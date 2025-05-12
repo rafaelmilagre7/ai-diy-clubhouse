@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Loader2, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Mail, Lock, User, Eye, EyeOff, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 
 interface InviteData {
@@ -23,10 +23,13 @@ const InvitePage = () => {
   const [token, setToken] = useState<string>(tokenFromUrl || '');
   const [loading, setLoading] = useState<boolean>(false);
   const [checkingToken, setCheckingToken] = useState<boolean>(!!tokenFromUrl);
+  const [processingInvite, setProcessingInvite] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [inviteData, setInviteData] = useState<InviteData | null>(null);
+  const [registerSuccess, setRegisterSuccess] = useState<boolean>(false);
+  const [inviteProcessed, setInviteProcessed] = useState<boolean>(false);
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   
   // Estados para cadastro de usuário
   const [name, setName] = useState<string>('');
@@ -43,10 +46,30 @@ const InvitePage = () => {
   
   // Se o usuário já está autenticado e temos dados do convite, processar automaticamente
   useEffect(() => {
-    if (tokenFromUrl && user && inviteData) {
-      processInvite(tokenFromUrl);
-    }
-  }, [tokenFromUrl, user, inviteData]);
+    const processIfReady = async () => {
+      // Verificar se temos um usuário e sessão válida e um convite válido para processar
+      if (user && session && inviteData && tokenFromUrl && !inviteProcessed) {
+        console.log("Condições atendidas para processar convite automaticamente:", {
+          userId: user.id,
+          hasSession: !!session,
+          hasInviteData: !!inviteData,
+          token: tokenFromUrl
+        });
+        
+        try {
+          setProcessingInvite(true);
+          await processInvite(tokenFromUrl);
+          setInviteProcessed(true);
+        } catch (err) {
+          console.error("Erro ao processar convite automaticamente:", err);
+        } finally {
+          setProcessingInvite(false);
+        }
+      }
+    };
+    
+    processIfReady();
+  }, [user, session, inviteData, tokenFromUrl, inviteProcessed]);
 
   // Função para avaliar a força da senha
   const evaluatePasswordStrength = (pass: string) => {
@@ -152,6 +175,9 @@ const InvitePage = () => {
         throw new Error(data.message || 'Token inválido ou expirado');
       }
 
+      // Atualizar informações de estado
+      setInviteProcessed(true);
+      
       toast.success('Bem-vindo ao VIVER DE IA Club!', {
         description: 'Seu acesso foi configurado com sucesso.'
       });
@@ -229,7 +255,12 @@ const InvitePage = () => {
           // Login bem sucedido
           if (signinData.user) {
             toast.success('Login realizado com sucesso!');
-            // O convite será processado automaticamente pelo useEffect
+            setRegisterSuccess(true);
+            
+            // Processar o convite após o login bem-sucedido
+            console.log("Usuário logado, processando convite:", inviteData.token);
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Esperar 1 segundo para garantir que a sessão está disponível
+            await processInvite(inviteData.token);
           }
           
         } else {
@@ -239,8 +270,20 @@ const InvitePage = () => {
       } else if (signupData.user) {
         // Cadastro bem sucedido
         toast.success('Conta criada com sucesso!');
-        // O processamento do convite será feito automaticamente pelo useEffect
-        // quando detectar que o usuário está autenticado
+        setRegisterSuccess(true);
+        
+        // Esperar um pouco para garantir que a sessão está disponível
+        console.log("Usuário registrado, aguardando para processar convite");
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Se autorização de email não for necessária, processar o convite
+        if (!signupData.session) {
+          console.log("Sem sessão após cadastro - verificando se é necessário confirmar email");
+          toast.info('Verifique seu email para confirmar seu cadastro e então acesse a plataforma.');
+        } else {
+          console.log("Sessão disponível após cadastro, processando convite");
+          await processInvite(inviteData.token);
+        }
       } else {
         // Caso especial: cadastro iniciado mas precisa confirmar email
         toast.info(
@@ -268,6 +311,35 @@ const InvitePage = () => {
         <div className="flex flex-col items-center justify-center py-8">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
           <p className="mt-4 text-center text-muted-foreground">Verificando seu convite...</p>
+        </div>
+      );
+    }
+    
+    // Se estiver processando o convite
+    if (processingInvite) {
+      return (
+        <div className="flex flex-col items-center justify-center py-8">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="mt-4 text-center text-muted-foreground">Configurando seu acesso...</p>
+        </div>
+      );
+    }
+    
+    // Se o convite foi processado com sucesso
+    if (inviteProcessed) {
+      return (
+        <div className="flex flex-col items-center justify-center py-8 space-y-4">
+          <CheckCircle2 className="h-16 w-16 text-green-500" />
+          <h2 className="text-2xl font-bold text-center">Convite Aceito com Sucesso!</h2>
+          <p className="text-center text-muted-foreground">
+            Seu acesso foi configurado corretamente. Você será redirecionado para a plataforma em alguns segundos.
+          </p>
+          <Button 
+            onClick={() => navigate('/dashboard')} 
+            className="mt-4"
+          >
+            Acessar a Plataforma
+          </Button>
         </div>
       );
     }
@@ -311,120 +383,136 @@ const InvitePage = () => {
             </p>
           </div>
           
-          <form onSubmit={handleCreateAccount} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome completo</Label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-                <Input
-                  id="name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="pl-10"
-                  placeholder="Seu nome completo"
-                  required
-                  autoFocus
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-                <Input
-                  id="email"
-                  type="email"
-                  value={inviteData.email}
-                  readOnly
-                  className="pl-10 bg-muted"
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="password">Crie sua senha</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    evaluatePasswordStrength(e.target.value);
-                  }}
-                  className="pl-10 pr-10"
-                  placeholder="Senha segura com pelo menos 6 caracteres"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-500" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-gray-500" />
-                  )}
-                </button>
-              </div>
-              
-              {/* Indicador de força da senha */}
-              {passwordStrength && (
-                <div className="flex items-center mt-1">
-                  <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full ${
-                        passwordStrength === 'forte' 
-                          ? 'bg-green-500 w-full' 
-                          : passwordStrength === 'média' 
-                            ? 'bg-yellow-500 w-2/3' 
-                            : 'bg-red-500 w-1/3'
-                      }`}
-                    />
-                  </div>
-                  <span className={`ml-2 text-xs ${
-                    passwordStrength === 'forte' 
-                      ? 'text-green-500' 
-                      : passwordStrength === 'média' 
-                        ? 'text-yellow-500' 
-                        : 'text-red-500'
-                  }`}>
-                    {passwordStrength === 'forte' ? 'Forte' : passwordStrength === 'média' ? 'Média' : 'Fraca'}
-                  </span>
-                </div>
-              )}
-              
-              <p className="text-xs text-muted-foreground">
-                A senha deve ter pelo menos 6 caracteres
+          {registerSuccess ? (
+            <div className="flex flex-col items-center justify-center py-4 space-y-4">
+              <CheckCircle2 className="h-12 w-12 text-green-500" />
+              <p className="text-center font-medium">Conta criada com sucesso!</p>
+              <p className="text-sm text-center text-muted-foreground">
+                Configurando seu acesso à plataforma...
               </p>
+              <div className="w-full max-w-xs bg-gray-100 rounded-full h-2.5 mt-2">
+                <div className="bg-primary h-2.5 rounded-full animate-pulse w-full"></div>
+              </div>
             </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={loading || !password || !name}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Criando sua conta...
-                </>
-              ) : (
-                'Criar conta e acessar'
-              )}
-            </Button>
-            
-            <p className="text-xs text-center text-muted-foreground mt-4">
-              Já possui conta com este email? Digite sua senha atual para fazer login.
-            </p>
-          </form>
+          ) : (
+            <form onSubmit={handleCreateAccount} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Nome completo</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+                  <Input
+                    id="name"
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="pl-10"
+                    placeholder="Seu nome completo"
+                    required
+                    autoFocus
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+                  <Input
+                    id="email"
+                    type="email"
+                    value={inviteData.email}
+                    readOnly
+                    className="pl-10 bg-muted"
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="password">Crie sua senha</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      evaluatePasswordStrength(e.target.value);
+                    }}
+                    className="pl-10 pr-10"
+                    placeholder="Senha segura com pelo menos 6 caracteres"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-500" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-500" />
+                    )}
+                  </button>
+                </div>
+                
+                {/* Indicador de força da senha */}
+                {passwordStrength && (
+                  <div className="flex items-center mt-1">
+                    <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full ${
+                          passwordStrength === 'forte' 
+                            ? 'bg-green-500 w-full' 
+                            : passwordStrength === 'média' 
+                              ? 'bg-yellow-500 w-2/3' 
+                              : 'bg-red-500 w-1/3'
+                        }`}
+                      />
+                    </div>
+                    <span className={`ml-2 text-xs ${
+                      passwordStrength === 'forte' 
+                        ? 'text-green-500' 
+                        : passwordStrength === 'média' 
+                          ? 'text-yellow-500' 
+                          : 'text-red-500'
+                    }`}>
+                      {passwordStrength === 'forte' ? 'Forte' : passwordStrength === 'média' ? 'Média' : 'Fraca'}
+                    </span>
+                  </div>
+                )}
+                
+                <p className="text-xs text-muted-foreground">
+                  A senha deve ter pelo menos 6 caracteres
+                </p>
+              </div>
+              
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={loading || !password || !name}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Criando sua conta...
+                  </>
+                ) : (
+                  'Criar conta e acessar'
+                )}
+              </Button>
+              
+              <p className="text-xs text-center text-muted-foreground mt-4">
+                Já possui conta com este email? Digite sua senha atual para fazer login.
+              </p>
+            </form>
+          )}
           
           {error && (
-            <p className="text-sm text-destructive text-center mt-4">{error}</p>
+            <div className="bg-red-50 p-4 rounded-md border border-red-100 flex items-start mt-4">
+              <AlertCircle className="h-5 w-5 text-red-500 mr-2 mt-0.5" />
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
           )}
         </div>
       );
@@ -443,7 +531,11 @@ const InvitePage = () => {
               autoFocus
             />
             {error && (
-              <p className="text-destructive text-sm text-center">{error}</p>
+              <div className="bg-red-50 p-3 rounded-md border border-red-100">
+                <p className="text-destructive text-sm text-center flex items-center justify-center">
+                  <AlertCircle className="h-4 w-4 mr-1" /> {error}
+                </p>
+              </div>
             )}
           </div>
           <Button 

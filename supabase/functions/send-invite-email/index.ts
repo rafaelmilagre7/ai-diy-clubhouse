@@ -1,297 +1,453 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import * as smtp from "npm:nodemailer@6.9.10";
-import { corsHeaders } from "../_shared/cors.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
+import { Resend } from 'https://esm.sh/resend@3.1.0'
+import { format, addDays } from 'https://esm.sh/date-fns@3.6.0'
+import { ptBR } from 'https://esm.sh/date-fns/locale@3.6.0'
 
-interface InviteEmailRequest {
-  email: string;
-  inviteUrl: string;
-  roleName: string;
-  expiresAt: string;
-  senderName?: string;
-  notes?: string;
-  inviteId?: string; // ID do convite para atualizar estatísticas
+// Configuração de CORS
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Obter configurações SMTP do ambiente
-const smtpConfig = {
-  host: Deno.env.get("SMTP_HOST") || "smtp.hostinger.com",
-  port: parseInt(Deno.env.get("SMTP_PORT") || "465"),
-  secure: true, // true para porta 465 (SSL), false para outras portas
-  auth: {
-    user: Deno.env.get("SMTP_USER"),
-    pass: Deno.env.get("SMTP_PASS")
-  }
-};
-
-serve(async (req) => {
-  // Lidar com requisições preflight CORS
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+// Lidar com requisição OPTIONS para CORS
+Deno.serve(async (req) => {
+  // Esta função de edge aceita requisições POST apenas
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    console.log("Iniciando função send-invite-email");
-    console.log("Configuração SMTP:", {
-      host: smtpConfig.host,
-      port: smtpConfig.port,
-      secure: smtpConfig.secure,
-      authUser: smtpConfig.auth.user ? "Configurado" : "Não configurado",
-      authPass: smtpConfig.auth.pass ? "Configurado" : "Não configurado"
-    });
+    // Obter segredos da configuração
+    const supabaseUrl = Deno.env.get('PROJECT_URL')
+    const supabaseServiceKey = Deno.env.get('PRIVATE_SERVICE_ROLE_KEY')
+    const resendApiKey = Deno.env.get('RESEND_API_KEY')
     
-    const { email, inviteUrl, roleName, expiresAt, senderName, notes, inviteId } = await req.json() as InviteEmailRequest;
-
-    // Verificar se temos todas as informações necessárias
-    if (!email || !inviteUrl || !roleName || !expiresAt) {
-      console.error("Dados incompletos:", { email, inviteUrl, roleName, expiresAt });
-      throw new Error("Dados de convite incompletos");
+    if (!supabaseUrl || !supabaseServiceKey || !resendApiKey) {
+      throw new Error('Configuração de ambiente incompleta')
     }
-
-    // Verificar se temos as credenciais SMTP
-    if (!smtpConfig.auth.user || !smtpConfig.auth.pass) {
-      console.error("Credenciais SMTP não configuradas");
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: "Credenciais SMTP não configuradas",
-          message: "As credenciais do servidor de e-mail não estão configuradas."
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 500,
-        }
-      );
+    
+    // Inicializar clientes
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    const resend = new Resend(resendApiKey)
+    
+    // Obter dados do corpo da requisição
+    const requestData = await req.json()
+    const { email, inviteUrl, roleName, expiresAt, senderName, notes, inviteId } = requestData
+    
+    console.log(`Preparando envio de convite para ${email} com papel ${roleName}`)
+    
+    // Verificar dados obrigatórios
+    if (!email || !inviteUrl) {
+      throw new Error('Email e URL do convite são obrigatórios')
     }
-
+    
+    // Validação básica de URL
+    const urlRegex = new RegExp('^https?://[a-z0-9-]+(\\.[a-z0-9-]+)+([/?].*)?$', 'i')
+    if (!urlRegex.test(inviteUrl)) {
+      throw new Error('URL do convite inválida')
+    }
+    
     // Formatar a data de expiração
-    const expireDate = new Date(expiresAt);
-    const formattedExpireDate = expireDate.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-    
-    // Extrair token do URL para exibição separada
-    let token = "";
-    let cleanUrl = inviteUrl;
-    try {
-      const url = new URL(inviteUrl);
-      // Certificar-se de que a URL não contenha caracteres problemáticos
-      token = url.pathname.split('/').pop() || "";
-      
-      // Limpar qualquer espaço em branco na URL
-      cleanUrl = url.toString().trim();
-      
-      console.log("Token extraído do URL:", token, "comprimento:", token.length);
-      console.log("URL limpa:", cleanUrl);
-    } catch (e) {
-      console.error("Erro ao extrair token do URL:", e);
+    let formattedExpiresAt = 'Em 7 dias'
+    if (expiresAt) {
+      try {
+        formattedExpiresAt = format(new Date(expiresAt), 'dd MMMM yyyy', { locale: ptBR })
+      } catch (err) {
+        console.error('Erro ao formatar data de expiração:', err)
+      }
     }
-
-    // Criar transportador SMTP
-    const transporter = smtp.createTransport(smtpConfig);
-
-    // Obter o email do remetente das variáveis de ambiente ou usar o padrão
-    const senderEmail = Deno.env.get("SMTP_USER") || "no-reply@viverdeia.ai";
-    const senderDomain = senderEmail.split('@')[1];
-
-    // Configurar email com layout melhorado para garantir que os links não quebrem
-    const mailOptions = {
-      from: `"VIVER DE IA Club" <${senderEmail}>`,
-      to: email,
-      subject: "Convite para o VIVER DE IA Club",
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-          <title>Convite para o VIVER DE IA Club</title>
-          <style>
-            body {
-              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-              line-height: 1.6;
-              color: #333;
-              max-width: 600px;
-              margin: 0 auto;
-              padding: 20px;
+    
+    // Preparar o HTML do email
+    const emailHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>Convite para o VIVER DE IA Club</title>
+        <style>
+          @media only screen and (max-width: 620px) {
+            table.body h1 {
+              font-size: 28px !important;
+              margin-bottom: 10px !important;
             }
-            .header {
-              text-align: center;
-              margin-bottom: 30px;
+            table.body p,
+            table.body ul,
+            table.body ol,
+            table.body td,
+            table.body span,
+            table.body a {
+              font-size: 16px !important;
             }
-            .header img {
-              max-width: 200px;
+            table.body .wrapper,
+            table.body .article {
+              padding: 10px !important;
             }
-            .button {
-              display: inline-block;
-              background-color: #4361ee;
-              color: white !important;
-              text-decoration: none;
-              padding: 12px 24px;
-              border-radius: 6px;
-              font-weight: 600;
-              margin: 20px 0;
-              text-align: center;
-              white-space: nowrap;
+            table.body .content {
+              padding: 0 !important;
             }
-            .footer {
-              margin-top: 40px;
-              font-size: 12px;
-              color: #666;
+            table.body .container {
+              padding: 0 !important;
+              width: 100% !important;
             }
-            .note {
-              background-color: #f8f9fa;
-              border-left: 4px solid #4361ee;
-              padding: 15px;
-              margin: 20px 0;
+            table.body .main {
+              border-left-width: 0 !important;
+              border-radius: 0 !important;
+              border-right-width: 0 !important;
             }
-            .token-display {
-              font-family: monospace;
-              font-size: 18px;
-              background-color: #f0f0f0;
-              border: 1px solid #ddd;
-              padding: 10px;
-              border-radius: 4px;
-              margin: 10px 0;
-              text-align: center;
-              letter-spacing: 2px;
-              font-weight: bold;
+            table.body .btn table {
+              width: 100% !important;
             }
-            .url-container {
-              word-break: break-all;
-              background-color: #f5f5f5;
-              padding: 10px;
-              border-radius: 4px;
-              margin: 15px 0;
-              border: 1px solid #eee;
+            table.body .btn a {
+              width: 100% !important;
             }
-            .important-note {
-              color: #d32f2f;
-              font-weight: bold;
+            table.body .img-responsive {
+              height: auto !important;
+              max-width: 100% !important;
+              width: auto !important;
             }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>Você foi convidado para o VIVER DE IA Club!</h1>
-          </div>
-          
-          <p>Olá,</p>
-          
-          <p>Você recebeu um convite para participar do VIVER DE IA Club com o papel de <strong>${roleName}</strong>.</p>
-          
-          ${notes ? `<div class="note"><p><strong>Mensagem do convidante:</strong></p><p>${notes}</p></div>` : ''}
-          
-          <p>Para aceitar o convite, clique no botão abaixo:</p>
-          
-          <table width="100%" cellpadding="0" cellspacing="0" border="0">
-            <tr>
-              <td align="center">
-                <a href="${cleanUrl}" class="button" style="color: white !important; text-decoration: none !important;">Aceitar Convite</a>
-              </td>
-            </tr>
-          </table>
-          
-          <p><strong>Importante:</strong> Este convite expira em ${formattedExpireDate}.</p>
-          
-          <p>Se o botão acima não funcionar, você pode copiar e colar o link a seguir no seu navegador:</p>
-          <div class="url-container">
-            <a href="${cleanUrl}" style="color: #4361ee;">${cleanUrl}</a>
-          </div>
-          
-          <p class="important-note">⚠️ ATENÇÃO: Se tiver problemas com o link acima, use este código de convite:</p>
-          <div class="token-display">${token}</div>
-          <p>Entre em <strong>viverdeia.ai/convite</strong> e cole o código acima</p>
-          
-          ${senderName ? `<p>Convite enviado por: ${senderName}</p>` : ''}
-          
-          <div class="footer">
-            <p>Se você recebeu este e-mail por engano, pode ignorá-lo com segurança.</p>
-            <p>&copy; ${new Date().getFullYear()} VIVER DE IA Club. Todos os direitos reservados.</p>
-          </div>
-        </body>
-        </html>
-      `
-    };
-
-    // Enviar email
-    console.log("Tentando enviar e-mail para:", email);
-    try {
-      const result = await transporter.sendMail(mailOptions);
-      console.log("E-mail enviado com sucesso:", result);
-
-      // Se um ID de convite foi fornecido, atualizar as estatísticas de envio
-      if (inviteId) {
-        try {
-          // Atualizar as estatísticas do convite usando a função RPC
-          const { data: updateData, error: updateError } = await fetch(
-            `${Deno.env.get("SUPABASE_URL")}/rest/v1/rpc/update_invite_send_attempt`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-                "apikey": Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ""
-              },
-              body: JSON.stringify({ invite_id: inviteId })
-            }
-          ).then(res => res.json());
-
-          if (updateError) {
-            console.error("Erro ao atualizar estatísticas de envio:", updateError);
           }
-        } catch (updateErr) {
-          console.error("Falha ao atualizar estatísticas de envio:", updateErr);
+          
+          body {
+            background-color: #f6f6f6;
+            font-family: sans-serif;
+            -webkit-font-smoothing: antialiased;
+            font-size: 14px;
+            line-height: 1.4;
+            margin: 0;
+            padding: 0;
+            -ms-text-size-adjust: 100%;
+            -webkit-text-size-adjust: 100%;
+          }
+          
+          table {
+            border-collapse: separate;
+            width: 100%;
+          }
+          
+          table td {
+            font-family: sans-serif;
+            font-size: 14px;
+            vertical-align: top;
+          }
+          
+          .body {
+            background-color: #f6f6f6;
+            width: 100%;
+          }
+          
+          .container {
+            display: block;
+            margin: 0 auto !important;
+            max-width: 580px;
+            padding: 10px;
+            width: 580px;
+          }
+          
+          .content {
+            box-sizing: border-box;
+            display: block;
+            margin: 0 auto;
+            max-width: 580px;
+            padding: 10px;
+          }
+          
+          .main {
+            background: #ffffff;
+            border-radius: 3px;
+            width: 100%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+          }
+          
+          .wrapper {
+            box-sizing: border-box;
+            padding: 20px;
+          }
+          
+          .content-block {
+            padding-bottom: 10px;
+            padding-top: 10px;
+          }
+          
+          .footer {
+            clear: both;
+            margin-top: 10px;
+            text-align: center;
+            width: 100%;
+          }
+          
+          .footer td,
+          .footer p,
+          .footer span,
+          .footer a {
+            color: #999999;
+            font-size: 12px;
+            text-align: center;
+          }
+          
+          h1,
+          h2,
+          h3,
+          h4 {
+            color: #000000;
+            font-family: sans-serif;
+            font-weight: 600;
+            line-height: 1.4;
+            margin: 0 0 30px;
+          }
+          
+          h1 {
+            font-size: 35px;
+            font-weight: 300;
+            text-align: center;
+            text-transform: capitalize;
+          }
+          
+          p,
+          ul,
+          ol {
+            font-family: sans-serif;
+            font-size: 14px;
+            font-weight: normal;
+            margin: 0 0 15px;
+          }
+          
+          p li,
+          ul li,
+          ol li {
+            list-style-position: inside;
+            margin-left: 5px;
+          }
+          
+          a {
+            color: #3498db;
+            text-decoration: none;
+          }
+          
+          .btn {
+            box-sizing: border-box;
+            width: 100%;
+          }
+          
+          .btn > tbody > tr > td {
+            padding-bottom: 15px;
+          }
+          
+          .btn table {
+            width: auto;
+          }
+          
+          .btn table td {
+            background-color: #ffffff;
+            border-radius: 5px;
+            text-align: center;
+          }
+          
+          .btn a {
+            background-color: #ffffff;
+            border: solid 1px #3498db;
+            border-radius: 5px;
+            box-sizing: border-box;
+            color: #3498db;
+            cursor: pointer;
+            display: inline-block;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 0;
+            padding: 12px 25px;
+            text-decoration: none;
+          }
+          
+          .btn-primary table td {
+            background-color: #3498db;
+          }
+          
+          .btn-primary a {
+            background-color: #3498db;
+            border-color: #3498db;
+            color: #ffffff;
+          }
+          
+          .preheader {
+            color: transparent;
+            display: none;
+            height: 0;
+            max-height: 0;
+            max-width: 0;
+            opacity: 0;
+            overflow: hidden;
+            visibility: hidden;
+            width: 0;
+          }
+          
+          .highlight {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+          }
+          
+          .logo-container {
+            text-align: center;
+            margin-bottom: 20px;
+          }
+          
+          .logo {
+            max-width: 200px;
+            height: auto;
+          }
+          
+          .expires {
+            color: #718096;
+            font-size: 13px;
+            margin-top: 15px;
+          }
+          
+          .notes {
+            background-color: #f8fbfd;
+            border-left: 3px solid #63b3ed;
+            padding: 10px 15px;
+            margin: 20px 0;
+            font-style: italic;
+          }
+        </style>
+      </head>
+      <body>
+        <span class="preheader">Você foi convidado para se juntar ao VIVER DE IA Club.</span>
+        <table role="presentation" class="body">
+          <tr>
+            <td>&nbsp;</td>
+            <td class="container">
+              <div class="content">
+                <div class="logo-container">
+                  <img src="https://viverdeia.ai/images/logo.png" alt="VIVER DE IA" class="logo" />
+                </div>
+                
+                <!-- START MAIN CONTENT AREA -->
+                <table role="presentation" class="main">
+                  <tr>
+                    <td class="wrapper">
+                      <table role="presentation">
+                        <tr>
+                          <td>
+                            <h2>Você foi convidado para o VIVER DE IA Club</h2>
+                            <p>Olá,</p>
+                            <p>
+                              ${senderName ? `${senderName} convidou você` : 'Você foi convidado'} 
+                              para se juntar ao VIVER DE IA Club como <strong>${roleName || 'membro'}</strong>.
+                            </p>
+                            
+                            ${notes ? `<div class="notes">${notes}</div>` : ''}
+                            
+                            <div class="highlight">
+                              <p>Para aceitar este convite, clique no botão abaixo:</p>
+                              <table role="presentation" class="btn btn-primary">
+                                <tbody>
+                                  <tr>
+                                    <td align="center">
+                                      <table role="presentation">
+                                        <tbody>
+                                          <tr>
+                                            <td>
+                                              <a href="${inviteUrl}" target="_blank">Aceitar Convite</a>
+                                            </td>
+                                          </tr>
+                                        </tbody>
+                                      </table>
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                              <p class="expires">Este convite expira em: ${formattedExpiresAt}</p>
+                            </div>
+                            
+                            <p>
+                              Se você tiver problemas para clicar no botão "Aceitar Convite", 
+                              copie e cole este link em seu navegador:
+                            </p>
+                            <p style="word-break: break-all;">${inviteUrl}</p>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+                <!-- END MAIN CONTENT AREA -->
+                
+                <!-- START FOOTER -->
+                <div class="footer">
+                  <table role="presentation">
+                    <tr>
+                      <td class="content-block">
+                        <span class="apple-link">VIVER DE IA Club</span>
+                        <br />
+                        <span>Este email foi enviado automaticamente, por favor não responda.</span>
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+                <!-- END FOOTER -->
+              </div>
+            </td>
+            <td>&nbsp;</td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `
+    
+    // Enviar o email via Resend
+    console.log('Enviando email para:', email)
+    const emailResponse = await resend.emails.send({
+      from: 'Viver de IA Club <convites@viverdeia.ai>',
+      to: email,
+      subject: `Convite para o VIVER DE IA Club - Acesso como ${roleName || 'membro'}`,
+      html: emailHtml,
+    })
+    
+    console.log('Resposta do envio:', emailResponse)
+    
+    // Atualizar estatísticas de envio do convite se temos um ID
+    if (inviteId) {
+      console.log(`Atualizando estatísticas do convite ${inviteId}`)
+      await supabase.rpc('update_invite_send_attempt', {
+        invite_id: inviteId
+      })
+    }
+    
+    // Retornar sucesso
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: 'Email de convite enviado com sucesso',
+        emailId: emailResponse?.id || null
+      }),
+      { 
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders
         }
       }
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          data: {
-            messageId: result.messageId,
-            accepted: result.accepted
-          },
-          message: `Convite enviado para ${email} com sucesso.`
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        }
-      );
-    } catch (emailError) {
-      console.error("Erro ao enviar e-mail:", emailError);
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: emailError.message,
-          code: emailError.code || "UNKNOWN",
-          command: emailError.command || "",
-          message: `Falha ao enviar e-mail para ${email}: ${emailError.message}`
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 500,
-        }
-      );
-    }
+    )
   } catch (error) {
-    console.error("Erro na função send-invite-email:", error);
+    console.error('Erro ao enviar email de convite:', error)
     
+    // Retornar erro
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
-        message: "Falha ao enviar o convite por e-mail."
+        message: 'Erro ao enviar email de convite',
+        error: error.message || 'Erro desconhecido'
       }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      { 
         status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders
+        }
       }
-    );
+    )
   }
-});
+})
