@@ -22,7 +22,7 @@ const CommentsSection = ({
   onSubmitComment
 }: CommentsSectionProps) => {
   return (
-    <div>
+    <div className="bg-backgroundLight border border-white/10 rounded-lg p-5">
       <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-textPrimary">
         <MessageCircle size={18} className="text-viverblue" />
         Comentários ({comments.length})

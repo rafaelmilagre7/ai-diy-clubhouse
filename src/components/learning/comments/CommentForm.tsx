@@ -41,8 +41,8 @@ export const CommentForm: React.FC<CommentFormProps> = ({
   
   if (!user) {
     return (
-      <div className="text-center p-4 bg-muted/30 rounded-lg">
-        <p className="text-muted-foreground">Faça login para comentar nesta aula.</p>
+      <div className="text-center p-4 bg-backgroundLight/30 rounded-lg border border-white/10">
+        <p className="text-textSecondary">Faça login para comentar nesta aula.</p>
       </div>
     );
   }
@@ -69,9 +69,9 @@ export const CommentForm: React.FC<CommentFormProps> = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {replyingTo && (
-        <div className="flex items-center justify-between bg-muted/20 p-2 rounded-md">
-          <div className="flex items-center text-sm text-muted-foreground">
-            <MessageSquare className="h-4 w-4 mr-2" />
+        <div className="flex items-center justify-between bg-viverblue/10 p-2 rounded-md border border-viverblue/20">
+          <div className="flex items-center text-sm text-textSecondary">
+            <MessageSquare className="h-4 w-4 mr-2 text-viverblue" />
             Respondendo a {replyingTo.profiles?.name || "Usuário"}
           </div>
           <Button 
@@ -79,7 +79,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
             variant="ghost"
             size="sm"
             onClick={onCancel}
-            className="h-7 px-2"
+            className="h-7 px-2 hover:bg-viverblue/10 text-textSecondary hover:text-textPrimary"
           >
             Cancelar
           </Button>
@@ -92,7 +92,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
             src={profile?.avatar_url || ""} 
             alt={profile?.name || "Usuário"} 
           />
-          <AvatarFallback className="bg-primary/10 text-primary">
+          <AvatarFallback className="bg-viverblue/10 text-viverblue">
             {getInitials(profile?.name)}
           </AvatarFallback>
         </Avatar>
@@ -103,7 +103,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder={placeholder}
-            className="resize-none min-h-[100px]"
+            className="resize-none min-h-[100px] bg-[#151823] border-white/10 text-textPrimary"
           />
           
           <div className="flex justify-end gap-2">
@@ -113,6 +113,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
                 variant="outline"
                 onClick={onCancel}
                 disabled={isSubmitting}
+                className="border-white/10 bg-backgroundLight text-textSecondary hover:bg-backgroundLight/80 hover:text-textPrimary"
               >
                 Cancelar
               </Button>
@@ -121,6 +122,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
             <Button 
               type="submit"
               disabled={!content.trim() || isSubmitting}
+              className="bg-viverblue hover:bg-viverblue/90 text-white"
             >
               {isSubmitting ? (
                 <>

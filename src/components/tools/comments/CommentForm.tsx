@@ -104,7 +104,7 @@ export const CommentForm = ({
             placeholder={replyTo ? "Escreva sua resposta..." : "Compartilhe sua experiência ou dica..."}
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            className="min-h-24 resize-none bg-backgroundLight border-white/10 text-textPrimary focus-visible:ring-viverblue"
+            className="min-h-24 resize-none bg-[#151823] border-white/10 text-textPrimary focus-visible:ring-viverblue"
           />
           
           <ImageGallery 

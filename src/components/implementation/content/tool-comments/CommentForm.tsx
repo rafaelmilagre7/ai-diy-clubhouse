@@ -59,7 +59,7 @@ export const CommentForm = ({
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           placeholder={replyTo ? "Escreva sua resposta..." : "Compartilhe sua experiência ou dúvida sobre esta solução..."}
-          className="min-h-24 resize-y bg-backgroundLight border-white/10 text-textPrimary focus-visible:ring-viverblue"
+          className="min-h-24 resize-y bg-[#151823] border-white/10 text-textPrimary focus-visible:ring-viverblue"
         />
         
         <div className="flex justify-end">
