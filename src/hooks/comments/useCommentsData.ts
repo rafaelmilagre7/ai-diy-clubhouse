@@ -22,13 +22,10 @@ export const useCommentsData = (toolId: string) => {
       log('Buscando comentários para ferramenta', { toolId });
 
       try {
-        // Buscar comentários principais
+        // Buscar comentários principais sem join automático
         const { data: parentComments, error: parentError } = await supabase
           .from('tool_comments')
-          .select(`
-            *,
-            profiles:user_id(id, name, avatar_url, role)
-          `)
+          .select('*')
           .eq('tool_id', toolId)
           .is('parent_id', null)
           .order('created_at', { ascending: false });
@@ -38,13 +35,27 @@ export const useCommentsData = (toolId: string) => {
           throw parentError;
         }
 
+        // Buscar perfis dos usuários que fizeram os comentários
+        const userIds = [...new Set(parentComments.map((c: any) => c.user_id))];
+        const { data: userProfiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, name, avatar_url, role')
+          .in('id', userIds);
+          
+        if (profilesError) {
+          logError('Erro ao buscar perfis dos usuários', profilesError);
+        }
+        
+        // Mapear perfis por ID para fácil acesso
+        const profilesMap = (userProfiles || []).reduce((acc: Record<string, any>, profile: any) => {
+          acc[profile.id] = profile;
+          return acc;
+        }, {});
+
         // Buscar respostas
         const { data: replies, error: repliesError } = await supabase
           .from('tool_comments')
-          .select(`
-            *,
-            profiles:user_id(id, name, avatar_url, role)
-          `)
+          .select('*')
           .eq('tool_id', toolId)
           .not('parent_id', 'is', null)
           .order('created_at', { ascending: true });
@@ -53,10 +64,30 @@ export const useCommentsData = (toolId: string) => {
           logError('Erro ao buscar respostas', repliesError);
           throw repliesError;
         }
+        
+        // Adicionar IDs de usuários de respostas ao conjunto de IDs
+        const replyUserIds = [...new Set(replies.map((r: any) => r.user_id))];
+        const missingUserIds = replyUserIds.filter(id => !profilesMap[id]);
+        
+        // Buscar perfis adicionais se necessário
+        if (missingUserIds.length > 0) {
+          const { data: additionalProfiles } = await supabase
+            .from('profiles')
+            .select('id, name, avatar_url, role')
+            .in('id', missingUserIds);
+            
+          if (additionalProfiles) {
+            additionalProfiles.forEach((profile: any) => {
+              profilesMap[profile.id] = profile;
+            });
+          }
+        }
 
         // Verificar curtidas do usuário atual
-        const { user } = await import('@/contexts/auth').then(m => m.useAuth());
         let likesMap: Record<string, boolean> = {};
+        
+        const { data: authData } = await supabase.auth.getUser();
+        const user = authData?.user;
         
         if (user) {
           const { data: userLikes } = await supabase
@@ -74,29 +105,28 @@ export const useCommentsData = (toolId: string) => {
         log('Dados brutos dos comentários:', { 
           parentCount: parentComments?.length || 0,
           repliesCount: replies?.length || 0,
-          firstParentComment: parentComments?.length > 0 ? {
-            id: parentComments[0].id,
-            content: parentComments[0].content,
-            hasProfile: !!parentComments[0].profiles,
-            profileData: parentComments[0].profiles
-          } : 'Nenhum comentário'
+          profilesCount: Object.keys(profilesMap).length || 0
         });
 
-        // Organizar respostas dentro dos comentários principais com verificação de segurança
-        const organizedComments = (parentComments || []).map((parentComment: Comment) => ({
+        // Organizar respostas dentro dos comentários principais
+        const organizedComments = (parentComments || []).map((parentComment: any) => ({
           ...parentComment,
+          profiles: profilesMap[parentComment.user_id] || null,
           user_has_liked: !!likesMap[parentComment.id],
           replies: (replies || [])
-            .filter((reply: Comment) => reply.parent_id === parentComment.id)
-            .map((reply: Comment) => ({
+            .filter((reply: any) => reply.parent_id === parentComment.id)
+            .map((reply: any) => ({
               ...reply,
+              profiles: profilesMap[reply.user_id] || null,
               user_has_liked: !!likesMap[reply.id]
             }))
         }));
 
         log('Comentários organizados e processados:', { 
           count: organizedComments.length,
-          firstCommentHasProfiles: organizedComments.length > 0 ? !!organizedComments[0].profiles : false
+          firstCommentHasProfiles: organizedComments.length > 0 
+            ? !!organizedComments[0].profiles 
+            : false
         });
         
         return organizedComments;
