@@ -56,8 +56,8 @@ const ToolDetails = () => {
     return (
       <div className="container py-10">
         <div className="text-center space-y-4">
-          <h2 className="text-2xl font-bold text-gray-800">Ferramenta não encontrada</h2>
-          <p className="text-muted-foreground">{error || 'Não foi possível encontrar a ferramenta solicitada.'}</p>
+          <h2 className="text-2xl font-bold text-textPrimary">Ferramenta não encontrada</h2>
+          <p className="text-textSecondary">{error || 'Não foi possível encontrar a ferramenta solicitada.'}</p>
         </div>
       </div>
     );
@@ -70,17 +70,32 @@ const ToolDetails = () => {
       <div className="grid md:grid-cols-3 gap-8">
         <div className="md:col-span-2 space-y-8">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="w-full grid grid-cols-3">
-              <TabsTrigger value="about">Sobre</TabsTrigger>
-              <TabsTrigger value="tutorials">Tutoriais</TabsTrigger>
-              <TabsTrigger value="comments">Comentários</TabsTrigger>
+            <TabsList className="w-full grid grid-cols-3 bg-backgroundLight border border-white/10">
+              <TabsTrigger 
+                value="about" 
+                className="data-[state=active]:bg-viverblue/10 data-[state=active]:text-viverblue"
+              >
+                Sobre
+              </TabsTrigger>
+              <TabsTrigger 
+                value="tutorials"
+                className="data-[state=active]:bg-viverblue/10 data-[state=active]:text-viverblue"
+              >
+                Tutoriais
+              </TabsTrigger>
+              <TabsTrigger 
+                value="comments"
+                className="data-[state=active]:bg-viverblue/10 data-[state=active]:text-viverblue"
+              >
+                Comentários
+              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="about" className="mt-6">
               <Card>
                 <CardContent className="pt-6">
-                  <h2 className="text-xl font-semibold mb-4">Sobre a ferramenta</h2>
-                  <p className="text-gray-700 whitespace-pre-line">{tool.description}</p>
+                  <h2 className="text-xl font-semibold mb-4 text-textPrimary">Sobre a ferramenta</h2>
+                  <p className="text-textSecondary whitespace-pre-line">{tool.description}</p>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -88,7 +103,7 @@ const ToolDetails = () => {
             <TabsContent value="tutorials" className="mt-6">
               <Card>
                 <CardContent className="pt-6">
-                  <h2 className="text-xl font-semibold mb-4">Tutoriais em vídeo</h2>
+                  <h2 className="text-xl font-semibold mb-4 text-textPrimary">Tutoriais em vídeo</h2>
                   <ToolTutorials tutorials={tool.video_tutorials} />
                 </CardContent>
               </Card>

@@ -63,7 +63,7 @@ export const AdminToolsFilters: React.FC<AdminToolsFiltersProps> = ({
           <SelectValue placeholder="Todas as categorias" />
         </SelectTrigger>
         <SelectContent className="bg-backgroundLight border-white/10 text-textPrimary">
-          <SelectItem value="all">Todas as categorias</SelectItem>
+          <SelectItem value="all" className="hover:bg-viverblue/10">Todas as categorias</SelectItem>
           {categories.map((category) => (
             <SelectItem key={category} value={category} className="hover:bg-viverblue/10">
               {category}

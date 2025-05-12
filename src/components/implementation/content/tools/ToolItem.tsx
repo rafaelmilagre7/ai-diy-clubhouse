@@ -55,7 +55,7 @@ export const ToolItem = ({
                   Obrigatória
                 </Badge>
               ) : (
-                <Badge variant="outline" className="text-xs bg-backgroundLight border-white/10 text-textSecondary">
+                <Badge variant="secondary" className="text-xs">
                   Opcional
                 </Badge>
               )}
@@ -72,7 +72,7 @@ export const ToolItem = ({
         <Button 
           variant="outline" 
           size="sm" 
-          className="w-full hover:bg-viverblue/10 hover:text-viverblue" 
+          className="w-full hover:bg-viverblue/10 hover:text-viverblue border-white/10" 
           onClick={() => window.open(toolUrl, "_blank")}
         >
           <ExternalLink className="h-4 w-4 mr-2" />

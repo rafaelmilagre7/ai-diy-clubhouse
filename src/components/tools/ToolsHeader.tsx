@@ -55,7 +55,7 @@ export const ToolsHeader = ({
           <span className="text-sm mr-2 text-textSecondary">Filtro ativo:</span>
           <Badge 
             variant="outline" 
-            className="bg-viverblue/10 text-viverblue flex items-center gap-1 border-viverblue/30"
+            className="bg-viverblue/10 text-viverblue border-viverblue/30 flex items-center gap-1"
           >
             {selectedCategory}
             <Button

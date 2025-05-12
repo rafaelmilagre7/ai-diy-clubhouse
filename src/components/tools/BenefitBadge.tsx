@@ -15,27 +15,27 @@ export const BenefitBadge = ({ type, className = '' }: BenefitBadgeProps) => {
     discount: {
       text: 'Desconto',
       icon: <Percent className="h-3 w-3 mr-1" />,
-      baseClassName: 'bg-amber-900/30 text-amber-300 border-amber-700/50 hover:bg-amber-800/40'
+      baseClassName: 'bg-amber-900/30 text-amber-300 border-amber-700/50 hover:bg-amber-900/40'
     },
     exclusive: {
       text: 'Exclusivo',
       icon: <Trophy className="h-3 w-3 mr-1" />,
-      baseClassName: 'bg-purple-900/30 text-purple-300 border-purple-700/50 hover:bg-purple-800/40'
+      baseClassName: 'bg-purple-900/30 text-purple-300 border-purple-700/50 hover:bg-purple-900/40'
     },
     free: {
       text: 'Gratuito',
       icon: <Gift className="h-3 w-3 mr-1" />,
-      baseClassName: 'bg-green-900/30 text-green-300 border-green-700/50 hover:bg-green-800/40'
+      baseClassName: 'bg-green-900/30 text-green-300 border-green-700/50 hover:bg-green-900/40'
     },
     trial: {
       text: 'Trial',
       icon: <Clock className="h-3 w-3 mr-1" />,
-      baseClassName: 'bg-blue-900/30 text-blue-300 border-blue-700/50 hover:bg-blue-800/40'
+      baseClassName: 'bg-blue-900/30 text-blue-300 border-blue-700/50 hover:bg-blue-900/40'
     },
     other: {
       text: 'Benefício',
       icon: <Star className="h-3 w-3 mr-1" />,
-      baseClassName: 'bg-gray-900/30 text-gray-300 border-gray-700/50 hover:bg-gray-800/40'
+      baseClassName: 'bg-gray-900/30 text-gray-300 border-gray-700/50 hover:bg-gray-900/40'
     }
   };
 
