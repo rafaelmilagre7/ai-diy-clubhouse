@@ -25,13 +25,13 @@ export const DifficultyBadge = ({ difficulty }: DifficultyBadgeProps) => {
   const getStyleClass = () => {
     switch (difficulty) {
       case 'easy':
-        return 'bg-neutral-800/80 text-emerald-400 border-emerald-900/20';
+        return 'bg-neutral-800/60 text-emerald-400 border-0';
       case 'medium':
-        return 'bg-neutral-800/80 text-amber-400 border-amber-900/20';
+        return 'bg-neutral-800/60 text-amber-400 border-0';
       case 'advanced':
-        return 'bg-neutral-800/80 text-rose-400 border-rose-900/20';
+        return 'bg-neutral-800/60 text-rose-400 border-0';
       default:
-        return 'bg-neutral-800/80 text-neutral-300 border-neutral-700';
+        return 'bg-neutral-800/60 text-neutral-300 border-0';
     }
   };
   
@@ -39,7 +39,7 @@ export const DifficultyBadge = ({ difficulty }: DifficultyBadgeProps) => {
     <Badge 
       variant="outline" 
       className={cn(
-        "px-2 py-0.5 text-xs rounded-full border-0",
+        "px-2 py-0.5 text-xs rounded-full",
         getStyleClass()
       )}
     >

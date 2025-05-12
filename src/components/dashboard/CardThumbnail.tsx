@@ -8,8 +8,12 @@ interface CardThumbnailProps {
 export const CardThumbnail = ({ thumbnailUrl }: CardThumbnailProps) => {
   return (
     <div className={cn(
-      "w-full h-36 bg-[#1A1E2E] overflow-hidden rounded-t-xl",
+      "w-full h-40 overflow-hidden rounded-t-xl relative",
     )}>
+      {thumbnailUrl ? (
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent z-10" />
+      ) : null}
+      
       {thumbnailUrl ? (
         <img 
           src={thumbnailUrl} 
@@ -18,7 +22,7 @@ export const CardThumbnail = ({ thumbnailUrl }: CardThumbnailProps) => {
           loading="lazy"
         />
       ) : (
-        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#1A1E2E] to-[#151823]">
+        <div className="w-full h-full flex items-center justify-center bg-[#151823]">
           <span className="text-neutral-600 text-base">Sem imagem</span>
         </div>
       )}

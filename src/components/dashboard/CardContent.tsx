@@ -8,9 +8,9 @@ interface CardContentProps {
 
 export const CardContentSection = ({ title, description }: CardContentProps) => {
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2">
       <h3 className={cn(
-        "font-medium text-base line-clamp-2 text-white",
+        "font-medium text-lg line-clamp-2 text-white",
         "group-hover:text-white transition-colors duration-300"
       )}>
         {title}

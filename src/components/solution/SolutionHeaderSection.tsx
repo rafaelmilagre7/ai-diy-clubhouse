@@ -12,22 +12,22 @@ interface SolutionHeaderSectionProps {
 const getDifficultyStyles = (difficulty: string) => {
   switch (difficulty) {
     case "easy":
-      return "bg-emerald-100 text-emerald-800 border-emerald-200";
+      return "bg-neutral-800 text-emerald-400 border-emerald-900/30";
     case "medium":
-      return "bg-amber-100 text-amber-800 border-amber-200";
+      return "bg-neutral-800 text-amber-400 border-amber-900/30";
     case "advanced":
-      return "bg-rose-100 text-rose-800 border-rose-200";
+      return "bg-neutral-800 text-rose-400 border-rose-900/30";
     default:
-      return "bg-gray-100 text-gray-800 border-gray-200";
+      return "bg-neutral-800 text-gray-400 border-gray-700";
   }
 };
 
 export const SolutionHeaderSection = ({ solution }: SolutionHeaderSectionProps) => {
   // Função para obter o ícone adequado com base na categoria
   const getCategoryIcon = () => {
-    if (solution.category === 'Receita') return <TrendingUp className="h-3.5 w-3.5 mr-1.5" />;
-    if (solution.category === 'Operacional') return <Settings className="h-3.5 w-3.5 mr-1.5" />;
-    if (solution.category === 'Estratégia') return <BarChart className="h-3.5 w-3.5 mr-1.5" />;
+    if (solution.category === 'Receita') return <TrendingUp className="h-4 w-4 mr-1.5" />;
+    if (solution.category === 'Operacional') return <Settings className="h-4 w-4 mr-1.5" />;
+    if (solution.category === 'Estratégia') return <BarChart className="h-4 w-4 mr-1.5" />;
     return null;
   };
 
@@ -40,7 +40,7 @@ export const SolutionHeaderSection = ({ solution }: SolutionHeaderSectionProps) 
   };
 
   return (
-    <div className="space-y-4 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex flex-wrap items-center gap-2 mb-2">
         <Badge 
           variant="outline" 
@@ -56,7 +56,7 @@ export const SolutionHeaderSection = ({ solution }: SolutionHeaderSectionProps) 
         <Badge 
           variant="outline" 
           className={cn(
-            "px-3 py-1 rounded-full flex items-center border",
+            "px-3 py-1 rounded-full flex items-center",
             getDifficultyStyles(solution.difficulty)
           )}
         >
@@ -67,8 +67,8 @@ export const SolutionHeaderSection = ({ solution }: SolutionHeaderSectionProps) 
         
         {/* Só mostra tempo estimado se existir e for maior que zero */}
         {solution.estimated_time && solution.estimated_time > 0 && (
-          <Badge variant="outline" className="px-2 py-1 flex items-center bg-blue-50 text-blue-700 border-blue-100">
-            <Clock className="h-3.5 w-3.5 mr-1.5" />
+          <Badge variant="outline" className="px-3 py-1 flex items-center bg-neutral-800 text-blue-400 border-blue-900/30">
+            <Clock className="h-4 w-4 mr-1.5" />
             {solution.estimated_time} min
           </Badge>
         )}
@@ -79,11 +79,11 @@ export const SolutionHeaderSection = ({ solution }: SolutionHeaderSectionProps) 
       </h1>
       
       {solution.thumbnail_url && (
-        <div className="mt-6 relative overflow-hidden rounded-xl shadow-lg">
+        <div className="mt-6 relative overflow-hidden rounded-xl shadow-lg max-h-[400px]">
           <img 
             src={solution.thumbnail_url} 
             alt={solution.title} 
-            className="w-full h-60 object-cover transition-transform duration-700 hover:scale-105"
+            className="w-full object-cover transition-transform duration-700 hover:scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-60"></div>
         </div>
