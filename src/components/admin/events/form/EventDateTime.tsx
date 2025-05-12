@@ -5,6 +5,8 @@ import { UseFormReturn } from "react-hook-form";
 import type { EventFormData } from "./EventFormSchema";
 import { RecurrenceToggle } from "./recurrence/RecurrenceToggle";
 import { Info } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { extractLocalTime } from "@/utils/timezoneUtils";
 
 interface EventDateTimeProps {
   form: UseFormReturn<EventFormData>;
@@ -63,10 +65,15 @@ export const EventDateTime = ({ form }: EventDateTimeProps) => {
       ) : (
         // Campos para evento recorrente (apenas hora)
         <div>
-          <div className="flex items-center gap-2 text-muted-foreground text-xs mb-4">
-            <Info size={14} />
-            <span>Para eventos recorrentes, informe apenas o horário de início e término que será repetido em cada ocorrência</span>
-          </div>
+          <Alert variant="info" className="mb-4 bg-blue-50 text-blue-800 border-blue-200">
+            <AlertDescription className="flex items-center gap-2 text-xs">
+              <Info size={14} />
+              <span>
+                Para eventos recorrentes, informe apenas o horário de início e término que será repetido em cada ocorrência.
+                Os horários estão no fuso horário de Brasília.
+              </span>
+            </AlertDescription>
+          </Alert>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField
@@ -74,9 +81,7 @@ export const EventDateTime = ({ form }: EventDateTimeProps) => {
               name="start_time"
               render={({ field }) => {
                 // Extrair apenas o horário se o campo já tiver algum valor
-                const timeValue = field.value?.includes('T') 
-                  ? field.value.split('T')[1] 
-                  : '';
+                const timeValue = field.value ? extractLocalTime(field.value) : '';
                 
                 return (
                   <FormItem>
@@ -104,9 +109,7 @@ export const EventDateTime = ({ form }: EventDateTimeProps) => {
               name="end_time"
               render={({ field }) => {
                 // Extrair apenas o horário se o campo já tiver algum valor
-                const timeValue = field.value?.includes('T') 
-                  ? field.value.split('T')[1] 
-                  : '';
+                const timeValue = field.value ? extractLocalTime(field.value) : '';
                 
                 return (
                   <FormItem>

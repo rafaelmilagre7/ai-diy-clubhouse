@@ -15,8 +15,9 @@ import { EventCoverImage } from "./form/EventCoverImage";
 import { EventRecurrence } from "./form/EventRecurrence";
 import { EventRoleAccess } from "./form/EventRoleAccess";
 import { useEffect } from "react";
-import { addDays, addMonths, addWeeks, format, parseISO } from "date-fns";
+import { addDays, addMonths, addWeeks, format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BRASIL_TIMEZONE, createUTCDateWithLocalTime, toLocalTime, toUTCTime } from "@/utils/timezoneUtils";
 
 interface EventFormProps {
   event?: Event;
@@ -95,36 +96,33 @@ export const EventForm = ({ event, initialData, onSuccess, layout = "standard" }
   const generateRecurringEvents = async (baseEvent: EventFormData, parentEventId: string) => {
     const events: any[] = [];
     
-    // Configurar data inicial para o primeiro evento real
-    let startDate: Date;
-    const currentDate = new Date();
-    currentDate.setHours(0, 0, 0, 0); // Normalizar para início do dia
+    // Configurações de tempo
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalizar para início do dia
     
-    // Configurar horários a partir dos campos de horário
-    const startTimeParts = baseEvent.start_time.includes('T') ? 
-      baseEvent.start_time.split('T')[1].split(':') : 
-      ["00", "00", "00"];
+    // Extrair horas e minutos dos campos de horário
+    const startTimeStr = baseEvent.start_time.includes('T') ? 
+      baseEvent.start_time.split('T')[1] : "00:00";
     
-    const endTimeParts = baseEvent.end_time.includes('T') ? 
-      baseEvent.end_time.split('T')[1].split(':') : 
-      ["00", "00", "00"];
+    const endTimeStr = baseEvent.end_time.includes('T') ? 
+      baseEvent.end_time.split('T')[1] : "00:00";
     
-    const startHour = parseInt(startTimeParts[0]);
-    const startMinute = parseInt(startTimeParts[1]);
-    const endHour = parseInt(endTimeParts[0]);
-    const endMinute = parseInt(endTimeParts[1]);
+    const [startHour, startMinute] = startTimeStr.split(':').map(Number);
+    const [endHour, endMinute] = endTimeStr.split(':').map(Number);
     
     // Definir data de início com base no padrão de recorrência
+    let startDate: Date;
+    
     switch (baseEvent.recurrence_pattern) {
       case "daily":
         // Para eventos diários, começamos hoje
-        startDate = new Date(currentDate);
+        startDate = new Date(today);
         break;
       
       case "weekly":
         // Para eventos semanais, encontramos o próximo dia da semana correspondente
         const targetDay = baseEvent.recurrence_day || 1; // Segunda-feira como padrão
-        startDate = new Date(currentDate);
+        startDate = new Date(today);
         
         const currentDay = startDate.getDay(); // 0 = domingo, 1 = segunda, ...
         const daysToAdd = (targetDay - currentDay + 7) % 7;
@@ -146,17 +144,14 @@ export const EventForm = ({ event, initialData, onSuccess, layout = "standard" }
       
       case "monthly":
         // Para eventos mensais, definimos para o mesmo dia no mês atual ou próximo
-        const today = new Date();
-        const targetDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
         
         // Se já passou do dia no mês atual, vamos para o próximo mês
-        if (today.getDate() > targetDate.getDate() || 
-            (today.getDate() === targetDate.getDate() && 
+        if (today.getDate() > startDate.getDate() || 
+            (today.getDate() === startDate.getDate() && 
              (today.getHours() > startHour || 
               (today.getHours() === startHour && today.getMinutes() > startMinute)))) {
-          startDate = addMonths(targetDate, 1);
-        } else {
-          startDate = targetDate;
+          startDate = addMonths(startDate, 1);
         }
         break;
       
@@ -164,12 +159,9 @@ export const EventForm = ({ event, initialData, onSuccess, layout = "standard" }
         startDate = new Date();
     }
     
-    // Configurar horários específicos
-    startDate.setHours(startHour, startMinute, 0, 0);
-    
     // Determinar o número de eventos a criar
     let count = baseEvent.recurrence_count || 10; // padrão para 10 se não especificado
-    const endDateLimit = baseEvent.recurrence_end_date ? parseISO(baseEvent.recurrence_end_date) : null;
+    const endDateLimit = baseEvent.recurrence_end_date ? new Date(baseEvent.recurrence_end_date) : null;
     const interval = baseEvent.recurrence_interval || 1;
     
     // Função para adicionar tempo com base no padrão
@@ -182,8 +174,13 @@ export const EventForm = ({ event, initialData, onSuccess, layout = "standard" }
       }
     };
     
-    // Data inicial para a primeira instância
-    let currentStartDate = startDate;
+    // Data inicial para a primeira instância, aplicando os horários definidos
+    let currentStartDate = new Date(startDate);
+    currentStartDate.setHours(startHour, startMinute, 0, 0);
+    
+    // Converter para ISO format no timezone local. É importante que o timezone
+    // seja preservado ao criar as instâncias.
+    const currentStartLocalISODate = format(currentStartDate, "yyyy-MM-dd");
     
     // Gerar instâncias
     for (let i = 0; i < count; i++) {
@@ -192,14 +189,27 @@ export const EventForm = ({ event, initialData, onSuccess, layout = "standard" }
         break;
       }
       
-      // Calcular data de fim do evento
-      const currentEndDate = new Date(currentStartDate);
-      currentEndDate.setHours(endHour, endMinute, 0, 0);
+      // Formatar a data atual para string no formato ISO
+      const currentDateISO = format(currentStartDate, "yyyy-MM-dd");
       
-      // Se o horário de término for anterior ao horário de início, assume-se que termina no dia seguinte
-      if (endHour < startHour || (endHour === startHour && endMinute < startMinute)) {
-        currentEndDate.setDate(currentEndDate.getDate() + 1);
-      }
+      // Criar strings de data e hora formatadas para UTC antes de salvar
+      const startISO = createUTCDateWithLocalTime(
+        currentDateISO, 
+        `${String(startHour).padStart(2, '0')}:${String(startMinute).padStart(2, '0')}`
+      );
+      
+      // Calcular data de fim do evento
+      // Se o horário de término for anterior ao horário de início, 
+      // assume-se que termina no dia seguinte
+      const isNextDay = endHour < startHour || (endHour === startHour && endMinute < startMinute);
+      const endDateISO = isNextDay ? 
+        format(addDays(currentStartDate, 1), "yyyy-MM-dd") : 
+        currentDateISO;
+        
+      const endISO = createUTCDateWithLocalTime(
+        endDateISO,
+        `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`
+      );
       
       // Obter o usuário atual de forma assíncrona
       const { data: userData } = await supabase.auth.getUser();
@@ -209,14 +219,22 @@ export const EventForm = ({ event, initialData, onSuccess, layout = "standard" }
       const eventInstance = {
         title: baseEvent.title,
         description: baseEvent.description,
-        start_time: format(currentStartDate, "yyyy-MM-dd'T'HH:mm:ss"),
-        end_time: format(currentEndDate, "yyyy-MM-dd'T'HH:mm:ss"),
+        start_time: startISO,
+        end_time: endISO,
         location_link: baseEvent.location_link,
         physical_location: baseEvent.physical_location,
         cover_image_url: baseEvent.cover_image_url,
         parent_event_id: parentEventId,
         created_by: userId
       };
+      
+      console.log(`Evento recorrente ${i+1} criado:`, {
+        data: currentDateISO,
+        horário_início_local: `${startHour}:${startMinute}`,
+        horário_fim_local: `${endHour}:${endMinute}`,
+        start_time_utc: startISO,
+        end_time_utc: endISO
+      });
       
       events.push(eventInstance);
       
@@ -258,6 +276,8 @@ export const EventForm = ({ event, initialData, onSuccess, layout = "standard" }
 
   const onSubmit = async (data: EventFormData) => {
     try {
+      console.log("Dados do formulário antes de processar:", data);
+      
       // Para eventos recorrentes, normalizar as datas
       if (data.is_recurring) {
         // Para eventos recorrentes, usamos uma data fictícia apenas para validação
@@ -272,7 +292,26 @@ export const EventForm = ({ event, initialData, onSuccess, layout = "standard" }
         if (!data.end_time.includes('T')) {
           data.end_time = `${fakeDate}T${data.end_time}`;
         }
+      } else {
+        // Para eventos não recorrentes, converter do horário local para UTC
+        if (data.start_time) {
+          const startLocalDate = new Date(data.start_time);
+          const startUTCDate = toUTCTime(startLocalDate);
+          data.start_time = startUTCDate.toISOString();
+        }
+        
+        if (data.end_time) {
+          const endLocalDate = new Date(data.end_time);
+          const endUTCDate = toUTCTime(endLocalDate);
+          data.end_time = endUTCDate.toISOString();
+        }
       }
+
+      console.log("Dados do formulário após processar:", {
+        start_time: data.start_time,
+        end_time: data.end_time,
+        is_recurring: data.is_recurring
+      });
 
       if (isEditing) {
         // Atualizar evento existente
@@ -342,7 +381,7 @@ export const EventForm = ({ event, initialData, onSuccess, layout = "standard" }
             
             if (recurrenceError) {
               console.error("Erro ao criar instâncias recorrentes:", recurrenceError);
-              // Não bloquear o fluxo em caso de erro nas instâncias
+              toast.error("Ocorreu um erro ao criar algumas instâncias recorrentes");
             }
           }
         }

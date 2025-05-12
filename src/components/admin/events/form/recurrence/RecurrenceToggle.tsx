@@ -3,23 +3,29 @@ import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/for
 import { Switch } from "@/components/ui/switch";
 import { UseFormReturn } from "react-hook-form";
 import { EventFormData } from "../EventFormSchema";
+import { CalendarClock } from "lucide-react";
 
 interface RecurrenceToggleProps {
   form: UseFormReturn<EventFormData>;
 }
 
 export const RecurrenceToggle = ({ form }: RecurrenceToggleProps) => {
+  const isRecurring = form.watch("is_recurring");
+
   return (
     <FormField
       control={form.control}
       name="is_recurring"
       render={({ field }) => (
-        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-          <div className="space-y-0.5">
-            <FormLabel className="text-base">Evento Recorrente</FormLabel>
-            <p className="text-sm text-muted-foreground">
-              Ative para configurar um evento que se repete regularmente
-            </p>
+        <FormItem className={`flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm transition-all ${isRecurring ? 'bg-blue-50 border-blue-200' : ''}`}>
+          <div className="flex items-center space-x-3">
+            <CalendarClock className={`w-5 h-5 ${isRecurring ? 'text-viverblue' : 'text-muted-foreground'}`} />
+            <div className="space-y-0.5">
+              <FormLabel className="text-base">Evento Recorrente</FormLabel>
+              <p className="text-sm text-muted-foreground">
+                Ative para configurar um evento que se repete regularmente
+              </p>
+            </div>
           </div>
           <FormControl>
             <Switch

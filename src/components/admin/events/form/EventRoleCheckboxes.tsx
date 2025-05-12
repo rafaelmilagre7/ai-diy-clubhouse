@@ -5,6 +5,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { Badge } from "@/components/ui/badge";
+import { Users } from "lucide-react";
 
 interface Role {
   id: string;
@@ -70,35 +72,62 @@ export const EventRoleCheckboxes = ({ selectedRoles, onChange }: EventRoleCheckb
     return <p className="text-sm text-muted-foreground">Nenhum papel de usuário encontrado</p>;
   }
 
+  const selectedCount = selected.length;
+
   return (
-    <ScrollArea className="h-[220px] rounded-md border p-4">
-      <div className="space-y-4">
-        {roles.map((role) => (
-          <div 
-            key={role.id}
-            className="flex items-start space-x-2 rounded-md hover:bg-muted/50 p-2 transition-colors"
-          >
-            <Checkbox
-              id={`role-${role.id}`}
-              checked={selected.includes(role.id)}
-              onCheckedChange={(checked) => handleCheckedChange(checked === true, role.id)}
-            />
-            <div className="grid gap-1.5 leading-none">
-              <label
-                htmlFor={`role-${role.id}`}
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-              >
-                {role.name}
-              </label>
-              {role.description && (
-                <p className="text-xs text-muted-foreground">
-                  {role.description}
-                </p>
-              )}
-            </div>
-          </div>
-        ))}
+    <div>
+      <div className="flex items-center gap-2 mb-2">
+        {selectedCount > 0 ? (
+          <Badge className="bg-viverblue text-white">
+            <Users className="w-3 h-3 mr-1" />
+            {selectedCount} {selectedCount === 1 ? 'papel selecionado' : 'papéis selecionados'}
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="text-muted-foreground">
+            <Users className="w-3 h-3 mr-1" />
+            Nenhum papel selecionado
+          </Badge>
+        )}
       </div>
-    </ScrollArea>
+      <ScrollArea className="h-[220px] rounded-md border p-4">
+        <div className="space-y-2">
+          {roles.map((role) => {
+            const isChecked = selected.includes(role.id);
+            return (
+              <div 
+                key={role.id}
+                className={`flex items-start space-x-2 rounded-md p-2 transition-colors ${
+                  isChecked 
+                    ? "bg-blue-50 border border-blue-200" 
+                    : "hover:bg-muted/50 border border-transparent"
+                }`}
+              >
+                <Checkbox
+                  id={`role-${role.id}`}
+                  checked={isChecked}
+                  onCheckedChange={(checked) => handleCheckedChange(checked === true, role.id)}
+                  className={isChecked ? "data-[state=checked]:bg-viverblue data-[state=checked]:border-viverblue" : ""}
+                />
+                <div className="grid gap-1.5 leading-none">
+                  <label
+                    htmlFor={`role-${role.id}`}
+                    className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer ${
+                      isChecked ? "text-viverblue" : ""
+                    }`}
+                  >
+                    {role.name}
+                  </label>
+                  {role.description && (
+                    <p className="text-xs text-muted-foreground">
+                      {role.description}
+                    </p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </ScrollArea>
+    </div>
   );
 };
