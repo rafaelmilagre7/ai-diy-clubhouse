@@ -11,6 +11,7 @@ import { PermissionGuard } from "@/components/auth/PermissionGuard";
 import { RoleForm } from "@/components/admin/roles/RoleForm";
 import { RolePermissions } from "@/components/admin/roles/RolePermissions";
 import { DeleteRoleDialog } from "@/components/admin/roles/DeleteRoleDialog";
+import { RoleCourseAccess } from "@/components/admin/roles/RoleCourseAccess";
 
 export default function RolesPage() {
   // Substituindo o Helmet pelo hook useDocumentTitle
@@ -35,6 +36,9 @@ export default function RolesPage() {
 
   // Estado para controlar o diálogo de permissões
   const [permissionsDialogOpen, setPermissionsDialogOpen] = useState(false);
+  
+  // Estado para controlar o diálogo de acesso a cursos
+  const [courseAccessDialogOpen, setCourseAccessDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchRoles();
@@ -94,6 +98,10 @@ export default function RolesPage() {
               setSelectedRole(role);
               setPermissionsDialogOpen(true);
             }}
+            onManageCourseAccess={(role) => {
+              setSelectedRole(role);
+              setCourseAccessDialogOpen(true);
+            }}
             onDeleteRole={(role) => {
               setSelectedRole(role);
               setDeleteDialogOpen(true);
@@ -120,6 +128,12 @@ export default function RolesPage() {
           <RolePermissions
             open={permissionsDialogOpen}
             onOpenChange={setPermissionsDialogOpen}
+            role={selectedRole}
+          />
+          
+          <RoleCourseAccess
+            open={courseAccessDialogOpen}
+            onOpenChange={setCourseAccessDialogOpen}
             role={selectedRole}
           />
 

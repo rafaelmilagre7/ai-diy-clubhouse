@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Role } from "@/hooks/admin/useRoles";
 import { Button } from "@/components/ui/button";
-import { Edit2, Shield, Trash } from "lucide-react";
+import { Edit2, Shield, Trash, BookOpen } from "lucide-react";
 import { PermissionGuard } from "@/components/auth/PermissionGuard";
 import {
   Tooltip,
@@ -25,6 +25,7 @@ interface RolesListProps {
   onEditRole: (role: Role) => void;
   onDeleteRole?: (role: Role) => void;
   onManagePermissions?: (role: Role) => void;
+  onManageCourseAccess?: (role: Role) => void;
 }
 
 export function RolesList({
@@ -33,6 +34,7 @@ export function RolesList({
   onEditRole,
   onDeleteRole,
   onManagePermissions,
+  onManageCourseAccess,
 }: RolesListProps) {
   if (isLoading) {
     return <div className="flex justify-center py-8">Carregando papéis...</div>;
@@ -108,6 +110,25 @@ export function RolesList({
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>Gerenciar permissões</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </PermissionGuard>
+                    )}
+
+                    {onManageCourseAccess && (
+                      <PermissionGuard permission="courses.manage">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => onManageCourseAccess(role)}
+                            >
+                              <BookOpen className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Gerenciar acesso a cursos</p>
                           </TooltipContent>
                         </Tooltip>
                       </PermissionGuard>
