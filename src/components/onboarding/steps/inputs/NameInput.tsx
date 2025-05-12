@@ -21,7 +21,6 @@ export const NameInput = ({ value, onChange, disabled, readOnly }: NameInputProp
       onChange={e => onChange(e.target.value)}
       required
       placeholder="Seu nome completo"
-      className={readOnly ? "bg-gray-100" : ""}
     />
   </div>
 );

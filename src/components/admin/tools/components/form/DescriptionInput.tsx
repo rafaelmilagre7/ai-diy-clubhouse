@@ -17,7 +17,7 @@ export const DescriptionInput = ({ form }: DescriptionInputProps) => {
           <FormControl>
             <Textarea 
               placeholder="Descreva a ferramenta e suas principais funcionalidades..." 
-              className="min-h-[120px] bg-[#151823] border-white/10 text-textPrimary"
+              className="min-h-[120px]"
               {...field} 
             />
           </FormControl>

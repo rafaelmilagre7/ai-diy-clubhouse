@@ -21,10 +21,10 @@ export const WizardStepProgress = ({
   
   return (
     <TooltipProvider>
-      <div className="relative px-4 py-4 rounded-lg bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="relative px-4 py-4 rounded-lg bg-backgroundLight backdrop-blur-sm border border-white/5 shadow-md">
         <div className="relative flex items-center justify-between">
           {/* Linha de progresso base */}
-          <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-gray-100 dark:bg-gray-700 rounded-full" />
+          <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-[#1C2030] rounded-full" />
           
           {/* Linha de progresso preenchida */}
           <div 
@@ -47,7 +47,7 @@ export const WizardStepProgress = ({
                       isClickable && "cursor-pointer hover:scale-110",
                       isComplete ? "bg-green-500 text-white shadow-sm" : 
                       isActive ? "bg-[#0ABAB5] text-white ring-4 ring-[#0ABAB5]/20 shadow-lg scale-110" : 
-                      "bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 text-gray-400"
+                      "bg-[#1C2030] border-2 border-[#2A2D3A] text-textSecondary"
                     )}
                     onClick={isClickable ? () => onStepClick(step) : undefined}
                   >
@@ -80,9 +80,9 @@ export const WizardStepProgress = ({
                 key={step}
                 className={cn(
                   "text-xs px-2 py-1 rounded",
-                  isComplete ? "text-green-600 dark:text-green-400" :
+                  isComplete ? "text-green-400" :
                   isActive ? "text-[#0ABAB5] font-medium" :
-                  "text-gray-500 dark:text-gray-400"
+                  "text-textSecondary"
                 )}
               >
                 {step}. {stepTitles[step - 1]}

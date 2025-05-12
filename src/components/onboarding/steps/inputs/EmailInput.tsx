@@ -21,7 +21,6 @@ export const EmailInput = ({ value, onChange, disabled, readOnly }: EmailInputPr
       onChange={e => onChange(e.target.value)}
       required
       placeholder="exemplo@dominio.com"
-      className={readOnly ? "bg-gray-100" : ""}
     />
   </div>
 );
