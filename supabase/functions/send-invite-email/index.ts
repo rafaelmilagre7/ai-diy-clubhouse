@@ -432,7 +432,10 @@ Deno.serve(async (req) => {
       try {
         console.log('Enviando email via Resend');
         
-        const fromEmail = "VIVER DE IA Club <no-reply@viverdeia.ai>";
+        // Modificar o endereço de email para usar o domínio verificado
+        const fromEmail = "VIVER DE IA Club <no-reply@inteligenciapraviver.com>";
+        
+        console.log('Usando endereço de remetente:', fromEmail);
         
         const emailResponse = await resend.emails.send({
           from: fromEmail,
@@ -440,7 +443,7 @@ Deno.serve(async (req) => {
           subject: `Convite para o VIVER DE IA Club - Acesso como ${roleName || 'membro'}`,
           html: emailHtml,
           text: `Você foi convidado para o VIVER DE IA Club como ${roleName || 'membro'}. Acesse o link para aceitar: ${inviteUrl}`,
-          reply_to: "no-reply@viverdeia.ai"
+          reply_to: "no-reply@inteligenciapraviver.com" // Também modificado para usar o domínio verificado
         });
         
         console.log('Resposta do Resend:', emailResponse);
@@ -451,6 +454,13 @@ Deno.serve(async (req) => {
         };
       } catch (error) {
         console.error('Erro durante envio de email com Resend:', error);
+        // Melhorar o log para capturar mais detalhes sobre erros específicos do Resend
+        if (error.response) {
+          console.error('Detalhes da resposta de erro:', {
+            status: error.response.status,
+            data: error.response.data
+          });
+        }
         throw error;
       }
     };
@@ -490,7 +500,8 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         message: 'Email de convite enviado com sucesso',
-        emailId: emailResponse?.messageId || null
+        emailId: emailResponse?.messageId || null,
+        fromEmail: "no-reply@inteligenciapraviver.com" // Adicionar para diagnóstico
       }),
       { 
         headers: {
