@@ -73,8 +73,19 @@ export const useRealtimeComments = (
       });
     
     const invalidateComments = () => {
+      // Invalidar tanto a chave antiga quanto a nova para garantir compatibilidade
       queryClient.invalidateQueries({ 
         queryKey: ['solution-comments', solutionId, moduleId] 
+      });
+      
+      // Invalidar também a chave usada em useCommentsData
+      queryClient.invalidateQueries({ 
+        queryKey: ['solution-comments', solutionId, 'all'] 
+      });
+      
+      // E a chave antiga para garantir compatibilidade
+      queryClient.invalidateQueries({ 
+        queryKey: ['tool-comments', solutionId] 
       });
     };
     
