@@ -9,6 +9,7 @@ import { useInviteEmailService } from './useInviteEmailService';
 export function useInviteCreate() {
   const { user } = useAuth();
   const [isCreating, setIsCreating] = useState(false);
+  const [createError, setCreateError] = useState<Error | null>(null);
   const { 
     sendInviteEmail, 
     getInviteLink, 
@@ -22,6 +23,7 @@ export function useInviteCreate() {
     
     try {
       setIsCreating(true);
+      setCreateError(null);
       
       // Validar email básico (simples mas evita erros óbvios)
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -65,7 +67,7 @@ export function useInviteCreate() {
         .from('user_roles')
         .select('name')
         .eq('id', roleId)
-        .single();
+        .maybeSingle(); // Usando maybeSingle() em vez de single() para evitar erro se não encontrar
 
       const sendResult = await sendInviteEmail({
         email,
@@ -99,6 +101,7 @@ export function useInviteCreate() {
       };
     } catch (err: any) {
       console.error('Erro ao criar convite:', err);
+      setCreateError(err);
       toast.error('Erro ao criar convite', {
         description: err.message || 'Não foi possível criar o convite.'
       });
@@ -111,6 +114,8 @@ export function useInviteCreate() {
   return {
     isCreating,
     createInvite,
-    pendingEmails
+    pendingEmails,
+    createError,
+    retryAllPendingEmails
   };
 }

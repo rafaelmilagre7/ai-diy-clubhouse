@@ -22,4 +22,5 @@ export interface SendInviteResponse {
   success: boolean;
   message: string;
   error?: string;
+  emailId?: string; // Adicionando emailId como propriedade opcional
 }

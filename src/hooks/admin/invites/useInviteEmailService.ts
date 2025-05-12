@@ -114,7 +114,11 @@ export function useInviteEmailService() {
         }
         
         setSendError(error);
-        throw error;
+        return {
+          success: false,
+          message: 'Erro ao enviar e-mail de convite',
+          error: error.message || 'Falha na conexão com o servidor'
+        };
       }
       
       console.log("Resposta da edge function:", data);
@@ -138,6 +142,26 @@ export function useInviteEmailService() {
     } catch (err: any) {
       console.error('Erro ao enviar email de convite:', err);
       setSendError(err);
+      
+      // Se for um erro de timeout ou conexão, também adicionar à fila de retentativas
+      if (retryCount < 3 && (err.message?.includes('Tempo limite') || err.message?.includes('conexão'))) {
+        const retryParams = {
+          email,
+          inviteUrl,
+          roleName,
+          expiresAt,
+          senderName,
+          notes,
+          inviteId,
+          retryCount: retryCount + 1
+        };
+        
+        setEmailQueue(prev => [...prev, retryParams]);
+        
+        setTimeout(() => {
+          sendInviteEmail(retryParams);
+        }, Math.pow(2, retryCount) * 5000);
+      }
       
       return {
         success: false,

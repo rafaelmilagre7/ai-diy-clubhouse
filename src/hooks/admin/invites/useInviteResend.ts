@@ -7,12 +7,14 @@ import { useInviteEmailService } from './useInviteEmailService';
 
 export function useInviteResend() {
   const [isSending, setIsSending] = useState(false);
+  const [resendError, setResendError] = useState<Error | null>(null);
   const { sendInviteEmail, getInviteLink } = useInviteEmailService();
 
   // Reenviar convite
   const resendInvite = useCallback(async (invite: Invite) => {
     try {
       setIsSending(true);
+      setResendError(null);
       
       // Verificar se o convite ainda é válido
       if (invite.used_at) {
@@ -34,7 +36,7 @@ export function useInviteResend() {
         .from('user_roles')
         .select('name')
         .eq('id', invite.role_id)
-        .single();
+        .maybeSingle(); // Usando maybeSingle() em vez de single()
         
       // Validar o token antes de gerar o link
       if (!invite.token || invite.token.length < 6) {
@@ -60,6 +62,16 @@ export function useInviteResend() {
       });
       
       if (sendResult.success) {
+        // Atualizar contadores de envio no banco de dados - separado do envio de email
+        try {
+          await supabase.rpc('update_invite_send_stats', {
+            p_invite_id: invite.id
+          });
+        } catch (statsError) {
+          console.error("Erro ao atualizar estatísticas de envio:", statsError);
+          // Não falhar o processo por causa disso
+        }
+        
         toast.success('Convite reenviado com sucesso', {
           description: `Um novo e-mail foi enviado para ${invite.email}.`
         });
@@ -81,6 +93,7 @@ export function useInviteResend() {
       };
     } catch (err: any) {
       console.error('Erro ao reenviar convite:', err);
+      setResendError(err);
       toast.error('Erro ao reenviar convite', {
         description: err.message || 'Não foi possível reenviar o convite.'
       });
@@ -92,6 +105,7 @@ export function useInviteResend() {
 
   return {
     isSending,
-    resendInvite
+    resendInvite,
+    resendError
   };
 }
