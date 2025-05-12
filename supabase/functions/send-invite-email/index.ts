@@ -1,8 +1,8 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
-import { Resend } from 'https://esm.sh/resend@3.1.0'
 import { format, addDays } from 'https://esm.sh/date-fns@3.6.0'
 import { ptBR } from 'https://esm.sh/date-fns@3.6.0/locale/pt-BR'
+import * as nodemailer from 'https://esm.sh/nodemailer@6.9.10'
 
 // Configuração de CORS
 const corsHeaders = {
@@ -21,15 +21,32 @@ Deno.serve(async (req) => {
     // Obter segredos da configuração
     const supabaseUrl = Deno.env.get('PROJECT_URL')
     const supabaseServiceKey = Deno.env.get('PRIVATE_SERVICE_ROLE_KEY')
-    const resendApiKey = Deno.env.get('RESEND_API_KEY')
+    const smtpHost = Deno.env.get('SMTP_HOST') || 'smtp.hostinger.com'
+    const smtpPort = parseInt(Deno.env.get('SMTP_PORT') || '465')
+    const smtpUser = Deno.env.get('SMTP_USER') || 'no-reply@viverdeia.ai'
+    const smtpPass = Deno.env.get('SMTP_PASS')
     
-    if (!supabaseUrl || !supabaseServiceKey || !resendApiKey) {
-      throw new Error('Configuração de ambiente incompleta')
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Configuração de ambiente Supabase incompleta')
+    }
+    
+    if (!smtpHost || !smtpPort || !smtpUser || !smtpPass) {
+      throw new Error('Configuração de SMTP incompleta')
     }
     
     // Inicializar clientes
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
-    const resend = new Resend(resendApiKey)
+    
+    // Configurar transportador SMTP
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpPort === 465, // true para porta 465, false para outras portas
+      auth: {
+        user: smtpUser,
+        pass: smtpPass
+      }
+    })
     
     // Obter dados do corpo da requisição
     const requestData = await req.json()
@@ -398,14 +415,19 @@ Deno.serve(async (req) => {
       </html>
     `
     
-    // Enviar o email via Resend
+    // Enviar o email via Nodemailer
     console.log('Enviando email para:', email)
-    const emailResponse = await resend.emails.send({
-      from: 'Viver de IA Club <convites@viverdeia.ai>',
+    
+    // Configurar opções do email
+    const mailOptions = {
+      from: `"VIVER DE IA Club" <${smtpUser}>`,
       to: email,
       subject: `Convite para o VIVER DE IA Club - Acesso como ${roleName || 'membro'}`,
       html: emailHtml,
-    })
+    }
+    
+    // Enviar o email
+    const emailResponse = await transporter.sendMail(mailOptions)
     
     console.log('Resposta do envio:', emailResponse)
     
@@ -422,7 +444,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         message: 'Email de convite enviado com sucesso',
-        emailId: emailResponse?.id || null
+        emailId: emailResponse?.messageId || null
       }),
       { 
         headers: {
@@ -451,3 +473,4 @@ Deno.serve(async (req) => {
     )
   }
 })
+
