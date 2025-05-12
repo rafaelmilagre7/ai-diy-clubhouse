@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useEffect } from "react";
 import { format } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { InfoCircle } from "lucide-react";
+import { Info } from "lucide-react";
 
 interface EventRecurrenceProps {
   form: UseFormReturn<EventFormData>;
@@ -108,7 +108,7 @@ export const EventRecurrence = ({ form }: EventRecurrenceProps) => {
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger type="button" asChild>
-                          <InfoCircle className="h-4 w-4 text-muted-foreground" />
+                          <Info className="h-4 w-4 text-muted-foreground" />
                         </TooltipTrigger>
                         <TooltipContent>
                           {pattern === "daily" && "A cada quantos dias"}
