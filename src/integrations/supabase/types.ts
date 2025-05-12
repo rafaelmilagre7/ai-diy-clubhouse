@@ -3200,6 +3200,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      sync_profile_roles: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       update_invite_send_attempt: {
         Args: { invite_id: string }
         Returns: undefined

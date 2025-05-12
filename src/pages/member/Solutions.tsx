@@ -4,12 +4,15 @@ import { useSolutionsData } from '@/hooks/useSolutionsData';
 import { SolutionCard } from '@/components/solution/SolutionCard';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, ShieldAlert } from 'lucide-react';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { Solution } from '@/lib/supabase';
 import { useToolsData } from '@/hooks/useToolsData';
 import { useLogging } from '@/contexts/logging';
 import { useDocumentTitle } from '@/hooks/use-document-title';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 const Solutions = () => {
   // Definir título da página
@@ -27,14 +30,16 @@ const Solutions = () => {
     searchQuery, 
     setSearchQuery,
     activeCategory,
-    setActiveCategory
+    setActiveCategory,
+    canViewSolutions
   } = useSolutionsData();
 
   // Log data for debugging
   log("Solutions page loaded", { 
     solutionsCount: filteredSolutions?.length || 0, 
     activeCategory,
-    isLoading: loading || toolsDataLoading
+    isLoading: loading || toolsDataLoading,
+    canViewSolutions
   });
 
   const categories = [
@@ -43,6 +48,33 @@ const Solutions = () => {
     { id: 'operational', name: 'Operacional' },
     { id: 'strategy', name: 'Estratégia' }
   ];
+
+  // Se o usuário não tem permissão para ver soluções, mostrar mensagem
+  if (!canViewSolutions) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Soluções</h1>
+            <p className="text-muted-foreground mt-1">
+              Explore as soluções disponíveis e comece a implementá-las em seu negócio
+            </p>
+          </div>
+        </div>
+
+        <Alert variant="destructive" className="my-8">
+          <ShieldAlert className="h-5 w-5" />
+          <AlertTitle>Acesso restrito</AlertTitle>
+          <AlertDescription>
+            <p className="mb-4">Você não tem permissão para acessar as soluções. Entre em contato com o administrador para solicitar acesso.</p>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/dashboard">Voltar para o Dashboard</Link>
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   // Se estiver carregando as soluções, mostrar tela de carregamento
   // Mas não bloquear se apenas as ferramentas estiverem carregando

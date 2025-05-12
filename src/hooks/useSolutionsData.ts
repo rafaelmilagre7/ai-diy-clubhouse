@@ -4,22 +4,32 @@ import { supabase } from '@/lib/supabase';
 import { Solution } from '@/lib/supabase';
 import { useToast } from '@/components/ui/use-toast';
 import { useQuery } from '@tanstack/react-query';
+import { usePermissions } from '@/hooks/auth/usePermissions';
 
 // Otimização: Usar React Query para cache e gerenciamento de estado
 export function useSolutionsData(initialCategory: string | null = 'all') {
   const { toast } = useToast();
+  const { hasPermission } = usePermissions();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState(initialCategory || 'all');
 
+  // Verificar se o usuário tem permissão para visualizar soluções
+  const canViewSolutions = hasPermission('solutions.view');
+
   // Implementar função de fetching separadamente para melhor controle
   const fetchSolutions = useCallback(async () => {
+    if (!canViewSolutions) {
+      console.log('Usuário não tem permissão para visualizar soluções');
+      return [];
+    }
+
     try {
       console.log('Fetching solutions from database...');
       const { data, error } = await supabase
         .from('solutions')
         .select('*')
         .eq('published', true)
-        .order('created_at', { ascending: false }); // Mudado de 'priority' para 'created_at'
+        .order('created_at', { ascending: false });
       
       if (error) throw error;
       
@@ -33,14 +43,15 @@ export function useSolutionsData(initialCategory: string | null = 'all') {
       });
       return [];
     }
-  }, [toast]);
+  }, [toast, canViewSolutions]);
 
   // Usar React Query para cache e refetch
   const { data: solutions = [], isLoading, error } = useQuery({
-    queryKey: ['solutions'],
+    queryKey: ['solutions', canViewSolutions],
     queryFn: fetchSolutions,
     staleTime: 5 * 60 * 1000, // 5 minutos de cache
     refetchOnWindowFocus: false, // Não refetch ao focar a janela
+    enabled: canViewSolutions, // Só executa a query se o usuário tiver permissão
   });
 
   // Filtrar soluções por categoria e pesquisa
@@ -75,6 +86,7 @@ export function useSolutionsData(initialCategory: string | null = 'all') {
     searchQuery,
     setSearchQuery,
     activeCategory,
-    setActiveCategory
+    setActiveCategory,
+    canViewSolutions
   };
 }
