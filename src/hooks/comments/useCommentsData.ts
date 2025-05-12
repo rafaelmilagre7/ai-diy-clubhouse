@@ -14,7 +14,7 @@ export const useCommentsData = (toolId: string) => {
     error,
     refetch
   } = useQuery({
-    // Usando a mesma chave que o useRealtimeComments para garantir sincronização
+    // Usando uma chave padrão que será referenciada em outros lugares
     queryKey: ['solution-comments', toolId, 'all'],
     queryFn: async () => {
       if (!toolId) return [];
@@ -27,7 +27,7 @@ export const useCommentsData = (toolId: string) => {
           .from('tool_comments')
           .select(`
             *,
-            profiles:user_id(name, avatar_url, role)
+            profiles:user_id(id, name, avatar_url, role)
           `)
           .eq('tool_id', toolId)
           .is('parent_id', null)
@@ -43,7 +43,7 @@ export const useCommentsData = (toolId: string) => {
           .from('tool_comments')
           .select(`
             *,
-            profiles:user_id(name, avatar_url, role)
+            profiles:user_id(id, name, avatar_url, role)
           `)
           .eq('tool_id', toolId)
           .not('parent_id', 'is', null)
@@ -70,19 +70,35 @@ export const useCommentsData = (toolId: string) => {
           }, {});
         }
 
-        // Organizar respostas dentro dos comentários principais
-        const organizedComments = parentComments.map((parentComment: Comment) => ({
+        // Log para diagnóstico
+        log('Dados brutos dos comentários:', { 
+          parentCount: parentComments?.length || 0,
+          repliesCount: replies?.length || 0,
+          firstParentComment: parentComments?.length > 0 ? {
+            id: parentComments[0].id,
+            content: parentComments[0].content,
+            hasProfile: !!parentComments[0].profiles,
+            profileData: parentComments[0].profiles
+          } : 'Nenhum comentário'
+        });
+
+        // Organizar respostas dentro dos comentários principais com verificação de segurança
+        const organizedComments = (parentComments || []).map((parentComment: Comment) => ({
           ...parentComment,
           user_has_liked: !!likesMap[parentComment.id],
-          replies: replies.filter(
-            (reply: Comment) => reply.parent_id === parentComment.id
-          ).map((reply: Comment) => ({
-            ...reply,
-            user_has_liked: !!likesMap[reply.id]
-          }))
+          replies: (replies || [])
+            .filter((reply: Comment) => reply.parent_id === parentComment.id)
+            .map((reply: Comment) => ({
+              ...reply,
+              user_has_liked: !!likesMap[reply.id]
+            }))
         }));
 
-        log('Comentários carregados com sucesso', { count: organizedComments.length });
+        log('Comentários organizados e processados:', { 
+          count: organizedComments.length,
+          firstCommentHasProfiles: organizedComments.length > 0 ? !!organizedComments[0].profiles : false
+        });
+        
         return organizedComments;
       } catch (error) {
         logError('Erro ao buscar comentários', error);

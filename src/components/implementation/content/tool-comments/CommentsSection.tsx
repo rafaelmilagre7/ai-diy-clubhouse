@@ -22,6 +22,7 @@ export const CommentsSection = ({ solutionId, moduleId }: CommentsSectionProps) 
   const {
     comments,
     isLoading,
+    error,
     comment,
     setComment,
     replyTo,
@@ -30,7 +31,8 @@ export const CommentsSection = ({ solutionId, moduleId }: CommentsSectionProps) 
     startReply,
     cancelReply,
     likeComment,
-    deleteComment
+    deleteComment,
+    refreshTrigger
   } = useToolComments(toolId);
   
   // Ativar comentários em tempo real
@@ -45,9 +47,12 @@ export const CommentsSection = ({ solutionId, moduleId }: CommentsSectionProps) 
       solutionId, 
       moduleId,
       commentsCount: safeComments.length,
-      loadingState: isLoading ? 'carregando' : 'concluído'
+      loadingState: isLoading ? 'carregando' : 'concluído',
+      refreshTrigger
     });
-  }, [solutionId, moduleId, safeComments.length, isLoading, log]);
+    
+    // Adicionamos o refreshTrigger na dependência para relogar quando for atualizado
+  }, [solutionId, moduleId, safeComments.length, isLoading, refreshTrigger, log]);
 
   // Adaptar as funções para passar diretamente o objeto de comentário
   const handleLikeComment = (comment: Comment) => {
@@ -81,6 +86,7 @@ export const CommentsSection = ({ solutionId, moduleId }: CommentsSectionProps) 
       <CommentList
         comments={safeComments}
         isLoading={isLoading}
+        error={error as Error | null}
         onReply={startReply}
         onLike={handleLikeComment}
         onDelete={handleDeleteComment}

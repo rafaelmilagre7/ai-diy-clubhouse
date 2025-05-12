@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { AlertTriangle, MessageSquare } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useLogging } from '@/hooks/useLogging';
 
 interface CommentListProps {
   comments: Comment[];
@@ -24,6 +25,28 @@ export const CommentList = ({
   onLike,
   onDelete
 }: CommentListProps) => {
+  const { log } = useLogging();
+  
+  // Garantir comentários válidos com verificação adicional
+  const safeComments = Array.isArray(comments) ? comments : [];
+  
+  // Log para diagnóstico
+  React.useEffect(() => {
+    if (safeComments.length > 0) {
+      log('Renderizando comentários:', { 
+        totalCount: safeComments.length,
+        firstCommentHasProfile: !!safeComments[0]?.profiles,
+        profileData: safeComments[0]?.profiles,
+        commentIds: safeComments.map(c => c.id).slice(0, 3)
+      });
+    } else if (!isLoading) {
+      log('Nenhum comentário para renderizar', { 
+        commentsArray: safeComments, 
+        isArray: Array.isArray(comments) 
+      });
+    }
+  }, [safeComments, isLoading, log]);
+
   if (error) {
     return (
       <Alert variant="destructive" className="bg-red-950/50 border-red-800/50">
@@ -57,7 +80,7 @@ export const CommentList = ({
     );
   }
 
-  if (comments.length === 0) {
+  if (safeComments.length === 0) {
     return (
       <Card className="p-8 text-center border-dashed border-2 border-viverblue/20 bg-viverblue/5">
         <MessageSquare className="h-12 w-12 mx-auto text-viverblue/40 mb-4" />
@@ -70,7 +93,7 @@ export const CommentList = ({
 
   return (
     <div className="space-y-6">
-      {comments.map(comment => (
+      {safeComments.map(comment => (
         <CommentItem 
           key={comment.id} 
           comment={comment} 
