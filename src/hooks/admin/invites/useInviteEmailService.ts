@@ -101,7 +101,7 @@ export function useInviteEmailService() {
     }
     
     // Limpar o token de espaços e normalizar
-    const cleanToken = token.trim().replace(/[\s\n\r\t]+/g, '');
+    const cleanToken = token.trim().replace(/[\\s\\n\\r\\t]+/g, '');
     
     console.log("Gerando link de convite para token:", {
       original: token,

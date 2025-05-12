@@ -2,6 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { format } from "https://deno.land/std@0.168.0/datetime/mod.ts";
+import nodemailer from "nodemailer";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,7 +17,7 @@ interface EmailRequest {
   senderName?: string;
   notes?: string;
   inviteId?: string;
-  userType?: 'new_user' | 'existing_user'; // Novo ou existente
+  userType?: 'new_user' | 'existing_user';
 }
 
 serve(async (req) => {
@@ -181,28 +182,40 @@ serve(async (req) => {
       </html>
     `;
 
-    // Configuração para o envio de email via Resend
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    if (!resendApiKey) {
-      throw new Error("RESEND_API_KEY não configurada");
+    // Configuração do transporte SMTP usando Nodemailer
+    const smtpHost = Deno.env.get("SMTP_HOST");
+    const smtpPort = Deno.env.get("SMTP_PORT");
+    const smtpUser = Deno.env.get("SMTP_USER");
+    const smtpPass = Deno.env.get("SMTP_PASS");
+    
+    if (!smtpHost || !smtpPort || !smtpUser || !smtpPass) {
+      throw new Error("Configurações SMTP incompletas. Verifique as variáveis de ambiente.");
     }
-
-    // Enviar email usando o Resend
-    const resendResponse = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${resendApiKey}`,
-      },
-      body: JSON.stringify({
-        from: "VIVER DE IA Club <contato@viverdeia.ai>",
-        to: [email],
-        subject: titleMessage,
-        html: htmlContent,
-      }),
+    
+    console.log("Configurando SMTP com host:", smtpHost);
+    
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: parseInt(smtpPort),
+      secure: parseInt(smtpPort) === 465, // true para porta 465, false para outras portas
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      }
     });
-
-    const resendData = await resendResponse.json();
+    
+    // Enviar email usando Nodemailer
+    const mailOptions = {
+      from: `"VIVER DE IA Club" <${smtpUser}>`,
+      to: email,
+      subject: titleMessage,
+      html: htmlContent,
+    };
+    
+    console.log("Enviando email para:", email);
+    
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Email enviado:", info);
 
     // Registrar tentativa de envio no banco de dados
     if (inviteId) {
@@ -216,21 +229,17 @@ serve(async (req) => {
     }
 
     // Retornar resultado
-    if (resendResponse.ok) {
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: "Email enviado com sucesso",
-          id: resendData.id,
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        }
-      );
-    } else {
-      throw new Error(`Falha no envio de email: ${JSON.stringify(resendData)}`);
-    }
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: "Email enviado com sucesso",
+        id: info.messageId,
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      }
+    );
   } catch (error) {
     console.error("Erro ao processar solicitação:", error);
     return new Response(
