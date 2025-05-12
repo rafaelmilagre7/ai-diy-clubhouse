@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useSolutionsData } from '@/hooks/useSolutionsData';
 import { SolutionCard } from '@/components/solution/SolutionCard';
@@ -45,9 +44,9 @@ const Solutions = () => {
   // Atualizado para usar nomes de categorias em português
   const categories = [
     { id: 'all', name: 'Todas' },
-    { id: 'revenue', name: 'Receita' },
-    { id: 'operational', name: 'Operacional' },
-    { id: 'strategy', name: 'Estratégia' }
+    { id: 'Receita', name: 'Receita' },
+    { id: 'Operacional', name: 'Operacional' },
+    { id: 'Estratégia', name: 'Estratégia' }
   ];
 
   // Se o usuário não tem permissão para ver soluções, mostrar mensagem

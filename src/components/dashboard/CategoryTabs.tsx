@@ -12,9 +12,9 @@ export const CategoryTabs = ({ activeCategory, setActiveCategory }: CategoryTabs
   // Mantemos as chaves antigas para IDs para compatibilidade com o resto do sistema
   const categories = [
     { id: "all", name: "Todas" },
-    { id: "revenue", name: "Receita" },
-    { id: "operational", name: "Otimização Operacional" },
-    { id: "strategic", name: "Gestão Estratégica" }
+    { id: "Receita", name: "Receita" },
+    { id: "Operacional", name: "Otimização Operacional" },
+    { id: "Estratégia", name: "Gestão Estratégica" }
   ];
 
   return (

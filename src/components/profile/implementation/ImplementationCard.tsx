@@ -27,13 +27,13 @@ export const ImplementationCard = ({ implementation }: ImplementationCardProps) 
             </Link>
             <div className="flex items-center gap-2 mt-1">
               <Badge variant="outline" className={cn(
-                implementation.solution.category === "revenue" && "bg-revenue/10 text-revenue border-revenue/30",
-                implementation.solution.category === "operational" && "bg-operational/10 text-operational border-operational/30",
-                implementation.solution.category === "strategy" && "bg-strategy/10 text-strategy border-strategy/30"
+                implementation.solution.category === "Receita" && "bg-revenue/10 text-revenue border-revenue/30",
+                implementation.solution.category === "Operacional" && "bg-operational/10 text-operational border-operational/30",
+                implementation.solution.category === "Estratégia" && "bg-strategy/10 text-strategy border-strategy/30"
               )}>
-                {implementation.solution.category === "revenue" && "Receita"}
-                {implementation.solution.category === "operational" && "Operacional"}
-                {implementation.solution.category === "strategy" && "Estratégia"}
+                {implementation.solution.category === "Receita" && "Receita"}
+                {implementation.solution.category === "Operacional" && "Operacional"}
+                {implementation.solution.category === "Estratégia" && "Estratégia"}
               </Badge>
               <Badge variant="outline" className="bg-gray-100">
                 {implementation.solution.difficulty === "easy" && "Fácil"}

@@ -22,21 +22,21 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
       className={cn("flex flex-col space-y-2", className)}
     >
       <div className="flex items-center space-x-2">
-        <RadioGroupItem value="revenue" id="category-revenue" />
+        <RadioGroupItem value="Receita" id="category-revenue" />
         <Label htmlFor="category-revenue" className="text-sm cursor-pointer">
           Aumento de Receita
         </Label>
       </div>
       
       <div className="flex items-center space-x-2">
-        <RadioGroupItem value="operational" id="category-operational" />
+        <RadioGroupItem value="Operacional" id="category-operational" />
         <Label htmlFor="category-operational" className="text-sm cursor-pointer">
           Otimização Operacional
         </Label>
       </div>
       
       <div className="flex items-center space-x-2">
-        <RadioGroupItem value="strategy" id="category-strategy" />
+        <RadioGroupItem value="Estratégia" id="category-strategy" />
         <Label htmlFor="category-strategy" className="text-sm cursor-pointer">
           Gestão Estratégica
         </Label>

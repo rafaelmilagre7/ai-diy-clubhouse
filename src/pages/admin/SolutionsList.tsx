@@ -42,14 +42,18 @@ import { SolutionCategory, categoryMapping } from "@/lib/types/categoryTypes";
 
 const categoryLabel = (category: string) => {
   switch (category) {
-    case "revenue":
     case "Receita":
       return "Receita";
-    case "operational":
     case "Operacional":
       return "Operacional";
-    case "strategy":
     case "Estratégia":
+      return "Estratégia";
+    // Compatibilidade com valores antigos (caso ainda existam no sistema)
+    case "revenue":
+      return "Receita";
+    case "operational":
+      return "Operacional";
+    case "strategy":
       return "Estratégia";
     default:
       return category;
@@ -361,9 +365,9 @@ const SolutionsList = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todas categorias</SelectItem>
-                    <SelectItem value="revenue">Receita</SelectItem>
-                    <SelectItem value="operational">Operacional</SelectItem>
-                    <SelectItem value="strategy">Estratégia</SelectItem>
+                    <SelectItem value="Receita">Receita</SelectItem>
+                    <SelectItem value="Operacional">Operacional</SelectItem>
+                    <SelectItem value="Estratégia">Estratégia</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

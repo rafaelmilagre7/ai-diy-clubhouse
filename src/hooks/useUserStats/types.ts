@@ -1,5 +1,5 @@
 
-export type SolutionCategory = "revenue" | "operational" | "strategy";
+export type SolutionCategory = "Receita" | "Operacional" | "Estratégia";
 
 export interface CategoryCount {
   total: number;
@@ -7,9 +7,9 @@ export interface CategoryCount {
 }
 
 export interface CategoryDistribution {
-  revenue: CategoryCount;
-  operational: CategoryCount;
-  strategy: CategoryCount;
+  Receita: CategoryCount;
+  Operacional: CategoryCount;
+  Estratégia: CategoryCount;
 }
 
 export interface UserStats {

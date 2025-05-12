@@ -8,7 +8,7 @@ export const solutionFormSchema = z.object({
   description: z.string().min(10, {
     message: "A descrição deve ter pelo menos 10 caracteres.",
   }),
-  category: z.enum(["revenue", "operational", "strategy"], {
+  category: z.enum(["Receita", "Operacional", "Estratégia"], {
     required_error: "Por favor, selecione uma categoria.",
   }),
   difficulty: z.enum(["easy", "medium", "advanced"], {

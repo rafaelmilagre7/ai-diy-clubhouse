@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Checkbox } from "@/components/ui/checkbox";
@@ -13,15 +12,15 @@ import { useOnboarding } from '@/hooks/onboarding/useOnboarding';
 
 // Lista de objetivos para exibir
 const businessGoals = [
-  { id: 'vendas', title: 'Aumentar vendas', category: 'revenue' },
-  { id: 'leads', title: 'Gerar mais leads', category: 'revenue' },
-  { id: 'marketing', title: 'Otimizar marketing', category: 'revenue' },
-  { id: 'automacao', title: 'Automatizar processos', category: 'operational' },
-  { id: 'atendimento', title: 'Melhorar atendimento', category: 'operational' },
-  { id: 'processos', title: 'Aprimorar processos', category: 'operational' },
-  { id: 'decisoes', title: 'Melhorar decisões', category: 'strategy' },
-  { id: 'escala', title: 'Escalar operações', category: 'strategy' },
-  { id: 'inovacao', title: 'Criar novas soluções', category: 'strategy' }
+  { id: 'vendas', title: 'Aumentar vendas', category: 'Receita' },
+  { id: 'leads', title: 'Gerar mais leads', category: 'Receita' },
+  { id: 'marketing', title: 'Otimizar marketing', category: 'Receita' },
+  { id: 'automacao', title: 'Automatizar processos', category: 'Operacional' },
+  { id: 'atendimento', title: 'Melhorar atendimento', category: 'Operacional' },
+  { id: 'processos', title: 'Aprimorar processos', category: 'Operacional' },
+  { id: 'decisoes', title: 'Melhorar decisões', category: 'Estratégia' },
+  { id: 'escala', title: 'Escalar operações', category: 'Estratégia' },
+  { id: 'inovacao', title: 'Criar novas soluções', category: 'Estratégia' }
 ];
 
 // Interface para a propriedade de dados
@@ -44,9 +43,9 @@ const ExpectativasObjetivosStep = React.memo(({ onUpdateData, data }: Expectativ
   // Usar useMemo para filtragem por categoria
   const goalsByCategory = useMemo(() => {
     const grouped = {
-      revenue: businessGoals.filter((goal) => goal.category === 'revenue'),
-      operational: businessGoals.filter((goal) => goal.category === 'operational'),
-      strategy: businessGoals.filter((goal) => goal.category === 'strategy')
+      Receita: businessGoals.filter((goal) => goal.category === 'Receita'),
+      Operacional: businessGoals.filter((goal) => goal.category === 'Operacional'),
+      Estratégia: businessGoals.filter((goal) => goal.category === 'Estratégia')
     };
     return grouped;
   }, []);
@@ -113,7 +112,7 @@ const ExpectativasObjetivosStep = React.memo(({ onUpdateData, data }: Expectativ
             </div>
             <Separator className="mb-4" />
             <div className="space-y-3">
-              {goalsByCategory.revenue.map((goal) => (
+              {goalsByCategory.Receita.map((goal) => (
                 <div key={goal.id} className="flex items-start space-x-2">
                   <Checkbox 
                     id={goal.id}
@@ -144,7 +143,7 @@ const ExpectativasObjetivosStep = React.memo(({ onUpdateData, data }: Expectativ
             </div>
             <Separator className="mb-4" />
             <div className="space-y-3">
-              {goalsByCategory.operational.map((goal) => (
+              {goalsByCategory.Operacional.map((goal) => (
                 <div key={goal.id} className="flex items-start space-x-2">
                   <Checkbox 
                     id={goal.id}
@@ -175,7 +174,7 @@ const ExpectativasObjetivosStep = React.memo(({ onUpdateData, data }: Expectativ
             </div>
             <Separator className="mb-4" />
             <div className="space-y-3">
-              {goalsByCategory.strategy.map((goal) => (
+              {goalsByCategory.Estratégia.map((goal) => (
                 <div key={goal.id} className="flex items-start space-x-2">
                   <Checkbox 
                     id={goal.id}

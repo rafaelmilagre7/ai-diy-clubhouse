@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
 import { useSolutionData } from "@/hooks/useSolutionData";
@@ -20,7 +19,7 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
   const defaultValues: SolutionFormValues = {
     title: "",
     description: "",
-    category: "revenue" as const,
+    category: "Receita" as const,
     difficulty: "medium" as const,
     thumbnail_url: "",
     published: false,
@@ -31,7 +30,7 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
     ? {
         title: solution.title,
         description: solution.description,
-        category: solution.category as "revenue" | "operational" | "strategy",
+        category: solution.category as "Receita" | "Operacional" | "Estratégia",
         difficulty: solution.difficulty as "easy" | "medium" | "advanced",
         thumbnail_url: solution.thumbnail_url || "",
         published: solution.published,

@@ -60,18 +60,7 @@ export function useSolutionsData(initialCategory: string | null = 'all') {
     
     // Filtrar por categoria - Agora com categorias padronizadas
     if (activeCategory !== 'all') {
-      const categoryMapping: Record<string, string> = {
-        'revenue': 'Receita',
-        'operational': 'Operacional',
-        'strategy': 'Estratégia'
-      };
-      
-      const normalizedCategory = categoryMapping[activeCategory] || activeCategory;
-      
-      filtered = filtered.filter(solution => 
-        solution.category === normalizedCategory || 
-        solution.category === activeCategory // Para retrocompatibilidade durante a migração
-      );
+      filtered = filtered.filter(solution => solution.category === activeCategory);
     }
     
     // Filtrar por pesquisa

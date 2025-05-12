@@ -1,4 +1,3 @@
-
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { SolutionFormValues } from "./solutionFormSchema";
@@ -65,9 +64,9 @@ const BasicInfoRightColumn: React.FC<BasicInfoRightColumnProps> = ({
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="revenue">Aumento de Receita</SelectItem>
-                <SelectItem value="operational">Otimização Operacional</SelectItem>
-                <SelectItem value="strategy">Gestão Estratégica</SelectItem>
+                <SelectItem value="Receita">Aumento de Receita</SelectItem>
+                <SelectItem value="Operacional">Otimização Operacional</SelectItem>
+                <SelectItem value="Estratégia">Gestão Estratégica</SelectItem>
               </SelectContent>
             </Select>
             <FormDescription>

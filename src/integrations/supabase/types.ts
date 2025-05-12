@@ -3299,7 +3299,8 @@ export type Database = {
         | "new_vote"
         | "comment_reply"
         | "admin_response"
-      solution_category: "revenue" | "operational" | "strategic"
+      solution_category: "Receita" | "Operacional" | "Estratégia"
+      solution_category_bkp: "revenue" | "operational" | "strategy"
       suggestion_status:
         | "new"
         | "under_review"
@@ -3432,7 +3433,8 @@ export const Constants = {
         "comment_reply",
         "admin_response",
       ],
-      solution_category: ["revenue", "operational", "strategic"],
+      solution_category: ["Receita", "Operacional", "Estratégia"],
+      solution_category_bkp: ["revenue", "operational", "strategy"],
       suggestion_status: [
         "new",
         "under_review",
