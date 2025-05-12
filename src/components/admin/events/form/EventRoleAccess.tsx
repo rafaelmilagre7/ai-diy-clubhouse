@@ -40,6 +40,7 @@ export const EventRoleAccess = ({ form }: EventRoleAccessProps) => {
 
   return (
     <div className="space-y-4">
+      <h3 className="font-medium text-sm">Controle de Acesso</h3>
       <FormField
         control={form.control}
         name="role_ids"

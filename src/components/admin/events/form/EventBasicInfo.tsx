@@ -12,6 +12,7 @@ interface EventBasicInfoProps {
 export const EventBasicInfo = ({ form }: EventBasicInfoProps) => {
   return (
     <div className="space-y-4">
+      <h3 className="font-medium text-sm">Informações Básicas</h3>
       <FormField
         control={form.control}
         name="title"
@@ -19,7 +20,7 @@ export const EventBasicInfo = ({ form }: EventBasicInfoProps) => {
           <FormItem>
             <FormLabel>Título</FormLabel>
             <FormControl>
-              <Input {...field} />
+              <Input {...field} placeholder="Nome do evento" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -33,7 +34,12 @@ export const EventBasicInfo = ({ form }: EventBasicInfoProps) => {
           <FormItem>
             <FormLabel>Descrição</FormLabel>
             <FormControl>
-              <Textarea {...field} />
+              <Textarea 
+                {...field} 
+                placeholder="Descreva o evento..." 
+                className="resize-none" 
+                rows={4}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>

@@ -56,50 +56,54 @@ export const EventCoverImage = ({ form }: EventCoverImageProps) => {
       name="cover_image_url"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Imagem de Capa</FormLabel>
-          <FormControl>
-            <div>
-              {field.value && (
-                <div className="mb-2">
-                  <img 
-                    src={field.value} 
-                    alt="Prévia" 
-                    className="w-32 h-32 object-cover rounded-lg border"
+          <div className="space-y-2">
+            <h3 className="font-medium text-sm">Imagem de Capa</h3>
+            <FormLabel>Imagem de Capa</FormLabel>
+            <FormControl>
+              <div className="space-y-3">
+                {field.value && (
+                  <div className="mt-2">
+                    <img 
+                      src={field.value} 
+                      alt="Prévia" 
+                      className="w-full max-h-44 object-cover rounded-lg border"
+                    />
+                  </div>
+                )}
+                <div className="flex items-center justify-start">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className={isUploading ? "opacity-70" : ""}
+                    disabled={isUploading}
+                    onClick={() => fileInputRef.current?.click()}
+                    size="sm"
+                  >
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Enviando...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="mr-2 h-4 w-4" />
+                        {field.value ? "Trocar Imagem" : "Upload da Imagem"}
+                      </>
+                    )}
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    disabled={isUploading}
                   />
                 </div>
-              )}
-              <div className="space-y-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className={isUploading ? "opacity-70" : ""}
-                  disabled={isUploading}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  {isUploading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Enviando...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="mr-2 h-4 w-4" />
-                      Upload da Imagem de Capa
-                    </>
-                  )}
-                </Button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  disabled={isUploading}
-                />
               </div>
-            </div>
-          </FormControl>
-          <FormMessage />
+            </FormControl>
+            <FormMessage />
+          </div>
         </FormItem>
       )}
     />

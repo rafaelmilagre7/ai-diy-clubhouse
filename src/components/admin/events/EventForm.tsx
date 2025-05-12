@@ -14,17 +14,20 @@ import { EventCoverImage } from "./form/EventCoverImage";
 import { EventRecurrence } from "./form/EventRecurrence";
 import { EventRoleAccess } from "./form/EventRoleAccess";
 import { useEffect } from "react";
-import { addDays, addMonths, addWeeks, format, parse, parseISO } from "date-fns";
+import { addDays, addMonths, addWeeks, format, parseISO } from "date-fns";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 
 interface EventFormProps {
   event?: Event;
   initialData?: EventFormData | null;
   onSuccess: () => void;
+  layout?: "standard" | "tabs";
 }
 
-export const EventForm = ({ event, initialData, onSuccess }: EventFormProps) => {
+export const EventForm = ({ event, initialData, onSuccess, layout = "standard" }: EventFormProps) => {
   const queryClient = useQueryClient();
   const isEditing = !!event;
+  const useTabs = layout === "tabs";
 
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
@@ -275,7 +278,7 @@ export const EventForm = ({ event, initialData, onSuccess }: EventFormProps) => 
     }
   };
 
-  return (
+  const renderStandardLayout = () => (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <EventBasicInfo form={form} />
@@ -296,4 +299,38 @@ export const EventForm = ({ event, initialData, onSuccess }: EventFormProps) => 
       </form>
     </Form>
   );
+
+  const renderTabsLayout = () => (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        <Tabs defaultValue="informacoes" className="w-full">
+          <TabsContent value="informacoes" className="mt-0 space-y-4">
+            <EventBasicInfo form={form} />
+            <EventDateTime form={form} />
+            <EventLocation form={form} />
+            <EventCoverImage form={form} />
+          </TabsContent>
+
+          <TabsContent value="recorrencia" className="mt-0">
+            <EventRecurrence form={form} />
+          </TabsContent>
+
+          <TabsContent value="acesso" className="mt-0">
+            <EventRoleAccess form={form} />
+          </TabsContent>
+
+          <div className="flex justify-end gap-2 mt-6 sticky bottom-0">
+            <Button type="button" variant="outline" onClick={onSuccess}>
+              Cancelar
+            </Button>
+            <Button type="submit">
+              {isEditing ? "Atualizar" : "Criar"} Evento
+            </Button>
+          </div>
+        </Tabs>
+      </form>
+    </Form>
+  );
+
+  return useTabs ? renderTabsLayout() : renderStandardLayout();
 };

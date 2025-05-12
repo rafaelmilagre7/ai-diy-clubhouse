@@ -11,6 +11,7 @@ interface EventLocationProps {
 export const EventLocation = ({ form }: EventLocationProps) => {
   return (
     <div className="space-y-4">
+      <h3 className="font-medium text-sm">Localização</h3>
       <FormField
         control={form.control}
         name="location_link"

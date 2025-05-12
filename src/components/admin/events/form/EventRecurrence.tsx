@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { useEffect } from "react";
 import { format } from "date-fns";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { InfoCircle } from "lucide-react";
 
 interface EventRecurrenceProps {
   form: UseFormReturn<EventFormData>;
@@ -42,14 +44,14 @@ export const EventRecurrence = ({ form }: EventRecurrenceProps) => {
   }, [isRecurring, pattern, startDate, form]);
 
   return (
-    <div className="space-y-6 border p-4 rounded-md">
+    <div className="space-y-6">
       <FormField
         control={form.control}
         name="is_recurring"
         render={({ field }) => (
           <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
             <div className="space-y-0.5">
-              <FormLabel>Evento Recorrente</FormLabel>
+              <FormLabel className="text-base">Evento Recorrente</FormLabel>
               <p className="text-sm text-muted-foreground">
                 Ative para criar um evento que se repete periodicamente.
               </p>
@@ -66,58 +68,69 @@ export const EventRecurrence = ({ form }: EventRecurrenceProps) => {
 
       {isRecurring && (
         <div className="space-y-4">
-          <FormField
-            control={form.control}
-            name="recurrence_pattern"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Frequência</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  value={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a frequência" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {recurrencePatterns.map((pattern) => (
-                      <SelectItem key={pattern.value} value={pattern.value}>
-                        {pattern.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="recurrence_pattern"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Frequência</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a frequência" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {recurrencePatterns.map((pattern) => (
+                        <SelectItem key={pattern.value} value={pattern.value}>
+                          {pattern.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <FormField
-            control={form.control}
-            name="recurrence_interval"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Intervalo</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    min={1}
-                    {...field}
-                    onChange={(e) => field.onChange(Number(e.target.value) || 1)}
-                  />
-                </FormControl>
-                <FormMessage />
-                <p className="text-sm text-muted-foreground mt-1">
-                  {pattern === "daily" && "A cada quantos dias"}
-                  {pattern === "weekly" && "A cada quantas semanas"}
-                  {pattern === "monthly" && "A cada quantos meses"}
-                </p>
-              </FormItem>
-            )}
-          />
+            <FormField
+              control={form.control}
+              name="recurrence_interval"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="flex items-center gap-2">
+                    <FormLabel>Intervalo</FormLabel>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger type="button" asChild>
+                          <InfoCircle className="h-4 w-4 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {pattern === "daily" && "A cada quantos dias"}
+                          {pattern === "weekly" && "A cada quantas semanas"}
+                          {pattern === "monthly" && "A cada quantos meses"}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min={1}
+                      {...field}
+                      onChange={(e) => field.onChange(Number(e.target.value) || 1)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           {pattern === "weekly" && (
             <FormField
@@ -176,9 +189,6 @@ export const EventRecurrence = ({ form }: EventRecurrenceProps) => {
                     />
                   </FormControl>
                   <FormMessage />
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Deixe em branco para não limitar
-                  </p>
                 </FormItem>
               )}
             />
@@ -205,9 +215,6 @@ export const EventRecurrence = ({ form }: EventRecurrenceProps) => {
                     />
                   </FormControl>
                   <FormMessage />
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Deixe em branco para não limitar por data
-                  </p>
                 </FormItem>
               )}
             />
