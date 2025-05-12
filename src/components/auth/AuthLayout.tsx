@@ -1,9 +1,7 @@
 
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LoginForm from "./login/LoginForm";
-import RegisterForm from "./RegisterForm";
 import { AnimatePresence, motion } from "framer-motion";
 
 const AuthLayout = () => {
@@ -41,28 +39,7 @@ const AuthLayout = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Tabs defaultValue="login" className="w-full">
-                <TabsList className="grid grid-cols-2 mb-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl">
-                  <TabsTrigger 
-                    value="login" 
-                    className="text-white/70 data-[state=active]:bg-white/10 data-[state=active]:text-white transition-all duration-300 rounded-lg"
-                  >
-                    Login
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="register" 
-                    className="text-white/70 data-[state=active]:bg-white/10 data-[state=active]:text-white transition-all duration-300 rounded-lg"
-                  >
-                    Cadastro
-                  </TabsTrigger>
-                </TabsList>
-                <TabsContent value="login">
-                  <LoginForm />
-                </TabsContent>
-                <TabsContent value="register">
-                  <RegisterForm />
-                </TabsContent>
-              </Tabs>
+              <LoginForm />
             </CardContent>
           </Card>
 
@@ -71,7 +48,16 @@ const AuthLayout = () => {
               Acesso exclusivo para membros do VIVER DE IA Club
             </p>
             <p>
-              Não é membro ainda?{" "}
+              Não possui uma conta?{" "}
+              <span className="font-medium text-white/80">
+                O cadastro é feito apenas por convite
+              </span>
+            </p>
+            <p>
+              Se você recebeu um convite, acesse o link enviado por email para ativar sua conta
+            </p>
+            <p>
+              Dúvidas ou mais informações?{" "}
               <a
                 href="https://milagredigital.com/club/"
                 className="font-medium text-white/80 hover:text-white underline decoration-white/30 hover:decoration-white/60 transition-all"

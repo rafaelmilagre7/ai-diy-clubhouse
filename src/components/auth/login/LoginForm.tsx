@@ -12,18 +12,20 @@ const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | undefined>(undefined);
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
+      setError(undefined);
       toast.info("Iniciando login com Google...");
       // Usando valores vazios para indicar que queremos fazer login com Google
       await signIn("", "");
     } catch (error) {
       console.error("Erro ao fazer login com Google:", error);
-      toast.error("Não foi possível fazer login com o Google. Tente novamente.");
+      setError("Não foi possível fazer login com o Google. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
@@ -33,12 +35,13 @@ const LoginForm = () => {
     e.preventDefault();
     
     if (!email || !password) {
-      toast.error("Por favor, preencha todos os campos.");
+      setError("Por favor, preencha todos os campos.");
       return;
     }
     
     try {
       setIsLoading(true);
+      setError(undefined);
       toast.info("Entrando...");
       
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -54,7 +57,9 @@ const LoginForm = () => {
       }
     } catch (error: any) {
       console.error("Erro ao fazer login:", error);
-      toast.error(error.message || "Não foi possível fazer login. Verifique suas credenciais.");
+      setError(error.message === "Invalid login credentials"
+        ? "Credenciais inválidas. Verifique seu email e senha."
+        : error.message || "Não foi possível fazer login. Verifique suas credenciais.");
     } finally {
       setIsLoading(false);
     }
@@ -69,6 +74,7 @@ const LoginForm = () => {
         setPassword={setPassword}
         onSubmit={handleEmailSignIn}
         isLoading={isLoading}
+        error={error}
       />
 
       <Divider />
@@ -77,6 +83,10 @@ const LoginForm = () => {
         onClick={handleGoogleSignIn}
         isLoading={isLoading}
       />
+      
+      <div className="text-center text-sm text-white/60 mt-4">
+        <p>O acesso à plataforma é exclusivo para membros convidados</p>
+      </div>
     </div>
   );
 };

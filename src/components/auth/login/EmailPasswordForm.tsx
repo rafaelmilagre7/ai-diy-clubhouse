@@ -1,10 +1,11 @@
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { FormMessage } from "@/components/ui/form-message";
 
 interface EmailPasswordFormProps {
   email: string;
@@ -13,84 +14,73 @@ interface EmailPasswordFormProps {
   setPassword: (password: string) => void;
   onSubmit: (e: React.FormEvent) => void;
   isLoading: boolean;
+  error?: string;
 }
 
-const EmailPasswordForm = ({ 
-  email, 
-  setEmail, 
-  password, 
-  setPassword, 
-  onSubmit, 
-  isLoading 
+const EmailPasswordForm = ({
+  email,
+  setEmail,
+  password,
+  setPassword,
+  onSubmit,
+  isLoading,
+  error
 }: EmailPasswordFormProps) => {
-  const [showPassword, setShowPassword] = useState(false);
-
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email" className="text-white">
-          Email
-        </Label>
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <Mail className="h-5 w-5 text-gray-400" />
-          </div>
-          <Input
-            id="email"
-            type="email"
-            placeholder="seu@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="pl-10 bg-gray-800 border-gray-700 text-white"
-          />
-        </div>
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="seu@email.com"
+          disabled={isLoading}
+          required
+          autoComplete="username"
+        />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password" className="text-white">
-          Senha
-        </Label>
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <Lock className="h-5 w-5 text-gray-400" />
-          </div>
-          <Input
-            id="password"
-            type={showPassword ? "text" : "password"}
-            placeholder="********"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="pl-10 pr-10 bg-gray-800 border-gray-700 text-white"
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute inset-y-0 right-0 flex items-center pr-3"
+        <div className="flex items-center justify-between">
+          <Label htmlFor="password">Senha</Label>
+          <Link
+            to="/reset-password"
+            className="text-xs text-viverblue hover:underline hover:text-viverblue/90"
           >
-            {showPassword ? (
-              <EyeOff className="h-5 w-5 text-gray-400" />
-            ) : (
-              <Eye className="h-5 w-5 text-gray-400" />
-            )}
-          </button>
+            Esqueceu sua senha?
+          </Link>
         </div>
+        <Input
+          id="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••••"
+          disabled={isLoading}
+          required
+          autoComplete="current-password"
+        />
       </div>
 
-      <div className="flex justify-end mb-2">
-        <Link 
-          to="/reset-password"
-          className="text-sm text-viverblue hover:underline"
-        >
-          Esqueceu sua senha?
-        </Link>
-      </div>
+      {error && (
+        <FormMessage type="error" message={error} />
+      )}
 
       <Button
         type="submit"
         className="w-full bg-viverblue hover:bg-viverblue/90"
         disabled={isLoading}
       >
-        {isLoading ? "Entrando..." : "Entrar"}
+        {isLoading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Entrando...
+          </>
+        ) : (
+          "Entrar"
+        )}
       </Button>
     </form>
   );
