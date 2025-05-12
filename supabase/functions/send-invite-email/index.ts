@@ -1,8 +1,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "@supabase/supabase-js";
 import { format } from "https://deno.land/std@0.168.0/datetime/mod.ts";
-import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
+import { Resend } from "resend";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -182,47 +182,39 @@ serve(async (req) => {
       </html>
     `;
 
-    // Configuração do cliente SMTP para Deno
-    const smtpHost = Deno.env.get("SMTP_HOST");
-    const smtpPort = Deno.env.get("SMTP_PORT");
-    const smtpUser = Deno.env.get("SMTP_USER");
-    const smtpPass = Deno.env.get("SMTP_PASS");
+    // Verificar se a chave da API Resend está configurada
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
     
-    if (!smtpHost || !smtpPort || !smtpUser || !smtpPass) {
-      throw new Error("Configurações SMTP incompletas. Verifique as variáveis de ambiente.");
+    if (!resendApiKey) {
+      console.error("Erro: RESEND_API_KEY não configurada");
+      throw new Error("Variável de ambiente RESEND_API_KEY não configurada");
     }
+
+    console.log("Configurando cliente Resend para envio de email");
     
-    console.log("Configurando SMTP com host:", smtpHost, "porta:", smtpPort);
+    // Inicializar o cliente Resend
+    const resend = new Resend(resendApiKey);
     
-    // Criar cliente SMTP do Deno
-    const client = new SmtpClient();
+    // Configurar o remetente - use o domínio verificado no Resend
+    const fromEmail = "no-reply@viverdeia.ai"; // Substitua por um domínio verificado no Resend
+    const fromName = "VIVER DE IA Club";
     
-    // Conectar ao servidor
-    await client.connectTLS({
-      hostname: smtpHost,
-      port: Number(smtpPort),
-      username: smtpUser,
-      password: smtpPass,
-    });
+    console.log(`Enviando email para ${email} via Resend`);
     
-    // Enviar email
-    const senderEmail = smtpUser;
-    const emailSenderName = "VIVER DE IA Club";
-    
-    console.log("Enviando email para:", email);
-    
-    const sendInfo = await client.send({
-      from: `${emailSenderName} <${senderEmail}>`,
-      to: email,
+    // Enviar email usando Resend
+    const { data: emailData, error: emailError } = await resend.emails.send({
+      from: `${fromName} <${fromEmail}>`,
+      to: [email],
       subject: titleMessage,
-      content: htmlContent,
       html: htmlContent,
     });
     
-    // Fechar a conexão
-    await client.close();
+    if (emailError) {
+      console.error("Erro ao enviar email via Resend:", emailError);
+      throw new Error(`Falha no envio de email: ${emailError.message}`);
+    }
     
-    console.log("Email enviado:", sendInfo);
+    console.log("Email enviado com sucesso via Resend:", emailData);
 
     // Registrar tentativa de envio no banco de dados
     if (inviteId) {
@@ -240,7 +232,8 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         message: "Email enviado com sucesso",
-        id: sendInfo ? "deno_smtp_success" : "unknown",
+        id: emailData?.id || "unknown",
+        provider: "resend"
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -253,6 +246,7 @@ serve(async (req) => {
       JSON.stringify({
         success: false,
         error: error.message || "Erro desconhecido",
+        provider: "resend"
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
