@@ -13,13 +13,16 @@ export const SolutionContentSection = ({ solution }: SolutionContentSectionProps
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm">
-      <div className="prose max-w-none">
-        <h2 className="text-xl font-semibold mb-4">Sobre esta solução</h2>
+      <div className="prose max-w-none text-neutral-800">
+        <h2 className="text-xl font-semibold mb-4 text-neutral-900">Sobre esta solução</h2>
         
         {solution.overview ? (
-          <div dangerouslySetInnerHTML={renderContent(solution.overview)} />
+          <div 
+            className="text-neutral-800" 
+            dangerouslySetInnerHTML={renderContent(solution.overview)} 
+          />
         ) : (
-          <p>{solution.description}</p>
+          <p className="text-neutral-800">{solution.description}</p>
         )}
       </div>
     </div>
