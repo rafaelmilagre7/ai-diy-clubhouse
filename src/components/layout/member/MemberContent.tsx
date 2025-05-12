@@ -1,8 +1,6 @@
 
 import { ReactNode } from "react";
 import { Outlet } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface MemberContentProps {
@@ -26,27 +24,6 @@ export const MemberContent = ({
         "ml-0"
       )}
     >
-      {/* Cabeçalho mobile com botão do menu */}
-      <div className="sticky top-0 z-40 flex h-16 items-center border-b border-white/5 bg-[#0F111A] px-4 md:hidden">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="mr-2 text-neutral-300"
-          aria-label={sidebarOpen ? "Fechar menu" : "Abrir menu"}
-        >
-          <Menu size={24} />
-        </Button>
-        <div className="flex-1 flex justify-center">
-          <img 
-            src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif" 
-            alt="VIVER DE IA Club" 
-            className="h-8 w-auto" 
-          />
-        </div>
-        <div className="w-10"></div> {/* Espaçador para equilíbrio */}
-      </div>
-
       {/* Área de conteúdo */}
       <div className="container py-6 md:py-8">
         {children || <Outlet />}

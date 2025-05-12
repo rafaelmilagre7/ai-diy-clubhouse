@@ -12,9 +12,9 @@ const buttonVariants = cva(
       variant: {
         default: "bg-viverblue text-white hover:bg-viverblue-dark focus-visible:bg-viverblue-dark active:bg-viverblue-darker",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+          "bg-red-500 text-white hover:bg-red-600 active:bg-red-700",
         outline:
-          "border border-input bg-transparent hover:bg-accent hover:text-accent-foreground",
+          "border border-white/10 bg-transparent hover:bg-white/5 hover:border-white/20 text-neutral-200",
         secondary:
           "bg-[#181A2A] text-neutral-200 hover:bg-[#1E2033] hover:text-white",
         ghost: "text-neutral-200 hover:bg-[#181A2A] hover:text-white",
@@ -22,7 +22,7 @@ const buttonVariants = cva(
       },
       size: {
         default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
+        sm: "h-8 rounded-md px-3 text-xs",
         lg: "h-11 rounded-md px-8",
         icon: "h-10 w-10",
       },

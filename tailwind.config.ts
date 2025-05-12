@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -187,6 +188,11 @@ export default {
                 'gradient-strategy': 'linear-gradient(135deg, #004D40 0%, #00897B 100%)',
                 'gradient-card': 'linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%)',
                 'dot-pattern': 'radial-gradient(circle, #0ABAB5 1px, transparent 1px)',
+                'dot-pattern-dark': 'radial-gradient(circle, #00EAD9 1px, transparent 1px)',
+            },
+            backgroundSize: {
+                '200': '200% 200%',
+                '300': '300% 300%',
             },
 		}
 	},

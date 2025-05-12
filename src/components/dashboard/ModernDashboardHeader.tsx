@@ -10,7 +10,7 @@ export function ModernDashboardHeader({ userName }: { userName: string }) {
     <div
       className={cn(
         "relative mb-8 md:mb-12 overflow-visible rounded-2xl md:rounded-3xl shadow-xl",
-        "bg-gradient-to-br from-viverblue via-indigo-500/80 to-viverblue-dark animate-gradient-shift bg-size-300"
+        "bg-gradient-to-br from-viverblue via-viverblue/80 to-viverblue-dark animate-gradient-shift bg-size-300"
       )}
     >
       {/* Elementos decorativos do fundo */}

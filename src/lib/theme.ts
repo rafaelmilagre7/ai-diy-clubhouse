@@ -1,30 +1,30 @@
 
 export const theme = {
   colors: {
-    primary: "#00EAD9",
-    primaryLight: "#6DF2E9",
-    primaryDark: "#00BAB0",
-    primaryHover: "#00D6C7",
-    primaryActive: "#00A69D",
+    primary: "#00EAD9", // Azul claro da Hubla
+    primaryLight: "#6DF2E9", // Tom mais claro
+    primaryDark: "#00BAB0", // Tom mais escuro
+    primaryHover: "#00D6C7", // Tom para hover
+    primaryActive: "#00A69D", // Tom para active
     primaryTransparent10: "rgba(0, 234, 217, 0.1)",
     primaryTransparent20: "rgba(0, 234, 217, 0.2)",
-    secondary: "#FEC260",
+    secondary: "#FEC260", // Mantido
     secondaryLight: "#ffdf99",
     secondaryDark: "#e0a23f",
-    accent: "#9b87f5",
+    accent: "#9b87f5", // Cor de destaque complementar
     accentLight: "#b8a9fa",
     accentDark: "#7b69cc",
     success: "#82e19b",
     error: "#ea4335",
     warning: "#fbbc05",
     info: "#4285f4",
-    textPrimary: "#E9ECEF",
-    textSecondary: "#ADB5BD",
-    textMuted: "#868E96",
-    background: "#0F111A",
-    backgroundLight: "#151823",
-    border: "#2E3346",
-    borderLight: "#374151",
+    textPrimary: "#F8FAFC", // Texto mais claro para contraste no tema escuro
+    textSecondary: "#CDD5E0", // Cinza claro
+    textMuted: "#657084", // Cinza médio
+    background: "#0F111A", // Fundo escuro estilo Hubla
+    backgroundLight: "#151823", // Fundo um pouco mais claro para cards
+    border: "#2E3346", // Bordas mais escuras
+    borderLight: "#374151", // Bordas mais claras
   },
   spacing: {
     xs: "0.25rem",

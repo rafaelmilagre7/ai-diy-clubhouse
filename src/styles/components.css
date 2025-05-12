@@ -3,25 +3,25 @@
 
 @layer components {
   .glass-card, .glassmorphism {
-    @apply bg-white/5 dark:bg-white/5 backdrop-blur-sm border border-white/10 dark:border-white/5 shadow-md dark:shadow-black/20;
+    @apply bg-white/5 backdrop-blur-sm border border-white/10 shadow-md;
   }
   .glass-effect {
-    @apply glassmorphism dark:bg-white/5 dark:backdrop-blur-xl dark:shadow-[0_4px_20px_-2px_rgba(0,0,0,0.5)];
+    @apply glassmorphism bg-white/5 backdrop-blur-xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.5)];
   }
   .container {
     @apply max-w-7xl mx-auto px-4 md:px-8;
   }
   .progress-step {
-    @apply relative flex items-center justify-center w-8 h-8 rounded-full bg-secondary text-secondary-foreground dark:bg-secondary dark:text-secondary-foreground;
+    @apply relative flex items-center justify-center w-8 h-8 rounded-full bg-secondary text-secondary-foreground;
   }
   .progress-step.active {
-    @apply bg-viverblue text-white dark:bg-viverblue dark:text-white;
+    @apply bg-viverblue text-white;
   }
   .progress-step.completed {
     @apply bg-green-500 text-white;
   }
   .progress-line {
-    @apply flex-1 h-1 bg-secondary dark:bg-muted;
+    @apply flex-1 h-1 bg-secondary;
   }
   .progress-line.completed {
     @apply bg-green-500;
@@ -57,28 +57,28 @@
     @apply relative before:absolute before:inset-0 before:p-[1px] before:rounded-lg before:bg-gradient-to-r before:from-viverblue before:to-viverblue-light before:-z-10;
   }
   .glassmorphism {
-    @apply backdrop-blur-xl bg-white/5 dark:bg-white/5 border border-white/10 dark:border-white/5 shadow-xl;
+    @apply backdrop-blur-xl bg-white/5 border border-white/10 shadow-xl;
   }
   .glass-effect {
-    @apply glassmorphism dark:bg-white/3 dark:backdrop-blur-xl dark:shadow-[0_4px_20px_-2px_rgba(0,0,0,0.5)];
+    @apply glassmorphism bg-white/3 backdrop-blur-xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.5)];
   }
   .section-title {
-    @apply font-heading text-2xl md:text-3xl font-bold text-neutral-800 dark:text-neutral-100 mb-6;
+    @apply font-heading text-2xl md:text-3xl font-bold text-neutral-100 mb-6;
   }
   .gradient-card {
-    @apply bg-gradient-to-br from-neutral-900 to-neutral-950 dark:from-black dark:to-neutral-900 rounded-2xl shadow-md border border-neutral-800;
+    @apply bg-gradient-to-br from-neutral-900 to-neutral-950 rounded-2xl shadow-md border border-neutral-800;
   }
   .gradient-card-revenue {
-    @apply bg-gradient-to-br from-revenue-darker to-black dark:from-revenue-darker dark:to-black rounded-2xl shadow-md border-l-4 border-l-revenue border-t border-r border-b border-neutral-800;
+    @apply bg-gradient-to-br from-revenue-darker to-black rounded-2xl shadow-md border-l-4 border-l-revenue border-t border-r border-b border-neutral-800;
   }
   .gradient-card-operational {
-    @apply bg-gradient-to-br from-operational-darker to-black dark:from-operational-darker dark:to-black rounded-2xl shadow-md border-l-4 border-l-operational border-t border-r border-b border-neutral-800;
+    @apply bg-gradient-to-br from-operational-darker to-black rounded-2xl shadow-md border-l-4 border-l-operational border-t border-r border-b border-neutral-800;
   }
   .gradient-card-strategy {
-    @apply bg-gradient-to-br from-strategy-darker to-black dark:from-strategy-darker dark:to-black rounded-2xl shadow-md border-l-4 border-l-strategy border-t border-r border-b border-neutral-800;
+    @apply bg-gradient-to-br from-strategy-darker to-black rounded-2xl shadow-md border-l-4 border-l-strategy border-t border-r border-b border-neutral-800;
   }
   .dot-bg {
-    @apply bg-dot-pattern bg-[length:20px_20px] dark:bg-dot-pattern-dark;
+    @apply bg-dot-pattern bg-[length:20px_20px];
   }
   .animated-gradient {
     @apply bg-gradient-to-r from-viverblue via-viverblue-light to-viverblue bg-size-200 animate-gradient-shift;
@@ -133,5 +133,16 @@
   /* Nova classe para cards com o estilo Hubla */
   .hubla-card {
     @apply bg-[#151823] border border-white/5 rounded-xl shadow-lg;
+  }
+
+  /* Adicionando estilo para navegação ativa */
+  .hubla-active-nav {
+    @apply bg-[#1A1E2E] border-l-2 border-viverblue text-viverblue font-medium;
+  }
+
+  /* Adicionar efeito de brilho nas bordas dos cards */
+  .hubla-border-glow {
+    @apply relative;
+    box-shadow: 0 0 15px 1px rgba(0, 234, 217, 0.1);
   }
 }
