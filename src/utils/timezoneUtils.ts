@@ -1,6 +1,6 @@
 
 import { format, parseISO } from 'date-fns';
-import { utcToZonedTime, zonedTimeToUtc } from 'date-fns-tz';
+import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 
 // Fuso horário de Brasília (BRT)
 export const BRASIL_TIMEZONE = 'America/Sao_Paulo';
@@ -9,7 +9,7 @@ export const BRASIL_TIMEZONE = 'America/Sao_Paulo';
  * Converte um timestamp UTC para o fuso horário de Brasília
  */
 export function toLocalTime(utcTimestamp: string | Date): Date {
-  return utcToZonedTime(
+  return toZonedTime(
     typeof utcTimestamp === 'string' ? parseISO(utcTimestamp) : utcTimestamp,
     BRASIL_TIMEZONE
   );
@@ -19,7 +19,7 @@ export function toLocalTime(utcTimestamp: string | Date): Date {
  * Converte um timestamp do fuso horário de Brasília para UTC
  */
 export function toUTCTime(localTimestamp: string | Date): Date {
-  return zonedTimeToUtc(
+  return fromZonedTime(
     typeof localTimestamp === 'string' ? parseISO(localTimestamp) : localTimestamp,
     BRASIL_TIMEZONE
   );
