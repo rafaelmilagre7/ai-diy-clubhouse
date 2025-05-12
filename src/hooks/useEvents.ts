@@ -4,16 +4,21 @@ import { supabase } from '@/lib/supabase';
 import type { Event } from '@/types/events';
 
 export const useEvents = () => {
-  const { data: user } = supabase.auth.getSession();
-
   return useQuery({
     queryKey: ['events'],
     queryFn: async () => {
+      // Obter o usuário atual
+      const { data: userData } = await supabase.auth.getUser();
+      
+      if (!userData.user) {
+        throw new Error('Usuário não autenticado');
+      }
+
       // Obter o perfil do usuário atual
       const { data: profile } = await supabase
         .from('profiles')
         .select('id, role_id')
-        .eq('id', user?.user?.id)
+        .eq('id', userData.user.id)
         .single();
 
       if (!profile) {

@@ -1,4 +1,3 @@
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -89,7 +88,7 @@ export const EventForm = ({ event, initialData, onSuccess }: EventFormProps) => 
   }, [isEditing, event?.id, form]);
 
   // Função para gerar instâncias de eventos recorrentes
-  const generateRecurringEvents = (baseEvent: EventFormData, parentEventId: string) => {
+  const generateRecurringEvents = async (baseEvent: EventFormData, parentEventId: string) => {
     const events: any[] = [];
     
     // Parsear datas do evento base
@@ -135,6 +134,10 @@ export const EventForm = ({ event, initialData, onSuccess }: EventFormProps) => 
         }
       }
       
+      // Obter o usuário atual de forma assíncrona
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData?.user?.id;
+      
       // Criar a instância do evento
       const eventInstance = {
         title: baseEvent.title,
@@ -145,7 +148,7 @@ export const EventForm = ({ event, initialData, onSuccess }: EventFormProps) => 
         physical_location: baseEvent.physical_location,
         cover_image_url: baseEvent.cover_image_url,
         parent_event_id: parentEventId,
-        created_by: (await supabase.auth.getUser()).data.user?.id
+        created_by: userId
       };
       
       events.push(eventInstance);
