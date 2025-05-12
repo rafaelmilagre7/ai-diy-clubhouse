@@ -77,3 +77,7 @@ function_timeout = 5
 enabled = false
 port = 54327
 vector_port = 54328
+
+# Criação de função RPC para atualizar estatísticas de envio
+[functions.update_invite_send_stats]
+verify_jwt = true
