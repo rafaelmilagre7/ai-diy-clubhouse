@@ -3,7 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Repeat } from "lucide-react";
 import { useState } from "react";
 import { useEvents } from "@/hooks/useEvents";
 import { EventFormDialog } from "./EventFormDialog";
@@ -11,6 +11,8 @@ import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { Event } from "@/types/events";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export const EventsTable = () => {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
@@ -49,6 +51,7 @@ export const EventsTable = () => {
             <TableHead>Título</TableHead>
             <TableHead>Data/Hora Início</TableHead>
             <TableHead>Data/Hora Fim</TableHead>
+            <TableHead>Tipo</TableHead>
             <TableHead>Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -61,6 +64,34 @@ export const EventsTable = () => {
               </TableCell>
               <TableCell>
                 {format(new Date(event.end_time), "PPpp", { locale: ptBR })}
+              </TableCell>
+              <TableCell>
+                {event.is_recurring ? (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Badge variant="outline" className="flex items-center gap-1">
+                          <Repeat className="h-3 w-3" />
+                          Recorrente
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          {event.recurrence_pattern === 'daily' && "Ocorre diariamente"}
+                          {event.recurrence_pattern === 'weekly' && "Ocorre semanalmente"}
+                          {event.recurrence_pattern === 'monthly' && "Ocorre mensalmente"}
+                          {event.recurrence_interval && event.recurrence_interval > 1 ? 
+                            ` a cada ${event.recurrence_interval} ${
+                              event.recurrence_pattern === 'daily' ? 'dias' : 
+                              event.recurrence_pattern === 'weekly' ? 'semanas' : 'meses'
+                            }` : ''}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <Badge variant="outline">Único</Badge>
+                )}
               </TableCell>
               <TableCell>
                 <div className="flex gap-2">

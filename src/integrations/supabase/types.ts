@@ -185,6 +185,42 @@ export type Database = {
           },
         ]
       }
+      event_access_control: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          role_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          role_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          role_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_access_control_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_access_control_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "user_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           cover_image_url: string | null
@@ -193,8 +229,15 @@ export type Database = {
           description: string | null
           end_time: string
           id: string
+          is_recurring: boolean | null
           location_link: string | null
+          parent_event_id: string | null
           physical_location: string | null
+          recurrence_count: number | null
+          recurrence_day: number | null
+          recurrence_end_date: string | null
+          recurrence_interval: number | null
+          recurrence_pattern: string | null
           start_time: string
           title: string
         }
@@ -205,8 +248,15 @@ export type Database = {
           description?: string | null
           end_time: string
           id?: string
+          is_recurring?: boolean | null
           location_link?: string | null
+          parent_event_id?: string | null
           physical_location?: string | null
+          recurrence_count?: number | null
+          recurrence_day?: number | null
+          recurrence_end_date?: string | null
+          recurrence_interval?: number | null
+          recurrence_pattern?: string | null
           start_time: string
           title: string
         }
@@ -217,12 +267,27 @@ export type Database = {
           description?: string | null
           end_time?: string
           id?: string
+          is_recurring?: boolean | null
           location_link?: string | null
+          parent_event_id?: string | null
           physical_location?: string | null
+          recurrence_count?: number | null
+          recurrence_day?: number | null
+          recurrence_end_date?: string | null
+          recurrence_interval?: number | null
+          recurrence_pattern?: string | null
           start_time?: string
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "events_parent_event_id_fkey"
+            columns: ["parent_event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       implementation_checkpoints: {
         Row: {
