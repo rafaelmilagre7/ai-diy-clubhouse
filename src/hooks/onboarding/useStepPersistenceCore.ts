@@ -15,10 +15,12 @@ export function useStepPersistenceCore({
   currentStepIndex,
   setCurrentStepIndex,
   navigate,
+  onboardingType = 'club'
 }: {
   currentStepIndex: number;
   setCurrentStepIndex: (i: number) => void;
   navigate: (path: string) => void;
+  onboardingType?: 'club' | 'formacao';
 }) {
   const { progress, updateProgress, refreshProgress } = useProgress();
   const { logError } = useLogging();
@@ -68,10 +70,17 @@ export function useStepPersistenceCore({
     }
     
     console.log(`Salvando dados do passo ${stepId}, índice ${currentStepIndex}:`, data);
+    console.log("Estado atual do progresso:", progress);
 
     try {
+      // Adicionar o tipo de onboarding aos dados
+      const dataWithType = {
+        ...data,
+        onboarding_type
+      };
+      
       // Montar objeto de atualização para a etapa
-      const updateObj = buildUpdateObject(stepId, data, progress, currentStepIndex);
+      const updateObj = buildUpdateObject(stepId, dataWithType, progress, currentStepIndex);
       if (Object.keys(updateObj).length === 0) {
         console.warn("Objeto de atualização vazio, nada para salvar");
         if (!toastShown.current) {
@@ -83,7 +92,7 @@ export function useStepPersistenceCore({
 
       console.log("Dados a serem enviados para o banco:", updateObj);
 
-      // Atualizar no Supabase - Correção para tratar corretamente o retorno
+      // Atualizar na tabela principal
       const result = await updateProgress(updateObj);
       
       // Verificar se temos um retorno válido
@@ -114,12 +123,13 @@ export function useStepPersistenceCore({
       
       // Forçar atualização dos dados local após salvar
       await refreshProgress();
+      console.log("Dados locais atualizados após salvar");
       
       // Navegação para a próxima etapa
       if (shouldNavigate) {
         console.log("Tentando navegar para a próxima etapa...");
-        // Usar o módulo de navegação por etapas
-        navigateAfterStep(stepId, currentStepIndex, navigate, shouldNavigate);
+        // Usar o módulo de navegação por etapas, passando o tipo de onboarding
+        navigateAfterStep(stepId, currentStepIndex, navigate, shouldNavigate, onboardingType);
       } else {
         console.log("Navegação automática desativada, permanecendo na página atual");
       }
@@ -140,6 +150,7 @@ export function useStepPersistenceCore({
 
   /**
    * Finaliza o onboarding, marca como completo e redireciona para a trilha de implementação
+   * ou para a página de cursos, dependendo do tipo de onboarding
    */
   const completeOnboarding = async () => {
     if (!progress?.id) {
@@ -148,12 +159,13 @@ export function useStepPersistenceCore({
     }
     
     try {
-      console.log("Completando onboarding...");
+      console.log(`Completando onboarding do tipo ${onboardingType}...`);
       
       // Marca o onboarding como concluído
       const result = await updateProgress({
         is_completed: true,
         completed_steps: steps.map(s => s.id),
+        onboarding_type: onboardingType
       });
       
       if ((result as any)?.error) {
@@ -162,13 +174,17 @@ export function useStepPersistenceCore({
       
       // Atualiza dados locais
       await refreshProgress();
-      console.log("Onboarding marcado como completo, preparando redirecionamento para trilha...");
       
       toast.success("Onboarding concluído com sucesso!");
       
       // Redirecionamento após delay para garantir atualização do estado
       setTimeout(() => {
-        window.location.href = "/implementation-trail";
+        // Redirecionar para página apropriada com base no tipo de onboarding
+        if (onboardingType === 'club') {
+          window.location.href = "/implementation-trail";
+        } else {
+          window.location.href = "/learning"; // Rota para a área de aprendizado da formação
+        }
       }, 1000);
     } catch (error: any) {
       console.error("Erro ao completar onboarding:", error);
@@ -186,6 +202,6 @@ export function useStepPersistenceCore({
 
   return {
     saveStepData,
-    completeOnboarding
+    completeOnboarding,
   };
 }

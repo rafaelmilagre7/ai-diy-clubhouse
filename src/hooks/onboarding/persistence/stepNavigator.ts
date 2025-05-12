@@ -1,11 +1,12 @@
 
-import { steps } from "../useStepDefinitions";
+import { getStepsByUserType } from "../useStepDefinitions";
 
 export function navigateAfterStep(
   stepId: string, 
   currentStepIndex: number | undefined, 
   navigate: (path: string) => void,
-  shouldNavigate: boolean = true
+  shouldNavigate: boolean = true,
+  onboardingType: 'club' | 'formacao' = 'club'
 ) {
   // Se não devemos navegar automaticamente, retornar
   if (!shouldNavigate) {
@@ -13,10 +14,13 @@ export function navigateAfterStep(
     return;
   }
   
-  console.log(`Determinando próxima rota após etapa ${stepId} (índice atual: ${currentStepIndex})`);
+  console.log(`Determinando próxima rota após etapa ${stepId} (índice atual: ${currentStepIndex}, tipo: ${onboardingType})`);
   
-  // Mapeamento direto de etapas para rotas de navegação
-  const nextRouteMap: {[key: string]: string} = {
+  // Obter os passos apropriados para o tipo de usuário
+  const steps = getStepsByUserType(onboardingType);
+  
+  // Mapeamentos específicos para o tipo club
+  const clubNextRouteMap: {[key: string]: string} = {
     "personal": "/onboarding/professional-data",
     "professional_data": "/onboarding/business-context",
     "business_context": "/onboarding/ai-experience",
@@ -25,6 +29,17 @@ export function navigateAfterStep(
     "experience_personalization": "/onboarding/complementary",
     "complementary_info": "/onboarding/review"
   };
+  
+  // Mapeamentos específicos para o tipo formação
+  const formacaoNextRouteMap: {[key: string]: string} = {
+    "personal": "/onboarding/formacao/ai-experience",
+    "ai_exp": "/onboarding/formacao/goals",
+    "formation_goals": "/onboarding/formacao/preferences",
+    "learning_preferences": "/onboarding/formacao/review"
+  };
+  
+  // Escolher o mapeamento com base no tipo de onboarding
+  const nextRouteMap = onboardingType === 'club' ? clubNextRouteMap : formacaoNextRouteMap;
   
   // Verificar se temos uma rota direta para o próximo passo
   if (nextRouteMap[stepId]) {
@@ -44,9 +59,11 @@ export function navigateAfterStep(
       
       navigate(nextStep.path);
     } else {
-      console.log('Navegando para /onboarding/review (última etapa)');
+      // Determinar a página de revisão com base no tipo de onboarding
+      const reviewPath = onboardingType === 'club' ? '/onboarding/review' : '/onboarding/formacao/review';
+      console.log(`Navegando para ${reviewPath} (última etapa)`);
       
-      navigate('/onboarding/review');
+      navigate(reviewPath);
     }
     return;
   }

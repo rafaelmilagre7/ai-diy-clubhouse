@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,7 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { slugify } from '@/utils/slugify';
 import BasicInfoForm from '@/components/admin/solution/form/BasicInfoForm';
 import { SolutionFormValues } from '@/components/admin/solution/form/solutionFormSchema';
-import { FileText, ArrowRight } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import SolutionCreateWizardSteps from "@/components/admin/solution/SolutionCreateWizardSteps";
 
 const AdminSolutionCreate = () => {

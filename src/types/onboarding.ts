@@ -1,3 +1,4 @@
+
 export interface OnboardingData {
   // 1. Dados Pessoais
   personal_info: {
@@ -73,27 +74,21 @@ export interface OnboardingData {
     interested_in_interview?: boolean;
     priority_topics?: string[];
   };
-  // Campos para novas perguntas futuras 
-  industry_focus?: {
-    sector?: string;
-    target_market?: string;
-    main_challenges?: string[];
+  
+  // Campos para Formação
+  formation_data?: {
+    current_occupation?: string;
+    interests?: string[];
+    learning_goals?: string[];
+    preferred_learning_style?: string[];
+    availability_hours_per_week?: number;
+    previous_courses?: string[];
+    expectations?: string;
+    how_heard_about?: string;
   };
-  resources_needs?: {
-    budget_range?: string;
-    team_size?: string;
-    tech_stack?: string[];
-  };
-  team_info?: {
-    decision_makers?: string[];
-    technical_expertise?: string;
-    training_needs?: string[];
-  };
-  implementation_preferences?: {
-    priority_areas?: string[];
-    implementation_speed?: string;
-    support_level?: string;
-  };
+  
+  // Campo para identificar o tipo de onboarding
+  onboarding_type?: 'club' | 'formacao';
   
   // Campos diretos para compatibilidade com as verificações do builder
   how_found_us?: string;
@@ -129,6 +124,8 @@ export interface OnboardingProgress {
   ai_experience: OnboardingData['ai_experience'];
   experience_personalization: OnboardingData['experience_personalization'];
   complementary_info: OnboardingData['complementary_info'];
+  formation_data?: OnboardingData['formation_data']; // Adicionando os dados de formação
+  onboarding_type?: 'club' | 'formacao'; // Adicionando o tipo de onboarding
   industry_focus?: OnboardingData['industry_focus'];
   resources_needs?: OnboardingData['resources_needs'];
   team_info?: OnboardingData['team_info'];
@@ -173,4 +170,15 @@ export type ProfessionalDataInput = {
   company_website?: string;
   current_position?: string;
   annual_revenue?: string;
+};
+
+// Definição das etapas do onboarding de formação
+export interface FormationOnboardingStep extends OnboardingStep {
+  forFormation: boolean; // indica se a etapa é específica para formação
+}
+
+// Definição das etapas do onboarding completo, incluindo etapas específicas para formação
+export type CompleteOnboardingStep = OnboardingStep & { 
+  forFormation?: boolean;
+  forClub?: boolean;
 };
