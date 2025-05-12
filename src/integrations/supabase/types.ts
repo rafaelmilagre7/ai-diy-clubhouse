@@ -3104,6 +3104,10 @@ export type Database = {
         Args: { user_id: string; course_id: string }
         Returns: boolean
       }
+      check_invite_token: {
+        Args: { invite_token: string }
+        Returns: Json
+      }
       check_onboarding_data_consistency: {
         Args: { progress_id: string }
         Returns: Json
