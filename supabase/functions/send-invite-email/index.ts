@@ -2,6 +2,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 import { format } from 'https://esm.sh/date-fns@3.6.0'
 import { ptBR } from 'https://esm.sh/date-fns@3.6.0/locale/pt-BR'
+import { Resend } from 'https://esm.sh/@resend/node@2.1.1'
 
 // Configuração de CORS
 const corsHeaders = {
@@ -20,20 +21,14 @@ Deno.serve(async (req) => {
     // Obter segredos da configuração com suporte a múltiplos nomes de variáveis
     const supabaseUrl = Deno.env.get('PROJECT_URL') || Deno.env.get('SUPABASE_URL')
     const supabaseServiceKey = Deno.env.get('PRIVATE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-    const smtpHost = Deno.env.get('SMTP_HOST') || 'smtp.hostinger.com'
-    const smtpPort = parseInt(Deno.env.get('SMTP_PORT') || '465')
-    const smtpUser = Deno.env.get('SMTP_USER') || 'no-reply@viverdeia.ai'
-    const smtpPass = Deno.env.get('SMTP_PASS')
+    const resendApiKey = Deno.env.get('RESEND_API_KEY')
     
     // Log para diagnóstico das variáveis disponíveis
     console.log('Variáveis de ambiente disponíveis:',
       {
         supabaseUrl: supabaseUrl ? 'Configurado' : 'Não configurado',
         supabaseServiceKey: supabaseServiceKey ? 'Configurado' : 'Não configurado',
-        smtpHost: smtpHost ? smtpHost : 'Não configurado',
-        smtpPort: smtpPort,
-        smtpUser: smtpUser ? smtpUser : 'Não configurado',
-        smtpPass: smtpPass ? 'Configurado' : 'Não configurado',
+        resendApiKey: resendApiKey ? 'Configurado' : 'Não configurado',
       }
     )
     
@@ -47,14 +42,9 @@ Deno.serve(async (req) => {
       throw new Error('Configuração de ambiente Supabase incompleta')
     }
     
-    if (!smtpHost || !smtpPort || !smtpUser || !smtpPass) {
-      console.error('Erro de configuração: Credenciais SMTP ausentes', {
-        smtpHost: smtpHost ? 'Configurado' : 'Não configurado',
-        smtpPort: smtpPort ? 'Configurado' : 'Não configurado',
-        smtpUser: smtpUser ? 'Configurado' : 'Não configurado',
-        smtpPass: smtpPass ? 'Configurado' : 'Não configurado',
-      })
-      throw new Error('Configuração de SMTP incompleta')
+    if (!resendApiKey) {
+      console.error('Erro de configuração: Chave da API do Resend ausente')
+      throw new Error('Configuração de Resend incompleta')
     }
     
     // Inicializar cliente Supabase
@@ -66,6 +56,9 @@ Deno.serve(async (req) => {
       console.error('Erro ao inicializar cliente Supabase:', supabaseError)
       // Continuar com a execução - não bloquear o envio de email se o Supabase falhar
     }
+    
+    // Inicializar cliente Resend
+    const resend = new Resend(resendApiKey)
     
     // Obter dados do corpo da requisição
     const requestData = await req.json()
@@ -434,53 +427,30 @@ Deno.serve(async (req) => {
       </html>
     `
     
-    // Enviar o email usando as credenciais SMTP configuradas via fetch
-    const sendEmailWithFetch = async () => {
+    // Enviar o email usando o Resend
+    const sendEmailWithResend = async () => {
       try {
-        // Aqui estamos usando a API SMTP2GO que aceita requisições REST para envio de emails
-        // Esta API é compatível com Deno e não precisa do módulo Buffer
-        const emailApiUrl = 'https://api.smtp2go.com/v3/email/send';
+        console.log('Enviando email via Resend');
         
-        const emailPayload = {
-          api_key: smtpPass, // Usando a senha SMTP como API key para o serviço
+        const fromEmail = "VIVER DE IA Club <no-reply@viverdeia.ai>";
+        
+        const emailResponse = await resend.emails.send({
+          from: fromEmail,
           to: [email],
-          sender: `VIVER DE IA Club <${smtpUser}>`,
           subject: `Convite para o VIVER DE IA Club - Acesso como ${roleName || 'membro'}`,
-          html_body: emailHtml,
-          text_body: `Você foi convidado para o VIVER DE IA Club como ${roleName || 'membro'}. Acesse o link para aceitar: ${inviteUrl}`,
-          custom_headers: [
-            {
-              header: "Reply-To",
-              value: smtpUser
-            }
-          ]
-        };
-        
-        console.log('Enviando email via API REST');
-        
-        const response = await fetch(emailApiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify(emailPayload)
+          html: emailHtml,
+          text: `Você foi convidado para o VIVER DE IA Club como ${roleName || 'membro'}. Acesse o link para aceitar: ${inviteUrl}`,
+          reply_to: "no-reply@viverdeia.ai"
         });
         
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(`Erro na API de email: ${JSON.stringify(errorData)}`);
-        }
-        
-        const responseData = await response.json();
-        console.log('Resposta da API de email:', responseData);
+        console.log('Resposta do Resend:', emailResponse);
         
         return {
           success: true,
-          messageId: responseData.data?.email_id || `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          messageId: emailResponse.id || `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
         };
       } catch (error) {
-        console.error('Erro durante envio de email:', error);
+        console.error('Erro durante envio de email com Resend:', error);
         throw error;
       }
     };
@@ -489,7 +459,7 @@ Deno.serve(async (req) => {
     let emailResponse = null;
     try {
       console.log(`Enviando email para: ${email}`);
-      emailResponse = await sendEmailWithFetch();
+      emailResponse = await sendEmailWithResend();
       console.log('Email enviado com sucesso:', emailResponse);
     } catch (emailError) {
       console.error('Erro ao enviar email:', emailError);

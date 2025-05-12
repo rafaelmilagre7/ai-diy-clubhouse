@@ -81,3 +81,7 @@ vector_port = 54328
 # Criação de função RPC para atualizar estatísticas de envio
 [functions.update_invite_send_stats]
 verify_jwt = true
+
+# Configuração da função de envio de email
+[functions.send-invite-email]
+verify_jwt = true
