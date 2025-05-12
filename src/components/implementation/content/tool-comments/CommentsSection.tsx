@@ -48,8 +48,8 @@ export const CommentsSection = ({ solutionId, moduleId }: CommentsSectionProps) 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <MessageSquare className="h-5 w-5 text-[#0ABAB5]" />
-        <h2 className="text-xl font-semibold">Comentários</h2>
+        <MessageSquare className="h-5 w-5 text-viverblue" />
+        <h2 className="text-xl font-semibold text-textPrimary">Comentários</h2>
       </div>
       
       <CommentForm
@@ -61,7 +61,7 @@ export const CommentsSection = ({ solutionId, moduleId }: CommentsSectionProps) 
         isSubmitting={isSubmitting}
       />
 
-      <Separator />
+      <Separator className="bg-white/10" />
       
       <CommentList
         comments={safeComments}

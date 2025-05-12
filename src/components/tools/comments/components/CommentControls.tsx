@@ -26,7 +26,10 @@ export const CommentControls = ({
           size="sm"
           onClick={onImageUploadClick}
           disabled={imagesCount >= 3}
-          className={cn("text-xs", imagesCount >= 3 && "opacity-50")}
+          className={cn(
+            "text-xs bg-backgroundLight border-white/10 text-textSecondary hover:text-textPrimary hover:bg-backgroundLight/80", 
+            imagesCount >= 3 && "opacity-50"
+          )}
         >
           <ImagePlus className="h-3.5 w-3.5 mr-1" />
           {imagesCount === 0 ? 'Adicionar imagem' : `${imagesCount}/3 imagens`}
@@ -37,7 +40,7 @@ export const CommentControls = ({
         type="submit" 
         size="sm"
         disabled={isSubmitting || !hasComment}
-        className="text-xs"
+        className="text-xs bg-viverblue hover:bg-viverblue/90"
       >
         <Send className="h-3.5 w-3.5 mr-1" />
         {isSubmitting ? 'Enviando...' : 'Enviar'}

@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface ImageGalleryProps {
   images: File[];
@@ -9,23 +10,28 @@ interface ImageGalleryProps {
 
 export const ImageGallery = ({ images, onRemoveImage }: ImageGalleryProps) => {
   if (images.length === 0) return null;
-  
+
   return (
-    <div className="mt-2 flex gap-2">
+    <div className="mt-3 flex flex-wrap gap-2">
       {images.map((image, index) => (
-        <div key={index} className="relative w-16 h-16 border rounded overflow-hidden group">
-          <img 
-            src={URL.createObjectURL(image)} 
-            alt={`Imagem ${index + 1}`}
+        <div 
+          key={index} 
+          className="relative w-16 h-16 group rounded-md overflow-hidden border border-white/10"
+        >
+          <img
+            src={URL.createObjectURL(image)}
+            alt={`Anexo ${index + 1}`}
             className="w-full h-full object-cover"
           />
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute top-0.5 right-0.5 h-5 w-5 p-0.5 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
             onClick={() => onRemoveImage(index)}
-            className="absolute top-0 right-0 bg-black/50 text-white p-0.5 rounded-bl hidden group-hover:block"
           >
-            <X className="h-3 w-3" />
-          </button>
+            <X className="h-3 w-3 text-white" />
+          </Button>
         </div>
       ))}
     </div>

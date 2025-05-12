@@ -32,13 +32,13 @@ export const CommentForm = ({
   };
   
   return (
-    <Card className="p-4 bg-white shadow-sm border-viverblue/20">
+    <Card className="p-4 bg-backgroundLight border-white/10">
       <form onSubmit={handleSubmit} className="space-y-4">
         {replyTo && (
-          <div className="flex items-center justify-between p-3 bg-viverblue/5 rounded-md">
+          <div className="flex items-center justify-between p-3 bg-viverblue/5 rounded-md border border-viverblue/20">
             <div className="flex items-center gap-2">
               <MessageSquare className="h-4 w-4 text-viverblue" />
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium text-textPrimary">
                 Respondendo para {replyTo.profiles?.name || 'Usuário'}
               </span>
             </div>
@@ -49,7 +49,7 @@ export const CommentForm = ({
               onClick={cancelReply} 
               className="h-6 w-6 p-0 hover:bg-viverblue/10"
             >
-              <X className="h-4 w-4" />
+              <X className="h-4 w-4 text-textSecondary" />
             </Button>
           </div>
         )}
@@ -59,7 +59,7 @@ export const CommentForm = ({
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           placeholder={replyTo ? "Escreva sua resposta..." : "Compartilhe sua experiência ou dúvida sobre esta solução..."}
-          className="min-h-24 resize-y focus-visible:ring-viverblue"
+          className="min-h-24 resize-y bg-backgroundLight border-white/10 text-textPrimary focus-visible:ring-viverblue"
         />
         
         <div className="flex justify-end">

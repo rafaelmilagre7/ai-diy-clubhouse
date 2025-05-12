@@ -37,7 +37,7 @@ export const CommentItem = ({ comment, onReply, onLike, onDelete }: CommentItemP
   };
 
   return (
-    <Card className="bg-white border-viverblue/10 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <Card className="bg-[#151823] border-white/10 shadow-sm hover:shadow-md hover:border-white/20 transition-all duration-300">
       <div className="p-4 space-y-4">
         <div className="flex gap-4">
           <Avatar className="h-10 w-10 ring-2 ring-viverblue/10">
@@ -51,7 +51,7 @@ export const CommentItem = ({ comment, onReply, onLike, onDelete }: CommentItemP
             <div className="flex justify-between items-start">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-gray-900">{comment.profiles?.name || 'Usuário'}</span>
+                  <span className="font-semibold text-textPrimary">{comment.profiles?.name || 'Usuário'}</span>
                   {comment.profiles?.role === 'admin' && (
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-viverblue/10 text-viverblue">
                       <Shield className="h-3 w-3 mr-1" />
@@ -59,7 +59,7 @@ export const CommentItem = ({ comment, onReply, onLike, onDelete }: CommentItemP
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground">{formatDate(comment.created_at)}</p>
+                <p className="text-sm text-textSecondary">{formatDate(comment.created_at)}</p>
               </div>
               
               {isAuthor && (
@@ -67,14 +67,14 @@ export const CommentItem = ({ comment, onReply, onLike, onDelete }: CommentItemP
                   variant="ghost" 
                   size="sm" 
                   onClick={() => onDelete(comment)}
-                  className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                  className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-900/20"
                 >
                   <Trash className="h-4 w-4" />
                 </Button>
               )}
             </div>
             
-            <div className="text-gray-700 leading-relaxed">
+            <div className="text-textPrimary leading-relaxed">
               {comment.content}
             </div>
             
@@ -84,7 +84,7 @@ export const CommentItem = ({ comment, onReply, onLike, onDelete }: CommentItemP
                 size="sm" 
                 onClick={() => onLike(comment)}
                 className={`text-xs hover:bg-viverblue/10 ${
-                  comment.user_has_liked ? 'text-viverblue' : 'text-muted-foreground'
+                  comment.user_has_liked ? 'text-viverblue' : 'text-textSecondary hover:text-textPrimary'
                 }`}
               >
                 <ThumbsUp className="h-3.5 w-3.5 mr-1" />
@@ -95,7 +95,7 @@ export const CommentItem = ({ comment, onReply, onLike, onDelete }: CommentItemP
                 variant="ghost" 
                 size="sm" 
                 onClick={() => onReply(comment)}
-                className="text-xs text-muted-foreground hover:bg-viverblue/10"
+                className="text-xs text-textSecondary hover:text-textPrimary hover:bg-viverblue/10"
               >
                 <MessageSquare className="h-3.5 w-3.5 mr-1" />
                 Responder

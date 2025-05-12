@@ -75,8 +75,8 @@ export const CommentForm = ({
 
   if (!user) {
     return (
-      <div className="text-center p-4 border rounded-lg bg-gray-50">
-        <p className="text-muted-foreground">
+      <div className="text-center p-4 border border-white/10 rounded-lg bg-backgroundLight">
+        <p className="text-textSecondary">
           Faça login para adicionar um comentário.
         </p>
       </div>
@@ -84,7 +84,7 @@ export const CommentForm = ({
   }
 
   return (
-    <form onSubmit={onSubmit} className="border rounded-lg p-4 bg-white">
+    <form onSubmit={onSubmit} className="border border-white/10 rounded-lg p-4 bg-[#151823]">
       <ReplyHeader replyTo={replyTo} onCancelReply={cancelReply} />
       
       <div className="flex gap-3">
@@ -92,7 +92,7 @@ export const CommentForm = ({
           {profile?.avatar_url ? (
             <AvatarImage src={profile.avatar_url} alt={profile.name || 'Usuário'} />
           ) : (
-            <AvatarFallback className="bg-[#0ABAB5]/10 text-[#0ABAB5]">
+            <AvatarFallback className="bg-viverblue/10 text-viverblue">
               {getInitials(profile?.name)}
             </AvatarFallback>
           )}
@@ -104,7 +104,7 @@ export const CommentForm = ({
             placeholder={replyTo ? "Escreva sua resposta..." : "Compartilhe sua experiência ou dica..."}
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            className="min-h-24 resize-none"
+            className="min-h-24 resize-none bg-backgroundLight border-white/10 text-textPrimary focus-visible:ring-viverblue"
           />
           
           <ImageGallery 

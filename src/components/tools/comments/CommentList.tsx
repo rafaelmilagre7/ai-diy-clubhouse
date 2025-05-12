@@ -3,6 +3,8 @@ import { Comment } from '@/types/commentTypes';
 import { CommentItem } from './CommentItem';
 import { useAuth } from '@/contexts/auth';
 import { Skeleton } from '@/components/ui/skeleton';
+import { MessageSquare } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 
 interface CommentListProps {
   comments: Comment[];
@@ -25,18 +27,18 @@ export const CommentList = ({
     return (
       <div className="space-y-6">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="space-y-3">
+          <div key={i} className="space-y-3 p-4 border border-white/5 rounded-lg bg-backgroundLight">
             <div className="flex items-center gap-2">
-              <Skeleton className="w-10 h-10 rounded-full" />
+              <Skeleton className="w-10 h-10 rounded-full bg-white/10" />
               <div>
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-3 w-16 mt-1" />
+                <Skeleton className="h-4 w-24 bg-white/10" />
+                <Skeleton className="h-3 w-16 mt-1 bg-white/10" />
               </div>
             </div>
-            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-16 w-full bg-white/10" />
             <div className="flex gap-2">
-              <Skeleton className="h-8 w-16" />
-              <Skeleton className="h-8 w-16" />
+              <Skeleton className="h-8 w-16 bg-white/10" />
+              <Skeleton className="h-8 w-16 bg-white/10" />
             </div>
           </div>
         ))}
@@ -46,11 +48,12 @@ export const CommentList = ({
 
   if (comments.length === 0) {
     return (
-      <div className="text-center py-8 bg-gray-50 rounded-lg border border-dashed">
-        <p className="text-muted-foreground">
+      <Card className="p-8 text-center border-dashed border-2 border-viverblue/20 bg-viverblue/5">
+        <MessageSquare className="h-12 w-12 mx-auto text-viverblue/40 mb-4" />
+        <p className="text-textSecondary">
           Ainda não há comentários. Seja o primeiro a comentar!
         </p>
-      </div>
+      </Card>
     );
   }
 
@@ -68,7 +71,7 @@ export const CommentList = ({
           
           {/* Respostas */}
           {comment.replies && comment.replies.length > 0 && (
-            <div className="pl-6 border-l border-gray-200 space-y-6">
+            <div className="pl-6 border-l border-white/10 space-y-6">
               {comment.replies.map((reply) => (
                 <CommentItem
                   key={reply.id}
