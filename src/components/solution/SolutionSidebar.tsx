@@ -50,30 +50,30 @@ export const SolutionSidebar = ({
   };
   
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm space-y-6 hidden sm:block">
+    <div className="bg-[#151823] border border-white/5 p-6 rounded-lg shadow-sm space-y-6 hidden sm:block">
       <div>
-        <h3 className="font-medium mb-2 text-neutral-900">Status de Implementação</h3>
+        <h3 className="font-medium mb-2 text-neutral-100">Status de Implementação</h3>
         {progress ? (
           progress.is_completed ? (
-            <div className="flex items-center text-green-600">
+            <div className="flex items-center text-green-500">
               <CheckCircle className="h-5 w-5 mr-2" />
               <span>Implementação concluída</span>
             </div>
           ) : (
             <div>
-              <p className="text-sm text-neutral-600">
+              <p className="text-sm text-neutral-400">
                 Implementação não concluída
               </p>
             </div>
           )
         ) : (
-          <p className="text-sm text-neutral-600">
+          <p className="text-sm text-neutral-400">
             Implementação não iniciada
           </p>
         )}
       </div>
       
-      <div className="pt-4 border-t">
+      <div className="pt-4 border-t border-white/5">
         {progress?.is_completed ? (
           <div className="space-y-3">
             <Button 
@@ -104,21 +104,21 @@ export const SolutionSidebar = ({
         )}
       </div>
       
-      <div className="pt-4 border-t">
-        <h3 className="font-medium mb-2 text-neutral-900">Informações</h3>
+      <div className="pt-4 border-t border-white/5">
+        <h3 className="font-medium mb-2 text-neutral-100">Informações</h3>
         <div className="space-y-2">
           {solution.category && (
             <div className="flex justify-between text-sm">
-              <span className="text-neutral-600">Categoria:</span>
-              <span className="font-medium text-neutral-900">
+              <span className="text-neutral-400">Categoria:</span>
+              <span className="font-medium text-neutral-200">
                 {getCategoryDisplayText(solution.category)}
               </span>
             </div>
           )}
           {solution.difficulty && (
             <div className="flex justify-between text-sm">
-              <span className="text-neutral-600">Dificuldade:</span>
-              <span className="font-medium text-neutral-900">
+              <span className="text-neutral-400">Dificuldade:</span>
+              <span className="font-medium text-neutral-200">
                 {solution.difficulty === "easy" && "Fácil"}
                 {solution.difficulty === "medium" && "Médio"}
                 {solution.difficulty === "advanced" && "Avançado"}
@@ -127,16 +127,16 @@ export const SolutionSidebar = ({
           )}
           {solution.estimated_time && solution.estimated_time > 0 && (
             <div className="flex justify-between text-sm">
-              <span className="text-neutral-600">Tempo estimado:</span>
-              <span className="font-medium text-neutral-900">
+              <span className="text-neutral-400">Tempo estimado:</span>
+              <span className="font-medium text-neutral-200">
                 {solution.estimated_time} minutos
               </span>
             </div>
           )}
           {typeof solution.success_rate === "number" && solution.success_rate > 0 && (
             <div className="flex justify-between text-sm">
-              <span className="text-neutral-600">Taxa de sucesso:</span>
-              <span className="font-medium text-neutral-900">
+              <span className="text-neutral-400">Taxa de sucesso:</span>
+              <span className="font-medium text-neutral-200">
                 {solution.success_rate}%
               </span>
             </div>
@@ -145,13 +145,13 @@ export const SolutionSidebar = ({
       </div>
       
       {solution.tags && solution.tags.length > 0 && (
-        <div className="pt-4 border-t">
-          <h3 className="font-medium mb-2 text-neutral-900">Tags</h3>
+        <div className="pt-4 border-t border-white/5">
+          <h3 className="font-medium mb-2 text-neutral-100">Tags</h3>
           <div className="flex flex-wrap gap-2">
             {solution.tags.map((tag, index) => (
               <span 
                 key={index}
-                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900/40 text-blue-200 border border-blue-700/30"
               >
                 {tag}
               </span>
