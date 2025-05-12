@@ -18,9 +18,9 @@ export function useUserStats() {
     averageCompletionTime: null,
     activeDays: 0,
     categoryDistribution: {
-      revenue: { total: 0, completed: 0 },
-      operational: { total: 0, completed: 0 },
-      strategy: { total: 0, completed: 0 }
+      Receita: { total: 0, completed: 0 },
+      Operacional: { total: 0, completed: 0 },
+      Estratégia: { total: 0, completed: 0 }
     },
     recentActivity: []
   });
@@ -53,9 +53,9 @@ export function useUserStats() {
           averageCompletionTime: 45,
           activeDays: 5,
           categoryDistribution: {
-            revenue: { total: 1, completed: 1 },
-            operational: { total: 1, completed: 1 },
-            strategy: { total: 1, completed: 0 }
+            Receita: { total: 1, completed: 1 },
+            Operacional: { total: 1, completed: 1 },
+            Estratégia: { total: 1, completed: 0 }
           },
           recentActivity: [
             { date: new Date().toISOString(), action: "Solução concluída", solution: "Assistente de IA no WhatsApp" }

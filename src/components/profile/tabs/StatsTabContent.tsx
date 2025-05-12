@@ -36,11 +36,11 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
                 <div>
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-revenue">Aumento de Receita</span>
-                    <span>{stats.categoryDistribution.revenue.completed}/{stats.categoryDistribution.revenue.total}</span>
+                    <span>{stats.categoryDistribution.Receita.completed}/{stats.categoryDistribution.Receita.total}</span>
                   </div>
                   <Progress 
-                    value={stats.categoryDistribution.revenue.total > 0 ? 
-                      (stats.categoryDistribution.revenue.completed / stats.categoryDistribution.revenue.total) * 100 : 0
+                    value={stats.categoryDistribution.Receita.total > 0 ? 
+                      (stats.categoryDistribution.Receita.completed / stats.categoryDistribution.Receita.total) * 100 : 0
                     } 
                     className="h-2 bg-muted" 
                   />
@@ -48,11 +48,11 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
                 <div>
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-operational">Otimização Operacional</span>
-                    <span>{stats.categoryDistribution.operational.completed}/{stats.categoryDistribution.operational.total}</span>
+                    <span>{stats.categoryDistribution.Operacional.completed}/{stats.categoryDistribution.Operacional.total}</span>
                   </div>
                   <Progress 
-                    value={stats.categoryDistribution.operational.total > 0 ? 
-                      (stats.categoryDistribution.operational.completed / stats.categoryDistribution.operational.total) * 100 : 0
+                    value={stats.categoryDistribution.Operacional.total > 0 ? 
+                      (stats.categoryDistribution.Operacional.completed / stats.categoryDistribution.Operacional.total) * 100 : 0
                     } 
                     className="h-2 bg-muted" 
                   />
@@ -60,11 +60,11 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
                 <div>
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-strategy">Gestão Estratégica</span>
-                    <span>{stats.categoryDistribution.strategy.completed}/{stats.categoryDistribution.strategy.total}</span>
+                    <span>{stats.categoryDistribution.Estratégia.completed}/{stats.categoryDistribution.Estratégia.total}</span>
                   </div>
                   <Progress 
-                    value={stats.categoryDistribution.strategy.total > 0 ? 
-                      (stats.categoryDistribution.strategy.completed / stats.categoryDistribution.strategy.total) * 100 : 0
+                    value={stats.categoryDistribution.Estratégia.total > 0 ? 
+                      (stats.categoryDistribution.Estratégia.completed / stats.categoryDistribution.Estratégia.total) * 100 : 0
                     } 
                     className="h-2 bg-muted" 
                   />
@@ -163,7 +163,7 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
                   </Card>
                 )}
                 
-                {stats.categoryDistribution.strategy.completed === 0 && (
+                {stats.categoryDistribution.Estratégia.completed === 0 && (
                   <Card className="p-3">
                     <div className="flex justify-between items-center">
                       <div>

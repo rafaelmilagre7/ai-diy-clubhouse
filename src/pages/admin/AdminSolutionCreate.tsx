@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,7 +22,7 @@ const AdminSolutionCreate = () => {
   const defaultValues: SolutionFormValues = {
     title: "",
     description: "",
-    category: "revenue",
+    category: "Receita",
     difficulty: "medium",
     thumbnail_url: "",
     published: false,

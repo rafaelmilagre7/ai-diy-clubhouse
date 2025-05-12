@@ -10,9 +10,9 @@ export const DEFAULT_STATS: UserStats = {
   averageCompletionTime: null,
   activeDays: 0,
   categoryDistribution: {
-    revenue: { total: 0, completed: 0 },
-    operational: { total: 0, completed: 0 },
-    strategy: { total: 0, completed: 0 }
+    Receita: { total: 0, completed: 0 },
+    Operacional: { total: 0, completed: 0 },
+    Estratégia: { total: 0, completed: 0 }
   },
   recentActivity: [],
   totalTimeSpent: 0,
@@ -27,9 +27,9 @@ export const calculateCategoryDistribution = (
 ): CategoryDistribution => {
   // Initialize category distribution
   const categoryDistribution: CategoryDistribution = {
-    revenue: { total: 0, completed: 0 },
-    operational: { total: 0, completed: 0 },
-    strategy: { total: 0, completed: 0 }
+    Receita: { total: 0, completed: 0 },
+    Operacional: { total: 0, completed: 0 },
+    Estratégia: { total: 0, completed: 0 }
   };
 
   // Count solutions by category
