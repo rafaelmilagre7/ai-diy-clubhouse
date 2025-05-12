@@ -207,12 +207,12 @@ serve(async (req) => {
     
     // Enviar email
     const senderEmail = smtpUser;
-    const senderName = "VIVER DE IA Club";
+    const emailSenderName = "VIVER DE IA Club";
     
     console.log("Enviando email para:", email);
     
     const sendInfo = await client.send({
-      from: `${senderName} <${senderEmail}>`,
+      from: `${emailSenderName} <${senderEmail}>`,
       to: email,
       subject: titleMessage,
       content: htmlContent,
