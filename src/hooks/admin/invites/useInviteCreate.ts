@@ -9,7 +9,12 @@ import { useInviteEmailService } from './useInviteEmailService';
 export function useInviteCreate() {
   const { user } = useAuth();
   const [isCreating, setIsCreating] = useState(false);
-  const { sendInviteEmail, getInviteLink } = useInviteEmailService();
+  const { 
+    sendInviteEmail, 
+    getInviteLink, 
+    pendingEmails, 
+    retryAllPendingEmails 
+  } = useInviteEmailService();
 
   // Criar novo convite
   const createInvite = useCallback(async (email: string, roleId: string, notes?: string, expiresIn: string = '7 days') => {
@@ -76,7 +81,11 @@ export function useInviteCreate() {
       
       if (!sendResult.success) {
         toast.warning('Convite criado, mas houve um erro ao enviar o e-mail', {
-          description: sendResult.error || 'O sistema tentará reenviar o e-mail mais tarde.'
+          description: 'O sistema tentará reenviar o e-mail automaticamente em breve.',
+          action: {
+            label: 'Tentar Agora',
+            onClick: () => retryAllPendingEmails()
+          }
         });
       } else {
         toast.success('Convite criado com sucesso', {
@@ -84,7 +93,10 @@ export function useInviteCreate() {
         });
       }
       
-      return data;
+      return {
+        ...data,
+        emailStatus: sendResult.success ? 'sent' : 'pending'
+      };
     } catch (err: any) {
       console.error('Erro ao criar convite:', err);
       toast.error('Erro ao criar convite', {
@@ -94,10 +106,11 @@ export function useInviteCreate() {
     } finally {
       setIsCreating(false);
     }
-  }, [user, sendInviteEmail, getInviteLink]);
+  }, [user, sendInviteEmail, getInviteLink, retryAllPendingEmails]);
 
   return {
     isCreating,
-    createInvite
+    createInvite,
+    pendingEmails
   };
 }

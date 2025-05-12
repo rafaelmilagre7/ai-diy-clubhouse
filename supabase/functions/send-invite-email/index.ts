@@ -18,24 +18,55 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Obter segredos da configuração
-    const supabaseUrl = Deno.env.get('PROJECT_URL')
-    const supabaseServiceKey = Deno.env.get('PRIVATE_SERVICE_ROLE_KEY')
+    // Obter segredos da configuração com suporte a múltiplos nomes de variáveis
+    const supabaseUrl = Deno.env.get('PROJECT_URL') || Deno.env.get('SUPABASE_URL')
+    const supabaseServiceKey = Deno.env.get('PRIVATE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     const smtpHost = Deno.env.get('SMTP_HOST') || 'smtp.hostinger.com'
     const smtpPort = parseInt(Deno.env.get('SMTP_PORT') || '465')
     const smtpUser = Deno.env.get('SMTP_USER') || 'no-reply@viverdeia.ai'
     const smtpPass = Deno.env.get('SMTP_PASS')
     
+    // Log para diagnóstico das variáveis disponíveis
+    console.log('Variáveis de ambiente disponíveis:',
+      {
+        supabaseUrl: supabaseUrl ? 'Configurado' : 'Não configurado',
+        supabaseServiceKey: supabaseServiceKey ? 'Configurado' : 'Não configurado',
+        smtpHost: smtpHost ? smtpHost : 'Não configurado',
+        smtpPort: smtpPort,
+        smtpUser: smtpUser ? smtpUser : 'Não configurado',
+        smtpPass: smtpPass ? 'Configurado' : 'Não configurado',
+      }
+    )
+    
     if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Erro de configuração: URLs do Supabase ausentes', {
+        PROJECT_URL: Deno.env.get('PROJECT_URL') ? 'Configurado' : 'Não configurado',
+        SUPABASE_URL: Deno.env.get('SUPABASE_URL') ? 'Configurado' : 'Não configurado',
+        PRIVATE_SERVICE_ROLE_KEY: Deno.env.get('PRIVATE_SERVICE_ROLE_KEY') ? 'Configurado' : 'Não configurado',
+        SUPABASE_SERVICE_ROLE_KEY: Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ? 'Configurado' : 'Não configurado'
+      })
       throw new Error('Configuração de ambiente Supabase incompleta')
     }
     
     if (!smtpHost || !smtpPort || !smtpUser || !smtpPass) {
+      console.error('Erro de configuração: Credenciais SMTP ausentes', {
+        smtpHost: smtpHost ? 'Configurado' : 'Não configurado',
+        smtpPort: smtpPort ? 'Configurado' : 'Não configurado',
+        smtpUser: smtpUser ? 'Configurado' : 'Não configurado',
+        smtpPass: smtpPass ? 'Configurado' : 'Não configurado',
+      })
       throw new Error('Configuração de SMTP incompleta')
     }
     
     // Inicializar clientes
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    let supabase = null
+    try {
+      supabase = createClient(supabaseUrl, supabaseServiceKey)
+      console.log('Cliente Supabase inicializado com sucesso')
+    } catch (supabaseError) {
+      console.error('Erro ao inicializar cliente Supabase:', supabaseError)
+      // Continuar com a execução - não bloquear o envio de email se o Supabase falhar
+    }
     
     // Configurar transportador SMTP
     const transporter = nodemailer.createTransport({
@@ -47,6 +78,15 @@ Deno.serve(async (req) => {
         pass: smtpPass
       }
     })
+    
+    // Testar conexão SMTP
+    try {
+      await transporter.verify()
+      console.log('Conexão SMTP verificada com sucesso')
+    } catch (smtpError) {
+      console.error('Erro na verificação SMTP:', smtpError)
+      throw new Error(`Falha na conexão SMTP: ${smtpError.message}`)
+    }
     
     // Obter dados do corpo da requisição
     const requestData = await req.json()
@@ -426,17 +466,32 @@ Deno.serve(async (req) => {
       html: emailHtml,
     }
     
-    // Enviar o email
-    const emailResponse = await transporter.sendMail(mailOptions)
-    
-    console.log('Resposta do envio:', emailResponse)
+    let emailResponse = null;
+    try {
+      // Enviar o email
+      emailResponse = await transporter.sendMail(mailOptions)
+      console.log('Email enviado com sucesso:', emailResponse)
+    } catch (emailError) {
+      console.error('Erro ao enviar email:', emailError)
+      throw new Error(`Falha ao enviar email: ${emailError.message}`)
+    }
     
     // Atualizar estatísticas de envio do convite se temos um ID
-    if (inviteId) {
-      console.log(`Atualizando estatísticas do convite ${inviteId}`)
-      await supabase.rpc('update_invite_send_attempt', {
-        invite_id: inviteId
-      })
+    // Isolado em um try/catch separado para não afetar a resposta do email
+    if (supabase && inviteId) {
+      try {
+        console.log(`Atualizando estatísticas do convite ${inviteId}`)
+        await supabase.rpc('update_invite_send_attempt', {
+          invite_id: inviteId
+        })
+        console.log(`Estatísticas do convite ${inviteId} atualizadas com sucesso`)
+      } catch (statsError) {
+        // Logging do erro, mas não bloquear o fluxo principal
+        console.error('Erro ao atualizar estatísticas do convite:', statsError)
+        // Não lançar erro aqui, pois o email já foi enviado com sucesso
+      }
+    } else if (inviteId) {
+      console.warn('Não foi possível atualizar estatísticas: Cliente Supabase não inicializado')
     }
     
     // Retornar sucesso
@@ -456,12 +511,14 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Erro ao enviar email de convite:', error)
     
-    // Retornar erro
+    // Retornar erro detalhado para facilitar o diagnóstico
     return new Response(
       JSON.stringify({
         success: false,
         message: 'Erro ao enviar email de convite',
-        error: error.message || 'Erro desconhecido'
+        error: error.message || 'Erro desconhecido',
+        stack: error.stack,
+        timestamp: new Date().toISOString()
       }),
       { 
         status: 500,
@@ -473,4 +530,3 @@ Deno.serve(async (req) => {
     )
   }
 })
-

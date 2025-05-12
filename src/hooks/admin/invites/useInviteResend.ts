@@ -64,21 +64,27 @@ export function useInviteResend() {
           description: `Um novo e-mail foi enviado para ${invite.email}.`
         });
       } else {
+        // Mesmo que haja um erro, a função useInviteEmailService já adicionará à fila de retentativas
         toast.error('Erro ao reenviar convite', {
-          description: sendResult.error || 'Não foi possível reenviar o e-mail.'
+          description: `Falha ao enviar email. ${sendResult.error || 'O sistema tentará novamente em breve.'}`,
+          action: {
+            label: 'Tentar Novamente',
+            onClick: () => resendInvite(invite)
+          }
         });
       }
 
       return {
         token: invite.token,
-        expires_at: invite.expires_at
+        expires_at: invite.expires_at,
+        emailStatus: sendResult.success ? 'sent' : 'pending'
       };
     } catch (err: any) {
       console.error('Erro ao reenviar convite:', err);
       toast.error('Erro ao reenviar convite', {
         description: err.message || 'Não foi possível reenviar o convite.'
       });
-      throw err;
+      return null;
     } finally {
       setIsSending(false);
     }
