@@ -19,46 +19,13 @@ export const SolutionCard = ({ solution, onClick }: SolutionCardProps) => {
     onClick();
   };
 
-  // Função para mapeamento de categorias para classes CSS
-  const getCategoryStyleName = (category: SolutionCategory): string => {
-    switch (category) {
-      case "Receita":
-        return "revenue";
-      case "Operacional":
-        return "operational";
-      case "Estratégia":
-        return "strategy";
-      default:
-        return "";
-    }
-  };
-
-  // Definir classes específicas baseadas na categoria
-  const categoryStyles: Record<string, string> = {
-    revenue: "from-revenue-lighter to-white/95 border-l-4 border-l-revenue",
-    operational: "from-operational-lighter to-white/95 border-l-4 border-l-operational",
-    strategy: "from-strategy-lighter to-white/95 border-l-4 border-l-strategy"
-  };
-
-  // Obter o estilo correspondente à categoria atual
-  const categoryStyle = categoryStyles[getCategoryStyleName(solution.category)] || "from-gray-100 to-white";
-
-  // Aplicar animação de entrada com delay baseado na posição
-  // Isso será processado pelo CSS na classe animate-fade-in definida em utilities.css
-  const getAnimationDelay = () => {
-    const randomDelay = Math.floor(Math.random() * 5) * 100; // 0, 100, 200, 300, 400ms
-    return { '--delay': randomDelay } as React.CSSProperties;
-  };
-
   return (
     <Card 
       className={cn(
-        "overflow-hidden rounded-xl shadow-md transition-all duration-300 cursor-pointer",
-        "hover:shadow-xl hover:translate-y-[-4px]",
-        "bg-gradient-to-br stat-item-enter",
-        categoryStyle
+        "overflow-hidden rounded-xl transition-all duration-200 cursor-pointer",
+        "hover:shadow-md hover:translate-y-[-3px] border border-white/5 bg-[#151823]",
+        "group stat-item-enter"
       )}
-      style={getAnimationDelay()}
       onClick={handleSelect}
     >
       <CardContent className="p-0 relative">

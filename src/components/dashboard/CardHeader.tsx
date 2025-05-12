@@ -11,7 +11,7 @@ interface CardHeaderProps {
 }
 
 export const CardHeader = ({ category, difficulty }: CardHeaderProps) => {
-  // Função para mapear categorias antigas para os novos estilos
+  // Função para aplicar estilos discretos baseados na categoria
   const getCategoryStyles = () => {
     // Mapear para chaves de estilo com base na categoria
     const styleKey = Object.entries(categoryMapping).find(
@@ -22,13 +22,13 @@ export const CardHeader = ({ category, difficulty }: CardHeaderProps) => {
     
     switch (styleKey) {
       case "revenue":
-        return "bg-gradient-to-r from-revenue to-revenue-light text-white shadow-sm shadow-revenue/20";
+        return "bg-neutral-700 text-white";
       case "operational":
-        return "bg-gradient-to-r from-operational to-operational-light text-white shadow-sm shadow-operational/20";
+        return "bg-neutral-700 text-white";
       case "strategy":
-        return "bg-gradient-to-r from-strategy to-strategy-light text-white shadow-sm shadow-strategy/20";
+        return "bg-neutral-700 text-white";
       default:
-        return "bg-gradient-to-r from-neutral-700 to-neutral-600 text-white shadow-sm";
+        return "bg-neutral-700 text-white";
     }
   };
   
@@ -44,9 +44,8 @@ export const CardHeader = ({ category, difficulty }: CardHeaderProps) => {
   return (
     <div className="flex justify-between items-start mb-2">
       <Badge variant="outline" className={cn(
-        "px-3 py-1 font-medium rounded-full border-0",
-        "animate-slide-in transition-all duration-300",
-        "hover:scale-105",
+        "px-2.5 py-0.5 text-xs font-medium rounded-full",
+        "border-0 transition-all duration-300",
         getCategoryStyles()
       )}>
         {getCategoryLabel()}

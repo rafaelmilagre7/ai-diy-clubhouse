@@ -1,43 +1,31 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Clock } from "lucide-react";
-import { formatRelativeDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
+import { ChevronRight } from "lucide-react";
 
 interface CardFooterProps {
-  createdAt: string;
+  createdAt?: string;
   onSelect: () => void;
 }
 
-// Função para formatar a data relativa (implementada no utils)
-const formatRelative = (dateString: string): string => {
-  // Fallback temporário caso a função de utils não esteja disponível
-  try {
-    return formatRelativeDate(dateString);
-  } catch (e) {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) return "Hoje";
-    if (diffDays === 1) return "Ontem";
-    if (diffDays < 7) return `${diffDays} dias atrás`;
-    return date.toLocaleDateString('pt-BR');
-  }
-};
-
 export const CardFooterSection = ({ createdAt, onSelect }: CardFooterProps) => {
   return (
-    <div className="flex justify-between items-center p-4 border-t w-full">
-      <div className="flex items-center text-sm text-neutral-500">
-        <Clock className="h-3.5 w-3.5 mr-1.5 text-neutral-400" />
-        <span>{formatRelative(createdAt)}</span>
+    <div className="flex items-center justify-between w-full px-4 py-3 border-t border-white/5">
+      <div className="text-xs text-neutral-500">
+        {createdAt ? formatDate(new Date(createdAt)) : "Data não disponível"}
       </div>
+      
       <Button 
-        onClick={onSelect}
-        className="bg-gradient-to-r from-viverblue to-viverblue-light hover:opacity-90 rounded-full p-2 h-auto w-auto transition-all duration-300 hover:shadow-md"
+        variant="ghost" 
+        size="sm" 
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect();
+        }}
+        className="p-0 h-6 text-neutral-400 hover:text-white hover:bg-transparent"
       >
-        <ArrowRight className="h-4 w-4" />
+        <span className="mr-1 text-xs">Ver</span>
+        <ChevronRight className="h-3.5 w-3.5" />
       </Button>
     </div>
   );

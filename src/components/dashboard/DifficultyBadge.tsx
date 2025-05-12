@@ -6,35 +6,44 @@ interface DifficultyBadgeProps {
   difficulty: string;
 }
 
-export const DifficultyBadge: React.FC<DifficultyBadgeProps> = ({ difficulty }) => {
-  const getLevelInfo = (level: string) => {
-    switch (level?.toLowerCase()) {
-      case "beginner":
-      case "iniciante":
-        return { label: "Iniciante", color: "bg-green-100 text-green-700 border-green-200" };
-      case "intermediate":
-      case "intermediário":
-        return { label: "Intermediário", color: "bg-amber-100 text-amber-700 border-amber-200" };
-      case "advanced":
-      case "avançado":
-        return { label: "Avançado", color: "bg-red-100 text-red-700 border-red-200" };
+export const DifficultyBadge = ({ difficulty }: DifficultyBadgeProps) => {
+  // Função para obter label em português
+  const getLabel = () => {
+    switch (difficulty) {
+      case 'easy':
+        return 'Fácil';
+      case 'medium':
+        return 'Médio';
+      case 'advanced':
+        return 'Avançado';
       default:
-        return { label: level || "N/A", color: "bg-gray-100 text-gray-700 border-gray-200" };
+        return difficulty;
     }
   };
-
-  const { label, color } = getLevelInfo(difficulty);
-
+  
+  // Função para obter classe de estilo
+  const getStyleClass = () => {
+    switch (difficulty) {
+      case 'easy':
+        return 'bg-neutral-800 text-neutral-300';
+      case 'medium':
+        return 'bg-neutral-800 text-neutral-300';
+      case 'advanced':
+        return 'bg-neutral-800 text-neutral-300';
+      default:
+        return 'bg-neutral-800 text-neutral-300';
+    }
+  };
+  
   return (
-    <Badge
-      variant="outline"
+    <Badge 
+      variant="outline" 
       className={cn(
-        "text-xs rounded-full px-2 border",
-        "transition-all duration-300 hover:scale-105",
-        color
+        "px-2 py-0.5 text-xs rounded-full border-0",
+        getStyleClass()
       )}
     >
-      {label}
+      {getLabel()}
     </Badge>
   );
 };
