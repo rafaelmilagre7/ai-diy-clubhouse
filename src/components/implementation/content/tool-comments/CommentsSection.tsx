@@ -15,7 +15,6 @@ interface CommentsSectionProps {
 
 export const CommentsSection = ({ solutionId, moduleId }: CommentsSectionProps) => {
   // Utilizamos apenas o solutionId como identificador do toolId
-  // já que moduleId pode não ser um UUID válido quando combinado
   const toolId = solutionId;
   
   const {
