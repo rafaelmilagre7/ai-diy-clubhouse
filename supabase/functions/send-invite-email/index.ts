@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { format } from "https://deno.land/std@0.168.0/datetime/mod.ts";
-import nodemailer from "https://esm.sh/nodemailer@6.9.9";
+import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -182,7 +182,7 @@ serve(async (req) => {
       </html>
     `;
 
-    // Configuração do transporte SMTP usando Nodemailer
+    // Configuração do cliente SMTP para Deno
     const smtpHost = Deno.env.get("SMTP_HOST");
     const smtpPort = Deno.env.get("SMTP_PORT");
     const smtpUser = Deno.env.get("SMTP_USER");
@@ -192,30 +192,37 @@ serve(async (req) => {
       throw new Error("Configurações SMTP incompletas. Verifique as variáveis de ambiente.");
     }
     
-    console.log("Configurando SMTP com host:", smtpHost);
+    console.log("Configurando SMTP com host:", smtpHost, "porta:", smtpPort);
     
-    const transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: parseInt(smtpPort),
-      secure: parseInt(smtpPort) === 465, // true para porta 465, false para outras portas
-      auth: {
-        user: smtpUser,
-        pass: smtpPass,
-      }
+    // Criar cliente SMTP do Deno
+    const client = new SmtpClient();
+    
+    // Conectar ao servidor
+    await client.connectTLS({
+      hostname: smtpHost,
+      port: Number(smtpPort),
+      username: smtpUser,
+      password: smtpPass,
     });
     
-    // Enviar email usando Nodemailer
-    const mailOptions = {
-      from: `"VIVER DE IA Club" <${smtpUser}>`,
-      to: email,
-      subject: titleMessage,
-      html: htmlContent,
-    };
+    // Enviar email
+    const senderEmail = smtpUser;
+    const senderName = "VIVER DE IA Club";
     
     console.log("Enviando email para:", email);
     
-    const info = await transporter.sendMail(mailOptions);
-    console.log("Email enviado:", info);
+    const sendInfo = await client.send({
+      from: `${senderName} <${senderEmail}>`,
+      to: email,
+      subject: titleMessage,
+      content: htmlContent,
+      html: htmlContent,
+    });
+    
+    // Fechar a conexão
+    await client.close();
+    
+    console.log("Email enviado:", sendInfo);
 
     // Registrar tentativa de envio no banco de dados
     if (inviteId) {
@@ -233,7 +240,7 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         message: "Email enviado com sucesso",
-        id: info.messageId,
+        id: sendInfo ? "deno_smtp_success" : "unknown",
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
