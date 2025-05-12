@@ -2,7 +2,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 import { Resend } from 'https://esm.sh/resend@3.1.0'
 import { format, addDays } from 'https://esm.sh/date-fns@3.6.0'
-import { ptBR } from 'https://esm.sh/date-fns/locale@3.6.0'
+import { ptBR } from 'https://esm.sh/date-fns@3.6.0/locale/pt-BR'
 
 // Configuração de CORS
 const corsHeaders = {
