@@ -28,13 +28,11 @@ const InvitePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   
-  // Estados para cadastro/login de usuário
+  // Estados para cadastro de usuário
   const [name, setName] = useState<string>('');
-  const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [emailExists, setEmailExists] = useState<boolean | null>(null);
-  const [checkingEmail, setCheckingEmail] = useState<boolean>(false);
+  const [passwordStrength, setPasswordStrength] = useState<'fraca' | 'média' | 'forte' | null>(null);
   
   // Verificar token na URL e buscar dados do convite
   useEffect(() => {
@@ -50,38 +48,30 @@ const InvitePage = () => {
     }
   }, [tokenFromUrl, user, inviteData]);
 
+  // Função para avaliar a força da senha
+  const evaluatePasswordStrength = (pass: string) => {
+    if (!pass) {
+      setPasswordStrength(null);
+      return;
+    }
+    
+    const hasLetters = /[a-zA-Z]/.test(pass);
+    const hasNumbers = /[0-9]/.test(pass);
+    const hasSpecialChars = /[!@#$%^&*(),.?":{}|<>]/.test(pass);
+    
+    if (pass.length < 6) {
+      setPasswordStrength('fraca');
+    } else if (pass.length >= 8 && hasLetters && hasNumbers && hasSpecialChars) {
+      setPasswordStrength('forte');
+    } else if (pass.length >= 6 && ((hasLetters && hasNumbers) || (hasLetters && hasSpecialChars) || (hasNumbers && hasSpecialChars))) {
+      setPasswordStrength('média');
+    } else {
+      setPasswordStrength('fraca');
+    }
+  };
+
   const normalizeToken = (inputToken: string): string => {
     return inputToken.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-  };
-  
-  // Função para verificar se um email já existe no sistema
-  const checkEmailExists = async (emailToCheck: string) => {
-    try {
-      setCheckingEmail(true);
-      
-      // Tentar fazer login com um método que vai falhar, mas nos diz se o email existe
-      const { error } = await supabase.auth.signInWithOtp({
-        email: emailToCheck,
-        options: {
-          shouldCreateUser: false // Não criar usuário, apenas verificar
-        }
-      });
-      
-      // Se o erro for "User not found", então o email não existe
-      const userNotFound = error?.message?.toLowerCase().includes('user not found') ||
-                          error?.message?.toLowerCase().includes('usuário não encontrado');
-      
-      setEmailExists(!userNotFound);
-      return !userNotFound;
-      
-    } catch (err) {
-      console.error("Erro ao verificar email:", err);
-      // Em caso de erro, assumimos que o email não existe para permitir tentativa de registro
-      setEmailExists(false);
-      return false;
-    } finally {
-      setCheckingEmail(false);
-    }
   };
   
   // Função para verificar o token sem necessidade de autenticação
@@ -118,12 +108,7 @@ const InvitePage = () => {
         token: data.token,
         expires_at: data.expires_at
       });
-      
-      setEmail(data.email);
-      
-      // Verificar se o email já existe
-      await checkEmailExists(data.email);
-      
+            
     } catch (err: any) {
       console.error('Erro ao verificar token:', err);
       setError(err.message || 'Token de convite inválido');
@@ -167,8 +152,8 @@ const InvitePage = () => {
         throw new Error(data.message || 'Token inválido ou expirado');
       }
 
-      toast.success('Convite aceito com sucesso!', {
-        description: 'Seu acesso foi atualizado.'
+      toast.success('Bem-vindo ao VIVER DE IA Club!', {
+        description: 'Seu acesso foi configurado com sucesso.'
       });
 
       // Redirecionar para a página principal após sucesso
@@ -190,17 +175,22 @@ const InvitePage = () => {
     checkInviteToken(token);
   };
   
-  // Função unificada para lidar com registro ou login
-  const handleAuthSubmit = async (e: React.FormEvent) => {
+  // Função para registrar e processar convite em um só passo
+  const handleCreateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
-      toast.error('Preencha todos os campos obrigatórios');
+    if (!inviteData || !inviteData.email) {
+      toast.error('Dados do convite inválidos');
       return;
     }
     
-    if (!emailExists && !name) {
-      toast.error('O nome é obrigatório para novos cadastros');
+    if (!name) {
+      toast.error('Por favor, informe seu nome completo');
+      return;
+    }
+    
+    if (!password || password.length < 6) {
+      toast.error('A senha deve ter pelo menos 6 caracteres');
       return;
     }
     
@@ -208,41 +198,51 @@ const InvitePage = () => {
       setLoading(true);
       setError(null);
       
-      let authResult;
-      
-      if (emailExists) {
-        // Email já existe, tenta login
-        authResult = await supabase.auth.signInWithPassword({ 
-          email, 
-          password 
-        });
-      } else {
-        // Novo usuário, registrar
-        if (password.length < 6) {
-          throw new Error('A senha deve ter pelo menos 6 caracteres');
+      // Tenta realizar o cadastro do usuário
+      const { data: signupData, error: signupError } = await supabase.auth.signUp({
+        email: inviteData.email,
+        password,
+        options: {
+          data: { name }
         }
-        
-        authResult = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { name }
+      });
+      
+      // Verificar se houve erro no cadastro
+      if (signupError) {
+        // Se o erro indicar que o usuário já existe, orientar a fazer login
+        if (signupError.message.includes('already registered') || 
+            signupError.message.includes('already exists') || 
+            signupError.message.toLowerCase().includes('já cadastrado')) {
+          
+          // Tentar fazer login com as credenciais fornecidas
+          toast.info('Este email já está cadastrado. Tentando fazer login...');
+          
+          const { data: signinData, error: signinError } = await supabase.auth.signInWithPassword({
+            email: inviteData.email,
+            password
+          });
+          
+          if (signinError) {
+            throw new Error('Senha incorreta. Se você já possui conta, use a senha correta.');
           }
-        });
-      }
-      
-      if (authResult.error) {
-        throw authResult.error;
-      }
-      
-      if (authResult.data.user) {
-        const actionMsg = emailExists ? 'Login realizado' : 'Conta criada';
-        toast.success(`${actionMsg} com sucesso!`);
-        
-        // O convite será processado automaticamente pelo useEffect
+          
+          // Login bem sucedido
+          if (signinData.user) {
+            toast.success('Login realizado com sucesso!');
+            // O convite será processado automaticamente pelo useEffect
+          }
+          
+        } else {
+          // Outros erros de cadastro
+          throw signupError;
+        }
+      } else if (signupData.user) {
+        // Cadastro bem sucedido
+        toast.success('Conta criada com sucesso!');
+        // O processamento do convite será feito automaticamente pelo useEffect
         // quando detectar que o usuário está autenticado
-      } else if (!emailExists && authResult.data.session === null) {
-        // Caso especial: registro bem sucedido mas precisa confirmar email
+      } else {
+        // Caso especial: cadastro iniciado mas precisa confirmar email
         toast.info(
           'Verifique seu email', 
           { description: 'Enviamos um link de confirmação para o seu email.' }
@@ -252,18 +252,7 @@ const InvitePage = () => {
     } catch (err: any) {
       console.error("Erro de autenticação:", err);
       
-      // Tratar mensagens de erro específicas para torná-las mais amigáveis
       let errorMsg = err.message || 'Erro ao processar a solicitação';
-      
-      if (errorMsg.includes('User already registered') || 
-          errorMsg.includes('already registered')) {
-        errorMsg = 'Este email já está cadastrado. Por favor, faça login.';
-        // Atualizar o estado para mostrar o formulário de login
-        setEmailExists(true);
-      } else if (errorMsg.includes('Invalid login')) {
-        errorMsg = 'Email ou senha inválidos. Verifique suas credenciais.';
-      }
-      
       setError(errorMsg);
       toast.error('Erro no processo', { description: errorMsg });
     } finally {
@@ -315,41 +304,30 @@ const InvitePage = () => {
     if (inviteData && !user) {
       return (
         <div className="space-y-6">
-          <div>
-            <p className="text-lg font-medium text-center mb-2">Convite para: {inviteData.email}</p>
-            {emailExists === null ? (
-              <p className="text-sm text-center text-muted-foreground">
-                Verificando status do email...
-              </p>
-            ) : emailExists ? (
-              <p className="text-sm text-center text-muted-foreground">
-                Este email já está cadastrado. Faça login para aceitar o convite.
-              </p>
-            ) : (
-              <p className="text-sm text-center text-muted-foreground">
-                Crie sua conta para aceitar o convite.
-              </p>
-            )}
+          <div className="mb-6">
+            <p className="text-lg font-medium text-center mb-1">Ative seu convite para o VIVER DE IA Club</p>
+            <p className="text-sm text-center text-muted-foreground">
+              Crie sua senha para acessar a plataforma com o email: <strong>{inviteData.email}</strong>
+            </p>
           </div>
           
-          <form onSubmit={handleAuthSubmit} className="space-y-4">
-            {!emailExists && (
-              <div className="space-y-2">
-                <Label htmlFor="name">Nome completo</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-                  <Input
-                    id="name"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="pl-10"
-                    placeholder="Seu nome completo"
-                    required={!emailExists}
-                  />
-                </div>
+          <form onSubmit={handleCreateAccount} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome completo</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+                <Input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="pl-10"
+                  placeholder="Seu nome completo"
+                  required
+                  autoFocus
+                />
               </div>
-            )}
+            </div>
             
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -366,16 +344,20 @@ const InvitePage = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
+              <Label htmlFor="password">Crie sua senha</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    evaluatePasswordStrength(e.target.value);
+                  }}
                   className="pl-10 pr-10"
-                  placeholder={emailExists ? "Sua senha" : "Escolha uma senha"}
+                  placeholder="Senha segura com pelo menos 6 caracteres"
+                  required
                 />
                 <button
                   type="button"
@@ -389,27 +371,56 @@ const InvitePage = () => {
                   )}
                 </button>
               </div>
-              {!emailExists && (
-                <p className="text-xs text-muted-foreground">
-                  A senha deve ter pelo menos 6 caracteres
-                </p>
+              
+              {/* Indicador de força da senha */}
+              {passwordStrength && (
+                <div className="flex items-center mt-1">
+                  <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full ${
+                        passwordStrength === 'forte' 
+                          ? 'bg-green-500 w-full' 
+                          : passwordStrength === 'média' 
+                            ? 'bg-yellow-500 w-2/3' 
+                            : 'bg-red-500 w-1/3'
+                      }`}
+                    />
+                  </div>
+                  <span className={`ml-2 text-xs ${
+                    passwordStrength === 'forte' 
+                      ? 'text-green-500' 
+                      : passwordStrength === 'média' 
+                        ? 'text-yellow-500' 
+                        : 'text-red-500'
+                  }`}>
+                    {passwordStrength === 'forte' ? 'Forte' : passwordStrength === 'média' ? 'Média' : 'Fraca'}
+                  </span>
+                </div>
               )}
+              
+              <p className="text-xs text-muted-foreground">
+                A senha deve ter pelo menos 6 caracteres
+              </p>
             </div>
             
             <Button 
               type="submit" 
               className="w-full" 
-              disabled={loading || !password || (checkingEmail)}
+              disabled={loading || !password || !name}
             >
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {emailExists ? 'Entrando...' : 'Criando conta...'}
+                  Criando sua conta...
                 </>
               ) : (
-                emailExists ? 'Entrar e aceitar convite' : 'Criar conta e aceitar convite'
+                'Criar conta e acessar'
               )}
             </Button>
+            
+            <p className="text-xs text-center text-muted-foreground mt-4">
+              Já possui conta com este email? Digite sua senha atual para fazer login.
+            </p>
           </form>
           
           {error && (
@@ -464,11 +475,11 @@ const InvitePage = () => {
     <div className="flex items-center justify-center min-h-screen bg-gray-100 px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Convite para o VIVER DE IA Club</CardTitle>
+          <CardTitle className="text-2xl">VIVER DE IA Club</CardTitle>
           <CardDescription>
             {inviteData 
-              ? `Você foi convidado com o email ${inviteData.email}` 
-              : 'Insira ou confirme seu código de convite'}
+              ? `Ative seu acesso à plataforma` 
+              : 'Insira seu código de convite'}
           </CardDescription>
         </CardHeader>
         <CardContent>
