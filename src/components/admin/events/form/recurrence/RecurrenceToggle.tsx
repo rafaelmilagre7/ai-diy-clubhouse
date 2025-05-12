@@ -27,6 +27,7 @@ export const RecurrenceToggle = ({ form }: RecurrenceToggleProps) => {
               onCheckedChange={(checked) => {
                 field.onChange(checked);
               }}
+              className="data-[state=checked]:bg-viverblue"
             />
           </FormControl>
         </FormItem>
