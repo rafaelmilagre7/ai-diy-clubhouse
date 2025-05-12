@@ -30,6 +30,8 @@ Deno.serve(async (req) => {
       throw new Error('ID do convite é obrigatório')
     }
     
+    console.log(`Atualizando estatísticas do convite ${invite_id}`)
+    
     // Atualizar estatísticas do convite
     const { data, error } = await supabase
       .from('invites')
@@ -44,8 +46,11 @@ Deno.serve(async (req) => {
       .eq('id', invite_id)
     
     if (error) {
+      console.error(`Erro ao atualizar estatísticas: ${error.message}`)
       throw error
     }
+    
+    console.log(`Estatísticas do convite ${invite_id} atualizadas com sucesso`)
     
     return new Response(
       JSON.stringify({

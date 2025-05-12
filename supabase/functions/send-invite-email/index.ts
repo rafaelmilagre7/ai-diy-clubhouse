@@ -1,6 +1,6 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
-import { format, addDays } from 'https://esm.sh/date-fns@3.6.0'
+import { format } from 'https://esm.sh/date-fns@3.6.0'
 import { ptBR } from 'https://esm.sh/date-fns@3.6.0/locale/pt-BR'
 
 // Configuração de CORS
@@ -434,101 +434,85 @@ Deno.serve(async (req) => {
       </html>
     `
     
-    // Enviar o email usando uma API REST de email em vez de nodemailer
-    // Esta é uma adaptação para usar um serviço de email via API REST
-    const emailData = {
-      from: `VIVER DE IA Club <${smtpUser}>`,
-      to: email,
-      subject: `Convite para o VIVER DE IA Club - Acesso como ${roleName || 'membro'}`,
-      html: emailHtml,
-      smtp: {
-        host: smtpHost,
-        port: smtpPort,
-        user: smtpUser,
-        pass: smtpPass,
-        secure: smtpPort === 465 // true para porta 465, false para outras
-      }
-    }
-    
-    console.log('Enviando email para:', email)
-    
-    // Função para enviar email usando API REST Mailazy ou serviço similar
-    const sendEmail = async () => {
+    // Enviar o email usando as credenciais SMTP configuradas via fetch
+    const sendEmailWithFetch = async () => {
       try {
-        // Usar uma API REST de email compatível com Deno
-        // Esta é uma abordagem usando a EmailJS API (exemplo)
-        const emailResponse = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+        // Aqui estamos usando a API SMTP2GO que aceita requisições REST para envio de emails
+        // Esta API é compatível com Deno e não precisa do módulo Buffer
+        const emailApiUrl = 'https://api.smtp2go.com/v3/email/send';
+        
+        const emailPayload = {
+          api_key: smtpPass, // Usando a senha SMTP como API key para o serviço
+          to: [email],
+          sender: `VIVER DE IA Club <${smtpUser}>`,
+          subject: `Convite para o VIVER DE IA Club - Acesso como ${roleName || 'membro'}`,
+          html_body: emailHtml,
+          text_body: `Você foi convidado para o VIVER DE IA Club como ${roleName || 'membro'}. Acesse o link para aceitar: ${inviteUrl}`,
+          custom_headers: [
+            {
+              header: "Reply-To",
+              value: smtpUser
+            }
+          ]
+        };
+        
+        console.log('Enviando email via API REST');
+        
+        const response = await fetch(emailApiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Origin': 'https://viverdeia.ai'
+            'Accept': 'application/json'
           },
-          body: JSON.stringify({
-            service_id: 'smtp_service',
-            template_id: 'invite_template',
-            user_id: 'user_id', // Seria um ID do serviço EmailJS
-            template_params: {
-              to_email: email,
-              from_name: 'VIVER DE IA Club',
-              subject: `Convite para o VIVER DE IA Club - Acesso como ${roleName || 'membro'}`,
-              message_html: emailHtml,
-              smtp_settings: {
-                host: smtpHost,
-                port: smtpPort,
-                user: smtpUser,
-                pass: smtpPass
-              }
-            }
-          })
-        })
+          body: JSON.stringify(emailPayload)
+        });
         
-        // Simulação de envio bem-sucedido para teste
-        // Na versão final, isto seria substituído pelo código real da API escolhida
-        const simulatedResponse = {
-          success: true,
-          messageId: `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`Erro na API de email: ${JSON.stringify(errorData)}`);
         }
         
-        console.log('Resposta do envio de email:', simulatedResponse)
-        return simulatedResponse
+        const responseData = await response.json();
+        console.log('Resposta da API de email:', responseData);
+        
+        return {
+          success: true,
+          messageId: responseData.data?.email_id || `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        };
       } catch (error) {
-        console.error('Erro durante envio de email:', error)
-        throw error
+        console.error('Erro durante envio de email:', error);
+        throw error;
       }
-    }
+    };
     
     // Tentar enviar o email
-    let emailResponse = null
+    let emailResponse = null;
     try {
-      // Simular o envio de e-mail para testar
-      // Na implementação real, chamaríamos de fato o serviço de email
-      emailResponse = {
-        messageId: `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
-        success: true
-      }
-      
-      console.log('Email enviado com sucesso:', emailResponse)
+      console.log(`Enviando email para: ${email}`);
+      emailResponse = await sendEmailWithFetch();
+      console.log('Email enviado com sucesso:', emailResponse);
     } catch (emailError) {
-      console.error('Erro ao enviar email:', emailError)
-      throw new Error(`Falha ao enviar email: ${emailError.message}`)
+      console.error('Erro ao enviar email:', emailError);
+      throw new Error(`Falha ao enviar email: ${emailError.message}`);
     }
     
     // Atualizar estatísticas de envio do convite se temos um ID
-    // Isolado em um try/catch separado para não afetar a resposta do email
     if (supabase && inviteId) {
       try {
-        console.log(`Atualizando estatísticas do convite ${inviteId}`)
-        await supabase.rpc('update_invite_send_attempt', {
-          invite_id: inviteId
-        })
-        console.log(`Estatísticas do convite ${inviteId} atualizadas com sucesso`)
+        console.log(`Atualizando estatísticas do convite ${inviteId}`);
+        
+        // Chamar a função RPC específica para atualização das estatísticas
+        await supabase.functions.invoke('update_invite_send_stats', {
+          body: { invite_id: inviteId }
+        });
+        
+        console.log(`Estatísticas do convite ${inviteId} atualizadas com sucesso`);
       } catch (statsError) {
-        // Logging do erro, mas não bloquear o fluxo principal
-        console.error('Erro ao atualizar estatísticas do convite:', statsError)
+        console.error('Erro ao atualizar estatísticas do convite:', statsError);
         // Não lançar erro aqui, pois o email já foi enviado com sucesso
       }
     } else if (inviteId) {
-      console.warn('Não foi possível atualizar estatísticas: Cliente Supabase não inicializado')
+      console.warn('Não foi possível atualizar estatísticas: Cliente Supabase não inicializado');
     }
     
     // Retornar sucesso
@@ -546,7 +530,7 @@ Deno.serve(async (req) => {
       }
     )
   } catch (error) {
-    console.error('Erro ao enviar email de convite:', error)
+    console.error('Erro ao enviar email de convite:', error);
     
     // Retornar erro detalhado para facilitar o diagnóstico
     return new Response(
