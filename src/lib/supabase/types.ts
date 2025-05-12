@@ -1,4 +1,3 @@
-
 export * from './types/database.types';
 
 export type UserRole = 'admin' | 'member' | 'formacao';
@@ -22,7 +21,8 @@ export interface Solution {
   title: string;
   description: string;
   difficulty: string;
-  category: string;
+  // Atualizada a categoria para refletir os novos valores padronizados
+  category: 'Receita' | 'Operacional' | 'Estratégia';
   image_url?: string;
   thumbnail_url?: string;
   author_id?: string;

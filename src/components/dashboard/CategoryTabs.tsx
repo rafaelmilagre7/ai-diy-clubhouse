@@ -10,7 +10,7 @@ export interface CategoryTabsProps {
 export const CategoryTabs = ({ activeCategory, setActiveCategory }: CategoryTabsProps) => {
   const categories = [
     { id: "all", name: "Todas" },
-    { id: "revenue", name: "Aumento de Receita" },
+    { id: "revenue", name: "Receita" },
     { id: "operational", name: "Otimização Operacional" },
     { id: "strategic", name: "Gestão Estratégica" }
   ];

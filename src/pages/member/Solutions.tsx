@@ -42,6 +42,7 @@ const Solutions = () => {
     canViewSolutions
   });
 
+  // Atualizado para usar nomes de categorias em português
   const categories = [
     { id: 'all', name: 'Todas' },
     { id: 'revenue', name: 'Receita' },

@@ -3196,6 +3196,10 @@ export type Database = {
         Args: { target: Json; source: Json }
         Returns: Json
       }
+      normalize_solution_category: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       setup_learning_storage_buckets: {
         Args: Record<PropertyKey, never>
         Returns: Json

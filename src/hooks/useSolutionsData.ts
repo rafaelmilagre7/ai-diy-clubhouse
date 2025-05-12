@@ -58,9 +58,20 @@ export function useSolutionsData(initialCategory: string | null = 'all') {
   const filteredSolutions = useMemo(() => {
     let filtered = [...solutions];
     
-    // Filtrar por categoria
+    // Filtrar por categoria - Agora com categorias padronizadas
     if (activeCategory !== 'all') {
-      filtered = filtered.filter(solution => solution.category === activeCategory);
+      const categoryMapping: Record<string, string> = {
+        'revenue': 'Receita',
+        'operational': 'Operacional',
+        'strategy': 'Estratégia'
+      };
+      
+      const normalizedCategory = categoryMapping[activeCategory] || activeCategory;
+      
+      filtered = filtered.filter(solution => 
+        solution.category === normalizedCategory || 
+        solution.category === activeCategory // Para retrocompatibilidade durante a migração
+      );
     }
     
     // Filtrar por pesquisa

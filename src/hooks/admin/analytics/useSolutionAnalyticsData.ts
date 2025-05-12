@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
@@ -133,6 +132,7 @@ const processSolutionData = (
   // Distribuição por categoria
   const categoryCount: Record<string, number> = {};
   filteredSolutions.forEach(solution => {
+    // Usando as categorias atualizadas
     const category = getCategoryText(solution.category);
     categoryCount[category] = (categoryCount[category] || 0) + 1;
   });
@@ -244,6 +244,7 @@ const processSolutionData = (
 
 // Funções auxiliares
 const filterByTimeRange = (solutions: any[], progress: any[], timeRange: string) => {
+  // ... keep existing code (filtro por intervalo de tempo)
   if (timeRange === 'all') {
     return { solutions, progress };
   }
@@ -281,12 +282,20 @@ const filterByTimeRange = (solutions: any[], progress: any[], timeRange: string)
   return { solutions: filteredSolutions, progress: filteredProgress };
 };
 
+// Atualizar o mapeamento de categorias para refletir os novos valores no banco de dados
 const getCategoryText = (category: string): string => {
   switch (category) {
-    case 'revenue': return 'Aumento de Receita';
-    case 'operational': return 'Otimização Operacional';
-    case 'strategy': return 'Gestão Estratégica';
-    default: return category || 'Sem categoria';
+    case 'revenue': 
+    case 'Receita': 
+      return 'Aumento de Receita';
+    case 'operational': 
+    case 'Operacional': 
+      return 'Otimização Operacional';
+    case 'strategy':
+    case 'Estratégia': 
+      return 'Gestão Estratégica';
+    default: 
+      return category || 'Sem categoria';
   }
 };
 
