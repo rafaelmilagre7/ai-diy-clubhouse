@@ -61,7 +61,7 @@ export const KpiGrid: React.FC<KpiGridProps> = ({
             <h3 className="text-sm text-neutral-400 mb-1">Em Andamento</h3>
             <div className="flex items-baseline">
               <p className="text-xl font-medium text-white">{inProgress}</p>
-              <span className="text-xs ml-1.5 text-neutral-500">soluções</span>
+              <span className="text-xs ml-1.5 text-neutral-500">projetos</span>
             </div>
             <div className="flex space-x-1 mt-2">
               {[...Array(Math.min(5, inProgress))].map((_, i) => (

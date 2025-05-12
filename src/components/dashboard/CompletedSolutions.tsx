@@ -14,9 +14,9 @@ export const CompletedSolutions: FC<CompletedSolutionsProps> = ({
 }) => {
   return (
     <div className="mb-8">
-      <h2 className="text-2xl font-bold mb-4">Soluções completadas</h2>
+      <h2 className="text-2xl font-bold mb-4">Implementações concluídas</h2>
       <p className="text-muted-foreground mb-4">
-        Soluções que você já implementou com sucesso
+        Projetos que você já implementou com sucesso
       </p>
       <SolutionsGrid solutions={solutions} onSolutionClick={onSolutionClick} />
     </div>

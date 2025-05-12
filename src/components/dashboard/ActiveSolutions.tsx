@@ -14,9 +14,9 @@ export const ActiveSolutions: FC<ActiveSolutionsProps> = ({
 }) => {
   return (
     <div className="mb-8">
-      <h2 className="text-2xl font-bold mb-4">Soluções em andamento</h2>
+      <h2 className="text-2xl font-bold mb-4">Projetos em andamento</h2>
       <p className="text-muted-foreground mb-4">
-        Continue implementando essas soluções em seu negócio
+        Continue implementando esses projetos em seu negócio
       </p>
       <SolutionsGrid solutions={solutions} onSolutionClick={onSolutionClick} />
     </div>
