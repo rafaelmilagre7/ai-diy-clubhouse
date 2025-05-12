@@ -3,6 +3,7 @@ import { Solution } from "@/lib/supabase";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { DifficultyBadge } from "./DifficultyBadge";
+import { SolutionCategory, categoryMapping } from "@/lib/types/categoryTypes";
 
 interface CardHeaderProps {
   category: Solution['category']; 
@@ -10,9 +11,16 @@ interface CardHeaderProps {
 }
 
 export const CardHeader = ({ category, difficulty }: CardHeaderProps) => {
-  // Definir estilos específicos por categoria com gradientes modernos
+  // Função para mapear categorias antigas para os novos estilos
   const getCategoryStyles = () => {
-    switch (category) {
+    // Mapear para chaves de estilo com base na categoria
+    const styleKey = Object.entries(categoryMapping).find(
+      ([_, newCat]) => newCat === category
+    )?.[0] || Object.keys(categoryMapping).find(
+      oldCat => categoryMapping[oldCat] === category
+    );
+    
+    switch (styleKey) {
       case "revenue":
         return "bg-gradient-to-r from-revenue to-revenue-light text-white shadow-sm shadow-revenue/20";
       case "operational":
@@ -26,16 +34,11 @@ export const CardHeader = ({ category, difficulty }: CardHeaderProps) => {
   
   // Tradução e estilização das categorias
   const getCategoryLabel = () => {
-    switch (category) {
-      case "revenue":
-        return "Receita";
-      case "operational":
-        return "Operacional";
-      case "strategy":
-        return "Estratégia";
-      default:
-        return category || "Categoria";
-    }
+    // Usar comparação usando os valores padrão
+    if (category === 'Receita') return "Receita";
+    if (category === 'Operacional') return "Operacional";
+    if (category === 'Estratégia') return "Estratégia";
+    return String(category || "Categoria");
   };
 
   return (

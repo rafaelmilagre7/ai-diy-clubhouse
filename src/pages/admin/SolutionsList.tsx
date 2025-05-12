@@ -38,14 +38,18 @@ import {
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SolutionCategory, categoryMapping } from "@/lib/types/categoryTypes";
 
 const categoryLabel = (category: string) => {
   switch (category) {
     case "revenue":
+    case "Receita":
       return "Receita";
     case "operational":
+    case "Operacional":
       return "Operacional";
     case "strategy":
+    case "Estratégia":
       return "Estratégia";
     default:
       return category;
@@ -96,6 +100,23 @@ const SolutionsList = () => {
   const [sortBy, setSortBy] = useState<string>("updated_at");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   
+  // Função para obter classe CSS com base na categoria
+  const getCategoryClass = (category: SolutionCategory) => {
+    // Usar getCategoryStyleKey para obter a chave correspondente
+    const styleKey = getCategoryStyleKey(category);
+    
+    return cn(
+      styleKey === "Receita" && "bg-revenue/10 text-revenue border-revenue/30",
+      styleKey === "Operacional" && "bg-operational/10 text-operational border-operational/30",
+      styleKey === "Estratégia" && "bg-strategy/10 text-strategy border-strategy/30"
+    );
+  };
+  
+  // Função para obter a chave de estilo correspondente à categoria
+  const getCategoryStyleKey = (category: SolutionCategory): string => {
+    return String(category);
+  };
+
   useEffect(() => {
     const fetchSolutions = async () => {
       try {
@@ -424,15 +445,9 @@ const SolutionsList = () => {
                   <TableCell>
                     <Badge
                       variant="outline"
-                      className={cn(
-                        solution.category === "revenue" && "bg-revenue/10 text-revenue border-revenue/30",
-                        solution.category === "operational" && "bg-operational/10 text-operational border-operational/30",
-                        solution.category === "strategy" && "bg-strategy/10 text-strategy border-strategy/30"
-                      )}
+                      className={getCategoryClass(solution.category)}
                     >
-                      {solution.category === "revenue" ? "Receita" : 
-                       solution.category === "operational" ? "Operacional" : 
-                       solution.category === "strategy" ? "Estratégia" : solution.category}
+                      {categoryLabel(solution.category)}
                     </Badge>
                   </TableCell>
                   <TableCell>

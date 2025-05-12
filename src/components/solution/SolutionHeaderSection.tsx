@@ -2,6 +2,7 @@
 import { Solution } from "@/lib/supabase";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { SolutionCategory, categoryMapping } from "@/lib/types/categoryTypes";
 
 interface SolutionHeaderSectionProps {
   solution: Solution;
@@ -21,6 +22,23 @@ const getDifficultyStyles = (difficulty: string) => {
 };
 
 export const SolutionHeaderSection = ({ solution }: SolutionHeaderSectionProps) => {
+  // Função para obter a classe adequada com base na categoria
+  const getCategoryClass = () => {
+    // Verifica pela categoria atual
+    if (solution.category === 'Receita') return "bg-gradient-to-r from-revenue to-revenue-light text-white border-0";
+    if (solution.category === 'Operacional') return "bg-gradient-to-r from-operational to-operational-light text-white border-0";
+    if (solution.category === 'Estratégia') return "bg-gradient-to-r from-strategy to-strategy-light text-white border-0";
+    return "";
+  };
+
+  // Função para obter o texto de exibição da categoria
+  const getCategoryDisplayText = () => {
+    if (solution.category === 'Receita') return "Receita";
+    if (solution.category === 'Operacional') return "Operacional"; 
+    if (solution.category === 'Estratégia') return "Estratégia";
+    return String(solution.category);
+  };
+
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center gap-2">
@@ -28,14 +46,10 @@ export const SolutionHeaderSection = ({ solution }: SolutionHeaderSectionProps) 
           variant="outline" 
           className={`
             px-3 py-1 rounded-full shadow-sm font-medium
-            ${solution.category === "revenue" ? "bg-gradient-to-r from-revenue to-revenue-light text-white border-0" : ""}
-            ${solution.category === "operational" ? "bg-gradient-to-r from-operational to-operational-light text-white border-0" : ""}
-            ${solution.category === "strategy" ? "bg-gradient-to-r from-strategy to-strategy-light text-white border-0" : ""}
+            ${getCategoryClass()}
           `}
         >
-          {solution.category === "revenue" ? "Receita" : 
-           solution.category === "operational" ? "Operacional" : 
-           "Estratégia"}
+          {getCategoryDisplayText()}
         </Badge>
         
         <Badge 

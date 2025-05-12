@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { categoryMapping } from "@/lib/types/categoryTypes";
 
 export interface CategoryTabsProps {
   activeCategory: string;
@@ -8,6 +9,7 @@ export interface CategoryTabsProps {
 }
 
 export const CategoryTabs = ({ activeCategory, setActiveCategory }: CategoryTabsProps) => {
+  // Mantemos as chaves antigas para IDs para compatibilidade com o resto do sistema
   const categories = [
     { id: "all", name: "Todas" },
     { id: "revenue", name: "Receita" },

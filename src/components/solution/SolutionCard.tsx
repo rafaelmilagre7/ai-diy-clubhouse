@@ -6,6 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Clock, BarChart, TrendingUp, Settings, Zap } from 'lucide-react';
+import { SolutionCategory } from '@/lib/types/categoryTypes';
 
 interface SolutionCardProps {
   solution: Solution;
@@ -25,21 +26,21 @@ const getDifficultyBadgeStyle = (difficulty: string) => {
 };
 
 export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
-  const getCategoryDetails = (category: string) => {
+  const getCategoryDetails = (category: SolutionCategory) => {
     switch (category) {
-      case 'revenue':
+      case 'Receita':
         return {
           name: 'Receita',
           icon: <TrendingUp className="h-4 w-4 text-green-500" />,
           color: 'bg-green-100 text-green-800 border-green-200'
         };
-      case 'operational':
+      case 'Operacional':
         return {
           name: 'Operacional',
           icon: <Settings className="h-4 w-4 text-blue-500" />,
           color: 'bg-blue-100 text-blue-800 border-blue-200'
         };
-      case 'strategy':
+      case 'Estratégia':
         return {
           name: 'Estratégia',
           icon: <BarChart className="h-4 w-4 text-purple-500" />,

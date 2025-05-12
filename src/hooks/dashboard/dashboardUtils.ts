@@ -1,5 +1,6 @@
 
 import { Solution } from "@/lib/supabase";
+import { SolutionCategory } from "@/lib/types/categoryTypes";
 
 // Fallback solutions data for when API calls fail
 export const fallbackSolutionsData: Solution[] = [
@@ -8,7 +9,7 @@ export const fallbackSolutionsData: Solution[] = [
     title: "Assistente de IA no WhatsApp",
     description: "Implemente um assistente de IA para atendimento automatizado via WhatsApp",
     thumbnail_url: "/images/whatsapp-ai.jpg",
-    category: "operational",
+    category: "Operacional",
     difficulty: "easy",
     slug: "whatsapp-ai-assistant",
     estimated_time: 45,
@@ -25,7 +26,7 @@ export const fallbackSolutionsData: Solution[] = [
     title: "Chatbot para Geração de Leads",
     description: "Crie um chatbot para qualificar e capturar leads no seu site",
     thumbnail_url: "/images/chatbot-leads.jpg",
-    category: "revenue",
+    category: "Receita",
     difficulty: "medium",
     slug: "chatbot-lead-generation",
     estimated_time: 60,
@@ -42,7 +43,7 @@ export const fallbackSolutionsData: Solution[] = [
     title: "Análise de Sentimento de Clientes",
     description: "Analise o sentimento dos seus clientes para melhorar a satisfação e retenção",
     thumbnail_url: "/images/sentiment-analysis.jpg",
-    category: "operational",
+    category: "Operacional",
     difficulty: "advanced",
     slug: "customer-sentiment-analysis",
     estimated_time: 90,
