@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { FormMessage } from "@/components/ui/form-message";
 import { CheckCircle, AlertCircle } from "lucide-react";
 import { useIBGELocations } from "@/hooks/useIBGELocations";
+import { theme } from "@/lib/theme";
 
 interface LocationInputsProps {
   country: string;
@@ -45,29 +46,29 @@ export const LocationInputs: React.FC<LocationInputsProps> = ({
 
   return (
     <div className="space-y-6 p-4 bg-white/5 rounded-lg backdrop-blur-sm">
-      <h3 className="text-lg font-semibold text-[#0ABAB5]">Localização</h3>
+      <h3 className="text-lg font-semibold text-viverblue">Localização</h3>
       
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="country" className="text-gray-700">País</Label>
+          <Label htmlFor="country">País</Label>
           <Input
             id="country"
             value={country}
             onChange={(e) => onChangeCountry(e.target.value)}
             disabled={true}
-            className="bg-gray-100"
+            readOnly={true}
           />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="state" className={cn(
             "transition-colors flex items-center gap-2",
-            errors.state ? "text-red-500" : stateIsValid ? "text-[#0ABAB5]" : "text-gray-700"
+            errors.state ? "text-red-500" : stateIsValid ? "text-viverblue" : ""
           )}>
             Estado <span className="text-red-500">*</span>
             {state && (
               stateIsValid ? (
-                <CheckCircle className="h-4 w-4 text-[#0ABAB5]" />
+                <CheckCircle className="h-4 w-4 text-viverblue" />
               ) : errors.state ? (
                 <AlertCircle className="h-4 w-4 text-red-500" />
               ) : null
@@ -82,8 +83,8 @@ export const LocationInputs: React.FC<LocationInputsProps> = ({
               id="state" 
               className={cn(
                 "w-full transition-colors",
-                errors.state ? "border-red-500 focus:border-red-500" : 
-                stateIsValid ? "border-[#0ABAB5] focus:border-[#0ABAB5]" : ""
+                errors.state ? "border-red-500 focus:border-red-500 focus-visible:ring-red-500" : 
+                stateIsValid ? "border-viverblue focus:border-viverblue focus-visible:ring-viverblue" : ""
               )}
             >
               <SelectValue placeholder={isLoading ? "Carregando estados..." : "Selecione seu estado"} />
@@ -110,12 +111,12 @@ export const LocationInputs: React.FC<LocationInputsProps> = ({
         <div className="space-y-2">
           <Label htmlFor="city" className={cn(
             "transition-colors flex items-center gap-2",
-            errors.city ? "text-red-500" : cityIsValid ? "text-[#0ABAB5]" : "text-gray-700"
+            errors.city ? "text-red-500" : cityIsValid ? "text-viverblue" : ""
           )}>
             Cidade <span className="text-red-500">*</span>
             {city && (
               cityIsValid ? (
-                <CheckCircle className="h-4 w-4 text-[#0ABAB5]" />
+                <CheckCircle className="h-4 w-4 text-viverblue" />
               ) : errors.city ? (
                 <AlertCircle className="h-4 w-4 text-red-500" />
               ) : null
@@ -132,8 +133,8 @@ export const LocationInputs: React.FC<LocationInputsProps> = ({
                 id="city" 
                 className={cn(
                   "w-full transition-colors",
-                  errors.city ? "border-red-500 focus:border-red-500" : 
-                  cityIsValid ? "border-[#0ABAB5] focus:border-[#0ABAB5]" : ""
+                  errors.city ? "border-red-500 focus:border-red-500 focus-visible:ring-red-500" : 
+                  cityIsValid ? "border-viverblue focus:border-viverblue focus-visible:ring-viverblue" : ""
                 )}
               >
                 <SelectValue placeholder={isLoading ? "Carregando cidades..." : "Selecione sua cidade"} />
@@ -165,8 +166,8 @@ export const LocationInputs: React.FC<LocationInputsProps> = ({
               placeholder="Selecione um estado primeiro"
               className={cn(
                 "transition-colors",
-                errors.city ? "border-red-500 focus:border-red-500" : 
-                cityIsValid ? "border-[#0ABAB5] focus:border-[#0ABAB5]" : ""
+                errors.city ? "border-red-500 focus:border-red-500 focus-visible:ring-red-500" : 
+                cityIsValid ? "border-viverblue focus:border-viverblue focus-visible:ring-viverblue" : ""
               )}
             />
           )}

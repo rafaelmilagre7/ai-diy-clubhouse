@@ -19,6 +19,22 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
     return savedState !== null ? savedState === "true" : window.innerWidth >= 768;
   });
 
+  // Overlay para o menu mobile
+  const [showOverlay, setShowOverlay] = useState(false);
+
+  // Atualizar overlay baseado no estado da sidebar em mobile
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    setShowOverlay(isMobile && sidebarOpen);
+  }, [sidebarOpen]);
+
+  // Fechar menu ao clicar no overlay
+  const handleOverlayClick = () => {
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
+  };
+
   // Efeito para persistir o estado da barra lateral
   useEffect(() => {
     console.log("Persistindo estado da sidebar:", sidebarOpen);
@@ -41,10 +57,6 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
     const handleResize = () => {
       const isMobile = window.innerWidth < 768;
       console.log("Detectado redimensionamento:", { isMobile, width: window.innerWidth });
-      
-      if (isMobile && sidebarOpen) {
-        setSidebarOpen(false);
-      }
     };
 
     window.addEventListener('resize', handleResize);
@@ -54,7 +66,7 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, [sidebarOpen]);
+  }, []);
 
   // Forçar o tema escuro 
   useEffect(() => {
@@ -64,6 +76,14 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="flex min-h-screen bg-[#0F111A] overflow-hidden">
+      {/* Overlay para dispositivos móveis */}
+      {showOverlay && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          onClick={handleOverlayClick}
+        />
+      )}
+      
       {/* Barra lateral garantida para ser renderizada sempre */}
       <MemberSidebar 
         sidebarOpen={sidebarOpen} 

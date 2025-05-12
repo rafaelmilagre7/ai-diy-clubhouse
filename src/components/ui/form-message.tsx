@@ -1,37 +1,59 @@
 
-import React, { memo } from "react";
+import React from "react";
 import { cn } from "@/lib/utils";
-import { CheckCircle, AlertCircle } from "lucide-react";
+import { AlertCircle, CheckCircle } from "lucide-react";
 
 interface FormMessageProps {
+  type?: "error" | "success" | "warning" | "info";
   message?: string;
-  type?: "error" | "success";
   className?: string;
+  children?: React.ReactNode;
 }
 
-export const FormMessage: React.FC<FormMessageProps> = memo(({ 
-  message, 
-  type = "error", 
-  className 
+export const FormMessage: React.FC<FormMessageProps> = ({
+  type = "info",
+  message,
+  className,
+  children,
 }) => {
-  if (!message) return null;
+  const content = message || children;
   
+  if (!content) {
+    return null;
+  }
+
+  const getIcon = () => {
+    switch (type) {
+      case "error":
+        return <AlertCircle className="h-4 w-4 text-red-500" />;
+      case "success":
+        return <CheckCircle className="h-4 w-4 text-viverblue" />;
+      case "warning":
+        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+      case "info":
+      default:
+        return null;
+    }
+  };
+  
+  const getTextColor = () => {
+    switch (type) {
+      case "error":
+        return "text-red-500";
+      case "success":
+        return "text-viverblue";
+      case "warning":
+        return "text-yellow-500";
+      case "info":
+      default:
+        return "text-textSecondary";
+    }
+  };
+
   return (
-    <div 
-      className={cn(
-        "flex items-center text-xs font-medium mt-1",
-        type === "error" ? "text-red-500" : "text-[#0ABAB5]",
-        className
-      )}
-    >
-      {type === "error" ? (
-        <AlertCircle className="h-3 w-3 mr-1" />
-      ) : (
-        <CheckCircle className="h-3 w-3 mr-1" /> 
-      )}
-      <span>{message}</span>
+    <div className={cn("flex items-center gap-2 text-sm mt-1", getTextColor(), className)}>
+      {getIcon()}
+      <span>{content}</span>
     </div>
   );
-});
-
-FormMessage.displayName = "FormMessage";
+};

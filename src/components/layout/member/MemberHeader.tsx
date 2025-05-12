@@ -9,14 +9,19 @@ interface MemberHeaderProps {
 }
 
 export const MemberHeader = ({ sidebarOpen, setSidebarOpen }: MemberHeaderProps) => {
+  const handleToggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-white/5 bg-[#0F111A] px-4">
       <div className="flex items-center">
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
+          onClick={handleToggleSidebar}
           className="mr-2 md:hidden text-neutral-300 hover:bg-[#181A2A]"
+          aria-label={sidebarOpen ? "Fechar menu" : "Abrir menu"}
         >
           <Menu className="h-5 w-5" />
         </Button>
@@ -37,6 +42,7 @@ export const MemberHeader = ({ sidebarOpen, setSidebarOpen }: MemberHeaderProps)
           variant="ghost" 
           size="icon"
           className="text-neutral-300 hover:bg-[#181A2A]"
+          aria-label="Pesquisar"
         >
           <Search className="h-5 w-5" />
         </Button>
@@ -44,6 +50,7 @@ export const MemberHeader = ({ sidebarOpen, setSidebarOpen }: MemberHeaderProps)
           variant="ghost" 
           size="icon"
           className="text-neutral-300 hover:bg-[#181A2A]"
+          aria-label="Notificações"
         >
           <Bell className="h-5 w-5" />
         </Button>
