@@ -2,7 +2,8 @@
 import { Solution } from "@/lib/supabase";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { SolutionCategory, categoryMapping } from "@/lib/types/categoryTypes";
+import { SolutionCategory } from "@/lib/types/categoryTypes";
+import { Clock, TrendingUp, Settings, BarChart } from "lucide-react";
 
 interface SolutionHeaderSectionProps {
   solution: Solution;
@@ -11,24 +12,23 @@ interface SolutionHeaderSectionProps {
 const getDifficultyStyles = (difficulty: string) => {
   switch (difficulty) {
     case "easy":
-      return "bg-green-100 text-green-800 border-green-200";
+      return "bg-emerald-100 text-emerald-800 border-emerald-200";
     case "medium":
-      return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      return "bg-amber-100 text-amber-800 border-amber-200";
     case "advanced":
-      return "bg-red-100 text-red-800 border-red-200";
+      return "bg-rose-100 text-rose-800 border-rose-200";
     default:
       return "bg-gray-100 text-gray-800 border-gray-200";
   }
 };
 
 export const SolutionHeaderSection = ({ solution }: SolutionHeaderSectionProps) => {
-  // Função para obter a classe adequada com base na categoria
-  const getCategoryClass = () => {
-    // Verifica pela categoria atual
-    if (solution.category === 'Receita') return "bg-gradient-to-r from-revenue to-revenue-light text-white border-0";
-    if (solution.category === 'Operacional') return "bg-gradient-to-r from-operational to-operational-light text-white border-0";
-    if (solution.category === 'Estratégia') return "bg-gradient-to-r from-strategy to-strategy-light text-white border-0";
-    return "";
+  // Função para obter o ícone adequado com base na categoria
+  const getCategoryIcon = () => {
+    if (solution.category === 'Receita') return <TrendingUp className="h-3.5 w-3.5 mr-1.5" />;
+    if (solution.category === 'Operacional') return <Settings className="h-3.5 w-3.5 mr-1.5" />;
+    if (solution.category === 'Estratégia') return <BarChart className="h-3.5 w-3.5 mr-1.5" />;
+    return null;
   };
 
   // Função para obter o texto de exibição da categoria
@@ -41,21 +41,22 @@ export const SolutionHeaderSection = ({ solution }: SolutionHeaderSectionProps) 
 
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 mb-2">
         <Badge 
           variant="outline" 
-          className={`
-            px-3 py-1 rounded-full shadow-sm font-medium
-            ${getCategoryClass()}
-          `}
+          className={cn(
+            "px-3 py-1 rounded-full flex items-center",
+            "bg-neutral-800 text-white border-neutral-700"
+          )}
         >
+          {getCategoryIcon()}
           {getCategoryDisplayText()}
         </Badge>
         
         <Badge 
           variant="outline" 
           className={cn(
-            "px-3 py-1 rounded-full shadow-sm font-medium border",
+            "px-3 py-1 rounded-full flex items-center border",
             getDifficultyStyles(solution.difficulty)
           )}
         >
@@ -63,21 +64,17 @@ export const SolutionHeaderSection = ({ solution }: SolutionHeaderSectionProps) 
            solution.difficulty === "medium" ? "Médio" :
            solution.difficulty === "advanced" ? "Avançado" : solution.difficulty}
         </Badge>
+        
         {/* Só mostra tempo estimado se existir e for maior que zero */}
         {solution.estimated_time && solution.estimated_time > 0 && (
-          <Badge variant="outline" className="px-2 py-1 bg-slate-50 text-slate-700 border-slate-200">
+          <Badge variant="outline" className="px-2 py-1 flex items-center bg-blue-50 text-blue-700 border-blue-100">
+            <Clock className="h-3.5 w-3.5 mr-1.5" />
             {solution.estimated_time} min
-          </Badge>
-        )}
-        {/* Só mostra taxa de sucesso se existir e for maior que zero */}
-        {typeof solution.success_rate === "number" && solution.success_rate > 0 && (
-          <Badge variant="outline" className="px-2 py-1 bg-blue-50 text-blue-800 border-blue-200">
-            {solution.success_rate}% sucesso
           </Badge>
         )}
       </div>
       
-      <h1 className="text-2xl md:text-3xl font-bold font-heading bg-clip-text text-transparent bg-gradient-to-r from-neutral-900 to-neutral-700">
+      <h1 className="text-2xl md:text-3xl font-bold font-heading text-neutral-100">
         {solution.title}
       </h1>
       
@@ -88,7 +85,7 @@ export const SolutionHeaderSection = ({ solution }: SolutionHeaderSectionProps) 
             alt={solution.title} 
             className="w-full h-60 object-cover transition-transform duration-700 hover:scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-60"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-60"></div>
         </div>
       )}
     </div>

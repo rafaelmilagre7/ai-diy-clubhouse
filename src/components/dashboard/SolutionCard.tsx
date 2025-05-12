@@ -22,9 +22,9 @@ export const SolutionCard = ({ solution, onClick }: SolutionCardProps) => {
   return (
     <Card 
       className={cn(
-        "overflow-hidden rounded-xl transition-all duration-200 cursor-pointer",
-        "hover:shadow-md hover:translate-y-[-3px] border border-white/5 bg-[#151823]",
-        "group stat-item-enter"
+        "overflow-hidden rounded-xl transition-all duration-300 cursor-pointer",
+        "hover:shadow-lg hover:translate-y-[-4px] border-neutral-800/50 bg-[#151823]",
+        "group animate-fade-in"
       )}
       onClick={handleSelect}
     >

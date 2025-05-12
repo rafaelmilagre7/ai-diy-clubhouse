@@ -11,11 +11,11 @@ export const CardContentSection = ({ title, description }: CardContentProps) => 
     <div className="space-y-1.5">
       <h3 className={cn(
         "font-medium text-base line-clamp-2 text-white",
-        "group-hover:text-white/90 transition-colors duration-300"
+        "group-hover:text-white transition-colors duration-300"
       )}>
         {title}
       </h3>
-      <p className="text-neutral-400 text-sm line-clamp-2">
+      <p className="text-neutral-400 text-sm line-clamp-2 leading-relaxed">
         {description}
       </p>
     </div>
