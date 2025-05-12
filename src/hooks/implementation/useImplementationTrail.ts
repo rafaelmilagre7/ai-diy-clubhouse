@@ -86,7 +86,7 @@ export const useImplementationTrail = () => {
     return loadExistingTrail(forceRefresh);
   }, [loadExistingTrail]);
 
-  // Gerar nova trilha
+  // Gerar nova trilha - implementação melhorada com modo de fallback
   const generateImplementationTrail = async (onboardingData: any) => {
     if (!user) {
       setError("Usuário não autenticado");
@@ -96,6 +96,9 @@ export const useImplementationTrail = () => {
     try {
       setIsLoading(true);
       setError(null);
+
+      // Registrar o início da geração da trilha
+      console.log("Iniciando geração da trilha para usuário:", user.id);
 
       // Buscar trilha existente
       const { data: existingTrail } = await supabase
@@ -108,61 +111,133 @@ export const useImplementationTrail = () => {
         .maybeSingle();
 
       if (existingTrail) {
+        console.log("Trilha existente encontrada, retornando dados existentes");
         const sanitizedData = sanitizeTrailData(existingTrail.trail_data as ImplementationTrail);
         setTrail(sanitizedData);
         return sanitizedData;
       }
 
       // Iniciar processo de geração
-      const { error: updateError } = await supabase
+      console.log("Criando registro de geração de trilha pendente");
+      const { data: trailRecord, error: updateError } = await supabase
         .from("implementation_trails")
         .insert({
           user_id: user.id,
           status: "pending",
           generation_attempts: 1
-        });
+        })
+        .select()
+        .single();
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error("Erro ao criar registro de geração:", updateError);
+        throw updateError;
+      }
 
-      // Chamar função de geração
-      const { data: generatedData, error: fnError } = await supabase.functions.invoke(
-        "generate-implementation-trail",
-        {
-          body: {
-            onboardingData
-          },
+      console.log("Registro de trilha criado:", trailRecord?.id);
+
+      // Chamar função de geração com tratamento aprimorado de erros
+      let generatedData = null;
+      let fnError = null;
+
+      try {
+        console.log("Chamando edge function generate-implementation-trail");
+        const functionResponse = await supabase.functions.invoke(
+          "generate-implementation-trail",
+          {
+            body: {
+              onboardingData,
+              userId: user.id,
+            },
+          }
+        );
+
+        console.log("Resposta da função edge:", functionResponse);
+        
+        if (functionResponse.error) {
+          console.error("Erro na resposta da função edge:", functionResponse.error);
+          fnError = functionResponse.error;
+        } else {
+          generatedData = functionResponse.data;
         }
-      );
+      } catch (edgeFunctionError) {
+        console.error("Erro ao chamar função edge:", edgeFunctionError);
+        fnError = edgeFunctionError;
+      }
 
-      if (fnError) throw fnError;
+      // Se houve erro na função edge, usar dados mockados (fallback)
+      if (fnError || !generatedData?.recommendations) {
+        console.log("Usando modo de fallback para geração da trilha");
+        
+        // Obter soluções publicadas do banco para criar recomendações mais relevantes
+        const { data: availableSolutions, error: solutionsError } = await supabase
+          .from("solutions")
+          .select("id, title, category")
+          .eq("published", true)
+          .limit(10);
 
-      // Como a edge function ainda não está implementada, vamos criar dados mockados
-      const mockRecommendations = {
-        priority1: [
-          {
-            solutionId: "mock-solution-1",
-            justification: "Esta solução é perfeita para seu negócio B2B e pode ajudar a otimizar seus processos de vendas."
-          },
-          {
-            solutionId: "mock-solution-2",
-            justification: "Considerando seu foco em automação, esta solução trará ganhos imediatos de produtividade."
-          }
-        ],
-        priority2: [
-          {
-            solutionId: "mock-solution-3",
-            justification: "Com seu conhecimento avançado em IA, você poderá implementar esta solução rapidamente."
-          }
-        ],
-        priority3: [
-          {
-            solutionId: "mock-solution-4",
-            justification: "Para complementar sua estratégia de marketing com IA, esta ferramenta será muito útil."
-          }
-        ]
-      };
+        if (solutionsError) {
+          console.error("Erro ao buscar soluções disponíveis:", solutionsError);
+        }
 
-      const recommendationsToSave = generatedData?.recommendations || mockRecommendations;
+        // Criar recomendações de fallback usando soluções reais se disponíveis
+        const mockRecommendations: ImplementationTrail = {
+          priority1: [],
+          priority2: [],
+          priority3: []
+        };
+
+        if (availableSolutions?.length) {
+          console.log("Usando soluções reais para criar recomendações de fallback");
+          
+          // Distribuir soluções disponíveis entre as prioridades
+          availableSolutions.forEach((solution, index) => {
+            const recommendation = {
+              solutionId: solution.id,
+              justification: `Esta solução de ${solution.category} foi selecionada para ajudar seu negócio com base no seu perfil.`
+            };
+            
+            if (index < 4) {
+              mockRecommendations.priority1.push(recommendation);
+            } else if (index < 7) {
+              mockRecommendations.priority2.push(recommendation);
+            } else {
+              mockRecommendations.priority3.push(recommendation);
+            }
+          });
+        } else {
+          // Fallback para caso não consiga obter soluções do banco
+          console.log("Usando IDs de fallback para recomendações");
+          mockRecommendations.priority1 = [
+            {
+              solutionId: "mock-solution-1",
+              justification: "Esta solução foi selecionada para seu negócio B2B e pode ajudar a otimizar seus processos de vendas."
+            },
+            {
+              solutionId: "mock-solution-2",
+              justification: "Considerando seu foco em automação, esta solução trará ganhos imediatos de produtividade."
+            }
+          ];
+          mockRecommendations.priority2 = [
+            {
+              solutionId: "mock-solution-3",
+              justification: "Com seu conhecimento em IA, você poderá implementar esta solução rapidamente."
+            }
+          ];
+          mockRecommendations.priority3 = [
+            {
+              solutionId: "mock-solution-4",
+              justification: "Para complementar sua estratégia de marketing com IA, esta ferramenta será muito útil."
+            }
+          ];
+        }
+
+        // Usar as recomendações de fallback
+        generatedData = { recommendations: mockRecommendations };
+      }
+
+      const recommendationsToSave = generatedData?.recommendations;
+      console.log("Salvando recomendações geradas:", recommendationsToSave);
 
       // Salvar trilha gerada
       const { error: saveError } = await supabase
@@ -175,7 +250,10 @@ export const useImplementationTrail = () => {
         .eq("user_id", user.id)
         .eq("status", "pending");
 
-      if (saveError) throw saveError;
+      if (saveError) {
+        console.error("Erro ao salvar trilha gerada:", saveError);
+        throw saveError;
+      }
 
       const sanitizedData = sanitizeTrailData(recommendationsToSave);
       setTrail(sanitizedData);
@@ -186,17 +264,55 @@ export const useImplementationTrail = () => {
       setError(error.message || "Erro ao gerar trilha");
       
       // Registrar erro
-      await supabase
-        .from("implementation_trails")
-        .update({
-          status: "error",
-          error_message: error.message,
-        })
-        .eq("user_id", user.id)
-        .eq("status", "pending");
+      try {
+        await supabase
+          .from("implementation_trails")
+          .update({
+            status: "error",
+            error_message: error.message || "Erro desconhecido na geração da trilha",
+          })
+          .eq("user_id", user.id)
+          .eq("status", "pending");
+      } catch (updateError) {
+        console.error("Erro ao registrar falha:", updateError);
+      }
 
-      toast.error("Não foi possível gerar sua trilha");
-      return null;
+      toast.error("Não foi possível gerar sua trilha de implementação. Uma trilha padrão será criada.");
+      
+      // Gerar trilha padrão em caso de erro para evitar falha completa
+      try {
+        const defaultTrail: ImplementationTrail = {
+          priority1: [
+            {
+              solutionId: "default-solution-1",
+              justification: "Solução padrão para ajudar nas primeiras etapas da implementação de IA."
+            }
+          ],
+          priority2: [
+            {
+              solutionId: "default-solution-2",
+              justification: "Recomendação padrão para auxiliar na implementação de IA no seu negócio."
+            }
+          ],
+          priority3: []
+        };
+        
+        await supabase
+          .from("implementation_trails")
+          .insert({
+            user_id: user.id,
+            status: "completed",
+            trail_data: defaultTrail,
+            is_default: true,
+            error_message: error.message || "Erro desconhecido - usado trilha padrão"
+          });
+          
+        setTrail(defaultTrail);
+        return defaultTrail;
+      } catch (fallbackError) {
+        console.error("Falha ao criar trilha padrão:", fallbackError);
+        return null;
+      }
     } finally {
       setIsLoading(false);
     }

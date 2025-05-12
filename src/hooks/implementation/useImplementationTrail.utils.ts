@@ -21,3 +21,31 @@ export const sanitizeTrailData = (trailData: ImplementationTrail | null): Implem
   
   return sanitized;
 };
+
+// Função para extrair IDs válidos das recomendações
+export const extractValidIds = (trail: ImplementationTrail | null): string[] => {
+  if (!trail) return [];
+  
+  const allRecommendations = [
+    ...(trail.priority1 || []),
+    ...(trail.priority2 || []),
+    ...(trail.priority3 || [])
+  ];
+  
+  return allRecommendations
+    .filter(rec => rec.solutionId && rec.solutionId !== 'mock-solution-1' && rec.solutionId !== 'default-solution-1')
+    .map(rec => rec.solutionId);
+};
+
+// Função para validar a estrutura da trilha
+export const isValidTrail = (trail: ImplementationTrail | null): boolean => {
+  if (!trail) return false;
+  
+  // Verificar se pelo menos uma das prioridades tem soluções
+  const hasContent = 
+    (Array.isArray(trail.priority1) && trail.priority1.length > 0) ||
+    (Array.isArray(trail.priority2) && trail.priority2.length > 0) ||
+    (Array.isArray(trail.priority3) && trail.priority3.length > 0);
+    
+  return hasContent;
+};

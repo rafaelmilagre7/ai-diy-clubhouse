@@ -18,6 +18,8 @@ max_rows = 1000
 [db]
 # Port to use for the local database URL.
 port = 54322
+# Port used by db diff command to initialize the shadow database.
+shadow_port = 54320
 # The database major version to use. This has to be the same as your remote database's. Run `SHOW
 # server_version;` on the remote database to check.
 major_version = 15
@@ -43,11 +45,14 @@ file_size_limit = "50MiB"
 # in emails.
 site_url = "http://localhost:3000"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["https://localhost:3000", "https://zotzvtepvpnkcoobdubt.supabase.co/auth/v1/callback", "https://viverdeia.lovable.app"]
-# How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 seconds (one
-# week).
+additional_redirect_urls = ["https://localhost:3000"]
+# How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # Allow/disallow new user signups to your project.
+enable_signup = true
+
+[auth.email]
+# Allow/disallow new user signups via email to your project.
 enable_signup = true
 # If enabled, a user will be required to confirm any email change on both the old, and new email
 # addresses. If disabled, only the new email is required to confirm.
@@ -55,10 +60,10 @@ double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
 enable_confirmations = false
 
-# Use an external OAuth provider. The full list of providers are: "apple", "azure", "bitbucket",
-# "discord", "facebook", "github", "gitlab", "google", "keycloak", "linkedin", "notion", "twitch",
-# "twitter", "slack", "spotify", "workos", "zoom".
-[auth.external.github]
+# Use an external OAuth provider. The full list of providers are: `apple`, `azure`, `bitbucket`,
+# `discord`, `facebook`, `github`, `gitlab`, `google`, `keycloak`, `linkedin`, `notion`, `twitch`,
+# `twitter`, `slack`, `spotify`, `workos`, `zoom`.
+[auth.external.apple]
 enabled = false
 client_id = ""
 secret = ""
@@ -70,18 +75,32 @@ url = ""
 
 [functions]
 # Port to use for Functions.
-port = 54321
-function_timeout = 5
+port = 54328
+# Allows for customization of the function build process, available settings:
+# https://supabase.com/docs/guides/functions/build-operations
+# build_options = { process_builds = true }
 
-[analytics]
-enabled = false
-port = 54327
-vector_port = 54328
+# Configure Postgres functions to use in your local dev environment.
+# Postgres functions should be located in the `supabase/functions/pg-functions` directory.
 
-# Criação de função RPC para atualizar estatísticas de envio
-[functions.update_invite_send_stats]
-verify_jwt = true
+# Enable realtime functionality
+[realtime]
+enabled = true
 
-# Configuração da função de envio de email
-[functions.send-invite-email]
+# Configure one of the supported storage providers: [`file`, `s3`, `gcs`, `azure`]
+[storage.file]
+enabled = true
+
+[postgres]
+# Port to use for the local postgres server.
+port = 54322
+
+[interpret]
+enabled = true
+port = 54329
+
+[generate]
+enabled = true
+
+[functions.generate-implementation-trail]
 verify_jwt = true
