@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -53,13 +52,13 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-                // VIVER DE IA colors - enhanced with more variants
+                // VIVER DE IA colors com novo azul claro
                 viverblue: {
-                    DEFAULT: '#0ABAB5',
-                    light: '#6de2de',
-                    lighter: '#9EECEA',
-                    dark: '#068d89',
-                    darker: '#046A66',
+                    DEFAULT: '#00EAD9',
+                    light: '#6DF2E9',
+                    lighter: '#9FF7F2',
+                    dark: '#00BAB0',
+                    darker: '#008B84',
                 },
                 // Revenue track colors - enhanced
                 revenue: {
@@ -136,10 +135,10 @@ export default {
                 },
                 'pulse-glow': {
                     '0%, 100%': { 
-                        boxShadow: '0 0 0 0 rgba(10, 186, 181, 0.7)' 
+                        boxShadow: '0 0 0 0 rgba(0, 234, 217, 0.7)' 
                     },
                     '50%': { 
-                        boxShadow: '0 0 20px 10px rgba(10, 186, 181, 0.4)' 
+                        boxShadow: '0 0 20px 10px rgba(0, 234, 217, 0.4)' 
                     }
                 },
                 'fade-in': {

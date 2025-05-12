@@ -27,10 +27,6 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
   const location = useLocation();
   const { isAdmin, isFormacao } = useAuth();
 
-  // Log para verificar se o componente está sendo renderizado
-  console.log("MemberSidebarNav renderizando, sidebarOpen:", sidebarOpen);
-  console.log("Caminho atual:", location.pathname);
-
   const menuItems = [
     {
       title: "Dashboard",
@@ -85,26 +81,28 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
   ];
 
   const isActive = (href: string) => {
-    console.log(`Verificando se ${href} está ativo para ${location.pathname}`);
     return location.pathname === href || location.pathname.startsWith(href + '/');
   };
 
   return (
-    <div className="space-y-4 py-4">
+    <div className="space-y-2 py-4">
       <div className="px-3 space-y-1">
         {menuItems.map((item) => (
           <Button
             key={item.href}
-            variant={isActive(item.href) ? "default" : "ghost"}
+            variant="ghost"
             className={cn(
-              "w-full justify-start gap-2",
+              "w-full justify-start gap-3 rounded-lg hover:bg-[#181A2A] text-neutral-400 dark:text-neutral-300",
               !sidebarOpen && "justify-center",
-              isActive(item.href) && "bg-viverblue hover:bg-viverblue/90"
+              isActive(item.href) && "hubla-active-nav"
             )}
             asChild
           >
             <Link to={item.href}>
-              <item.icon className="h-4 w-4" />
+              <item.icon className={cn(
+                "h-4 w-4", 
+                isActive(item.href) ? "text-viverblue" : "text-neutral-400"
+              )} />
               {sidebarOpen && <span>{item.title}</span>}
             </Link>
           </Button>
@@ -114,7 +112,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
           <Button
             variant="outline"
             className={cn(
-              "w-full justify-start gap-2 border-viverblue text-viverblue hover:bg-viverblue/10 mt-4",
+              "w-full justify-start gap-3 border-viverblue/30 text-viverblue hover:bg-[#181A2A] mt-4",
               !sidebarOpen && "justify-center"
             )}
             asChild
@@ -130,7 +128,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
           <Button
             variant="outline"
             className={cn(
-              "w-full justify-start gap-2 border-viverblue text-viverblue hover:bg-viverblue/10 mt-4",
+              "w-full justify-start gap-3 border-viverblue/30 text-viverblue hover:bg-[#181A2A] mt-4",
               !sidebarOpen && "justify-center"
             )}
             asChild

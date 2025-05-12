@@ -40,7 +40,6 @@ export const MemberUserMenu = ({
     
     try {
       setIsLoggingOut(true);
-      console.log("Iniciando processo de logout via MemberUserMenu");
       
       // Limpar token do localStorage para garantir logout
       localStorage.removeItem('sb-zotzvtepvpnkcoobdubt-auth-token');
@@ -51,7 +50,6 @@ export const MemberUserMenu = ({
       
       // Redirecionamento forçado para a página de autenticação
       toast.success("Logout realizado com sucesso");
-      console.log("Redirecionando para /login");
       
       // Forçar redirecionamento via location.href para garantir reset completo da aplicação
       window.location.href = '/login';
@@ -71,17 +69,17 @@ export const MemberUserMenu = ({
           <Button
             variant="ghost"
             className={cn(
-              "w-full justify-start gap-2 px-2",
+              "w-full justify-start gap-2 px-2 hover:bg-[#181A2A] text-neutral-300",
               !sidebarOpen && "justify-center"
             )}
           >
-            <Avatar className="h-8 w-8">
+            <Avatar className="h-8 w-8 border border-white/10">
               <AvatarImage src={profileAvatar} />
-              <AvatarFallback>{getInitials(profileName)}</AvatarFallback>
+              <AvatarFallback className="bg-[#181A2A] text-viverblue">{getInitials(profileName)}</AvatarFallback>
             </Avatar>
             {sidebarOpen && (
               <div className="flex flex-col items-start text-sm">
-                <span className="font-medium">{profileName}</span>
+                <span className="font-medium text-neutral-100">{profileName}</span>
                 <span className="text-muted-foreground text-xs truncate max-w-[150px]">
                   {profileEmail}
                 </span>
@@ -89,11 +87,11 @@ export const MemberUserMenu = ({
             )}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
-          <DropdownMenuSeparator />
+        <DropdownMenuContent align="end" className="w-56 bg-[#151823] border-white/5">
+          <DropdownMenuLabel className="text-neutral-200">Minha Conta</DropdownMenuLabel>
+          <DropdownMenuSeparator className="bg-white/5" />
           <Link to="/profile">
-            <DropdownMenuItem>
+            <DropdownMenuItem className="hover:bg-[#181A2A]">
               <User className="mr-2 h-4 w-4" />
               <span>Perfil</span>
             </DropdownMenuItem>
@@ -101,6 +99,7 @@ export const MemberUserMenu = ({
           <DropdownMenuItem 
             disabled={isLoggingOut} 
             onSelect={handleSignOut}
+            className="hover:bg-[#181A2A]"
           >
             <LogOut className="mr-2 h-4 w-4" />
             <span>{isLoggingOut ? "Saindo..." : "Sair"}</span>

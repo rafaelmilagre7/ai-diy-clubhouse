@@ -16,13 +16,10 @@ export const MemberContent = ({
   setSidebarOpen, 
   children 
 }: MemberContentProps) => {
-  // Debug log para verificar quando o componente é renderizado
-  console.log("MemberContent renderizando, sidebarOpen:", sidebarOpen);
-
   return (
     <main 
       className={cn(
-        "flex-1 bg-background transition-all duration-300 ease-in-out",
+        "flex-1 bg-[#0F111A] transition-all duration-300 ease-in-out",
         // Ajusta o margin-left baseado no estado da barra lateral
         sidebarOpen ? "md:ml-64" : "md:ml-[70px]",
         // Sem margem em mobile (barra lateral sobrepõe)
@@ -30,12 +27,12 @@ export const MemberContent = ({
       )}
     >
       {/* Cabeçalho mobile com botão do menu */}
-      <div className="sticky top-0 z-40 flex h-16 items-center border-b bg-background px-4 md:hidden">
+      <div className="sticky top-0 z-40 flex h-16 items-center border-b border-white/5 bg-[#0F111A] px-4 md:hidden">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="mr-2"
+          className="mr-2 text-neutral-300"
           aria-label={sidebarOpen ? "Fechar menu" : "Abrir menu"}
         >
           <Menu size={24} />

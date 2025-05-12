@@ -56,12 +56,14 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
     };
   }, [sidebarOpen]);
 
-  // Log para debugging
-  console.log("MemberLayout renderizando com sidebarOpen:", sidebarOpen);
-  console.log("Perfil do usuário:", profile);
+  // Forçar o tema escuro 
+  useEffect(() => {
+    document.documentElement.classList.add('dark');
+    document.body.classList.add('dark');
+  }, []);
 
   return (
-    <div className="flex min-h-screen bg-background overflow-hidden">
+    <div className="flex min-h-screen bg-[#0F111A] overflow-hidden">
       {/* Barra lateral garantida para ser renderizada sempre */}
       <MemberSidebar 
         sidebarOpen={sidebarOpen} 

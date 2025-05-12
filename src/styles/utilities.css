@@ -1,3 +1,4 @@
+
 /* Utilitários extras, gradientes, animações customizadas para responsividade, glass, hover, efeitos */
 
 .bg-size-200 {
@@ -20,9 +21,9 @@
     animation: highlight-flash 1.2s cubic-bezier(0.9,0,0.2,1);
   }
   @keyframes highlight-flash {
-    0% { box-shadow: 0 0 0 0px #FEC26077, 0 0 16px 8px #FEC26088 inset; }
-    50% { box-shadow: 0 0 0 16px #F8F8F833, 0 0 32px 16px #0ABAB544 inset; }
-    90% { box-shadow: 0 0 0 0 #F8F8F833, 0 0 0 0 #0ABAB500 inset; }
+    0% { box-shadow: 0 0 0 0px #00EAD977, 0 0 16px 8px #00EAD988 inset; }
+    50% { box-shadow: 0 0 0 16px #F8F8F833, 0 0 32px 16px #00EAD944 inset; }
+    90% { box-shadow: 0 0 0 0 #F8F8F833, 0 0 0 0 #00EAD900 inset; }
     100% { box-shadow: none; }
   }
 
@@ -73,13 +74,26 @@
     100% { opacity: 1; }
   }
   
-  /* Efeito de pulso suave */
+  /* Efeito de pulso suave para highlights */
   .pulse-subtle {
     animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
   @keyframes pulse-subtle {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.7; }
+  }
+  
+  /* Novos utilitários para o estilo Hubla */
+  .hubla-active-nav {
+    @apply relative bg-[#181A2A] text-viverblue border-l-2 border-viverblue;
+  }
+  
+  .hubla-shadow {
+    @apply shadow-[0_4px_20px_-2px_rgba(0,0,0,0.3)];
+  }
+  
+  .hubla-glow {
+    @apply shadow-[0_0_15px_rgba(0,234,217,0.3)];
   }
 }
 
@@ -89,7 +103,7 @@
 }
 .hover-lift:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* Animação de entrada para as estatísticas na tela de conclusão */
@@ -126,4 +140,21 @@
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+/* Efeito de borda iluminada ao estilo Hubla */
+.hubla-border-glow {
+  @apply border border-white/5 relative;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+.hubla-border-glow:hover {
+  @apply border-viverblue/30;
+  box-shadow: 
+    inset 0 0 0 1px rgba(0, 234, 217, 0.2),
+    0 0 10px rgba(0, 234, 217, 0.1);
+}
+
+/* Efeito de gradiente sutil para cards */
+.hubla-card-gradient {
+  background: linear-gradient(180deg, rgba(30, 32, 47, 0.6) 0%, rgba(15, 17, 26, 0.8) 100%);
 }
