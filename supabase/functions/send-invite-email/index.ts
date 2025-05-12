@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { format } from "https://deno.land/std@0.168.0/datetime/mod.ts";
-import nodemailer from "nodemailer";
+import nodemailer from "https://esm.sh/nodemailer@6.9.9";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
