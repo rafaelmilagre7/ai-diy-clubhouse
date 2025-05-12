@@ -44,13 +44,13 @@ export const AdminToolsFilters: React.FC<AdminToolsFiltersProps> = ({
     <div className="flex gap-4 mb-6">
       <div className="flex-1">
         <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-textMuted" />
           <Input
             type="search"
             placeholder="Buscar ferramenta..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-8"
+            className="pl-8 bg-backgroundLight border-white/10 text-textPrimary"
           />
         </div>
       </div>
@@ -59,13 +59,13 @@ export const AdminToolsFilters: React.FC<AdminToolsFiltersProps> = ({
         value={selectedCategory || 'all'}
         onValueChange={(value) => onCategoryChange(value === 'all' ? null : value as ToolCategory)}
       >
-        <SelectTrigger className="w-[200px]">
+        <SelectTrigger className="w-[200px] bg-backgroundLight border-white/10 text-textPrimary">
           <SelectValue placeholder="Todas as categorias" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="bg-backgroundLight border-white/10 text-textPrimary">
           <SelectItem value="all">Todas as categorias</SelectItem>
           {categories.map((category) => (
-            <SelectItem key={category} value={category}>
+            <SelectItem key={category} value={category} className="hover:bg-viverblue/10">
               {category}
             </SelectItem>
           ))}

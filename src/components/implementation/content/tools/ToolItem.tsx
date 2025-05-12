@@ -26,10 +26,10 @@ export const ToolItem = ({
   const { logoUrl, loading } = useToolLogo({ toolName });
 
   return (
-    <Card className="overflow-hidden flex flex-col h-full hover:shadow-md transition-shadow">
+    <Card className="overflow-hidden flex flex-col h-full hubla-card hover:border-viverblue/30 hover:shadow-md transition-shadow">
       <CardContent className="p-0">
         <div className="p-4 pb-3 flex items-center gap-3">
-          <div className="h-12 w-12 rounded-lg bg-gray-100 border flex items-center justify-center overflow-hidden flex-shrink-0">
+          <div className="h-12 w-12 rounded-lg bg-backgroundLight border border-white/10 flex items-center justify-center overflow-hidden flex-shrink-0">
             {logoUrl ? (
               <img 
                 src={logoUrl} 
@@ -37,25 +37,25 @@ export const ToolItem = ({
                 className="h-full w-full object-contain" 
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
-                  e.currentTarget.parentElement!.innerHTML = `<div class="text-xl font-bold text-[#0ABAB5]">${toolName.substring(0, 2).toUpperCase()}</div>`;
+                  e.currentTarget.parentElement!.innerHTML = `<div class="text-xl font-bold text-viverblue">${toolName.substring(0, 2).toUpperCase()}</div>`;
                 }}
               />
             ) : (
-              <div className="text-xl font-bold text-[#0ABAB5]">
+              <div className="text-xl font-bold text-viverblue">
                 {toolName.substring(0, 2).toUpperCase()}
               </div>
             )}
           </div>
           
           <div>
-            <h3 className="font-medium text-base">{toolName}</h3>
+            <h3 className="font-medium text-base text-textPrimary">{toolName}</h3>
             <div className="flex flex-wrap gap-1 mt-1">
               {isRequired ? (
-                <Badge variant="outline" className="text-xs bg-[#0ABAB5]/10 text-[#0ABAB5] border-[#0ABAB5]/30">
+                <Badge variant="outline" className="text-xs bg-viverblue/10 text-viverblue border-viverblue/30">
                   Obrigatória
                 </Badge>
               ) : (
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-xs bg-backgroundLight border-white/10 text-textSecondary">
                   Opcional
                 </Badge>
               )}
@@ -72,7 +72,7 @@ export const ToolItem = ({
         <Button 
           variant="outline" 
           size="sm" 
-          className="w-full" 
+          className="w-full hover:bg-viverblue/10 hover:text-viverblue" 
           onClick={() => window.open(toolUrl, "_blank")}
         >
           <ExternalLink className="h-4 w-4 mr-2" />

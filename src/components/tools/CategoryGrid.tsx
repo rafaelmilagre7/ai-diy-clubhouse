@@ -29,25 +29,27 @@ const CategoryCard = ({ category, label, icon, count, isSelected, onClick }: Cat
       className={cn(
         "flex flex-col items-center justify-center p-4 rounded-lg cursor-pointer transition-all duration-200",
         isSelected 
-          ? "bg-[#0ABAB5]/15 border-2 border-[#0ABAB5] text-[#0ABAB5]" 
-          : "bg-white border border-gray-200 hover:border-[#0ABAB5]/50 hover:bg-[#0ABAB5]/5"
+          ? "bg-viverblue/15 border-2 border-viverblue text-viverblue" 
+          : "bg-backgroundLight border border-white/5 hover:border-viverblue/50 hover:bg-viverblue/5"
       )}
       onClick={onClick}
     >
       <div className={cn(
         "w-10 h-10 flex items-center justify-center rounded-md mb-2",
-        isSelected ? "bg-[#0ABAB5]/20" : "bg-gray-100"
+        isSelected ? "bg-viverblue/20" : "bg-background/50"
       )}>
         {icon}
       </div>
-      <p className="text-sm font-medium text-center line-clamp-2 h-10 flex items-center">
+      <p className="text-sm font-medium text-center line-clamp-2 h-10 flex items-center text-textPrimary">
         {label}
       </p>
       <Badge 
         variant="outline" 
         className={cn(
           "mt-1 text-xs",
-          isSelected ? "bg-[#0ABAB5]/20 border-[#0ABAB5]/30" : "bg-gray-100"
+          isSelected 
+            ? "bg-viverblue/20 border-viverblue/30 text-viverblue" 
+            : "bg-background border-white/10 text-textSecondary"
         )}
       >
         {count}
@@ -82,7 +84,7 @@ export const CategoryGrid = ({ selectedCategory, onCategoryChange }: CategoryGri
   // Define ícones para cada categoria
   const getCategoryIcon = (category: string | null) => {
     const iconSize = 20;
-    const iconColor = selectedCategory === category ? "#0ABAB5" : "#64748b";
+    const iconColor = selectedCategory === category ? "#00EAD9" : "#CDD5E0";
     
     switch(category) {
       case 'Modelos de IA e Interfaces':
