@@ -3,6 +3,7 @@ import React from "react";
 import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useToolImage } from "@/hooks/useToolImage";
 import { Avatar } from "@/components/ui/avatar";
 
 interface ToolItemProps {
@@ -20,6 +21,8 @@ export const ToolItem = ({
   hasBenefit = false,
   benefitType,
 }: ToolItemProps) => {
+  const { logoUrl, loading, error } = useToolImage({ toolName });
+  
   const formatName = (name: string) => {
     return name.charAt(0).toUpperCase() + name.slice(1);
   };
@@ -28,7 +31,30 @@ export const ToolItem = ({
   const getToolAvatar = (name: string) => {
     const firstLetter = name.charAt(0).toUpperCase();
     
-    // Aqui poderia ter lógica para mostrar um logo específico
+    // Se temos uma URL de logo e não estamos carregando nem temos erros
+    if (logoUrl && !loading && !error) {
+      return (
+        <div className="bg-white h-10 w-10 rounded-md flex items-center justify-center overflow-hidden">
+          <img 
+            src={logoUrl} 
+            alt={`Logo ${name}`} 
+            className="h-full w-full object-contain"
+            onError={(e) => {
+              // Em caso de erro ao carregar a imagem, mostrar a letra inicial
+              e.currentTarget.style.display = 'none';
+              e.currentTarget.parentElement?.classList.add('bg-viverblue/20');
+              e.currentTarget.parentElement?.classList.remove('bg-white');
+              const fallback = document.createElement('div');
+              fallback.className = 'font-semibold text-viverblue';
+              fallback.textContent = firstLetter;
+              e.currentTarget.parentElement?.appendChild(fallback);
+            }} 
+          />
+        </div>
+      );
+    }
+    
+    // Fallback para quando não temos o logo
     return (
       <div className="bg-viverblue/20 text-viverblue h-10 w-10 rounded-md flex items-center justify-center font-semibold">
         {firstLetter}
