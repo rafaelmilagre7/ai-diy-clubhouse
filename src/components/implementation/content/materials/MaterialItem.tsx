@@ -1,54 +1,64 @@
 
 import React from "react";
+import { Download, FileText, FileImage, FileArchive } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Download, FileText, Image, FileArchive, Video } from "lucide-react";
-import { Material } from "@/hooks/implementation/useMaterialsData";
+
+interface Material {
+  id: string;
+  name: string;
+  filename?: string;
+  url?: string;
+  format?: string;
+  description?: string;
+}
 
 interface MaterialItemProps {
   material: Material;
-  onDownload: (material: Material) => Promise<void>;
+  onDownload: (material: Material) => void;
 }
 
-export const MaterialItem: React.FC<MaterialItemProps> = ({ material, onDownload }) => {
-  // Function to get appropriate icon based on file type
-  const getFileIcon = (type: string, format: string | null) => {
-    switch(type) {
-      case "image":
-        return <Image className="h-5 w-5 text-green-600" />;
-      case "document":
-      case "pdf":
-        return <FileText className="h-5 w-5 text-green-600" />;
-      case "template":
-      case "spreadsheet":
-        return <FileText className="h-5 w-5 text-green-600" />;
-      case "video":
-        return <Video className="h-5 w-5 text-green-600" />;
-      default:
-        return <FileArchive className="h-5 w-5 text-green-600" />;
+export const MaterialItem = ({ material, onDownload }: MaterialItemProps) => {
+  const getFileIcon = () => {
+    const fileType = material.format?.toLowerCase() || material.filename?.split('.').pop()?.toLowerCase();
+    
+    if (fileType?.match(/pdf|doc|docx|txt|md/)) {
+      return <FileText className="h-5 w-5" />;
+    } else if (fileType?.match(/png|jpg|jpeg|gif|svg|webp/)) {
+      return <FileImage className="h-5 w-5" />;
+    } else {
+      return <FileArchive className="h-5 w-5" />;
     }
   };
-
+  
   return (
-    <div className="flex items-start p-4 border rounded-md">
-      <div className="bg-green-100 p-2 rounded mr-4">
-        {getFileIcon(material.type, material.format)}
+    <div className="bg-[#1A1E2E] border border-white/10 rounded-lg p-4 flex items-start space-x-4">
+      <div className="bg-viverblue/20 text-viverblue p-2 rounded-md">
+        {getFileIcon()}
       </div>
-      <div className="flex-1">
-        <div className="flex justify-between items-start">
-          <h4 className="font-medium">{material.name}</h4>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onDownload(material)}
-          >
-            <Download className="h-4 w-4 mr-1" />
-            Baixar
-          </Button>
-        </div>
-        <p className="text-sm text-muted-foreground mt-1">
-          {material.format ? `${material.type.toUpperCase()} - ${material.format}` : material.type}
-        </p>
+      
+      <div className="flex-1 min-w-0">
+        <h4 className="text-base font-medium mb-1 text-neutral-100">
+          {material.name}
+        </h4>
+        
+        {material.description && (
+          <p className="text-sm text-neutral-400 mb-3 line-clamp-2">{material.description}</p>
+        )}
+        
+        {material.format && (
+          <p className="text-xs text-neutral-500 uppercase">{material.format}</p>
+        )}
       </div>
+      
+      <Button 
+        variant="outline" 
+        size="sm" 
+        className="bg-transparent border-viverblue/20 text-viverblue hover:bg-viverblue/10"
+        onClick={() => onDownload(material)}
+      >
+        <Download className="h-4 w-4 mr-2" />
+        Baixar
+      </Button>
     </div>
   );
 };

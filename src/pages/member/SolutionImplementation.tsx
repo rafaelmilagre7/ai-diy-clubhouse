@@ -92,16 +92,16 @@ const SolutionImplementation = () => {
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f8fdff] via-[#f0fafe] to-[#edf6fb] pb-16">
+    <div className="min-h-screen bg-[#0F111A] pb-16">
       <div className="container max-w-4xl py-4 md:py-6 animate-fade-in">
-        <GlassCard className="p-0 md:p-0 transition-all duration-300 shadow-xl border border-[#0ABAB5]/10 overflow-hidden">
+        <GlassCard className="p-0 md:p-0 transition-all duration-300 shadow-xl border border-white/10 overflow-hidden">
           <ImplementationHeader solution={solution} />
           
           <div className="mt-0 px-4 md:px-6 pb-6">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <ImplementationTabsNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
               
-              <div className="bg-white/50 rounded-xl p-4 md:p-6 border border-[#0ABAB5]/5 min-h-[30vh]">
+              <div className="bg-[#151823] rounded-xl p-4 md:p-6 border border-white/10 min-h-[30vh]">
                 <TabsContent value="tools" className="mt-0">
                   <ModuleContentTools module={currentModule} />
                 </TabsContent>

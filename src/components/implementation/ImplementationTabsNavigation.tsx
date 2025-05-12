@@ -33,7 +33,7 @@ export const ImplementationTabsNavigation = ({
   setActiveTab
 }: ImplementationTabsNavigationProps) => (
   <TooltipProvider delayDuration={300}>
-    <TabsList className="w-full bg-neutral-100/90 dark:bg-neutral-800/50 rounded-lg shadow-sm mb-6 p-1 border border-neutral-200 dark:border-neutral-700/50 gap-1 overflow-x-auto flex justify-between">
+    <TabsList className="w-full bg-[#1A1E2E]/90 rounded-lg shadow-sm mb-6 p-1 border border-white/10 gap-1 overflow-x-auto flex justify-between">
       {tabs.map((tab) => (
         <Tooltip key={tab.value}>
           <TooltipTrigger asChild>
@@ -43,8 +43,8 @@ export const ImplementationTabsNavigation = ({
               className={`
                 flex items-center gap-2 px-3 py-2 rounded-md transition-all relative flex-1 min-w-0
                 ${activeTab === tab.value 
-                  ? "bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-sm after:absolute after:-bottom-1 after:left-2 after:right-2 after:h-0.5 after:bg-neutral-400 dark:after:bg-neutral-400 after:rounded-full after:transition-all" 
-                  : "text-neutral-700 dark:text-neutral-300 hover:bg-white/80 dark:hover:bg-neutral-700/50"}
+                  ? "bg-[#151823] text-viverblue shadow-sm after:absolute after:-bottom-1 after:left-2 after:right-2 after:h-0.5 after:bg-viverblue after:rounded-full after:transition-all" 
+                  : "text-neutral-300 hover:bg-[#151823]/80"}
               `}
               tabIndex={0}
             >

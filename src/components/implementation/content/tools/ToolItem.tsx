@@ -3,82 +3,85 @@ import React from "react";
 import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { useToolLogo } from "@/hooks/useToolLogo";
-import { BenefitBadge } from "@/components/tools/BenefitBadge";
-import { BenefitType } from "@/types/toolTypes";
+import { Avatar } from "@/components/ui/avatar";
 
 interface ToolItemProps {
   toolName: string;
-  toolUrl: string;
-  isRequired: boolean;
-  benefitType?: BenefitType;
+  toolUrl?: string;
+  isRequired?: boolean;
   hasBenefit?: boolean;
+  benefitType?: "discount" | "free" | "special";
 }
 
-export const ToolItem = ({ 
-  toolName, 
-  toolUrl, 
-  isRequired,
+export const ToolItem = ({
+  toolName,
+  toolUrl,
+  isRequired = false,
+  hasBenefit = false,
   benefitType,
-  hasBenefit
 }: ToolItemProps) => {
-  const { logoUrl, loading } = useToolLogo({ toolName });
+  const formatName = (name: string) => {
+    return name.charAt(0).toUpperCase() + name.slice(1);
+  };
+
+  // Determina se o ícone deve ser a primeira letra ou um logo
+  const getToolAvatar = (name: string) => {
+    const firstLetter = name.charAt(0).toUpperCase();
+    
+    // Aqui poderia ter lógica para mostrar um logo específico
+    return (
+      <div className="bg-viverblue/20 text-viverblue h-10 w-10 rounded-md flex items-center justify-center font-semibold">
+        {firstLetter}
+      </div>
+    );
+  };
+
+  const getBenefitLabel = () => {
+    switch (benefitType) {
+      case "discount":
+        return "Desconto exclusivo";
+      case "free":
+        return "Versão gratuita";
+      case "special":
+        return "Oferta especial";
+      default:
+        return "Benefício exclusivo";
+    }
+  };
 
   return (
-    <Card className="overflow-hidden flex flex-col h-full border-neutral-800/50 bg-[#151823] hover:shadow-md transition-shadow">
-      <CardContent className="p-0">
-        <div className="p-4 pb-3 flex items-center gap-3">
-          <div className="h-12 w-12 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center overflow-hidden flex-shrink-0">
-            {logoUrl ? (
-              <img 
-                src={logoUrl} 
-                alt={toolName} 
-                className="h-full w-full object-contain" 
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.parentElement!.innerHTML = `<div class="text-xl font-bold text-neutral-300">${toolName.substring(0, 2).toUpperCase()}</div>`;
-                }}
-              />
-            ) : (
-              <div className="text-xl font-bold text-neutral-300">
-                {toolName.substring(0, 2).toUpperCase()}
-              </div>
+    <div className="bg-[#1A1E2E] border border-white/10 rounded-lg p-4 flex flex-col h-full shadow-sm">
+      <div className="flex items-start gap-3 mb-4">
+        {getToolAvatar(toolName)}
+        <div className="space-y-1">
+          <h3 className="font-medium text-neutral-100">{formatName(toolName)}</h3>
+          <div className="flex flex-wrap gap-2">
+            {isRequired && (
+              <Badge variant="outline" className="bg-viverblue/10 text-viverblue border-viverblue/20 text-xs">
+                Necessário
+              </Badge>
+            )}
+            {hasBenefit && (
+              <Badge variant="outline" className="bg-secondary/10 text-secondary border-secondary/20 text-xs">
+                {getBenefitLabel()}
+              </Badge>
             )}
           </div>
-          
-          <div>
-            <h3 className="font-medium text-base text-white">{toolName}</h3>
-            <div className="flex flex-wrap gap-1 mt-1">
-              {isRequired ? (
-                <Badge variant="outline" className="text-xs bg-neutral-800 text-white border-neutral-700">
-                  Obrigatória
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="text-xs bg-neutral-800 text-neutral-400 border-neutral-700">
-                  Opcional
-                </Badge>
-              )}
-              
-              {hasBenefit && benefitType && (
-                <BenefitBadge type={benefitType} />
-              )}
-            </div>
-          </div>
         </div>
-      </CardContent>
+      </div>
       
-      <CardFooter className="p-4 pt-0 mt-auto">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="w-full hover:bg-neutral-700 hover:text-white border-neutral-700 text-neutral-300" 
-          onClick={() => window.open(toolUrl, "_blank")}
-        >
-          <ExternalLink className="h-4 w-4 mr-2" />
-          Acessar ferramenta
-        </Button>
-      </CardFooter>
-    </Card>
+      {toolUrl && (
+        <div className="mt-auto pt-3">
+          <Button 
+            variant="outline"
+            className="w-full bg-transparent border-viverblue/20 text-viverblue hover:bg-viverblue/10 hover:text-viverblue"
+            onClick={() => window.open(toolUrl, '_blank')}
+          >
+            <ExternalLink className="mr-2 h-4 w-4" />
+            Acessar ferramenta
+          </Button>
+        </div>
+      )}
+    </div>
   );
 };
