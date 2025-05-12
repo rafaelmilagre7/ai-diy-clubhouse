@@ -28,11 +28,13 @@ const InvitePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   
-  // Estados para registro de novo usuário
+  // Estados para cadastro/login de usuário
   const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [emailExists, setEmailExists] = useState<boolean | null>(null);
+  const [checkingEmail, setCheckingEmail] = useState<boolean>(false);
   
   // Verificar token na URL e buscar dados do convite
   useEffect(() => {
@@ -50,6 +52,36 @@ const InvitePage = () => {
 
   const normalizeToken = (inputToken: string): string => {
     return inputToken.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+  };
+  
+  // Função para verificar se um email já existe no sistema
+  const checkEmailExists = async (emailToCheck: string) => {
+    try {
+      setCheckingEmail(true);
+      
+      // Tentar fazer login com um método que vai falhar, mas nos diz se o email existe
+      const { error } = await supabase.auth.signInWithOtp({
+        email: emailToCheck,
+        options: {
+          shouldCreateUser: false // Não criar usuário, apenas verificar
+        }
+      });
+      
+      // Se o erro for "User not found", então o email não existe
+      const userNotFound = error?.message?.toLowerCase().includes('user not found') ||
+                          error?.message?.toLowerCase().includes('usuário não encontrado');
+      
+      setEmailExists(!userNotFound);
+      return !userNotFound;
+      
+    } catch (err) {
+      console.error("Erro ao verificar email:", err);
+      // Em caso de erro, assumimos que o email não existe para permitir tentativa de registro
+      setEmailExists(false);
+      return false;
+    } finally {
+      setCheckingEmail(false);
+    }
   };
   
   // Função para verificar o token sem necessidade de autenticação
@@ -88,6 +120,9 @@ const InvitePage = () => {
       });
       
       setEmail(data.email);
+      
+      // Verificar se o email já existe
+      await checkEmailExists(data.email);
       
     } catch (err: any) {
       console.error('Erro ao verificar token:', err);
@@ -155,85 +190,82 @@ const InvitePage = () => {
     checkInviteToken(token);
   };
   
-  // Registrar novo usuário com os dados do convite
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!name || !email || !password) {
-      toast.error('Preencha todos os campos para criar sua conta');
-      return;
-    }
-    
-    if (password.length < 6) {
-      toast.error('A senha deve ter pelo menos 6 caracteres');
-      return;
-    }
-    
-    try {
-      setLoading(true);
-      
-      // Criar conta do usuário
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-          },
-        },
-      });
-      
-      if (error) throw error;
-      
-      if (data.user) {
-        toast.success('Conta criada com sucesso! Processando seu convite...');
-        
-        // Processamos o convite depois que a conta for criada
-        // O useEffect vai detectar que o usuário agora está autenticado e 
-        // irá automaticamente processar o convite
-      }
-      
-    } catch (err: any) {
-      console.error("Erro ao criar conta:", err);
-      setError(err.message || 'Erro ao criar conta');
-      toast.error('Erro ao criar conta', {
-        description: err.message || 'Não foi possível criar sua conta. Tente novamente.'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  // Fazer login com conta existente
-  const handleLogin = async (e: React.FormEvent) => {
+  // Função unificada para lidar com registro ou login
+  const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email || !password) {
-      toast.error('Preencha seu email e senha para entrar');
+      toast.error('Preencha todos os campos obrigatórios');
+      return;
+    }
+    
+    if (!emailExists && !name) {
+      toast.error('O nome é obrigatório para novos cadastros');
       return;
     }
     
     try {
       setLoading(true);
+      setError(null);
       
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      let authResult;
       
-      if (error) throw error;
+      if (emailExists) {
+        // Email já existe, tenta login
+        authResult = await supabase.auth.signInWithPassword({ 
+          email, 
+          password 
+        });
+      } else {
+        // Novo usuário, registrar
+        if (password.length < 6) {
+          throw new Error('A senha deve ter pelo menos 6 caracteres');
+        }
+        
+        authResult = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { name }
+          }
+        });
+      }
       
-      if (data.user) {
-        toast.success('Login efetuado com sucesso! Processando seu convite...');
-        // O processamento do convite será feito pelo useEffect quando o usuário estiver autenticado
+      if (authResult.error) {
+        throw authResult.error;
+      }
+      
+      if (authResult.data.user) {
+        const actionMsg = emailExists ? 'Login realizado' : 'Conta criada';
+        toast.success(`${actionMsg} com sucesso!`);
+        
+        // O convite será processado automaticamente pelo useEffect
+        // quando detectar que o usuário está autenticado
+      } else if (!emailExists && authResult.data.session === null) {
+        // Caso especial: registro bem sucedido mas precisa confirmar email
+        toast.info(
+          'Verifique seu email', 
+          { description: 'Enviamos um link de confirmação para o seu email.' }
+        );
       }
       
     } catch (err: any) {
-      console.error("Erro ao fazer login:", err);
-      setError(err.message || 'Erro ao fazer login');
-      toast.error('Erro ao fazer login', {
-        description: err.message || 'Verifique suas credenciais e tente novamente.'
-      });
+      console.error("Erro de autenticação:", err);
+      
+      // Tratar mensagens de erro específicas para torná-las mais amigáveis
+      let errorMsg = err.message || 'Erro ao processar a solicitação';
+      
+      if (errorMsg.includes('User already registered') || 
+          errorMsg.includes('already registered')) {
+        errorMsg = 'Este email já está cadastrado. Por favor, faça login.';
+        // Atualizar o estado para mostrar o formulário de login
+        setEmailExists(true);
+      } else if (errorMsg.includes('Invalid login')) {
+        errorMsg = 'Email ou senha inválidos. Verifique suas credenciais.';
+      }
+      
+      setError(errorMsg);
+      toast.error('Erro no processo', { description: errorMsg });
     } finally {
       setLoading(false);
     }
@@ -285,153 +317,100 @@ const InvitePage = () => {
         <div className="space-y-6">
           <div>
             <p className="text-lg font-medium text-center mb-2">Convite para: {inviteData.email}</p>
-            {email === inviteData.email ? (
+            {emailExists === null ? (
               <p className="text-sm text-center text-muted-foreground">
-                Para acessar, você precisa criar uma conta ou fazer login com este email.
+                Verificando status do email...
+              </p>
+            ) : emailExists ? (
+              <p className="text-sm text-center text-muted-foreground">
+                Este email já está cadastrado. Faça login para aceitar o convite.
               </p>
             ) : (
-              <p className="text-sm text-center text-destructive">
-                Atenção: O email usado deve ser o mesmo do convite.
+              <p className="text-sm text-center text-muted-foreground">
+                Crie sua conta para aceitar o convite.
               </p>
             )}
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-4 border rounded-md">
-              <h2 className="text-lg font-semibold mb-4">Novo Usuário</h2>
-              <form onSubmit={handleRegister} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nome completo</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-                    <Input
-                      id="name"
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="pl-10"
-                      placeholder="Seu nome completo"
-                    />
-                  </div>
+          <form onSubmit={handleAuthSubmit} className="space-y-4">
+            {!emailExists && (
+              <div className="space-y-2">
+                <Label htmlFor="name">Nome completo</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+                  <Input
+                    id="name"
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="pl-10"
+                    placeholder="Seu nome completo"
+                    required={!emailExists}
+                  />
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="register-email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-                    <Input
-                      id="register-email"
-                      type="email"
-                      value={inviteData.email}
-                      readOnly
-                      className="pl-10 bg-muted"
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="register-password">Senha</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-                    <Input
-                      id="register-password"
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 pr-10"
-                      placeholder="Escolha uma senha"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-gray-500" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-gray-500" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-                
-                <Button 
-                  type="submit" 
-                  className="w-full" 
-                  disabled={loading || !name || !password}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Criando conta...
-                    </>
-                  ) : (
-                    'Criar conta e aceitar'
-                  )}
-                </Button>
-              </form>
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+                <Input
+                  id="email"
+                  type="email"
+                  value={inviteData.email}
+                  readOnly
+                  className="pl-10 bg-muted"
+                />
+              </div>
             </div>
             
-            <div className="p-4 border rounded-md">
-              <h2 className="text-lg font-semibold mb-4">Já tem conta?</h2>
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="login-email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-                    <Input
-                      id="login-email"
-                      type="email"
-                      value={inviteData.email}
-                      readOnly
-                      className="pl-10 bg-muted"
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="login-password">Senha</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-                    <Input
-                      id="login-password"
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 pr-10"
-                      placeholder="Sua senha"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-gray-500" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-gray-500" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-                
-                <Button 
-                  type="submit" 
-                  className="w-full" 
-                  disabled={loading || !password}
+            <div className="space-y-2">
+              <Label htmlFor="password">Senha</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10 pr-10"
+                  placeholder={emailExists ? "Sua senha" : "Escolha uma senha"}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2"
                 >
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Entrando...
-                    </>
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-500" />
                   ) : (
-                    'Entrar e aceitar'
+                    <Eye className="h-4 w-4 text-gray-500" />
                   )}
-                </Button>
-              </form>
+                </button>
+              </div>
+              {!emailExists && (
+                <p className="text-xs text-muted-foreground">
+                  A senha deve ter pelo menos 6 caracteres
+                </p>
+              )}
             </div>
-          </div>
+            
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={loading || !password || (checkingEmail)}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {emailExists ? 'Entrando...' : 'Criando conta...'}
+                </>
+              ) : (
+                emailExists ? 'Entrar e aceitar convite' : 'Criar conta e aceitar convite'
+              )}
+            </Button>
+          </form>
           
           {error && (
             <p className="text-sm text-destructive text-center mt-4">{error}</p>
@@ -483,7 +462,7 @@ const InvitePage = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 px-4">
-      <Card className="w-full max-w-2xl">
+      <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Convite para o VIVER DE IA Club</CardTitle>
           <CardDescription>
