@@ -15,7 +15,7 @@ import { EventRecurrence } from "./form/EventRecurrence";
 import { EventRoleAccess } from "./form/EventRoleAccess";
 import { useEffect } from "react";
 import { addDays, addMonths, addWeeks, format, parseISO } from "date-fns";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface EventFormProps {
   event?: Event;
@@ -283,9 +283,9 @@ export const EventForm = ({ event, initialData, onSuccess, layout = "standard" }
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <EventBasicInfo form={form} />
         <EventDateTime form={form} />
+        {form.watch("is_recurring") && <EventRecurrence form={form} />}
         <EventLocation form={form} />
         <EventRoleAccess form={form} />
-        <EventRecurrence form={form} />
         <EventCoverImage form={form} />
         
         <div className="flex justify-end gap-2">
@@ -304,6 +304,14 @@ export const EventForm = ({ event, initialData, onSuccess, layout = "standard" }
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <Tabs defaultValue="informacoes" className="w-full">
+          <TabsList className="w-full justify-start px-6 pt-4 border-b rounded-none">
+            <TabsTrigger value="informacoes">Informações</TabsTrigger>
+            {form.watch("is_recurring") && 
+              <TabsTrigger value="recorrencia">Recorrência</TabsTrigger>
+            }
+            <TabsTrigger value="acesso">Acesso</TabsTrigger>
+          </TabsList>
+          
           <TabsContent value="informacoes" className="mt-0 space-y-4">
             <EventBasicInfo form={form} />
             <EventDateTime form={form} />
@@ -311,9 +319,11 @@ export const EventForm = ({ event, initialData, onSuccess, layout = "standard" }
             <EventCoverImage form={form} />
           </TabsContent>
 
-          <TabsContent value="recorrencia" className="mt-0">
-            <EventRecurrence form={form} />
-          </TabsContent>
+          {form.watch("is_recurring") && (
+            <TabsContent value="recorrencia" className="mt-0">
+              <EventRecurrence form={form} />
+            </TabsContent>
+          )}
 
           <TabsContent value="acesso" className="mt-0">
             <EventRoleAccess form={form} />

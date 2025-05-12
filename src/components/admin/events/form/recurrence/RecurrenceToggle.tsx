@@ -18,7 +18,7 @@ export const RecurrenceToggle = ({ form }: RecurrenceToggleProps) => {
           <div className="space-y-0.5">
             <FormLabel className="text-base">Evento Recorrente</FormLabel>
             <p className="text-sm text-muted-foreground">
-              Ative para criar um evento que se repete periodicamente.
+              Ative para configurar um evento que se repete regularmente
             </p>
           </div>
           <FormControl>
