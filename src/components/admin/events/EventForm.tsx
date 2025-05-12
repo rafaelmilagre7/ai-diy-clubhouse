@@ -1,3 +1,4 @@
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -94,10 +95,77 @@ export const EventForm = ({ event, initialData, onSuccess, layout = "standard" }
   const generateRecurringEvents = async (baseEvent: EventFormData, parentEventId: string) => {
     const events: any[] = [];
     
-    // Parsear datas do evento base
-    const startDate = parseISO(baseEvent.start_time);
-    const endDate = parseISO(baseEvent.end_time);
-    const eventDuration = endDate.getTime() - startDate.getTime(); // duração em milissegundos
+    // Configurar data inicial para o primeiro evento real
+    let startDate: Date;
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0); // Normalizar para início do dia
+    
+    // Configurar horários a partir dos campos de horário
+    const startTimeParts = baseEvent.start_time.includes('T') ? 
+      baseEvent.start_time.split('T')[1].split(':') : 
+      ["00", "00", "00"];
+    
+    const endTimeParts = baseEvent.end_time.includes('T') ? 
+      baseEvent.end_time.split('T')[1].split(':') : 
+      ["00", "00", "00"];
+    
+    const startHour = parseInt(startTimeParts[0]);
+    const startMinute = parseInt(startTimeParts[1]);
+    const endHour = parseInt(endTimeParts[0]);
+    const endMinute = parseInt(endTimeParts[1]);
+    
+    // Definir data de início com base no padrão de recorrência
+    switch (baseEvent.recurrence_pattern) {
+      case "daily":
+        // Para eventos diários, começamos hoje
+        startDate = new Date(currentDate);
+        break;
+      
+      case "weekly":
+        // Para eventos semanais, encontramos o próximo dia da semana correspondente
+        const targetDay = baseEvent.recurrence_day || 1; // Segunda-feira como padrão
+        startDate = new Date(currentDate);
+        
+        const currentDay = startDate.getDay(); // 0 = domingo, 1 = segunda, ...
+        const daysToAdd = (targetDay - currentDay + 7) % 7;
+        
+        if (daysToAdd === 0) {
+          // Se hoje for o dia alvo, verificar se já passou do horário configurado
+          const currentHour = new Date().getHours();
+          const currentMinute = new Date().getMinutes();
+          
+          if (currentHour > startHour || (currentHour === startHour && currentMinute > startMinute)) {
+            // Se já passou do horário hoje, vamos para a próxima semana
+            startDate = addDays(startDate, 7);
+          }
+        } else {
+          // Ajustar para o próximo dia da semana correto
+          startDate = addDays(startDate, daysToAdd);
+        }
+        break;
+      
+      case "monthly":
+        // Para eventos mensais, definimos para o mesmo dia no mês atual ou próximo
+        const today = new Date();
+        const targetDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        
+        // Se já passou do dia no mês atual, vamos para o próximo mês
+        if (today.getDate() > targetDate.getDate() || 
+            (today.getDate() === targetDate.getDate() && 
+             (today.getHours() > startHour || 
+              (today.getHours() === startHour && today.getMinutes() > startMinute)))) {
+          startDate = addMonths(targetDate, 1);
+        } else {
+          startDate = targetDate;
+        }
+        break;
+      
+      default:
+        startDate = new Date();
+    }
+    
+    // Configurar horários específicos
+    startDate.setHours(startHour, startMinute, 0, 0);
     
     // Determinar o número de eventos a criar
     let count = baseEvent.recurrence_count || 10; // padrão para 10 se não especificado
@@ -114,8 +182,8 @@ export const EventForm = ({ event, initialData, onSuccess, layout = "standard" }
       }
     };
     
-    // Data inicial para a primeira instância (após o evento base)
-    let currentStartDate = addTimeByPattern(startDate, baseEvent.recurrence_pattern || 'weekly', interval);
+    // Data inicial para a primeira instância
+    let currentStartDate = startDate;
     
     // Gerar instâncias
     for (let i = 0; i < count; i++) {
@@ -124,17 +192,13 @@ export const EventForm = ({ event, initialData, onSuccess, layout = "standard" }
         break;
       }
       
-      // Calcular data de fim baseada na duração do evento original
-      const currentEndDate = new Date(currentStartDate.getTime() + eventDuration);
+      // Calcular data de fim do evento
+      const currentEndDate = new Date(currentStartDate);
+      currentEndDate.setHours(endHour, endMinute, 0, 0);
       
-      // Verificar dia da semana para eventos semanais
-      if (baseEvent.recurrence_pattern === 'weekly' && baseEvent.recurrence_day !== undefined) {
-        // Se o dia da semana não for o correto, ajustar para o próximo dia correto
-        if (currentStartDate.getDay() !== baseEvent.recurrence_day) {
-          const daysToAdd = (baseEvent.recurrence_day - currentStartDate.getDay() + 7) % 7;
-          currentStartDate = addDays(currentStartDate, daysToAdd);
-          continue; // Recalcular após ajuste
-        }
+      // Se o horário de término for anterior ao horário de início, assume-se que termina no dia seguinte
+      if (endHour < startHour || (endHour === startHour && endMinute < startMinute)) {
+        currentEndDate.setDate(currentEndDate.getDate() + 1);
       }
       
       // Obter o usuário atual de forma assíncrona
@@ -194,6 +258,22 @@ export const EventForm = ({ event, initialData, onSuccess, layout = "standard" }
 
   const onSubmit = async (data: EventFormData) => {
     try {
+      // Para eventos recorrentes, normalizar as datas
+      if (data.is_recurring) {
+        // Para eventos recorrentes, usamos uma data fictícia apenas para validação
+        // A data real será determinada pela lógica de recorrência
+        const fakeDate = "2023-01-01";
+        
+        // Verificar se já temos os formatos de horário corretos
+        if (!data.start_time.includes('T')) {
+          data.start_time = `${fakeDate}T${data.start_time}`;
+        }
+        
+        if (!data.end_time.includes('T')) {
+          data.end_time = `${fakeDate}T${data.end_time}`;
+        }
+      }
+
       if (isEditing) {
         // Atualizar evento existente
         const { error } = await supabase

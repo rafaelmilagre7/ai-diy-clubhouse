@@ -6,8 +6,7 @@ import { EventFormData } from "../EventFormSchema";
 export function useRecurrence(form: UseFormReturn<EventFormData>) {
   const isRecurring = form.watch("is_recurring");
   const pattern = form.watch("recurrence_pattern");
-  const startDate = form.watch("start_time");
-
+  
   // Gerenciar campos de recorrência
   useEffect(() => {
     if (!isRecurring) {
@@ -21,17 +20,13 @@ export function useRecurrence(form: UseFormReturn<EventFormData>) {
       // Definir padrões iniciais quando ativada
       form.setValue("recurrence_pattern", "weekly");
       form.setValue("recurrence_interval", 1);
+      
+      // Definir um dia da semana padrão para eventos semanais (segunda-feira = 1)
+      if (!form.getValues("recurrence_day")) {
+        form.setValue("recurrence_day", 1);
+      }
     }
   }, [isRecurring, pattern, form]);
-
-  // Configurar dia da semana com base na data de início
-  useEffect(() => {
-    if (isRecurring && pattern === "weekly" && startDate) {
-      const date = new Date(startDate);
-      const day = date.getDay(); // 0 = domingo, 1 = segunda, etc.
-      form.setValue("recurrence_day", day);
-    }
-  }, [isRecurring, pattern, startDate, form]);
 
   return {
     isRecurring,
