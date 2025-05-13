@@ -1,4 +1,3 @@
-
 // Modificando apenas a interface para garantir consistência de tipos
 import React, { useEffect, useState, useMemo } from "react";
 import { OnboardingProgress } from "@/types/onboarding";
@@ -277,21 +276,22 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
         </Card>
       )}
 
-      <div className="pt-6 flex justify-end">
+      <div className="pt-8 flex justify-end">
         <Button
           onClick={onComplete}
           disabled={isSubmitting}
-          className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90 text-white"
+          size="lg"
+          className="bg-viverblue hover:bg-viverblue-dark text-white px-8 py-6 text-lg shadow-md hover:shadow-lg transition-all duration-300"
         >
           {isSubmitting ? (
             <span className="flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="h-5 w-5 animate-spin" />
               Processando...
             </span>
           ) : (
             <span className="flex items-center gap-2">
               Concluir e Gerar Minha Trilha
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-5 w-5" />
             </span>
           )}
         </Button>

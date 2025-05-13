@@ -11,6 +11,7 @@ interface NavigationButtonsProps {
   showPrevious?: boolean;
   previousDisabled?: boolean;
   className?: string;
+  variant?: "primary" | "secondary" | "default";
 }
 
 export const NavigationButtons = ({ 
@@ -20,42 +21,57 @@ export const NavigationButtons = ({
   loadingText = "Salvando...",
   showPrevious = true,
   previousDisabled = false,
-  className
-}: NavigationButtonsProps) => (
-  <div className={cn("flex justify-between pt-6", className)}>
-    {showPrevious ? (
-      <Button
-        type="button"
-        variant="outline"
-        disabled={previousDisabled || isSubmitting}
-        className="min-w-[120px] transition-all"
-        onClick={onPrevious}
-      >
-        <span className="flex items-center gap-2">
-          <ArrowLeft className="h-4 w-4" />
-          Anterior
-        </span>
-      </Button>
-    ) : (
-      <div /> /* Espaçador quando não tem botão anterior */
-    )}
-    
-    <Button
-      type="submit"
-      className="min-w-[120px] bg-[#0ABAB5] hover:bg-[#0ABAB5]/90 transition-all"
-      disabled={isSubmitting}
-    >
-      {isSubmitting ? (
-        <span className="flex items-center gap-2">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          {loadingText}
-        </span>
+  className,
+  variant = "default"
+}: NavigationButtonsProps) => {
+  // Função para determinar a classe de estilo do botão com base na variante
+  const getButtonStyle = () => {
+    switch (variant) {
+      case "primary":
+        return "bg-viverblue hover:bg-viverblue-dark text-white";
+      case "secondary":
+        return "bg-indigo-600 hover:bg-indigo-700 text-white";
+      default:
+        return "bg-viverblue hover:bg-viverblue/90 text-white";
+    }
+  };
+
+  return (
+    <div className={cn("flex justify-between pt-6", className)}>
+      {showPrevious ? (
+        <Button
+          type="button"
+          variant="outline"
+          disabled={previousDisabled || isSubmitting}
+          className="min-w-[120px] transition-all border-neutral-600 hover:bg-[#252842] hover:text-white"
+          onClick={onPrevious}
+        >
+          <span className="flex items-center gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Anterior
+          </span>
+        </Button>
       ) : (
-        <span className="flex items-center gap-2">
-          {submitText}
-          <ArrowRight className="h-4 w-4" />
-        </span>
+        <div /> /* Espaçador quando não tem botão anterior */
       )}
-    </Button>
-  </div>
-);
+      
+      <Button
+        type="submit"
+        className={cn("min-w-[120px] transition-all", getButtonStyle())}
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? (
+          <span className="flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            {loadingText}
+          </span>
+        ) : (
+          <span className="flex items-center gap-2">
+            {submitText}
+            <ArrowRight className="h-4 w-4" />
+          </span>
+        )}
+      </Button>
+    </div>
+  );
+};

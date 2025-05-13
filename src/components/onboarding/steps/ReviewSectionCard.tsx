@@ -1,4 +1,3 @@
-
 import React, { useMemo } from "react";
 import { CheckCircle, PenSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -168,16 +167,14 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
   // Função de edição atualizada para usar o ID do passo diretamente
   const handleEditClick = () => {
     console.log(`[ReviewSectionCard] Editando seção ${step.id}`);
-    
-    // Passar o ID do passo diretamente para a função de navegação
     navigateToStep(step.id);
   };
 
   return (
-    <Card className="overflow-hidden border-l-4 border-l-neutral-700 bg-[#151823] border border-neutral-700 shadow-md">
-      <CardHeader className="flex flex-row items-center justify-between bg-[#1A1E2E] py-3 px-4">
+    <Card className="overflow-hidden border-l-4 border-l-viverblue dark-mode-card bg-gradient-to-br from-[#1A1E2E] to-[#151823] shadow-md transition-all duration-300 hover:shadow-lg hover:border-viverblue/80">
+      <CardHeader className="flex flex-row items-center justify-between bg-[#1E2235] py-3 px-4 border-b border-neutral-700/50">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0ABAB5]/20 text-viverblue">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-viverblue/20 text-viverblue">
             <span className="text-sm font-medium">{stepIndex}</span>
           </div>
           <CardTitle className="text-lg font-medium text-white">{step.title}</CardTitle>
@@ -191,7 +188,7 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
           <Button
             variant="outline"
             size="sm"
-            className="flex items-center gap-1"
+            className="flex items-center gap-1 border-neutral-600 hover:bg-[#252842] hover:text-white"
             onClick={handleEditClick}
           >
             <PenSquare className="h-4 w-4" />
