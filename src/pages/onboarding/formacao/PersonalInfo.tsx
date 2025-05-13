@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useNavigate } from "react-router-dom";
@@ -128,7 +127,7 @@ const FormacaoPersonalInfo = () => {
       </div>
       
       <PersonalInfoStep
-        onSubmit={handleSubmit}
+        onSubmit={(data) => handleSubmit(data)}
         isSubmitting={isSubmitting}
         initialData={progress?.personal_info}
       />

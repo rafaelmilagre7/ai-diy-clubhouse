@@ -34,13 +34,13 @@ const FormacaoAIExperience = () => {
     loadInitialData();
   }, []);
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (stepId: string, data: any) => {
     try {
       setIsSubmitting(true);
       console.log("[Formação AIExperience] Submetendo dados:", data);
       
-      await saveStepData("ai_exp", {
-        ai_experience: data,
+      await saveStepData(stepId, {
+        ...data,
         onboarding_type: 'formacao'
       });
       
