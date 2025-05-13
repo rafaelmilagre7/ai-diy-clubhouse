@@ -19,7 +19,7 @@ export function TrailEmptyState({ onRegenerate }: TrailEmptyStateProps) {
       <CardContent>
         <div className="text-center py-6 space-y-4">
           <Lightbulb className="h-12 w-12 mx-auto text-[#0ABAB5]" />
-          <p className="text-gray-600">
+          <p className="text-neutral-300">
             Ainda não foi possível gerar uma trilha personalizada para você.
           </p>
           <Button

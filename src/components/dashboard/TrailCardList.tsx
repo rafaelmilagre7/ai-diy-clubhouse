@@ -97,7 +97,7 @@ export function TrailCardList({ solutions, onSolutionClick, onSeeAll, isLoading 
   // Verificar se temos soluções
   if (!enrichedSolutions || enrichedSolutions.length === 0) {
     return (
-      <div className="text-center py-8 bg-neutral-800/30 rounded-lg border border-neutral-700/50 p-6">
+      <div className="text-center py-8 bg-[#151823]/80 rounded-lg border border-neutral-700/50 p-6">
         <p className="text-neutral-300 mb-4">Nenhuma solução encontrada em sua trilha.</p>
         <Button 
           onClick={onSeeAll}

@@ -121,7 +121,7 @@ const ImplementationTrailPage = () => {
             <CardContent className="pt-6 flex flex-col items-center justify-center min-h-[300px]">
               <FadeTransition>
                 <Loader2 className="h-8 w-8 text-[#0ABAB5] animate-spin mb-4" />
-                <p className="text-muted-foreground">Carregando dados...</p>
+                <p className="text-neutral-300">Carregando dados...</p>
               </FadeTransition>
             </CardContent>
           </Card>
@@ -144,7 +144,7 @@ const ImplementationTrailPage = () => {
             </CardHeader>
             <CardContent className="flex flex-col items-center justify-center min-h-[250px]">
               <FadeTransition>
-                <p className="text-muted-foreground mb-4">Não foi possível carregar seus dados. Verifique sua conexão e tente novamente.</p>
+                <p className="text-neutral-300 mb-4">Não foi possível carregar seus dados. Verifique sua conexão e tente novamente.</p>
                 <Button 
                   onClick={handleRefresh} 
                   className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"

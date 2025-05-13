@@ -17,12 +17,12 @@ export const OnboardingIncompleteState: React.FC<OnboardingIncompleteStateProps>
 }) => {
   return (
     <div className="space-y-6">
-      <Alert className="bg-blue-50 border-blue-200">
-        <Lightbulb className="h-5 w-5 text-blue-500" />
-        <AlertTitle className="text-blue-700 font-semibold text-lg">
+      <Alert className="bg-[#151823]/80 border-[#0ABAB5]/30 text-white">
+        <Lightbulb className="h-5 w-5 text-[#0ABAB5]" />
+        <AlertTitle className="text-white font-semibold text-lg">
           Complete o onboarding para acessar sua trilha personalizada
         </AlertTitle>
-        <AlertDescription className="text-blue-600 mt-2">
+        <AlertDescription className="text-neutral-300 mt-2">
           <p className="mb-4">
             Para criar sua trilha de implementação personalizada, precisamos conhecer melhor
             você e seu negócio. Complete o processo de onboarding para desbloquear 
@@ -43,7 +43,7 @@ export const OnboardingIncompleteState: React.FC<OnboardingIncompleteStateProps>
                 variant="outline"
                 disabled={isForceCompleting}
                 onClick={onForceComplete}
-                className="border-blue-300 text-blue-700"
+                className="border-[#0ABAB5]/30 text-[#0ABAB5] hover:bg-[#0ABAB5]/10"
               >
                 {isForceCompleting ? (
                   <>
@@ -59,9 +59,9 @@ export const OnboardingIncompleteState: React.FC<OnboardingIncompleteStateProps>
         </AlertDescription>
       </Alert>
       
-      <div className="p-4 border border-gray-100 rounded-lg bg-gray-50">
-        <h3 className="text-lg font-medium mb-2">Por que completar o onboarding?</h3>
-        <ul className="space-y-2 ml-4 list-disc text-gray-600">
+      <div className="p-4 border border-neutral-700/50 rounded-lg bg-[#151823]/60 text-neutral-200">
+        <h3 className="text-lg font-medium mb-2 text-white">Por que completar o onboarding?</h3>
+        <ul className="space-y-2 ml-4 list-disc text-neutral-300">
           <li>Receba soluções de IA personalizadas para seu negócio</li>
           <li>Priorize implementações com maior impacto para seus objetivos</li>
           <li>Obtenha uma jornada estruturada para implementar IA com sucesso</li>

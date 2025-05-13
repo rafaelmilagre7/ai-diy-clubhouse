@@ -96,7 +96,7 @@ export const ImplementationTrailCreator = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[300px] py-8">
         <Loader2 className="h-8 w-8 text-[#0ABAB5] animate-spin mb-4" />
-        <p className="text-muted-foreground">Carregando sua trilha personalizada...</p>
+        <p className="text-neutral-300">Carregando sua trilha personalizada...</p>
       </div>
     );
   }
@@ -104,10 +104,10 @@ export const ImplementationTrailCreator = () => {
   // Estado de erro
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+      <div className="bg-red-900/20 border border-red-900/40 rounded-lg p-6 text-center">
         <AlertTriangle className="h-10 w-10 text-red-500 mx-auto mb-4" />
-        <h3 className="text-lg font-medium mb-2">Erro ao carregar trilha</h3>
-        <p className="text-gray-600 mb-4">
+        <h3 className="text-lg font-medium mb-2 text-white">Erro ao carregar trilha</h3>
+        <p className="text-neutral-300 mb-4">
           Não foi possível carregar sua trilha personalizada.
         </p>
         <Button onClick={handleGenerateTrail} disabled={isGenerating}>
@@ -128,9 +128,9 @@ export const ImplementationTrailCreator = () => {
   if (!hasContent || processedSolutions.length === 0) {
     return (
       <div className="text-center py-8 space-y-6">
-        <div className="bg-blue-50 rounded-lg p-8 max-w-2xl mx-auto">
-          <h3 className="text-xl font-medium mb-4">Vamos criar sua trilha personalizada</h3>
-          <p className="text-gray-600 mb-6">
+        <div className="bg-[#151823]/80 border border-[#0ABAB5]/20 rounded-lg p-8 max-w-2xl mx-auto">
+          <h3 className="text-xl font-medium mb-4 text-white">Vamos criar sua trilha personalizada</h3>
+          <p className="text-neutral-300 mb-6">
             Baseado nas suas respostas do onboarding, vamos gerar uma trilha 
             de implementação exclusiva para o seu negócio.
           </p>
@@ -157,12 +157,13 @@ export const ImplementationTrailCreator = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Suas soluções recomendadas</h3>
+        <h3 className="text-lg font-medium text-white">Suas soluções recomendadas</h3>
         <Button 
           variant="outline" 
           size="sm" 
           onClick={handleRefreshTrail}
           disabled={isGenerating}
+          className="border-neutral-700 hover:border-[#0ABAB5] hover:bg-[#0ABAB5]/10"
         >
           {isGenerating ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -176,15 +177,15 @@ export const ImplementationTrailCreator = () => {
       </div>
       
       {missingIds.length > 0 && (
-        <Alert variant="warning" className="bg-amber-50 border-amber-200 mb-4">
-          <Info className="h-4 w-4 text-amber-500" />
-          <AlertDescription className="text-amber-700">
+        <Alert variant="warning" className="bg-amber-900/20 border-amber-700/40 text-amber-300">
+          <Info className="h-4 w-4 text-amber-400" />
+          <AlertDescription className="text-amber-300">
             Algumas soluções recomendadas não estão mais disponíveis. A trilha foi atualizada.
           </AlertDescription>
         </Alert>
       )}
       
-      <Separator />
+      <Separator className="bg-neutral-800" />
       
       <TrailSolutionsList solutions={processedSolutions} />
     </div>
