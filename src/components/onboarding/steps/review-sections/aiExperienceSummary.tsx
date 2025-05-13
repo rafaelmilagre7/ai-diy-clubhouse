@@ -76,7 +76,7 @@ function getAIExperienceSummaryComponent(data: OnboardingData['ai_experience']) 
           <span className="font-medium">Ferramentas já utilizadas:</span>
           <div className="flex flex-wrap gap-1 mt-1">
             {processedData.previous_tools.map((tool: string, index: number) => (
-              <Badge key={index} variant="outline" className="bg-gray-100">{tool}</Badge>
+              <Badge key={index} variant="dark-outline">{tool}</Badge>
             ))}
           </div>
         </div>
@@ -88,7 +88,7 @@ function getAIExperienceSummaryComponent(data: OnboardingData['ai_experience']) 
           <span className="font-medium">Áreas de interesse em IA:</span>
           <div className="flex flex-wrap gap-1 mt-1">
             {processedData.desired_ai_areas.map((area: string, index: number) => (
-              <Badge key={index} variant="outline" className="bg-gray-100">
+              <Badge key={index} variant="dark-outline">
                 {areaMap[area] || area}
               </Badge>
             ))}
@@ -113,7 +113,7 @@ function getAIExperienceSummaryComponent(data: OnboardingData['ai_experience']) 
       {processedData.improvement_suggestions && (
         <div>
           <p className="font-medium">Sugestões de melhoria:</p>
-          <p className="text-gray-600 mt-1 bg-gray-50 p-2 rounded border border-gray-100">
+          <p className="text-neutral-300 mt-1 bg-neutral-800/50 p-2 rounded border border-neutral-700">
             {processedData.improvement_suggestions}
           </p>
         </div>

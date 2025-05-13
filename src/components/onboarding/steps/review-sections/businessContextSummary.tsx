@@ -77,7 +77,7 @@ export function getBusinessContextSummary(data: OnboardingData['business_context
           <span className="font-medium">Desafios do negócio:</span>
           <div className="flex flex-wrap gap-1 mt-1">
             {data.business_challenges.map((challenge: string, index: number) => (
-              <Badge key={index} variant="outline" className="bg-gray-100">
+              <Badge key={index} variant="dark-outline">
                 {translateId(challenge, friendlyChallenges)}
               </Badge>
             ))}
@@ -90,7 +90,7 @@ export function getBusinessContextSummary(data: OnboardingData['business_context
           <span className="font-medium">KPIs importantes:</span>
           <div className="flex flex-wrap gap-1 mt-1">
             {data.important_kpis.map((kpi: string, index: number) => (
-              <Badge key={index} variant="outline" className="bg-gray-100">
+              <Badge key={index} variant="dark-outline">
                 {translateId(kpi, friendlyKpis)}
               </Badge>
             ))}
@@ -103,7 +103,7 @@ export function getBusinessContextSummary(data: OnboardingData['business_context
           <span className="font-medium">Metas de curto prazo:</span>
           <div className="flex flex-wrap gap-1 mt-1">
             {data.short_term_goals.map((goal: string, index: number) => (
-              <Badge key={index} variant="outline" className="bg-gray-100">{goal}</Badge>
+              <Badge key={index} variant="dark-outline">{goal}</Badge>
             ))}
           </div>
         </div>
@@ -114,7 +114,7 @@ export function getBusinessContextSummary(data: OnboardingData['business_context
           <span className="font-medium">Metas de médio prazo:</span>
           <div className="flex flex-wrap gap-1 mt-1">
             {data.medium_term_goals.map((goal: string, index: number) => (
-              <Badge key={index} variant="outline" className="bg-gray-100">{goal}</Badge>
+              <Badge key={index} variant="dark-outline">{goal}</Badge>
             ))}
           </div>
         </div>

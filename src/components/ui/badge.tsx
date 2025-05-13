@@ -25,6 +25,9 @@ const badgeVariants = cva(
           "border-transparent bg-blue-100 text-blue-900 border-blue-400 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700 hover:bg-blue-200 dark:hover:bg-blue-800/50",
         neutral:
           "border-transparent bg-gray-100 text-gray-900 border-gray-400 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700",
+        // Nova variante específica para resumo no tema escuro
+        "dark-outline":
+          "border-neutral-700 bg-neutral-800 text-neutral-200 hover:bg-neutral-700",
       },
     },
     defaultVariants: {

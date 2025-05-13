@@ -94,7 +94,9 @@ export function getComplementaryInfoSummary(data: any) {
           <span className="font-medium">Tópicos prioritários:</span>
           <div className="flex flex-wrap gap-1 mt-1">
             {processedData.priority_topics.map((topic: string, index: number) => (
-              <Badge key={index} variant="outline" className="bg-gray-100">{getTopicLabel(topic)}</Badge>
+              <Badge key={index} variant="dark-outline">
+                {getTopicLabel(topic)}
+              </Badge>
             ))}
           </div>
         </div>

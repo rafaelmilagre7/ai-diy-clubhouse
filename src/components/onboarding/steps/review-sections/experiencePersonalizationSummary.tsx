@@ -111,7 +111,7 @@ export function getExperiencePersonalizationSummary(data: any) {
           <span className="font-medium">Interesses em IA:</span>
           <div className="flex flex-wrap gap-1 mt-1">
             {interests.map((interest: string, index: number) => (
-              <Badge key={index} variant="outline" className="bg-gray-100">
+              <Badge key={index} variant="dark-outline">
                 {translateInterest(interest)}
               </Badge>
             ))}
@@ -124,7 +124,7 @@ export function getExperiencePersonalizationSummary(data: any) {
           <span className="font-medium">Preferências de horário:</span>
           <div className="flex flex-wrap gap-1 mt-1">
             {preferredTimes.map((pref: string, index: number) => (
-              <Badge key={index} variant="outline" className="bg-gray-100">
+              <Badge key={index} variant="dark-outline">
                 {translateTimePreference(pref)}
               </Badge>
             ))}
@@ -137,7 +137,7 @@ export function getExperiencePersonalizationSummary(data: any) {
           <span className="font-medium">Dias disponíveis:</span>
           <div className="flex flex-wrap gap-1 mt-1">
             {daysAvailable.map((day: string, index: number) => (
-              <Badge key={index} variant="outline" className="bg-gray-100">
+              <Badge key={index} variant="dark-outline">
                 {day}
               </Badge>
             ))}
@@ -156,7 +156,7 @@ export function getExperiencePersonalizationSummary(data: any) {
           <span className="font-medium">Habilidades para compartilhar:</span>
           <div className="flex flex-wrap gap-1 mt-1">
             {shareableSkills.map((skill: string, index: number) => (
-              <Badge key={index} variant="outline" className="bg-gray-100">
+              <Badge key={index} variant="dark-outline">
                 {translateSkill(skill)}
               </Badge>
             ))}
@@ -169,7 +169,7 @@ export function getExperiencePersonalizationSummary(data: any) {
           <span className="font-medium">Tópicos para mentoria:</span>
           <div className="flex flex-wrap gap-1 mt-1">
             {mentorshipTopics.map((topic: string, index: number) => (
-              <Badge key={index} variant="outline" className="bg-gray-100">
+              <Badge key={index} variant="dark-outline">
                 {translateMentorshipTopic(topic)}
               </Badge>
             ))}
