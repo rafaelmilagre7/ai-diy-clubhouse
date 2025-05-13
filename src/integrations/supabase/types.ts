@@ -3159,6 +3159,30 @@ export type Database = {
           },
         ]
       }
+      users_with_roles: {
+        Row: {
+          avatar_url: string | null
+          company_name: string | null
+          created_at: string | null
+          email: string | null
+          id: string | null
+          industry: string | null
+          name: string | null
+          role: string | null
+          role_description: string | null
+          role_id: string | null
+          role_name: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "user_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       can_access_benefit: {
@@ -3218,6 +3242,25 @@ export type Database = {
         Args: { user_id: string }
         Returns: string[]
       }
+      get_users_with_roles: {
+        Args: {
+          limit_count?: number
+          offset_count?: number
+          search_query?: string
+        }
+        Returns: {
+          id: string
+          email: string
+          name: string
+          avatar_url: string
+          role: string
+          role_id: string
+          user_roles: Json
+          company_name: string
+          industry: string
+          created_at: string
+        }[]
+      }
       increment: {
         Args: { row_id: string; table_name: string; column_name: string }
         Returns: undefined
@@ -3236,6 +3279,10 @@ export type Database = {
       }
       is_admin_user: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_user_admin: {
+        Args: { user_id: string }
         Returns: boolean
       }
       limpar_dados_onboarding: {
@@ -3264,6 +3311,10 @@ export type Database = {
       normalize_solution_category: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      quick_check_permission: {
+        Args: { user_id: string; permission_code: string }
+        Returns: boolean
       }
       setup_learning_storage_buckets: {
         Args: Record<PropertyKey, never>

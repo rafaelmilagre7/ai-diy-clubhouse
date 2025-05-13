@@ -6,7 +6,7 @@ import { Role } from '@/hooks/admin/useRoles';
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth";
 
-// Dados de fallback completamente tipados para quando a API falhar
+// Dados de fallback tipados para quando a API falhar
 const FALLBACK_USERS: UserProfile[] = [
   {
     id: "fallback-1",
@@ -55,7 +55,36 @@ const FALLBACK_ROLES: Role[] = [
 ];
 
 // Aumentando o tempo de cache para evitar sobrecarga de requisições
-const CACHE_VALIDITY = 10 * 60 * 1000; // 10 minutos
+const CACHE_VALIDITY = 30 * 60 * 1000; // 30 minutos
+
+// Armazenar cache entre sessões (localStorage)
+const initCacheFromLocalStorage = () => {
+  try {
+    const storedCache = localStorage.getItem('usersCache');
+    if (storedCache) {
+      return JSON.parse(storedCache);
+    }
+  } catch (error) {
+    console.error('Erro ao ler cache de usuários:', error);
+  }
+  return {
+    users: null,
+    roles: null,
+    timestamp: 0
+  };
+};
+
+// Cache global inicializado do localStorage
+const GLOBAL_CACHE = initCacheFromLocalStorage();
+
+// Salvar cache no localStorage
+const saveToLocalStorage = (cache: any) => {
+  try {
+    localStorage.setItem('usersCache', JSON.stringify(cache));
+  } catch (error) {
+    console.error('Erro ao salvar cache de usuários:', error);
+  }
+};
 
 export const useUsers = () => {
   const { hasPermission } = usePermissions();
@@ -69,17 +98,11 @@ export const useUsers = () => {
   const [fetchAttempts, setFetchAttempts] = useState(0);
   const [useFallback, setUseFallback] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [page, setPage] = useState(0);
+  const [totalUsers, setTotalUsers] = useState(0);
   
-  // Cache para evitar refetches desnecessários
-  const cacheRef = useRef<{
-    users: UserProfile[] | null;
-    roles: Role[] | null;
-    timestamp: number;
-  }>({
-    users: null,
-    roles: null,
-    timestamp: 0
-  });
+  // Referência ao cache
+  const cacheRef = useRef(GLOBAL_CACHE);
 
   // Flag para abortar requisições
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -100,6 +123,7 @@ export const useUsers = () => {
     }
   }, []);
 
+  // Nova implementação usando a função RPC otimizada
   const fetchUsers = useCallback(async (forceRefresh = false) => {
     try {
       // Se não forçar refresh e o cache for válido, usar o cache
@@ -134,17 +158,21 @@ export const useUsers = () => {
       // Configurar AbortController para poder cancelar a requisição
       abortControllerRef.current = new AbortController();
       
-      // Definir um timeout para a consulta (5 segundos)
+      // Definir um timeout para a consulta (10 segundos)
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Tempo limite excedido ao buscar usuários")), 5000);
+        setTimeout(() => reject(new Error("Tempo limite excedido ao buscar usuários")), 10000);
       });
       
-      // Consulta ao banco de dados com timeout
-      const fetchPromise = supabase
-        .from("profiles")
-        .select("*, user_roles(*)")
-        .order("created_at", { ascending: false });
-        
+      // Usar a função RPC otimizada
+      const fetchPromise = supabase.rpc(
+        'get_users_with_roles',
+        { 
+          limit_count: 50,
+          offset_count: page * 50,
+          search_query: searchQuery || null
+        }
+      );
+      
       // Race entre a consulta e o timeout
       const result: any = await Promise.race([fetchPromise, timeoutPromise]);
       
@@ -163,6 +191,9 @@ export const useUsers = () => {
         users: data as UserProfile[],
         timestamp: Date.now()
       };
+      
+      // Salvar cache no localStorage
+      saveToLocalStorage(cacheRef.current);
       
       setUsers(data as UserProfile[]);
       setError(null);
@@ -195,7 +226,7 @@ export const useUsers = () => {
       setIsRefreshing(false);
       abortControllerRef.current = null;
     }
-  }, [fetchAttempts, useFallback, isCacheValid, abortPreviousRequests]);
+  }, [fetchAttempts, useFallback, isCacheValid, abortPreviousRequests, page, searchQuery]);
 
   const fetchRoles = useCallback(async () => {
     try {
@@ -212,9 +243,9 @@ export const useUsers = () => {
         return;
       }
       
-      // Definir um timeout para a consulta (3 segundos)
+      // Definir um timeout para a consulta (5 segundos)
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Tempo limite excedido ao buscar papéis")), 3000);
+        setTimeout(() => reject(new Error("Tempo limite excedido ao buscar papéis")), 5000);
       });
       
       // Consulta ao banco de dados com timeout
@@ -236,6 +267,9 @@ export const useUsers = () => {
         roles: result.data as Role[],
         timestamp: Date.now()
       };
+      
+      // Salvar cache no localStorage
+      saveToLocalStorage(cacheRef.current);
       
       setAvailableRoles(result.data as Role[]);
     } catch (error: any) {
@@ -265,9 +299,8 @@ export const useUsers = () => {
     }
   }, [error, fetchAttempts, fetchUsers]);
 
-  // Efeito para carregar dados iniciais
+  // Efeito para abortar requisições anteriores ao desmontar o componente
   useEffect(() => {
-    // Abortar requisições anteriores ao desmontar o componente
     return () => {
       abortPreviousRequests();
     };
@@ -281,16 +314,8 @@ export const useUsers = () => {
   
   // Filtro para usuários baseado na busca
   const filteredUsers = useMemo(() => {
-    if (!searchQuery) return users;
-    
-    const query = searchQuery.toLowerCase();
-    return users.filter(user => 
-      user.name?.toLowerCase().includes(query) || 
-      user.email.toLowerCase().includes(query) ||
-      user.company_name?.toLowerCase().includes(query) ||
-      user.role?.toLowerCase().includes(query)
-    );
-  }, [users, searchQuery]);
+    return users;
+  }, [users]);
   
   // Verificações alternativas de permissão caso o sistema de permissões falhe
   const isAdminByEmail = user?.email?.includes('@viverdeia.ai') || 
@@ -309,6 +334,9 @@ export const useUsers = () => {
     isRefreshing,
     fetchUsers: () => fetchUsers(true), // Sempre forçar refresh ao chamar manualmente
     refreshUsers: () => fetchUsers(true),
+    page,
+    setPage,
+    totalUsers,
     // Usar fallback de permissões caso o sistema principal falhe
     canManageUsers: hasPermission('users.manage') || isAdmin || isAdminByEmail,
     canAssignRoles: hasPermission('users.roles.assign') || isAdmin || isAdminByEmail,

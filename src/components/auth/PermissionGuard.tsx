@@ -17,7 +17,7 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
   permission,
   children,
   fallback,
-  timeoutSeconds = 2 // Reduzido para 2 segundos para experiência mais rápida
+  timeoutSeconds = 1.5 // Reduzido para 1.5 segundos para experiência mais rápida
 }) => {
   const { hasPermission, loading, userPermissions } = usePermissions();
   const { isAdmin, user } = useAuth();
@@ -27,7 +27,7 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
   // Verificar se o usuário tem a permissão admin.all (é um superadmin)
   const isAdminByPermission = userPermissions.includes('admin.all');
   
-  // Método otimizado para verificar permissão com prioridade para dados já disponíveis
+  // Método otimizado para verificar permissão com prioridade para dados já disponíveis em cache
   const checkPermission = useCallback((): boolean => {
     // Se já sabemos que é admin pelo contexto, permitir imediatamente
     if (isAdmin) return true;
@@ -51,23 +51,21 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
   // Efeito para timeout com verificação de permissão prioritária
   useEffect(() => {
     // Primeira verificação rápida: se for admin, não precisa esperar timeout
-    if (isAdmin || isAdminByPermission) {
-      setTimedOut(true);
+    if (checkPermission()) {
       return;
     }
     
     // Se ainda está carregando e não deu timeout
     if (loading && !timedOut) {
       const timer = setTimeout(() => {
-        console.log(`PermissionGuard timeout atingido para permissão: ${permission}`);
         setTimedOut(true);
       }, timeoutSeconds * 1000);
       
       return () => clearTimeout(timer);
     }
-  }, [loading, timedOut, timeoutSeconds, permission, isAdmin, isAdminByPermission]);
+  }, [loading, timedOut, timeoutSeconds, checkPermission]);
   
-  // Mostrar skeleton apenas por tempo muito curto
+  // Mostrar skeleton apenas por tempo muito curto (100ms)
   if (loading && !timedOut && checkAttempts < 1) {
     // Inicia contagem de tentativas após 100ms
     setTimeout(() => setCheckAttempts(prev => prev + 1), 100);
@@ -80,7 +78,7 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
     );
   }
 
-  // Verificação de permissão prioritária
+  // Verificação de permissão prioritária (com cache)
   if (checkPermission()) {
     return <>{children}</>;
   }
@@ -93,13 +91,11 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
       user.email === 'admin@teste.com' || 
       user.email === 'admin@viverdeia.ai'
     )) {
-      console.warn(`PermissionGuard: Concedendo acesso para admin por email após timeout: ${permission}`);
       return <>{children}</>;
     }
     
     // Última instância, verificar se é admin pelo contexto
     if (isAdmin) {
-      console.warn(`PermissionGuard: Concedendo acesso para admin após timeout: ${permission}`);
       return <>{children}</>;
     }
   }

@@ -6,14 +6,15 @@ import { UsersTable } from "@/components/admin/users/UsersTable";
 import { UserRoleManager } from "@/components/admin/users/UserRoleManager";
 import { UserProfile } from "@/lib/supabase";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, ShieldAlert } from "lucide-react";
+import { AlertCircle, ShieldAlert, RefreshCw } from "lucide-react";
 import { DeleteUserDialog } from "@/components/admin/users/DeleteUserDialog";
 import { ResetPasswordDialog } from "@/components/admin/users/ResetPasswordDialog";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth";
+import { Button } from "@/components/ui/button";
 
 const AdminUsers = () => {
-  // Usando o hook useUsers com otimizações integradas
+  // Usando o hook useUsers com as otimizações implementadas
   const {
     users,
     availableRoles,
@@ -35,9 +36,9 @@ const AdminUsers = () => {
   const [roleManagerOpen, setRoleManagerOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
-  const [refreshCounter, setRefreshCounter] = useState(0);
   const [loadAttempts, setLoadAttempts] = useState(0);
   const [showAdminWarning, setShowAdminWarning] = useState(false);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
 
   // Efeito para detectar problemas de permissão e avisar sobre uso de fallback
   useEffect(() => {
@@ -49,10 +50,22 @@ const AdminUsers = () => {
     }
   }, [isAdmin, canManageUsers, canAssignRoles]);
 
-  // Efeito para atualizar a lista quando o contador mudar com limitação de tentativas
+  // Efeito para timeout de carregamento
   useEffect(() => {
-    fetchUsers();
-  }, [refreshCounter, fetchUsers]);
+    let timeoutId: number | null = null;
+    
+    if (loading && !loadingTimeout) {
+      timeoutId = window.setTimeout(() => {
+        setLoadingTimeout(true);
+      }, 10000); // 10 segundos de timeout
+    }
+    
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [loading, loadingTimeout]);
 
   const handleEditRole = (user: UserProfile) => {
     setSelectedUser(user);
@@ -72,9 +85,9 @@ const AdminUsers = () => {
   const handleRefresh = () => {
     // Limitar a 3 tentativas manuais para evitar sobrecarga
     if (loadAttempts < 3 && !isRefreshing) {
-      setRefreshCounter(prev => prev + 1);
       setLoadAttempts(prev => prev + 1);
       toast.info("Atualizando lista de usuários...");
+      fetchUsers();
     } else if (isRefreshing) {
       toast.info("Atualização em andamento, aguarde...");
     } else {
@@ -82,6 +95,12 @@ const AdminUsers = () => {
         description: "Por favor, atualize a página ou tente mais tarde."
       });
     }
+  };
+
+  const handleForceRefresh = () => {
+    // Forçar atualização mesmo além do limite
+    toast.info("Forçando atualização da lista...");
+    window.location.reload();
   };
 
   // Verificação simplificada de acesso administrativo usando o contexto
@@ -104,8 +123,18 @@ const AdminUsers = () => {
         <div className="animate-spin w-8 h-8 border-4 border-viverblue border-t-transparent rounded-full"></div>
         <div>Carregando usuários...</div>
         <div className="text-sm text-muted-foreground">
-          Isso pode levar alguns instantes.
+          {loadingTimeout ? "O carregamento está demorando mais que o esperado." : "Isso pode levar alguns instantes."}
         </div>
+        
+        {loadingTimeout && (
+          <Button 
+            onClick={handleForceRefresh}
+            variant="outline"
+            className="mt-4"
+          >
+            <RefreshCw className="mr-2 h-4 w-4" /> Forçar atualização
+          </Button>
+        )}
       </div>
     );
   }
@@ -119,12 +148,31 @@ const AdminUsers = () => {
         <AlertDescription className="space-y-2">
           <p>Ocorreu um problema ao carregar a lista de usuários:</p>
           <p className="font-mono text-sm bg-destructive/10 p-2 rounded">{error.message}</p>
-          <button 
-            onClick={handleRefresh}
-            className="px-4 py-2 mt-2 bg-primary text-white rounded hover:bg-primary/90"
-          >
-            Tentar novamente
-          </button>
+          <div className="flex gap-2 mt-4">
+            <Button 
+              onClick={handleRefresh}
+              variant="outline"
+              className="px-4 py-2"
+              disabled={isRefreshing}
+            >
+              {isRefreshing ? (
+                <>
+                  <RefreshCw className="animate-spin mr-2 h-4 w-4" /> Atualizando...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4" /> Tentar novamente
+                </>
+              )}
+            </Button>
+            
+            <Button 
+              onClick={handleForceRefresh}
+              variant="default"
+            >
+              Recarregar página
+            </Button>
+          </div>
         </AlertDescription>
       </Alert>
     );
@@ -162,6 +210,7 @@ const AdminUsers = () => {
         />
       </div>
       
+      {/* Componentes de diálogo remanescentes */}
       {(canAssignRoles || isAdmin) && (
         <UserRoleManager
           open={roleManagerOpen}
