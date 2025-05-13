@@ -16,7 +16,7 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
   const startImplementation = async () => {
     if (!user || !solutionId) {
       toast.error("Você precisa estar logado para implementar esta solução");
-      return;
+      return false; // Retorna false em caso de erro
     }
     
     try {
@@ -53,6 +53,7 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
       toast.success("Redirecionando para a implementação...");
       console.log("Redirecionando para /implement/" + solutionId + "/0");
       navigate(`/implement/${solutionId}/0`);
+      return true; // Retorna true quando a implementação é iniciada com sucesso
     } catch (error) {
       console.error("Erro ao iniciar implementação:", error);
       uiToast({
@@ -60,6 +61,7 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
         description: "Ocorreu um erro ao tentar iniciar a implementação da solução.",
         variant: "destructive",
       });
+      return false; // Retorna false em caso de erro
     } finally {
       setInitializing(false);
     }
@@ -68,7 +70,7 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
   const continueImplementation = () => {
     if (!solutionId || !progress) {
       toast.error("Não foi possível continuar a implementação");
-      return;
+      return false; // Retorna false em caso de erro
     }
     
     // Navigate directly to the implementation page
@@ -76,16 +78,19 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
     toast.success("Redirecionando para onde você parou...");
     console.log("Redirecionando para /implement/" + solutionId + "/" + (progress.current_module || 0));
     navigate(`/implement/${solutionId}/${progress.current_module || 0}`);
+    return true; // Retorna true quando a continuação é bem-sucedida
   };
   
   const toggleFavorite = () => {
     toast.success("Solução adicionada aos favoritos!");
     // Implementação futura para favoritar soluções
+    return true;
   };
   
   const downloadMaterials = () => {
     toast.success("Baixando materiais de apoio...");
     // Implementação futura para download de materiais
+    return true;
   };
   
   return {

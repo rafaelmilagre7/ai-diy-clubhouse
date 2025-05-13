@@ -2,7 +2,7 @@
 import React from "react";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { Tool, Play, FileText, CheckSquare, MessageSquare, CheckCircle } from "lucide-react";
+import { Wrench, Play, FileText, CheckSquare, MessageSquare, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface ImplementationTabsNavigationProps {
@@ -15,7 +15,7 @@ export const ImplementationTabsNavigation = ({
   setActiveTab
 }: ImplementationTabsNavigationProps) => {
   const tabs = [
-    { id: 'tools', label: 'Ferramentas', icon: <Tool className="h-4 w-4" /> },
+    { id: 'tools', label: 'Ferramentas', icon: <Wrench className="h-4 w-4" /> },
     { id: 'materials', label: 'Materiais', icon: <FileText className="h-4 w-4" /> },
     { id: 'videos', label: 'Vídeos', icon: <Play className="h-4 w-4" /> },
     { id: 'checklist', label: 'Checklist', icon: <CheckSquare className="h-4 w-4" /> },
