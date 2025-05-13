@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
+import { PageTransitionWithFallback } from "@/components/transitions/PageTransitionWithFallback";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -13,34 +14,53 @@ export const ProtectedRoute = ({
   children, 
   requireAdmin = false 
 }: ProtectedRouteProps) => {
-  const { user, isAdmin, isLoading, setIsLoading } = useAuth();
+  const { user, isAdmin, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const [accessChecked, setAccessChecked] = useState(false);
   const timeoutRef = useRef<number | null>(null);
   
-  // Clean up on unmount
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
+  // Depuração e diagnóstico
+  console.log("ProtectedRoute:", {
+    user: !!user,
+    isAdmin,
+    isLoading,
+    accessChecked
+  });
   
-  // Handle loading timeout - Always runs regardless of conditions
+  // Verificar acesso apenas quando o estado de autenticação estiver pronto
   useEffect(() => {
+    // Limpar timeout existente
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    
+    // Se estiver carregando, configurar timeout
     if (isLoading) {
-      // Clear any existing timeout
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      
       timeoutRef.current = window.setTimeout(() => {
         console.log("ProtectedRoute: Loading timeout exceeded");
-        setLoadingTimeout(true);
-        setIsLoading(false);
+        
+        // Redirecionar para login se timeout excedido
+        navigate('/login', { replace: true });
+      }, 2000); // 2 segundos de timeout
+    }
+    // Se não estiver carregando, verificar acesso
+    else if (!accessChecked) {
+      console.log("ProtectedRoute: Verificando acesso");
+      
+      if (!user) {
+        console.log("ProtectedRoute: No user, redirecting to auth");
         navigate('/auth', { replace: true });
-      }, 2000); // Longer timeout for better UX
+        return;
+      }
+      
+      if (requireAdmin && !isAdmin) {
+        console.log("ProtectedRoute: User is not admin, redirecting to dashboard");
+        navigate('/dashboard', { replace: true });
+        return;
+      }
+      
+      // Acesso verificado e permitido
+      setAccessChecked(true);
     }
     
     return () => {
@@ -48,31 +68,19 @@ export const ProtectedRoute = ({
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [isLoading, navigate, setIsLoading]);
+  }, [user, isAdmin, isLoading, accessChecked, requireAdmin, navigate]);
 
-  // Navigation logic - Always runs regardless of conditions
-  useEffect(() => {
-    if (!isLoading && !loadingTimeout) {
-      if (!user) {
-        console.log("ProtectedRoute: No user, redirecting to auth");
-        navigate('/auth', { replace: true });
-      } else if (requireAdmin && !isAdmin) {
-        console.log("ProtectedRoute: User is not admin, redirecting to dashboard");
-        navigate('/dashboard', { replace: true });
-      }
-    }
-  }, [user, isAdmin, isLoading, loadingTimeout, requireAdmin, navigate]);
-
-  // Show loading screen during the loading state
-  if (isLoading && !loadingTimeout) {
-    return <LoadingScreen message="Verificando sua autenticação..." />;
+  // Mostrar loading enquanto verifica acesso
+  if (isLoading || !accessChecked) {
+    return (
+      <PageTransitionWithFallback isVisible={true}>
+        <LoadingScreen message="Verificando sua autenticação..." />
+      </PageTransitionWithFallback>
+    );
   }
 
-  // Only render children if conditions are met
-  if (user && ((!requireAdmin) || (requireAdmin && isAdmin))) {
-    return <>{children}</>;
-  }
-
-  // Return loading screen as fallback while navigation happens
-  return <LoadingScreen message="Redirecionando..." />;
+  // Renderizar apenas se acesso foi verificado
+  return <>{children}</>;
 };
+
+export default ProtectedRoute;

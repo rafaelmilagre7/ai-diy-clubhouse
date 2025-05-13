@@ -1,71 +1,89 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
+import { PageTransitionWithFallback } from "@/components/transitions/PageTransitionWithFallback";
 import { toast } from "sonner";
 
 const RootRedirect = () => {
   const { user, profile, isAdmin, isLoading } = useAuth();
   const navigate = useNavigate();
   const [timeoutExceeded, setTimeoutExceeded] = useState(false);
-  const timeoutRef = useRef<number | null>(null);
+  const [redirectTarget, setRedirectTarget] = useState<string | null>(null);
   
-  // Adicionar um debug log para ajudar a entender o estado
-  console.log("RootRedirect state:", { user, profile, isAdmin, isLoading, timeoutExceeded });
+  // Registrar estado para depuração
+  console.log("RootRedirect state:", { 
+    user: !!user, 
+    profile: !!profile, 
+    isAdmin, 
+    isLoading, 
+    timeoutExceeded,
+    redirectTarget
+  });
+  
+  // Determinar para onde redirecionar com base no estado da autenticação
+  useEffect(() => {
+    // Não fazer nada enquanto carrega
+    if (isLoading && !timeoutExceeded) return;
+    
+    if (!user) {
+      console.log("RootRedirect: No user, redirecting to /login");
+      setRedirectTarget('/login');
+    } else if (user && profile) {
+      console.log("RootRedirect: User and profile available, redirecting based on role");
+      if (profile.role === 'admin' || isAdmin) {
+        setRedirectTarget('/admin');
+      } else {
+        setRedirectTarget('/dashboard');
+      }
+    }
+  }, [user, profile, isAdmin, isLoading, timeoutExceeded]);
+  
+  // Realizar o redirecionamento quando o alvo for definido
+  useEffect(() => {
+    if (redirectTarget) {
+      // Pequeno delay para garantir que a UI reaja antes do redirecionamento
+      const redirectTimer = setTimeout(() => {
+        navigate(redirectTarget, { replace: true });
+      }, 100);
+      
+      return () => clearTimeout(redirectTimer);
+    }
+  }, [redirectTarget, navigate]);
   
   // Handle timing out the loading state
   useEffect(() => {
-    // Clear any existing timeout
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    
     if (isLoading && !timeoutExceeded) {
-      timeoutRef.current = window.setTimeout(() => {
+      const timeout = setTimeout(() => {
         console.log("RootRedirect: Loading timeout exceeded, redirecting to /login");
         setTimeoutExceeded(true);
         toast("Tempo de carregamento excedido, redirecionando para tela de login");
-        navigate('/login', { replace: true });
       }, 3000); // 3 segundos de timeout
-    }
-    
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [isLoading, navigate, timeoutExceeded]);
-  
-  // Handle redirection based on user state
-  useEffect(() => {
-    if (!isLoading) {
-      console.log("RootRedirect: Not loading anymore, checking user state");
       
-      if (!user) {
-        console.log("RootRedirect: No user, redirecting to /login");
-        navigate('/login', { replace: true });
-        return;
-      }
-      
-      if (user && profile) {
-        console.log("RootRedirect: User and profile available, redirecting based on role");
-        if (profile.role === 'admin' || isAdmin) {
-          navigate('/admin', { replace: true });
-        } else {
-          navigate('/dashboard', { replace: true });
-        }
-      }
+      return () => clearTimeout(timeout);
     }
-  }, [user, profile, isAdmin, navigate, isLoading]);
+  }, [isLoading, timeoutExceeded]);
   
-  // Show loading screen during check
-  if (isLoading && !timeoutExceeded) {
-    return <LoadingScreen message="Preparando sua experiência..." />;
+  // Mostrar tela de carregamento enquanto decide para onde redirecionar
+  if ((isLoading && !timeoutExceeded) || (!redirectTarget && !timeoutExceeded)) {
+    return (
+      <PageTransitionWithFallback
+        isVisible={true}
+        fallbackMessage="Redirecionando..."
+      >
+        <LoadingScreen message="Preparando sua experiência..." />
+      </PageTransitionWithFallback>
+    );
   }
   
-  // Fallback redirect
-  return !user ? <Navigate to="/login" replace /> : <Navigate to="/dashboard" replace />;
+  // Fallback redirect se algo deu errado
+  if (timeoutExceeded || !redirectTarget) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  // Retornar null porque o useEffect cuida do redirecionamento
+  return null;
 };
 
 export default RootRedirect;
