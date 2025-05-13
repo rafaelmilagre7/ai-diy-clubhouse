@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useNavigate } from "react-router-dom";
@@ -13,6 +14,9 @@ const FormacaoPersonalInfo = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { progress, isLoading, refreshProgress, lastError } = useProgress();
+  
+  // Estado para armazenar os dados do formulário
+  const [formData, setFormData] = useState<any>({});
   
   const { saveStepData } = useStepPersistenceCore({
     currentStepIndex: 0,
@@ -50,6 +54,7 @@ const FormacaoPersonalInfo = () => {
     return () => clearTimeout(timer);
   }, [isLoading]);
 
+  // Função para processar o envio do formulário - recebe os dados como parâmetro
   const handleSubmit = async (data: any) => {
     try {
       setIsSubmitting(true);
@@ -70,6 +75,21 @@ const FormacaoPersonalInfo = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Criar uma função intermediária que não recebe parâmetros
+  // Esta função vai chamar handleSubmit com os dados do formData
+  const handleFormSubmit = async () => {
+    // Aqui utilizamos os dados armazenados no estado formData
+    await handleSubmit(formData);
+  };
+
+  // Função para atualizar o estado formData quando os campos forem alterados
+  const handleFormChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   if (isLoading && !showError) {
@@ -127,9 +147,12 @@ const FormacaoPersonalInfo = () => {
       </div>
       
       <PersonalInfoStep
-        onSubmit={(data) => handleSubmit(data)}
+        onSubmit={handleFormSubmit} // Passamos a função intermediária sem parâmetros
         isSubmitting={isSubmitting}
         initialData={progress?.personal_info}
+        formData={formData} // Passamos os dados do formulário
+        errors={{}} // Inicialmente não temos erros
+        onChange={handleFormChange} // Passamos a função para atualizar os dados do formulário
       />
     </OnboardingLayout>
   );
