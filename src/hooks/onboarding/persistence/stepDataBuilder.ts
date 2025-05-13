@@ -1,135 +1,95 @@
 
-import { OnboardingData, OnboardingProgress } from '@/types/onboarding';
-import { buildPersonalInfoUpdate } from './stepBuilders/personalInfoBuilder';
+import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
+import { buildProfessionalDataUpdate } from "./stepBuilders/professionalDataBuilder";
 
+/**
+ * Constrói o objeto de atualização para qualquer etapa do onboarding
+ * Versão melhorada para melhor tratamento de estruturas de dados aninhadas
+ */
 export function buildUpdateObject(
-  stepId: string,
-  data: Partial<OnboardingData> | any,
-  progress: OnboardingProgress | null | undefined,
-  currentStepIndex: number | undefined
-): any {
-  console.log(`Building update object for step ${stepId}`);
+  stepId: string, 
+  data: Partial<OnboardingData>, 
+  progress: OnboardingProgress | null,
+  currentStepIndex: number
+) {
+  // Sempre iniciar com um objeto vazio para acumular atualizações
+  const updateObj: Record<string, any> = {};
   
-  // Se não tivermos um progresso, não podemos atualizar nada
-  if (!progress) {
-    console.warn('Nenhum progresso encontrado para atualizar');
-    return {};
+  // Adicionar o current_step ao objeto de atualização
+  updateObj.current_step = stepId;
+  
+  // Se temos progresso existente, obter completed_steps ou iniciar array vazio
+  const completedSteps = progress?.completed_steps || [];
+  
+  // Verificar se o passo atual já está marcado como completo
+  if (!completedSteps.includes(stepId)) {
+    // Adicionar o passo atual aos passos concluídos
+    updateObj.completed_steps = [...completedSteps, stepId];
+  } else {
+    // Manter os passos concluídos como estão
+    updateObj.completed_steps = completedSteps;
   }
-
-  // Determinar o tipo de onboarding (padrão é 'club')
-  const onboardingType = progress.onboarding_type || 'club';
   
-  // Base do objeto de atualização
-  const updateObj: any = {};
-  
-  // Adicionar IDs de etapas concluídas
-  if (stepId) {
-    const completedSteps = progress.completed_steps || [];
-    if (!completedSteps.includes(stepId)) {
-      updateObj.completed_steps = [...completedSteps, stepId];
-    }
-  }
-
-  // Comportamento específico para cada tipo de etapa
+  // Lidar com os dados específicos de cada etapa
   switch (stepId) {
     case 'personal':
     case 'personal_info':
-      return {
-        ...updateObj,
-        ...buildPersonalInfoUpdate(data, progress)
-      };
-    
+      // Dados pessoais
+      if ('personal_info' in data) {
+        updateObj.personal_info = data.personal_info;
+      }
+      break;
+      
     case 'professional_data':
     case 'professional_info':
-      if (data.professional_info || data.company_name) {
-        updateObj.professional_info = {
-          ...(progress.professional_info || {}),
-          ...(data.professional_info || data)
-        };
-        
-        // Compatibilidade com campos legacy
-        updateObj.company_name = data.company_name || data.professional_info?.company_name || progress.company_name;
-        updateObj.company_size = data.company_size || data.professional_info?.company_size || progress.company_size;
-        updateObj.company_sector = data.company_sector || data.professional_info?.company_sector || progress.company_sector;
-        updateObj.company_website = data.company_website || data.professional_info?.company_website || progress.company_website;
-        updateObj.current_position = data.current_position || data.professional_info?.current_position || progress.current_position;
-        updateObj.annual_revenue = data.annual_revenue || data.professional_info?.annual_revenue || progress.annual_revenue;
-      }
-      return updateObj;
-    
+      // Usar builder especializado para dados profissionais
+      const professionalInfoUpdates = buildProfessionalDataUpdate(data, progress);
+      Object.assign(updateObj, professionalInfoUpdates);
+      break;
+      
     case 'business_context':
-      if (data.business_context) {
-        updateObj.business_context = {
-          ...(progress.business_context || {}),
-          ...data.business_context
-        };
+      if ('business_context' in data) {
+        updateObj.business_context = data.business_context;
       }
-      return updateObj;
-    
+      break;
+      
     case 'ai_exp':
-      if (data.ai_experience) {
-        updateObj.ai_experience = {
-          ...(progress.ai_experience || {}),
-          ...data.ai_experience
-        };
+    case 'ai_experience':
+      if ('ai_experience' in data) {
+        updateObj.ai_experience = data.ai_experience;
       }
-      return updateObj;
-    
+      break;
+      
     case 'business_goals':
-      if (data.business_goals) {
-        updateObj.business_goals = {
-          ...(progress.business_goals || {}),
-          ...data.business_goals
-        };
+      if ('business_goals' in data) {
+        updateObj.business_goals = data.business_goals;
       }
-      return updateObj;
-    
+      break;
+      
     case 'experience_personalization':
-      if (data.experience_personalization) {
-        updateObj.experience_personalization = {
-          ...(progress.experience_personalization || {}),
-          ...data.experience_personalization
-        };
+      if ('experience_personalization' in data) {
+        updateObj.experience_personalization = data.experience_personalization;
       }
-      return updateObj;
-    
+      break;
+      
     case 'complementary_info':
-      if (data.complementary_info) {
-        updateObj.complementary_info = {
-          ...(progress.complementary_info || {}),
-          ...data.complementary_info
-        };
+      if ('complementary_info' in data) {
+        updateObj.complementary_info = data.complementary_info;
       }
-      return updateObj;
+      // Campos específicos para complementary_info
+      if ('how_found_us' in data) updateObj.how_found_us = data.how_found_us;
+      if ('referred_by' in data) updateObj.referred_by = data.referred_by;
+      if ('authorize_case_usage' in data) updateObj.authorize_case_usage = data.authorize_case_usage;
+      if ('interested_in_interview' in data) updateObj.interested_in_interview = data.interested_in_interview;
+      if ('priority_topics' in data) updateObj.priority_topics = data.priority_topics;
+      break;
       
-    // Novas etapas para formação
-    case 'formation_goals':
-    case 'learning_preferences':
-      if (data.formation_data) {
-        updateObj.formation_data = {
-          ...(progress.formation_data || {}),
-          ...data.formation_data
-        };
-      } else {
-        // Caso os dados venham diretamente e não dentro de formation_data
-        updateObj.formation_data = {
-          ...(progress.formation_data || {}),
-          ...data
-        };
-      }
-      
-      // Sempre garantir que o tipo de onboarding esteja definido
-      updateObj.onboarding_type = 'formacao';
-      return updateObj;
-    
     default:
-      console.warn(`Tipo de etapa desconhecido: ${stepId}`);
-      
-      // Se não for uma etapa conhecida, tenta salvar os dados diretamente
-      if (typeof data === 'object' && data !== null) {
-        return { ...updateObj, ...data };
-      }
-      
-      return updateObj;
+      // Para outros passos, apenas copiar os dados diretamente
+      console.log(`Processando passo sem handler específico: ${stepId}`);
+      Object.assign(updateObj, data);
   }
+  
+  console.log(`Objeto de atualização construído para passo ${stepId}:`, updateObj);
+  return updateObj;
 }

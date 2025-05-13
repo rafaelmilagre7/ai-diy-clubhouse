@@ -12,9 +12,9 @@ export const steps: CompleteOnboardingStep[] = [
     forFormation: true
   },
   {
-    id: "professional_info", // Mudança importante: usamos 'professional_info' em vez de 'professional_data'
+    id: "professional_info", 
     title: "Dados Profissionais",
-    section: "professional_info", // Esta seção deve ser consistente
+    section: "professional_info",
     path: "/onboarding/professional-data",
     forClub: true
   },

@@ -87,7 +87,7 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
     
     try {
       // Verificação básica se os campos obrigatórios estão preenchidos
-      const requiredFields = ['company_name', 'company_size', 'company_sector', 'current_position', 'annual_revenue'];
+      const requiredFields = ['company_name', 'company_size', 'company_sector', 'current_position'];
       const errors: string[] = [];
       
       requiredFields.forEach(field => {
@@ -103,7 +103,20 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
       }
       
       console.log("Enviando dados profissionais:", data);
-      await onSubmit("professional_data", data);
+      
+      // Estruturando os dados para seguir o padrão professional_info
+      const professionalData = {
+        professional_info: {
+          company_name: data.company_name,
+          company_size: data.company_size,
+          company_sector: data.company_sector,
+          company_website: data.company_website,
+          current_position: data.current_position,
+          annual_revenue: data.annual_revenue
+        }
+      };
+      
+      await onSubmit("professional_info", professionalData);
       
       // Mostra feedback de sucesso
       toast.success("Dados salvos com sucesso!", {

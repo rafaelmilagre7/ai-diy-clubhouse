@@ -1,89 +1,120 @@
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { ProfessionalDataStep } from "@/components/onboarding/steps/ProfessionalDataStep";
-import { useProgress } from "@/hooks/onboarding/useProgress";
-import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
-import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
-import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { navigateAfterStep } from "@/hooks/onboarding/persistence/stepNavigator";
-import { ProfessionalDataInput } from "@/types/onboarding";
+import { useProgress } from "@/hooks/onboarding/useProgress";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { toast } from "sonner";
+import { professionalDataService } from "@/services/onboarding";
+import { Card } from "@/components/ui/card";
 
 const ProfessionalData = () => {
-  const { progress, isLoading, refreshProgress } = useProgress();
-  const { saveStepData } = useOnboardingSteps();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [dataLoaded, setDataLoaded] = useState(false);
   const navigate = useNavigate();
+  const { progress, isLoading, refreshProgress, lastError } = useProgress();
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [initialData, setInitialData] = useState<any>(null);
   
-  // Carregar dados apenas uma vez na montagem usando useCallback para estabilizar a função
-  const loadInitialData = useCallback(async () => {
-    if (dataLoaded) return;
-    
-    try {
-      console.log("ProfessionalData - carregando dados mais recentes");
-      await refreshProgress();
-      setDataLoaded(true);
-    } catch (error) {
-      console.error("Erro ao carregar dados iniciais:", error);
-    }
-  }, [refreshProgress, dataLoaded]);
-  
+  // Carregar dados iniciais
   useEffect(() => {
-    loadInitialData();
-  }, [loadInitialData]);
-
-  const handleSubmit = async (stepId: string, data: ProfessionalDataInput) => {
-    if (isSubmitting) return;
+    const loadData = async () => {
+      try {
+        if (progress) {
+          console.log("Carregando dados profissionais do progresso:", progress);
+          
+          // Consolidar dados do progresso
+          const data = {
+            ...(progress.professional_info || {}),
+            company_name: progress.company_name || (progress.professional_info?.company_name || ""),
+            company_size: progress.company_size || (progress.professional_info?.company_size || ""),
+            company_sector: progress.company_sector || (progress.professional_info?.company_sector || ""),
+            company_website: progress.company_website || (progress.professional_info?.company_website || ""),
+            current_position: progress.current_position || (progress.professional_info?.current_position || ""),
+            annual_revenue: progress.annual_revenue || (progress.professional_info?.annual_revenue || ""),
+          };
+          
+          setInitialData(data);
+          console.log("Dados iniciais profissionais carregados:", data);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar dados profissionais:", error);
+        toast.error("Erro ao carregar seus dados", {
+          description: "Atualize a página para tentar novamente"
+        });
+      }
+    };
     
+    if (!isLoading) {
+      loadData();
+    }
+  }, [progress, isLoading]);
+  
+  const handleSubmit = async (stepId: string, data: any) => {
     setIsSubmitting(true);
+    setSubmitError(null);
+    
     try {
-      console.log("ProfessionalData - Salvando dados:", data);
+      console.log("Submetendo dados profissionais:", data);
       
-      // Validar campos obrigatórios
-      if (!data.company_name || !data.company_size || !data.company_sector || !data.current_position || !data.annual_revenue) {
-        toast.error("Por favor, preencha todos os campos obrigatórios");
-        setIsSubmitting(false);
-        return;
+      if (!progress?.id) {
+        throw new Error("ID de progresso não encontrado");
       }
       
-      await saveStepData(stepId, data, false);
+      // Atualizar os dados na tabela de onboarding_progress
+      await professionalDataService.save(progress.id, progress.user_id, data);
       
-      // Navegar para a próxima página após salvar
-      console.log("Navegando para próxima etapa após salvar dados profissionais");
-      navigateAfterStep(stepId, 1, navigate, true);
+      // Recarregar o progresso para refletir as alterações
+      await refreshProgress();
       
-    } catch (error) {
+      // Navegar para a próxima etapa
+      navigate("/onboarding/business-context");
+      
+      return true;
+    } catch (error: any) {
       console.error("Erro ao salvar dados profissionais:", error);
-      toast.error("Erro ao salvar dados. Por favor, tente novamente.");
+      setSubmitError(error.message || "Erro ao salvar dados");
+      toast.error("Erro ao salvar dados", {
+        description: "Verifique sua conexão e tente novamente"
+      });
+      return false;
     } finally {
       setIsSubmitting(false);
     }
   };
-
+  
+  if (isLoading) {
+    return (
+      <OnboardingLayout 
+        currentStep={2} 
+        title="Dados Profissionais" 
+        backUrl="/onboarding/personal-info"
+      >
+        <div className="flex justify-center items-center py-20">
+          <LoadingSpinner size="lg" />
+          <p className="ml-4 text-gray-400">Carregando seus dados...</p>
+        </div>
+      </OnboardingLayout>
+    );
+  }
+  
   return (
-    <OnboardingLayout
-      currentStep={2}
-      title="Dados Profissionais"
-      backUrl="/onboarding"
+    <OnboardingLayout 
+      currentStep={2} 
+      title="Dados Profissionais" 
+      backUrl="/onboarding/personal-info"
     >
-      <div className="max-w-4xl mx-auto space-y-8">
-        <MilagrinhoMessage
-          message="Agora vamos conhecer um pouco sobre sua empresa e seu papel profissional. Estas informações nos ajudarão a personalizar as soluções que mais se adaptam ao seu contexto de negócio."
-        />
-        {isLoading && !dataLoaded ? (
-          <div className="flex justify-center py-10">
-            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#0ABAB5]"></div>
-          </div>
-        ) : (
-          <ProfessionalDataStep
-            onSubmit={handleSubmit}
-            isSubmitting={isSubmitting}
-            initialData={progress}
-          />
-        )}
-      </div>
+      {submitError && (
+        <Card className="p-4 mb-6 bg-red-100 text-red-700 border-red-300">
+          <p>{submitError}</p>
+        </Card>
+      )}
+      
+      <ProfessionalDataStep 
+        initialData={initialData} 
+        onSubmit={handleSubmit}
+        isSubmitting={isSubmitting}
+      />
     </OnboardingLayout>
   );
 };

@@ -1,3 +1,4 @@
+
 export interface OnboardingData {
   // 1. Dados Pessoais
   personal_info: {
@@ -132,8 +133,8 @@ export interface OnboardingProgress {
   ai_experience: OnboardingData['ai_experience'];
   experience_personalization: OnboardingData['experience_personalization'];
   complementary_info: OnboardingData['complementary_info'];
-  formation_data?: OnboardingData['formation_data']; // Adicionando os dados de formação
-  onboarding_type?: 'club' | 'formacao'; // Adicionando o tipo de onboarding
+  formation_data?: OnboardingData['formation_data'];
+  onboarding_type?: 'club' | 'formacao';
   industry_focus?: OnboardingData['industry_focus'];
   resources_needs?: OnboardingData['resources_needs'];
   team_info?: OnboardingData['team_info'];
@@ -172,7 +173,7 @@ export interface OnboardingStep {
   path: string;
 }
 
-// Corrigindo o tipo para ProfessionalDataInput para usar professional_info em vez de professional_data
+// Tipo para ProfessionalDataInput que usa o mesmo nome de campo 'professional_info'
 export type ProfessionalDataInput = {
   company_name?: string;
   company_size?: string;

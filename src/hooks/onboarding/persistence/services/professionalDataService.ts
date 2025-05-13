@@ -9,24 +9,52 @@ import { ProfessionalDataInput } from "@/types/onboarding";
 export const saveProfessionalData = async (
   progressId: string,
   userId: string,
-  data: Partial<ProfessionalDataInput>
+  data: Partial<ProfessionalDataInput> | { professional_info?: any }
 ) => {
   try {
     console.log("Salvando dados profissionais:", { progressId, userId, data });
     
-    // Em vez de tentar salvar em uma tabela separada, vamos atualizar diretamente
-    // na tabela onboarding_progress usando o campo professional_info
+    // Extrair os dados profissionais do objeto, seja de dados diretos ou de professional_info
+    let professionalData: any = {};
+    
+    if ('professional_info' in data && data.professional_info) {
+      professionalData = data.professional_info;
+    } else {
+      professionalData = data;
+    }
+    
+    // Garantir que os campos estão preenchidos
+    const companyName = professionalData.company_name || "";
+    const companySize = professionalData.company_size || "";
+    const companySector = professionalData.company_sector || "";
+    const companyWebsite = professionalData.company_website || "";
+    const currentPosition = professionalData.current_position || "";
+    const annualRevenue = professionalData.annual_revenue || "";
+    
+    // Criar objeto consolidado para atualização
+    const updateData = {
+      professional_info: {
+        company_name: companyName,
+        company_size: companySize,
+        company_sector: companySector,
+        company_website: companyWebsite,
+        current_position: currentPosition,
+        annual_revenue: annualRevenue
+      },
+      company_name: companyName,
+      company_size: companySize,
+      company_sector: companySector,
+      company_website: companyWebsite,
+      current_position: currentPosition,
+      annual_revenue: annualRevenue
+    };
+    
+    console.log("Dados preparados para salvar:", updateData);
+    
+    // Atualizar na tabela onboarding_progress
     const { data: result, error } = await supabase
       .from('onboarding_progress')
-      .update({
-        professional_info: data,
-        company_name: data.company_name || null,
-        company_size: data.company_size || null,
-        company_sector: data.company_sector || null,
-        company_website: data.company_website || null,
-        current_position: data.current_position || null,
-        annual_revenue: data.annual_revenue || null,
-      })
+      .update(updateData)
       .eq('id', progressId)
       .select();
       
@@ -48,7 +76,7 @@ export const saveProfessionalData = async (
  */
 export const fetchProfessionalData = async (progressId: string) => {
   try {
-    // Agora obteremos os dados profissionais diretamente da tabela onboarding_progress
+    // Buscar os dados profissionais diretamente da tabela onboarding_progress
     const { data, error } = await supabase
       .from('onboarding_progress')
       .select('professional_info, company_name, company_size, company_sector, company_website, current_position, annual_revenue')
@@ -86,6 +114,7 @@ export const formatProfessionalData = (data: any) => {
   // caso contrário, construímos a partir dos campos individuais
   const professionalInfo = data.professional_info || {};
   
+  // Criar objeto consolidado com dados de ambas as fontes
   return {
     company_name: data.company_name || professionalInfo.company_name || "",
     company_size: data.company_size || professionalInfo.company_size || "",
