@@ -15,6 +15,7 @@ const FALLBACK_USERS: UserProfile[] = [
     avatar_url: null,
     role: "admin",
     company_name: "VIVER DE IA",
+    industry: null,
     created_at: new Date().toISOString()
   },
   {
@@ -24,6 +25,7 @@ const FALLBACK_USERS: UserProfile[] = [
     avatar_url: null,
     role: "member",
     company_name: "Empresa Teste",
+    industry: null,
     created_at: new Date().toISOString()
   }
 ];
