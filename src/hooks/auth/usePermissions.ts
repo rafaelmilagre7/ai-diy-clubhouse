@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/contexts/auth';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -186,10 +185,10 @@ export const usePermissions = () => {
         }, 3000);
       });
       
-      // Realizar a chamada RPC com timeout
+      // Realizar a chamada RPC com timeout - Removendo abortSignal que não existe
       const rpcPromise = supabase.rpc('get_user_permissions', {
         user_id: user.id
-      }).abortSignal(abortControllerRef.current.signal);
+      });
       
       // Usar o que retornar primeiro: a consulta ou o timeout
       const { data, error } = await Promise.race([rpcPromise, timeoutPromise]);
@@ -253,7 +252,7 @@ export const usePermissions = () => {
           // Sem papel definido, sem permissões
           setUserPermissions([]);
           
-          // Atualizar cache global
+          // Atualizar cache global com lista vazia
           globalPermissionsCache.userPermissions.set(user.id, []);
         }
       } catch (profileError) {
@@ -311,7 +310,7 @@ export const usePermissions = () => {
     let isAdminByEmail = false;
     if (user?.email) {
       isAdminByEmail = user.email.includes('@viverdeia.ai') || 
-                      user.email === 'admin@teste.com' || 
+                      user.email === 'admin@teste.com' ||
                       user.email === 'admin@viverdeia.ai';
     }
     

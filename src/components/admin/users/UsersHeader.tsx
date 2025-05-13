@@ -1,15 +1,20 @@
 
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface UsersHeaderProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 export const UsersHeader = ({
   searchQuery,
   onSearchChange,
+  onRefresh,
+  isRefreshing = false
 }: UsersHeaderProps) => {
   return (
     <>
@@ -30,6 +35,18 @@ export const UsersHeader = ({
             onChange={(e) => onSearchChange(e.target.value)}
           />
         </div>
+        
+        {onRefresh && (
+          <Button 
+            variant="outline" 
+            onClick={onRefresh} 
+            disabled={isRefreshing}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Atualizar Lista
+          </Button>
+        )}
       </div>
     </>
   );

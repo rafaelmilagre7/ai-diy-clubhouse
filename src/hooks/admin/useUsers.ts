@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { supabase, UserProfile } from '@/lib/supabase';
 import { usePermissions } from '@/hooks/auth/usePermissions';
 import { Role } from '@/hooks/admin/useRoles';
