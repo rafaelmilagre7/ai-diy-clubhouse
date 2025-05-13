@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useSolutionsData } from '@/hooks/useSolutionsData';
 import { SolutionCard } from '@/components/solution/SolutionCard';
@@ -55,8 +56,8 @@ const Solutions = () => {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Soluções</h1>
-            <p className="text-muted-foreground mt-1">
+            <h1 className="text-3xl font-bold text-white">Soluções</h1>
+            <p className="text-neutral-300 mt-1">
               Explore as soluções disponíveis e comece a implementá-las em seu negócio
             </p>
           </div>
@@ -64,8 +65,8 @@ const Solutions = () => {
 
         <Alert variant="destructive" className="my-8">
           <ShieldAlert className="h-5 w-5" />
-          <AlertTitle>Acesso restrito</AlertTitle>
-          <AlertDescription>
+          <AlertTitle className="text-white">Acesso restrito</AlertTitle>
+          <AlertDescription className="text-neutral-200">
             <p className="mb-4">Você não tem permissão para acessar as soluções. Entre em contato com o administrador para solicitar acesso.</p>
             <Button variant="outline" size="sm" asChild>
               <Link to="/dashboard">Voltar para o Dashboard</Link>
@@ -86,19 +87,19 @@ const Solutions = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Soluções</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-3xl font-bold text-white">Soluções</h1>
+          <p className="text-neutral-300 mt-1">
             Explore as soluções disponíveis e comece a implementá-las em seu negócio
           </p>
         </div>
 
         <div className="w-full sm:w-auto flex gap-2">
           <div className="relative flex-1 sm:w-64">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-400" />
             <Input
               type="search"
               placeholder="Buscar soluções..."
-              className="pl-8"
+              className="pl-8 bg-[#1A1E2E] text-white border-neutral-700"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -107,12 +108,12 @@ const Solutions = () => {
       </div>
 
       <Tabs defaultValue={activeCategory} onValueChange={setActiveCategory} className="w-full">
-        <TabsList className="mb-6 flex flex-wrap">
+        <TabsList className="mb-6 flex flex-wrap bg-[#1A1E2E]/80 border border-neutral-700">
           {categories.map((category) => (
             <TabsTrigger 
               key={category.id}
               value={category.id}
-              className="flex-1 sm:flex-none"
+              className="flex-1 sm:flex-none text-neutral-300 data-[state=active]:bg-viverblue data-[state=active]:text-white"
             >
               {category.name}
             </TabsTrigger>
@@ -122,11 +123,11 @@ const Solutions = () => {
         {categories.map((category) => (
           <TabsContent key={category.id} value={category.id} className="mt-0">
             {filteredSolutions?.length === 0 ? (
-              <div className="text-center py-8 bg-white rounded-lg border border-dashed">
+              <div className="text-center py-8 bg-[#151823] rounded-lg border border-neutral-700 border-dashed">
                 <div className="flex flex-col items-center px-4">
-                  <Filter className="h-10 w-10 text-muted-foreground mb-3" />
-                  <h3 className="text-lg font-medium">Nenhuma solução encontrada</h3>
-                  <p className="text-muted-foreground text-sm mt-1 max-w-md">
+                  <Filter className="h-10 w-10 text-neutral-400 mb-3" />
+                  <h3 className="text-lg font-medium text-white">Nenhuma solução encontrada</h3>
+                  <p className="text-neutral-400 text-sm mt-1 max-w-md">
                     Não encontramos soluções com esse filtro. Tente selecionar outra categoria ou ajuste sua busca.
                   </p>
                 </div>
