@@ -1,6 +1,7 @@
 
 import * as React from "react"
-import { Area, AreaChart as RechartsAreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
+import { Area, AreaChart as RechartsAreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Legend, Dot, TooltipProps } from "recharts"
+import { chartColors, chartConfig, getChartGradient } from "@/lib/chart-utils"
 
 interface AreaChartProps {
   data: any[]
@@ -29,29 +30,112 @@ export function AreaChart({
   showGridLines = true,
   className,
 }: AreaChartProps) {
-  const [hoveredValue, setHoveredValue] = React.useState<number | null>(null)
-
-  const formatValue = (value: number) => {
-    return valueFormatter(value)
-  }
-
-  const customColors = colors || ["var(--color-primary)", "var(--color-secondary)", "var(--color-muted)"]
+  const [activeIndex, setActiveIndex] = React.useState<number | null>(null);
+  const [hoveredValue, setHoveredValue] = React.useState<number | null>(null);
+  
+  // Usar cores padronizadas ou as cores fornecidas
+  const customColors = colors || chartColors.categorical;
+  
+  // Componente personalizado para pontos ativos com animação
+  const CustomActiveDot = (props: any) => {
+    const { cx, cy, value } = props;
+    
+    React.useEffect(() => {
+      setHoveredValue(value);
+    }, [value]);
+    
+    return (
+      <Dot
+        cx={cx}
+        cy={cy}
+        r={6}
+        stroke={customColors[0]}
+        strokeWidth={2}
+        fill="#fff"
+        className="animate-pulse"
+      />
+    );
+  };
+  
+  // Tooltip personalizado com estilo melhorado
+  const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="rounded-lg border bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-3 shadow-lg">
+          <p className="font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</p>
+          <div className="grid gap-1">
+            {payload.map((entry, index) => (
+              <div key={`tooltip-${index}`} className="flex items-center gap-2">
+                <div 
+                  className="w-3 h-3 rounded-full" 
+                  style={{ backgroundColor: entry.color }}
+                />
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  {entry.name}:
+                </span>
+                <span className="text-sm font-medium" style={{ color: entry.color }}>
+                  {valueFormatter(entry.value as number)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+  
+  // Legenda personalizada
+  const CustomLegend = ({ payload }: any) => {
+    if (!showLegend) return null;
+    
+    return (
+      <div className="flex flex-wrap justify-center gap-4 mt-4">
+        {payload.map((entry: any, index: number) => (
+          <div 
+            key={`legend-${index}`} 
+            className="flex items-center gap-2 cursor-pointer transition-opacity duration-300"
+            style={{ opacity: activeIndex === null || activeIndex === index ? 1 : 0.5 }}
+            onClick={() => setActiveIndex(activeIndex === index ? null : index)}
+          >
+            <div 
+              className="w-3 h-3 rounded-full" 
+              style={{ backgroundColor: entry.color }}
+            />
+            <span className="text-sm text-gray-600 dark:text-gray-300">{entry.value}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className={className || "h-full w-full"}>
+      {/* Definindo gradientes reutilizáveis */}
+      <svg width="0" height="0" className="absolute">
+        {getChartGradient(chartColors.areaGradient.id, chartColors.areaGradient.colors)}
+      </svg>
+      
       <ResponsiveContainer width="100%" height="100%">
         <RechartsAreaChart
           data={data}
           margin={{
-            top: 10,
-            right: 10,
+            top: 20,
+            right: 20,
             left: 0,
             bottom: 0,
           }}
+          onMouseLeave={() => setActiveIndex(null)}
         >
           {showGridLines && (
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" strokeOpacity={0.8} />
+            <CartesianGrid 
+              strokeDasharray="3 3" 
+              stroke="var(--border)" 
+              strokeOpacity={0.4} 
+              vertical={false}
+            />
           )}
+          
           {showXAxis && (
             <XAxis
               dataKey={index}
@@ -59,57 +143,69 @@ export function AreaChart({
               tickLine={{ stroke: "var(--border)" }}
               axisLine={{ stroke: "var(--border)" }}
               tickMargin={10}
+              padding={{ left: 10, right: 10 }}
+              tick={({ x, y, payload }) => (
+                <text
+                  x={x}
+                  y={y + 10}
+                  textAnchor="middle"
+                  fill="var(--muted-foreground)"
+                  fontSize={12}
+                >
+                  {payload.value}
+                </text>
+              )}
             />
           )}
+          
           {showYAxis && (
             <YAxis
               width={yAxisWidth}
-              tickFormatter={formatValue}
+              tickFormatter={valueFormatter}
               tick={{ fill: "var(--muted-foreground)" }}
               tickLine={{ stroke: "var(--border)" }}
               axisLine={{ stroke: "var(--border)" }}
               tickMargin={10}
+              domain={['auto', 'auto']}
+              tick={({ x, y, payload }) => (
+                <text
+                  x={x - 10}
+                  y={y}
+                  textAnchor="end"
+                  fill="var(--muted-foreground)"
+                  fontSize={12}
+                >
+                  {valueFormatter(payload.value)}
+                </text>
+              )}
             />
           )}
-          <Tooltip
-            cursor={false}
-            content={({ active, payload }) => {
-              if (active && payload && payload.length) {
-                return (
-                  <div className="rounded-lg border bg-background p-2 shadow-sm">
-                    <div className="grid grid-cols-2 gap-2">
-                      {payload.map((entry, index) => (
-                        <div key={`tooltip-${index}`}>
-                          <p className="text-xs text-muted-foreground">
-                            {entry.name}
-                          </p>
-                          <p
-                            className="text-sm font-medium"
-                            style={{ color: entry.color }}
-                          >
-                            {valueFormatter(entry.value as number)}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )
-              }
-              return null
-            }}
-          />
+          
+          <Tooltip content={<CustomTooltip />} />
+          
+          {showLegend && (
+            <Legend content={<CustomLegend />} />
+          )}
+          
           {categories.map((category, index) => (
             <Area
               key={category}
               type="monotone"
               dataKey={category}
-              stackId="1"
+              name={category}
               stroke={customColors[index % customColors.length]}
-              fill={customColors[index % customColors.length]}
-              fillOpacity={0.2}
-              activeDot={{
-                onMouseOver: (props: any) => setHoveredValue(props.value),
-                onMouseLeave: () => setHoveredValue(null),
+              fill={index === 0 ? `url(#${chartColors.areaGradient.id})` : customColors[index % customColors.length] + '20'}
+              fillOpacity={0.8}
+              strokeWidth={2}
+              dot={false}
+              activeDot={<CustomActiveDot />}
+              isAnimationActive={true}
+              animationDuration={1000}
+              animationEasing="ease-in-out"
+              style={{
+                filter: "drop-shadow(0 2px 2px rgba(0, 0, 0, 0.1))",
+                opacity: activeIndex === null || activeIndex === index ? 1 : 0.3,
+                transition: "opacity 300ms"
               }}
             />
           ))}
