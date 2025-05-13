@@ -33,12 +33,14 @@ export function buildUpdateObject(
   // Comportamento específico para cada tipo de etapa
   switch (stepId) {
     case 'personal':
+    case 'personal_info':
       return {
         ...updateObj,
         ...buildPersonalInfoUpdate(data, progress)
       };
     
     case 'professional_data':
+    case 'professional_info':
       if (data.professional_info || data.company_name) {
         updateObj.professional_info = {
           ...(progress.professional_info || {}),

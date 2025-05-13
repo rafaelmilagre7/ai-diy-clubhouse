@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 import { useAuth } from "@/contexts/auth";
+import { toast } from "sonner";
 
 export function usePersonalInfoFormData() {
   const { progress, updateProgress, isLoading, refreshProgress } = useProgress();
@@ -11,6 +12,7 @@ export function usePersonalInfoFormData() {
   const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const initialLoadCompletedRef = useRef(false);
+  const loadAttemptsRef = useRef(0);
 
   const [formData, setFormData] = useState({
     name: profile?.name || progress?.personal_info?.name || "",
@@ -68,11 +70,55 @@ export function usePersonalInfoFormData() {
     const fetchData = async () => {
       if (!isLoading && !formDataLoaded) {
         console.log("Buscando novos dados do progresso para o formulário pessoal");
-        await refreshProgress();
+        loadAttemptsRef.current += 1;
+        
+        try {
+          const refreshedProgress = await refreshProgress();
+          if (refreshedProgress) {
+            console.log("Dados de progresso atualizados:", refreshedProgress);
+          } else if (loadAttemptsRef.current >= 3) {
+            // Após várias tentativas sem sucesso, preencha com dados mínimos
+            console.log("Não foi possível carregar dados, usando defaults");
+            setFormData(prev => ({
+              ...prev,
+              name: profile?.name || user?.user_metadata?.name || "",
+              email: profile?.email || user?.email || ""
+            }));
+            setFormDataLoaded(true);
+            
+            // Notificar ao usuário
+            toast.info("Usando dados básicos para continuar");
+          }
+        } catch (error) {
+          console.error("Erro ao carregar dados:", error);
+          if (loadAttemptsRef.current >= 3) {
+            toast.warning("Problemas ao carregar dados. Continuando com informações básicas.");
+            setFormDataLoaded(true);
+          }
+        }
       }
     };  
     fetchData();
-  }, [refreshProgress, isLoading, formDataLoaded]);
+  }, [refreshProgress, isLoading, formDataLoaded, profile, user?.email, user?.user_metadata?.name]);
+
+  // Timer para carregamento de fallback após 5 segundos
+  useEffect(() => {
+    if (!formDataLoaded) {
+      const timer = setTimeout(() => {
+        if (!formDataLoaded) {
+          console.log("Timeout de carregamento - usando valores padrão");
+          setFormData(prev => ({
+            ...prev,
+            name: profile?.name || user?.user_metadata?.name || "",
+            email: profile?.email || user?.email || ""
+          }));
+          setFormDataLoaded(true);
+        }
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [formDataLoaded, profile, user?.email, user?.user_metadata?.name]);
 
   // Função para gerenciar alterações no formulário sem salvamento automático
   const handleFormChange = useCallback((field: string, value: string) => {

@@ -239,12 +239,14 @@ export function useStepPersistenceCore({
     // Validações específicas por etapa
     switch (stepId) {
       case 'personal_info':
-        if (!data.name) missingFields.push('nome');
-        if (!data.email) missingFields.push('email');
+      case 'personal':
+        if (!data.name && !data.personal_info?.name) missingFields.push('nome');
+        if (!data.email && !data.personal_info?.email) missingFields.push('email');
         break;
       // Correção: alteramos 'professional_data' para 'professional_info'  
       case 'professional_info':
-        if (!data.company_name) missingFields.push('nome da empresa');
+      case 'professional_data':
+        if (!data.company_name && !data.professional_info?.company_name) missingFields.push('nome da empresa');
         break;
       // Adicionar outras validações conforme necessário
     }

@@ -22,7 +22,9 @@ export function navigateAfterStep(
   // Mapeamentos específicos para o tipo club
   const clubNextRouteMap: {[key: string]: string} = {
     "personal": "/onboarding/professional-data",
+    "personal_info": "/onboarding/professional-data",
     "professional_data": "/onboarding/business-context",
+    "professional_info": "/onboarding/business-context",
     "business_context": "/onboarding/ai-experience",
     "ai_exp": "/onboarding/club-goals",
     "business_goals": "/onboarding/customization",
@@ -33,6 +35,7 @@ export function navigateAfterStep(
   // Mapeamentos específicos para o tipo formação
   const formacaoNextRouteMap: {[key: string]: string} = {
     "personal": "/onboarding/formacao/ai-experience",
+    "personal_info": "/onboarding/formacao/ai-experience",
     "ai_exp": "/onboarding/formacao/goals",
     "formation_goals": "/onboarding/formacao/preferences",
     "learning_preferences": "/onboarding/formacao/review"

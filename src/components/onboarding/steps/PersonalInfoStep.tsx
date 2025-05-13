@@ -36,6 +36,8 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
   const [validationAttempted, setValidationAttempted] = useState(false);
   // Flag para indicar que o formulário foi carregado
   const [isFormLoaded, setIsFormLoaded] = useState(false);
+  // Estado para controlar tentativas de envio
+  const [submitAttempts, setSubmitAttempts] = useState(0);
   
   // Marcar o formulário como carregado após um breve delay
   useEffect(() => {
@@ -57,6 +59,7 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
   const onFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationAttempted(true);
+    setSubmitAttempts(prev => prev + 1);
     
     // Verificar quais campos têm erro
     const fieldErrors = Object.keys(errors);
@@ -82,9 +85,28 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
     }
     
     try {
-      // Apenas chamar o onSubmit sem mostrar toast de sucesso aqui
-      // O toast será mostrado apenas no hook usePersonalInfoStep
-      await onSubmit();
+      // Adicionar tratamento especial para caso de múltiplas tentativas
+      if (submitAttempts > 2) {
+        console.log("Múltiplas tentativas de envio detectadas, usando enfoque mais agressivo");
+        
+        // Tenta forçar a navegação para a próxima etapa após o salvamento
+        // Isso é um fallback para casos onde pode haver problemas no salvamento
+        const savePromise = onSubmit();
+        
+        // Se estamos em muitas tentativas, mostrar mensagem de espera
+        toast.info("Processando sua requisição, por favor aguarde...");
+        
+        // Aguarde até 5 segundos e, se o salvamento não estiver concluído,
+        // tente navegar diretamente para a próxima página
+        setTimeout(() => {
+          window.location.href = "/onboarding/professional-data";
+        }, 5000);
+        
+        await savePromise;
+      } else {
+        // Caminho normal de salvamento
+        await onSubmit();
+      }
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
       toast.error("Erro ao salvar os dados", {
