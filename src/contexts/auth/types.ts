@@ -2,9 +2,10 @@
 import { Session, User } from '@supabase/supabase-js';
 import { UserProfile } from '@/lib/supabase';
 
+// Tipo do contexto de autenticação
 export interface AuthContextType {
-  user: User | null;
   session: Session | null;
+  user: User | null;
   profile: UserProfile | null;
   isAdmin: boolean;
   isFormacao: boolean;
@@ -14,9 +15,8 @@ export interface AuthContextType {
   signOut: () => Promise<void>;
   signInAsMember: () => Promise<void>;
   signInAsAdmin: () => Promise<void>;
-  // Exposed for AuthSession
+  setSession: React.Dispatch<React.SetStateAction<Session | null>>;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   setProfile: React.Dispatch<React.SetStateAction<UserProfile | null>>;
-  setSession: React.Dispatch<React.SetStateAction<Session | null>>;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }

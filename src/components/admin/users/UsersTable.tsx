@@ -184,7 +184,7 @@ export const UsersTable = ({
           <TableRow>
             <TableHead className="w-12">Avatar</TableHead>
             <TableHead
-              className="cursor-pointer"
+              className="cursor-pointer hover:text-viverblue transition-colors"
               onClick={() => requestSort("name")}
             >
               Nome
@@ -193,7 +193,7 @@ export const UsersTable = ({
               )}
             </TableHead>
             <TableHead
-              className="cursor-pointer"
+              className="cursor-pointer hover:text-viverblue transition-colors"
               onClick={() => requestSort("email")}
             >
               Email
@@ -202,7 +202,7 @@ export const UsersTable = ({
               )}
             </TableHead>
             <TableHead
-              className="cursor-pointer"
+              className="cursor-pointer hover:text-viverblue transition-colors"
               onClick={() => requestSort("roleDisplay")}
             >
               Função
@@ -211,7 +211,7 @@ export const UsersTable = ({
               )}
             </TableHead>
             <TableHead
-              className="cursor-pointer"
+              className="cursor-pointer hover:text-viverblue transition-colors"
               onClick={() => requestSort("created_at")}
             >
               Criado em
@@ -231,7 +231,7 @@ export const UsersTable = ({
             </TableRow>
           ) : (
             sortedUsers.map((user) => (
-              <TableRow key={user.id} className="hover:bg-gray-50">
+              <TableRow key={user.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
                 <TableCell>
                   <Avatar>
                     <AvatarImage
@@ -243,29 +243,29 @@ export const UsersTable = ({
                     </AvatarFallback>
                   </Avatar>
                 </TableCell>
-                <TableCell className="font-medium text-neutral-900 dark:text-neutral-100">{user.name || "-"}</TableCell>
-                <TableCell className="text-neutral-800 dark:text-neutral-200">{user.email}</TableCell>
+                <TableCell className="font-medium text-neutral-900 dark:text-white">{user.name || "-"}</TableCell>
+                <TableCell className="text-neutral-800 dark:text-neutral-100">{user.email}</TableCell>
                 <TableCell>{renderUserRole(user)}</TableCell>
-                <TableCell className="text-sm text-neutral-800 dark:text-neutral-200">{formatDate(user.created_at)}</TableCell>
+                <TableCell className="text-sm text-neutral-800 dark:text-neutral-100">{formatDate(user.created_at)}</TableCell>
                 <TableCell>
                   {(canEditRoles || canDeleteUsers || canResetPasswords) ? (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-neutral-100 dark:hover:bg-neutral-800">
                           <MoreHorizontal className="h-4 w-4" />
                           <span className="sr-only">Abrir menu</span>
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      <DropdownMenuContent align="end" className="w-44">
                         {canEditRoles && (
-                          <DropdownMenuItem onClick={() => onEditRole(user)}>
+                          <DropdownMenuItem onClick={() => onEditRole(user)} className="cursor-pointer">
                             <Edit2 className="mr-2 h-4 w-4" />
                             Alterar Função
                           </DropdownMenuItem>
                         )}
                         
                         {canResetPasswords && (
-                          <DropdownMenuItem onClick={() => onResetPassword(user)}>
+                          <DropdownMenuItem onClick={() => onResetPassword(user)} className="cursor-pointer">
                             <Key className="mr-2 h-4 w-4" />
                             Redefinir Senha
                           </DropdownMenuItem>
@@ -274,7 +274,7 @@ export const UsersTable = ({
                         {canDeleteUsers && (
                           <DropdownMenuItem 
                             onClick={() => onDeleteUser(user)}
-                            className="text-destructive focus:text-destructive"
+                            className="text-destructive focus:text-destructive cursor-pointer"
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
                             Excluir Usuário
