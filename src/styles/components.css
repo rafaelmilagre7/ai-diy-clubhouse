@@ -1,3 +1,4 @@
+
 /* Componentes reutilizáveis (cards, glass, badges, progress, etc) */
 
 @layer components {
@@ -17,16 +18,16 @@
     @apply bg-viverblue text-white shadow-lg;
   }
   .progress-step.completed {
-    @apply bg-green-700 text-white shadow-md;
+    @apply bg-green-600 text-white shadow-md;
   }
   .progress-line {
     @apply flex-1 h-1 bg-neutral-800 transition-all;
   }
   .progress-line.completed {
-    @apply bg-green-700;
+    @apply bg-green-600;
   }
   .solution-card {
-    @apply relative overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-1;
+    @apply relative overflow-hidden rounded-xl border bg-card text-white shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-1;
   }
   .solution-card.revenue {
     @apply border-l-4 border-l-revenue shadow-revenue/10;
@@ -40,13 +41,13 @@
   
   /* Badge classes com melhor contraste */
   .badge-revenue {
-    @apply bg-revenue/20 text-revenue-darker border-revenue/50;
+    @apply bg-revenue/30 text-revenue border-revenue/50;
   }
   .badge-operational {
-    @apply bg-operational/20 text-operational-darker border-operational/50;
+    @apply bg-operational/30 text-operational border-operational/50;
   }
   .badge-strategy {
-    @apply bg-strategy/20 text-strategy-darker border-strategy/50;
+    @apply bg-strategy/30 text-strategy border-strategy/50;
   }
   
   .card-hover-effect {
@@ -65,7 +66,7 @@
     @apply glassmorphism bg-white/3 backdrop-blur-xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.5)];
   }
   .section-title {
-    @apply font-heading text-2xl md:text-3xl font-bold text-neutral-100 mb-6;
+    @apply font-heading text-2xl md:text-3xl font-bold text-white mb-6;
   }
   .gradient-card {
     @apply bg-gradient-to-br from-neutral-900 to-neutral-950 rounded-2xl shadow-md border border-neutral-800;
@@ -134,7 +135,7 @@
   
   /* Nova classe para cards com o estilo Hubla */
   .hubla-card {
-    @apply bg-[#151823] border border-white/5 rounded-xl shadow-lg;
+    @apply bg-[#151823] border border-white/10 rounded-xl shadow-lg;
   }
 
   /* Adicionando estilo para navegação ativa */
@@ -148,21 +149,21 @@
     box-shadow: 0 0 15px 1px rgba(0, 234, 217, 0.1);
   }
   
-  /* Novos estilos para badges com tema escuro */
+  /* Novos estilos para badges para melhor contraste */
   .badge-dark-success {
-    @apply bg-green-900/30 text-green-300 border-green-700/50;
+    @apply bg-green-900/40 text-green-300 border-green-700;
   }
   
   .badge-dark-warning {
-    @apply bg-amber-900/30 text-amber-300 border-amber-700/50;
+    @apply bg-amber-900/40 text-amber-300 border-amber-700;
   }
   
   .badge-dark-info {
-    @apply bg-blue-900/30 text-blue-300 border-blue-700/50;
+    @apply bg-blue-900/40 text-blue-300 border-blue-700;
   }
   
   .badge-dark-neutral {
-    @apply bg-gray-800/50 text-gray-300 border-gray-700/30;
+    @apply bg-gray-800/60 text-gray-300 border-gray-700;
   }
   
   /* Badges com cores melhoradas para o modo claro */
@@ -200,7 +201,7 @@
   }
   
   .trail-solution-justification {
-    @apply p-4 border-l-2 border-[#0ABAB5]/30 bg-[#0ABAB5]/10 rounded-r-lg italic text-neutral-300;
+    @apply p-4 border-l-2 border-[#0ABAB5]/30 bg-[#0ABAB5]/10 rounded-r-lg italic text-neutral-200;
   }
   
   /* Efeito de carregamento animado para a geração da trilha */
@@ -227,7 +228,7 @@
   
   /* Melhoria para o hover das tabelas */
   .table-hover-row {
-    @apply hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors;
+    @apply hover:bg-neutral-800/50 transition-colors;
   }
   
   /* Estilo consistente para badges de status */
@@ -235,21 +236,21 @@
     @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium;
   }
   .status-badge-active {
-    @apply bg-green-100 text-green-800 border border-green-300;
+    @apply bg-green-900/30 text-green-300 border border-green-700;
   }
   .status-badge-inactive {
-    @apply bg-gray-100 text-gray-800 border border-gray-300;
+    @apply bg-gray-800/50 text-gray-300 border border-gray-700;
   }
   
   /* Melhorias para legibilidade no modo escuro */
   .text-high-contrast {
-    @apply text-neutral-900 dark:text-white;
+    @apply text-white;
   }
   .text-medium-contrast {
-    @apply text-neutral-800 dark:text-neutral-100;
+    @apply text-neutral-100;
   }
   .text-low-contrast {
-    @apply text-neutral-600 dark:text-neutral-300;
+    @apply text-neutral-300;
   }
   
   /* Melhorar contraste para textos em badges */
@@ -269,19 +270,81 @@
 
   /* Melhorar a visibilidade das linhas da tabela no modo escuro */
   .table-border-enhanced {
-    @apply border-neutral-200 dark:border-neutral-700;
+    @apply border-neutral-700;
   }
 
   /* Melhorar o contraste dos badges para acessibilidade */
   .badge-admin {
-    @apply bg-blue-100 text-blue-800 border border-blue-300;
+    @apply bg-blue-900/30 text-blue-300 border border-blue-700;
   }
   
   .badge-formacao {
-    @apply bg-amber-100 text-amber-800 border border-amber-300;
+    @apply bg-amber-900/30 text-amber-300 border border-amber-700;
   }
   
   .badge-membro {
-    @apply bg-gray-100 text-gray-800 border border-gray-300;
+    @apply bg-gray-800/50 text-gray-300 border border-gray-700;
+  }
+
+  /* Classes especiais para tooltip e estados de alerta */
+  .tooltip {
+    @apply bg-[#151823] text-white border border-white/10 shadow-lg py-1.5 px-3 rounded text-sm z-50;
+  }
+
+  /* Estilo para separadores com melhor visibilidade */
+  .separator {
+    @apply border-t border-white/10 my-4;
+  }
+
+  /* Contraste melhorado para elementos de interface */
+  .input-label {
+    @apply text-white text-sm mb-1.5;
+  }
+  
+  .input-field {
+    @apply bg-[#181A2A] border border-white/10 text-white rounded-md px-3 py-2 placeholder:text-neutral-500;
+  }
+
+  /* Redefinição dos elementos de interface principal para garantir legibilidade */
+  .page-title {
+    @apply text-3xl font-bold text-white mb-2;
+  }
+  
+  .page-description {
+    @apply text-neutral-300 text-lg mb-6;
+  }
+
+  /* Estilo para notificações e alertas */
+  .alert-success {
+    @apply bg-green-900/20 border border-green-700 text-green-300 px-4 py-3 rounded;
+  }
+  
+  .alert-warning {
+    @apply bg-amber-900/20 border border-amber-700 text-amber-300 px-4 py-3 rounded;
+  }
+  
+  .alert-error {
+    @apply bg-red-900/20 border border-red-700 text-red-300 px-4 py-3 rounded;
+  }
+  
+  .alert-info {
+    @apply bg-blue-900/20 border border-blue-700 text-blue-300 px-4 py-3 rounded;
+  }
+
+  /* Estado vazio consistente */
+  .empty-state {
+    @apply flex flex-col items-center justify-center py-12 px-4 text-center;
+  }
+  
+  .empty-state-icon {
+    @apply text-neutral-500 mb-3 h-12 w-12;
+  }
+  
+  .empty-state-title {
+    @apply text-white text-lg font-medium mb-1;
+  }
+  
+  .empty-state-description {
+    @apply text-neutral-400 max-w-sm mx-auto;
   }
 }

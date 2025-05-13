@@ -12,13 +12,13 @@ const buttonVariants = cva(
       variant: {
         default: "bg-viverblue text-white hover:bg-viverblue-dark focus-visible:bg-viverblue-dark active:bg-viverblue-darker",
         destructive:
-          "bg-red-500 text-white hover:bg-red-600 active:bg-red-700",
+          "bg-red-600 text-white hover:bg-red-700 active:bg-red-800",
         outline:
-          "border border-white/10 bg-transparent hover:bg-white/5 hover:border-white/20 text-neutral-200",
+          "border border-white/20 bg-transparent hover:bg-white/10 hover:border-white/30 text-white",
         secondary:
-          "bg-[#181A2A] text-neutral-200 hover:bg-[#1E2033] hover:text-white",
-        ghost: "text-neutral-200 hover:bg-[#181A2A] hover:text-white",
-        link: "text-viverblue underline-offset-4 hover:underline",
+          "bg-[#1E2033] text-white hover:bg-[#252842] hover:text-white",
+        ghost: "text-white hover:bg-[#181A2A] hover:text-white",
+        link: "text-viverblue underline-offset-4 hover:underline text-white",
       },
       size: {
         default: "h-10 px-4 py-2",

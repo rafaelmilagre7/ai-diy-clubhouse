@@ -137,19 +137,19 @@ export const UsersTable = ({
     switch (roleName.toLowerCase()) {
       case 'admin':
         return (
-          <Badge className="bg-blue-100 text-blue-800 border border-blue-300 font-medium">
+          <Badge className="badge-dark-info badge-high-contrast">
             Admin
           </Badge>
         );
       case 'formacao':
         return (
-          <Badge className="bg-amber-100 text-amber-800 border border-amber-300 font-medium">
+          <Badge className="badge-dark-success badge-high-contrast">
             Formação
           </Badge>
         );
       default:
         return (
-          <Badge className="bg-gray-100 text-gray-800 border border-gray-300 font-medium">
+          <Badge className="badge-dark-neutral badge-high-contrast">
             Membro
           </Badge>
         );
@@ -160,7 +160,7 @@ export const UsersTable = ({
     return (
       <div className="flex flex-col justify-center items-center p-8 space-y-4">
         <div className="animate-spin w-8 h-8 border-4 border-viverblue border-t-transparent rounded-full"></div>
-        <div>Carregando usuários...</div>
+        <div className="text-white">Carregando usuários...</div>
       </div>
     );
   }
@@ -226,7 +226,12 @@ export const UsersTable = ({
           {sortedUsers.length === 0 ? (
             <TableRow>
               <TableCell colSpan={6} className="h-24 text-center">
-                Nenhum usuário encontrado.
+                <div className="empty-state">
+                  <div className="empty-state-title">Nenhum usuário encontrado</div>
+                  <p className="empty-state-description">
+                    Não há usuários cadastrados ou que correspondam aos filtros aplicados.
+                  </p>
+                </div>
               </TableCell>
             </TableRow>
           ) : (
@@ -251,21 +256,21 @@ export const UsersTable = ({
                   {(canEditRoles || canDeleteUsers || canResetPasswords) ? (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-neutral-800">
                           <MoreHorizontal className="h-4 w-4" />
                           <span className="sr-only">Abrir menu</span>
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-44">
+                      <DropdownMenuContent align="end" className="w-44 bg-[#1A1E2E] border border-white/10 text-white">
                         {canEditRoles && (
-                          <DropdownMenuItem onClick={() => onEditRole(user)} className="cursor-pointer">
+                          <DropdownMenuItem onClick={() => onEditRole(user)} className="cursor-pointer text-white hover:bg-neutral-700">
                             <Edit2 className="mr-2 h-4 w-4" />
                             Alterar Função
                           </DropdownMenuItem>
                         )}
                         
                         {canResetPasswords && (
-                          <DropdownMenuItem onClick={() => onResetPassword(user)} className="cursor-pointer">
+                          <DropdownMenuItem onClick={() => onResetPassword(user)} className="cursor-pointer text-white hover:bg-neutral-700">
                             <Key className="mr-2 h-4 w-4" />
                             Redefinir Senha
                           </DropdownMenuItem>
@@ -274,7 +279,7 @@ export const UsersTable = ({
                         {canDeleteUsers && (
                           <DropdownMenuItem 
                             onClick={() => onDeleteUser(user)}
-                            className="text-destructive focus:text-destructive cursor-pointer"
+                            className="text-red-400 hover:text-red-300 focus:text-red-300 cursor-pointer hover:bg-neutral-700"
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
                             Excluir Usuário

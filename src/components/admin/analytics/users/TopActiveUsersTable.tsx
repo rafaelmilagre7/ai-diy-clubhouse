@@ -5,6 +5,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Badge } from '@/components/ui/badge';
 
 interface User {
   id: string;
@@ -45,11 +46,11 @@ export const TopActiveUsersTable: React.FC<TopActiveUsersTableProps> = ({ users 
   const getRoleLabel = (role: string) => {
     switch (role.toLowerCase()) {
       case 'admin':
-        return <span className="rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-800">Admin</span>;
+        return <Badge variant="info">Admin</Badge>;
       case 'formacao':
-        return <span className="rounded-full bg-green-100 px-2 py-1 text-xs text-green-800">Formação</span>;
+        return <Badge variant="success">Formação</Badge>;
       default:
-        return <span className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-800">Membro</span>;
+        return <Badge variant="neutral">Membro</Badge>;
     }
   };
 
@@ -73,14 +74,14 @@ export const TopActiveUsersTable: React.FC<TopActiveUsersTableProps> = ({ users 
                 <TableHead>Usuário</TableHead>
                 <TableHead>Empresa</TableHead>
                 <TableHead>Perfil</TableHead>
-                <TableHead className="text-right">Atividades</TableHead>
-                <TableHead className="text-right">Última Atividade</TableHead>
+                <TableHead>Atividades</TableHead>
+                <TableHead>Última Atividade</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {users.map((user) => (
                 <TableRow key={user.id}>
-                  <TableCell className="font-medium">
+                  <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar className="h-8 w-8">
                         <AvatarImage src={user.avatarUrl} alt={user.name} />
@@ -88,14 +89,14 @@ export const TopActiveUsersTable: React.FC<TopActiveUsersTableProps> = ({ users 
                       </Avatar>
                       <div>
                         <div className="font-medium">{user.name}</div>
-                        <div className="text-xs text-muted-foreground">{user.email}</div>
+                        <div className="text-xs text-neutral-300">{user.email}</div>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>{user.company || 'N/A'}</TableCell>
                   <TableCell>{getRoleLabel(user.role)}</TableCell>
-                  <TableCell className="text-right">{user.activityCount}</TableCell>
-                  <TableCell className="text-right">{formatLastSeen(user.lastSeen)}</TableCell>
+                  <TableCell>{user.activityCount}</TableCell>
+                  <TableCell>{formatLastSeen(user.lastSeen)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

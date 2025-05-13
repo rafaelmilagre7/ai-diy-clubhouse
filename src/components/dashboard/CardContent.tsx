@@ -15,7 +15,7 @@ export const CardContentSection = ({ title, description }: CardContentProps) => 
       )}>
         {title}
       </h3>
-      <p className="text-neutral-400 text-sm line-clamp-2 leading-relaxed">
+      <p className="text-neutral-300 text-sm line-clamp-2 leading-relaxed">
         {description}
       </p>
     </div>
