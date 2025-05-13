@@ -1,9 +1,11 @@
 
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Solution } from "@/lib/supabase";
 import { CheckCircle, Loader2, Award, Share2, ArrowRight } from "lucide-react";
 import confetti from "canvas-confetti";
+import { motion } from "framer-motion";
+import { FadeTransition } from "@/components/transitions/FadeTransition";
 
 interface ImplementationCompleteProps {
   solution: Solution;
@@ -19,6 +21,7 @@ export const ImplementationComplete: React.FC<ImplementationCompleteProps> = ({
   isCompleted = false
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [animationComplete, setAnimationComplete] = useState(false);
 
   useEffect(() => {
     if (isCompleted && containerRef.current) {
@@ -35,6 +38,8 @@ export const ImplementationComplete: React.FC<ImplementationCompleteProps> = ({
       // Remove classe após animação
       setTimeout(() => {
         containerRef.current?.classList.remove("highlight-flash");
+        // Marca que a animação inicial está completa
+        setAnimationComplete(true);
       }, 1200);
     }
   }, [isCompleted]);
@@ -47,49 +52,90 @@ export const ImplementationComplete: React.FC<ImplementationCompleteProps> = ({
     return (
       <div ref={containerRef} className="text-center py-8 space-y-6 animate-fade-in">
         <div className="bg-[#1A1E2E] bg-gradient-to-br from-[#1E2338] to-[#151823] p-8 rounded-xl border border-white/10 shadow-md mx-auto max-w-xl">
-          <div className="relative w-20 h-20 mx-auto mb-6">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 400, damping: 15 }}
+            className="relative w-20 h-20 mx-auto mb-6"
+          >
             <div className="absolute inset-0 bg-viverblue/20 rounded-full animate-ping opacity-30"></div>
             <div className="relative flex items-center justify-center bg-viverblue/20 w-20 h-20 rounded-full">
               <CheckCircle className="h-10 w-10 text-viverblue" />
             </div>
-          </div>
+          </motion.div>
           
-          <h2 className="text-2xl font-bold text-white mb-3">Parabéns!</h2>
-          <p className="text-neutral-200 mb-6 text-lg">
+          <motion.h2 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="text-2xl font-bold text-white mb-3"
+          >
+            Parabéns!
+          </motion.h2>
+          
+          <motion.p 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="text-neutral-200 mb-6 text-lg"
+          >
             Você concluiu com sucesso a implementação da solução <span className="font-semibold">"{solution.title}"</span>.
-          </p>
+          </motion.p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-8">
-            <div className="bg-[#151823] p-4 rounded-lg shadow-sm text-center border border-white/5 hover:border-viverblue/20 transition-all item-pop">
-              <div className="text-3xl font-bold text-viverblue">1</div>
-              <div className="text-sm text-neutral-400">Solução Implementada</div>
-            </div>
-            <div className="bg-[#151823] p-4 rounded-lg shadow-sm text-center border border-white/5 hover:border-viverblue/20 transition-all item-pop" style={{animationDelay: "0.1s"}}>
-              <div className="text-3xl font-bold text-viverblue">8</div>
-              <div className="text-sm text-neutral-400">Módulos Concluídos</div>
-            </div>
-            <div className="bg-[#151823] p-4 rounded-lg shadow-sm text-center border border-white/5 hover:border-viverblue/20 transition-all item-pop" style={{animationDelay: "0.2s"}}>
-              <div className="text-3xl font-bold text-viverblue">+30%</div>
-              <div className="text-sm text-neutral-400">Eficiência Esperada</div>
-            </div>
+            {[
+              { value: "1", label: "Solução Implementada", delay: 0.5 },
+              { value: "8", label: "Módulos Concluídos", delay: 0.6 },
+              { value: "+30%", label: "Eficiência Esperada", delay: 0.7 }
+            ].map((stat, index) => (
+              <motion.div 
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: stat.delay }}
+                className="bg-[#151823] p-4 rounded-lg shadow-sm text-center border border-white/5 hover:border-viverblue/20 transition-all item-pop"
+              >
+                <motion.div 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: stat.delay + 0.1, type: "spring", stiffness: 300 }}
+                  className="text-3xl font-bold text-viverblue"
+                >
+                  {stat.value}
+                </motion.div>
+                <div className="text-sm text-neutral-400">{stat.label}</div>
+              </motion.div>
+            ))}
           </div>
           
           <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
-            <Button 
-              onClick={() => window.location.href = "/solutions"}
-              className="bg-viverblue hover:bg-viverblue/80 gap-2"
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
             >
-              <Award className="h-4 w-4" />
-              Ver conquista
-            </Button>
+              <Button 
+                onClick={() => window.location.href = "/solutions"}
+                className="bg-viverblue hover:bg-viverblue/80 gap-2"
+              >
+                <Award className="h-4 w-4" />
+                Ver conquista
+              </Button>
+            </motion.div>
             
-            <Button 
-              onClick={() => window.location.href = "/dashboard"}
-              variant="outline"
-              className="border-viverblue/20 text-viverblue hover:bg-viverblue/10 gap-2"
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.9 }}
             >
-              Voltar ao Dashboard
-            </Button>
+              <Button 
+                onClick={() => window.location.href = "/dashboard"}
+                variant="outline"
+                className="border-viverblue/20 text-viverblue hover:bg-viverblue/10 gap-2"
+              >
+                Voltar ao Dashboard
+              </Button>
+            </motion.div>
           </div>
         </div>
       </div>
@@ -97,7 +143,7 @@ export const ImplementationComplete: React.FC<ImplementationCompleteProps> = ({
   }
   
   return (
-    <div className="py-6 space-y-6 animate-fade-in">
+    <FadeTransition className="py-6 space-y-6">
       <div className="bg-[#1A1E2E] bg-gradient-to-br from-[#1E2338] to-[#151823] p-6 rounded-xl border border-white/10 shadow-sm">
         <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
           <Award className="h-5 w-5 text-viverblue" />
@@ -158,14 +204,24 @@ export const ImplementationComplete: React.FC<ImplementationCompleteProps> = ({
       </div>
       
       {/* Seção de próximos passos */}
-      <div className="bg-[#1A1E2E] p-6 rounded-xl border border-white/10 shadow-sm">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="bg-[#1A1E2E] p-6 rounded-xl border border-white/10 shadow-sm"
+      >
         <h3 className="text-lg font-medium mb-4 flex items-center gap-2 text-white">
           <ArrowRight className="h-5 w-5 text-viverblue" />
           Próximos passos
         </h3>
         
         <div className="space-y-4">
-          <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-[#151823] transition-colors">
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
+            className="flex items-start gap-3 p-3 rounded-lg hover:bg-[#151823] transition-colors"
+          >
             <div className="bg-[#272B3F] p-2 rounded-full mr-1 flex-shrink-0">
               <Share2 className="h-4 w-4 text-viverblue" />
             </div>
@@ -175,9 +231,14 @@ export const ImplementationComplete: React.FC<ImplementationCompleteProps> = ({
                 Inspire outros membros compartilhando sua experiência de implementação
               </p>
             </div>
-          </div>
+          </motion.div>
           
-          <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-[#151823] transition-colors">
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5 }}
+            className="flex items-start gap-3 p-3 rounded-lg hover:bg-[#151823] transition-colors"
+          >
             <div className="bg-[#272B3F] p-2 rounded-full mr-1 flex-shrink-0">
               <Award className="h-4 w-4 text-viverblue" />
             </div>
@@ -187,9 +248,9 @@ export const ImplementationComplete: React.FC<ImplementationCompleteProps> = ({
                 Continue sua transformação descobrindo novas soluções para o seu negócio
               </p>
             </div>
-          </div>
+          </motion.div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </FadeTransition>
   );
 };

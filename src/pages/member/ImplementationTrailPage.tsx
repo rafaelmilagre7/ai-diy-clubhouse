@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { PageTransition } from "@/components/transitions/PageTransition";
+import { FadeTransition } from "@/components/transitions/FadeTransition";
 
 const ImplementationTrailPage = () => {
   const navigate = useNavigate();
@@ -110,83 +112,99 @@ const ImplementationTrailPage = () => {
     }
   };
 
-  // Enquanto os dados estão carregando, exibir tela de carregamento
+  // Enquanto os dados estão carregando, exibir tela de carregamento com animação
   if (isLoading) {
     return (
-      <div className="container py-8">
-        <Card>
-          <CardContent className="pt-6 flex flex-col items-center justify-center min-h-[300px]">
-            <Loader2 className="h-8 w-8 text-[#0ABAB5] animate-spin mb-4" />
-            <p className="text-muted-foreground">Carregando dados...</p>
-          </CardContent>
-        </Card>
-      </div>
+      <PageTransition>
+        <div className="container py-8">
+          <Card>
+            <CardContent className="pt-6 flex flex-col items-center justify-center min-h-[300px]">
+              <FadeTransition>
+                <Loader2 className="h-8 w-8 text-[#0ABAB5] animate-spin mb-4" />
+                <p className="text-muted-foreground">Carregando dados...</p>
+              </FadeTransition>
+            </CardContent>
+          </Card>
+        </div>
+      </PageTransition>
     );
   }
   
   // Se não conseguimos carregar os dados mesmo após tentativas
   if (progress === null && showRefreshButton) {
     return (
-      <div className="container py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Trilha de Implementação</CardTitle>
-            <CardDescription>
-              Tivemos um problema ao carregar seus dados
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center justify-center min-h-[250px]">
-            <p className="text-muted-foreground mb-4">Não foi possível carregar seus dados. Verifique sua conexão e tente novamente.</p>
-            <Button 
-              onClick={handleRefresh} 
-              className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
-            >
-              Recarregar dados
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <PageTransition>
+        <div className="container py-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Trilha de Implementação</CardTitle>
+              <CardDescription>
+                Tivemos um problema ao carregar seus dados
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center justify-center min-h-[250px]">
+              <FadeTransition>
+                <p className="text-muted-foreground mb-4">Não foi possível carregar seus dados. Verifique sua conexão e tente novamente.</p>
+                <Button 
+                  onClick={handleRefresh} 
+                  className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+                >
+                  Recarregar dados
+                </Button>
+              </FadeTransition>
+            </CardContent>
+          </Card>
+        </div>
+      </PageTransition>
     );
   }
 
   // Se o onboarding não foi concluído, exibir mensagem orientando o usuário
   if (isOnboardingComplete === false) {
     return (
-      <div className="container py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Trilha de Implementação</CardTitle>
-            <CardDescription>
-              Personalize sua experiência no VIVER DE IA Club com uma trilha exclusiva
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <OnboardingIncompleteState 
-              onNavigateToOnboarding={() => navigate("/onboarding")} 
-              onForceComplete={handleCompleteOnboarding}
-              isForceCompleting={isUpdatingStatus}
-            />
-          </CardContent>
-        </Card>
-      </div>
+      <PageTransition>
+        <div className="container py-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Trilha de Implementação</CardTitle>
+              <CardDescription>
+                Personalize sua experiência no VIVER DE IA Club com uma trilha exclusiva
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FadeTransition>
+                <OnboardingIncompleteState 
+                  onNavigateToOnboarding={() => navigate("/onboarding")} 
+                  onForceComplete={handleCompleteOnboarding}
+                  isForceCompleting={isUpdatingStatus}
+                />
+              </FadeTransition>
+            </CardContent>
+          </Card>
+        </div>
+      </PageTransition>
     );
   }
 
   // Quando o onboarding estiver completo, exibir o criador de trilha
   return (
-    <div className="container py-8">
-      <Card>
-        <CardHeader>
-          <CardTitle>Trilha de Implementação</CardTitle>
-          <CardDescription>
-            Sua trilha personalizada com base no seu perfil e objetivos de negócio
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ImplementationTrailCreator />
-        </CardContent>
-      </Card>
-    </div>
+    <PageTransition>
+      <div className="container py-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Trilha de Implementação</CardTitle>
+            <CardDescription>
+              Sua trilha personalizada com base no seu perfil e objetivos de negócio
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FadeTransition>
+              <ImplementationTrailCreator />
+            </FadeTransition>
+          </CardContent>
+        </Card>
+      </div>
+    </PageTransition>
   );
 };
 

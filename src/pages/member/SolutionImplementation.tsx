@@ -16,6 +16,10 @@ import { useSolutionCompletion } from "@/hooks/implementation/useSolutionComplet
 import { useRealtimeComments } from "@/hooks/implementation/useRealtimeComments";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { ImplementationTabsNavigation } from "@/components/implementation/ImplementationTabsNavigation";
+import { PageTransition } from "@/components/transitions/PageTransition";
+import { FadeTransition } from "@/components/transitions/FadeTransition";
+import { StepProgressBar } from "@/components/implementation/StepProgressBar";
+import { SuccessCard } from "@/components/celebration/SuccessCard";
 
 const SolutionImplementation = () => {
   const {
@@ -28,6 +32,7 @@ const SolutionImplementation = () => {
   } = useModuleImplementation();
   
   const [activeTab, setActiveTab] = useState("tools");
+  const [showSuccess, setShowSuccess] = useState(false);
   const { log, logError } = useLogging();
   
   const {
@@ -64,6 +69,7 @@ const SolutionImplementation = () => {
     const success = await handleConfirmImplementation();
     if (success) {
       log("Implementation completed successfully", { solution_id: solution?.id });
+      setShowSuccess(true);
     }
   };
   
@@ -90,57 +96,100 @@ const SolutionImplementation = () => {
     logError("Implementation not found", { error: errorMsg, solution_id: solution?.id });
     return <ImplementationNotFound />;
   }
+
+  // Preparar os passos para a barra de progresso
+  const moduleSteps = modules ? modules.map(module => module.title || "Etapa") : [];
   
   return (
-    <div className="min-h-screen bg-[#0F111A] pb-16">
+    <PageTransition className="min-h-screen bg-[#0F111A] pb-16">
       <div className="container max-w-4xl py-4 md:py-6 animate-fade-in">
+        {/* Cartão de sucesso (aparece quando o usuário completa a implementação) */}
+        {showSuccess && (
+          <div className="mb-6">
+            <SuccessCard
+              title="Implementação Concluída!"
+              message={`Parabéns! Você finalizou com sucesso a implementação da solução "${solution.title}".`}
+              type="implementation"
+              onAnimationComplete={() => {
+                setTimeout(() => setShowSuccess(false), 5000);
+              }}
+            />
+          </div>
+        )}
+        
         <GlassCard className="p-0 md:p-0 transition-all duration-300 shadow-xl border border-white/10 overflow-hidden">
           <ImplementationHeader solution={solution} />
+          
+          {/* Barra de progresso da implementação */}
+          {moduleSteps.length > 0 && (
+            <div className="px-4 md:px-6 pt-4">
+              <FadeTransition>
+                <StepProgressBar
+                  steps={moduleSteps}
+                  currentStep={modules.findIndex(m => m.id === currentModule?.id)}
+                  completedSteps={completedModules}
+                  className="mb-4"
+                />
+              </FadeTransition>
+            </div>
+          )}
           
           <div className="mt-0 px-4 md:px-6 pb-6">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <ImplementationTabsNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
               
               <div className="bg-[#151823] rounded-xl p-4 md:p-6 border border-white/10 min-h-[30vh]">
-                <TabsContent value="tools" className="mt-0">
-                  <ModuleContentTools module={currentModule} />
+                <TabsContent value="tools" className="mt-0 tab-fade-in">
+                  <FadeTransition>
+                    <ModuleContentTools module={currentModule} />
+                  </FadeTransition>
                 </TabsContent>
                 
-                <TabsContent value="materials" className="mt-0">
-                  <ModuleContentMaterials module={currentModule} />
+                <TabsContent value="materials" className="mt-0 tab-fade-in">
+                  <FadeTransition>
+                    <ModuleContentMaterials module={currentModule} />
+                  </FadeTransition>
                 </TabsContent>
                 
-                <TabsContent value="videos" className="mt-0">
-                  <ModuleContentVideos module={currentModule} />
+                <TabsContent value="videos" className="mt-0 tab-fade-in">
+                  <FadeTransition>
+                    <ModuleContentVideos module={currentModule} />
+                  </FadeTransition>
                 </TabsContent>
                 
-                <TabsContent value="checklist" className="mt-0">
-                  <ModuleContentChecklist module={currentModule} />
+                <TabsContent value="checklist" className="mt-0 tab-fade-in">
+                  <FadeTransition>
+                    <ModuleContentChecklist module={currentModule} />
+                  </FadeTransition>
                 </TabsContent>
                 
-                <TabsContent value="comments" className="mt-0">
+                <TabsContent value="comments" className="mt-0 tab-fade-in">
                   {solution && currentModule && (
-                    <CommentsSection 
-                      solutionId={solution.id} 
-                      moduleId={currentModule.id} 
-                    />
+                    <FadeTransition>
+                      <CommentsSection 
+                        solutionId={solution.id} 
+                        moduleId={currentModule.id} 
+                      />
+                    </FadeTransition>
                   )}
                 </TabsContent>
                 
-                <TabsContent value="complete" className="mt-0">
-                  <ImplementationComplete 
-                    solution={solution} 
-                    onComplete={onComplete} 
-                    isCompleting={isCompleting}
-                    isCompleted={isCompleted}
-                  />
+                <TabsContent value="complete" className="mt-0 tab-fade-in">
+                  <FadeTransition>
+                    <ImplementationComplete 
+                      solution={solution} 
+                      onComplete={onComplete} 
+                      isCompleting={isCompleting}
+                      isCompleted={isCompleted}
+                    />
+                  </FadeTransition>
                 </TabsContent>
               </div>
             </Tabs>
           </div>
         </GlassCard>
       </div>
-    </div>
+    </PageTransition>
   );
 };
 
