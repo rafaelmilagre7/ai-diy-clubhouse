@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useNavigate } from "react-router-dom";
@@ -34,6 +33,8 @@ const goalsSchema = z.object({
   }),
 });
 
+type FormSchemaType = z.infer<typeof goalsSchema>;
+
 const FormacaoGoals = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,7 +47,7 @@ const FormacaoGoals = () => {
     onboardingType: 'formacao',
   });
   
-  const form = useForm<z.infer<typeof goalsSchema>>({
+  const form = useForm<FormSchemaType>({
     resolver: zodResolver(goalsSchema),
     defaultValues: {
       current_occupation: "",
@@ -80,7 +81,7 @@ const FormacaoGoals = () => {
     loadInitialData();
   }, []);
 
-  const onSubmit = async (data: z.infer<typeof goalsSchema>) => {
+  const onSubmit = async (data: FormSchemaType) => {
     try {
       setIsSubmitting(true);
       
@@ -97,6 +98,7 @@ const FormacaoGoals = () => {
           learning_goals: finalLearningGoals,
           interests: data.interests,
           expectations: data.expectations,
+          custom_goal: data.custom_goal // Preservando o valor para edição futura
         },
         onboarding_type: 'formacao'
       });

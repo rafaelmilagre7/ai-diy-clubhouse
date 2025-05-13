@@ -84,6 +84,9 @@ export interface OnboardingData {
     previous_courses?: string[];
     expectations?: string;
     how_heard_about?: string;
+    custom_goal?: string; // Adicionado campo
+    preferred_content_format?: string[]; // Adicionado campo
+    preferred_study_time?: string; // Adicionado campo
   };
   
   // Campo para identificar o tipo de onboarding

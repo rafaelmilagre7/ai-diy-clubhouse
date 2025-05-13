@@ -1,46 +1,23 @@
+import React from "react";
+import { AIExperienceForm } from "./forms/AIExperienceForm";
+import { OnboardingStepProps } from "@/types/onboarding";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { useForm, Controller } from "react-hook-form";
-import { AIKnowledgeLevelField } from "./ai-experience/AIKnowledgeLevelField";
-import { AIToolsField } from "./ai-experience/AIToolsField";
-import { AIFormationQuestions } from "./ai-experience/AIFormationQuestions";
-import { AINPSField } from "./ai-experience/AINPSField";
-import { AISuggestionsField } from "./ai-experience/AISuggestionsField";
-import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-
-interface AIExperienceStepProps {
-  onSubmit: (stepId: string, data: any) => void;
+export interface AIExperienceStepProps extends Partial<OnboardingStepProps> {
+  onSubmit: (data: any) => Promise<void>;
   isSubmitting: boolean;
+  initialData?: any;
   isLastStep?: boolean;
   onComplete?: () => void;
-  initialData?: any;
+  personalInfo?: any; // Adicionada propriedade personalInfo
 }
-
-type AIExperienceFormValues = {
-  knowledge_level: string;
-  previous_tools: string[];
-  has_implemented: string; // "sim" ou "nao"
-  desired_ai_areas: string[]; // Usando array para áreas desejadas
-  completed_formation: boolean;
-  is_member_for_month: boolean;
-  nps_score: number;
-  improvement_suggestions: string;
-};
-
-const desiredAreas = [
-  { value: "vendas", label: "Soluções de IA para Vendas" },
-  { value: "marketing", label: "Soluções de IA para Marketing" },
-  { value: "rh", label: "Soluções de IA para RH" },
-  { value: "analise_dados", label: "Soluções de IA para Análise de Dados" },
-];
 
 export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
   onSubmit,
   isSubmitting,
   initialData,
+  isLastStep,
+  onComplete,
+  personalInfo
 }) => {
   const formInitialized = useRef(false);
   const submitting = useRef(false);

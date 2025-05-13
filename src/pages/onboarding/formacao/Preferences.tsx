@@ -29,6 +29,8 @@ const preferencesSchema = z.object({
   })
 });
 
+type FormSchemaType = z.infer<typeof preferencesSchema>;
+
 const FormacaoPreferences = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,7 +43,7 @@ const FormacaoPreferences = () => {
     onboardingType: 'formacao',
   });
   
-  const form = useForm<z.infer<typeof preferencesSchema>>({
+  const form = useForm<FormSchemaType>({
     resolver: zodResolver(preferencesSchema),
     defaultValues: {
       preferred_learning_style: [],
@@ -73,14 +75,17 @@ const FormacaoPreferences = () => {
     loadInitialData();
   }, []);
 
-  const onSubmit = async (data: z.infer<typeof preferencesSchema>) => {
+  const onSubmit = async (data: FormSchemaType) => {
     try {
       setIsSubmitting(true);
       
       await saveStepData("learning_preferences", {
         formation_data: {
           ...progress?.formation_data,
-          ...data
+          preferred_learning_style: data.preferred_learning_style,
+          availability_hours_per_week: data.availability_hours_per_week,
+          preferred_content_format: data.preferred_content_format,
+          preferred_study_time: data.preferred_study_time
         },
         onboarding_type: 'formacao'
       });

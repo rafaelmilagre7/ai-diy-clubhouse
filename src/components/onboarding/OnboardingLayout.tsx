@@ -6,7 +6,7 @@ import { WizardStepProgress } from './WizardStepProgress';
 import MemberLayout from '@/components/layout/MemberLayout';
 import { cn } from '@/lib/utils';
 
-interface OnboardingLayoutProps {
+export interface OnboardingLayoutProps {
   children: React.ReactNode;
   currentStep: number;
   title: string;
@@ -16,6 +16,7 @@ interface OnboardingLayoutProps {
   stepTitles?: string[];
   onStepClick?: (step: number) => void;
   hideProgress?: boolean;
+  isFormacao?: boolean; // Nova propriedade adicionada
 }
 
 export const OnboardingLayout = ({
@@ -36,7 +37,8 @@ export const OnboardingLayout = ({
     "Revisão"
   ],
   onStepClick,
-  hideProgress = false
+  hideProgress = false,
+  isFormacao = false // Valor padrão
 }: OnboardingLayoutProps) => {
   return (
     <MemberLayout>
