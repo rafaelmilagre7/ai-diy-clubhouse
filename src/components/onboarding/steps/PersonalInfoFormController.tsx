@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { PersonalInfoInputs } from "./PersonalInfoInputs";
-import { NavigationButtons } from "./NavigationButtons";
+import { NavigationButtons } from "@/components/onboarding/NavigationButtons";
 import { usePersonalInfoFormData } from "@/hooks/onboarding/usePersonalInfoFormData";
 import { validatePersonalInfoForm } from "@/utils/validatePersonalInfoForm";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";

@@ -37,7 +37,7 @@ export const NavigationButtons = ({
         </span>
       </Button>
     ) : (
-      <div /> {/* Espaçador quando não tem botão anterior */}
+      <div /> /* Espaçador quando não tem botão anterior */
     )}
     
     <Button
