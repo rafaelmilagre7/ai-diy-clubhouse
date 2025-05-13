@@ -1,9 +1,13 @@
-
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { sanitizeTrailData } from "./useImplementationTrail.utils";
+import { 
+  sanitizeTrailData, 
+  saveTrailToLocalStorage, 
+  getTrailFromLocalStorage, 
+  clearTrailFromLocalStorage 
+} from "./useImplementationTrail.utils";
 
 export type ImplementationRecommendation = {
   solutionId: string;
@@ -22,6 +26,7 @@ export const useImplementationTrail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [validSolutionsCache, setValidSolutionsCache] = useState<Set<string>>(new Set());
+  const [lastRefresh, setLastRefresh] = useState<number>(0);
 
   // Verificar se a trilha tem conteúdo
   const hasContent = useCallback(() => {
@@ -83,7 +88,7 @@ export const useImplementationTrail = () => {
     return validatedRecommendations.filter(Boolean) as ImplementationRecommendation[];
   }, [validateSolutionId]);
 
-  // Carregar trilha existente com validação de IDs
+  // Carregar trilha existente com validação de IDs e suporte a cache local
   const loadExistingTrail = useCallback(async (forceRefresh = false) => {
     if (!user) {
       setIsLoading(false);
@@ -92,12 +97,29 @@ export const useImplementationTrail = () => {
     }
 
     try {
+      // Verificar se não estamos forçando atualização e já temos dados em cache
       if (!forceRefresh && trail && hasContent()) {
+        console.log("Usando trilha em memória");
         return trail;
       }
 
       setIsLoading(true);
       setError(null);
+
+      // Tentar primeiro obter do cache local se não estiver forçando refresh
+      if (!forceRefresh) {
+        const cachedTrail = getTrailFromLocalStorage(user.id);
+        if (cachedTrail) {
+          console.log("Usando trilha do cache local");
+          const sanitizedCacheData = sanitizeTrailData(cachedTrail);
+          if (sanitizedCacheData && hasValidSolutions(sanitizedCacheData)) {
+            setTrail(sanitizedCacheData);
+            setIsLoading(false);
+            setLastRefresh(Date.now());
+            return sanitizedCacheData;
+          }
+        }
+      }
 
       const { data, error: loadError } = await supabase
         .from("implementation_trails")
@@ -129,6 +151,11 @@ export const useImplementationTrail = () => {
             priority3: validPriority3
           };
           
+          // Salvar no cache local
+          if (user?.id) {
+            saveTrailToLocalStorage(user.id, trailData);
+          }
+          
           // Atualizar a trilha no banco se alguma solução foi removida
           if (
             validPriority1.length < (data.trail_data.priority1?.length || 0) ||
@@ -149,6 +176,7 @@ export const useImplementationTrail = () => {
         }
         
         setTrail(trailData);
+        setLastRefresh(Date.now());
         return trailData;
       }
 
@@ -162,10 +190,28 @@ export const useImplementationTrail = () => {
     }
   }, [user, trail, hasContent, filterValidRecommendations]);
 
+  // Verificar se a trilha tem soluções válidas
+  const hasValidSolutions = (trailData: ImplementationTrail): boolean => {
+    const totalItems = 
+      (trailData.priority1?.length || 0) + 
+      (trailData.priority2?.length || 0) + 
+      (trailData.priority3?.length || 0);
+    
+    return totalItems > 0;
+  };
+
   // Recarregar trilha (com opção de força)
   const refreshTrail = useCallback(async (forceRefresh = false) => {
+    // Se a última atualização foi há menos de 5 minutos e não estamos forçando,
+    // usar os dados existentes
+    const fiveMinutesMs = 5 * 60 * 1000;
+    if (!forceRefresh && trail && Date.now() - lastRefresh < fiveMinutesMs) {
+      console.log("Usando dados em cache (menos de 5 minutos desde a última atualização)");
+      return trail;
+    }
+
     return loadExistingTrail(forceRefresh);
-  }, [loadExistingTrail]);
+  }, [loadExistingTrail, trail, lastRefresh]);
 
   // Gerar nova trilha - implementação melhorada com modo de fallback
   const generateImplementationTrail = async (onboardingData: any) => {
@@ -423,6 +469,14 @@ export const useImplementationTrail = () => {
   useEffect(() => {
     loadExistingTrail();
   }, [loadExistingTrail]);
+
+  // Limpar cache ao desmontar
+  useEffect(() => {
+    return () => {
+      // Não limpar o cache local ao desmontar, somente o cache em memória
+      setValidSolutionsCache(new Set());
+    };
+  }, []);
 
   return {
     trail,

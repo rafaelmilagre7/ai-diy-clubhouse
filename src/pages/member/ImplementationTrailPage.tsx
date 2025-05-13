@@ -15,9 +15,10 @@ const ImplementationTrailPage = () => {
   const [isOnboardingComplete, setIsOnboardingComplete] = useState<boolean | null>(null);
   const [showRefreshButton, setShowRefreshButton] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
-    // Carregar os dados do progresso e verificar se estão presentes
+    // Carregar os dados do progresso com sistema de retry
     const loadProgressData = async () => {
       try {
         await refreshProgress();
@@ -26,15 +27,31 @@ const ImplementationTrailPage = () => {
         setTimeout(() => {
           if (!isLoading && progress === null) {
             setShowRefreshButton(true);
+            
+            // Tentar recarregar automaticamente até 2 vezes
+            if (retryCount < 2) {
+              console.log(`Tentativa automática de recarregar dados: ${retryCount + 1}`);
+              setRetryCount(prev => prev + 1);
+              refreshProgress();
+            }
           }
-        }, 2000);
+        }, 1500);
       } catch (error) {
         console.error("Erro ao atualizar dados de progresso:", error);
+        
+        // Tentar recarregar automaticamente até 2 vezes
+        if (retryCount < 2) {
+          console.log(`Tentativa automática após erro: ${retryCount + 1}`);
+          setRetryCount(prev => prev + 1);
+          setTimeout(() => refreshProgress(), 2000); // Esperar 2 segundos antes de tentar novamente
+        } else {
+          setShowRefreshButton(true);
+        }
       }
     };
     
     loadProgressData();
-  }, []);
+  }, [retryCount]);
 
   useEffect(() => {
     if (!isLoading && progress) {
@@ -57,7 +74,7 @@ const ImplementationTrailPage = () => {
         } else {
           setIsOnboardingComplete(progress.is_completed || false);
         }
-      }, 2000);
+      }, 1500);
     } catch (error) {
       console.error("Erro ao recarregar dados:", error);
       setShowRefreshButton(true);

@@ -1,3 +1,4 @@
+
 import React, { useRef } from "react";
 import { useProgress } from "../useProgress";
 import { buildUpdateObject } from "./stepDataBuilder";
@@ -180,9 +181,9 @@ export function useStepPersistenceCore({
       
       toast.success("Onboarding concluído com sucesso!");
       
-      // Redirecionamento após delay para garantir atualização do estado
+      // Redirecionamento após delay para garantir atualização do estado - usando navigate em vez de window.location
       setTimeout(() => {
-        window.location.href = "/implementation-trail";
+        navigate("/implementation-trail");
       }, 1000);
     } catch (error: any) {
       console.error("Erro ao completar onboarding:", error);
@@ -191,9 +192,9 @@ export function useStepPersistenceCore({
       });
       toast.error("Erro ao finalizar onboarding. Por favor, tente novamente.");
       
-      // Fallback para dashboard em caso de erro
+      // Fallback para dashboard em caso de erro - usando navigate em vez de window.location
       setTimeout(() => {
-        window.location.href = "/dashboard";
+        navigate("/dashboard");
       }, 1500);
     }
   };

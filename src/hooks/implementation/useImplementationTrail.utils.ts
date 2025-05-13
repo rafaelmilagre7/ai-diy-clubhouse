@@ -1,51 +1,86 @@
 
-import { ImplementationTrail } from "./useImplementationTrail";
+// Utilitário para sanitização e validação de dados da trilha
 
-export const sanitizeTrailData = (trailData: ImplementationTrail | null): ImplementationTrail | null => {
+/**
+ * Limpa e normaliza os dados da trilha
+ */
+export const sanitizeTrailData = (trailData: any) => {
   if (!trailData) return null;
   
-  // Garantir que todas as propriedades existam e sejam arrays
-  const sanitized: ImplementationTrail = {
-    priority1: Array.isArray(trailData.priority1) ? trailData.priority1 : [],
-    priority2: Array.isArray(trailData.priority2) ? trailData.priority2 : [],
-    priority3: Array.isArray(trailData.priority3) ? trailData.priority3 : []
-  };
-
-  // Garantir que cada item em cada array tenha as propriedades necessárias
-  ['priority1', 'priority2', 'priority3'].forEach(key => {
-    sanitized[key as keyof ImplementationTrail] = sanitized[key as keyof ImplementationTrail].map(item => ({
-      solutionId: item.solutionId || '',
-      justification: item.justification || 'Recomendação personalizada'
-    }));
-  });
-  
-  return sanitized;
-};
-
-// Função para extrair IDs válidos das recomendações
-export const extractValidIds = (trail: ImplementationTrail | null): string[] => {
-  if (!trail) return [];
-  
-  const allRecommendations = [
-    ...(trail.priority1 || []),
-    ...(trail.priority2 || []),
-    ...(trail.priority3 || [])
-  ];
-  
-  return allRecommendations
-    .filter(rec => rec.solutionId && rec.solutionId !== 'mock-solution-1' && rec.solutionId !== 'default-solution-1')
-    .map(rec => rec.solutionId);
-};
-
-// Função para validar a estrutura da trilha
-export const isValidTrail = (trail: ImplementationTrail | null): boolean => {
-  if (!trail) return false;
-  
-  // Verificar se pelo menos uma das prioridades tem soluções
-  const hasContent = 
-    (Array.isArray(trail.priority1) && trail.priority1.length > 0) ||
-    (Array.isArray(trail.priority2) && trail.priority2.length > 0) ||
-    (Array.isArray(trail.priority3) && trail.priority3.length > 0);
+  try {
+    // Garantir que temos arrays válidos em todas as prioridades
+    const priority1 = Array.isArray(trailData.priority1) ? trailData.priority1 : [];
+    const priority2 = Array.isArray(trailData.priority2) ? trailData.priority2 : [];
+    const priority3 = Array.isArray(trailData.priority3) ? trailData.priority3 : [];
     
-  return hasContent;
+    return {
+      priority1,
+      priority2,
+      priority3
+    };
+  } catch (error) {
+    console.error("Erro ao sanitizar dados da trilha:", error);
+    return null;
+  }
+};
+
+/**
+ * Salva a trilha no armazenamento local
+ */
+export const saveTrailToLocalStorage = (userId: string, trail: any) => {
+  try {
+    const storageKey = `implementation_trail_${userId}`;
+    const dataToSave = {
+      trail,
+      timestamp: new Date().getTime()
+    };
+    localStorage.setItem(storageKey, JSON.stringify(dataToSave));
+    console.log("Trilha salva no armazenamento local com sucesso");
+    return true;
+  } catch (error) {
+    console.error("Erro ao salvar trilha no armazenamento local:", error);
+    return false;
+  }
+};
+
+/**
+ * Recupera a trilha do armazenamento local
+ */
+export const getTrailFromLocalStorage = (userId: string) => {
+  try {
+    const storageKey = `implementation_trail_${userId}`;
+    const storedData = localStorage.getItem(storageKey);
+    
+    if (!storedData) return null;
+    
+    const parsedData = JSON.parse(storedData);
+    
+    // Verificar idade dos dados - descartar se tiver mais de 24 horas
+    const now = new Date().getTime();
+    const maxAge = 24 * 60 * 60 * 1000; // 24 horas em milissegundos
+    
+    if (now - parsedData.timestamp > maxAge) {
+      localStorage.removeItem(storageKey);
+      return null;
+    }
+    
+    return parsedData.trail;
+  } catch (error) {
+    console.error("Erro ao recuperar trilha do armazenamento local:", error);
+    return null;
+  }
+};
+
+/**
+ * Remove a trilha do armazenamento local
+ */
+export const clearTrailFromLocalStorage = (userId: string) => {
+  try {
+    const storageKey = `implementation_trail_${userId}`;
+    localStorage.removeItem(storageKey);
+    return true;
+  } catch (error) {
+    console.error("Erro ao limpar trilha do armazenamento local:", error);
+    return false;
+  }
 };
