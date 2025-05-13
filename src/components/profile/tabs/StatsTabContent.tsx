@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { BarChart, Clock, CheckCircle } from "lucide-react";
+import { BarChart, Clock, CheckCircle, TrendingUp, Settings, ChevronRight } from "lucide-react";
 import { formatDate } from "@/utils/dateUtils";
 import { Implementation } from "@/hooks/useProfileData";
 import { UserStats } from "@/hooks/useUserStats/types";
@@ -20,71 +20,95 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
     .slice(0, 3);
 
   return (
-    <Card>
+    <Card className="glass-dark">
       <CardHeader>
-        <CardTitle>Estatísticas de Implementação</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-high-contrast">Estatísticas de Implementação</CardTitle>
+        <CardDescription className="text-medium-contrast">
           Uma visão geral do seu progresso na plataforma
         </CardDescription>
       </CardHeader>
       <CardContent className="px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
-            <div>
-              <h4 className="text-sm font-medium">Distribuição por Categoria</h4>
-              <div className="mt-2 space-y-2">
+            <div className="bg-[#1A1E2E] p-4 rounded-lg border border-neutral-700/50 animate-fade-in">
+              <h4 className="text-sm font-medium text-white mb-3 flex items-center">
+                <BarChart className="h-4 w-4 mr-2 text-viverblue" />
+                Distribuição por Categoria
+              </h4>
+              <div className="space-y-3">
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-revenue">Aumento de Receita</span>
-                    <span>{stats.categoryDistribution.Receita.completed}/{stats.categoryDistribution.Receita.total}</span>
+                    <span className="text-revenue flex items-center">
+                      <TrendingUp className="h-3.5 w-3.5 mr-1.5" />
+                      Aumento de Receita
+                    </span>
+                    <span className="font-medium text-white">{stats.categoryDistribution.Receita.completed}/{stats.categoryDistribution.Receita.total}</span>
                   </div>
                   <Progress 
                     value={stats.categoryDistribution.Receita.total > 0 ? 
                       (stats.categoryDistribution.Receita.completed / stats.categoryDistribution.Receita.total) * 100 : 0
                     } 
-                    className="h-2 bg-muted" 
+                    className="h-2"
+                    style={{
+                      background: 'rgba(57, 73, 171, 0.1)'
+                    }}
                   />
                 </div>
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-operational">Otimização Operacional</span>
-                    <span>{stats.categoryDistribution.Operacional.completed}/{stats.categoryDistribution.Operacional.total}</span>
+                    <span className="text-operational flex items-center">
+                      <Settings className="h-3.5 w-3.5 mr-1.5" />
+                      Otimização Operacional
+                    </span>
+                    <span className="font-medium text-white">{stats.categoryDistribution.Operacional.completed}/{stats.categoryDistribution.Operacional.total}</span>
                   </div>
                   <Progress 
                     value={stats.categoryDistribution.Operacional.total > 0 ? 
                       (stats.categoryDistribution.Operacional.completed / stats.categoryDistribution.Operacional.total) * 100 : 0
                     } 
-                    className="h-2 bg-muted" 
+                    className="h-2"
+                    style={{
+                      background: 'rgba(142, 36, 170, 0.1)'
+                    }}
                   />
                 </div>
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-strategy">Gestão Estratégica</span>
-                    <span>{stats.categoryDistribution.Estratégia.completed}/{stats.categoryDistribution.Estratégia.total}</span>
+                    <span className="text-strategy flex items-center">
+                      <BarChart className="h-3.5 w-3.5 mr-1.5" />
+                      Gestão Estratégica
+                    </span>
+                    <span className="font-medium text-white">{stats.categoryDistribution.Estratégia.completed}/{stats.categoryDistribution.Estratégia.total}</span>
                   </div>
                   <Progress 
                     value={stats.categoryDistribution.Estratégia.total > 0 ? 
                       (stats.categoryDistribution.Estratégia.completed / stats.categoryDistribution.Estratégia.total) * 100 : 0
                     } 
-                    className="h-2 bg-muted" 
+                    className="h-2"
+                    style={{
+                      background: 'rgba(0, 137, 123, 0.1)'
+                    }}
                   />
                 </div>
               </div>
             </div>
             
-            <div>
-              <h4 className="text-sm font-medium">Tempo Gasto</h4>
+            <div className="bg-[#1A1E2E] p-4 rounded-lg border border-neutral-700/50 animate-fade-in">
+              <h4 className="text-sm font-medium text-white mb-3 flex items-center">
+                <Clock className="h-4 w-4 mr-2 text-viverblue" />
+                Tempo Gasto
+              </h4>
               <div className="grid grid-cols-2 gap-4 mt-2">
-                <Card>
+                <Card className="dark-mode-card border-viverblue/10 hover:border-viverblue/30 transition-all duration-300">
                   <CardContent className="p-4 text-center">
-                    <p className="text-3xl font-bold">{stats.totalTimeSpent || 0}</p>
-                    <p className="text-xs text-muted-foreground">minutos totais</p>
+                    <p className="text-3xl font-bold text-high-contrast">{stats.totalTimeSpent || 0}</p>
+                    <p className="text-xs text-medium-contrast">minutos totais</p>
                   </CardContent>
                 </Card>
-                <Card>
+                <Card className="dark-mode-card border-viverblue/10 hover:border-viverblue/30 transition-all duration-300">
                   <CardContent className="p-4 text-center">
-                    <p className="text-3xl font-bold">{stats.avgTimePerSolution || 0}</p>
-                    <p className="text-xs text-muted-foreground">min. por solução</p>
+                    <p className="text-3xl font-bold text-high-contrast">{stats.avgTimePerSolution || 0}</p>
+                    <p className="text-xs text-medium-contrast">min. por solução</p>
                   </CardContent>
                 </Card>
               </div>
@@ -92,12 +116,15 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
           </div>
           
           <div className="space-y-4">
-            <div>
-              <h4 className="text-sm font-medium">Atividade Recente</h4>
+            <div className="bg-[#1A1E2E] p-4 rounded-lg border border-neutral-700/50 animate-fade-in">
+              <h4 className="text-sm font-medium text-white mb-3 flex items-center">
+                <Clock className="h-4 w-4 mr-2 text-viverblue" />
+                Atividade Recente
+              </h4>
               <div className="mt-2 space-y-3">
                 {recentImplementations.length > 0 ? (
                   recentImplementations.map((implementation, index) => (
-                    <div key={index} className="flex items-start gap-3">
+                    <div key={index} className="flex items-start gap-3 bg-[#151823] p-3 rounded-lg border border-neutral-800 hover:border-viverblue/30 transition-all duration-300">
                       <div className="h-8 w-8 rounded-full bg-viverblue/10 flex items-center justify-center">
                         {implementation.is_completed ? (
                           <CheckCircle className="h-4 w-4 text-viverblue" />
@@ -106,11 +133,11 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
                         )}
                       </div>
                       <div>
-                        <p className="text-sm font-medium">
+                        <p className="text-sm font-medium text-high-contrast">
                           {implementation.is_completed ? "Implementação concluída" : "Implementação em andamento"}
                         </p>
-                        <p className="text-xs text-muted-foreground">{implementation.solution?.title}</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-medium-contrast">{implementation.solution?.title}</p>
+                        <p className="text-xs text-medium-contrast">
                           {formatDate(implementation.last_activity || '')}
                         </p>
                       </div>
@@ -118,7 +145,7 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
                   ))
                 ) : (
                   <div className="text-center py-4">
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-medium-contrast">
                       Nenhuma atividade recente encontrada
                     </p>
                   </div>
@@ -126,37 +153,58 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
               </div>
             </div>
             
-            <div>
-              <h4 className="text-sm font-medium">Próximos Passos Recomendados</h4>
-              <div className="mt-2 space-y-2">
+            <div className="bg-[#1A1E2E] p-4 rounded-lg border border-neutral-700/50 animate-fade-in">
+              <h4 className="text-sm font-medium text-white mb-3">
+                Próximos Passos Recomendados
+              </h4>
+              <div className="mt-2 space-y-3">
                 {implementations.some(imp => !imp.is_completed) ? (
-                  <Card className="p-3">
+                  <Card className="p-3 dark-mode-card hover:shadow-md transition-all border-viverblue/10">
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="text-sm font-medium">Concluir implementação atual</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-sm font-medium text-high-contrast">
+                          Concluir implementação atual
+                        </p>
+                        <p className="text-xs text-medium-contrast">
                           {implementations.find(imp => !imp.is_completed)?.solution?.title}
                         </p>
                       </div>
-                      <Button size="sm" variant="outline" asChild>
-                        <Link to={`/implement/${implementations.find(imp => !imp.is_completed)?.solution?.id}/${implementations.find(imp => !imp.is_completed)?.current_module}`}>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        asChild
+                        className="hover:bg-viverblue/10 hover:text-viverblue"
+                      >
+                        <Link 
+                          to={`/implement/${implementations.find(imp => !imp.is_completed)?.solution?.id}/${implementations.find(imp => !imp.is_completed)?.current_module}`}
+                          className="flex items-center"
+                        >
                           Continuar
+                          <ChevronRight className="ml-1 h-4 w-4" />
                         </Link>
                       </Button>
                     </div>
                   </Card>
                 ) : (
-                  <Card className="p-3">
+                  <Card className="p-3 dark-mode-card hover:shadow-md transition-all border-viverblue/10">
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="text-sm font-medium">Explore novas soluções</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-sm font-medium text-high-contrast">
+                          Explore novas soluções
+                        </p>
+                        <p className="text-xs text-medium-contrast">
                           Descubra soluções que podem ajudar seu negócio
                         </p>
                       </div>
-                      <Button size="sm" variant="outline" asChild>
-                        <Link to="/dashboard">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        asChild
+                        className="hover:bg-viverblue/10 hover:text-viverblue"
+                      >
+                        <Link to="/dashboard" className="flex items-center">
                           Explorar
+                          <ChevronRight className="ml-1 h-4 w-4" />
                         </Link>
                       </Button>
                     </div>
@@ -164,15 +212,25 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
                 )}
                 
                 {stats.categoryDistribution.Estratégia.completed === 0 && (
-                  <Card className="p-3">
+                  <Card className="p-3 dark-mode-card hover:shadow-md transition-all border-viverblue/10">
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="text-sm font-medium">Explore a trilha de estratégia</p>
-                        <p className="text-xs text-muted-foreground">Ainda não implementou soluções desta trilha</p>
+                        <p className="text-sm font-medium text-high-contrast">
+                          Explore a trilha de estratégia
+                        </p>
+                        <p className="text-xs text-medium-contrast">
+                          Ainda não implementou soluções desta trilha
+                        </p>
                       </div>
-                      <Button size="sm" variant="outline" asChild>
-                        <Link to="/dashboard?category=strategy">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        asChild
+                        className="hover:bg-viverblue/10 hover:text-viverblue"
+                      >
+                        <Link to="/dashboard?category=strategy" className="flex items-center">
                           Explorar
+                          <ChevronRight className="ml-1 h-4 w-4" />
                         </Link>
                       </Button>
                     </div>

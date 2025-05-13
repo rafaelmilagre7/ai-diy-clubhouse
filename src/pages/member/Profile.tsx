@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { useProfileData } from "@/hooks/useProfileData";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Pencil } from "lucide-react";
+import { Pencil, Loader2 } from "lucide-react";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileTabs } from "@/components/profile/tabs/ProfileTabs";
@@ -28,16 +28,16 @@ const Profile = () => {
   }
   
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex items-center justify-between bg-[#151823] p-4 rounded-lg border border-neutral-800 shadow-md">
         <div>
-          <h1 className="text-3xl font-bold">Meu Perfil</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-3xl font-bold text-white">Meu Perfil</h1>
+          <p className="text-neutral-300 mt-1">
             Acompanhe seu progresso e conquistas
           </p>
         </div>
         <Link to="/profile/edit">
-          <Button variant="outline">
+          <Button variant="outline" className="hover:bg-viverblue/10 hover:text-viverblue">
             <Pencil className="mr-2 h-4 w-4" /> Editar Perfil
           </Button>
         </Link>

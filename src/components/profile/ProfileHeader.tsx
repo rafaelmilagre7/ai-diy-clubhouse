@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { FileEdit } from "lucide-react";
+import { FileEdit, Calendar, CheckCircle, Clock } from "lucide-react";
 import { formatDate } from "@/utils/dateUtils";
 import { Link } from "react-router-dom";
 
@@ -30,41 +30,60 @@ export const ProfileHeader = ({
   avatarInitials
 }: ProfileHeaderProps) => {
   return (
-    <Card className="md:col-span-1">
+    <Card className="md:col-span-1 glass-dark hover:shadow-lg transition-all duration-300">
       <CardContent className="pt-6">
         <div className="flex flex-col items-center text-center">
-          <Avatar className="h-24 w-24">
+          <Avatar className="h-24 w-24 border-2 border-viverblue/20 shadow-md">
             <AvatarImage src={profileAvatar || undefined} />
-            <AvatarFallback className="text-2xl">{avatarInitials}</AvatarFallback>
+            <AvatarFallback className="text-2xl bg-gradient-viver text-white">{avatarInitials}</AvatarFallback>
           </Avatar>
-          <h2 className="mt-4 text-xl font-semibold">{profileName || "Usuário"}</h2>
-          <p className="text-sm text-muted-foreground mt-1">{profileEmail || ""}</p>
+          <h2 className="mt-4 text-xl font-semibold text-high-contrast">{profileName || "Usuário"}</h2>
+          <p className="text-sm text-medium-contrast mt-1">{profileEmail || ""}</p>
           
           <div className="w-full mt-6 space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Membro desde</span>
-              <span className="font-medium">{formatDate(createdAt || new Date().toISOString())}</span>
+            <div className="flex justify-between items-center text-sm bg-neutral-800/30 p-3 rounded-lg">
+              <span className="flex items-center text-medium-contrast">
+                <Calendar className="h-4 w-4 mr-2 text-viverblue" />
+                Membro desde
+              </span>
+              <span className="font-medium text-high-contrast">{formatDate(createdAt || new Date().toISOString())}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Implementações</span>
-              <span className="font-medium">{totalSolutions}</span>
+              <span className="text-medium-contrast">Implementações</span>
+              <span className="font-medium text-high-contrast">{totalSolutions}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Concluídas</span>
-              <span className="font-medium">{completedSolutions}</span>
+              <span className="flex items-center text-medium-contrast">
+                <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
+                Concluídas
+              </span>
+              <span className="font-medium text-high-contrast">{completedSolutions}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Taxa de conclusão</span>
-              <span className="font-medium">{completionRate}%</span>
+              <span className="flex items-center text-medium-contrast">
+                <Clock className="h-4 w-4 mr-2 text-amber-500" />
+                Taxa de conclusão
+              </span>
+              <span className="font-medium text-high-contrast">{completionRate}%</span>
             </div>
           </div>
           
           <div className="w-full mt-6">
-            <Progress value={completionRate} className="h-2" />
+            <div className="flex justify-between text-xs text-medium-contrast mb-1">
+              <span>Conclusão total</span>
+              <span>{completionRate}%</span>
+            </div>
+            <Progress 
+              value={completionRate} 
+              className="h-2" 
+              style={{
+                background: 'rgba(0, 234, 217, 0.1)'
+              }}
+            />
           </div>
           
-          <Link to="/profile/edit">
-            <Button className="mt-6" variant="outline" size="sm">
+          <Link to="/profile/edit" className="mt-6 w-full">
+            <Button className="w-full" variant="outline" size="sm">
               <FileEdit className="mr-2 h-4 w-4" />
               Editar Perfil
             </Button>

@@ -1,27 +1,25 @@
 
 import React from 'react';
-import { Link } from "react-router-dom";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { BookOpen } from "lucide-react";
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Lightbulb } from 'lucide-react';
 
 export const EmptyImplementationsState = () => {
   return (
-    <Card className="border-dashed border-2 p-6 text-center">
-      <div className="flex flex-col items-center">
-        <div className="bg-muted/30 h-16 w-16 rounded-full flex items-center justify-center mb-4">
-          <BookOpen className="h-8 w-8 text-muted-foreground" />
-        </div>
-        <h3 className="font-semibold text-base">Comece sua jornada</h3>
-        <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
-          Explore nossa biblioteca de soluções e comece a implementar IA em sua empresa
-        </p>
-        <Button className="mt-4" asChild>
-          <Link to="/dashboard">
-            Explorar Soluções
-          </Link>
-        </Button>
+    <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-[#1A1E2E] rounded-lg border border-neutral-700/50 animate-fade-in">
+      <div className="h-16 w-16 rounded-full bg-viverblue/10 flex items-center justify-center mb-4">
+        <Lightbulb className="h-8 w-8 text-viverblue" />
       </div>
-    </Card>
+      <h3 className="text-xl font-semibold text-white mb-2">Nenhuma implementação encontrada</h3>
+      <p className="text-neutral-400 max-w-md mb-6">
+        Parece que você ainda não iniciou nenhuma implementação. 
+        Explore nossas soluções para começar a implementar IA no seu negócio.
+      </p>
+      <Button asChild>
+        <Link to="/dashboard">
+          Explorar soluções
+        </Link>
+      </Button>
+    </div>
   );
 };

@@ -19,13 +19,13 @@ export const ProfileTabs = ({
   stats 
 }: ProfileTabsProps) => {
   return (
-    <Tabs defaultValue={defaultTab}>
-      <TabsList>
-        <TabsTrigger value="stats">
+    <Tabs defaultValue={defaultTab} className="animate-fade-in">
+      <TabsList className="w-full">
+        <TabsTrigger value="stats" className="flex-1">
           <BarChart className="mr-2 h-4 w-4" />
           Estatísticas
         </TabsTrigger>
-        <TabsTrigger value="implementations">
+        <TabsTrigger value="implementations" className="flex-1">
           <CheckCircle className="mr-2 h-4 w-4" />
           Implementações
         </TabsTrigger>
