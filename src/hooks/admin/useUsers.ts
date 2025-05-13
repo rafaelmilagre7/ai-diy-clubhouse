@@ -1,13 +1,11 @@
 
 import { useState, useEffect } from 'react';
 import { supabase, UserProfile } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
 import { usePermissions } from '@/hooks/auth/usePermissions';
 import { Role } from '@/hooks/admin/useRoles';
 import { toast } from "sonner";
 
 export const useUsers = () => {
-  const { toast } = useToast();
   const { hasPermission } = usePermissions();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
@@ -31,11 +29,7 @@ export const useUsers = () => {
       setUsers(data as UserProfile[]);
     } catch (error: any) {
       console.error("Erro ao buscar usuários:", error.message);
-      toast({
-        title: "Erro ao carregar usuários",
-        description: "Não foi possível carregar a lista de usuários.",
-        variant: "destructive",
-      });
+      toast.error("Não foi possível carregar a lista de usuários.");
     } finally {
       setLoading(false);
     }
