@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { OnboardingLayout } from '@/components/onboarding/OnboardingLayout';
 import { useProgress } from '@/hooks/onboarding/useProgress';
@@ -104,6 +103,13 @@ const TrailGeneration = () => {
       
       log('trail_generation_success', {});
       toast.success("Trilha personalizada gerada com sucesso!");
+      
+      // Atualizar o progresso com a informação que o onboarding está completo
+      if (!progress.is_completed) {
+        await updateProgress({
+          is_completed: true
+        });
+      }
       
       // Marcar como gerado
       setGenerating(false);
