@@ -1,3 +1,4 @@
+
 import { useAuth } from '@/contexts/auth';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -19,7 +20,7 @@ export type Role = {
   permissions: Record<string, any>;
 };
 
-// Cache global para armazenar permissões entre instâncias do hook
+// Cache global com tempo de expiração mais longo (10 minutos)
 const globalPermissionsCache = {
   allPermissions: null as Permission[] | null,
   userPermissions: new Map<string, string[]>(),
@@ -27,11 +28,11 @@ const globalPermissionsCache = {
   lastFetch: 0
 };
 
-// Tempo de validade do cache em ms (2 minutos)
-const CACHE_VALIDITY = 2 * 60 * 1000;
+// Tempo de validade do cache em ms (10 minutos)
+const CACHE_VALIDITY = 10 * 60 * 1000;
 
 export const usePermissions = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [userPermissions, setUserPermissions] = useState<string[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
@@ -134,10 +135,19 @@ export const usePermissions = () => {
     }
   }, [isGlobalCacheValid, abortPreviousRequests]);
 
-  // Buscar permissões do usuário atual com retry e fallback
+  // Otimização: Verificar primeiro se o usuário é admin antes de fazer chamadas RPC
   const fetchUserPermissions = useCallback(async () => {
     if (!user?.id) {
       setUserPermissions([]);
+      setLoading(false);
+      return;
+    }
+
+    // Verificação rápida de admin pelos dados já disponíveis (reduz chamadas ao servidor)
+    if (isAdmin) {
+      const adminPermissions = ['admin.all', 'users.view', 'users.manage', 'users.roles.assign', 'users.delete', 'users.reset_password'];
+      globalPermissionsCache.userPermissions.set(user.id, adminPermissions);
+      setUserPermissions(adminPermissions);
       setLoading(false);
       return;
     }
@@ -175,15 +185,15 @@ export const usePermissions = () => {
         return;
       }
       
-      // Definir um timeout para a consulta RPC
+      // Definir um timeout para a consulta RPC (reduzido para 2 segundos para falhar mais rápido)
       const timeoutPromise = new Promise<{data: string[] | null, error: Error | null}>(resolve => {
         timeoutRef.current = window.setTimeout(() => {
           console.log('Timeout atingido ao buscar permissões via RPC');
           resolve({data: null, error: new Error('Timeout ao buscar permissões')});
-        }, 3000);
+        }, 2000);
       });
       
-      // Realizar a chamada RPC com timeout - Removendo abortSignal que não existe
+      // Realizar a chamada RPC
       const rpcPromise = supabase.rpc('get_user_permissions', {
         user_id: user.id
       });
@@ -221,7 +231,7 @@ export const usePermissions = () => {
         return;
       }
       
-      // Fallback 2: Verificar papel no perfil
+      // Fallback: Verificar papel no perfil
       try {
         const { data: profileData } = await supabase
           .from('profiles')
@@ -287,10 +297,13 @@ export const usePermissions = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, isGlobalCacheValid, abortPreviousRequests]);
+  }, [user, isAdmin, isGlobalCacheValid, abortPreviousRequests]);
 
   // Verificar se o usuário tem determinada permissão com cache local
   const hasPermission = useCallback((permissionCode: string): boolean => {
+    // Admin sempre tem todas as permissões
+    if (isAdmin) return true;
+    
     // Verificar se temos o resultado em cache
     const cacheKey = `${user?.id || 'anon'}-${permissionCode}`;
     if (permissionCheckCache.current.has(cacheKey)) {
@@ -317,18 +330,48 @@ export const usePermissions = () => {
     permissionCheckCache.current.set(cacheKey, result);
     
     return result;
-  }, [userPermissions, user?.email, user?.id]);
+  }, [userPermissions, user?.email, user?.id, isAdmin]);
 
   // Carregar dados iniciais quando o usuário mudar
   useEffect(() => {
     // Limpar cache local quando o usuário mudar
     permissionCheckCache.current.clear();
     
-    fetchAllPermissions();
-    fetchRoles();
-    fetchUserPermissions();
+    // Otimização: carregar dados em sequência para evitar sobrecarga
+    const loadData = async () => {
+      setLoading(true);
+      
+      try {
+        // Primeiro verificamos se é admin - se for, não precisamos das outras chamadas
+        if (isAdmin) {
+          const adminPermissions = ['admin.all', 'users.view', 'users.manage', 'users.roles.assign', 'users.delete', 'users.reset_password'];
+          setUserPermissions(adminPermissions);
+          setLoading(false);
+          
+          // Carregamos o resto em segundo plano
+          setTimeout(() => {
+            fetchAllPermissions();
+            fetchRoles();
+          }, 1000);
+          
+          return;
+        }
+        
+        // Buscar permissões do usuário (prioridade alta)
+        await fetchUserPermissions();
+        
+        // Carregar os outros dados em segundo plano
+        fetchAllPermissions();
+        fetchRoles();
+      } catch (error) {
+        console.error("Erro ao carregar dados de permissões:", error);
+        setLoading(false);
+      }
+    };
     
-    // Adicionando um timeout para garantir que loading nunca fique preso
+    loadData();
+    
+    // Timeout de segurança para evitar loading infinito
     const timeoutId = window.setTimeout(() => {
       if (loading) {
         console.warn('Timeout atingido ao carregar permissões. Definindo loading como false.');
@@ -346,13 +389,13 @@ export const usePermissions = () => {
           }
         }
       }
-    }, 5000);
+    }, 3000);
     
     return () => {
       clearTimeout(timeoutId);
       abortPreviousRequests();
     };
-  }, [user?.id, fetchAllPermissions, fetchRoles, fetchUserPermissions, loading, userPermissions.length, user?.email, abortPreviousRequests]);
+  }, [user?.id, fetchAllPermissions, fetchRoles, fetchUserPermissions, loading, userPermissions.length, user?.email, abortPreviousRequests, isAdmin]);
 
   return {
     permissions,

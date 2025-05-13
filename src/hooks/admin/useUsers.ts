@@ -44,8 +44,18 @@ const FALLBACK_ROLES: Role[] = [
     description: "Membro padrão",
     is_system: true,
     created_at: new Date().toISOString()
+  },
+  {
+    id: "fallback-role-3",
+    name: "formacao",
+    description: "Usuário da formação",
+    is_system: true,
+    created_at: new Date().toISOString()
   }
 ];
+
+// Aumentando o tempo de cache para evitar sobrecarga de requisições
+const CACHE_VALIDITY = 10 * 60 * 1000; // 10 minutos
 
 export const useUsers = () => {
   const { hasPermission } = usePermissions();
@@ -58,6 +68,7 @@ export const useUsers = () => {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [fetchAttempts, setFetchAttempts] = useState(0);
   const [useFallback, setUseFallback] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   // Cache para evitar refetches desnecessários
   const cacheRef = useRef<{
@@ -69,16 +80,24 @@ export const useUsers = () => {
     roles: null,
     timestamp: 0
   });
-  
-  // Tempo de validade do cache em ms (5 minutos)
-  const CACHE_VALIDITY = 5 * 60 * 1000;
 
+  // Flag para abortar requisições
+  const abortControllerRef = useRef<AbortController | null>(null);
+  
   // Verificar se o cache está válido
   const isCacheValid = useCallback(() => {
     return (
       cacheRef.current.users !== null &&
       cacheRef.current.timestamp > Date.now() - CACHE_VALIDITY
     );
+  }, []);
+  
+  // Função para abortar requisições em andamento
+  const abortPreviousRequests = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
   }, []);
 
   const fetchUsers = useCallback(async (forceRefresh = false) => {
@@ -92,16 +111,19 @@ export const useUsers = () => {
       }
       
       setLoading(true);
+      setIsRefreshing(true);
       setError(null);
+      abortPreviousRequests();
       
       // Se já tentamos muitas vezes ou estamos em modo fallback, usar dados de fallback
-      if ((useFallback && fetchAttempts >= 2) || fetchAttempts >= 3) {
+      if ((useFallback && fetchAttempts >= 1) || fetchAttempts >= 2) {
         console.log("Usando dados de fallback para usuários após múltiplas falhas");
         setUsers(FALLBACK_USERS);
         toast.warning("Usando dados temporários", {
           description: "Os dados exibidos podem não estar atualizados"
         });
         setLoading(false);
+        setIsRefreshing(false);
         return;
       }
       
@@ -109,9 +131,12 @@ export const useUsers = () => {
       setFetchAttempts(prev => prev + 1);
       console.log(`Tentativa ${fetchAttempts + 1} de buscar usuários`);
       
-      // Definir um timeout para a consulta
+      // Configurar AbortController para poder cancelar a requisição
+      abortControllerRef.current = new AbortController();
+      
+      // Definir um timeout para a consulta (5 segundos)
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Tempo limite excedido ao buscar usuários")), 8000);
+        setTimeout(() => reject(new Error("Tempo limite excedido ao buscar usuários")), 5000);
       });
       
       // Consulta ao banco de dados com timeout
@@ -141,6 +166,10 @@ export const useUsers = () => {
       
       setUsers(data as UserProfile[]);
       setError(null);
+      
+      // Resetar tentativas após sucesso
+      setFetchAttempts(0);
+      setUseFallback(false);
     } catch (error: any) {
       console.error("Erro ao buscar usuários:", error.message);
       setError(error);
@@ -152,7 +181,7 @@ export const useUsers = () => {
         toast.error("Erro ao atualizar lista", {
           description: "Usando dados anteriormente carregados"
         });
-      } else if (fetchAttempts >= 2) {
+      } else {
         // Se já tentamos muito e não temos cache, usar dados de fallback
         console.log("Usando dados de fallback após múltiplas falhas");
         setUseFallback(true);
@@ -160,15 +189,13 @@ export const useUsers = () => {
         toast.error("Erro ao carregar lista de usuários", {
           description: "Usando dados temporários para demonstração"
         });
-      } else {
-        toast.error("Erro ao carregar usuários", {
-          description: "Tentaremos novamente automaticamente"
-        });
       }
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
+      abortControllerRef.current = null;
     }
-  }, [fetchAttempts, useFallback, isCacheValid]);
+  }, [fetchAttempts, useFallback, isCacheValid, abortPreviousRequests]);
 
   const fetchRoles = useCallback(async () => {
     try {
@@ -185,9 +212,9 @@ export const useUsers = () => {
         return;
       }
       
-      // Definir um timeout para a consulta
+      // Definir um timeout para a consulta (3 segundos)
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Tempo limite excedido ao buscar papéis")), 5000);
+        setTimeout(() => reject(new Error("Tempo limite excedido ao buscar papéis")), 3000);
       });
       
       // Consulta ao banco de dados com timeout
@@ -221,15 +248,13 @@ export const useUsers = () => {
         // Se não temos cache, usar dados de fallback
         setAvailableRoles(FALLBACK_ROLES);
       }
-      
-      // Não exibir toast aqui para evitar múltiplas notificações
     }
   }, [useFallback, isCacheValid]);
 
   // Efeito para tentar novamente após falha com delay exponencial
   useEffect(() => {
-    if (error && fetchAttempts < 3) {
-      const retryDelay = Math.min(2000 * Math.pow(2, fetchAttempts - 1), 10000); // Exponential backoff capped at 10s
+    if (error && fetchAttempts < 2) {
+      const retryDelay = Math.min(1000 * Math.pow(2, fetchAttempts), 5000); // Exponential backoff capped at 5s
       console.log(`Tentando buscar usuários novamente após erro em ${retryDelay}ms`);
       
       const timer = setTimeout(() => {
@@ -241,6 +266,14 @@ export const useUsers = () => {
   }, [error, fetchAttempts, fetchUsers]);
 
   // Efeito para carregar dados iniciais
+  useEffect(() => {
+    // Abortar requisições anteriores ao desmontar o componente
+    return () => {
+      abortPreviousRequests();
+    };
+  }, [abortPreviousRequests]);
+  
+  // Carregar dados na inicialização
   useEffect(() => {
     fetchUsers();
     fetchRoles();
@@ -261,8 +294,8 @@ export const useUsers = () => {
   
   // Verificações alternativas de permissão caso o sistema de permissões falhe
   const isAdminByEmail = user?.email?.includes('@viverdeia.ai') || 
-                         user?.email === 'admin@teste.com' || 
-                         user?.email === 'admin@viverdeia.ai';
+                       user?.email === 'admin@teste.com' || 
+                       user?.email === 'admin@viverdeia.ai';
 
   return {
     users: filteredUsers,
@@ -273,7 +306,9 @@ export const useUsers = () => {
     setSearchQuery,
     selectedUser,
     setSelectedUser,
+    isRefreshing,
     fetchUsers: () => fetchUsers(true), // Sempre forçar refresh ao chamar manualmente
+    refreshUsers: () => fetchUsers(true),
     // Usar fallback de permissões caso o sistema principal falhe
     canManageUsers: hasPermission('users.manage') || isAdmin || isAdminByEmail,
     canAssignRoles: hasPermission('users.roles.assign') || isAdmin || isAdminByEmail,

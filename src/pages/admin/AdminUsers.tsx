@@ -13,11 +13,12 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth";
 
 const AdminUsers = () => {
-  // Usando diretamente o hook useUsers com otimizações integradas
+  // Usando o hook useUsers com otimizações integradas
   const {
     users,
     availableRoles,
     loading,
+    isRefreshing,
     searchQuery,
     setSearchQuery,
     selectedUser,
@@ -35,24 +36,18 @@ const AdminUsers = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
   const [refreshCounter, setRefreshCounter] = useState(0);
-  const [loadTimeout, setLoadTimeout] = useState(false);
   const [loadAttempts, setLoadAttempts] = useState(0);
+  const [showAdminWarning, setShowAdminWarning] = useState(false);
 
-  // Efeito para detectar timeout de carregamento com incremento de tentativas
+  // Efeito para detectar problemas de permissão e avisar sobre uso de fallback
   useEffect(() => {
-    if (loading && !loadTimeout && loadAttempts < 3) {
-      const timer = setTimeout(() => {
-        console.log(`Timeout atingido no carregamento de usuários (tentativa ${loadAttempts + 1})`);
-        setLoadTimeout(true);
-        toast.error("Tempo limite excedido ao carregar usuários", {
-          description: "Os dados podem estar incompletos ou desatualizados"
-        });
-        setLoadAttempts(prev => prev + 1);
-      }, 5000); // 5 segundos de timeout
-      
-      return () => clearTimeout(timer);
+    // Verificar se há problemas com permissões mas o usuário é admin por email
+    if (isAdmin && !canManageUsers && !canAssignRoles) {
+      setShowAdminWarning(true);
+    } else {
+      setShowAdminWarning(false);
     }
-  }, [loading, loadTimeout, loadAttempts]);
+  }, [isAdmin, canManageUsers, canAssignRoles]);
 
   // Efeito para atualizar a lista quando o contador mudar com limitação de tentativas
   useEffect(() => {
@@ -76,10 +71,12 @@ const AdminUsers = () => {
 
   const handleRefresh = () => {
     // Limitar a 3 tentativas manuais para evitar sobrecarga
-    if (loadAttempts < 3) {
+    if (loadAttempts < 3 && !isRefreshing) {
       setRefreshCounter(prev => prev + 1);
       setLoadAttempts(prev => prev + 1);
       toast.info("Atualizando lista de usuários...");
+    } else if (isRefreshing) {
+      toast.info("Atualização em andamento, aguarde...");
     } else {
       toast.warning("Limite de tentativas atingido", {
         description: "Por favor, atualize a página ou tente mais tarde."
@@ -87,9 +84,8 @@ const AdminUsers = () => {
     }
   };
 
-  // Verificação simplificada de acesso administrativo
-  // Primeira checagem rápida com base no contexto de autenticação
-  if (!isAdmin) {
+  // Verificação simplificada de acesso administrativo usando o contexto
+  if (!isAdmin && !canManageUsers) {
     return (
       <Alert variant="destructive" className="my-4">
         <AlertCircle className="h-4 w-4" />
@@ -102,13 +98,13 @@ const AdminUsers = () => {
   }
 
   // Se o carregamento demorar demais, mostrar feedback mais informativo
-  if (loading && !loadTimeout) {
+  if (loading && !users.length) {
     return (
       <div className="flex flex-col items-center justify-center p-8 space-y-4">
         <div className="animate-spin w-8 h-8 border-4 border-viverblue border-t-transparent rounded-full"></div>
         <div>Carregando usuários...</div>
         <div className="text-sm text-muted-foreground">
-          Isso pode levar alguns instantes. Tentativa {loadAttempts + 1}/3
+          Isso pode levar alguns instantes.
         </div>
       </div>
     );
@@ -136,7 +132,7 @@ const AdminUsers = () => {
 
   return (
     <div className="space-y-6">
-      {loadTimeout && (
+      {showAdminWarning && (
         <div className="flex items-center gap-2 py-2 px-4 bg-amber-50 border border-amber-200 rounded-md mb-4">
           <ShieldAlert className="h-5 w-5 text-amber-600" />
           <p className="text-sm text-amber-700">
@@ -149,7 +145,7 @@ const AdminUsers = () => {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onRefresh={handleRefresh}
-        isRefreshing={loading}
+        isRefreshing={isRefreshing}
       />
       
       <div className="border rounded-lg">
