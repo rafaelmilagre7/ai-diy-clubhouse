@@ -1,3 +1,4 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -136,19 +137,19 @@ export const UsersTable = ({
     switch (roleName.toLowerCase()) {
       case 'admin':
         return (
-          <Badge variant="outline" className="bg-viverblue/20 text-viverblue-darker border-viverblue/50 font-medium">
+          <Badge variant="outline" className="bg-viverblue/20 text-viverblue-darker border-viverblue/60 font-medium">
             Admin
           </Badge>
         );
       case 'formacao':
         return (
-          <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300 font-medium">
+          <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-400 font-medium">
             Formação
           </Badge>
         );
       default:
         return (
-          <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-300 font-medium">
+          <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-400 font-medium">
             Membro
           </Badge>
         );
@@ -242,10 +243,10 @@ export const UsersTable = ({
                     </AvatarFallback>
                   </Avatar>
                 </TableCell>
-                <TableCell className="font-medium">{user.name || "-"}</TableCell>
-                <TableCell className="text-neutral-700">{user.email}</TableCell>
+                <TableCell className="font-medium text-neutral-900 dark:text-neutral-100">{user.name || "-"}</TableCell>
+                <TableCell className="text-neutral-800 dark:text-neutral-200">{user.email}</TableCell>
                 <TableCell>{renderUserRole(user)}</TableCell>
-                <TableCell className="text-sm text-neutral-700">{formatDate(user.created_at)}</TableCell>
+                <TableCell className="text-sm text-neutral-800 dark:text-neutral-200">{formatDate(user.created_at)}</TableCell>
                 <TableCell>
                   {(canEditRoles || canDeleteUsers || canResetPasswords) ? (
                     <DropdownMenu>

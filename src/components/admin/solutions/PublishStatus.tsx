@@ -10,6 +10,6 @@ export const PublishStatus: React.FC<PublishStatusProps> = ({ published }) => {
   return published ? (
     <Badge variant="success">Publicada</Badge>
   ) : (
-    <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-300">Rascunho</Badge>
+    <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-400">Rascunho</Badge>
   );
 };

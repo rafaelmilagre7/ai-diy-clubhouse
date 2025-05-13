@@ -15,27 +15,27 @@ export const BenefitBadge = ({ type, className = '' }: BenefitBadgeProps) => {
     discount: {
       text: 'Desconto',
       icon: <Percent className="h-3 w-3 mr-1" />,
-      baseClassName: 'bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200' // Melhor contraste
+      baseClassName: 'bg-amber-100 text-amber-800 border-amber-400 hover:bg-amber-200' // Melhor contraste
     },
     exclusive: {
       text: 'Exclusivo',
       icon: <Trophy className="h-3 w-3 mr-1" />,
-      baseClassName: 'bg-purple-100 text-purple-800 border-purple-300 hover:bg-purple-200' // Melhor contraste
+      baseClassName: 'bg-purple-100 text-purple-800 border-purple-400 hover:bg-purple-200' // Melhor contraste
     },
     free: {
       text: 'Gratuito',
       icon: <Gift className="h-3 w-3 mr-1" />,
-      baseClassName: 'bg-green-100 text-green-800 border-green-300 hover:bg-green-200' // Melhor contraste
+      baseClassName: 'bg-green-100 text-green-800 border-green-400 hover:bg-green-200' // Melhor contraste
     },
     trial: {
       text: 'Trial',
       icon: <Clock className="h-3 w-3 mr-1" />,
-      baseClassName: 'bg-blue-100 text-blue-800 border-blue-300 hover:bg-blue-200' // Melhor contraste
+      baseClassName: 'bg-blue-100 text-blue-800 border-blue-400 hover:bg-blue-200' // Melhor contraste
     },
     other: {
       text: 'Benefício',
       icon: <Star className="h-3 w-3 mr-1" />,
-      baseClassName: 'bg-gray-100 text-gray-800 border-gray-300 hover:bg-gray-200' // Melhor contraste
+      baseClassName: 'bg-gray-100 text-gray-800 border-gray-400 hover:bg-gray-200' // Melhor contraste
     }
   };
 
