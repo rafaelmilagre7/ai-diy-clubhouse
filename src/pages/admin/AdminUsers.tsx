@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUsers } from "@/hooks/admin/useUsers";
 import { UsersHeader } from "@/components/admin/users/UsersHeader";
 import { UsersTable } from "@/components/admin/users/UsersTable";
@@ -10,6 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { DeleteUserDialog } from "@/components/admin/users/DeleteUserDialog";
 import { ResetPasswordDialog } from "@/components/admin/users/ResetPasswordDialog";
+import { toast } from "sonner";
 
 const AdminUsers = () => {
   const {
@@ -30,6 +31,12 @@ const AdminUsers = () => {
   const [roleManagerOpen, setRoleManagerOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
+  const [refreshCounter, setRefreshCounter] = useState(0);
+
+  // Efeito para atualizar a lista quando o contador mudar
+  useEffect(() => {
+    fetchUsers();
+  }, [refreshCounter, fetchUsers]);
 
   const handleEditRole = (user: UserProfile) => {
     setSelectedUser(user);
@@ -44,6 +51,11 @@ const AdminUsers = () => {
   const handleResetPassword = (user: UserProfile) => {
     setSelectedUser(user);
     setResetPasswordDialogOpen(true);
+  };
+
+  const handleRefresh = () => {
+    setRefreshCounter(prev => prev + 1);
+    toast.info("Atualizando lista de usuários...");
   };
 
   return (
@@ -75,6 +87,7 @@ const AdminUsers = () => {
             onEditRole={handleEditRole}
             onDeleteUser={handleDeleteUser}
             onResetPassword={handleResetPassword}
+            onRefresh={handleRefresh}
           />
         </div>
         
@@ -84,6 +97,10 @@ const AdminUsers = () => {
             onOpenChange={setRoleManagerOpen}
             user={selectedUser}
             availableRoles={availableRoles}
+            onSuccess={() => {
+              // Atualizar lista após alterar papel
+              setTimeout(() => fetchUsers(), 500);
+            }}
           />
         )}
         

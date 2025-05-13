@@ -4,6 +4,7 @@ import { supabase, UserProfile } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { usePermissions } from '@/hooks/auth/usePermissions';
 import { Role } from '@/hooks/admin/useRoles';
+import { toast } from "sonner";
 
 export const useUsers = () => {
   const { toast } = useToast();
@@ -54,6 +55,7 @@ export const useUsers = () => {
       setAvailableRoles(data as Role[]);
     } catch (error: any) {
       console.error("Erro ao buscar papéis:", error.message);
+      toast.error("Erro ao carregar papéis de usuário");
     }
   };
 

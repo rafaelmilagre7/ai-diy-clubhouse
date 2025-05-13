@@ -1,3 +1,4 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { UserProfile } from "@/lib/supabase";
-import { Edit2, MoreHorizontal, Key, Trash2 } from "lucide-react";
+import { Edit2, MoreHorizontal, Key, Trash2, RefreshCw } from "lucide-react";
 import { useState, useMemo } from "react";
 import {
   DropdownMenu,
@@ -19,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Badge } from "@/components/ui/badge";
 
 interface UsersTableProps {
   users: UserProfile[];
@@ -29,6 +31,7 @@ interface UsersTableProps {
   onEditRole: (user: UserProfile) => void;
   onDeleteUser: (user: UserProfile) => void;
   onResetPassword: (user: UserProfile) => void;
+  onRefresh?: () => void;
 }
 
 export const UsersTable = ({
@@ -40,6 +43,7 @@ export const UsersTable = ({
   onEditRole,
   onDeleteUser,
   onResetPassword,
+  onRefresh,
 }: UsersTableProps) => {
   const [sortConfig, setSortConfig] = useState<{
     key: keyof UserProfile | "roleDisplay";
@@ -128,21 +132,35 @@ export const UsersTable = ({
   // quanto o antigo sistema (role)
   const renderUserRole = (user: UserProfile) => {
     // Primeiro tenta pegar do novo sistema
-    if (user.user_roles) {
-      return (
-        <span className="capitalize">
-          {user.user_roles.name || "membro"}
-        </span>
-      );
-    }
+    const roleName = user.user_roles?.name || user.role || "membro";
     
-    // Se não tiver do novo sistema, usa o campo antigo
-    return <span className="capitalize">{user.role || "membro"}</span>;
+    // Com base no papel, selecionar estilo e conteúdo do badge
+    switch (roleName.toLowerCase()) {
+      case 'admin':
+        return (
+          <Badge variant="outline" className="bg-viverblue/10 text-viverblue border-viverblue/30 font-medium">
+            Admin
+          </Badge>
+        );
+      case 'formacao':
+        return (
+          <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300 font-medium">
+            Formação
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-200 font-medium">
+            Membro
+          </Badge>
+        );
+    }
   };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center p-8">
+      <div className="flex flex-col justify-center items-center p-8 space-y-4">
+        <div className="animate-spin w-8 h-8 border-4 border-viverblue border-t-transparent rounded-full"></div>
         <div>Carregando usuários...</div>
       </div>
     );
@@ -150,6 +168,18 @@ export const UsersTable = ({
 
   return (
     <div className="relative overflow-x-auto">
+      <div className="flex justify-end mb-4">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onRefresh} 
+          className="flex items-center"
+          disabled={loading}
+        >
+          <RefreshCw className="h-4 w-4 mr-1" />
+          Atualizar
+        </Button>
+      </div>
       <Table className="border-collapse">
         <TableHeader>
           <TableRow>
@@ -176,7 +206,7 @@ export const UsersTable = ({
               className="cursor-pointer"
               onClick={() => requestSort("roleDisplay")}
             >
-              Papel
+              Função
               {sortConfig.key === "roleDisplay" && (
                 <span>{sortConfig.direction === "asc" ? " ↑" : " ↓"}</span>
               )}
@@ -202,35 +232,36 @@ export const UsersTable = ({
             </TableRow>
           ) : (
             sortedUsers.map((user) => (
-              <TableRow key={user.id}>
+              <TableRow key={user.id} className="hover:bg-gray-50">
                 <TableCell>
                   <Avatar>
                     <AvatarImage
                       src={user.avatar_url || undefined}
                       alt={user.name || "Avatar"}
                     />
-                    <AvatarFallback>
+                    <AvatarFallback className="bg-viverblue/10 text-viverblue">
                       {getInitials(user.name || user.email)}
                     </AvatarFallback>
                   </Avatar>
                 </TableCell>
                 <TableCell className="font-medium">{user.name || "-"}</TableCell>
-                <TableCell>{user.email}</TableCell>
+                <TableCell className="text-muted-foreground">{user.email}</TableCell>
                 <TableCell>{renderUserRole(user)}</TableCell>
-                <TableCell>{formatDate(user.created_at)}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">{formatDate(user.created_at)}</TableCell>
                 <TableCell>
                   {(canEditRoles || canDeleteUsers || canResetPasswords) ? (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
                           <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">Abrir menu</span>
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         {canEditRoles && (
                           <DropdownMenuItem onClick={() => onEditRole(user)}>
                             <Edit2 className="mr-2 h-4 w-4" />
-                            Alterar Papel
+                            Alterar Função
                           </DropdownMenuItem>
                         )}
                         
