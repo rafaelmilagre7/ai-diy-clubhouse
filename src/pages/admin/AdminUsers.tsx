@@ -7,10 +7,11 @@ import { UserRoleManager } from "@/components/admin/users/UserRoleManager";
 import { UserProfile } from "@/lib/supabase";
 import { PermissionGuard } from "@/components/auth/PermissionGuard";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ShieldAlert } from "lucide-react";
 import { DeleteUserDialog } from "@/components/admin/users/DeleteUserDialog";
 import { ResetPasswordDialog } from "@/components/admin/users/ResetPasswordDialog";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/auth";
 
 const AdminUsers = () => {
   const {
@@ -28,6 +29,7 @@ const AdminUsers = () => {
     canResetPasswords,
   } = useUsers();
 
+  const { isAdmin } = useAuth();
   const [roleManagerOpen, setRoleManagerOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
@@ -58,10 +60,38 @@ const AdminUsers = () => {
     toast.info("Atualizando lista de usuários...");
   };
 
-  return (
-    <PermissionGuard
-      permission="users.view"
-      fallback={
+  // Fallback para quando o permissionGuard falha
+  const permissionFallback = (
+    <div className="space-y-6">
+      {isAdmin ? (
+        <>
+          <div className="flex items-center gap-2 py-2 px-4 bg-amber-50 border border-amber-200 rounded-md">
+            <ShieldAlert className="h-5 w-5 text-amber-600" />
+            <p className="text-sm text-amber-700">
+              Acesso concedido devido ao seu papel de administrador, mas houve um problema ao verificar permissões específicas.
+            </p>
+          </div>
+          
+          <UsersHeader
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+          />
+          
+          <div className="border rounded-lg">
+            <UsersTable
+              users={users}
+              loading={loading}
+              canEditRoles={true}
+              canDeleteUsers={true}
+              canResetPasswords={true}
+              onEditRole={handleEditRole}
+              onDeleteUser={handleDeleteUser}
+              onResetPassword={handleResetPassword}
+              onRefresh={handleRefresh}
+            />
+          </div>
+        </>
+      ) : (
         <Alert variant="destructive" className="my-4">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Acesso restrito</AlertTitle>
@@ -69,7 +99,15 @@ const AdminUsers = () => {
             Você não tem permissão para visualizar a lista de usuários.
           </AlertDescription>
         </Alert>
-      }
+      )}
+    </div>
+  );
+
+  return (
+    <PermissionGuard
+      permission="users.view"
+      fallback={permissionFallback}
+      timeoutSeconds={3}
     >
       <div className="space-y-6">
         <UsersHeader
