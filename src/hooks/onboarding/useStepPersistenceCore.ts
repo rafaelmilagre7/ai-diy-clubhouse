@@ -76,7 +76,7 @@ export function useStepPersistenceCore({
       // Adicionar o tipo de onboarding aos dados
       const dataWithType = {
         ...data,
-        onboarding_type
+        onboarding_type: onboardingType
       };
       
       // Montar objeto de atualização para a etapa

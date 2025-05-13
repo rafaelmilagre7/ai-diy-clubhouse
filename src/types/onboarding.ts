@@ -1,4 +1,3 @@
-
 export interface OnboardingData {
   // 1. Dados Pessoais
   personal_info: {
@@ -96,6 +95,12 @@ export interface OnboardingData {
   authorize_case_usage?: boolean;
   interested_in_interview?: boolean;
   priority_topics?: string[];
+
+  // Campos adicionais necessários para compatibilidade
+  industry_focus?: any;
+  resources_needs?: any;
+  team_info?: any;
+  implementation_preferences?: any;
 }
 
 export interface PersonalInfoData {
