@@ -98,10 +98,10 @@ const AdminUsers = () => {
   // Verificação simplificada de acesso administrativo usando o contexto
   if (!isAdmin) {
     return (
-      <Alert variant="destructive" className="my-4">
+      <Alert variant="destructive" className="my-4 border-destructive/40">
         <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Acesso restrito</AlertTitle>
-        <AlertDescription>
+        <AlertTitle className="font-semibold">Acesso restrito</AlertTitle>
+        <AlertDescription className="text-destructive-foreground/90">
           Você não tem permissão para visualizar a lista de usuários.
         </AlertDescription>
       </Alert>
@@ -113,8 +113,8 @@ const AdminUsers = () => {
     return (
       <div className="flex flex-col items-center justify-center p-8 space-y-4">
         <div className="animate-spin w-8 h-8 border-4 border-viverblue border-t-transparent rounded-full"></div>
-        <div>Carregando usuários...</div>
-        <div className="text-sm text-muted-foreground">
+        <div className="text-foreground font-medium">Carregando usuários...</div>
+        <div className="text-sm text-neutral-600 dark:text-neutral-400">
           {loadingTimeout ? "O carregamento está demorando mais que o esperado." : "Isso pode levar alguns instantes."}
         </div>
         
@@ -134,12 +134,12 @@ const AdminUsers = () => {
   // Exibir mensagem de erro quando aplicável
   if (error && !users.length) {
     return (
-      <Alert variant="destructive" className="my-4">
+      <Alert variant="destructive" className="my-4 border-destructive/40">
         <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Erro ao carregar usuários</AlertTitle>
-        <AlertDescription className="space-y-2">
+        <AlertTitle className="font-semibold">Erro ao carregar usuários</AlertTitle>
+        <AlertDescription className="space-y-2 text-destructive-foreground/90">
           <p>Ocorreu um problema ao carregar a lista de usuários:</p>
-          <p className="font-mono text-sm bg-destructive/10 p-2 rounded">{error.message}</p>
+          <p className="font-mono text-sm bg-destructive/10 p-2 rounded text-destructive-foreground/90">{error.message}</p>
           <div className="flex gap-2 mt-4">
             <Button 
               onClick={handleRefresh}
@@ -205,7 +205,7 @@ const AdminUsers = () => {
       
       {/* Mostrar informação sobre quantidade de usuários carregados */}
       {users.length > 0 && !isRefreshing && (
-        <div className="text-sm text-muted-foreground text-right">
+        <div className="text-sm text-neutral-600 dark:text-muted-foreground text-right">
           {users.length} usuários carregados
         </div>
       )}

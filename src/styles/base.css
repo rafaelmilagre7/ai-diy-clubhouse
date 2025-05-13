@@ -29,7 +29,7 @@
   }
   
   .light {
-    /* Light mode */
+    /* Light mode com melhor contraste */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
@@ -40,13 +40,14 @@
     --primary-foreground: 0 0% 100%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Melhoria de contraste: mudança de cor do muted para um tom mais escuro */
     --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted-foreground: 215 14% 34%; /* Escurecido para melhor contraste */
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
+    --border: 214.3 31.8% 81.4%; /* Escurecido um pouco para melhor contraste */
     --input: 214.3 31.8% 91.4%;
     --ring: 174 100% 46%;
     --radius: 0.75rem;

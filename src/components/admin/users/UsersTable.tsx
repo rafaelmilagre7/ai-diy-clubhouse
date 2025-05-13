@@ -1,4 +1,3 @@
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -128,8 +127,7 @@ export const UsersTable = ({
     }
   };
 
-  // Renderiza o papel do usuário considerando tanto o novo sistema (role_id + user_roles)
-  // quanto o antigo sistema (role)
+  // Renderiza o papel do usuário com melhor contraste
   const renderUserRole = (user: UserProfile) => {
     // Primeiro tenta pegar do novo sistema
     const roleName = user.user_roles?.name || user.role || "membro";
@@ -138,7 +136,7 @@ export const UsersTable = ({
     switch (roleName.toLowerCase()) {
       case 'admin':
         return (
-          <Badge variant="outline" className="bg-viverblue/10 text-viverblue border-viverblue/30 font-medium">
+          <Badge variant="outline" className="bg-viverblue/20 text-viverblue-darker border-viverblue/50 font-medium">
             Admin
           </Badge>
         );
@@ -150,7 +148,7 @@ export const UsersTable = ({
         );
       default:
         return (
-          <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-200 font-medium">
+          <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-300 font-medium">
             Membro
           </Badge>
         );
@@ -245,9 +243,9 @@ export const UsersTable = ({
                   </Avatar>
                 </TableCell>
                 <TableCell className="font-medium">{user.name || "-"}</TableCell>
-                <TableCell className="text-muted-foreground">{user.email}</TableCell>
+                <TableCell className="text-neutral-700">{user.email}</TableCell>
                 <TableCell>{renderUserRole(user)}</TableCell>
-                <TableCell className="text-sm text-muted-foreground">{formatDate(user.created_at)}</TableCell>
+                <TableCell className="text-sm text-neutral-700">{formatDate(user.created_at)}</TableCell>
                 <TableCell>
                   {(canEditRoles || canDeleteUsers || canResetPasswords) ? (
                     <DropdownMenu>
@@ -284,7 +282,7 @@ export const UsersTable = ({
                       </DropdownMenuContent>
                     </DropdownMenu>
                   ) : (
-                    <span className="text-gray-400">-</span>
+                    <span className="text-neutral-500">-</span>
                   )}
                 </TableCell>
               </TableRow>

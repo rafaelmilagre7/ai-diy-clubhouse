@@ -12,19 +12,19 @@ const badgeVariants = cva(
         default:
           "border-transparent bg-viverblue text-white hover:bg-viverblue-dark",
         secondary:
-          "border-white/10 bg-backgroundLight text-textSecondary hover:bg-background/80",
+          "border-neutral-300 bg-backgroundLight text-neutral-700 hover:bg-background/80", /* Melhor contraste */
         destructive:
           "border-transparent bg-destructive/80 text-destructive-foreground hover:bg-destructive/70",
         outline: 
-          "border-white/10 text-textPrimary hover:bg-backgroundLight/80",
+          "border-neutral-400 text-neutral-700 hover:bg-backgroundLight/80", /* Melhor contraste */
         success: 
-          "border-transparent bg-green-900/30 text-green-300 border-green-800/30 hover:bg-green-900/40",
+          "border-transparent bg-green-100 text-green-800 border-green-300 hover:bg-green-200", /* Melhor contraste */
         warning: 
-          "border-transparent bg-amber-900/30 text-amber-300 border-amber-800/30 hover:bg-amber-900/40",
+          "border-transparent bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200", /* Melhor contraste */
         info: 
-          "border-transparent bg-blue-900/30 text-blue-300 border-blue-800/30 hover:bg-blue-900/40",
+          "border-transparent bg-blue-100 text-blue-800 border-blue-300 hover:bg-blue-200", /* Melhor contraste */
         neutral:
-          "border-transparent bg-gray-800/50 text-gray-300 border-gray-700/30 hover:bg-gray-800/60",
+          "border-transparent bg-gray-100 text-gray-800 border-gray-300 hover:bg-gray-200", /* Melhor contraste */
       },
     },
     defaultVariants: {

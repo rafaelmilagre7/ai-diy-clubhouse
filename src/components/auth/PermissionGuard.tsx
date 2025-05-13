@@ -69,12 +69,12 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
     return <>{children}</>;
   }
 
-  // Caso contrário, mostrar mensagem de erro ou fallback
+  // Caso contrário, mostrar mensagem de erro ou fallback com melhor contraste
   return fallback || (
-    <Alert variant="destructive" className="my-4">
+    <Alert variant="destructive" className="my-4 border-destructive/40">
       <AlertCircle className="h-4 w-4" />
-      <AlertTitle>Acesso restrito</AlertTitle>
-      <AlertDescription>
+      <AlertTitle className="font-semibold">Acesso restrito</AlertTitle>
+      <AlertDescription className="text-destructive-foreground/90">
         Você não tem permissão para acessar este recurso.
       </AlertDescription>
     </Alert>
