@@ -137,19 +137,19 @@ export const UsersTable = ({
     switch (roleName.toLowerCase()) {
       case 'admin':
         return (
-          <Badge variant="outline" className="bg-viverblue/20 text-viverblue-darker border-viverblue/60 font-medium">
+          <Badge className="bg-blue-100 text-blue-800 border border-blue-300 font-medium">
             Admin
           </Badge>
         );
       case 'formacao':
         return (
-          <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-400 font-medium">
+          <Badge className="bg-amber-100 text-amber-800 border border-amber-300 font-medium">
             Formação
           </Badge>
         );
       default:
         return (
-          <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-400 font-medium">
+          <Badge className="bg-gray-100 text-gray-800 border border-gray-300 font-medium">
             Membro
           </Badge>
         );
@@ -231,7 +231,7 @@ export const UsersTable = ({
             </TableRow>
           ) : (
             sortedUsers.map((user) => (
-              <TableRow key={user.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
+              <TableRow key={user.id}>
                 <TableCell>
                   <Avatar>
                     <AvatarImage
@@ -243,10 +243,10 @@ export const UsersTable = ({
                     </AvatarFallback>
                   </Avatar>
                 </TableCell>
-                <TableCell className="font-medium text-neutral-900 dark:text-white">{user.name || "-"}</TableCell>
-                <TableCell className="text-neutral-800 dark:text-neutral-100">{user.email}</TableCell>
+                <TableCell className="font-medium">{user.name || "-"}</TableCell>
+                <TableCell>{user.email}</TableCell>
                 <TableCell>{renderUserRole(user)}</TableCell>
-                <TableCell className="text-sm text-neutral-800 dark:text-neutral-100">{formatDate(user.created_at)}</TableCell>
+                <TableCell className="text-sm">{formatDate(user.created_at)}</TableCell>
                 <TableCell>
                   {(canEditRoles || canDeleteUsers || canResetPasswords) ? (
                     <DropdownMenu>

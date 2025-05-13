@@ -29,26 +29,26 @@ export const SolutionsTable: React.FC<SolutionsTableProps> = ({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="hover:text-viverblue transition-colors">Título</TableHead>
-          <TableHead className="hover:text-viverblue transition-colors">Categoria</TableHead>
-          <TableHead className="hover:text-viverblue transition-colors">Dificuldade</TableHead>
-          <TableHead className="hover:text-viverblue transition-colors">Status</TableHead>
-          <TableHead className="hover:text-viverblue transition-colors">Criada em</TableHead>
+          <TableHead>Título</TableHead>
+          <TableHead>Categoria</TableHead>
+          <TableHead>Dificuldade</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Criada em</TableHead>
           <TableHead className="text-right">Ações</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {solutions.map((solution) => (
-          <TableRow key={solution.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
-            <TableCell className="font-medium text-neutral-900 dark:text-white">{solution.title}</TableCell>
-            <TableCell className="text-neutral-800 dark:text-neutral-100">{getCategoryText(solution.category)}</TableCell>
+          <TableRow key={solution.id}>
+            <TableCell className="font-medium">{solution.title}</TableCell>
+            <TableCell>{getCategoryText(solution.category)}</TableCell>
             <TableCell>
               <SolutionDifficultyBadge difficulty={solution.difficulty} />
             </TableCell>
             <TableCell>
               <PublishStatus published={solution.published} />
             </TableCell>
-            <TableCell className="text-neutral-800 dark:text-neutral-100">{formatDateDistance(solution.created_at)}</TableCell>
+            <TableCell>{formatDateDistance(solution.created_at)}</TableCell>
             <TableCell className="text-right">
               <TableActions 
                 solutionId={solution.id} 
