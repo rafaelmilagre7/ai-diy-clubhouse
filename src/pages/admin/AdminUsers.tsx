@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth";
 
 const AdminUsers = () => {
-  // Usando diretamente o hook useUsers sem depender do PermissionGuard
+  // Usando diretamente o hook useUsers com otimizações integradas
   const {
     users,
     availableRoles,
@@ -27,6 +27,7 @@ const AdminUsers = () => {
     canAssignRoles,
     canDeleteUsers,
     canResetPasswords,
+    error,
   } = useUsers();
 
   const { isAdmin } = useAuth();
@@ -35,23 +36,25 @@ const AdminUsers = () => {
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
   const [refreshCounter, setRefreshCounter] = useState(0);
   const [loadTimeout, setLoadTimeout] = useState(false);
+  const [loadAttempts, setLoadAttempts] = useState(0);
 
-  // Efeito para detectar timeout de carregamento
+  // Efeito para detectar timeout de carregamento com incremento de tentativas
   useEffect(() => {
-    if (loading) {
+    if (loading && !loadTimeout && loadAttempts < 3) {
       const timer = setTimeout(() => {
-        console.log("Timeout atingido no carregamento de usuários");
+        console.log(`Timeout atingido no carregamento de usuários (tentativa ${loadAttempts + 1})`);
         setLoadTimeout(true);
         toast.error("Tempo limite excedido ao carregar usuários", {
-          description: "Tentando carregar com dados de fallback"
+          description: "Os dados podem estar incompletos ou desatualizados"
         });
+        setLoadAttempts(prev => prev + 1);
       }, 5000); // 5 segundos de timeout
       
       return () => clearTimeout(timer);
     }
-  }, [loading]);
+  }, [loading, loadTimeout, loadAttempts]);
 
-  // Efeito para atualizar a lista quando o contador mudar
+  // Efeito para atualizar a lista quando o contador mudar com limitação de tentativas
   useEffect(() => {
     fetchUsers();
   }, [refreshCounter, fetchUsers]);
@@ -72,11 +75,20 @@ const AdminUsers = () => {
   };
 
   const handleRefresh = () => {
-    setRefreshCounter(prev => prev + 1);
-    toast.info("Atualizando lista de usuários...");
+    // Limitar a 3 tentativas manuais para evitar sobrecarga
+    if (loadAttempts < 3) {
+      setRefreshCounter(prev => prev + 1);
+      setLoadAttempts(prev => prev + 1);
+      toast.info("Atualizando lista de usuários...");
+    } else {
+      toast.warning("Limite de tentativas atingido", {
+        description: "Por favor, atualize a página ou tente mais tarde."
+      });
+    }
   };
 
-  // Verificação direta de permissão de admin, sem usar o PermissionGuard
+  // Verificação simplificada de acesso administrativo
+  // Primeira checagem rápida com base no contexto de autenticação
   if (!isAdmin) {
     return (
       <Alert variant="destructive" className="my-4">
@@ -89,17 +101,39 @@ const AdminUsers = () => {
     );
   }
 
-  // Se o carregamento demorar demais, mostrar feedback
+  // Se o carregamento demorar demais, mostrar feedback mais informativo
   if (loading && !loadTimeout) {
     return (
       <div className="flex flex-col items-center justify-center p-8 space-y-4">
         <div className="animate-spin w-8 h-8 border-4 border-viverblue border-t-transparent rounded-full"></div>
         <div>Carregando usuários...</div>
+        <div className="text-sm text-muted-foreground">
+          Isso pode levar alguns instantes. Tentativa {loadAttempts + 1}/3
+        </div>
       </div>
     );
   }
 
-  // Se houve timeout mas o usuário é admin, mostrar interface com aviso
+  // Exibir mensagem de erro quando aplicável
+  if (error && !users.length) {
+    return (
+      <Alert variant="destructive" className="my-4">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Erro ao carregar usuários</AlertTitle>
+        <AlertDescription className="space-y-2">
+          <p>Ocorreu um problema ao carregar a lista de usuários:</p>
+          <p className="font-mono text-sm bg-destructive/10 p-2 rounded">{error.message}</p>
+          <button 
+            onClick={handleRefresh}
+            className="px-4 py-2 mt-2 bg-primary text-white rounded hover:bg-primary/90"
+          >
+            Tentar novamente
+          </button>
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {loadTimeout && (
@@ -114,6 +148,8 @@ const AdminUsers = () => {
       <UsersHeader
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        onRefresh={handleRefresh}
+        isRefreshing={loading}
       />
       
       <div className="border rounded-lg">
