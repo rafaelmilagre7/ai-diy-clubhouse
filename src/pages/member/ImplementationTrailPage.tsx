@@ -11,9 +11,10 @@ import { toast } from "sonner";
 
 const ImplementationTrailPage = () => {
   const navigate = useNavigate();
-  const { progress, isLoading, refreshProgress } = useProgress();
+  const { progress, isLoading, refreshProgress, updateProgress } = useProgress();
   const [isOnboardingComplete, setIsOnboardingComplete] = useState<boolean | null>(null);
   const [showRefreshButton, setShowRefreshButton] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   useEffect(() => {
     // Carregar os dados do progresso e verificar se estão presentes
@@ -61,6 +62,34 @@ const ImplementationTrailPage = () => {
       console.error("Erro ao recarregar dados:", error);
       setShowRefreshButton(true);
       toast.error("Erro ao carregar seus dados. Tente novamente.");
+    }
+  };
+
+  // Função para concluir o onboarding caso o usuário esteja na página da trilha
+  // mas o onboarding não esteja marcado como concluído
+  const handleCompleteOnboarding = async () => {
+    if (!progress || isUpdatingStatus) return;
+    
+    try {
+      setIsUpdatingStatus(true);
+      console.log("Atualizando status do onboarding para completo...");
+      
+      // Atualiza o status do onboarding para completo
+      await updateProgress({
+        is_completed: true
+      });
+      
+      // Atualizar dados locais
+      await refreshProgress();
+      
+      setIsOnboardingComplete(true);
+      toast.success("Onboarding marcado como concluído");
+      
+    } catch (error) {
+      console.error("Erro ao atualizar status do onboarding:", error);
+      toast.error("Erro ao atualizar seu progresso. Tente novamente mais tarde.");
+    } finally {
+      setIsUpdatingStatus(false);
     }
   };
 
@@ -115,7 +144,11 @@ const ImplementationTrailPage = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <OnboardingIncompleteState onNavigateToOnboarding={() => navigate("/onboarding")} />
+            <OnboardingIncompleteState 
+              onNavigateToOnboarding={() => navigate("/onboarding")} 
+              onForceComplete={handleCompleteOnboarding}
+              isForceCompleting={isUpdatingStatus}
+            />
           </CardContent>
         </Card>
       </div>

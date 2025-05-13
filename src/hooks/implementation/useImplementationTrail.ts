@@ -21,6 +21,7 @@ export const useImplementationTrail = () => {
   const [trail, setTrail] = useState<ImplementationTrail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [validSolutionsCache, setValidSolutionsCache] = useState<Set<string>>(new Set());
 
   // Verificar se a trilha tem conteúdo
   const hasContent = useCallback(() => {
@@ -34,7 +35,55 @@ export const useImplementationTrail = () => {
     return totalItems > 0;
   }, [trail]);
 
-  // Carregar trilha existente
+  // Função para verificar se uma solução existe no banco
+  const validateSolutionId = useCallback(async (solutionId: string): Promise<boolean> => {
+    // Se já verificamos antes, retornar do cache
+    if (validSolutionsCache.has(solutionId)) {
+      return true;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("solutions")
+        .select("id")
+        .eq("id", solutionId)
+        .eq("published", true)
+        .maybeSingle();
+      
+      if (error) {
+        console.error("Erro ao verificar solução:", error);
+        return false;
+      }
+
+      const isValid = !!data;
+      
+      if (isValid) {
+        // Adicionar ao cache para futuras verificações
+        setValidSolutionsCache(prev => new Set([...prev, solutionId]));
+      }
+      
+      return isValid;
+    } catch (err) {
+      console.error("Erro ao verificar solução:", err);
+      return false;
+    }
+  }, [validSolutionsCache]);
+
+  // Filtrar recomendações para incluir apenas soluções válidas
+  const filterValidRecommendations = useCallback(async (recommendations: ImplementationRecommendation[]): Promise<ImplementationRecommendation[]> => {
+    if (!recommendations || !recommendations.length) return [];
+    
+    const validatedRecommendations = await Promise.all(
+      recommendations.map(async (rec) => {
+        const isValid = await validateSolutionId(rec.solutionId);
+        return isValid ? rec : null;
+      })
+    );
+    
+    return validatedRecommendations.filter(Boolean) as ImplementationRecommendation[];
+  }, [validateSolutionId]);
+
+  // Carregar trilha existente com validação de IDs
   const loadExistingTrail = useCallback(async (forceRefresh = false) => {
     if (!user) {
       setIsLoading(false);
@@ -66,9 +115,41 @@ export const useImplementationTrail = () => {
       }
 
       if (data?.trail_data) {
-        const sanitizedData = sanitizeTrailData(data.trail_data as ImplementationTrail);
-        setTrail(sanitizedData);
-        return sanitizedData;
+        let trailData = sanitizeTrailData(data.trail_data as ImplementationTrail);
+        
+        // Validar e filtrar soluções que não existem mais
+        if (trailData) {
+          const validPriority1 = await filterValidRecommendations(trailData.priority1);
+          const validPriority2 = await filterValidRecommendations(trailData.priority2);
+          const validPriority3 = await filterValidRecommendations(trailData.priority3);
+          
+          trailData = {
+            priority1: validPriority1,
+            priority2: validPriority2,
+            priority3: validPriority3
+          };
+          
+          // Atualizar a trilha no banco se alguma solução foi removida
+          if (
+            validPriority1.length < (data.trail_data.priority1?.length || 0) ||
+            validPriority2.length < (data.trail_data.priority2?.length || 0) ||
+            validPriority3.length < (data.trail_data.priority3?.length || 0)
+          ) {
+            try {
+              await supabase
+                .from("implementation_trails")
+                .update({ trail_data: trailData })
+                .eq("id", data.id);
+              
+              console.log("Trilha atualizada para remover soluções inválidas");
+            } catch (updateErr) {
+              console.error("Erro ao atualizar trilha com soluções filtradas:", updateErr);
+            }
+          }
+        }
+        
+        setTrail(trailData);
+        return trailData;
       }
 
       return null;
@@ -79,7 +160,7 @@ export const useImplementationTrail = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, trail, hasContent]);
+  }, [user, trail, hasContent, filterValidRecommendations]);
 
   // Recarregar trilha (com opção de força)
   const refreshTrail = useCallback(async (forceRefresh = false) => {
@@ -113,6 +194,23 @@ export const useImplementationTrail = () => {
       if (existingTrail) {
         console.log("Trilha existente encontrada, retornando dados existentes");
         const sanitizedData = sanitizeTrailData(existingTrail.trail_data as ImplementationTrail);
+        
+        // Validar e filtrar soluções que não existem mais
+        if (sanitizedData) {
+          const validPriority1 = await filterValidRecommendations(sanitizedData.priority1);
+          const validPriority2 = await filterValidRecommendations(sanitizedData.priority2);
+          const validPriority3 = await filterValidRecommendations(sanitizedData.priority3);
+          
+          const validatedTrail = {
+            priority1: validPriority1,
+            priority2: validPriority2,
+            priority3: validPriority3
+          };
+          
+          setTrail(validatedTrail);
+          return validatedTrail;
+        }
+        
         setTrail(sanitizedData);
         return sanitizedData;
       }
@@ -206,30 +304,8 @@ export const useImplementationTrail = () => {
             }
           });
         } else {
-          // Fallback para caso não consiga obter soluções do banco
-          console.log("Usando IDs de fallback para recomendações");
-          mockRecommendations.priority1 = [
-            {
-              solutionId: "mock-solution-1",
-              justification: "Esta solução foi selecionada para seu negócio B2B e pode ajudar a otimizar seus processos de vendas."
-            },
-            {
-              solutionId: "mock-solution-2",
-              justification: "Considerando seu foco em automação, esta solução trará ganhos imediatos de produtividade."
-            }
-          ];
-          mockRecommendations.priority2 = [
-            {
-              solutionId: "mock-solution-3",
-              justification: "Com seu conhecimento em IA, você poderá implementar esta solução rapidamente."
-            }
-          ];
-          mockRecommendations.priority3 = [
-            {
-              solutionId: "mock-solution-4",
-              justification: "Para complementar sua estratégia de marketing com IA, esta ferramenta será muito útil."
-            }
-          ];
+          // Não usar IDs falsos, mas deixar as listas vazias
+          console.log("Não foi possível obter soluções do banco. Criando trilha vazia.");
         }
 
         // Usar as recomendações de fallback
@@ -253,6 +329,16 @@ export const useImplementationTrail = () => {
       if (saveError) {
         console.error("Erro ao salvar trilha gerada:", saveError);
         throw saveError;
+      }
+
+      // Garantir que o onboarding está marcado como completo
+      try {
+        await supabase
+          .from("onboarding_progress")
+          .update({ is_completed: true })
+          .eq("user_id", user.id);
+      } catch (onboardingErr) {
+        console.error("Erro ao atualizar status do onboarding:", onboardingErr);
       }
 
       const sanitizedData = sanitizeTrailData(recommendationsToSave);
@@ -281,21 +367,36 @@ export const useImplementationTrail = () => {
       
       // Gerar trilha padrão em caso de erro para evitar falha completa
       try {
+        // Obter soluções publicadas do banco para criar recomendações mais relevantes
+        const { data: availableSolutions } = await supabase
+          .from("solutions")
+          .select("id, title, category")
+          .eq("published", true)
+          .limit(5);
+        
         const defaultTrail: ImplementationTrail = {
-          priority1: [
-            {
-              solutionId: "default-solution-1",
-              justification: "Solução padrão para ajudar nas primeiras etapas da implementação de IA."
-            }
-          ],
-          priority2: [
-            {
-              solutionId: "default-solution-2",
-              justification: "Recomendação padrão para auxiliar na implementação de IA no seu negócio."
-            }
-          ],
+          priority1: [],
+          priority2: [],
           priority3: []
         };
+        
+        // Usar soluções reais se disponíveis
+        if (availableSolutions && availableSolutions.length > 0) {
+          availableSolutions.forEach((solution, index) => {
+            const recommendation = {
+              solutionId: solution.id,
+              justification: "Recomendação padrão para auxiliar na implementação de IA no seu negócio."
+            };
+            
+            if (index < 2) {
+              defaultTrail.priority1.push(recommendation);
+            } else if (index < 4) {
+              defaultTrail.priority2.push(recommendation);
+            } else {
+              defaultTrail.priority3.push(recommendation);
+            }
+          });
+        }
         
         await supabase
           .from("implementation_trails")

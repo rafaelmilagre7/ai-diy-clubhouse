@@ -181,9 +181,10 @@ export function useStepPersistenceCore({
       setTimeout(() => {
         // Redirecionar para página apropriada com base no tipo de onboarding
         if (onboardingType === 'club') {
-          window.location.href = "/implementation-trail";
+          // Usamos o navigate em vez de window.location.href para manter o SPA
+          navigate("/implementation-trail");
         } else {
-          window.location.href = "/learning"; // Rota para a área de aprendizado da formação
+          navigate("/learning"); // Rota para a área de aprendizado da formação
         }
       }, 1000);
     } catch (error: any) {
@@ -193,9 +194,9 @@ export function useStepPersistenceCore({
       });
       toast.error("Erro ao finalizar onboarding. Por favor, tente novamente.");
       
-      // Fallback para dashboard em caso de erro
+      // Fallback para dashboard em caso de erro, usando navigate
       setTimeout(() => {
-        window.location.href = "/dashboard";
+        navigate("/dashboard");
       }, 1500);
     }
   };

@@ -4,15 +4,17 @@ import { useImplementationTrail } from "@/hooks/implementation/useImplementation
 import { useSolutionsData } from "@/hooks/useSolutionsData";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, RefreshCw, AlertTriangle } from "lucide-react";
+import { Loader2, RefreshCw, AlertTriangle, Info } from "lucide-react";
 import { TrailSolutionsList } from "./TrailSolutionsList";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export const ImplementationTrailCreator = () => {
   const { trail, isLoading, error, hasContent, generateImplementationTrail, refreshTrail } = useImplementationTrail();
   const { solutions: allSolutions, loading: solutionsLoading } = useSolutionsData();
   const [processedSolutions, setProcessedSolutions] = useState<any[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [missingIds, setMissingIds] = useState<string[]>([]);
   
   // Processar soluções quando os dados estiverem disponíveis
   useEffect(() => {
@@ -23,22 +25,39 @@ export const ImplementationTrailCreator = () => {
       }
 
       const result = [];
+      const missingIdsList: string[] = [];
       
-      ["priority1", "priority2", "priority3"].forEach((priority, idx) => {
-        const items = (trail as any)[priority] || [];
+      // Função auxiliar para processar itens por prioridade
+      const processItems = (items: any[] = [], priority: number) => {
         items.forEach((item: any) => {
+          if (!item || !item.solutionId) return;
+          
           const solution = allSolutions.find(s => s.id === item.solutionId);
           if (solution) {
             result.push({
               ...solution,
               ...item,
-              priority: idx + 1
+              priority
             });
+          } else {
+            // Registrar IDs de soluções ausentes
+            missingIdsList.push(item.solutionId);
           }
         });
-      });
+      };
+      
+      // Processar cada nível de prioridade
+      processItems((trail as any).priority1 || [], 1);
+      processItems((trail as any).priority2 || [], 2);
+      processItems((trail as any).priority3 || [], 3);
 
       setProcessedSolutions(result);
+      setMissingIds(missingIdsList);
+      
+      // Mostrar aviso se alguma solução não foi encontrada
+      if (missingIdsList.length > 0) {
+        console.warn("Algumas soluções na trilha não foram encontradas:", missingIdsList);
+      }
     };
 
     processSolutions();
@@ -155,6 +174,15 @@ export const ImplementationTrailCreator = () => {
           )}
         </Button>
       </div>
+      
+      {missingIds.length > 0 && (
+        <Alert variant="warning" className="bg-amber-50 border-amber-200 mb-4">
+          <Info className="h-4 w-4 text-amber-500" />
+          <AlertDescription className="text-amber-700">
+            Algumas soluções recomendadas não estão mais disponíveis. A trilha foi atualizada.
+          </AlertDescription>
+        </Alert>
+      )}
       
       <Separator />
       

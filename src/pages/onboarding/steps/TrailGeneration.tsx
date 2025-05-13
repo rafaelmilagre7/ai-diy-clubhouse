@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { OnboardingLayout } from '@/components/onboarding/OnboardingLayout';
 import { useProgress } from '@/hooks/onboarding/useProgress';
@@ -85,6 +86,21 @@ const TrailGeneration = () => {
     };
   }, [generating, generated, attemptCount, logError]);
 
+  // Garantir que o progresso de onboarding esteja marcado como completo
+  const ensureOnboardingComplete = useCallback(async () => {
+    if (progress && !progress.is_completed) {
+      try {
+        console.log("Atualizando status do onboarding para completo...");
+        await updateProgress({
+          is_completed: true
+        });
+        await refreshProgress();
+      } catch (error) {
+        console.error("Erro ao atualizar status do onboarding:", error);
+      }
+    }
+  }, [progress, updateProgress, refreshProgress]);
+
   // Função para iniciar a geração da trilha
   const startTrailGeneration = async () => {
     if (!progress) return;
@@ -98,18 +114,14 @@ const TrailGeneration = () => {
       
       log('trail_generation_started', { attempt: attemptCount + 1 });
       
+      // Primeiro garante que o onboarding está marcado como completo
+      await ensureOnboardingComplete();
+      
       // Gerar a trilha de implementação
       await generateImplementationTrail(progress);
       
       log('trail_generation_success', {});
       toast.success("Trilha personalizada gerada com sucesso!");
-      
-      // Atualizar o progresso com a informação que o onboarding está completo
-      if (!progress.is_completed) {
-        await updateProgress({
-          is_completed: true
-        });
-      }
       
       // Marcar como gerado
       setGenerating(false);
@@ -173,6 +185,18 @@ const TrailGeneration = () => {
       toast.error("Erro ao limpar dados. Tente novamente.");
     }
   };
+  
+  // Lidando com a navegação após a geração
+  const handleClose = useCallback(() => {
+    // Garantir que o onboarding está marcado como completo antes de redirecionar
+    ensureOnboardingComplete().then(() => {
+      navigate('/dashboard');
+    }).catch(err => {
+      console.error("Erro ao finalizar onboarding:", err);
+      // Redirecionar mesmo assim
+      navigate('/dashboard');
+    });
+  }, [navigate, ensureOnboardingComplete]);
 
   // Renderização do componente com base no estado
   return (
@@ -217,7 +241,7 @@ const TrailGeneration = () => {
         {generated && !generating && !error && !trailError && (
           <TrailGenerationPanel 
             onboardingData={progress}
-            onClose={() => navigate('/dashboard')}
+            onClose={handleClose}
           />
         )}
       </div>
