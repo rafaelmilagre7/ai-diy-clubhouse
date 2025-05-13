@@ -69,13 +69,13 @@ export default {
                     dark: '#1A237E',
                     darker: '#0D1642',
                 },
-                // Operational track colors - enhanced 
+                // Operational track colors - substituindo o roxo por azul
                 operational: {
-                    DEFAULT: '#8E24AA',
-                    light: '#BA68C8',
-                    lighter: '#E1BEE7',
-                    dark: '#4A148C',
-                    darker: '#2A0B50',
+                    DEFAULT: '#0078B7',
+                    light: '#2D9CDB',
+                    lighter: '#BFE5FF',
+                    dark: '#005A8D',
+                    darker: '#004671',
                 },
                 // Strategy track colors - enhanced
                 strategy: {
