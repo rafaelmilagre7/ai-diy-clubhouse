@@ -96,7 +96,8 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
   // Verificar etapas obrigatórias que não foram completadas
   const checkMissingSteps = (data: any) => {
     // Etapas mínimas obrigatórias para gerar uma trilha significativa
-    const requiredSteps = ['personal_info', 'professional_data', 'business_goals'];
+    // Correção: alteramos 'professional_data' para 'professional_info'
+    const requiredSteps = ['personal_info', 'professional_info', 'business_goals'];
     
     const missing = requiredSteps.filter(stepId => {
       const hasStep = data.completed_steps && Array.isArray(data.completed_steps) && 

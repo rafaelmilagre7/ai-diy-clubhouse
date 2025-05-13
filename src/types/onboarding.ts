@@ -155,6 +155,7 @@ export interface OnboardingProgress {
   updated_at?: string;
 }
 
+// Atualizando o tipo de OnboardingStepProps para incluir consistência entre os nomes de campos
 export interface OnboardingStepProps {
   onSubmit: (stepId: string, data: any) => Promise<void>;
   isSubmitting: boolean;
@@ -171,6 +172,7 @@ export interface OnboardingStep {
   path: string;
 }
 
+// Corrigindo o tipo para ProfessionalDataInput para usar professional_info em vez de professional_data
 export type ProfessionalDataInput = {
   company_name?: string;
   company_size?: string;

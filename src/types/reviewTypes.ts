@@ -1,35 +1,22 @@
 
 import { OnboardingProgress } from "./onboarding";
 
-// Tipo para representar dados processados para a revisão
-export type ReviewData = OnboardingProgress;
-
-// Interface para dados processados de analytics
-export interface AnalyticsInsight {
-  key: string;
-  label: string;
-  value: string | number;
-  type?: 'success' | 'warning' | 'error' | 'info';
-  icon?: React.ReactNode;
+// Interface para os dados processados do Review
+export interface ReviewData extends OnboardingProgress {
+  // Campos adicionais específicos para a etapa de revisão
+  // Podem ser adicionados conforme necessário
 }
 
-export interface SectionAnalytics {
-  completeness: number;
-  insights: AnalyticsInsight[];
-}
-
-export interface OnboardingAnalytics {
-  personal: SectionAnalytics;
-  professional: SectionAnalytics;
-  business: SectionAnalytics;
-  goals: SectionAnalytics;
-  experience: SectionAnalytics;
-  preferences: SectionAnalytics;
-  complementary: SectionAnalytics;
-  overall: {
-    score: number;
-    completedSections: number;
-    totalSections: number;
-    nextSteps: string[];
-  };
+// Interface para soluções na trilha de implementação
+export interface TrailSolution {
+  id: string;
+  title: string;
+  description: string;
+  thumbnail_url?: string;
+  category: string;
+  difficulty: string;
+  tags?: string[];
+  priority: number;
+  justification: string;
+  solutionId: string;
 }

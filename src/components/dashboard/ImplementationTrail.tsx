@@ -10,15 +10,12 @@ import { TrailEmptyState } from "./TrailEmptyState";
 import { TrailCardList } from "./TrailCardList";
 import { TrailCardHeader } from "./TrailCardHeader";
 
-interface TrailSolution extends Solution {
-  priority: number;
-  justification: string;
-}
+// Removemos a definição da interface TrailSolution daqui para evitar conflito
 
 export const ImplementationTrail = () => {
   const navigate = useNavigate();
   const { trail, isLoading, hasContent, refreshTrail, generateImplementationTrail } = useImplementationTrail();
-  const [solutions, setSolutions] = useState<TrailSolution[]>([]);
+  const [solutions, setSolutions] = useState<any[]>([]);
   const [loadingSolutions, setLoadingSolutions] = useState(true);
 
   useEffect(() => {
@@ -49,7 +46,7 @@ export const ImplementationTrail = () => {
 
         if (error) throw error;
 
-        const mappedSolutions: TrailSolution[] = [];
+        const mappedSolutions: any[] = [];
 
         trail.priority1.forEach(rec => {
           const solution = data?.find(s => s.id === rec.solutionId);
@@ -57,7 +54,8 @@ export const ImplementationTrail = () => {
             mappedSolutions.push({
               ...solution,
               priority: 1,
-              justification: rec.justification
+              justification: rec.justification,
+              solutionId: rec.solutionId
             });
           }
         });
@@ -68,7 +66,8 @@ export const ImplementationTrail = () => {
             mappedSolutions.push({
               ...solution,
               priority: 2,
-              justification: rec.justification
+              justification: rec.justification,
+              solutionId: rec.solutionId
             });
           }
         });
@@ -79,7 +78,8 @@ export const ImplementationTrail = () => {
             mappedSolutions.push({
               ...solution,
               priority: 3,
-              justification: rec.justification
+              justification: rec.justification,
+              solutionId: rec.solutionId
             });
           }
         });

@@ -242,7 +242,8 @@ export function useStepPersistenceCore({
         if (!data.name) missingFields.push('nome');
         if (!data.email) missingFields.push('email');
         break;
-      case 'professional_data':
+      // Correção: alteramos 'professional_data' para 'professional_info'  
+      case 'professional_info':
         if (!data.company_name) missingFields.push('nome da empresa');
         break;
       // Adicionar outras validações conforme necessário

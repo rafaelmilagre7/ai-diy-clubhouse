@@ -1,3 +1,4 @@
+
 import React, { useMemo } from "react";
 import { CheckCircle, PenSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -80,6 +81,7 @@ interface ReviewSectionCardProps {
   progress: any;
   stepIndex: number;
   navigateToStep: (stepId: string) => void; // Atualizado para receber ID em vez de índice
+  highlight?: boolean; // Adicionada a propriedade highlight como opcional
 }
 
 export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
@@ -88,6 +90,7 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
   progress,
   stepIndex,
   navigateToStep,
+  highlight = false, // Valor padrão como false
 }) => {
   // Verificar se há dados válidos na seção com tratamento de tipos
   const isCompleted = useMemo(() => {
@@ -170,8 +173,13 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
     navigateToStep(step.id);
   };
 
+  // Adicionando classe condicional para destacar etapas com problemas
+  const borderClass = highlight 
+    ? "border-amber-500 border-l-amber-500" 
+    : "border-l-viverblue dark-mode-card";
+
   return (
-    <Card className="overflow-hidden border-l-4 border-l-viverblue dark-mode-card bg-gradient-to-br from-[#1A1E2E] to-[#151823] shadow-md transition-all duration-300 hover:shadow-lg hover:border-viverblue/80">
+    <Card className={`overflow-hidden border-l-4 ${borderClass} bg-gradient-to-br from-[#1A1E2E] to-[#151823] shadow-md transition-all duration-300 hover:shadow-lg hover:border-viverblue/80`}>
       <CardHeader className="flex flex-row items-center justify-between bg-[#1E2235] py-3 px-4 border-b border-neutral-700/50">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-viverblue/20 text-viverblue">

@@ -1,36 +1,32 @@
 
-import { CompleteOnboardingStep } from '@/types/onboarding';
+import { CompleteOnboardingStep } from "@/types/onboarding";
 
-// Lista completa de etapas para ambos os tipos de onboarding
-export const completeSteps: CompleteOnboardingStep[] = [
-  // Etapas comuns para ambos
+// Definição das etapas do onboarding
+export const steps: CompleteOnboardingStep[] = [
   {
-    id: "personal",
+    id: "personal_info",
     title: "Informações Pessoais",
     section: "personal_info",
     path: "/onboarding/personal-info",
     forClub: true,
     forFormation: true
   },
-  // Etapas específicas para Club
   {
-    id: "professional_data",
+    id: "professional_info", // Mudança importante: usamos 'professional_info' em vez de 'professional_data'
     title: "Dados Profissionais",
-    section: "professional_info",
+    section: "professional_info", // Esta seção deve ser consistente
     path: "/onboarding/professional-data",
-    forClub: true,
-    forFormation: false
+    forClub: true
   },
   {
     id: "business_context",
-    title: "Contexto do Negócio",
+    title: "Contexto de Negócio",
     section: "business_context",
     path: "/onboarding/business-context",
-    forClub: true,
-    forFormation: false
+    forClub: true
   },
   {
-    id: "ai_exp",
+    id: "ai_experience",
     title: "Experiência com IA",
     section: "ai_experience",
     path: "/onboarding/ai-experience",
@@ -42,43 +38,22 @@ export const completeSteps: CompleteOnboardingStep[] = [
     title: "Objetivos de Negócio",
     section: "business_goals",
     path: "/onboarding/club-goals",
-    forClub: true,
-    forFormation: false
+    forClub: true
   },
   {
     id: "experience_personalization",
     title: "Personalização da Experiência",
     section: "experience_personalization",
     path: "/onboarding/customization",
-    forClub: true,
-    forFormation: false
+    forClub: true
   },
   {
     id: "complementary_info",
     title: "Informações Complementares",
     section: "complementary_info",
     path: "/onboarding/complementary",
-    forClub: true,
-    forFormation: false
+    forClub: true
   },
-  // Etapas específicas para Formação
-  {
-    id: "formation_goals",
-    title: "Objetivos de Aprendizado",
-    section: "formation_data",
-    path: "/onboarding/formacao/goals",
-    forClub: false,
-    forFormation: true
-  },
-  {
-    id: "learning_preferences",
-    title: "Preferências de Aprendizado",
-    section: "formation_data",
-    path: "/onboarding/formacao/preferences",
-    forClub: false,
-    forFormation: true
-  },
-  // Revisão para ambos
   {
     id: "review",
     title: "Revisão",
@@ -86,27 +61,51 @@ export const completeSteps: CompleteOnboardingStep[] = [
     path: "/onboarding/review",
     forClub: true,
     forFormation: true
+  },
+  {
+    id: "trail_generation",
+    title: "Geração de Trilha",
+    section: "trail_generation",
+    path: "/onboarding/trail-generation",
+    forClub: true
   }
 ];
 
-// Função para filtrar etapas por tipo de usuário
-export const getStepsByUserType = (userType: 'club' | 'formacao') => {
-  if (userType === 'club') {
-    return completeSteps.filter(step => step.forClub !== false);
-  } else {
-    return completeSteps.filter(step => step.forFormation === true);
+// Etapas específicas para a formação
+export const formationSteps: CompleteOnboardingStep[] = [
+  {
+    id: "personal_info", 
+    title: "Informações Pessoais",
+    section: "personal_info",
+    path: "/onboarding/formacao/personal-info",
+    forFormation: true
+  },
+  {
+    id: "ai_experience",
+    title: "Experiência com IA",
+    section: "ai_experience",
+    path: "/onboarding/formacao/ai-experience",
+    forFormation: true
+  },
+  {
+    id: "learning_goals",
+    title: "Objetivos de Aprendizado",
+    section: "formation_data",
+    path: "/onboarding/formacao/goals",
+    forFormation: true
+  },
+  {
+    id: "learning_preferences",
+    title: "Preferências de Aprendizado",
+    section: "formation_data",
+    path: "/onboarding/formacao/preferences",
+    forFormation: true
+  },
+  {
+    id: "review",
+    title: "Revisão",
+    section: "review",
+    path: "/onboarding/formacao/review",
+    forFormation: true
   }
-};
-
-// Exportando as etapas do Club por compatibilidade com código existente
-export const steps = getStepsByUserType('club');
-
-// Usando um hook para retornar as etapas baseado no tipo de usuário
-export const useStepDefinitions = (userType: 'club' | 'formacao' = 'club') => {
-  return {
-    steps: getStepsByUserType(userType),
-    allSteps: completeSteps
-  };
-};
-
-export default useStepDefinitions;
+];
