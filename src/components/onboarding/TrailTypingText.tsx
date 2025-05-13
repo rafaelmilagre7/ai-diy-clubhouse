@@ -1,40 +1,57 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from 'react';
 
 interface TrailTypingTextProps {
   text: string;
   onComplete?: () => void;
+  typingSpeed?: number;
 }
 
-export const TrailTypingText = ({ text, onComplete }: TrailTypingTextProps) => {
-  const [displayText, setDisplayText] = useState("");
-  const [index, setIndex] = useState(0);
-
-  // Reset ao mudar o texto (quando troca a solução)
+export const TrailTypingText: React.FC<TrailTypingTextProps> = ({ 
+  text, 
+  onComplete,
+  typingSpeed = 30
+}) => {
+  const [displayedText, setDisplayedText] = useState('');
+  const [isComplete, setIsComplete] = useState(false);
+  const textRef = useRef<HTMLDivElement>(null);
+  
   useEffect(() => {
-    setDisplayText("");
-    setIndex(0);
-  }, [text]);
-
-  // Efeito de digitação
-  useEffect(() => {
-    if (!text || index >= text.length) {
-      if (index >= text.length) {
-        onComplete && onComplete();
+    setDisplayedText('');
+    setIsComplete(false);
+    
+    let currentIndex = 0;
+    const textToType = text || '';
+    
+    const typingInterval = setInterval(() => {
+      if (currentIndex < textToType.length) {
+        setDisplayedText(prev => prev + textToType.charAt(currentIndex));
+        currentIndex++;
+      } else {
+        clearInterval(typingInterval);
+        setIsComplete(true);
+        if (onComplete) onComplete();
       }
-      return;
-    }
-    const timeout = setTimeout(() => {
-      setDisplayText(text.substring(0, index + 1));
-      setIndex(index + 1);
-    }, 30);
-    return () => clearTimeout(timeout);
-  }, [index, text, onComplete]);
-
+    }, typingSpeed);
+    
+    return () => clearInterval(typingInterval);
+  }, [text, onComplete, typingSpeed]);
+  
   return (
-    <p className="text-gray-700 text-center text-base min-h-[4rem] max-w-3xl mx-auto px-4 select-text whitespace-pre-wrap">
-      {displayText}
-    </p>
+    <div className="relative">
+      <div 
+        ref={textRef}
+        className="text-lg font-medium text-center text-neutral-200 italic leading-relaxed p-6 bg-gradient-to-r from-[#0ABAB5]/10 via-[#0ABAB5]/5 to-transparent rounded-md border border-[#0ABAB5]/20"
+      >
+        <span className="text-[#0ABAB5]">"</span>
+        {displayedText}
+        <span className={`inline-block ${isComplete ? 'opacity-100' : 'animate-pulse'}`}>
+          <span className="text-[#0ABAB5]">"</span>
+        </span>
+        {!isComplete && (
+          <span className="inline-block w-1.5 h-4 ml-0.5 bg-[#0ABAB5] animate-pulse" />
+        )}
+      </div>
+    </div>
   );
 };
-

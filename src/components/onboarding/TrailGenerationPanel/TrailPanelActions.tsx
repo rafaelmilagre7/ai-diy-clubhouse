@@ -1,43 +1,36 @@
 
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { RefreshCcw, Edit } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { RefreshCw, Home } from 'lucide-react';
 
-export function TrailPanelActions({
-  onRegenerate,
-  onClose
-}: {
-  onRegenerate: () => void;
+interface TrailPanelActionsProps {
+  onRegenerate?: () => void;
   onClose?: () => void;
-}) {
-  const navigate = useNavigate();
+}
 
+export const TrailPanelActions: React.FC<TrailPanelActionsProps> = ({ onRegenerate, onClose }) => {
   return (
-    <div className="flex flex-wrap justify-between mt-6 gap-2">
-      <Button 
-        variant="ghost" 
-        onClick={onRegenerate}
-        className="flex items-center gap-1"
-      >
-        <RefreshCcw className="h-4 w-4 mr-1" />
-        Regenerar Trilha
-      </Button>
-      <div className="flex gap-2">
+    <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8 pt-6 border-t border-[#0ABAB5]/10">
+      {onRegenerate && (
         <Button 
+          onClick={onRegenerate} 
           variant="outline" 
-          onClick={() => navigate("/onboarding/review")}
-          className="flex items-center gap-1"
+          className="border-[#0ABAB5]/30 text-[#0ABAB5] hover:bg-[#0ABAB5]/10"
         >
-          <Edit className="h-4 w-4 mr-1" /> 
-          Editar Onboarding
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Regenerar Trilha
         </Button>
-        {onClose && (
-          <Button variant="outline" onClick={onClose}>
-            Fechar
-          </Button>
-        )}
-      </div>
+      )}
+      
+      {onClose && (
+        <Button 
+          onClick={onClose} 
+          className="bg-gradient-to-r from-[#0ABAB5] to-[#34D399] hover:from-[#0ABAB5]/90 hover:to-[#34D399]/90"
+        >
+          <Home className="h-4 w-4 mr-2" />
+          Ir para Dashboard
+        </Button>
+      )}
     </div>
   );
-}
+};

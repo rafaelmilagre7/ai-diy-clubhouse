@@ -12,40 +12,40 @@
     @apply max-w-7xl mx-auto px-4 md:px-8;
   }
   .progress-step {
-    @apply relative flex items-center justify-center w-8 h-8 rounded-full bg-neutral-800 text-neutral-400;
+    @apply relative flex items-center justify-center w-8 h-8 rounded-full bg-neutral-800 text-neutral-400 transition-colors;
   }
   .progress-step.active {
-    @apply bg-viverblue text-white;
+    @apply bg-viverblue text-white shadow-lg;
   }
   .progress-step.completed {
-    @apply bg-green-700 text-white;
+    @apply bg-green-700 text-white shadow-md;
   }
   .progress-line {
-    @apply flex-1 h-1 bg-neutral-800;
+    @apply flex-1 h-1 bg-neutral-800 transition-all;
   }
   .progress-line.completed {
     @apply bg-green-700;
   }
   .solution-card {
-    @apply relative overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm transition-all duration-200 hover:shadow-md;
+    @apply relative overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-1;
   }
   .solution-card.revenue {
-    @apply border-l-4 border-l-revenue;
+    @apply border-l-4 border-l-revenue shadow-revenue/10;
   }
   .solution-card.operational {
-    @apply border-l-4 border-l-operational;
+    @apply border-l-4 border-l-operational shadow-operational/10;
   }
   .solution-card.strategy {
-    @apply border-l-4 border-l-strategy;
+    @apply border-l-4 border-l-strategy shadow-strategy/10;
   }
   .badge-revenue {
-    @apply bg-revenue text-white;
+    @apply bg-revenue/20 text-revenue-light border-revenue/30;
   }
   .badge-operational {
-    @apply bg-operational text-white;
+    @apply bg-operational/20 text-operational-light border-operational/30;
   }
   .badge-strategy {
-    @apply bg-strategy text-white;
+    @apply bg-strategy/20 text-strategy-light border-strategy/30;
   }
   .card-hover-effect {
     @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
@@ -161,5 +161,48 @@
   
   .badge-dark-neutral {
     @apply bg-gray-800/50 text-gray-300 border-gray-700/30;
+  }
+  
+  /* Novas classes para a trilha de implementação */
+  .trail-card {
+    @apply bg-gradient-to-br from-[#151823] to-[#0F111A] border border-white/10 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5;
+  }
+  
+  .trail-card-priority-1 {
+    @apply bg-gradient-to-br from-[#0ABAB5]/20 to-[#151823] border-l-4 border-l-[#0ABAB5] border-t border-r border-b border-white/10;
+  }
+  
+  .trail-card-priority-2 {
+    @apply bg-gradient-to-br from-amber-500/10 to-[#151823] border-l-4 border-l-amber-500 border-t border-r border-b border-white/10;
+  }
+  
+  .trail-card-priority-3 {
+    @apply bg-gradient-to-br from-neutral-500/10 to-[#151823] border-l-4 border-l-neutral-500 border-t border-r border-b border-white/10;
+  }
+  
+  .trail-solution-justification {
+    @apply p-4 border-l-2 border-[#0ABAB5]/30 bg-[#0ABAB5]/10 rounded-r-lg italic text-neutral-300;
+  }
+  
+  /* Efeito de carregamento animado para a geração da trilha */
+  .trail-loading-pulse {
+    @apply relative;
+  }
+  
+  .trail-loading-pulse:before {
+    content: '';
+    @apply absolute inset-0 rounded-full bg-[#0ABAB5]/30;
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 0.5;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.2;
+      transform: scale(1.1);
+    }
   }
 }

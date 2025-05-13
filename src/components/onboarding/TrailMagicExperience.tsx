@@ -1,123 +1,93 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Loader2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ErrorBoundary } from 'react-error-boundary';
+import { Sparkles } from 'lucide-react';
 
 interface TrailMagicExperienceProps {
   onFinish: () => void;
 }
 
-// Componente de fallback para erros
-const MagicFallback = ({ onFinish }: { onFinish: () => void }) => (
-  <div className="w-full h-80 flex flex-col items-center justify-center bg-gradient-to-br from-[#0ABAB5]/10 to-white rounded-2xl p-8">
-    <div className="text-center space-y-4">
-      <h3 className="text-xl font-semibold text-[#0ABAB5]">Milagrinho está gerando sua trilha personalizada</h3>
-      <p className="text-gray-600">Estamos analisando seus dados e construindo uma trilha perfeita para o seu negócio!</p>
-      <div className="flex justify-center mt-4">
-        <Loader2 className="animate-spin h-8 w-8 text-[#0ABAB5]" />
-      </div>
-      <Button 
-        className="mt-4 bg-[#0ABAB5] text-white"
-        onClick={onFinish}
-      >
-        Continuar para ver minha trilha
-      </Button>
-    </div>
-  </div>
-);
-
 export const TrailMagicExperience: React.FC<TrailMagicExperienceProps> = ({ onFinish }) => {
-  const [stage, setStage] = useState<'intro' | 'analysis' | 'completion'>('intro');
-  const [animCompleted, setAnimCompleted] = useState(false);
+  const [step, setStep] = useState(0);
+  const [showFinishButton, setShowFinishButton] = useState(false);
   
-  // Usar useCallback para otimizar a performance
-  const handleAnalysisComplete = useCallback(() => {
-    setAnimCompleted(true);
-    setStage('completion');
-  }, []);
+  const messages = [
+    "Analisando seu perfil e objetivos...",
+    "Combinando com soluções de IA de alto impacto...",
+    "Personalizando recomendações específicas...",
+    "Organizando sua trilha ideal...",
+    "Trilha personalizada pronta!"
+  ];
   
-  // Usar useCallback para otimizar a performance
-  const handleStartAnalysis = useCallback(() => {
-    setStage('analysis');
-    
-    // Simular tempo de análise (5 segundos)
-    setTimeout(() => {
-      handleAnalysisComplete();
-    }, 5000);
-  }, [handleAnalysisComplete]);
-  
-  // Iniciar automaticamente 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      handleStartAnalysis();
-    }, 1000);
+    const timers: NodeJS.Timeout[] = [];
     
-    return () => clearTimeout(timer);
-  }, [handleStartAnalysis]);
+    // Avançar pelos passos com temporizadores
+    for (let i = 1; i < messages.length; i++) {
+      const timer = setTimeout(() => {
+        setStep(i);
+        if (i === messages.length - 1) {
+          setTimeout(() => setShowFinishButton(true), 1000);
+        }
+      }, i * 2000);
+      timers.push(timer);
+    }
+    
+    return () => timers.forEach(timer => clearTimeout(timer));
+  }, [messages.length]);
   
-  // Para ter certeza que o usuário não fica preso, timer de segurança
-  useEffect(() => {
-    const safetyTimer = setTimeout(() => {
-      if (!animCompleted) {
-        console.log("Timer de segurança acionado para TrailMagicExperience");
-        handleAnalysisComplete();
-      }
-    }, 10000);
-    
-    return () => clearTimeout(safetyTimer);
-  }, [animCompleted, handleAnalysisComplete]);
-
-  const messages = {
-    intro: "Milagrinho está analisando seus dados para gerar sua trilha personalizada...",
-    analysis: "Identificando as melhores soluções para o momento do seu negócio...",
-    completion: "Trilha personalizada gerada com sucesso! Clique para continuar."
-  };
-
   return (
-    <ErrorBoundary fallbackRender={({error}) => {
-      console.error("Erro na experiência mágica:", error);
-      return <MagicFallback onFinish={onFinish} />;
-    }}>
-      <div className="relative w-full h-80 flex items-center justify-center mb-4 rounded-2xl overflow-hidden">
-        {/* Overlay simplificado sem a cena 3D */}
-        <div className="absolute inset-0 z-0 bg-gradient-to-br from-[#0ABAB5]/20 to-white">
-          {/* Animação simplificada */}
-          {stage === 'analysis' && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-24 h-24 rounded-full bg-[#0ABAB5]/10 animate-ping" />
-            </div>
-          )}
+    <div className="max-w-2xl mx-auto">
+      <div className="bg-gradient-to-br from-[#151823] to-[#1A1E2E] p-8 rounded-2xl border border-[#0ABAB5]/20 shadow-lg flex flex-col items-center justify-center min-h-[350px]">
+        <div className="relative mb-8">
+          <div className="absolute inset-0 rounded-full bg-[#0ABAB5]/20 blur-xl animate-pulse"></div>
+          <div className="relative">
+            <Sparkles className="h-16 w-16 text-[#0ABAB5] animate-pulse" />
+          </div>
         </div>
         
-        {/* Overlay com mensagens */}
-        <div className="relative z-10 text-center p-4 bg-white/30 backdrop-blur-sm rounded-xl flex flex-col items-center space-y-4">
-          <h3 className="text-xl font-bold text-[#0ABAB5]">{messages[stage]}</h3>
-          
-          {stage === 'intro' && (
-            <Button 
-              className="mt-4 bg-[#0ABAB5] text-white"
-              onClick={handleStartAnalysis}
+        <div className="space-y-6 w-full max-w-md">
+          {messages.map((message, idx) => (
+            <div 
+              key={idx} 
+              className={`flex items-center gap-3 transition-all duration-500 ${
+                idx <= step ? 'opacity-100' : 'opacity-30'
+              }`}
             >
-              Iniciar Análise
-            </Button>
-          )}
-          
-          {stage === 'analysis' && (
-            <Loader2 className="animate-spin h-8 w-8 text-[#0ABAB5]" />
-          )}
-          
-          {stage === 'completion' && (
-            <Button 
-              className="mt-4 bg-[#0ABAB5] text-white"
-              onClick={onFinish}
-              autoFocus
-            >
-              Ver Minha Trilha Personalizada
-            </Button>
-          )}
+              <div className={`h-6 w-6 rounded-full flex items-center justify-center ${
+                idx < step 
+                  ? 'bg-[#0ABAB5] text-white' 
+                  : idx === step 
+                    ? 'bg-white/10 border-2 border-[#0ABAB5] animate-pulse' 
+                    : 'bg-white/5 border border-white/10'
+              }`}>
+                {idx < step ? (
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                ) : (
+                  <span className="h-2 w-2 rounded-full bg-white/70"></span>
+                )}
+              </div>
+              <span className={`text-${idx <= step ? 'white' : 'neutral-500'} ${idx === step ? 'font-medium' : ''}`}>
+                {message}
+              </span>
+            </div>
+          ))}
         </div>
+        
+        {showFinishButton && (
+          <div className="mt-8 animate-fade-in">
+            <Button
+              onClick={onFinish}
+              className="bg-gradient-to-r from-[#0ABAB5] to-[#34D399] hover:from-[#0ABAB5]/90 hover:to-[#34D399]/90 px-6 py-2 text-base"
+            >
+              <Sparkles className="mr-2 h-4 w-4" />
+              Ver Minha Trilha
+            </Button>
+          </div>
+        )}
       </div>
-    </ErrorBoundary>
+    </div>
   );
 };

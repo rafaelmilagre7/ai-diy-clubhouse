@@ -1,6 +1,6 @@
 
 import React from "react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Sparkles, Gauge, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
@@ -19,13 +19,23 @@ export const TrailSolutionCard: React.FC<TrailSolutionCardProps> = ({ solution, 
   const getPriorityStyles = () => {
     switch (solution.priority) {
       case 1:
-        return "bg-gradient-to-tr from-[#0ABAB5]/80 to-[#6de2de]/60 border-[#0ABAB5] shadow-primary/10 border-2";
+        return "bg-gradient-to-tr from-[#0ABAB5]/90 to-[#34D399]/80 border-[#0ABAB5] shadow-[0_4px_15px_-2px_rgba(10,186,181,0.25)] border";
       case 2:
-        return "bg-gradient-to-tr from-amber-100 to-amber-50 border-amber-300 border-2";
+        return "bg-gradient-to-tr from-amber-500/20 to-amber-300/10 border-amber-500/30 border shadow-md";
       case 3:
-        return "bg-gradient-to-tr from-gray-100 to-white border-gray-200 border-2";
+        return "bg-gradient-to-tr from-neutral-800/20 to-neutral-700/10 border-neutral-700/20 border shadow-sm";
       default:
-        return "bg-white border-gray-100";
+        return "bg-gradient-to-tr from-neutral-900/10 to-transparent border-neutral-700/10 border";
+    }
+  };
+
+  // Ícone baseado na prioridade
+  const getPriorityIcon = () => {
+    switch (solution.priority) {
+      case 1: return <Sparkles className="h-4 w-4 text-[#0ABAB5]" />;
+      case 2: return <Gauge className="h-4 w-4 text-amber-500" />;
+      case 3: return <Zap className="h-4 w-4 text-neutral-400" />;
+      default: return null;
     }
   };
 
@@ -33,13 +43,13 @@ export const TrailSolutionCard: React.FC<TrailSolutionCardProps> = ({ solution, 
   const getCategoryInfo = () => {
     switch (solution.category) {
       case "revenue":
-        return { label: "Receita", className: "bg-green-100 text-green-700 border-green-300" };
+        return { label: "Receita", className: "bg-revenue-dark/30 text-revenue-light border-revenue/30" };
       case "operational":
-        return { label: "Operacional", className: "bg-blue-100 text-blue-700 border-blue-300" };
+        return { label: "Operacional", className: "bg-operational-dark/30 text-operational-light border-operational/30" };
       case "strategy":
-        return { label: "Estratégia", className: "bg-purple-100 text-purple-700 border-purple-300" };
+        return { label: "Estratégia", className: "bg-strategy-dark/30 text-strategy-light border-strategy/30" };
       default:
-        return { label: "Outra", className: "bg-gray-100 text-gray-700 border-gray-300" };
+        return { label: "Outra", className: "bg-gray-800/50 text-gray-300 border-gray-700/30" };
     }
   };
 
@@ -54,7 +64,7 @@ export const TrailSolutionCard: React.FC<TrailSolutionCardProps> = ({ solution, 
   return (
     <div
       className={cn(
-        "flex items-center gap-4 rounded-2xl px-5 py-4 mb-0 cursor-pointer group transition-all hover:scale-[1.01]",
+        "flex items-center gap-4 rounded-2xl px-5 py-4 mb-3 cursor-pointer group transition-all hover:scale-[1.01] backdrop-blur-sm",
         getPriorityStyles()
       )}
       onClick={() => onClick(solution.solutionId)}
@@ -63,28 +73,42 @@ export const TrailSolutionCard: React.FC<TrailSolutionCardProps> = ({ solution, 
         <img
           src={solution.image_url || solution.thumbnail_url}
           alt={safeTitle}
-          className="h-14 w-14 rounded-xl object-cover border-white border-2 shadow-sm shrink-0"
+          className="h-16 w-16 rounded-xl object-cover border-[#151823]/80 border shadow-sm shrink-0"
         />
       ) : (
-        <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-[#0ABAB5] to-[#0ABAB5]/70 flex items-center justify-center text-white font-bold shrink-0 text-xl shadow-sm">
-          IA
+        <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-[#0ABAB5] to-[#34D399] flex items-center justify-center text-white font-bold shrink-0 text-xl shadow-md">
+          {safeTitle.charAt(0).toUpperCase()}
         </div>
       )}
 
       <div className="flex-1 min-w-0">
-        <div className="flex items-center mb-1 gap-x-2">
-          <span className={cn("text-xs font-semibold uppercase tracking-tight opacity-80", getCategoryInfo().className)}>
-            {getCategoryInfo().label}
-          </span>
+        <div className="flex items-center mb-1.5 gap-x-2">
+          <Badge className={cn("px-2 py-0.5 flex items-center gap-1", getCategoryInfo().className)}>
+            {getPriorityIcon()}
+            <span>{getCategoryInfo().label}</span>
+          </Badge>
+          
+          {solution.difficulty && (
+            <Badge variant="neutral" className="text-xs">
+              {solution.difficulty === "easy" && "Fácil"}
+              {solution.difficulty === "medium" && "Médio"}
+              {solution.difficulty === "advanced" && "Avançado"}
+            </Badge>
+          )}
         </div>
-        <h3 className="font-semibold text-base text-gray-900 truncate group-hover:text-[#0ABAB5] transition-colors">
+        
+        <h3 className="font-semibold text-base text-neutral-100 group-hover:text-[#0ABAB5] transition-colors">
           {safeTitle}
         </h3>
-        <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">
+        
+        <p className="text-sm text-neutral-400 line-clamp-2 mt-1">
           {safeDescription}
         </p>
       </div>
-      <ChevronRight className="h-6 w-6 text-[#0ABAB5] opacity-80 ml-2 group-hover:translate-x-1 transition-transform" />
+      
+      <div className="h-10 w-10 flex items-center justify-center rounded-full bg-[#0ABAB5]/10 group-hover:bg-[#0ABAB5]/20 transition-colors">
+        <ChevronRight className="h-5 w-5 text-[#0ABAB5] group-hover:translate-x-0.5 transition-transform" />
+      </div>
     </div>
   );
 };
