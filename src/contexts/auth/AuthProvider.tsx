@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { UserProfile } from '@/lib/supabase';
@@ -6,25 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuthMethods } from './hooks/useAuthMethods';
 import { AuthStateManager, AuthState } from './managers/AuthStateManager';
 import { toast } from 'sonner';
-
-// Tipo do contexto de autenticação
-export interface AuthContextType {
-  session: Session | null;
-  user: User | null;
-  profile: UserProfile | null;
-  isAdmin: boolean;
-  isFormacao: boolean;
-  isLoading: boolean;
-  authError: Error | null;
-  signIn: (email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
-  signInAsMember: () => Promise<void>;
-  signInAsAdmin: () => Promise<void>;
-  setSession: React.Dispatch<React.SetStateAction<Session | null>>;
-  setUser: React.Dispatch<React.SetStateAction<User | null>>;
-  setProfile: React.Dispatch<React.SetStateAction<UserProfile | null>>;
-  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
-};
+import { AuthContextType } from './types';
 
 // Criação do contexto com valor padrão undefined
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

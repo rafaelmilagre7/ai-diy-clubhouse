@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { supabase } from '@/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
@@ -17,7 +16,7 @@ export interface AuthState {
 }
 
 export interface AuthStateManagerProps {
-  onStateChange: (newState: AuthState) => void;
+  onStateChange: (newState: Partial<AuthState>) => void;
 }
 
 /**
@@ -39,13 +38,11 @@ export const AuthStateManager = ({ onStateChange }: AuthStateManagerProps) => {
   });
   
   // Função para atualizar o estado e enviar para o contexto pai
+  // Modificado para garantir que retorne um objeto Partial<AuthState> válido
   const updateState = (partialState: Partial<AuthState>) => {
     if (!isMounted.current) return;
     
-    onStateChange((prevState) => ({
-      ...prevState,
-      ...partialState
-    }));
+    onStateChange(partialState);
   };
   
   // Função para definir o perfil e calcular funções derivadas
