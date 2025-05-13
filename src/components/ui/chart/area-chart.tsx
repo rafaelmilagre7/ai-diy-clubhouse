@@ -139,7 +139,6 @@ export function AreaChart({
           {showXAxis && (
             <XAxis
               dataKey={index}
-              tick={{ fill: "var(--muted-foreground)" }}
               tickLine={{ stroke: "var(--border)" }}
               axisLine={{ stroke: "var(--border)" }}
               tickMargin={10}
@@ -162,7 +161,6 @@ export function AreaChart({
             <YAxis
               width={yAxisWidth}
               tickFormatter={valueFormatter}
-              tick={{ fill: "var(--muted-foreground)" }}
               tickLine={{ stroke: "var(--border)" }}
               axisLine={{ stroke: "var(--border)" }}
               tickMargin={10}
@@ -214,3 +212,4 @@ export function AreaChart({
     </div>
   )
 }
+
