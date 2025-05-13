@@ -41,7 +41,7 @@ export function NetworkingAvailabilitySection({ control, errors, showErrors = fa
             />
             <div className="flex justify-between text-xs text-neutral-400">
               <span>Pouca disponibilidade</span>
-              <span className="text-viverblue text-lg font-medium">{field.value || 0}</span>
+              <span className="text-[#0ABAB5] text-lg font-medium">{field.value || 0}</span>
               <span>Muita disponibilidade</span>
             </div>
           </div>

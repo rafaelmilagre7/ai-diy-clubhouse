@@ -43,8 +43,7 @@ export function InterestsSection({ watch, toggleSelect, errors, showErrors = fal
               "px-3 py-2 rounded-lg border transition-all text-sm",
               selectedInterests.includes(opt.value)
                 ? "bg-[#0ABAB5] text-white border-[#0ABAB5]"
-                : "bg-[#1A1E2E] text-neutral-300 border-neutral-700",
-              hasError ? "border-red-300" : ""
+                : "bg-[#1A1E2E] text-neutral-300 border-neutral-700"
             )}
             onClick={() => toggleSelect("interests", opt.value)}
           >

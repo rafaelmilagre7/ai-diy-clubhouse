@@ -1,12 +1,12 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { OnboardingStepProps } from "@/types/onboarding";
 import { NavigationButtons } from "@/components/onboarding/NavigationButtons";
 import { useForm, Controller } from "react-hook-form";
 import { normalizeExperiencePersonalization } from "@/hooks/onboarding/persistence/utils/experiencePersonalizationNormalization";
 import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
-import { Sun, Moon, Calendar, Users, BookOpen, Briefcase } from "lucide-react";
+import { Sun, Moon, Calendar, Users, BookOpen, Briefcase, Clock, GraduationCap } from "lucide-react";
 
 // Interface para o formulário
 interface ExperienceFormData {
@@ -157,13 +157,13 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
+      <div className="bg-[#1A1E2E] rounded-lg border border-neutral-700 p-6 shadow-md backdrop-blur-sm">
         <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8">
           {/* Interesses em IA */}
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <BookOpen className="text-[#0ABAB5]" />
-              <label className="font-semibold text-gray-700">
+            <div className="flex items-center gap-2 mb-3">
+              <BookOpen className="text-[#0ABAB5] h-5 w-5" />
+              <label className="font-semibold text-white">
                 Interesses Específicos em IA <span className="text-red-500">*</span>
               </label>
             </div>
@@ -184,7 +184,7 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
                         "px-3 py-2 rounded-lg border transition-all text-sm",
                         (field.value || []).includes(opt.value)
                           ? "bg-[#0ABAB5] text-white border-[#0ABAB5]"
-                          : "bg-white text-gray-700 border-gray-200"
+                          : "bg-[#151823] text-neutral-300 border-neutral-700 hover:border-neutral-600"
                       )}
                       onClick={() => toggleSelection("interests", opt.value)}
                     >
@@ -203,9 +203,9 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
 
           {/* Horários Preferidos */}
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Clock className="text-[#0ABAB5]" />
-              <label className="font-semibold text-gray-700">
+            <div className="flex items-center gap-2 mb-3">
+              <Clock className="text-[#0ABAB5] h-5 w-5" />
+              <label className="font-semibold text-white">
                 Horários Preferidos para Encontros Online <span className="text-red-500">*</span>
               </label>
             </div>
@@ -215,7 +215,7 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
               rules={{ required: true, minLength: 1 }}
               render={({ field }) => (
                 <div className={cn(
-                  "flex gap-4",
+                  "flex flex-wrap gap-4",
                   errors.preferred_times && hasAttemptedSubmit ? "border border-red-500 p-3 rounded-md" : ""
                 )}>
                   {TIME_OPTIONS.map(opt => (
@@ -223,14 +223,14 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
                       type="button"
                       key={opt.value}
                       className={cn(
-                        "flex items-center border px-4 py-2 rounded-lg gap-2 transition-all",
+                        "flex items-center border px-4 py-2 rounded-lg gap-2 transition-all flex-1",
                         (field.value || []).includes(opt.value)
                           ? "bg-[#0ABAB5] text-white border-[#0ABAB5]"
-                          : "bg-white text-gray-700 border-gray-200"
+                          : "bg-[#151823] text-neutral-300 border-neutral-700 hover:border-neutral-600"
                       )}
                       onClick={() => toggleSelection("preferred_times", opt.value)}
                     >
-                      <span className="text-2xl">{opt.emoji}</span>
+                      <span className="text-lg">{opt.emoji}</span>
                       {opt.label}
                     </button>
                   ))}
@@ -246,9 +246,9 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
 
           {/* Dias Disponíveis */}
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Calendar className="text-[#0ABAB5]" />
-              <label className="font-semibold text-gray-700">
+            <div className="flex items-center gap-2 mb-3">
+              <Calendar className="text-[#0ABAB5] h-5 w-5" />
+              <label className="font-semibold text-white">
                 Dias da Semana Disponíveis <span className="text-red-500">*</span>
               </label>
             </div>
@@ -268,7 +268,7 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
                         "rounded-full px-4 py-1 border font-medium transition",
                         (field.value || []).includes(day)
                           ? "bg-[#0ABAB5] text-white border-[#0ABAB5]"
-                          : "bg-white text-gray-700 border-gray-200"
+                          : "bg-[#151823] text-neutral-300 border-neutral-700 hover:border-neutral-600"
                       )}
                       onClick={() => toggleSelection("days_available", day)}
                     >
@@ -287,9 +287,9 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
 
           {/* Nível de Networking */}
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Users className="text-[#0ABAB5]" />
-              <label className="font-semibold text-gray-700">
+            <div className="flex items-center gap-2 mb-3">
+              <Users className="text-[#0ABAB5] h-5 w-5" />
+              <label className="font-semibold text-white">
                 Disponibilidade para Networking <span className="text-red-500">*</span>
               </label>
             </div>
@@ -299,8 +299,8 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
               rules={{ required: true, min: 0, max: 10 }}
               render={({ field }) => (
                 <div className={cn(
-                  "flex flex-col gap-2",
-                  errors.networking_level && hasAttemptedSubmit ? "border border-red-500 p-3 rounded-md" : ""
+                  "flex flex-col gap-2 bg-[#151823] p-4 rounded-lg border border-neutral-700",
+                  errors.networking_level && hasAttemptedSubmit ? "border-red-500" : ""
                 )}>
                   <Slider
                     min={0}
@@ -310,8 +310,9 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
                     onValueChange={val => field.onChange(val[0])}
                     className="w-full"
                   />
-                  <div className="flex justify-between text-xs">
+                  <div className="flex justify-between text-xs text-neutral-400">
                     <span>Pouca disponibilidade</span>
+                    <span className="text-[#0ABAB5] text-lg font-medium">{field.value || 0}</span>
                     <span>Muita disponibilidade</span>
                   </div>
                 </div>
@@ -326,9 +327,9 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
 
           {/* Habilidades para Compartilhar */}
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Briefcase className="text-[#0ABAB5]" />
-              <label className="font-semibold text-gray-700">
+            <div className="flex items-center gap-2 mb-3">
+              <Briefcase className="text-[#0ABAB5] h-5 w-5" />
+              <label className="font-semibold text-white">
                 Habilidades que Você Pode Compartilhar <span className="text-red-500">*</span>
               </label>
             </div>
@@ -348,7 +349,7 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
                         "px-3 py-2 rounded-lg border transition-all text-sm",
                         (field.value || []).includes(opt.value)
                           ? "bg-[#0ABAB5] text-white border-[#0ABAB5]"
-                          : "bg-white text-gray-700 border-gray-200"
+                          : "bg-[#151823] text-neutral-300 border-neutral-700 hover:border-neutral-600"
                       )}
                       onClick={() => toggleSelection("shareable_skills", opt.value)}
                     >
@@ -367,9 +368,9 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
 
           {/* Tópicos para Mentoria */}
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <GraduationCap className="text-[#0ABAB5]" />
-              <label className="font-semibold text-gray-700">
+            <div className="flex items-center gap-2 mb-3">
+              <GraduationCap className="text-[#0ABAB5] h-5 w-5" />
+              <label className="font-semibold text-white">
                 Tópicos em que Gostaria de Receber Mentoria <span className="text-red-500">*</span>
               </label>
             </div>
@@ -389,7 +390,7 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
                         "px-3 py-2 rounded-lg border transition-all text-sm",
                         (field.value || []).includes(topic.value)
                           ? "bg-[#0ABAB5] text-white border-[#0ABAB5]"
-                          : "bg-white text-gray-700 border-gray-200"
+                          : "bg-[#151823] text-neutral-300 border-neutral-700 hover:border-neutral-600"
                       )}
                       onClick={() => toggleSelection("mentorship_topics", topic.value)}
                     >
@@ -408,7 +409,7 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
 
           {/* Mensagem de erro geral */}
           {hasAttemptedSubmit && !isValid && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+            <div className="p-3 bg-red-900/20 border border-red-800/30 rounded-md text-red-300 text-sm">
               Por favor, preencha todos os campos obrigatórios para continuar.
             </div>
           )}
@@ -426,5 +427,3 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
     </div>
   );
 };
-
-import { Clock, GraduationCap } from "lucide-react";

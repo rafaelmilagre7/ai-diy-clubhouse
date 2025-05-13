@@ -32,7 +32,7 @@ export function MentorshipTopicsSection({ watch, toggleSelect, errors, showError
     <div>
       <label className={cn(
         "font-semibold mb-2 block",
-        hasError ? "text-red-500" : "text-gray-700"
+        hasError ? "text-red-500" : "text-white"
       )}>
         Tópicos em que Você Gostaria de Receber Mentoria <span className="text-red-500">*</span>
       </label>
@@ -47,7 +47,7 @@ export function MentorshipTopicsSection({ watch, toggleSelect, errors, showError
               "px-3 py-2 rounded-lg border transition-all text-sm",
               selectedTopics.includes(topic.value)
                 ? "bg-[#0ABAB5] text-white border-[#0ABAB5]"
-                : "bg-white text-gray-700 border-gray-200"
+                : "bg-[#1A1E2E] text-neutral-300 border-neutral-700"
             )}
             onClick={() => toggleSelect("mentorship_topics", topic.value)}
           >
