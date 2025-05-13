@@ -1,9 +1,10 @@
+
 // Modificando apenas a interface para garantir consistência de tipos
 import React, { useEffect, useState, useMemo } from "react";
 import { OnboardingProgress } from "@/types/onboarding";
 import { ReviewData } from "@/types/reviewTypes";
 import { steps } from "@/hooks/onboarding/useStepDefinitions";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReviewSectionCard } from "./ReviewSectionCard";
 import { Card } from "@/components/ui/card";
@@ -279,10 +280,15 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
       <div className="pt-6 flex justify-end">
         <Button
           onClick={onComplete}
-          disabled={isSubmitting || !dataToUse}
-          className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+          disabled={isSubmitting}
+          className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90 text-white"
         >
-          {isSubmitting ? "Processando..." : (
+          {isSubmitting ? (
+            <span className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Processando...
+            </span>
+          ) : (
             <span className="flex items-center gap-2">
               Concluir e Gerar Minha Trilha
               <ArrowRight className="h-4 w-4" />

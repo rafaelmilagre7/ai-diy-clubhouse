@@ -8,7 +8,7 @@ import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, ChevronRight } from "lucide-react";
+import { Check, ChevronRight, Loader2 } from "lucide-react";
 
 const FormacaoReview = () => {
   const navigate = useNavigate();
@@ -75,17 +75,16 @@ const FormacaoReview = () => {
         backUrl="/onboarding/formacao/preferences"
         isFormacao={true}
       >
-        <div className="bg-amber-50 dark:bg-amber-900/30 p-6 rounded-lg border border-amber-200 dark:border-amber-700">
-          <h3 className="text-lg font-medium text-amber-800 dark:text-amber-300">Dados incompletos</h3>
-          <p className="mt-2 text-amber-700 dark:text-amber-400">
+        <div className="bg-amber-950/30 p-6 rounded-lg border border-amber-700">
+          <h3 className="text-lg font-medium text-amber-300">Dados incompletos</h3>
+          <p className="mt-2 text-amber-200">
             Não conseguimos encontrar todos os dados necessários para revisão. Por favor, volte às etapas anteriores 
             e verifique se preencheu todas as informações.
           </p>
           <div className="mt-4">
             <Button 
               onClick={() => navigate("/onboarding/formacao/personal-info")}
-              variant="outline" 
-              className="bg-white dark:bg-transparent"
+              variant="outline"
             >
               Voltar ao início
             </Button>
@@ -138,7 +137,7 @@ const FormacaoReview = () => {
       
       <div className="space-y-6">
         {/* Dados Pessoais */}
-        <Card>
+        <Card className="bg-[#151823] border-neutral-700">
           <CardHeader className="flex flex-row items-center justify-between bg-slate-800 rounded-t-lg">
             <div>
               <CardTitle className="text-white">Dados Pessoais</CardTitle>
@@ -148,7 +147,7 @@ const FormacaoReview = () => {
               variant="outline" 
               size="sm"
               onClick={() => handleEditSection("/onboarding/formacao/personal-info")}
-              className="bg-transparent border-gray-600 text-white hover:bg-gray-700"
+              className="border-gray-600 text-white hover:bg-gray-700"
             >
               Editar
             </Button>
@@ -156,23 +155,23 @@ const FormacaoReview = () => {
           <CardContent className="pt-6">
             <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <dt className="text-sm font-medium text-gray-500">Nome</dt>
-                <dd className="mt-1 text-base">{personalInfo.name || "Não informado"}</dd>
+                <dt className="text-sm font-medium text-gray-400">Nome</dt>
+                <dd className="mt-1 text-base text-white">{personalInfo.name || "Não informado"}</dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-gray-500">Email</dt>
-                <dd className="mt-1 text-base">{personalInfo.email || "Não informado"}</dd>
+                <dt className="text-sm font-medium text-gray-400">Email</dt>
+                <dd className="mt-1 text-base text-white">{personalInfo.email || "Não informado"}</dd>
               </div>
               {personalInfo.phone && (
                 <div>
-                  <dt className="text-sm font-medium text-gray-500">Telefone</dt>
-                  <dd className="mt-1 text-base">{personalInfo.ddi || "+55"} {personalInfo.phone}</dd>
+                  <dt className="text-sm font-medium text-gray-400">Telefone</dt>
+                  <dd className="mt-1 text-base text-white">{personalInfo.ddi || "+55"} {personalInfo.phone}</dd>
                 </div>
               )}
               {personalInfo.city && (
                 <div>
-                  <dt className="text-sm font-medium text-gray-500">Localização</dt>
-                  <dd className="mt-1 text-base">
+                  <dt className="text-sm font-medium text-gray-400">Localização</dt>
+                  <dd className="mt-1 text-base text-white">
                     {[personalInfo.city, personalInfo.state, personalInfo.country].filter(Boolean).join(", ")}
                   </dd>
                 </div>
@@ -182,7 +181,7 @@ const FormacaoReview = () => {
         </Card>
         
         {/* Experiência com IA */}
-        <Card>
+        <Card className="bg-[#151823] border-neutral-700">
           <CardHeader className="flex flex-row items-center justify-between bg-slate-800 rounded-t-lg">
             <div>
               <CardTitle className="text-white">Experiência com IA</CardTitle>
@@ -192,7 +191,7 @@ const FormacaoReview = () => {
               variant="outline" 
               size="sm"
               onClick={() => handleEditSection("/onboarding/formacao/ai-experience")}
-              className="bg-transparent border-gray-600 text-white hover:bg-gray-700"
+              className="border-gray-600 text-white hover:bg-gray-700"
             >
               Editar
             </Button>
@@ -200,19 +199,19 @@ const FormacaoReview = () => {
           <CardContent className="pt-6">
             <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <dt className="text-sm font-medium text-gray-500">Nível de conhecimento</dt>
-                <dd className="mt-1 text-base">{getKnowledgeLevelLabel(aiExperience?.knowledge_level)}</dd>
+                <dt className="text-sm font-medium text-gray-400">Nível de conhecimento</dt>
+                <dd className="mt-1 text-base text-white">{getKnowledgeLevelLabel(aiExperience?.knowledge_level)}</dd>
               </div>
               {aiExperience?.previous_tools && aiExperience.previous_tools.length > 0 && (
                 <div>
-                  <dt className="text-sm font-medium text-gray-500">Ferramentas já utilizadas</dt>
-                  <dd className="mt-1 text-base">{aiExperience.previous_tools.join(", ")}</dd>
+                  <dt className="text-sm font-medium text-gray-400">Ferramentas já utilizadas</dt>
+                  <dd className="mt-1 text-base text-white">{aiExperience.previous_tools.join(", ")}</dd>
                 </div>
               )}
               {aiExperience?.desired_ai_areas && aiExperience.desired_ai_areas.length > 0 && (
                 <div className="col-span-2">
-                  <dt className="text-sm font-medium text-gray-500">Áreas de interesse</dt>
-                  <dd className="mt-1 text-base">{aiExperience.desired_ai_areas.join(", ")}</dd>
+                  <dt className="text-sm font-medium text-gray-400">Áreas de interesse</dt>
+                  <dd className="mt-1 text-base text-white">{aiExperience.desired_ai_areas.join(", ")}</dd>
                 </div>
               )}
             </dl>
@@ -220,7 +219,7 @@ const FormacaoReview = () => {
         </Card>
         
         {/* Objetivos e Preferências */}
-        <Card>
+        <Card className="bg-[#151823] border-neutral-700">
           <CardHeader className="flex flex-row items-center justify-between bg-slate-800 rounded-t-lg">
             <div>
               <CardTitle className="text-white">Objetivos e Preferências</CardTitle>
@@ -230,7 +229,7 @@ const FormacaoReview = () => {
               variant="outline" 
               size="sm"
               onClick={() => handleEditSection("/onboarding/formacao/preferences")}
-              className="bg-transparent border-gray-600 text-white hover:bg-gray-700"
+              className="border-gray-600 text-white hover:bg-gray-700"
             >
               Editar
             </Button>
@@ -239,20 +238,20 @@ const FormacaoReview = () => {
             <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {formationData?.learning_goals && formationData.learning_goals.length > 0 && (
                 <div className="col-span-2">
-                  <dt className="text-sm font-medium text-gray-500">Objetivos de aprendizado</dt>
-                  <dd className="mt-1 text-base">{formationData.learning_goals.join(", ")}</dd>
+                  <dt className="text-sm font-medium text-gray-400">Objetivos de aprendizado</dt>
+                  <dd className="mt-1 text-base text-white">{formationData.learning_goals.join(", ")}</dd>
                 </div>
               )}
               {formationData?.preferred_learning_style && (
                 <div>
-                  <dt className="text-sm font-medium text-gray-500">Estilo de aprendizado preferido</dt>
-                  <dd className="mt-1 text-base">{getLearningStyleLabel(formationData.preferred_learning_style)}</dd>
+                  <dt className="text-sm font-medium text-gray-400">Estilo de aprendizado preferido</dt>
+                  <dd className="mt-1 text-base text-white">{getLearningStyleLabel(formationData.preferred_learning_style)}</dd>
                 </div>
               )}
               {formationData?.availability_hours_per_week && (
                 <div>
-                  <dt className="text-sm font-medium text-gray-500">Disponibilidade semanal</dt>
-                  <dd className="mt-1 text-base">{formationData.availability_hours_per_week} horas</dd>
+                  <dt className="text-sm font-medium text-gray-400">Disponibilidade semanal</dt>
+                  <dd className="mt-1 text-base text-white">{formationData.availability_hours_per_week} horas</dd>
                 </div>
               )}
             </dl>
@@ -274,7 +273,7 @@ const FormacaoReview = () => {
           >
             {isSubmitting ? (
               <>
-                <LoadingSpinner size="sm" className="mr-2" />
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                 Finalizando...
               </>
             ) : (

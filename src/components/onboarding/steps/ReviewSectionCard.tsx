@@ -1,3 +1,4 @@
+
 import React, { useMemo } from "react";
 import { CheckCircle, PenSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -190,7 +191,7 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
           <Button
             variant="outline"
             size="sm"
-            className="flex items-center gap-1 border-neutral-700 hover:bg-[#1A1E2E] hover:text-white"
+            className="flex items-center gap-1"
             onClick={handleEditClick}
           >
             <PenSquare className="h-4 w-4" />

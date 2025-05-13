@@ -123,9 +123,9 @@ const Review: React.FC = () => {
         totalSteps={steps.length}
         title="Revisar Informações"
       >
-        <div className="bg-amber-50 p-6 rounded-lg border border-amber-200">
-          <h3 className="text-lg font-medium text-amber-800">Dados não disponíveis</h3>
-          <p className="mt-2 text-amber-700">
+        <div className="bg-amber-950/30 p-6 rounded-lg border border-amber-700/70">
+          <h3 className="text-lg font-medium text-amber-300">Dados não disponíveis</h3>
+          <p className="mt-2 text-amber-200">
             {loadError?.message || "Não foi possível carregar seus dados. Por favor, tente recarregar a página ou volte para as etapas anteriores."}
           </p>
           <div className="mt-4 flex gap-3">
@@ -137,14 +137,12 @@ const Review: React.FC = () => {
                 setLoadError(null);
                 window.location.reload();
               }}
-              className="bg-white"
             >
               Recarregar página
             </Button>
             <Button
               onClick={() => navigate("/onboarding/complementary")}
               variant="default"
-              className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
             >
               Voltar à etapa anterior
             </Button>
@@ -166,7 +164,7 @@ const Review: React.FC = () => {
           message="Vamos revisar as informações que você compartilhou conosco. Se algo estiver incorreto, você pode voltar às etapas anteriores e fazer os ajustes necessários."
         />
         
-        <div className="bg-gray-50 rounded-lg p-6">
+        <div className="bg-[#151823] rounded-lg p-6 border border-neutral-700/50">
           {/* Apenas renderizar ReviewStep se tivermos dados de progresso */}
           {progress && (
             <ReviewStep 

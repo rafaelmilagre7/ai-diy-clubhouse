@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ArrowLeft } from "lucide-react";
+import { ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
 
 interface NavigationButtonsProps {
   isSubmitting: boolean;
@@ -41,7 +41,10 @@ export const NavigationButtons = ({
       disabled={isSubmitting}
     >
       {isSubmitting ? (
-        loadingText
+        <span className="flex items-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          {loadingText}
+        </span>
       ) : (
         <span className="flex items-center gap-2">
           {submitText}
