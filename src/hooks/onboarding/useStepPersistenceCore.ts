@@ -23,10 +23,12 @@ export function useStepPersistenceCore({
   onboardingType?: 'club' | 'formacao';
 }) {
   const { progress, updateProgress, refreshProgress } = useProgress();
-  const { logError } = useLogging();
+  const { logError, log } = useLogging();
   
   // Flag para controlar exibição de toasts
   const toastShown = React.useRef(false);
+  // Cache local para dados não salvos
+  const unsavedDataCache = React.useRef<Record<string, any>>({});
 
   /**
    * Função principal para salvar dados de um passo específico
@@ -70,14 +72,22 @@ export function useStepPersistenceCore({
     }
     
     console.log(`Salvando dados do passo ${stepId}, índice ${currentStepIndex}:`, data);
-    console.log("Estado atual do progresso:", progress);
-
+    
+    // Salvar no cache local para recuperação em caso de falha
+    unsavedDataCache.current[stepId] = data;
+    
     try {
       // Adicionar o tipo de onboarding aos dados
       const dataWithType = {
         ...data,
         onboarding_type: onboardingType
       };
+      
+      // Validar dados obrigatórios por etapa
+      validateRequiredFields(stepId, dataWithType);
+      
+      // Registrar tentativa de salvamento
+      log("onboarding_save_attempt", { step: stepId, step_index: currentStepIndex });
       
       // Montar objeto de atualização para a etapa
       const updateObj = buildUpdateObject(stepId, dataWithType, progress, currentStepIndex);
@@ -93,7 +103,12 @@ export function useStepPersistenceCore({
       console.log("Dados a serem enviados para o banco:", updateObj);
 
       // Atualizar na tabela principal
-      const result = await updateProgress(updateObj);
+      const result = await updateProgress({
+        ...updateObj,
+        // Garantir que campos importantes estejam sempre atualizados
+        updated_at: new Date().toISOString(),
+        sync_status: 'pendente' // Marcar para sincronização com outros sistemas se necessário
+      });
       
       // Verificar se temos um retorno válido
       if (!result || (result as any).error) {
@@ -111,9 +126,19 @@ export function useStepPersistenceCore({
         return;
       }
       
+      // Dados salvos com sucesso, limpar do cache
+      delete unsavedDataCache.current[stepId];
+      
       // Usar os dados retornados ou fallback para o objeto de progresso com as atualizações
       const updatedProgress = (result as any).data || { ...progress, ...updateObj };
       console.log("Progresso atualizado com sucesso:", updatedProgress);
+      
+      // Registrar sucesso
+      log("onboarding_save_success", { 
+        step: stepId, 
+        step_index: currentStepIndex,
+        completed_steps: updatedProgress.completed_steps?.length || 0
+      });
       
       // Notificar usuário do salvamento (apenas uma vez)
       if (!toastShown.current) {
@@ -160,12 +185,14 @@ export function useStepPersistenceCore({
     
     try {
       console.log(`Completando onboarding do tipo ${onboardingType}...`);
+      log("complete_onboarding_attempt", { type: onboardingType });
       
       // Marca o onboarding como concluído
       const result = await updateProgress({
         is_completed: true,
         completed_steps: steps.map(s => s.id),
-        onboarding_type: onboardingType
+        onboarding_type: onboardingType,
+        updated_at: new Date().toISOString()
       });
       
       if ((result as any)?.error) {
@@ -175,14 +202,15 @@ export function useStepPersistenceCore({
       // Atualiza dados locais
       await refreshProgress();
       
+      log("complete_onboarding_success", { type: onboardingType });
       toast.success("Onboarding concluído com sucesso!");
       
       // Redirecionamento após delay para garantir atualização do estado
       setTimeout(() => {
         // Redirecionar para página apropriada com base no tipo de onboarding
         if (onboardingType === 'club') {
-          // Usamos o navigate em vez de window.location.href para manter o SPA
-          navigate("/implementation-trail");
+          // Adicionar parâmetro para ativar geração automática da trilha
+          navigate("/onboarding/trail-generation?autoGenerate=true");
         } else {
           navigate("/learning"); // Rota para a área de aprendizado da formação
         }
@@ -190,7 +218,8 @@ export function useStepPersistenceCore({
     } catch (error: any) {
       console.error("Erro ao completar onboarding:", error);
       logError("complete_onboarding_error", { 
-        error: error instanceof Error ? error.message : String(error) 
+        error: error instanceof Error ? error.message : String(error),
+        type: onboardingType 
       });
       toast.error("Erro ao finalizar onboarding. Por favor, tente novamente.");
       
@@ -201,8 +230,44 @@ export function useStepPersistenceCore({
     }
   };
 
+  /**
+   * Função para validar campos obrigatórios por etapa
+   */
+  const validateRequiredFields = (stepId: string, data: any) => {
+    let missingFields: string[] = [];
+    
+    // Validações específicas por etapa
+    switch (stepId) {
+      case 'personal_info':
+        if (!data.name) missingFields.push('nome');
+        if (!data.email) missingFields.push('email');
+        break;
+      case 'professional_data':
+        if (!data.company_name) missingFields.push('nome da empresa');
+        break;
+      // Adicionar outras validações conforme necessário
+    }
+    
+    // Se houver campos faltando, registrar mas não bloquear
+    if (missingFields.length > 0) {
+      console.warn(`Campos obrigatórios não preenchidos na etapa ${stepId}:`, missingFields);
+      log("onboarding_missing_fields", { 
+        step: stepId, 
+        missing: missingFields.join(', ')
+      });
+    }
+  };
+
+  /**
+   * Recupera dados não salvos do cache local
+   */
+  const getUnsavedData = (stepId: string) => {
+    return unsavedDataCache.current[stepId];
+  };
+
   return {
     saveStepData,
     completeOnboarding,
+    getUnsavedData
   };
 }

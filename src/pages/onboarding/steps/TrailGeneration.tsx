@@ -11,10 +11,13 @@ import { TrailErrorState } from '@/components/onboarding/TrailGeneration/TrailEr
 import { TrailGenerationPanel } from '@/components/onboarding/TrailGenerationPanel';
 import { MilagrinhoMessage } from '@/components/onboarding/MilagrinhoMessage';
 import { toast } from 'sonner';
+import { saveImplementationTrail } from '@/hooks/implementation/useSaveImplementationTrail';
+import { useAuth } from '@/contexts/auth';
 
 // Componente principal para geração de trilha
 const TrailGeneration = () => {
   const { progress, refreshProgress, updateProgress } = useProgress();
+  const { user } = useAuth();
   const { trail, isLoading: trailLoading, error: trailError, generateImplementationTrail } = useImplementationTrail();
   const { log, logError } = useLogging();
   const [searchParams] = useSearchParams();
@@ -92,7 +95,8 @@ const TrailGeneration = () => {
       try {
         console.log("Atualizando status do onboarding para completo...");
         await updateProgress({
-          is_completed: true
+          is_completed: true,
+          updated_at: new Date().toISOString()
         });
         await refreshProgress();
       } catch (error) {
@@ -103,7 +107,10 @@ const TrailGeneration = () => {
 
   // Função para iniciar a geração da trilha
   const startTrailGeneration = async () => {
-    if (!progress) return;
+    if (!progress || !user) {
+      toast.error("Dados de usuário ou onboarding não disponíveis");
+      return;
+    }
     
     try {
       setGenerating(true);
@@ -118,7 +125,19 @@ const TrailGeneration = () => {
       await ensureOnboardingComplete();
       
       // Gerar a trilha de implementação
-      await generateImplementationTrail(progress);
+      const generatedTrail = await generateImplementationTrail(progress);
+      
+      if (generatedTrail && user.id) {
+        // Salvar no banco de dados
+        try {
+          await saveImplementationTrail(user.id, generatedTrail);
+          log('trail_saved_to_database', { success: true });
+        } catch (saveError) {
+          console.error("Erro ao salvar trilha no banco:", saveError);
+          logError('trail_save_error', { error: String(saveError) });
+          // Continuar mesmo com erro de salvamento
+        }
+      }
       
       log('trail_generation_success', {});
       toast.success("Trilha personalizada gerada com sucesso!");
@@ -142,6 +161,7 @@ const TrailGeneration = () => {
       // Tentar novamente automaticamente se estiver dentro do limite de tentativas
       if (attemptCount < MAX_RETRY_ATTEMPTS) {
         console.log(`Tentativa ${attemptCount + 1} falhou. Tentando novamente...`);
+        toast.info(`Tentativa ${attemptCount + 1} falhou. Tentando novamente automaticamente...`);
         setTimeout(() => {
           startTrailGeneration();
         }, 2000); // Esperar 2 segundos antes de tentar novamente
@@ -190,18 +210,18 @@ const TrailGeneration = () => {
   const handleClose = useCallback(() => {
     // Garantir que o onboarding está marcado como completo antes de redirecionar
     ensureOnboardingComplete().then(() => {
-      navigate('/dashboard');
+      navigate('/implementation-trail');
     }).catch(err => {
       console.error("Erro ao finalizar onboarding:", err);
       // Redirecionar mesmo assim
-      navigate('/dashboard');
+      navigate('/implementation-trail');
     });
   }, [navigate, ensureOnboardingComplete]);
 
   // Renderização do componente com base no estado
   return (
     <OnboardingLayout
-      currentStep={9} // Etapa após a revisão
+      currentStep={9} 
       title="Trilha Personalizada VIVER DE IA"
       backUrl="/onboarding/review"
       hideProgress

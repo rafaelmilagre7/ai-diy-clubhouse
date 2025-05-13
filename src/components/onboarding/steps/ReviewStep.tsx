@@ -1,4 +1,4 @@
-// Modificando apenas a interface para garantir consistência de tipos
+
 import React, { useEffect, useState, useMemo } from "react";
 import { OnboardingProgress } from "@/types/onboarding";
 import { ReviewData } from "@/types/reviewTypes";
@@ -7,12 +7,13 @@ import { ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReviewSectionCard } from "./ReviewSectionCard";
 import { Card } from "@/components/ui/card";
+import { toast } from "sonner";
 
 interface ReviewStepProps {
   progress: OnboardingProgress | null;
   onComplete: () => void;
   isSubmitting: boolean;
-  navigateToStep: (stepId: string) => void; // Mantida a definição de string como parâmetro
+  navigateToStep: (stepId: string) => void;
 }
 
 export const ReviewStep: React.FC<ReviewStepProps> = ({
@@ -24,6 +25,8 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
   // Estado com tipagem explícita para dados processados
   const [processedData, setProcessedData] = useState<ReviewData | null>(null);
   const [processingComplete, setProcessingComplete] = useState<boolean>(false);
+  const [dataIntegrityChecked, setDataIntegrityChecked] = useState<boolean>(false);
+  const [missingSteps, setMissingSteps] = useState<string[]>([]);
   
   // Efeito para processar dados quando progresso mudar
   useEffect(() => {
@@ -77,39 +80,96 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
         }
       });
       
-      // Log adicional especialmente para business_goals
-      console.log("[ReviewStep] Verificação especial de business_goals:", {
-        original: progress.business_goals,
-        normalized: normalizedProgress.business_goals,
-        hasFields: normalizedProgress.business_goals && Object.keys(normalizedProgress.business_goals).length > 0
-      });
-      
       console.log("[ReviewStep] Dados normalizados:", normalizedProgress);
       setProcessedData(normalizedProgress as ReviewData);
+      
+      // Verificar etapas obrigatórias
+      checkMissingSteps(normalizedProgress);
     } catch (error) {
       console.error("[ReviewStep] Erro ao processar dados:", error);
+      toast.error("Erro ao processar dados de revisão. Algumas informações podem estar incompletas.");
     } finally {
       setProcessingComplete(true);
     }
   }, [progress]);
+
+  // Verificar etapas obrigatórias que não foram completadas
+  const checkMissingSteps = (data: any) => {
+    // Etapas mínimas obrigatórias para gerar uma trilha significativa
+    const requiredSteps = ['personal_info', 'professional_data', 'business_goals'];
+    
+    const missing = requiredSteps.filter(stepId => {
+      const hasStep = data.completed_steps && Array.isArray(data.completed_steps) && 
+                     data.completed_steps.includes(stepId);
+      const hasData = !!data[stepId] && 
+                     typeof data[stepId] === 'object' && 
+                     Object.keys(data[stepId]).length > 0;
+      
+      return !hasStep || !hasData;
+    });
+    
+    setMissingSteps(missing);
+    setDataIntegrityChecked(true);
+    
+    console.log("[ReviewStep] Verificação de integridade:", { 
+      missingSteps: missing,
+      dataComplete: missing.length === 0
+    });
+  };
 
   // Usar dados processados ou fallback para dados originais
   const dataToUse = useMemo(() => {
     return processedData || progress;
   }, [processedData, progress]);
 
+  // Função melhorada para manipular a finalização
+  const handleComplete = () => {
+    // Verificar se há etapas obrigatórias faltantes
+    if (missingSteps.length > 0) {
+      const stepsText = missingSteps.map(stepId => {
+        const step = steps.find(s => s.id === stepId);
+        return step ? step.title : stepId;
+      }).join(', ');
+      
+      // Alerta mas permite continuar
+      toast.warning(`Algumas etapas importantes parecem estar incompletas: ${stepsText}. Completar essas etapas resultará em uma trilha mais personalizada.`, {
+        duration: 7000,
+        action: {
+          label: "Continuar mesmo assim",
+          onClick: () => onComplete()
+        }
+      });
+      return;
+    }
+    
+    // Se tudo estiver ok, continuar normalmente
+    onComplete();
+  };
+
   // Se ainda não tivermos dados e o processamento estiver completo, mostrar mensagem de erro
   if (!dataToUse && processingComplete) {
     return (
       <div className="p-4 bg-red-900/30 border border-red-800 rounded-md">
         <p className="text-red-400">Erro ao carregar dados para revisão. Por favor, recarregue a página ou volte às etapas anteriores.</p>
+        <Button 
+          onClick={() => window.location.reload()}
+          variant="outline" 
+          className="mt-2 border-red-800 text-red-400 hover:bg-red-900/50"
+        >
+          Recarregar página
+        </Button>
       </div>
     );
   }
 
   // Se os dados estiverem sendo processados, mostrar estado de carregamento
   if (!processingComplete) {
-    return <div className="py-4 text-neutral-400">Processando informações...</div>;
+    return (
+      <div className="py-6 flex flex-col items-center text-neutral-400">
+        <Loader2 className="h-8 w-8 animate-spin mb-2 text-viverblue" />
+        <p>Processando informações...</p>
+      </div>
+    );
   }
 
   // Verifica se todos os passos necessários foram concluídos
@@ -131,19 +191,6 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
           .map((step, idx) => {
             const sectionKey = step.section as keyof OnboardingProgress;
             let sectionData = dataToUse && dataToUse[sectionKey];
-
-            // Log para depuração
-            console.log(`[ReviewStep] Processando seção ${step.id}, dados:`, sectionData);
-            
-            // Log especial para business_goals
-            if (step.section === 'business_goals') {
-              console.log("[ReviewStep] Detalhes extras para business_goals:", {
-                sectionData,
-                sectionType: typeof sectionData,
-                rawData: dataToUse?.business_goals,
-                keys: sectionData ? Object.keys(sectionData) : []
-              });
-            }
             
             // Tratamento para dados específicos
             switch (step.section) {
@@ -189,50 +236,6 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
                 }
                 break;
               
-              // Garantir tratamento correto para business_goals
-              case 'business_goals':
-                if (!sectionData || Object.keys(sectionData || {}).length === 0) {
-                  console.log("[ReviewStep] Dados de business_goals vazios", sectionData);
-                } else {
-                  console.log("[ReviewStep] Dados de business_goals encontrados:", sectionData);
-                  
-                  // Se for string, tentar converter para objeto
-                  if (typeof sectionData === 'string') {
-                    try {
-                      sectionData = JSON.parse(sectionData);
-                      console.log("[ReviewStep] business_goals convertido de string para objeto:", sectionData);
-                    } catch (e) {
-                      console.error("[ReviewStep] Erro ao converter business_goals de string para objeto:", e);
-                    }
-                  }
-                  
-                  // Verificar se temos dados no formato correto
-                  const hasExpectedOutcomes = sectionData.expected_outcomes && 
-                    Array.isArray(sectionData.expected_outcomes) && 
-                    sectionData.expected_outcomes.length > 0;
-                  
-                  // Ou se temos dados no formato de booleanos
-                  const hasObjectiveSelections = Object.entries(sectionData).some(
-                    ([key, value]) => key !== 'primary_goal' && key !== 'timeline' && value === true
-                  );
-                  
-                  console.log("[ReviewStep] Análise de business_goals:", {
-                    hasExpectedOutcomes,
-                    hasObjectiveSelections,
-                    keysWithTrueValues: Object.keys(sectionData).filter(key => sectionData[key] === true)
-                  });
-                }
-                break;
-                
-              // Garantir tratamento correto para complementary_info
-              case 'complementary_info':
-                if (!sectionData || Object.keys(sectionData || {}).length === 0) {
-                  console.log("[ReviewStep] Dados de complementary_info vazios", sectionData);
-                } else {
-                  console.log("[ReviewStep] Dados de complementary_info encontrados:", sectionData);
-                }
-                break;
-                
               default:
                 // Nenhum tratamento especial para outras seções
                 break;
@@ -251,6 +254,9 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
             // Garante que sectionData seja sempre um objeto (nunca undefined ou null)
             const safeData = sectionData || {};
             
+            // Highlight se for uma etapa faltante
+            const isMissingStep = missingSteps.includes(step.id);
+            
             // Passamos o índice real (começando em 1) para a UI
             const stepIndex = idx + 1;
 
@@ -262,23 +268,28 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
                 sectionData={safeData}
                 progress={dataToUse}
                 stepIndex={stepIndex}
-                navigateToStep={navigateToStep}  // Esta função agora espera receber um ID
+                navigateToStep={navigateToStep}
+                highlight={isMissingStep}
               />
             );
           })}
       </div>
 
-      {!allStepsCompleted && (
+      {!allStepsCompleted && dataIntegrityChecked && (
         <Card className="bg-amber-900/30 p-4 border border-amber-700">
           <p className="text-amber-400">
-            <strong>Atenção:</strong> Algumas seções ainda não foram preenchidas. Recomendamos completar todas as seções antes de prosseguir para obter a melhor experiência personalizada.
+            <strong>Atenção:</strong> {missingSteps.length > 0 ? (
+              <>Algumas seções importantes ainda não foram preenchidas. Recomendamos completar todas as seções antes de prosseguir para obter a melhor experiência personalizada.</>
+            ) : (
+              <>Algumas seções ainda não foram preenchidas. Recomendamos completar todas as seções para uma experiência mais completa.</>
+            )}
           </p>
         </Card>
       )}
 
       <div className="pt-8 flex justify-end">
         <Button
-          onClick={onComplete}
+          onClick={handleComplete}
           disabled={isSubmitting}
           size="lg"
           className="bg-viverblue hover:bg-viverblue-dark text-white px-8 py-6 text-lg shadow-md hover:shadow-lg transition-all duration-300"

@@ -5,6 +5,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.33.1';
 interface ImplementationRecommendation {
   solutionId: string;
   justification: string;
+  priority: number;
 }
 
 interface ImplementationTrail {
@@ -95,6 +96,19 @@ serve(async (req) => {
     
     console.log(`Encontradas ${solutions.length} soluções publicadas`);
     
+    // Buscar dados dos cursos disponíveis para integração
+    const { data: courses, error: coursesError } = await supabaseClient
+      .from('learning_courses')
+      .select('*, learning_modules(*, learning_lessons(*))')
+      .eq('published', true);
+      
+    if (coursesError) {
+      console.error("Erro ao buscar cursos:", coursesError);
+      // Não bloquear o fluxo principal, apenas registrar o erro
+    }
+    
+    console.log(`Encontrados ${courses?.length || 0} cursos publicados para integração`);
+    
     // Buscar dados de onboarding do usuário usando ID fornecido ou token de autenticação
     let user;
     let userIdToUse = userId;
@@ -145,29 +159,82 @@ serve(async (req) => {
     // Definir variáveis que serão usadas para personalização
     let businessGoals = [];
     let industryFocus = '';
-    let aiExperience = {};
+    let aiExperience: Record<string, any> = {};
     let companySize = '';
     
     // Extrair informações do onboarding para melhorar as recomendações
     if (onboardingProgress) {
-      businessGoals = onboardingProgress.goals || 
-                     (onboardingProgress.business_goals ? onboardingProgress.business_goals.goals : []) || 
-                     [];
-      industryFocus = onboardingProgress.industry_focus?.industry || 
-                     onboardingProgress.company_sector || 
-                     '';
-      aiExperience = onboardingProgress.ai_experience || {};
-      companySize = onboardingProgress.company_size || '';
+      // Processar objetivos de negócio
+      if (typeof onboardingProgress.business_goals === 'object') {
+        businessGoals = onboardingProgress.business_goals.expected_outcomes || [];
+        // Adicionar objetivo primário se disponível
+        if (onboardingProgress.business_goals.primary_goal) {
+          businessGoals.push(onboardingProgress.business_goals.primary_goal);
+        }
+      } else if (typeof onboardingProgress.business_goals === 'string') {
+        try {
+          const parsedGoals = JSON.parse(onboardingProgress.business_goals);
+          businessGoals = parsedGoals.expected_outcomes || [];
+          // Adicionar objetivo primário se disponível
+          if (parsedGoals.primary_goal) {
+            businessGoals.push(parsedGoals.primary_goal);
+          }
+        } catch (e) {
+          console.error("Erro ao processar business_goals:", e);
+        }
+      }
+      
+      // Extrair setor da empresa
+      if (typeof onboardingProgress.professional_info === 'object') {
+        industryFocus = onboardingProgress.professional_info.company_sector || '';
+        companySize = onboardingProgress.professional_info.company_size || '';
+      } else if (typeof onboardingProgress.professional_info === 'string') {
+        try {
+          const parsedInfo = JSON.parse(onboardingProgress.professional_info);
+          industryFocus = parsedInfo.company_sector || '';
+          companySize = parsedInfo.company_size || '';
+        } catch (e) {
+          console.error("Erro ao processar professional_info:", e);
+        }
+      }
+      
+      // Extrair experiência com IA
+      if (typeof onboardingProgress.ai_experience === 'object') {
+        aiExperience = onboardingProgress.ai_experience;
+      } else if (typeof onboardingProgress.ai_experience === 'string') {
+        try {
+          aiExperience = JSON.parse(onboardingProgress.ai_experience);
+        } catch (e) {
+          console.error("Erro ao processar ai_experience:", e);
+        }
+      }
+      
+      // Backup para campos top-level de setor/tamanho
+      if (!industryFocus && onboardingProgress.company_sector) {
+        industryFocus = onboardingProgress.company_sector;
+      }
+      
+      if (!companySize && onboardingProgress.company_size) {
+        companySize = onboardingProgress.company_size;
+      }
     } else if (onboardingData) {
       // Usar dados fornecidos na requisição se disponíveis
-      businessGoals = onboardingData.goals || 
-                     (onboardingData.business_goals ? onboardingData.business_goals.goals : []) || 
-                     [];
-      industryFocus = onboardingData.industry_focus?.industry || 
-                     onboardingData.company_sector || 
+      // Processar objetivos de negócio
+      if (typeof onboardingData.business_goals === 'object') {
+        businessGoals = onboardingData.business_goals.expected_outcomes || [];
+        // Adicionar objetivo primário se disponível
+        if (onboardingData.business_goals.primary_goal) {
+          businessGoals.push(onboardingData.business_goals.primary_goal);
+        }
+      }
+      
+      industryFocus = onboardingData.company_sector || 
+                     (onboardingData.professional_info ? onboardingData.professional_info.company_sector : '') || 
                      '';
+      companySize = onboardingData.company_size || 
+                   (onboardingData.professional_info ? onboardingData.professional_info.company_size : '') || 
+                   '';
       aiExperience = onboardingData.ai_experience || {};
-      companySize = onboardingData.company_size || '';
     }
     
     console.log("Dados para personalização:", {
@@ -180,26 +247,38 @@ serve(async (req) => {
     // Criar algoritmo de pontuação para as soluções
     const scoredSolutions = solutions.map(solution => {
       let score = 0;
+      let matchedCourses = [];
       
       // Pontuação com base na categoria da solução
-      if (businessGoals.includes('revenue_increase') && 
-          (solution.category === 'revenue' || solution.category === 'Receita')) {
-        score += 3;
-      }
-      
-      if (businessGoals.includes('cost_reduction') && 
-          (solution.category === 'optimization' || 
-           solution.category === 'operational' || 
-           solution.category === 'Operacional')) {
-        score += 3;
-      }
-      
-      if (businessGoals.includes('operational_efficiency') && 
-          (solution.category === 'optimization' || 
-           solution.category === 'automation' || 
-           solution.category === 'operational' || 
-           solution.category === 'Operacional')) {
-        score += 2;
+      if (Array.isArray(businessGoals)) {
+        if (businessGoals.some(goal => 
+            goal.toLowerCase().includes('receita') || 
+            goal.toLowerCase().includes('vendas'))) {
+          if (solution.category === 'revenue' || solution.category === 'Receita') {
+            score += 3;
+          }
+        }
+        
+        if (businessGoals.some(goal => 
+            goal.toLowerCase().includes('custo') || 
+            goal.toLowerCase().includes('economia'))) {
+          if (solution.category === 'optimization' || 
+             solution.category === 'operational' || 
+             solution.category === 'Operacional') {
+            score += 3;
+          }
+        }
+        
+        if (businessGoals.some(goal => 
+            goal.toLowerCase().includes('eficiência') || 
+            goal.toLowerCase().includes('produtividade'))) {
+          if (solution.category === 'optimization' || 
+             solution.category === 'automation' || 
+             solution.category === 'operational' || 
+             solution.category === 'Operacional') {
+            score += 2;
+          }
+        }
       }
       
       // Pontuação com base nas tags
@@ -236,9 +315,51 @@ serve(async (req) => {
         score -= 1;
       }
       
+      // Relacionar soluções com cursos disponíveis quando possível
+      if (courses && courses.length > 0) {
+        courses.forEach(course => {
+          const modules = course.learning_modules || [];
+          
+          modules.forEach((module: any) => {
+            const lessons = module.learning_lessons || [];
+            
+            // Verificar se alguma aula menciona a solução pelo título ou categoria
+            const relatedLessons = lessons.filter((lesson: any) => {
+              const title = lesson.title?.toLowerCase() || '';
+              const desc = lesson.description?.toLowerCase() || '';
+              const solutionTitle = solution.title?.toLowerCase() || '';
+              const solutionCategory = typeof solution.category === 'string' ? 
+                                      solution.category.toLowerCase() : '';
+              
+              return title.includes(solutionTitle) || 
+                     desc.includes(solutionTitle) ||
+                     title.includes(solutionCategory) ||
+                     desc.includes(solutionCategory);
+            });
+            
+            if (relatedLessons.length > 0) {
+              matchedCourses.push({
+                course_id: course.id,
+                course_title: course.title,
+                module_id: module.id,
+                module_title: module.title,
+                lessons: relatedLessons.map((l: any) => ({ 
+                  id: l.id, 
+                  title: l.title 
+                }))
+              });
+              
+              // Aumentar pontuação para soluções que têm conteúdo educacional disponível
+              score += 1;
+            }
+          });
+        });
+      }
+      
       return {
         solution,
-        score
+        score,
+        matchedCourses: matchedCourses.length > 0 ? matchedCourses : undefined
       };
     });
     
@@ -275,28 +396,39 @@ serve(async (req) => {
         justifications.push(`Desenvolvida para lidar com a escala e complexidade de grandes organizações como a sua.`);
       }
       
+      // Se a solução tiver cursos relacionados
+      if (solution.matchedCourses && solution.matchedCourses.length > 0) {
+        justifications.push(`Temos cursos específicos na plataforma para ajudar você a implementar esta solução.`);
+      }
+      
       // Escolher uma justificativa com base em uma fórmula derivada do score
-      const index = Math.abs((score * solution.id.charCodeAt(0)) % justifications.length);
-      return justifications[index];
+      const justificationIndex = Math.abs((score * solution.solution.id.charCodeAt(0)) % justifications.length);
+      return justifications[justificationIndex];
     };
     
     // Criar as recomendações por prioridade
     const priority1 = scoredSolutions.slice(0, Math.min(3, scoredSolutions.length))
       .map(item => ({
         solutionId: item.solution.id,
-        justification: generateJustification(item.solution, item.score)
+        justification: generateJustification(item, item.score),
+        matchedCourses: item.matchedCourses,
+        priority: 1
       }));
     
     const priority2 = scoredSolutions.slice(Math.min(3, scoredSolutions.length), Math.min(6, scoredSolutions.length))
       .map(item => ({
         solutionId: item.solution.id,
-        justification: generateJustification(item.solution, item.score)
+        justification: generateJustification(item, item.score),
+        matchedCourses: item.matchedCourses,
+        priority: 2
       }));
     
     const priority3 = scoredSolutions.slice(Math.min(6, scoredSolutions.length), Math.min(9, scoredSolutions.length))
       .map(item => ({
         solutionId: item.solution.id,
-        justification: generateJustification(item.solution, item.score)
+        justification: generateJustification(item, item.score),
+        matchedCourses: item.matchedCourses,
+        priority: 3
       }));
     
     // Criar objeto de resposta
@@ -309,8 +441,28 @@ serve(async (req) => {
     console.log("Recomendações geradas com sucesso:", {
       priority1Count: priority1.length,
       priority2Count: priority2.length,
-      priority3Count: priority3.length
+      priority3Count: priority3.length,
+      hasMatchedCourses: scoredSolutions.some(s => !!s.matchedCourses)
     });
+    
+    // Registrar a geração da trilha
+    try {
+      await supabaseClient
+        .from('implementation_trails')
+        .insert({
+          user_id: userIdToUse,
+          status: 'completed',
+          trail_data: recommendations,
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+      
+      console.log("Trilha registrada com sucesso no banco de dados");
+    } catch (dbError) {
+      console.error("Erro ao salvar trilha no banco de dados:", dbError);
+      // Não bloquear a resposta por causa do erro de salvamento
+    }
     
     return new Response(
       JSON.stringify({ 
