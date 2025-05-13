@@ -140,8 +140,8 @@ export const usePermissions = () => {
       }
       
       // Tentativa 2: Verificar se o usuário é admin pelo email
-      const { user: currentUser } = await supabase.auth.getUser();
-      const email = currentUser?.user?.email;
+      const { data: userData } = await supabase.auth.getUser();
+      const email = userData.user?.email;
       
       if (email && (
           email.includes('@viverdeia.ai') || 
