@@ -23,7 +23,7 @@ export function AvailableDaysSection({ watch, toggleSelect, errors, showErrors =
     <div>
       <label className={cn(
         "font-semibold mb-2 block",
-        hasError ? "text-red-500" : "text-gray-700"
+        hasError ? "text-red-500" : "text-white"
       )}>
         Dias da Semana Disponíveis <span className="text-red-500">*</span>
       </label>
@@ -38,7 +38,7 @@ export function AvailableDaysSection({ watch, toggleSelect, errors, showErrors =
               "rounded-full px-4 py-1 border font-medium transition",
               selectedDays.includes(day)
                 ? "bg-[#0ABAB5] text-white border-[#0ABAB5]"
-                : "bg-white text-gray-700 border-gray-200"
+                : "bg-[#1A1E2E] text-neutral-300 border-neutral-700"
             )}
             onClick={() => toggleSelect("available_days", day)}
           >

@@ -26,7 +26,7 @@ export function TimePreferenceSection({ control, watch, toggleSelect, errors, sh
     <div>
       <label className={cn(
         "font-semibold mb-2 block",
-        hasError ? "text-red-500" : "text-gray-700"
+        hasError ? "text-red-500" : "text-white"
       )}>
         Preferência de Horários para Encontros Online <span className="text-red-500">*</span>
       </label>
@@ -44,15 +44,15 @@ export function TimePreferenceSection({ control, watch, toggleSelect, errors, sh
                 type="button"
                 key={opt.value}
                 className={cn(
-                  "flex items-center border px-4 py-2 rounded-lg gap-2 transition-all",
+                  "flex items-center border px-4 py-2 rounded-lg gap-2 transition-all flex-1",
                   selectedTimes.includes(opt.value)
                     ? "bg-[#0ABAB5] text-white border-[#0ABAB5]"
-                    : "bg-white text-gray-700 border-gray-200"
+                    : "bg-[#1A1E2E] text-neutral-300 border-neutral-700 hover:border-neutral-500"
                 )}
                 onClick={() => toggleSelect("time_preference", opt.value)}
               >
-                <span className="text-2xl">{opt.emoji}</span>
-                {opt.label}
+                <span>{opt.emoji}</span>
+                <span>{opt.label}</span>
               </button>
             ))}
           </div>
@@ -60,7 +60,7 @@ export function TimePreferenceSection({ control, watch, toggleSelect, errors, sh
       />
       {hasError && (
         <span className="text-xs text-red-500 mt-1 block">
-          Escolha pelo menos um horário.
+          Selecione pelo menos um horário.
         </span>
       )}
     </div>

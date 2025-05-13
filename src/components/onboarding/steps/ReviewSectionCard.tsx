@@ -1,4 +1,3 @@
-
 import React, { useMemo } from "react";
 import { CheckCircle, PenSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -174,25 +173,24 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
   };
 
   return (
-    <Card className="overflow-hidden border-l-4 border-l-gray-200">
-      <CardHeader className="flex flex-row items-center justify-between bg-gray-50 py-2 px-4">
+    <Card className="overflow-hidden border-l-4 border-l-neutral-700 bg-[#151823] border border-neutral-700 shadow-md">
+      <CardHeader className="flex flex-row items-center justify-between bg-[#1A1E2E] py-3 px-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-50 text-primary-foreground">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0ABAB5]/20 text-viverblue">
             <span className="text-sm font-medium">{stepIndex}</span>
           </div>
-          <CardTitle className="text-lg font-medium">{step.title}</CardTitle>
+          <CardTitle className="text-lg font-medium text-white">{step.title}</CardTitle>
         </div>
         <div className="flex items-center gap-2">
-          {isCompleted && (
-            <span className="flex items-center text-green-600">
-              <CheckCircle className="mr-1 h-4 w-4" />
-              <span className="text-xs">Completo</span>
-            </span>
-          )}
+          {/* Status de conclusão e botão de edição */}
+          <span className="flex items-center text-green-500">
+            <CheckCircle className="mr-1 h-4 w-4" />
+            <span className="text-xs">Completo</span>
+          </span>
           <Button
             variant="outline"
             size="sm"
-            className="flex items-center gap-1"
+            className="flex items-center gap-1 border-neutral-700 hover:bg-[#1A1E2E] hover:text-white"
             onClick={handleEditClick}
           >
             <PenSquare className="h-4 w-4" />
@@ -200,7 +198,7 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="p-4">{sectionSummary}</CardContent>
+      <CardContent className="p-4 text-neutral-300">{sectionSummary}</CardContent>
     </Card>
   );
 };

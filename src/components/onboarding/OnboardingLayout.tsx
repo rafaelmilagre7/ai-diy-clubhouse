@@ -42,13 +42,13 @@ export const OnboardingLayout = ({
 }: OnboardingLayoutProps) => {
   return (
     <MemberLayout>
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-[#0F111A] dark:from-gray-900 dark:to-gray-800">
         <div className="container max-w-4xl mx-auto px-4 py-8">
           <header className="mb-8 space-y-4">
             {backUrl && (
               <Link 
                 to={backUrl}
-                className="inline-flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-colors group"
+                className="inline-flex items-center text-neutral-400 hover:text-neutral-200 transition-colors group"
               >
                 <ArrowLeft className="w-4 h-4 mr-2 transition-transform group-hover:-translate-x-1" />
                 Voltar
@@ -56,9 +56,9 @@ export const OnboardingLayout = ({
             )}
             
             <div className="space-y-2">
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">{title}</h1>
+              <h1 className="text-2xl md:text-3xl font-bold text-white">{title}</h1>
               {description && (
-                <p className="text-gray-600 dark:text-gray-400 text-base md:text-lg">{description}</p>
+                <p className="text-neutral-400 text-base md:text-lg">{description}</p>
               )}
             </div>
             
@@ -73,8 +73,8 @@ export const OnboardingLayout = ({
           </header>
           
           <div className={cn(
-            "bg-white dark:bg-gray-800 rounded-xl p-6 md:p-8 shadow-sm border border-gray-200 dark:border-gray-700",
-            "transition-all duration-200 hover:shadow-md"
+            "bg-[#151823] dark:bg-[#151823] rounded-xl p-6 md:p-8 shadow-md border border-neutral-700 dark:border-neutral-700",
+            "transition-all duration-200 backdrop-blur-sm"
           )}>
             {children}
           </div>

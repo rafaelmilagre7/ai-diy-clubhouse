@@ -27,7 +27,7 @@ export function InterestsSection({ watch, toggleSelect, errors, showErrors = fal
     <div>
       <label className={cn(
         "font-semibold mb-2 block",
-        hasError ? "text-red-500" : "text-gray-700"
+        hasError ? "text-red-500" : "text-white"
       )}>
         Interesses Específicos em IA <span className="text-red-500">*</span>
       </label>
@@ -43,7 +43,7 @@ export function InterestsSection({ watch, toggleSelect, errors, showErrors = fal
               "px-3 py-2 rounded-lg border transition-all text-sm",
               selectedInterests.includes(opt.value)
                 ? "bg-[#0ABAB5] text-white border-[#0ABAB5]"
-                : "bg-white text-gray-700 border-gray-200",
+                : "bg-[#1A1E2E] text-neutral-300 border-neutral-700",
               hasError ? "border-red-300" : ""
             )}
             onClick={() => toggleSelect("interests", opt.value)}

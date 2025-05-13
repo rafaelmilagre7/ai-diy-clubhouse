@@ -1,4 +1,3 @@
-
 // Modificando apenas a interface para garantir consistência de tipos
 import React, { useEffect, useState, useMemo } from "react";
 import { OnboardingProgress } from "@/types/onboarding";
@@ -102,15 +101,15 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
   // Se ainda não tivermos dados e o processamento estiver completo, mostrar mensagem de erro
   if (!dataToUse && processingComplete) {
     return (
-      <div className="p-4 bg-red-50 border border-red-200 rounded-md">
-        <p className="text-red-700">Erro ao carregar dados para revisão. Por favor, recarregue a página ou volte às etapas anteriores.</p>
+      <div className="p-4 bg-red-900/30 border border-red-800 rounded-md">
+        <p className="text-red-400">Erro ao carregar dados para revisão. Por favor, recarregue a página ou volte às etapas anteriores.</p>
       </div>
     );
   }
 
   // Se os dados estiverem sendo processados, mostrar estado de carregamento
   if (!processingComplete) {
-    return <div className="py-4 text-gray-600">Processando informações...</div>;
+    return <div className="py-4 text-neutral-400">Processando informações...</div>;
   }
 
   // Verifica se todos os passos necessários foram concluídos
@@ -270,8 +269,8 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
       </div>
 
       {!allStepsCompleted && (
-        <Card className="bg-amber-50 p-4 border border-amber-200">
-          <p className="text-amber-700">
+        <Card className="bg-amber-900/30 p-4 border border-amber-700">
+          <p className="text-amber-400">
             <strong>Atenção:</strong> Algumas seções ainda não foram preenchidas. Recomendamos completar todas as seções antes de prosseguir para obter a melhor experiência personalizada.
           </p>
         </Card>

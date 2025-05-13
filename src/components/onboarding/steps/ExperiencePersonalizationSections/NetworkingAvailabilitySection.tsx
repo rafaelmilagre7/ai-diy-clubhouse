@@ -18,7 +18,7 @@ export function NetworkingAvailabilitySection({ control, errors, showErrors = fa
     <div>
       <label className={cn(
         "font-semibold mb-2 block",
-        hasError ? "text-red-500" : "text-gray-700"
+        hasError ? "text-red-500" : "text-white"
       )}>
         Disponibilidade para Networking <span className="text-red-500">*</span>
       </label>
@@ -28,8 +28,8 @@ export function NetworkingAvailabilitySection({ control, errors, showErrors = fa
         rules={{ required: true, min: 0, max: 10 }}
         render={({ field }) => (
           <div className={cn(
-            "flex flex-col gap-2",
-            hasError ? "border-red-500 border p-3 rounded-md" : ""
+            "flex flex-col gap-2 bg-[#1A1E2E] p-4 rounded-lg border border-neutral-700",
+            hasError ? "border-red-500" : ""
           )}>
             <Slider
               min={0}
@@ -39,8 +39,9 @@ export function NetworkingAvailabilitySection({ control, errors, showErrors = fa
               onValueChange={val => field.onChange(val[0])}
               className="w-full"
             />
-            <div className="flex justify-between text-xs">
+            <div className="flex justify-between text-xs text-neutral-400">
               <span>Pouca disponibilidade</span>
+              <span className="text-viverblue text-lg font-medium">{field.value || 0}</span>
               <span>Muita disponibilidade</span>
             </div>
           </div>
