@@ -35,7 +35,7 @@ export const ImplementationCard = ({ implementation }: ImplementationCardProps) 
                 {implementation.solution.category === "Operacional" && "Operacional"}
                 {implementation.solution.category === "Estratégia" && "Estratégia"}
               </Badge>
-              <Badge variant="outline" className="bg-gray-100">
+              <Badge variant="neutral">
                 {implementation.solution.difficulty === "easy" && "Fácil"}
                 {implementation.solution.difficulty === "medium" && "Médio"}
                 {implementation.solution.difficulty === "advanced" && "Avançado"}
@@ -43,12 +43,12 @@ export const ImplementationCard = ({ implementation }: ImplementationCardProps) 
             </div>
           </div>
           {implementation.is_completed ? (
-            <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">
+            <Badge variant="success">
               <CheckCircle className="mr-1 h-3 w-3" />
               Concluído
             </Badge>
           ) : (
-            <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-200">
+            <Badge variant="warning">
               <Clock className="mr-1 h-3 w-3" />
               Em andamento
             </Badge>

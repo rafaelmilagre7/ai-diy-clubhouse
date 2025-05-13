@@ -9,10 +9,10 @@ interface SolutionDifficultyBadgeProps {
 export const SolutionDifficultyBadge: React.FC<SolutionDifficultyBadgeProps> = ({ difficulty }) => {
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'easy': return 'bg-green-100 text-green-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'advanced': return 'bg-orange-100 text-orange-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'easy': return 'bg-green-900/30 text-green-300';
+      case 'medium': return 'bg-amber-900/30 text-amber-300';
+      case 'advanced': return 'bg-red-900/30 text-red-300';
+      default: return 'bg-gray-800/50 text-gray-300';
     }
   };
 

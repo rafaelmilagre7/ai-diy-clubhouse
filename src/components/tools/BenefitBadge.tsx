@@ -10,7 +10,7 @@ interface BenefitBadgeProps {
 }
 
 export const BenefitBadge = ({ type, className = '' }: BenefitBadgeProps) => {
-  // Configurações baseadas no tipo de benefício para o tema escuro
+  // Configurações baseadas no tipo de benefício adaptadas para o tema escuro
   const config = {
     discount: {
       text: 'Desconto',

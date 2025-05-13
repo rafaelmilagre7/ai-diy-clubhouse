@@ -21,7 +21,7 @@ export const DifficultyBadge = ({ difficulty }: DifficultyBadgeProps) => {
     }
   };
   
-  // Função para obter classe de estilo
+  // Função para obter classe de estilo com melhor contraste
   const getStyleClass = () => {
     switch (difficulty) {
       case 'easy':

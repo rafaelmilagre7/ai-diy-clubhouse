@@ -23,6 +23,8 @@ const badgeVariants = cva(
           "border-transparent bg-amber-900/30 text-amber-300 border-amber-800/30 hover:bg-amber-900/40",
         info: 
           "border-transparent bg-blue-900/30 text-blue-300 border-blue-800/30 hover:bg-blue-900/40",
+        neutral:
+          "border-transparent bg-gray-800/50 text-gray-300 border-gray-700/30 hover:bg-gray-800/60",
       },
     },
     defaultVariants: {
