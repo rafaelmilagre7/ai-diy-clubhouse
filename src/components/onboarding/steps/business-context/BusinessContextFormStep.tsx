@@ -7,7 +7,7 @@ import { ShortTermGoalsField } from "./inputs/ShortTermGoalsField";
 import { MediumTermGoalsField } from "./inputs/MediumTermGoalsField";
 import { KpisField } from "./inputs/KpisField";
 import { AdditionalContextField } from "./inputs/AdditionalContextField";
-import { NavigationButtons } from "@/components/onboarding/steps/NavigationButtons";
+import { NavigationButtons } from "@/components/onboarding/NavigationButtons";
 import { OnboardingProgress } from "@/types/onboarding";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
