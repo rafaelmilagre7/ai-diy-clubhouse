@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { usePermissions } from '@/hooks/auth/usePermissions';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
@@ -17,45 +17,20 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
   permission,
   children,
   fallback,
-  timeoutSeconds = 1.5 // Reduzido para 1.5 segundos para experiência mais rápida
+  timeoutSeconds = 1 // Reduzido para 1 segundo para experiência mais rápida
 }) => {
   const { hasPermission, loading, userPermissions } = usePermissions();
   const { isAdmin, user } = useAuth();
   const [timedOut, setTimedOut] = useState(false);
-  const [checkAttempts, setCheckAttempts] = useState(0);
   
-  // Verificar se o usuário tem a permissão admin.all (é um superadmin)
-  const isAdminByPermission = userPermissions.includes('admin.all');
+  // Verificação rápida e simplificada logo no início
+  // Se é admin pelo contexto, renderiza imediatamente os filhos
+  if (isAdmin) {
+    return <>{children}</>;
+  }
   
-  // Método otimizado para verificar permissão com prioridade para dados já disponíveis em cache
-  const checkPermission = useCallback((): boolean => {
-    // Se já sabemos que é admin pelo contexto, permitir imediatamente
-    if (isAdmin) return true;
-    
-    // Se tem a permissão específica
-    if (hasPermission(permission)) return true;
-    
-    // Verificação direta de permissão admin.all em memória
-    if (isAdminByPermission) return true;
-    
-    // Fallback rápido por email se tivermos um usuário
-    if (user?.email) {
-      return user.email.includes('@viverdeia.ai') || 
-             user.email === 'admin@teste.com' || 
-             user.email === 'admin@viverdeia.ai';
-    }
-    
-    return false;
-  }, [isAdmin, hasPermission, permission, isAdminByPermission, user?.email]);
-  
-  // Efeito para timeout com verificação de permissão prioritária
+  // Efeito para timeout
   useEffect(() => {
-    // Primeira verificação rápida: se for admin, não precisa esperar timeout
-    if (checkPermission()) {
-      return;
-    }
-    
-    // Se ainda está carregando e não deu timeout
     if (loading && !timedOut) {
       const timer = setTimeout(() => {
         setTimedOut(true);
@@ -63,13 +38,10 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
       
       return () => clearTimeout(timer);
     }
-  }, [loading, timedOut, timeoutSeconds, checkPermission]);
+  }, [loading, timedOut, timeoutSeconds]);
   
-  // Mostrar skeleton apenas por tempo muito curto (100ms)
-  if (loading && !timedOut && checkAttempts < 1) {
-    // Inicia contagem de tentativas após 100ms
-    setTimeout(() => setCheckAttempts(prev => prev + 1), 100);
-    
+  // Mostrar skeleton apenas durante o carregamento inicial e por tempo muito curto
+  if (loading && !timedOut) {
     return (
       <div className="space-y-2">
         <Skeleton className="h-4 w-[250px]" />
@@ -78,26 +50,23 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
     );
   }
 
-  // Verificação de permissão prioritária (com cache)
-  if (checkPermission()) {
+  // Verificação de permissão específica
+  if (hasPermission(permission) || userPermissions.includes(permission)) {
     return <>{children}</>;
   }
-
-  // Se o timeout foi atingido, fazer uma última verificação de email como admin
-  if (timedOut || checkAttempts >= 1) {
-    // Se o usuário é admin por email mas falhou a verificação normal, conceder acesso
-    if (user?.email && (
-      user.email.includes('@viverdeia.ai') || 
-      user.email === 'admin@teste.com' || 
-      user.email === 'admin@viverdeia.ai'
-    )) {
-      return <>{children}</>;
-    }
-    
-    // Última instância, verificar se é admin pelo contexto
-    if (isAdmin) {
-      return <>{children}</>;
-    }
+  
+  // Verificação direta de permissão admin.all em memória
+  if (userPermissions.includes('admin.all')) {
+    return <>{children}</>;
+  }
+  
+  // Última verificação por email (redundante, mas mantida como fallback extremo)
+  if (user?.email && (
+    user.email.includes('@viverdeia.ai') || 
+    user.email === 'admin@teste.com' || 
+    user.email === 'admin@viverdeia.ai'
+  )) {
+    return <>{children}</>;
   }
 
   // Caso contrário, mostrar mensagem de erro ou fallback

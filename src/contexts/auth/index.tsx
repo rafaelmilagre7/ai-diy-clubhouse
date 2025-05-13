@@ -9,7 +9,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
-  isAdmin: boolean; // Adicionando verificação explícita de admin
+  isAdmin: boolean; // Verificação centralizada e definitiva
   signOut: () => Promise<void>;
 }
 
@@ -17,23 +17,109 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
   isLoading: true,
-  isAdmin: false, // Valor inicial
+  isAdmin: false,
   signOut: async () => {}
 });
+
+// Função para persistir o status de admin em localStorage
+const saveAdminStatus = (userId: string, isAdmin: boolean) => {
+  try {
+    const adminCache = JSON.parse(localStorage.getItem('adminCache') || '{}');
+    adminCache[userId] = {
+      status: isAdmin,
+      timestamp: Date.now()
+    };
+    localStorage.setItem('adminCache', JSON.stringify(adminCache));
+  } catch (error) {
+    console.error('Erro ao salvar status de admin:', error);
+  }
+};
+
+// Função para recuperar status de admin do localStorage
+const getAdminStatus = (userId: string) => {
+  try {
+    const adminCache = JSON.parse(localStorage.getItem('adminCache') || '{}');
+    const cachedData = adminCache[userId];
+    
+    // Verificar se o cache é válido (menos de 24 horas)
+    if (cachedData && Date.now() - cachedData.timestamp < 24 * 60 * 60 * 1000) {
+      return cachedData.status;
+    }
+  } catch (error) {
+    console.error('Erro ao recuperar status de admin:', error);
+  }
+  
+  return null;
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false); // Estado para rastrear se o usuário é admin
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminCheckComplete, setAdminCheckComplete] = useState(false);
 
-  // Verificar se um usuário é admin com base no email
-  const checkIsAdmin = (email?: string | null) => {
-    if (!email) return false;
+  // Verificação definitiva se o usuário é admin
+  const checkIsAdmin = async (email?: string | null, userId?: string) => {
+    // Se não temos email ou userId, não pode ser admin
+    if (!email || !userId) {
+      setIsAdmin(false);
+      return false;
+    }
+
+    // Verificação rápida por email (alta prioridade)
+    const isAdminByEmail = email.includes('@viverdeia.ai') || 
+                         email === 'admin@teste.com' || 
+                         email === 'admin@viverdeia.ai';
     
-    return email.includes('@viverdeia.ai') || 
-           email === 'admin@teste.com' || 
-           email === 'admin@viverdeia.ai';
+    if (isAdminByEmail) {
+      setIsAdmin(true);
+      saveAdminStatus(userId, true);
+      return true;
+    }
+
+    // Tentar verificar pelo cache local
+    const cachedAdminStatus = getAdminStatus(userId);
+    if (cachedAdminStatus !== null) {
+      setIsAdmin(cachedAdminStatus);
+      return cachedAdminStatus;
+    }
+
+    try {
+      // Verificação com a função RPC otimizada
+      const { data, error } = await supabase.rpc('is_user_admin', {
+        user_id: userId
+      });
+      
+      if (error) throw error;
+      
+      const adminStatus = !!data;
+      setIsAdmin(adminStatus);
+      saveAdminStatus(userId, adminStatus);
+      return adminStatus;
+    } catch (error) {
+      console.error('Erro ao verificar status de admin:', error);
+      
+      // Verificação de fallback pelo papel no perfil
+      try {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', userId)
+          .single();
+          
+        const isAdminByRole = profileData?.role === 'admin';
+        setIsAdmin(isAdminByRole);
+        saveAdminStatus(userId, isAdminByRole);
+        return isAdminByRole;
+      } catch (profileError) {
+        console.error('Erro ao verificar perfil:', profileError);
+        setIsAdmin(isAdminByEmail); // Usar resultado da verificação por email como fallback final
+        return isAdminByEmail;
+      }
+    } finally {
+      setAdminCheckComplete(true);
+    }
   };
 
   useEffect(() => {
@@ -45,32 +131,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
-        // Verificar se é admin
-        if (currentSession?.user?.email) {
-          setIsAdmin(checkIsAdmin(currentSession.user.email));
+        // Verificar se é admin (apenas se temos um usuário)
+        if (currentSession?.user?.email && currentSession?.user?.id) {
+          await checkIsAdmin(currentSession.user.email, currentSession.user.id);
+        } else {
+          setIsAdmin(false);
+          setAdminCheckComplete(true);
         }
         
         setIsLoading(false);
       } catch (error) {
         console.error('Erro ao buscar sessão:', error);
         setIsLoading(false);
+        setAdminCheckComplete(true);
       }
     };
 
     fetchCurrentSession();
 
     // Configurar listener para mudanças de autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       console.log('Evento de autenticação:', event);
       
       setSession(newSession);
       setUser(newSession?.user ?? null);
       
-      // Verificar se é admin quando o usuário mudar
-      if (newSession?.user?.email) {
-        setIsAdmin(checkIsAdmin(newSession.user.email));
+      // Reset admin status enquanto verificamos
+      if (event === 'SIGNED_OUT') {
+        setIsAdmin(false);
+        setAdminCheckComplete(true);
+      } else if (newSession?.user?.email && newSession?.user?.id) {
+        await checkIsAdmin(newSession.user.email, newSession.user.id);
       } else {
         setIsAdmin(false);
+        setAdminCheckComplete(true);
       }
     });
 
@@ -82,7 +176,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
+      // Limpar caches
+      localStorage.removeItem('permissionsCache');
+      
       await supabase.auth.signOut();
+      setIsAdmin(false);
       toast.success('Você saiu com sucesso');
     } catch (error) {
       console.error('Erro ao sair:', error);
@@ -90,8 +188,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Se estiver carregando, mostrar um componente de loading
-  if (isLoading) {
+  // Mostra loading apenas se estamos verificando o admin pela primeira vez
+  if (isLoading && !adminCheckComplete) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="space-y-4 w-80">

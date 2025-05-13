@@ -6,7 +6,7 @@ import { UsersTable } from "@/components/admin/users/UsersTable";
 import { UserRoleManager } from "@/components/admin/users/UserRoleManager";
 import { UserProfile } from "@/lib/supabase";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, ShieldAlert, RefreshCw } from "lucide-react";
+import { AlertCircle, RefreshCw, ShieldCheck } from "lucide-react";
 import { DeleteUserDialog } from "@/components/admin/users/DeleteUserDialog";
 import { ResetPasswordDialog } from "@/components/admin/users/ResetPasswordDialog";
 import { toast } from "sonner";
@@ -36,19 +36,22 @@ const AdminUsers = () => {
   const [roleManagerOpen, setRoleManagerOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
-  const [loadAttempts, setLoadAttempts] = useState(0);
-  const [showAdminWarning, setShowAdminWarning] = useState(false);
+  const [showAdminInfo, setShowAdminInfo] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
 
-  // Efeito para detectar problemas de permissão e avisar sobre uso de fallback
+  // Efeito para detectar quando o admin foi determinado pelo email
   useEffect(() => {
-    // Verificar se há problemas com permissões mas o usuário é admin por email
-    if (isAdmin && !canManageUsers && !canAssignRoles) {
-      setShowAdminWarning(true);
-    } else {
-      setShowAdminWarning(false);
+    if (isAdmin) {
+      setShowAdminInfo(true);
+      
+      // Esconder após 5 segundos
+      const timer = setTimeout(() => {
+        setShowAdminInfo(false);
+      }, 5000);
+      
+      return () => clearTimeout(timer);
     }
-  }, [isAdmin, canManageUsers, canAssignRoles]);
+  }, [isAdmin]);
 
   // Efeito para timeout de carregamento
   useEffect(() => {
@@ -57,7 +60,7 @@ const AdminUsers = () => {
     if (loading && !loadingTimeout) {
       timeoutId = window.setTimeout(() => {
         setLoadingTimeout(true);
-      }, 10000); // 10 segundos de timeout
+      }, 5000); // 5 segundos de timeout
     }
     
     return () => {
@@ -83,28 +86,17 @@ const AdminUsers = () => {
   };
 
   const handleRefresh = () => {
-    // Limitar a 3 tentativas manuais para evitar sobrecarga
-    if (loadAttempts < 3 && !isRefreshing) {
-      setLoadAttempts(prev => prev + 1);
-      toast.info("Atualizando lista de usuários...");
-      fetchUsers();
-    } else if (isRefreshing) {
-      toast.info("Atualização em andamento, aguarde...");
-    } else {
-      toast.warning("Limite de tentativas atingido", {
-        description: "Por favor, atualize a página ou tente mais tarde."
-      });
-    }
+    toast.info("Atualizando lista de usuários...");
+    fetchUsers();
   };
 
   const handleForceRefresh = () => {
-    // Forçar atualização mesmo além do limite
-    toast.info("Forçando atualização da lista...");
+    toast.info("Recarregando a página por completo...");
     window.location.reload();
   };
 
   // Verificação simplificada de acesso administrativo usando o contexto
-  if (!isAdmin && !canManageUsers) {
+  if (!isAdmin) {
     return (
       <Alert variant="destructive" className="my-4">
         <AlertCircle className="h-4 w-4" />
@@ -180,11 +172,12 @@ const AdminUsers = () => {
 
   return (
     <div className="space-y-6">
-      {showAdminWarning && (
-        <div className="flex items-center gap-2 py-2 px-4 bg-amber-50 border border-amber-200 rounded-md mb-4">
-          <ShieldAlert className="h-5 w-5 text-amber-600" />
-          <p className="text-sm text-amber-700">
-            Houve um problema ao verificar permissões específicas, mas o acesso foi concedido devido ao seu papel de administrador.
+      {/* Banner informativo quando o admin foi verificado por email */}
+      {showAdminInfo && (
+        <div className="flex items-center gap-2 py-2 px-4 bg-blue-50 border border-blue-200 rounded-md mb-4 animate-fade-in">
+          <ShieldCheck className="h-5 w-5 text-blue-600" />
+          <p className="text-sm text-blue-700">
+            Acesso de administrador concedido. Você tem acesso completo ao gerenciamento de usuários.
           </p>
         </div>
       )}
@@ -200,9 +193,9 @@ const AdminUsers = () => {
         <UsersTable
           users={users}
           loading={loading}
-          canEditRoles={canAssignRoles || isAdmin}
-          canDeleteUsers={canDeleteUsers || isAdmin}
-          canResetPasswords={canResetPasswords || isAdmin}
+          canEditRoles={canAssignRoles}
+          canDeleteUsers={canDeleteUsers}
+          canResetPasswords={canResetPasswords}
           onEditRole={handleEditRole}
           onDeleteUser={handleDeleteUser}
           onResetPassword={handleResetPassword}
@@ -210,8 +203,15 @@ const AdminUsers = () => {
         />
       </div>
       
-      {/* Componentes de diálogo remanescentes */}
-      {(canAssignRoles || isAdmin) && (
+      {/* Mostrar informação sobre quantidade de usuários carregados */}
+      {users.length > 0 && !isRefreshing && (
+        <div className="text-sm text-muted-foreground text-right">
+          {users.length} usuários carregados
+        </div>
+      )}
+      
+      {/* Componentes de diálogo */}
+      {canAssignRoles && (
         <UserRoleManager
           open={roleManagerOpen}
           onOpenChange={setRoleManagerOpen}
@@ -224,7 +224,7 @@ const AdminUsers = () => {
         />
       )}
       
-      {(canDeleteUsers || isAdmin) && (
+      {canDeleteUsers && (
         <DeleteUserDialog
           open={deleteDialogOpen}
           onOpenChange={setDeleteDialogOpen}
@@ -233,7 +233,7 @@ const AdminUsers = () => {
         />
       )}
       
-      {(canResetPasswords || isAdmin) && (
+      {canResetPasswords && (
         <ResetPasswordDialog
           open={resetPasswordDialogOpen}
           onOpenChange={setResetPasswordDialogOpen}

@@ -54,41 +54,40 @@ const FALLBACK_ROLES: Role[] = [
   }
 ];
 
-// Aumentando o tempo de cache para evitar sobrecarga de requisições
-const CACHE_VALIDITY = 30 * 60 * 1000; // 30 minutos
+// Aumentando o tempo de cache para 12 horas para reduzir requisições
+const CACHE_VALIDITY = 12 * 60 * 60 * 1000; // 12 horas
 
-// Armazenar cache entre sessões (localStorage)
-const initCacheFromLocalStorage = () => {
+// Função para salvar cache com timestamp
+const saveCache = (key: string, data: any) => {
   try {
-    const storedCache = localStorage.getItem('usersCache');
-    if (storedCache) {
-      return JSON.parse(storedCache);
-    }
+    const cacheData = {
+      data,
+      timestamp: Date.now()
+    };
+    localStorage.setItem(key, JSON.stringify(cacheData));
   } catch (error) {
-    console.error('Erro ao ler cache de usuários:', error);
+    console.error(`Erro ao salvar cache para ${key}:`, error);
   }
-  return {
-    users: null,
-    roles: null,
-    timestamp: 0
-  };
 };
 
-// Cache global inicializado do localStorage
-const GLOBAL_CACHE = initCacheFromLocalStorage();
-
-// Salvar cache no localStorage
-const saveToLocalStorage = (cache: any) => {
+// Função para recuperar cache se válido
+const getCache = (key: string) => {
   try {
-    localStorage.setItem('usersCache', JSON.stringify(cache));
+    const cacheJson = localStorage.getItem(key);
+    if (!cacheJson) return null;
+    
+    const cache = JSON.parse(cacheJson);
+    if (Date.now() - cache.timestamp < CACHE_VALIDITY) {
+      return cache.data;
+    }
   } catch (error) {
-    console.error('Erro ao salvar cache de usuários:', error);
+    console.error(`Erro ao recuperar cache para ${key}:`, error);
   }
+  return null;
 };
 
 export const useUsers = () => {
-  const { hasPermission } = usePermissions();
-  const { user, isAdmin } = useAuth();
+  const { isAdmin } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,24 +95,13 @@ export const useUsers = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [fetchAttempts, setFetchAttempts] = useState(0);
-  const [useFallback, setUseFallback] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [page, setPage] = useState(0);
   const [totalUsers, setTotalUsers] = useState(0);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   
-  // Referência ao cache
-  const cacheRef = useRef(GLOBAL_CACHE);
-
   // Flag para abortar requisições
   const abortControllerRef = useRef<AbortController | null>(null);
-  
-  // Verificar se o cache está válido
-  const isCacheValid = useCallback(() => {
-    return (
-      cacheRef.current.users !== null &&
-      cacheRef.current.timestamp > Date.now() - CACHE_VALIDITY
-    );
-  }, []);
   
   // Função para abortar requisições em andamento
   const abortPreviousRequests = useCallback(() => {
@@ -123,47 +111,45 @@ export const useUsers = () => {
     }
   }, []);
 
-  // Nova implementação usando a função RPC otimizada
+  // Implementação otimizada para buscar usuários
   const fetchUsers = useCallback(async (forceRefresh = false) => {
     try {
-      // Se não forçar refresh e o cache for válido, usar o cache
-      if (!forceRefresh && isCacheValid() && cacheRef.current.users) {
-        console.log("Usando dados em cache para usuários");
-        setUsers(cacheRef.current.users);
-        setLoading(false);
-        return;
+      // Se não estamos forçando refresh e já temos dados iniciais, não bloquear a UI
+      if (!forceRefresh && initialLoadComplete) {
+        setIsRefreshing(true);
+      } else {
+        setLoading(true);
       }
       
-      setLoading(true);
-      setIsRefreshing(true);
       setError(null);
       abortPreviousRequests();
       
-      // Se já tentamos muitas vezes ou estamos em modo fallback, usar dados de fallback
-      if ((useFallback && fetchAttempts >= 1) || fetchAttempts >= 2) {
-        console.log("Usando dados de fallback para usuários após múltiplas falhas");
-        setUsers(FALLBACK_USERS);
-        toast.warning("Usando dados temporários", {
-          description: "Os dados exibidos podem não estar atualizados"
-        });
-        setLoading(false);
-        setIsRefreshing(false);
-        return;
+      // Verificar o cache primeiro (exceto se forçar refresh)
+      if (!forceRefresh) {
+        const cachedUsers = getCache('usersData');
+        if (cachedUsers && cachedUsers.length > 0) {
+          console.log("Usando dados em cache para usuários");
+          setUsers(cachedUsers);
+          
+          if (!initialLoadComplete) {
+            setInitialLoadComplete(true);
+            setLoading(false);
+          }
+          
+          // Se temos cache, podemos continuar para buscar dados atualizados em segundo plano
+          // sem bloquear a UI
+        }
       }
-      
-      // Incrementar contador de tentativas
-      setFetchAttempts(prev => prev + 1);
-      console.log(`Tentativa ${fetchAttempts + 1} de buscar usuários`);
       
       // Configurar AbortController para poder cancelar a requisição
       abortControllerRef.current = new AbortController();
       
-      // Definir um timeout para a consulta (10 segundos)
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Tempo limite excedido ao buscar usuários")), 10000);
+      // Definir um timeout para a consulta (8 segundos)
+      const timeoutPromise = new Promise<any>((_, reject) => {
+        setTimeout(() => reject(new Error("Tempo limite excedido ao buscar usuários")), 8000);
       });
       
-      // Usar a função RPC otimizada
+      // Chamar a função RPC otimizada
       const fetchPromise = supabase.rpc(
         'get_users_with_roles',
         { 
@@ -174,51 +160,60 @@ export const useUsers = () => {
       );
       
       // Race entre a consulta e o timeout
-      const result: any = await Promise.race([fetchPromise, timeoutPromise]);
+      const result = await Promise.race([fetchPromise, timeoutPromise]);
       
       // Verificar se a consulta retornou um erro
       if (result.error) {
         throw result.error;
       }
       
-      // Processar dados retornados
-      const data = result.data;
-      console.log(`Encontrados ${data?.length || 0} usuários`);
+      const usersData = result.data as UserProfile[];
       
       // Atualizar o cache com os novos dados
-      cacheRef.current = {
-        ...cacheRef.current,
-        users: data as UserProfile[],
-        timestamp: Date.now()
-      };
+      if (usersData && usersData.length > 0) {
+        saveCache('usersData', usersData);
+      }
       
-      // Salvar cache no localStorage
-      saveToLocalStorage(cacheRef.current);
-      
-      setUsers(data as UserProfile[]);
+      // Se ainda não tínhamos dados, atualizar diretamente
+      // Se já tínhamos dados do cache, atualizar sem causar flash de UI
+      setUsers(usersData);
       setError(null);
-      
-      // Resetar tentativas após sucesso
-      setFetchAttempts(0);
-      setUseFallback(false);
+      setFetchAttempts(0); // Resetar tentativas após sucesso
+      setInitialLoadComplete(true);
     } catch (error: any) {
       console.error("Erro ao buscar usuários:", error.message);
-      setError(error);
       
-      // Verificar se já temos dados em cache para usar como fallback inicial
-      if (cacheRef.current.users && cacheRef.current.users.length > 0) {
-        console.log("Usando cache como fallback após erro");
-        setUsers(cacheRef.current.users);
-        toast.error("Erro ao atualizar lista", {
-          description: "Usando dados anteriormente carregados"
-        });
+      // Incrementar contador de tentativas
+      setFetchAttempts(prev => prev + 1);
+      
+      // Se esse foi o primeiro carregamento (não temos dados ainda),
+      // tentar usar o cache como último recurso
+      if (!initialLoadComplete) {
+        const cachedUsers = getCache('usersData');
+        
+        if (cachedUsers && cachedUsers.length > 0) {
+          console.log("Erro na API, usando cache local como fallback");
+          setUsers(cachedUsers);
+          setInitialLoadComplete(true);
+          toast.warning("Usando dados em cache", {
+            description: "Não foi possível atualizar a lista de usuários"
+          });
+        } else {
+          // Se não temos cache, usar dados de fallback
+          setError(error);
+          setUsers(FALLBACK_USERS);
+          setInitialLoadComplete(true);
+          
+          toast.error("Erro ao carregar usuários", {
+            description: "Usando dados de exemplo para demonstração"
+          });
+        }
       } else {
-        // Se já tentamos muito e não temos cache, usar dados de fallback
-        console.log("Usando dados de fallback após múltiplas falhas");
-        setUseFallback(true);
-        setUsers(FALLBACK_USERS);
-        toast.error("Erro ao carregar lista de usuários", {
-          description: "Usando dados temporários para demonstração"
+        // Se já tínhamos dados e estávamos apenas atualizando, manter os dados existentes
+        setError(error);
+        
+        toast.error("Erro ao atualizar lista de usuários", {
+          description: "Mantendo dados já carregados"
         });
       }
     } finally {
@@ -226,26 +221,23 @@ export const useUsers = () => {
       setIsRefreshing(false);
       abortControllerRef.current = null;
     }
-  }, [fetchAttempts, useFallback, isCacheValid, abortPreviousRequests, page, searchQuery]);
+  }, [abortPreviousRequests, initialLoadComplete, page, searchQuery]);
 
-  const fetchRoles = useCallback(async () => {
+  // Função otimizada para buscar papéis
+  const fetchRoles = useCallback(async (forceRefresh = false) => {
     try {
-      // Verificar se temos dados de roles em cache
-      if (isCacheValid() && cacheRef.current.roles) {
-        console.log("Usando dados em cache para papéis");
-        setAvailableRoles(cacheRef.current.roles);
-        return;
+      if (!forceRefresh) {
+        const cachedRoles = getCache('rolesData');
+        if (cachedRoles && cachedRoles.length > 0) {
+          console.log("Usando dados em cache para papéis");
+          setAvailableRoles(cachedRoles);
+          return; // Saída rápida, sem bloquear
+        }
       }
       
-      if (useFallback) {
-        console.log("Usando dados de fallback para papéis");
-        setAvailableRoles(FALLBACK_ROLES);
-        return;
-      }
-      
-      // Definir um timeout para a consulta (5 segundos)
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Tempo limite excedido ao buscar papéis")), 5000);
+      // Definir um timeout para a consulta (3 segundos)
+      const timeoutPromise = new Promise<any>((_, reject) => {
+        setTimeout(() => reject(new Error("Tempo limite excedido ao buscar papéis")), 3000);
       });
       
       // Consulta ao banco de dados com timeout
@@ -255,39 +247,35 @@ export const useUsers = () => {
         .order("name", { ascending: true });
         
       // Race entre a consulta e o timeout
-      const result: any = await Promise.race([fetchPromise, timeoutPromise]);
+      const result = await Promise.race([fetchPromise, timeoutPromise]);
       
       if (result.error) {
         throw result.error;
       }
       
+      const rolesData = result.data as Role[];
+      
       // Atualizar o cache com os novos dados
-      cacheRef.current = {
-        ...cacheRef.current,
-        roles: result.data as Role[],
-        timestamp: Date.now()
-      };
-      
-      // Salvar cache no localStorage
-      saveToLocalStorage(cacheRef.current);
-      
-      setAvailableRoles(result.data as Role[]);
+      if (rolesData && rolesData.length > 0) {
+        saveCache('rolesData', rolesData);
+        setAvailableRoles(rolesData);
+      }
     } catch (error: any) {
       console.error("Erro ao buscar papéis:", error.message);
       
-      // Se temos dados em cache, usar como fallback
-      if (cacheRef.current.roles && cacheRef.current.roles.length > 0) {
-        setAvailableRoles(cacheRef.current.roles);
+      // Tentar usar o cache como fallback
+      const cachedRoles = getCache('rolesData');
+      if (cachedRoles && cachedRoles.length > 0) {
+        setAvailableRoles(cachedRoles);
       } else {
-        // Se não temos cache, usar dados de fallback
         setAvailableRoles(FALLBACK_ROLES);
       }
     }
-  }, [useFallback, isCacheValid]);
+  }, []);
 
-  // Efeito para tentar novamente após falha com delay exponencial
+  // Efeito para tentar novamente com backoff exponencial
   useEffect(() => {
-    if (error && fetchAttempts < 2) {
+    if (error && fetchAttempts < 3) {
       const retryDelay = Math.min(1000 * Math.pow(2, fetchAttempts), 5000); // Exponential backoff capped at 5s
       console.log(`Tentando buscar usuários novamente após erro em ${retryDelay}ms`);
       
@@ -306,24 +294,45 @@ export const useUsers = () => {
     };
   }, [abortPreviousRequests]);
   
+  // Loading lazy - só disparar fetchRoles depois que users terminar
+  useEffect(() => {
+    if (initialLoadComplete && !isRefreshing) {
+      fetchRoles(false);
+    }
+  }, [initialLoadComplete, isRefreshing, fetchRoles]);
+  
   // Carregar dados na inicialização
   useEffect(() => {
-    fetchUsers();
-    fetchRoles();
-  }, [fetchUsers, fetchRoles]);
+    console.log("useUsers hook inicializado");
+    fetchUsers(false);
+    
+    // Registrar evento na analytics para diagnóstico
+    try {
+      // Simples timestamp para debug
+      localStorage.setItem('lastUsersLoad', JSON.stringify({
+        timestamp: Date.now(),
+        userAgent: navigator.userAgent
+      }));
+    } catch (e) {
+      // Ignorar erros
+    }
+    
+    return () => {
+      console.log("useUsers hook desmontado");
+      abortPreviousRequests();
+    };
+  }, [fetchUsers, abortPreviousRequests]);
   
-  // Filtro para usuários baseado na busca
-  const filteredUsers = useMemo(() => {
-    return users;
-  }, [users]);
-  
-  // Verificações alternativas de permissão caso o sistema de permissões falhe
-  const isAdminByEmail = user?.email?.includes('@viverdeia.ai') || 
-                       user?.email === 'admin@teste.com' || 
-                       user?.email === 'admin@viverdeia.ai';
+  // Recarregar quando a página ou busca mudar
+  useEffect(() => {
+    // Não recarregar imediatamente na montagem inicial
+    if (initialLoadComplete) {
+      fetchUsers(false);
+    }
+  }, [page, searchQuery, fetchUsers, initialLoadComplete]);
 
   return {
-    users: filteredUsers,
+    users,
     availableRoles,
     loading,
     error,
@@ -332,15 +341,15 @@ export const useUsers = () => {
     selectedUser,
     setSelectedUser,
     isRefreshing,
-    fetchUsers: () => fetchUsers(true), // Sempre forçar refresh ao chamar manualmente
-    refreshUsers: () => fetchUsers(true),
+    fetchUsers: useCallback(() => fetchUsers(true), [fetchUsers]), // Sempre forçar refresh ao chamar manualmente
+    refreshUsers: useCallback(() => fetchUsers(true), [fetchUsers]),
     page,
     setPage,
     totalUsers,
-    // Usar fallback de permissões caso o sistema principal falhe
-    canManageUsers: hasPermission('users.manage') || isAdmin || isAdminByEmail,
-    canAssignRoles: hasPermission('users.roles.assign') || isAdmin || isAdminByEmail,
-    canDeleteUsers: hasPermission('users.delete') || isAdmin || isAdminByEmail,
-    canResetPasswords: hasPermission('users.reset_password') || isAdmin || isAdminByEmail,
+    // Status de permissões simplificados - confiando no isAdmin do contexto
+    canManageUsers: isAdmin,
+    canAssignRoles: isAdmin,
+    canDeleteUsers: isAdmin,
+    canResetPasswords: isAdmin,
   };
 };
