@@ -84,9 +84,8 @@ export const usePermissions = () => {
         .from('permission_definitions')
         .select('*')
         .order('category', { ascending: true })
-        .order('name', { ascending: true })
-        .abortSignal(abortControllerRef.current.signal);
-
+        .order('name', { ascending: true });
+        
       if (error) throw error;
       
       // Atualizar cache global
@@ -118,9 +117,8 @@ export const usePermissions = () => {
       const { data, error } = await supabase
         .from('user_roles')
         .select('*')
-        .order('name', { ascending: true })
-        .abortSignal(abortControllerRef.current.signal);
-
+        .order('name', { ascending: true });
+        
       if (error) throw error;
       
       // Atualizar cache global
@@ -229,8 +227,7 @@ export const usePermissions = () => {
           .from('profiles')
           .select('role')
           .eq('id', user.id)
-          .single()
-          .abortSignal(abortControllerRef.current.signal);
+          .single();
           
         if (profileData?.role === 'admin') {
           console.log('Usuário identificado como admin pelo perfil no fallback');
