@@ -84,7 +84,7 @@ const AIExperience = () => {
         />
         {isLoading && !initialLoadDone.current ? (
           <div className="flex justify-center py-10">
-            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#0ABAB5]"></div>
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-viverblue"></div>
           </div>
         ) : (
           <AIExperienceStep

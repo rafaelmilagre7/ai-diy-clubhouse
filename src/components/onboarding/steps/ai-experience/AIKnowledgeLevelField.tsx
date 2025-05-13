@@ -18,8 +18,8 @@ const knowledgeLevelOptions = [
 ];
 
 const AIKnowledgeLevelFieldComponent: React.FC<AIKnowledgeLevelFieldProps> = ({ control, error }) => (
-  <div className="space-y-4 bg-gray-50 p-6 rounded-lg">
-    <h3 className="text-lg font-medium text-gray-800">Nível de conhecimento em IA</h3>
+  <div className="space-y-4 bg-[#151823] p-6 rounded-lg border border-neutral-700">
+    <h3 className="text-lg font-medium text-white">Nível de conhecimento em IA</h3>
     <Controller
       control={control}
       name="knowledge_level"
@@ -33,8 +33,8 @@ const AIKnowledgeLevelFieldComponent: React.FC<AIKnowledgeLevelFieldProps> = ({ 
           >
             {knowledgeLevelOptions.map((opt) => (
               <div key={opt.value} className="flex items-center gap-3">
-                <RadioGroupItem value={opt.value} id={`knowledge-${opt.value}`} />
-                <Label htmlFor={`knowledge-${opt.value}`} className="font-normal">
+                <RadioGroupItem value={opt.value} id={`knowledge-${opt.value}`} className="border-neutral-600 text-white" />
+                <Label htmlFor={`knowledge-${opt.value}`} className="font-normal text-neutral-300">
                   {opt.label}
                 </Label>
               </div>

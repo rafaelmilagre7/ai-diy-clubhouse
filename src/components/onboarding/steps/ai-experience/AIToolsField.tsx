@@ -15,8 +15,8 @@ const toolsOptions = [
 ];
 
 const AIToolsFieldComponent: React.FC<AIToolsFieldProps> = ({ control, error }) => (
-  <div className="space-y-4 bg-gray-50 p-6 rounded-lg">
-    <h3 className="text-lg font-medium text-gray-800">Ferramentas de IA que já utilizou</h3>
+  <div className="space-y-4 bg-[#151823] p-6 rounded-lg border border-neutral-700">
+    <h3 className="text-lg font-medium text-white">Ferramentas de IA que já utilizou</h3>
     <Controller
       control={control}
       name="previous_tools"
@@ -37,8 +37,9 @@ const AIToolsFieldComponent: React.FC<AIToolsFieldProps> = ({ control, error }) 
                     }
                   }}
                   id={`tool-${tool}`}
+                  className="border-neutral-600 data-[state=checked]:text-white"
                 />
-                <span className="text-sm">{tool}</span>
+                <span className="text-sm text-neutral-300">{tool}</span>
               </label>
             ))}
           </div>

@@ -16,9 +16,9 @@ const AIFormationQuestionsComponent: React.FC<AIFormationQuestionsProps> = ({
   isMemberError 
 }) => (
   <div className="grid md:grid-cols-2 gap-6">
-    <div className="space-y-4 bg-gray-50 p-6 rounded-lg">
-      <h3 className="text-lg font-medium text-gray-800">Você já completou a Formação VIVER DE IA?</h3>
-      <p className="text-sm text-gray-500 mb-3">Informação importante para personalizar sua experiência.</p>
+    <div className="space-y-4 bg-[#151823] p-6 rounded-lg border border-neutral-700">
+      <h3 className="text-lg font-medium text-white">Você já completou a Formação VIVER DE IA?</h3>
+      <p className="text-sm text-neutral-400 mb-3">Informação importante para personalizar sua experiência.</p>
       <Controller
         control={control}
         name="completed_formation"
@@ -30,7 +30,7 @@ const AIFormationQuestionsComponent: React.FC<AIFormationQuestionsProps> = ({
                 onCheckedChange={field.onChange}
                 id="completed-formation"
               />
-              <Label htmlFor="completed-formation">
+              <Label htmlFor="completed-formation" className="text-neutral-300">
                 {field.value ? "Sim" : "Não"}
               </Label>
             </div>
@@ -46,9 +46,9 @@ const AIFormationQuestionsComponent: React.FC<AIFormationQuestionsProps> = ({
         )}
       />
     </div>
-    <div className="space-y-4 bg-gray-50 p-6 rounded-lg">
-      <h3 className="text-lg font-medium text-gray-800">Você já é membro do VIVER DE IA Club há mais de um mês?</h3>
-      <p className="text-sm text-gray-500 mb-3">Precisamos entender sua experiência no Club até agora.</p>
+    <div className="space-y-4 bg-[#151823] p-6 rounded-lg border border-neutral-700">
+      <h3 className="text-lg font-medium text-white">Você já é membro do VIVER DE IA Club há mais de um mês?</h3>
+      <p className="text-sm text-neutral-400 mb-3">Precisamos entender sua experiência no Club até agora.</p>
       <Controller
         control={control}
         name="is_member_for_month"
@@ -60,7 +60,7 @@ const AIFormationQuestionsComponent: React.FC<AIFormationQuestionsProps> = ({
                 onCheckedChange={field.onChange}
                 id="is-member-month"
               />
-              <Label htmlFor="is-member-month">
+              <Label htmlFor="is-member-month" className="text-neutral-300">
                 {field.value ? "Sim" : "Não"}
               </Label>
             </div>

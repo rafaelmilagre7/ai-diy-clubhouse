@@ -71,8 +71,8 @@ export const AIExperienceFormStep: React.FC<AIExperienceFormStepProps> = ({
       <AIToolsField control={control} />
 
       {/* Pergunta: Já implementou alguma solução de IA? */}
-      <div className="space-y-4 bg-gray-50 p-6 rounded-lg">
-        <h3 className="text-lg font-medium text-gray-800">
+      <div className="space-y-4 bg-[#151823] p-6 rounded-lg border border-neutral-700">
+        <h3 className="text-lg font-medium text-white">
           Você já implementou alguma solução de IA?
         </h3>
         <Controller
@@ -86,12 +86,12 @@ export const AIExperienceFormStep: React.FC<AIExperienceFormStepProps> = ({
               className="flex gap-6 mt-2"
             >
               <div className="flex items-center gap-2">
-                <RadioGroupItem value="sim" id="has_implemented_sim" />
-                <label htmlFor="has_implemented_sim" className="text-sm">Sim</label>
+                <RadioGroupItem value="sim" id="has_implemented_sim" className="border-neutral-600 text-white" />
+                <label htmlFor="has_implemented_sim" className="text-sm text-neutral-300">Sim</label>
               </div>
               <div className="flex items-center gap-2">
-                <RadioGroupItem value="nao" id="has_implemented_nao" />
-                <label htmlFor="has_implemented_nao" className="text-sm">Não</label>
+                <RadioGroupItem value="nao" id="has_implemented_nao" className="border-neutral-600 text-white" />
+                <label htmlFor="has_implemented_nao" className="text-sm text-neutral-300">Não</label>
               </div>
               {fieldState.error && (
                 <span className="text-red-500 text-xs ml-4">{fieldState.error.message}</span>
@@ -102,8 +102,8 @@ export const AIExperienceFormStep: React.FC<AIExperienceFormStepProps> = ({
       </div>
 
       {/* Pergunta: Em quais áreas você deseja implementar soluções de IA no seu negócio? (agora múltipla escolha) */}
-      <div className="space-y-4 bg-gray-50 p-6 rounded-lg">
-        <h3 className="text-lg font-medium text-gray-800">
+      <div className="space-y-4 bg-[#151823] p-6 rounded-lg border border-neutral-700">
+        <h3 className="text-lg font-medium text-white">
           Em quais áreas você deseja implementar soluções de IA no seu negócio?
         </h3>
         <Controller
@@ -121,8 +121,8 @@ export const AIExperienceFormStep: React.FC<AIExperienceFormStepProps> = ({
                   type="button"
                   className={`px-3 py-2 rounded-lg border transition-all text-sm
                     ${field.value?.includes(opt.value)
-                      ? "bg-[#0ABAB5] text-white border-[#0ABAB5]"
-                      : "bg-white text-gray-700 border-gray-200"}
+                      ? "bg-viverblue text-white border-viverblue"
+                      : "bg-[#1A1E2E] text-neutral-300 border-neutral-700 hover:bg-[#252842]"}
                   `}
                   onClick={() => {
                     const current = field.value || [];
@@ -156,7 +156,7 @@ export const AIExperienceFormStep: React.FC<AIExperienceFormStepProps> = ({
       {/* Botão de envio */}
       <Button
         type="submit"
-        className="w-full bg-[#0ABAB5] hover:bg-[#0ABAB5]/90 text-white"
+        className="w-full bg-viverblue hover:bg-viverblue-dark text-white"
         disabled={isSubmitting}
       >
         {isSubmitting ? "Salvando..." : isLastStep ? "Finalizar" : "Continuar"}

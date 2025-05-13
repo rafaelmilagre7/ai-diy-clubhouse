@@ -64,7 +64,7 @@ const FormacaoAIExperience = () => {
       >
         <div className="flex justify-center py-20">
           <LoadingSpinner size="lg" />
-          <p className="ml-4 text-gray-400">Carregando seus dados...</p>
+          <p className="ml-4 text-neutral-300">Carregando seus dados...</p>
         </div>
       </OnboardingLayout>
     );
@@ -77,7 +77,7 @@ const FormacaoAIExperience = () => {
       backUrl="/onboarding/formacao/personal-info"
       isFormacao={true}
     >
-      <div className="text-gray-300 mb-6">
+      <div className="text-neutral-300 mb-6">
         <p>Conte-nos sobre sua experiência atual com Inteligência Artificial.</p>
         <p>Essas informações nos ajudarão a personalizar seu aprendizado.</p>
       </div>
