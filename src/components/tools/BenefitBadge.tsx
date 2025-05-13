@@ -3,6 +3,7 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { BenefitType } from '@/types/toolTypes';
 import { Gift, Trophy, Clock, Percent, Star } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface BenefitBadgeProps {
   type: BenefitType;
@@ -10,32 +11,32 @@ interface BenefitBadgeProps {
 }
 
 export const BenefitBadge = ({ type, className = '' }: BenefitBadgeProps) => {
-  // Configurações baseadas no tipo de benefício com melhor contraste
+  // Configurações baseadas no tipo de benefício com melhor contraste para modo escuro
   const config = {
     discount: {
       text: 'Desconto',
       icon: <Percent className="h-3 w-3 mr-1" />,
-      baseClassName: 'bg-amber-100 text-amber-800 border-amber-400 hover:bg-amber-200' // Melhor contraste
+      baseClassName: 'badge-dark-warning' // Contraste melhorado para modo escuro
     },
     exclusive: {
       text: 'Exclusivo',
       icon: <Trophy className="h-3 w-3 mr-1" />,
-      baseClassName: 'bg-purple-100 text-purple-800 border-purple-400 hover:bg-purple-200' // Melhor contraste
+      baseClassName: 'bg-purple-900/40 text-purple-300 border-purple-700' // Contraste melhorado
     },
     free: {
       text: 'Gratuito',
       icon: <Gift className="h-3 w-3 mr-1" />,
-      baseClassName: 'bg-green-100 text-green-800 border-green-400 hover:bg-green-200' // Melhor contraste
+      baseClassName: 'badge-dark-success' // Contraste melhorado para modo escuro
     },
     trial: {
       text: 'Trial',
       icon: <Clock className="h-3 w-3 mr-1" />,
-      baseClassName: 'bg-blue-100 text-blue-800 border-blue-400 hover:bg-blue-200' // Melhor contraste
+      baseClassName: 'badge-dark-info' // Contraste melhorado para modo escuro
     },
     other: {
       text: 'Benefício',
       icon: <Star className="h-3 w-3 mr-1" />,
-      baseClassName: 'bg-gray-100 text-gray-800 border-gray-400 hover:bg-gray-200' // Melhor contraste
+      baseClassName: 'badge-dark-neutral' // Contraste melhorado para modo escuro
     }
   };
 
@@ -44,7 +45,7 @@ export const BenefitBadge = ({ type, className = '' }: BenefitBadgeProps) => {
   return (
     <Badge 
       variant="outline" 
-      className={`text-xs flex items-center ${baseClassName} ${className}`}
+      className={cn(`text-xs flex items-center font-medium ${baseClassName}`, className)}
     >
       {icon}
       {text}

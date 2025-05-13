@@ -8,6 +8,7 @@ import { Gift, Copy, ExternalLink, Check } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { BenefitAccessDenied } from './BenefitAccessDenied';
+import { cn } from '@/lib/utils';
 
 interface MemberBenefitModalProps {
   tool: Tool;
@@ -62,7 +63,12 @@ export const MemberBenefitModal = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button 
-          className={`${variant === 'default' ? 'bg-[#10b981] hover:bg-[#10b981]/90' : 'bg-white text-[#10b981] border-[#10b981] hover:bg-[#10b981]/10'}`}
+          className={cn(
+            "w-full",
+            variant === 'default' 
+              ? 'bg-viverblue hover:bg-viverblue-dark text-white' 
+              : 'bg-[#1A1E2E] text-viverblue border-viverblue hover:bg-viverblue/10'
+          )}
           size={size}
         >
           <Gift className="mr-2 h-4 w-4" />
@@ -70,7 +76,7 @@ export const MemberBenefitModal = ({
         </Button>
       </DialogTrigger>
       
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-[#151823] border-neutral-700 text-white">
         {hasAccessRestriction && !hasAccess ? (
           <BenefitAccessDenied 
             tool={tool} 
@@ -80,12 +86,12 @@ export const MemberBenefitModal = ({
           <>
             <DialogHeader>
               <div className="flex items-center gap-2 mb-1">
-                <Badge className="bg-[#10b981]">Benefício Exclusivo</Badge>
+                <Badge className="bg-viverblue text-white">Benefício Exclusivo</Badge>
               </div>
-              <DialogTitle className="text-xl">
+              <DialogTitle className="text-xl text-white">
                 {tool.benefit_title}
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="text-neutral-300">
                 Oferta exclusiva para membros do VIVER DE IA Club
               </DialogDescription>
             </DialogHeader>
@@ -98,25 +104,25 @@ export const MemberBenefitModal = ({
                   className="w-24 h-24 object-contain mb-4" 
                 />
               ) : (
-                <div className="w-20 h-20 rounded-full bg-[#10b981]/10 flex items-center justify-center mb-4">
-                  <Gift className="h-10 w-10 text-[#10b981]" />
+                <div className="w-20 h-20 rounded-full bg-viverblue/10 flex items-center justify-center mb-4">
+                  <Gift className="h-10 w-10 text-viverblue" />
                 </div>
               )}
               
               <div className="prose max-w-full w-full">
-                <p className="text-center whitespace-pre-line">
+                <p className="text-center whitespace-pre-line text-neutral-100">
                   {tool.benefit_description}
                 </p>
               </div>
               
               {promoCode && (
-                <div className="mt-4 p-3 bg-gray-100 rounded-md flex items-center justify-between w-full">
-                  <code className="font-mono font-bold text-[#10b981]">{promoCode}</code>
+                <div className="mt-4 p-3 bg-[#1A1E2E] border border-neutral-700 rounded-md flex items-center justify-between w-full">
+                  <code className="font-mono font-bold text-viverblue">{promoCode}</code>
                   <Button 
                     size="sm" 
                     variant="ghost" 
                     onClick={handleCopyCode}
-                    className="text-[#10b981]"
+                    className="text-viverblue hover:text-viverblue-light hover:bg-viverblue/10"
                   >
                     {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                   </Button>
@@ -128,13 +134,13 @@ export const MemberBenefitModal = ({
               <Button
                 variant="outline"
                 onClick={() => setOpen(false)}
-                className="sm:w-auto flex-1"
+                className="sm:w-auto flex-1 border-neutral-700 text-white hover:bg-[#1A1E2E]"
               >
                 Fechar
               </Button>
               
               <Button 
-                className="bg-[#10b981] hover:bg-[#10b981]/90 sm:w-auto flex-1"
+                className="bg-viverblue hover:bg-viverblue-dark text-white sm:w-auto flex-1"
                 onClick={handleAccessBenefit}
                 disabled={isProcessing}
               >

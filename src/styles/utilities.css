@@ -1,4 +1,3 @@
-
 /* Utilitários extras, gradientes, animações customizadas para responsividade, glass, hover, efeitos */
 
 .bg-size-200 {
@@ -83,7 +82,7 @@
     50% { opacity: 0.7; }
   }
   
-  /* Novos utilitários para o estilo Hubla */
+  /* Novas utilitários para o estilo Hubla */
   .hubla-active-nav {
     @apply relative bg-[#181A2A] text-viverblue border-l-2 border-viverblue;
   }
@@ -135,6 +134,60 @@
   @keyframes shimmer {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
+  }
+  
+  /* Novas utilidades para o tema escuro */
+  .bg-gradient-dark {
+    background: linear-gradient(to bottom, #1A1E2E 0%, #151823 100%);
+  }
+  
+  .hover-glow-viverblue {
+    transition: all 0.3s ease;
+  }
+  
+  .hover-glow-viverblue:hover {
+    box-shadow: 0 0 10px 0 rgba(0, 234, 217, 0.3);
+    border-color: rgba(0, 234, 217, 0.5);
+  }
+  
+  /* Efeitos de foco e hover melhorados para modo escuro */
+  .focus-ring-dark {
+    @apply focus:outline-none focus:ring-2 focus:ring-viverblue focus:ring-offset-0;
+  }
+  
+  .hover-bg-dark {
+    @apply hover:bg-[#1A1E2E];
+  }
+  
+  .text-gradient-viverblue {
+    @apply bg-gradient-to-r from-viverblue to-viverblue-light bg-clip-text text-transparent;
+  }
+  
+  /* Melhorar os efeitos de transição */
+  .smooth-transition {
+    @apply transition-all duration-300 ease-in-out;
+  }
+  
+  /* Melhoria para a acessibilidade - foco visível melhorado */
+  .focus-visible-improved:focus-visible {
+    @apply outline-none ring-2 ring-viverblue ring-offset-1;
+  }
+  
+  /* Efeito de pulsação suave para elementos destacados */
+  .pulse-viverblue {
+    animation: pulse-viverblue 2s infinite;
+  }
+  
+  @keyframes pulse-viverblue {
+    0% {
+      box-shadow: 0 0 0 0 rgba(0, 234, 217, 0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(0, 234, 217, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(0, 234, 217, 0);
+    }
   }
 }
 

@@ -12,6 +12,7 @@ import { MemberBenefitModal } from '@/components/tools/MemberBenefitModal';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/auth';
+import { cn } from '@/lib/utils';
 
 const Benefits = () => {
   const { user } = useAuth();
@@ -97,13 +98,13 @@ const Benefits = () => {
       <div className="container py-8">
         <div className="space-y-8">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold">Benefícios Exclusivos</h1>
+            <h1 className="text-2xl font-bold text-white">Benefícios Exclusivos</h1>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i} className="h-[280px] animate-pulse">
+              <Card key={i} className="h-[280px] animate-pulse border-neutral-700 bg-[#151823]/80">
                 <CardContent className="p-6">
-                  <div className="h-full bg-muted/40 rounded-lg"></div>
+                  <div className="h-full bg-neutral-800/70 rounded-lg"></div>
                 </CardContent>
               </Card>
             ))}
@@ -116,13 +117,13 @@ const Benefits = () => {
   if (error) {
     return (
       <div className="container py-8">
-        <Card className="border-destructive">
+        <Card className="border-destructive bg-[#151823]/80">
           <CardHeader>
             <div className="flex items-center gap-2">
               <AlertCircle className="h-5 w-5 text-destructive" />
-              <CardTitle>Erro ao carregar benefícios</CardTitle>
+              <CardTitle className="text-white">Erro ao carregar benefícios</CardTitle>
             </div>
-            <CardDescription>
+            <CardDescription className="text-neutral-300">
               Ocorreu um erro ao tentar carregar os benefícios. Por favor, tente novamente mais tarde.
             </CardDescription>
           </CardHeader>
@@ -137,30 +138,30 @@ const Benefits = () => {
         <div className="flex flex-col gap-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold">Benefícios Exclusivos</h1>
-              <p className="text-muted-foreground mt-1">
+              <h1 className="text-2xl font-bold text-white">Benefícios Exclusivos</h1>
+              <p className="text-neutral-300 mt-1">
                 Acesse ofertas e descontos exclusivos para membros do VIVER DE IA Club
               </p>
             </div>
             <div className="relative w-full md:w-72">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
               <Input
                 type="search"
                 placeholder="Buscar benefício..."
-                className="pl-9"
+                className="pl-9 bg-[#1A1E2E] border-neutral-700 text-white"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
           </div>
 
-          <Tabs defaultValue="all" onValueChange={setBenefitType}>
-            <TabsList>
-              <TabsTrigger value="all">Todos</TabsTrigger>
-              <TabsTrigger value="discount">Descontos</TabsTrigger>
-              <TabsTrigger value="exclusive">Acesso Exclusivo</TabsTrigger>
-              <TabsTrigger value="free">Versão Gratuita</TabsTrigger>
-              <TabsTrigger value="trial">Trial Estendido</TabsTrigger>
+          <Tabs defaultValue="all" className="w-full" onValueChange={setBenefitType}>
+            <TabsList className="bg-[#1A1E2E] border-neutral-700 w-full overflow-x-auto scrollbar-hide flex-nowrap">
+              <TabsTrigger value="all" className="text-white">Todos</TabsTrigger>
+              <TabsTrigger value="discount" className="text-white">Descontos</TabsTrigger>
+              <TabsTrigger value="exclusive" className="text-white">Acesso Exclusivo</TabsTrigger>
+              <TabsTrigger value="free" className="text-white">Versão Gratuita</TabsTrigger>
+              <TabsTrigger value="trial" className="text-white">Trial Estendido</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
@@ -172,12 +173,12 @@ const Benefits = () => {
             ))}
           </div>
         ) : (
-          <Card className="p-8 text-center">
+          <Card className="p-8 text-center bg-[#151823]/80 border-neutral-700">
             <div className="flex justify-center mb-4">
-              <Gift className="h-12 w-12 text-muted-foreground opacity-50" />
+              <Gift className="h-12 w-12 text-neutral-400 opacity-50" />
             </div>
-            <CardTitle className="text-lg mb-2">Nenhum benefício encontrado</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-lg mb-2 text-white">Nenhum benefício encontrado</CardTitle>
+            <CardDescription className="text-neutral-300">
               {searchQuery || benefitType !== 'all'
                 ? "Nenhum benefício corresponde aos seus filtros. Tente ajustar sua busca."
                 : "Não há benefícios disponíveis no momento. Volte em breve para novas ofertas."}
@@ -196,10 +197,16 @@ const BenefitCard = ({ tool }: { tool: Tool }) => {
   const hasAccess = tool.has_access !== false;
   
   return (
-    <Card className={`h-full flex flex-col overflow-hidden hover:shadow-md transition-shadow ${isRestricted && !hasAccess ? 'border-amber-300' : ''}`}>
+    <Card className={cn(
+      "h-full flex flex-col overflow-hidden transition-all duration-300",
+      "hover:shadow-md hover:translate-y-[-2px]",
+      "bg-gradient-to-br from-[#1A1E2E] to-[#151823] border-neutral-700",
+      isRestricted && !hasAccess ? 'border-l-4 border-l-amber-600' : '',
+      "hubla-border-glow"
+    )}>
       <CardHeader className="pb-2 pt-6">
         <div className="flex items-center gap-3 mb-2">
-          <div className="h-10 w-10 rounded bg-gray-100 border flex items-center justify-center overflow-hidden">
+          <div className="h-10 w-10 rounded bg-[#252842] border border-neutral-700 flex items-center justify-center overflow-hidden">
             {tool.logo_url ? (
               <img 
                 src={tool.logo_url} 
@@ -207,32 +214,32 @@ const BenefitCard = ({ tool }: { tool: Tool }) => {
                 className="h-full w-full object-contain" 
               />
             ) : (
-              <span className="text-lg font-bold text-[#0ABAB5]">
+              <span className="text-lg font-bold text-viverblue">
                 {tool.name.substring(0, 2).toUpperCase()}
               </span>
             )}
           </div>
           <div>
-            <CardTitle className="text-lg">{tool.name}</CardTitle>
+            <CardTitle className="text-lg text-white">{tool.name}</CardTitle>
             <div className="flex flex-wrap gap-2">
               {tool.benefit_type && (
                 <BenefitBadge type={tool.benefit_type} className="mt-1" />
               )}
               {isRestricted && !hasAccess && (
-                <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-200">
+                <Badge variant="outline" className="badge-dark-warning">
                   Acesso Restrito
                 </Badge>
               )}
             </div>
           </div>
         </div>
-        <CardDescription className="line-clamp-2 h-10">
+        <CardDescription className="line-clamp-2 h-10 text-neutral-300">
           {tool.benefit_title || "Benefício exclusivo para membros"}
         </CardDescription>
       </CardHeader>
       
       <CardContent className="pt-2 pb-6 flex-1 flex flex-col">
-        <p className="text-sm text-muted-foreground line-clamp-3 mb-4 flex-1">
+        <p className="text-sm text-neutral-300 line-clamp-3 mb-4 flex-1">
           {tool.benefit_description || tool.description}
         </p>
         
