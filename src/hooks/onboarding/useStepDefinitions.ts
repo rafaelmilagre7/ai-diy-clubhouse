@@ -109,3 +109,11 @@ export const formationSteps: CompleteOnboardingStep[] = [
     forFormation: true
   }
 ];
+
+// Função para obter os passos com base no tipo de onboarding
+export function getStepsByUserType(type: 'club' | 'formacao'): CompleteOnboardingStep[] {
+  if (type === 'formacao') {
+    return formationSteps;
+  }
+  return steps;
+}
