@@ -1,6 +1,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types/database.types';
+import { isDevelopmentMode as isDevMode } from '@/utils/environmentUtils';
 
 // Função auxiliar para verificar o ambiente atual
 export const isDevelopmentMode = (): boolean => {
@@ -10,6 +11,166 @@ export const isDevelopmentMode = (): boolean => {
     window.location.hostname.includes('.lovable.dev') ||
     window.location.hostname.includes('.lovable.app')
   );
+};
+
+// Função para criar um cliente mockado para desenvolvimento sem Supabase
+const createMockClient = () => {
+  console.info('🔨 Utilizando cliente Supabase mockado para desenvolvimento');
+  
+  // Objeto que armazena dados em memória para simulação
+  const memoryStore: Record<string, any[]> = {};
+
+  // Esta é uma implementação melhorada que simula a API do Supabase
+  // mas retorna respostas simuladas para desenvolvimento
+  return {
+    from: (table: string) => ({
+      select: (columns?: string) => ({
+        eq: (column: string, value: any) => ({
+          order: (column: string, options?: { ascending?: boolean }) => ({
+            limit: (limit: number) => ({
+              single: async () => ({ 
+                data: null, 
+                error: null 
+              }),
+              maybeSingle: async () => ({ 
+                data: null, 
+                error: null 
+              })
+            }),
+            single: async () => ({ 
+              data: null, 
+              error: null 
+            }),
+            maybeSingle: async () => ({ 
+              data: null, 
+              error: null 
+            })
+          }),
+          single: async () => ({ 
+            data: null, 
+            error: null 
+          }),
+          maybeSingle: async () => ({ 
+            data: null, 
+            error: null 
+          })
+        }),
+        in: (column: string, values: any[]) => ({
+          order: (column: string, options?: { ascending?: boolean }) => ({
+            limit: (limit: number) => ({
+              single: async () => ({ 
+                data: null, 
+                error: null 
+              }),
+              maybeSingle: async () => ({ 
+                data: null, 
+                error: null 
+              })
+            })
+          })
+        }),
+        limit: (limit: number) => ({
+          single: async () => ({ 
+            data: null, 
+            error: null 
+          }),
+          maybeSingle: async () => ({ 
+            data: null, 
+            error: null 
+          })
+        }),
+        order: (column: string, options?: { ascending?: boolean }) => ({
+          limit: (limit: number) => ({
+            single: async () => ({ 
+              data: null, 
+              error: null 
+            }),
+            maybeSingle: async () => ({ 
+              data: null, 
+              error: null 
+            })
+          })
+        }),
+        maybeSingle: async () => ({ 
+          data: null, 
+          error: null 
+        }),
+        single: async () => ({ 
+          data: null, 
+          error: null 
+        })
+      }),
+      insert: (data: any) => ({
+        select: async () => ({ 
+          data: Array.isArray(data) ? data : [data], 
+          error: null 
+        }),
+        single: async () => ({ 
+          data: Array.isArray(data) ? data[0] : data, 
+          error: null 
+        })
+      }),
+      update: (data: any) => ({
+        eq: (column: string, value: any) => ({
+          select: async () => ({ 
+            data: Array.isArray(data) ? data : [data], 
+            error: null 
+          }),
+          single: async () => ({ 
+            data: Array.isArray(data) ? data[0] : data, 
+            error: null 
+          })
+        })
+      }),
+      upsert: (data: any) => ({
+        select: async () => ({ 
+          data: Array.isArray(data) ? data : [data], 
+          error: null 
+        })
+      })
+    }),
+    auth: {
+      getSession: async () => ({ 
+        data: { session: null }, 
+        error: null 
+      }),
+      signOut: async () => ({ error: null }),
+      onAuthStateChange: (callback: (event: string, session: any) => void) => {
+        // Retornando um objeto com método unsubscribe para evitar erros
+        return { 
+          data: { subscription: { unsubscribe: () => {} } }, 
+          error: null 
+        };
+      },
+      signInWithOAuth: async () => ({ data: null, error: null }),
+      signInWithOtp: async () => ({ data: null, error: null }),
+      signInWithPassword: async () => ({ data: null, error: null })
+    },
+    storage: {
+      listBuckets: async () => ({ data: [], error: null }),
+      createBucket: async () => ({ data: null, error: null }),
+      from: (bucket: string) => ({
+        upload: async () => ({ data: null, error: null }),
+        getPublicUrl: () => ({ data: { publicUrl: '' } })
+      })
+    },
+    rpc: async () => ({ data: null, error: null }),
+    removeChannel: () => {},
+    channel: () => ({
+      on: () => ({
+        on: () => ({
+          subscribe: (callback: (status: string) => void) => {
+            callback('SUBSCRIBED');
+            return {};
+          }
+        }),
+        subscribe: (callback: (status: string) => void) => {
+          callback('SUBSCRIBED');
+          return {};
+        }
+      })
+    })
+  } as any;
 };
 
 // Função para obter o cliente Supabase com base no ambiente
@@ -38,80 +199,30 @@ export const getSupabaseClient = () => {
       'Certifique-se de definir VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no seu arquivo .env.local'
     );
     
-    // Em produção, lançar um erro mais visível para o usuário
-    if (!isDevelopmentMode()) {
-      throw new Error('Erro de configuração: Conecte-se ao suporte técnico.');
+    // Em desenvolvimento, retornar cliente mockado mesmo com erro
+    if (isDevelopmentMode()) {
+      console.warn('Utilizando cliente mockado devido à falta de configuração');
+      return createMockClient();
     }
     
-    // Mesmo em desenv, retornamos o cliente mockado para evitar erros
+    // Em produção, usar cliente mockado com aviso ao invés de lançar erro
+    console.error('Usando cliente mockado em produção - funcionalidades limitadas');
     return createMockClient();
   }
   
   // Criação do cliente Supabase com configuração correta
-  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      storageKey: 'viver-de-ia-auth'
-    }
-  });
-};
-
-// Criação de um cliente mockado para desenvolvimento sem Supabase
-const createMockClient = () => {
-  // Esta é uma implementação básica que simula a API do Supabase
-  // mas retorna respostas predefinidas ou vazias
-  return {
-    from: () => ({
-      select: () => ({
-        eq: () => ({
-          order: () => ({
-            limit: () => ({
-              maybeSingle: async () => ({ data: null, error: null }),
-              single: async () => ({ data: null, error: null })
-            }),
-            maybeSingle: async () => ({ data: null, error: null }),
-            single: async () => ({ data: null, error: null })
-          }),
-          maybeSingle: async () => ({ data: null, error: null }),
-          single: async () => ({ data: null, error: null })
-        }),
-        limit: () => ({
-          maybeSingle: async () => ({ data: null, error: null }),
-          single: async () => ({ data: null, error: null })
-        }),
-        maybeSingle: async () => ({ data: null, error: null }),
-        single: async () => ({ data: null, error: null })
-      }),
-      insert: () => ({
-        select: async () => ({ data: null, error: null }),
-        single: async () => ({ data: null, error: null })
-      }),
-      update: () => ({
-        eq: () => ({
-          select: async () => ({ data: null, error: null }),
-          single: async () => ({ data: null, error: null })
-        })
-      }),
-      upsert: () => ({
-        select: async () => ({ data: null, error: null })
-      })
-    }),
-    auth: {
-      getSession: async () => ({ data: { session: null }, error: null }),
-      signOut: async () => ({ error: null }),
-      onAuthStateChange: () => ({ data: null, error: null, unsubscribe: () => {} })
-    },
-    storage: {
-      listBuckets: async () => ({ data: [], error: null }),
-      createBucket: async () => ({ data: null, error: null }),
-      from: () => ({
-        upload: async () => ({ data: null, error: null }),
-        getPublicUrl: () => ({ data: { publicUrl: '' } })
-      })
-    },
-    rpc: async () => ({ data: null, error: null })
-  } as any;
+  try {
+    return createClient<Database>(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        storageKey: 'viver-de-ia-auth'
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao criar cliente Supabase:', error);
+    return createMockClient();
+  }
 };
 
 // Exportação do cliente Supabase

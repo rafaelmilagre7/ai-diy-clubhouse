@@ -150,27 +150,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fetchCurrentSession();
 
     // Configurar listener para mudanças de autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
-      console.log('Evento de autenticação:', event);
+    let subscription: { unsubscribe: () => void } | null = null;
+    
+    try {
+      const authStateChange = supabase.auth.onAuthStateChange(async (event, newSession) => {
+        console.log('Evento de autenticação:', event);
+        
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
+        
+        // Reset admin status enquanto verificamos
+        if (event === 'SIGNED_OUT') {
+          setIsAdmin(false);
+          setAdminCheckComplete(true);
+        } else if (newSession?.user?.email && newSession?.user?.id) {
+          await checkIsAdmin(newSession.user.email, newSession.user.id);
+        } else {
+          setIsAdmin(false);
+          setAdminCheckComplete(true);
+        }
+      });
       
-      setSession(newSession);
-      setUser(newSession?.user ?? null);
-      
-      // Reset admin status enquanto verificamos
-      if (event === 'SIGNED_OUT') {
-        setIsAdmin(false);
-        setAdminCheckComplete(true);
-      } else if (newSession?.user?.email && newSession?.user?.id) {
-        await checkIsAdmin(newSession.user.email, newSession.user.id);
-      } else {
-        setIsAdmin(false);
-        setAdminCheckComplete(true);
+      // Armazenar a subscription para limpeza
+      if (authStateChange?.data?.subscription) {
+        subscription = authStateChange.data.subscription;
       }
-    });
+    } catch (error) {
+      console.error("Erro ao configurar listener de autenticação:", error);
+      setIsLoading(false);
+    }
 
     // Limpar subscription ao desmontar
     return () => {
-      subscription.unsubscribe();
+      if (subscription && typeof subscription.unsubscribe === 'function') {
+        subscription.unsubscribe();
+      }
     };
   }, []);
 
