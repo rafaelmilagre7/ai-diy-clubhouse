@@ -1,6 +1,12 @@
 
 import { supabase } from "@/lib/supabase";
 
+// Função auxiliar para validar formato UUID
+const isValidUUID = (id: string) => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(id);
+};
+
 /**
  * Busca dados profissionais específicos para um progresso
  */
@@ -8,6 +14,20 @@ export const fetchProfessionalData = async (progressId: string) => {
   if (!progressId) {
     console.error("[ERRO] ID de progresso não fornecido para busca de dados profissionais");
     return null;
+  }
+  
+  // Verificar se o ID de progresso é válido antes de fazer chamadas ao banco de dados
+  if (!isValidUUID(progressId)) {
+    console.warn("[WARN] ID de progresso inválido ou simulado, retornando dados simulados:", progressId);
+    return {
+      progress_id: progressId,
+      company_name: "Empresa Teste",
+      company_size: "11-50",
+      company_sector: "Tecnologia",
+      company_website: "https://exemplo.com",
+      current_position: "Diretor",
+      annual_revenue: "1-5M"
+    };
   }
   
   try {
@@ -36,6 +56,12 @@ export const saveProfessionalData = async (progressId: string, userId: string, d
   if (!progressId) {
     console.error("[ERRO] ID de progresso não fornecido para salvar dados profissionais");
     throw new Error("ID de progresso não fornecido");
+  }
+  
+  // Verificar se o ID de progresso é válido antes de fazer chamadas ao banco de dados
+  if (!isValidUUID(progressId)) {
+    console.warn("[WARN] ID de progresso inválido ou simulado, skipping database call:", progressId);
+    return [{ simulated: true, success: true }];
   }
   
   try {

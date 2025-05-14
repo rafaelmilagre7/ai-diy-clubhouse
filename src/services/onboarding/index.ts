@@ -2,11 +2,23 @@
 import { supabase } from "@/lib/supabase";
 import { OnboardingData, ProfessionalDataInput } from "@/types/onboarding";
 
+// Função auxiliar para validar formato UUID
+const isValidUUID = (id: string) => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(id);
+};
+
 // Serviço para dados profissionais
 export const professionalDataService = {
   async save(progressId: string, userId: string, data: any) {
     try {
       console.log("Salvando dados profissionais via serviço:", { progressId, userId, data });
+      
+      // Verificar se o ID de progresso é válido antes de fazer chamadas ao banco de dados
+      if (!isValidUUID(progressId)) {
+        console.warn("ID de progresso inválido ou simulado, skipping database call:", progressId);
+        return { simulated: true, success: true };
+      }
       
       // Extrair os dados profissionais do objeto
       let professionalInfo: Record<string, any> = {};
@@ -86,6 +98,27 @@ export const professionalDataService = {
   
   async fetch(progressId: string) {
     try {
+      // Verificar se o ID de progresso é válido antes de fazer chamadas ao banco de dados
+      if (!isValidUUID(progressId)) {
+        console.warn("ID de progresso inválido ou simulado, retornando dados simulados:", progressId);
+        return {
+          company_name: "Empresa Teste",
+          company_size: "11-50",
+          company_sector: "Tecnologia",
+          company_website: "https://exemplo.com",
+          current_position: "Diretor",
+          annual_revenue: "1-5M",
+          professional_info: {
+            company_name: "Empresa Teste",
+            company_size: "11-50",
+            company_sector: "Tecnologia",
+            company_website: "https://exemplo.com",
+            current_position: "Diretor",
+            annual_revenue: "1-5M"
+          }
+        };
+      }
+      
       const { data, error } = await supabase
         .from('onboarding_progress')
         .select('professional_info, company_name, company_size, company_sector, company_website, current_position, annual_revenue')

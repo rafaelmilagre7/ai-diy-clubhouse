@@ -12,6 +12,24 @@ export function useProgress() {
   const lastError = useRef<Error | null>(null);
   const { logError, log } = useLogging();
 
+  // Helper para gerar UUIDs válidos para mock
+  const generateValidUUID = () => {
+    // Usar crypto.randomUUID() se disponível no navegador
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    
+    // Fallback simples para gerar UUID se randomUUID não estiver disponível
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  };
+
+  // Flag para determinar se estamos em modo de desenvolvimento
+  const isDevelopmentMode = true; // Em produção, esta flag seria controlada por variável de ambiente
+
   /**
    * Carrega dados atualizados do progresso do onboarding
    */
@@ -23,8 +41,8 @@ export function useProgress() {
       // Simulação de carregamento do progresso (mock)
       // Em uma implementação real, aqui faria a consulta ao banco de dados
       const mockProgress: OnboardingProgress = {
-        id: "onb-12345",
-        user_id: "usr-12345",
+        id: isDevelopmentMode ? generateValidUUID() : "onb-12345",
+        user_id: isDevelopmentMode ? generateValidUUID() : "usr-12345",
         current_step: "business_context",
         completed_steps: ["personal_info", "professional_info"],
         is_completed: false,
@@ -35,6 +53,10 @@ export function useProgress() {
         professional_info: {
           company_name: "Empresa Teste",
           current_position: "Diretor",
+          company_size: "11-50",
+          company_sector: "Tecnologia",
+          company_website: "https://exemplo.com",
+          annual_revenue: "1-5M"
         },
         business_context: {
           business_model: "B2B SaaS",
@@ -122,6 +144,7 @@ export function useProgress() {
     isLoading,
     refreshProgress,
     updateProgress,
-    lastError: lastError.current
+    lastError: lastError.current,
+    isDevelopmentMode // Exportar a flag para que os serviços saibam se estamos em modo de desenvolvimento
   };
 }

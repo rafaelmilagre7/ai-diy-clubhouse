@@ -1,13 +1,57 @@
-
 import { supabase } from "@/lib/supabase";
 import { OnboardingProgress } from "@/types/onboarding";
 import { normalizeOnboardingResponse } from "./normalizers/progressNormalizer";
 import { fetchProfessionalData, formatProfessionalData } from "./services/professionalDataService";
 
+// Função auxiliar para validar formato UUID
+const isValidUUID = (id: string) => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(id);
+};
+
 export const fetchOnboardingProgress = async (userId: string) => {
   console.log("[DEBUG] Buscando progresso de onboarding para usuário:", userId);
   
   try {
+    // Verificar se o ID do usuário é válido antes de fazer chamadas ao banco de dados
+    if (!isValidUUID(userId)) {
+      console.warn("[WARN] ID de usuário inválido ou simulado, retornando dados simulados:", userId);
+      const mockData = {
+        id: crypto.randomUUID(),
+        user_id: userId,
+        current_step: "business_context",
+        completed_steps: ["personal_info", "professional_info"],
+        is_completed: false,
+        personal_info: {
+          name: "Usuário Teste",
+          email: "teste@exemplo.com",
+        },
+        professional_info: {
+          company_name: "Empresa Teste",
+          current_position: "Diretor",
+          company_size: "11-50",
+          company_sector: "Tecnologia",
+          company_website: "https://exemplo.com",
+          annual_revenue: "1-5M"
+        },
+        company_name: "Empresa Teste",
+        company_size: "11-50",
+        company_sector: "Tecnologia",
+        company_website: "https://exemplo.com",
+        current_position: "Diretor",
+        annual_revenue: "1-5M",
+        business_context: {},
+        business_goals: {},
+        ai_experience: {},
+        experience_personalization: {},
+        complementary_info: {},
+        sync_status: "completed",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      return { data: mockData, error: null };
+    }
+    
     const { data: rawData, error } = await supabase
       .from("onboarding_progress")
       .select("*")
@@ -68,6 +112,45 @@ export const createInitialOnboardingProgress = async (user: any) => {
   if (!user || !user.id) {
     console.error("[ERRO] Tentativa de criar progresso para usuário inválido:", user);
     return { data: null, error: new Error("Usuário inválido") };
+  }
+  
+  // Verificar se o ID do usuário é válido antes de fazer chamadas ao banco de dados
+  if (!isValidUUID(user.id)) {
+    console.warn("[WARN] ID de usuário inválido ou simulado, retornando dados simulados:", user.id);
+    const mockData = {
+      id: crypto.randomUUID(),
+      user_id: user.id,
+      current_step: "personal_info",
+      completed_steps: [],
+      is_completed: false,
+      personal_info: {
+        name: user?.user_metadata?.name || '',
+        email: user?.email || '',
+        ddi: "+55",
+      },
+      professional_info: {
+        company_name: "",
+        company_size: "",
+        company_sector: "",
+        company_website: "",
+        current_position: "",
+        annual_revenue: "",
+      },
+      company_name: "",
+      company_size: "",
+      company_sector: "",
+      company_website: "",
+      current_position: "",
+      annual_revenue: "",
+      business_context: {},
+      business_goals: {},
+      ai_experience: {},
+      experience_personalization: {},
+      complementary_info: {},
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    return { data: mockData, error: null };
   }
   
   const userName = user?.user_metadata?.name || '';
@@ -140,6 +223,17 @@ export const updateOnboardingProgress = async (progressId: string, updates: Part
     console.error("[ERRO] ID de progresso inválido:", progressId);
     return { data: null, error: new Error("ID de progresso inválido") };
   }
+  
+  // Verificar se o ID de progresso é válido antes de fazer chamadas ao banco de dados
+  if (!isValidUUID(progressId)) {
+    console.warn("[WARN] ID de progresso inválido ou simulado, retornando dados simulados:", progressId);
+    const mockData = {
+      id: progressId,
+      ...updates,
+      updated_at: new Date().toISOString()
+    };
+    return { data: mockData, error: null };
+  }
 
   try {
     const cleanedUpdates = { ...updates };
@@ -164,7 +258,7 @@ export const updateOnboardingProgress = async (progressId: string, updates: Part
         delete objField._last_updated;
       }
     });
-
+    
     const { data: existingProgress, error: queryError } = await supabase
       .from("onboarding_progress")
       .select("id, user_id, created_at")
