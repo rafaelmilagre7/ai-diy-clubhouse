@@ -1,98 +1,94 @@
 
-import React from "react";
+import React, { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { SubmitButton } from "../business-context/SubmitButton";
+import { NameInput } from "../inputs/NameInput";
+import { EmailInput } from "../inputs/EmailInput";
 import { PhoneInput } from "../inputs/PhoneInput";
 import { SocialInputs } from "../inputs/SocialInputs";
 import { LocationInputs } from "../inputs/LocationInputs";
 import { TimezoneInput } from "../inputs/TimezoneInput";
-import { Button } from "@/components/ui/button";
+import { OnboardingProgress } from "@/types/onboarding";
+import { toast } from "sonner";
 
 interface PersonalInfoFormProps {
-  validation?: any;
-  register?: any;
-  errors: Record<string, string>;
-  touchedFields?: any;
+  onSubmit: (data: any) => Promise<void>;
   isSubmitting: boolean;
-  initialData?: any;
-  formData: any;
-  onChange: (field: string, value: any) => void;
+  initialData?: OnboardingProgress | null;
 }
 
 export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
-  validation,
-  register,
-  errors,
-  touchedFields,
+  onSubmit,
   isSubmitting,
   initialData,
-  formData,
-  onChange
 }) => {
-  // Combinar dados iniciais e formData para garantir valores corretos
-  const currentData = {
-    ...initialData,
-    ...formData
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      ddi: "+55",
+      linkedin: "",
+      instagram: "",
+      country: "Brasil",
+      state: "",
+      city: "",
+      timezone: "America/Sao_Paulo",
+    },
+  });
+
+  // Carregar dados iniciais quando disponíveis
+  useEffect(() => {
+    if (initialData?.personal_info) {
+      console.log("Carregando dados iniciais:", initialData.personal_info);
+      // Usar reset para evitar problemas com o controlled/uncontrolled warning do React
+      reset({
+        name: initialData.personal_info.name || "",
+        email: initialData.personal_info.email || "",
+        phone: initialData.personal_info.phone || "",
+        ddi: initialData.personal_info.ddi || "+55",
+        linkedin: initialData.personal_info.linkedin || "",
+        instagram: initialData.personal_info.instagram || "",
+        country: initialData.personal_info.country || "Brasil",
+        state: initialData.personal_info.state || "",
+        city: initialData.personal_info.city || "",
+        timezone: initialData.personal_info.timezone || "America/Sao_Paulo",
+      });
+    }
+  }, [initialData, reset]);
+
+  const onFormSubmit = async (data: any) => {
+    try {
+      await onSubmit(data);
+      toast.success("Informações pessoais salvas com sucesso!");
+    } catch (error) {
+      console.error("Erro ao salvar informações pessoais:", error);
+      toast.error("Ocorreu um erro ao salvar suas informações. Por favor, tente novamente.");
+    }
   };
 
   return (
-    <div className="space-y-8">
-      <LocationInputs
-        country={currentData.country || "Brasil"}
-        state={currentData.state || ""}
-        city={currentData.city || ""}
-        onChangeCountry={(value) => onChange("country", value)}
-        onChangeState={(value) => onChange("state", value)}
-        onChangeCity={(value) => onChange("city", value)}
-        errors={{
-          state: errors.state,
-          city: errors.city
+    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
+      <NameInput control={control} error={errors.name} />
+      <EmailInput control={control} error={errors.email} />
+      <PhoneInput control={control} error={errors.phone} />
+      <SocialInputs control={control} errors={{ linkedin: errors.linkedin, instagram: errors.instagram }} />
+      <LocationInputs 
+        control={control} 
+        errors={{ country: errors.country, state: errors.state, city: errors.city }} 
+        defaultValues={{
+          country: initialData?.personal_info?.country,
+          state: initialData?.personal_info?.state,
+          city: initialData?.personal_info?.city
         }}
-        disabled={isSubmitting}
       />
-      
-      <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4 space-y-6">
-        <h3 className="text-lg font-semibold text-[#0ABAB5]">Contato</h3>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <PhoneInput
-            value={currentData.phone || ""}
-            onChange={(v) => onChange("phone", v)}
-            disabled={isSubmitting}
-            error={errors.phone}
-            ddi={currentData.ddi || "+55"}
-            onChangeDDI={(v) => onChange("ddi", v)}
-          />
-          <TimezoneInput 
-            value={currentData.timezone || "America/Sao_Paulo"} 
-            onChange={(v) => onChange("timezone", v)} 
-            disabled={isSubmitting}
-            error={errors.timezone}
-          />
-        </div>
-      </div>
-      
-      <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4 space-y-6">
-        <h3 className="text-lg font-semibold text-[#0ABAB5]">Redes Sociais</h3>
-        <SocialInputs
-          linkedin={currentData.linkedin || ""}
-          instagram={currentData.instagram || ""}
-          onChangeLinkedin={(v) => onChange("linkedin", v)}
-          onChangeInstagram={(v) => onChange("instagram", v)}
-          disabled={isSubmitting}
-          errors={{
-            linkedin: errors.linkedin,
-            instagram: errors.instagram
-          }}
-        />
-      </div>
-      
-      <div className="flex justify-end space-x-4">
-        <Button 
-          type="submit"
-          disabled={isSubmitting}
-          className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
-        >
-          {isSubmitting ? "Salvando..." : "Continuar"}
-        </Button>
-      </div>
-    </div>
+      <TimezoneInput control={control} error={errors.timezone} />
+      <SubmitButton isSubmitting={isSubmitting} text="Salvar e Continuar" />
+    </form>
   );
 };
