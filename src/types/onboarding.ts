@@ -1,4 +1,3 @@
-
 export interface OnboardingData {
   // 1. Dados Pessoais
   personal_info: {
@@ -148,6 +147,9 @@ export interface OnboardingProgress {
   company_website?: string;
   current_position?: string;
   annual_revenue?: string;
+  
+  // Adicionando campo de status de sincronização
+  sync_status?: string;
 
   // Propriedades para trilhas futuras
   trail_solutions?: any[];

@@ -50,7 +50,8 @@ const ProfessionalData = () => {
     }
   }, [progress, isLoading]);
   
-  const handleSubmit = async (stepId: string, data: any) => {
+  // Corrigindo o tipo de retorno para Promise<void> em vez de Promise<boolean>
+  const handleSubmit = async (stepId: string, data: any): Promise<void> => {
     setIsSubmitting(true);
     setSubmitError(null);
     
@@ -70,14 +71,15 @@ const ProfessionalData = () => {
       // Navegar para a próxima etapa
       navigate("/onboarding/business-context");
       
-      return true;
+      toast.success("Dados salvos com sucesso", {
+        description: "Redirecionando para a próxima etapa..."
+      });
     } catch (error: any) {
       console.error("Erro ao salvar dados profissionais:", error);
       setSubmitError(error.message || "Erro ao salvar dados");
       toast.error("Erro ao salvar dados", {
         description: "Verifique sua conexão e tente novamente"
       });
-      return false;
     } finally {
       setIsSubmitting(false);
     }

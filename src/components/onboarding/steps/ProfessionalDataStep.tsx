@@ -81,6 +81,7 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
     }
   }, [initialData, methods]);
 
+  // Ajustada para não retornar valor booleano e corresponder ao tipo Promise<void>
   const handleSubmit = async (data: any) => {
     setIsLoading(true);
     setValidationErrors([]);

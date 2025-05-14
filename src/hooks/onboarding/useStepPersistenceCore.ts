@@ -102,13 +102,15 @@ export function useStepPersistenceCore({
 
       console.log("Dados a serem enviados para o banco:", updateObj);
 
-      // Atualizar na tabela principal
-      const result = await updateProgress({
+      // Atualizar na tabela principal com objeto tipado corretamente
+      const updateWithMeta = {
         ...updateObj,
         // Garantir que campos importantes estejam sempre atualizados
         updated_at: new Date().toISOString(),
-        sync_status: 'pendente' // Marcar para sincronização com outros sistemas se necessário
-      });
+        sync_status: 'pendente' as string // Especificamos o tipo para evitar erros
+      };
+      
+      const result = await updateProgress(updateWithMeta);
       
       // Verificar se temos um retorno válido
       if (!result || (result as any).error) {
