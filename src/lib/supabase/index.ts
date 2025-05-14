@@ -12,9 +12,9 @@ export {
   formatVideoDuration,
   setupLearningStorageBuckets,
   ensureBucketExists,
-  createStoragePublicPolicy,
   extractPandaVideoInfo,
   uploadFileWithFallback,
+  // Removi createStoragePublicPolicy daqui, pois deve vir apenas do módulo rpc
   // Adicione outras funções que precisam ser exportadas
 } from './storage';
 
