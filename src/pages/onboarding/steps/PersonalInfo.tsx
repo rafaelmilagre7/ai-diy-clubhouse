@@ -14,8 +14,9 @@ const PersonalInfo = () => {
   const navigate = useNavigate();
   const [loadingAttempts, setLoadingAttempts] = useState(0);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [forceSkipLoading, setForceSkipLoading] = useState(false);
   
-  // Usar diretamente o hook useProgress em vez de reimportá-lo
+  // Usar hook useProgress para obter e manter dados de progresso
   const { progress, isLoading, refreshProgress, lastError } = useProgress();
   
   const {
@@ -52,29 +53,26 @@ const PersonalInfo = () => {
     console.log("[DEBUG] PersonalInfo montado - iniciando carregamento de dados");
     attemptDataLoad();
     
+    // Definir timeout de segurança
+    const safetyTimeout = setTimeout(() => {
+      if (isLoading) {
+        console.warn("[DEBUG] Timeout de segurança acionado para evitar loading infinito");
+        setForceSkipLoading(true);
+      }
+    }, 8000); // 8 segundos de timeout absoluto
+    
     return () => {
       console.log("[DEBUG] PersonalInfo desmontado");
+      clearTimeout(safetyTimeout);
     };
   }, []);
 
-  // Adicionar um efeito para forçar carregamento após um tempo limite
+  // Carregar dados iniciais quando o progresso estiver disponível
   useEffect(() => {
-    // Se ainda estiver carregando após 5 segundos, tenta novamente
-    if (isLoading && loadingAttempts < 3) {
-      const timer = setTimeout(() => {
-        console.log("[DEBUG] Tempo limite de carregamento atingido, tentando novamente");
-        attemptDataLoad();
-      }, 5000);
-      
-      return () => clearTimeout(timer);
+    if (progress && !isSubmitting) {
+      loadInitialData();
     }
-  }, [isLoading, loadingAttempts]);
-
-  useEffect(() => {
-    if (progress) {
-      console.log("[DEBUG] Dados do formulário atualizados:", formData);
-    }
-  }, [formData, progress]);
+  }, [progress, loadInitialData, isSubmitting]);
 
   // Adaptador simplificado para compatibilidade com a nova assinatura de onSubmit
   const handleSuccess = async (stepId?: string, data?: any) => {
@@ -108,59 +106,8 @@ const PersonalInfo = () => {
     }
   };
 
-  // Se tentou carregar 3 vezes e ainda está carregando, mostrar botão para forçar continuação
-  const showForceButton = loadingAttempts >= 3 && isLoading;
-
-  // Se houver um erro de carregamento ou erro no último progresso
-  const hasError = loadError || lastError;
-
-  if (isLoading && !showForceButton) {
-    console.log("[DEBUG] Exibindo spinner de carregamento");
-    return (
-      <OnboardingLayout 
-        currentStep={1} 
-        title="Dados Pessoais" 
-        backUrl="/"
-      >
-        <div className="flex justify-center items-center py-20">
-          <LoadingSpinner size="lg" />
-          <p className="ml-4 text-gray-400">Carregando seus dados...</p>
-        </div>
-      </OnboardingLayout>
-    );
-  }
-
-  // Se houver erro, mostramos uma mensagem de erro com opção para tentar novamente
-  if (hasError) {
-    return (
-      <OnboardingLayout 
-        currentStep={1} 
-        title="Dados Pessoais" 
-        backUrl="/"
-      >
-        <div className="space-y-6">
-          <Alert variant="destructive" className="bg-red-50 border-red-200">
-            <AlertTriangle className="h-5 w-5" />
-            <AlertDescription className="ml-2">
-              {loadError || (lastError ? "Erro ao carregar dados de progresso." : "")}
-            </AlertDescription>
-          </Alert>
-          
-          <div className="flex justify-center mt-6">
-            <button 
-              onClick={attemptDataLoad}
-              className="px-4 py-2 bg-[#0ABAB5] text-white rounded hover:bg-[#0ABAB5]/90"
-            >
-              Tentar Novamente
-            </button>
-          </div>
-        </div>
-      </OnboardingLayout>
-    );
-  }
-
-  // Se tentou várias vezes e ainda está carregando, permitir continuar mesmo assim
-  if (showForceButton) {
+  // Forçar continuação se o carregamento estiver demorando muito
+  if ((loadingAttempts >= 3 || forceSkipLoading) && isLoading) {
     return (
       <OnboardingLayout 
         currentStep={1} 
@@ -180,6 +127,7 @@ const PersonalInfo = () => {
               onClick={() => {
                 // Forçar carregamento com dados padrão vazios
                 toast.info("Continuando com dados padrão");
+                setForceSkipLoading(true);
                 setLoadingAttempts(0);
               }}
               className="px-4 py-2 bg-[#0ABAB5] text-white rounded hover:bg-[#0ABAB5]/90"
@@ -191,6 +139,62 @@ const PersonalInfo = () => {
               className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
             >
               Tentar Novamente
+            </button>
+          </div>
+        </div>
+      </OnboardingLayout>
+    );
+  }
+
+  // Se ainda está carregando (e não atingimos o limite de tentativas)
+  if (isLoading && !forceSkipLoading) {
+    console.log("[DEBUG] Exibindo spinner de carregamento");
+    return (
+      <OnboardingLayout 
+        currentStep={1} 
+        title="Dados Pessoais" 
+        backUrl="/"
+      >
+        <div className="flex justify-center items-center py-20">
+          <LoadingSpinner size="lg" />
+          <p className="ml-4 text-gray-400">Carregando seus dados...</p>
+        </div>
+      </OnboardingLayout>
+    );
+  }
+
+  // Se houver erro, mostramos uma mensagem de erro com opção para tentar novamente
+  if (loadError || lastError) {
+    return (
+      <OnboardingLayout 
+        currentStep={1} 
+        title="Dados Pessoais" 
+        backUrl="/"
+      >
+        <div className="space-y-6">
+          <Alert variant="destructive" className="bg-red-50 border-red-200">
+            <AlertTriangle className="h-5 w-5" />
+            <AlertDescription className="ml-2">
+              {loadError || (lastError ? "Erro ao carregar dados de progresso." : "")}
+            </AlertDescription>
+          </Alert>
+          
+          <div className="flex justify-center mt-6 space-x-4">
+            <button 
+              onClick={attemptDataLoad}
+              className="px-4 py-2 bg-[#0ABAB5] text-white rounded hover:bg-[#0ABAB5]/90"
+            >
+              Tentar Novamente
+            </button>
+            <button 
+              onClick={() => {
+                // Continuar com dados padrão
+                setForceSkipLoading(true);
+                toast.info("Continuando com dados padrão");
+              }}
+              className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+            >
+              Continuar Mesmo Assim
             </button>
           </div>
         </div>

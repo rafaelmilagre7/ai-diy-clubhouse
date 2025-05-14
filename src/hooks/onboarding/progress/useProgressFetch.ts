@@ -17,22 +17,34 @@ export const useProgressFetch = (
   const { user } = useAuth();
   
   /**
-   * Busca o progresso do onboarding do usuário
+   * Busca o progresso do onboarding do usuário com retry limitado e seguro
    */
   const fetchProgress = useCallback(async (): Promise<OnboardingProgress | null> => {
     if (!user) {
       logDebugEvent("fetchProgress_noUser");
       console.log("[ERRO] Tentando buscar progresso sem usuário autenticado");
+      setIsLoading(false);
+      return null;
+    }
+    
+    // Garantir que não estamos em um loop infinito
+    if (retryCount.current > 3) {
+      logDebugEvent("fetchProgress_tooManyRetries", { retries: retryCount.current });
+      console.warn("[AVISO] Muitas tentativas de buscar progresso, interrompendo.");
+      if (isMounted.current) {
+        setIsLoading(false);
+      }
       return null;
     }
     
     try {
       setIsLoading(true);
-      logDebugEvent("fetchProgress_start", { userId: user.id });
+      logDebugEvent("fetchProgress_start", { userId: user.id, attempt: retryCount.current + 1 });
       
       // Passo 1: Tentar buscar progresso existente
       const { data, error } = await fetchOnboardingProgress(user.id);
       
+      // Verificação crítica: se componente desmontado, abortar operação
       if (!isMounted.current) {
         logDebugEvent("fetchProgress_unmountedDuringFetch");
         return null;
@@ -48,7 +60,13 @@ export const useProgressFetch = (
           toast.error("Erro ao carregar seus dados. Tentando novamente...");
         }
         
+        // Incrementar contagem de tentativas
         retryCount.current += 1;
+        
+        // Garantir que isLoading é definido para false
+        if (isMounted.current) {
+          setIsLoading(false);
+        }
         return null;
       }
       
@@ -59,6 +77,7 @@ export const useProgressFetch = (
         
         const { data: initialData, error: createError } = await createInitialOnboardingProgress(user);
         
+        // Verificação crítica: se componente desmontado, abortar operação
         if (!isMounted.current) return null;
         
         if (createError) {
@@ -66,6 +85,11 @@ export const useProgressFetch = (
           console.error("[ERRO] Falha ao criar progresso inicial:", createError);
           lastError.current = createError;
           toast.error("Erro ao configurar seu perfil. Por favor, tente novamente.");
+          
+          // Garantir que isLoading é definido para false
+          if (isMounted.current) {
+            setIsLoading(false);
+          }
           return null;
         }
         
@@ -73,10 +97,20 @@ export const useProgressFetch = (
           logDebugEvent("fetchProgress_created", { progressId: initialData.id });
           console.log("[DEBUG] Progresso inicial criado:", initialData);
           progressId.current = initialData.id;
-          setProgress(initialData);
+          
+          // Atualizar estado apenas se o componente ainda estiver montado
+          if (isMounted.current) {
+            setProgress(initialData);
+            setIsLoading(false);
+          }
+          
           return initialData;
         }
         
+        // Garantir que isLoading é definido para false no caso de falha
+        if (isMounted.current) {
+          setIsLoading(false);
+        }
         return null;
       }
       
@@ -89,7 +123,14 @@ export const useProgressFetch = (
       
       console.log("[DEBUG] Progresso carregado:", data);
       progressId.current = data.id;
-      setProgress(data);
+      
+      // Atualizar estados apenas se componente ainda montado
+      if (isMounted.current) {
+        setProgress(data);
+        setIsLoading(false);
+      }
+      
+      // Resetar contadores de erro
       lastError.current = null;
       retryCount.current = 0;
       
@@ -105,8 +146,15 @@ export const useProgressFetch = (
       }
       
       retryCount.current += 1;
+      
+      // Garantir que isLoading é definido para false mesmo em caso de exceção
+      if (isMounted.current) {
+        setIsLoading(false);
+      }
+      
       return null;
     } finally {
+      // Belt and suspenders: garantir que isLoading é SEMPRE definido como false
       if (isMounted.current) {
         setIsLoading(false);
       }

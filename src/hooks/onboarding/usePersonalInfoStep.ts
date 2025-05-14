@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useProgress } from "./useProgress";
 import { toast } from "sonner";
@@ -11,9 +12,11 @@ export const usePersonalInfoStep = () => {
   const [lastSaveTime, setLastSaveTime] = useState<number | null>(null);
   const { progress, updateProgress, refreshProgress } = useProgress();
   const { user, profile } = useAuth();
-  const [formData, setFormData] = useState<PersonalInfoData>({
-    name: "",
-    email: "",
+  
+  // Valores padrão para formulário
+  const defaultFormData = {
+    name: profile?.name || user?.user_metadata?.name || "",
+    email: profile?.email || user?.email || "",
     phone: "",
     ddi: "+55",
     linkedin: "",
@@ -22,7 +25,9 @@ export const usePersonalInfoStep = () => {
     state: "",
     city: "",
     timezone: "America/Sao_Paulo", // Define o valor padrão como Brasília
-  });
+  };
+  
+  const [formData, setFormData] = useState<PersonalInfoData>(defaultFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [validationAttempted, setValidationAttempted] = useState(false);
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
@@ -59,42 +64,28 @@ export const usePersonalInfoStep = () => {
       });
     } else {
       console.log("[usePersonalInfoStep] Nenhum dado encontrado, usando valores padrão");
-      setFormData(prev => ({
-        ...prev,
-        name: userName,
-        email: userEmail,
-        timezone: "America/Sao_Paulo"
-      }));
+      setFormData(defaultFormData);
     }
     setInitialDataLoaded(true);
-  }, [progress, profile, user]);
+  }, [progress, profile, user, defaultFormData]);
 
-  // Inicializar com dados vazios se não houver progresso após 3 segundos
+  // Inicializar com dados padrão se não houver progresso
   useEffect(() => {
     if (!initialDataLoaded) {
+      loadInitialData();
+      
+      // Safety timeout para garantir que temos dados mesmo sem resposta do servidor
       const timer = setTimeout(() => {
         if (!initialDataLoaded) {
-          console.log("[DEBUG] Tempo limite atingido, inicializando com dados vazios");
-          setFormData(prev => ({
-            ...prev,
-            name: profile?.name || user?.user_metadata?.name || "",
-            email: profile?.email || user?.email || "",
-            timezone: "America/Sao_Paulo"
-          }));
+          console.log("[DEBUG] Tempo limite atingido, inicializando com dados padrão");
+          setFormData(defaultFormData);
           setInitialDataLoaded(true);
         }
       }, 3000);
       
       return () => clearTimeout(timer);
     }
-  }, [initialDataLoaded, profile, user]);
-
-  // Carregar dados iniciais quando o progresso for carregado
-  useEffect(() => {
-    if (progress && !initialDataLoaded) {
-      loadInitialData();
-    }
-  }, [progress, initialDataLoaded, loadInitialData]);
+  }, [initialDataLoaded, loadInitialData, defaultFormData]);
 
   const handleChange = (field: keyof PersonalInfoData, value: string) => {
     // Registrar a alteração para debug
@@ -140,6 +131,8 @@ export const usePersonalInfoStep = () => {
     }
 
     setIsSubmitting(true);
+    setIsSaving(true);
+    
     try {
       // Formatação do DDI antes de salvar
       const dataToSubmit = {
@@ -149,6 +142,11 @@ export const usePersonalInfoStep = () => {
       // Garantir que o DDI está formatado corretamente
       if (dataToSubmit.ddi) {
         dataToSubmit.ddi = "+" + dataToSubmit.ddi.replace(/\+/g, '').replace(/\D/g, '');
+      }
+      
+      // Garantir que o timezone está definido
+      if (!dataToSubmit.timezone) {
+        dataToSubmit.timezone = "America/Sao_Paulo";
       }
       
       console.log("[DEBUG] Submetendo dados formatados:", dataToSubmit);
@@ -170,6 +168,16 @@ export const usePersonalInfoStep = () => {
       });
 
       if (result?.error) {
+        // Se houver erro do servidor mas conseguimos atualizar localmente (modo offline)
+        if (result.offline) {
+          toast.warning("Dados salvos localmente. Sincronização com o servidor ocorrerá automaticamente quando houver conexão.");
+          
+          // Registrar quando salvou
+          setLastSaveTime(Date.now());
+          
+          return true; // Permitir continuar mesmo com erro de servidor
+        }
+        
         throw new Error(result.error.message);
       }
 
@@ -188,6 +196,7 @@ export const usePersonalInfoStep = () => {
       return false;
     } finally {
       setIsSubmitting(false);
+      setIsSaving(false);
     }
   };
 
