@@ -11,16 +11,25 @@ export const useStepNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Mapeamento de caminhos para IDs de etapa
+  // Mapeamento unificado de caminhos para IDs de etapa
   const pathToStepId = {
-    "/onboarding": "personal",
-    "/onboarding/professional-data": "professional_data",
+    "/onboarding": "personal_info",
+    "/onboarding/personal-info": "personal_info",
+    "/onboarding/professional-data": "professional_info",
     "/onboarding/business-context": "business_context",
-    "/onboarding/ai-experience": "ai_exp",
+    "/onboarding/ai-experience": "ai_experience",
     "/onboarding/club-goals": "business_goals",
     "/onboarding/customization": "experience_personalization",
     "/onboarding/complementary": "complementary_info",
-    "/onboarding/review": "review"
+    "/onboarding/review": "review",
+    "/onboarding/trail-generation": "trail_generation",
+    // Rotas de formação
+    "/onboarding/formacao": "personal_info",
+    "/onboarding/formacao/personal-info": "personal_info",
+    "/onboarding/formacao/ai-experience": "ai_experience",
+    "/onboarding/formacao/goals": "learning_goals",
+    "/onboarding/formacao/preferences": "learning_preferences",
+    "/onboarding/formacao/review": "review"
   };
 
   useEffect(() => {
@@ -68,7 +77,7 @@ export const useStepNavigation = () => {
     loadProgress();
   }, [navigate, refreshProgress, isLoading, location.pathname]);
 
-  // Nova função de navegação que usa ID do passo em vez do índice
+  // Função de navegação que usa ID do passo
   const navigateToStepById = (stepId: string) => {
     const index = steps.findIndex(step => step.id === stepId);
     if (index !== -1) {
@@ -95,7 +104,7 @@ export const useStepNavigation = () => {
     setCurrentStepIndex,
     progress,
     navigateToStep,
-    navigateToStepById, // Exportando a nova função
+    navigateToStepById,
     isLoading,
     currentStep: steps[currentStepIndex] || steps[0]
   };

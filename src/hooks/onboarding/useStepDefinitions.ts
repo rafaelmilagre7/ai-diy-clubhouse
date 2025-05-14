@@ -1,4 +1,3 @@
-
 import { CompleteOnboardingStep } from "@/types/onboarding";
 
 // Definição das etapas do onboarding

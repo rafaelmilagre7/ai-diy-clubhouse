@@ -9,7 +9,8 @@ import { toast } from 'sonner';
 
 const Onboarding: React.FC = () => {
   const { currentStepIndex, steps, navigateToStep, saveStepData, progress } = useOnboardingSteps();
-  const formStateRef = useRef<any>(null); // Pode ser aprimorado para tipo específico no futuro
+  const formStateRef = useRef<any>(null);
+  const toastShown = useRef(false);
 
   // Esta função será passada para EtapasProgresso: salva dados e navega ao destino
   const handleStepClick = async (stepIndexDestino: number) => {
@@ -24,9 +25,16 @@ const Onboarding: React.FC = () => {
       
       // Navegação direta sem tentar salvar dados intermediários
       navigateToStep(stepIndexDestino);
+      
+      // Resetar referência de toast para evitar duplicidades
+      toastShown.current = false;
     } catch (error) {
       console.error("Erro ao trocar de etapa:", error);
-      toast.error("Ocorreu um erro ao trocar de etapa");
+      
+      if (!toastShown.current) {
+        toast.error("Ocorreu um erro ao trocar de etapa");
+        toastShown.current = true;
+      }
     }
   };
 

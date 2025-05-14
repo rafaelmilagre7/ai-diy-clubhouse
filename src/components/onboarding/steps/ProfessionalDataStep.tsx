@@ -12,6 +12,11 @@ import { OnboardingStepProps } from "@/types/onboarding";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { NavigationButtons } from "@/components/onboarding/NavigationButtons";
+import { 
+  validateCompanyName, 
+  validateWebsite, 
+  normalizeWebsiteUrl 
+} from "@/utils/professionalDataValidation";
 
 interface ProfessionalDataStepProps extends OnboardingStepProps {
   personalInfo?: any;
@@ -28,6 +33,7 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const initialDataProcessedRef = useRef(false);
+  const toastShown = useRef(false);
   
   // Função melhorada para extrair dados iniciais do objeto
   const getInitialValue = (field: string) => {
@@ -81,22 +87,35 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
     }
   }, [initialData, methods]);
 
+  // Validação melhorada de dados antes do envio
+  const validateData = (data: any): string[] => {
+    const errors: string[] = [];
+    
+    // Usar funções de validação específicas
+    const companyNameError = validateCompanyName(data.company_name);
+    if (companyNameError) errors.push(companyNameError);
+    
+    const websiteError = validateWebsite(data.company_website);
+    if (websiteError) errors.push(websiteError);
+    
+    // Verificações adicionais para campos obrigatórios
+    if (!data.company_size) errors.push("Tamanho da empresa é obrigatório");
+    if (!data.company_sector) errors.push("Setor da empresa é obrigatório");
+    if (!data.current_position) errors.push("Cargo atual é obrigatório");
+    
+    return errors;
+  };
+  
   // Ajustada para não retornar valor booleano e corresponder ao tipo Promise<void>
   const handleSubmit = async (data: any) => {
     setIsLoading(true);
     setValidationErrors([]);
+    toastShown.current = false;
     
     try {
-      // Verificação básica se os campos obrigatórios estão preenchidos
-      const requiredFields = ['company_name', 'company_size', 'company_sector', 'current_position'];
-      const errors: string[] = [];
+      // Validar dados antes do envio
+      const errors = validateData(data);
       
-      requiredFields.forEach(field => {
-        if (!data[field]) {
-          errors.push(`O campo ${field.replace('_', ' ')} é obrigatório`);
-        }
-      });
-
       if (errors.length > 0) {
         setValidationErrors(errors);
         setIsLoading(false);
@@ -104,6 +123,11 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
       }
       
       console.log("Enviando dados profissionais:", data);
+      
+      // Normalizar URL do website
+      if (data.company_website) {
+        data.company_website = normalizeWebsiteUrl(data.company_website);
+      }
       
       // Estruturando os dados para seguir o padrão professional_info
       const professionalData = {
@@ -119,17 +143,24 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
       
       await onSubmit("professional_info", professionalData);
       
-      // Mostra feedback de sucesso
-      toast.success("Dados salvos com sucesso!", {
-        description: "Redirecionando para a próxima etapa..."
-      });
+      // Mostra feedback de sucesso apenas uma vez
+      if (!toastShown.current) {
+        toast.success("Dados salvos com sucesso!", {
+          description: "Redirecionando para a próxima etapa..."
+        });
+        toastShown.current = true;
+      }
       
     } catch (error) {
       console.error("Erro ao enviar dados profissionais:", error);
       setValidationErrors(["Falha ao salvar dados. Por favor, tente novamente."]);
-      toast.error("Erro ao salvar dados", {
-        description: "Verifique sua conexão e tente novamente."
-      });
+      
+      if (!toastShown.current) {
+        toast.error("Erro ao salvar dados", {
+          description: "Verifique sua conexão e tente novamente."
+        });
+        toastShown.current = true;
+      }
     } finally {
       setIsLoading(false);
     }

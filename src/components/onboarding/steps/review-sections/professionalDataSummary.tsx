@@ -6,44 +6,52 @@ export function getProfessionalDataSummary(data: any) {
     return <p className="text-gray-500 italic">Dados profissionais não fornecidos</p>;
   }
 
+  // Normalizar a estrutura dos dados
+  const companyName = data.company_name || data.professional_info?.company_name || "Não informado";
+  const currentPosition = data.current_position || data.professional_info?.current_position || "Não informado";
+  const companySize = data.company_size || data.professional_info?.company_size || "Não informado";
+  const companySector = data.company_sector || data.professional_info?.company_sector || "Não informado";
+  const companyWebsite = data.company_website || data.professional_info?.company_website || "";
+  const annualRevenue = data.annual_revenue || data.professional_info?.annual_revenue || "";
+
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <h3 className="text-sm font-semibold text-neutral-400">Empresa</h3>
-          <p className="text-neutral-200">{data.company_name || "Não informado"}</p>
+          <p className="text-neutral-200">{companyName}</p>
         </div>
         
         <div>
           <h3 className="text-sm font-semibold text-neutral-400">Cargo Atual</h3>
-          <p className="text-neutral-200">{data.current_position || "Não informado"}</p>
+          <p className="text-neutral-200">{currentPosition}</p>
         </div>
         
         <div>
           <h3 className="text-sm font-semibold text-neutral-400">Tamanho da Empresa</h3>
-          <p className="text-neutral-200">{data.company_size || "Não informado"}</p>
+          <p className="text-neutral-200">{companySize}</p>
         </div>
         
         <div>
           <h3 className="text-sm font-semibold text-neutral-400">Setor</h3>
-          <p className="text-neutral-200">{data.company_sector || "Não informado"}</p>
+          <p className="text-neutral-200">{companySector}</p>
         </div>
         
-        {data.company_website && (
+        {companyWebsite && (
           <div>
             <h3 className="text-sm font-semibold text-neutral-400">Website</h3>
             <p className="text-viverblue hover:text-viverblue-light hover:underline">
-              <a href={data.company_website} target="_blank" rel="noopener noreferrer">
-                {data.company_website}
+              <a href={companyWebsite} target="_blank" rel="noopener noreferrer">
+                {companyWebsite}
               </a>
             </p>
           </div>
         )}
         
-        {data.annual_revenue && (
+        {annualRevenue && (
           <div>
             <h3 className="text-sm font-semibold text-neutral-400">Faturamento Anual</h3>
-            <p className="text-neutral-200">{data.annual_revenue}</p>
+            <p className="text-neutral-200">{annualRevenue}</p>
           </div>
         )}
       </div>

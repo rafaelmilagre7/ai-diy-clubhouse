@@ -1,3 +1,4 @@
+
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { PersonalInfoStep } from "./steps/PersonalInfoStep";
 import { BusinessGoalsStep } from "./steps/BusinessGoalsStep";
@@ -26,15 +27,18 @@ export const OnboardingSteps = () => {
   
   const location = useLocation();
   
+  // Unificação dos mapeamentos de caminhos para IDs de etapas
   const pathToStepComponent = {
-    "/onboarding": "personal",
-    "/onboarding/professional-data": "professional_data", 
+    "/onboarding": "personal_info",
+    "/onboarding/personal-info": "personal_info",
+    "/onboarding/professional-data": "professional_info", 
     "/onboarding/business-context": "business_context",
-    "/onboarding/ai-experience": "ai_exp",
+    "/onboarding/ai-experience": "ai_experience",
     "/onboarding/club-goals": "business_goals",
     "/onboarding/customization": "experience_personalization",
     "/onboarding/complementary": "complementary_info",
-    "/onboarding/review": "review"
+    "/onboarding/review": "review",
+    "/onboarding/trail-generation": "trail_generation"
   };
 
   const currentPathStepId = pathToStepComponent[location.pathname as keyof typeof pathToStepComponent] || currentStep.id;
@@ -43,11 +47,12 @@ export const OnboardingSteps = () => {
     console.log(`Rota atual: ${location.pathname}, stepId mapeado: ${currentPathStepId}, currentStep.id: ${currentStep.id}`);
   }, [location.pathname, currentPathStepId, currentStep.id]);
 
+  // Atualização dos IDs de componentes para corresponder aos IDs de etapas
   const stepComponents = {
-    personal: PersonalInfoStep,
-    professional_data: ProfessionalDataStep,
+    personal_info: PersonalInfoStep,
+    professional_info: ProfessionalDataStep,
     business_context: BusinessContextStep,
-    ai_exp: AIExperienceStep,
+    ai_experience: AIExperienceStep,
     business_goals: BusinessGoalsStep,
     experience_personalization: ExperiencePersonalizationStep,
     complementary_info: ComplementaryInfoStep,
