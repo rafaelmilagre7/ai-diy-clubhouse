@@ -67,6 +67,9 @@ const ProfessionalData = () => {
         throw new Error("Dados inválidos para envio");
       }
       
+      // Normalizar dados antes de enviar
+      const normalizedData = normalizeData(data);
+      
       let retryCount = 0;
       const maxRetries = 2;
       let success = false;
@@ -74,7 +77,7 @@ const ProfessionalData = () => {
       while (!success && retryCount <= maxRetries) {
         try {
           // Atualizar os dados na tabela de onboarding_progress
-          await professionalDataService.save(progress.id, progress.user_id, data);
+          await professionalDataService.save(progress.id, progress.user_id, normalizedData);
           success = true;
         } catch (saveError: any) {
           retryCount++;
@@ -107,6 +110,37 @@ const ProfessionalData = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+  
+  // Função para normalizar os dados
+  const normalizeData = (data: any): any => {
+    // Se os dados já estiverem no formato esperado, retorná-los
+    if (data.professional_info) {
+      return {
+        professional_info: {
+          ...data.professional_info,
+          // Garantir que todos os campos obrigatórios estejam presentes
+          company_name: data.professional_info.company_name || "",
+          company_size: data.professional_info.company_size || "",
+          company_sector: data.professional_info.company_sector || "",
+          company_website: data.professional_info.company_website || "",
+          current_position: data.professional_info.current_position || "",
+          annual_revenue: data.professional_info.annual_revenue || ""
+        }
+      };
+    }
+    
+    // Caso contrário, criar a estrutura correta
+    return {
+      professional_info: {
+        company_name: data.company_name || "",
+        company_size: data.company_size || "",
+        company_sector: data.company_sector || "",
+        company_website: data.company_website || "",
+        current_position: data.current_position || "",
+        annual_revenue: data.annual_revenue || ""
+      }
+    };
   };
   
   if (isLoading) {

@@ -25,8 +25,8 @@ export const professionalDataService = {
         };
       }
       
-      // Preparar objeto de atualização
-      const updateData = {
+      // Preparar objeto de atualização inicial sem o completed_steps
+      const initialUpdateData = {
         professional_info: professionalInfo,
         company_name: professionalInfo.company_name || "",
         company_size: professionalInfo.company_size || "",
@@ -59,8 +59,11 @@ export const professionalDataService = {
         completedSteps.push('professional_info');
       }
       
-      // Atualizar com o novo array
-      updateData.completed_steps = completedSteps;
+      // Criar o objeto de atualização final incluindo o completed_steps
+      const updateData = {
+        ...initialUpdateData,
+        completed_steps: completedSteps
+      };
       
       // Atualizar o progresso
       const { data: result, error } = await supabase
