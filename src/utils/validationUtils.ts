@@ -1,4 +1,3 @@
-
 /**
  * Funções de validação para formulários do onboarding
  */
@@ -130,4 +129,28 @@ export const generateValidUUID = (): string => {
  */
 export const isDevelopmentMode = (): boolean => {
   return import.meta.env.MODE === 'development' || window.location.hostname === 'localhost';
+};
+
+/**
+ * Verifica se uma string é um UUID válido
+ * @param id String a ser verificada
+ * @returns boolean indicando se é um UUID válido
+ */
+export const isValidUUID = (id: string): boolean => {
+  if (!id) return false;
+  // Expressão regular para validar formato de UUID
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(id);
+};
+
+/**
+ * Verifica se um ID é um ID simulado (não-UUID)
+ * @param id String a ser verificada
+ * @returns boolean indicando se é um ID simulado
+ */
+export const isSimulatedID = (id: string): boolean => {
+  if (!id) return false;
+  // IDs simulados geralmente começam com prefixos específicos
+  // Verifique se o ID começa com prefixos típicos de simulação
+  return id.startsWith('onb-') || id.startsWith('sim-') || id.startsWith('test-');
 };
