@@ -54,16 +54,23 @@ const AppRoutes = () => {
             path="/" 
             element={
               <ProtectedRoute>
-                <MemberLayout />
+                <MemberLayout>
+                  <DashboardPage />
+                </MemberLayout>
               </ProtectedRoute>
             }
-          >
-            <Route index element={<DashboardPage />} />
-            <Route path="dashboard" element={<DashboardPage />} />
-          </Route>
+          />
           
-          {/* Redirecionamento da raiz */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <MemberLayout>
+                  <DashboardPage />
+                </MemberLayout>
+              </ProtectedRoute>
+            }
+          />
           
           {/* Página 404 */}
           <Route path="*" element={<NotFoundPage />} />
