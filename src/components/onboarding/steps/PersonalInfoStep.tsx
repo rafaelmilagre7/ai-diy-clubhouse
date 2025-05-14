@@ -9,7 +9,7 @@ import { AlertCircle, CheckCircle } from "lucide-react";
 import { OnboardingStepProps, PersonalInfoData } from "@/types/onboarding";
 
 export interface PersonalInfoStepProps extends Partial<OnboardingStepProps> {
-  onSubmit: () => Promise<void>;
+  onSubmit: (stepId?: string, data?: any) => Promise<void>;
   isSubmitting: boolean;
   formData?: PersonalInfoData;
   errors?: Record<string, string>;
@@ -89,9 +89,8 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
       if (submitAttempts > 2) {
         console.log("Múltiplas tentativas de envio detectadas, usando enfoque mais agressivo");
         
-        // Tenta forçar a navegação para a próxima etapa após o salvamento
-        // Isso é um fallback para casos onde pode haver problemas no salvamento
-        const savePromise = onSubmit();
+        // Adaptar para nova assinatura: passar 'personal_info' como stepId e os dados atuais do formulário
+        const savePromise = onSubmit('personal_info', formData);
         
         // Se estamos em muitas tentativas, mostrar mensagem de espera
         toast.info("Processando sua requisição, por favor aguarde...");
@@ -104,8 +103,8 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
         
         await savePromise;
       } else {
-        // Caminho normal de salvamento
-        await onSubmit();
+        // Caminho normal de salvamento - adaptar para nova assinatura
+        await onSubmit('personal_info', formData);
       }
     } catch (error) {
       console.error("Erro ao salvar dados:", error);

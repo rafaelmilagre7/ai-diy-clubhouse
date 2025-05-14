@@ -54,15 +54,18 @@ const FormacaoPersonalInfo = () => {
     return () => clearTimeout(timer);
   }, [isLoading]);
 
-  // Função para processar o envio do formulário - recebe os dados como parâmetro
-  const handleSubmit = async (data: any) => {
+  // Função para processar o envio do formulário - adaptar para a nova assinatura
+  const handleSubmit = async (stepId?: string, data?: any) => {
     try {
       setIsSubmitting(true);
-      console.log("[Formação PersonalInfo] Submetendo dados:", data);
+      console.log("[Formação PersonalInfo] Submetendo dados:", data || formData);
+      
+      // Usar os dados passados ou cair para o estado formData
+      const dataToSave = data || formData;
       
       // Enviando dados para o backend com flag de formação
       await saveStepData("personal", {
-        personal_info: data,
+        personal_info: dataToSave,
         onboarding_type: 'formacao'
       });
       
@@ -75,13 +78,6 @@ const FormacaoPersonalInfo = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  // Criar uma função intermediária que não recebe parâmetros
-  // Esta função vai chamar handleSubmit com os dados do formData
-  const handleFormSubmit = async () => {
-    // Aqui utilizamos os dados armazenados no estado formData
-    await handleSubmit(formData);
   };
 
   // Função para atualizar o estado formData quando os campos forem alterados
@@ -147,12 +143,12 @@ const FormacaoPersonalInfo = () => {
       </div>
       
       <PersonalInfoStep
-        onSubmit={handleFormSubmit} // Passamos a função intermediária sem parâmetros
+        onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
         initialData={progress?.personal_info}
-        formData={formData} // Passamos os dados do formulário
-        errors={{}} // Inicialmente não temos erros
-        onChange={handleFormChange} // Passamos a função para atualizar os dados do formulário
+        formData={formData}
+        errors={{}}
+        onChange={handleFormChange}
       />
     </OnboardingLayout>
   );

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { PersonalInfoStep } from "@/components/onboarding/steps/PersonalInfoStep";
@@ -77,6 +76,7 @@ const PersonalInfo = () => {
     }
   }, [formData, progress]);
 
+  // Adaptador para compatibilidade com a nova assinatura de onSubmit
   const handleSuccess = async () => {
     console.log("[DEBUG] Tentativa de envio do formulário");
     const success = await handleSubmit();
@@ -185,7 +185,10 @@ const PersonalInfo = () => {
       backUrl="/"
     >
       <PersonalInfoStep
-        onSubmit={handleSuccess}
+        onSubmit={async (stepId?: string, data?: any) => {
+          // Adaptador para compatibilizar as diferentes assinaturas de onSubmit
+          return handleSuccess();
+        }}
         isSubmitting={isSubmitting}
         formData={formData}
         errors={errors}

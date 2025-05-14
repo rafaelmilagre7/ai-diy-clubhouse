@@ -199,20 +199,33 @@ export const OnboardingSteps = () => {
     );
   };
 
+  // Criar um adaptador para a função onSubmit para compatibilidade com PersonalInfoStep
+  const createSubmitAdapter = (stepId: string) => {
+    return (customStepId?: string, data?: any) => {
+      // Se o componente chamar sem parâmetros ou com apenas um parâmetro (que é o dados)
+      if (customStepId === undefined) {
+        // Nenhum parâmetro - usar o ID da etapa atual
+        return saveStepData(stepId, formData[stepId] || {});
+      } else if (data === undefined) {
+        // Apenas um parâmetro que deve ser os dados
+        return saveStepData(stepId, customStepId);
+      } else {
+        // Dois parâmetros - usar conforme passado
+        return saveStepData(customStepId, data);
+      }
+    };
+  };
+
   // Preparar props para o componente da etapa atual
   const getPropsForCurrentStep = () => {
     // Definir props base que são comuns a todos os componentes
     const baseProps = {
-      onSubmit: saveStepData,
+      onSubmit: createSubmitAdapter(activeStepId),
       isSubmitting: isSubmitting,
       isLastStep: currentStepIndex === steps.length - 1,
       onComplete: completeOnboarding,
       initialData: getInitialDataForCurrentStep(),
       onPrevious: () => navigateToPreviousStep(activeStepId),
-      // Adicionando props comuns para compatibilidade com todos os componentes
-      formData: {} as any,
-      errors: {} as Record<string, string>,
-      onChange: (field: string, value: any) => handleFormChange(activeStepId, field, value)
     };
 
     // Obter dados específicos com base no tipo de componente
@@ -233,7 +246,8 @@ export const OnboardingSteps = () => {
     const propsWithData = {
       ...baseProps,
       formData: stepFormData,
-      errors: formErrors
+      errors: formErrors,
+      onChange: (field: string, value: any) => handleFormChange(activeStepId, field, value)
     };
     
     // Adicionar props específicas para componentes que precisam de personalInfo
