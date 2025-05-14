@@ -39,16 +39,25 @@ export const useProgress = () => {
   // Versão com debouncing para evitar chamadas múltiplas
   const refreshProgress = useCallback(async (): Promise<OnboardingProgress | null> => {
     if (fetchInProgress.current) {
-      console.log("Refresh já em andamento, ignorando nova solicitação");
+      console.log("[useProgress] Refresh já em andamento, ignorando nova solicitação");
       return progress;
     }
     
     try {
       fetchInProgress.current = true;
+      console.log("[useProgress] Iniciando atualização dos dados de progresso");
       const refreshedProgress = await fetchProgress();
+      console.log("[useProgress] Dados de progresso atualizados:", refreshedProgress);
       return refreshedProgress || null;
+    } catch (error) {
+      console.error("[useProgress] Erro ao atualizar progresso:", error);
+      return null;
     } finally {
-      fetchInProgress.current = false;
+      // Garantir que o flag seja liberado após um pequeno delay
+      // para evitar múltiplas chamadas em sequência rápida
+      setTimeout(() => {
+        fetchInProgress.current = false;
+      }, 300);
     }
   }, [fetchProgress, progress]);
 
@@ -131,6 +140,7 @@ export const useProgress = () => {
     refreshProgress,
     fetchProgress,
     resetProgress,
-    lastError: lastError.current
+    lastError: lastError.current,
+    isInitialized: hasInitialized.current
   };
 };

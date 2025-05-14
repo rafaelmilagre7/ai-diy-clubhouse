@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -19,28 +19,65 @@ interface OnboardingStepProps {
 export const BusinessContextStep = ({ onSubmit, isSubmitting, initialData }: OnboardingStepProps) => {
   // Estado local para controlar se o formulário está sendo enviado
   const [isSubmittingLocal, setIsSubmittingLocal] = useState(isSubmitting);
-  const [businessModel, setBusinessModel] = useState(initialData?.business_model || "");
-  const [businessChallenges, setBusinessChallenges] = useState(initialData?.business_challenges || []);
-  const [shortTermGoals, setShortTermGoals] = useState(initialData?.short_term_goals || []);
-  const [mediumTermGoals, setMediumTermGoals] = useState(initialData?.medium_term_goals || []);
-  const [importantKpis, setImportantKpis] = useState(initialData?.important_kpis || []);
-  const [additionalContext, setAdditionalContext] = useState(initialData?.additional_context || "");
-
+  const [businessModel, setBusinessModel] = useState("");
+  const [businessChallenges, setBusinessChallenges] = useState<string[]>([]);
+  const [shortTermGoals, setShortTermGoals] = useState<string[]>([]);
+  const [mediumTermGoals, setMediumTermGoals] = useState<string[]>([]);
+  const [importantKpis, setImportantKpis] = useState<string[]>([]);
+  const [additionalContext, setAdditionalContext] = useState("");
+  const formInitialized = useRef(false);
+  
   // Atualizar estado local quando as props mudarem
   useEffect(() => {
     setIsSubmittingLocal(isSubmitting);
   }, [isSubmitting]);
 
-  // Atualizar os dados do formulário quando os dados iniciais mudarem
+  // Inicializar dados do formulário a partir dos dados iniciais
   useEffect(() => {
-    if (initialData) {
-      console.log("[BusinessContextStep] Atualizando formulário com dados:", initialData);
+    if (initialData && !formInitialized.current) {
+      console.log("[BusinessContextStep] Inicializando formulário com dados:", initialData);
+      
+      // Garantir tipagem correta e valores padrão
       setBusinessModel(initialData.business_model || "");
-      setBusinessChallenges(initialData.business_challenges || []);
-      setShortTermGoals(initialData.short_term_goals || []);
-      setMediumTermGoals(initialData.medium_term_goals || []);
-      setImportantKpis(initialData.important_kpis || []);
+      setBusinessChallenges(Array.isArray(initialData.business_challenges) ? initialData.business_challenges : []);
+      setShortTermGoals(Array.isArray(initialData.short_term_goals) ? initialData.short_term_goals : []);
+      setMediumTermGoals(Array.isArray(initialData.medium_term_goals) ? initialData.medium_term_goals : []);
+      setImportantKpis(Array.isArray(initialData.important_kpis) ? initialData.important_kpis : []);
       setAdditionalContext(initialData.additional_context || "");
+      
+      formInitialized.current = true;
+    }
+  }, [initialData]);
+
+  // Efeito para atualizar formulário quando dados iniciais mudarem significativamente
+  useEffect(() => {
+    if (initialData && formInitialized.current) {
+      const currentData = {
+        business_model: businessModel,
+        business_challenges: businessChallenges,
+        short_term_goals: shortTermGoals,
+        medium_term_goals: mediumTermGoals,
+        important_kpis: importantKpis,
+        additional_context: additionalContext
+      };
+      
+      // Verificar se os dados iniciais mudaram significativamente
+      const hasSignificantChanges = 
+        initialData.business_model !== currentData.business_model || 
+        JSON.stringify(initialData.business_challenges) !== JSON.stringify(currentData.business_challenges) ||
+        JSON.stringify(initialData.short_term_goals) !== JSON.stringify(currentData.short_term_goals) ||
+        JSON.stringify(initialData.medium_term_goals) !== JSON.stringify(currentData.medium_term_goals) ||
+        JSON.stringify(initialData.important_kpis) !== JSON.stringify(currentData.important_kpis);
+        
+      if (hasSignificantChanges) {
+        console.log("[BusinessContextStep] Atualizando formulário com novos dados:", initialData);
+        setBusinessModel(initialData.business_model || "");
+        setBusinessChallenges(Array.isArray(initialData.business_challenges) ? initialData.business_challenges : []);
+        setShortTermGoals(Array.isArray(initialData.short_term_goals) ? initialData.short_term_goals : []);
+        setMediumTermGoals(Array.isArray(initialData.medium_term_goals) ? initialData.medium_term_goals : []);
+        setImportantKpis(Array.isArray(initialData.important_kpis) ? initialData.important_kpis : []);
+        setAdditionalContext(initialData.additional_context || "");
+      }
     }
   }, [initialData]);
 
@@ -173,10 +210,12 @@ export const BusinessContextStep = ({ onSubmit, isSubmitting, initialData }: Onb
     };
     
     try {
+      console.log("[BusinessContextStep] Validando dados antes de enviar:", formData);
+      
       // Validar os dados antes de enviar
       schema.parse(formData);
       
-      console.log("[BusinessContextStep] Enviando dados validados:", formData);
+      console.log("[BusinessContextStep] Dados validados, enviando para persistência");
       
       // Chamar a função onSubmit com os dados formatados corretamente
       await onSubmit(formData);
@@ -185,6 +224,7 @@ export const BusinessContextStep = ({ onSubmit, isSubmitting, initialData }: Onb
     } catch (error) {
       if (error instanceof z.ZodError) {
         const firstError = error.errors[0];
+        console.error("[BusinessContextStep] Erro de validação:", firstError);
         toast.error(firstError.message);
       } else {
         console.error("[BusinessContextStep] Erro ao enviar formulário:", error);
@@ -321,7 +361,12 @@ export const BusinessContextStep = ({ onSubmit, isSubmitting, initialData }: Onb
           className="w-full bg-[#0ABAB5] hover:bg-[#0ABAB5]/90" 
           disabled={isSubmittingLocal}
         >
-          {isSubmittingLocal ? "Salvando..." : "Continuar"}
+          {isSubmittingLocal ? (
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <span>Salvando...</span>
+            </div>
+          ) : "Continuar"}
         </Button>
       </form>
     </div>

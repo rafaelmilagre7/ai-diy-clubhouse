@@ -10,6 +10,7 @@ const BusinessContext = () => {
   const { progress, isLoading, refreshProgress } = useProgress();
   const { saveStepData, currentStepIndex, steps } = useOnboardingSteps();
   const hasLoadedData = useRef(false);
+  const isSaving = useRef(false);
 
   useEffect(() => {
     if (!hasLoadedData.current) {
@@ -20,40 +21,61 @@ const BusinessContext = () => {
     }
   }, [refreshProgress]);
 
-  const progressPercentage = Math.round(((currentStepIndex + 1) / steps.length) * 100);
-
+  // Função melhorada para obter dados iniciais unificados
   const getInitialData = () => {
     if (!progress) return {};
     
-    // Verificar ambas as fontes de dados possíveis (para compatibilidade)
-    const fromContext = progress.business_context || {};
-    const fromData = progress.business_data || {};
+    // Verificar business_context primeiro (formato preferencial)
+    if (progress.business_context && Object.keys(progress.business_context).length > 0) {
+      console.log("[BusinessContext] Usando dados de business_context:", progress.business_context);
+      return progress.business_context;
+    }
     
-    // Combinar dados das duas fontes (business_context tem precedência)
-    return {
-      ...fromData,
-      ...fromContext
-    };
+    // Fallback para business_data (formato legado)
+    if (progress.business_data && Object.keys(progress.business_data).length > 0) {
+      console.log("[BusinessContext] Usando dados de business_data (legado):", progress.business_data);
+      return progress.business_data;
+    }
+    
+    // Nenhum dado encontrado
+    console.log("[BusinessContext] Nenhum dado de contexto de negócio encontrado");
+    return {};
   };
 
   const handleSave = async (data: any): Promise<void> => {
+    // Evitar múltiplas submissões simultâneas
+    if (isSaving.current) {
+      console.log("[BusinessContext] Operação de salvamento já em andamento, ignorando nova solicitação");
+      return;
+    }
+    
+    isSaving.current = true;
+    
     try {
       console.log("[BusinessContext] Salvando dados do contexto de negócio:", data);
       
-      // CORREÇÃO: Enviar dados diretamente sem aninhamento adicional
-      // Isso corrige o problema de duplo aninhamento de dados
+      // Importante: Usar "business_context" como ID da etapa explicitamente
+      // para evitar qualquer ambiguidade no sistema de salvamento
       await saveStepData("business_context", data);
       
       // Atualizar os dados locais para confirmar a gravação
-      await refreshProgress();
+      const updatedProgress = await refreshProgress();
       
-      toast.success("Informações do contexto de negócio salvas com sucesso!");
+      if (updatedProgress) {
+        console.log("[BusinessContext] Dados atualizados recuperados após salvar:", 
+          updatedProgress.business_context || updatedProgress.business_data);
+        toast.success("Informações do contexto de negócio salvas com sucesso!");
+      } else {
+        // Tratar caso em que refreshProgress não retorna dados
+        console.warn("[BusinessContext] refreshProgress não retornou dados atualizados");
+        toast.success("Informações salvas, mas não foi possível confirmar atualização");
+      }
       
-      // Removido o setTimeout e a navegação manual
-      // O hook useStepPersistenceCore agora cuida da navegação centralmente
     } catch (error) {
       console.error("[BusinessContext] Erro ao salvar dados:", error);
       toast.error("Erro ao salvar dados. Tente novamente.");
+    } finally {
+      isSaving.current = false;
     }
   };
 
