@@ -12,6 +12,9 @@ export interface AIExperienceStepProps extends Partial<OnboardingStepProps> {
   isLastStep?: boolean;
   onComplete?: () => void;
   personalInfo?: any;
+  formData?: any; // Adicionando para compatibilidade
+  errors?: Record<string, string>; // Adicionando para compatibilidade
+  onChange?: (field: string, value: any) => void; // Adicionando para compatibilidade
 }
 
 export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
@@ -20,7 +23,10 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
   initialData,
   isLastStep,
   onComplete,
-  personalInfo
+  personalInfo,
+  formData = {}, // Valor padrão
+  errors = {}, // Valor padrão
+  onChange = () => {} // Função padrão vazia
 }) => {
   // Simplificar o componente para apenas passar as props para o AIExperienceFormStep
   const handleFormSubmit = (stepId: string, data: any) => {

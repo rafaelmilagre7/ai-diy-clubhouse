@@ -11,9 +11,9 @@ import { OnboardingStepProps, PersonalInfoData } from "@/types/onboarding";
 export interface PersonalInfoStepProps extends Partial<OnboardingStepProps> {
   onSubmit: () => Promise<void>;
   isSubmitting: boolean;
-  formData: PersonalInfoData;
-  errors: Record<string, string>;
-  onChange: (field: keyof PersonalInfoData, value: string) => void;
+  formData?: PersonalInfoData;
+  errors?: Record<string, string>;
+  onChange?: (field: keyof PersonalInfoData, value: string) => void;
   initialData?: any;
   isLastStep?: boolean;
   onComplete?: () => void;
@@ -27,9 +27,9 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
   initialData,
   isLastStep,
   onComplete,
-  formData,
-  errors,
-  onChange,
+  formData = {} as PersonalInfoData,
+  errors = {},
+  onChange = () => {},
   isSaving = false,
   lastSaveTime = null,
 }) => {
