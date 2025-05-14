@@ -1,20 +1,19 @@
+
 import React, { useEffect, useRef } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 import { BusinessContextStep } from "@/components/onboarding/steps/BusinessContextStep";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
 
 const BusinessContext = () => {
   const { progress, isLoading, refreshProgress } = useProgress();
   const { saveStepData, currentStepIndex, steps } = useOnboardingSteps();
-  const navigate = useNavigate();
   const hasLoadedData = useRef(false);
 
   useEffect(() => {
     if (!hasLoadedData.current) {
-      console.log("Carregando dados atualizados na página de contexto de negócio");
+      console.log("[BusinessContext] Carregando dados atualizados na página de contexto de negócio");
       refreshProgress().then(() => {
         hasLoadedData.current = true;
       });
@@ -26,34 +25,34 @@ const BusinessContext = () => {
   const getInitialData = () => {
     if (!progress) return {};
     
+    // Verificar ambas as fontes de dados possíveis (para compatibilidade)
     const fromContext = progress.business_context || {};
     const fromData = progress.business_data || {};
     
+    // Combinar dados das duas fontes (business_context tem precedência)
     return {
       ...fromData,
       ...fromContext
     };
   };
 
-  const handleSave = async (stepId: string, data: any): Promise<void> => {
+  const handleSave = async (data: any): Promise<void> => {
     try {
-      console.log("Salvando dados de contexto de negócio:", data);
+      console.log("[BusinessContext] Salvando dados do contexto de negócio:", data);
       
-      const formattedData = {
-        business_context: data
-      };
+      // CORREÇÃO: Enviar dados diretamente sem aninhamento adicional
+      // Isso corrige o problema de duplo aninhamento de dados
+      await saveStepData("business_context", data);
       
-      await saveStepData("business_context", formattedData, true);
+      // Atualizar os dados locais para confirmar a gravação
+      await refreshProgress();
       
-      setTimeout(() => {
-        const currentPath = window.location.pathname;
-        if (currentPath === "/onboarding/business-context") {
-          console.log("Navegação não ocorreu automaticamente, forçando redirecionamento");
-          navigate("/onboarding/ai-experience");
-        }
-      }, 1500);
+      toast.success("Informações do contexto de negócio salvas com sucesso!");
+      
+      // Removido o setTimeout e a navegação manual
+      // O hook useStepPersistenceCore agora cuida da navegação centralmente
     } catch (error) {
-      console.error("Erro ao salvar dados:", error);
+      console.error("[BusinessContext] Erro ao salvar dados:", error);
       toast.error("Erro ao salvar dados. Tente novamente.");
     }
   };
@@ -74,7 +73,7 @@ const BusinessContext = () => {
   }
 
   const initialData = getInitialData();
-  console.log("Dados iniciais para o formulário de contexto:", initialData);
+  console.log("[BusinessContext] Dados iniciais para o formulário de contexto:", initialData);
 
   return (
     <OnboardingLayout

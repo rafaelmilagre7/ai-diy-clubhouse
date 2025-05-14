@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -7,10 +7,9 @@ import { toast } from "sonner";
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FormMessage } from "@/components/ui/form-message";
 
 interface OnboardingStepProps {
-  onSubmit: (stepId: string, data: any) => void;
+  onSubmit: (data: any) => Promise<void>;
   isSubmitting: boolean;
   isLastStep?: boolean;
   onComplete?: () => void;
@@ -18,12 +17,32 @@ interface OnboardingStepProps {
 }
 
 export const BusinessContextStep = ({ onSubmit, isSubmitting, initialData }: OnboardingStepProps) => {
+  // Estado local para controlar se o formulário está sendo enviado
+  const [isSubmittingLocal, setIsSubmittingLocal] = useState(isSubmitting);
   const [businessModel, setBusinessModel] = useState(initialData?.business_model || "");
   const [businessChallenges, setBusinessChallenges] = useState(initialData?.business_challenges || []);
   const [shortTermGoals, setShortTermGoals] = useState(initialData?.short_term_goals || []);
   const [mediumTermGoals, setMediumTermGoals] = useState(initialData?.medium_term_goals || []);
   const [importantKpis, setImportantKpis] = useState(initialData?.important_kpis || []);
   const [additionalContext, setAdditionalContext] = useState(initialData?.additional_context || "");
+
+  // Atualizar estado local quando as props mudarem
+  useEffect(() => {
+    setIsSubmittingLocal(isSubmitting);
+  }, [isSubmitting]);
+
+  // Atualizar os dados do formulário quando os dados iniciais mudarem
+  useEffect(() => {
+    if (initialData) {
+      console.log("[BusinessContextStep] Atualizando formulário com dados:", initialData);
+      setBusinessModel(initialData.business_model || "");
+      setBusinessChallenges(initialData.business_challenges || []);
+      setShortTermGoals(initialData.short_term_goals || []);
+      setMediumTermGoals(initialData.medium_term_goals || []);
+      setImportantKpis(initialData.important_kpis || []);
+      setAdditionalContext(initialData.additional_context || "");
+    }
+  }, [initialData]);
 
   const businessModelOptions = [
     { id: "b2b", label: "B2B - Business to Business" },
@@ -133,8 +152,16 @@ export const BusinessContextStep = ({ onSubmit, isSubmitting, initialData }: Onb
     additional_context: z.string().optional(),
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Evitar múltiplos envios
+    if (isSubmittingLocal) {
+      console.log("[BusinessContextStep] Envio já em andamento, ignorando clique adicional");
+      return;
+    }
+    
+    setIsSubmittingLocal(true);
     
     const formData = {
       business_model: businessModel,
@@ -146,15 +173,25 @@ export const BusinessContextStep = ({ onSubmit, isSubmitting, initialData }: Onb
     };
     
     try {
+      // Validar os dados antes de enviar
       schema.parse(formData);
-      onSubmit("business_context", formData);
+      
+      console.log("[BusinessContextStep] Enviando dados validados:", formData);
+      
+      // Chamar a função onSubmit com os dados formatados corretamente
+      await onSubmit(formData);
+      
+      // Toast de sucesso movido para BusinessContext.tsx para evitar duplicação
     } catch (error) {
       if (error instanceof z.ZodError) {
         const firstError = error.errors[0];
         toast.error(firstError.message);
       } else {
+        console.error("[BusinessContextStep] Erro ao enviar formulário:", error);
         toast.error("Verifique os campos e tente novamente.");
       }
+    } finally {
+      setIsSubmittingLocal(false);
     }
   };
 
@@ -279,8 +316,12 @@ export const BusinessContextStep = ({ onSubmit, isSubmitting, initialData }: Onb
           />
         </div>
 
-        <Button type="submit" className="w-full bg-[#0ABAB5] hover:bg-[#0ABAB5]/90" disabled={isSubmitting}>
-          {isSubmitting ? "Salvando..." : "Continuar"}
+        <Button 
+          type="submit" 
+          className="w-full bg-[#0ABAB5] hover:bg-[#0ABAB5]/90" 
+          disabled={isSubmittingLocal}
+        >
+          {isSubmittingLocal ? "Salvando..." : "Continuar"}
         </Button>
       </form>
     </div>
