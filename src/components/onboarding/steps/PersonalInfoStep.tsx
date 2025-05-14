@@ -47,14 +47,16 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
     return () => clearTimeout(timer);
   }, []);
   
+  // Personalizar o adapter para o hook
   const {
+    methods,
     register,
-    handleSubmit,
+    handleSubmit: hookHandleSubmit,
     touchedFields,
     validation,
     isValid,
-    validateForm,
-  } = usePersonalInfoForm(initialData || formData);
+    validateForm
+  } = usePersonalInfoForm(initialData || formData, onSubmit);
 
   const onFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

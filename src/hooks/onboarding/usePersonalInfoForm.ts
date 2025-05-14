@@ -1,9 +1,14 @@
 
 import { useState } from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
+import { useForm, SubmitHandler, UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
 import { PersonalInfoData } from "@/types/onboarding";
 import { validateLinkedInUrl, validateInstagramUrl, validateBrazilianPhone, formatSocialUrl } from "@/utils/validationUtils";
+
+interface ValidationResult {
+  isValid: boolean;
+  errors: Record<string, string>;
+}
 
 export const usePersonalInfoForm = (
   initialData: Partial<PersonalInfoData> | null,
@@ -26,6 +31,51 @@ export const usePersonalInfoForm = (
     },
     mode: "onChange"
   });
+  
+  // Extrair os métodos necessários para a validação
+  const { register, formState, trigger, getValues } = methods;
+  const { touchedFields, errors, isValid } = formState;
+  
+  // Função para validar manualmente o formulário
+  const validateForm = (): ValidationResult => {
+    const values = getValues();
+    const validationErrors: Record<string, string> = {};
+    
+    // Campo state é obrigatório
+    if (!values.state) {
+      validationErrors.state = "Estado é obrigatório";
+    }
+    
+    // Campo city é obrigatório
+    if (!values.city) {
+      validationErrors.city = "Cidade é obrigatória";
+    }
+    
+    // Timezone é obrigatório
+    if (!values.timezone) {
+      validationErrors.timezone = "Fuso horário é obrigatório";
+    }
+    
+    // Validar telefone se fornecido
+    if (values.phone && !validateBrazilianPhone(values.phone)) {
+      validationErrors.phone = "Telefone inválido";
+    }
+    
+    // Validar LinkedIn se fornecido
+    if (values.linkedin && !validateLinkedInUrl(values.linkedin)) {
+      validationErrors.linkedin = "URL do LinkedIn inválida";
+    }
+    
+    // Validar Instagram se fornecido
+    if (values.instagram && !validateInstagramUrl(values.instagram)) {
+      validationErrors.instagram = "Usuário do Instagram inválido";
+    }
+    
+    return {
+      isValid: Object.keys(validationErrors).length === 0,
+      errors: validationErrors
+    };
+  };
 
   const handleSubmit: SubmitHandler<PersonalInfoData> = async (data) => {
     setIsSubmitting(true);
@@ -41,29 +91,14 @@ export const usePersonalInfoForm = (
       }
       
       // Validações personalizadas
-      if (data.linkedin && !validateLinkedInUrl(data.linkedin)) {
-        methods.setError("linkedin", { 
-          type: "manual", 
-          message: "URL do LinkedIn inválida" 
-        });
-        setIsSubmitting(false);
-        return;
-      }
-      
-      if (data.instagram && !validateInstagramUrl(data.instagram)) {
-        methods.setError("instagram", { 
-          type: "manual", 
-          message: "Usuário do Instagram inválido" 
-        });
-        setIsSubmitting(false);
-        return;
-      }
-      
-      if (data.phone && !validateBrazilianPhone(data.phone)) {
-        methods.setError("phone", { 
-          type: "manual", 
-          message: "Telefone inválido" 
-        });
+      const validation = validateForm();
+      if (!validation.isValid) {
+        for (const [field, message] of Object.entries(validation.errors)) {
+          methods.setError(field as any, { 
+            type: "manual", 
+            message
+          });
+        }
         setIsSubmitting(false);
         return;
       }
@@ -81,9 +116,23 @@ export const usePersonalInfoForm = (
     }
   };
 
+  // Função de validação para ser usada externamente
+  const validation = {
+    isValid: isValid,
+    errors: {} as Record<string, string>,
+    validate: () => {
+      return validateForm();
+    }
+  };
+
   return {
     methods,
+    register,
     handleSubmit,
+    touchedFields,
+    validation,
+    isValid,
+    validateForm,
     isSubmitting
   };
 };

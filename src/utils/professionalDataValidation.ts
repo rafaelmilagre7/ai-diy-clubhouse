@@ -104,3 +104,14 @@ export const normalizeWebsiteUrl = (url: string): string => {
   
   return normalizedUrl;
 };
+
+/**
+ * Valida o faturamento anual
+ * @param annualRevenue Valor do faturamento anual
+ * @returns true se for válido, false caso contrário
+ */
+export const validateAnnualRevenue = (annualRevenue: string): boolean => {
+  // Verifica se foi selecionado um valor
+  return !!annualRevenue && annualRevenue.trim() !== '';
+};
+
