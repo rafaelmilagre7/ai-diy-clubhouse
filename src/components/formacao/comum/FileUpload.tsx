@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -101,7 +100,7 @@ export const FileUpload = ({
       const result = await uploadFileWithFallback(
         file,
         bucketName,
-        folderPath,
+        folderPath ? `${folderPath}/${file.name}` : file.name,
         (progress) => {
           setUploadProgress(progress);
           console.log(`Upload progresso: ${progress}%`);
@@ -109,9 +108,13 @@ export const FileUpload = ({
         STORAGE_BUCKETS.FALLBACK // Usar bucket de fallback
       );
       
+      if (!result.url || result.error) {
+        throw result.error || new Error("Erro ao fazer upload do arquivo");
+      }
+      
       console.log("Upload concluído com sucesso:", result);
       setFileName(file.name);
-      onChange(result.publicUrl, file.type, file.size);
+      onChange(result.url, file.type, file.size);
       
       toast.success("Upload realizado com sucesso!");
       

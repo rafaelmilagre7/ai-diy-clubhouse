@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { uploadFileToStorage } from "@/components/ui/file/uploadUtils";
@@ -35,6 +36,10 @@ export const ImageUpload = ({ value, onChange, bucketName, folderPath }: ImageUp
         }
       );
 
+      if (!result || !result.publicUrl) {
+        throw new Error("Falha no upload da imagem");
+      }
+
       console.log("Upload bem-sucedido:", result);
       onChange(result.publicUrl);
       
@@ -43,11 +48,11 @@ export const ImageUpload = ({ value, onChange, bucketName, folderPath }: ImageUp
         description: "A imagem foi enviada com sucesso.",
         variant: "default",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao fazer upload:", error);
       toast({
         title: "Falha no upload",
-        description: "Não foi possível enviar a imagem. Tente novamente.",
+        description: error.message || "Não foi possível enviar a imagem. Tente novamente.",
         variant: "destructive",
       });
     } finally {

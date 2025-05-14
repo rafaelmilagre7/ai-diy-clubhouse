@@ -24,14 +24,14 @@ interface VideoUploadProps {
     thumbnailUrl?: string
   ) => void;
   videoType?: string;
-  disabled?: boolean; // Adicionada a propriedade disabled que estava faltando
+  disabled?: boolean;
 }
 
 export const VideoUpload: React.FC<VideoUploadProps> = ({
   value,
   onChange,
   videoType = "youtube",
-  disabled = false // Adicionado valor padrão
+  disabled = false
 }) => {
   const [activeTab, setActiveTab] = useState(videoType || "youtube");
   const [youtubeUrl, setYoutubeUrl] = useState(videoType === "youtube" ? value : "");
@@ -58,7 +58,7 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
       const standardUrl = `https://www.youtube.com/watch?v=${videoId}`;
       
       // Gerar URL de thumbnail
-      const thumbnailUrl = getYoutubeThumbnailUrl(standardUrl);
+      const thumbnailUrl = getYoutubeThumbnailUrl(videoId);
       
       // Passa para o componente pai
       onChange(standardUrl, "youtube", undefined, undefined, undefined, 0, thumbnailUrl);
@@ -94,17 +94,25 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
     setError(null);
 
     try {
+      // Gerar um nome de arquivo único
+      const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const filePath = `videos/${fileName}`;
+      
       // Usar a função de upload com fallback
       const result = await uploadFileWithFallback(
         file,
         STORAGE_BUCKETS.LEARNING_VIDEOS,
-        "videos",
+        filePath,
         (progress) => setUploadProgress(progress),
         STORAGE_BUCKETS.FALLBACK
       );
 
+      if (!result.url || result.error) {
+        throw result.error || new Error("Erro no upload do vídeo");
+      }
+
       onChange(
-        result.publicUrl, 
+        result.url, 
         "direct", 
         file.name, 
         result.path, 

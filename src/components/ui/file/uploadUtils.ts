@@ -2,6 +2,15 @@
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/lib/supabase';
 
+// Interface para o resultado do upload de arquivo
+export interface FileUploadResult {
+  path: string;
+  publicUrl: string;
+  bucket: string;
+  fileName: string;
+  size: number;
+}
+
 // Função para upload direto para o Supabase
 export const uploadFileToStorage = async (
   file: File,
@@ -9,7 +18,7 @@ export const uploadFileToStorage = async (
   folderPath: string = '',
   onProgressUpdate?: (progress: number) => void,
   abortSignal?: AbortSignal
-) => {
+): Promise<FileUploadResult> => {
   try {
     if (onProgressUpdate) {
       onProgressUpdate(5);
