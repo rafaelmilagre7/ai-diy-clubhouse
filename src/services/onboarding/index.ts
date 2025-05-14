@@ -34,12 +34,33 @@ export const professionalDataService = {
         company_website: professionalInfo.company_website || "",
         current_position: professionalInfo.current_position || "",
         annual_revenue: professionalInfo.annual_revenue || "",
-        // Adicionar etapa aos passos concluídos
-        completed_steps: supabase.rpc('array_append_unique', { 
-          arr: ['professional_info'], 
-          el: 'professional_info' 
-        })
       };
+      
+      // Adicionar etapa aos passos concluídos (manipulação do array no cliente)
+      const { data: currentProgress, error: fetchError } = await supabase
+        .from('onboarding_progress')
+        .select('completed_steps')
+        .eq('id', progressId)
+        .single();
+        
+      if (fetchError) {
+        console.error("Erro ao buscar progresso atual:", fetchError);
+        throw new Error(`Erro ao buscar progresso: ${fetchError.message}`);
+      }
+      
+      // Manipular o array de passos completos localmente
+      let completedSteps = currentProgress?.completed_steps || [];
+      if (!Array.isArray(completedSteps)) {
+        completedSteps = []; // Inicializa como array vazio se não for um array
+      }
+      
+      // Adicionar a etapa apenas se não existir
+      if (!completedSteps.includes('professional_info')) {
+        completedSteps.push('professional_info');
+      }
+      
+      // Atualizar com o novo array
+      updateData.completed_steps = completedSteps;
       
       // Atualizar o progresso
       const { data: result, error } = await supabase
@@ -69,10 +90,20 @@ export const professionalDataService = {
         .single();
         
       if (error) {
-        throw error;
+        if (error.code === 'PGRST116') {
+          // Nenhum registro encontrado
+          console.log("Nenhum dado profissional encontrado para o progresso:", progressId);
+          return null;
+        }
+        console.error("Erro ao buscar dados profissionais:", error);
+        return null;
       }
       
-      return data;
+      return {
+        ...data,
+        // Garantir que o campo professional_info seja sempre um objeto
+        professional_info: data.professional_info || {}
+      };
     } catch (error) {
       console.error("Erro ao buscar dados profissionais:", error);
       return null;

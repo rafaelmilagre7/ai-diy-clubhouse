@@ -50,7 +50,7 @@ const ProfessionalData = () => {
     }
   }, [progress, isLoading]);
   
-  // Corrigindo o tipo de retorno para Promise<void> em vez de Promise<boolean>
+  // Função para submeter os dados com tratamento de erros melhorado
   const handleSubmit = async (stepId: string, data: any): Promise<void> => {
     setIsSubmitting(true);
     setSubmitError(null);
@@ -62,8 +62,32 @@ const ProfessionalData = () => {
         throw new Error("ID de progresso não encontrado");
       }
       
-      // Atualizar os dados na tabela de onboarding_progress
-      await professionalDataService.save(progress.id, progress.user_id, data);
+      // Verificar estrutura dos dados antes de enviar
+      if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
+        throw new Error("Dados inválidos para envio");
+      }
+      
+      let retryCount = 0;
+      const maxRetries = 2;
+      let success = false;
+      
+      while (!success && retryCount <= maxRetries) {
+        try {
+          // Atualizar os dados na tabela de onboarding_progress
+          await professionalDataService.save(progress.id, progress.user_id, data);
+          success = true;
+        } catch (saveError: any) {
+          retryCount++;
+          console.warn(`Tentativa ${retryCount} falhou:`, saveError);
+          
+          if (retryCount > maxRetries) {
+            throw saveError;
+          }
+          
+          // Pequena espera entre tentativas
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
       
       // Recarregar o progresso para refletir as alterações
       await refreshProgress();

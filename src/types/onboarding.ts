@@ -150,6 +150,8 @@ export interface OnboardingProgress {
   
   // Adicionando campo de status de sincronização
   sync_status?: string;
+  last_sync_at?: string;
+  last_error?: string;
 
   // Propriedades para trilhas futuras
   trail_solutions?: any[];

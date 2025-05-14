@@ -15,7 +15,10 @@ import { NavigationButtons } from "@/components/onboarding/NavigationButtons";
 import { 
   validateCompanyName, 
   validateWebsite, 
-  normalizeWebsiteUrl 
+  normalizeWebsiteUrl,
+  validateCompanySize,
+  validateCompanySector,
+  validateCurrentPosition 
 } from "@/utils/professionalDataValidation";
 
 interface ProfessionalDataStepProps extends OnboardingStepProps {
@@ -98,10 +101,14 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
     const websiteError = validateWebsite(data.company_website);
     if (websiteError) errors.push(websiteError);
     
-    // Verificações adicionais para campos obrigatórios
-    if (!data.company_size) errors.push("Tamanho da empresa é obrigatório");
-    if (!data.company_sector) errors.push("Setor da empresa é obrigatório");
-    if (!data.current_position) errors.push("Cargo atual é obrigatório");
+    const companySizeError = validateCompanySize(data.company_size);
+    if (companySizeError) errors.push(companySizeError);
+    
+    const companySectorError = validateCompanySector(data.company_sector);
+    if (companySectorError) errors.push(companySectorError);
+    
+    const currentPositionError = validateCurrentPosition(data.current_position);
+    if (currentPositionError) errors.push(currentPositionError);
     
     return errors;
   };

@@ -55,3 +55,35 @@ export const validateCurrentPosition = (value: string): string | undefined => {
   if (value.length < 2) return "Cargo deve ter pelo menos 2 caracteres";
   return undefined;
 };
+
+// Função auxiliar para normalizar dados profissionais
+export const normalizeProfessionalData = (data: any): any => {
+  // Verifica se os dados já estão na estrutura correta
+  if (data.professional_info) {
+    return data;
+  }
+  
+  // Caso contrário, cria a estrutura esperada
+  return {
+    professional_info: {
+      company_name: data.company_name || "",
+      company_size: data.company_size || "",
+      company_sector: data.company_sector || "",
+      company_website: normalizeWebsiteUrl(data.company_website || ""),
+      current_position: data.current_position || "",
+      annual_revenue: data.annual_revenue || ""
+    }
+  };
+};
+
+// Função para verificar se todos os campos obrigatórios estão preenchidos
+export const hasRequiredProfessionalFields = (data: any): boolean => {
+  const info = data.professional_info || data;
+  
+  return Boolean(
+    info.company_name &&
+    info.company_size &&
+    info.company_sector &&
+    info.current_position
+  );
+};
