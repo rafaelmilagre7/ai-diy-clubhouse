@@ -2,6 +2,7 @@
 import { supabase } from "./client";
 import { createStoragePublicPolicy } from "./rpc";
 import { STORAGE_BUCKETS } from "./config";
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Extrai o ID de um vídeo do YouTube a partir de uma URL
@@ -44,7 +45,7 @@ export const formatVideoDuration = (seconds: number | null | undefined): string 
 /**
  * Extrai informações de vídeos da Panda Video
  */
-export const extractPandaVideoInfo = (embedCode: string): { videoId: string; thumbnail: string } | null => {
+export const extractPandaVideoInfo = (embedCode: string): { videoId: string; thumbnail: string; url: string; thumbnailUrl: string } | null => {
   try {
     const idRegex = /video-id="([^"]+)"/;
     const thumbnailRegex = /thumbnail="([^"]+)"/;
@@ -53,9 +54,16 @@ export const extractPandaVideoInfo = (embedCode: string): { videoId: string; thu
     const thumbnailMatch = embedCode.match(thumbnailRegex);
     
     if (idMatch && idMatch[1]) {
+      const videoId = idMatch[1];
+      const thumbnail = thumbnailMatch && thumbnailMatch[1] ? thumbnailMatch[1] : '';
+      // Adicionando as propriedades url e thumbnailUrl para compatibilidade
+      const url = `https://player.pandavideo.com.br/embed/?v=${videoId}`;
+      
       return {
-        videoId: idMatch[1],
-        thumbnail: thumbnailMatch && thumbnailMatch[1] ? thumbnailMatch[1] : ''
+        videoId,
+        thumbnail,
+        url,
+        thumbnailUrl: thumbnail // thumbnailUrl é um alias para thumbnail
       };
     }
     
@@ -152,5 +160,133 @@ export const setupLearningStorageBuckets = async (): Promise<{
       success: false,
       message: error instanceof Error ? error.message : "Erro desconhecido"
     };
+  }
+};
+
+/**
+ * Função para upload de arquivos com fallback automático para outro bucket
+ */
+export const uploadFileWithFallback = async (
+  file: File,
+  bucketName: string,
+  folderPath: string = "",
+  onProgressUpdate?: (progress: number) => void,
+  fallbackBucket: string = STORAGE_BUCKETS.FALLBACK
+): Promise<{
+  publicUrl: string;
+  path: string;
+  size: number;
+}> => {
+  try {
+    // Atualizar progresso inicial
+    if (onProgressUpdate) {
+      onProgressUpdate(5);
+    }
+    
+    console.log(`Iniciando upload para bucket: ${bucketName}, pasta: ${folderPath}`);
+    
+    // Verificar se o bucket existe
+    const bucketExists = await ensureBucketExists(bucketName);
+    if (!bucketExists) {
+      console.log(`Bucket ${bucketName} não encontrado ou não pôde ser criado. Usando fallback: ${fallbackBucket}`);
+    }
+    
+    // Gerar nome único para o arquivo
+    const fileExt = file.name.split('.').pop();
+    const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const fileName = `${uuidv4()}_${safeFileName}`;
+    const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
+    
+    if (onProgressUpdate) {
+      onProgressUpdate(20);
+    }
+    
+    // Tentar fazer upload para o bucket principal
+    let uploadError = null;
+    try {
+      const { data, error } = await supabase.storage
+        .from(bucketExists ? bucketName : fallbackBucket)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+        
+      if (error) {
+        console.error("Erro no upload inicial:", error);
+        uploadError = error;
+      } else {
+        if (onProgressUpdate) {
+          onProgressUpdate(90);
+        }
+        
+        // Upload bem-sucedido, obter URL pública
+        const actualBucket = bucketExists ? bucketName : fallbackBucket;
+        const { data: urlData } = supabase.storage
+          .from(actualBucket)
+          .getPublicUrl(filePath);
+        
+        if (onProgressUpdate) {
+          onProgressUpdate(100);
+        }
+        
+        return {
+          publicUrl: urlData.publicUrl,
+          path: filePath,
+          size: file.size
+        };
+      }
+    } catch (e) {
+      console.error("Exceção no upload inicial:", e);
+      uploadError = e;
+    }
+    
+    // Se chegarmos aqui, houve um erro no upload inicial
+    // Tentar com o bucket de fallback se ainda não tentamos
+    if (uploadError && bucketExists) {
+      console.log(`Tentando upload com bucket de fallback: ${fallbackBucket}`);
+      
+      if (onProgressUpdate) {
+        onProgressUpdate(30);
+      }
+      
+      const fallbackFilePath = `${bucketName}/${filePath}`;
+      
+      const { data, error } = await supabase.storage
+        .from(fallbackBucket)
+        .upload(fallbackFilePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+        
+      if (error) {
+        console.error("Erro no upload de fallback:", error);
+        throw error;
+      }
+      
+      if (onProgressUpdate) {
+        onProgressUpdate(95);
+      }
+      
+      // Obter URL pública
+      const { data: urlData } = supabase.storage
+        .from(fallbackBucket)
+        .getPublicUrl(fallbackFilePath);
+      
+      if (onProgressUpdate) {
+        onProgressUpdate(100);
+      }
+      
+      return {
+        publicUrl: urlData.publicUrl,
+        path: fallbackFilePath,
+        size: file.size
+      };
+    }
+    
+    throw uploadError || new Error("Falha no upload do arquivo");
+    
+  } catch (error) {
+    console.error("Erro no processo de upload:", error);
+    throw error;
   }
 };

@@ -4,6 +4,7 @@ import { useProgress } from "./useProgress";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
+// Corrigindo a tipagem para ser explicitamente "user" ou "assistant"
 interface Message {
   role: 'user' | 'assistant';
   content: string;
@@ -37,7 +38,11 @@ export const useOnboardingAI = (stepId: string) => {
         
         // Se existe um histórico, usá-lo
         if (data?.conversation_history) {
-          setMessages(data.conversation_history as Message[]);
+          const typedMessages = (data.conversation_history as any[]).map(msg => ({
+            role: msg.role as 'user' | 'assistant',
+            content: msg.content as string
+          }));
+          setMessages(typedMessages);
         } else {
           // Gerar mensagem inicial contextualizada para a etapa
           const initialMessage = getInitialMessageForStep(stepId, progress);
@@ -92,7 +97,7 @@ export const useOnboardingAI = (stepId: string) => {
       setIsLoading(true);
       
       // Adicionar mensagem do usuário ao estado local
-      const updatedMessages = [
+      const updatedMessages: Message[] = [
         ...messages,
         { role: 'user', content: userMessage }
       ];
@@ -123,7 +128,7 @@ export const useOnboardingAI = (stepId: string) => {
       const assistantMessage = data.message;
       
       // Adicionar resposta ao estado local
-      const finalMessages = [
+      const finalMessages: Message[] = [
         ...updatedMessages,
         { role: 'assistant', content: assistantMessage }
       ];
@@ -157,7 +162,7 @@ export const useOnboardingAI = (stepId: string) => {
       
       // Resetar estado local com mensagem inicial
       const initialMessage = getInitialMessageForStep(stepId, progress);
-      const resetMessages = [{ role: 'assistant', content: initialMessage }];
+      const resetMessages: Message[] = [{ role: 'assistant', content: initialMessage }];
       setMessages(resetMessages);
       
       toast.success("Conversa reiniciada");

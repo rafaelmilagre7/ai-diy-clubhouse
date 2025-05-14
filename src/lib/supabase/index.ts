@@ -1,4 +1,5 @@
 
+
 // Re-exportação centralizada para garantir compatibilidade com importações existentes
 export * from './client';
 export * from './types';
@@ -13,11 +14,13 @@ export {
   ensureBucketExists,
   createStoragePublicPolicy,
   extractPandaVideoInfo,
+  uploadFileWithFallback,
   // Adicione outras funções que precisam ser exportadas
 } from './storage';
 
 // Exportação explícita das funções de RPC
-// Nota: não re-exportamos createStoragePublicPolicy daqui para evitar conflito
 export {
+  createStoragePublicPolicy as createStoragePublicPolicyRPC,
   // Adicionar outras funções de RPC conforme necessário
 } from './rpc';
+

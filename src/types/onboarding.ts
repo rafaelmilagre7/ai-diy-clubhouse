@@ -1,3 +1,4 @@
+
 export interface OnboardingData {
   // 1. Dados Pessoais
   personal_info: {
@@ -152,6 +153,13 @@ export interface OnboardingProgress {
   sync_status?: string;
   last_sync_at?: string;
   last_error?: string;
+
+  // Adicionando campo para logs de debug
+  debug_logs?: Array<{
+    event: string;
+    timestamp: string;
+    data: any;
+  }>;
 
   // Propriedades para trilhas futuras
   trail_solutions?: any[];
