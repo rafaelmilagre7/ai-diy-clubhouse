@@ -30,7 +30,7 @@ const ExperiencePersonalization = () => {
           setRefreshAttempted(true);
         });
     }
-  }, [refreshAttempted, refreshProgress, progress]);
+  }, [refreshAttempted, refreshProgress]);
 
   // Função para salvar dados do formulário
   const handleSaveData = async (stepId: string, data: any) => {
@@ -45,7 +45,7 @@ const ExperiencePersonalization = () => {
       }
       
       // Salvar dados no formato esperado pelo builder
-      await saveStepData(stepId, data);
+      await saveStepData(stepId, data, false);
       
       console.log("[ExperiencePersonalization] Dados salvos com sucesso");
       toast.success("Suas preferências foram salvas com sucesso!");
@@ -53,7 +53,7 @@ const ExperiencePersonalization = () => {
       // Forçar atualização dos dados locais após salvar
       await refreshProgress();
       
-      // Navegar para a próxima etapa
+      // Navegar para a próxima etapa usando o hook de navegação em vez de redirecionamento direto
       navigate("/onboarding/complementary");
     } catch (error) {
       console.error("[ExperiencePersonalization] Erro ao salvar dados:", error);
@@ -68,12 +68,19 @@ const ExperiencePersonalization = () => {
     setRefreshAttempted(false);
     refreshProgress();
   };
+  
+  // Função segura para voltar à etapa anterior
+  const handleNavigateBack = () => {
+    console.log("[ExperiencePersonalization] Navegando para a etapa anterior via hook de navegação");
+    navigate("/onboarding/club-goals");
+  };
 
   return (
     <OnboardingLayout
       currentStep={6}
       title="Personalização da Experiência"
       backUrl="/onboarding/club-goals"
+      onBackClick={handleNavigateBack}
     >
       <div className="max-w-4xl mx-auto space-y-8">
         <MilagrinhoMessage

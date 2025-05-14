@@ -3,19 +3,19 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormMessage } from "@/components/ui/form-message";
-import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
 import { OnboardingStepProps } from "@/types/onboarding";
 import { DiscoverySourceSection } from "./complementary-info/DiscoverySourceSection";
 import { PriorityTopicsSection } from "./complementary-info/PriorityTopicsSection";
 import { PermissionsSection } from "./complementary-info/PermissionsSection";
 import { complementaryInfoSchema, type ComplementaryInfoFormData } from "@/schemas/complementaryInfoSchema";
 import { normalizeComplementaryInfo, NormalizedComplementaryInfo } from "@/hooks/onboarding/persistence/utils/complementaryInfoNormalization";
+import { NavigationButtons } from "../NavigationButtons";
 
 export const ComplementaryInfoStep = ({ 
   onSubmit, 
   isSubmitting, 
-  initialData 
+  initialData,
+  onComplete
 }: OnboardingStepProps) => {
   // Processamento seguro dos dados iniciais
   const processInitialData = (): ComplementaryInfoFormData => {
@@ -68,6 +68,12 @@ export const ComplementaryInfoStep = ({
     });
   };
 
+  const handlePrevious = () => {
+    console.log("[ComplementaryInfoStep] Navegando para a etapa anterior");
+    // Navegar para a etapa anterior via URL fornecida pelo componente pai
+    window.history.back();
+  };
+
   const { formState: { errors } } = form;
 
   return (
@@ -87,30 +93,16 @@ export const ComplementaryInfoStep = ({
         </div>
       )}
 
-      {/* Botões de navegação */}
-      <div className="flex justify-between pt-6">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => window.history.back()}
-          disabled={isSubmitting}
-        >
-          Voltar
-        </Button>
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            "Processando..."
-          ) : (
-            <span className="flex items-center gap-2">
-              Finalizar Onboarding
-              <ArrowRight className="h-4 w-4" />
-            </span>
-          )}
-        </Button>
-      </div>
+      {/* Botões de navegação corrigidos para usar o componente NavigationButtons  */}
+      <NavigationButtons
+        isSubmitting={isSubmitting}
+        onPrevious={handlePrevious}
+        submitText="Finalizar Onboarding"
+        loadingText="Processando..."
+        showPrevious={true}
+        previousDisabled={false}
+        className="mt-6"
+      />
     </form>
   );
 };

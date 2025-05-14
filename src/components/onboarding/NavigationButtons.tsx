@@ -12,6 +12,8 @@ interface NavigationButtonsProps {
   previousDisabled?: boolean;
   className?: string;
   variant?: "primary" | "secondary" | "default";
+  previousButtonClassName?: string; // Nova propriedade para personalizar o estilo do botão anterior
+  submitButtonClassName?: string; // Nova propriedade para personalizar o estilo do botão de envio
 }
 
 export const NavigationButtons = ({ 
@@ -22,7 +24,9 @@ export const NavigationButtons = ({
   showPrevious = true,
   previousDisabled = false,
   className,
-  variant = "default"
+  variant = "default",
+  previousButtonClassName,
+  submitButtonClassName
 }: NavigationButtonsProps) => {
   // Função para determinar a classe de estilo do botão com base na variante
   const getButtonStyle = () => {
@@ -36,6 +40,18 @@ export const NavigationButtons = ({
     }
   };
 
+  // Função para lidar com o clique no botão anterior
+  const handlePreviousClick = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevenir comportamento padrão
+    
+    if (onPrevious) {
+      console.log("[NavigationButtons] Botão anterior clicado, executando callback");
+      onPrevious();
+    } else {
+      console.warn("[NavigationButtons] Botão anterior clicado mas nenhum callback fornecido");
+    }
+  };
+
   return (
     <div className={cn("flex justify-between pt-6", className)}>
       {showPrevious ? (
@@ -43,8 +59,8 @@ export const NavigationButtons = ({
           type="button"
           variant="outline"
           disabled={previousDisabled || isSubmitting}
-          className="min-w-[120px] transition-all border-neutral-600 hover:bg-[#252842] hover:text-white"
-          onClick={onPrevious}
+          className={cn("min-w-[120px] transition-all border-neutral-600 hover:bg-[#252842] hover:text-white", previousButtonClassName)}
+          onClick={handlePreviousClick}
         >
           <span className="flex items-center gap-2">
             <ArrowLeft className="h-4 w-4" />
@@ -57,7 +73,7 @@ export const NavigationButtons = ({
       
       <Button
         type="submit"
-        className={cn("min-w-[120px] transition-all", getButtonStyle())}
+        className={cn("min-w-[120px] transition-all", getButtonStyle(), submitButtonClassName)}
         disabled={isSubmitting}
       >
         {isSubmitting ? (

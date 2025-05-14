@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { ComplementaryInfoStep } from "@/components/onboarding/steps/ComplementaryInfoStep";
@@ -13,30 +13,58 @@ const ComplementaryInfo = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isLoading, refreshProgress } = useProgress();
   const [refreshAttempted, setRefreshAttempted] = useState(false);
+  // Adicionar uma referência para controlar se o componente está montado
+  const isMounted = useRef(true);
   const navigate = useNavigate();
+
+  // Efeito para configurar e limpar montagem do componente
+  useEffect(() => {
+    isMounted.current = true;
+    
+    return () => {
+      // Marcar componente como desmontado quando for destruído
+      isMounted.current = false;
+    };
+  }, []);
 
   // Efeito para carregar dados mais recentes ao entrar na página - com controle para evitar loops
   useEffect(() => {
-    // Verificar se já tentou uma vez para não entrar em loop
-    if (!refreshAttempted) {
-      console.log("ComplementaryInfo montado - carregando dados mais recentes");
+    // Verificar se já tentou uma vez para não entrar em loop e se o componente está montado
+    if (!refreshAttempted && isMounted.current) {
+      console.log("[ComplementaryInfo] Carregando dados mais recentes");
+      
+      let isCancelled = false;
+      
       refreshProgress()
-        .then(() => {
-          console.log("Dados atualizados para ComplementaryInfo:", progress);
+        .then((refreshedData) => {
+          // Verificar se o componente ainda está montado antes de atualizar state
+          if (isCancelled || !isMounted.current) return;
+          
+          console.log("[ComplementaryInfo] Dados atualizados:", refreshedData || progress);
           setRefreshAttempted(true); // Marcar que já tentamos atualizar
         })
         .catch(error => {
-          console.error("Erro ao carregar dados:", error);
+          // Verificar se o componente ainda está montado antes de atualizar state
+          if (isCancelled || !isMounted.current) return;
+          
+          console.error("[ComplementaryInfo] Erro ao carregar dados:", error);
           toast.error("Erro ao carregar dados. Algumas informações podem estar desatualizadas.");
           setRefreshAttempted(true); // Marcar que já tentamos, mesmo com erro
         });
+        
+      // Função de cleanup para marcar operação como cancelada se o componente for desmontado
+      return () => {
+        isCancelled = true;
+      };
     }
   }, [refreshAttempted]); // Dependência reduzida para evitar loop
 
   const handleSaveData = async (stepId: string, data: any) => {
+    if (!isMounted.current) return; // Verificação de segurança
+    
     setIsSubmitting(true);
     try {
-      console.log("Salvando informações complementares:", data);
+      console.log("[ComplementaryInfo] Salvando informações complementares:", data);
       
       // Verificar se temos dados válidos
       if (!data) {
@@ -46,19 +74,27 @@ const ComplementaryInfo = () => {
       // Usar a assinatura com stepId explícito para evitar problemas
       await saveStepData(stepId, data, false);
       
-      console.log("Informações complementares salvas com sucesso");
+      if (!isMounted.current) return; // Verificação após operação assíncrona
+      
+      console.log("[ComplementaryInfo] Informações complementares salvas com sucesso");
       toast.success("Dados salvos com sucesso!");
       
-      // Forçar atualização dos dados após salvar
-      await refreshProgress();
+      // Forçar atualização dos dados após salvar, mas apenas se ainda estiver montado
+      if (isMounted.current) {
+        await refreshProgress();
+      }
       
       // Navegar manualmente para a página de revisão
       navigate("/onboarding/review");
     } catch (error) {
-      console.error("Erro ao salvar dados:", error);
+      if (!isMounted.current) return; // Verificação após operação assíncrona
+      
+      console.error("[ComplementaryInfo] Erro ao salvar dados:", error);
       toast.error("Erro ao salvar dados. Por favor, tente novamente.");
     } finally {
-      setIsSubmitting(false);
+      if (isMounted.current) {
+        setIsSubmitting(false);
+      }
     }
   };
   
@@ -68,21 +104,18 @@ const ComplementaryInfo = () => {
     refreshProgress();
   };
   
-  // Verificar se temos dados válidos para complementary_info
-  const hasComplementaryInfo = progress?.complementary_info && 
-    typeof progress.complementary_info === 'object' && 
-    Object.keys(progress.complementary_info).length > 0;
-    
-  console.log("Estado das informações complementares:", {
-    hasComplementaryInfo,
-    complementaryInfo: progress?.complementary_info
-  });
+  // Função para navegação segura para trás
+  const handleNavigateBack = () => {
+    console.log("[ComplementaryInfo] Navegando para a etapa anterior via hook de navegação");
+    navigate("/onboarding/customization");
+  };
 
   return (
     <OnboardingLayout
       currentStep={7}
       title="Informações Complementares"
       backUrl="/onboarding/customization"
+      onBackClick={handleNavigateBack}
     >
       <div className="max-w-4xl mx-auto space-y-8">
         <MilagrinhoMessage
