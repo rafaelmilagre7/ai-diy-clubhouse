@@ -1,106 +1,92 @@
 
-import { toast } from "sonner";
-
 /**
- * Navega para a próxima etapa após salvar os dados
+ * Função de navegação após completar uma etapa
+ * Determina qual é a próxima etapa com base no ID da etapa atual
  */
-export const navigateAfterStep = (
-  stepId: string,
-  currentStepIndex: number,
-  navigate: (path: string) => void,
-  shouldNavigate: boolean,
-  onboardingType: string = 'club'
-) => {
-  if (!shouldNavigate) return;
+export function navigateAfterStep(
+  stepId: string, 
+  currentStepIndex: number, 
+  navigate: (path: string) => void, 
+  shouldNavigate: boolean = true,
+  onboardingType: 'club' | 'formacao' = 'club'
+) {
+  console.log(`[DEBUG] Navegando após etapa ${stepId} (índice ${currentStepIndex}) - tipo ${onboardingType}`);
   
-  try {
-    // Mapeamento de etapas para rotas de navegação
-    const stepToNextPath: Record<string, string> = {
-      // Club
-      'personal_info': '/onboarding/professional-data',
-      'personal': '/onboarding/professional-data',
-      'professional_info': '/onboarding/business-context',
-      'professional_data': '/onboarding/business-context',
-      'business_context': '/onboarding/ai-experience',
-      'ai_experience': '/onboarding/club-goals',
-      'ai_exp': '/onboarding/club-goals',
-      'business_goals': '/onboarding/customization',
-      'experience_personalization': '/onboarding/complementary',
-      'complementary_info': '/onboarding/review',
-      'review': '/onboarding/trail-generation',
-      
-      // Formação (se necessário)
-      'formacao_personal': '/onboarding/formacao/ai-experience',
-      'formacao_ai_experience': '/onboarding/formacao/goals',
-      'formacao_goals': '/onboarding/formacao/preferences',
-      'formacao_preferences': '/onboarding/formacao/review'
-    };
-    
-    // Buscar o próximo caminho com base no ID da etapa
-    const nextPath = stepToNextPath[stepId];
-    
-    // Se não encontrou o próximo caminho, tentar com base no índice atual
-    if (!nextPath) {
-      console.warn(`[AVISO] Próximo caminho não encontrado para etapa ${stepId}, tentando usar índice ${currentStepIndex}`);
-      
-      // Navegação baseada em índice como fallback
-      switch (onboardingType) {
-        case 'club':
-          // Caminhos do Club
-          const clubPaths = [
-            '/onboarding/personal-info',
-            '/onboarding/professional-data',
-            '/onboarding/business-context',
-            '/onboarding/ai-experience',
-            '/onboarding/club-goals',
-            '/onboarding/customization',
-            '/onboarding/complementary',
-            '/onboarding/review',
-            '/onboarding/trail-generation'
-          ];
-          
-          if (currentStepIndex >= 0 && currentStepIndex < clubPaths.length - 1) {
-            navigate(clubPaths[currentStepIndex + 1]);
-          } else {
-            navigate('/onboarding/review');
-          }
-          break;
-          
-        case 'formacao':
-          // Caminhos da Formação
-          const formacaoPaths = [
-            '/onboarding/formacao/personal-info',
-            '/onboarding/formacao/ai-experience',
-            '/onboarding/formacao/goals',
-            '/onboarding/formacao/preferences',
-            '/onboarding/formacao/review'
-          ];
-          
-          if (currentStepIndex >= 0 && currentStepIndex < formacaoPaths.length - 1) {
-            navigate(formacaoPaths[currentStepIndex + 1]);
-          } else {
-            navigate('/onboarding/formacao/review');
-          }
-          break;
-          
-        default:
-          console.error(`[ERRO] Tipo de onboarding desconhecido: ${onboardingType}`);
-          navigate('/onboarding/personal-info');
-      }
-    } else {
-      // Navegação normal com base no mapeamento de etapas
-      console.log(`[DEBUG] Navegando de ${stepId} para ${nextPath}`);
-      navigate(nextPath);
-    }
-  } catch (error) {
-    console.error("[ERRO] Erro ao navegar após salvar etapa:", error);
-    toast.error("Erro na navegação. Tente novamente.");
-    
-    // Usar navegação de fallback básica em caso de erro
-    if (onboardingType === 'formacao') {
-      navigate('/onboarding/formacao');
-    } else {
-      navigate('/onboarding/personal-info');
-    }
+  if (!shouldNavigate) {
+    console.log("[DEBUG] Navegação automática desativada");
+    return;
   }
-};
+  
+  // Mapeamento de etapas para rotas (caminho completo)
+  const stepIdToPath: Record<string, string> = {
+    // Rotas para Club
+    personal_info: "/onboarding/personal-info",
+    professional_info: "/onboarding/professional-data",
+    professional_data: "/onboarding/professional-data", // Alias para compatibilidade
+    business_context: "/onboarding/business-context",
+    ai_experience: "/onboarding/ai-experience",
+    business_goals: "/onboarding/club-goals",
+    experience_personalization: "/onboarding/customization",
+    complementary_info: "/onboarding/complementary",
+    review: "/onboarding/review",
+    
+    // Rotas para Formação
+    formation_personal: "/onboarding/formacao/personal-info",
+    formation_ai_experience: "/onboarding/formacao/ai-experience",
+    formation_goals: "/onboarding/formacao/goals",
+    formation_preferences: "/onboarding/formacao/preferences",
+    formation_review: "/onboarding/formacao/review"
+  };
+  
+  // Sequência de etapas para cada tipo de onboarding
+  const stepSequence = {
+    club: [
+      "personal_info",
+      "professional_info",
+      "business_context",
+      "ai_experience",
+      "business_goals", 
+      "experience_personalization",
+      "complementary_info",
+      "review"
+    ],
+    formacao: [
+      "formation_personal",
+      "formation_ai_experience",
+      "formation_goals",
+      "formation_preferences",
+      "formation_review"
+    ]
+  };
+  
+  // Selecionar a sequência correta com base no tipo de onboarding
+  const sequence = stepSequence[onboardingType];
+  
+  // Encontrar o índice da etapa atual na sequência
+  const currentStepSequenceIndex = sequence.indexOf(stepId);
+  
+  if (currentStepSequenceIndex === -1) {
+    console.warn(`[AVISO] Etapa ${stepId} não encontrada na sequência de ${onboardingType}`);
+    // Fallback para a primeira etapa
+    navigate(stepIdToPath[sequence[0]]);
+    return;
+  }
+  
+  // Verificar se é a última etapa
+  if (currentStepSequenceIndex === sequence.length - 1) {
+    console.log("[DEBUG] Esta é a última etapa, não navegando automaticamente");
+    return;
+  }
+  
+  // Obter o ID da próxima etapa na sequência
+  const nextStepId = sequence[currentStepSequenceIndex + 1];
+  const nextPath = stepIdToPath[nextStepId];
+  
+  if (!nextPath) {
+    console.warn(`[AVISO] Caminho para próxima etapa ${nextStepId} não encontrado`);
+    return;
+  }
+  
+  console.log(`[DEBUG] Navegando para próxima etapa: ${nextStepId} (${nextPath})`);
+  navigate(nextPath);
+}
