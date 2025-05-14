@@ -168,6 +168,7 @@ export interface OnboardingStepProps {
   onComplete?: () => void;
   initialData?: any;
   personalInfo?: OnboardingData['personal_info'];
+  onPrevious?: () => void; // Adicionada a propriedade onPrevious como opcional
 }
 
 export interface OnboardingStep {

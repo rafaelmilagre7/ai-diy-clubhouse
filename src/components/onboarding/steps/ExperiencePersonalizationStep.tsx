@@ -70,7 +70,7 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
   initialData,
   isLastStep,
   onComplete,
-  onPrevious // Vamos garantir que esta prop seja usada
+  onPrevious // Agora essa prop está definida na interface
 }) => {
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
   
@@ -431,7 +431,7 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
             submitText="Próximo"
             loadingText="Salvando..."
             showPrevious={true}
-            onPrevious={handlePrevious} // Passando a função para o botão anterior
+            onPrevious={handlePrevious} // Usando a função handlePrevious
             className="mt-8"
           />
         </form>
