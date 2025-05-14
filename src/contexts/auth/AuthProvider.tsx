@@ -1,5 +1,5 @@
 
-import React, { createContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useEffect, useCallback, useContext } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { UserProfile } from '@/lib/supabase';
 import { supabase } from '@/lib/supabase';
@@ -109,7 +109,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         // Reset admin status enquanto verificamos
         if (event === 'SIGNED_OUT') {
-          setIsAdmin(false);
+          // Atualizamos o estado usando o setAuthState para garantir consistência
+          setAuthState(prev => ({
+            ...prev,
+            isAdmin: false
+          }));
         }
       });
 
@@ -126,7 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Erro ao configurar listener de autenticação:', error);
       setIsLoading(false);
     }
-  }, [setSession, setUser, setIsAdmin, setIsLoading]);
+  }, [setSession, setUser, setIsLoading]);
 
   // Montar objeto de contexto
   const contextValue: AuthContextType = {

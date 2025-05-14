@@ -6,7 +6,7 @@ import { AuthProvider } from "@/contexts/auth";
 import { isDevelopmentMode } from "@/utils/environmentUtils";
 
 // Layout principal
-import MemberLayout from "@/components/layout/member/MemberLayout";
+import MemberLayout from "@/components/layout/MemberLayout";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 // Lazy-loaded pages para otimização de bundle
