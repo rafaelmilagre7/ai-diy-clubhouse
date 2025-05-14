@@ -1,20 +1,20 @@
 
 import { PersonalInfoData } from "@/types/onboarding";
-import { validateLinkedInUrl, validateInstagramUrl, validateBrazilianPhone } from "@/utils/validationUtils";
+import { validateBrazilianPhone, validateLinkedInUrl, validateInstagramUrl } from "./validationUtils";
 
 /**
  * Valida os dados do formulário de informações pessoais
  * @param data Dados do formulário
- * @returns Objeto com erros de validação (vazio se não houver erros)
+ * @returns Objeto com erros, se houver
  */
-export const validatePersonalInfoForm = (data: PersonalInfoData): Record<string, string> => {
+export const validatePersonalInfoForm = (data: Partial<PersonalInfoData>) => {
   const errors: Record<string, string> = {};
-  
+
   // Validar campos obrigatórios
   if (!data.state) {
     errors.state = "Estado é obrigatório";
   }
-  
+
   if (!data.city) {
     errors.city = "Cidade é obrigatória";
   }
@@ -22,19 +22,27 @@ export const validatePersonalInfoForm = (data: PersonalInfoData): Record<string,
   if (!data.timezone) {
     errors.timezone = "Fuso horário é obrigatório";
   }
-  
-  // Validar campos opcionais se preenchidos
-  if (data.phone && !validateBrazilianPhone(data.phone)) {
-    errors.phone = "Número de telefone inválido";
+
+  // Validar telefone se informado
+  if (data.phone) {
+    if (!validateBrazilianPhone(data.phone)) {
+      errors.phone = "Formato de telefone inválido";
+    }
   }
-  
-  if (data.linkedin && !validateLinkedInUrl(data.linkedin)) {
-    errors.linkedin = "URL do LinkedIn inválida";
+
+  // Validar LinkedIn se informado
+  if (data.linkedin) {
+    if (!validateLinkedInUrl(data.linkedin)) {
+      errors.linkedin = "URL do LinkedIn inválida";
+    }
   }
-  
-  if (data.instagram && !validateInstagramUrl(data.instagram)) {
-    errors.instagram = "Usuário do Instagram inválido";
+
+  // Validar Instagram se informado
+  if (data.instagram) {
+    if (!validateInstagramUrl(data.instagram)) {
+      errors.instagram = "Username do Instagram inválido";
+    }
   }
-  
+
   return errors;
 };

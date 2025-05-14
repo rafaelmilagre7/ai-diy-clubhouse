@@ -4,28 +4,26 @@
 
 /**
  * Valida um número de telefone brasileiro
- * @param phone Número de telefone para validar
- * @returns boolean indicando se é válido
+ * Aceita formatos: (XX) XXXXX-XXXX ou XXXXXXXXXXX
  */
-export const validateBrazilianPhone = (phone: string): boolean => {
+export function validateBrazilianPhone(phone: string): boolean {
   if (!phone) return false;
   
-  // Remove caracteres não numéricos
-  const cleanPhone = phone.replace(/\D/g, '');
+  // Remove todos os caracteres não numéricos
+  const phoneDigits = phone.replace(/\D/g, '');
   
-  // Verifica se tem entre 10 e 11 dígitos (com ou sem DDD)
-  if (cleanPhone.length < 10 || cleanPhone.length > 11) {
+  // Verifica se tem entre 10 e 11 dígitos (com ou sem o 9)
+  if (phoneDigits.length < 10 || phoneDigits.length > 11) {
     return false;
   }
   
-  // Verifica se não é número repetido
-  const isRepeated = /^(\d)\1+$/.test(cleanPhone);
-  if (isRepeated) {
+  // Se tem 11 dígitos, o terceiro dígito deve ser 9
+  if (phoneDigits.length === 11 && phoneDigits[2] !== '9') {
     return false;
   }
   
   return true;
-};
+}
 
 /**
  * Valida uma URL do LinkedIn

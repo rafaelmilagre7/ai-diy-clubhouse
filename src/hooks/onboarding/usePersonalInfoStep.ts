@@ -22,7 +22,7 @@ export const usePersonalInfoStep = () => {
     country: "Brasil",
     state: "",
     city: "",
-    timezone: "GMT-3",
+    timezone: "America/Sao_Paulo",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [validationAttempted, setValidationAttempted] = useState(false);
@@ -38,10 +38,13 @@ export const usePersonalInfoStep = () => {
 
     if (progress?.personal_info) {
       console.log("[usePersonalInfoStep] Dados encontrados:", progress.personal_info);
+      
+      // Garantir que o DDI esteja formatado corretamente
       let ddi = progress.personal_info.ddi || "+55";
-      if (ddi) {
-        ddi = "+" + ddi.replace(/\+/g, '').replace(/\D/g, '');
+      if (ddi && !ddi.startsWith('+')) {
+        ddi = "+" + ddi.replace(/\D/g, '');
       }
+      
       setFormData({
         name: userName || progress.personal_info.name || "",
         email: userEmail || progress.personal_info.email || "",
@@ -52,7 +55,7 @@ export const usePersonalInfoStep = () => {
         country: progress.personal_info.country || "Brasil",
         state: progress.personal_info.state || "",
         city: progress.personal_info.city || "",
-        timezone: progress.personal_info.timezone || "GMT-3"
+        timezone: progress.personal_info.timezone || "America/Sao_Paulo"
       });
     } else {
       console.log("[usePersonalInfoStep] Nenhum dado encontrado, usando valores padrão");

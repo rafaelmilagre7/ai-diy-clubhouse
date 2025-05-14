@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 import { FormMessage } from "@/components/ui/form-message";
 import { CheckCircle, AlertCircle } from "lucide-react";
 import { useIBGELocations } from "@/hooks/useIBGELocations";
-import { theme } from "@/lib/theme";
 
 interface LocationInputsProps {
   country: string;
@@ -35,7 +34,7 @@ export const LocationInputs: React.FC<LocationInputsProps> = ({
   errors = {}
 }) => {
   // Usar o hook para obter estados e cidades
-  const { estados, cidadesPorEstado, isLoading } = useIBGELocations();
+  const { estados, cidadesPorEstado, isLoading, fetchEstados, fetchCidadesPorEstado } = useIBGELocations();
   
   // Considera um campo válido se tem valor e não tem erro
   const stateIsValid = state && !errors.state;
@@ -43,6 +42,27 @@ export const LocationInputs: React.FC<LocationInputsProps> = ({
 
   // Filtrar cidades com base no estado selecionado
   const cidadesDoEstado = state && cidadesPorEstado[state] ? cidadesPorEstado[state] : [];
+
+  // Carregar estados quando componente montar
+  useEffect(() => {
+    fetchEstados();
+  }, [fetchEstados]);
+
+  // Carregar cidades quando o estado mudar
+  useEffect(() => {
+    if (state) {
+      fetchCidadesPorEstado(state);
+    }
+  }, [state, fetchCidadesPorEstado]);
+
+  // Se já temos um estado selecionado e temos uma cidade definida,
+  // mas ela não está na lista de cidades, adicionar manualmente
+  useEffect(() => {
+    if (state && city && cidadesDoEstado.length > 0 && !cidadesDoEstado.some(c => c.name === city)) {
+      // Apenas log para debug
+      console.log(`Cidade '${city}' não encontrada na lista para o estado '${state}'`);
+    }
+  }, [state, city, cidadesDoEstado]);
 
   return (
     <div className="space-y-6 p-4 bg-white/5 rounded-lg backdrop-blur-sm">
@@ -76,7 +96,11 @@ export const LocationInputs: React.FC<LocationInputsProps> = ({
           </Label>
           <Select
             value={state}
-            onValueChange={onChangeState}
+            onValueChange={(value) => {
+              onChangeState(value);
+              // Limpar cidade quando mudar o estado
+              onChangeCity('');
+            }}
             disabled={disabled || isLoading}
           >
             <SelectTrigger 
@@ -137,10 +161,14 @@ export const LocationInputs: React.FC<LocationInputsProps> = ({
                   cityIsValid ? "border-viverblue focus:border-viverblue focus-visible:ring-viverblue" : ""
                 )}
               >
-                <SelectValue placeholder={isLoading ? "Carregando cidades..." : "Selecione sua cidade"} />
+                <SelectValue placeholder={
+                  isLoading && state ? "Carregando cidades..." : 
+                  !state ? "Selecione um estado primeiro" : 
+                  "Selecione sua cidade"
+                } />
               </SelectTrigger>
               <SelectContent>
-                {isLoading ? (
+                {isLoading && state ? (
                   <SelectItem value="" disabled>
                     Carregando cidades...
                   </SelectItem>
@@ -153,6 +181,12 @@ export const LocationInputs: React.FC<LocationInputsProps> = ({
                 ) : (
                   <SelectItem value="" disabled>
                     Selecione um estado primeiro
+                  </SelectItem>
+                )}
+                {/* Se a cidade já selecionada não estiver na lista, adicionamos ela */}
+                {city && cidadesDoEstado.length > 0 && !cidadesDoEstado.some(c => c.name === city) && (
+                  <SelectItem key="manual-city" value={city}>
+                    {city}
                   </SelectItem>
                 )}
               </SelectContent>

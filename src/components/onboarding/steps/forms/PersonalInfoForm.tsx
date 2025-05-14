@@ -1,18 +1,20 @@
 
 import React from "react";
+import { PhoneInput } from "../inputs/PhoneInput";
+import { SocialInputs } from "../inputs/SocialInputs";
+import { LocationInputs } from "../inputs/LocationInputs";
+import { TimezoneInput } from "../inputs/TimezoneInput";
 import { Button } from "@/components/ui/button";
-import { PersonalInfoInputs } from "../PersonalInfoInputs";
-import { PersonalInfoData } from "@/types/onboarding";
 
 interface PersonalInfoFormProps {
-  validation: any;
-  register: any;
+  validation?: any;
+  register?: any;
   errors: Record<string, string>;
-  touchedFields: any;
+  touchedFields?: any;
   isSubmitting: boolean;
   initialData?: any;
-  formData: PersonalInfoData;
-  onChange: (field: keyof PersonalInfoData, value: string) => void;
+  formData: any;
+  onChange: (field: string, value: any) => void;
 }
 
 export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
@@ -25,26 +27,68 @@ export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
   formData,
   onChange
 }) => {
-  // Combinar erros do react-hook-form e da validação personalizada
-  const combinedErrors = {
-    ...errors,
-    ...validation.errors
+  // Combinar dados iniciais e formData para garantir valores corretos
+  const currentData = {
+    ...initialData,
+    ...formData
   };
 
   return (
-    <div className="space-y-6">
-      <PersonalInfoInputs
-        formData={formData}
-        onChange={onChange}
+    <div className="space-y-8">
+      <LocationInputs
+        country={currentData.country || "Brasil"}
+        state={currentData.state || ""}
+        city={currentData.city || ""}
+        onChangeCountry={(value) => onChange("country", value)}
+        onChangeState={(value) => onChange("state", value)}
+        onChangeCity={(value) => onChange("city", value)}
+        errors={{
+          state: errors.state,
+          city: errors.city
+        }}
         disabled={isSubmitting}
-        errors={combinedErrors}
       />
       
-      <div className="flex justify-end pt-4">
-        <Button 
-          type="submit" 
+      <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4 space-y-6">
+        <h3 className="text-lg font-semibold text-[#0ABAB5]">Contato</h3>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <PhoneInput
+            value={currentData.phone || ""}
+            onChange={(v) => onChange("phone", v)}
+            disabled={isSubmitting}
+            error={errors.phone}
+            ddi={currentData.ddi || "+55"}
+            onChangeDDI={(v) => onChange("ddi", v)}
+          />
+          <TimezoneInput 
+            value={currentData.timezone || "America/Sao_Paulo"} 
+            onChange={(v) => onChange("timezone", v)} 
+            disabled={isSubmitting}
+            error={errors.timezone}
+          />
+        </div>
+      </div>
+      
+      <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4 space-y-6">
+        <h3 className="text-lg font-semibold text-[#0ABAB5]">Redes Sociais</h3>
+        <SocialInputs
+          linkedin={currentData.linkedin || ""}
+          instagram={currentData.instagram || ""}
+          onChangeLinkedin={(v) => onChange("linkedin", v)}
+          onChangeInstagram={(v) => onChange("instagram", v)}
           disabled={isSubmitting}
-          className="w-full sm:w-auto"
+          errors={{
+            linkedin: errors.linkedin,
+            instagram: errors.instagram
+          }}
+        />
+      </div>
+      
+      <div className="flex justify-end space-x-4">
+        <Button 
+          type="submit"
+          disabled={isSubmitting}
+          className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
         >
           {isSubmitting ? "Salvando..." : "Continuar"}
         </Button>
