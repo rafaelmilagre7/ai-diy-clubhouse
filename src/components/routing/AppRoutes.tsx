@@ -1,82 +1,111 @@
 
-import React, { Suspense, lazy } from "react";
-import { Route, Routes, Navigate } from "react-router-dom";
-import { Spinner } from "@/components/ui/spinner";
-import { AuthProvider } from "@/contexts/auth";
-import { isDevelopmentMode } from "@/utils/environmentUtils";
-
-// Layout principal
+import { lazy, Suspense } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { ProtectedRoute } from "./ProtectedRoute";
 import MemberLayout from "@/components/layout/MemberLayout";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import DashboardPage from "@/pages/member/Dashboard";
+import LoadingScreen from "@/components/common/LoadingScreen";
+import { authRoutes } from "@/routes/AuthRoutes";
 
-// Lazy-loaded pages para otimização de bundle
-const DashboardPage = lazy(() => import("@/pages/member/Dashboard"));
-const LoginPage = lazy(() => import("@/pages/auth/Login"));
-const OfflinePage = lazy(() => import("@/pages/errors/Offline"));
-const NotFoundPage = lazy(() => import("@/pages/errors/NotFound"));
+// Lazy loading para páginas não críticas
+const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
+const AdminLayout = lazy(() => import("@/components/layout/AdminLayout"));
+const FormacaoLayout = lazy(() => import("@/components/layout/formacao/FormacaoLayout"));
 
-// Configuração de fallback para carregamento
-const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <Spinner size="lg" />
-  </div>
-);
+// Lazy loading para áreas administrativas
+const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
+const AdminUsers = lazy(() => import("@/pages/admin/users/AdminUsers"));
+const AdminSettings = lazy(() => import("@/pages/admin/settings/AdminSettings"));
 
+// Lazy loading para área de formação
+const FormacaoDashboard = lazy(() => import("@/pages/formacao/FormacaoDashboard"));
+
+/**
+ * AppRoutes é o componente principal de roteamento da aplicação
+ * Define todas as rotas e seus componentes correspondentes
+ */
 const AppRoutes = () => {
-  // Verificar se as variáveis de ambiente estão configuradas
-  const supabaseConfigured = !!(
-    import.meta.env.VITE_SUPABASE_URL && 
-    import.meta.env.VITE_SUPABASE_ANON_KEY
-  );
-
-  // Em produção, sem configuração de Supabase, mostrar página de offline
-  if (!isDevelopmentMode() && !supabaseConfigured) {
-    return (
-      <Suspense fallback={<PageLoader />}>
-        <OfflinePage 
-          title="Erro de Configuração" 
-          message="Conecte-se ao suporte técnico para configurar as variáveis de ambiente." 
-        />
-      </Suspense>
-    );
-  }
-
+  console.log("Renderizando AppRoutes");
+  
   return (
-    <AuthProvider>
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
-          {/* Rotas não autenticadas */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/auth" element={<LoginPage />} />
-          
-          {/* Rotas protegidas */}
-          <Route 
-            path="/" 
-            element={
-              <ProtectedRoute>
-                <MemberLayout>
-                  <DashboardPage />
-                </MemberLayout>
-              </ProtectedRoute>
-            }
-          />
-          
-          <Route 
-            path="/dashboard" 
-            element={
-              <ProtectedRoute>
-                <MemberLayout>
-                  <DashboardPage />
-                </MemberLayout>
-              </ProtectedRoute>
-            }
-          />
-          
-          {/* Página 404 */}
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </Suspense>
-    </AuthProvider>
+    <Suspense fallback={<LoadingScreen message="Carregando página..." />}>
+      <Routes>
+        {/* Rotas de autenticação */}
+        {authRoutes.map((route) => (
+          <Route key={route.path} path={route.path} element={route.element} />
+        ))}
+        
+        {/* Rotas da área administrativa */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute requireAdmin={true}>
+              <AdminLayout>
+                <AdminDashboard />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute requireAdmin={true}>
+              <AdminLayout>
+                <AdminUsers />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/settings"
+          element={
+            <ProtectedRoute requireAdmin={true}>
+              <AdminLayout>
+                <AdminSettings />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        {/* Rotas da área de formação */}
+        <Route
+          path="/formacao"
+          element={
+            <ProtectedRoute requiredRole="formacao">
+              <FormacaoLayout>
+                <FormacaoDashboard />
+              </FormacaoLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        {/* Rotas da área de membros */}
+        <Route 
+          path="/" 
+          element={
+            <ProtectedRoute>
+              <MemberLayout>
+                <DashboardPage />
+              </MemberLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route 
+          path="/dashboard" 
+          element={
+            <ProtectedRoute>
+              <MemberLayout>
+                <DashboardPage />
+              </MemberLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        {/* Página 404 */}
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </Suspense>
   );
 };
 

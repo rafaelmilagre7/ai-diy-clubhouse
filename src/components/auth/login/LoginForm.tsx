@@ -44,14 +44,14 @@ const LoginForm = () => {
       setError(undefined);
       toast.info("Entrando...");
       
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
-      if (error) throw error;
+      if (authError) throw authError;
       
-      if (data.user) {
+      if (data?.user) {
         toast.success("Login bem-sucedido! Redirecionando...");
         navigate('/dashboard', { replace: true });
       }
