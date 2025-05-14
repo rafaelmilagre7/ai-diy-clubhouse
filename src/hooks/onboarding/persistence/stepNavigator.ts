@@ -10,11 +10,11 @@ export function navigateAfterStep(
 ) {
   // Se não devemos navegar automaticamente, retornar
   if (!shouldNavigate) {
-    console.log("Navegação automática desativada, permanecendo na página atual");
+    console.log("[stepNavigator] Navegação automática desativada, permanecendo na página atual");
     return;
   }
   
-  console.log(`Determinando próxima rota após etapa ${stepId} (índice atual: ${currentStepIndex}, tipo: ${onboardingType})`);
+  console.log(`[stepNavigator] Determinando próxima rota após etapa ${stepId} (índice atual: ${currentStepIndex}, tipo: ${onboardingType})`);
   
   // Obter os passos apropriados para o tipo de usuário
   const steps = getStepsByUserType(onboardingType);
@@ -38,15 +38,34 @@ export function navigateAfterStep(
     "learning_preferences": "/onboarding/formacao/review"
   };
   
+  // Mapeamentos para navegação anterior
+  const clubPrevRouteMap: {[key: string]: string} = {
+    "professional_info": "/onboarding/personal-info",
+    "business_context": "/onboarding/professional-data",
+    "ai_experience": "/onboarding/business-context",
+    "business_goals": "/onboarding/ai-experience",
+    "experience_personalization": "/onboarding/club-goals",
+    "complementary_info": "/onboarding/customization",
+    "review": "/onboarding/complementary"
+  };
+  
+  const formacaoPrevRouteMap: {[key: string]: string} = {
+    "ai_experience": "/onboarding/formacao/personal-info",
+    "learning_goals": "/onboarding/formacao/ai-experience",
+    "learning_preferences": "/onboarding/formacao/goals",
+    "review": "/onboarding/formacao/preferences"
+  };
+  
   // Escolher o mapeamento com base no tipo de onboarding
   const nextRouteMap = onboardingType === 'club' ? clubNextRouteMap : formacaoNextRouteMap;
+  const prevRouteMap = onboardingType === 'club' ? clubPrevRouteMap : formacaoPrevRouteMap;
   
   // Verificar se temos uma rota direta para o próximo passo
   if (nextRouteMap[stepId]) {
     const nextRoute = nextRouteMap[stepId];
-    console.log(`Navegando para ${nextRoute} (via mapeamento direto)`);
+    console.log(`[stepNavigator] Navegando para ${nextRoute} (via mapeamento direto)`);
     
-    // Uso de navigate em vez de window.location.href para evitar recarregamento completo da página
+    // Uso de navigate para evitar recarregamento completo da página
     navigate(nextRoute);
     return;
   }
@@ -55,18 +74,55 @@ export function navigateAfterStep(
   if (typeof currentStepIndex === 'number' && currentStepIndex >= 0) {
     if (currentStepIndex < steps.length - 1) {
       const nextStep = steps[currentStepIndex + 1];
-      console.log(`Navegando para ${nextStep.path} (próximo passo na sequência)`);
+      console.log(`[stepNavigator] Navegando para ${nextStep.path} (próximo passo na sequência)`);
       
       navigate(nextStep.path);
     } else {
       // Determinar a página de revisão com base no tipo de onboarding
       const reviewPath = onboardingType === 'club' ? '/onboarding/review' : '/onboarding/formacao/review';
-      console.log(`Navegando para ${reviewPath} (última etapa)`);
+      console.log(`[stepNavigator] Navegando para ${reviewPath} (última etapa)`);
       
       navigate(reviewPath);
     }
     return;
   }
   
-  console.warn("Não foi possível determinar a próxima etapa, permanecendo na página atual");
+  console.warn("[stepNavigator] Não foi possível determinar a próxima etapa, permanecendo na página atual");
+}
+
+// Função para navegação direta para a etapa anterior
+export function navigateToPreviousStep(
+  stepId: string,
+  navigate: (path: string) => void,
+  onboardingType: 'club' | 'formacao' = 'club'
+) {
+  // Mapeamentos para navegação anterior
+  const clubPrevRouteMap: {[key: string]: string} = {
+    "professional_info": "/onboarding/personal-info",
+    "business_context": "/onboarding/professional-data",
+    "ai_experience": "/onboarding/business-context",
+    "business_goals": "/onboarding/ai-experience",
+    "experience_personalization": "/onboarding/club-goals",
+    "complementary_info": "/onboarding/customization",
+    "review": "/onboarding/complementary"
+  };
+  
+  const formacaoPrevRouteMap: {[key: string]: string} = {
+    "ai_experience": "/onboarding/formacao/personal-info",
+    "learning_goals": "/onboarding/formacao/ai-experience",
+    "learning_preferences": "/onboarding/formacao/goals",
+    "review": "/onboarding/formacao/preferences"
+  };
+  
+  const prevRouteMap = onboardingType === 'club' ? clubPrevRouteMap : formacaoPrevRouteMap;
+  
+  if (prevRouteMap[stepId]) {
+    const prevRoute = prevRouteMap[stepId];
+    console.log(`[stepNavigator] Navegando para a etapa anterior ${prevRoute} (via mapeamento direto)`);
+    navigate(prevRoute);
+    return true;
+  }
+  
+  console.warn(`[stepNavigator] Rota anterior não encontrada para a etapa: ${stepId}`);
+  return false;
 }

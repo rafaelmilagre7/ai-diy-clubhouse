@@ -70,6 +70,7 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
   initialData,
   isLastStep,
   onComplete,
+  onPrevious // Vamos garantir que esta prop seja usada
 }) => {
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
   
@@ -125,6 +126,16 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
       );
     } else {
       setValue(field, [...currentValues, value], { shouldValidate: true });
+    }
+  };
+
+  // Função para lidar com o clique no botão anterior
+  const handlePrevious = () => {
+    if (onPrevious) {
+      console.log("[ExperiencePersonalizationStep] Navegando para a etapa anterior");
+      onPrevious();
+    } else {
+      console.warn("[ExperiencePersonalizationStep] onPrevious não foi fornecido");
     }
   };
 
@@ -420,6 +431,7 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
             submitText="Próximo"
             loadingText="Salvando..."
             showPrevious={true}
+            onPrevious={handlePrevious} // Passando a função para o botão anterior
             className="mt-8"
           />
         </form>

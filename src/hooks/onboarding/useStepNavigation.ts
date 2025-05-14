@@ -32,6 +32,22 @@ export const useStepNavigation = () => {
     "/onboarding/formacao/review": "review"
   };
 
+  // Mapeamento reverso para navegação
+  const stepIdToPath = {
+    "personal_info": "/onboarding/personal-info",
+    "professional_info": "/onboarding/professional-data",
+    "business_context": "/onboarding/business-context",
+    "ai_experience": "/onboarding/ai-experience",
+    "business_goals": "/onboarding/club-goals",
+    "experience_personalization": "/onboarding/customization",
+    "complementary_info": "/onboarding/complementary",
+    "review": "/onboarding/review",
+    "trail_generation": "/onboarding/trail-generation",
+    // Formação
+    "learning_goals": "/onboarding/formacao/goals",
+    "learning_preferences": "/onboarding/formacao/preferences"
+  };
+
   useEffect(() => {
     const loadProgress = async () => {
       if (isLoading) return; // Evitar múltiplas chamadas durante carregamento
@@ -61,16 +77,16 @@ export const useStepNavigation = () => {
           
           if (currentPath !== correctPath) {
             console.log(`[useStepNavigation] Redirecionando de ${currentPath} para ${correctPath}`);
-            navigate(correctPath);
+            navigate(correctPath, { replace: true }); // Usando replace para evitar navegação indesejada de volta
           }
         } else {
           console.warn(`[useStepNavigation] Etapa não encontrada nos passos definidos: ${refreshedProgress.current_step}`);
-          navigate(steps[0].path);
+          navigate(steps[0].path, { replace: true });
           toast.info("Iniciando o preenchimento do onboarding");
         }
       } else if (refreshedProgress) {
         console.log("[useStepNavigation] Nenhuma etapa atual definida, começando do início");
-        navigate(steps[0].path);
+        navigate(steps[0].path, { replace: true });
       }
     };
     
@@ -80,10 +96,14 @@ export const useStepNavigation = () => {
   // Função de navegação que usa ID do passo
   const navigateToStepById = (stepId: string) => {
     const index = steps.findIndex(step => step.id === stepId);
+    
     if (index !== -1) {
       console.log(`[useStepNavigation] Navegando para etapa ID ${stepId} (índice ${index}): ${steps[index].path}`);
+      
+      const targetPath = stepIdToPath[stepId as keyof typeof stepIdToPath] || steps[index].path;
+      
       setCurrentStepIndex(index);
-      navigate(steps[index].path);
+      navigate(targetPath);
     } else {
       console.warn(`[useStepNavigation] Etapa não encontrada com ID: ${stepId}`);
     }
@@ -91,12 +111,20 @@ export const useStepNavigation = () => {
 
   const navigateToStep = (stepIndex: number) => {
     if (stepIndex >= 0 && stepIndex < steps.length) {
-      console.log(`[useStepNavigation] Navegando para etapa índice ${stepIndex}: ${steps[stepIndex].id} (${steps[stepIndex].path})`);
+      const targetStepId = steps[stepIndex].id;
+      const targetPath = stepIdToPath[targetStepId as keyof typeof stepIdToPath] || steps[stepIndex].path;
+      
+      console.log(`[useStepNavigation] Navegando para etapa índice ${stepIndex}: ${targetStepId} (${targetPath})`);
       setCurrentStepIndex(stepIndex);
-      navigate(steps[stepIndex].path);
+      navigate(targetPath);
     } else {
       console.warn(`[useStepNavigation] Tentativa de navegação para índice inválido: ${stepIndex}`);
     }
+  };
+
+  // Função para verificar se o progresso foi carregado
+  const isProgressLoaded = () => {
+    return progress !== null && !isLoading;
   };
 
   return {
@@ -106,6 +134,7 @@ export const useStepNavigation = () => {
     navigateToStep,
     navigateToStepById,
     isLoading,
+    isProgressLoaded,
     currentStep: steps[currentStepIndex] || steps[0]
   };
 };

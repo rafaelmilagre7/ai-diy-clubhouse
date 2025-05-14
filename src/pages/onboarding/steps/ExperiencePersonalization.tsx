@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { ExperiencePersonalizationStep } from "@/components/onboarding/steps/ExperiencePersonalizationStep";
@@ -14,26 +14,42 @@ const ExperiencePersonalization = () => {
   const { isLoading, refreshProgress } = useProgress();
   const [refreshAttempted, setRefreshAttempted] = useState(false);
   const navigate = useNavigate();
+  const isMounted = useRef(true);
+  
+  // Efeito para controlar o ciclo de vida do componente
+  useEffect(() => {
+    isMounted.current = true;
+    
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   // Efeito para carregar dados ao entrar na página
   useEffect(() => {
-    if (!refreshAttempted) {
+    if (!refreshAttempted && isMounted.current) {
       console.log("[ExperiencePersonalization] Carregando dados mais recentes...");
       refreshProgress()
         .then((refreshedData) => {
-          console.log("[ExperiencePersonalization] Dados atualizados:", refreshedData || progress);
-          setRefreshAttempted(true);
+          if (isMounted.current) {
+            console.log("[ExperiencePersonalization] Dados atualizados:", refreshedData || progress);
+            setRefreshAttempted(true);
+          }
         })
         .catch(error => {
-          console.error("[ExperiencePersonalization] Erro ao carregar dados:", error);
-          toast.error("Erro ao carregar dados. Algumas informações podem estar desatualizadas.");
-          setRefreshAttempted(true);
+          if (isMounted.current) {
+            console.error("[ExperiencePersonalization] Erro ao carregar dados:", error);
+            toast.error("Erro ao carregar dados. Algumas informações podem estar desatualizadas.");
+            setRefreshAttempted(true);
+          }
         });
     }
-  }, [refreshAttempted, refreshProgress]);
+  }, [refreshAttempted, refreshProgress, progress]); // Adicionando progress como dependência
 
   // Função para salvar dados do formulário
   const handleSaveData = async (stepId: string, data: any) => {
+    if (!isMounted.current) return;
+    
     setIsSubmitting(true);
     
     try {
@@ -48,25 +64,31 @@ const ExperiencePersonalization = () => {
       await saveStepData(stepId, data, false);
       
       console.log("[ExperiencePersonalization] Dados salvos com sucesso");
-      toast.success("Suas preferências foram salvas com sucesso!");
       
-      // Forçar atualização dos dados locais após salvar
-      await refreshProgress();
-      
-      // Navegar para a próxima etapa usando o hook de navegação em vez de redirecionamento direto
-      navigate("/onboarding/complementary");
+      if (isMounted.current) {
+        toast.success("Suas preferências foram salvas com sucesso!");
+        
+        // Forçar atualização dos dados locais após salvar
+        await refreshProgress();
+        
+        // Navegar para a próxima etapa usando o hook de navegação em vez de redirecionamento direto
+        navigate("/onboarding/complementary");
+      }
     } catch (error) {
-      console.error("[ExperiencePersonalization] Erro ao salvar dados:", error);
-      toast.error("Erro ao salvar dados. Por favor, tente novamente.");
+      if (isMounted.current) {
+        console.error("[ExperiencePersonalization] Erro ao salvar dados:", error);
+        toast.error("Erro ao salvar dados. Por favor, tente novamente.");
+      }
     } finally {
-      setIsSubmitting(false);
+      if (isMounted.current) {
+        setIsSubmitting(false);
+      }
     }
   };
 
   // Função para tentar recarregar dados
   const handleRetry = () => {
     setRefreshAttempted(false);
-    refreshProgress();
   };
   
   // Função segura para voltar à etapa anterior
@@ -111,6 +133,7 @@ const ExperiencePersonalization = () => {
             initialData={progress}
             isLastStep={false}
             onComplete={completeOnboarding}
+            onPrevious={handleNavigateBack} // Passando a função de navegação para o componente filho
           />
         )}
       </div>

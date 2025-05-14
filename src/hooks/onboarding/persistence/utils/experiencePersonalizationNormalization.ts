@@ -1,99 +1,76 @@
 
 /**
- * Normaliza dados de personalização da experiência
- * Garante que todos os campos esperados estejam presentes e com o tipo correto
+ * Função para normalizar dados de personalização da experiência
+ * Compatível com formatos antigos e novos para garantir consistência
  */
-export function normalizeExperiencePersonalization(data: any): Record<string, any> {
-  console.log("[normalizeExperiencePersonalization] Normalizando dados:", typeof data, data);
-  
-  // Valores padrão para todos os campos
-  const defaultValues = {
-    interests: [],
-    preferred_times: [],
-    days_available: [],
-    networking_level: 5,
-    shareable_skills: [],
-    mentorship_topics: [],
-  };
-  
-  // Caso 1: Se for null ou undefined, retorna objeto com valores padrão
-  if (data === null || data === undefined) {
-    console.log("[normalizeExperiencePersonalization] Dados nulos, retornando valores padrão");
-    return { ...defaultValues };
+export function normalizeExperiencePersonalization(data: any): {
+  interests: string[];
+  preferred_times: string[];
+  days_available: string[];
+  networking_level: number;
+  shareable_skills: string[];
+  mentorship_topics: string[];
+} {
+  // Se não há dados, retornar objeto padrão
+  if (!data) {
+    return {
+      interests: [],
+      preferred_times: [],
+      days_available: [],
+      networking_level: 5,
+      shareable_skills: [],
+      mentorship_topics: []
+    };
   }
   
-  // Caso 2: Se for string, tenta converter para objeto
+  // Converter dados de string para objeto se necessário
+  let normalizedData: any = data;
+  
   if (typeof data === 'string') {
     try {
-      // Se for string vazia, retorna objeto com valores padrão
-      if (data.trim() === '') {
-        console.log("[normalizeExperiencePersonalization] String vazia, retornando valores padrão");
-        return { ...defaultValues };
-      }
-      
-      // Tentar parsear a string como JSON
-      const parsedData = JSON.parse(data);
-      console.log("[normalizeExperiencePersonalization] String convertida para objeto");
-      
-      // Continuar normalização com o dado parseado
-      return normalizeExperiencePersonalization(parsedData);
+      normalizedData = JSON.parse(data);
     } catch (e) {
-      console.error("[normalizeExperiencePersonalization] Erro ao converter string:", e);
-      return { ...defaultValues };
+      console.error("Erro ao converter dados de string para objeto:", e);
+      normalizedData = {};
     }
   }
-  
-  // Caso 3: Se for objeto, garante campos obrigatórios
-  if (typeof data === 'object') {
-    console.log("[normalizeExperiencePersonalization] Normalizando campos do objeto");
-    
-    // Se data for um array, converte para objeto com valores padrão
-    if (Array.isArray(data)) {
-      console.warn("[normalizeExperiencePersonalization] Dados são um array, convertendo");
-      return { ...defaultValues };
-    }
-    
-    // Verificar formato aninhado com o campo experience_personalization
-    if (data.experience_personalization && typeof data.experience_personalization === 'object') {
-      console.log("[normalizeExperiencePersonalization] Formato aninhado detectado");
-      return normalizeExperiencePersonalization(data.experience_personalization);
-    }
-    
-    // Garantir que todos os arrays sejam realmente arrays
-    const ensureArray = (value: any) => {
-      if (Array.isArray(value)) return value;
-      if (value === undefined || value === null) return [];
-      
-      if (typeof value === 'string') {
-        try {
-          const parsed = JSON.parse(value);
-          return Array.isArray(parsed) ? parsed : [value];
-        } catch (e) {
-          return value.trim() ? [value] : [];
-        }
-      }
-      
-      return [value];
-    };
-    
-    // Criar novo objeto normalizado
-    const normalizedData = {
-      interests: ensureArray(data.interests),
-      preferred_times: ensureArray(data.preferred_times || data.time_preference),
-      days_available: ensureArray(data.days_available || data.available_days),
-      networking_level: typeof data.networking_level === 'number' ? 
-                       data.networking_level : 
-                       (data.networking_availability !== undefined ? 
-                        Number(data.networking_availability) : defaultValues.networking_level),
-      shareable_skills: ensureArray(data.shareable_skills || data.skills_to_share),
-      mentorship_topics: ensureArray(data.mentorship_topics),
-    };
-    
-    console.log("[normalizeExperiencePersonalization] Dados normalizados:", normalizedData);
-    return normalizedData;
+
+  // Garantir que estamos trabalhando com um objeto
+  if (typeof normalizedData !== 'object' || normalizedData === null) {
+    normalizedData = {};
   }
   
-  // Caso padrão: retorna objeto com valores padrão
-  console.warn("[normalizeExperiencePersonalization] Tipo de dados inesperado:", typeof data);
-  return { ...defaultValues };
+  // Normalizar dados para compatibilidade com múltiplos formatos
+  return {
+    // Suporte para nomenclaturas alternativas nos campos
+    interests: Array.isArray(normalizedData.interests) ? normalizedData.interests : [],
+    
+    preferred_times: Array.isArray(normalizedData.preferred_times) 
+      ? normalizedData.preferred_times 
+      : (Array.isArray(normalizedData.time_preference) 
+        ? normalizedData.time_preference 
+        : []),
+    
+    days_available: Array.isArray(normalizedData.days_available) 
+      ? normalizedData.days_available 
+      : (Array.isArray(normalizedData.available_days) 
+        ? normalizedData.available_days 
+        : []),
+    
+    networking_level: typeof normalizedData.networking_level === 'number' 
+      ? normalizedData.networking_level 
+      : (typeof normalizedData.networking_availability === 'number'
+        ? normalizedData.networking_availability
+        : 5),
+    
+    shareable_skills: Array.isArray(normalizedData.shareable_skills) 
+      ? normalizedData.shareable_skills 
+      : (Array.isArray(normalizedData.skills_to_share) 
+        ? normalizedData.skills_to_share 
+        : []),
+    
+    mentorship_topics: Array.isArray(normalizedData.mentorship_topics) 
+      ? normalizedData.mentorship_topics 
+      : []
+  };
 }

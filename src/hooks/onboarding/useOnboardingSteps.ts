@@ -11,14 +11,28 @@ export const useOnboardingSteps = () => {
   const { 
     currentStepIndex, 
     navigateToStep: baseNavigateToStep,
-    navigateToStepById 
+    navigateToStepById,
+    isProgressLoaded 
   } = useStepNavigation();
+  
   const { progress, isLoading, refreshProgress } = useProgress();
-  const { saveStepData, completeOnboarding } = useStepPersistenceCore({
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const { saveStepData: coreSaveStepData, completeOnboarding } = useStepPersistenceCore({
     currentStepIndex,
-    setCurrentStepIndex: (idx: number) => { /* Esta função será substituída */ },
+    setCurrentStepIndex: (idx: number) => baseNavigateToStep(idx),
     navigate,
   });
+  
+  // Wrapper para o saveStepData que inclui o estado de submissão
+  const saveStepData = async (stepIdOrData: string | any, dataOrShouldNavigate?: any | boolean, thirdParam?: boolean) => {
+    setIsSubmitting(true);
+    try {
+      await coreSaveStepData(stepIdOrData, dataOrShouldNavigate, thirdParam);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   // Função melhorada para navegação - pode receber ID ou índice
   const navigateToStep = (indexOrId: number | string) => {
@@ -39,14 +53,18 @@ export const useOnboardingSteps = () => {
     }
   };
 
+  // Verificar se as condições necessárias para renderização estão satisfeitas
+  const isReadyToRender = isProgressLoaded();
+
   return {
     currentStepIndex,
     currentStep: steps[currentStepIndex],
     steps,
-    isSubmitting: false,
+    isSubmitting,
     saveStepData,
     progress,
     isLoading,
+    isReadyToRender,
     refreshProgress,
     navigateToStep,
     completeOnboarding
