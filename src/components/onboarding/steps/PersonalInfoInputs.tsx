@@ -7,6 +7,9 @@ import { SocialInputs } from "./inputs/SocialInputs";
 import { LocationInputs } from "./inputs/LocationInputs";
 import { TimezoneInput } from "./inputs/TimezoneInput";
 import { useAuth } from "@/contexts/auth";
+import { FieldError } from "react-hook-form";
+
+type ErrorType = string | FieldError;
 
 interface PersonalInfoInputsProps {
   formData: {
@@ -24,7 +27,7 @@ interface PersonalInfoInputsProps {
   onChange: (field: string, value: string) => void;
   disabled: boolean;
   readOnly?: boolean;
-  errors?: Record<string, string>;
+  errors?: Record<string, ErrorType>;
 }
 
 export const PersonalInfoInputs = ({ 
@@ -50,12 +53,14 @@ export const PersonalInfoInputs = ({
             onChange={v => onChange("name", v)}
             disabled={true}
             readOnly={true}
+            error={errors.name}
           />
           <EmailInput
             value={userEmail}
             onChange={v => onChange("email", v)}
             disabled={true}
             readOnly={true}
+            error={errors.email}
           />
         </div>
       </div>

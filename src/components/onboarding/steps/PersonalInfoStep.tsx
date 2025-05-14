@@ -6,13 +6,13 @@ import { usePersonalInfoForm } from "@/hooks/onboarding/usePersonalInfoForm";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle } from "lucide-react";
-import { OnboardingStepProps, PersonalInfoData } from "@/types/onboarding";
+import { OnboardingStepProps, PersonalInfoData, ValidationResult } from "@/types/onboarding";
 
 export interface PersonalInfoStepProps extends Partial<OnboardingStepProps> {
   onSubmit: (stepId?: string, data?: any) => Promise<void>;
   isSubmitting: boolean;
   formData?: PersonalInfoData;
-  errors?: Record<string, string>;
+  errors?: Record<string, any>;
   onChange?: (field: keyof PersonalInfoData, value: string) => void;
   initialData?: any;
   isLastStep?: boolean;
@@ -153,9 +153,8 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
         validation={validation}
         register={register}
         errors={errors}
-        touchedFields={touchedFields}
         isSubmitting={isSubmitting}
-        initialData={initialData || formData}
+        initialData={initialData}
         formData={formData}
         onChange={onChange}
       />

@@ -10,23 +10,33 @@ import { LocationInputs } from "../inputs/LocationInputs";
 import { TimezoneInput } from "../inputs/TimezoneInput";
 import { OnboardingProgress } from "@/types/onboarding";
 import { toast } from "sonner";
+import { PersonalInfoInputs } from "../PersonalInfoInputs";
 
 interface PersonalInfoFormProps {
   onSubmit: (data: any) => Promise<void>;
   isSubmitting: boolean;
   initialData?: OnboardingProgress | null;
+  validation?: any;
+  register?: any;
+  formData?: any;
+  errors?: any;
+  onChange?: (field: string, value: string) => void;
 }
 
 export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
   onSubmit,
   isSubmitting,
   initialData,
+  validation,
+  register,
+  formData,
+  errors = {},
+  onChange = () => {},
 }) => {
   const {
-    control,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors: formErrors },
   } = useForm({
     defaultValues: {
       name: "",
@@ -72,22 +82,30 @@ export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
     }
   };
 
+  // Se estamos usando a abordagem de componentes controlados
+  if (formData) {
+    return (
+      <form onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit(formData);
+      }} className="space-y-6">
+        <PersonalInfoInputs 
+          formData={formData}
+          onChange={onChange}
+          disabled={isSubmitting}
+          errors={errors}
+        />
+        <SubmitButton isSubmitting={isSubmitting} text="Salvar e Continuar" />
+      </form>
+    );
+  }
+
+  // Se estamos usando a abordagem do react-hook-form
   return (
     <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
-      <NameInput control={control} error={errors.name} />
-      <EmailInput control={control} error={errors.email} />
-      <PhoneInput control={control} error={errors.phone} />
-      <SocialInputs control={control} errors={{ linkedin: errors.linkedin, instagram: errors.instagram }} />
-      <LocationInputs 
-        control={control} 
-        errors={{ country: errors.country, state: errors.state, city: errors.city }} 
-        defaultValues={{
-          country: initialData?.personal_info?.country,
-          state: initialData?.personal_info?.state,
-          city: initialData?.personal_info?.city
-        }}
-      />
-      <TimezoneInput control={control} error={errors.timezone} />
+      <div className="space-y-6">
+        {/* Implementar campos de formulário com register caso necessário */}
+      </div>
       <SubmitButton isSubmitting={isSubmitting} text="Salvar e Continuar" />
     </form>
   );

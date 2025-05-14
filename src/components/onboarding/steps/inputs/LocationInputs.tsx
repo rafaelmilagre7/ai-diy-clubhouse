@@ -1,142 +1,159 @@
 
-import React, { useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
+import { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Control, Controller, FieldError } from "react-hook-form";
 import { useIBGELocations } from "@/hooks/useIBGELocations";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { FieldError } from "react-hook-form";
 
 interface LocationInputsProps {
-  control: Control<any>;
-  errors: {
-    country?: FieldError;
-    state?: FieldError;
-    city?: FieldError;
-  };
+  country: string;
+  state: string;
+  city: string;
+  onChangeCountry: (value: string) => void;
+  onChangeState: (value: string) => void;
+  onChangeCity: (value: string) => void;
+  disabled?: boolean;
+  readOnly?: boolean;
   defaultValues?: {
     country?: string;
     state?: string;
     city?: string;
   };
+  errors?: {
+    country?: string | FieldError;
+    state?: string | FieldError;
+    city?: string | FieldError;
+  };
 }
 
-export const LocationInputs: React.FC<LocationInputsProps> = ({ control, errors, defaultValues }) => {
-  const [selectedState, setSelectedState] = useState<string | undefined>(defaultValues?.state);
-  const {
-    estados,
-    cidades,
-    loadingEstados,
-    loadingCidades,
-    buscarEstados,
-    buscarCidades,
+export const LocationInputs = ({
+  country,
+  state,
+  city,
+  onChangeCountry,
+  onChangeState,
+  onChangeCity,
+  disabled,
+  readOnly,
+  defaultValues,
+  errors = {}
+}: LocationInputsProps) => {
+  const { 
+    states, 
+    cities, 
+    loadingStates, 
+    loadingCities, 
+    fetchStates, 
+    fetchCities 
   } = useIBGELocations();
 
-  // Buscar estados quando o componente montar
-  useEffect(() => {
-    buscarEstados();
-  }, [buscarEstados]);
+  const [availableCountries] = useState([
+    { value: "Brasil", label: "Brasil" },
+  ]);
 
-  // Buscar cidades quando o estado for selecionado
   useEffect(() => {
-    if (selectedState) {
-      buscarCidades(selectedState);
+    fetchStates();
+  }, []);
+
+  useEffect(() => {
+    if (state) {
+      fetchCities(state);
     }
-  }, [selectedState, buscarCidades]);
+  }, [state, fetchCities]);
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="country">
-          País <span className="text-red-500">*</span>
-        </Label>
-        <Controller
-          name="country"
-          control={control}
-          rules={{ required: "O país é obrigatório" }}
-          defaultValue={defaultValues?.country || "Brasil"}
-          render={({ field }) => (
-            <Input
-              id="country"
-              {...field}
-              className={errors.country ? "border-red-500" : ""}
-              readOnly
-            />
+    <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4 space-y-6">
+      <h3 className="text-lg font-semibold text-[#0ABAB5]">Localização</h3>
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="country">País</Label>
+          <Select
+            value={country}
+            onValueChange={onChangeCountry}
+            disabled={disabled || readOnly || availableCountries.length === 1}
+          >
+            <SelectTrigger id="country" className={errors.country ? "border-red-400" : ""}>
+              <SelectValue placeholder="Selecione um país" />
+            </SelectTrigger>
+            <SelectContent>
+              {availableCountries.map(country => (
+                <SelectItem key={country.value} value={country.value}>
+                  {country.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.country && (
+            <p className="text-xs text-red-500 mt-1">
+              {typeof errors.country === 'string' ? errors.country : errors.country.message}
+            </p>
           )}
-        />
-        {errors.country && <p className="text-red-500 text-sm">{errors.country.message}</p>}
-      </div>
+        </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="state">
-          Estado <span className="text-red-500">*</span>
-        </Label>
-        <Controller
-          name="state"
-          control={control}
-          rules={{ required: "O estado é obrigatório" }}
-          defaultValue={defaultValues?.state || ""}
-          render={({ field }) => (
-            <Select
-              onValueChange={(value) => {
-                field.onChange(value);
-                setSelectedState(value);
-              }}
-              value={field.value}
-            >
-              <SelectTrigger
-                id="state"
-                className={`${errors.state ? "border-red-500" : ""} ${loadingEstados ? "opacity-70" : ""}`}
-                disabled={loadingEstados}
-              >
-                <SelectValue placeholder="Selecione seu estado" />
-              </SelectTrigger>
-              <SelectContent>
-                {estados.map((estado) => (
-                  <SelectItem key={estado.id} value={estado.sigla}>
-                    {estado.nome}
+        <div>
+          <Label htmlFor="state">Estado</Label>
+          <Select
+            value={state}
+            onValueChange={onChangeState}
+            disabled={disabled || loadingStates || country !== "Brasil"}
+          >
+            <SelectTrigger id="state" className={errors.state ? "border-red-400" : ""}>
+              <SelectValue placeholder={loadingStates ? "Carregando estados..." : "Selecione um estado"} />
+            </SelectTrigger>
+            <SelectContent>
+              {loadingStates ? (
+                <div className="flex items-center justify-center p-2">
+                  <LoadingSpinner size="sm" />
+                  <span className="ml-2">Carregando...</span>
+                </div>
+              ) : (
+                states.map(state => (
+                  <SelectItem key={state.id} value={state.sigla}>
+                    {state.nome}
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+          {errors.state && (
+            <p className="text-xs text-red-500 mt-1">
+              {typeof errors.state === 'string' ? errors.state : errors.state.message}
+            </p>
           )}
-        />
-        {errors.state && <p className="text-red-500 text-sm">{errors.state.message}</p>}
-      </div>
+        </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="city">
-          Cidade <span className="text-red-500">*</span>
-        </Label>
-        <Controller
-          name="city"
-          control={control}
-          rules={{ required: "A cidade é obrigatória" }}
-          defaultValue={defaultValues?.city || ""}
-          render={({ field }) => (
-            <Select
-              onValueChange={field.onChange}
-              value={field.value}
-              disabled={!selectedState || loadingCidades}
-            >
-              <SelectTrigger
-                id="city"
-                className={`${errors.city ? "border-red-500" : ""} ${
-                  !selectedState || loadingCidades ? "opacity-70" : ""
-                }`}
-              >
-                <SelectValue placeholder="Selecione sua cidade" />
-              </SelectTrigger>
-              <SelectContent>
-                {cidades.map((cidade) => (
-                  <SelectItem key={cidade.id} value={cidade.nome}>
-                    {cidade.nome}
+        <div>
+          <Label htmlFor="city">Cidade</Label>
+          <Select
+            value={city}
+            onValueChange={onChangeCity}
+            disabled={disabled || loadingCities || !state || country !== "Brasil"}
+          >
+            <SelectTrigger id="city" className={errors.city ? "border-red-400" : ""}>
+              <SelectValue placeholder={!state ? "Selecione um estado primeiro" : loadingCities ? "Carregando cidades..." : "Selecione uma cidade"} />
+            </SelectTrigger>
+            <SelectContent>
+              {loadingCities ? (
+                <div className="flex items-center justify-center p-2">
+                  <LoadingSpinner size="sm" />
+                  <span className="ml-2">Carregando...</span>
+                </div>
+              ) : (
+                cities.map(city => (
+                  <SelectItem key={city.id} value={city.nome}>
+                    {city.nome}
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+          {errors.city && (
+            <p className="text-xs text-red-500 mt-1">
+              {typeof errors.city === 'string' ? errors.city : errors.city.message}
+            </p>
           )}
-        />
-        {errors.city && <p className="text-red-500 text-sm">{errors.city.message}</p>}
+        </div>
       </div>
     </div>
   );
