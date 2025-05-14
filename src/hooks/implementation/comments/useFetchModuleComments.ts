@@ -5,15 +5,6 @@ import { Comment } from '@/types/commentTypes';
 import { useLogging } from '@/hooks/useLogging';
 import { useAuth } from '@/contexts/auth';
 
-// Interface para o perfil do usuário
-interface UserProfile {
-  id: string;
-  name: string;
-  avatar_url: string;
-  role: string;
-  [key: string]: any;
-}
-
 export const useFetchModuleComments = (solutionId: string, moduleId: string) => {
   const { log, logError } = useLogging();
   const { user } = useAuth();
@@ -49,13 +40,10 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
         }
         
         // Mapear perfis por ID para fácil acesso
-        const profilesMap: Record<string, UserProfile> = {};
-        
-        (userProfiles || []).forEach((profile: UserProfile) => {
-          if (profile && profile.id) {
-            profilesMap[profile.id] = profile;
-          }
-        });
+        const profilesMap = (userProfiles || []).reduce((acc: Record<string, any>, profile: any) => {
+          acc[profile.id] = profile;
+          return acc;
+        }, {});
 
         // Buscar respostas (replies)
         const { data: replies, error: repliesError } = await supabase
@@ -74,8 +62,8 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
         const replyUserIds = [...new Set(replies.map((r: any) => r.user_id))];
         
         // Buscar perfis adicionais se necessário
-        if (replyUserIds.some(id => !profilesMap[id as string])) {
-          const missingIds = replyUserIds.filter(id => !profilesMap[id as string]);
+        if (replyUserIds.some(id => !profilesMap[id])) {
+          const missingIds = replyUserIds.filter(id => !profilesMap[id]);
           
           const { data: additionalProfiles } = await supabase
             .from('profiles')
@@ -83,10 +71,8 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
             .in('id', missingIds);
             
           if (additionalProfiles) {
-            additionalProfiles.forEach((profile: UserProfile) => {
-              if (profile && profile.id) {
-                profilesMap[profile.id] = profile;
-              }
+            additionalProfiles.forEach((profile: any) => {
+              profilesMap[profile.id] = profile;
             });
           }
         }
@@ -100,33 +86,25 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
             .select('comment_id')
             .eq('user_id', user.id);
 
-          likesMap = (userLikes || []).reduce((acc: Record<string, boolean>, like: any) => {
-            if (like && like.comment_id) {
-              acc[like.comment_id] = true;
-            }
+          likesMap = (userLikes || []).reduce((acc: Record<string, boolean>, like) => {
+            acc[like.comment_id] = true;
             return acc;
           }, {});
         }
 
         // Organizar comentários com respostas e perfis
-        const organizedComments = parentComments.map((comment: any) => {
-          const userId = comment.user_id as string;
-          return {
-            ...comment,
-            profiles: userId && profilesMap[userId] ? profilesMap[userId] : null,
-            user_has_liked: !!likesMap[comment.id as string],
-            replies: (replies || [])
-              .filter((reply: any) => reply.parent_id === comment.id)
-              .map((reply: any) => {
-                const replyUserId = reply.user_id as string;
-                return {
-                  ...reply,
-                  profiles: replyUserId && profilesMap[replyUserId] ? profilesMap[replyUserId] : null,
-                  user_has_liked: !!likesMap[reply.id as string]
-                };
-              })
-          };
-        });
+        const organizedComments = parentComments.map((comment: any) => ({
+          ...comment,
+          profiles: profilesMap[comment.user_id] || null,
+          user_has_liked: !!likesMap[comment.id],
+          replies: (replies || [])
+            .filter((reply: any) => reply.parent_id === comment.id)
+            .map((reply: any) => ({
+              ...reply,
+              profiles: profilesMap[reply.user_id] || null,
+              user_has_liked: !!likesMap[reply.id]
+            }))
+        }));
 
         log('Comentários carregados com sucesso', { 
           total: organizedComments.length

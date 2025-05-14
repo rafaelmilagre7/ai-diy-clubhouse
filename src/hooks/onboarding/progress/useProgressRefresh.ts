@@ -1,7 +1,7 @@
 
 import { MutableRefObject, useCallback } from "react";
 import { OnboardingProgress } from "@/types/onboarding";
-import { fetchOnboardingProgress } from "../persistence/progressPersistence";
+import { refreshOnboardingProgress } from "../persistence/progressPersistence";
 import { toast } from "sonner";
 
 export const useProgressRefresh = (
@@ -15,16 +15,16 @@ export const useProgressRefresh = (
    * Recarrega os dados do progresso do banco de dados
    */
   const refreshProgress = useCallback(async (): Promise<OnboardingProgress | null> => {
-    if (!progress?.user_id) {
-      logDebugEvent("refreshProgress_noUserId");
-      console.error("[ERRO] Tentativa de recarregar sem ID de usuário");
+    if (!progress?.id) {
+      logDebugEvent("refreshProgress_noProgress");
+      console.error("[ERRO] Tentativa de recarregar sem ID de progresso");
       return null;
     }
     
     try {
-      logDebugEvent("refreshProgress_start", { userId: progress.user_id });
+      logDebugEvent("refreshProgress_start", { progressId: progress.id });
       
-      const { data, error } = await fetchOnboardingProgress(progress.user_id);
+      const { data, error } = await refreshOnboardingProgress(progress.id);
       
       if (!isMounted.current) {
         return null;

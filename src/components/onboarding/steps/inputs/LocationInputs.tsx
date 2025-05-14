@@ -1,10 +1,13 @@
 
-import { useState, useEffect } from "react";
+import React from "react";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import { FormMessage } from "@/components/ui/form-message";
+import { CheckCircle, AlertCircle } from "lucide-react";
 import { useIBGELocations } from "@/hooks/useIBGELocations";
-import { LoadingSpinner } from "@/components/common/LoadingSpinner";
-import { FieldError } from "react-hook-form";
+import { theme } from "@/lib/theme";
 
 interface LocationInputsProps {
   country: string;
@@ -14,144 +17,163 @@ interface LocationInputsProps {
   onChangeState: (value: string) => void;
   onChangeCity: (value: string) => void;
   disabled?: boolean;
-  readOnly?: boolean;
-  defaultValues?: {
+  errors?: {
     country?: string;
     state?: string;
     city?: string;
   };
-  errors?: {
-    country?: string | FieldError;
-    state?: string | FieldError;
-    city?: string | FieldError;
-  };
 }
 
-export const LocationInputs = ({
+export const LocationInputs: React.FC<LocationInputsProps> = ({
   country,
   state,
   city,
   onChangeCountry,
   onChangeState,
   onChangeCity,
-  disabled,
-  readOnly,
-  defaultValues,
+  disabled = false,
   errors = {}
-}: LocationInputsProps) => {
-  const { 
-    estados, 
-    cidades, 
-    loadingEstados, 
-    loadingCidades, 
-    buscarEstados, 
-    buscarCidades 
-  } = useIBGELocations();
+}) => {
+  // Usar o hook para obter estados e cidades
+  const { estados, cidadesPorEstado, isLoading } = useIBGELocations();
+  
+  // Considera um campo válido se tem valor e não tem erro
+  const stateIsValid = state && !errors.state;
+  const cityIsValid = city && !errors.city;
 
-  const [availableCountries] = useState([
-    { value: "Brasil", label: "Brasil" },
-  ]);
-
-  useEffect(() => {
-    buscarEstados();
-  }, [buscarEstados]);
-
-  useEffect(() => {
-    if (state) {
-      buscarCidades(state);
-    }
-  }, [state, buscarCidades]);
+  // Filtrar cidades com base no estado selecionado
+  const cidadesDoEstado = state && cidadesPorEstado[state] ? cidadesPorEstado[state] : [];
 
   return (
-    <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4 space-y-6">
-      <h3 className="text-lg font-semibold text-[#0ABAB5]">Localização</h3>
+    <div className="space-y-6 p-4 bg-white/5 rounded-lg backdrop-blur-sm">
+      <h3 className="text-lg font-semibold text-viverblue">Localização</h3>
+      
       <div className="space-y-4">
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="country">País</Label>
-          <Select
+          <Input
+            id="country"
             value={country}
-            onValueChange={onChangeCountry}
-            disabled={disabled || readOnly || availableCountries.length === 1}
-          >
-            <SelectTrigger id="country" className={errors.country ? "border-red-400" : ""}>
-              <SelectValue placeholder="Selecione um país" />
-            </SelectTrigger>
-            <SelectContent>
-              {availableCountries.map(country => (
-                <SelectItem key={country.value} value={country.value}>
-                  {country.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.country && (
-            <p className="text-xs text-red-500 mt-1">
-              {typeof errors.country === 'string' ? errors.country : errors.country.message}
-            </p>
-          )}
+            onChange={(e) => onChangeCountry(e.target.value)}
+            disabled={true}
+            readOnly={true}
+          />
         </div>
 
-        <div>
-          <Label htmlFor="state">Estado</Label>
+        <div className="space-y-2">
+          <Label htmlFor="state" className={cn(
+            "transition-colors flex items-center gap-2",
+            errors.state ? "text-red-500" : stateIsValid ? "text-viverblue" : ""
+          )}>
+            Estado <span className="text-red-500">*</span>
+            {state && (
+              stateIsValid ? (
+                <CheckCircle className="h-4 w-4 text-viverblue" />
+              ) : errors.state ? (
+                <AlertCircle className="h-4 w-4 text-red-500" />
+              ) : null
+            )}
+          </Label>
           <Select
             value={state}
             onValueChange={onChangeState}
-            disabled={disabled || loadingEstados || country !== "Brasil"}
+            disabled={disabled || isLoading}
           >
-            <SelectTrigger id="state" className={errors.state ? "border-red-400" : ""}>
-              <SelectValue placeholder={loadingEstados ? "Carregando estados..." : "Selecione um estado"} />
+            <SelectTrigger 
+              id="state" 
+              className={cn(
+                "w-full transition-colors",
+                errors.state ? "border-red-500 focus:border-red-500 focus-visible:ring-red-500" : 
+                stateIsValid ? "border-viverblue focus:border-viverblue focus-visible:ring-viverblue" : ""
+              )}
+            >
+              <SelectValue placeholder={isLoading ? "Carregando estados..." : "Selecione seu estado"} />
             </SelectTrigger>
             <SelectContent>
-              {loadingEstados ? (
-                <div className="flex items-center justify-center p-2">
-                  <LoadingSpinner size="sm" />
-                  <span className="ml-2">Carregando...</span>
-                </div>
+              {isLoading ? (
+                <SelectItem value="loading" disabled>
+                  Carregando estados...
+                </SelectItem>
               ) : (
-                estados.map(estado => (
-                  <SelectItem key={estado.id} value={estado.sigla}>
-                    {estado.nome}
+                estados.map((estado) => (
+                  <SelectItem key={estado.code} value={estado.code}>
+                    {estado.name}
                   </SelectItem>
                 ))
               )}
             </SelectContent>
           </Select>
           {errors.state && (
-            <p className="text-xs text-red-500 mt-1">
-              {typeof errors.state === 'string' ? errors.state : errors.state.message}
-            </p>
+            <FormMessage type="error" message={errors.state} />
           )}
         </div>
 
-        <div>
-          <Label htmlFor="city">Cidade</Label>
-          <Select
-            value={city}
-            onValueChange={onChangeCity}
-            disabled={disabled || loadingCidades || !state || country !== "Brasil"}
-          >
-            <SelectTrigger id="city" className={errors.city ? "border-red-400" : ""}>
-              <SelectValue placeholder={!state ? "Selecione um estado primeiro" : loadingCidades ? "Carregando cidades..." : "Selecione uma cidade"} />
-            </SelectTrigger>
-            <SelectContent>
-              {loadingCidades ? (
-                <div className="flex items-center justify-center p-2">
-                  <LoadingSpinner size="sm" />
-                  <span className="ml-2">Carregando...</span>
-                </div>
-              ) : (
-                cidades.map(cidade => (
-                  <SelectItem key={cidade.id} value={cidade.nome}>
-                    {cidade.nome}
+        <div className="space-y-2">
+          <Label htmlFor="city" className={cn(
+            "transition-colors flex items-center gap-2",
+            errors.city ? "text-red-500" : cityIsValid ? "text-viverblue" : ""
+          )}>
+            Cidade <span className="text-red-500">*</span>
+            {city && (
+              cityIsValid ? (
+                <CheckCircle className="h-4 w-4 text-viverblue" />
+              ) : errors.city ? (
+                <AlertCircle className="h-4 w-4 text-red-500" />
+              ) : null
+            )}
+          </Label>
+          
+          {state ? (
+            <Select
+              value={city}
+              onValueChange={onChangeCity}
+              disabled={disabled || !state || isLoading}
+            >
+              <SelectTrigger 
+                id="city" 
+                className={cn(
+                  "w-full transition-colors",
+                  errors.city ? "border-red-500 focus:border-red-500 focus-visible:ring-red-500" : 
+                  cityIsValid ? "border-viverblue focus:border-viverblue focus-visible:ring-viverblue" : ""
+                )}
+              >
+                <SelectValue placeholder={isLoading ? "Carregando cidades..." : "Selecione sua cidade"} />
+              </SelectTrigger>
+              <SelectContent>
+                {isLoading ? (
+                  <SelectItem value="" disabled>
+                    Carregando cidades...
                   </SelectItem>
-                ))
+                ) : cidadesDoEstado.length > 0 ? (
+                  cidadesDoEstado.map((cidade) => (
+                    <SelectItem key={cidade.code} value={cidade.name}>
+                      {cidade.name}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="" disabled>
+                    Selecione um estado primeiro
+                  </SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+          ) : (
+            <Input
+              id="city"
+              value={city}
+              onChange={(e) => onChangeCity(e.target.value)}
+              disabled={disabled || !state}
+              placeholder="Selecione um estado primeiro"
+              className={cn(
+                "transition-colors",
+                errors.city ? "border-red-500 focus:border-red-500 focus-visible:ring-red-500" : 
+                cityIsValid ? "border-viverblue focus:border-viverblue focus-visible:ring-viverblue" : ""
               )}
-            </SelectContent>
-          </Select>
+            />
+          )}
+          
           {errors.city && (
-            <p className="text-xs text-red-500 mt-1">
-              {typeof errors.city === 'string' ? errors.city : errors.city.message}
-            </p>
+            <FormMessage type="error" message={errors.city} />
           )}
         </div>
       </div>

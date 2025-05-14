@@ -1,5 +1,4 @@
-
-import React, { createContext, useState, useEffect, useCallback, useContext } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { UserProfile } from '@/lib/supabase';
 import { supabase } from '@/lib/supabase';
@@ -79,58 +78,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("AuthProvider: Salvei última rota autenticada:", window.location.pathname);
     }
   }, [user, profile, isLoading]);
-
-  // Configurar listener para mudanças de autenticação
-  useEffect(() => {
-    try {
-      // Buscar sessão atual ao montar o componente
-      const fetchCurrentSession = async () => {
-        try {
-          const { data: { session: currentSession } } = await supabase.auth.getSession();
-          
-          setSession(currentSession);
-          setUser(currentSession?.user ?? null);
-          
-          setIsLoading(false);
-        } catch (error) {
-          console.error('Erro ao buscar sessão:', error);
-          setIsLoading(false);
-        }
-      };
-
-      fetchCurrentSession();
-
-      // Configurar listener para mudanças de autenticação
-      const { data } = supabase.auth.onAuthStateChange(async (event, newSession) => {
-        console.log('Evento de autenticação:', event);
-        
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
-        
-        // Reset admin status enquanto verificamos
-        if (event === 'SIGNED_OUT') {
-          // Atualizamos o estado usando o setAuthState para garantir consistência
-          setAuthState(prev => ({
-            ...prev,
-            isAdmin: false
-          }));
-        }
-      });
-
-      // Garantir que data e subscription existam antes de tentar acessar
-      const subscription = data?.subscription;
-      
-      // Limpar subscription ao desmontar
-      return () => {
-        if (subscription && typeof subscription.unsubscribe === 'function') {
-          subscription.unsubscribe();
-        }
-      };
-    } catch (error) {
-      console.error('Erro ao configurar listener de autenticação:', error);
-      setIsLoading(false);
-    }
-  }, [setSession, setUser, setIsLoading]);
 
   // Montar objeto de contexto
   const contextValue: AuthContextType = {

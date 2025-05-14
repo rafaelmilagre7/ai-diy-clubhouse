@@ -24,7 +24,7 @@ export function usePersonalInfoFormData() {
     country: progress?.personal_info?.country || "Brasil",
     state: progress?.personal_info?.state || "",
     city: progress?.personal_info?.city || "",
-    timezone: progress?.personal_info?.timezone || "America/Sao_Paulo", // Define o valor padrão como Brasília
+    timezone: progress?.personal_info?.timezone || "GMT-3",
   });
 
   const updateFormData = useCallback(() => {

@@ -31,10 +31,7 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
   const formInitialized = useRef(false);
   const submitting = useRef(false);
   
-  // Log detalhado do progress para ajudar na depuração
-  console.log("[BusinessContextFormStep] Progress recebido:", progress);
-  
-  // Extrair dados do contexto de negócios da coluna correta
+  // Obter dados iniciais do contexto de negócios da coluna correta
   const getInitialData = useCallback((): FormValues => {
     if (!progress) return {
       business_model: "",
@@ -45,25 +42,15 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
       additional_context: ""
     };
     
-    // Log para depuração
-    console.log("[BusinessContextFormStep] business_context:", progress.business_context);
-    console.log("[BusinessContextFormStep] business_data:", progress.business_data);
-    
-    // Buscar dados do business_context (novo formato) ou business_data (formato antigo)
-    const contextData = progress.business_context || progress.business_data || {};
-    
-    // Garantir que os arrays são realmente arrays
-    const ensureArray = (value: any): string[] => {
-      if (!value) return [];
-      return Array.isArray(value) ? value : [];
-    };
+    // Usar business_context para acessar os dados existentes
+    const contextData = progress.business_context || {};
     
     return {
       business_model: contextData.business_model || "",
-      business_challenges: ensureArray(contextData.business_challenges),
-      short_term_goals: ensureArray(contextData.short_term_goals),
-      medium_term_goals: ensureArray(contextData.medium_term_goals),
-      important_kpis: ensureArray(contextData.important_kpis),
+      business_challenges: Array.isArray(contextData.business_challenges) ? contextData.business_challenges : [],
+      short_term_goals: Array.isArray(contextData.short_term_goals) ? contextData.short_term_goals : [],
+      medium_term_goals: Array.isArray(contextData.medium_term_goals) ? contextData.medium_term_goals : [],
+      important_kpis: Array.isArray(contextData.important_kpis) ? contextData.important_kpis : [],
       additional_context: contextData.additional_context || "",
     };
   }, [progress]);
@@ -72,11 +59,11 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
     defaultValues: getInitialData(),
   });
   
-  // Atualizar formulário quando os dados do progresso mudarem
+  // Atualizar formulário apenas quando os dados do progresso mudarem e apenas uma vez
   useEffect(() => {
-    if (progress) {
+    if (progress && !formInitialized.current) {
       const initialData = getInitialData();
-      console.log("[BusinessContextFormStep] Inicializando formulário com dados:", initialData);
+      console.log("Inicializando formulário com dados:", initialData);
       methods.reset(initialData);
       formInitialized.current = true;
     }
@@ -85,13 +72,13 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
   const handleSubmit = async (data: FormValues) => {
     // Evitar envios múltiplos simultâneos
     if (submitting.current) {
-      console.log("[BusinessContextFormStep] Já existe um envio em andamento, ignorando");
+      console.log("Já existe um envio em andamento, ignorando");
       return;
     }
     
     try {
       submitting.current = true;
-      console.log("[BusinessContextFormStep] Enviando dados do contexto do negócio:", data);
+      console.log("Enviando dados do contexto do negócio:", data);
       
       // Validar que os dados obrigatórios estão preenchidos
       if (!data.business_model) {
@@ -106,14 +93,12 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
         return;
       }
       
-      // Chamar onSave com os dados não aninhados
-      // Os dados serão tratados corretamente no hook useStepPersistenceCore
+      // Chamar onSave com os dados completos e validados
       await onSave(data);
-      
+      // Não definir submitting como false aqui, pois deve haver um redirecionamento após o salvamento
     } catch (error) {
-      console.error("[BusinessContextFormStep] Erro ao salvar dados do contexto do negócio:", error);
+      console.error("Erro ao salvar dados do contexto do negócio:", error);
       toast.error("Erro ao salvar dados. Tente novamente.");
-    } finally {
       submitting.current = false;
     }
   };
@@ -158,7 +143,7 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
           />
           
           <NavigationButtons 
-            isSubmitting={methods.formState.isSubmitting || submitting.current} 
+            isSubmitting={methods.formState.isSubmitting} 
             onPrevious={handlePreviousStep}
             submitText="Continuar"
             loadingText="Salvando..."

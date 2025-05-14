@@ -7,7 +7,7 @@ import { CompanySectorField } from "./professional-inputs/CompanySectorField";
 import { WebsiteField } from "./professional-inputs/WebsiteField";
 import { CurrentPositionField } from "./professional-inputs/CurrentPositionField";
 import { AnnualRevenueField } from "./professional-inputs/AnnualRevenueField";
-import { AlertCircle, Building2, CheckCircle } from "lucide-react";
+import { AlertCircle, Building2 } from "lucide-react";
 import { OnboardingStepProps } from "@/types/onboarding";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -35,11 +35,27 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
-  const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const initialDataProcessedRef = useRef(false);
   const toastShown = useRef(false);
-  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const formDataRef = useRef<any>(null);
+  
+  // Função melhorada para extrair dados iniciais do objeto
+  const getInitialValue = (field: string) => {
+    if (!initialData) return "";
+    
+    // Primeiro verificar no objeto professional_info
+    if (initialData.professional_info && 
+        initialData.professional_info[field] !== undefined && 
+        initialData.professional_info[field] !== null) {
+      return initialData.professional_info[field];
+    }
+    
+    // Depois verificar nos campos de nível superior
+    if (initialData[field] !== undefined && initialData[field] !== null) {
+      return initialData[field];
+    }
+    
+    return "";
+  };
   
   // Inicializar formulário com métodos do react-hook-form
   const methods = useForm({
@@ -55,146 +71,49 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
   });
   
   // Efeito para atualizar o formulário quando os dados iniciais mudarem
+  // Com ref para evitar atualizações desnecessárias
   useEffect(() => {
     if (initialData && !initialDataProcessedRef.current) {
       console.log("Atualizando formulário com dados iniciais:", initialData);
       
-      // Limpar valores padrão do website para evitar pré-preenchimento
-      const processedData = {
-        ...initialData,
-        company_website: initialData.company_website === "https://exemplo.com" ? "" : initialData.company_website
-      };
-      
       // Resetar o formulário com os valores iniciais
       methods.reset({
-        company_name: processedData.company_name || "",
-        company_size: processedData.company_size || "",
-        company_sector: processedData.company_sector || "",
-        company_website: processedData.company_website || "",
-        current_position: processedData.current_position || "",
-        annual_revenue: processedData.annual_revenue || ""
+        company_name: getInitialValue('company_name'),
+        company_size: getInitialValue('company_size'),
+        company_sector: getInitialValue('company_sector'),
+        company_website: getInitialValue('company_website'),
+        current_position: getInitialValue('current_position'),
+        annual_revenue: getInitialValue('annual_revenue')
       });
       
-      formDataRef.current = processedData;
       initialDataProcessedRef.current = true;
     }
   }, [initialData, methods]);
 
-  // Efeito para monitorar alterações no formulário para auto-save
-  useEffect(() => {
-    const subscription = methods.watch((data) => {
-      // Armazenar dados atuais do formulário 
-      formDataRef.current = data;
-      // Realizar auto-save se houver mudanças significativas
-      if (data.company_name && data.company_name.length >= 2) {
-        scheduleAutoSave();
-      }
-    });
-    
-    return () => {
-      subscription.unsubscribe();
-      // Limpar qualquer timeout pendente
-      if (autoSaveTimeoutRef.current) {
-        clearTimeout(autoSaveTimeoutRef.current);
-      }
-    };
-  }, [methods.watch]);
-
-  // Função para agendar o salvamento automático
-  const scheduleAutoSave = () => {
-    // Cancelar qualquer auto-save pendente
-    if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current);
-    }
-    
-    // Programar novo auto-save após 2 segundos de inatividade
-    autoSaveTimeoutRef.current = setTimeout(() => {
-      performAutoSave();
-    }, 2000);
-  };
-
-  // Função para realizar o salvamento automático
-  const performAutoSave = async () => {
-    if (!formDataRef.current || !formDataRef.current.company_name) return;
-    
-    try {
-      setAutoSaveStatus('saving');
-      
-      // Estruturar os dados para o formato esperado
-      const professionalData = {
-        professional_info: {
-          company_name: formDataRef.current.company_name,
-          company_size: formDataRef.current.company_size || "",
-          company_sector: formDataRef.current.company_sector || "",
-          company_website: formDataRef.current.company_website 
-            ? normalizeWebsiteUrl(formDataRef.current.company_website) 
-            : "",
-          current_position: formDataRef.current.current_position || "",
-          annual_revenue: formDataRef.current.annual_revenue || ""
-        }
-      };
-      
-      // Chamar onSubmit com flag para não navegar
-      await onSubmit("professional_info", professionalData, false);
-      setAutoSaveStatus('saved');
-      
-      // Resetar o status após 3 segundos
-      setTimeout(() => {
-        setAutoSaveStatus('idle');
-      }, 3000);
-    } catch (error) {
-      console.error("Erro no salvamento automático:", error);
-      setAutoSaveStatus('error');
-      
-      // Resetar o status após 3 segundos
-      setTimeout(() => {
-        setAutoSaveStatus('idle');
-      }, 3000);
-    }
-  };
-  
   // Validação melhorada de dados antes do envio
   const validateData = (data: any): string[] => {
     const errors: string[] = [];
     
     // Usar funções de validação específicas
-    if (!data.company_name) {
-      errors.push("Nome da empresa é obrigatório");
-    } else {
-      const companyNameError = validateCompanyName(data.company_name);
-      if (companyNameError) errors.push(companyNameError);
-    }
+    const companyNameError = validateCompanyName(data.company_name);
+    if (companyNameError) errors.push(companyNameError);
     
-    if (data.company_website) {
-      const websiteError = validateWebsite(data.company_website);
-      if (websiteError) errors.push(websiteError);
-    }
+    const websiteError = validateWebsite(data.company_website);
+    if (websiteError) errors.push(websiteError);
     
-    if (!data.company_size) {
-      errors.push("Tamanho da empresa é obrigatório");
-    } else {
-      const companySizeError = validateCompanySize(data.company_size);
-      if (companySizeError) errors.push(companySizeError);
-    }
+    const companySizeError = validateCompanySize(data.company_size);
+    if (companySizeError) errors.push(companySizeError);
     
-    if (!data.company_sector) {
-      errors.push("Setor da empresa é obrigatório");
-    } else {
-      const companySectorError = validateCompanySector(data.company_sector);
-      if (companySectorError) errors.push(companySectorError);
-    }
+    const companySectorError = validateCompanySector(data.company_sector);
+    if (companySectorError) errors.push(companySectorError);
     
-    if (!data.current_position) {
-      errors.push("Seu cargo atual é obrigatório");
-    } else {
-      const currentPositionError = validateCurrentPosition(data.current_position);
-      if (currentPositionError) errors.push(currentPositionError);
-    }
+    const currentPositionError = validateCurrentPosition(data.current_position);
+    if (currentPositionError) errors.push(currentPositionError);
     
     return errors;
   };
   
-  // Função do formulário quando submetido
+  // Ajustada para não retornar valor booleano e corresponder ao tipo Promise<void>
   const handleSubmit = async (data: any) => {
     setIsLoading(true);
     setValidationErrors([]);
@@ -257,29 +176,10 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(handleSubmit)} className="space-y-8">
-        <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6 relative">
+        <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6">
           <div className="flex items-center gap-2 mb-6">
             <Building2 className="h-5 w-5 text-[#0ABAB5]" />
             <h3 className="text-lg font-semibold text-[#0ABAB5]">Dados da Empresa</h3>
-            
-            {/* Indicador de auto-save */}
-            <div className="ml-auto">
-              {autoSaveStatus === 'saving' && (
-                <span className="text-xs text-gray-400 flex items-center">
-                  <span className="animate-pulse mr-1">●</span> Salvando...
-                </span>
-              )}
-              {autoSaveStatus === 'saved' && (
-                <span className="text-xs text-green-500 flex items-center">
-                  <CheckCircle className="w-3 h-3 mr-1" /> Rascunho salvo
-                </span>
-              )}
-              {autoSaveStatus === 'error' && (
-                <span className="text-xs text-red-500 flex items-center">
-                  <AlertCircle className="w-3 h-3 mr-1" /> Erro ao salvar
-                </span>
-              )}
-            </div>
           </div>
 
           {validationErrors.length > 0 && (

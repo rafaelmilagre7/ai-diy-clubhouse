@@ -1,219 +1,288 @@
-
-import React, { useState, useEffect } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { OnboardingStepProps } from "@/types/onboarding";
-import { DynamicItemsInput } from "../common/DynamicItemsInput";
-import { getBusinessContextFromProgress } from "@/hooks/onboarding/persistence/businessContextBuilder";
+import { z } from "zod";
 import { toast } from "sonner";
+import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import { FormMessage } from "@/components/ui/form-message";
 
-export const BusinessContextStep: React.FC<OnboardingStepProps> = ({ 
-  onSubmit, 
-  isSubmitting, 
-  initialData,
-  onPrevious
-}) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  
-  // Usar getBusinessContextFromProgress para normalizar dados iniciais
-  const normalizedData = React.useMemo(() => {
-    console.log("[BusinessContextStep] Normalizando dados iniciais:", initialData);
-    return getBusinessContextFromProgress(initialData);
-  }, [initialData]);
-  
-  const { control, handleSubmit, formState: { errors }, setValue, watch, reset } = useForm({
-    defaultValues: {
-      business_model: "",
-      business_challenges: [""],
-      short_term_goals: [""],
-      medium_term_goals: [""],
-      important_kpis: [""],
-      additional_context: ""
-    }
+interface OnboardingStepProps {
+  onSubmit: (stepId: string, data: any) => void;
+  isSubmitting: boolean;
+  isLastStep?: boolean;
+  onComplete?: () => void;
+  initialData?: any;
+}
+
+export const BusinessContextStep = ({ onSubmit, isSubmitting, initialData }: OnboardingStepProps) => {
+  const [businessModel, setBusinessModel] = useState(initialData?.business_model || "");
+  const [businessChallenges, setBusinessChallenges] = useState(initialData?.business_challenges || []);
+  const [shortTermGoals, setShortTermGoals] = useState(initialData?.short_term_goals || []);
+  const [mediumTermGoals, setMediumTermGoals] = useState(initialData?.medium_term_goals || []);
+  const [importantKpis, setImportantKpis] = useState(initialData?.important_kpis || []);
+  const [additionalContext, setAdditionalContext] = useState(initialData?.additional_context || "");
+
+  const businessModelOptions = [
+    { id: "b2b", label: "B2B - Business to Business" },
+    { id: "b2c", label: "B2C - Business to Consumer" },
+    { id: "b2b2c", label: "B2B2C - Business to Business to Consumer" },
+    { id: "d2c", label: "D2C - Direct to Consumer" },
+    { id: "saas", label: "SaaS - Software as a Service" },
+    { id: "marketplace", label: "Marketplace" },
+    { id: "ecommerce", label: "E-commerce" },
+    { id: "subscription", label: "Assinatura / Recorrência" },
+    { id: "freelancer", label: "Freelancer / Autônomo" },
+    { id: "consulting", label: "Consultoria" },
+    { id: "agency", label: "Agência" }
+  ];
+
+  const businessChallengesOptions = [
+    { id: "growth", label: "Crescimento acelerado" },
+    { id: "leads", label: "Geração de leads qualificados" },
+    { id: "automation", label: "Automação de processos" },
+    { id: "conversion", label: "Conversão de vendas" },
+    { id: "retention", label: "Retenção de clientes" },
+    { id: "ai-implementation", label: "Implementação eficiente de IA" },
+    { id: "data-analysis", label: "Análise e uso efetivo de dados" },
+    { id: "team-training", label: "Capacitação de equipe em IA" },
+    { id: "cost-optimization", label: "Otimização de custos" },
+    { id: "product-development", label: "Desenvolvimento de novos produtos" }
+  ];
+
+  const shortTermGoalsOptions = [
+    { id: "first-ai-solution", label: "Implementar primeira solução de IA no negócio" },
+    { id: "automate-customer-service", label: "Automatizar processo de atendimento" },
+    { id: "virtual-assistant", label: "Criar assistente virtual para área comercial" },
+    { id: "optimize-internal-processes", label: "Otimizar processos internos com IA" },
+    { id: "ai-content", label: "Desenvolver conteúdo com auxílio de IA" },
+    { id: "team-training", label: "Treinar equipe em ferramentas de IA" },
+    { id: "ai-marketing", label: "Implementar estratégia de marketing com IA" },
+    { id: "sales-conversion", label: "Aumentar conversão de vendas com IA" },
+    { id: "cost-reduction", label: "Reduzir custos operacionais com automação" },
+    { id: "new-product", label: "Lançar novo produto/serviço utilizando IA" }
+  ];
+
+  const mediumTermGoalsOptions = [
+    { id: "scale_ai", label: "Escalar soluções de IA implementadas" },
+    { id: "create_internal_department", label: "Criar departamento interno focado em IA" },
+    { id: "measure_roi", label: "Mensurar e otimizar ROI das soluções de IA" },
+    { id: "expand_markets", label: "Expandir para novos mercados utilizando IA" },
+    { id: "omnichannel", label: "Implementar estratégia omnichannel com IA" },
+    { id: "develop_services", label: "Desenvolver oferta de serviços baseados em IA" },
+    { id: "integrate_ai", label: "Integrar múltiplas soluções de IA nos processos" },
+    { id: "advanced_data_analysis", label: "Implementar análise avançada de dados com IA" },
+    { id: "product_with_ai", label: "Desenvolver produto próprio com base em IA" },
+    { id: "market_reference", label: "Tornar-se referência no seu setor em uso de IA" },
+  ];
+
+  const kpiOptions = [
+    { id: "revenue", label: "Receita" },
+    { id: "profit", label: "Lucro" },
+    { id: "customer-acquisition", label: "Aquisição de Clientes" },
+    { id: "customer-retention", label: "Retenção de Clientes" },
+    { id: "churn-rate", label: "Taxa de Churn" },
+    { id: "cac", label: "CAC (Custo de Aquisição de Cliente)" },
+    { id: "ltv", label: "LTV (Valor do Tempo de Vida do Cliente)" },
+    { id: "mrr", label: "MRR (Receita Recorrente Mensal)" },
+    { id: "conversion-rate", label: "Taxa de Conversão" },
+    { id: "operational-efficiency", label: "Eficiência Operacional" },
+    { id: "nps", label: "NPS (Net Promoter Score)" }
+  ];
+
+  const toggleBusinessChallenge = (id: string) => {
+    setBusinessChallenges(prev => 
+      prev.includes(id) 
+        ? prev.filter(item => item !== id) 
+        : [...prev, id]
+    );
+  };
+
+  const toggleShortTermGoal = (id: string) => {
+    setShortTermGoals(prev => 
+      prev.includes(id) 
+        ? prev.filter(item => item !== id) 
+        : [...prev, id]
+    );
+  };
+
+  const toggleMediumTermGoal = (id: string) => {
+    setMediumTermGoals(prev => 
+      prev.includes(id) 
+        ? prev.filter(item => item !== id) 
+        : [...prev, id]
+    );
+  };
+
+  const toggleKpi = (id: string) => {
+    setImportantKpis(prev => 
+      prev.includes(id) 
+        ? prev.filter(item => item !== id) 
+        : [...prev, id]
+    );
+  };
+
+  const schema = z.object({
+    business_model: z.string().min(1, "Selecione um modelo de negócio"),
+    business_challenges: z.array(z.string()).min(1, "Selecione pelo menos um desafio"),
+    short_term_goals: z.array(z.string()).min(1, "Selecione pelo menos um objetivo"),
+    medium_term_goals: z.array(z.string()).min(1, "Selecione pelo menos um objetivo de médio prazo"),
+    important_kpis: z.array(z.string()).min(1, "Selecione pelo menos um KPI"),
+    additional_context: z.string().optional(),
   });
 
-  // Preencher o formulário com os dados normalizados quando disponíveis
-  useEffect(() => {
-    if (normalizedData) {
-      console.log("[BusinessContextStep] Preenchendo formulário com dados normalizados:", normalizedData);
-      
-      // Definir valores iniciais no formulário
-      setValue("business_model", normalizedData.business_model || "");
-      
-      // Garantir que arrays estejam no formato correto (mesmo vazios)
-      setValue("business_challenges", 
-        Array.isArray(normalizedData.business_challenges) && normalizedData.business_challenges.length > 0 
-          ? normalizedData.business_challenges 
-          : [""]
-      );
-      
-      setValue("short_term_goals", 
-        Array.isArray(normalizedData.short_term_goals) && normalizedData.short_term_goals.length > 0 
-          ? normalizedData.short_term_goals 
-          : [""]
-      );
-      
-      setValue("medium_term_goals", 
-        Array.isArray(normalizedData.medium_term_goals) && normalizedData.medium_term_goals.length > 0 
-          ? normalizedData.medium_term_goals 
-          : [""]
-      );
-      
-      setValue("important_kpis", 
-        Array.isArray(normalizedData.important_kpis) && normalizedData.important_kpis.length > 0 
-          ? normalizedData.important_kpis 
-          : [""]
-      );
-      
-      setValue("additional_context", normalizedData.additional_context || "");
-      
-      // Marcar como carregado
-      setIsLoading(false);
-    } else {
-      console.log("[BusinessContextStep] Sem dados iniciais, usando valores padrão");
-      setIsLoading(false);
-    }
-  }, [normalizedData, setValue]);
-
-  const onFormSubmit = async (data: any) => {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const formData = {
+      business_model: businessModel,
+      business_challenges: businessChallenges,
+      short_term_goals: shortTermGoals,
+      medium_term_goals: mediumTermGoals,
+      important_kpis: importantKpis,
+      additional_context: additionalContext,
+    };
+    
     try {
-      // Log detalhado de ação de usuário
-      console.log("[BusinessContextStep] Enviando formulário com dados:", data);
-      
-      setIsSaving(true);
-      
-      // Garantir que todos os arrays tenham valores válidos (remover strings vazias)
-      const cleanedData = {
-        ...data,
-        business_challenges: data.business_challenges?.filter((item: string) => item.trim() !== "") || [],
-        short_term_goals: data.short_term_goals?.filter((item: string) => item.trim() !== "") || [],
-        medium_term_goals: data.medium_term_goals?.filter((item: string) => item.trim() !== "") || [],
-        important_kpis: data.important_kpis?.filter((item: string) => item.trim() !== "") || []
-      };
-      
-      // Salvar usando o formato padronizado
-      await onSubmit("business_context", cleanedData);
-      console.log("[BusinessContextStep] Dados salvos com sucesso");
+      schema.parse(formData);
+      onSubmit("business_context", formData);
     } catch (error) {
-      console.error("[BusinessContextStep] Erro ao enviar formulário:", error);
-      toast.error("Ocorreu um erro ao salvar os dados. Tente novamente.");
-    } finally {
-      setIsSaving(false);
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        toast.error(firstError.message);
+      } else {
+        toast.error("Verifique os campos e tente novamente.");
+      }
     }
   };
 
-  // Exibir estado de carregamento enquanto os dados são preparados
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center py-8">
-        <div className="spinner h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-        <span className="ml-3 text-gray-300">Carregando dados...</span>
-      </div>
-    );
-  }
-
   return (
-    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
-      <div className="space-y-4">
-        <div>
-          <Label htmlFor="business_model" className="text-lg font-medium text-white">
-            Qual é o modelo de negócio da sua empresa?
+    <div className="space-y-6">
+      <MilagrinhoMessage 
+        message="Agora vamos entender o contexto do seu negócio para recomendar as melhores soluções de IA para você."
+      />
+
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="space-y-4">
+          <Label className="text-base font-medium">
+            Modelo(s) de Negócio
+            <span className="text-red-500">*</span>
           </Label>
-          <Controller
-            name="business_model"
-            control={control}
-            render={({ field }) => (
-              <Textarea
-                {...field}
-                placeholder="Descreva como sua empresa gera valor e receita..."
-                className="mt-2 h-24"
-              />
-            )}
+          <RadioGroup value={businessModel} onValueChange={setBusinessModel} className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {businessModelOptions.map((option) => (
+              <div key={option.id} className="flex items-center space-x-2">
+                <RadioGroupItem value={option.id} id={`business-model-${option.id}`} />
+                <Label htmlFor={`business-model-${option.id}`} className="cursor-pointer">
+                  {option.label}
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
+        </div>
+
+        <div className="space-y-4">
+          <Label className="text-base font-medium">
+            Principais Desafios do Negócio
+            <span className="text-red-500">*</span>
+          </Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {businessChallengesOptions.map((option) => (
+              <div key={option.id} className="flex items-center space-x-2">
+                <Checkbox 
+                  id={`challenge-${option.id}`} 
+                  checked={businessChallenges.includes(option.id)}
+                  onCheckedChange={() => toggleBusinessChallenge(option.id)}
+                />
+                <Label htmlFor={`challenge-${option.id}`} className="cursor-pointer">
+                  {option.label}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <Label className="text-base font-medium">
+            Objetivos de Curto Prazo (3-6 meses)
+            <span className="text-red-500">*</span>
+          </Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {shortTermGoalsOptions.map((option) => (
+              <div key={option.id} className="flex items-center space-x-2">
+                <Checkbox 
+                  id={`goal-${option.id}`} 
+                  checked={shortTermGoals.includes(option.id)}
+                  onCheckedChange={() => toggleShortTermGoal(option.id)}
+                />
+                <Label htmlFor={`goal-${option.id}`} className="cursor-pointer">
+                  {option.label}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <Label className="text-base font-medium">
+            Objetivos de Médio Prazo (6-12 meses)
+            <span className="text-red-500">*</span>
+          </Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {mediumTermGoalsOptions.map((option) => (
+              <div key={option.id} className="flex items-center space-x-2">
+                <Checkbox 
+                  id={`medium-goal-${option.id}`} 
+                  checked={mediumTermGoals.includes(option.id)}
+                  onCheckedChange={() => toggleMediumTermGoal(option.id)}
+                />
+                <Label htmlFor={`medium-goal-${option.id}`} className="cursor-pointer">
+                  {option.label}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <Label className="text-base font-medium">
+            Indicadores de Performance - KPIs Mais Importantes para o Negócio
+            <span className="text-red-500">*</span>
+          </Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {kpiOptions.map((option) => (
+              <div key={option.id} className="flex items-center space-x-2">
+                <Checkbox 
+                  id={`kpi-${option.id}`} 
+                  checked={importantKpis.includes(option.id)}
+                  onCheckedChange={() => toggleKpi(option.id)}
+                />
+                <Label htmlFor={`kpi-${option.id}`} className="cursor-pointer">
+                  {option.label}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <Label htmlFor="additional_context">
+            Contexto adicional (opcional)
+          </Label>
+          <Textarea
+            id="additional_context"
+            placeholder="Algo mais que queira compartilhar sobre seu contexto de negócio..."
+            value={additionalContext}
+            onChange={(e) => setAdditionalContext(e.target.value)}
+            className="h-24"
           />
         </div>
 
-        <DynamicItemsInput
-          control={control}
-          name="business_challenges"
-          label="Quais são os principais desafios do seu negócio hoje?"
-          placeholder="Ex: Aumentar conversão de leads, Melhorar processo de vendas..."
-          buttonText="Adicionar desafio"
-          watch={watch}
-        />
-
-        <DynamicItemsInput
-          control={control}
-          name="short_term_goals"
-          label="Quais são os objetivos de curto prazo (próximos 3 meses)?"
-          placeholder="Ex: Implementar automação de marketing, Treinar equipe de vendas..."
-          buttonText="Adicionar objetivo"
-          watch={watch}
-        />
-
-        <DynamicItemsInput
-          control={control}
-          name="medium_term_goals"
-          label="E os objetivos de médio prazo (6 a 12 meses)?"
-          placeholder="Ex: Expandir para novos mercados, Lançar novo produto..."
-          buttonText="Adicionar objetivo"
-          watch={watch}
-        />
-
-        <DynamicItemsInput
-          control={control}
-          name="important_kpis"
-          label="Quais KPIs são mais importantes para o seu negócio?"
-          placeholder="Ex: Taxa de conversão, LTV, CAC..."
-          buttonText="Adicionar KPI"
-          watch={watch}
-        />
-
-        <div>
-          <Label htmlFor="additional_context" className="text-lg font-medium text-white">
-            Informações adicionais sobre o seu negócio
-          </Label>
-          <Controller
-            name="additional_context"
-            control={control}
-            render={({ field }) => (
-              <Textarea
-                {...field}
-                placeholder="Qualquer contexto adicional que queira compartilhar..."
-                className="mt-2 h-24"
-              />
-            )}
-          />
-        </div>
-      </div>
-
-      <div className="flex justify-between pt-4">
-        <Button 
-          type="button" 
-          onClick={onPrevious}
-          variant="outline"
-          disabled={isSaving || isSubmitting}
-        >
-          Anterior
+        <Button type="submit" className="w-full bg-[#0ABAB5] hover:bg-[#0ABAB5]/90" disabled={isSubmitting}>
+          {isSubmitting ? "Salvando..." : "Continuar"}
         </Button>
-        <Button 
-          type="submit" 
-          disabled={isSaving || isSubmitting}
-          className="bg-primary hover:bg-primary/90"
-        >
-          {isSaving || isSubmitting ? (
-            <>
-              <span className="mr-2">Salvando...</span>
-              <div className="spinner h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            </>
-          ) : (
-            "Continuar"
-          )}
-        </Button>
-      </div>
-    </form>
+      </form>
+    </div>
   );
 };

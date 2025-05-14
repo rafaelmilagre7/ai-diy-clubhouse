@@ -7,9 +7,6 @@ import { SocialInputs } from "./inputs/SocialInputs";
 import { LocationInputs } from "./inputs/LocationInputs";
 import { TimezoneInput } from "./inputs/TimezoneInput";
 import { useAuth } from "@/contexts/auth";
-import { FieldError } from "react-hook-form";
-
-type ErrorType = string | FieldError;
 
 interface PersonalInfoInputsProps {
   formData: {
@@ -27,7 +24,7 @@ interface PersonalInfoInputsProps {
   onChange: (field: string, value: string) => void;
   disabled: boolean;
   readOnly?: boolean;
-  errors?: Record<string, ErrorType>;
+  errors?: Record<string, string>;
 }
 
 export const PersonalInfoInputs = ({ 
@@ -43,9 +40,6 @@ export const PersonalInfoInputs = ({
   const userName = formData.name || user?.user_metadata?.name || '';
   const userEmail = formData.email || user?.email || '';
   
-  // Garantir que o DDI tenha formato correto
-  const ddi = formData.ddi && formData.ddi.startsWith('+') ? formData.ddi : '+55';
-  
   return (
     <div className="space-y-8">
       <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4 space-y-6">
@@ -56,14 +50,12 @@ export const PersonalInfoInputs = ({
             onChange={v => onChange("name", v)}
             disabled={true}
             readOnly={true}
-            error={errors.name}
           />
           <EmailInput
             value={userEmail}
             onChange={v => onChange("email", v)}
             disabled={true}
             readOnly={true}
-            error={errors.email}
           />
         </div>
       </div>
@@ -76,11 +68,11 @@ export const PersonalInfoInputs = ({
             onChange={v => onChange("phone", v)}
             disabled={disabled}
             error={errors.phone}
-            ddi={ddi}
+            ddi={formData.ddi || "+55"}
             onChangeDDI={v => onChange("ddi", v)}
           />
           <TimezoneInput 
-            value={formData.timezone || "America/Sao_Paulo"} 
+            value={formData.timezone} 
             onChange={v => onChange("timezone", v)} 
             disabled={disabled} 
             error={errors.timezone}
@@ -104,9 +96,9 @@ export const PersonalInfoInputs = ({
       </div>
       
       <LocationInputs
-        country={formData.country || "Brasil"}
-        state={formData.state || ""}
-        city={formData.city || ""}
+        country={formData.country}
+        state={formData.state}
+        city={formData.city}
         onChangeCountry={v => onChange("country", v)}
         onChangeState={v => onChange("state", v)}
         onChangeCity={v => onChange("city", v)}

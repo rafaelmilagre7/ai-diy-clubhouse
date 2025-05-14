@@ -8,20 +8,15 @@ import { useStepPersistenceCore } from "@/hooks/onboarding/useStepPersistenceCor
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle, AlertCircle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
 const FormacaoPersonalInfo = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [loadingAttempts, setLoadingAttempts] = useState(0);
-  const [forceSkipLoading, setForceSkipLoading] = useState(false);
   const { progress, isLoading, refreshProgress, lastError } = useProgress();
   
   // Estado para armazenar os dados do formulário
-  const [formData, setFormData] = useState<any>({
-    timezone: "America/Sao_Paulo" // Garantir que o timezone seja definido por padrão
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [formData, setFormData] = useState<any>({});
   
   const { saveStepData } = useStepPersistenceCore({
     currentStepIndex: 0,
@@ -33,113 +28,41 @@ const FormacaoPersonalInfo = () => {
   // Estado para controlar quando mostrar erros
   const [showError, setShowError] = useState(false);
   
-  // Função para tentar carregar dados novamente
-  const attemptDataLoad = async () => {
-    try {
-      console.log("[Formação PersonalInfo] Tentativa #" + (loadingAttempts + 1) + " de carregar dados");
-      await refreshProgress();
-      
-      // Se temos dados de progresso, inicializar o formulário
-      if (progress?.personal_info) {
-        setFormData({
-          ...progress.personal_info,
-          // Garantir que o timezone está definido
-          timezone: progress.personal_info.timezone || "America/Sao_Paulo"
-        });
-      } else {
-        // Definir valor padrão do timezone se não houver dados
-        setFormData(prev => ({
-          ...prev,
-          timezone: "America/Sao_Paulo"
-        }));
-      }
-      
-      setLoadingAttempts(prev => prev + 1);
-    } catch (error) {
-      console.error("[Formação PersonalInfo] Erro ao carregar dados:", error);
-      setShowError(true);
-    }
-  };
-  
   useEffect(() => {
     console.log("[Formação PersonalInfo] Carregando dados iniciais");
-    attemptDataLoad();
-    
-    // Safety timeout para evitar loading infinito
-    const safetyTimeout = setTimeout(() => {
-      if (isLoading) {
-        console.warn("[DEBUG] Timeout de segurança acionado para evitar loading infinito");
-        setForceSkipLoading(true);
+    const loadInitialData = async () => {
+      try {
+        await refreshProgress();
+        console.log("[Formação PersonalInfo] Dados carregados:", progress);
+      } catch (error) {
+        console.error("[Formação PersonalInfo] Erro ao carregar dados:", error);
+        setShowError(true);
       }
-    }, 8000); // 8 segundos de timeout absoluto
-    
-    return () => {
-      clearTimeout(safetyTimeout);
     };
+    
+    loadInitialData();
   }, []);
   
   // Mostrar erro após 3 segundos se ainda estiver carregando
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (isLoading && !forceSkipLoading) {
+      if (isLoading) {
         setShowError(true);
       }
     }, 3000);
     
     return () => clearTimeout(timer);
-  }, [isLoading, forceSkipLoading]);
+  }, [isLoading]);
 
-  // Função para processar alterações de campo
-  const handleFieldChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    
-    // Limpar erro do campo se existir
-    if (errors[field]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
-    }
-  };
-
-  // Função para processar o envio do formulário
-  const handleSubmit = async (stepId?: string, data?: any) => {
+  // Função para processar o envio do formulário - recebe os dados como parâmetro
+  const handleSubmit = async (data: any) => {
     try {
       setIsSubmitting(true);
-      console.log("[Formação PersonalInfo] Submetendo dados:", data || formData);
-      
-      // Verificar campos obrigatórios
-      const dataToSave = data || formData;
-      const newErrors: Record<string, string> = {};
-      
-      if (!dataToSave.state) {
-        newErrors.state = "Estado é obrigatório";
-      }
-      
-      if (!dataToSave.city) {
-        newErrors.city = "Cidade é obrigatória";
-      }
-      
-      // Garantir que timezone está definido
-      if (!dataToSave.timezone) {
-        dataToSave.timezone = "America/Sao_Paulo";
-      }
-      
-      // Se há erros, mostrar e não prosseguir
-      if (Object.keys(newErrors).length > 0) {
-        setErrors(newErrors);
-        const errorFields = Object.keys(newErrors).join(', ');
-        toast.error(`Por favor preencha os campos: ${errorFields}`);
-        return;
-      }
+      console.log("[Formação PersonalInfo] Submetendo dados:", data);
       
       // Enviando dados para o backend com flag de formação
       await saveStepData("personal", {
-        personal_info: dataToSave,
+        personal_info: data,
         onboarding_type: 'formacao'
       });
       
@@ -154,47 +77,22 @@ const FormacaoPersonalInfo = () => {
     }
   };
 
-  // Forçar continuação se o carregamento estiver demorando muito
-  if ((loadingAttempts >= 3 || forceSkipLoading) && isLoading) {
-    return (
-      <OnboardingLayout 
-        currentStep={1} 
-        title="Dados Pessoais" 
-        backUrl="/onboarding/formacao"
-        isFormacao={true}
-      >
-        <div className="space-y-6">
-          <Alert className="bg-yellow-50 border-yellow-200">
-            <AlertCircle className="h-5 w-5 text-yellow-600" />
-            <AlertDescription className="ml-2 text-yellow-700">
-              Estamos tendo dificuldades para carregar seus dados. Você pode continuar mesmo assim ou tentar novamente.
-            </AlertDescription>
-          </Alert>
-          
-          <div className="flex justify-center mt-6 space-x-4">
-            <button 
-              onClick={() => {
-                setForceSkipLoading(true);
-                setShowError(false);
-                toast.info("Continuando com dados padrão");
-              }}
-              className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
-            >
-              Continuar Mesmo Assim
-            </button>
-            <button 
-              onClick={attemptDataLoad}
-              className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
-            >
-              Tentar Novamente
-            </button>
-          </div>
-        </div>
-      </OnboardingLayout>
-    );
-  }
+  // Criar uma função intermediária que não recebe parâmetros
+  // Esta função vai chamar handleSubmit com os dados do formData
+  const handleFormSubmit = async () => {
+    // Aqui utilizamos os dados armazenados no estado formData
+    await handleSubmit(formData);
+  };
 
-  if (isLoading && !showError && !forceSkipLoading) {
+  // Função para atualizar o estado formData quando os campos forem alterados
+  const handleFormChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  if (isLoading && !showError) {
     return (
       <OnboardingLayout 
         currentStep={1} 
@@ -210,7 +108,7 @@ const FormacaoPersonalInfo = () => {
     );
   }
 
-  if ((showError && (isLoading || lastError)) || loadingAttempts >= 3) {
+  if (showError && (isLoading || lastError)) {
     return (
       <OnboardingLayout 
         currentStep={1} 
@@ -221,28 +119,15 @@ const FormacaoPersonalInfo = () => {
         <Alert variant="destructive" className="bg-red-50 border-red-200 mt-4">
           <AlertTriangle className="h-5 w-5" />
           <AlertDescription>
-            Estamos com dificuldades para carregar seus dados. Você pode tentar novamente ou continuar com dados básicos.
+            Estamos com dificuldades para carregar seus dados. Por favor, tente novamente mais tarde.
           </AlertDescription>
         </Alert>
-        <div className="flex justify-center space-x-4 mt-6">
+        <div className="flex justify-center mt-6">
           <button 
-            onClick={() => {
-              setForceSkipLoading(true);
-              setShowError(false);
-              toast.info("Continuando com dados básicos");
-            }}
+            onClick={() => window.location.reload()}
             className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
           >
-            Continuar Mesmo Assim
-          </button>
-          <button 
-            onClick={() => {
-              setShowError(false);
-              attemptDataLoad();
-            }}
-            className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
-          >
-            Tentar Novamente
+            Tentar novamente
           </button>
         </div>
       </OnboardingLayout>
@@ -262,12 +147,12 @@ const FormacaoPersonalInfo = () => {
       </div>
       
       <PersonalInfoStep
-        onSubmit={handleSubmit}
+        onSubmit={handleFormSubmit} // Passamos a função intermediária sem parâmetros
         isSubmitting={isSubmitting}
         initialData={progress?.personal_info}
-        formData={formData}
-        errors={errors}
-        onChange={handleFieldChange}
+        formData={formData} // Passamos os dados do formulário
+        errors={{}} // Inicialmente não temos erros
+        onChange={handleFormChange} // Passamos a função para atualizar os dados do formulário
       />
     </OnboardingLayout>
   );

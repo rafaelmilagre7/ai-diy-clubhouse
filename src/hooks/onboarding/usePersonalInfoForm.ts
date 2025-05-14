@@ -1,27 +1,43 @@
 
-import { useState } from "react";
-import { useForm, SubmitHandler, UseFormReturn } from "react-hook-form";
-import { toast } from "sonner";
-import { PersonalInfoData } from "@/types/onboarding";
-import { 
-  validateLinkedInUrl,
-  validateInstagramUrl, 
-  isValidBrazilianPhone as validateBrazilianPhone, 
-  formatSocialUrl 
-} from "@/utils/validationUtils";
+import { useForm } from "react-hook-form";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { validateLinkedInUrl, validateInstagramUrl, validateBrazilianPhone, formatSocialUrl } from "@/utils/validationUtils";
 
-interface ValidationResult {
-  isValid: boolean;
-  errors: Record<string, string>;
-}
+const personalInfoSchema = z.object({
+  name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres").max(100, "Nome muito longo"),
+  email: z.string().email("E-mail inválido").min(5, "E-mail inválido"),
+  phone: z.string()
+    .optional()
+    .refine(val => !val || validateBrazilianPhone(val), {
+      message: "Digite um número de celular válido (ex: (11) 98765-4321)"
+    }),
+  ddi: z.string().default("+55"),
+  linkedin: z.string()
+    .optional()
+    .refine(val => !val || validateLinkedInUrl(val), {
+      message: "Digite uma URL válida do LinkedIn (ex: linkedin.com/in/seu-perfil)"
+    })
+    .transform(url => url ? formatSocialUrl(url, "linkedin") : ""),
+  instagram: z.string()
+    .optional()
+    .refine(val => !val || validateInstagramUrl(val), {
+      message: "Digite uma URL válida do Instagram (ex: instagram.com/seu-perfil)"
+    })
+    .transform(url => url ? formatSocialUrl(url, "instagram") : ""),
+  country: z.string().default("Brasil"),
+  state: z.string().min(2, "Estado é obrigatório"),
+  city: z.string().min(2, "Cidade é obrigatória"),
+  timezone: z.string().default("GMT-3")
+});
 
-export const usePersonalInfoForm = (
-  initialData: Partial<PersonalInfoData> | null,
-  onSubmit: (stepId: string, data: any, shouldNavigate?: boolean) => Promise<void>
-) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const methods = useForm<PersonalInfoData>({
+export type PersonalInfoFormData = z.infer<typeof personalInfoSchema>;
+
+export const usePersonalInfoForm = (initialData: any) => {
+  const { register, handleSubmit, formState: { errors, touchedFields, isValid, isDirty }, control, watch, trigger } = useForm({
+    resolver: zodResolver(personalInfoSchema),
+    mode: "onChange",
     defaultValues: {
       name: initialData?.name || "",
       email: initialData?.email || "",
@@ -32,112 +48,60 @@ export const usePersonalInfoForm = (
       country: initialData?.country || "Brasil",
       state: initialData?.state || "",
       city: initialData?.city || "",
-      timezone: initialData?.timezone || "America/Sao_Paulo" // Define o valor padrão como Brasília
-    },
-    mode: "onChange"
+      timezone: initialData?.timezone || "GMT-3"
+    }
   });
-  
-  // Extrair os métodos necessários para a validação
-  const { register, formState, trigger, getValues } = methods;
-  const { touchedFields, errors, isValid } = formState;
-  
-  // Função para validar manualmente o formulário
-  const validateForm = (): ValidationResult => {
-    const values = getValues();
-    const validationErrors: Record<string, string> = {};
-    
-    // Campo state é obrigatório
-    if (!values.state) {
-      validationErrors.state = "Estado é obrigatório";
-    }
-    
-    // Campo city é obrigatório
-    if (!values.city) {
-      validationErrors.city = "Cidade é obrigatória";
-    }
-    
-    // Timezone é obrigatório
-    if (!values.timezone) {
-      validationErrors.timezone = "Fuso horário é obrigatório";
-    }
-    
-    // Validar telefone se fornecido
-    if (values.phone && !validateBrazilianPhone(values.phone)) {
-      validationErrors.phone = "Telefone inválido";
-    }
-    
-    // Validar LinkedIn se fornecido
-    if (values.linkedin && !validateLinkedInUrl(values.linkedin)) {
-      validationErrors.linkedin = "URL do LinkedIn inválida";
-    }
-    
-    // Validar Instagram se fornecido
-    if (values.instagram && !validateInstagramUrl(values.instagram)) {
-      validationErrors.instagram = "Usuário do Instagram inválido";
-    }
-    
-    return {
-      isValid: Object.keys(validationErrors).length === 0,
-      errors: validationErrors
-    };
-  };
 
-  const handleSubmit: SubmitHandler<PersonalInfoData> = async (data) => {
-    setIsSubmitting(true);
-    
-    try {
-      // Formatar URLs sociais
-      if (data.linkedin) {
-        data.linkedin = formatSocialUrl(data.linkedin, 'linkedin');
-      }
-      
-      if (data.instagram) {
-        data.instagram = formatSocialUrl(data.instagram, 'instagram');
-      }
-      
-      // Validações personalizadas
-      const validation = validateForm();
-      if (!validation.isValid) {
-        for (const [field, message] of Object.entries(validation.errors)) {
-          methods.setError(field as any, { 
-            type: "manual", 
-            message
-          });
+  // Usar useFormValidation para campos adicionais que precisam de validação personalizada
+  const validation = useFormValidation(
+    {
+      phone: initialData?.phone || "",
+      ddi: initialData?.ddi || "+55",
+      linkedin: initialData?.linkedin || "",
+      instagram: initialData?.instagram || "",
+      state: initialData?.state || "",
+      city: initialData?.city || ""
+    },
+    {
+      phone: [
+        {
+          validate: (value: string) => !value || /^\(\d{2}\) \d{4,5}-\d{4}$/.test(value),
+          message: "Digite no formato (00) 00000-0000"
         }
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // Enviar dados para o backend
-      await onSubmit("personal_info", {
-        personal_info: data
-      });
-      
-    } catch (error) {
-      console.error("Erro ao enviar dados pessoais:", error);
-      toast.error("Ocorreu um erro ao salvar seus dados");
-    } finally {
-      setIsSubmitting(false);
+      ],
+      linkedin: [
+        {
+          validate: (value: string) => !value || value.includes("linkedin.com"),
+          message: "Insira uma URL válida do LinkedIn"
+        }
+      ],
+      instagram: [
+        {
+          validate: (value: string) => !value || value.includes("instagram.com"),
+          message: "Insira uma URL válida do Instagram"
+        }
+      ]
     }
+  );
+
+  const validateForm = async () => {
+    const isFormValid = await trigger();
+    return isFormValid && validation.isValid;
   };
 
-  // Função de validação para ser usada externamente
-  const validation = {
-    isValid: isValid,
-    errors: {} as Record<string, string>,
-    validate: () => {
-      return validateForm();
-    }
-  };
+  const formData = watch();
 
   return {
-    methods,
     register,
     handleSubmit,
+    errors,
     touchedFields,
+    control,
     validation,
     isValid,
+    isDirty,
+    formData,
     validateForm,
-    isSubmitting
+    trigger
   };
 };

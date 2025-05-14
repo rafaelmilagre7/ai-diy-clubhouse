@@ -1,37 +1,54 @@
 
 import React from "react";
-import { SubmitButton } from "../business-context/SubmitButton";
+import { Button } from "@/components/ui/button";
 import { PersonalInfoInputs } from "../PersonalInfoInputs";
-import { OnboardingProgress } from "@/types/onboarding";
+import { PersonalInfoData } from "@/types/onboarding";
 
 interface PersonalInfoFormProps {
-  onSubmit: (e: React.FormEvent) => Promise<void>;
+  validation: any;
+  register: any;
+  errors: Record<string, string>;
+  touchedFields: any;
   isSubmitting: boolean;
-  initialData?: OnboardingProgress | null;
-  formData?: any;
-  errors?: any;
-  onChange?: (field: string, value: string) => void;
+  initialData?: any;
+  formData: PersonalInfoData;
+  onChange: (field: keyof PersonalInfoData, value: string) => void;
 }
 
 export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
-  onSubmit,
+  validation,
+  register,
+  errors,
+  touchedFields,
   isSubmitting,
   initialData,
   formData,
-  errors = {},
-  onChange = () => {},
+  onChange
 }) => {
+  // Combinar erros do react-hook-form e da validação personalizada
+  const combinedErrors = {
+    ...errors,
+    ...validation.errors
+  };
+
   return (
-    <form onSubmit={onSubmit} className="space-y-6">
-      <PersonalInfoInputs 
+    <div className="space-y-6">
+      <PersonalInfoInputs
         formData={formData}
         onChange={onChange}
         disabled={isSubmitting}
-        errors={errors}
+        errors={combinedErrors}
       />
+      
       <div className="flex justify-end pt-4">
-        <SubmitButton isSubmitting={isSubmitting} text="Salvar e Continuar" />
+        <Button 
+          type="submit" 
+          disabled={isSubmitting}
+          className="w-full sm:w-auto"
+        >
+          {isSubmitting ? "Salvando..." : "Continuar"}
+        </Button>
       </div>
-    </form>
+    </div>
   );
 };

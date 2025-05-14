@@ -1,7 +1,6 @@
 
 import { supabase } from "@/lib/supabase";
 import { OnboardingData, ProfessionalDataInput } from "@/types/onboarding";
-import { isValidUUID, isSimulatedID } from "@/utils/validationUtils";
 
 // Serviço para dados profissionais
 export const professionalDataService = {
@@ -9,30 +8,11 @@ export const professionalDataService = {
     try {
       console.log("Salvando dados profissionais via serviço:", { progressId, userId, data });
       
-      // Verificar se o ID de progresso é um ID simulado
-      if (isSimulatedID(progressId)) {
-        console.log("ID de progresso simulado detectado, retornando resposta simulada:", progressId);
-        return { 
-          simulated: true, 
-          success: true,
-          data: {
-            progress_id: progressId,
-            ...data
-          }
-        };
-      }
-      
-      // Verificar se o ID de progresso é um UUID válido antes de fazer chamadas ao banco de dados
-      if (!isValidUUID(progressId)) {
-        console.error("ID de progresso inválido:", progressId);
-        throw new Error(`ID de progresso inválido: ${progressId}`);
-      }
-      
       // Extrair os dados profissionais do objeto
       let professionalInfo: Record<string, any> = {};
       
       if ('professional_info' in data) {
-        professionalInfo = { ...data.professional_info };
+        professionalInfo = data.professional_info;
       } else {
         // Assumir que os campos estão no nível raiz
         professionalInfo = {
@@ -61,12 +41,11 @@ export const professionalDataService = {
         .from('onboarding_progress')
         .select('completed_steps')
         .eq('id', progressId)
-        .maybeSingle(); // Usar maybeSingle em vez de single para evitar erros
+        .single();
         
       if (fetchError) {
         console.error("Erro ao buscar progresso atual:", fetchError);
-        // Não lançar erro, tentar continuar com array vazio
-        console.log("Continuando com array vazio de completed_steps");
+        throw new Error(`Erro ao buscar progresso: ${fetchError.message}`);
       }
       
       // Manipular o array de passos completos localmente
@@ -83,20 +62,14 @@ export const professionalDataService = {
       // Criar o objeto de atualização final incluindo o completed_steps
       const updateData = {
         ...initialUpdateData,
-        completed_steps: completedSteps,
-        sync_status: 'pendente',
-        last_sync_at: new Date().toISOString(),
-        current_step: 'business_context' // Definir próxima etapa
+        completed_steps: completedSteps
       };
       
-      // Atualizar o progresso com upsert - cria se não existir, atualiza se existir
+      // Atualizar o progresso
       const { data: result, error } = await supabase
         .from('onboarding_progress')
-        .upsert({
-          id: progressId,
-          user_id: userId,
-          ...updateData
-        })
+        .update(updateData)
+        .eq('id', progressId)
         .select();
         
       if (error) {
@@ -113,38 +86,11 @@ export const professionalDataService = {
   
   async fetch(progressId: string) {
     try {
-      // Verificar se o ID de progresso é um ID simulado
-      if (isSimulatedID(progressId)) {
-        console.log("ID de progresso simulado detectado, retornando dados simulados:", progressId);
-        return {
-          company_name: "",
-          company_size: "",
-          company_sector: "",
-          company_website: "",
-          current_position: "",
-          annual_revenue: "",
-          professional_info: {
-            company_name: "",
-            company_size: "",
-            company_sector: "",
-            company_website: "",
-            current_position: "",
-            annual_revenue: ""
-          }
-        };
-      }
-      
-      // Verificar se o ID de progresso é um UUID válido antes de fazer chamadas ao banco de dados
-      if (!isValidUUID(progressId)) {
-        console.error("ID de progresso inválido para buscar dados profissionais:", progressId);
-        return null;
-      }
-      
       const { data, error } = await supabase
         .from('onboarding_progress')
         .select('professional_info, company_name, company_size, company_sector, company_website, current_position, annual_revenue')
         .eq('id', progressId)
-        .maybeSingle(); // Usar maybeSingle para evitar erros
+        .single();
         
       if (error) {
         if (error.code === 'PGRST116') {
@@ -159,7 +105,7 @@ export const professionalDataService = {
       return {
         ...data,
         // Garantir que o campo professional_info seja sempre um objeto
-        professional_info: data?.professional_info || {}
+        professional_info: data.professional_info || {}
       };
     } catch (error) {
       console.error("Erro ao buscar dados profissionais:", error);

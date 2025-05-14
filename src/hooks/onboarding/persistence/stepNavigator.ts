@@ -10,10 +10,10 @@ export function navigateAfterStep(
   shouldNavigate: boolean = true,
   onboardingType: 'club' | 'formacao' = 'club'
 ) {
-  console.log(`[stepNavigator] Navegando após etapa ${stepId} (índice ${currentStepIndex}) - tipo ${onboardingType}`);
+  console.log(`[DEBUG] Navegando após etapa ${stepId} (índice ${currentStepIndex}) - tipo ${onboardingType}`);
   
   if (!shouldNavigate) {
-    console.log("[stepNavigator] Navegação automática desativada");
+    console.log("[DEBUG] Navegação automática desativada");
     return;
   }
   
@@ -29,7 +29,6 @@ export function navigateAfterStep(
     experience_personalization: "/onboarding/customization",
     complementary_info: "/onboarding/complementary",
     review: "/onboarding/review",
-    trail_generation: "/onboarding/trail-generation",
     
     // Rotas para Formação
     formation_personal: "/onboarding/formacao/personal-info",
@@ -49,8 +48,7 @@ export function navigateAfterStep(
       "business_goals", 
       "experience_personalization",
       "complementary_info",
-      "review",
-      "trail_generation"
+      "review"
     ],
     formacao: [
       "formation_personal",
@@ -68,30 +66,15 @@ export function navigateAfterStep(
   const currentStepSequenceIndex = sequence.indexOf(stepId);
   
   if (currentStepSequenceIndex === -1) {
-    console.warn(`[stepNavigator] Etapa ${stepId} não encontrada na sequência de ${onboardingType}`);
-    
-    // Log completo para ajudar no debug
-    console.log("[stepNavigator] Sequência completa:", sequence);
-    console.log("[stepNavigator] Mapeamento de rotas:", stepIdToPath);
-    
-    // Tratamento especial para aliases conhecidos
-    if (stepId === "professional_data") {
-      console.log("[stepNavigator] Convertendo alias professional_data para professional_info");
-      const path = stepIdToPath["professional_info"];
-      console.log(`[stepNavigator] Navegando para ${path}`);
-      navigate(path);
-      return;
-    }
-    
+    console.warn(`[AVISO] Etapa ${stepId} não encontrada na sequência de ${onboardingType}`);
     // Fallback para a primeira etapa
-    console.log(`[stepNavigator] Fallback para a primeira etapa: ${sequence[0]}`);
     navigate(stepIdToPath[sequence[0]]);
     return;
   }
   
   // Verificar se é a última etapa
   if (currentStepSequenceIndex === sequence.length - 1) {
-    console.log("[stepNavigator] Esta é a última etapa, não navegando automaticamente");
+    console.log("[DEBUG] Esta é a última etapa, não navegando automaticamente");
     return;
   }
   
@@ -100,15 +83,10 @@ export function navigateAfterStep(
   const nextPath = stepIdToPath[nextStepId];
   
   if (!nextPath) {
-    console.warn(`[stepNavigator] Caminho para próxima etapa ${nextStepId} não encontrado`);
-    console.log("[stepNavigator] Mapeamento completo:", stepIdToPath);
+    console.warn(`[AVISO] Caminho para próxima etapa ${nextStepId} não encontrado`);
     return;
   }
   
-  console.log(`[stepNavigator] Navegando para próxima etapa: ${nextStepId} (${nextPath})`);
-  
-  // Usar timeout para dar tempo de completar qualquer processamento pendente
-  setTimeout(() => {
-    navigate(nextPath);
-  }, 100);
+  console.log(`[DEBUG] Navegando para próxima etapa: ${nextStepId} (${nextPath})`);
+  navigate(nextPath);
 }

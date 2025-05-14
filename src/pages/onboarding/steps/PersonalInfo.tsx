@@ -8,20 +8,17 @@ import { useProgress } from "@/hooks/onboarding/useProgress";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle, CloudOff, RefreshCw } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
 const PersonalInfo = () => {
   const navigate = useNavigate();
   const [loadingAttempts, setLoadingAttempts] = useState(0);
-  
-  // Usar hook useProgress para obter e manter dados de progresso
+  const [loadError, setLoadError] = useState<string | null>(null);
   const { 
-    progress, 
-    isLoading, 
+    isLoading: progressLoading, 
     refreshProgress, 
-    lastError, 
-    isOfflineMode,
-    initializeOfflineMode 
+    lastError,
+    progress 
   } = useProgress();
   
   const {
@@ -38,23 +35,17 @@ const PersonalInfo = () => {
   // Função para tentar carregar dados novamente
   const attemptDataLoad = async () => {
     try {
+      setLoadError(null);
       console.log("[DEBUG] Tentativa #" + (loadingAttempts + 1) + " de carregar dados");
       
       await refreshProgress();
       console.log("[DEBUG] Dados de progresso atualizados:", progress);
       
-      if (progress) {
-        loadInitialData();
-      }
+      loadInitialData();
       setLoadingAttempts(prev => prev + 1);
     } catch (error) {
       console.error("[ERRO] Falha ao carregar dados:", error);
-      
-      // Se falhar após múltiplas tentativas, ativar modo offline
-      if (loadingAttempts >= 1) {
-        console.log("[DEBUG] Ativando modo offline após falhas de carregamento");
-        initializeOfflineMode();
-      }
+      setLoadError("Erro ao carregar dados. Por favor, tente novamente.");
     }
   };
 
@@ -67,36 +58,27 @@ const PersonalInfo = () => {
     };
   }, []);
 
-  // Carregar dados iniciais quando o progresso estiver disponível
+  // Adicionar um efeito para forçar carregamento após um tempo limite
   useEffect(() => {
-    if (progress && !isSubmitting) {
-      loadInitialData();
+    // Se ainda estiver carregando após 5 segundos, tenta novamente
+    if (progressLoading && loadingAttempts < 3) {
+      const timer = setTimeout(() => {
+        console.log("[DEBUG] Tempo limite de carregamento atingido, tentando novamente");
+        attemptDataLoad();
+      }, 5000);
+      
+      return () => clearTimeout(timer);
     }
-  }, [progress, loadInitialData, isSubmitting]);
+  }, [progressLoading, loadingAttempts]);
 
-  // Adaptador simplificado para compatibilidade com a nova assinatura de onSubmit
-  const handleSuccess = async (stepId?: string, data?: any) => {
-    console.log("[DEBUG] Tentativa de envio do formulário", { stepId, data });
-    
-    // Se dados foram passados, usá-los; caso contrário, usar formData
-    const dataToSubmit = data || formData;
-    
-    // Verificar campos obrigatórios antes de tentar salvar
-    if (!dataToSubmit.state) {
-      toast.error("Por favor, preencha o estado");
-      return;
+  useEffect(() => {
+    if (progress) {
+      console.log("[DEBUG] Dados do formulário atualizados:", formData);
     }
-    
-    if (!dataToSubmit.city) {
-      toast.error("Por favor, preencha a cidade");
-      return;
-    }
-    
-    // Garantir que temos um timezone selecionado
-    if (!dataToSubmit.timezone) {
-      dataToSubmit.timezone = "America/Sao_Paulo";
-    }
-    
+  }, [formData, progress]);
+
+  const handleSuccess = async () => {
+    console.log("[DEBUG] Tentativa de envio do formulário");
     const success = await handleSubmit();
     if (success) {
       console.log("[DEBUG] Formulário enviado com sucesso, navegando para próxima etapa");
@@ -106,52 +88,30 @@ const PersonalInfo = () => {
     }
   };
 
-  // Se ainda está carregando
-  if (isLoading) {
+  // Se tentou carregar 3 vezes e ainda está carregando, mostrar botão para forçar continuação
+  const showForceButton = loadingAttempts >= 3 && progressLoading;
+
+  // Se houver um erro de carregamento ou erro no último progresso
+  const hasError = loadError || lastError;
+
+  if (progressLoading && !showForceButton) {
+    console.log("[DEBUG] Exibindo spinner de carregamento");
     return (
       <OnboardingLayout 
         currentStep={1} 
         title="Dados Pessoais" 
         backUrl="/"
       >
-        <div className="flex flex-col justify-center items-center py-20 space-y-6">
+        <div className="flex justify-center items-center py-20">
           <LoadingSpinner size="lg" />
-          <p className="text-gray-400">Carregando seus dados...</p>
+          <p className="ml-4 text-gray-400">Carregando seus dados...</p>
         </div>
       </OnboardingLayout>
     );
   }
 
-  // Se estamos em modo offline
-  if (isOfflineMode) {
-    return (
-      <OnboardingLayout 
-        currentStep={1} 
-        title="Dados Pessoais" 
-        backUrl="/"
-      >
-        <Alert className="bg-blue-50 border-blue-200 mb-6">
-          <CloudOff className="h-5 w-5 text-blue-600" />
-          <AlertDescription className="ml-2 text-blue-700">
-            Você está no modo offline. Os dados serão armazenados localmente.
-          </AlertDescription>
-        </Alert>
-        
-        <PersonalInfoStep
-          onSubmit={handleSuccess}
-          isSubmitting={isSubmitting}
-          formData={formData}
-          errors={errors}
-          onChange={handleChange}
-          isSaving={isSaving}
-          lastSaveTime={lastSaveTime}
-        />
-      </OnboardingLayout>
-    );
-  }
-
   // Se houver erro, mostramos uma mensagem de erro com opção para tentar novamente
-  if (lastError) {
+  if (hasError) {
     return (
       <OnboardingLayout 
         currentStep={1} 
@@ -162,28 +122,55 @@ const PersonalInfo = () => {
           <Alert variant="destructive" className="bg-red-50 border-red-200">
             <AlertTriangle className="h-5 w-5" />
             <AlertDescription className="ml-2">
-              {lastError ? "Não foi possível carregar seus dados. Verifique sua conexão e tente novamente." : ""}
+              {loadError || (lastError ? "Erro ao carregar dados de progresso." : "")}
+            </AlertDescription>
+          </Alert>
+          
+          <div className="flex justify-center mt-6">
+            <button 
+              onClick={attemptDataLoad}
+              className="px-4 py-2 bg-[#0ABAB5] text-white rounded hover:bg-[#0ABAB5]/90"
+            >
+              Tentar Novamente
+            </button>
+          </div>
+        </div>
+      </OnboardingLayout>
+    );
+  }
+
+  // Se tentou várias vezes e ainda está carregando, permitir continuar mesmo assim
+  if (showForceButton) {
+    return (
+      <OnboardingLayout 
+        currentStep={1} 
+        title="Dados Pessoais" 
+        backUrl="/"
+      >
+        <div className="space-y-6">
+          <Alert className="bg-yellow-50 border-yellow-200">
+            <AlertTriangle className="h-5 w-5 text-yellow-600" />
+            <AlertDescription className="ml-2 text-yellow-700">
+              Estamos tendo dificuldades para carregar seus dados. Você pode continuar mesmo assim ou tentar novamente.
             </AlertDescription>
           </Alert>
           
           <div className="flex justify-center mt-6 space-x-4">
             <button 
-              onClick={attemptDataLoad}
-              className="flex items-center px-4 py-2 bg-[#0ABAB5] text-white rounded hover:bg-[#0ABAB5]/90"
+              onClick={() => {
+                // Forçar carregamento com dados padrão vazios
+                toast.info("Continuando com dados padrão");
+                setLoadingAttempts(0);
+              }}
+              className="px-4 py-2 bg-[#0ABAB5] text-white rounded hover:bg-[#0ABAB5]/90"
             >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Tentar Novamente
+              Continuar Mesmo Assim
             </button>
             <button 
-              onClick={() => {
-                // Ativar modo offline
-                initializeOfflineMode();
-                toast.info("Modo offline ativado. Suas alterações serão salvas localmente.");
-              }}
-              className="flex items-center px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+              onClick={attemptDataLoad}
+              className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
             >
-              <CloudOff className="h-4 w-4 mr-2" />
-              Continuar Offline
+              Tentar Novamente
             </button>
           </div>
         </div>

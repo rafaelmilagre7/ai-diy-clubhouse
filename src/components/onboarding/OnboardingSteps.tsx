@@ -199,28 +199,10 @@ export const OnboardingSteps = () => {
     );
   };
 
-  // Criar um adaptador para a função onSubmit para compatibilidade com PersonalInfoStep
-  const createSubmitAdapter = (stepId: string) => {
-    return (customStepId?: string, data?: any) => {
-      // Se o componente chamar sem parâmetros ou com apenas um parâmetro (que é o dados)
-      if (customStepId === undefined) {
-        // Nenhum parâmetro - usar o ID da etapa atual
-        return saveStepData(stepId, formData[stepId] || {});
-      } else if (data === undefined) {
-        // Apenas um parâmetro que deve ser os dados
-        return saveStepData(stepId, customStepId);
-      } else {
-        // Dois parâmetros - usar conforme passado
-        return saveStepData(customStepId, data);
-      }
-    };
-  };
-
   // Preparar props para o componente da etapa atual
   const getPropsForCurrentStep = () => {
-    // Definir props base que são comuns a todos os componentes
     const baseProps = {
-      onSubmit: createSubmitAdapter(activeStepId),
+      onSubmit: saveStepData,
       isSubmitting: isSubmitting,
       isLastStep: currentStepIndex === steps.length - 1,
       onComplete: completeOnboarding,
@@ -228,37 +210,42 @@ export const OnboardingSteps = () => {
       onPrevious: () => navigateToPreviousStep(activeStepId),
     };
 
-    // Obter dados específicos com base no tipo de componente
-    let stepFormData = {} as any;
-    
-    // Tentar obter os dados do progresso salvo primeiro, depois do estado local
+    // Props personalizados por tipo de componente
     if (activeStepId === "personal_info") {
-      stepFormData = progress?.personal_info || formData.personal_info || {};
-    } else if (activeStepId === "professional_info") {
-      stepFormData = progress?.professional_info || formData.professional_info || {};
-    } else {
-      // Para as outras etapas, verificar se existe no progresso ou no estado local
-      const progressData = progress?.[activeStepId as keyof typeof progress];
-      stepFormData = progressData || formData[activeStepId] || {};
-    }
-    
-    // Aplicar dados específicos ao baseProps
-    const propsWithData = {
-      ...baseProps,
-      formData: stepFormData,
-      errors: formErrors,
-      onChange: (field: string, value: any) => handleFormChange(activeStepId, field, value)
-    };
-    
-    // Adicionar props específicas para componentes que precisam de personalInfo
-    if (supportsPersonalInfo(activeStepId)) {
+      const personalInfoData = progress?.personal_info || formData.personal_info || {};
       return {
-        ...propsWithData,
-        personalInfo: progress?.personal_info || {}
+        ...baseProps,
+        formData: personalInfoData,
+        errors: formErrors,
+        onChange: (field: string, value: any) => handleFormChange('personal_info', field, value)
       };
     }
-    
-    return propsWithData;
+
+    if (activeStepId === "professional_info") {
+      return {
+        ...baseProps,
+        personalInfo: progress?.personal_info || {},
+        formData: progress?.professional_info || formData.professional_info || {},
+        errors: formErrors,
+        onChange: (field: string, value: any) => handleFormChange('professional_info', field, value)
+      };
+    }
+
+    if (supportsPersonalInfo(activeStepId)) {
+      // Para todos os outros componentes que precisam de personalInfo
+      const stepFormData = progress?.[activeStepId as keyof typeof progress] || 
+                          formData[activeStepId] || {};
+      
+      return {
+        ...baseProps,
+        personalInfo: progress?.personal_info || {},
+        formData: stepFormData,
+        errors: formErrors,
+        onChange: (field: string, value: any) => handleFormChange(activeStepId, field, value)
+      };
+    }
+
+    return baseProps;
   };
 
   return (

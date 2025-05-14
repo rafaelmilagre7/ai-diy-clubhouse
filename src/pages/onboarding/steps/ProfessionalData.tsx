@@ -8,8 +8,6 @@ import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { toast } from "sonner";
 import { professionalDataService } from "@/services/onboarding";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
 
 const ProfessionalData = () => {
   const navigate = useNavigate();
@@ -17,13 +15,12 @@ const ProfessionalData = () => {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [initialData, setInitialData] = useState<any>(null);
-  const [dataLoaded, setDataLoaded] = useState(false);
   
-  // Carregar dados iniciais apenas uma vez
+  // Carregar dados iniciais
   useEffect(() => {
     const loadData = async () => {
       try {
-        if (progress && !dataLoaded) {
+        if (progress) {
           console.log("Carregando dados profissionais do progresso:", progress);
           
           // Consolidar dados do progresso
@@ -39,28 +36,22 @@ const ProfessionalData = () => {
           
           setInitialData(data);
           console.log("Dados iniciais profissionais carregados:", data);
-          setSubmitError(null);
-          setDataLoaded(true);
         }
       } catch (error) {
         console.error("Erro ao carregar dados profissionais:", error);
         toast.error("Erro ao carregar seus dados", {
-          description: "Por favor, tente novamente."
+          description: "Atualize a página para tentar novamente"
         });
-        setSubmitError("Não foi possível carregar seus dados. Por favor, tente novamente.");
       }
     };
     
-    if (!isLoading && progress && !dataLoaded) {
+    if (!isLoading) {
       loadData();
     }
-  }, [progress, isLoading, dataLoaded]);
+  }, [progress, isLoading]);
   
   // Função para submeter os dados com tratamento de erros melhorado
-  const handleSubmit = async (stepId: string, data: any, shouldNavigate = true): Promise<void> => {
-    // Prevenir múltiplas submissões
-    if (isSubmitting) return;
-    
+  const handleSubmit = async (stepId: string, data: any): Promise<void> => {
     setIsSubmitting(true);
     setSubmitError(null);
     
@@ -79,34 +70,37 @@ const ProfessionalData = () => {
       // Normalizar dados antes de enviar
       const normalizedData = normalizeData(data);
       
+      let retryCount = 0;
+      const maxRetries = 2;
       let success = false;
-      let errorMessage = "";
       
-      try {
-        // Atualizar os dados na tabela de onboarding_progress
-        await professionalDataService.save(progress.id, progress.user_id, normalizedData);
-        success = true;
-      } catch (saveError: any) {
-        errorMessage = saveError.message || "Erro ao salvar dados";
-        console.error("Erro ao salvar dados:", saveError);
-        throw saveError;
-      }
-      
-      if (success) {
-        // Recarregar o progresso para refletir as alterações
-        await refreshProgress();
-        
-        // Navegar para a próxima etapa apenas se shouldNavigate for true
-        if (shouldNavigate) {
-          navigate("/onboarding/business-context");
+      while (!success && retryCount <= maxRetries) {
+        try {
+          // Atualizar os dados na tabela de onboarding_progress
+          await professionalDataService.save(progress.id, progress.user_id, normalizedData);
+          success = true;
+        } catch (saveError: any) {
+          retryCount++;
+          console.warn(`Tentativa ${retryCount} falhou:`, saveError);
           
-          toast.success("Dados salvos com sucesso", {
-            description: "Redirecionando para a próxima etapa..."
-          });
+          if (retryCount > maxRetries) {
+            throw saveError;
+          }
+          
+          // Pequena espera entre tentativas
+          await new Promise(resolve => setTimeout(resolve, 500));
         }
-      } else {
-        throw new Error(errorMessage || "Falha ao salvar dados");
       }
+      
+      // Recarregar o progresso para refletir as alterações
+      await refreshProgress();
+      
+      // Navegar para a próxima etapa
+      navigate("/onboarding/business-context");
+      
+      toast.success("Dados salvos com sucesso", {
+        description: "Redirecionando para a próxima etapa..."
+      });
     } catch (error: any) {
       console.error("Erro ao salvar dados profissionais:", error);
       setSubmitError(error.message || "Erro ao salvar dados");
@@ -149,12 +143,6 @@ const ProfessionalData = () => {
     };
   };
   
-  const handleRetry = () => {
-    refreshProgress();
-    setSubmitError(null);
-    setDataLoaded(false); // Permitir nova tentativa de carregamento
-  };
-  
   if (isLoading) {
     return (
       <OnboardingLayout 
@@ -169,30 +157,6 @@ const ProfessionalData = () => {
       </OnboardingLayout>
     );
   }
-
-  // Adicionar verificação de erro persistente
-  if (lastError && !isLoading) {
-    return (
-      <OnboardingLayout 
-        currentStep={2} 
-        title="Dados Profissionais" 
-        backUrl="/onboarding/personal-info"
-      >
-        <Card className="p-6 mb-6 bg-red-50 text-red-700 border-red-300">
-          <h3 className="text-lg font-medium mb-2">Erro ao carregar seus dados</h3>
-          <p className="mb-4">{lastError.message || "Erro desconhecido ao carregar seus dados"}</p>
-          <Button 
-            onClick={handleRetry}
-            variant="destructive"
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Tentar novamente
-          </Button>
-        </Card>
-      </OnboardingLayout>
-    );
-  }
   
   return (
     <OnboardingLayout 
@@ -201,17 +165,8 @@ const ProfessionalData = () => {
       backUrl="/onboarding/personal-info"
     >
       {submitError && (
-        <Card className="p-4 mb-6 bg-red-50 text-red-700 border-red-300">
+        <Card className="p-4 mb-6 bg-red-100 text-red-700 border-red-300">
           <p>{submitError}</p>
-          <Button 
-            onClick={handleRetry}
-            variant="ghost" 
-            size="sm"
-            className="mt-2 text-red-700 hover:text-red-800 hover:bg-red-100"
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Tentar novamente
-          </Button>
         </Card>
       )}
       

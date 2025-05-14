@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { TEST_ADMIN, TEST_MEMBER } from '@/contexts/auth/constants';
 import { toast } from '@/hooks/use-toast';
-import { cleanupAuthState } from '@/utils/authUtils';
 
 interface UseAuthMethodsProps {
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
@@ -14,17 +13,6 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
   const signIn = async (email?: string, password?: string): Promise<{ error: Error | null }> => {
     try {
       setIsLoading(true);
-      
-      // Limpar qualquer token existente para evitar conflitos
-      cleanupAuthState();
-      
-      // Tentar realizar logout global preventivo para evitar conflitos de sessão
-      try {
-        await supabase.auth.signOut({ scope: 'global' });
-      } catch (e) {
-        // Ignorar erros de logout, pois pode não haver sessão ativa
-        console.log("Logout preventivo falhou, continuando com login:", e);
-      }
       
       // Se email e senha não forem fornecidos, usar login com Google
       if (!email || !password) {
@@ -40,16 +28,12 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
       }
       
       // Login com email/senha
-      console.log("Tentando login com email/senha", { email });
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       if (error) throw error;
-      
-      console.log("Login bem-sucedido:", data?.user?.id);
       
       toast({
         title: 'Login realizado com sucesso',
@@ -76,15 +60,10 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
     try {
       setIsLoading(true);
       
-      // Limpar tokens locais primeiro
-      cleanupAuthState();
-      
-      // Tentar fazer logout global no Supabase
-      const { error } = await supabase.auth.signOut({ scope: 'global' });
+      const { error } = await supabase.auth.signOut();
       
       if (error) throw error;
       
-      // Redirecionamento forçado para login com recarregamento completo da página
       window.location.href = '/login';
     } catch (error: any) {
       console.error('Erro ao fazer logout:', error);

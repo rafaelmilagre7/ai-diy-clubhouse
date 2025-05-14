@@ -21,6 +21,7 @@ const LoginForm = () => {
       setIsLoading(true);
       setError(undefined);
       toast.info("Iniciando login com Google...");
+      // Usando valores vazios para indicar que queremos fazer login com Google
       await signIn("", "");
     } catch (error) {
       console.error("Erro ao fazer login com Google:", error);
@@ -43,27 +44,17 @@ const LoginForm = () => {
       setError(undefined);
       toast.info("Entrando...");
       
-      // Limpar qualquer token existente para evitar conflitos
-      try {
-        localStorage.removeItem('sb-zotzvtepvpnkcoobdubt-auth-token');
-      } catch (e) {
-        console.warn("Erro ao limpar localStorage:", e);
-      }
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
       
-      // Usar o método signIn do contexto de autenticação em vez de chamar diretamente a API
-      const result = await signIn(email, password);
+      if (error) throw error;
       
-      if (result?.error) {
-        throw result.error;
-      }
-      
-      // Redirecionamento será tratado pelo contexto de autenticação ou useEffect abaixo
-      toast.success("Login bem-sucedido! Redirecionando...");
-      
-      // Forçar redirecionamento para dashboard após login bem-sucedido
-      setTimeout(() => {
+      if (data.user) {
+        toast.success("Login bem-sucedido! Redirecionando...");
         navigate('/dashboard', { replace: true });
-      }, 500);
+      }
     } catch (error: any) {
       console.error("Erro ao fazer login:", error);
       setError(error.message === "Invalid login credentials"
