@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { OnboardingProgress } from "@/types/onboarding";
 import { useLogging } from "./useLogging";
 
@@ -9,6 +9,7 @@ import { useLogging } from "./useLogging";
 export function useProgress() {
   const [progress, setProgress] = useState<OnboardingProgress | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const lastError = useRef<Error | null>(null);
   const { logError, log } = useLogging();
 
   /**
@@ -57,11 +58,13 @@ export function useProgress() {
       
       console.log("[useProgress] Dados de progresso atualizados com sucesso");
       log("progress_refreshed", { success: true });
+      lastError.current = null;
       
       return mockProgress;
-    } catch (error) {
+    } catch (error: any) {
       console.error("[useProgress] Erro ao atualizar dados de progresso:", error);
       logError("refresh_progress_error", { error: String(error) });
+      lastError.current = error instanceof Error ? error : new Error(String(error));
       return null;
     } finally {
       setIsLoading(false);
@@ -88,15 +91,17 @@ export function useProgress() {
       
       // Log de sucesso na atualização
       log("progress_updated", { success: true });
+      lastError.current = null;
       
       // Retornar mock de sucesso
       return { 
         success: true, 
         data: { ...progress, ...data } 
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error("[useProgress] Erro ao atualizar progresso:", error);
       logError("update_progress_error", { error: String(error) });
+      lastError.current = error instanceof Error ? error : new Error(String(error));
       
       // Retornar mock de erro
       return { 
@@ -116,6 +121,7 @@ export function useProgress() {
     progress,
     isLoading,
     refreshProgress,
-    updateProgress
+    updateProgress,
+    lastError: lastError.current
   };
 }

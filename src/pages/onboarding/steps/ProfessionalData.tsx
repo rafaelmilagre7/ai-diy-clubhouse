@@ -157,6 +157,27 @@ const ProfessionalData = () => {
       </OnboardingLayout>
     );
   }
+
+  // Adicionar verificação de erro persistente
+  if (lastError && !isLoading) {
+    return (
+      <OnboardingLayout 
+        currentStep={2} 
+        title="Dados Profissionais" 
+        backUrl="/onboarding/personal-info"
+      >
+        <Card className="p-4 mb-6 bg-red-100 text-red-700 border-red-300">
+          <p>Erro ao carregar seus dados: {lastError.message || "Erro desconhecido"}</p>
+          <button 
+            onClick={() => refreshProgress()}
+            className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Tentar novamente
+          </button>
+        </Card>
+      </OnboardingLayout>
+    );
+  }
   
   return (
     <OnboardingLayout 
