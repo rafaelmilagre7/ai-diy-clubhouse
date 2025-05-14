@@ -1,104 +1,64 @@
 
 import React from "react";
+import { useFormContext } from "react-hook-form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { FormMessage } from "@/components/ui/form-message";
-import { cn } from "@/lib/utils";
-import { CheckCircle, AlertCircle } from "lucide-react";
+import { FormFeedback } from "@/components/ui/form-feedback";
+import { Linkedin, Instagram } from "lucide-react";
 import { validateLinkedInUrl, validateInstagramUrl } from "@/utils/validationUtils";
 
-interface SocialInputsProps {
-  linkedin: string;
-  instagram: string;
-  onChangeLinkedin: (value: string) => void;
-  onChangeInstagram: (value: string) => void;
-  disabled?: boolean;
-  errors: {
-    linkedin?: string;
-    instagram?: string;
-  };
-  isValid?: {
-    linkedin?: boolean;
-    instagram?: boolean;
-  };
-}
-
-export const SocialInputs: React.FC<SocialInputsProps> = ({
-  linkedin,
-  instagram,
-  onChangeLinkedin,
-  onChangeInstagram,
-  disabled,
-  errors,
-  isValid = { linkedin: false, instagram: false }
-}) => {
-  const linkedinIsValid = linkedin ? validateLinkedInUrl(linkedin) : true;
-  const instagramIsValid = instagram ? validateInstagramUrl(instagram) : true;
-
+export const SocialInputs = () => {
+  const { register, formState: { errors } } = useFormContext();
+  
   return (
-    <div className="space-y-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div className="space-y-2">
-        <Label htmlFor="linkedin" className={cn(
-          "transition-colors flex items-center gap-2",
-          errors.linkedin ? "text-red-500" : linkedin && linkedinIsValid ? "text-[#0ABAB5]" : ""
-        )}>
-          LinkedIn (opcional)
-          {linkedin && (
-            linkedinIsValid ? (
-              <CheckCircle className="h-4 w-4 text-[#0ABAB5]" />
-            ) : (
-              <AlertCircle className="h-4 w-4 text-red-500" />
-            )
-          )}
-        </Label>
-        <Input
-          id="linkedin"
-          placeholder="linkedin.com/in/seu-perfil"
-          value={linkedin}
-          onChange={(e) => onChangeLinkedin(e.target.value)}
-          disabled={disabled}
-          className={cn(
-            "transition-colors",
-            errors.linkedin ? "border-red-500 focus:border-red-500" : 
-            linkedin && linkedinIsValid ? "border-[#0ABAB5] focus:border-[#0ABAB5]" : ""
-          )}
-        />
-        <FormMessage
-          type={linkedin && linkedinIsValid ? "success" : "error"}
-          message={errors.linkedin || (linkedin && !linkedinIsValid ? "Digite uma URL válida do LinkedIn" : undefined)}
-        />
+        <label htmlFor="linkedin" className="block text-sm font-medium">
+          LinkedIn
+        </label>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <Linkedin className="h-4 w-4 text-gray-500" />
+          </div>
+          <Input
+            id="linkedin"
+            type="text"
+            placeholder="linkedin.com/in/seuperfil"
+            className="pl-10"
+            {...register("linkedin", {
+              validate: {
+                validLinkedIn: (value) => !value || validateLinkedInUrl(value) || "URL do LinkedIn inválida"
+              }
+            })}
+          />
+        </div>
+        {errors.linkedin && (
+          <FormFeedback error={errors.linkedin.message as string} />
+        )}
       </div>
-
+      
       <div className="space-y-2">
-        <Label htmlFor="instagram" className={cn(
-          "transition-colors flex items-center gap-2",
-          errors.instagram ? "text-red-500" : instagram && instagramIsValid ? "text-[#0ABAB5]" : ""
-        )}>
-          Instagram (opcional)
-          {instagram && (
-            instagramIsValid ? (
-              <CheckCircle className="h-4 w-4 text-[#0ABAB5]" />
-            ) : (
-              <AlertCircle className="h-4 w-4 text-red-500" />
-            )
-          )}
-        </Label>
-        <Input
-          id="instagram"
-          placeholder="instagram.com/seu-perfil"
-          value={instagram}
-          onChange={(e) => onChangeInstagram(e.target.value)}
-          disabled={disabled}
-          className={cn(
-            "transition-colors",
-            errors.instagram ? "border-red-500 focus:border-red-500" : 
-            instagram && instagramIsValid ? "border-[#0ABAB5] focus:border-[#0ABAB5]" : ""
-          )}
-        />
-        <FormMessage
-          type={instagram && instagramIsValid ? "success" : "error"}
-          message={errors.instagram || (instagram && !instagramIsValid ? "Digite uma URL válida do Instagram" : undefined)}
-        />
+        <label htmlFor="instagram" className="block text-sm font-medium">
+          Instagram
+        </label>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <Instagram className="h-4 w-4 text-gray-500" />
+          </div>
+          <Input
+            id="instagram"
+            type="text"
+            placeholder="@seuinsta"
+            className="pl-10"
+            {...register("instagram", {
+              validate: {
+                validInstagram: (value) => !value || validateInstagramUrl(value) || "Usuário do Instagram inválido"
+              }
+            })}
+          />
+        </div>
+        {errors.instagram && (
+          <FormFeedback error={errors.instagram.message as string} />
+        )}
       </div>
     </div>
   );

@@ -1,89 +1,106 @@
 
-// Funções de validação para os dados profissionais
+/**
+ * Funções de validação específicas para dados profissionais
+ * Usadas no formulário de Dados Profissionais do onboarding
+ */
 
-export const validateCompanyName = (value: string): string | undefined => {
-  if (!value) return "Nome da empresa é obrigatório";
-  if (value.length < 2) return "Nome da empresa deve ter pelo menos 2 caracteres";
-  return undefined;
+/**
+ * Valida o nome da empresa
+ * @param companyName Nome da empresa
+ * @returns Mensagem de erro ou null se válido
+ */
+export const validateCompanyName = (companyName: string): string | null => {
+  if (!companyName) {
+    return "Nome da empresa é obrigatório";
+  }
+  
+  if (companyName.length < 2) {
+    return "Nome da empresa deve ter pelo menos 2 caracteres";
+  }
+  
+  return null;
 };
 
-export const validateWebsite = (value: string): string | undefined => {
-  if (!value) return undefined; // Website é opcional
+/**
+ * Valida o tamanho da empresa
+ * @param companySize Tamanho da empresa
+ * @returns Mensagem de erro ou null se válido
+ */
+export const validateCompanySize = (companySize: string): string | null => {
+  if (!companySize) {
+    return "Tamanho da empresa é obrigatório";
+  }
   
+  return null;
+};
+
+/**
+ * Valida o setor da empresa
+ * @param companySector Setor da empresa
+ * @returns Mensagem de erro ou null se válido
+ */
+export const validateCompanySector = (companySector: string): string | null => {
+  if (!companySector) {
+    return "Setor da empresa é obrigatório";
+  }
+  
+  return null;
+};
+
+/**
+ * Valida o cargo atual do usuário
+ * @param currentPosition Cargo atual
+ * @returns Mensagem de erro ou null se válido
+ */
+export const validateCurrentPosition = (currentPosition: string): string | null => {
+  if (!currentPosition) {
+    return "Cargo atual é obrigatório";
+  }
+  
+  return null;
+};
+
+/**
+ * Valida a URL do website da empresa
+ * @param website URL do website
+ * @returns Mensagem de erro ou null se válido
+ */
+export const validateWebsite = (website: string): string | null => {
+  if (!website) {
+    return null; // Website é opcional
+  }
+  
+  // Verificação básica de URL
   try {
-    // Adicionar protocolo se não existir
-    const urlString = value.match(/^https?:\/\//) ? value : `https://${value}`;
+    // Normalizar a URL primeiro
+    const normalizedUrl = normalizeWebsiteUrl(website);
     
-    // Verificar se é uma URL válida
-    new URL(urlString);
-    
-    // Verificar se o domínio parece válido
-    if (!urlString.match(/^https?:\/\/[^.]+\.[^.]+/)) {
-      return "URL deve incluir um domínio válido";
-    }
-    
-    return undefined;
-  } catch (e) {
-    return "URL inválida";
+    // Tentar criar um objeto URL válido
+    new URL(normalizedUrl);
+    return null;
+  } catch (error) {
+    return "URL do website inválida. Use o formato: exemplo.com";
   }
 };
 
-export const normalizeWebsiteUrl = (value: string): string => {
-  if (!value) return "";
+/**
+ * Normaliza uma URL de website para garantir formato correto
+ * @param url URL a ser normalizada
+ * @returns URL normalizada
+ */
+export const normalizeWebsiteUrl = (url: string): string => {
+  if (!url) return "";
   
-  // Adicionar protocolo se não existir
-  return value.match(/^https?:\/\//) ? value : `https://${value}`;
-};
-
-export const validateCompanySize = (value: string): string | undefined => {
-  if (!value) return "Tamanho da empresa é obrigatório";
-  return undefined;
-};
-
-export const validateCompanySector = (value: string): string | undefined => {
-  if (!value) return "Setor é obrigatório";
-  return undefined;
-};
-
-export const validateAnnualRevenue = (value: string): string | undefined => {
-  if (!value) return "Faturamento anual é obrigatório";
-  return undefined;
-};
-
-export const validateCurrentPosition = (value: string): string | undefined => {
-  if (!value) return "Cargo atual é obrigatório";
-  if (value.length < 2) return "Cargo deve ter pelo menos 2 caracteres";
-  return undefined;
-};
-
-// Função auxiliar para normalizar dados profissionais
-export const normalizeProfessionalData = (data: any): any => {
-  // Verifica se os dados já estão na estrutura correta
-  if (data.professional_info) {
-    return data;
+  // Remove espaços extras
+  let normalizedUrl = url.trim();
+  
+  // Remove http:// e https:// para padronização
+  normalizedUrl = normalizedUrl.replace(/^(https?:\/\/)?(www\.)?/, "");
+  
+  // Se não estiver vazio, adiciona https://
+  if (normalizedUrl) {
+    normalizedUrl = `https://${normalizedUrl}`;
   }
   
-  // Caso contrário, cria a estrutura esperada
-  return {
-    professional_info: {
-      company_name: data.company_name || "",
-      company_size: data.company_size || "",
-      company_sector: data.company_sector || "",
-      company_website: normalizeWebsiteUrl(data.company_website || ""),
-      current_position: data.current_position || "",
-      annual_revenue: data.annual_revenue || ""
-    }
-  };
-};
-
-// Função para verificar se todos os campos obrigatórios estão preenchidos
-export const hasRequiredProfessionalFields = (data: any): boolean => {
-  const info = data.professional_info || data;
-  
-  return Boolean(
-    info.company_name &&
-    info.company_size &&
-    info.company_sector &&
-    info.current_position
-  );
+  return normalizedUrl;
 };
