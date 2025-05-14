@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { OnboardingProgress } from "@/types/onboarding";
 import { useLogging } from "./useLogging";
+import { generateValidUUID, isDevelopmentMode } from "@/utils/validationUtils";
 
 /**
  * Hook principal para acessar e manipular o progresso do onboarding
@@ -12,23 +13,8 @@ export function useProgress() {
   const lastError = useRef<Error | null>(null);
   const { logError, log } = useLogging();
 
-  // Helper para gerar UUIDs válidos para mock
-  const generateValidUUID = () => {
-    // Usar crypto.randomUUID() se disponível no navegador
-    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-      return crypto.randomUUID();
-    }
-    
-    // Fallback simples para gerar UUID se randomUUID não estiver disponível
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      const r = Math.random() * 16 | 0;
-      const v = c === 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
-  };
-
   // Flag para determinar se estamos em modo de desenvolvimento
-  const isDevelopmentMode = true; // Em produção, esta flag seria controlada por variável de ambiente
+  const devMode = isDevelopmentMode();
 
   /**
    * Carrega dados atualizados do progresso do onboarding
@@ -41,8 +27,8 @@ export function useProgress() {
       // Simulação de carregamento do progresso (mock)
       // Em uma implementação real, aqui faria a consulta ao banco de dados
       const mockProgress: OnboardingProgress = {
-        id: isDevelopmentMode ? generateValidUUID() : "onb-12345",
-        user_id: isDevelopmentMode ? generateValidUUID() : "usr-12345",
+        id: devMode ? generateValidUUID() : "onb-12345",
+        user_id: devMode ? generateValidUUID() : "usr-12345",
         current_step: "business_context",
         completed_steps: ["personal_info", "professional_info"],
         is_completed: false,
@@ -91,7 +77,7 @@ export function useProgress() {
     } finally {
       setIsLoading(false);
     }
-  }, [log, logError]);
+  }, [log, logError, devMode]);
 
   /**
    * Atualiza o progresso do onboarding com novos dados
@@ -145,6 +131,6 @@ export function useProgress() {
     refreshProgress,
     updateProgress,
     lastError: lastError.current,
-    isDevelopmentMode // Exportar a flag para que os serviços saibam se estamos em modo de desenvolvimento
+    isDevelopmentMode: devMode // Exportar a flag para que os serviços saibam se estamos em modo de desenvolvimento
   };
 }

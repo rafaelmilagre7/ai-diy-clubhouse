@@ -8,6 +8,8 @@ import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { toast } from "sonner";
 import { professionalDataService } from "@/services/onboarding";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 const ProfessionalData = () => {
   const navigate = useNavigate();
@@ -15,8 +17,9 @@ const ProfessionalData = () => {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [initialData, setInitialData] = useState<any>(null);
+  const [loadAttempts, setLoadAttempts] = useState(0);
   
-  // Carregar dados iniciais
+  // Carregar dados iniciais com retry automático
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -36,22 +39,35 @@ const ProfessionalData = () => {
           
           setInitialData(data);
           console.log("Dados iniciais profissionais carregados:", data);
+          setSubmitError(null);
         }
       } catch (error) {
         console.error("Erro ao carregar dados profissionais:", error);
-        toast.error("Erro ao carregar seus dados", {
-          description: "Atualize a página para tentar novamente"
-        });
+        // Só mostrar toast se for a primeira tentativa
+        if (loadAttempts === 0) {
+          toast.error("Erro ao carregar seus dados", {
+            description: "Tentando novamente automaticamente..."
+          });
+        }
+        
+        // Se menos de 3 tentativas, tentar novamente após um delay
+        if (loadAttempts < 3) {
+          setTimeout(() => {
+            setLoadAttempts(prev => prev + 1);
+          }, 2000);
+        } else {
+          setSubmitError("Não foi possível carregar seus dados após várias tentativas.");
+        }
       }
     };
     
     if (!isLoading) {
       loadData();
     }
-  }, [progress, isLoading]);
+  }, [progress, isLoading, loadAttempts]);
   
   // Função para submeter os dados com tratamento de erros melhorado
-  const handleSubmit = async (stepId: string, data: any): Promise<void> => {
+  const handleSubmit = async (stepId: string, data: any, shouldNavigate = true): Promise<void> => {
     setIsSubmitting(true);
     setSubmitError(null);
     
@@ -95,12 +111,14 @@ const ProfessionalData = () => {
       // Recarregar o progresso para refletir as alterações
       await refreshProgress();
       
-      // Navegar para a próxima etapa
-      navigate("/onboarding/business-context");
-      
-      toast.success("Dados salvos com sucesso", {
-        description: "Redirecionando para a próxima etapa..."
-      });
+      // Navegar para a próxima etapa apenas se shouldNavigate for true
+      if (shouldNavigate) {
+        navigate("/onboarding/business-context");
+        
+        toast.success("Dados salvos com sucesso", {
+          description: "Redirecionando para a próxima etapa..."
+        });
+      }
     } catch (error: any) {
       console.error("Erro ao salvar dados profissionais:", error);
       setSubmitError(error.message || "Erro ao salvar dados");
@@ -143,6 +161,12 @@ const ProfessionalData = () => {
     };
   };
   
+  const handleRetry = () => {
+    refreshProgress();
+    setSubmitError(null);
+    setLoadAttempts(0);
+  };
+  
   if (isLoading) {
     return (
       <OnboardingLayout 
@@ -166,14 +190,17 @@ const ProfessionalData = () => {
         title="Dados Profissionais" 
         backUrl="/onboarding/personal-info"
       >
-        <Card className="p-4 mb-6 bg-red-100 text-red-700 border-red-300">
-          <p>Erro ao carregar seus dados: {lastError.message || "Erro desconhecido"}</p>
-          <button 
-            onClick={() => refreshProgress()}
-            className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+        <Card className="p-6 mb-6 bg-red-50 text-red-700 border-red-300">
+          <h3 className="text-lg font-medium mb-2">Erro ao carregar seus dados</h3>
+          <p className="mb-4">{lastError.message || "Erro desconhecido ao carregar seus dados"}</p>
+          <Button 
+            onClick={handleRetry}
+            variant="destructive"
+            className="flex items-center gap-2"
           >
+            <RefreshCw className="h-4 w-4" />
             Tentar novamente
-          </button>
+          </Button>
         </Card>
       </OnboardingLayout>
     );
@@ -186,8 +213,17 @@ const ProfessionalData = () => {
       backUrl="/onboarding/personal-info"
     >
       {submitError && (
-        <Card className="p-4 mb-6 bg-red-100 text-red-700 border-red-300">
+        <Card className="p-4 mb-6 bg-red-50 text-red-700 border-red-300">
           <p>{submitError}</p>
+          <Button 
+            onClick={handleRetry}
+            variant="ghost" 
+            size="sm"
+            className="mt-2 text-red-700 hover:text-red-800 hover:bg-red-100"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Tentar novamente
+          </Button>
         </Card>
       )}
       

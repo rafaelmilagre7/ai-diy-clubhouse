@@ -1,7 +1,5 @@
 
-// Este arquivo é um redirecionamento para a implementação real em outro local
-// para evitar imports circulares e manter compatibilidade com código existente
-
+// Re-exportando o hook useProgress com as melhorias implementadas
 import { useProgress as useProgressOriginal } from "../useProgress";
 
 /**

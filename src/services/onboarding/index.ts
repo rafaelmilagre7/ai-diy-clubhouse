@@ -1,12 +1,7 @@
 
 import { supabase } from "@/lib/supabase";
 import { OnboardingData, ProfessionalDataInput } from "@/types/onboarding";
-
-// Função auxiliar para validar formato UUID
-const isValidUUID = (id: string) => {
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  return uuidRegex.test(id);
-};
+import { isValidUUID, isSimulatedID } from "@/utils/validationUtils";
 
 // Serviço para dados profissionais
 export const professionalDataService = {
@@ -14,10 +9,23 @@ export const professionalDataService = {
     try {
       console.log("Salvando dados profissionais via serviço:", { progressId, userId, data });
       
-      // Verificar se o ID de progresso é válido antes de fazer chamadas ao banco de dados
+      // Verificar se o ID de progresso é um ID simulado
+      if (isSimulatedID(progressId)) {
+        console.log("ID de progresso simulado detectado, retornando resposta simulada:", progressId);
+        return { 
+          simulated: true, 
+          success: true,
+          data: {
+            progress_id: progressId,
+            ...data
+          }
+        };
+      }
+      
+      // Verificar se o ID de progresso é um UUID válido antes de fazer chamadas ao banco de dados
       if (!isValidUUID(progressId)) {
-        console.warn("ID de progresso inválido ou simulado, skipping database call:", progressId);
-        return { simulated: true, success: true };
+        console.error("ID de progresso inválido:", progressId);
+        throw new Error(`ID de progresso inválido: ${progressId}`);
       }
       
       // Extrair os dados profissionais do objeto
@@ -98,9 +106,9 @@ export const professionalDataService = {
   
   async fetch(progressId: string) {
     try {
-      // Verificar se o ID de progresso é válido antes de fazer chamadas ao banco de dados
-      if (!isValidUUID(progressId)) {
-        console.warn("ID de progresso inválido ou simulado, retornando dados simulados:", progressId);
+      // Verificar se o ID de progresso é um ID simulado
+      if (isSimulatedID(progressId)) {
+        console.log("ID de progresso simulado detectado, retornando dados simulados:", progressId);
         return {
           company_name: "Empresa Teste",
           company_size: "11-50",
@@ -117,6 +125,12 @@ export const professionalDataService = {
             annual_revenue: "1-5M"
           }
         };
+      }
+      
+      // Verificar se o ID de progresso é um UUID válido antes de fazer chamadas ao banco de dados
+      if (!isValidUUID(progressId)) {
+        console.error("ID de progresso inválido para buscar dados profissionais:", progressId);
+        return null;
       }
       
       const { data, error } = await supabase
