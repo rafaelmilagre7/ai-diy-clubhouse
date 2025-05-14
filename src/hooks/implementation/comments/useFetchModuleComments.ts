@@ -74,8 +74,8 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
         const replyUserIds = [...new Set(replies.map((r: any) => r.user_id))];
         
         // Buscar perfis adicionais se necessário
-        if (replyUserIds.some(id => !profilesMap[id])) {
-          const missingIds = replyUserIds.filter(id => !profilesMap[id]);
+        if (replyUserIds.some(id => !profilesMap[id as string])) {
+          const missingIds = replyUserIds.filter(id => !profilesMap[id as string]);
           
           const { data: additionalProfiles } = await supabase
             .from('profiles')
@@ -109,18 +109,24 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
         }
 
         // Organizar comentários com respostas e perfis
-        const organizedComments = parentComments.map((comment: any) => ({
-          ...comment,
-          profiles: comment.user_id && profilesMap[comment.user_id] ? profilesMap[comment.user_id] : null,
-          user_has_liked: !!likesMap[comment.id],
-          replies: (replies || [])
-            .filter((reply: any) => reply.parent_id === comment.id)
-            .map((reply: any) => ({
-              ...reply,
-              profiles: reply.user_id && profilesMap[reply.user_id] ? profilesMap[reply.user_id] : null,
-              user_has_liked: !!likesMap[reply.id]
-            }))
-        }));
+        const organizedComments = parentComments.map((comment: any) => {
+          const userId = comment.user_id as string;
+          return {
+            ...comment,
+            profiles: userId && profilesMap[userId] ? profilesMap[userId] : null,
+            user_has_liked: !!likesMap[comment.id as string],
+            replies: (replies || [])
+              .filter((reply: any) => reply.parent_id === comment.id)
+              .map((reply: any) => {
+                const replyUserId = reply.user_id as string;
+                return {
+                  ...reply,
+                  profiles: replyUserId && profilesMap[replyUserId] ? profilesMap[replyUserId] : null,
+                  user_has_liked: !!likesMap[reply.id as string]
+                };
+              })
+          };
+        });
 
         log('Comentários carregados com sucesso', { 
           total: organizedComments.length

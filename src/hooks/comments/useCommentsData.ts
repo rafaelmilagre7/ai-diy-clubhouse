@@ -79,7 +79,7 @@ export const useCommentsData = (toolId: string) => {
         
         // Adicionar IDs de usuários de respostas ao conjunto de IDs
         const replyUserIds = [...new Set(replies.map((r: any) => r.user_id))];
-        const missingUserIds = replyUserIds.filter(id => !profilesMap[id]);
+        const missingUserIds = replyUserIds.filter(id => !profilesMap[id as string]);
         
         // Buscar perfis adicionais se necessário
         if (missingUserIds.length > 0) {
@@ -125,18 +125,24 @@ export const useCommentsData = (toolId: string) => {
         });
 
         // Organizar respostas dentro dos comentários principais
-        const organizedComments = (parentComments || []).map((parentComment: any) => ({
-          ...parentComment,
-          profiles: parentComment.user_id && profilesMap[parentComment.user_id] ? profilesMap[parentComment.user_id] : null,
-          user_has_liked: !!likesMap[parentComment.id],
-          replies: (replies || [])
-            .filter((reply: any) => reply.parent_id === parentComment.id)
-            .map((reply: any) => ({
-              ...reply,
-              profiles: reply.user_id && profilesMap[reply.user_id] ? profilesMap[reply.user_id] : null,
-              user_has_liked: !!likesMap[reply.id]
-            }))
-        }));
+        const organizedComments = (parentComments || []).map((parentComment: any) => {
+          const userId = parentComment.user_id as string;
+          return {
+            ...parentComment,
+            profiles: userId && profilesMap[userId] ? profilesMap[userId] : null,
+            user_has_liked: !!likesMap[parentComment.id as string],
+            replies: (replies || [])
+              .filter((reply: any) => reply.parent_id === parentComment.id)
+              .map((reply: any) => {
+                const replyUserId = reply.user_id as string;
+                return {
+                  ...reply,
+                  profiles: replyUserId && profilesMap[replyUserId] ? profilesMap[replyUserId] : null,
+                  user_has_liked: !!likesMap[reply.id as string]
+                };
+              })
+          };
+        });
 
         log('Comentários organizados e processados:', { 
           count: organizedComments.length,
