@@ -6,12 +6,26 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export const PersonalInfoForm = ({ 
+interface PersonalInfoFormProps {
+  formData: any;
+  errors: Record<string, any>;
+  onChange: (field: string, value: any) => void;
+  isSubmitting: boolean;
+  onSubmit: (e: React.FormEvent) => void;
+  validation?: any;
+  register?: any;
+  initialData?: any;
+}
+
+export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ 
   formData, 
   errors, 
   onChange, 
   isSubmitting, 
-  onSubmit 
+  onSubmit,
+  validation,
+  register,
+  initialData
 }) => {
   const hasErrors = Object.keys(errors).length > 0;
 

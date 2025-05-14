@@ -40,12 +40,12 @@ export const LocationInputs = ({
   errors = {}
 }: LocationInputsProps) => {
   const { 
-    states, 
-    cities, 
-    loadingStates, 
-    loadingCities, 
-    fetchStates, 
-    fetchCities 
+    estados, 
+    cidades, 
+    loadingEstados, 
+    loadingCidades, 
+    buscarEstados, 
+    buscarCidades 
   } = useIBGELocations();
 
   const [availableCountries] = useState([
@@ -53,14 +53,14 @@ export const LocationInputs = ({
   ]);
 
   useEffect(() => {
-    fetchStates();
-  }, []);
+    buscarEstados();
+  }, [buscarEstados]);
 
   useEffect(() => {
     if (state) {
-      fetchCities(state);
+      buscarCidades(state);
     }
-  }, [state, fetchCities]);
+  }, [state, buscarCidades]);
 
   return (
     <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4 space-y-6">
@@ -96,21 +96,21 @@ export const LocationInputs = ({
           <Select
             value={state}
             onValueChange={onChangeState}
-            disabled={disabled || loadingStates || country !== "Brasil"}
+            disabled={disabled || loadingEstados || country !== "Brasil"}
           >
             <SelectTrigger id="state" className={errors.state ? "border-red-400" : ""}>
-              <SelectValue placeholder={loadingStates ? "Carregando estados..." : "Selecione um estado"} />
+              <SelectValue placeholder={loadingEstados ? "Carregando estados..." : "Selecione um estado"} />
             </SelectTrigger>
             <SelectContent>
-              {loadingStates ? (
+              {loadingEstados ? (
                 <div className="flex items-center justify-center p-2">
                   <LoadingSpinner size="sm" />
                   <span className="ml-2">Carregando...</span>
                 </div>
               ) : (
-                states.map(state => (
-                  <SelectItem key={state.id} value={state.sigla}>
-                    {state.nome}
+                estados.map(estado => (
+                  <SelectItem key={estado.id} value={estado.sigla}>
+                    {estado.nome}
                   </SelectItem>
                 ))
               )}
@@ -128,21 +128,21 @@ export const LocationInputs = ({
           <Select
             value={city}
             onValueChange={onChangeCity}
-            disabled={disabled || loadingCities || !state || country !== "Brasil"}
+            disabled={disabled || loadingCidades || !state || country !== "Brasil"}
           >
             <SelectTrigger id="city" className={errors.city ? "border-red-400" : ""}>
-              <SelectValue placeholder={!state ? "Selecione um estado primeiro" : loadingCities ? "Carregando cidades..." : "Selecione uma cidade"} />
+              <SelectValue placeholder={!state ? "Selecione um estado primeiro" : loadingCidades ? "Carregando cidades..." : "Selecione uma cidade"} />
             </SelectTrigger>
             <SelectContent>
-              {loadingCities ? (
+              {loadingCidades ? (
                 <div className="flex items-center justify-center p-2">
                   <LoadingSpinner size="sm" />
                   <span className="ml-2">Carregando...</span>
                 </div>
               ) : (
-                cities.map(city => (
-                  <SelectItem key={city.id} value={city.nome}>
-                    {city.nome}
+                cidades.map(cidade => (
+                  <SelectItem key={cidade.id} value={cidade.nome}>
+                    {cidade.nome}
                   </SelectItem>
                 ))
               )}

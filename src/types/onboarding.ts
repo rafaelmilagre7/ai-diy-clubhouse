@@ -1,4 +1,3 @@
-
 export interface OnboardingData {
   // 1. Dados Pessoais
   personal_info: {
@@ -210,3 +209,9 @@ export type CompleteOnboardingStep = OnboardingStep & {
   forFormation?: boolean;
   forClub?: boolean;
 };
+
+// Adicionando tipo ValidationResult que estava faltando
+export interface ValidationResult {
+  isValid: boolean;
+  errors: Record<string, string>;
+}

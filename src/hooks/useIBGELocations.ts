@@ -65,7 +65,9 @@ export function useIBGELocations() {
     }
   }, []);
 
+  // Adicionando propriedades com nomes em inglês para compatibilidade
   return {
+    // Nomes em português (originais)
     estados,
     cidades,
     loadingEstados,
@@ -74,5 +76,15 @@ export function useIBGELocations() {
     errorCidades,
     buscarEstados,
     buscarCidades,
+    
+    // Nomes em inglês (alias para compatibilidade)
+    states: estados,
+    cities: cidades,
+    loadingStates: loadingEstados,
+    loadingCities: loadingCidades,
+    errorStates: errorEstados,
+    errorCities: errorCidades,
+    fetchStates: buscarEstados,
+    fetchCities: buscarCidades
   };
 }

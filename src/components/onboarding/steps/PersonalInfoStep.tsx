@@ -157,6 +157,7 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
         initialData={initialData}
         formData={formData}
         onChange={onChange}
+        onSubmit={onFormSubmit}
       />
     </form>
   );
