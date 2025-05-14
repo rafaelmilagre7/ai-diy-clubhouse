@@ -76,9 +76,29 @@ const PersonalInfo = () => {
     }
   }, [formData, progress]);
 
-  // Adaptador para compatibilidade com a nova assinatura de onSubmit
-  const handleSuccess = async () => {
-    console.log("[DEBUG] Tentativa de envio do formulário");
+  // Adaptador simplificado para compatibilidade com a nova assinatura de onSubmit
+  const handleSuccess = async (stepId?: string, data?: any) => {
+    console.log("[DEBUG] Tentativa de envio do formulário", { stepId, data });
+    
+    // Se dados foram passados, usá-los; caso contrário, usar formData
+    const dataToSubmit = data || formData;
+    
+    // Verificar campos obrigatórios antes de tentar salvar
+    if (!dataToSubmit.state) {
+      toast.error("Por favor, preencha o estado");
+      return;
+    }
+    
+    if (!dataToSubmit.city) {
+      toast.error("Por favor, preencha a cidade");
+      return;
+    }
+    
+    // Garantir que temos um timezone selecionado
+    if (!dataToSubmit.timezone) {
+      dataToSubmit.timezone = "America/Sao_Paulo";
+    }
+    
     const success = await handleSubmit();
     if (success) {
       console.log("[DEBUG] Formulário enviado com sucesso, navegando para próxima etapa");
@@ -185,10 +205,7 @@ const PersonalInfo = () => {
       backUrl="/"
     >
       <PersonalInfoStep
-        onSubmit={async (stepId?: string, data?: any) => {
-          // Adaptador para compatibilizar as diferentes assinaturas de onSubmit
-          return handleSuccess();
-        }}
+        onSubmit={handleSuccess}
         isSubmitting={isSubmitting}
         formData={formData}
         errors={errors}

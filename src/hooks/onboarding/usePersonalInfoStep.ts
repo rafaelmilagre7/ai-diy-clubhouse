@@ -55,6 +55,7 @@ export const usePersonalInfoStep = () => {
         country: progress.personal_info.country || "Brasil",
         state: progress.personal_info.state || "",
         city: progress.personal_info.city || "",
+        // Garantir que o timezone esteja definido
         timezone: progress.personal_info.timezone || "America/Sao_Paulo"
       });
     } else {
@@ -62,7 +63,8 @@ export const usePersonalInfoStep = () => {
       setFormData(prev => ({
         ...prev,
         name: userName,
-        email: userEmail
+        email: userEmail,
+        timezone: "America/Sao_Paulo"
       }));
     }
     setInitialDataLoaded(true);
@@ -77,7 +79,8 @@ export const usePersonalInfoStep = () => {
           setFormData(prev => ({
             ...prev,
             name: profile?.name || user?.user_metadata?.name || "",
-            email: profile?.email || user?.email || ""
+            email: profile?.email || user?.email || "",
+            timezone: "America/Sao_Paulo"
           }));
           setInitialDataLoaded(true);
         }
@@ -175,6 +178,9 @@ export const usePersonalInfoStep = () => {
       toast.success("Dados pessoais salvos com sucesso!", {
         description: "Avançando para a próxima etapa..."
       });
+      
+      // Registrar quando salvou
+      setLastSaveTime(Date.now());
       
       return true;
     } catch (error) {

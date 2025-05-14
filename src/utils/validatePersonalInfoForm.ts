@@ -24,21 +24,21 @@ export const validatePersonalInfoForm = (data: Partial<PersonalInfoData>) => {
   }
 
   // Validar telefone se informado
-  if (data.phone) {
+  if (data.phone && data.phone.trim() !== '') {
     if (!validateBrazilianPhone(data.phone)) {
       errors.phone = "Formato de telefone inválido";
     }
   }
 
   // Validar LinkedIn se informado
-  if (data.linkedin) {
+  if (data.linkedin && data.linkedin.trim() !== '') {
     if (!validateLinkedInUrl(data.linkedin)) {
       errors.linkedin = "URL do LinkedIn inválida";
     }
   }
 
   // Validar Instagram se informado
-  if (data.instagram) {
+  if (data.instagram && data.instagram.trim() !== '') {
     if (!validateInstagramUrl(data.instagram)) {
       errors.instagram = "Username do Instagram inválido";
     }

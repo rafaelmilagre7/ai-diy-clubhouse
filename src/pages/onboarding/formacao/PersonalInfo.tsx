@@ -16,7 +16,10 @@ const FormacaoPersonalInfo = () => {
   const { progress, isLoading, refreshProgress, lastError } = useProgress();
   
   // Estado para armazenar os dados do formulário
-  const [formData, setFormData] = useState<any>({});
+  const [formData, setFormData] = useState<any>({
+    timezone: "America/Sao_Paulo" // Garantir que o timezone seja definido por padrão
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   
   const { saveStepData } = useStepPersistenceCore({
     currentStepIndex: 0,
@@ -34,6 +37,21 @@ const FormacaoPersonalInfo = () => {
       try {
         await refreshProgress();
         console.log("[Formação PersonalInfo] Dados carregados:", progress);
+        
+        // Se temos dados de progresso, inicializar o formulário
+        if (progress?.personal_info) {
+          setFormData({
+            ...progress.personal_info,
+            // Garantir que o timezone está definido
+            timezone: progress.personal_info.timezone || "America/Sao_Paulo"
+          });
+        } else {
+          // Definir valor padrão do timezone se não houver dados
+          setFormData(prev => ({
+            ...prev,
+            timezone: "America/Sao_Paulo"
+          }));
+        }
       } catch (error) {
         console.error("[Formação PersonalInfo] Erro ao carregar dados:", error);
         setShowError(true);
@@ -54,14 +72,53 @@ const FormacaoPersonalInfo = () => {
     return () => clearTimeout(timer);
   }, [isLoading]);
 
-  // Função para processar o envio do formulário - adaptar para a nova assinatura
+  // Função para processar alterações de campo
+  const handleFieldChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    
+    // Limpar erro do campo se existir
+    if (errors[field]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  // Função para processar o envio do formulário
   const handleSubmit = async (stepId?: string, data?: any) => {
     try {
       setIsSubmitting(true);
       console.log("[Formação PersonalInfo] Submetendo dados:", data || formData);
       
-      // Usar os dados passados ou cair para o estado formData
+      // Verificar campos obrigatórios
       const dataToSave = data || formData;
+      const newErrors: Record<string, string> = {};
+      
+      if (!dataToSave.state) {
+        newErrors.state = "Estado é obrigatório";
+      }
+      
+      if (!dataToSave.city) {
+        newErrors.city = "Cidade é obrigatória";
+      }
+      
+      // Garantir que timezone está definido
+      if (!dataToSave.timezone) {
+        dataToSave.timezone = "America/Sao_Paulo";
+      }
+      
+      // Se há erros, mostrar e não prosseguir
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        const errorFields = Object.keys(newErrors).join(', ');
+        toast.error(`Por favor preencha os campos: ${errorFields}`);
+        return;
+      }
       
       // Enviando dados para o backend com flag de formação
       await saveStepData("personal", {
@@ -78,14 +135,6 @@ const FormacaoPersonalInfo = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  // Função para atualizar o estado formData quando os campos forem alterados
-  const handleFormChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
   };
 
   if (isLoading && !showError) {
@@ -147,8 +196,8 @@ const FormacaoPersonalInfo = () => {
         isSubmitting={isSubmitting}
         initialData={progress?.personal_info}
         formData={formData}
-        errors={{}}
-        onChange={handleFormChange}
+        errors={errors}
+        onChange={handleFieldChange}
       />
     </OnboardingLayout>
   );

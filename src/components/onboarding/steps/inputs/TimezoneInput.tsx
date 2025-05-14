@@ -2,6 +2,7 @@
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FieldError } from "react-hook-form";
+import { useEffect } from "react";
 
 interface TimezoneInputProps {
   value: string;
@@ -26,11 +27,18 @@ export const TimezoneInput = ({ value, onChange, disabled, readOnly, error }: Ti
     { value: "Europe/Paris", label: "Paris (GMT+2)" }
   ];
 
+  // Garantir que o valor padrão seja definido se não houver valor
+  useEffect(() => {
+    if (!value && !disabled && !readOnly) {
+      onChange("America/Sao_Paulo");
+    }
+  }, [value, onChange, disabled, readOnly]);
+
   return (
     <div>
       <Label htmlFor="timezone">Fuso Horário</Label>
       <Select 
-        value={value} 
+        value={value || "America/Sao_Paulo"} 
         onValueChange={onChange} 
         disabled={disabled || readOnly}
       >
