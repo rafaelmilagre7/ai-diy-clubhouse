@@ -1,3 +1,4 @@
+
 export interface OnboardingData {
   // 1. Dados Pessoais
   personal_info: {
@@ -175,11 +176,7 @@ export interface OnboardingStepProps {
   onComplete?: () => void;
   initialData?: any;
   personalInfo?: OnboardingData['personal_info'];
-  onPrevious?: () => void;
-  // Props adicionadas para compatibilidade com todos os tipos de etapas
-  formData?: any;
-  errors?: Record<string, string>;
-  onChange?: (field: string, value: any) => void;
+  onPrevious?: () => void; // Adicionada a propriedade onPrevious como opcional
 }
 
 export interface OnboardingStep {

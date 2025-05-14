@@ -11,7 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { OnboardingData } from "@/types/onboarding";
 import { ProfessionalDataStep } from "./steps/ProfessionalDataStep";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { toast } from "sonner";
 
 export const OnboardingSteps = () => {
@@ -25,20 +25,6 @@ export const OnboardingSteps = () => {
     progress,
     navigateToStep
   } = useOnboardingSteps();
-  
-  // Estado local para erros de formulário
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  
-  // Estado local para dados de formulário por etapa
-  const [formData, setFormData] = useState<Record<string, any>>({
-    personal_info: {},
-    professional_info: {},
-    business_context: {},
-    ai_experience: {},
-    business_goals: {},
-    experience_personalization: {},
-    complementary_info: {}
-  });
   
   const location = useLocation();
   const navigate = useNavigate();
@@ -104,26 +90,6 @@ export const OnboardingSteps = () => {
     } catch (error) {
       console.error("[OnboardingSteps] Erro ao navegar para etapa anterior:", error);
       toast.error("Erro ao navegar para a etapa anterior");
-    }
-  };
-
-  // Manipulador para alterações nos campos de formulário
-  const handleFormChange = (stepId: string, fieldName: string, value: any) => {
-    setFormData(prevData => ({
-      ...prevData,
-      [stepId]: {
-        ...(prevData[stepId] || {}),
-        [fieldName]: value
-      }
-    }));
-
-    // Limpar erros quando o campo é alterado
-    if (formErrors[fieldName]) {
-      setFormErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[fieldName];
-        return newErrors;
-      });
     }
   };
 
@@ -210,38 +176,10 @@ export const OnboardingSteps = () => {
       onPrevious: () => navigateToPreviousStep(activeStepId),
     };
 
-    // Props personalizados por tipo de componente
-    if (activeStepId === "personal_info") {
-      const personalInfoData = progress?.personal_info || formData.personal_info || {};
-      return {
-        ...baseProps,
-        formData: personalInfoData,
-        errors: formErrors,
-        onChange: (field: string, value: any) => handleFormChange('personal_info', field, value)
-      };
-    }
-
-    if (activeStepId === "professional_info") {
-      return {
-        ...baseProps,
-        personalInfo: progress?.personal_info || {},
-        formData: progress?.professional_info || formData.professional_info || {},
-        errors: formErrors,
-        onChange: (field: string, value: any) => handleFormChange('professional_info', field, value)
-      };
-    }
-
     if (supportsPersonalInfo(activeStepId)) {
-      // Para todos os outros componentes que precisam de personalInfo
-      const stepFormData = progress?.[activeStepId as keyof typeof progress] || 
-                          formData[activeStepId] || {};
-      
       return {
         ...baseProps,
         personalInfo: progress?.personal_info || {},
-        formData: stepFormData,
-        errors: formErrors,
-        onChange: (field: string, value: any) => handleFormChange(activeStepId, field, value)
       };
     }
 

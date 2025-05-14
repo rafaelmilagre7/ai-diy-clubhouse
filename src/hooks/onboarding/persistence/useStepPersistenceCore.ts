@@ -87,7 +87,7 @@ export function useStepPersistenceCore({
 
       // Salvar dados específicos em tabelas separadas
       try {
-        if (stepId === 'professional_data' || stepId === 'professional_info') {
+        if (stepId === 'professional_data') {
           await saveProfessionalData(progress.id, progress.user_id, data);
           console.log("Dados profissionais salvos na tabela específica com sucesso");
         }
@@ -134,7 +134,7 @@ export function useStepPersistenceCore({
       if (shouldNavigate) {
         console.log("Tentando navegar para a próxima etapa...");
         // Usar o módulo de navegação por etapas
-        navigateAfterStep(stepId, currentStepIndex, navigate, shouldNavigate, 'club');
+        navigateAfterStep(stepId, currentStepIndex, navigate);
       } else {
         console.log("Navegação automática desativada, permanecendo na página atual");
       }
