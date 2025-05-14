@@ -5,6 +5,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { UserProfile } from '@/lib/supabase';
 import { processUserProfile } from '../utils/authSessionUtils';
 import { toast } from "sonner";
+import { cleanupAuthState } from "@/utils/authUtils";
 
 export interface AuthState {
   user: User | null;
@@ -30,6 +31,7 @@ export const AuthStateManager = ({ onStateChange }: AuthStateManagerProps) => {
   const initTimeoutRef = useRef<number | null>(null);
   const lastAuthEvent = useRef<string | null>(null);
   const initAttempts = useRef(0);
+  const hasInitialized = useRef(false);
   
   // Estado local para debug
   const [debugState, setDebugState] = useState({
@@ -43,6 +45,7 @@ export const AuthStateManager = ({ onStateChange }: AuthStateManagerProps) => {
   const updateState = (partialState: Partial<AuthState>) => {
     if (!isMounted.current) return;
     
+    console.log("AuthStateManager: Atualizando estado", partialState);
     onStateChange(partialState);
   };
   
@@ -72,49 +75,49 @@ export const AuthStateManager = ({ onStateChange }: AuthStateManagerProps) => {
       console.log("AuthStateManager: Initializing auth");
       initAttempts.current += 1;
       
-      // Obter sessão atual com timeout limitado
-      const sessionPromise = supabase.auth.getSession();
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Session fetch timeout")), 1500)
-      );
+      // Marcar inicialização como em andamento
+      updateState({ isLoading: true });
       
-      // Corrida entre o fetch e o timeout
-      const { data: { session } } = await Promise.race([
-        sessionPromise,
-        timeoutPromise
-      ]) as { data: { session: any } };
-      
-      setDebugState(prev => ({ 
-        ...prev, 
-        lastEvent: 'SESSION_FETCHED',
-        initComplete: true
-      }));
-      
-      updateState({ 
-        session, 
-        user: session?.user || null, 
-        isLoading: session?.user ? true : false 
-      });
-      
-      if (session?.user) {
-        console.log("AuthStateManager: Session found for user", session.user.id);
+      try {
+        // Tentar obter a sessão atual
+        const { data: { session } } = await supabase.auth.getSession();
         
-        try {
-          // Processar perfil do usuário de forma independente
-          const profile = await processUserProfile(
-            session.user.id,
-            session.user.email,
-            session.user.user_metadata?.name || session.user.user_metadata?.full_name
-          );
+        setDebugState(prev => ({ 
+          ...prev, 
+          lastEvent: 'SESSION_FETCHED',
+          initComplete: true
+        }));
+        
+        updateState({ 
+          session, 
+          user: session?.user || null,
+        });
+        
+        if (session?.user) {
+          console.log("AuthStateManager: Session found for user", session.user.id);
           
-          setProfile(profile);
-          console.log("AuthStateManager: Profile processed successfully");
-        } catch (profileError) {
-          console.error("Error processing user profile:", profileError);
+          try {
+            // Processar perfil do usuário de forma independente
+            const profile = await processUserProfile(
+              session.user.id,
+              session.user.email,
+              session.user.user_metadata?.name || session.user.user_metadata?.full_name
+            );
+            
+            setProfile(profile);
+            console.log("AuthStateManager: Profile processed successfully");
+          } catch (profileError) {
+            console.error("Error processing user profile:", profileError);
+          }
         }
+      } catch (error) {
+        console.error("Error fetching session:", error);
+        // Continuar com perfil null em caso de erro
       }
       
+      // Marcar inicialização como concluída
       updateState({ isLoading: false });
+      hasInitialized.current = true;
       
     } catch (error) {
       console.error("Auth initialization error:", error);
@@ -125,18 +128,20 @@ export const AuthStateManager = ({ onStateChange }: AuthStateManagerProps) => {
         initComplete: true
       }));
       
-      // Se for timeout ou erro de rede, não interromper a experiência do usuário
-      updateState({ 
-        authError: error instanceof Error ? error : new Error(String(error)),
-        isLoading: false
-      });
-      
-      // Mostrar toast apenas em caso de erro crítico e não timeout
-      if (initAttempts.current >= 2 && !(error instanceof Error && error.message === "Session fetch timeout")) {
+      // Se for um erro grave, mostrar toast e limpar estado
+      if (initAttempts.current >= 2) {
         toast.error("Erro ao verificar autenticação", {
-          description: "Tente recarregar a página"
+          description: "Tente fazer login novamente"
         });
+        cleanupAuthState();
       }
+      
+      // Mesmo com erro, marcar como não carregando
+      updateState({ 
+        isLoading: false,
+        authError: error instanceof Error ? error : new Error(String(error))
+      });
+      hasInitialized.current = true;
     }
   };
   
@@ -154,8 +159,10 @@ export const AuthStateManager = ({ onStateChange }: AuthStateManagerProps) => {
           ...prev, 
           lastEvent: 'TIMEOUT_REACHED'
         }));
+        
+        hasInitialized.current = true;
       }
-    }, 2000); // Timeout mais curto (2s) para melhor UX
+    }, 5000); // 5 segundos de timeout
     
     // Configurar listener de estado de autenticação
     let subscription: { unsubscribe: () => void } | null = null;
@@ -188,11 +195,11 @@ export const AuthStateManager = ({ onStateChange }: AuthStateManagerProps) => {
           else if (event === 'SIGNED_IN' && newSession?.user) {
             console.log("AuthStateManager: User signed in, updating profile");
             
-            try {
-              // Adicionar delay mínimo para evitar deadlocks com Supabase
-              setTimeout(async () => {
-                if (!isMounted.current) return;
-                
+            // Adicionar delay mínimo para evitar deadlocks com Supabase
+            setTimeout(async () => {
+              if (!isMounted.current) return;
+              
+              try {
                 const profile = await processUserProfile(
                   newSession.user.id,
                   newSession.user.email,
@@ -200,10 +207,10 @@ export const AuthStateManager = ({ onStateChange }: AuthStateManagerProps) => {
                 );
                 
                 setProfile(profile);
-              }, 10);
-            } catch (error) {
-              console.error("Error processing profile after sign in:", error);
-            }
+              } catch (error) {
+                console.error("Error processing profile after sign in:", error);
+              }
+            }, 100);
           }
         }
       );
