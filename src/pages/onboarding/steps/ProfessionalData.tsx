@@ -17,13 +17,13 @@ const ProfessionalData = () => {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [initialData, setInitialData] = useState<any>(null);
-  const [loadAttempts, setLoadAttempts] = useState(0);
+  const [dataLoaded, setDataLoaded] = useState(false);
   
-  // Carregar dados iniciais com retry automático
+  // Carregar dados iniciais apenas uma vez
   useEffect(() => {
     const loadData = async () => {
       try {
-        if (progress) {
+        if (progress && !dataLoaded) {
           console.log("Carregando dados profissionais do progresso:", progress);
           
           // Consolidar dados do progresso
@@ -40,34 +40,27 @@ const ProfessionalData = () => {
           setInitialData(data);
           console.log("Dados iniciais profissionais carregados:", data);
           setSubmitError(null);
+          setDataLoaded(true);
         }
       } catch (error) {
         console.error("Erro ao carregar dados profissionais:", error);
-        // Só mostrar toast se for a primeira tentativa
-        if (loadAttempts === 0) {
-          toast.error("Erro ao carregar seus dados", {
-            description: "Tentando novamente automaticamente..."
-          });
-        }
-        
-        // Se menos de 3 tentativas, tentar novamente após um delay
-        if (loadAttempts < 3) {
-          setTimeout(() => {
-            setLoadAttempts(prev => prev + 1);
-          }, 2000);
-        } else {
-          setSubmitError("Não foi possível carregar seus dados após várias tentativas.");
-        }
+        toast.error("Erro ao carregar seus dados", {
+          description: "Por favor, tente novamente."
+        });
+        setSubmitError("Não foi possível carregar seus dados. Por favor, tente novamente.");
       }
     };
     
-    if (!isLoading) {
+    if (!isLoading && progress && !dataLoaded) {
       loadData();
     }
-  }, [progress, isLoading, loadAttempts]);
+  }, [progress, isLoading, dataLoaded]);
   
   // Função para submeter os dados com tratamento de erros melhorado
   const handleSubmit = async (stepId: string, data: any, shouldNavigate = true): Promise<void> => {
+    // Prevenir múltiplas submissões
+    if (isSubmitting) return;
+    
     setIsSubmitting(true);
     setSubmitError(null);
     
@@ -86,38 +79,33 @@ const ProfessionalData = () => {
       // Normalizar dados antes de enviar
       const normalizedData = normalizeData(data);
       
-      let retryCount = 0;
-      const maxRetries = 2;
       let success = false;
+      let errorMessage = "";
       
-      while (!success && retryCount <= maxRetries) {
-        try {
-          // Atualizar os dados na tabela de onboarding_progress
-          await professionalDataService.save(progress.id, progress.user_id, normalizedData);
-          success = true;
-        } catch (saveError: any) {
-          retryCount++;
-          console.warn(`Tentativa ${retryCount} falhou:`, saveError);
-          
-          if (retryCount > maxRetries) {
-            throw saveError;
-          }
-          
-          // Pequena espera entre tentativas
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
+      try {
+        // Atualizar os dados na tabela de onboarding_progress
+        await professionalDataService.save(progress.id, progress.user_id, normalizedData);
+        success = true;
+      } catch (saveError: any) {
+        errorMessage = saveError.message || "Erro ao salvar dados";
+        console.error("Erro ao salvar dados:", saveError);
+        throw saveError;
       }
       
-      // Recarregar o progresso para refletir as alterações
-      await refreshProgress();
-      
-      // Navegar para a próxima etapa apenas se shouldNavigate for true
-      if (shouldNavigate) {
-        navigate("/onboarding/business-context");
+      if (success) {
+        // Recarregar o progresso para refletir as alterações
+        await refreshProgress();
         
-        toast.success("Dados salvos com sucesso", {
-          description: "Redirecionando para a próxima etapa..."
-        });
+        // Navegar para a próxima etapa apenas se shouldNavigate for true
+        if (shouldNavigate) {
+          navigate("/onboarding/business-context");
+          
+          toast.success("Dados salvos com sucesso", {
+            description: "Redirecionando para a próxima etapa..."
+          });
+        }
+      } else {
+        throw new Error(errorMessage || "Falha ao salvar dados");
       }
     } catch (error: any) {
       console.error("Erro ao salvar dados profissionais:", error);
@@ -164,7 +152,7 @@ const ProfessionalData = () => {
   const handleRetry = () => {
     refreshProgress();
     setSubmitError(null);
-    setLoadAttempts(0);
+    setDataLoaded(false); // Permitir nova tentativa de carregamento
   };
   
   if (isLoading) {

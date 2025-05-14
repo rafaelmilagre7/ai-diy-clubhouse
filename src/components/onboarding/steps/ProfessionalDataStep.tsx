@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { CompanyNameField } from "./professional-inputs/CompanyNameField";
@@ -38,25 +39,7 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
   const initialDataProcessedRef = useRef(false);
   const toastShown = useRef(false);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // Função melhorada para extrair dados iniciais do objeto
-  const getInitialValue = (field: string) => {
-    if (!initialData) return "";
-    
-    // Primeiro verificar no objeto professional_info
-    if (initialData.professional_info && 
-        initialData.professional_info[field] !== undefined && 
-        initialData.professional_info[field] !== null) {
-      return initialData.professional_info[field];
-    }
-    
-    // Depois verificar nos campos de nível superior
-    if (initialData[field] !== undefined && initialData[field] !== null) {
-      return initialData[field];
-    }
-    
-    return "";
-  };
+  const formDataRef = useRef<any>(null);
   
   // Inicializar formulário com métodos do react-hook-form
   const methods = useForm({
@@ -72,21 +55,27 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
   });
   
   // Efeito para atualizar o formulário quando os dados iniciais mudarem
-  // Com ref para evitar atualizações desnecessárias
   useEffect(() => {
     if (initialData && !initialDataProcessedRef.current) {
       console.log("Atualizando formulário com dados iniciais:", initialData);
       
+      // Limpar valores padrão do website para evitar pré-preenchimento
+      const processedData = {
+        ...initialData,
+        company_website: initialData.company_website === "https://exemplo.com" ? "" : initialData.company_website
+      };
+      
       // Resetar o formulário com os valores iniciais
       methods.reset({
-        company_name: getInitialValue('company_name'),
-        company_size: getInitialValue('company_size'),
-        company_sector: getInitialValue('company_sector'),
-        company_website: getInitialValue('company_website'),
-        current_position: getInitialValue('current_position'),
-        annual_revenue: getInitialValue('annual_revenue')
+        company_name: processedData.company_name || "",
+        company_size: processedData.company_size || "",
+        company_sector: processedData.company_sector || "",
+        company_website: processedData.company_website || "",
+        current_position: processedData.current_position || "",
+        annual_revenue: processedData.annual_revenue || ""
       });
       
+      formDataRef.current = processedData;
       initialDataProcessedRef.current = true;
     }
   }, [initialData, methods]);
@@ -94,7 +83,12 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
   // Efeito para monitorar alterações no formulário para auto-save
   useEffect(() => {
     const subscription = methods.watch((data) => {
-      autoSave(data);
+      // Armazenar dados atuais do formulário 
+      formDataRef.current = data;
+      // Realizar auto-save se houver mudanças significativas
+      if (data.company_name && data.company_name.length >= 2) {
+        scheduleAutoSave();
+      }
     });
     
     return () => {
@@ -106,51 +100,57 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
     };
   }, [methods.watch]);
 
-  // Função para salvamento automático
-  const autoSave = async (data: any) => {
+  // Função para agendar o salvamento automático
+  const scheduleAutoSave = () => {
     // Cancelar qualquer auto-save pendente
     if (autoSaveTimeoutRef.current) {
       clearTimeout(autoSaveTimeoutRef.current);
     }
     
     // Programar novo auto-save após 2 segundos de inatividade
-    autoSaveTimeoutRef.current = setTimeout(async () => {
-      // Verificar se temos dados suficientes para salvar
-      if (data.company_name && data.company_name.length >= 2) {
-        try {
-          setAutoSaveStatus('saving');
-          
-          // Estruturar os dados para o formato esperado
-          const professionalData = {
-            professional_info: {
-              company_name: data.company_name,
-              company_size: data.company_size || "",
-              company_sector: data.company_sector || "",
-              company_website: data.company_website ? normalizeWebsiteUrl(data.company_website) : "",
-              current_position: data.current_position || "",
-              annual_revenue: data.annual_revenue || ""
-            }
-          };
-          
-          // Chamar onSubmit com flag para não navegar
-          await onSubmit("professional_info", professionalData, false);
-          setAutoSaveStatus('saved');
-          
-          // Resetar o status após 3 segundos
-          setTimeout(() => {
-            setAutoSaveStatus('idle');
-          }, 3000);
-        } catch (error) {
-          console.error("Erro no salvamento automático:", error);
-          setAutoSaveStatus('error');
-          
-          // Resetar o status após 3 segundos
-          setTimeout(() => {
-            setAutoSaveStatus('idle');
-          }, 3000);
-        }
-      }
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      performAutoSave();
     }, 2000);
+  };
+
+  // Função para realizar o salvamento automático
+  const performAutoSave = async () => {
+    if (!formDataRef.current || !formDataRef.current.company_name) return;
+    
+    try {
+      setAutoSaveStatus('saving');
+      
+      // Estruturar os dados para o formato esperado
+      const professionalData = {
+        professional_info: {
+          company_name: formDataRef.current.company_name,
+          company_size: formDataRef.current.company_size || "",
+          company_sector: formDataRef.current.company_sector || "",
+          company_website: formDataRef.current.company_website 
+            ? normalizeWebsiteUrl(formDataRef.current.company_website) 
+            : "",
+          current_position: formDataRef.current.current_position || "",
+          annual_revenue: formDataRef.current.annual_revenue || ""
+        }
+      };
+      
+      // Chamar onSubmit com flag para não navegar
+      await onSubmit("professional_info", professionalData, false);
+      setAutoSaveStatus('saved');
+      
+      // Resetar o status após 3 segundos
+      setTimeout(() => {
+        setAutoSaveStatus('idle');
+      }, 3000);
+    } catch (error) {
+      console.error("Erro no salvamento automático:", error);
+      setAutoSaveStatus('error');
+      
+      // Resetar o status após 3 segundos
+      setTimeout(() => {
+        setAutoSaveStatus('idle');
+      }, 3000);
+    }
   };
   
   // Validação melhorada de dados antes do envio
@@ -158,25 +158,43 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
     const errors: string[] = [];
     
     // Usar funções de validação específicas
-    const companyNameError = validateCompanyName(data.company_name);
-    if (companyNameError) errors.push(companyNameError);
+    if (!data.company_name) {
+      errors.push("Nome da empresa é obrigatório");
+    } else {
+      const companyNameError = validateCompanyName(data.company_name);
+      if (companyNameError) errors.push(companyNameError);
+    }
     
-    const websiteError = validateWebsite(data.company_website);
-    if (websiteError) errors.push(websiteError);
+    if (data.company_website) {
+      const websiteError = validateWebsite(data.company_website);
+      if (websiteError) errors.push(websiteError);
+    }
     
-    const companySizeError = validateCompanySize(data.company_size);
-    if (companySizeError) errors.push(companySizeError);
+    if (!data.company_size) {
+      errors.push("Tamanho da empresa é obrigatório");
+    } else {
+      const companySizeError = validateCompanySize(data.company_size);
+      if (companySizeError) errors.push(companySizeError);
+    }
     
-    const companySectorError = validateCompanySector(data.company_sector);
-    if (companySectorError) errors.push(companySectorError);
+    if (!data.company_sector) {
+      errors.push("Setor da empresa é obrigatório");
+    } else {
+      const companySectorError = validateCompanySector(data.company_sector);
+      if (companySectorError) errors.push(companySectorError);
+    }
     
-    const currentPositionError = validateCurrentPosition(data.current_position);
-    if (currentPositionError) errors.push(currentPositionError);
+    if (!data.current_position) {
+      errors.push("Seu cargo atual é obrigatório");
+    } else {
+      const currentPositionError = validateCurrentPosition(data.current_position);
+      if (currentPositionError) errors.push(currentPositionError);
+    }
     
     return errors;
   };
   
-  // Ajustada para não retornar valor booleano e corresponder ao tipo Promise<void>
+  // Função do formulário quando submetido
   const handleSubmit = async (data: any) => {
     setIsLoading(true);
     setValidationErrors([]);

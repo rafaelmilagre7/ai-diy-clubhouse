@@ -32,7 +32,7 @@ export const professionalDataService = {
       let professionalInfo: Record<string, any> = {};
       
       if ('professional_info' in data) {
-        professionalInfo = data.professional_info;
+        professionalInfo = { ...data.professional_info };
       } else {
         // Assumir que os campos estão no nível raiz
         professionalInfo = {
@@ -61,11 +61,12 @@ export const professionalDataService = {
         .from('onboarding_progress')
         .select('completed_steps')
         .eq('id', progressId)
-        .single();
+        .maybeSingle(); // Usar maybeSingle em vez de single para evitar erros
         
       if (fetchError) {
         console.error("Erro ao buscar progresso atual:", fetchError);
-        throw new Error(`Erro ao buscar progresso: ${fetchError.message}`);
+        // Não lançar erro, tentar continuar com array vazio
+        console.log("Continuando com array vazio de completed_steps");
       }
       
       // Manipular o array de passos completos localmente
@@ -82,14 +83,20 @@ export const professionalDataService = {
       // Criar o objeto de atualização final incluindo o completed_steps
       const updateData = {
         ...initialUpdateData,
-        completed_steps: completedSteps
+        completed_steps: completedSteps,
+        sync_status: 'pendente',
+        last_sync_at: new Date().toISOString(),
+        current_step: 'business_context' // Definir próxima etapa
       };
       
-      // Atualizar o progresso
+      // Atualizar o progresso com upsert - cria se não existir, atualiza se existir
       const { data: result, error } = await supabase
         .from('onboarding_progress')
-        .update(updateData)
-        .eq('id', progressId)
+        .upsert({
+          id: progressId,
+          user_id: userId,
+          ...updateData
+        })
         .select();
         
       if (error) {
@@ -110,19 +117,19 @@ export const professionalDataService = {
       if (isSimulatedID(progressId)) {
         console.log("ID de progresso simulado detectado, retornando dados simulados:", progressId);
         return {
-          company_name: "Empresa Teste",
-          company_size: "11-50",
-          company_sector: "Tecnologia",
-          company_website: "https://exemplo.com",
-          current_position: "Diretor",
-          annual_revenue: "1-5M",
+          company_name: "",
+          company_size: "",
+          company_sector: "",
+          company_website: "",
+          current_position: "",
+          annual_revenue: "",
           professional_info: {
-            company_name: "Empresa Teste",
-            company_size: "11-50",
-            company_sector: "Tecnologia",
-            company_website: "https://exemplo.com",
-            current_position: "Diretor",
-            annual_revenue: "1-5M"
+            company_name: "",
+            company_size: "",
+            company_sector: "",
+            company_website: "",
+            current_position: "",
+            annual_revenue: ""
           }
         };
       }
@@ -137,7 +144,7 @@ export const professionalDataService = {
         .from('onboarding_progress')
         .select('professional_info, company_name, company_size, company_sector, company_website, current_position, annual_revenue')
         .eq('id', progressId)
-        .single();
+        .maybeSingle(); // Usar maybeSingle para evitar erros
         
       if (error) {
         if (error.code === 'PGRST116') {
@@ -152,7 +159,7 @@ export const professionalDataService = {
       return {
         ...data,
         // Garantir que o campo professional_info seja sempre um objeto
-        professional_info: data.professional_info || {}
+        professional_info: data?.professional_info || {}
       };
     } catch (error) {
       console.error("Erro ao buscar dados profissionais:", error);
