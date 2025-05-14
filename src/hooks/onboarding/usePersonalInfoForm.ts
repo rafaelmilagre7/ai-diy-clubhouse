@@ -27,7 +27,7 @@ export const usePersonalInfoForm = (
       country: initialData?.country || "Brasil",
       state: initialData?.state || "",
       city: initialData?.city || "",
-      timezone: initialData?.timezone || "America/Sao_Paulo"
+      timezone: initialData?.timezone || "America/Sao_Paulo" // Define o valor padrão como Brasília
     },
     mode: "onChange"
   });

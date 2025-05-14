@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useProgress } from "./useProgress";
 import { toast } from "sonner";
@@ -22,7 +21,7 @@ export const usePersonalInfoStep = () => {
     country: "Brasil",
     state: "",
     city: "",
-    timezone: "America/Sao_Paulo",
+    timezone: "America/Sao_Paulo", // Define o valor padrão como Brasília
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [validationAttempted, setValidationAttempted] = useState(false);

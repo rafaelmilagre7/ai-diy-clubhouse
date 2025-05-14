@@ -29,7 +29,7 @@ export const TimezoneInput = ({ value, onChange, disabled, readOnly, error }: Ti
 
   // Garantir que o valor padrão seja definido se não houver valor
   useEffect(() => {
-    if (!value && !disabled && !readOnly) {
+    if ((!value || value === "") && !disabled && !readOnly) {
       onChange("America/Sao_Paulo");
     }
   }, [value, onChange, disabled, readOnly]);
