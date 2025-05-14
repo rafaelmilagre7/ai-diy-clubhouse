@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { CompanyNameField } from "./professional-inputs/CompanyNameField";
@@ -92,6 +91,21 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
     }
   }, [initialData, methods]);
 
+  // Efeito para monitorar alterações no formulário para auto-save
+  useEffect(() => {
+    const subscription = methods.watch((data) => {
+      autoSave(data);
+    });
+    
+    return () => {
+      subscription.unsubscribe();
+      // Limpar qualquer timeout pendente
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, [methods.watch]);
+
   // Função para salvamento automático
   const autoSave = async (data: any) => {
     // Cancelar qualquer auto-save pendente
@@ -139,21 +153,6 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
     }, 2000);
   };
   
-  // Monitorar alterações no formulário para auto-save
-  useEffect(() => {
-    const subscription = methods.watch((data) => {
-      autoSave(data);
-    });
-    
-    return () => {
-      subscription.unsubscribe();
-      // Limpar qualquer timeout pendente
-      if (autoSaveTimeoutRef.current) {
-        clearTimeout(autoSaveTimeoutRef.current);
-      }
-    };
-  }, [methods.watch]);
-
   // Validação melhorada de dados antes do envio
   const validateData = (data: any): string[] => {
     const errors: string[] = [];

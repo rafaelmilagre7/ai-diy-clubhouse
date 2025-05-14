@@ -1,3 +1,4 @@
+
 export interface OnboardingData {
   // 1. Dados Pessoais
   personal_info: {
@@ -169,7 +170,7 @@ export interface OnboardingProgress {
 
 // Atualizando o tipo de OnboardingStepProps para incluir consistência entre os nomes de campos
 export interface OnboardingStepProps {
-  onSubmit: (stepId: string, data: any) => Promise<void>;
+  onSubmit: (stepId: string, data: any, shouldNavigate?: boolean) => Promise<void>;
   isSubmitting: boolean;
   isLastStep?: boolean;
   onComplete?: () => void;
