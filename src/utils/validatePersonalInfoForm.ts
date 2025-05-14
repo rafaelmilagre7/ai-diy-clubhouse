@@ -11,11 +11,11 @@ export const validatePersonalInfoForm = (data: Partial<PersonalInfoData>) => {
   const errors: Record<string, string> = {};
 
   // Validar campos obrigatórios
-  if (!data.state) {
+  if (!data.state || data.state.trim() === '') {
     errors.state = "Estado é obrigatório";
   }
 
-  if (!data.city) {
+  if (!data.city || data.city.trim() === '') {
     errors.city = "Cidade é obrigatória";
   }
   

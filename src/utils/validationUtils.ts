@@ -1,19 +1,24 @@
-
 /**
  * Valida um número de telefone brasileiro
- * @param phone Número de telefone
- * @returns true se for válido
+ * @param phone Número de telefone para validar
+ * @returns true se o telefone é válido
  */
 export const validateBrazilianPhone = (phone: string): boolean => {
-  // Remove caracteres não numéricos
-  const phoneDigits = phone.replace(/\D/g, '');
+  if (!phone) return true; // Telefone não é obrigatório
+
+  // Remover todos os caracteres não numéricos
+  const cleanPhone = phone.replace(/\D/g, '');
   
-  // Aceitar telefones com DDD (10-11 dígitos)
-  if (phoneDigits.length >= 10 && phoneDigits.length <= 11) {
-    return true;
-  }
+  // Verificar se tem entre 10 e 11 dígitos (com ou sem 9 no início)
+  if (cleanPhone.length < 10 || cleanPhone.length > 11) return false;
   
-  return false;
+  // Se tiver 11 dígitos, o 3º dígito deve ser 9
+  if (cleanPhone.length === 11 && cleanPhone.charAt(2) !== '9') return false;
+  
+  // Verificar se não são todos os dígitos iguais
+  const allSameDigits = /^(\d)\1+$/.test(cleanPhone);
+  
+  return !allSameDigits;
 };
 
 /**

@@ -49,21 +49,24 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
     setSubmitAttempts(prev => prev + 1);
     
     // Verificar campos obrigatórios
+    const localErrors: Record<string, string> = {};
+    
     if (!formData.state) {
-      errors.state = "Estado é obrigatório";
+      localErrors.state = "Estado é obrigatório";
     }
     
     if (!formData.city) {
-      errors.city = "Cidade é obrigatória";
+      localErrors.city = "Cidade é obrigatória";
     }
     
     // Garantir que temos um timezone selecionado
-    if (!formData.timezone) {
-      formData.timezone = "America/Sao_Paulo";
-    }
+    const submissionData = {
+      ...formData,
+      timezone: formData.timezone || "America/Sao_Paulo"
+    };
     
     // Verificar quais campos têm erro
-    const fieldErrors = Object.keys(errors);
+    const fieldErrors = Object.keys({...errors, ...localErrors});
     
     if (fieldErrors.length > 0) {
       // Criar uma mensagem que lista os campos com erro
@@ -79,13 +82,13 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
         }
       }).join(', ');
       
-      console.log("[PersonalInfoStep] Erros de validação:", errors);
+      console.log("[PersonalInfoStep] Erros de validação:", {...errors, ...localErrors});
       return;
     }
     
     try {
-      console.log("[PersonalInfoStep] Enviando dados do formulário:", formData);
-      await onSubmit('personal_info', formData);
+      console.log("[PersonalInfoStep] Enviando dados do formulário:", submissionData);
+      await onSubmit('personal_info', submissionData);
     } catch (error) {
       console.error("[PersonalInfoStep] Erro ao salvar dados:", error);
     }

@@ -43,6 +43,9 @@ export const PersonalInfoInputs = ({
   const userName = formData.name || user?.user_metadata?.name || '';
   const userEmail = formData.email || user?.email || '';
   
+  // Garantir que o DDI tenha formato correto
+  const ddi = formData.ddi && formData.ddi.startsWith('+') ? formData.ddi : '+55';
+  
   return (
     <div className="space-y-8">
       <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4 space-y-6">
@@ -73,11 +76,11 @@ export const PersonalInfoInputs = ({
             onChange={v => onChange("phone", v)}
             disabled={disabled}
             error={errors.phone}
-            ddi={formData.ddi || "+55"}
+            ddi={ddi}
             onChangeDDI={v => onChange("ddi", v)}
           />
           <TimezoneInput 
-            value={formData.timezone} 
+            value={formData.timezone || "America/Sao_Paulo"} 
             onChange={v => onChange("timezone", v)} 
             disabled={disabled} 
             error={errors.timezone}
@@ -101,9 +104,9 @@ export const PersonalInfoInputs = ({
       </div>
       
       <LocationInputs
-        country={formData.country}
-        state={formData.state}
-        city={formData.city}
+        country={formData.country || "Brasil"}
+        state={formData.state || ""}
+        city={formData.city || ""}
         onChangeCountry={v => onChange("country", v)}
         onChangeState={v => onChange("state", v)}
         onChangeCity={v => onChange("city", v)}
