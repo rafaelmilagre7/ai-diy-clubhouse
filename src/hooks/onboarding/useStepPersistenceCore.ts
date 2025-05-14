@@ -29,6 +29,8 @@ export function useStepPersistenceCore({
   const toastShown = React.useRef(false);
   // Cache local para dados não salvos
   const unsavedDataCache = React.useRef<Record<string, any>>({});
+  // Contador de tentativas
+  const saveAttempts = React.useRef(0);
 
   /**
    * Função principal para salvar dados de um passo específico
@@ -42,13 +44,14 @@ export function useStepPersistenceCore({
     thirdParam?: boolean
   ): Promise<void> => {
     if (!progress?.id) {
-      console.error("Não foi possível salvar dados: ID de progresso não encontrado");
+      console.error("[ERRO] Não foi possível salvar dados: ID de progresso não encontrado");
       toast.error("Erro ao salvar dados: ID de progresso não encontrado");
       return;
     }
 
     // Resetar a flag de toast ao iniciar uma nova operação de salvamento
     toastShown.current = false;
+    saveAttempts.current = 0;
 
     // Determinar os parâmetros corretos com base na assinatura usada
     let stepId: string;
@@ -61,118 +64,165 @@ export function useStepPersistenceCore({
       stepId = stepIdOrData;
       data = dataOrShouldNavigate;
       shouldNavigate = thirdParam !== undefined ? thirdParam : true;
-      console.log(`saveStepData chamado com stepId='${stepId}', data=objeto, shouldNavigate=${shouldNavigate}`);
+      console.log(`[DEBUG] saveStepData chamado com stepId='${stepId}', data=objeto, shouldNavigate=${shouldNavigate}`);
     } else {
       // Caso 2: saveStepData(data: any, shouldNavigate?: boolean)
       stepId = steps[currentStepIndex]?.id || '';
       data = stepIdOrData;
       shouldNavigate = typeof dataOrShouldNavigate === 'boolean' ? 
                        dataOrShouldNavigate : true;
-      console.log(`saveStepData chamado com data=objeto, shouldNavigate=${shouldNavigate}, inferindo stepId='${stepId}'`);
+      console.log(`[DEBUG] saveStepData chamado com data=objeto, shouldNavigate=${shouldNavigate}, inferindo stepId='${stepId}'`);
     }
     
-    console.log(`Salvando dados do passo ${stepId}, índice ${currentStepIndex}:`, data);
+    console.log(`[DEBUG] Salvando dados do passo ${stepId}, índice ${currentStepIndex}:`, data);
     
     // Salvar no cache local para recuperação em caso de falha
     unsavedDataCache.current[stepId] = data;
     
-    try {
-      // Adicionar o tipo de onboarding aos dados
-      const dataWithType = {
-        ...data,
-        onboarding_type: onboardingType
-      };
-      
-      // Validar dados obrigatórios por etapa
-      validateRequiredFields(stepId, dataWithType);
-      
-      // Registrar tentativa de salvamento
-      log("onboarding_save_attempt", { step: stepId, step_index: currentStepIndex });
-      
-      // Montar objeto de atualização para a etapa
-      const updateObj = buildUpdateObject(stepId, dataWithType, progress, currentStepIndex);
-      if (Object.keys(updateObj).length === 0) {
-        console.warn("Objeto de atualização vazio, nada para salvar");
+    // Função interna para tentativas com retry
+    const attemptSave = async (retryCount = 0): Promise<void> => {
+      if (retryCount > 2) {
+        console.error(`[ERRO] Falha após ${retryCount} tentativas de salvar dados`);
         if (!toastShown.current) {
-          toast.warning("Sem dados para salvar");
+          toast.error("Erro ao salvar dados após várias tentativas");
           toastShown.current = true;
         }
         return;
       }
 
-      console.log("Dados a serem enviados para o banco:", updateObj);
+      try {
+        saveAttempts.current = retryCount + 1;
+        
+        // Adicionar o tipo de onboarding aos dados
+        const dataWithType = {
+          ...data,
+          onboarding_type: onboardingType
+        };
+        
+        // Validar dados obrigatórios por etapa
+        validateRequiredFields(stepId, dataWithType);
+        
+        // Registrar tentativa de salvamento
+        log("onboarding_save_attempt", { 
+          step: stepId, 
+          step_index: currentStepIndex,
+          retry: retryCount
+        });
+        
+        // Montar objeto de atualização para a etapa
+        const updateObj = buildUpdateObject(stepId, dataWithType, progress, currentStepIndex);
+        if (Object.keys(updateObj).length === 0) {
+          console.warn("[AVISO] Objeto de atualização vazio, nada para salvar");
+          if (!toastShown.current) {
+            toast.warning("Sem dados para salvar");
+            toastShown.current = true;
+          }
+          return;
+        }
 
-      // Atualizar na tabela principal com objeto tipado corretamente
-      const updateWithMeta = {
-        ...updateObj,
-        // Garantir que campos importantes estejam sempre atualizados
-        updated_at: new Date().toISOString(),
-        sync_status: 'pendente' as string // Especificamos o tipo para evitar erros
-      };
-      
-      const result = await updateProgress(updateWithMeta);
-      
-      // Verificar se temos um retorno válido
-      if (!result || (result as any).error) {
-        const errorMessage = (result as any)?.error?.message || "Erro desconhecido ao atualizar dados";
-        console.error("Erro ao atualizar dados:", errorMessage);
+        console.log("[DEBUG] Dados a serem enviados para o banco:", updateObj);
+
+        // Adicionar logs de debug para ajudar a rastrear problemas
+        const debugLog = {
+          event: "save_attempt",
+          timestamp: new Date().toISOString(),
+          data: {
+            step_id: stepId,
+            current_index: currentStepIndex,
+            retry_count: retryCount
+          }
+        };
+
+        // Se já existir array de debug_logs, adicionar novo log; caso contrário, criar array
+        const existingLogs = Array.isArray(progress.debug_logs) ? progress.debug_logs : [];
+        const updatedLogs = [...existingLogs, debugLog].slice(-20); // manter apenas os 20 logs mais recentes
+        
+        // Atualizar na tabela principal com objeto tipado corretamente
+        const updateWithMeta = {
+          ...updateObj,
+          // Garantir que campos importantes estejam sempre atualizados
+          updated_at: new Date().toISOString(),
+          sync_status: 'pendente',
+          last_sync_at: new Date().toISOString(),
+          debug_logs: updatedLogs
+        };
+        
+        const result = await updateProgress(updateWithMeta);
+        
+        // Verificar se temos um retorno válido
+        if (!result || (result as any).error) {
+          const errorMessage = (result as any)?.error?.message || "Erro desconhecido ao atualizar dados";
+          console.error(`[ERRO] Erro ao atualizar dados (tentativa ${retryCount + 1}):`, errorMessage);
+          
+          logError("save_step_data_error", { 
+            step: stepId, 
+            error: errorMessage,
+            stepIndex: currentStepIndex,
+            retry: retryCount
+          });
+          
+          // Esperar um breve momento antes de tentar novamente
+          await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+          return attemptSave(retryCount + 1);
+        }
+        
+        // Dados salvos com sucesso, limpar do cache
+        delete unsavedDataCache.current[stepId];
+        
+        // Usar os dados retornados ou fallback para o objeto de progresso com as atualizações
+        const updatedProgress = (result as any).data || { ...progress, ...updateObj };
+        console.log("[DEBUG] Progresso atualizado com sucesso:", updatedProgress);
+        
+        // Registrar sucesso
+        log("onboarding_save_success", { 
+          step: stepId, 
+          step_index: currentStepIndex,
+          completed_steps: updatedProgress.completed_steps?.length || 0
+        });
+        
+        // Notificar usuário do salvamento (apenas uma vez)
+        if (!toastShown.current) {
+          toast.success("Dados salvos com sucesso!");
+          toastShown.current = true;
+        }
+        
+        // Forçar atualização dos dados local após salvar
+        await refreshProgress();
+        console.log("[DEBUG] Dados locais atualizados após salvar");
+        
+        // Navegação para a próxima etapa
+        if (shouldNavigate) {
+          console.log("[DEBUG] Tentando navegar para a próxima etapa...");
+          // Usar o módulo de navegação por etapas, passando o tipo de onboarding
+          navigateAfterStep(stepId, currentStepIndex, navigate, shouldNavigate, onboardingType);
+        } else {
+          console.log("[DEBUG] Navegação automática desativada, permanecendo na página atual");
+        }
+      } catch (error: any) {
+        console.error(`[ERRO] Erro ao salvar dados (tentativa ${retryCount + 1}):`, error);
         logError("save_step_data_error", { 
           step: stepId, 
-          error: errorMessage,
-          stepIndex: currentStepIndex
+          error: error instanceof Error ? error.message : String(error),
+          stepIndex: currentStepIndex,
+          retry: retryCount
         });
-        if (!toastShown.current) {
-          toast.error("Erro ao salvar dados. Por favor, tente novamente.");
-          toastShown.current = true;
+        
+        if (retryCount < 2) {
+          // Esperar antes de tentar novamente (backoff exponencial)
+          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount)));
+          return attemptSave(retryCount + 1);
+        } else {
+          if (!toastShown.current) {
+            toast.error("Erro ao salvar dados. Por favor, tente novamente.");
+            toastShown.current = true;
+          }
+          throw error;
         }
-        return;
       }
-      
-      // Dados salvos com sucesso, limpar do cache
-      delete unsavedDataCache.current[stepId];
-      
-      // Usar os dados retornados ou fallback para o objeto de progresso com as atualizações
-      const updatedProgress = (result as any).data || { ...progress, ...updateObj };
-      console.log("Progresso atualizado com sucesso:", updatedProgress);
-      
-      // Registrar sucesso
-      log("onboarding_save_success", { 
-        step: stepId, 
-        step_index: currentStepIndex,
-        completed_steps: updatedProgress.completed_steps?.length || 0
-      });
-      
-      // Notificar usuário do salvamento (apenas uma vez)
-      if (!toastShown.current) {
-        toast.success("Dados salvos com sucesso!");
-        toastShown.current = true;
-      }
-      
-      // Forçar atualização dos dados local após salvar
-      await refreshProgress();
-      console.log("Dados locais atualizados após salvar");
-      
-      // Navegação para a próxima etapa
-      if (shouldNavigate) {
-        console.log("Tentando navegar para a próxima etapa...");
-        // Usar o módulo de navegação por etapas, passando o tipo de onboarding
-        navigateAfterStep(stepId, currentStepIndex, navigate, shouldNavigate, onboardingType);
-      } else {
-        console.log("Navegação automática desativada, permanecendo na página atual");
-      }
-    } catch (error: any) {
-      console.error("Erro ao salvar dados:", error);
-      logError("save_step_data_error", { 
-        step: stepId, 
-        error: error instanceof Error ? error.message : String(error),
-        stepIndex: currentStepIndex
-      });
-      if (!toastShown.current) {
-        toast.error("Erro ao salvar dados. Por favor, tente novamente.");
-        toastShown.current = true;
-      }
-      throw error;
-    }
+    };
+    
+    // Iniciar processo de salvamento com retries
+    await attemptSave();
   };
 
   /**
@@ -186,7 +236,7 @@ export function useStepPersistenceCore({
     }
     
     try {
-      console.log(`Completando onboarding do tipo ${onboardingType}...`);
+      console.log(`[DEBUG] Completando onboarding do tipo ${onboardingType}...`);
       log("complete_onboarding_attempt", { type: onboardingType });
       
       // Marca o onboarding como concluído
@@ -194,6 +244,7 @@ export function useStepPersistenceCore({
         is_completed: true,
         completed_steps: steps.map(s => s.id),
         onboarding_type: onboardingType,
+        current_step: 'completed',
         updated_at: new Date().toISOString()
       });
       
@@ -218,7 +269,7 @@ export function useStepPersistenceCore({
         }
       }, 1000);
     } catch (error: any) {
-      console.error("Erro ao completar onboarding:", error);
+      console.error("[ERRO] Erro ao completar onboarding:", error);
       logError("complete_onboarding_error", { 
         error: error instanceof Error ? error.message : String(error),
         type: onboardingType 
@@ -242,20 +293,23 @@ export function useStepPersistenceCore({
     switch (stepId) {
       case 'personal_info':
       case 'personal':
-        if (!data.name && !data.personal_info?.name) missingFields.push('nome');
-        if (!data.email && !data.personal_info?.email) missingFields.push('email');
+        if (!data.name && (!data.personal_info || !data.personal_info.name)) missingFields.push('nome');
+        if (!data.email && (!data.personal_info || !data.personal_info.email)) missingFields.push('email');
         break;
-      // Correção: alteramos 'professional_data' para 'professional_info'  
+      // Correção: 'professional_data' para 'professional_info'  
       case 'professional_info':
       case 'professional_data':
-        if (!data.company_name && !data.professional_info?.company_name) missingFields.push('nome da empresa');
+        if (!data.company_name && 
+           (!data.professional_info || !data.professional_info.company_name)) {
+          missingFields.push('nome da empresa');
+        }
         break;
       // Adicionar outras validações conforme necessário
     }
     
     // Se houver campos faltando, registrar mas não bloquear
     if (missingFields.length > 0) {
-      console.warn(`Campos obrigatórios não preenchidos na etapa ${stepId}:`, missingFields);
+      console.warn(`[AVISO] Campos recomendados não preenchidos na etapa ${stepId}:`, missingFields);
       log("onboarding_missing_fields", { 
         step: stepId, 
         missing: missingFields.join(', ')
@@ -270,9 +324,17 @@ export function useStepPersistenceCore({
     return unsavedDataCache.current[stepId];
   };
 
+  /**
+   * Recupera o número de tentativas de salvamento atual
+   */
+  const getCurrentAttemptCount = () => {
+    return saveAttempts.current;
+  };
+
   return {
     saveStepData,
     completeOnboarding,
-    getUnsavedData
+    getUnsavedData,
+    getCurrentAttemptCount
   };
 }
