@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useProgress } from "./useProgress";
 import { toast } from "sonner";
@@ -29,11 +30,14 @@ export const usePersonalInfoStep = () => {
 
   // Função para carregar dados iniciais do banco
   const loadInitialData = useCallback(() => {
+    console.log("[usePersonalInfoStep] Carregando dados iniciais");
+    
     // Garantir que sempre carrega só do personal_info
     const userName = profile?.name || user?.user_metadata?.name || "";
     const userEmail = profile?.email || user?.email || "";
 
     if (progress?.personal_info) {
+      console.log("[usePersonalInfoStep] Dados encontrados:", progress.personal_info);
       let ddi = progress.personal_info.ddi || "+55";
       if (ddi) {
         ddi = "+" + ddi.replace(/\+/g, '').replace(/\D/g, '');
@@ -51,6 +55,7 @@ export const usePersonalInfoStep = () => {
         timezone: progress.personal_info.timezone || "GMT-3"
       });
     } else {
+      console.log("[usePersonalInfoStep] Nenhum dado encontrado, usando valores padrão");
       setFormData(prev => ({
         ...prev,
         name: userName,
@@ -88,7 +93,7 @@ export const usePersonalInfoStep = () => {
 
   const handleChange = (field: keyof PersonalInfoData, value: string) => {
     // Registrar a alteração para debug
-    console.log(`Campo alterado: ${field}, Valor: ${value}`);
+    console.log(`[usePersonalInfoStep] Campo alterado: ${field}, Valor: ${value}`);
     
     // Se for o campo DDI, garantir formatação adequada
     if (field === 'ddi') {
@@ -153,11 +158,15 @@ export const usePersonalInfoStep = () => {
         ? currentCompletedSteps
         : [...currentCompletedSteps, "personal"];
       
-      await updateProgress({
+      const result = await updateProgress({
         personal_info: dataToSubmit,
         current_step: "professional_data",
         completed_steps: newCompletedSteps,
       });
+
+      if (result?.error) {
+        throw new Error(result.error.message);
+      }
 
       // Única notificação de sucesso com informação combinada
       toast.success("Dados pessoais salvos com sucesso!", {

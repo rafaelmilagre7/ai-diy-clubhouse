@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { PersonalInfoStep } from "@/components/onboarding/steps/PersonalInfoStep";
@@ -13,12 +14,9 @@ const PersonalInfo = () => {
   const navigate = useNavigate();
   const [loadingAttempts, setLoadingAttempts] = useState(0);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const { 
-    isLoading: progressLoading, 
-    refreshProgress, 
-    lastError,
-    progress 
-  } = useProgress();
+  
+  // Usar diretamente o hook useProgress em vez de reimportá-lo
+  const { progress, isLoading, refreshProgress, lastError } = useProgress();
   
   const {
     formData,
@@ -40,7 +38,9 @@ const PersonalInfo = () => {
       await refreshProgress();
       console.log("[DEBUG] Dados de progresso atualizados:", progress);
       
-      loadInitialData();
+      if (progress) {
+        loadInitialData();
+      }
       setLoadingAttempts(prev => prev + 1);
     } catch (error) {
       console.error("[ERRO] Falha ao carregar dados:", error);
@@ -60,7 +60,7 @@ const PersonalInfo = () => {
   // Adicionar um efeito para forçar carregamento após um tempo limite
   useEffect(() => {
     // Se ainda estiver carregando após 5 segundos, tenta novamente
-    if (progressLoading && loadingAttempts < 3) {
+    if (isLoading && loadingAttempts < 3) {
       const timer = setTimeout(() => {
         console.log("[DEBUG] Tempo limite de carregamento atingido, tentando novamente");
         attemptDataLoad();
@@ -68,7 +68,7 @@ const PersonalInfo = () => {
       
       return () => clearTimeout(timer);
     }
-  }, [progressLoading, loadingAttempts]);
+  }, [isLoading, loadingAttempts]);
 
   useEffect(() => {
     if (progress) {
@@ -89,12 +89,12 @@ const PersonalInfo = () => {
   };
 
   // Se tentou carregar 3 vezes e ainda está carregando, mostrar botão para forçar continuação
-  const showForceButton = loadingAttempts >= 3 && progressLoading;
+  const showForceButton = loadingAttempts >= 3 && isLoading;
 
   // Se houver um erro de carregamento ou erro no último progresso
   const hasError = loadError || lastError;
 
-  if (progressLoading && !showForceButton) {
+  if (isLoading && !showForceButton) {
     console.log("[DEBUG] Exibindo spinner de carregamento");
     return (
       <OnboardingLayout 

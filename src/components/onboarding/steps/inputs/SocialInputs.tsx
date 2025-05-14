@@ -26,10 +26,12 @@ export const SocialInputs = ({
   disabled = false,
   errors = {}
 }: SocialInputsProps) => {
-  const { register, formState: { errors: formErrors } } = useFormContext();
+  const formContext = useFormContext();
+  const register = formContext?.register;
+  const formErrors = formContext?.formState?.errors;
   
   // Se estiver usando react-hook-form
-  if (!onChangeLinkedin && !onChangeInstagram) {
+  if (register && formErrors && !onChangeLinkedin && !onChangeInstagram) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
@@ -100,7 +102,7 @@ export const SocialInputs = ({
             id="linkedin"
             type="text"
             value={linkedin}
-            onChange={e => onChangeLinkedin && onChangeLinkedin(e.target.value)}
+            onChange={e => onChangeLinkedin?.(e.target.value)}
             disabled={disabled}
             placeholder="linkedin.com/in/seuperfil"
             className="pl-10"
@@ -123,7 +125,7 @@ export const SocialInputs = ({
             id="instagram"
             type="text"
             value={instagram}
-            onChange={e => onChangeInstagram && onChangeInstagram(e.target.value)}
+            onChange={e => onChangeInstagram?.(e.target.value)}
             disabled={disabled}
             placeholder="@seuinsta"
             className="pl-10"

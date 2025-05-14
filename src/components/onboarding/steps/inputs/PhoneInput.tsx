@@ -16,17 +16,19 @@ interface PhoneInputProps {
 }
 
 export const PhoneInput = ({ 
-  value, 
+  value = "", 
   onChange, 
-  disabled, 
+  disabled = false, 
   error,
   ddi = "+55",
   onChangeDDI
 }: PhoneInputProps) => {
-  const { register, formState: { errors } } = useFormContext();
+  const formContext = useFormContext();
+  const register = formContext?.register;
+  const errors = formContext?.formState?.errors;
   
   // Se estiver usando react-hook-form
-  if (!onChange) {
+  if (register && errors && !onChange) {
     return (
       <div className="space-y-2">
         <label htmlFor="phone" className="block text-sm font-medium">
@@ -69,7 +71,7 @@ export const PhoneInput = ({
           id="phone"
           type="tel"
           value={value}
-          onChange={e => onChange(e.target.value)}
+          onChange={e => onChange?.(e.target.value)}
           disabled={disabled}
           placeholder="(00) 00000-0000"
           className="pl-10"
