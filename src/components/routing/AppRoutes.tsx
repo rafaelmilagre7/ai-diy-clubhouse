@@ -1,23 +1,21 @@
 
 import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { ProtectedRoute } from "./ProtectedRoute";
+import ProtectedRoute from "./ProtectedRoute";
 import MemberLayout from "@/components/layout/MemberLayout";
 import DashboardPage from "@/pages/member/Dashboard";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { authRoutes } from "@/routes/AuthRoutes";
-
-// Lazy loading para páginas não críticas
-const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
-const AdminLayout = lazy(() => import("@/components/layout/AdminLayout"));
-const FormacaoLayout = lazy(() => import("@/components/layout/formacao/FormacaoLayout"));
+import NotFoundPage from "@/pages/NotFound"; // Corrigido para o caminho correto
+import AdminLayout from "@/components/layout/AdminLayout";
 
 // Lazy loading para áreas administrativas
 const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
-const AdminUsers = lazy(() => import("@/pages/admin/users/AdminUsers"));
-const AdminSettings = lazy(() => import("@/pages/admin/settings/AdminSettings"));
+const AdminUsers = lazy(() => import("@/pages/admin/AdminUsers")); // Ajustado para o caminho correto
+const AdminSettings = lazy(() => import("@/pages/admin/AdminSettings")); // Ajustado para o caminho correto
 
 // Lazy loading para área de formação
+const FormacaoLayout = lazy(() => import("@/components/layout/formacao/FormacaoLayout"));
 const FormacaoDashboard = lazy(() => import("@/pages/formacao/FormacaoDashboard"));
 
 /**
