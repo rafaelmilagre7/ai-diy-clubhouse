@@ -2,76 +2,85 @@
 import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 
 /**
- * Builder específico para dados de contexto de negócio
- * Processa e normaliza os dados para facilitar interpretação por IA
+ * Normaliza dados do contexto de negócio para garantir consistência
+ * entre os formatos business_data (legado) e business_context
  */
-export function buildBusinessContextUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
-  const updateObj: Record<string, any> = {};
-  
-  console.log("[businessContextBuilder] Construindo objeto de atualização para Business Context:", data);
-  
-  if (!data || !progress) {
-    console.warn("[businessContextBuilder] Dados ou progresso não fornecidos para Business Context Builder");
-    return updateObj;
+export function normalizeBusinessContextData(data: any): OnboardingData['business_context'] {
+  // Se já estiver no formato correto, retornar diretamente
+  if (data && 
+      (data.business_model !== undefined || 
+       data.business_challenges !== undefined || 
+       data.short_term_goals !== undefined || 
+       data.medium_term_goals !== undefined || 
+       data.important_kpis !== undefined)) {
+    console.log("[businessContextBuilder] Dados já estão no formato business_context");
+    return data;
   }
   
-  try {
-    // Determinar de onde os dados estão vindo (direto ou aninhado)
-    let contextData: Record<string, any>;
+  // Se dados estiverem em formato business_data (legado), converter
+  if (data && typeof data === 'object') {
+    console.log("[businessContextBuilder] Convertendo business_data para business_context");
     
-    // Verificar se os dados vêm como parte do formato aninhado (via data.business_context)
-    if (typeof data.business_context === 'object' && data.business_context !== null) {
-      contextData = data.business_context;
-      console.log("[businessContextBuilder] Usando dados de formato aninhado business_context");
-    } 
-    // Caso contrário, assumir que os dados são passados diretamente
-    else {
-      contextData = { ...data };
-      console.log("[businessContextBuilder] Usando dados passados diretamente");
-    }
-    
-    // Garantir que o objeto business_context existe no objeto de atualização
-    updateObj.business_context = {
-      // Manter dados existentes (se houver)
-      ...(typeof progress.business_context === 'object' && progress.business_context !== null 
-        ? progress.business_context : {}),
-      // Adicionar novos dados
-      ...contextData,
-      // Adicionar timestamp
-      _last_updated: new Date().toISOString()
+    // Mapeamento de campos do formato legado para o novo formato
+    return {
+      business_model: data.model || data.business_model || "",
+      business_challenges: Array.isArray(data.challenges) ? data.challenges : 
+                         Array.isArray(data.business_challenges) ? data.business_challenges : [],
+      short_term_goals: Array.isArray(data.short_goals) ? data.short_goals :
+                       Array.isArray(data.short_term_goals) ? data.short_term_goals : [],
+      medium_term_goals: Array.isArray(data.mid_goals) ? data.mid_goals :
+                        Array.isArray(data.medium_term_goals) ? data.medium_term_goals : [],
+      important_kpis: Array.isArray(data.kpis) ? data.kpis :
+                     Array.isArray(data.important_kpis) ? data.important_kpis : [],
+      additional_context: data.additional_context || data.context || ""
     };
-    
-    // Remover campos undefined/null que podem causar problemas no Supabase
-    Object.keys(updateObj.business_context).forEach(key => {
-      if (updateObj.business_context[key] === undefined || updateObj.business_context[key] === null) {
-        delete updateObj.business_context[key];
-      }
-      
-      // Garantir que arrays continuem sendo arrays mesmo quando vazios
-      if (Array.isArray(updateObj.business_context[key]) && updateObj.business_context[key].length === 0) {
-        updateObj.business_context[key] = [];
-      }
-    });
-    
-    // Compatibilidade: copiar para business_data apenas se já existir no progresso atual
-    // Isso ajuda na transição suave do formato antigo para o novo
-    if (progress.business_data !== undefined) {
-      // Certificar que business_data é um objeto
-      const baseBusinessData = typeof progress.business_data === 'object' && progress.business_data 
-        ? progress.business_data 
-        : {};
-        
-      updateObj.business_data = {
-        ...baseBusinessData,
-        ...updateObj.business_context,
-        _deprecated: true // Marcar como deprecated para futura remoção
-      };
-    }
-    
-    console.log("[businessContextBuilder] Objeto de atualização gerado:", updateObj);
-    return updateObj;
-  } catch (error) {
-    console.error("[businessContextBuilder] Erro ao construir objeto de atualização de Business Context:", error);
-    return updateObj;
   }
+  
+  // Retornar objeto vazio se nada for encontrado
+  return {
+    business_model: "",
+    business_challenges: [],
+    short_term_goals: [],
+    medium_term_goals: [],
+    important_kpis: [],
+    additional_context: ""
+  };
+}
+
+/**
+ * Extrai dados de contexto de negócio do objeto de progresso,
+ * unificando formatos legados e atuais
+ */
+export function getBusinessContextFromProgress(progress: OnboardingProgress | null): OnboardingData['business_context'] {
+  if (!progress) {
+    console.log("[businessContextBuilder] Progresso não encontrado, retornando objeto vazio");
+    return {
+      business_model: "",
+      business_challenges: [],
+      short_term_goals: [],
+      medium_term_goals: [],
+      important_kpis: [],
+      additional_context: ""
+    };
+  }
+
+  // Verificar primeiro no formato atual (business_context)
+  if (progress.business_context) {
+    return normalizeBusinessContextData(progress.business_context);
+  }
+  
+  // Verificar depois no formato legado (business_data)
+  if (progress.business_data) {
+    return normalizeBusinessContextData(progress.business_data);
+  }
+  
+  // Se nada for encontrado, retornar objeto vazio
+  return {
+    business_model: "",
+    business_challenges: [],
+    short_term_goals: [],
+    medium_term_goals: [],
+    important_kpis: [],
+    additional_context: ""
+  };
 }

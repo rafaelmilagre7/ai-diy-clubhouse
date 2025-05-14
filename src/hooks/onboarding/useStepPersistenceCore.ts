@@ -1,5 +1,6 @@
+
 import React, { useRef } from "react";
-import { useProgress } from "../useProgress";
+import { useProgress } from "./useProgress"; // Corrigindo o caminho do import
 import { buildUpdateObject } from "./persistence/stepDataBuilder";
 import { navigateAfterStep } from "./persistence/stepNavigator";
 import { steps } from "./useStepDefinitions";
@@ -142,18 +143,13 @@ export function useStepPersistenceCore({
         // Importante: Adicionar o passo atual nas etapas concluídas se ainda não estiver lá
         completed_steps: Array.isArray(progress.completed_steps) 
           ? [...new Set([...progress.completed_steps, stepId])]
-          : [stepId]
+          : [stepId],
+        
+        // Adicionando o current_step para resolver o erro de compilação
+        current_step: stepId !== 'review' ? 
+          (steps[currentStepIndex + 1]?.id || progress.current_step) : 
+          progress.current_step
       };
-      
-      // Atualizar o passo atual no objeto de progresso
-      // Isso é crucial para a navegação correta
-      if (stepId !== 'review') {
-        const nextStepIndex = currentStepIndex + 1;
-        if (nextStepIndex < steps.length) {
-          const nextStepId = steps[nextStepIndex].id;
-          updateWithMeta.current_step = nextStepId;
-        }
-      }
       
       // Executar a atualização no banco de dados
       const result = await updateProgress(updateWithMeta);
@@ -221,60 +217,6 @@ export function useStepPersistenceCore({
       setTimeout(() => {
         isSaving.current = false;
       }, 500);
-    }
-  };
-
-  const completeOnboarding = async () => {
-    if (!progress?.id) {
-      toast.error("Progresso não encontrado. Tente recarregar a página.");
-      return;
-    }
-    
-    try {
-      console.log(`[DEBUG] Completando onboarding do tipo ${onboardingType}...`);
-      log("complete_onboarding_attempt", { type: onboardingType });
-      
-      // Marca o onboarding como concluído
-      const result = await updateProgress({
-        is_completed: true,
-        completed_steps: steps.map(s => s.id),
-        onboarding_type: onboardingType,
-        current_step: 'completed',
-        updated_at: new Date().toISOString()
-      });
-      
-      if ((result as any)?.error) {
-        throw new Error((result as any).error.message || "Erro ao completar onboarding");
-      }
-      
-      // Atualiza dados locais
-      await refreshProgress();
-      
-      log("complete_onboarding_success", { type: onboardingType });
-      toast.success("Onboarding concluído com sucesso!");
-      
-      // Redirecionamento após delay para garantir atualização do estado
-      setTimeout(() => {
-        // Redirecionar para página apropriada com base no tipo de onboarding
-        if (onboardingType === 'club') {
-          // Adicionar parâmetro para ativar geração automática da trilha
-          navigate("/onboarding/trail-generation?autoGenerate=true");
-        } else {
-          navigate("/learning"); // Rota para a área de aprendizado da formação
-        }
-      }, 1000);
-    } catch (error: any) {
-      console.error("[ERRO] Erro ao completar onboarding:", error);
-      logError("complete_onboarding_error", { 
-        error: error instanceof Error ? error.message : String(error),
-        type: onboardingType 
-      });
-      toast.error("Erro ao finalizar onboarding. Por favor, tente novamente.");
-      
-      // Fallback para dashboard em caso de erro, usando navigate
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 1500);
     }
   };
 
