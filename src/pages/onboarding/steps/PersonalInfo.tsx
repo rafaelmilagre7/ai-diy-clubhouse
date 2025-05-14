@@ -8,16 +8,21 @@ import { useProgress } from "@/hooks/onboarding/useProgress";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, CloudOff, RefreshCw } from "lucide-react";
 
 const PersonalInfo = () => {
   const navigate = useNavigate();
   const [loadingAttempts, setLoadingAttempts] = useState(0);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [forceSkipLoading, setForceSkipLoading] = useState(false);
   
   // Usar hook useProgress para obter e manter dados de progresso
-  const { progress, isLoading, refreshProgress, lastError } = useProgress();
+  const { 
+    progress, 
+    isLoading, 
+    refreshProgress, 
+    lastError, 
+    isOfflineMode,
+    initializeOfflineMode 
+  } = useProgress();
   
   const {
     formData,
@@ -33,7 +38,6 @@ const PersonalInfo = () => {
   // Função para tentar carregar dados novamente
   const attemptDataLoad = async () => {
     try {
-      setLoadError(null);
       console.log("[DEBUG] Tentativa #" + (loadingAttempts + 1) + " de carregar dados");
       
       await refreshProgress();
@@ -45,7 +49,12 @@ const PersonalInfo = () => {
       setLoadingAttempts(prev => prev + 1);
     } catch (error) {
       console.error("[ERRO] Falha ao carregar dados:", error);
-      setLoadError("Erro ao carregar dados. Por favor, tente novamente.");
+      
+      // Se falhar após múltiplas tentativas, ativar modo offline
+      if (loadingAttempts >= 1) {
+        console.log("[DEBUG] Ativando modo offline após falhas de carregamento");
+        initializeOfflineMode();
+      }
     }
   };
 
@@ -53,17 +62,8 @@ const PersonalInfo = () => {
     console.log("[DEBUG] PersonalInfo montado - iniciando carregamento de dados");
     attemptDataLoad();
     
-    // Definir timeout de segurança
-    const safetyTimeout = setTimeout(() => {
-      if (isLoading) {
-        console.warn("[DEBUG] Timeout de segurança acionado para evitar loading infinito");
-        setForceSkipLoading(true);
-      }
-    }, 8000); // 8 segundos de timeout absoluto
-    
     return () => {
       console.log("[DEBUG] PersonalInfo desmontado");
-      clearTimeout(safetyTimeout);
     };
   }, []);
 
@@ -106,65 +106,52 @@ const PersonalInfo = () => {
     }
   };
 
-  // Forçar continuação se o carregamento estiver demorando muito
-  if ((loadingAttempts >= 3 || forceSkipLoading) && isLoading) {
+  // Se ainda está carregando
+  if (isLoading) {
     return (
       <OnboardingLayout 
         currentStep={1} 
         title="Dados Pessoais" 
         backUrl="/"
       >
-        <div className="space-y-6">
-          <Alert className="bg-yellow-50 border-yellow-200">
-            <AlertTriangle className="h-5 w-5 text-yellow-600" />
-            <AlertDescription className="ml-2 text-yellow-700">
-              Estamos tendo dificuldades para carregar seus dados. Você pode continuar mesmo assim ou tentar novamente.
-            </AlertDescription>
-          </Alert>
-          
-          <div className="flex justify-center mt-6 space-x-4">
-            <button 
-              onClick={() => {
-                // Forçar carregamento com dados padrão vazios
-                toast.info("Continuando com dados padrão");
-                setForceSkipLoading(true);
-                setLoadingAttempts(0);
-              }}
-              className="px-4 py-2 bg-[#0ABAB5] text-white rounded hover:bg-[#0ABAB5]/90"
-            >
-              Continuar Mesmo Assim
-            </button>
-            <button 
-              onClick={attemptDataLoad}
-              className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
-            >
-              Tentar Novamente
-            </button>
-          </div>
+        <div className="flex flex-col justify-center items-center py-20 space-y-6">
+          <LoadingSpinner size="lg" />
+          <p className="text-gray-400">Carregando seus dados...</p>
         </div>
       </OnboardingLayout>
     );
   }
 
-  // Se ainda está carregando (e não atingimos o limite de tentativas)
-  if (isLoading && !forceSkipLoading) {
-    console.log("[DEBUG] Exibindo spinner de carregamento");
+  // Se estamos em modo offline
+  if (isOfflineMode) {
     return (
       <OnboardingLayout 
         currentStep={1} 
         title="Dados Pessoais" 
         backUrl="/"
       >
-        <div className="flex justify-center items-center py-20">
-          <LoadingSpinner size="lg" />
-          <p className="ml-4 text-gray-400">Carregando seus dados...</p>
-        </div>
+        <Alert className="bg-blue-50 border-blue-200 mb-6">
+          <CloudOff className="h-5 w-5 text-blue-600" />
+          <AlertDescription className="ml-2 text-blue-700">
+            Você está no modo offline. Os dados serão armazenados localmente.
+          </AlertDescription>
+        </Alert>
+        
+        <PersonalInfoStep
+          onSubmit={handleSuccess}
+          isSubmitting={isSubmitting}
+          formData={formData}
+          errors={errors}
+          onChange={handleChange}
+          isSaving={isSaving}
+          lastSaveTime={lastSaveTime}
+        />
       </OnboardingLayout>
     );
   }
 
   // Se houver erro, mostramos uma mensagem de erro com opção para tentar novamente
-  if (loadError || lastError) {
+  if (lastError) {
     return (
       <OnboardingLayout 
         currentStep={1} 
@@ -175,26 +162,28 @@ const PersonalInfo = () => {
           <Alert variant="destructive" className="bg-red-50 border-red-200">
             <AlertTriangle className="h-5 w-5" />
             <AlertDescription className="ml-2">
-              {loadError || (lastError ? "Erro ao carregar dados de progresso." : "")}
+              {lastError ? "Não foi possível carregar seus dados. Verifique sua conexão e tente novamente." : ""}
             </AlertDescription>
           </Alert>
           
           <div className="flex justify-center mt-6 space-x-4">
             <button 
               onClick={attemptDataLoad}
-              className="px-4 py-2 bg-[#0ABAB5] text-white rounded hover:bg-[#0ABAB5]/90"
+              className="flex items-center px-4 py-2 bg-[#0ABAB5] text-white rounded hover:bg-[#0ABAB5]/90"
             >
+              <RefreshCw className="h-4 w-4 mr-2" />
               Tentar Novamente
             </button>
             <button 
               onClick={() => {
-                // Continuar com dados padrão
-                setForceSkipLoading(true);
-                toast.info("Continuando com dados padrão");
+                // Ativar modo offline
+                initializeOfflineMode();
+                toast.info("Modo offline ativado. Suas alterações serão salvas localmente.");
               }}
-              className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+              className="flex items-center px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
             >
-              Continuar Mesmo Assim
+              <CloudOff className="h-4 w-4 mr-2" />
+              Continuar Offline
             </button>
           </div>
         </div>

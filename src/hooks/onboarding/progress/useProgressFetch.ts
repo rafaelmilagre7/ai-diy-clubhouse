@@ -4,6 +4,11 @@ import { OnboardingProgress } from "@/types/onboarding";
 import { fetchOnboardingProgress, createInitialOnboardingProgress } from "../persistence/progressPersistence";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
+import { isDevelopmentMode } from "@/lib/supabase/client";
+
+// Constantes de configuração
+const MAX_FETCH_ATTEMPTS = 2;
+const FETCH_TIMEOUT_MS = 3000;
 
 export const useProgressFetch = (
   isMounted: MutableRefObject<boolean>,
@@ -15,6 +20,7 @@ export const useProgressFetch = (
   logDebugEvent: (eventName: string, data?: any) => void
 ) => {
   const { user } = useAuth();
+  const isDevMode = isDevelopmentMode();
   
   /**
    * Busca o progresso do onboarding do usuário com retry limitado e seguro
@@ -28,7 +34,7 @@ export const useProgressFetch = (
     }
     
     // Garantir que não estamos em um loop infinito
-    if (retryCount.current > 3) {
+    if (retryCount.current >= MAX_FETCH_ATTEMPTS) {
       logDebugEvent("fetchProgress_tooManyRetries", { retries: retryCount.current });
       console.warn("[AVISO] Muitas tentativas de buscar progresso, interrompendo.");
       if (isMounted.current) {
@@ -41,8 +47,16 @@ export const useProgressFetch = (
       setIsLoading(true);
       logDebugEvent("fetchProgress_start", { userId: user.id, attempt: retryCount.current + 1 });
       
-      // Passo 1: Tentar buscar progresso existente
-      const { data, error } = await fetchOnboardingProgress(user.id);
+      // Definir timeout para a operação
+      const timeoutPromise = new Promise<{data: null, error: Error}>((_, reject) => {
+        setTimeout(() => {
+          reject(new Error(`Timeout após ${FETCH_TIMEOUT_MS}ms ao buscar progresso`));
+        }, FETCH_TIMEOUT_MS);
+      });
+      
+      // Passo 1: Tentar buscar progresso existente com timeout
+      const fetchPromise = fetchOnboardingProgress(user.id);
+      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
       
       // Verificação crítica: se componente desmontado, abortar operação
       if (!isMounted.current) {
@@ -55,9 +69,11 @@ export const useProgressFetch = (
         console.error("[ERRO] Falha ao buscar progresso:", error);
         lastError.current = error;
         
-        // Exibir toast apenas no primeiro erro
-        if (retryCount.current === 0) {
-          toast.error("Erro ao carregar seus dados. Tentando novamente...");
+        // Exibir toast apenas no primeiro erro e apenas em produção
+        if (retryCount.current === 0 && !isDevMode) {
+          toast.error("Erro ao carregar seus dados. Tentando novamente...", {
+            duration: 3000
+          });
         }
         
         // Incrementar contagem de tentativas
@@ -75,7 +91,23 @@ export const useProgressFetch = (
         logDebugEvent("fetchProgress_creating", { userId: user.id });
         console.log("[DEBUG] Progresso não encontrado, criando...");
         
-        const { data: initialData, error: createError } = await createInitialOnboardingProgress(user);
+        // Verificação para evitar criar dados em desenvolvimento sem Supabase
+        if (isDevMode && !import.meta.env.VITE_SUPABASE_URL) {
+          logDebugEvent("fetchProgress_skipCreateInDev");
+          console.log("[DEBUG] Modo de desenvolvimento sem Supabase detectado. Pulando criação.");
+          
+          if (isMounted.current) {
+            setIsLoading(false);
+          }
+          return null;
+        }
+        
+        // Tentar criar novo progresso com timeout
+        const createPromise = createInitialOnboardingProgress(user);
+        const { data: initialData, error: createError } = await Promise.race([
+          createPromise,
+          timeoutPromise
+        ]);
         
         // Verificação crítica: se componente desmontado, abortar operação
         if (!isMounted.current) return null;
@@ -84,7 +116,10 @@ export const useProgressFetch = (
           logDebugEvent("fetchProgress_createError", { error: createError.message });
           console.error("[ERRO] Falha ao criar progresso inicial:", createError);
           lastError.current = createError;
-          toast.error("Erro ao configurar seu perfil. Por favor, tente novamente.");
+          
+          if (!isDevMode) {
+            toast.error("Erro ao configurar seu perfil. Por favor, tente novamente.");
+          }
           
           // Garantir que isLoading é definido para false
           if (isMounted.current) {
@@ -140,8 +175,8 @@ export const useProgressFetch = (
       console.error("[ERRO] Exceção ao buscar progresso:", e);
       lastError.current = e;
       
-      // Exibir toast apenas no primeiro erro
-      if (retryCount.current === 0) {
+      // Exibir toast apenas no primeiro erro e não em desenvolvimento
+      if (retryCount.current === 0 && !isDevMode) {
         toast.error("Erro ao carregar seus dados. Por favor, tente novamente.");
       }
       
@@ -159,7 +194,7 @@ export const useProgressFetch = (
         setIsLoading(false);
       }
     }
-  }, [user, setIsLoading, setProgress, isMounted, retryCount, lastError, progressId, logDebugEvent]);
+  }, [user, setIsLoading, setProgress, isMounted, retryCount, lastError, progressId, logDebugEvent, isDevMode]);
 
   return { fetchProgress };
 };

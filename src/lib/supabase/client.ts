@@ -2,28 +2,133 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types/database.types';
 
-// Verificar se as variáveis de ambiente estão definidas
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Função auxiliar para verificar o ambiente atual
+export const isDevelopmentMode = (): boolean => {
+  return (
+    window.location.hostname === 'localhost' || 
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname.includes('.lovable.dev') ||
+    window.location.hostname.includes('.lovable.app')
+  );
+};
 
-// Verificação de segurança para as variáveis de ambiente
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Erro crítico: Variáveis de ambiente do Supabase não estão configuradas.');
-  console.error('Certifique-se de definir VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no seu arquivo .env.local');
-}
+// Função para obter o cliente Supabase com base no ambiente
+export const getSupabaseClient = () => {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  
+  // Verificar se estamos em ambiente de desenvolvimento sem variáveis configuradas
+  const isDevWithoutEnv = isDevelopmentMode() && (!supabaseUrl || !supabaseAnonKey);
+  
+  if (isDevWithoutEnv) {
+    console.warn(
+      'Ambiente de desenvolvimento detectado sem variáveis do Supabase configuradas.\n' +
+      'Operando em modo offline com dados simulados. Algumas funcionalidades podem estar limitadas.\n' +
+      'Para conexão completa, configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no arquivo .env.local'
+    );
+    
+    // Retorna uma instância mockada do cliente Supabase
+    return createMockClient();
+  }
+  
+  // Verificação de segurança para as variáveis de ambiente em produção
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error(
+      'Erro crítico: Variáveis de ambiente do Supabase não estão configuradas.\n' +
+      'Certifique-se de definir VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no seu arquivo .env.local'
+    );
+    
+    // Em produção, lançar um erro mais visível para o usuário
+    if (!isDevelopmentMode()) {
+      throw new Error('Erro de configuração: Conecte-se ao suporte técnico.');
+    }
+    
+    // Mesmo em desenv, retornamos o cliente mockado para evitar erros
+    return createMockClient();
+  }
+  
+  // Criação do cliente Supabase com configuração correta
+  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      storageKey: 'viver-de-ia-auth'
+    }
+  });
+};
 
-// Criação do cliente Supabase com tipagem correta
-export const supabase = createClient<Database>(
-  supabaseUrl || 'https://zotzvtepvpnkcoobdubt.supabase.co',
-  supabaseAnonKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvdHp2dGVwdnBua2Nvb2JkdWJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNzgzODAsImV4cCI6MjA1OTk1NDM4MH0.dxjPkqTPnK8gjjxJbooPX5_kpu3INciLeDpuU8dszHQ'
-);
+// Criação de um cliente mockado para desenvolvimento sem Supabase
+const createMockClient = () => {
+  // Esta é uma implementação básica que simula a API do Supabase
+  // mas retorna respostas predefinidas ou vazias
+  return {
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          order: () => ({
+            limit: () => ({
+              maybeSingle: async () => ({ data: null, error: null }),
+              single: async () => ({ data: null, error: null })
+            }),
+            maybeSingle: async () => ({ data: null, error: null }),
+            single: async () => ({ data: null, error: null })
+          }),
+          maybeSingle: async () => ({ data: null, error: null }),
+          single: async () => ({ data: null, error: null })
+        }),
+        limit: () => ({
+          maybeSingle: async () => ({ data: null, error: null }),
+          single: async () => ({ data: null, error: null })
+        }),
+        maybeSingle: async () => ({ data: null, error: null }),
+        single: async () => ({ data: null, error: null })
+      }),
+      insert: () => ({
+        select: async () => ({ data: null, error: null }),
+        single: async () => ({ data: null, error: null })
+      }),
+      update: () => ({
+        eq: () => ({
+          select: async () => ({ data: null, error: null }),
+          single: async () => ({ data: null, error: null })
+        })
+      }),
+      upsert: () => ({
+        select: async () => ({ data: null, error: null })
+      })
+    }),
+    auth: {
+      getSession: async () => ({ data: { session: null }, error: null }),
+      signOut: async () => ({ error: null }),
+      onAuthStateChange: () => ({ data: null, error: null, unsubscribe: () => {} })
+    },
+    storage: {
+      listBuckets: async () => ({ data: [], error: null }),
+      createBucket: async () => ({ data: null, error: null }),
+      from: () => ({
+        upload: async () => ({ data: null, error: null }),
+        getPublicUrl: () => ({ data: { publicUrl: '' } })
+      })
+    },
+    rpc: async () => ({ data: null, error: null })
+  } as any;
+};
+
+// Exportação do cliente Supabase
+export const supabase = getSupabaseClient();
 
 // Exportação de tipos básicos
 export type Tables = Database['public']['Tables'];
 
-// Função para garantir que um bucket de armazenamento existe
+// Função de auxílio para bucket de armazenamento
 export async function ensureStorageBucketExists(bucketName: string): Promise<boolean> {
   try {
+    // Verificar se estamos em modo de desenvolvimento sem variáveis
+    if (isDevelopmentMode() && !import.meta.env.VITE_SUPABASE_URL) {
+      console.log(`Modo de desenvolvimento: simulando criação do bucket ${bucketName}`);
+      return true;
+    }
+    
     // Verificar se o bucket existe
     const { data: buckets, error: listError } = await supabase.storage.listBuckets();
     
@@ -51,7 +156,7 @@ export async function ensureStorageBucketExists(bucketName: string): Promise<boo
           console.log(`Tentando criar bucket ${bucketName} via RPC...`);
           
           try {
-            const { data, error } = await supabase.rpc('create_storage_public_policy', {
+            const { error } = await supabase.rpc('create_storage_public_policy', {
               bucket_name: bucketName
             });
             
@@ -70,38 +175,11 @@ export async function ensureStorageBucketExists(bucketName: string): Promise<boo
         
         return false;
       }
-      
-      // Configurar políticas de acesso
-      try {
-        await createStoragePublicPolicy(bucketName);
-      } catch (policyError) {
-        console.error(`Não foi possível definir políticas para ${bucketName}:`, policyError);
-        // Não falhar por causa de políticas - o bucket já foi criado
-      }
     }
     
     return true;
   } catch (error) {
     console.error("Erro ao verificar/criar bucket:", error);
     return false;
-  }
-}
-
-// Função para criar políticas de acesso público para um bucket
-export async function createStoragePublicPolicy(bucketName: string): Promise<{ success: boolean, error?: string }> {
-  try {
-    const { data, error } = await supabase.rpc('create_storage_public_policy', {
-      bucket_name: bucketName
-    });
-    
-    if (error) {
-      console.error(`Erro ao criar políticas para ${bucketName}:`, error);
-      return { success: false, error: error.message };
-    }
-    
-    return { success: true };
-  } catch (error: any) {
-    console.error(`Erro ao criar políticas para ${bucketName}:`, error);
-    return { success: false, error: error.message };
   }
 }
