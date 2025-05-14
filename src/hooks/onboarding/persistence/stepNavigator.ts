@@ -16,9 +16,6 @@ export function navigateAfterStep(
   
   console.log(`[stepNavigator] Determinando próxima rota após etapa ${stepId} (índice atual: ${currentStepIndex}, tipo: ${onboardingType})`);
   
-  // Obter os passos apropriados para o tipo de usuário
-  const steps = getStepsByUserType(onboardingType);
-  
   // Mapeamentos específicos para o tipo club
   const clubNextRouteMap: {[key: string]: string} = {
     "personal_info": "/onboarding/professional-data",
@@ -38,27 +35,8 @@ export function navigateAfterStep(
     "learning_preferences": "/onboarding/formacao/review"
   };
   
-  // Mapeamentos para navegação anterior
-  const clubPrevRouteMap: {[key: string]: string} = {
-    "professional_info": "/onboarding/personal-info",
-    "business_context": "/onboarding/professional-data",
-    "ai_experience": "/onboarding/business-context",
-    "business_goals": "/onboarding/ai-experience",
-    "experience_personalization": "/onboarding/club-goals",
-    "complementary_info": "/onboarding/customization",
-    "review": "/onboarding/complementary"
-  };
-  
-  const formacaoPrevRouteMap: {[key: string]: string} = {
-    "ai_experience": "/onboarding/formacao/personal-info",
-    "learning_goals": "/onboarding/formacao/ai-experience",
-    "learning_preferences": "/onboarding/formacao/goals",
-    "review": "/onboarding/formacao/preferences"
-  };
-  
   // Escolher o mapeamento com base no tipo de onboarding
   const nextRouteMap = onboardingType === 'club' ? clubNextRouteMap : formacaoNextRouteMap;
-  const prevRouteMap = onboardingType === 'club' ? clubPrevRouteMap : formacaoPrevRouteMap;
   
   // Verificar se temos uma rota direta para o próximo passo
   if (nextRouteMap[stepId]) {
@@ -72,6 +50,8 @@ export function navigateAfterStep(
   
   // Caso alternativo: usar o índice atual para determinar o próximo passo
   if (typeof currentStepIndex === 'number' && currentStepIndex >= 0) {
+    const steps = getStepsByUserType(onboardingType);
+    
     if (currentStepIndex < steps.length - 1) {
       const nextStep = steps[currentStepIndex + 1];
       console.log(`[stepNavigator] Navegando para ${nextStep.path} (próximo passo na sequência)`);

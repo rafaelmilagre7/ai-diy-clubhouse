@@ -15,12 +15,17 @@ const ExperiencePersonalization = () => {
   const [refreshAttempted, setRefreshAttempted] = useState(false);
   const navigate = useNavigate();
   const isMounted = useRef(true);
+  const isNavigating = useRef(false);
   
   // Efeito para controlar o ciclo de vida do componente
   useEffect(() => {
     isMounted.current = true;
+    isNavigating.current = false;
+    
+    console.log("[ExperiencePersonalization] Componente montado");
     
     return () => {
+      console.log("[ExperiencePersonalization] Componente desmontado");
       isMounted.current = false;
     };
   }, []);
@@ -44,13 +49,14 @@ const ExperiencePersonalization = () => {
           }
         });
     }
-  }, [refreshAttempted, refreshProgress, progress]); // Adicionando progress como dependência
+  }, [refreshAttempted, refreshProgress, progress]); 
 
-  // Função para salvar dados do formulário
+  // Função para salvar dados do formulário com retry e navegação melhorada
   const handleSaveData = async (stepId: string, data: any) => {
-    if (!isMounted.current) return;
+    if (!isMounted.current || isNavigating.current) return;
     
     setIsSubmitting(true);
+    isNavigating.current = true;
     
     try {
       console.log("[ExperiencePersonalization] Salvando dados:", data);
@@ -60,28 +66,52 @@ const ExperiencePersonalization = () => {
         throw new Error("Dados de personalização ausentes ou inválidos");
       }
       
-      // Salvar dados no formato esperado pelo builder
-      await saveStepData(stepId, data, false);
-      
-      console.log("[ExperiencePersonalization] Dados salvos com sucesso");
-      
-      if (isMounted.current) {
-        toast.success("Suas preferências foram salvas com sucesso!");
+      try {
+        // Salvar dados no formato esperado pelo builder
+        await saveStepData(stepId, data, false);
+        console.log("[ExperiencePersonalization] Dados salvos com sucesso");
         
-        // Forçar atualização dos dados locais após salvar
-        await refreshProgress();
+        if (isMounted.current) {
+          toast.success("Suas preferências foram salvas com sucesso!");
+          
+          // Forçar atualização dos dados locais após salvar
+          await refreshProgress();
+          
+          // Navegar para a próxima etapa com um pequeno delay para garantir animações
+          setTimeout(() => {
+            if (isMounted.current) {
+              console.log("[ExperiencePersonalization] Navegando para a próxima etapa");
+              navigate("/onboarding/complementary");
+            }
+          }, 500);
+        }
+      } catch (error) {
+        // Mesmo com erro no salvamento, tentar prosseguir se os dados estiverem minimamente preenchidos
+        console.error("[ExperiencePersonalization] Erro ao salvar, mas tentando navegar:", error);
         
-        // Navegar para a próxima etapa usando o hook de navegação em vez de redirecionamento direto
-        navigate("/onboarding/complementary");
+        if (isMounted.current) {
+          toast.error("Erro ao salvar alguns dados. Tentando prosseguir mesmo assim.");
+          
+          // Navegar mesmo com erro para evitar usuário travado
+          setTimeout(() => {
+            if (isMounted.current) {
+              console.log("[ExperiencePersonalization] Navegando para próxima etapa mesmo com erro");
+              navigate("/onboarding/complementary");
+            }
+          }, 1000);
+        }
       }
     } catch (error) {
       if (isMounted.current) {
-        console.error("[ExperiencePersonalization] Erro ao salvar dados:", error);
-        toast.error("Erro ao salvar dados. Por favor, tente novamente.");
+        console.error("[ExperiencePersonalization] Erro crítico:", error);
+        toast.error("Erro ao processar dados. Por favor, tente novamente.");
+        isNavigating.current = false;
       }
     } finally {
       if (isMounted.current) {
-        setIsSubmitting(false);
+        setTimeout(() => {
+          setIsSubmitting(false);
+        }, 500);
       }
     }
   };
@@ -93,7 +123,10 @@ const ExperiencePersonalization = () => {
   
   // Função segura para voltar à etapa anterior
   const handleNavigateBack = () => {
-    console.log("[ExperiencePersonalization] Navegando para a etapa anterior via hook de navegação");
+    if (isNavigating.current) return;
+    
+    isNavigating.current = true;
+    console.log("[ExperiencePersonalization] Navegando para a etapa anterior");
     navigate("/onboarding/club-goals");
   };
 
@@ -133,7 +166,7 @@ const ExperiencePersonalization = () => {
             initialData={progress}
             isLastStep={false}
             onComplete={completeOnboarding}
-            onPrevious={handleNavigateBack} // Passando a função de navegação para o componente filho
+            onPrevious={handleNavigateBack}
           />
         )}
       </div>

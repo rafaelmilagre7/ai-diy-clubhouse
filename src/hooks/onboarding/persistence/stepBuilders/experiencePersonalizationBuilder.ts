@@ -40,11 +40,31 @@ export function buildExperiencePersonalizationUpdate(data: Partial<OnboardingDat
       }
     }
     
-    // Normalizar e mesclar com dados existentes
-    updateObj.experience_personalization = normalizeExperiencePersonalization({
+    // IMPORTANTE: Usar a função de normalização para garantir formato consistente
+    const normalizedNewData = normalizeExperiencePersonalization(experienceData);
+    
+    // Mesclar com dados existentes e normalizar novamente
+    updateObj.experience_personalization = {
       ...existingExperiencePersonalization,
-      ...experienceData
-    });
+      ...normalizedNewData
+    };
+    
+    // Adicionar campos compatíveis nos formatos antigos
+    if (normalizedNewData.days_available && normalizedNewData.days_available.length > 0) {
+      updateObj.experience_personalization.available_days = normalizedNewData.days_available;
+    }
+    
+    if (normalizedNewData.preferred_times && normalizedNewData.preferred_times.length > 0) {
+      updateObj.experience_personalization.time_preference = normalizedNewData.preferred_times;
+    }
+    
+    if (typeof normalizedNewData.networking_level === 'number') {
+      updateObj.experience_personalization.networking_availability = normalizedNewData.networking_level;
+    }
+    
+    if (normalizedNewData.shareable_skills && normalizedNewData.shareable_skills.length > 0) {
+      updateObj.experience_personalization.skills_to_share = normalizedNewData.shareable_skills;
+    }
     
     console.log("[buildExperiencePersonalizationBuilder] Objeto atualizado:", updateObj);
     return updateObj;
@@ -57,7 +77,12 @@ export function buildExperiencePersonalizationUpdate(data: Partial<OnboardingDat
     'days_available', 
     'networking_level', 
     'shareable_skills', 
-    'mentorship_topics'
+    'mentorship_topics',
+    // Campos no formato antigo
+    'time_preference',
+    'available_days',
+    'networking_availability',
+    'skills_to_share'
   ];
   
   const hasDirectFields = experienceFields.some(field => field in data);
@@ -74,11 +99,31 @@ export function buildExperiencePersonalizationUpdate(data: Partial<OnboardingDat
       }
     });
     
-    // Mesclar com dados existentes e normalizar
-    updateObj.experience_personalization = normalizeExperiencePersonalization({
+    // Normalizar antes de mesclar para garantir formato correto
+    const normalizedDirectData = normalizeExperiencePersonalization(experienceData);
+    
+    // Mesclar com dados existentes
+    updateObj.experience_personalization = {
       ...existingExperiencePersonalization,
-      ...experienceData
-    });
+      ...normalizedDirectData
+    };
+    
+    // Adicionar versões paralelas para compatibilidade
+    if (normalizedDirectData.days_available && normalizedDirectData.days_available.length > 0) {
+      updateObj.experience_personalization.available_days = normalizedDirectData.days_available;
+    }
+    
+    if (normalizedDirectData.preferred_times && normalizedDirectData.preferred_times.length > 0) {
+      updateObj.experience_personalization.time_preference = normalizedDirectData.preferred_times;
+    }
+    
+    if (typeof normalizedDirectData.networking_level === 'number') {
+      updateObj.experience_personalization.networking_availability = normalizedDirectData.networking_level;
+    }
+    
+    if (normalizedDirectData.shareable_skills && normalizedDirectData.shareable_skills.length > 0) {
+      updateObj.experience_personalization.skills_to_share = normalizedDirectData.shareable_skills;
+    }
     
     console.log("[buildExperiencePersonalizationBuilder] Objeto final com campos diretos:", updateObj);
     return updateObj;

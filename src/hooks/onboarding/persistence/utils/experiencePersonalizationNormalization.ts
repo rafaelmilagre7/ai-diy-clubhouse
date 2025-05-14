@@ -42,33 +42,38 @@ export function normalizeExperiencePersonalization(data: any): {
   
   // Normalizar dados para compatibilidade com múltiplos formatos
   return {
-    // Suporte para nomenclaturas alternativas nos campos
+    // Campos diretos
     interests: Array.isArray(normalizedData.interests) ? normalizedData.interests : [],
     
+    // Mapeamento bidirecional entre preferred_times e time_preference
     preferred_times: Array.isArray(normalizedData.preferred_times) 
       ? normalizedData.preferred_times 
       : (Array.isArray(normalizedData.time_preference) 
         ? normalizedData.time_preference 
         : []),
     
+    // Mapeamento bidirecional entre days_available e available_days
     days_available: Array.isArray(normalizedData.days_available) 
       ? normalizedData.days_available 
       : (Array.isArray(normalizedData.available_days) 
         ? normalizedData.available_days 
         : []),
     
+    // Mapeamento bidirecional entre networking_level e networking_availability
     networking_level: typeof normalizedData.networking_level === 'number' 
       ? normalizedData.networking_level 
       : (typeof normalizedData.networking_availability === 'number'
         ? normalizedData.networking_availability
         : 5),
     
+    // Mapeamento bidirecional entre shareable_skills e skills_to_share
     shareable_skills: Array.isArray(normalizedData.shareable_skills) 
       ? normalizedData.shareable_skills 
       : (Array.isArray(normalizedData.skills_to_share) 
         ? normalizedData.skills_to_share 
         : []),
     
+    // Campo direto
     mentorship_topics: Array.isArray(normalizedData.mentorship_topics) 
       ? normalizedData.mentorship_topics 
       : []

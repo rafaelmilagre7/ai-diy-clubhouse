@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { OnboardingStepProps } from "@/types/onboarding";
 import { NavigationButtons } from "@/components/onboarding/NavigationButtons";
 import { useForm, Controller } from "react-hook-form";
@@ -73,6 +73,7 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
   onPrevious // Agora essa prop está definida na interface
 }) => {
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
+  const [isFormValid, setIsFormValid] = useState(false);
   
   // Extrair e normalizar dados iniciais
   const formInitialData = React.useMemo(() => {
@@ -109,6 +110,11 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
     mode: "onChange"
   });
 
+  // Monitorar mudanças na validade do formulário
+  useEffect(() => {
+    setIsFormValid(isValid);
+  }, [isValid]);
+
   // Função para alternar seleção em campos de múltipla escolha
   const toggleSelection = (field: keyof ExperienceFormData, value: string) => {
     const currentValues = watch(field) as string[];
@@ -143,8 +149,17 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
   const onFormSubmit = (formData: ExperienceFormData) => {
     setHasAttemptedSubmit(true);
     
-    if (!isValid) {
-      console.error("[ExperiencePersonalizationStep] Formulário inválido:", errors);
+    // Validação mínima mesmo se o formulário não estiver completamente válido
+    // para permitir que usuários avancem mesmo sem preencher tudo
+    const hasMinimalData = 
+      (formData.interests && formData.interests.length > 0) ||
+      (formData.preferred_times && formData.preferred_times.length > 0) ||
+      (formData.days_available && formData.days_available.length > 0) ||
+      (formData.shareable_skills && formData.shareable_skills.length > 0) ||
+      (formData.mentorship_topics && formData.mentorship_topics.length > 0);
+    
+    if (!isValid && !hasMinimalData) {
+      console.error("[ExperiencePersonalizationStep] Formulário inválido sem dados mínimos:", errors);
       return;
     }
     
@@ -153,12 +168,12 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
     // Enviar dados formatados no formato esperado pelo builder
     const dataForSubmit = {
       experience_personalization: {
-        interests: formData.interests,
-        preferred_times: formData.preferred_times,
-        days_available: formData.days_available,
-        networking_level: formData.networking_level,
-        shareable_skills: formData.shareable_skills,
-        mentorship_topics: formData.mentorship_topics,
+        interests: formData.interests || [],
+        preferred_times: formData.preferred_times || [],
+        days_available: formData.days_available || [],
+        networking_level: formData.networking_level || 5,
+        shareable_skills: formData.shareable_skills || [],
+        mentorship_topics: formData.mentorship_topics || [],
       }
     };
     
@@ -181,7 +196,7 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
             <Controller
               name="interests"
               control={control}
-              rules={{ required: true, minLength: 1 }}
+              rules={{ required: false }}
               render={({ field }) => (
                 <div className={cn(
                   "flex flex-wrap gap-3",
@@ -223,7 +238,7 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
             <Controller
               name="preferred_times"
               control={control}
-              rules={{ required: true, minLength: 1 }}
+              rules={{ required: false }}
               render={({ field }) => (
                 <div className={cn(
                   "flex flex-wrap gap-4",
@@ -266,7 +281,7 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
             <Controller
               name="days_available"
               control={control}
-              rules={{ required: true, minLength: 1 }}
+              rules={{ required: false }}
               render={({ field }) => (
                 <div className={cn(
                   "flex flex-wrap gap-2",
@@ -307,7 +322,7 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
             <Controller
               name="networking_level"
               control={control}
-              rules={{ required: true, min: 0, max: 10 }}
+              rules={{ required: false }}
               render={({ field }) => (
                 <div className={cn(
                   "flex flex-col gap-2 bg-[#151823] p-4 rounded-lg border border-neutral-700",
@@ -347,7 +362,7 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
             <Controller
               name="shareable_skills"
               control={control}
-              rules={{ required: true, minLength: 1 }}
+              rules={{ required: false }}
               render={({ field }) => (
                 <div className={cn(
                   "flex flex-wrap gap-3",
@@ -388,7 +403,7 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
             <Controller
               name="mentorship_topics"
               control={control}
-              rules={{ required: true, minLength: 1 }}
+              rules={{ required: false }}
               render={({ field }) => (
                 <div className={cn(
                   "flex flex-wrap gap-3",
@@ -418,12 +433,11 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
             )}
           </div>
 
-          {/* Mensagem de erro geral */}
-          {hasAttemptedSubmit && !isValid && (
-            <div className="p-3 bg-red-900/20 border border-red-800/30 rounded-md text-red-300 text-sm">
-              Por favor, preencha todos os campos obrigatórios para continuar.
-            </div>
-          )}
+          {/* Mensagem de aviso */}
+          <div className="p-3 bg-amber-900/20 border border-amber-800/30 rounded-md text-amber-300 text-sm">
+            Recomendamos preencher todos os campos para uma experiência personalizada, 
+            mas você pode avançar mesmo com preenchimento parcial.
+          </div>
 
           {/* Botões de navegação */}
           <NavigationButtons
@@ -438,4 +452,4 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
       </div>
     </div>
   );
-};
+}
