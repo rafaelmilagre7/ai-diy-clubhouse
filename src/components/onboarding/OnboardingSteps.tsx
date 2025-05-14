@@ -116,6 +116,15 @@ export const OnboardingSteps = () => {
         [fieldName]: value
       }
     }));
+
+    // Limpar erros quando o campo é alterado
+    if (formErrors[fieldName]) {
+      setFormErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[fieldName];
+        return newErrors;
+      });
+    }
   };
 
   // Atualização dos IDs de componentes para corresponder aos IDs de etapas
@@ -203,7 +212,7 @@ export const OnboardingSteps = () => {
 
     // Props personalizados por tipo de componente
     if (activeStepId === "personal_info") {
-      const personalInfoData = formData.personal_info || {};
+      const personalInfoData = progress?.personal_info || formData.personal_info || {};
       return {
         ...baseProps,
         formData: personalInfoData,
@@ -216,13 +225,23 @@ export const OnboardingSteps = () => {
       return {
         ...baseProps,
         personalInfo: progress?.personal_info || {},
+        formData: progress?.professional_info || formData.professional_info || {},
+        errors: formErrors,
+        onChange: (field: string, value: any) => handleFormChange('professional_info', field, value)
       };
     }
 
     if (supportsPersonalInfo(activeStepId)) {
+      // Para todos os outros componentes que precisam de personalInfo
+      const stepFormData = progress?.[activeStepId as keyof typeof progress] || 
+                          formData[activeStepId] || {};
+      
       return {
         ...baseProps,
         personalInfo: progress?.personal_info || {},
+        formData: stepFormData,
+        errors: formErrors,
+        onChange: (field: string, value: any) => handleFormChange(activeStepId, field, value)
       };
     }
 
