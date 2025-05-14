@@ -1,59 +1,78 @@
 
+import { MutableRefObject, useCallback } from "react";
 import { OnboardingProgress } from "@/types/onboarding";
 import { updateOnboardingProgress } from "../persistence/progressPersistence";
 import { toast } from "sonner";
 
-export function useProgressUpdate(
+export const useProgressUpdate = (
   progress: OnboardingProgress | null,
-  setProgress: (progress: OnboardingProgress) => void,
-  toastShownRef: React.MutableRefObject<boolean>,
-  lastError: React.MutableRefObject<Error | null>,
+  setProgress: (progress: OnboardingProgress | null) => void,
+  toastShownRef: MutableRefObject<boolean>,
+  lastError: MutableRefObject<Error | null>,
   refreshProgress: () => Promise<OnboardingProgress | null>,
-  logDebugEvent: (action: string, data?: any) => void
-) {
-  const updateProgress = async (updates: Partial<OnboardingProgress>) => {
+  logDebugEvent: (eventName: string, data?: any) => void
+) => {
+  /**
+   * Atualiza o progresso do onboarding
+   */
+  const updateProgress = useCallback(async (updates: Partial<OnboardingProgress>) => {
     if (!progress?.id) {
-      console.error("Usuário ou progresso não disponível para atualização");
-      logDebugEvent("updateProgress_error", { error: "Usuário ou progresso não disponível" });
-      throw new Error("Usuário ou progresso não disponível");
+      logDebugEvent("updateProgress_noProgress");
+      console.error("[ERRO] Tentativa de atualizar sem ID de progresso");
+      return { error: new Error("ID de progresso não encontrado") };
     }
-
+    
     try {
-      console.log("Atualizando progresso:", updates);
-      logDebugEvent("updateProgress_start", { progressId: progress.id, updates });
+      logDebugEvent("updateProgress_start", { 
+        progressId: progress.id,
+        updates: Object.keys(updates)
+      });
       
-      // Prevenção de múltiplas chamadas de toast
-      const shouldShowToasts = !toastShownRef.current;
-      toastShownRef.current = true;
+      // Limpar flag de toast
+      toastShownRef.current = false;
       
       const { data, error } = await updateOnboardingProgress(progress.id, updates);
-
+      
       if (error) {
-        console.error("Erro ao atualizar dados:", error);
         logDebugEvent("updateProgress_error", { error: error.message });
-        lastError.current = new Error(error.message);
-        throw error;
+        console.error("[ERRO] Falha ao atualizar progresso:", error);
+        lastError.current = error;
+        
+        if (!toastShownRef.current) {
+          toast.error("Erro ao salvar suas alterações. Por favor, tente novamente.");
+          toastShownRef.current = true;
+        }
+        
+        return { error };
       }
-
-      const updatedProgress = data || { ...progress, ...updates };
-      setProgress(updatedProgress);
-      console.log("Progresso atualizado com sucesso:", updatedProgress);
-      logDebugEvent("updateProgress_success", { progressId: updatedProgress.id });
       
-      // Reset do flag de toast após um tempo
-      setTimeout(() => {
-        toastShownRef.current = false;
-      }, 2000);
+      if (data) {
+        logDebugEvent("updateProgress_success", { 
+          progressId: data.id,
+          currentStep: data.current_step
+        });
+        
+        console.log("[DEBUG] Progresso atualizado:", data);
+        setProgress(data);
+        lastError.current = null;
+        
+        return { data };
+      }
       
-      return updatedProgress;
-    } catch (error) {
-      console.error("Erro ao atualizar progresso:", error);
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      logDebugEvent("updateProgress_exception", { error: errorMessage });
-      lastError.current = error instanceof Error ? error : new Error(String(error));
-      throw error;
+      return { error: new Error("Nenhum dado retornado após atualização") };
+    } catch (e: any) {
+      logDebugEvent("updateProgress_exception", { error: e.message });
+      console.error("[ERRO] Exceção ao atualizar progresso:", e);
+      lastError.current = e;
+      
+      if (!toastShownRef.current) {
+        toast.error("Erro ao salvar suas alterações. Por favor, tente novamente.");
+        toastShownRef.current = true;
+      }
+      
+      return { error: e };
     }
-  };
+  }, [progress, setProgress, refreshProgress, toastShownRef, lastError, logDebugEvent]);
 
   return { updateProgress };
-}
+};

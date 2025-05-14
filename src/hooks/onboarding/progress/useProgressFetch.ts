@@ -1,162 +1,117 @@
 
-import { MutableRefObject, useCallback } from "react";
-import { useAuth } from "@/contexts/auth";
+import { Dispatch, MutableRefObject, SetStateAction, useCallback } from "react";
 import { OnboardingProgress } from "@/types/onboarding";
 import { fetchOnboardingProgress, createInitialOnboardingProgress } from "../persistence/progressPersistence";
+import { useAuth } from "@/contexts/auth";
+import { toast } from "sonner";
 
-export function useProgressFetch(
+export const useProgressFetch = (
   isMounted: MutableRefObject<boolean>,
-  setProgress: (progress: OnboardingProgress | null) => void,
-  setIsLoading: (loading: boolean) => void,
+  setProgress: Dispatch<SetStateAction<OnboardingProgress | null>>,
+  setIsLoading: Dispatch<SetStateAction<boolean>>,
   progressId: MutableRefObject<string | null>,
   lastError: MutableRefObject<Error | null>,
   retryCount: MutableRefObject<number>,
-  logDebugEvent: (action: string, data?: any) => void
-) {
+  logDebugEvent: (eventName: string, data?: any) => void
+) => {
   const { user } = useAuth();
   
+  /**
+   * Busca o progresso do onboarding do usuário
+   */
   const fetchProgress = useCallback(async (): Promise<OnboardingProgress | null> => {
     if (!user) {
-      console.log("Usuário não autenticado, não buscando progresso");
-      lastError.current = new Error("Usuário não autenticado");
+      logDebugEvent("fetchProgress_noUser");
+      console.log("[ERRO] Tentando buscar progresso sem usuário autenticado");
       return null;
     }
-    
-    if (!isMounted.current) {
-      console.log("Componente desmontado, cancelando busca de progresso");
-      return null;
-    }
-    
-    // Evitar atualizações de loading desnecessárias se já tivermos dados
-    // e o componente estiver apenas sendo re-renderizado
-    if (progressId.current) {
-      console.log(`Já temos ID de progresso (${progressId.current}), não precisamos atualizar loading`);
-    } else {
-      setIsLoading(true);
-    }
-    
-    logDebugEvent("fetchProgress", { userId: user?.id });
     
     try {
-      // Buscar progresso existente
+      setIsLoading(true);
+      logDebugEvent("fetchProgress_start", { userId: user.id });
+      
+      // Passo 1: Tentar buscar progresso existente
       const { data, error } = await fetchOnboardingProgress(user.id);
       
-      // Garantir que o componente ainda está montado após a requisição
       if (!isMounted.current) {
-        console.log("Componente desmontado após requisição, cancelando atualização");
+        logDebugEvent("fetchProgress_unmountedDuringFetch");
         return null;
       }
       
-      // Verificar se houve erro na busca
       if (error) {
-        console.error("Erro ao buscar progresso:", error);
-        lastError.current = error instanceof Error ? error : new Error(String(error));
-        setIsLoading(false);
+        logDebugEvent("fetchProgress_error", { error: error.message });
+        console.error("[ERRO] Falha ao buscar progresso:", error);
+        lastError.current = error;
+        
+        // Exibir toast apenas no primeiro erro
+        if (retryCount.current === 0) {
+          toast.error("Erro ao carregar seus dados. Tentando novamente...");
+        }
+        
+        retryCount.current += 1;
         return null;
       }
       
-      // Verificar se dados foram encontrados
-      if (data) {
-        console.log("Progresso encontrado:", data);
-        progressId.current = data.id;
+      // Se não tem dados, criar um registro inicial
+      if (!data) {
+        logDebugEvent("fetchProgress_creating", { userId: user.id });
+        console.log("[DEBUG] Progresso não encontrado, criando...");
         
-        // Processar e normalizar dados específicos que podem estar como string
-        const processedData = processProgressData(data);
+        const { data: initialData, error: createError } = await createInitialOnboardingProgress(user);
         
-        setProgress(processedData);
-        retryCount.current = 0;
-        setIsLoading(false);
-        return processedData;
-      }
-      
-      // Se não encontrou dados, cria um perfil inicial
-      console.log("Nenhum progresso encontrado, criando inicial");
-      const { data: newData, error: createError } = await createInitialOnboardingProgress(user);
-      
-      // Verificar novamente se o componente está montado
-      if (!isMounted.current) {
-        console.log("Componente desmontado após criar perfil inicial, cancelando atualização");
+        if (!isMounted.current) return null;
+        
+        if (createError) {
+          logDebugEvent("fetchProgress_createError", { error: createError.message });
+          console.error("[ERRO] Falha ao criar progresso inicial:", createError);
+          lastError.current = createError;
+          toast.error("Erro ao configurar seu perfil. Por favor, tente novamente.");
+          return null;
+        }
+        
+        if (initialData) {
+          logDebugEvent("fetchProgress_created", { progressId: initialData.id });
+          console.log("[DEBUG] Progresso inicial criado:", initialData);
+          progressId.current = initialData.id;
+          setProgress(initialData);
+          return initialData;
+        }
+        
         return null;
       }
       
-      if (createError) {
-        console.error("Erro ao criar progresso inicial:", createError);
-        lastError.current = createError instanceof Error ? createError : new Error(String(createError));
-        setIsLoading(false);
-        return null;
+      // Dados encontrados
+      logDebugEvent("fetchProgress_success", { 
+        progressId: data.id,
+        currentStep: data.current_step,
+        isCompleted: data.is_completed
+      });
+      
+      console.log("[DEBUG] Progresso carregado:", data);
+      progressId.current = data.id;
+      setProgress(data);
+      lastError.current = null;
+      retryCount.current = 0;
+      
+      return data;
+    } catch (e: any) {
+      logDebugEvent("fetchProgress_exception", { error: e.message });
+      console.error("[ERRO] Exceção ao buscar progresso:", e);
+      lastError.current = e;
+      
+      // Exibir toast apenas no primeiro erro
+      if (retryCount.current === 0) {
+        toast.error("Erro ao carregar seus dados. Por favor, tente novamente.");
       }
       
-      if (newData) {
-        console.log("Novo progresso criado:", newData);
-        progressId.current = newData.id;
-        
-        // Adicionar metadata para controle de normalização
-        const processedNewData = processProgressData(newData);
-        
-        setProgress(processedNewData);
-        retryCount.current = 0;
-        setIsLoading(false);
-        return processedNewData;
-      }
-      
-      setIsLoading(false);
+      retryCount.current += 1;
       return null;
-    } catch (error) {
-      console.error("Exceção ao buscar progresso:", error);
-      lastError.current = error instanceof Error ? error : new Error(String(error));
+    } finally {
       if (isMounted.current) {
         setIsLoading(false);
       }
-      return null;
     }
-  }, [user, isMounted, setProgress, setIsLoading, progressId, lastError, retryCount, logDebugEvent]);
-  
-  // Função auxiliar para processar e normalizar os dados do progresso
-  function processProgressData(data: OnboardingProgress): OnboardingProgress {
-    // Criar uma cópia profunda para não modificar o original
-    const processedData = JSON.parse(JSON.stringify(data)) as OnboardingProgress;
-    
-    // Lista de campos que podem precisar de normalização
-    const fieldsToCheck = [
-      'experience_personalization',
-      'complementary_info',
-      'ai_experience',
-      'business_goals',
-      'professional_info',
-      'business_context',
-      'personal_info'
-    ];
-    
-    // Normalizar cada campo
-    fieldsToCheck.forEach(field => {
-      const fieldData = (processedData as any)[field];
-      
-      // Se o campo for uma string, tentar converter para objeto
-      if (typeof fieldData === 'string' && fieldData.trim() !== '') {
-        try {
-          (processedData as any)[field] = JSON.parse(fieldData);
-          console.log(`Campo ${field} convertido de string para objeto:`, (processedData as any)[field]);
-        } catch (e) {
-          console.error(`Erro ao converter campo ${field} de string para objeto:`, e);
-          // Manter o valor original em caso de erro
-        }
-      }
-      
-      // Garantir que o campo seja um objeto (não nulo)
-      if (!fieldData) {
-        (processedData as any)[field] = {};
-      }
-    });
-    
-    // Adicionar informações de debug no console mas não no objeto
-    console.log("[processProgressData] Dados normalizados:", {
-      ...processedData,
-      _normalized_at: new Date().toISOString(),
-      _normalized_version: '2.1'
-    });
-    
-    return processedData;
-  }
-  
+  }, [user, setIsLoading, setProgress, isMounted, retryCount, lastError, progressId, logDebugEvent]);
+
   return { fetchProgress };
-}
+};

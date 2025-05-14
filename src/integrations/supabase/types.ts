@@ -1306,6 +1306,36 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_ai_conversations: {
+        Row: {
+          ai_context: Json
+          conversation_history: Json
+          created_at: string | null
+          id: string
+          step_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          ai_context?: Json
+          conversation_history?: Json
+          created_at?: string | null
+          id?: string
+          step_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          ai_context?: Json
+          conversation_history?: Json
+          created_at?: string | null
+          id?: string
+          step_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       onboarding_ai_experience: {
         Row: {
           completed_formation: boolean | null
@@ -1802,6 +1832,7 @@ export type Database = {
           debug_logs: Json | null
           decision_makers: string[] | null
           experience_personalization: Json | null
+          formation_data: Json | null
           goals: string[] | null
           id: string
           implementation_preferences: Json | null
@@ -1847,6 +1878,7 @@ export type Database = {
           debug_logs?: Json | null
           decision_makers?: string[] | null
           experience_personalization?: Json | null
+          formation_data?: Json | null
           goals?: string[] | null
           id?: string
           implementation_preferences?: Json | null
@@ -1892,6 +1924,7 @@ export type Database = {
           debug_logs?: Json | null
           decision_makers?: string[] | null
           experience_personalization?: Json | null
+          formation_data?: Json | null
           goals?: string[] | null
           id?: string
           implementation_preferences?: Json | null
@@ -1917,6 +1950,48 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      onboarding_revisions: {
+        Row: {
+          changes_summary: string | null
+          created_at: string | null
+          id: string
+          progress_id: string
+          revision_data: Json
+          user_id: string
+        }
+        Insert: {
+          changes_summary?: string | null
+          created_at?: string | null
+          id?: string
+          progress_id: string
+          revision_data: Json
+          user_id: string
+        }
+        Update: {
+          changes_summary?: string | null
+          created_at?: string | null
+          id?: string
+          progress_id?: string
+          revision_data?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_revisions_progress_id_fkey"
+            columns: ["progress_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_profile_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_revisions_progress_id_fkey"
+            columns: ["progress_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_progress"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       permission_audit_logs: {
         Row: {
@@ -3315,6 +3390,10 @@ export type Database = {
       quick_check_permission: {
         Args: { user_id: string; permission_code: string }
         Returns: boolean
+      }
+      reset_user_onboarding: {
+        Args: { user_id_param: string }
+        Returns: Json
       }
       setup_learning_storage_buckets: {
         Args: Record<PropertyKey, never>

@@ -1,87 +1,67 @@
 
-import { useCallback } from "react";
-import { useAuth } from "@/contexts/auth";
-import { refreshOnboardingProgress } from "../persistence/progressPersistence";
+import { MutableRefObject, useCallback } from "react";
 import { OnboardingProgress } from "@/types/onboarding";
+import { refreshOnboardingProgress } from "../persistence/progressPersistence";
+import { toast } from "sonner";
 
-export function useProgressRefresh(
-  progressId: React.MutableRefObject<string | null>,
-  setIsLoading: (loading: boolean) => void,
-  lastError: React.MutableRefObject<Error | null>,
-  isMounted: React.MutableRefObject<boolean>,
+export const useProgressRefresh = (
+  progress: OnboardingProgress | null,
   setProgress: (progress: OnboardingProgress | null) => void,
-  retryCount: React.MutableRefObject<number>,
-  fetchProgress: () => Promise<any>,
-  logDebugEvent: (action: string, data?: any) => void
-) {
-  const { user } = useAuth();
-
-  const refreshProgress = useCallback(async () => {
-    if (!user) return null;
-
-    if (!progressId.current) {
-      logDebugEvent("refreshProgress_redirect_to_fetch", {});
-      console.log("[useProgressRefresh] ID de progresso não disponível, buscando dados iniciais");
-      return await fetchProgress();
-    }
-
-    try {
-      setIsLoading(true);
-      lastError.current = null;
-      logDebugEvent("refreshProgress_start", { progressId: progressId.current });
-      console.log("[useProgressRefresh] Atualizando dados do progresso:", progressId.current);
-      
-      const { data, error } = await refreshOnboardingProgress(progressId.current);
-
-      if (!isMounted.current) {
-        setIsLoading(false);
-        return null;
-      }
-
-      if (error) {
-        console.error("[useProgressRefresh] Erro ao recarregar progresso:", error);
-        lastError.current = new Error(error.message);
-        logDebugEvent("refreshProgress_error", { error: error.message });
-        setIsLoading(false);
-        
-        if (retryCount.current < 3) {
-          retryCount.current++;
-          console.log(`[useProgressRefresh] Tentando novamente (${retryCount.current}/3) em ${retryCount.current * 1000}ms...`);
-          setTimeout(() => {
-            refreshProgress();
-          }, retryCount.current * 1000);
-        }
-        
-        return null;
-      }
-
-      logDebugEvent("refreshProgress_success", { progressId: data?.id });
-      console.log("[useProgressRefresh] Progresso recarregado com sucesso:", data);
-      
-      // Garantir que os dados não são nulos
-      if (data) {
-        // Normalizar dados antes de atualizar estado
-        const normalizedData = data;
-        
-        // Atualizar o estado com os dados normalizados
-        setProgress(normalizedData);
-        retryCount.current = 0;
-        setIsLoading(false);
-        return normalizedData;
-      } else {
-        console.warn("[useProgressRefresh] Dados recarregados são nulos ou vazios");
-        setIsLoading(false);
-        return null;
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      logDebugEvent("refreshProgress_exception", { error: errorMessage });
-      console.error("[useProgressRefresh] Erro ao recarregar progresso:", error);
-      lastError.current = error instanceof Error ? error : new Error(String(error));
-      setIsLoading(false);
+  isMounted: MutableRefObject<boolean>,
+  lastError: MutableRefObject<Error | null>,
+  logDebugEvent: (eventName: string, data?: any) => void
+) => {
+  /**
+   * Recarrega os dados do progresso do banco de dados
+   */
+  const refreshProgress = useCallback(async (): Promise<OnboardingProgress | null> => {
+    if (!progress?.id) {
+      logDebugEvent("refreshProgress_noProgress");
+      console.error("[ERRO] Tentativa de recarregar sem ID de progresso");
       return null;
     }
-  }, [user, progressId, setIsLoading, lastError, isMounted, setProgress, retryCount, fetchProgress, logDebugEvent]);
+    
+    try {
+      logDebugEvent("refreshProgress_start", { progressId: progress.id });
+      
+      const { data, error } = await refreshOnboardingProgress(progress.id);
+      
+      if (!isMounted.current) {
+        return null;
+      }
+      
+      if (error) {
+        logDebugEvent("refreshProgress_error", { error: error.message });
+        console.error("[ERRO] Falha ao recarregar progresso:", error);
+        lastError.current = error;
+        toast.error("Erro ao recarregar seus dados. Por favor, tente novamente.");
+        return null;
+      }
+      
+      if (!data) {
+        logDebugEvent("refreshProgress_noData");
+        console.error("[ERRO] Nenhum dado retornado ao recarregar");
+        return null;
+      }
+      
+      logDebugEvent("refreshProgress_success", { 
+        progressId: data.id, 
+        currentStep: data.current_step 
+      });
+      
+      console.log("[DEBUG] Progresso recarregado:", data);
+      setProgress(data);
+      lastError.current = null;
+      
+      return data;
+    } catch (e: any) {
+      logDebugEvent("refreshProgress_exception", { error: e.message });
+      console.error("[ERRO] Exceção ao recarregar progresso:", e);
+      lastError.current = e;
+      toast.error("Erro ao recarregar seus dados. Por favor, tente novamente.");
+      return null;
+    }
+  }, [progress, setProgress, isMounted, lastError, logDebugEvent]);
 
   return { refreshProgress };
-}
+};
