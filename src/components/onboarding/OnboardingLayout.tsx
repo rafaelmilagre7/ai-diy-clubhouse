@@ -3,21 +3,28 @@ import React from "react";
 import MemberLayout from "@/components/layout/MemberLayout";
 import { OnboardingHeader } from "./OnboardingHeader";
 import { useNavigate } from "react-router-dom";
+import { ProgressBar } from "./ProgressBar";
 
 interface OnboardingLayoutProps {
   children: React.ReactNode;
   title: string;
   currentStep: number;
+  totalSteps?: number;
   backUrl?: string;
-  onBackClick?: () => void; // Adicionada função de callback para navegação
+  onBackClick?: () => void;
+  isFormacao?: boolean;
+  hideProgress?: boolean;
 }
 
 export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
   children,
   title,
   currentStep,
+  totalSteps,
   backUrl,
-  onBackClick
+  onBackClick,
+  isFormacao = false,
+  hideProgress = false
 }) => {
   const navigate = useNavigate();
 
@@ -40,14 +47,23 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
 
   return (
     <MemberLayout>
-      <div className="w-full bg-white py-6">
+      <div className="w-full bg-[#0F111A] py-6">
         <div className="container max-w-screen-lg">
           <OnboardingHeader 
-            isOnboardingCompleted={false} 
+            isOnboardingCompleted={false}
             title={title}
             step={currentStep}
             onBackClick={backUrl || onBackClick ? handleBack : undefined}
           />
+          
+          {!hideProgress && (
+            <div className="mt-6">
+              <ProgressBar 
+                currentStep={currentStep} 
+                totalSteps={totalSteps || 8} 
+              />
+            </div>
+          )}
         </div>
       </div>
 
