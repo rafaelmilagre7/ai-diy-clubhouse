@@ -78,3 +78,60 @@ export const validateInstagramUrl = (username: string): boolean => {
   
   return instagramRegex.test(cleanUsername);
 };
+
+/**
+ * Formata URLs de redes sociais para formato padrão
+ * @param url URL ou username para formatar
+ * @param platform 'linkedin' ou 'instagram'
+ * @returns URL formatada
+ */
+export const formatSocialUrl = (url: string, platform: 'linkedin' | 'instagram'): string => {
+  if (!url) return '';
+  
+  const cleanUrl = url.trim();
+  
+  // Se já é uma URL completa, retornar como está
+  if (/^https?:\/\//i.test(cleanUrl)) {
+    return cleanUrl;
+  }
+  
+  // Remover @ do início de usernames do Instagram
+  const username = platform === 'instagram' ? cleanUrl.replace(/^@/, '') : cleanUrl;
+  
+  // Remover prefixos de domínio se existirem
+  const cleanUsername = username
+    .replace(/^(https?:\/\/)?(www\.)?/, '')
+    .replace(/^(linkedin\.com\/in\/|instagram\.com\/)/, '');
+    
+  // Construir URL completa
+  if (platform === 'linkedin') {
+    return `https://linkedin.com/in/${cleanUsername}`;
+  } else {
+    return `https://instagram.com/${cleanUsername}`;
+  }
+};
+
+/**
+ * Verifica se a aplicação está em modo de desenvolvimento
+ * @returns true se estiver em modo de desenvolvimento
+ */
+export const isDevelopmentMode = (): boolean => {
+  // Verificar se está rodando em ambiente de desenvolvimento
+  return import.meta.env.DEV || 
+         import.meta.env.MODE === 'development' || 
+         window.location.hostname === 'localhost' ||
+         window.location.hostname === '127.0.0.1';
+};
+
+/**
+ * Gera um UUID válido para uso em ambiente de desenvolvimento
+ * @returns UUID string
+ */
+export const generateValidUUID = (): string => {
+  // Implementação simplificada de um gerador de UUID v4
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
