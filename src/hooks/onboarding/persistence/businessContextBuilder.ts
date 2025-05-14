@@ -84,3 +84,29 @@ export function getBusinessContextFromProgress(progress: OnboardingProgress | nu
     additional_context: ""
   };
 }
+
+/**
+ * Constrói objeto de atualização específico para business_context
+ * Garante compatibilidade com formatos legados e atuais
+ */
+export function buildBusinessContextUpdate(data: any, progress: OnboardingProgress | null): Record<string, any> {
+  if (!progress) {
+    console.log("[businessContextBuilder] Progresso não encontrado, retornando dados como estão");
+    return data;
+  }
+
+  // Extrair dados de business_context do objeto de dados
+  const contextData = data.business_context || {};
+  
+  // Construir objeto de atualização que mantém ambos os formatos
+  const updateObj: Record<string, any> = {
+    // Formato atual
+    business_context: {
+      ...(typeof progress.business_context === 'object' ? progress.business_context || {} : {}),
+      ...contextData
+    },
+  };
+  
+  console.log("[businessContextBuilder] Objeto de atualização construído:", updateObj);
+  return updateObj;
+}
