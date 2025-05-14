@@ -1,10 +1,19 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useProgress } from "./useProgress";
 import { toast } from "sonner";
 import { PersonalInfoData } from "@/types/onboarding";
 import { validatePersonalInfoForm } from "@/utils/validatePersonalInfoForm";
 import { useAuth } from "@/contexts/auth";
+
+// Interface para o resultado da atualização de progresso
+interface ProgressUpdateResult {
+  success?: boolean;
+  data?: any;
+  offline?: boolean;
+  error?: {
+    message: string;
+  };
+}
 
 export const usePersonalInfoStep = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -165,7 +174,7 @@ export const usePersonalInfoStep = () => {
         personal_info: dataToSubmit,
         current_step: "professional_data",
         completed_steps: newCompletedSteps,
-      });
+      }) as ProgressUpdateResult;
 
       if (result?.error) {
         // Se houver erro do servidor mas conseguimos atualizar localmente (modo offline)

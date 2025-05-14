@@ -3,7 +3,12 @@ import { useState } from "react";
 import { useForm, SubmitHandler, UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
 import { PersonalInfoData } from "@/types/onboarding";
-import { validateLinkedInUrl, validateInstagramUrl, validateBrazilianPhone, formatSocialUrl } from "@/utils/validationUtils";
+import { 
+  validateLinkedInUrl,
+  validateInstagramUrl, 
+  isValidBrazilianPhone as validateBrazilianPhone, 
+  formatSocialUrl 
+} from "@/utils/validationUtils";
 
 interface ValidationResult {
   isValid: boolean;

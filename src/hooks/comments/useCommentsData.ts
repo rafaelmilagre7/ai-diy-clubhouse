@@ -5,6 +5,15 @@ import { supabase } from '@/lib/supabase';
 import { Comment } from '@/types/commentTypes';
 import { useLogging } from '@/hooks/useLogging';
 
+// Interface para o perfil do usuário
+interface UserProfile {
+  id: string;
+  name: string;
+  avatar_url: string;
+  role: string;
+  [key: string]: any;
+}
+
 export const useCommentsData = (toolId: string) => {
   const { log, logError } = useLogging();
 
@@ -47,10 +56,13 @@ export const useCommentsData = (toolId: string) => {
         }
         
         // Mapear perfis por ID para fácil acesso
-        const profilesMap = (userProfiles || []).reduce((acc: Record<string, any>, profile: any) => {
-          acc[profile.id] = profile;
-          return acc;
-        }, {});
+        const profilesMap: Record<string, UserProfile> = {};
+        
+        (userProfiles || []).forEach((profile: UserProfile) => {
+          if (profile && profile.id) {
+            profilesMap[profile.id] = profile;
+          }
+        });
 
         // Buscar respostas
         const { data: replies, error: repliesError } = await supabase
@@ -77,8 +89,10 @@ export const useCommentsData = (toolId: string) => {
             .in('id', missingUserIds);
             
           if (additionalProfiles) {
-            additionalProfiles.forEach((profile: any) => {
-              profilesMap[profile.id] = profile;
+            additionalProfiles.forEach((profile: UserProfile) => {
+              if (profile && profile.id) {
+                profilesMap[profile.id] = profile;
+              }
             });
           }
         }
@@ -96,7 +110,9 @@ export const useCommentsData = (toolId: string) => {
             .eq('user_id', user.id);
 
           likesMap = (userLikes || []).reduce((acc: Record<string, boolean>, like: any) => {
-            acc[like.comment_id] = true;
+            if (like && like.comment_id) {
+              acc[like.comment_id] = true;
+            }
             return acc;
           }, {});
         }
@@ -111,13 +127,13 @@ export const useCommentsData = (toolId: string) => {
         // Organizar respostas dentro dos comentários principais
         const organizedComments = (parentComments || []).map((parentComment: any) => ({
           ...parentComment,
-          profiles: profilesMap[parentComment.user_id] || null,
+          profiles: parentComment.user_id && profilesMap[parentComment.user_id] ? profilesMap[parentComment.user_id] : null,
           user_has_liked: !!likesMap[parentComment.id],
           replies: (replies || [])
             .filter((reply: any) => reply.parent_id === parentComment.id)
             .map((reply: any) => ({
               ...reply,
-              profiles: profilesMap[reply.user_id] || null,
+              profiles: reply.user_id && profilesMap[reply.user_id] ? profilesMap[reply.user_id] : null,
               user_has_liked: !!likesMap[reply.id]
             }))
         }));

@@ -5,6 +5,15 @@ import { Comment } from '@/types/commentTypes';
 import { useLogging } from '@/hooks/useLogging';
 import { useAuth } from '@/contexts/auth';
 
+// Interface para o perfil do usuário
+interface UserProfile {
+  id: string;
+  name: string;
+  avatar_url: string;
+  role: string;
+  [key: string]: any;
+}
+
 export const useFetchModuleComments = (solutionId: string, moduleId: string) => {
   const { log, logError } = useLogging();
   const { user } = useAuth();
@@ -40,10 +49,13 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
         }
         
         // Mapear perfis por ID para fácil acesso
-        const profilesMap = (userProfiles || []).reduce((acc: Record<string, any>, profile: any) => {
-          acc[profile.id] = profile;
-          return acc;
-        }, {});
+        const profilesMap: Record<string, UserProfile> = {};
+        
+        (userProfiles || []).forEach((profile: UserProfile) => {
+          if (profile && profile.id) {
+            profilesMap[profile.id] = profile;
+          }
+        });
 
         // Buscar respostas (replies)
         const { data: replies, error: repliesError } = await supabase
@@ -71,8 +83,10 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
             .in('id', missingIds);
             
           if (additionalProfiles) {
-            additionalProfiles.forEach((profile: any) => {
-              profilesMap[profile.id] = profile;
+            additionalProfiles.forEach((profile: UserProfile) => {
+              if (profile && profile.id) {
+                profilesMap[profile.id] = profile;
+              }
             });
           }
         }
@@ -86,8 +100,10 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
             .select('comment_id')
             .eq('user_id', user.id);
 
-          likesMap = (userLikes || []).reduce((acc: Record<string, boolean>, like) => {
-            acc[like.comment_id] = true;
+          likesMap = (userLikes || []).reduce((acc: Record<string, boolean>, like: any) => {
+            if (like && like.comment_id) {
+              acc[like.comment_id] = true;
+            }
             return acc;
           }, {});
         }
@@ -95,13 +111,13 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
         // Organizar comentários com respostas e perfis
         const organizedComments = parentComments.map((comment: any) => ({
           ...comment,
-          profiles: profilesMap[comment.user_id] || null,
+          profiles: comment.user_id && profilesMap[comment.user_id] ? profilesMap[comment.user_id] : null,
           user_has_liked: !!likesMap[comment.id],
           replies: (replies || [])
             .filter((reply: any) => reply.parent_id === comment.id)
             .map((reply: any) => ({
               ...reply,
-              profiles: profilesMap[reply.user_id] || null,
+              profiles: reply.user_id && profilesMap[reply.user_id] ? profilesMap[reply.user_id] : null,
               user_has_liked: !!likesMap[reply.id]
             }))
         }));
