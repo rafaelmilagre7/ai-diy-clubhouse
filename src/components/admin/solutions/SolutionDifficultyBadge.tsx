@@ -1,33 +1,38 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface SolutionDifficultyBadgeProps {
-  difficulty: string;
+  difficulty: 'easy' | 'medium' | 'advanced' | string;
+  className?: string;
 }
 
-export const SolutionDifficultyBadge: React.FC<SolutionDifficultyBadgeProps> = ({ difficulty }) => {
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy': return 'bg-green-100 text-green-800 border-green-400'; // Melhor contraste
-      case 'medium': return 'bg-amber-100 text-amber-800 border-amber-400'; // Melhor contraste
-      case 'advanced': return 'bg-red-100 text-red-900 border-red-400'; // Melhor contraste
-      default: return 'bg-gray-100 text-gray-800 border-gray-400'; // Melhor contraste
-    }
+export const SolutionDifficultyBadge: React.FC<SolutionDifficultyBadgeProps> = ({ 
+  difficulty,
+  className
+}) => {
+  const badgeStyles = {
+    easy: "bg-green-900/40 text-green-300 border-green-700",
+    medium: "bg-amber-900/40 text-amber-300 border-amber-700", 
+    advanced: "bg-red-900/40 text-red-300 border-red-700",
   };
-
-  const getDifficultyText = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy': return 'Fácil';
-      case 'medium': return 'Normal';
-      case 'advanced': return 'Avançado';
-      default: return difficulty;
-    }
+  
+  const difficultyText = {
+    easy: "Fácil",
+    medium: "Médio",
+    advanced: "Avançado"
   };
-
+  
+  const style = badgeStyles[difficulty as keyof typeof badgeStyles] || badgeStyles.medium;
+  const text = difficultyText[difficulty as keyof typeof difficultyText] || difficulty;
+  
   return (
-    <Badge className={getDifficultyColor(difficulty)}>
-      {getDifficultyText(difficulty)}
+    <Badge 
+      variant="outline" 
+      className={cn(style, "font-medium", className)}
+    >
+      {text}
     </Badge>
   );
 };

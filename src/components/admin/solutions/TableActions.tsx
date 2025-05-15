@@ -1,8 +1,14 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Eye, Edit, BarChart2, Trash2 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { MoreVertical, FileEdit, Eye, Trash2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface TableActionsProps {
   solutionId: string;
@@ -11,40 +17,39 @@ interface TableActionsProps {
 
 export const TableActions: React.FC<TableActionsProps> = ({
   solutionId,
-  onDeleteClick,
+  onDeleteClick
 }) => {
-  const navigate = useNavigate();
-
   return (
-    <div className="flex justify-end space-x-2">
-      <Button 
-        variant="outline" 
-        size="sm"
-        onClick={() => navigate(`/solution/${solutionId}`)}
-      >
-        <Eye className="h-4 w-4" />
-      </Button>
-      <Button 
-        variant="outline" 
-        size="sm"
-        onClick={() => navigate(`/admin/solutions/${solutionId}`)}
-      >
-        <Edit className="h-4 w-4" />
-      </Button>
-      <Button 
-        variant="outline" 
-        size="sm"
-        onClick={() => navigate(`/admin/metrics/${solutionId}`)}
-      >
-        <BarChart2 className="h-4 w-4" />
-      </Button>
-      <Button 
-        variant="destructive" 
-        size="sm"
-        onClick={() => onDeleteClick(solutionId)}
-      >
-        <Trash2 className="h-4 w-4" />
-      </Button>
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="text-neutral-300 hover:text-white">
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="bg-[#1A1E2E] border-neutral-700 text-white">
+        <Link to={`/admin/solutions/${solutionId}`}>
+          <DropdownMenuItem className="hover:bg-neutral-800 text-white cursor-pointer">
+            <FileEdit className="mr-2 h-4 w-4" />
+            <span>Editar</span>
+          </DropdownMenuItem>
+        </Link>
+        <Link to={`/solution/${solutionId}`} target="_blank">
+          <DropdownMenuItem className="hover:bg-neutral-800 text-white cursor-pointer">
+            <Eye className="mr-2 h-4 w-4" />
+            <span>Visualizar</span>
+          </DropdownMenuItem>
+        </Link>
+        <DropdownMenuItem 
+          className="hover:bg-neutral-800 text-white cursor-pointer"
+          onClick={(e) => {
+            e.preventDefault();
+            onDeleteClick(solutionId);
+          }}
+        >
+          <Trash2 className="mr-2 h-4 w-4" />
+          <span>Excluir</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };

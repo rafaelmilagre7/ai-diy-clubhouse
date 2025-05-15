@@ -20,15 +20,15 @@ const AdminSolutions = () => {
     <div className="space-y-6">
       <SolutionsHeader />
       
-      <div className="border rounded-lg">
+      <div className="border rounded-lg border-neutral-700 bg-[#151823] overflow-hidden">
         {loading ? (
           <div className="text-center py-10">
-            <p className="text-muted-foreground">Carregando soluções...</p>
+            <p className="text-neutral-300">Carregando soluções...</p>
           </div>
         ) : solutions.length === 0 ? (
           <div className="text-center py-10">
-            <p className="text-muted-foreground">Nenhuma solução encontrada.</p>
-            <p className="text-muted-foreground mt-2">Crie uma nova solução para começar.</p>
+            <p className="text-neutral-300">Nenhuma solução encontrada.</p>
+            <p className="text-neutral-300 mt-2">Crie uma nova solução para começar.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
