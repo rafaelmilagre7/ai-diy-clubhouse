@@ -10,6 +10,9 @@ interface PhoneInputProps {
   error?: string;
   ddi: string;
   onChangeDDI: (value: string) => void;
+  // Novas propriedades
+  onBlur?: () => void;
+  isValid?: boolean;
 }
 
 export const PhoneInput = ({ 
@@ -18,7 +21,9 @@ export const PhoneInput = ({
   disabled, 
   error, 
   ddi,
-  onChangeDDI
+  onChangeDDI,
+  onBlur,
+  isValid
 }: PhoneInputProps) => {
   const commonDDIs = [
     { value: "+55", label: "Brasil +55" },
@@ -54,8 +59,9 @@ export const PhoneInput = ({
             value={value}
             disabled={disabled}
             onChange={e => onChange(e.target.value)}
+            onBlur={onBlur}
             placeholder="(00) 00000-0000"
-            className={error ? "border-red-400" : ""}
+            className={error ? "border-red-400" : isValid ? "border-green-400" : ""}
           />
         </div>
       </div>

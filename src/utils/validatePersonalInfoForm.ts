@@ -5,7 +5,7 @@ export interface PersonalInfoData {
   name: string;
   email: string;
   phone: string;
-  ddi: string;
+  ddi: string; // Tornando obrigatório para compatibilidade
   linkedin: string;
   instagram: string;
   country: string;
