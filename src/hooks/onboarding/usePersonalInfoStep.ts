@@ -15,7 +15,7 @@ export const usePersonalInfoStep = () => {
     name: "",
     email: "",
     phone: "",
-    ddi: "+55",
+    ddi: "+55", // Garantindo que ddi sempre tenha um valor padrão
     linkedin: "",
     instagram: "",
     country: "Brasil",
@@ -42,7 +42,7 @@ export const usePersonalInfoStep = () => {
         name: userName || progress.personal_info.name || "",
         email: userEmail || progress.personal_info.email || "",
         phone: progress.personal_info.phone || "",
-        ddi: ddi,
+        ddi: ddi, // Garantindo que ddi esteja definido
         linkedin: progress.personal_info.linkedin || "",
         instagram: progress.personal_info.instagram || "",
         country: progress.personal_info.country || "Brasil",
@@ -54,7 +54,8 @@ export const usePersonalInfoStep = () => {
       setFormData(prev => ({
         ...prev,
         name: userName,
-        email: userEmail
+        email: userEmail,
+        ddi: "+55" // Garantindo que ddi sempre tenha um valor padrão
       }));
     }
     setInitialDataLoaded(true);
@@ -69,7 +70,8 @@ export const usePersonalInfoStep = () => {
           setFormData(prev => ({
             ...prev,
             name: profile?.name || user?.user_metadata?.name || "",
-            email: profile?.email || user?.email || ""
+            email: profile?.email || user?.email || "",
+            ddi: "+55" // Garantindo que ddi sempre tenha um valor padrão
           }));
           setInitialDataLoaded(true);
         }

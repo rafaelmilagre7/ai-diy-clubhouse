@@ -111,7 +111,7 @@ export interface PersonalInfoData {
   name: string;
   email: string;
   phone: string;
-  ddi?: string;
+  ddi: string; // Alterado de opcional para obrigatório
   linkedin: string;
   instagram: string;
   country: string;
