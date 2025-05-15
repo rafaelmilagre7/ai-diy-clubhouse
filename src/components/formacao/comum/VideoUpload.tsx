@@ -96,7 +96,7 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
 
     try {
       // Usar a função de upload com fallback
-      const result = await uploadFileWithFallback(
+      const uploadResult = await uploadFileWithFallback(
         file,
         STORAGE_BUCKETS.LEARNING_VIDEOS,
         "videos",
@@ -104,22 +104,23 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
         STORAGE_BUCKETS.FALLBACK
       );
 
-      // Verificação adequada de tipo usando estrutura if/else explícita
-      if ('error' in result) {
+      // Verificação adequada de tipo usando abordagem explícita
+      if ('error' in uploadResult) {
         // Caso de erro
-        throw result.error;
-      } else {
-        // Caso de sucesso (TypeScript entende este bloco corretamente)
-        onChange(
-          result.publicUrl, 
-          "direct", 
-          file.name, 
-          result.path, 
-          file.size
-        );
-        
-        toast.success("Vídeo enviado com sucesso");
+        throw uploadResult.error;
       }
+      
+      // Caso de sucesso - usando uma variável com tipagem explícita
+      const successResult = uploadResult as { publicUrl: string; path: string; error: null };
+      onChange(
+        successResult.publicUrl, 
+        "direct", 
+        file.name, 
+        successResult.path, 
+        file.size
+      );
+      
+      toast.success("Vídeo enviado com sucesso");
     } catch (error: any) {
       console.error("Erro ao fazer upload:", error);
       setError(`Erro no upload: ${error.message || "Tente novamente ou use uma URL do YouTube"}`);

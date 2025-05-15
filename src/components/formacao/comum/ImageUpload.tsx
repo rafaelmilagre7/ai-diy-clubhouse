@@ -64,7 +64,7 @@ export const ImageUpload = ({
     try {
       console.log(`Iniciando upload para bucket: ${bucketName}, pasta: ${folderPath}`);
       
-      const result = await uploadFileWithFallback(
+      const uploadResult = await uploadFileWithFallback(
         file,
         bucketName,
         folderPath,
@@ -74,21 +74,22 @@ export const ImageUpload = ({
         STORAGE_BUCKETS.FALLBACK // Usando o bucket de fallback definido nas constantes
       );
 
-      // Verificação de tipo adequada com estrutura if/else explícita
-      if ('error' in result) {
+      // Verificação de tipo adequada com abordagem explícita
+      if ('error' in uploadResult) {
         // Caso de erro
-        throw result.error;
-      } else {
-        // Caso de sucesso (TypeScript entende este bloco corretamente)
-        console.log("Upload bem-sucedido:", result);
-        onChange(result.publicUrl);
-        
-        toast({
-          title: "Upload concluído",
-          description: "A imagem foi enviada com sucesso.",
-          variant: "default",
-        });
+        throw uploadResult.error;
       }
+      
+      // Caso de sucesso - usando uma variável com tipagem explícita
+      const successResult = uploadResult as { publicUrl: string; path: string; error: null };
+      console.log("Upload bem-sucedido:", successResult);
+      onChange(successResult.publicUrl);
+      
+      toast({
+        title: "Upload concluído",
+        description: "A imagem foi enviada com sucesso.",
+        variant: "default",
+      });
     } catch (error: any) {
       console.error("Erro ao fazer upload:", error);
       setError(error.message || "Não foi possível enviar a imagem. Tente novamente.");

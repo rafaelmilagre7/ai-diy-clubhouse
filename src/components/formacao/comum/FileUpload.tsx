@@ -98,7 +98,7 @@ export const FileUpload = ({
       
       // Upload com mecanismo de fallback aprimorado
       console.log(`Iniciando upload para bucket: ${bucketName}, pasta: ${folderPath}`);
-      const result = await uploadFileWithFallback(
+      const uploadResult = await uploadFileWithFallback(
         file,
         bucketName,
         folderPath,
@@ -109,18 +109,19 @@ export const FileUpload = ({
         STORAGE_BUCKETS.FALLBACK // Usar bucket de fallback
       );
       
-      // Verificação adequada de tipos para result com estrutura if/else explícita
-      if ('error' in result) {
+      // Verificação adequada de tipos para result com uma abordagem explícita
+      if ('error' in uploadResult) {
         // Caso de erro
-        throw result.error;
-      } else {
-        // Caso de sucesso (TypeScript entende este bloco corretamente)
-        console.log("Upload concluído com sucesso:", result);
-        setFileName(file.name);
-        onChange(result.publicUrl, file.type, file.size);
-        
-        toast.success("Upload realizado com sucesso!");
-      }
+        throw uploadResult.error;
+      } 
+      
+      // Caso de sucesso - definindo uma variável com o tipo explícito
+      const successResult = uploadResult as { publicUrl: string; path: string; error: null };
+      console.log("Upload concluído com sucesso:", successResult);
+      setFileName(file.name);
+      onChange(successResult.publicUrl, file.type, file.size);
+      
+      toast.success("Upload realizado com sucesso!");
       
     } catch (error: any) {
       console.error("Erro no upload de arquivo:", error);
