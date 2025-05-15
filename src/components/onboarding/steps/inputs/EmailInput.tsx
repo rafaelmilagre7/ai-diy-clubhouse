@@ -11,7 +11,7 @@ interface EmailInputProps {
 
 export const EmailInput = ({ value, onChange, disabled, readOnly }: EmailInputProps) => (
   <div>
-    <Label htmlFor="email">E-mail</Label>
+    <Label htmlFor="email" className="text-white">E-mail</Label>
     <Input
       id="email"
       type="email"
@@ -21,6 +21,7 @@ export const EmailInput = ({ value, onChange, disabled, readOnly }: EmailInputPr
       onChange={e => onChange(e.target.value)}
       required
       placeholder="exemplo@dominio.com"
+      className="bg-[#1A1E2E] text-white border-neutral-700"
     />
   </div>
 );
