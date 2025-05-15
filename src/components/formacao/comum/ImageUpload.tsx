@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { uploadFileWithFallback } from "@/lib/supabase/storage";
@@ -72,6 +73,10 @@ export const ImageUpload = ({
         },
         STORAGE_BUCKETS.FALLBACK // Usando o bucket de fallback definido nas constantes
       );
+
+      if ('error' in result && result.error) {
+        throw result.error;
+      }
 
       console.log("Upload bem-sucedido:", result);
       onChange(result.publicUrl);

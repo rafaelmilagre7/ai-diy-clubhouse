@@ -25,8 +25,8 @@ export const useAulaStorage = () => {
         setStorageReady(result.success);
         
         if (!result.success) {
-          console.warn("Configuração de armazenamento incompleta:", result.message);
-          setStorageError(result.message);
+          console.warn("Configuração de armazenamento incompleta:", result.error);
+          setStorageError(result.error);
           toast.warning("Configuração de armazenamento incompleta. Alguns recursos podem não funcionar corretamente.");
         } else {
           console.log("Buckets configurados com sucesso:", result);
@@ -55,8 +55,8 @@ export const useAulaStorage = () => {
       if (result.success) {
         toast.success("Configuração de armazenamento concluída com sucesso!");
       } else {
-        setStorageError(result.message);
-        toast.error(`Falha na configuração: ${result.message}`);
+        setStorageError(result.error);
+        toast.error(`Falha na configuração: ${result.error}`);
       }
     } catch (error: any) {
       setStorageError(error.message || "Erro desconhecido");

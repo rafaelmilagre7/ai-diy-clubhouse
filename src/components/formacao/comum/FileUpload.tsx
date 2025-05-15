@@ -109,6 +109,10 @@ export const FileUpload = ({
         STORAGE_BUCKETS.FALLBACK // Usar bucket de fallback
       );
       
+      if ('error' in result && result.error) {
+        throw result.error;
+      }
+      
       console.log("Upload concluído com sucesso:", result);
       setFileName(file.name);
       onChange(result.publicUrl, file.type, file.size);
