@@ -80,12 +80,20 @@ export const FileUpload = ({
         STORAGE_BUCKETS.FALLBACK // Usar bucket de fallback
       );
       
+      // Verificar se há erro e tratar corretamente
+      if ('error' in result) {
+        throw result.error;
+      }
+      
+      // Caso de sucesso - definindo uma variável com tipo explícito
+      const successResult = result as { publicUrl: string; path: string; error: null };
+      
       setFileName(file.name);
-      onChange(result.publicUrl, file.type, file.size);
+      onChange(successResult.publicUrl, file.type, file.size);
       
       toast.success("Upload realizado com sucesso!");
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro no upload de arquivo:", error);
       toast.error("Erro ao fazer upload do arquivo. Tente novamente.");
     } finally {
