@@ -1,6 +1,7 @@
 
 import React from "react";
 import { NameInput } from "./inputs/NameInput";
+import { EmailInput } from "./inputs/EmailInput";
 import { PhoneInput } from "./inputs/PhoneInput";
 import { SocialInputs } from "./inputs/SocialInputs";
 import { LocationInputs } from "./inputs/LocationInputs";
@@ -10,6 +11,7 @@ import { useAuth } from "@/contexts/auth";
 interface PersonalInfoInputsProps {
   formData: {
     name: string;
+    email: string;
     phone: string;
     ddi?: string;
     linkedin: string;
@@ -23,7 +25,6 @@ interface PersonalInfoInputsProps {
   disabled: boolean;
   readOnly?: boolean;
   errors?: Record<string, string>;
-  hideEmail?: boolean;
 }
 
 export const PersonalInfoInputs = ({ 
@@ -31,22 +32,28 @@ export const PersonalInfoInputs = ({
   onChange, 
   disabled, 
   readOnly, 
-  errors = {},
-  hideEmail = false
+  errors = {} 
 }: PersonalInfoInputsProps) => {
   const { user } = useAuth();
   
   // Usar os valores do usuário autenticado como fallback
   const userName = formData.name || user?.user_metadata?.name || '';
+  const userEmail = formData.email || user?.email || '';
   
   return (
     <div className="space-y-8">
       <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4 space-y-6">
         <h3 className="text-lg font-semibold text-[#0ABAB5]">Informações Básicas</h3>
-        <div className="w-full">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <NameInput
             value={userName}
             onChange={v => onChange("name", v)}
+            disabled={true}
+            readOnly={true}
+          />
+          <EmailInput
+            value={userEmail}
+            onChange={v => onChange("email", v)}
             disabled={true}
             readOnly={true}
           />
@@ -63,7 +70,6 @@ export const PersonalInfoInputs = ({
             error={errors.phone}
             ddi={formData.ddi || "+55"}
             onChangeDDI={v => onChange("ddi", v)}
-            showLabel={false}
           />
           <TimezoneInput 
             value={formData.timezone} 

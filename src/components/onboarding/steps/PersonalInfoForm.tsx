@@ -35,7 +35,6 @@ export const PersonalInfoForm = ({
         onChange={onChange} 
         disabled={isSubmitting}
         errors={errors}
-        hideEmail={true}
       />
       
       <div className="flex justify-end pt-4">
