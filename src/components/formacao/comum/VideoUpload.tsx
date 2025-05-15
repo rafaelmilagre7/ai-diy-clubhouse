@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -104,24 +103,21 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
         STORAGE_BUCKETS.FALLBACK
       );
 
-      if ('error' in result && result.error) {
+      // Verificação adequada de tipo usando discriminante 'error'
+      if ('error' in result) {
         throw result.error;
       }
 
-      // Verificar se o resultado contém publicUrl e path antes de usar
-      if (!('error' in result) && result.publicUrl && result.path) {
-        onChange(
-          result.publicUrl, 
-          "direct", 
-          file.name, 
-          result.path, 
-          file.size
-        );
-        
-        toast.success("Vídeo enviado com sucesso");
-      } else {
-        throw new Error("Não foi possível obter URL do vídeo após upload");
-      }
+      // Agora TypeScript sabe que result contém publicUrl e path
+      onChange(
+        result.publicUrl, 
+        "direct", 
+        file.name, 
+        result.path, 
+        file.size
+      );
+      
+      toast.success("Vídeo enviado com sucesso");
     } catch (error: any) {
       console.error("Erro ao fazer upload:", error);
       setError(`Erro no upload: ${error.message || "Tente novamente ou use uma URL do YouTube"}`);

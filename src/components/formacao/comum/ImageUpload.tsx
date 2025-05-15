@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { uploadFileWithFallback } from "@/lib/supabase/storage";
@@ -74,23 +73,20 @@ export const ImageUpload = ({
         STORAGE_BUCKETS.FALLBACK // Usando o bucket de fallback definido nas constantes
       );
 
-      if ('error' in result && result.error) {
+      // Verificação de tipo adequada com discriminante 'error'
+      if ('error' in result) {
         throw result.error;
       }
 
-      // Verificar se o resultado tem publicUrl antes de usar
-      if (!('error' in result) && result.publicUrl) {
-        console.log("Upload bem-sucedido:", result);
-        onChange(result.publicUrl);
-        
-        toast({
-          title: "Upload concluído",
-          description: "A imagem foi enviada com sucesso.",
-          variant: "default",
-        });
-      } else {
-        throw new Error("Não foi possível obter URL da imagem após upload");
-      }
+      // Após a verificação, o TypeScript sabe que result contém publicUrl
+      console.log("Upload bem-sucedido:", result);
+      onChange(result.publicUrl);
+      
+      toast({
+        title: "Upload concluído",
+        description: "A imagem foi enviada com sucesso.",
+        variant: "default",
+      });
     } catch (error: any) {
       console.error("Erro ao fazer upload:", error);
       setError(error.message || "Não foi possível enviar a imagem. Tente novamente.");

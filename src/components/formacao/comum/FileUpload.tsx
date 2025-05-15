@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -109,20 +108,17 @@ export const FileUpload = ({
         STORAGE_BUCKETS.FALLBACK // Usar bucket de fallback
       );
       
-      if ('error' in result && result.error) {
+      // Verificação adequada de tipos para result
+      if ('error' in result) {
         throw result.error;
       }
       
-      // Verificar se o resultado tem publicUrl antes de usar
-      if (!('error' in result) && result.publicUrl) {
-        console.log("Upload concluído com sucesso:", result);
-        setFileName(file.name);
-        onChange(result.publicUrl, file.type, file.size);
-        
-        toast.success("Upload realizado com sucesso!");
-      } else {
-        throw new Error("Não foi possível obter URL do arquivo após upload");
-      }
+      // Após a verificação de erro, result.publicUrl está disponível e tipado corretamente
+      console.log("Upload concluído com sucesso:", result);
+      setFileName(file.name);
+      onChange(result.publicUrl, file.type, file.size);
+      
+      toast.success("Upload realizado com sucesso!");
       
     } catch (error: any) {
       console.error("Erro no upload de arquivo:", error);
