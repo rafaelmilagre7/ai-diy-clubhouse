@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -108,17 +109,18 @@ export const FileUpload = ({
         STORAGE_BUCKETS.FALLBACK // Usar bucket de fallback
       );
       
-      // Verificação adequada de tipos para result
+      // Verificação adequada de tipos para result com estrutura if/else explícita
       if ('error' in result) {
+        // Caso de erro
         throw result.error;
+      } else {
+        // Caso de sucesso (TypeScript entende este bloco corretamente)
+        console.log("Upload concluído com sucesso:", result);
+        setFileName(file.name);
+        onChange(result.publicUrl, file.type, file.size);
+        
+        toast.success("Upload realizado com sucesso!");
       }
-      
-      // Após a verificação de erro, result.publicUrl está disponível e tipado corretamente
-      console.log("Upload concluído com sucesso:", result);
-      setFileName(file.name);
-      onChange(result.publicUrl, file.type, file.size);
-      
-      toast.success("Upload realizado com sucesso!");
       
     } catch (error: any) {
       console.error("Erro no upload de arquivo:", error);
