@@ -12,7 +12,6 @@ import { OnboardingData } from "@/types/onboarding";
 import { ProfessionalDataStep } from "./steps/ProfessionalDataStep";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import { toast } from "sonner";
 
 export const OnboardingSteps = () => {
   const {
@@ -29,8 +28,8 @@ export const OnboardingSteps = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Mapeamento consistente de caminhos para IDs de etapas
-  const pathToStepId = {
+  // Unificação dos mapeamentos de caminhos para IDs de etapas
+  const pathToStepComponent = {
     "/onboarding": "personal_info",
     "/onboarding/personal-info": "personal_info",
     "/onboarding/professional-data": "professional_info", 
@@ -44,7 +43,7 @@ export const OnboardingSteps = () => {
   };
 
   // Mapeamento reverso para navegação
-  const stepIdToPath = {
+  const stepToPath = {
     "personal_info": "/onboarding/personal-info",
     "professional_info": "/onboarding/professional-data",
     "business_context": "/onboarding/business-context",
@@ -56,41 +55,28 @@ export const OnboardingSteps = () => {
     "trail_generation": "/onboarding/trail-generation"
   };
 
-  const currentPathStepId = pathToStepId[location.pathname as keyof typeof pathToStepId];
+  const currentPathStepId = pathToStepComponent[location.pathname as keyof typeof pathToStepComponent] || currentStep.id;
   
   useEffect(() => {
-    // Log mais detalhado para depuração
-    console.log(`[OnboardingSteps] Rota: ${location.pathname}, stepId mapeado: ${currentPathStepId}, currentStep.id: ${currentStep.id}`);
-    
-    // Verificar se estamos em uma rota válida de onboarding
-    if (location.pathname.startsWith('/onboarding') && !currentPathStepId && location.pathname !== '/onboarding') {
-      console.warn(`[OnboardingSteps] Rota de onboarding não reconhecida: ${location.pathname}`);
-      // Redirecionar para a primeira etapa se estiver em uma rota inválida
-      navigate('/onboarding/personal-info');
-    }
-  }, [location.pathname, currentPathStepId, currentStep.id, navigate]);
+    console.log(`Rota atual: ${location.pathname}, stepId mapeado: ${currentPathStepId}, currentStep.id: ${currentStep.id}`);
+  }, [location.pathname, currentPathStepId, currentStep.id]);
 
   // Função para navegar para a etapa anterior
   const navigateToPreviousStep = (currentStepId: string) => {
-    try {
-      const stepIds = Object.keys(stepIdToPath);
-      const currentIndex = stepIds.indexOf(currentStepId);
-      
-      if (currentIndex <= 0) {
-        // Se for a primeira etapa ou não encontrou a etapa atual, vamos para a primeira etapa
-        navigate("/onboarding/personal-info");
-        return;
-      }
-      
-      const previousStepId = stepIds[currentIndex - 1];
-      const previousPath = stepIdToPath[previousStepId as keyof typeof stepIdToPath];
-      
-      console.log(`[OnboardingSteps] Navegando da etapa ${currentStepId} para etapa anterior ${previousStepId} (${previousPath})`);
-      navigate(previousPath);
-    } catch (error) {
-      console.error("[OnboardingSteps] Erro ao navegar para etapa anterior:", error);
-      toast.error("Erro ao navegar para a etapa anterior");
+    const stepIds = Object.keys(stepToPath);
+    const currentIndex = stepIds.indexOf(currentStepId);
+    
+    if (currentIndex <= 0) {
+      // Se for a primeira etapa ou não encontrou a etapa atual, vamos para a primeira etapa
+      navigate("/onboarding/personal-info");
+      return;
     }
+    
+    const previousStepId = stepIds[currentIndex - 1];
+    const previousPath = stepToPath[previousStepId as keyof typeof stepToPath];
+    
+    console.log(`[OnboardingSteps] Navegando da etapa ${currentStepId} para etapa anterior ${previousStepId} (${previousPath})`);
+    navigate(previousPath);
   };
 
   // Atualização dos IDs de componentes para corresponder aos IDs de etapas
@@ -112,52 +98,33 @@ export const OnboardingSteps = () => {
     ),
   };
 
-  // Determinar qual componente renderizar com base na rota atual ou no estado
-  // Priorizar o ID da etapa baseado na rota atual, com fallback para o estado
-  const activeStepId = currentPathStepId || currentStep.id;
-  const CurrentStepComponent = stepComponents[activeStepId as keyof typeof stepComponents];
+  const CurrentStepComponent = stepComponents[currentPathStepId as keyof typeof stepComponents] || 
+                              stepComponents[currentStep.id as keyof typeof stepComponents];
   
   if (!CurrentStepComponent) {
-    console.warn(`[OnboardingSteps] Componente não encontrado para etapa: ${activeStepId}`);
-    return (
-      <div className="p-8 text-center">
-        <h3 className="text-lg font-medium text-red-500">Etapa não encontrada</h3>
-        <p className="mt-2">Ocorreu um erro ao carregar esta etapa do onboarding.</p>
-        <button 
-          className="mt-4 bg-primary text-white px-4 py-2 rounded-md"
-          onClick={() => navigate("/onboarding/personal-info")}
-        >
-          Voltar ao início
-        </button>
-      </div>
-    );
+    console.warn(`Componente não encontrado para etapa: ${currentPathStepId || currentStep.id}`);
+    return null;
   }
 
   const progressPercentage = ((currentStepIndex + 1) / steps.length) * 100;
 
-  // Obter os dados iniciais para a etapa atual
   const getInitialDataForCurrentStep = () => {
     if (!progress) return undefined;
-    
-    // Tratamento específico para cada tipo de dado
-    if (activeStepId === "professional_info") {
-      return progress.professional_info || {};
+    if (currentPathStepId === "professional_data" || currentStep.id === "professional_data") {
+      return progress.professional_info;
     }
-    if (activeStepId === "business_context") {
-      return progress.business_context || {};
+    if (currentPathStepId === "business_context" || currentStep.id === "business_context") {
+      return progress.business_context;
     }
-    
-    // Acesso direto usando o nome da seção como chave
-    const sectionKey = activeStepId as keyof OnboardingData;
-    return progress[sectionKey as keyof typeof progress] || {};
+    const sectionKey = currentStep.section as keyof OnboardingData;
+    return progress[sectionKey as keyof typeof progress];
   };
 
-  // Verificar se o componente da etapa precisa de dados pessoais
   const supportsPersonalInfo = (stepId: string) => {
     return (
-      stepId === "professional_info" || 
+      stepId === "professional_data" || 
       stepId === "business_context" || 
-      stepId === "ai_experience" || 
+      stepId === "ai_exp" || 
       stepId === "business_goals" || 
       stepId === "experience_personalization" || 
       stepId === "complementary_info" || 
@@ -165,7 +132,6 @@ export const OnboardingSteps = () => {
     );
   };
 
-  // Preparar props para o componente da etapa atual
   const getPropsForCurrentStep = () => {
     const baseProps = {
       onSubmit: saveStepData,
@@ -173,13 +139,13 @@ export const OnboardingSteps = () => {
       isLastStep: currentStepIndex === steps.length - 1,
       onComplete: completeOnboarding,
       initialData: getInitialDataForCurrentStep(),
-      onPrevious: () => navigateToPreviousStep(activeStepId),
+      onPrevious: () => navigateToPreviousStep(currentPathStepId || currentStep.id), // Nova prop
     };
 
-    if (supportsPersonalInfo(activeStepId)) {
+    if (supportsPersonalInfo(currentPathStepId || currentStep.id)) {
       return {
         ...baseProps,
-        personalInfo: progress?.personal_info || {},
+        personalInfo: progress?.personal_info,
       };
     }
 

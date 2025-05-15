@@ -1,58 +1,57 @@
 
-import { supabase } from "@/lib/supabase";
+import { professionalDataService } from "@/services/onboarding";
 
 /**
- * Busca dados profissionais específicos para um progresso
+ * Função para salvar dados profissionais em tabelas específicas
  */
-export const fetchProfessionalData = async (progressId: string) => {
-  if (!progressId) {
-    console.error("[ERRO] ID de progresso não fornecido para busca de dados profissionais");
-    return null;
-  }
-  
+export async function saveProfessionalData(
+  progressId: string, 
+  userId: string, 
+  data: any
+): Promise<any> {
   try {
-    const { data, error } = await supabase
-      .from('onboarding_professional_info')
-      .select('*')
-      .eq('progress_id', progressId)
-      .maybeSingle();
+    console.log("[DEBUG] Salvando dados profissionais:", { progressId, userId, data });
     
-    if (error) {
-      console.error("[ERRO] Erro ao buscar dados profissionais:", error);
-      return null;
-    }
+    // Chamar serviço especializado
+    const result = await professionalDataService.save(progressId, userId, data);
     
-    return data;
+    return result;
   } catch (error) {
-    console.error("[ERRO] Exceção ao buscar dados profissionais:", error);
-    return null;
+    console.error("[ERRO] Falha ao salvar dados profissionais:", error);
+    throw error;
   }
-};
+}
 
 /**
- * Formata dados profissionais para o formato esperado
+ * Busca dados profissionais de tabelas relacionadas
  */
-export const formatProfessionalData = (data: any) => {
+export async function fetchProfessionalData(progressId: string): Promise<any> {
+  try {
+    // Chamar serviço especializado
+    const result = await professionalDataService.fetch(progressId);
+    
+    return result;
+  } catch (error) {
+    console.error("[ERRO] Falha ao buscar dados profissionais:", error);
+    return null;
+  }
+}
+
+/**
+ * Formata os dados profissionais para integração
+ */
+export function formatProfessionalData(data: any): any {
   if (!data) return {};
   
-  // Extrair os campos específicos para professional_info
-  const professional_info = {
-    company_name: data.company_name || "",
-    company_size: data.company_size || "",
-    company_sector: data.company_sector || "",
-    company_website: data.company_website || "",
-    current_position: data.current_position || "",
-    annual_revenue: data.annual_revenue || ""
+  const formatted = {
+    professional_info: data.professional_info || {},
+    company_name: data.company_name || '',
+    company_size: data.company_size || '',
+    company_sector: data.company_sector || '',
+    company_website: data.company_website || '',
+    current_position: data.current_position || '',
+    annual_revenue: data.annual_revenue || ''
   };
   
-  // Retornar formato consistente com os dados top-level
-  return {
-    professional_info,
-    company_name: data.company_name || "",
-    company_size: data.company_size || "",
-    company_sector: data.company_sector || "",
-    company_website: data.company_website || "",
-    current_position: data.current_position || "",
-    annual_revenue: data.annual_revenue || ""
-  };
-};
+  return formatted;
+}

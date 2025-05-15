@@ -1,3 +1,4 @@
+
 import { supabase } from "./client";
 import { STORAGE_BUCKETS } from "./config";
 
@@ -31,7 +32,6 @@ export const formatVideoDuration = (seconds: number): string => {
 
 /**
  * Configura os buckets de armazenamento necessários para o LMS
- * @returns Objeto com informações do resultado da operação
  */
 export const setupLearningStorageBuckets = async () => {
   try {
@@ -41,28 +41,15 @@ export const setupLearningStorageBuckets = async () => {
     
     if (error) {
       console.error('Erro ao configurar buckets:', error);
-      return { 
-        success: false, 
-        message: error.message,
-        error: error.message 
-      };
+      return { success: false, error: error.message };
     }
     
     console.log('Buckets configurados com sucesso:', data);
     
-    return { 
-      success: true, 
-      message: 'Buckets configurados com sucesso',
-      data 
-    };
+    return { success: true, data };
   } catch (error) {
     console.error('Falha na configuração de buckets:', error);
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    return { 
-      success: false, 
-      message: errorMessage,
-      error: errorMessage 
-    };
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
 };
 
@@ -110,75 +97,41 @@ export const ensureBucketExists = async (bucketName: string): Promise<boolean> =
 /**
  * Extrai informações de um vídeo do Panda Video
  */
-export const extractPandaVideoInfo = (data: any): { videoId: string; thumbnail: string; url: string; thumbnailUrl: string } => {
+export const extractPandaVideoInfo = (data: any): { videoId: string; thumbnail: string } => {
   // Verificando se os dados são válidos
   if (!data || !data.id) {
     console.error('Dados de vídeo inválidos:', data);
-    return { 
-      videoId: '', 
-      thumbnail: '',
-      url: '',
-      thumbnailUrl: ''
-    };
+    return { videoId: '', thumbnail: '' };
   }
-
-  const thumbnailUrl = data.thumbnailUrl || data.thumbnail || '';
-  const url = data.url || `https://pandavideo.com.br/videos/${data.id}`;
 
   return {
     videoId: data.id || '',
-    thumbnail: thumbnailUrl,
-    url: url,
-    thumbnailUrl: thumbnailUrl
+    thumbnail: data.thumbnailUrl || data.thumbnail || ''
   };
 };
 
 /**
  * Faz upload de um arquivo com fallback para um bucket alternativo
- * @param file Arquivo a ser enviado
- * @param bucketName Nome do bucket principal
- * @param filePath Caminho onde o arquivo será armazenado
- * @param onProgressUpdate Callback opcional para atualização de progresso
- * @param fallbackBucket Bucket alternativo opcional para fallback
- * @returns Objeto com URL do arquivo ou erro
  */
 export const uploadFileWithFallback = async (
   file: File,
   bucketName: string,
   filePath: string,
-  onProgressUpdate?: (progress: number) => void,
-  fallbackBucket?: string
-): Promise<{ url: string | null; publicUrl?: string; path?: string; error: Error | null }> => {
+  options = {}
+): Promise<{ url: string | null; error: Error | null }> => {
   try {
-    if (onProgressUpdate) {
-      onProgressUpdate(10);
-    }
-    
     // Tentativa inicial no bucket primário
     const { data, error } = await supabase.storage
       .from(bucketName)
-      .upload(filePath, file, { upsert: true });
+      .upload(filePath, file, { upsert: true, ...options });
     
     // Se o upload foi bem-sucedido
     if (data && !error) {
-      if (onProgressUpdate) {
-        onProgressUpdate(80);
-      }
-      
       const { data: publicUrlData } = await supabase.storage
         .from(bucketName)
         .getPublicUrl(filePath);
       
-      if (onProgressUpdate) {
-        onProgressUpdate(100);
-      }
-      
-      return { 
-        url: publicUrlData.publicUrl, 
-        publicUrl: publicUrlData.publicUrl, 
-        path: filePath,
-        error: null 
-      };
+      return { url: publicUrlData.publicUrl, error: null };
     }
     
     // Se houve erro mas não é um problema de bucket inexistente
@@ -187,92 +140,45 @@ export const uploadFileWithFallback = async (
       return { url: null, error: new Error(error.message) };
     }
 
-    if (onProgressUpdate) {
-      onProgressUpdate(20);
-    }
-
     // Tentar criar o bucket
     const bucketCreated = await ensureBucketExists(bucketName);
     if (bucketCreated) {
-      if (onProgressUpdate) {
-        onProgressUpdate(40);
-      }
-      
       // Tentar novamente com o bucket recém-criado
       const { data: retryData, error: retryError } = await supabase.storage
         .from(bucketName)
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, file, { upsert: true, ...options });
       
       if (retryData && !retryError) {
-        if (onProgressUpdate) {
-          onProgressUpdate(80);
-        }
-        
         const { data: publicUrlData } = await supabase.storage
           .from(bucketName)
           .getPublicUrl(filePath);
         
-        if (onProgressUpdate) {
-          onProgressUpdate(100);
-        }
-        
-        return { 
-          url: publicUrlData.publicUrl, 
-          publicUrl: publicUrlData.publicUrl, 
-          path: filePath,
-          error: null 
-        };
+        return { url: publicUrlData.publicUrl, error: null };
       }
       
       console.error(`Erro na segunda tentativa de upload para ${bucketName}:`, retryError);
+      return { url: null, error: new Error(retryError?.message || 'Falha no upload após criar bucket') };
     }
 
-    // Fallback para o bucket geral se fornecido
-    if (fallbackBucket) {
-      console.log(`Usando bucket de fallback ${fallbackBucket} para o upload`);
+    // Fallback para o bucket geral
+    console.log(`Usando bucket de fallback ${STORAGE_BUCKETS.FALLBACK} para o upload`);
+    const { data: fallbackData, error: fallbackError } = await supabase.storage
+      .from(STORAGE_BUCKETS.FALLBACK)
+      .upload(`fallback/${bucketName}/${filePath}`, file, { upsert: true, ...options });
+    
+    if (fallbackData && !fallbackError) {
+      const { data: publicUrlData } = await supabase.storage
+        .from(STORAGE_BUCKETS.FALLBACK)
+        .getPublicUrl(`fallback/${bucketName}/${filePath}`);
       
-      if (onProgressUpdate) {
-        onProgressUpdate(60);
-      }
-      
-      const fallbackPath = `fallback/${bucketName}/${filePath}`;
-      const { data: fallbackData, error: fallbackError } = await supabase.storage
-        .from(fallbackBucket)
-        .upload(fallbackPath, file, { upsert: true });
-      
-      if (fallbackData && !fallbackError) {
-        if (onProgressUpdate) {
-          onProgressUpdate(90);
-        }
-        
-        const { data: publicUrlData } = await supabase.storage
-          .from(fallbackBucket)
-          .getPublicUrl(fallbackPath);
-        
-        if (onProgressUpdate) {
-          onProgressUpdate(100);
-        }
-        
-        return { 
-          url: publicUrlData.publicUrl, 
-          publicUrl: publicUrlData.publicUrl, 
-          path: fallbackPath,
-          error: null 
-        };
-      }
+      return { url: publicUrlData.publicUrl, error: null };
     }
     
-    console.error('Todas as tentativas de upload falharam');
-    return { 
-      url: null, 
-      error: new Error('Todas as tentativas de upload falharam') 
-    };
+    console.error('Todas as tentativas de upload falharam:', fallbackError);
+    return { url: null, error: new Error(fallbackError?.message || 'Todas as tentativas de upload falharam') };
   } catch (error) {
     console.error('Exceção durante upload:', error);
-    return { 
-      url: null, 
-      error: error instanceof Error ? error : new Error('Erro desconhecido durante upload') 
-    };
+    return { url: null, error: error instanceof Error ? error : new Error('Erro desconhecido durante upload') };
   }
 };
 

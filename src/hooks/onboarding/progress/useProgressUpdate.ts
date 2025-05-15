@@ -31,34 +31,10 @@ export const useProgressUpdate = (
       // Limpar flag de toast
       toastShownRef.current = false;
       
-      // Prepare debug_logs if updating
-      let updatesToSend = { ...updates };
-
-      // Adicionar log de debug para rastreamento de alterações
-      if (updates.debug_logs === undefined) {
-        const debugLog = {
-          event: "progress_update",
-          timestamp: new Date().toISOString(),
-          data: {
-            fields_updated: Object.keys(updates),
-            update_source: new Error().stack?.split('\n')[2]?.trim() || 'unknown'
-          }
-        };
-
-        // Garantir que debug_logs é um array
-        const existingLogs = Array.isArray(progress.debug_logs) ? progress.debug_logs : [];
-        
-        // Manter apenas os 20 logs mais recentes
-        updatesToSend.debug_logs = [...existingLogs, debugLog].slice(-20);
-      }
-      
-      const { data, error } = await updateOnboardingProgress(progress.id, updatesToSend);
+      const { data, error } = await updateOnboardingProgress(progress.id, updates);
       
       if (error) {
-        logDebugEvent("updateProgress_error", { 
-          error: error.message,
-          progressId: progress.id
-        });
+        logDebugEvent("updateProgress_error", { error: error.message });
         console.error("[ERRO] Falha ao atualizar progresso:", error);
         lastError.current = error;
         
