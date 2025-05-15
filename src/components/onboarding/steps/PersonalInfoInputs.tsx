@@ -23,6 +23,7 @@ interface PersonalInfoInputsProps {
   disabled: boolean;
   readOnly?: boolean;
   errors?: Record<string, string>;
+  hideEmail?: boolean;
 }
 
 export const PersonalInfoInputs = ({ 
@@ -30,7 +31,8 @@ export const PersonalInfoInputs = ({
   onChange, 
   disabled, 
   readOnly, 
-  errors = {} 
+  errors = {},
+  hideEmail = false
 }: PersonalInfoInputsProps) => {
   const { user } = useAuth();
   
@@ -61,6 +63,7 @@ export const PersonalInfoInputs = ({
             error={errors.phone}
             ddi={formData.ddi || "+55"}
             onChangeDDI={v => onChange("ddi", v)}
+            showLabel={false}
           />
           <TimezoneInput 
             value={formData.timezone} 

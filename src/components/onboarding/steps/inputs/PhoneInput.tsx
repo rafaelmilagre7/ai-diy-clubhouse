@@ -13,6 +13,7 @@ interface PhoneInputProps {
   // Novas propriedades
   onBlur?: () => void;
   isValid?: boolean;
+  showLabel?: boolean;
 }
 
 export const PhoneInput = ({ 
@@ -23,7 +24,8 @@ export const PhoneInput = ({
   ddi,
   onChangeDDI,
   onBlur,
-  isValid
+  isValid,
+  showLabel = true
 }: PhoneInputProps) => {
   const commonDDIs = [
     { value: "+55", label: "Brasil +55" },
@@ -34,9 +36,11 @@ export const PhoneInput = ({
   
   return (
     <div className="space-y-2">
-      <Label htmlFor="phone" className={error ? "text-red-400" : ""}>
-        Telefone
-      </Label>
+      {showLabel && (
+        <Label htmlFor="phone" className={error ? "text-red-400" : ""}>
+          Telefone
+        </Label>
+      )}
       <div className="flex gap-2">
         <div className="w-28">
           <Select value={ddi} onValueChange={onChangeDDI} disabled={disabled}>

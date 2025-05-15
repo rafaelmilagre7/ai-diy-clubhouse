@@ -77,8 +77,9 @@ export const PersonalInfoFormController = () => {
         formData={formData} 
         onChange={handleFormChange} 
         disabled={isSubmitting}
-        readOnly 
+        readOnly={false} 
         errors={formErrors}
+        hideEmail={true}
       />
       <NavigationButtons isSubmitting={isSubmitting} />
     </form>
