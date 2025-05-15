@@ -113,11 +113,16 @@ export const FileUpload = ({
         throw result.error;
       }
       
-      console.log("Upload concluído com sucesso:", result);
-      setFileName(file.name);
-      onChange(result.publicUrl, file.type, file.size);
-      
-      toast.success("Upload realizado com sucesso!");
+      // Verificar se o resultado tem publicUrl antes de usar
+      if (!('error' in result) && result.publicUrl) {
+        console.log("Upload concluído com sucesso:", result);
+        setFileName(file.name);
+        onChange(result.publicUrl, file.type, file.size);
+        
+        toast.success("Upload realizado com sucesso!");
+      } else {
+        throw new Error("Não foi possível obter URL do arquivo após upload");
+      }
       
     } catch (error: any) {
       console.error("Erro no upload de arquivo:", error);

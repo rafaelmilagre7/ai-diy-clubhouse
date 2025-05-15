@@ -25,14 +25,14 @@ interface VideoUploadProps {
     thumbnailUrl?: string
   ) => void;
   videoType?: string;
-  disabled?: boolean; // Adicionada a propriedade disabled que estava faltando
+  disabled?: boolean;
 }
 
 export const VideoUpload: React.FC<VideoUploadProps> = ({
   value,
   onChange,
   videoType = "youtube",
-  disabled = false // Adicionado valor padrão
+  disabled = false
 }) => {
   const [activeTab, setActiveTab] = useState(videoType || "youtube");
   const [youtubeUrl, setYoutubeUrl] = useState(videoType === "youtube" ? value : "");
@@ -108,15 +108,20 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
         throw result.error;
       }
 
-      onChange(
-        result.publicUrl, 
-        "direct", 
-        file.name, 
-        result.path, 
-        file.size
-      );
-      
-      toast.success("Vídeo enviado com sucesso");
+      // Verificar se o resultado contém publicUrl e path antes de usar
+      if (!('error' in result) && result.publicUrl && result.path) {
+        onChange(
+          result.publicUrl, 
+          "direct", 
+          file.name, 
+          result.path, 
+          file.size
+        );
+        
+        toast.success("Vídeo enviado com sucesso");
+      } else {
+        throw new Error("Não foi possível obter URL do vídeo após upload");
+      }
     } catch (error: any) {
       console.error("Erro ao fazer upload:", error);
       setError(`Erro no upload: ${error.message || "Tente novamente ou use uma URL do YouTube"}`);

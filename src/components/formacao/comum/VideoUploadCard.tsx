@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -68,7 +69,7 @@ export const VideoUploadCard = ({ value, onChange, videoType = 'youtube' }: Vide
             </Alert>
           )}
           {!storageReady && storageChecking && (
-            <Alert variant="secondary">
+            <Alert variant="info">
               <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
               <AlertDescription>Verificando configuração de armazenamento...</AlertDescription>
             </Alert>

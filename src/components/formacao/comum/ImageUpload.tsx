@@ -78,14 +78,19 @@ export const ImageUpload = ({
         throw result.error;
       }
 
-      console.log("Upload bem-sucedido:", result);
-      onChange(result.publicUrl);
-      
-      toast({
-        title: "Upload concluído",
-        description: "A imagem foi enviada com sucesso.",
-        variant: "default",
-      });
+      // Verificar se o resultado tem publicUrl antes de usar
+      if (!('error' in result) && result.publicUrl) {
+        console.log("Upload bem-sucedido:", result);
+        onChange(result.publicUrl);
+        
+        toast({
+          title: "Upload concluído",
+          description: "A imagem foi enviada com sucesso.",
+          variant: "default",
+        });
+      } else {
+        throw new Error("Não foi possível obter URL da imagem após upload");
+      }
     } catch (error: any) {
       console.error("Erro ao fazer upload:", error);
       setError(error.message || "Não foi possível enviar a imagem. Tente novamente.");
