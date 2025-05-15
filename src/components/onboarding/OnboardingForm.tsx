@@ -51,7 +51,11 @@ export function OnboardingForm({ onSuccess }: OnboardingFormProps) {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [formSuccess, setFormSuccess] = useState<boolean>(false);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [userProfile, setUserProfile] = useState<{name?: string, email?: string} | null>(null);
+  const [userProfile, setUserProfile] = useState<{
+    name?: string,
+    email?: string,
+    full_name?: string
+  } | null>(null);
   const navigate = useNavigate();
 
   // Definir o formulário com React Hook Form e validação Zod
@@ -89,26 +93,48 @@ export function OnboardingForm({ onSuccess }: OnboardingFormProps) {
   useEffect(() => {
     const getUserData = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        setIsLoading(true);
+        // Buscar dados do usuário autenticado
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError) {
+          console.error("Erro ao obter dados do usuário:", userError);
+          return;
+        }
+
         if (user) {
-          setUserProfile({
-            name: user.user_metadata?.name || user.user_metadata?.full_name || '',
-            email: user.email || ''
-          });
+          // Extrair nome de diversas possíveis fontes
+          const userData = {
+            email: user.email || '',
+            name: user.user_metadata?.name || '',
+            full_name: user.user_metadata?.full_name || user.user_metadata?.name || ''
+          };
+          
+          console.log("Dados do usuário obtidos:", userData);
+          setUserProfile(userData);
+
+          // Usar os dados do usuário para preencher os campos do formulário
+          if (userData.email) {
+            form.setValue("email", userData.email);
+          }
+          
+          if (userData.full_name) {
+            form.setValue("nome_completo", userData.full_name);
+          }
         }
       } catch (error) {
         console.error("Erro ao obter dados do usuário:", error);
+        toast.error("Não foi possível carregar seus dados de perfil");
       }
     };
     
     getUserData();
-  }, []);
+  }, [form]);
 
   // Carregar dados existentes do usuário
   useEffect(() => {
     const loadUserData = async () => {
       try {
-        setIsLoading(true);
         const { data, error } = await getUserOnboardingData();
         
         if (error) {
@@ -118,21 +144,22 @@ export function OnboardingForm({ onSuccess }: OnboardingFormProps) {
         }
         
         if (data) {
-          // Preencher o formulário com dados existentes
-          form.reset({
+          // Mesclar dados existentes com dados do perfil
+          // Mas não sobrescrever nome e email obtidos do perfil
+          const mergedData = {
             ...data,
-            // Garantir que os valores dos novos campos sejam inicializados mesmo se não existirem
-            telefone: data.telefone || "",
-            nome_empresa: data.nome_empresa || "",
-            segmento_empresa: data.segmento_empresa || "",
-            como_conheceu: data.como_conheceu || "",
-            quem_indicou: data.quem_indicou || ""
-          });
+            // Manter email do perfil se existir
+            email: userProfile?.email || data.email || "",
+            // Manter nome do perfil se existir
+            nome_completo: userProfile?.full_name || userProfile?.name || data.nome_completo || ""
+          };
           
-          console.log("Dados carregados com sucesso:", data);
+          // Preencher o formulário com dados mesclados
+          form.reset(mergedData);
+          console.log("Dados carregados e mesclados com sucesso:", mergedData);
         } else if (userProfile) {
           // Se não há dados existentes mas temos o perfil do usuário, pré-preencher nome e email
-          form.setValue("nome_completo", userProfile.name || "");
+          form.setValue("nome_completo", userProfile.full_name || userProfile.name || "");
           form.setValue("email", userProfile.email || "");
         }
       } catch (error) {
@@ -146,6 +173,9 @@ export function OnboardingForm({ onSuccess }: OnboardingFormProps) {
     // Só carregar dados quando o userProfile estiver disponível
     if (userProfile) {
       loadUserData();
+    } else if (!isLoading) {
+      // Se não houver perfil e não estiver carregando, finalizar loading
+      setIsLoading(false);
     }
   }, [form, userProfile]);
 
@@ -242,9 +272,7 @@ export function OnboardingForm({ onSuccess }: OnboardingFormProps) {
                     <FormControl>
                       <Input 
                         placeholder="Seu nome completo" 
-                        {...field} 
-                        readOnly 
-                        disabled
+                        {...field}
                         className="bg-slate-50" 
                       />
                     </FormControl>
