@@ -1,30 +1,28 @@
 
 import React from "react";
+import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-type LoadingSpinnerProps = {
-  size?: "sm" | "md" | "lg";
+interface LoadingSpinnerProps {
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
   className?: string;
-};
+}
 
 export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ 
   size = "md", 
-  className = "" 
+  className 
 }) => {
-  // Convertemos o tamanho para valores específicos em pixels
-  const sizeMap = {
-    sm: 4,
-    md: 6,
-    lg: 8
+  const sizeClasses = {
+    xs: "h-3 w-3",
+    sm: "h-4 w-4",
+    md: "h-6 w-6",
+    lg: "h-8 w-8",
+    xl: "h-12 w-12",
   };
   
-  const sizeValue = sizeMap[size];
-  
   return (
-    <div className={`flex justify-center items-center ${className}`}>
-      <div 
-        className={`h-${sizeValue} w-${sizeValue} animate-spin rounded-full border-2 border-solid border-current border-r-transparent motion-reduce:animate-[spin_1.5s_linear_infinite] text-primary`}
-        role="status"
-      />
-    </div>
+    <Loader2 
+      className={cn("animate-spin text-primary", sizeClasses[size], className)}
+    />
   );
 };

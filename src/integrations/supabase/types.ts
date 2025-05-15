@@ -1993,6 +1993,69 @@ export type Database = {
           },
         ]
       }
+      onboarding_users: {
+        Row: {
+          areas_interesse: string[] | null
+          cidade: string
+          created_at: string | null
+          email: string
+          estado: string
+          experiencia_anterior: string | null
+          id: string
+          interesse_entrevista: boolean | null
+          interesse_networking: boolean | null
+          nivel_conhecimento: string | null
+          nome_completo: string
+          objetivos: string[] | null
+          observacoes: string | null
+          perfil_usuario: string
+          permite_case: boolean | null
+          preferencia_horario: string[] | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          areas_interesse?: string[] | null
+          cidade: string
+          created_at?: string | null
+          email: string
+          estado: string
+          experiencia_anterior?: string | null
+          id?: string
+          interesse_entrevista?: boolean | null
+          interesse_networking?: boolean | null
+          nivel_conhecimento?: string | null
+          nome_completo: string
+          objetivos?: string[] | null
+          observacoes?: string | null
+          perfil_usuario: string
+          permite_case?: boolean | null
+          preferencia_horario?: string[] | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          areas_interesse?: string[] | null
+          cidade?: string
+          created_at?: string | null
+          email?: string
+          estado?: string
+          experiencia_anterior?: string | null
+          id?: string
+          interesse_entrevista?: boolean | null
+          interesse_networking?: boolean | null
+          nivel_conhecimento?: string | null
+          nome_completo?: string
+          objetivos?: string[] | null
+          observacoes?: string | null
+          perfil_usuario?: string
+          permite_case?: boolean | null
+          preferencia_horario?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       permission_audit_logs: {
         Row: {
           action_type: string
