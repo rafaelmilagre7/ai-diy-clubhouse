@@ -36,9 +36,11 @@ import {
 } from "@/components/ui/card";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { cn } from "@/lib/utils";
-import { AlertCircle, CheckCircle } from "lucide-react";
+import { AlertCircle, CheckCircle, Building, User } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useNavigate } from "react-router-dom";
+import { PhoneInput } from "@/components/onboarding/steps/inputs/PhoneInput";
+import { supabase } from "@/lib/supabase";
 
 interface OnboardingFormProps {
   onSuccess?: () => void;
@@ -49,6 +51,7 @@ export function OnboardingForm({ onSuccess }: OnboardingFormProps) {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [formSuccess, setFormSuccess] = useState<boolean>(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<{name?: string, email?: string} | null>(null);
   const navigate = useNavigate();
 
   // Definir o formulário com React Hook Form e validação Zod
@@ -57,6 +60,11 @@ export function OnboardingForm({ onSuccess }: OnboardingFormProps) {
     defaultValues: {
       nome_completo: "",
       email: "",
+      telefone: "",
+      nome_empresa: "",
+      segmento_empresa: "",
+      como_conheceu: "",
+      quem_indicou: "",
       perfil_usuario: "Empresário",
       areas_interesse: [],
       nivel_conhecimento: "Iniciante",
@@ -70,7 +78,31 @@ export function OnboardingForm({ onSuccess }: OnboardingFormProps) {
       interesse_entrevista: false,
       observacoes: "",
     },
+    mode: "onChange",
   });
+
+  // Observar o valor do campo "como_conheceu" para mostrar/ocultar o campo "quem_indicou"
+  const comoConheceu = form.watch("como_conheceu");
+  const mostrarQuemIndicou = comoConheceu === "Indicação";
+
+  // Obter os dados do usuário autenticado
+  useEffect(() => {
+    const getUserData = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setUserProfile({
+            name: user.user_metadata?.name || user.user_metadata?.full_name || '',
+            email: user.email || ''
+          });
+        }
+      } catch (error) {
+        console.error("Erro ao obter dados do usuário:", error);
+      }
+    };
+    
+    getUserData();
+  }, []);
 
   // Carregar dados existentes do usuário
   useEffect(() => {
@@ -88,23 +120,20 @@ export function OnboardingForm({ onSuccess }: OnboardingFormProps) {
         if (data) {
           // Preencher o formulário com dados existentes
           form.reset({
-            nome_completo: data.nome_completo || "",
-            email: data.email || "",
-            perfil_usuario: data.perfil_usuario as any || "Empresário",
-            areas_interesse: data.areas_interesse || [],
-            nivel_conhecimento: data.nivel_conhecimento as any || "Iniciante",
-            experiencia_anterior: data.experiencia_anterior as any || "Não sei nada",
-            objetivos: data.objetivos || [],
-            preferencia_horario: data.preferencia_horario || [],
-            interesse_networking: data.interesse_networking || false,
-            estado: data.estado || "",
-            cidade: data.cidade || "",
-            permite_case: data.permite_case || false,
-            interesse_entrevista: data.interesse_entrevista || false,
-            observacoes: data.observacoes || "",
+            ...data,
+            // Garantir que os valores dos novos campos sejam inicializados mesmo se não existirem
+            telefone: data.telefone || "",
+            nome_empresa: data.nome_empresa || "",
+            segmento_empresa: data.segmento_empresa || "",
+            como_conheceu: data.como_conheceu || "",
+            quem_indicou: data.quem_indicou || ""
           });
           
           console.log("Dados carregados com sucesso:", data);
+        } else if (userProfile) {
+          // Se não há dados existentes mas temos o perfil do usuário, pré-preencher nome e email
+          form.setValue("nome_completo", userProfile.name || "");
+          form.setValue("email", userProfile.email || "");
         }
       } catch (error) {
         console.error("Erro ao carregar dados de usuário:", error);
@@ -114,8 +143,11 @@ export function OnboardingForm({ onSuccess }: OnboardingFormProps) {
       }
     };
 
-    loadUserData();
-  }, [form]);
+    // Só carregar dados quando o userProfile estiver disponível
+    if (userProfile) {
+      loadUserData();
+    }
+  }, [form, userProfile]);
 
   // Enviar formulário
   const onSubmit = async (data: OnboardingFormData) => {
@@ -203,11 +235,22 @@ export function OnboardingForm({ onSuccess }: OnboardingFormProps) {
                 name="nome_completo"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nome Completo*</FormLabel>
+                    <FormLabel className="flex items-center">
+                      Nome Completo* 
+                      <User className="h-4 w-4 ml-2 text-muted-foreground" />
+                    </FormLabel>
                     <FormControl>
-                      <Input placeholder="Seu nome completo" {...field} />
+                      <Input 
+                        placeholder="Seu nome completo" 
+                        {...field} 
+                        readOnly 
+                        disabled
+                        className="bg-slate-50" 
+                      />
                     </FormControl>
-                    <FormMessage />
+                    <FormDescription>
+                      Nome obtido automaticamente do seu cadastro
+                    </FormDescription>
                   </FormItem>
                 )}
               />
@@ -219,9 +262,42 @@ export function OnboardingForm({ onSuccess }: OnboardingFormProps) {
                   <FormItem>
                     <FormLabel>E-mail*</FormLabel>
                     <FormControl>
-                      <Input placeholder="seu.email@exemplo.com" type="email" {...field} />
+                      <Input 
+                        placeholder="seu.email@exemplo.com" 
+                        type="email" 
+                        {...field} 
+                        readOnly 
+                        disabled
+                        className="bg-slate-50" 
+                      />
                     </FormControl>
-                    <FormMessage />
+                    <FormDescription>
+                      Email obtido automaticamente do seu cadastro
+                    </FormDescription>
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="telefone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telefone*</FormLabel>
+                    <FormControl>
+                      <PhoneInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        error={form.formState.errors.telefone?.message}
+                        ddi="+55"
+                        onChangeDDI={(value) => console.log("DDI alterado:", value)}
+                        isValid={!form.formState.errors.telefone}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Digite seu número com DDD (Ex: 11 99999-9999)
+                    </FormDescription>
                   </FormItem>
                 )}
               />
@@ -229,7 +305,130 @@ export function OnboardingForm({ onSuccess }: OnboardingFormProps) {
           </CardContent>
         </Card>
 
-        {/* Seção 2: Perfil do Usuário */}
+        {/* Seção 2: Informações da Empresa */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Informações da Empresa</CardTitle>
+            <CardDescription>
+              Conte-nos um pouco sobre sua empresa (opcional).
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="nome_empresa"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      Nome da Empresa
+                      <Building className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-gray-400 text-xs">(opcional)</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nome da sua empresa" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="segmento_empresa"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Segmento da Empresa 
+                      <span className="text-gray-400 text-xs ml-2">(opcional)</span>
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o segmento" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {formOptions.segmentoEmpresa.map((option) => (
+                          <SelectItem key={option} value={option}>
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Seção 3: Como nos conheceu */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Como nos conheceu</CardTitle>
+            <CardDescription>
+              Queremos entender melhor como você chegou até nós.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="como_conheceu"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Como você nos conheceu*</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || ""}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className={cn(
+                          form.formState.errors.como_conheceu ? "border-red-500" : ""
+                        )}>
+                          <SelectValue placeholder="Selecione uma opção" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {formOptions.comoConheceu.map((option) => (
+                          <SelectItem key={option} value={option}>
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              {mostrarQuemIndicou && (
+                <FormField
+                  control={form.control}
+                  name="quem_indicou"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Quem indicou*</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Nome de quem indicou" 
+                          {...field} 
+                          className={cn(
+                            form.formState.errors.quem_indicou ? "border-red-500" : ""
+                          )}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Seção 3: Perfil do Usuário */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Perfil do Usuário</CardTitle>
@@ -265,7 +464,7 @@ export function OnboardingForm({ onSuccess }: OnboardingFormProps) {
           </CardContent>
         </Card>
 
-        {/* Seção 3: Interesses em IA */}
+        {/* Seção 4: Interesses em IA */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Interesses em Inteligência Artificial</CardTitle>
@@ -327,7 +526,7 @@ export function OnboardingForm({ onSuccess }: OnboardingFormProps) {
           </CardContent>
         </Card>
 
-        {/* Seção 4: Conhecimento em IA */}
+        {/* Seção 5: Conhecimento em IA */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Conhecimento em IA</CardTitle>
@@ -388,7 +587,7 @@ export function OnboardingForm({ onSuccess }: OnboardingFormProps) {
           </CardContent>
         </Card>
 
-        {/* Seção 5: Objetivos com a Plataforma */}
+        {/* Seção 6: Objetivos com a Plataforma */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Objetivos com a Plataforma</CardTitle>
@@ -450,7 +649,7 @@ export function OnboardingForm({ onSuccess }: OnboardingFormProps) {
           </CardContent>
         </Card>
 
-        {/* Seção 6: Disponibilidade */}
+        {/* Seção 7: Disponibilidade */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Disponibilidade</CardTitle>
@@ -533,7 +732,7 @@ export function OnboardingForm({ onSuccess }: OnboardingFormProps) {
           </CardContent>
         </Card>
 
-        {/* Seção 7: Localização */}
+        {/* Seção 8: Localização */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Localização</CardTitle>
@@ -574,7 +773,7 @@ export function OnboardingForm({ onSuccess }: OnboardingFormProps) {
           </CardContent>
         </Card>
 
-        {/* Seção 8: Permissões e Consentimentos */}
+        {/* Seção 9: Permissões e Consentimentos */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Permissões e Consentimentos</CardTitle>
@@ -627,7 +826,7 @@ export function OnboardingForm({ onSuccess }: OnboardingFormProps) {
           </CardContent>
         </Card>
 
-        {/* Seção 9: Observações Finais */}
+        {/* Seção 10: Observações Finais */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Observações Finais</CardTitle>
@@ -662,7 +861,11 @@ export function OnboardingForm({ onSuccess }: OnboardingFormProps) {
           <p className="text-sm text-muted-foreground">
             * Campos obrigatórios
           </p>
-          <Button type="submit" className="px-8" disabled={isSubmitting}>
+          <Button 
+            type="submit" 
+            className="px-8 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600"
+            disabled={isSubmitting}
+          >
             {isSubmitting ? (
               <>
                 <LoadingSpinner size="sm" className="mr-2" />

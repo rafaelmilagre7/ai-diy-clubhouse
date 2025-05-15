@@ -1997,6 +1997,7 @@ export type Database = {
         Row: {
           areas_interesse: string[] | null
           cidade: string
+          como_conheceu: string | null
           created_at: string | null
           email: string
           estado: string
@@ -2006,17 +2007,22 @@ export type Database = {
           interesse_networking: boolean | null
           nivel_conhecimento: string | null
           nome_completo: string
+          nome_empresa: string | null
           objetivos: string[] | null
           observacoes: string | null
           perfil_usuario: string
           permite_case: boolean | null
           preferencia_horario: string[] | null
+          quem_indicou: string | null
+          segmento_empresa: string | null
+          telefone: string | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
           areas_interesse?: string[] | null
           cidade: string
+          como_conheceu?: string | null
           created_at?: string | null
           email: string
           estado: string
@@ -2026,17 +2032,22 @@ export type Database = {
           interesse_networking?: boolean | null
           nivel_conhecimento?: string | null
           nome_completo: string
+          nome_empresa?: string | null
           objetivos?: string[] | null
           observacoes?: string | null
           perfil_usuario: string
           permite_case?: boolean | null
           preferencia_horario?: string[] | null
+          quem_indicou?: string | null
+          segmento_empresa?: string | null
+          telefone?: string | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
           areas_interesse?: string[] | null
           cidade?: string
+          como_conheceu?: string | null
           created_at?: string | null
           email?: string
           estado?: string
@@ -2046,11 +2057,15 @@ export type Database = {
           interesse_networking?: boolean | null
           nivel_conhecimento?: string | null
           nome_completo?: string
+          nome_empresa?: string | null
           objetivos?: string[] | null
           observacoes?: string | null
           perfil_usuario?: string
           permite_case?: boolean | null
           preferencia_horario?: string[] | null
+          quem_indicou?: string | null
+          segmento_empresa?: string | null
+          telefone?: string | null
           updated_at?: string | null
           user_id?: string
         }

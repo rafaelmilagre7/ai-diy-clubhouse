@@ -5,6 +5,11 @@ import { z } from "zod";
 export const onboardingSchema = z.object({
   nome_completo: z.string().min(1, "Nome é obrigatório"),
   email: z.string().email("Email inválido").min(1, "Email é obrigatório"),
+  telefone: z.string().min(10, "Telefone é obrigatório com no mínimo 10 dígitos"),
+  nome_empresa: z.string().optional(),
+  segmento_empresa: z.string().optional(),
+  como_conheceu: z.string().min(1, "Como você nos conheceu é obrigatório"),
+  quem_indicou: z.string().optional(),
   perfil_usuario: z.enum(["Empresário", "Estudante", "Profissional", "Outro"], {
     required_error: "Selecione seu perfil",
   }),
@@ -27,6 +32,15 @@ export const onboardingSchema = z.object({
   permite_case: z.boolean().default(false),
   interesse_entrevista: z.boolean().default(false),
   observacoes: z.string().optional(),
+}).refine(data => {
+  // Validação condicional: se como_conheceu é "Indicação", quem_indicou é obrigatório
+  if (data.como_conheceu === "Indicação" && (!data.quem_indicou || data.quem_indicou.trim() === "")) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Por favor, informe quem indicou a plataforma",
+  path: ["quem_indicou"]
 });
 
 // Tipo derivado do esquema Zod
@@ -69,5 +83,31 @@ export const formOptions = {
     "Manhã (8h–12h)",
     "Tarde (13h–18h)",
     "Noite (19h–22h)"
+  ],
+  segmentoEmpresa: [
+    "Tecnologia",
+    "Saúde",
+    "Educação",
+    "Comércio",
+    "Serviços",
+    "Indústria",
+    "Inteligência Artificial",
+    "Finanças",
+    "Marketing/Publicidade",
+    "Varejo/E-commerce",
+    "Logística",
+    "Alimentos/Bebidas",
+    "Outro"
+  ],
+  comoConheceu: [
+    "Instagram",
+    "YouTube",
+    "Google",
+    "Indicação",
+    "LinkedIn",
+    "Facebook",
+    "TikTok",
+    "Podcast",
+    "Outro"
   ]
 };

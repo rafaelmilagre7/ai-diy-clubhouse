@@ -1,40 +1,22 @@
-import { isValidPhone } from "@brazilian-utils/brazilian-utils";
 
-export const validateLinkedInUrl = (url: string): boolean => {
-  if (!url) return true; // URL opcional
-  const linkedInRegex = /^(https?:\/\/)?([\w\d]+\.)?linkedin\.com\/in\/[\w\d-]+\/?$/i;
-  return linkedInRegex.test(url);
-};
-
-export const validateInstagramUrl = (url: string): boolean => {
-  if (!url) return true; // URL opcional
-  const instagramRegex = /^(https?:\/\/)?([\w\d]+\.)?instagram\.com\/([A-Za-z0-9_](?:(?:[A-Za-z0-9_]|(?:\.(?!\.))){0,28}(?:[A-Za-z0-9_]))?)\/?$/i;
-  return instagramRegex.test(url);
-};
-
+/**
+ * Valida um número de telefone brasileiro
+ * Formato: (XX) XXXXX-XXXX ou (XX) XXXX-XXXX
+ */
 export const validateBrazilianPhone = (phone: string): boolean => {
-  if (!phone) return true; // Telefone opcional
-  const cleanPhone = phone.replace(/\D/g, "");
-  return isValidPhone(cleanPhone); // Using isValidPhone instead of isPhone
-};
-
-export const formatSocialUrl = (url: string, type: "linkedin" | "instagram"): string => {
-  if (!url) return "";
+  // Remove caracteres não numéricos
+  const cleanPhone = phone.replace(/\D/g, '');
   
-  // Remove whitespace
-  url = url.trim();
-  
-  // Add https:// if missing
-  if (!/^https?:\/\//i.test(url)) {
-    url = `https://${url}`;
+  // Verifica se tem entre 10 e 11 dígitos (com ou sem o 9)
+  if (cleanPhone.length < 10 || cleanPhone.length > 11) {
+    return false;
   }
   
-  // Add base domain if only username is provided
-  if (type === "linkedin" && !url.includes("linkedin.com")) {
-    url = `https://linkedin.com/in/${url.replace(/^https?:\/\//i, "")}`;
-  } else if (type === "instagram" && !url.includes("instagram.com")) {
-    url = `https://instagram.com/${url.replace(/^https?:\/\//i, "")}`;
+  // Para telefones de 11 dígitos, verifica se o primeiro dígito após DDD é 9
+  if (cleanPhone.length === 11 && cleanPhone.charAt(2) !== '9') {
+    return false;
   }
   
-  return url;
+  // Se chegou até aqui, o formato é válido
+  return true;
 };
