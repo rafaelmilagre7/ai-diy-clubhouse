@@ -1,29 +1,19 @@
 
-import React from "react";
+import React from 'react';
 
 interface MilagrinhoMessageProps {
   message: string;
-  title?: string;
 }
 
-export const MilagrinhoMessage: React.FC<MilagrinhoMessageProps> = ({
-  message,
-  title
-}) => {
+export const MilagrinhoMessage: React.FC<MilagrinhoMessageProps> = ({ message }) => {
   return (
-    <div className="bg-gradient-to-r from-[#1E2235] to-[#151823] rounded-lg p-6 border border-neutral-700/50 shadow-md">
-      {title && (
-        <h2 className="text-xl md:text-2xl font-semibold text-white mb-3">{title}</h2>
-      )}
-      <div className="flex">
-        <div className="mr-4 flex-shrink-0">
-          <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-semibold">
-            M
-          </div>
-        </div>
-        <div className="text-neutral-300">
-          <p className="whitespace-pre-line">{message}</p>
-        </div>
+    <div className="flex items-start gap-4 animate-fade-in mb-8">
+      <div className="flex-shrink-0 w-12 h-12 bg-viverblue/20 rounded-full p-2 flex items-center justify-center">
+        <span className="text-viverblue text-xl font-bold">M</span>
+      </div>
+      <div className="flex-grow bg-viverblue/5 backdrop-blur-sm rounded-lg p-4 border border-viverblue/10 relative">
+        <div className="absolute left-[-8px] top-4 w-4 h-4 bg-viverblue/5 border-l border-t border-viverblue/10 transform rotate-45"></div>
+        <p className="text-viverblue-light">{message}</p>
       </div>
     </div>
   );

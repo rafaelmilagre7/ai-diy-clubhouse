@@ -1,110 +1,65 @@
 
-import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FormMessage } from "@/components/ui/form-message";
-import { cn } from "@/lib/utils";
-import InputMask from "react-input-mask";
-import { CheckCircle, AlertCircle } from "lucide-react";
-import { validateBrazilianPhone } from "@/utils/validationUtils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface PhoneInputProps {
   value: string;
   onChange: (value: string) => void;
-  onBlur?: () => void;
-  error?: string;
   disabled?: boolean;
-  ddi?: string;
-  onChangeDDI?: (value: string) => void;
-  isValid?: boolean;
+  error?: string;
+  ddi: string;
+  onChangeDDI: (value: string) => void;
 }
 
-export const PhoneInput: React.FC<PhoneInputProps> = ({
-  value,
-  onChange,
-  onBlur = () => {},
-  error,
-  disabled = false,
-  ddi = "+55",
-  onChangeDDI,
-  isValid = false
-}) => {
-  const phoneIsValid = value ? validateBrazilianPhone(value) : true;
-  
-  // Certifica-se de que o DDI começa com + (mas apenas uma vez)
-  const formatDDI = (ddiValue: string) => {
-    if (!ddiValue) return "+55";
-    // Remove qualquer + existente e então adiciona um único + no início
-    return "+" + ddiValue.replace(/\+/g, '').replace(/\D/g, '');
-  };
-  
-  // Manipula a mudança do DDI garantindo que sempre começa com um único +
-  const handleDDIChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (onChangeDDI) {
-      const newDDI = formatDDI(e.target.value);
-      console.log("DDI formatado:", newDDI);
-      onChangeDDI(newDDI);
-    }
-  };
+export const PhoneInput = ({ 
+  value, 
+  onChange, 
+  disabled, 
+  error, 
+  ddi,
+  onChangeDDI
+}: PhoneInputProps) => {
+  const commonDDIs = [
+    { value: "+55", label: "Brasil +55" },
+    { value: "+1", label: "EUA/Canadá +1" },
+    { value: "+351", label: "Portugal +351" },
+    { value: "+34", label: "Espanha +34" }
+  ];
   
   return (
     <div className="space-y-2">
-      <Label htmlFor="phone" className={cn(
-        "transition-colors flex items-center gap-2",
-        error ? "text-red-500" : value && phoneIsValid ? "text-[#0ABAB5]" : ""
-      )}>
-        Telefone <span className="text-gray-400">(opcional)</span>
-        {value && (
-          phoneIsValid ? (
-            <CheckCircle className="h-4 w-4 text-[#0ABAB5]" />
-          ) : (
-            <AlertCircle className="h-4 w-4 text-red-500" />
-          )
-        )}
+      <Label htmlFor="phone" className={error ? "text-red-400" : ""}>
+        Telefone
       </Label>
-      <div className="flex">
-        {onChangeDDI && (
-          <div className="w-16 mr-2">
-            <Input
-              id="ddi"
-              value={ddi}
-              onChange={handleDDIChange}
-              disabled={disabled}
-              className={cn(
-                "transition-all duration-200",
-                error ? "border-red-500 focus:border-red-500" : 
-                value && phoneIsValid ? "border-[#0ABAB5] focus:border-[#0ABAB5]" : ""
-              )}
-            />
-          </div>
-        )}
+      <div className="flex gap-2">
+        <div className="w-28">
+          <Select value={ddi} onValueChange={onChangeDDI} disabled={disabled}>
+            <SelectTrigger className="bg-[#1A1E2E] border-neutral-700">
+              <SelectValue placeholder="+55" />
+            </SelectTrigger>
+            <SelectContent className="bg-[#1A1E2E] border-neutral-700">
+              {commonDDIs.map((item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <div className="flex-1">
-          <InputMask
-            mask="(99) 99999-9999"
+          <Input
+            id="phone"
+            type="tel"
             value={value}
-            onChange={(e) => onChange(e.target.value)}
-            onBlur={onBlur}
             disabled={disabled}
-          >
-            {(inputProps: any) => (
-              <Input
-                {...inputProps}
-                id="phone"
-                placeholder="(00) 00000-0000"
-                className={cn(
-                  "transition-all duration-200",
-                  error ? "border-red-500 focus:border-red-500" : 
-                  value && phoneIsValid ? "border-[#0ABAB5] focus:border-[#0ABAB5]" : ""
-                )}
-              />
-            )}
-          </InputMask>
+            onChange={e => onChange(e.target.value)}
+            placeholder="(00) 00000-0000"
+            className={error ? "border-red-400" : ""}
+          />
         </div>
       </div>
-      <FormMessage
-        type={value && phoneIsValid ? "success" : "error"}
-        message={error || (value && !phoneIsValid ? "Digite um número de celular válido" : undefined)}
-      />
+      {error && <p className="text-sm text-red-400">{error}</p>}
     </div>
   );
 };

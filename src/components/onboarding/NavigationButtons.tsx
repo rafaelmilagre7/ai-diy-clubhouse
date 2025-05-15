@@ -1,91 +1,52 @@
 
-import { Button } from "@/components/ui/button";
-import { ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 
 interface NavigationButtonsProps {
-  isSubmitting: boolean;
   onPrevious?: () => void;
-  submitText?: string;
-  loadingText?: string;
-  showPrevious?: boolean;
-  previousDisabled?: boolean;
-  className?: string;
-  variant?: "primary" | "secondary" | "default";
-  previousButtonClassName?: string; // Nova propriedade para personalizar o estilo do botão anterior
-  submitButtonClassName?: string; // Nova propriedade para personalizar o estilo do botão de envio
+  onNext?: () => void;
+  isSubmitting?: boolean;
+  isLastStep?: boolean;
+  showBack?: boolean;
 }
 
-export const NavigationButtons = ({ 
-  isSubmitting, 
-  onPrevious, 
-  submitText = "Próximo", 
-  loadingText = "Salvando...",
-  showPrevious = true,
-  previousDisabled = false,
-  className,
-  variant = "default",
-  previousButtonClassName,
-  submitButtonClassName
-}: NavigationButtonsProps) => {
-  // Função para determinar a classe de estilo do botão com base na variante
-  const getButtonStyle = () => {
-    switch (variant) {
-      case "primary":
-        return "bg-viverblue hover:bg-viverblue-dark text-white";
-      case "secondary":
-        return "bg-indigo-600 hover:bg-indigo-700 text-white";
-      default:
-        return "bg-viverblue hover:bg-viverblue/90 text-white";
-    }
-  };
-
-  // Função para lidar com o clique no botão anterior
-  const handlePreviousClick = (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevenir comportamento padrão
-    
-    if (onPrevious) {
-      console.log("[NavigationButtons] Botão anterior clicado, executando callback");
-      onPrevious();
-    } else {
-      console.warn("[NavigationButtons] Botão anterior clicado mas nenhum callback fornecido");
-    }
-  };
-
+export const NavigationButtons: React.FC<NavigationButtonsProps> = ({
+  onPrevious,
+  onNext,
+  isSubmitting = false,
+  isLastStep = false,
+  showBack = true
+}) => {
   return (
-    <div className={cn("flex justify-between pt-6", className)}>
-      {showPrevious ? (
+    <div className="flex justify-between mt-6 pt-4 border-t border-white/10">
+      {showBack && onPrevious ? (
         <Button
           type="button"
           variant="outline"
-          disabled={previousDisabled || isSubmitting}
-          className={cn("min-w-[120px] transition-all border-neutral-600 hover:bg-[#252842] hover:text-white", previousButtonClassName)}
-          onClick={handlePreviousClick}
+          onClick={onPrevious}
+          disabled={isSubmitting}
+          className="flex items-center gap-2 border-white/20 hover:bg-white/5"
         >
-          <span className="flex items-center gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Anterior
-          </span>
+          <ArrowLeft size={16} />
+          <span>Voltar</span>
         </Button>
       ) : (
-        <div /> /* Espaçador quando não tem botão anterior */
+        <div></div>
       )}
       
       <Button
         type="submit"
-        className={cn("min-w-[120px] transition-all", getButtonStyle(), submitButtonClassName)}
         disabled={isSubmitting}
+        className="bg-viverblue hover:bg-viverblue-dark transition-colors flex items-center gap-2"
       >
         {isSubmitting ? (
-          <span className="flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            {loadingText}
-          </span>
+          <>Processando...</>
         ) : (
-          <span className="flex items-center gap-2">
-            {submitText}
-            <ArrowRight className="h-4 w-4" />
-          </span>
+          <>
+            <span>{isLastStep ? 'Finalizar' : 'Continuar'}</span>
+            <ArrowRight size={16} />
+          </>
         )}
       </Button>
     </div>
