@@ -10,7 +10,6 @@ import { useAuth } from "@/contexts/auth";
 interface PersonalInfoInputsProps {
   formData: {
     name: string;
-    email: string;
     phone: string;
     ddi?: string;
     linkedin: string;

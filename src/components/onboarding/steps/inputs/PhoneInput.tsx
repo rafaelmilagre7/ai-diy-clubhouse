@@ -61,7 +61,7 @@ export const PhoneInput = ({
             onChange={e => onChange(e.target.value)}
             onBlur={onBlur}
             placeholder="(00) 00000-0000"
-            className={error ? "border-red-400" : isValid ? "border-green-400" : ""}
+            className={`bg-[#1A1E2E] !bg-[#1A1E2E] ${error ? "border-red-400" : isValid ? "border-green-400" : "border-neutral-700"}`}
           />
         </div>
       </div>

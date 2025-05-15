@@ -21,7 +21,8 @@ export const NameInput = ({ value, onChange, disabled, readOnly }: NameInputProp
       onChange={e => onChange(e.target.value)}
       required
       placeholder="Seu nome completo"
-      className="bg-[#1A1E2E] !bg-[#1A1E2E] text-white border-neutral-700"
+      className="bg-[#1A1E2E] !bg-[#1A1E2E] text-white border-neutral-700 shadow-none"
+      style={{ backgroundColor: '#1A1E2E', color: 'white' }}
     />
   </div>
 );
