@@ -1,7 +1,6 @@
 
 import React from "react";
 import { NameInput } from "./inputs/NameInput";
-import { EmailInput } from "./inputs/EmailInput";
 import { PhoneInput } from "./inputs/PhoneInput";
 import { SocialInputs } from "./inputs/SocialInputs";
 import { LocationInputs } from "./inputs/LocationInputs";
@@ -38,22 +37,15 @@ export const PersonalInfoInputs = ({
   
   // Usar os valores do usuário autenticado como fallback
   const userName = formData.name || user?.user_metadata?.name || '';
-  const userEmail = formData.email || user?.email || '';
   
   return (
     <div className="space-y-8">
       <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4 space-y-6">
         <h3 className="text-lg font-semibold text-[#0ABAB5]">Informações Básicas</h3>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="w-full">
           <NameInput
             value={userName}
             onChange={v => onChange("name", v)}
-            disabled={true}
-            readOnly={true}
-          />
-          <EmailInput
-            value={userEmail}
-            onChange={v => onChange("email", v)}
             disabled={true}
             readOnly={true}
           />
