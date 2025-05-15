@@ -20,3 +20,88 @@ export const validateBrazilianPhone = (phone: string): boolean => {
   // Se chegou até aqui, o formato é válido
   return true;
 };
+
+/**
+ * Valida uma URL do LinkedIn
+ * Aceita formatos como: linkedin.com/in/perfil, https://linkedin.com/in/perfil, etc.
+ */
+export const validateLinkedInUrl = (url: string): boolean => {
+  if (!url) return true; // URL é opcional
+  
+  // Verificar se contém o domínio do LinkedIn
+  const hasLinkedInDomain = url.includes('linkedin.com');
+  
+  // Verificar se contém caminho de perfil
+  const hasProfilePath = url.includes('/in/');
+  
+  return hasLinkedInDomain || hasProfilePath;
+};
+
+/**
+ * Valida uma URL do Instagram
+ * Aceita formatos como: instagram.com/perfil, https://instagram.com/perfil, @perfil, etc.
+ */
+export const validateInstagramUrl = (url: string): boolean => {
+  if (!url) return true; // URL é opcional
+  
+  // Verificar se contém o domínio do Instagram
+  const hasInstagramDomain = url.includes('instagram.com');
+  
+  // Verificar se é um handle do Instagram (começa com @)
+  const isInstagramHandle = url.startsWith('@');
+  
+  return hasInstagramDomain || isInstagramHandle;
+};
+
+/**
+ * Formata uma URL de rede social para garantir que tenha o formato correto
+ * @param url URL a ser formatada
+ * @param network Rede social ('linkedin' ou 'instagram')
+ * @returns URL formatada
+ */
+export const formatSocialUrl = (url: string, network: 'linkedin' | 'instagram'): string => {
+  if (!url) return '';
+  
+  // Remover espaços em branco
+  let formattedUrl = url.trim();
+  
+  if (network === 'linkedin') {
+    // Se for apenas um nome de usuário sem domínio
+    if (!formattedUrl.includes('linkedin.com') && !formattedUrl.includes('://')) {
+      // Verificar se começa com /in/
+      if (formattedUrl.startsWith('/in/')) {
+        formattedUrl = `https://linkedin.com${formattedUrl}`;
+      } 
+      // Verificar se começa apenas com 'in/'
+      else if (formattedUrl.startsWith('in/')) {
+        formattedUrl = `https://linkedin.com/${formattedUrl}`;
+      }
+      // Se for apenas o username
+      else if (!formattedUrl.includes('/')) {
+        formattedUrl = `https://linkedin.com/in/${formattedUrl}`;
+      }
+    }
+    
+    // Adicionar protocolo se não existir
+    if (!formattedUrl.startsWith('http')) {
+      formattedUrl = `https://${formattedUrl}`;
+    }
+  } 
+  else if (network === 'instagram') {
+    // Se começar com @, converter para URL
+    if (formattedUrl.startsWith('@')) {
+      formattedUrl = `https://instagram.com/${formattedUrl.substring(1)}`;
+    } 
+    // Se for apenas um nome de usuário sem domínio
+    else if (!formattedUrl.includes('instagram.com') && !formattedUrl.includes('://')) {
+      formattedUrl = `https://instagram.com/${formattedUrl}`;
+    }
+    
+    // Adicionar protocolo se não existir
+    if (!formattedUrl.startsWith('http')) {
+      formattedUrl = `https://${formattedUrl}`;
+    }
+  }
+  
+  return formattedUrl;
+};
