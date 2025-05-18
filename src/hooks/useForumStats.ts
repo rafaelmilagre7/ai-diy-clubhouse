@@ -2,77 +2,63 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 
-interface ForumStats {
-  topicCount: number;
-  postCount: number;
-  activeUserCount: number;
-  isLoading: boolean;
-  error: Error | null;
-}
-
-export function useForumStats(): ForumStats {
-  const {
-    data,
-    isLoading,
-    error
-  } = useQuery({
+export const useForumStats = () => {
+  const { data, isLoading, error } = useQuery({
     queryKey: ['forumStats'],
     queryFn: async () => {
-      // Buscar contagem de tópicos
-      const { count: topicCount, error: topicError } = await supabase
-        .from('forum_topics')
-        .select('*', { count: 'exact', head: true });
-      
-      if (topicError) throw new Error(`Erro ao buscar tópicos: ${topicError.message}`);
-      
-      // Buscar contagem total de posts
-      const { count: postCount, error: postError } = await supabase
-        .from('forum_posts')
-        .select('*', { count: 'exact', head: true });
-      
-      if (postError) throw new Error(`Erro ao buscar posts: ${postError.message}`);
-      
-      // Buscar contagem de usuários ativos (que criaram tópicos ou posts nos últimos 30 dias)
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
-      // Buscar usuários de tópicos ativos
-      const { data: topicUsers, error: topicUserError } = await supabase
-        .from('forum_topics')
-        .select('user_id')
-        .gt('created_at', thirtyDaysAgo.toISOString());
-      
-      if (topicUserError) throw new Error(`Erro ao buscar usuários ativos: ${topicUserError.message}`);
-      
-      // Buscar usuários de posts ativos
-      const { data: postUsers, error: postUserError } = await supabase
-        .from('forum_posts')
-        .select('user_id')
-        .gt('created_at', thirtyDaysAgo.toISOString());
-      
-      if (postUserError) throw new Error(`Erro ao buscar usuários ativos: ${postUserError.message}`);
-      
-      // Combinar os resultados e remover duplicatas para obter contagem única de usuários
-      const uniqueUserIds = new Set([
-        ...(topicUsers?.map(item => item.user_id) || []),
-        ...(postUsers?.map(item => item.user_id) || [])
-      ]);
-      
-      const activeUserCount = uniqueUserIds.size;
-      
-      return {
-        topicCount: topicCount || 0,
-        postCount: postCount || 0,
-        activeUserCount
-      };
-    }
+      try {
+        // Buscar contagem de tópicos
+        const { count: topicCount, error: topicsError } = await supabase
+          .from('forum_topics')
+          .select('*', { count: 'exact', head: true });
+        
+        if (topicsError) throw topicsError;
+        
+        // Buscar contagem de posts
+        const { count: postCount, error: postsError } = await supabase
+          .from('forum_posts')
+          .select('*', { count: 'exact', head: true });
+        
+        if (postsError) throw postsError;
+        
+        // Buscar usuários ativos (distintos que publicaram tópicos ou posts)
+        const { data: uniqueUsers, error: usersError } = await supabase
+          .from('forum_topics')
+          .select('user_id')
+          .limit(1000); // Limitar para não trazer muitos dados
+        
+        if (usersError) throw usersError;
+        
+        const { data: uniquePostUsers, error: postUsersError } = await supabase
+          .from('forum_posts')
+          .select('user_id')
+          .limit(1000);
+        
+        if (postUsersError) throw postUsersError;
+        
+        // Combinar IDs únicos
+        const allUserIds = [...uniqueUsers, ...uniquePostUsers].map(u => u.user_id);
+        const uniqueUserIds = [...new Set(allUserIds)];
+        
+        return {
+          topicCount,
+          postCount,
+          activeUserCount: uniqueUserIds.length
+        };
+      } catch (error) {
+        console.error("Erro ao buscar estatísticas do fórum:", error);
+        throw error;
+      }
+    },
+    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 5, // 5 minutos
   });
-
+  
   return {
     topicCount: data?.topicCount || 0,
     postCount: data?.postCount || 0,
     activeUserCount: data?.activeUserCount || 0,
     isLoading,
-    error: error as Error | null
+    error
   };
-}
+};

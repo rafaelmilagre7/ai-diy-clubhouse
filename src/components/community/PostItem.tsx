@@ -1,44 +1,49 @@
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CheckCircle2, ThumbsUp, Loader2 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/contexts/auth";
-import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { ReplyForm } from "@/components/community/ReplyForm";
+import { MessageSquare, ThumbsUp, AlertTriangle } from "lucide-react";
 
 interface Profile {
+  id: string;
   name: string | null;
   avatar_url: string | null;
 }
 
-interface PostItemProps {
-  post: {
-    id: string;
-    content: string;
-    created_at: string;
-    user_id: string;
-    profiles: Profile | null;
-    is_solution?: boolean;
-    reaction_count?: number;
-    user_has_reacted?: boolean;
-  };
-  isTopicAuthor?: boolean;
-  isTopicStarter?: boolean;
-  canMarkSolution?: boolean;
-  topicId: string;
+interface Post {
+  id: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+  parent_id: string | null;
+  is_solution: boolean;
+  profiles: Profile;
+  replies?: Post[];
 }
 
-export const PostItem = ({ post, isTopicAuthor, isTopicStarter, canMarkSolution, topicId }: PostItemProps) => {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const [isLiking, setIsLiking] = useState(false);
-  const [isMarking, setIsMarking] = useState(false);
+interface PostItemProps {
+  post: Post;
+  topicId: string;
+  isTopicAuthor: boolean;
+  isNestedReply?: boolean;
+  isLocked?: boolean;
+  onReplyAdded?: () => void;
+}
+
+export const PostItem = ({
+  post,
+  topicId,
+  isTopicAuthor,
+  isNestedReply = false,
+  isLocked = false,
+  onReplyAdded
+}: PostItemProps) => {
+  const [showReplyForm, setShowReplyForm] = useState(false);
   
   const getInitials = (name: string | null) => {
     if (!name) return "??";
@@ -50,179 +55,100 @@ export const PostItem = ({ post, isTopicAuthor, isTopicStarter, canMarkSolution,
       .slice(0, 2);
   };
   
-  const handleReaction = async () => {
-    if (!user?.id) {
-      toast.error("Você precisa estar logado para reagir a um post");
-      return;
-    }
-    
-    try {
-      setIsLiking(true);
-      
-      if (!isTopicStarter) {
-        console.log("Processando reação para o post:", post.id);
-        
-        // Verificar se já reagiu
-        const { data: existingReaction, error: checkError } = await supabase
-          .from("forum_reactions")
-          .select("id")
-          .eq("post_id", post.id)
-          .eq("user_id", user.id)
-          .single();
-        
-        if (checkError && checkError.code !== "PGRST116") {
-          console.error("Erro ao verificar reação existente:", checkError);
-          throw checkError;
-        }
-        
-        if (existingReaction) {
-          console.log("Removendo reação existente:", existingReaction.id);
-          
-          // Remover reação
-          const { error: deleteError } = await supabase
-            .from("forum_reactions")
-            .delete()
-            .eq("id", existingReaction.id);
-          
-          if (deleteError) throw deleteError;
-          toast.success("Reação removida");
-        } else {
-          console.log("Adicionando nova reação");
-          
-          // Adicionar reação
-          const { data, error: insertError } = await supabase
-            .from("forum_reactions")
-            .insert({
-              post_id: post.id,
-              user_id: user.id,
-              reaction_type: "like"
-            })
-            .select();
-          
-          if (insertError) throw insertError;
-          
-          console.log("Reação adicionada com sucesso:", data);
-          toast.success("Você reagiu a este post");
-        }
-        
-        // Atualizar dados
-        queryClient.invalidateQueries({ queryKey: ['forumPosts', topicId] });
-      }
-    } catch (error: any) {
-      console.error("Erro ao reagir ao post:", error);
-      toast.error(`Não foi possível processar sua reação: ${error.message || "Erro desconhecido"}`);
-    } finally {
-      setIsLiking(false);
-    }
+  const handleReplySuccess = () => {
+    setShowReplyForm(false);
+    if (onReplyAdded) onReplyAdded();
   };
   
-  const markAsSolution = async () => {
-    if (!user?.id || !canMarkSolution) return;
-    
-    try {
-      setIsMarking(true);
-      
-      console.log("Marcando post como solução:", post.id, "Estado atual:", post.is_solution);
-      
-      const { data, error } = await supabase
-        .from('forum_posts')
-        .update({ is_solution: !post.is_solution })
-        .eq('id', post.id)
-        .select();
-      
-      if (error) {
-        console.error("Erro ao atualizar status de solução:", error);
-        throw error;
-      }
-      
-      console.log("Post atualizado com sucesso:", data);
-      
-      // Atualizar cache
-      queryClient.invalidateQueries({ queryKey: ['forumPosts', topicId] });
-      
-      toast.success(post.is_solution 
-        ? "Post desmarcado como solução" 
-        : "Post marcado como solução"
-      );
-    } catch (error: any) {
-      console.error("Erro ao marcar solução:", error);
-      toast.error(`Não foi possível marcar como solução: ${error.message || "Erro desconhecido"}`);
-    } finally {
-      setIsMarking(false);
-    }
-  };
-
   return (
-    <Card className={`p-4 ${post.is_solution ? 'border-green-500 bg-green-50/5' : ''}`}>
-      <div className="flex justify-between mb-4">
-        <div className="flex items-start gap-3">
-          <Avatar>
-            <AvatarImage src={post.profiles?.avatar_url || undefined} />
+    <div className={`relative ${isNestedReply ? "ml-12 my-3" : "mb-6"}`}>
+      {isNestedReply && (
+        <div className="absolute left-[-24px] top-6 h-[calc(100%-24px)] w-0.5 bg-border"></div>
+      )}
+      
+      <Card className="p-4">
+        <div className="flex gap-4">
+          <Avatar className="h-10 w-10">
+            <AvatarImage src={post.profiles?.avatar_url || undefined} alt={post.profiles?.name || 'Usuário'} />
             <AvatarFallback>{getInitials(post.profiles?.name)}</AvatarFallback>
           </Avatar>
-          <div>
-            <div className="flex items-center gap-2">
-              <p className="font-medium">{post.profiles?.name || "Usuário"}</p>
-              {isTopicAuthor && (
-                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs px-2 py-0.5 rounded-full">
+          
+          <div className="flex-1">
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              <span className="font-medium">{post.profiles?.name || "Usuário"}</span>
+              <span className="text-xs text-muted-foreground">•</span>
+              <span className="text-xs text-muted-foreground">
+                {format(new Date(post.created_at), "d 'de' MMMM 'às' HH:mm", {
+                  locale: ptBR,
+                })}
+              </span>
+              
+              {isTopicAuthor && post.profiles?.id === post.user_id && (
+                <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
                   Autor
-                </Badge>
-              )}
-              {post.is_solution && (
-                <Badge variant="success" className="text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
-                  <CheckCircle2 className="h-3 w-3" />
-                  Solução
-                </Badge>
+                </span>
               )}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {format(new Date(post.created_at), "d 'de' MMMM 'às' HH:mm", {
-                locale: ptBR,
-              })}
-            </p>
+            
+            <div className="mt-2 prose prose-sm max-w-none dark:prose-invert">
+              <div dangerouslySetInnerHTML={{ __html: post.content }} />
+            </div>
+            
+            <div className="mt-4 flex items-center gap-2">
+              {!isLocked && !isNestedReply && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowReplyForm(!showReplyForm)}
+                  className="text-xs"
+                >
+                  <MessageSquare className="h-3 w-3 mr-1" />
+                  Responder
+                </Button>
+              )}
+              
+              <Button variant="ghost" size="sm" className="text-xs">
+                <ThumbsUp className="h-3 w-3 mr-1" />
+                Curtir
+              </Button>
+              
+              <Button variant="ghost" size="sm" className="text-xs">
+                <AlertTriangle className="h-3 w-3 mr-1" />
+                Reportar
+              </Button>
+            </div>
+            
+            {showReplyForm && (
+              <div className="mt-4">
+                <ReplyForm 
+                  topicId={topicId} 
+                  parentId={post.id} 
+                  onSuccess={handleReplySuccess}
+                  onCancel={() => setShowReplyForm(false)}
+                  placeholder={`Respondendo para ${post.profiles?.name || "Usuário"}...`}
+                />
+              </div>
+            )}
           </div>
         </div>
-        
-        {canMarkSolution && !isTopicStarter && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={markAsSolution}
-            disabled={isMarking}
-            className="text-xs h-8"
-          >
-            {isMarking ? (
-              <>
-                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                Processando...
-              </>
-            ) : (
-              post.is_solution ? "Remover solução" : "Marcar como solução"
-            )}
-          </Button>
-        )}
-      </div>
+      </Card>
       
-      <div className="whitespace-pre-wrap mb-4">{post.content}</div>
-      
-      {!isTopicStarter && (
-        <div className="flex justify-end">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleReaction}
-            disabled={isLiking}
-            className={`text-xs gap-1 h-8 ${post.user_has_reacted ? 'text-primary' : ''}`}
-          >
-            {isLiking ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <ThumbsUp className={`h-4 w-4 ${post.user_has_reacted ? 'fill-primary' : ''}`} />
-            )}
-            <span>{post.reaction_count || 0}</span>
-          </Button>
+      {/* Respostas aninhadas */}
+      {post.replies && post.replies.length > 0 && (
+        <div className="mt-3">
+          {post.replies.map((reply) => (
+            <PostItem
+              key={reply.id}
+              post={reply}
+              topicId={topicId}
+              isTopicAuthor={isTopicAuthor}
+              isNestedReply={true}
+              isLocked={isLocked}
+              onReplyAdded={onReplyAdded}
+            />
+          ))}
         </div>
       )}
-    </Card>
+    </div>
   );
 };

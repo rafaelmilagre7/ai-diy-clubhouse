@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase";
@@ -7,18 +7,38 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface ReplyFormProps {
   topicId: string;
   parentId?: string;
   onSuccess?: () => void;
+  onCancel?: () => void;
+  placeholder?: string;
 }
 
-export const ReplyForm = ({ topicId, parentId, onSuccess }: ReplyFormProps) => {
+export const ReplyForm = ({ 
+  topicId, 
+  parentId, 
+  onSuccess, 
+  onCancel, 
+  placeholder = "Escreva sua resposta..." 
+}: ReplyFormProps) => {
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const getInitials = (name: string | null) => {
+    if (!name) return "??";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,20 +80,16 @@ export const ReplyForm = ({ topicId, parentId, onSuccess }: ReplyFormProps) => {
       
       console.log("Resposta enviada com sucesso:", data);
       
-      // Atualiza o contador de respostas no tópico e data de última atividade
+      // Atualizar o contador de respostas no tópico e data de última atividade
       try {
+        // Atualiza a contagem de visualizações
         await supabase.rpc('increment_topic_views', { topic_id: topicId });
         
-        // Atualiza a data de última atividade
+        // Atualiza a data de última atividade e contador de respostas
         await supabase
           .from("forum_topics")
           .update({ 
             last_activity_at: new Date().toISOString(),
-            reply_count: supabase.rpc('increment', { 
-              row_id: topicId, 
-              table_name: 'forum_topics', 
-              column_name: 'reply_count' 
-            })
           })
           .eq("id", topicId);
       } catch (updateError) {
@@ -82,6 +98,10 @@ export const ReplyForm = ({ topicId, parentId, onSuccess }: ReplyFormProps) => {
       }
       
       setContent("");
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+      }
+      
       toast.success("Resposta enviada com sucesso!");
       queryClient.invalidateQueries({ queryKey: ['forumTopic', topicId] });
       queryClient.invalidateQueries({ queryKey: ['forumPosts', topicId] });
@@ -97,19 +117,55 @@ export const ReplyForm = ({ topicId, parentId, onSuccess }: ReplyFormProps) => {
       setIsSubmitting(false);
     }
   };
+
+  const handleTextareaInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setContent(e.target.value);
+    
+    // Auto-resize textarea
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  };
+  
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    }
+  };
   
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <Textarea
-        placeholder="Escreva sua resposta..."
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        rows={4}
-        className="w-full resize-none"
-        disabled={isSubmitting}
-      />
-      <div className="flex justify-end">
-        <Button type="submit" disabled={isSubmitting}>
+      <div className="flex gap-3">
+        <Avatar className="h-10 w-10 mt-1">
+          <AvatarImage src={user?.user_metadata?.avatar_url || undefined} />
+          <AvatarFallback>{getInitials(user?.user_metadata?.name || user?.email)}</AvatarFallback>
+        </Avatar>
+        
+        <Textarea
+          placeholder={placeholder}
+          value={content}
+          onChange={handleTextareaInput}
+          ref={textareaRef}
+          rows={3}
+          className="flex-1 resize-none"
+          disabled={isSubmitting}
+        />
+      </div>
+      
+      <div className="flex justify-end gap-2">
+        {onCancel && (
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={handleCancel}
+            disabled={isSubmitting}
+          >
+            Cancelar
+          </Button>
+        )}
+        
+        <Button type="submit" disabled={isSubmitting || !content.trim()}>
           {isSubmitting ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />

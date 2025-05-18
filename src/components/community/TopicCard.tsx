@@ -1,10 +1,10 @@
 
 import { Link } from "react-router-dom";
-import { format } from "date-fns";
+import { format, formatDistance } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, Eye, ThumbsUp, Pin, Lock } from "lucide-react";
+import { MessageSquare, Eye, ThumbsUp, Pin, Lock, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface Topic {
@@ -21,13 +21,20 @@ interface Topic {
     name: string | null;
     avatar_url: string | null;
   } | null;
+  category?: {
+    id: string;
+    name: string;
+    slug: string;
+  } | null;
 }
 
 interface TopicCardProps {
   topic: Topic;
+  className?: string;
+  compact?: boolean;
 }
 
-export const TopicCard = ({ topic }: TopicCardProps) => {
+export const TopicCard = ({ topic, className = "", compact = false }: TopicCardProps) => {
   const getInitials = (name: string | null) => {
     if (!name) return "??";
     return name
@@ -40,67 +47,75 @@ export const TopicCard = ({ topic }: TopicCardProps) => {
 
   // Extrair uma prévia do conteúdo
   const getContentPreview = (content: string) => {
-    return content.length > 120 ? content.substring(0, 120) + "..." : content;
+    // Remove qualquer HTML/markdown para ter texto puro
+    const plainText = content.replace(/<[^>]*>/g, '');
+    return plainText.length > 120 ? plainText.substring(0, 120) + "..." : plainText;
+  };
+  
+  // Calcular tempo relativo
+  const getRelativeTime = (date: string) => {
+    return formatDistance(new Date(date), new Date(), {
+      addSuffix: true,
+      locale: ptBR,
+    });
   };
   
   return (
-    <Card className="p-4 mb-3 hover:bg-accent/50 transition-all">
+    <Card className={`p-4 mb-3 hover:bg-accent/50 transition-all ${className}`}>
       <Link to={`/comunidade/topico/${topic.id}`} className="block">
         <div className="flex items-start gap-3">
-          <Avatar className="h-10 w-10">
+          <Avatar className="h-10 w-10 shrink-0">
             <AvatarImage src={topic.profiles?.avatar_url || undefined} />
             <AvatarFallback>{getInitials(topic.profiles?.name)}</AvatarFallback>
           </Avatar>
           
-          <div className="flex-1">
-            <div className="flex gap-2 flex-wrap items-center mb-1">
-              <span className="font-medium text-sm text-muted-foreground">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1 flex-wrap">
+              <span className="font-medium truncate">
                 {topic.profiles?.name || "Usuário"}
               </span>
-              <span className="text-xs text-muted-foreground">•</span>
-              <span className="text-xs text-muted-foreground">
-                {format(new Date(topic.created_at), "d 'de' MMMM", {
-                  locale: ptBR,
-                })}
-              </span>
               
-              <div className="ml-auto flex items-center gap-2">
-                {topic.is_pinned && (
-                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                    <Pin className="h-3 w-3 mr-1" />
-                    Fixo
-                  </Badge>
-                )}
-                
-                {topic.is_locked && (
-                  <Badge variant="outline" className="bg-muted text-muted-foreground border-muted/50">
-                    <Lock className="h-3 w-3 mr-1" />
-                    Trancado
-                  </Badge>
-                )}
+              <div className="flex items-center">
+                <Clock className="h-3 w-3 mr-1" />
+                <span>{getRelativeTime(topic.created_at)}</span>
               </div>
+              
+              {topic.category && (
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                  {topic.category.name}
+                </Badge>
+              )}
             </div>
             
-            <h3 className="text-lg font-semibold mb-2">{topic.title}</h3>
+            <h3 className="text-lg font-semibold mb-1 line-clamp-1">
+              {topic.is_pinned && <Pin className="h-3 w-3 inline mr-1 text-primary" />}
+              {topic.is_locked && <Lock className="h-3 w-3 inline mr-1 text-muted-foreground" />}
+              {topic.title}
+            </h3>
             
-            <div className="text-muted-foreground text-sm mb-4">
-              {getContentPreview(topic.content)}
-            </div>
+            {!compact && (
+              <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
+                {getContentPreview(topic.content)}
+              </p>
+            )}
             
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <div className="flex items-center">
                 <MessageSquare className="h-4 w-4 mr-1" />
-                <span>{topic.reply_count} respostas</span>
+                <span>{topic.reply_count}</span>
               </div>
               
               <div className="flex items-center">
                 <Eye className="h-4 w-4 mr-1" />
-                <span>{topic.view_count} visualizações</span>
+                <span>{topic.view_count}</span>
               </div>
               
-              <div className="flex items-center">
-                <ThumbsUp className="h-4 w-4 mr-1" />
-                <span>0</span>
+              <div className="flex items-center ml-auto">
+                {new Date(topic.last_activity_at).getTime() !== new Date(topic.created_at).getTime() && (
+                  <span className="text-xs">
+                    Última atividade {getRelativeTime(topic.last_activity_at)}
+                  </span>
+                )}
               </div>
             </div>
           </div>
