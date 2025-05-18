@@ -1,26 +1,25 @@
 
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { ForumHeader } from "@/components/forum/ForumHeader";
+import { ForumHeader } from '@/components/forum/ForumHeader';
 import { TopicRow } from '@/components/forum/TopicRow';
 import { useForumCategories } from '@/hooks/forum/useForumCategories';
 import { useForumTopics } from '@/hooks/forum/useForumTopics';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export const CategoryPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const { data: categories = [], isLoading: loadingCategories } = useForumCategories();
   
-  // Encontrar a categoria pelo slug
-  const category = categories.find(c => c.slug === slug);
+  // Encontrar a categoria atual pelo slug
+  const currentCategory = categories.find(cat => cat.slug === slug);
   
-  // Buscar tópicos apenas quando a categoria for encontrada
-  const { data: topics = [], isLoading: loadingTopics } = useForumTopics(
-    category?.id
-  );
+  // Buscar tópicos desta categoria
+  const { data: topics = [], isLoading: loadingTopics } = useForumTopics(currentCategory?.id);
   
-  const renderTopicsSkeleton = () => (
+  // Renderizar esqueletos de carregamento
+  const renderTopicSkeleton = () => (
     <div className="space-y-4">
       {[1, 2, 3, 4, 5].map((i) => (
         <Card key={i}>
@@ -42,52 +41,27 @@ export const CategoryPage = () => {
     </div>
   );
 
-  if (loadingCategories) {
-    return (
-      <div className="container py-8">
-        <Skeleton className="h-10 w-1/2 mb-2" />
-        <Skeleton className="h-6 w-2/3 mb-8" />
-        {renderTopicsSkeleton()}
-      </div>
-    );
-  }
-  
-  if (!category) {
-    return (
-      <div className="container py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Categoria não encontrada</CardTitle>
-            <CardDescription>
-              A categoria que você está procurando não existe ou foi removida.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="container py-8">
       <ForumHeader 
-        title={category.name} 
-        description={category.description || undefined}
+        title={loadingCategories ? "Carregando categoria..." : currentCategory?.name || "Categoria não encontrada"} 
+        description={currentCategory?.description || ""}
         showNewTopicButton
-        categorySlug={category.slug}
+        categorySlug={slug}
         breadcrumbs={[
           { name: 'Categorias', href: '/forum' },
-          { name: category.name, href: `/forum/categoria/${category.slug}` }
+          { name: currentCategory?.name || 'Categoria', href: `/forum/categoria/${slug}` }
         ]}
       />
       
       <div>
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle>Tópicos nesta categoria</CardTitle>
+            <CardTitle>Tópicos da categoria</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             {loadingTopics ? (
-              renderTopicsSkeleton()
+              renderTopicSkeleton()
             ) : (
               <div className="divide-y">
                 {topics.map((topic) => (
@@ -96,7 +70,7 @@ export const CategoryPage = () => {
                 
                 {topics.length === 0 && (
                   <div className="py-8 text-center text-muted-foreground">
-                    Nenhum tópico encontrado nesta categoria. Seja o primeiro a criar um!
+                    Nenhum tópico encontrado nesta categoria.
                   </div>
                 )}
               </div>

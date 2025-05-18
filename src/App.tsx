@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
 import './App.css';
 import Layout from './components/layout/Layout';
 import { ProtectedRoutes } from './auth/ProtectedRoutes';
@@ -14,18 +14,29 @@ import { TopicPage } from './pages/forum/TopicPage';
 import { NewTopicPage } from './pages/forum/NewTopicPage';
 import { AdminForumPage } from './pages/forum/AdminForumPage';
 
+// Componentes de layout protegido
+const ProtectedLayout = () => (
+  <ProtectedRoutes>
+    <Layout>
+      <Outlet />
+    </Layout>
+  </ProtectedRoutes>
+);
+
+const AdminProtectedLayout = () => (
+  <AdminProtectedRoutes>
+    <Layout>
+      <Outlet />
+    </Layout>
+  </AdminProtectedRoutes>
+);
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         {/* Rotas protegidas - Membros */}
-        <Route element={
-          <ProtectedRoutes>
-            <Layout />
-          </ProtectedRoutes>
-        }>
-          {/* Rotas existentes... */}
-          
+        <Route element={<ProtectedLayout />}>
           {/* Rotas do fórum */}
           <Route path="/forum" element={<ForumHomePage />} />
           <Route path="/forum/categoria/:slug" element={<CategoryPage />} />
@@ -37,11 +48,7 @@ function App() {
         </Route>
         
         {/* Rotas protegidas - Admin */}
-        <Route element={
-          <AdminProtectedRoutes>
-            <Layout />
-          </AdminProtectedRoutes>
-        }>
+        <Route element={<AdminProtectedLayout />}>
           {/* Rotas admin do fórum */}
           <Route path="/admin/forum" element={<AdminForumPage />} />
           

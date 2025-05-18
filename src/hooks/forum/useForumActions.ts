@@ -1,168 +1,115 @@
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from '@/hooks/use-toast';
+import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { ForumTopic, ForumPost, ReactionType } from '@/lib/supabase/types/forum.types';
 import { useAuth } from '@/contexts/auth';
+import { useQueryClient } from '@tanstack/react-query';
+import { ForumTopicWithMeta, ReactionType } from '@/lib/supabase/types/forum.types';
 
-export function useForumActions() {
-  const queryClient = useQueryClient();
+interface CreateTopicParams {
+  title: string;
+  content: string;
+  categoryId: string;
+}
+
+interface CreatePostParams {
+  topicId: string;
+  content: string;
+  parentId?: string;
+}
+
+export const useForumActions = () => {
   const { profile } = useAuth();
-
-  // Criar um novo tópico
-  const createTopic = useMutation({
-    mutationFn: async ({ 
-      title, 
-      content, 
-      categoryId 
-    }: { 
-      title: string; 
-      content: string; 
-      categoryId: string 
-    }): Promise<ForumTopic> => {
-      if (!profile?.id) throw new Error('Usuário não autenticado');
-
-      const newTopic = {
-        title,
-        content,
-        category_id: categoryId,
-        user_id: profile.id
-      };
-
+  const queryClient = useQueryClient();
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Criar novo tópico
+  const createTopic = async (params: CreateTopicParams) => {
+    if (!profile?.id) throw new Error('Usuário não autenticado');
+    
+    setIsLoading(true);
+    try {
       const { data, error } = await supabase
         .from('forum_topics')
-        .insert(newTopic)
-        .select('*')
+        .insert({
+          title: params.title,
+          content: params.content,
+          category_id: params.categoryId,
+          user_id: profile.id
+        })
+        .select('*, categories:category_id (slug)')
         .single();
-
-      if (error) {
-        console.error('Erro ao criar tópico:', error);
-        throw error;
-      }
-
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['forum', 'topics'] });
-      toast({
-        title: 'Tópico criado',
-        description: 'Seu tópico foi publicado com sucesso.',
+        
+      if (error) throw error;
+      
+      // Invalidar query para recarregar lista de tópicos
+      queryClient.invalidateQueries({
+        queryKey: ['forum', 'topics']
       });
-    },
-    onError: (error) => {
-      toast({
-        title: 'Erro ao criar tópico',
-        description: error.message || 'Ocorreu um erro ao criar o tópico. Tente novamente.',
-        variant: 'destructive'
-      });
+      
+      return data as ForumTopicWithMeta;
+    } finally {
+      setIsLoading(false);
     }
-  });
-
-  // Criar uma nova resposta
-  const createPost = useMutation({
-    mutationFn: async ({ 
-      content, 
-      topicId, 
-      parentId 
-    }: { 
-      content: string; 
-      topicId: string; 
-      parentId?: string 
-    }): Promise<ForumPost> => {
-      if (!profile?.id) throw new Error('Usuário não autenticado');
-
-      const newPost = {
-        content,
-        topic_id: topicId,
-        parent_id: parentId || null,
-        user_id: profile.id
-      };
-
+  };
+  
+  // Criar nova resposta
+  const createPost = async (params: CreatePostParams) => {
+    if (!profile?.id) throw new Error('Usuário não autenticado');
+    
+    setIsLoading(true);
+    try {
       const { data, error } = await supabase
         .from('forum_posts')
-        .insert(newPost)
-        .select('*')
+        .insert({
+          topic_id: params.topicId,
+          content: params.content,
+          user_id: profile.id,
+          parent_id: params.parentId || null
+        })
+        .select()
         .single();
-
-      if (error) {
-        console.error('Erro ao criar resposta:', error);
-        throw error;
-      }
-
+        
+      if (error) throw error;
+      
+      // Invalidar queries relacionadas
+      queryClient.invalidateQueries({
+        queryKey: ['forum', 'posts', params.topicId]
+      });
+      
+      queryClient.invalidateQueries({
+        queryKey: ['forum', 'topic', params.topicId]
+      });
+      
       return data;
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['forum', 'posts', variables.topicId] });
-      toast({
-        title: 'Resposta publicada',
-        description: 'Sua resposta foi publicada com sucesso.',
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: 'Erro ao publicar resposta',
-        description: error.message || 'Ocorreu um erro ao publicar sua resposta. Tente novamente.',
-        variant: 'destructive'
-      });
+    } finally {
+      setIsLoading(false);
     }
-  });
-
-  // Marcar resposta como solução
-  const markAsSolution = useMutation({
-    mutationFn: async ({ 
-      postId, 
-      topicId, 
-      isSolution 
-    }: { 
-      postId: string; 
-      topicId: string; 
-      isSolution: boolean 
-    }) => {
-      const { error } = await supabase
-        .from('forum_posts')
-        .update({ is_solution: isSolution })
-        .eq('id', postId);
-
-      if (error) {
-        console.error('Erro ao marcar como solução:', error);
-        throw error;
-      }
-
-      return { postId, isSolution };
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['forum', 'posts', variables.topicId] });
-      toast({
-        title: variables.isSolution ? 'Marcado como solução' : 'Desmarcado como solução',
-        description: variables.isSolution 
-          ? 'A resposta foi marcada como solução.' 
-          : 'A resposta foi desmarcada como solução.',
-      });
-    },
-    onError: () => {
-      toast({
-        title: 'Erro ao atualizar resposta',
-        description: 'Ocorreu um erro ao marcar/desmarcar a resposta como solução.',
-        variant: 'destructive'
-      });
-    }
-  });
-
-  // Adicionar/remover reação
-  const toggleReaction = useMutation({
-    mutationFn: async ({ 
-      postId, 
-      reactionType, 
-      active 
-    }: { 
-      postId: string; 
-      reactionType: ReactionType; 
-      active: boolean 
-    }) => {
-      if (!profile?.id) throw new Error('Usuário não autenticado');
-
-      if (active) {
-        // Adicionar reação
+  };
+  
+  // Reagir a um post
+  const reactToPost = async (postId: string, reactionType: ReactionType) => {
+    if (!profile?.id) throw new Error('Usuário não autenticado');
+    
+    setIsLoading(true);
+    try {
+      // Verificar se o usuário já reagiu a este post
+      const { data: existingReactions } = await supabase
+        .from('forum_reactions')
+        .select()
+        .eq('post_id', postId)
+        .eq('user_id', profile.id);
+      
+      if (existingReactions && existingReactions.length > 0) {
+        // Se já existe uma reação, remover
+        const { error } = await supabase
+          .from('forum_reactions')
+          .delete()
+          .eq('post_id', postId)
+          .eq('user_id', profile.id);
+          
+        if (error) throw error;
+      } else {
+        // Se não existe reação, criar
         const { error } = await supabase
           .from('forum_reactions')
           .insert({
@@ -170,49 +117,106 @@ export function useForumActions() {
             user_id: profile.id,
             reaction_type: reactionType
           });
-
-        if (error) {
-          // Se já existe, não é um erro
-          if (error.code === '23505') { // Código para violação de unicidade
-            return { postId, reactionType, active };
-          }
-          console.error('Erro ao adicionar reação:', error);
-          throw error;
-        }
-      } else {
-        // Remover reação
-        const { error } = await supabase
-          .from('forum_reactions')
-          .delete()
-          .eq('post_id', postId)
-          .eq('user_id', profile.id)
-          .eq('reaction_type', reactionType);
-
-        if (error) {
-          console.error('Erro ao remover reação:', error);
-          throw error;
-        }
+          
+        if (error) throw error;
       }
-
-      return { postId, reactionType, active };
-    },
-    onSuccess: () => {
-      // Revalidar as consultas de posts para atualizar as contagens de reação
-      queryClient.invalidateQueries({ queryKey: ['forum', 'posts'] });
-    },
-    onError: () => {
-      toast({
-        title: 'Erro ao registrar reação',
-        description: 'Ocorreu um erro ao processar sua reação.',
-        variant: 'destructive'
-      });
+      
+      // Buscar o topic_id para invalidar as queries
+      const { data: post } = await supabase
+        .from('forum_posts')
+        .select('topic_id')
+        .eq('id', postId)
+        .single();
+      
+      if (post) {
+        queryClient.invalidateQueries({
+          queryKey: ['forum', 'posts', post.topic_id]
+        });
+      }
+      
+      return true;
+    } finally {
+      setIsLoading(false);
     }
-  });
-
+  };
+  
+  // Marcar post como solução
+  const markAsSolution = async (postId: string, topicId: string) => {
+    if (!profile?.id) throw new Error('Usuário não autenticado');
+    
+    setIsLoading(true);
+    try {
+      // Remover a marcação de solução de todos os posts deste tópico
+      await supabase
+        .from('forum_posts')
+        .update({ is_solution: false })
+        .eq('topic_id', topicId);
+      
+      // Marcar este post específico como solução
+      const { error } = await supabase
+        .from('forum_posts')
+        .update({ is_solution: true })
+        .eq('id', postId);
+        
+      if (error) throw error;
+      
+      // Invalidar queries
+      queryClient.invalidateQueries({
+        queryKey: ['forum', 'posts', topicId]
+      });
+      
+      return true;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Excluir post
+  const deletePost = async (postId: string) => {
+    if (!profile?.id) throw new Error('Usuário não autenticado');
+    
+    setIsLoading(true);
+    try {
+      // Buscar o topic_id para invalidar as queries
+      const { data: post } = await supabase
+        .from('forum_posts')
+        .select('topic_id')
+        .eq('id', postId)
+        .single();
+      
+      const topicId = post?.topic_id;
+      
+      // Excluir o post
+      const { error } = await supabase
+        .from('forum_posts')
+        .delete()
+        .eq('id', postId);
+        
+      if (error) throw error;
+      
+      // Invalidar queries
+      if (topicId) {
+        queryClient.invalidateQueries({
+          queryKey: ['forum', 'posts', topicId]
+        });
+        
+        queryClient.invalidateQueries({
+          queryKey: ['forum', 'topic', topicId]
+        });
+      }
+      
+      return true;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   return {
     createTopic,
     createPost,
+    reactToPost,
     markAsSolution,
-    toggleReaction
+    deletePost,
+    isLoading
   };
-}
+};
