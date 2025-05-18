@@ -3414,6 +3414,28 @@ export type Database = {
           created_at: string
         }[]
       }
+      get_visible_events_for_user: {
+        Args: { user_id: string }
+        Returns: {
+          cover_image_url: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          end_time: string
+          id: string
+          is_recurring: boolean | null
+          location_link: string | null
+          parent_event_id: string | null
+          physical_location: string | null
+          recurrence_count: number | null
+          recurrence_day: number | null
+          recurrence_end_date: string | null
+          recurrence_interval: number | null
+          recurrence_pattern: string | null
+          start_time: string
+          title: string
+        }[]
+      }
       increment: {
         Args: { row_id: string; table_name: string; column_name: string }
         Returns: undefined
