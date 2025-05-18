@@ -1,10 +1,8 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Plus } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import NoSolutionPrompt from './NoSolutionPrompt';
-
 interface ModuleEmptyStateProps {
   solutionId: string | null;
   onSave: () => void;
@@ -13,7 +11,6 @@ interface ModuleEmptyStateProps {
   currentModuleStep: number;
   handleCreateDefaultModules: (specificTypes?: string[]) => Promise<void>;
 }
-
 const ModuleEmptyState: React.FC<ModuleEmptyStateProps> = ({
   solutionId,
   onSave,
@@ -33,9 +30,7 @@ const ModuleEmptyState: React.FC<ModuleEmptyStateProps> = ({
   if (!solutionId) {
     return <NoSolutionPrompt onSave={onSave} saving={saving} />;
   }
-
-  return (
-    <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+  return <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
       <h3 className="text-xl font-medium mb-3">Nenhum módulo criado</h3>
       <p className="text-muted-foreground mb-6 max-w-md">
         Módulos são as etapas da jornada de implementação da sua solução de IA.
@@ -47,26 +42,20 @@ const ModuleEmptyState: React.FC<ModuleEmptyStateProps> = ({
           <Plus className="h-4 w-4" />
           Adicionar Módulo Individual
         </Button>
-        <Button
-          variant="outline"
-          onClick={handleCreateAll}
-          className="gap-2"
-        >
+        <Button variant="outline" onClick={handleCreateAll} className="gap-2">
           Criar Todos os Módulos Padrão
         </Button>
       </div>
 
-      <Alert variant="default" className="bg-blue-50 border-blue-200 max-w-xl">
+      <Alert variant="default" className="border-blue-200 max-w-xl bg-slate-800">
         <AlertCircle className="h-4 w-4 text-blue-500" />
-        <AlertTitle>Dica</AlertTitle>
+        <AlertTitle className="text-slate-50">Dica</AlertTitle>
         <AlertDescription className="text-sm text-left">
           Recomendamos seguir o fluxo de módulos padrão para garantir uma
           experiência completa para seus membros. Comece com a Landing e termine
           com a Celebração.
         </AlertDescription>
       </Alert>
-    </div>
-  );
+    </div>;
 };
-
 export default ModuleEmptyState;
