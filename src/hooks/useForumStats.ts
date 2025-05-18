@@ -36,21 +36,28 @@ export function useForumStats(): ForumStats {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       
-      const { data: activeUsers, error: userError } = await supabase
+      // Buscar usuários de tópicos ativos
+      const { data: topicUsers, error: topicUserError } = await supabase
         .from('forum_topics')
         .select('user_id')
-        .gt('created_at', thirtyDaysAgo.toISOString())
-        .union([
-          supabase
-            .from('forum_posts')
-            .select('user_id')
-            .gt('created_at', thirtyDaysAgo.toISOString())
-        ]);
+        .gt('created_at', thirtyDaysAgo.toISOString());
       
-      if (userError) throw new Error(`Erro ao buscar usuários ativos: ${userError.message}`);
+      if (topicUserError) throw new Error(`Erro ao buscar usuários ativos: ${topicUserError.message}`);
       
-      // Remover duplicatas para obter contagem única de usuários
-      const uniqueUserIds = new Set(activeUsers?.map(item => item.user_id));
+      // Buscar usuários de posts ativos
+      const { data: postUsers, error: postUserError } = await supabase
+        .from('forum_posts')
+        .select('user_id')
+        .gt('created_at', thirtyDaysAgo.toISOString());
+      
+      if (postUserError) throw new Error(`Erro ao buscar usuários ativos: ${postUserError.message}`);
+      
+      // Combinar os resultados e remover duplicatas para obter contagem única de usuários
+      const uniqueUserIds = new Set([
+        ...(topicUsers?.map(item => item.user_id) || []),
+        ...(postUsers?.map(item => item.user_id) || [])
+      ]);
+      
       const activeUserCount = uniqueUserIds.size;
       
       return {
