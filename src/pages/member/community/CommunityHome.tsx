@@ -8,12 +8,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { CategoryCard } from "@/components/community/CategoryCard";
-import { QuickPostEditor } from "@/components/community/QuickPostEditor";
 import { TopicCard } from "@/components/community/TopicCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Topic } from "@/types/forumTypes";
+import { QuickPostInput } from "@/components/community/QuickPostInput";
 
 type TopicFilterType = "recentes" | "populares" | "sem-respostas" | "resolvidos";
 
@@ -189,7 +189,7 @@ const CommunityHome = () => {
         </div>
         
         {/* Editor rápido */}
-        <QuickPostEditor />
+        <QuickPostInput />
         
         {/* Estatísticas - mantemos isso para mostrar informações gerais */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -321,6 +321,6 @@ const CommunityHome = () => {
       </div>
     </div>
   );
-};
+}
 
 export default CommunityHome;
