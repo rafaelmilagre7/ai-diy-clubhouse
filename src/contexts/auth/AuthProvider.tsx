@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { UserProfile } from '@/lib/supabase';
@@ -41,16 +42,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
   
   const setProfile = useCallback((value: React.SetStateAction<UserProfile | null>) => {
-    setAuthState(prev => ({
-      ...prev,
-      profile: typeof value === 'function' ? value(prev.profile) : value,
-      isAdmin: typeof value === 'function' 
-        ? (value(prev.profile)?.role === 'admin')
-        : (value?.role === 'admin'),
-      isFormacao: typeof value === 'function'
-        ? (value(prev.profile)?.role === 'formacao')
-        : (value?.role === 'formacao')
-    }));
+    setAuthState(prev => {
+      const newProfile = typeof value === 'function' ? value(prev.profile) : value;
+      const role = newProfile?.role || '';
+      
+      return {
+        ...prev,
+        profile: newProfile,
+        isAdmin: role === 'admin',
+        isFormacao: role === 'formacao'
+      };
+    });
   }, []);
   
   const setIsLoading = useCallback((value: React.SetStateAction<boolean>) => {
