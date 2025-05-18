@@ -7,10 +7,13 @@ import { Event } from '@/types/events';
 import { format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { EventDay } from './EventDay';
+import { EventsListModal } from './EventsListModal';
 
 export const EventCalendar = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [eventsForDay, setEventsForDay] = useState<Event[]>([]);
+  const [showEventsListModal, setShowEventsListModal] = useState(false);
   const { data: events = [], isLoading } = useEvents();
   
   const handleDayClick = (day: Date | undefined) => {
@@ -23,8 +26,9 @@ export const EventCalendar = () => {
     if (eventsOnSelectedDay.length === 1) {
       setSelectedEvent(eventsOnSelectedDay[0]);
     } else if (eventsOnSelectedDay.length > 1) {
-      // Ao clicar em um dia com múltiplos eventos, mostra o primeiro
-      setSelectedEvent(eventsOnSelectedDay[0]);
+      // Quando há múltiplos eventos, mostrar o modal de lista
+      setEventsForDay(eventsOnSelectedDay);
+      setShowEventsListModal(true);
     }
     setSelectedDate(day);
   };
@@ -32,6 +36,16 @@ export const EventCalendar = () => {
   const handleCloseEventModal = () => {
     setSelectedEvent(null);
     setSelectedDate(undefined);
+  };
+
+  const handleCloseEventsListModal = () => {
+    setShowEventsListModal(false);
+    setSelectedDate(undefined);
+  };
+
+  const handleSelectEvent = (event: Event) => {
+    setShowEventsListModal(false);
+    setSelectedEvent(event);
   };
 
   const today = new Date();
@@ -91,6 +105,15 @@ export const EventCalendar = () => {
         <EventModal
           event={selectedEvent}
           onClose={handleCloseEventModal}
+        />
+      )}
+      
+      {showEventsListModal && selectedDate && (
+        <EventsListModal
+          date={selectedDate}
+          events={eventsForDay}
+          onSelectEvent={handleSelectEvent}
+          onClose={handleCloseEventsListModal}
         />
       )}
     </div>
