@@ -1,50 +1,38 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
-import { useNavigate } from "react-router-dom";
-
-const formSchema = z.object({
-  title: z.string()
-    .min(5, {
-      message: "O título deve ter pelo menos 5 caracteres.",
-    })
-    .max(100, {
-      message: "O título não pode exceder 100 caracteres.",
-    }),
-  content: z.string()
-    .min(10, {
-      message: "O conteúdo deve ter pelo menos 10 caracteres.",
-    })
-});
 
 interface NewTopicFormProps {
   categoryId: string;
   categorySlug: string;
 }
 
-export const NewTopicForm = ({ categoryId }: NewTopicFormProps) => {
+export const NewTopicForm = ({ categoryId, categorySlug }: NewTopicFormProps) => {
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      title: "",
-      content: ""
-    },
-  });
-
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!title.trim()) {
+      toast.error("O título do tópico é obrigatório");
+      return;
+    }
+    
+    if (!content.trim()) {
+      toast.error("O conteúdo do tópico é obrigatório");
+      return;
+    }
+    
     if (!user?.id) {
       toast.error("Você precisa estar logado para criar um tópico");
       return;
@@ -53,22 +41,22 @@ export const NewTopicForm = ({ categoryId }: NewTopicFormProps) => {
     try {
       setIsSubmitting(true);
       
-      // Cria o tópico
-      const { data: topic, error: topicError } = await supabase
+      // Inserir o novo tópico
+      const { data: topicData, error: topicError } = await supabase
         .from("forum_topics")
         .insert({
-          title: values.title.trim(),
-          content: values.content.trim(),
+          title: title.trim(),
+          content: content.trim(),
           category_id: categoryId,
-          user_id: user.id,
+          user_id: user.id
         })
-        .select()
+        .select("id")
         .single();
         
       if (topicError) throw topicError;
       
       toast.success("Tópico criado com sucesso!");
-      navigate(`/forum/topic/${topic.id}`);
+      navigate(`/forum/topic/${topicData.id}`);
       
     } catch (error) {
       console.error("Erro ao criar tópico:", error);
@@ -79,58 +67,41 @@ export const NewTopicForm = ({ categoryId }: NewTopicFormProps) => {
   };
   
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Título</FormLabel>
-              <FormControl>
-                <Input placeholder="Digite o título do seu tópico" {...field} />
-              </FormControl>
-              <FormDescription>
-                Um título claro ajuda outros membros a encontrarem seu tópico.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-2">
+        <label htmlFor="title" className="block text-sm font-medium">Título</label>
+        <Input 
+          id="title"
+          placeholder="Digite um título claro e descritivo"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          disabled={isSubmitting}
+          className="w-full"
         />
-        
-        <FormField
-          control={form.control}
-          name="content"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Conteúdo</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Descreva seu tópico em detalhes..." 
-                  className="min-h-[200px] resize-none"
-                  {...field} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+      </div>
+      
+      <div className="space-y-2">
+        <label htmlFor="content" className="block text-sm font-medium">Conteúdo</label>
+        <Textarea 
+          id="content"
+          placeholder="Descreva seu tópico em detalhes..."
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          disabled={isSubmitting}
+          rows={8}
+          className="w-full resize-none"
         />
-        
-        <div className="flex justify-end">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={() => navigate(-1)} 
-            className="mr-2"
-            disabled={isSubmitting}
-          >
-            Cancelar
-          </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Criando..." : "Criar Tópico"}
-          </Button>
-        </div>
-      </form>
-    </Form>
+      </div>
+      
+      <div className="flex justify-end">
+        <Button 
+          type="submit" 
+          disabled={isSubmitting}
+          className="min-w-[120px]"
+        >
+          {isSubmitting ? "Criando..." : "Criar Tópico"}
+        </Button>
+      </div>
+    </form>
   );
 };

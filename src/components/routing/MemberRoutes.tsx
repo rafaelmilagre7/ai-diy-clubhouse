@@ -10,6 +10,10 @@ import CourseDetails from "@/pages/member/learning/CourseDetails";
 import LessonView from "@/pages/member/learning/LessonView";
 import MemberCertificates from "@/pages/member/learning/MemberCertificates";
 import ValidateCertificate from "@/pages/certificate/ValidateCertificate";
+import ForumHome from "@/pages/member/forum/ForumHome";
+import CategoryView from "@/pages/member/forum/CategoryView";
+import TopicView from "@/pages/member/forum/TopicView";
+import NewTopic from "@/pages/member/forum/NewTopic";
 
 const MemberRoutes = () => {
   const isAdminRoute = window.location.pathname.startsWith('/admin');
@@ -33,6 +37,12 @@ const MemberRoutes = () => {
       <Route path="/learning/course/:id" element={<CourseDetails />} />
       <Route path="/learning/course/:courseId/lesson/:lessonId" element={<LessonView />} />
       <Route path="/certificates" element={<MemberCertificates />} />
+      
+      {/* Rotas do fórum */}
+      <Route path="/forum" element={<ForumHome />} />
+      <Route path="/forum/category/:slug" element={<CategoryView />} />
+      <Route path="/forum/topic/:id" element={<TopicView />} />
+      <Route path="/forum/new-topic/:categorySlug" element={<NewTopic />} />
       
       {/* Rota pública de validação de certificados */}
       <Route path="/certificado/validar/:code?" element={<ValidateCertificate />} />
