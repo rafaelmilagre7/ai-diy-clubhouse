@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, Upload, AlertCircle, X, Info, Check } from 'lucide-react';
@@ -177,7 +176,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     <div className="space-y-2">
       <div className="flex flex-col">
         {fieldLabel && (
-          <label className="text-sm text-muted-foreground mb-2">
+          <label className="text-sm text-neutral-800 dark:text-white mb-2">
             {fieldLabel}
           </label>
         )}
