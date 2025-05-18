@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export const ImplementationTrailCreator = () => {
-  const { trail, isLoading, error, hasContent, generateImplementationTrail, refreshTrail } = useImplementationTrail();
+  const { trail, isLoading, error, hasContent, generateImplementationTrail, refreshTrail, regenerating, refreshing } = useImplementationTrail();
   const { solutions: allSolutions, loading: solutionsLoading } = useSolutionsData();
   const [processedSolutions, setProcessedSolutions] = useState<any[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -80,23 +80,26 @@ export const ImplementationTrailCreator = () => {
   // Função para atualizar a trilha
   const handleRefreshTrail = async () => {
     try {
-      setIsGenerating(true);
       await refreshTrail(true);
       toast.success("Trilha atualizada com sucesso!");
     } catch (error) {
       console.error("Erro ao atualizar trilha:", error);
       toast.error("Erro ao atualizar trilha. Tente novamente.");
-    } finally {
-      setIsGenerating(false);
     }
   };
 
   // Estado de carregamento
-  if (isLoading || solutionsLoading) {
+  if (isLoading || solutionsLoading || regenerating) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[300px] py-8">
         <Loader2 className="h-8 w-8 text-[#0ABAB5] animate-spin mb-4" />
-        <p className="text-neutral-300">Carregando sua trilha personalizada...</p>
+        <p className="text-neutral-300">
+          {regenerating 
+            ? "Gerando sua trilha personalizada..." 
+            : refreshing 
+              ? "Atualizando dados da trilha..." 
+              : "Carregando sua trilha personalizada..."}
+        </p>
       </div>
     );
   }
@@ -110,8 +113,8 @@ export const ImplementationTrailCreator = () => {
         <p className="text-neutral-300 mb-4">
           Não foi possível carregar sua trilha personalizada.
         </p>
-        <Button onClick={handleGenerateTrail} disabled={isGenerating}>
-          {isGenerating ? (
+        <Button onClick={handleGenerateTrail} disabled={isGenerating || regenerating}>
+          {isGenerating || regenerating ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Gerando...
@@ -136,10 +139,10 @@ export const ImplementationTrailCreator = () => {
           </p>
           <Button 
             onClick={handleGenerateTrail} 
-            disabled={isGenerating}
+            disabled={isGenerating || regenerating}
             className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
           >
-            {isGenerating ? (
+            {isGenerating || regenerating ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Gerando Trilha...
@@ -162,10 +165,10 @@ export const ImplementationTrailCreator = () => {
           variant="outline" 
           size="sm" 
           onClick={handleRefreshTrail}
-          disabled={isGenerating}
+          disabled={refreshing || regenerating}
           className="border-neutral-700 hover:border-[#0ABAB5] hover:bg-[#0ABAB5]/10"
         >
-          {isGenerating ? (
+          {refreshing ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <>

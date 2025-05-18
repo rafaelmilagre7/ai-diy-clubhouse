@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
@@ -27,6 +28,8 @@ export const useImplementationTrail = () => {
   const [error, setError] = useState<string | null>(null);
   const [validSolutionsCache, setValidSolutionsCache] = useState<Set<string>>(new Set());
   const [lastRefresh, setLastRefresh] = useState<number>(0);
+  const [regenerating, setRegenerating] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Verificar se a trilha tem conteúdo
   const hasContent = useCallback(() => {
@@ -105,6 +108,7 @@ export const useImplementationTrail = () => {
 
       setIsLoading(true);
       setError(null);
+      setRefreshing(true);
 
       // Tentar primeiro obter do cache local se não estiver forçando refresh
       if (!forceRefresh) {
@@ -115,6 +119,7 @@ export const useImplementationTrail = () => {
           if (sanitizedCacheData && hasValidSolutions(sanitizedCacheData)) {
             setTrail(sanitizedCacheData);
             setIsLoading(false);
+            setRefreshing(false);
             setLastRefresh(Date.now());
             return sanitizedCacheData;
           }
@@ -133,6 +138,7 @@ export const useImplementationTrail = () => {
       if (loadError) {
         console.error("Erro ao carregar trilha:", loadError);
         setError("Erro ao carregar sua trilha");
+        setRefreshing(false);
         return null;
       }
 
@@ -177,13 +183,16 @@ export const useImplementationTrail = () => {
         
         setTrail(trailData);
         setLastRefresh(Date.now());
+        setRefreshing(false);
         return trailData;
       }
 
+      setRefreshing(false);
       return null;
     } catch (error) {
       console.error("Erro ao carregar trilha:", error);
       setError("Erro ao carregar sua trilha");
+      setRefreshing(false);
       return null;
     } finally {
       setIsLoading(false);
@@ -202,15 +211,19 @@ export const useImplementationTrail = () => {
 
   // Recarregar trilha (com opção de força)
   const refreshTrail = useCallback(async (forceRefresh = false) => {
+    setRefreshing(true);
     // Se a última atualização foi há menos de 5 minutos e não estamos forçando,
     // usar os dados existentes
     const fiveMinutesMs = 5 * 60 * 1000;
     if (!forceRefresh && trail && Date.now() - lastRefresh < fiveMinutesMs) {
       console.log("Usando dados em cache (menos de 5 minutos desde a última atualização)");
+      setRefreshing(false);
       return trail;
     }
 
-    return loadExistingTrail(forceRefresh);
+    const result = await loadExistingTrail(forceRefresh);
+    setRefreshing(false);
+    return result;
   }, [loadExistingTrail, trail, lastRefresh]);
 
   // Gerar nova trilha - implementação melhorada com modo de fallback
@@ -223,11 +236,12 @@ export const useImplementationTrail = () => {
     try {
       setIsLoading(true);
       setError(null);
+      setRegenerating(true);
 
       // Registrar o início da geração da trilha
       console.log("Iniciando geração da trilha para usuário:", user.id);
 
-      // Buscar trilha existente
+      // Buscar trilha existente - apenas para verificação
       const { data: existingTrail } = await supabase
         .from("implementation_trails")
         .select("*")
@@ -238,48 +252,12 @@ export const useImplementationTrail = () => {
         .maybeSingle();
 
       if (existingTrail) {
-        console.log("Trilha existente encontrada, retornando dados existentes");
-        const sanitizedData = sanitizeTrailData(existingTrail.trail_data as ImplementationTrail);
-        
-        // Validar e filtrar soluções que não existem mais
-        if (sanitizedData) {
-          const validPriority1 = await filterValidRecommendations(sanitizedData.priority1);
-          const validPriority2 = await filterValidRecommendations(sanitizedData.priority2);
-          const validPriority3 = await filterValidRecommendations(sanitizedData.priority3);
-          
-          const validatedTrail = {
-            priority1: validPriority1,
-            priority2: validPriority2,
-            priority3: validPriority3
-          };
-          
-          setTrail(validatedTrail);
-          return validatedTrail;
-        }
-        
-        setTrail(sanitizedData);
-        return sanitizedData;
+        console.log("Trilha existente encontrada. Solicitando atualização na Edge Function.");
       }
 
-      // Iniciar processo de geração
+      // Criar nova entrada pendente para a geração
       console.log("Criando registro de geração de trilha pendente");
-      const { data: trailRecord, error: updateError } = await supabase
-        .from("implementation_trails")
-        .insert({
-          user_id: user.id,
-          status: "pending",
-          generation_attempts: 1
-        })
-        .select()
-        .single();
-
-      if (updateError) {
-        console.error("Erro ao criar registro de geração:", updateError);
-        throw updateError;
-      }
-
-      console.log("Registro de trilha criado:", trailRecord?.id);
-
+      
       // Chamar função de geração com tratamento aprimorado de erros
       let generatedData = null;
       let fnError = null;
@@ -359,23 +337,7 @@ export const useImplementationTrail = () => {
       }
 
       const recommendationsToSave = generatedData?.recommendations;
-      console.log("Salvando recomendações geradas:", recommendationsToSave);
-
-      // Salvar trilha gerada
-      const { error: saveError } = await supabase
-        .from("implementation_trails")
-        .update({
-          trail_data: recommendationsToSave,
-          status: "completed",
-          updated_at: new Date().toISOString()
-        })
-        .eq("user_id", user.id)
-        .eq("status", "pending");
-
-      if (saveError) {
-        console.error("Erro ao salvar trilha gerada:", saveError);
-        throw saveError;
-      }
+      console.log("Trilha gerada com sucesso:", recommendationsToSave);
 
       // Garantir que o onboarding está marcado como completo
       try {
@@ -390,25 +352,19 @@ export const useImplementationTrail = () => {
       const sanitizedData = sanitizeTrailData(recommendationsToSave);
       setTrail(sanitizedData);
       
+      // Salvar no cache local
+      if (user?.id && sanitizedData) {
+        saveTrailToLocalStorage(user.id, sanitizedData);
+      }
+      
+      setLastRefresh(Date.now());
+      toast.success("Trilha personalizada gerada com sucesso!");
+      
       return sanitizedData;
     } catch (error: any) {
       console.error("Erro ao gerar trilha:", error);
       setError(error.message || "Erro ao gerar trilha");
       
-      // Registrar erro
-      try {
-        await supabase
-          .from("implementation_trails")
-          .update({
-            status: "error",
-            error_message: error.message || "Erro desconhecido na geração da trilha",
-          })
-          .eq("user_id", user.id)
-          .eq("status", "pending");
-      } catch (updateError) {
-        console.error("Erro ao registrar falha:", updateError);
-      }
-
       toast.error("Não foi possível gerar sua trilha de implementação. Uma trilha padrão será criada.");
       
       // Gerar trilha padrão em caso de erro para evitar falha completa
@@ -444,17 +400,13 @@ export const useImplementationTrail = () => {
           });
         }
         
-        await supabase
-          .from("implementation_trails")
-          .insert({
-            user_id: user.id,
-            status: "completed",
-            trail_data: defaultTrail,
-            is_default: true,
-            error_message: error.message || "Erro desconhecido - usado trilha padrão"
-          });
-          
         setTrail(defaultTrail);
+        
+        // Salvar no cache local
+        if (user?.id) {
+          saveTrailToLocalStorage(user.id, defaultTrail);
+        }
+        
         return defaultTrail;
       } catch (fallbackError) {
         console.error("Falha ao criar trilha padrão:", fallbackError);
@@ -462,6 +414,7 @@ export const useImplementationTrail = () => {
       }
     } finally {
       setIsLoading(false);
+      setRegenerating(false);
     }
   };
 
@@ -485,5 +438,7 @@ export const useImplementationTrail = () => {
     hasContent: hasContent(),
     refreshTrail,
     generateImplementationTrail,
+    regenerating,
+    refreshing
   };
 };

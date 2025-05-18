@@ -6,7 +6,7 @@ import { ImplementationTrailCreator } from "@/components/implementation-trail/Im
 import { OnboardingIncompleteState } from "@/components/implementation-trail/OnboardingIncompleteState";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { PageTransition } from "@/components/transitions/PageTransition";
 import { FadeTransition } from "@/components/transitions/FadeTransition";
@@ -149,6 +149,7 @@ const ImplementationTrailPage = () => {
                   onClick={handleRefresh} 
                   className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
                 >
+                  <RefreshCw className="mr-2 h-4 w-4" />
                   Recarregar dados
                 </Button>
               </FadeTransition>

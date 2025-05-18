@@ -138,6 +138,32 @@ serve(async (req) => {
       throw new Error('ID do usuário não fornecido e autenticação falhou');
     }
     
+    // Verificar se já existe uma trilha ativa para o usuário e limpar se necessário
+    try {
+      // Verificar se existe trilha pendente e removê-la
+      await supabaseClient
+        .from('implementation_trails')
+        .delete()
+        .eq('user_id', userIdToUse)
+        .eq('status', 'pending');
+      
+      // Verificar se existe trilha completa
+      const { data: existingTrail } = await supabaseClient
+        .from('implementation_trails')
+        .select('id')
+        .eq('user_id', userIdToUse)
+        .eq('status', 'completed')
+        .maybeSingle();
+      
+      if (existingTrail) {
+        // Em vez de criar novo registro, vamos atualizar o existente
+        console.log(`Trilha existente encontrada para usuário ${userIdToUse}. Atualizando registro existente.`);
+      }
+    } catch (cleanupError) {
+      console.error("Erro ao limpar trilhas existentes:", cleanupError);
+      // Continuar mesmo com erro de limpeza
+    }
+    
     // Buscar dados do onboarding
     console.log(`Buscando dados de onboarding para usuário ${userIdToUse}`);
     
@@ -445,20 +471,44 @@ serve(async (req) => {
       hasMatchedCourses: scoredSolutions.some(s => !!s.matchedCourses)
     });
     
-    // Registrar a geração da trilha
     try {
-      await supabaseClient
+      // Verificar se já existe uma trilha para este usuário
+      const { data: existingTrail } = await supabaseClient
         .from('implementation_trails')
-        .insert({
-          user_id: userIdToUse,
-          status: 'completed',
-          trail_data: recommendations,
-          updated_at: new Date().toISOString()
-        })
-        .select()
-        .single();
+        .select('id')
+        .eq('user_id', userIdToUse)
+        .eq('status', 'completed')
+        .maybeSingle();
       
-      console.log("Trilha registrada com sucesso no banco de dados");
+      if (existingTrail) {
+        // Atualizar trilha existente
+        await supabaseClient
+          .from('implementation_trails')
+          .update({
+            trail_data: recommendations,
+            updated_at: new Date().toISOString(),
+            generation_attempts: supabaseClient.rpc('increment', { 
+              row_id: existingTrail.id, 
+              table_name: 'implementation_trails', 
+              column_name: 'generation_attempts' 
+            })
+          })
+          .eq('id', existingTrail.id);
+        
+        console.log("Trilha existente atualizada com sucesso");
+      } else {
+        // Criar nova trilha
+        await supabaseClient
+          .from('implementation_trails')
+          .insert({
+            user_id: userIdToUse,
+            status: 'completed',
+            trail_data: recommendations,
+            updated_at: new Date().toISOString()
+          });
+        
+        console.log("Trilha registrada com sucesso no banco de dados");
+      }
     } catch (dbError) {
       console.error("Erro ao salvar trilha no banco de dados:", dbError);
       // Não bloquear a resposta por causa do erro de salvamento
