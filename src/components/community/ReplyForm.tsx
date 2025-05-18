@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { incrementTopicReplies } from "@/lib/supabase/rpc";
 
 interface ReplyFormProps {
   topicId: string;
@@ -80,24 +81,16 @@ export const ReplyForm = ({
       
       console.log("Resposta enviada com sucesso:", data);
       
-      // Atualizar o contador de respostas no tópico e data de última atividade
-      try {
-        // Atualizar a data de última atividade
-        await supabase
-          .from("forum_topics")
-          .update({ 
-            last_activity_at: new Date().toISOString(),
-            reply_count: supabase.rpc('increment', { 
-              row_id: topicId, 
-              table_name: 'forum_topics', 
-              column_name: 'reply_count' 
-            }) 
-          })
-          .eq("id", topicId);
-      } catch (updateError) {
-        console.error("Erro ao atualizar metadados do tópico:", updateError);
-        // Não falhar a operação principal se esta parte falhar
-      }
+      // Incrementar contador e atualizar data de última atividade usando a função RPC
+      await incrementTopicReplies(topicId);
+      
+      // Atualizar também a data de última atividade
+      await supabase
+        .from("forum_topics")
+        .update({ 
+          last_activity_at: new Date().toISOString()
+        })
+        .eq("id", topicId);
       
       setContent("");
       if (textareaRef.current) {

@@ -7,7 +7,18 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { PencilLine, Send, Loader2, X, ChevronDown } from "lucide-react";
+import { 
+  PencilLine, 
+  Send, 
+  Loader2, 
+  X, 
+  ChevronDown, 
+  Image as ImageIcon,
+  Bold, 
+  Italic,
+  Link,
+  List
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
@@ -24,6 +35,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export const QuickPostEditor = () => {
   const [title, setTitle] = useState("");
@@ -31,7 +43,11 @@ export const QuickPostEditor = () => {
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const editorRef = useRef(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const editorRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -59,8 +75,8 @@ export const QuickPostEditor = () => {
   
   // Detectar cliques fora do editor para minimizar quando não estiver em foco
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (editorRef.current && !editorRef.current.contains(event.target) && isExpanded && !content.trim() && !title.trim()) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (editorRef.current && !editorRef.current.contains(event.target as Node) && isExpanded && !content.trim() && !title.trim()) {
         setIsExpanded(false);
       }
     };
@@ -85,6 +101,7 @@ export const QuickPostEditor = () => {
     setTitle("");
     setContent("");
     setSelectedCategoryId("");
+    setImageUrl(null);
     setIsSubmitting(false);
   };
   
@@ -102,8 +119,119 @@ export const QuickPostEditor = () => {
       resetForm();
     }
   };
+
+  // Formatar texto com elementos HTML
+  const formatText = (format: 'bold' | 'italic' | 'link' | 'list') => {
+    if (!textareaRef.current) return;
+
+    const textarea = textareaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = content.substring(start, end);
+    let newContent = content;
+    let newCursorPos = end;
+
+    switch (format) {
+      case 'bold':
+        newContent = content.substring(0, start) + `<strong>${selectedText}</strong>` + content.substring(end);
+        newCursorPos = start + 8 + selectedText.length;
+        break;
+      case 'italic':
+        newContent = content.substring(0, start) + `<em>${selectedText}</em>` + content.substring(end);
+        newCursorPos = start + 4 + selectedText.length;
+        break;
+      case 'link':
+        // Prompt de URL para o link
+        const url = prompt('Digite a URL do link:', 'https://');
+        if (url) {
+          newContent = content.substring(0, start) + `<a href="${url}" target="_blank">${selectedText || url}</a>` + content.substring(end);
+          newCursorPos = start + (selectedText ? selectedText.length : url.length) + 15 + url.length;
+        }
+        break;
+      case 'list':
+        // Criar uma lista com os itens (1 item por linha)
+        const items = selectedText.split('\n').filter(line => line.trim());
+        if (items.length > 0) {
+          const listItems = items.map(item => `<li>${item}</li>`).join('');
+          newContent = content.substring(0, start) + `<ul>${listItems}</ul>` + content.substring(end);
+          newCursorPos = start + 4 + listItems.length;
+        } else {
+          // Se não houver texto selecionado, adicionar uma lista vazia com placeholders
+          newContent = content.substring(0, start) + '<ul><li>Item 1</li><li>Item 2</li></ul>' + content.substring(end);
+          newCursorPos = start + 26;
+        }
+        break;
+    }
+
+    setContent(newContent);
+    
+    // Definir foco de volta e posicionar o cursor
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+    }, 0);
+  };
+
+  // Upload de imagem
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Validar tipo e tamanho
+    if (!file.type.startsWith('image/')) {
+      toast.error('Apenas imagens são permitidas');
+      return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) { // 5MB
+      toast.error('A imagem deve ter no máximo 5MB');
+      return;
+    }
+    
+    setUploading(true);
+    
+    try {
+      // Gerar um nome de arquivo único
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+      const filePath = `forum/${fileName}`;
+      
+      // Fazer upload para o Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('forum_images')
+        .upload(filePath, file);
+      
+      if (error) throw error;
+      
+      // Obter URL pública da imagem
+      const { data: publicUrlData } = supabase.storage
+        .from('forum_images')
+        .getPublicUrl(filePath);
+        
+      // Inserir a imagem no conteúdo (no final do texto atual)
+      const imageTag = `<img src="${publicUrlData.publicUrl}" alt="Imagem do tópico" style="max-width: 100%; margin: 10px 0;" />`;
+      setContent((prev) => prev + '\n' + imageTag);
+      setImageUrl(publicUrlData.publicUrl);
+      
+      toast.success('Imagem carregada com sucesso!');
+    } catch (error: any) {
+      console.error('Erro ao carregar imagem:', error);
+      toast.error(`Erro ao carregar imagem: ${error.message || 'Erro desconhecido'}`);
+    } finally {
+      setUploading(false);
+      // Limpar o input de arquivo para permitir selecionar a mesma imagem novamente
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
   
-  const handleCreateTopic = async (e) => {
+  // Função para abrir o seletor de arquivo
+  const triggerImageUpload = () => {
+    fileInputRef.current?.click();
+  };
+  
+  const handleCreateTopic = async (e: React.FormEvent) => {
     e?.preventDefault();
     
     if (!title.trim()) {
@@ -164,10 +292,12 @@ export const QuickPostEditor = () => {
       setIsExpanded(false);
       
       // Invalidar a query para atualizar a lista de tópicos
-      // Alterado para usar a mesmo queryKey do componente CommunityHome
       queryClient.invalidateQueries({ queryKey: ['communityTopics'] });
       
       toast.success("Tópico criado com sucesso!");
+      
+      // Redirecionar para o tópico criado
+      navigate(`/comunidade/topico/${topicData.id}`);
       
     } catch (error: any) {
       console.error("Erro ao criar tópico:", error);
@@ -211,13 +341,127 @@ export const QuickPostEditor = () => {
         {isExpanded && (
           <CardContent className="p-4 pt-3">
             <div className="pl-[52px] space-y-3">
+              {/* Barra de formatação */}
+              <div className="flex flex-wrap gap-2 border rounded-md p-1">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => formatText('bold')}
+                        className="h-8 w-8 p-0"
+                        type="button"
+                      >
+                        <Bold className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Negrito</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => formatText('italic')}
+                        className="h-8 w-8 p-0"
+                        type="button"
+                      >
+                        <Italic className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Itálico</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => formatText('link')}
+                        className="h-8 w-8 p-0"
+                        type="button"
+                      >
+                        <Link className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Inserir link</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => formatText('list')}
+                        className="h-8 w-8 p-0"
+                        type="button"
+                      >
+                        <List className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Lista</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={triggerImageUpload}
+                        className="h-8 w-8 p-0"
+                        disabled={uploading}
+                        type="button"
+                      >
+                        {uploading ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <ImageIcon className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Adicionar imagem</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                {/* Input de arquivo (invisível) */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImageUpload}
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                />
+              </div>
+
               <Textarea 
                 placeholder="O que você gostaria de compartilhar ou perguntar?"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 className="min-h-[120px] resize-none"
                 disabled={isSubmitting}
+                ref={textareaRef}
               />
+
+              {/* Preview do conteúdo com formatação */}
+              {content && (
+                <div className="border p-4 rounded-md bg-muted/30">
+                  <h3 className="text-sm font-medium mb-2">Preview:</h3>
+                  <div 
+                    className="prose prose-sm dark:prose-invert max-w-none" 
+                    dangerouslySetInnerHTML={{ __html: content }}
+                  />
+                </div>
+              )}
               
               <div className="flex items-center">
                 <Select

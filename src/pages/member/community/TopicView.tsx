@@ -2,9 +2,19 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
+import { supabase, deleteForumTopic } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, MessageSquare, Eye, Clock, AlertTriangle, Pin, Lock } from "lucide-react";
+import { 
+  ChevronLeft, 
+  MessageSquare, 
+  Eye, 
+  Clock, 
+  AlertTriangle, 
+  Pin, 
+  Lock, 
+  Trash2, 
+  MoreVertical 
+} from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { PostItem } from "@/components/community/PostItem";
@@ -16,6 +26,23 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 import { Post, Topic } from "@/types/forumTypes";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel,
+  AlertDialogContent, 
+  AlertDialogDescription,
+  AlertDialogFooter, 
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog";
 
 const TopicView = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +50,8 @@ const TopicView = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Verificar se o usuário possui papel de admin
   useEffect(() => {
@@ -89,7 +118,7 @@ const TopicView = () => {
         // Buscar dados do usuário que criou o tópico
         const { data: userData, error: userError } = await supabase
           .from('profiles')
-          .select('id, name, avatar_url')
+          .select('id, name, avatar_url, role')
           .eq('id', topicData.user_id)
           .single();
         
@@ -163,7 +192,7 @@ const TopicView = () => {
       const userIds = [...new Set(postsData.map(post => post.user_id))];
       const { data: usersData, error: usersError } = await supabase
         .from('profiles')
-        .select('id, name, avatar_url')
+        .select('id, name, avatar_url, role')
         .in('id', userIds);
       
       if (usersError) {
@@ -260,6 +289,31 @@ const TopicView = () => {
       toast.error('Erro ao processar solicitação');
     }
   };
+
+  // Função para excluir tópico
+  const handleDeleteTopic = async () => {
+    if (!topic || !id) return;
+    
+    try {
+      setIsDeleting(true);
+      
+      const { success, error } = await deleteForumTopic(id);
+      
+      if (!success) {
+        throw new Error(error || 'Erro desconhecido ao excluir tópico');
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ['communityTopics'] });
+      toast.success('Tópico excluído com sucesso');
+      navigate('/comunidade');
+    } catch (error: any) {
+      console.error('Erro ao excluir tópico:', error);
+      toast.error(`Erro ao excluir tópico: ${error.message || 'Erro desconhecido'}`);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  };
   
   if (topicError) {
     return (
@@ -302,25 +356,61 @@ const TopicView = () => {
       ) : topic ? (
         <>
           <div className="mb-8">
-            <div className="flex items-center gap-2 mb-2">
-              {topic.category && (
-                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                  {topic.category.name}
-                </Badge>
-              )}
-              
-              {topic.is_pinned && (
-                <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20">
-                  <Pin className="h-3 w-3 mr-1" />
-                  Fixado
-                </Badge>
-              )}
-              
-              {topic.is_locked && (
-                <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20">
-                  <Lock className="h-3 w-3 mr-1" />
-                  Bloqueado
-                </Badge>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                {topic.category && (
+                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                    {topic.category.name}
+                  </Badge>
+                )}
+                
+                {topic.is_pinned && (
+                  <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20">
+                    <Pin className="h-3 w-3 mr-1" />
+                    Fixado
+                  </Badge>
+                )}
+                
+                {topic.is_locked && (
+                  <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20">
+                    <Lock className="h-3 w-3 mr-1" />
+                    Bloqueado
+                  </Badge>
+                )}
+              </div>
+
+              {/* Menu de ações do tópico */}
+              {(isAdmin || (user && topic.profiles && user.id === topic.profiles.id)) && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <MoreVertical className="h-4 w-4" />
+                      <span className="sr-only">Opções do tópico</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="min-w-[200px]">
+                    {isAdmin && (
+                      <>
+                        <DropdownMenuItem onClick={togglePinned}>
+                          <Pin className="h-4 w-4 mr-2" />
+                          {topic.is_pinned ? 'Desfixar tópico' : 'Fixar tópico'}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={toggleLocked}>
+                          <Lock className="h-4 w-4 mr-2" />
+                          {topic.is_locked ? 'Desbloquear tópico' : 'Bloquear tópico'}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
+                    <DropdownMenuItem 
+                      onClick={() => setShowDeleteDialog(true)}
+                      className="text-red-500 hover:text-red-700 focus:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Excluir tópico
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
             </div>
             
@@ -367,6 +457,12 @@ const TopicView = () => {
                     <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
                       Autor
                     </span>
+
+                    {topic.profiles?.role === 'admin' && (
+                      <span className="text-xs bg-red-500/10 text-red-500 px-2 py-0.5 rounded-full">
+                        Admin
+                      </span>
+                    )}
                   </div>
                   
                   <div className="mt-2 prose prose-sm max-w-none dark:prose-invert">
@@ -375,29 +471,6 @@ const TopicView = () => {
                 </div>
               </div>
             </Card>
-            
-            {/* Ações de administrador */}
-            {isAdmin && (
-              <div className="mt-4 flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={togglePinned}
-                >
-                  <Pin className="h-4 w-4 mr-1" />
-                  {topic.is_pinned ? 'Desfixar tópico' : 'Fixar tópico'}
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={toggleLocked}
-                >
-                  <Lock className="h-4 w-4 mr-1" />
-                  {topic.is_locked ? 'Desbloquear tópico' : 'Bloquear tópico'}
-                </Button>
-              </div>
-            )}
           </div>
           
           {/* Seção de resposta principal */}
@@ -445,6 +518,8 @@ const TopicView = () => {
                     isTopicAuthor={post.user_id === topic.user_id}
                     isLocked={topic.is_locked}
                     onReplyAdded={() => refetchPosts()}
+                    isAdmin={isAdmin}
+                    currentUserId={user?.id}
                   />
                 ))}
               </div>
@@ -457,6 +532,29 @@ const TopicView = () => {
           </div>
         </>
       ) : null}
+
+      {/* Diálogo de confirmação para excluir tópico */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir tópico</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este tópico? Esta ação não pode ser desfeita e todas as respostas 
+              relacionadas também serão excluídas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteTopic} 
+              disabled={isDeleting}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              {isDeleting ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

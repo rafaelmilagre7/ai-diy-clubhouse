@@ -6,8 +6,33 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ReplyForm } from "@/components/community/ReplyForm";
-import { MessageSquare, ThumbsUp, AlertTriangle } from "lucide-react";
+import { 
+  MessageSquare,
+  ThumbsUp, 
+  AlertTriangle, 
+  MoreVertical, 
+  Trash2 
+} from "lucide-react";
 import { Post, Profile } from "@/types/forumTypes";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
+import { deleteForumPost } from "@/lib/supabase/rpc";
+import { useQueryClient } from "@tanstack/react-query";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel,
+  AlertDialogContent, 
+  AlertDialogDescription,
+  AlertDialogFooter, 
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog";
 
 interface PostItemProps {
   post: Post;
@@ -15,6 +40,8 @@ interface PostItemProps {
   isTopicAuthor: boolean;
   isNestedReply?: boolean;
   isLocked?: boolean;
+  isAdmin?: boolean;
+  currentUserId?: string;
   onReplyAdded?: () => void;
 }
 
@@ -24,9 +51,17 @@ export const PostItem = ({
   isTopicAuthor,
   isNestedReply = false,
   isLocked = false,
+  isAdmin = false,
+  currentUserId,
   onReplyAdded
 }: PostItemProps) => {
   const [showReplyForm, setShowReplyForm] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const queryClient = useQueryClient();
+  
+  // Verificar se o usuário atual pode excluir este post
+  const canDelete = isAdmin || (currentUserId && post.user_id === currentUserId);
   
   const getInitials = (name: string | null) => {
     if (!name) return "??";
@@ -41,6 +76,35 @@ export const PostItem = ({
   const handleReplySuccess = () => {
     setShowReplyForm(false);
     if (onReplyAdded) onReplyAdded();
+  };
+
+  // Função para excluir o post
+  const handleDeletePost = async () => {
+    if (!post.id || !topicId) return;
+    
+    try {
+      setIsDeleting(true);
+      
+      const { success, error } = await deleteForumPost(post.id, topicId);
+      
+      if (!success) {
+        throw new Error(error || "Erro desconhecido ao excluir resposta");
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ['forumPosts', topicId] });
+      queryClient.invalidateQueries({ queryKey: ['forumTopic', topicId] });
+      toast.success("Resposta excluída com sucesso");
+      
+      if (onReplyAdded) {
+        onReplyAdded();
+      }
+    } catch (error: any) {
+      console.error("Erro ao excluir resposta:", error);
+      toast.error(`Erro ao excluir resposta: ${error.message || "Erro desconhecido"}`);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+    }
   };
   
   return (
@@ -57,19 +121,47 @@ export const PostItem = ({
           </Avatar>
           
           <div className="flex-1">
-            <div className="flex flex-wrap items-center gap-2 mb-1">
-              <span className="font-medium">{post.profiles?.name || "Usuário"}</span>
-              <span className="text-xs text-muted-foreground">•</span>
-              <span className="text-xs text-muted-foreground">
-                {format(new Date(post.created_at), "d 'de' MMMM 'às' HH:mm", {
-                  locale: ptBR,
-                })}
-              </span>
-              
-              {isTopicAuthor && post.profiles?.id === post.user_id && (
-                <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                  Autor
+            <div className="flex justify-between items-start mb-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-medium">{post.profiles?.name || "Usuário"}</span>
+                <span className="text-xs text-muted-foreground">•</span>
+                <span className="text-xs text-muted-foreground">
+                  {format(new Date(post.created_at), "d 'de' MMMM 'às' HH:mm", {
+                    locale: ptBR,
+                  })}
                 </span>
+                
+                {isTopicAuthor && post.profiles?.id === post.user_id && (
+                  <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                    Autor
+                  </span>
+                )}
+
+                {post.profiles?.role === 'admin' && (
+                  <span className="text-xs bg-red-500/10 text-red-500 px-2 py-0.5 rounded-full">
+                    Admin
+                  </span>
+                )}
+              </div>
+
+              {/* Dropdown menu para ações do post */}
+              {canDelete && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem 
+                      onClick={() => setShowDeleteDialog(true)}
+                      className="text-red-500 hover:text-red-700 focus:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Excluir
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
             </div>
             
@@ -127,11 +219,35 @@ export const PostItem = ({
               isTopicAuthor={isTopicAuthor}
               isNestedReply={true}
               isLocked={isLocked}
+              isAdmin={isAdmin}
+              currentUserId={currentUserId}
               onReplyAdded={onReplyAdded}
             />
           ))}
         </div>
       )}
+
+      {/* Diálogo de confirmação para excluir post */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir resposta</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir esta resposta? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeletePost} 
+              disabled={isDeleting}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              {isDeleting ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

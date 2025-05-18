@@ -21,7 +21,9 @@ export {
 export {
   createStoragePublicPolicy as createStoragePublicPolicyRPC,
   incrementTopicViews,
-  incrementTopicReplies
+  incrementTopicReplies,
+  deleteForumTopic,
+  deleteForumPost
   // Adicionar outras funções de RPC conforme necessário
 } from './rpc';
 

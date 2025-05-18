@@ -53,3 +53,81 @@ export async function incrementTopicReplies(topicId: string): Promise<void> {
     console.error('Erro ao incrementar respostas do tópico:', error);
   }
 }
+
+/**
+ * Deleta um tópico e suas respostas associadas
+ * @param topicId ID do tópico a ser deletado
+ */
+export async function deleteForumTopic(topicId: string): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  try {
+    // Primeiro, deletar todos os posts relacionados ao tópico
+    const { error: postsError } = await supabase
+      .from('forum_posts')
+      .delete()
+      .eq('topic_id', topicId);
+
+    if (postsError) {
+      console.error('Erro ao excluir posts do tópico:', postsError);
+      return { success: false, error: postsError.message };
+    }
+
+    // Em seguida, deletar o tópico
+    const { error: topicError } = await supabase
+      .from('forum_topics')
+      .delete()
+      .eq('id', topicId);
+
+    if (topicError) {
+      console.error('Erro ao excluir tópico:', topicError);
+      return { success: false, error: topicError.message };
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Erro ao excluir tópico:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Deleta um comentário/post específico
+ * @param postId ID do post a ser deletado
+ * @param topicId ID do tópico associado (para decrementar contadores)
+ */
+export async function deleteForumPost(postId: string, topicId: string): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  try {
+    // Excluir o post
+    const { error } = await supabase
+      .from('forum_posts')
+      .delete()
+      .eq('id', postId);
+
+    if (error) {
+      console.error('Erro ao excluir post:', error);
+      return { success: false, error: error.message };
+    }
+
+    // Decrementar o contador de respostas do tópico
+    try {
+      await supabase.rpc('decrement', {
+        row_id: topicId,
+        table_name: 'forum_topics',
+        column_name: 'reply_count'
+      });
+    } catch (error) {
+      // Não falhar a operação principal se essa parte falhar
+      console.error('Erro ao decrementar contador de respostas:', error);
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Erro ao excluir post:', error);
+    return { success: false, error: error.message };
+  }
+}
