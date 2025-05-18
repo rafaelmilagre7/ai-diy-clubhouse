@@ -1,17 +1,21 @@
 
-import { Navigate, useLocation, Outlet } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "sonner";
 
-export const FormacaoProtectedRoutes = () => {
+interface FormacaoProtectedRouteWithChildrenProps {
+  children: React.ReactNode;
+}
+
+export const FormacaoProtectedRouteWithChildren = ({ children }: FormacaoProtectedRouteWithChildrenProps) => {
   const { user, isAdmin, isFormacao, isLoading } = useAuth();
   const location = useLocation();
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const timeoutRef = useRef<number | null>(null);
 
-  console.log("FormacaoProtectedRoutes state:", { user, isAdmin, isFormacao, isLoading, loadingTimeout });
+  console.log("FormacaoProtectedRouteWithChildren state:", { user, isAdmin, isFormacao, isLoading, loadingTimeout });
   
   // Configurar timeout de carregamento
   useEffect(() => {
@@ -22,7 +26,7 @@ export const FormacaoProtectedRoutes = () => {
       }
       
       timeoutRef.current = window.setTimeout(() => {
-        console.log("FormacaoProtectedRoutes: Loading timeout exceeded");
+        console.log("FormacaoProtectedRouteWithChildren: Loading timeout exceeded");
         setLoadingTimeout(true);
       }, 5000); // 5 segundos para maior tolerância
     }
@@ -51,6 +55,6 @@ export const FormacaoProtectedRoutes = () => {
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Usuário é admin ou formacao, renderiza as rotas protegidas
-  return <Outlet />;
+  // Usuário é admin ou formacao, renderiza os filhos
+  return <>{children}</>;
 };

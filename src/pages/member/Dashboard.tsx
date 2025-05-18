@@ -26,7 +26,8 @@ const Dashboard = () => {
     user: !!user, 
     profile: !!profile,
     authLoading,
-    currentRoute: window.location.pathname
+    currentRoute: window.location.pathname,
+    currentUrl: window.location.href
   });
   
   // Otimização: Usar useMemo para lembrar o valor da categoria entre renderizações
@@ -105,7 +106,11 @@ const Dashboard = () => {
   console.log("Dashboard renderização final com estado:", {
     temSolucoes: (active?.length || 0) + (completed?.length || 0) + (recommended?.length || 0) > 0,
     hasError,
-    loading: solutionsLoading || progressLoading || authLoading
+    loading: solutionsLoading || progressLoading || authLoading,
+    active: active?.length || 0,
+    completed: completed?.length || 0,
+    recommended: recommended?.length ||
+    0
   });
 
   // Renderizar componente de erro se necessário

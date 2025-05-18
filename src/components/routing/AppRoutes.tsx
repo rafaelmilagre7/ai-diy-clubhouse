@@ -1,4 +1,5 @@
 
+import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { authRoutes } from '../../routes/AuthRoutes';
 import { adminRoutes } from '../../routes/AdminRoutes';
@@ -9,6 +10,18 @@ import NotFound from '@/pages/NotFound';
 import InvitePage from '@/pages/InvitePage';
 
 const AppRoutes = () => {
+  // Log de diagnóstico para depurar problemas de roteamento
+  useEffect(() => {
+    console.log("AppRoutes montado com as seguintes rotas:", {
+      authRoutes: authRoutes.length,
+      adminRoutes: adminRoutes.length,
+      memberRoutes: memberRoutes.length,
+      onboardingRoutes: onboardingRoutes.length,
+      formacaoRoutes: formacaoRoutes.length,
+      currentPath: window.location.pathname
+    });
+  }, []);
+
   return (
     <Routes>
       {/* Convite Routes - Alta prioridade e fora do sistema de autenticação */}
@@ -39,6 +52,9 @@ const AppRoutes = () => {
       {formacaoRoutes.map((route) => (
         <Route key={route.path} path={route.path} element={route.element} />
       ))}
+      
+      {/* Rota padrão */}
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
       
       {/* Fallback route */}
       <Route path="*" element={<NotFound />} />
