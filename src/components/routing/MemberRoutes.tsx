@@ -38,7 +38,7 @@ const MemberRoutes = () => {
       <Route path="/learning/course/:courseId/lesson/:lessonId" element={<LessonView />} />
       <Route path="/certificates" element={<MemberCertificates />} />
       
-      {/* Rotas do fórum */}
+      {/* Rotas da comunidade (antigo fórum) */}
       <Route path="/forum" element={<ForumHome />} />
       <Route path="/forum/category/:slug" element={<CategoryView />} />
       <Route path="/forum/topic/:id" element={<TopicView />} />

@@ -14,11 +14,11 @@ const ForumHome = () => {
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
           <MessageSquare className="h-6 w-6 text-primary" />
-          <h1 className="text-3xl font-bold">Fórum</h1>
+          <h1 className="text-3xl font-bold">Comunidade</h1>
         </div>
         
         <p className="text-muted-foreground mb-2">
-          Bem-vindo ao fórum da comunidade! Aqui você pode discutir tópicos, fazer perguntas e compartilhar conhecimento com outros membros.
+          Bem-vindo à comunidade! Aqui você pode discutir tópicos, fazer perguntas e compartilhar conhecimento com outros membros.
         </p>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

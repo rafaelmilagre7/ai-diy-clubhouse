@@ -70,7 +70,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
       icon: MessageSquare,
     },
     {
-      title: "Fórum",
+      title: "Comunidade",
       href: "/forum",
       icon: MessagesSquare,
     },

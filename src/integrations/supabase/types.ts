@@ -3620,6 +3620,10 @@ export type Database = {
         Args: { suggestion_id: string }
         Returns: undefined
       }
+      increment_topic_views: {
+        Args: { topic_id: string }
+        Returns: undefined
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
