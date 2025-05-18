@@ -3,13 +3,14 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Link } from "react-router-dom";
-import { MessageSquare, CircleAlert, PlusCircle } from "lucide-react";
+import { MessageSquare, CircleAlert, PlusCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toast } from "sonner";
 
 interface Topic {
   id: string;
@@ -36,47 +37,81 @@ export const TopicList = ({ categoryId, categorySlug }: TopicListProps) => {
   const [currentPage, setCurrentPage] = useState<number>(0);
   const itemsPerPage = 10;
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['forumTopics', categoryId, currentPage],
     queryFn: async () => {
-      // Primeiro buscar todos os tópicos fixados
-      const { data: pinnedTopics, error: pinnedError } = await supabase
-        .from('forum_topics')
-        .select(`
-          *,
-          profiles:user_id(*)
-        `)
-        .eq('category_id', categoryId)
-        .eq('is_pinned', true)
-        .order('last_activity_at', { ascending: false });
+      console.log("Buscando tópicos para categoria:", categoryId, "página:", currentPage);
       
-      if (pinnedError) throw pinnedError;
-      
-      // Depois buscar os tópicos normais, paginados
-      const { data: regularTopics, error: regularError, count } = await supabase
-        .from('forum_topics')
-        .select(`
-          *,
-          profiles:user_id(*)
-        `, { count: 'exact' })
-        .eq('category_id', categoryId)
-        .eq('is_pinned', false)
-        .order('last_activity_at', { ascending: false })
-        .range(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage - 1);
-      
-      if (regularError) throw regularError;
-      
-      return { 
-        pinnedTopics: pinnedTopics as Topic[],
-        regularTopics: regularTopics as Topic[],
-        totalCount: count || 0
-      };
-    }
+      try {
+        // Primeiro buscar todos os tópicos fixados
+        const { data: pinnedTopics, error: pinnedError } = await supabase
+          .from('forum_topics')
+          .select(`
+            *,
+            profiles:user_id(*)
+          `)
+          .eq('category_id', categoryId)
+          .eq('is_pinned', true)
+          .order('last_activity_at', { ascending: false });
+        
+        if (pinnedError) {
+          console.error("Erro ao buscar tópicos fixados:", pinnedError);
+          throw pinnedError;
+        }
+        
+        // Depois buscar os tópicos normais, paginados
+        const { data: regularTopics, error: regularError, count } = await supabase
+          .from('forum_topics')
+          .select(`
+            *,
+            profiles:user_id(*)
+          `, { count: 'exact' })
+          .eq('category_id', categoryId)
+          .eq('is_pinned', false)
+          .order('last_activity_at', { ascending: false })
+          .range(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage - 1);
+        
+        if (regularError) {
+          console.error("Erro ao buscar tópicos regulares:", regularError);
+          throw regularError;
+        }
+        
+        console.log("Tópicos encontrados:", {
+          pinnedCount: pinnedTopics?.length || 0,
+          regularCount: regularTopics?.length || 0,
+          totalCount: count || 0
+        });
+        
+        return { 
+          pinnedTopics: pinnedTopics as Topic[],
+          regularTopics: regularTopics as Topic[],
+          totalCount: count || 0
+        };
+      } catch (error) {
+        console.error("Erro ao buscar tópicos:", error);
+        throw error;
+      }
+    },
+    refetchOnWindowFocus: false,
+    retry: 1,
   });
+
+  const handleRetry = () => {
+    toast.info("Atualizando lista de tópicos...");
+    refetch();
+  };
 
   if (isLoading) {
     return (
       <div className="space-y-4">
+        <div className="flex justify-between items-center mb-5">
+          <h2 className="text-xl font-medium">Tópicos</h2>
+          <Button disabled>
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            Carregando...
+          </Button>
+        </div>
+        
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="p-4 border rounded-md animate-pulse">
             <div className="flex justify-between mb-2">
@@ -95,7 +130,10 @@ export const TopicList = ({ categoryId, categorySlug }: TopicListProps) => {
       <div className="text-center py-8">
         <CircleAlert className="h-12 w-12 mx-auto text-red-500 mb-4" />
         <h3 className="text-xl font-medium mb-2">Erro ao carregar tópicos</h3>
-        <p className="text-muted-foreground">Não foi possível carregar os tópicos desta categoria.</p>
+        <p className="text-muted-foreground mb-4">Não foi possível carregar os tópicos desta categoria.</p>
+        <Button onClick={handleRetry}>
+          Tentar novamente
+        </Button>
       </div>
     );
   }

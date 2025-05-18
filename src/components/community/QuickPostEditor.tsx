@@ -6,27 +6,35 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { PencilLine, Send } from "lucide-react";
+import { PencilLine, Send, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/auth";
+import { toast } from "sonner";
 
 export const QuickPostEditor = () => {
   const [content, setContent] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
   
   // Buscar categorias para seleção rápida
-  const { data: categories } = useQuery({
+  const { data: categories, isLoading: categoriesLoading } = useQuery({
     queryKey: ['forumCategories'],
     queryFn: async () => {
+      console.log("Buscando categorias para QuickPostEditor");
       const { data, error } = await supabase
         .from('forum_categories')
         .select('id, name, slug')
         .eq('is_active', true)
         .order('order_index', { ascending: true });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao buscar categorias:", error);
+        throw error;
+      }
+      
+      console.log("Categorias encontradas:", data?.length);
       return data;
     }
   });
@@ -42,11 +50,37 @@ export const QuickPostEditor = () => {
   };
   
   const handleExpandEditor = () => {
+    if (!user) {
+      toast.error("Você precisa estar logado para criar um tópico");
+      return;
+    }
     setIsExpanded(true);
   };
   
   const handleCategoryClick = (categorySlug: string) => {
-    navigate(`/comunidade/novo-topico/${categorySlug}`);
+    if (content.trim()) {
+      setIsLoading(true);
+      localStorage.setItem('draft_topic_content', content);
+      toast.success("Rascunho salvo! Continuando para a página de criação de tópico.");
+      setTimeout(() => {
+        navigate(`/comunidade/novo-topico/${categorySlug}`);
+      }, 500);
+    } else {
+      navigate(`/comunidade/novo-topico/${categorySlug}`);
+    }
+  };
+  
+  const handleCreateTopic = () => {
+    if (content.trim()) {
+      setIsLoading(true);
+      localStorage.setItem('draft_topic_content', content);
+      toast.success("Rascunho salvo! Continuando para a página de criação de tópico.");
+      setTimeout(() => {
+        navigate('/comunidade/novo-topico');
+      }, 500);
+    } else {
+      navigate('/comunidade/novo-topico');
+    }
   };
   
   return (
@@ -74,25 +108,46 @@ export const QuickPostEditor = () => {
                 onChange={(e) => setContent(e.target.value)}
                 className="min-h-[120px] resize-none"
                 autoFocus
+                disabled={isLoading}
               />
               
-              <div className="flex justify-between items-center">
-                <div className="flex gap-2 overflow-x-auto pb-1 max-w-[70%]">
-                  {categories?.map(category => (
-                    <Button 
-                      key={category.id} 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => handleCategoryClick(category.slug)}
-                    >
-                      {category.name}
-                    </Button>
-                  ))}
+              <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center">
+                <div className="flex gap-2 overflow-x-auto pb-1 max-w-full sm:max-w-[70%]">
+                  {categoriesLoading ? (
+                    <div className="flex items-center space-x-2">
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      <span className="text-muted-foreground text-sm">Carregando categorias...</span>
+                    </div>
+                  ) : (
+                    categories?.map(category => (
+                      <Button 
+                        key={category.id} 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleCategoryClick(category.slug)}
+                        disabled={isLoading}
+                      >
+                        {category.name}
+                      </Button>
+                    ))
+                  )}
                 </div>
                 
-                <Button onClick={() => navigate('/comunidade/novo-topico')}>
-                  <Send className="h-4 w-4 mr-1" />
-                  Criar Tópico
+                <Button 
+                  onClick={handleCreateTopic}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      Criando...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4 mr-1" />
+                      Criar Tópico
+                    </>
+                  )}
                 </Button>
               </div>
             </div>

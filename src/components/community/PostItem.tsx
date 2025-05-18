@@ -2,7 +2,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CheckCircle2, ThumbsUp } from "lucide-react";
+import { CheckCircle2, ThumbsUp, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
@@ -60,6 +60,8 @@ export const PostItem = ({ post, isTopicAuthor, isTopicStarter, canMarkSolution,
       setIsLiking(true);
       
       if (!isTopicStarter) {
+        console.log("Processando reação para o post:", post.id);
+        
         // Verificar se já reagiu
         const { data: existingReaction, error: checkError } = await supabase
           .from("forum_reactions")
@@ -69,10 +71,13 @@ export const PostItem = ({ post, isTopicAuthor, isTopicStarter, canMarkSolution,
           .single();
         
         if (checkError && checkError.code !== "PGRST116") {
+          console.error("Erro ao verificar reação existente:", checkError);
           throw checkError;
         }
         
         if (existingReaction) {
+          console.log("Removendo reação existente:", existingReaction.id);
+          
           // Remover reação
           const { error: deleteError } = await supabase
             .from("forum_reactions")
@@ -82,25 +87,30 @@ export const PostItem = ({ post, isTopicAuthor, isTopicStarter, canMarkSolution,
           if (deleteError) throw deleteError;
           toast.success("Reação removida");
         } else {
+          console.log("Adicionando nova reação");
+          
           // Adicionar reação
-          const { error: insertError } = await supabase
+          const { data, error: insertError } = await supabase
             .from("forum_reactions")
             .insert({
               post_id: post.id,
               user_id: user.id,
               reaction_type: "like"
-            });
+            })
+            .select();
           
           if (insertError) throw insertError;
+          
+          console.log("Reação adicionada com sucesso:", data);
           toast.success("Você reagiu a este post");
         }
         
         // Atualizar dados
         queryClient.invalidateQueries({ queryKey: ['forumPosts', topicId] });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao reagir ao post:", error);
-      toast.error("Não foi possível processar sua reação");
+      toast.error(`Não foi possível processar sua reação: ${error.message || "Erro desconhecido"}`);
     } finally {
       setIsLiking(false);
     }
@@ -111,12 +121,21 @@ export const PostItem = ({ post, isTopicAuthor, isTopicStarter, canMarkSolution,
     
     try {
       setIsMarking(true);
-      const { error } = await supabase
+      
+      console.log("Marcando post como solução:", post.id, "Estado atual:", post.is_solution);
+      
+      const { data, error } = await supabase
         .from('forum_posts')
         .update({ is_solution: !post.is_solution })
-        .eq('id', post.id);
+        .eq('id', post.id)
+        .select();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao atualizar status de solução:", error);
+        throw error;
+      }
+      
+      console.log("Post atualizado com sucesso:", data);
       
       // Atualizar cache
       queryClient.invalidateQueries({ queryKey: ['forumPosts', topicId] });
@@ -125,9 +144,9 @@ export const PostItem = ({ post, isTopicAuthor, isTopicStarter, canMarkSolution,
         ? "Post desmarcado como solução" 
         : "Post marcado como solução"
       );
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao marcar solução:", error);
-      toast.error("Não foi possível marcar como solução");
+      toast.error(`Não foi possível marcar como solução: ${error.message || "Erro desconhecido"}`);
     } finally {
       setIsMarking(false);
     }
@@ -150,7 +169,7 @@ export const PostItem = ({ post, isTopicAuthor, isTopicStarter, canMarkSolution,
                 </Badge>
               )}
               {post.is_solution && (
-                <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20 text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
+                <Badge variant="success" className="text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
                   <CheckCircle2 className="h-3 w-3" />
                   Solução
                 </Badge>
@@ -172,7 +191,14 @@ export const PostItem = ({ post, isTopicAuthor, isTopicStarter, canMarkSolution,
             disabled={isMarking}
             className="text-xs h-8"
           >
-            {post.is_solution ? "Remover solução" : "Marcar como solução"}
+            {isMarking ? (
+              <>
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                Processando...
+              </>
+            ) : (
+              post.is_solution ? "Remover solução" : "Marcar como solução"
+            )}
           </Button>
         )}
       </div>
@@ -188,7 +214,11 @@ export const PostItem = ({ post, isTopicAuthor, isTopicStarter, canMarkSolution,
             disabled={isLiking}
             className={`text-xs gap-1 h-8 ${post.user_has_reacted ? 'text-primary' : ''}`}
           >
-            <ThumbsUp className={`h-4 w-4 ${post.user_has_reacted ? 'fill-primary' : ''}`} />
+            {isLiking ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ThumbsUp className={`h-4 w-4 ${post.user_has_reacted ? 'fill-primary' : ''}`} />
+            )}
             <span>{post.reaction_count || 0}</span>
           </Button>
         </div>

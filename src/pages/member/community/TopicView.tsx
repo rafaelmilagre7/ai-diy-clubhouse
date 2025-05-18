@@ -7,7 +7,7 @@ import { PostItem } from "@/components/community/PostItem";
 import { ReplyForm } from "@/components/community/ReplyForm";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, MessageSquare, ThumbsUp, Eye } from "lucide-react";
+import { ChevronLeft, MessageSquare, ThumbsUp, Eye, Loader2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/auth";
 import { format } from "date-fns";
@@ -15,6 +15,7 @@ import { ptBR } from "date-fns/locale";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 interface ForumTopic {
   id: string;
@@ -65,7 +66,13 @@ const TopicView = () => {
   useEffect(() => {
     if (id) {
       const incrementView = async () => {
-        await supabase.rpc('increment_topic_views', { topic_id: id });
+        try {
+          await supabase.rpc('increment_topic_views', { topic_id: id });
+          console.log("Visualização do tópico contabilizada");
+        } catch (error) {
+          console.error("Erro ao incrementar visualização:", error);
+          // Não falhar se não conseguir incrementar visualização
+        }
       };
       incrementView();
     }
@@ -75,6 +82,12 @@ const TopicView = () => {
   const { data: topic, isLoading: topicLoading, error: topicError } = useQuery({
     queryKey: ['forumTopic', id],
     queryFn: async () => {
+      console.log("Buscando detalhes do tópico:", id);
+      
+      if (!id) {
+        throw new Error("ID do tópico não fornecido");
+      }
+      
       const { data, error } = await supabase
         .from('forum_topics')
         .select(`
@@ -85,15 +98,24 @@ const TopicView = () => {
         .eq('id', id)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao buscar tópico:", error);
+        throw error;
+      }
+      
+      console.log("Tópico encontrado:", data);
       return data as ForumTopic;
-    }
+    },
+    retry: 1,
+    refetchOnWindowFocus: false,
   });
 
   // Buscar posts/respostas do tópico
   const { data: posts, isLoading: postsLoading, error: postsError } = useQuery({
     queryKey: ['forumPosts', id],
     queryFn: async () => {
+      console.log("Buscando posts do tópico:", id);
+      
       // Buscar posts com reações
       const { data, error } = await supabase
         .from('forum_posts')
@@ -105,7 +127,12 @@ const TopicView = () => {
         .eq('topic_id', id)
         .order('created_at', { ascending: true });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao buscar posts:", error);
+        throw error;
+      }
+      
+      console.log("Posts encontrados:", data?.length);
       
       // Processar dados para adicionar informações de reação do usuário atual
       return data.map(post => {
@@ -120,7 +147,9 @@ const TopicView = () => {
         };
       }) as ForumPost[];
     },
-    enabled: !!id && !!user?.id
+    enabled: !!id && !!topic,
+    retry: 1,
+    refetchOnWindowFocus: false,
   });
 
   const isLoading = topicLoading || postsLoading;
@@ -135,36 +164,28 @@ const TopicView = () => {
       .toUpperCase()
       .slice(0, 2);
   };
+  
+  useEffect(() => {
+    // Mostrar erro se não conseguir carregar o tópico
+    if (topicError) {
+      toast.error("Não foi possível carregar o tópico. Tente novamente mais tarde.");
+      console.error("Erro ao carregar tópico:", topicError);
+    }
+    
+    // Mostrar erro se não conseguir carregar os posts
+    if (postsError && topic) {
+      toast.error("Não foi possível carregar as respostas. Tente novamente mais tarde.");
+      console.error("Erro ao carregar posts:", postsError);
+    }
+  }, [topicError, postsError, topic]);
 
   if (isLoading) {
     return (
       <div className="container px-4 py-6 mx-auto max-w-7xl">
-        <div className="animate-pulse">
-          <div className="h-8 bg-muted rounded-md w-1/4 mb-4"></div>
-          <div className="h-4 bg-muted rounded-md w-1/2 mb-8"></div>
-          <Card className="bg-card shadow-sm border-none p-6 rounded-lg mb-6">
-            <div className="h-6 bg-muted rounded-md w-1/3 mb-6"></div>
-            <div className="h-4 bg-muted rounded-md w-full mb-3"></div>
-            <div className="h-4 bg-muted rounded-md w-full mb-3"></div>
-            <div className="h-4 bg-muted rounded-md w-3/4"></div>
-          </Card>
-          <div className="space-y-4">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <Card key={i} className="p-6 border rounded-md">
-                <div className="flex justify-between mb-4">
-                  <div className="flex gap-3">
-                    <div className="h-10 w-10 bg-muted rounded-full"></div>
-                    <div>
-                      <div className="h-4 bg-muted rounded-md w-24 mb-2"></div>
-                      <div className="h-3 bg-muted rounded-md w-40"></div>
-                    </div>
-                  </div>
-                </div>
-                <div className="h-4 bg-muted rounded-md w-full mb-3"></div>
-                <div className="h-4 bg-muted rounded-md w-full mb-3"></div>
-                <div className="h-4 bg-muted rounded-md w-3/4"></div>
-              </Card>
-            ))}
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <Loader2 className="h-10 w-10 animate-spin mx-auto text-primary mb-4" />
+            <p className="text-muted-foreground">Carregando tópico...</p>
           </div>
         </div>
       </div>
@@ -198,7 +219,7 @@ const TopicView = () => {
         <Button variant="ghost" size="sm" asChild className="p-0">
           <Link to={categoryUrl} className="flex items-center">
             <ChevronLeft className="h-4 w-4" />
-            <span>Voltar para {topic.forum_categories?.name}</span>
+            <span>Voltar para {topic.forum_categories?.name || "Categorias"}</span>
           </Link>
         </Button>
       </div>
@@ -226,12 +247,12 @@ const TopicView = () => {
 
           <div className="flex gap-2">
             {topic.is_pinned && (
-              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+              <Badge variant="info" className="text-xs px-2 py-0.5 rounded-full">
                 Fixo
               </Badge>
             )}
             {topic.is_locked && (
-              <Badge variant="outline" className="bg-muted text-muted-foreground border-muted/50">
+              <Badge variant="neutral" className="text-xs px-2 py-0.5 rounded-full">
                 Trancado
               </Badge>
             )}
@@ -277,7 +298,12 @@ const TopicView = () => {
       {!topic.is_locked ? (
         <div className="mt-6">
           <h3 className="text-lg font-medium mb-4">Sua resposta</h3>
-          <ReplyForm topicId={topic.id} />
+          <ReplyForm 
+            topicId={topic.id} 
+            onSuccess={() => {
+              console.log("Resposta enviada com sucesso");
+            }}
+          />
         </div>
       ) : (
         <div className="mt-6 p-4 bg-muted rounded-md text-center">

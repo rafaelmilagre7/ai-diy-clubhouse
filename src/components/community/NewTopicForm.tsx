@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
+import { Loader2 } from "lucide-react";
 
 interface NewTopicFormProps {
   categoryId: string;
@@ -41,6 +42,13 @@ export const NewTopicForm = ({ categoryId, categorySlug }: NewTopicFormProps) =>
     try {
       setIsSubmitting(true);
       
+      console.log("Criando novo tópico:", {
+        categoryId,
+        title: title.trim(),
+        content: content.trim(),
+        userId: user.id
+      });
+      
       // Inserir o novo tópico
       const { data: topicData, error: topicError } = await supabase
         .from("forum_topics")
@@ -53,14 +61,23 @@ export const NewTopicForm = ({ categoryId, categorySlug }: NewTopicFormProps) =>
         .select("id")
         .single();
         
-      if (topicError) throw topicError;
+      if (topicError) {
+        console.error("Erro ao criar tópico:", topicError);
+        throw topicError;
+      }
+      
+      if (!topicData || !topicData.id) {
+        throw new Error("Não foi possível obter o ID do tópico criado");
+      }
+      
+      console.log("Tópico criado com sucesso:", topicData);
       
       toast.success("Tópico criado com sucesso!");
       navigate(`/comunidade/topico/${topicData.id}`);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao criar tópico:", error);
-      toast.error("Não foi possível criar o tópico. Tente novamente mais tarde.");
+      toast.error(`Não foi possível criar o tópico: ${error.message || "Erro desconhecido"}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -99,7 +116,14 @@ export const NewTopicForm = ({ categoryId, categorySlug }: NewTopicFormProps) =>
           disabled={isSubmitting}
           className="min-w-[120px]"
         >
-          {isSubmitting ? "Criando..." : "Criar Tópico"}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Criando...
+            </>
+          ) : (
+            "Criar Tópico"
+          )}
         </Button>
       </div>
     </form>
