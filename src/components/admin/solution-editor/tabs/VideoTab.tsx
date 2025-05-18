@@ -14,11 +14,13 @@ const VideoTab: React.FC<VideoTabProps> = ({
   saving,
 }) => {
   return (
-    <VideoLessonsForm 
-      solutionId={solutionId} 
-      onSave={onSave} 
-      saving={saving} 
-    />
+    <div className="text-neutral-800 dark:text-white">
+      <VideoLessonsForm 
+        solutionId={solutionId} 
+        onSave={onSave} 
+        saving={saving} 
+      />
+    </div>
   );
 };
 

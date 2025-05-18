@@ -11,7 +11,7 @@ interface SolutionEditorHeaderProps {
   title?: string;
   difficulty?: string;
   difficultyColor?: string;
-  difficultyText?: string; // Prop para texto traduzido
+  difficultyText?: string;
 }
 
 const SolutionEditorHeader: React.FC<SolutionEditorHeaderProps> = ({
@@ -43,11 +43,11 @@ const SolutionEditorHeader: React.FC<SolutionEditorHeaderProps> = ({
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 rounded-lg shadow-sm bg-gray-800">
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" onClick={() => navigate(id ? '/admin/solutions' : '/admin')} className="mr-2">
+        <Button variant="ghost" size="icon" onClick={() => navigate(id ? '/admin/solutions' : '/admin')} className="mr-2 text-white hover:text-white/80">
           <ArrowLeftIcon className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">
+          <h1 className="text-2xl font-bold text-white">
             {title ? title : id ? 'Editar Solução' : 'Nova Solução'}
           </h1>
           {difficulty && (

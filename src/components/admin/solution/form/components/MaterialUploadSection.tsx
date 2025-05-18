@@ -9,13 +9,13 @@ import { detectFileType, getFileFormatName } from "../utils/resourceUtils";
 interface MaterialUploadSectionProps {
   solutionId: string | null;
   onUploadComplete: (url: string, fileName: string, fileSize: number) => Promise<void>;
-  bucketReady?: boolean; // Nova propriedade para verificar se o bucket está pronto
+  bucketReady?: boolean;
 }
 
 const MaterialUploadSection: React.FC<MaterialUploadSectionProps> = ({
   solutionId,
   onUploadComplete,
-  bucketReady = true // Padrão como true para compatibilidade com código existente
+  bucketReady = true
 }) => {
   const { toast } = useToast();
 
@@ -97,11 +97,13 @@ const MaterialUploadSection: React.FC<MaterialUploadSectionProps> = ({
   };
 
   return (
-    <ResourceUploadCard 
-      handleUploadComplete={onUploadComplete}
-      handleYoutubeUrlSubmit={handleYoutubeUrlSubmit}
-      bucketReady={bucketReady}
-    />
+    <div className="text-neutral-800 dark:text-white">
+      <ResourceUploadCard 
+        handleUploadComplete={onUploadComplete}
+        handleYoutubeUrlSubmit={handleYoutubeUrlSubmit}
+        bucketReady={bucketReady}
+      />
+    </div>
   );
 };
 

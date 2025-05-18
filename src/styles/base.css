@@ -64,21 +64,21 @@
     min-height: 100vh;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-heading font-semibold text-white;
+    @apply font-heading font-semibold text-neutral-800 dark:text-white;
   }
   h1 { @apply text-3xl md:text-4xl tracking-tight; }
   h2 { @apply text-2xl md:text-3xl tracking-tight; }
   h3 { @apply text-xl md:text-2xl; }
-  p { @apply leading-relaxed text-neutral-200; }
+  p { @apply leading-relaxed text-neutral-700 dark:text-neutral-200; }
   
   /* Melhorias de contraste para tabelas */
   .table td {
-    @apply text-white;
+    @apply text-neutral-800 dark:text-white;
   }
   
   /* Melhorias de contraste para texto secundário */
   .text-muted-foreground {
-    @apply text-neutral-300;
+    @apply text-neutral-600 dark:text-neutral-300;
   }
 
   /* Link styles */
@@ -88,12 +88,26 @@
 
   /* Input styles para garantir legibilidade */
   input, textarea, select {
-    @apply text-white bg-[#181A2A] border-white/10;
+    @apply text-neutral-800 dark:text-white bg-white dark:bg-[#181A2A] border-neutral-300 dark:border-white/10;
   }
 
   /* Labels para melhor contraste */
   label {
-    @apply text-white;
+    @apply text-neutral-800 dark:text-white;
+  }
+  
+  /* Card */
+  .card-description {
+    @apply text-neutral-600 dark:text-neutral-300;
+  }
+  
+  /* Form */
+  .form-label {
+    @apply text-neutral-800 dark:text-white;
+  }
+  
+  .form-description {
+    @apply text-neutral-600 dark:text-neutral-300;
   }
 }
 

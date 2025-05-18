@@ -35,7 +35,7 @@ const SolutionEditorTabs = ({
   const shouldShowTabs = currentStep === 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-neutral-800 dark:text-white">
       <TabHeader currentStep={currentStep} activeTab={activeTab} />
       
       {shouldShowTabs ? (
@@ -55,7 +55,7 @@ const SolutionEditorTabs = ({
           currentValues={currentValues}
           onSubmit={onSubmit}
           saving={saving}
-          setActiveTab={setActiveTab} // Passando o setter do activeTab
+          setActiveTab={setActiveTab}
         />
       )}
     </div>
