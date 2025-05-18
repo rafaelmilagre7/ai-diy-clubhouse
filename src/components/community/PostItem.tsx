@@ -7,24 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ReplyForm } from "@/components/community/ReplyForm";
 import { MessageSquare, ThumbsUp, AlertTriangle } from "lucide-react";
-
-interface Profile {
-  id: string;
-  name: string | null;
-  avatar_url: string | null;
-}
-
-interface Post {
-  id: string;
-  content: string;
-  created_at: string;
-  updated_at: string;
-  user_id: string;
-  parent_id: string | null;
-  is_solution: boolean;
-  profiles: Profile;
-  replies?: Post[];
-}
+import { Post, Profile } from "@/types/forumTypes";
 
 interface PostItemProps {
   post: Post;

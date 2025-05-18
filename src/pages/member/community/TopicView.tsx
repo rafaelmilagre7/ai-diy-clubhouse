@@ -15,45 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
-
-interface Topic {
-  id: string;
-  title: string;
-  content: string;
-  created_at: string;
-  updated_at: string;
-  view_count: number;
-  reply_count: number;
-  is_locked: boolean;
-  is_pinned: boolean;
-  user_id: string;
-  category_id: string;
-  last_activity_at: string;
-  profiles: {
-    name: string | null;
-    avatar_url: string | null;
-  } | null;
-  category: {
-    id: string;
-    name: string;
-    slug: string;
-  } | null;
-}
-
-interface Post {
-  id: string;
-  content: string;
-  created_at: string;
-  updated_at: string;
-  user_id: string;
-  parent_id: string | null;
-  is_solution: boolean;
-  profiles: {
-    name: string | null;
-    avatar_url: string | null;
-  };
-  replies?: Post[];
-}
+import { Post, Topic } from "@/types/forumTypes";
 
 const TopicView = () => {
   const { id } = useParams<{ id: string }>();

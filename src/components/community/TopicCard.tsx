@@ -6,27 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageSquare, Eye, ThumbsUp, Pin, Lock, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-
-interface Topic {
-  id: string;
-  title: string;
-  content: string;
-  created_at: string;
-  view_count: number;
-  reply_count: number;
-  is_pinned: boolean;
-  is_locked: boolean;
-  last_activity_at: string;
-  profiles: {
-    name: string | null;
-    avatar_url: string | null;
-  } | null;
-  category?: {
-    id: string;
-    name: string;
-    slug: string;
-  } | null;
-}
+import { Topic } from "@/types/forumTypes";
 
 interface TopicCardProps {
   topic: Topic;
