@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -24,19 +23,21 @@ import {
   Youtube, 
   Plus, 
   Trash2,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Play
 } from "lucide-react";
 import { FileUpload } from "@/components/ui/file-upload";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import PandaVideoEmbed from "@/components/formacao/comum/PandaVideoEmbed";
 
 interface VideoLesson {
   id?: string;
   title: string;
   description: string;
   url: string;
-  type: "youtube" | "video";
+  type: "youtube" | "video" | "panda";
   solution_id: string;
   module_id?: string | null;
 }
@@ -53,10 +54,16 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
   saving
 }) => {
   const [videoLessons, setVideoLessons] = useState<VideoLesson[]>([]);
-  const [activeTab, setActiveTab] = useState<"youtube" | "upload">("youtube");
+  const [activeTab, setActiveTab] = useState<"youtube" | "upload" | "panda">("youtube");
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [youtubeTitle, setYoutubeTitle] = useState("");
   const [youtubeDescription, setYoutubeDescription] = useState("");
+  const [pandaTitle, setPandaTitle] = useState("");
+  const [pandaDescription, setPandaDescription] = useState("");
+  const [pandaEmbedCode, setPandaEmbedCode] = useState("");
+  const [pandaVideoId, setPandaVideoId] = useState("");
+  const [pandaVideoUrl, setPandaVideoUrl] = useState("");
+  const [pandaThumbnailUrl, setPandaThumbnailUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [savingVideos, setSavingVideos] = useState(false);
   const { toast } = useToast();
@@ -86,10 +93,13 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
         // Convert database records to VideoLesson type with proper type checking
         const lessons = data.map(item => {
           // Determine the correct video type
-          const videoType: "youtube" | "video" = 
-            item.url.includes("youtube") || item.url.includes("youtu.be") 
-              ? "youtube" 
-              : "video";
+          let videoType: "youtube" | "video" | "panda" = "video";
+          
+          if (item.url.includes("youtube") || item.url.includes("youtu.be")) {
+            videoType = "youtube";
+          } else if (item.url.includes("pandavideo") || item.metadata?.provider === "panda") {
+            videoType = "panda";
+          }
               
           return {
             id: item.id,
@@ -253,6 +263,80 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
     }
   };
 
+  const handleAddPandaVideo = async () => {
+    if (!solutionId || !pandaVideoId || !pandaVideoUrl) {
+      toast({
+        title: "Dados incompletos",
+        description: "Por favor, insira um código de incorporação válido do Panda Video.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      const newVideo = {
+        solution_id: solutionId,
+        name: pandaTitle || `Vídeo do Panda (${pandaVideoId})`,
+        url: pandaVideoUrl,
+        type: "video",
+        format: pandaDescription || "Vídeo do Panda",
+        metadata: {
+          provider: "panda",
+          videoId: pandaVideoId,
+          thumbnailUrl: pandaThumbnailUrl
+        }
+      };
+      
+      const { data, error } = await supabase
+        .from("solution_resources")
+        .insert(newVideo)
+        .select()
+        .single();
+        
+      if (error) throw error;
+      
+      if (data) {
+        const videoLesson: VideoLesson = {
+          id: data.id,
+          title: data.name,
+          description: data.format || "",
+          url: data.url,
+          type: "panda" as const,
+          solution_id: data.solution_id
+        };
+        
+        setVideoLessons(prev => [...prev, videoLesson]);
+        
+        // Limpar os campos
+        setPandaTitle("");
+        setPandaDescription("");
+        setPandaEmbedCode("");
+        setPandaVideoId("");
+        setPandaVideoUrl("");
+        setPandaThumbnailUrl("");
+      }
+      
+      toast({
+        title: "Vídeo adicionado",
+        description: "O vídeo do Panda foi adicionado com sucesso.",
+      });
+    } catch (error: any) {
+      console.error("Erro ao adicionar vídeo do Panda:", error);
+      toast({
+        title: "Erro ao adicionar vídeo",
+        description: error.message || "Ocorreu um erro ao tentar adicionar o vídeo do Panda.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePandaEmbedChange = (embedCode: string, videoId: string, url: string, thumbnailUrl: string) => {
+    setPandaEmbedCode(embedCode);
+    setPandaVideoId(videoId);
+    setPandaVideoUrl(url);
+    setPandaThumbnailUrl(thumbnailUrl);
+  };
+
   const handleRemoveVideo = async (id?: string, url?: string) => {
     if (!id) return;
     
@@ -361,8 +445,8 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
         </p>
       </div>
       
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "youtube" | "upload")}>
-        <TabsList className="w-full grid grid-cols-2">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "youtube" | "upload" | "panda")}>
+        <TabsList className="w-full grid grid-cols-3">
           <TabsTrigger value="youtube" className="flex items-center gap-2">
             <Youtube className="h-4 w-4" />
             <span>YouTube</span>
@@ -370,6 +454,10 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
           <TabsTrigger value="upload" className="flex items-center gap-2">
             <Film className="h-4 w-4" />
             <span>Upload de Vídeo</span>
+          </TabsTrigger>
+          <TabsTrigger value="panda" className="flex items-center gap-2">
+            <Play className="h-4 w-4" />
+            <span>Panda Video</span>
           </TabsTrigger>
         </TabsList>
         
@@ -457,6 +545,53 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="panda" className="space-y-4 mt-4">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="panda-title">Título do Vídeo (opcional)</Label>
+                  <Input
+                    id="panda-title"
+                    value={pandaTitle}
+                    onChange={(e) => setPandaTitle(e.target.value)}
+                    placeholder="Ex: Tutorial de Implementação"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="panda-description">Descrição (opcional)</Label>
+                  <Textarea
+                    id="panda-description"
+                    value={pandaDescription}
+                    onChange={(e) => setPandaDescription(e.target.value)}
+                    placeholder="Breve descrição do conteúdo do vídeo..."
+                    rows={3}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <PandaVideoEmbed
+                    value={pandaEmbedCode}
+                    onChange={handlePandaEmbedChange}
+                    label="Código de Incorporação do Panda Video"
+                    description="Cole o código iframe completo fornecido pelo Panda Video"
+                  />
+                </div>
+
+                <Button
+                  onClick={handleAddPandaVideo}
+                  disabled={!pandaVideoId || !pandaVideoUrl}
+                  className="mt-2 w-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar Vídeo
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
       
       {/* Lista de vídeos */}
@@ -471,6 +606,8 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
                     <div className="flex items-center gap-2">
                       {video.type === "youtube" ? (
                         <Youtube className="h-4 w-4 text-red-600" />
+                      ) : video.type === "panda" ? (
+                        <Play className="h-4 w-4 text-blue-500" />
                       ) : (
                         <Film className="h-4 w-4 text-blue-600" />
                       )}
@@ -487,6 +624,13 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
                   
                   <div className="relative pb-[56.25%] h-0">
                     {video.type === "youtube" ? (
+                      <iframe
+                        src={video.url}
+                        className="absolute top-0 left-0 w-full h-full"
+                        frameBorder="0"
+                        allowFullScreen
+                      />
+                    ) : video.type === "panda" ? (
                       <iframe
                         src={video.url}
                         className="absolute top-0 left-0 w-full h-full"

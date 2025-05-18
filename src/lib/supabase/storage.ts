@@ -1,4 +1,3 @@
-
 import { supabase } from "./client";
 import { STORAGE_BUCKETS } from "./config";
 
@@ -96,17 +95,60 @@ export const ensureBucketExists = async (bucketName: string): Promise<boolean> =
 
 /**
  * Extrai informações de um vídeo do Panda Video
+ * 
+ * Aceita um código de incorporação HTML (iframe) ou um objeto com os dados do vídeo
  */
-export const extractPandaVideoInfo = (data: any): { videoId: string; thumbnail: string; url: string; thumbnailUrl: string } => {
-  // Verificando se os dados são válidos
+export const extractPandaVideoInfo = (data: any): { videoId: string; url: string; thumbnailUrl: string } => {
+  // Se recebermos uma string (código iframe), extrair informações do código HTML
+  if (typeof data === 'string') {
+    try {
+      // Extrair src do iframe
+      const srcMatch = data.match(/src=["'](https:\/\/[^"']+)["']/i);
+      if (!srcMatch || !srcMatch[1]) {
+        throw new Error('URL não encontrada no iframe');
+      }
+      
+      const iframeSrc = srcMatch[1];
+      let videoId = '';
+      let thumbnailUrl = '';
+      
+      // Extrair videoId do URL
+      // Formato padrão: https://player-vz-d6ebf577-797.tv.pandavideo.com.br/embed/?v=VIDEO_ID
+      const videoIdMatch = iframeSrc.match(/embed\/\?v=([^&]+)/);
+      if (videoIdMatch && videoIdMatch[1]) {
+        videoId = videoIdMatch[1];
+      } else {
+        // Formato alternativo: https://player.pandavideo.com.br/embed/VIDEO_ID
+        const altMatch = iframeSrc.match(/\/embed\/([^/?]+)/);
+        if (altMatch && altMatch[1]) {
+          videoId = altMatch[1];
+        }
+      }
+      
+      // Se encontramos um ID de vídeo, podemos compor a URL da thumbnail
+      if (videoId) {
+        thumbnailUrl = `https://thumbs.pandavideo.com.br/${videoId}.jpg`;
+      }
+      
+      return {
+        videoId,
+        url: iframeSrc,
+        thumbnailUrl
+      };
+    } catch (error) {
+      console.error('Erro ao extrair informações do iframe do Panda Video:', error);
+      return { videoId: '', url: '', thumbnailUrl: '' };
+    }
+  }
+  
+  // Verificando se os dados são válidos como objeto
   if (!data || !data.id) {
     console.error('Dados de vídeo inválidos:', data);
-    return { videoId: '', thumbnail: '', url: '', thumbnailUrl: '' };
+    return { videoId: '', url: '', thumbnailUrl: '' };
   }
 
   return {
     videoId: data.id || '',
-    thumbnail: data.thumbnailUrl || data.thumbnail || '',
     url: data.url || '',
     thumbnailUrl: data.thumbnailUrl || data.thumbnail || ''
   };
