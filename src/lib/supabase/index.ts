@@ -1,5 +1,4 @@
 
-
 // Re-exportação centralizada para garantir compatibilidade com importações existentes
 export * from './client';
 export * from './types';
@@ -21,6 +20,8 @@ export {
 // Exportação explícita das funções de RPC
 export {
   createStoragePublicPolicy as createStoragePublicPolicyRPC,
+  incrementTopicViews,
+  incrementTopicReplies
   // Adicionar outras funções de RPC conforme necessário
 } from './rpc';
 

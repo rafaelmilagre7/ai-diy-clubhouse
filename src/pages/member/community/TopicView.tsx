@@ -45,7 +45,7 @@ const TopicView = () => {
     checkIsAdmin();
   }, [user]);
   
-  // Buscar dados do tópico
+  // Buscar dados do tópico - Versão corrigida usando joins manuais
   const { 
     data: topic, 
     isLoading: topicLoading, 
@@ -59,21 +59,63 @@ const TopicView = () => {
         // Incrementar visualização
         await supabase.rpc('increment_topic_views', { topic_id: id });
         
-        // Buscar tópico
-        const { data, error } = await supabase
+        // Buscar o tópico básico
+        const { data: topicData, error: topicError } = await supabase
           .from('forum_topics')
           .select(`
-            *,
-            profiles:user_id(*),
-            category:category_id(*)
+            id, 
+            title, 
+            content, 
+            created_at, 
+            updated_at, 
+            view_count, 
+            reply_count, 
+            is_locked, 
+            is_pinned, 
+            user_id, 
+            category_id, 
+            last_activity_at
           `)
           .eq('id', id)
           .single();
         
-        if (error) throw error;
-        if (!data) throw new Error('Tópico não encontrado');
+        if (topicError) {
+          console.error('Erro ao buscar tópico:', topicError);
+          throw topicError;
+        }
         
-        return data as Topic;
+        if (!topicData) throw new Error('Tópico não encontrado');
+        
+        // Buscar dados do usuário que criou o tópico
+        const { data: userData, error: userError } = await supabase
+          .from('profiles')
+          .select('id, name, avatar_url')
+          .eq('id', topicData.user_id)
+          .single();
+        
+        if (userError && userError.code !== 'PGRST116') {
+          console.error('Erro ao buscar dados do usuário:', userError);
+        }
+        
+        // Buscar dados da categoria do tópico
+        const { data: categoryData, error: categoryError } = await supabase
+          .from('forum_categories')
+          .select('id, name, slug')
+          .eq('id', topicData.category_id)
+          .single();
+        
+        if (categoryError && categoryError.code !== 'PGRST116') {
+          console.error('Erro ao buscar dados da categoria:', categoryError);
+        }
+        
+        // Montar o objeto de tópico completo
+        const fullTopic: Topic = {
+          ...topicData,
+          profiles: userData || null,
+          category: categoryData || null
+        };
+        
+        return fullTopic;
       } catch (error) {
         console.error('Erro ao buscar tópico:', error);
         throw error;
@@ -82,7 +124,7 @@ const TopicView = () => {
     retry: false,
   });
   
-  // Buscar posts/respostas
+  // Buscar posts/respostas com a mesma abordagem manual
   const { 
     data: posts, 
     isLoading: postsLoading, 
@@ -93,23 +135,62 @@ const TopicView = () => {
       if (!id) throw new Error('ID do tópico não fornecido');
       
       // Buscar todos os posts do tópico
-      const { data, error } = await supabase
+      const { data: postsData, error: postsError } = await supabase
         .from('forum_posts')
         .select(`
-          *,
-          profiles:user_id(*)
+          id,
+          content,
+          created_at,
+          updated_at,
+          user_id,
+          parent_id,
+          is_solution,
+          topic_id
         `)
         .eq('topic_id', id)
         .order('created_at', { ascending: true });
       
-      if (error) throw error;
+      if (postsError) {
+        console.error('Erro ao buscar posts:', postsError);
+        throw postsError;
+      }
+      
+      if (!postsData || postsData.length === 0) {
+        return [];
+      }
+      
+      // Buscar informações dos usuários
+      const userIds = [...new Set(postsData.map(post => post.user_id))];
+      const { data: usersData, error: usersError } = await supabase
+        .from('profiles')
+        .select('id, name, avatar_url')
+        .in('id', userIds);
+      
+      if (usersError) {
+        console.error('Erro ao buscar dados dos usuários:', usersError);
+        throw usersError;
+      }
+      
+      // Criar mapa de usuários para acesso fácil
+      const usersMap: Record<string, any> = {};
+      if (usersData) {
+        usersData.forEach(user => {
+          usersMap[user.id] = user;
+        });
+      }
+      
+      // Enriquecer posts com dados de usuário
+      const enrichedPosts = postsData.map(post => ({
+        ...post,
+        profiles: usersMap[post.user_id] || null
+      }));
       
       // Organizar posts em hierarquia (posts principais e respostas aninhadas)
       const mainPosts: Post[] = [];
       const repliesMap: Record<string, Post[]> = {};
       
       // Primeiro, separar posts principais e respostas
-      data.forEach(post => {
+      enrichedPosts.forEach(post => {
         if (!post.parent_id) {
           mainPosts.push(post as Post);
         } else {

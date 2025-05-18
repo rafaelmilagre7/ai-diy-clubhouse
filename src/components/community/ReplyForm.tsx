@@ -82,14 +82,16 @@ export const ReplyForm = ({
       
       // Atualizar o contador de respostas no tópico e data de última atividade
       try {
-        // Atualiza a contagem de visualizações
-        await supabase.rpc('increment_topic_views', { topic_id: topicId });
-        
-        // Atualiza a data de última atividade e contador de respostas
+        // Atualizar a data de última atividade
         await supabase
           .from("forum_topics")
           .update({ 
             last_activity_at: new Date().toISOString(),
+            reply_count: supabase.rpc('increment', { 
+              row_id: topicId, 
+              table_name: 'forum_topics', 
+              column_name: 'reply_count' 
+            }) 
           })
           .eq("id", topicId);
       } catch (updateError) {
@@ -103,8 +105,11 @@ export const ReplyForm = ({
       }
       
       toast.success("Resposta enviada com sucesso!");
+      
+      // Atualizar cache do React Query
       queryClient.invalidateQueries({ queryKey: ['forumTopic', topicId] });
       queryClient.invalidateQueries({ queryKey: ['forumPosts', topicId] });
+      queryClient.invalidateQueries({ queryKey: ['communityTopics'] });
       
       if (onSuccess) {
         onSuccess();
