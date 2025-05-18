@@ -1,3 +1,4 @@
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -11,6 +12,7 @@ interface PhoneInputProps {
   // Novas propriedades
   onBlur?: () => void;
   isValid?: boolean;
+  showLabel?: boolean; // Nova propriedade para controlar a exibição da label
 }
 export const PhoneInput = ({
   value,
@@ -20,7 +22,8 @@ export const PhoneInput = ({
   ddi,
   onChangeDDI,
   onBlur,
-  isValid
+  isValid,
+  showLabel = false // Por padrão, não mostra a label
 }: PhoneInputProps) => {
   const commonDDIs = [{
     value: "+55",
@@ -36,7 +39,7 @@ export const PhoneInput = ({
     label: "Espanha +34"
   }];
   return <div className="space-y-2">
-      
+      {showLabel && <Label htmlFor="phone">Telefone</Label>}
       <div className="flex gap-2">
         <div className="w-28">
           <Select value={ddi} onValueChange={onChangeDDI} disabled={disabled}>

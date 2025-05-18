@@ -40,6 +40,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useNavigate } from "react-router-dom";
 import { PhoneInput } from "@/components/onboarding/steps/inputs/PhoneInput";
 import { supabase } from "@/lib/supabase";
+import { showOnboardingSuccessToast } from "./OnboardingSuccessToast";
 
 interface OnboardingFormProps {
   onSuccess?: () => void;
@@ -189,7 +190,12 @@ export function OnboardingForm({ onSuccess }: OnboardingFormProps) {
       }
       
       setFormSuccess(true);
-      toast.success("Informações salvas com sucesso!");
+      
+      // Use nosso novo toast personalizado ao invés do toast simples
+      showOnboardingSuccessToast({
+        title: "Informações salvas com sucesso!",
+        message: "Suas informações foram registradas. Você será redirecionado para o dashboard em instantes."
+      });
       
       // Aguardar 2 segundos e redirecionar ou chamar callback
       setTimeout(() => {
@@ -314,6 +320,7 @@ export function OnboardingForm({ onSuccess }: OnboardingFormProps) {
                         ddi="+55"
                         onChangeDDI={(value) => console.log("DDI alterado:", value)}
                         isValid={!form.formState.errors.telefone}
+                        showLabel={false} // Não mostrar a label no componente
                       />
                     </FormControl>
                     <FormDescription>
