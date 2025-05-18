@@ -5,44 +5,50 @@ import { adminRoutes } from '../../routes/AdminRoutes';
 import { memberRoutes } from '../../routes/MemberRoutes';
 import { onboardingRoutes } from '../../routes/OnboardingRoutes';
 import { formacaoRoutes } from '../../routes/FormacaoRoutes';
+import { CommunityRedirects } from './CommunityRedirects';
 import NotFound from '@/pages/NotFound';
 import InvitePage from '@/pages/InvitePage';
 
 const AppRoutes = () => {
   return (
-    <Routes>
-      {/* Convite Routes - Alta prioridade e fora do sistema de autenticação */}
-      <Route path="/convite/:token" element={<InvitePage />} />
-      <Route path="/convite" element={<InvitePage />} />
+    <>
+      {/* Componente auxiliar para redirecionar antigas URLs */}
+      <CommunityRedirects />
       
-      {/* Auth Routes */}
-      {authRoutes.map((route) => (
-        <Route key={route.path} path={route.path} element={route.element} />
-      ))}
-      
-      {/* Member Routes */}
-      {memberRoutes.map((route) => (
-        <Route key={route.path} path={route.path} element={route.element} />
-      ))}
-      
-      {/* Admin Routes */}
-      {adminRoutes.map((route) => (
-        <Route key={route.path} path={route.path} element={route.element} />
-      ))}
-      
-      {/* Onboarding Routes */}
-      {onboardingRoutes.map((route) => (
-        <Route key={route.path} path={route.path} element={route.element} />
-      ))}
-      
-      {/* Formação Routes */}
-      {formacaoRoutes.map((route) => (
-        <Route key={route.path} path={route.path} element={route.element} />
-      ))}
-      
-      {/* Fallback route */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+      <Routes>
+        {/* Convite Routes - Alta prioridade e fora do sistema de autenticação */}
+        <Route path="/convite/:token" element={<InvitePage />} />
+        <Route path="/convite" element={<InvitePage />} />
+        
+        {/* Auth Routes */}
+        {authRoutes.map((route) => (
+          <Route key={route.path} path={route.path} element={route.element} />
+        ))}
+        
+        {/* Member Routes */}
+        {memberRoutes.map((route) => (
+          <Route key={route.path} path={route.path} element={route.element} />
+        ))}
+        
+        {/* Admin Routes */}
+        {adminRoutes.map((route) => (
+          <Route key={route.path} path={route.path} element={route.element} />
+        ))}
+        
+        {/* Onboarding Routes */}
+        {onboardingRoutes.map((route) => (
+          <Route key={route.path} path={route.path} element={route.element} />
+        ))}
+        
+        {/* Formação Routes */}
+        {formacaoRoutes.map((route) => (
+          <Route key={route.path} path={route.path} element={route.element} />
+        ))}
+        
+        {/* Fallback route */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </>
   );
 };
 

@@ -25,11 +25,11 @@ import LearningPage from '@/pages/member/learning/LearningPage';
 import CourseDetails from '@/pages/member/learning/CourseDetails';
 import LessonView from '@/pages/member/learning/LessonView';
 
-// Member Forum pages
-import ForumHome from '@/pages/member/forum/ForumHome';
-import CategoryView from '@/pages/member/forum/CategoryView';
-import TopicView from '@/pages/member/forum/TopicView';
-import NewTopic from '@/pages/member/forum/NewTopic';
+// Member Community pages
+import CommunityHome from '@/pages/member/community/CommunityHome';
+import CategoryView from '@/pages/member/community/CategoryView';
+import TopicView from '@/pages/member/community/TopicView';
+import NewTopic from '@/pages/member/community/NewTopic';
 
 export const memberRoutes: RouteObject[] = [
   {
@@ -121,10 +121,28 @@ export const memberRoutes: RouteObject[] = [
     element: <ProtectedRoutes><MemberLayout><NewSuggestion /></MemberLayout></ProtectedRoutes>
   },
   
-  // Fórum Routes
+  // Comunidade Routes - Novas rotas
+  {
+    path: "/comunidade",
+    element: <ProtectedRoutes><MemberLayout><CommunityHome /></MemberLayout></ProtectedRoutes>
+  },
+  {
+    path: "/comunidade/categoria/:slug",
+    element: <ProtectedRoutes><MemberLayout><CategoryView /></MemberLayout></ProtectedRoutes>
+  },
+  {
+    path: "/comunidade/topico/:id",
+    element: <ProtectedRoutes><MemberLayout><TopicView /></MemberLayout></ProtectedRoutes>
+  },
+  {
+    path: "/comunidade/novo-topico/:categorySlug?",
+    element: <ProtectedRoutes><MemberLayout><NewTopic /></MemberLayout></ProtectedRoutes>
+  },
+  
+  // Rotas legadas - temporárias para redirecionamento
   {
     path: "/forum",
-    element: <ProtectedRoutes><MemberLayout><ForumHome /></MemberLayout></ProtectedRoutes>
+    element: <ProtectedRoutes><MemberLayout><CommunityHome /></MemberLayout></ProtectedRoutes>
   },
   {
     path: "/forum/category/:slug",

@@ -71,7 +71,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
     },
     {
       title: "Comunidade",
-      href: "/forum",
+      href: "/comunidade",
       icon: MessagesSquare,
     },
     {
@@ -87,6 +87,14 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
   ];
 
   const isActive = (href: string) => {
+    // Para a comunidade, considerar tanto o caminho antigo quanto o novo
+    if (href === "/comunidade") {
+      return location.pathname === "/comunidade" || 
+             location.pathname === "/forum" || 
+             location.pathname.startsWith("/comunidade/") ||
+             location.pathname.startsWith("/forum/");
+    }
+    
     return location.pathname === href || location.pathname.startsWith(href + '/');
   };
 
