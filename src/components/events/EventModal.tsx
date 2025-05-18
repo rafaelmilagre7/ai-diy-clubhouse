@@ -84,7 +84,7 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
           {event.description && (
             <div className="pt-2">
               <h3 className="text-sm font-medium text-gray-700 mb-1">Descrição</h3>
-              <p className="text-sm text-gray-600 whitespace-pre-line">{event.description}</p>
+              <p className="text-sm text-white whitespace-pre-line">{event.description}</p>
             </div>
           )}
 
