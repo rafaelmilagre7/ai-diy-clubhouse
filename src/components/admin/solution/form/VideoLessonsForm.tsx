@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -514,7 +515,7 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
                 
                 {youtubeUrl && getYouTubeEmbedUrl(youtubeUrl) && (
                   <div className="mt-4 border rounded-md overflow-hidden">
-                    <p className="text-xs text-muted-foreground p-2 bg-gray-50 border-b">Preview:</p>
+                    <p className="text-xs text-muted-foreground p-2 bg-gray-50 dark:bg-gray-800 border-b">Preview:</p>
                     <div className="relative pb-[56.25%] h-0">
                       <iframe
                         src={getYouTubeEmbedUrl(youtubeUrl)}

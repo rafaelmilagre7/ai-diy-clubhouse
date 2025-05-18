@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { extractPandaVideoInfo } from '@/lib/supabase/storage';
 import { Textarea } from "@/components/ui/textarea";
-import { FormLabel, FormDescription } from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 
 interface PandaVideoEmbedProps {
   value?: string;
@@ -43,14 +43,16 @@ export const PandaVideoEmbed: React.FC<PandaVideoEmbedProps> = ({
   
   return (
     <div className="space-y-2">
-      {label && <FormLabel>{label}</FormLabel>}
+      {label && <Label className="text-neutral-800 dark:text-white">{label}</Label>}
       <Textarea
         placeholder="Cole aqui o código iframe do Panda Video"
         value={value}
         onChange={(e) => handleChange(e.target.value)}
         className="font-mono text-xs h-32 resize-none"
       />
-      {description && <FormDescription>{description}</FormDescription>}
+      {description && (
+        <p className="text-sm text-muted-foreground">{description}</p>
+      )}
       {error && (
         <p className="text-sm text-destructive">{error}</p>
       )}

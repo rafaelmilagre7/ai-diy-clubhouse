@@ -8,11 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 interface ResourceUploadCardProps {
   handleUploadComplete: (url: string, fileName: string, fileSize: number) => Promise<void>;
   handleYoutubeUrlSubmit?: (url: string) => Promise<void>;
   bucketReady?: boolean; // Nova propriedade para verificar se o bucket está pronto
 }
+
 const ResourceUploadCard: React.FC<ResourceUploadCardProps> = ({
   handleUploadComplete,
   handleYoutubeUrlSubmit,
@@ -21,6 +23,7 @@ const ResourceUploadCard: React.FC<ResourceUploadCardProps> = ({
   const [uploadError, setUploadError] = React.useState<string | null>(null);
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [activeTab, setActiveTab] = useState("file");
+
   const handleUpload = async (url: string, fileName: string, fileSize: number) => {
     try {
       setUploadError(null);
@@ -29,6 +32,7 @@ const ResourceUploadCard: React.FC<ResourceUploadCardProps> = ({
       setUploadError(error.message || "Erro ao processar o arquivo após o upload");
     }
   };
+
   const submitYoutubeUrl = async () => {
     if (!youtubeUrl.trim() || !handleYoutubeUrlSubmit) return;
     try {
@@ -39,6 +43,7 @@ const ResourceUploadCard: React.FC<ResourceUploadCardProps> = ({
       setUploadError(error.message || "Erro ao processar o URL do YouTube");
     }
   };
+
   return <Card className="border-2 border-dashed border-[#0ABAB5]/30 hover:border-[#0ABAB5]/50 transition-all">
       <CardHeader className="pb-3">
         <CardTitle className="text-[#0ABAB5] flex items-center text-xl">
@@ -70,19 +75,19 @@ const ResourceUploadCard: React.FC<ResourceUploadCardProps> = ({
           </TabsList>
           
           <TabsContent value="file" className="space-y-6">
-            <div className="p-6 rounded-md bg-gray-400">
+            <div className="p-6 rounded-md bg-gray-50 dark:bg-gray-800">
               <FileUpload bucketName="solution_files" folder="documents" onUploadComplete={handleUpload} accept="*" maxSize={25} // 25MB
             buttonText="Upload de Material" fieldLabel="Selecione um arquivo (até 25MB)" />
             </div>
             
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-neutral-800 dark:text-white">
               Formatos suportados: PDF, Word, Excel, PowerPoint, imagens e outros arquivos.
             </p>
           </TabsContent>
           
           <TabsContent value="youtube" className="space-y-6">
-            <div className="bg-gray-50 p-6 rounded-md">
-              <Label htmlFor="youtube-url" className="block mb-2">URL do vídeo do YouTube</Label>
+            <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-md">
+              <Label htmlFor="youtube-url" className="block mb-2 text-neutral-800 dark:text-white">URL do vídeo do YouTube</Label>
               <div className="flex gap-2">
                 <div className="relative flex-1">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -94,7 +99,7 @@ const ResourceUploadCard: React.FC<ResourceUploadCardProps> = ({
                   Adicionar
                 </Button>
               </div>
-              <p className="mt-2 text-sm text-muted-foreground">
+              <p className="mt-2 text-sm text-neutral-800 dark:text-white">
                 Cole o URL do vídeo do YouTube para adicionar automaticamente.
               </p>
             </div>
@@ -103,4 +108,5 @@ const ResourceUploadCard: React.FC<ResourceUploadCardProps> = ({
       </CardContent>
     </Card>;
 };
+
 export default ResourceUploadCard;
