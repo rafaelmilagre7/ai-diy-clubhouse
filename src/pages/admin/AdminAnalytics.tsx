@@ -69,27 +69,32 @@ const AdminAnalytics = () => {
       }
     >
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-white">Analytics</h1>
           <Button 
             variant="outline"
             size="sm"
             onClick={handleRefresh}
             disabled={analyticsLoading}
+            className="text-neutral-700 dark:text-white"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${analyticsLoading ? 'animate-spin' : ''}`} />
             Atualizar dados
           </Button>
         </div>
 
-        <AnalyticsHeader 
-          timeRange={timeRange}
-          setTimeRange={handleTimeRangeChange}
-          category={category}
-          setCategory={handleCategoryChange}
-          difficulty={difficulty}
-          setDifficulty={handleDifficultyChange}
-        />
+        <Card className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-md mb-6">
+          <CardContent className="pt-6">
+            <AnalyticsHeader 
+              timeRange={timeRange}
+              setTimeRange={handleTimeRangeChange}
+              category={category}
+              setCategory={handleCategoryChange}
+              difficulty={difficulty}
+              setDifficulty={handleDifficultyChange}
+            />
+          </CardContent>
+        </Card>
 
         {analyticsError && (
           <Alert variant="destructive" className="mb-6">
@@ -99,15 +104,17 @@ const AdminAnalytics = () => {
           </Alert>
         )}
 
-        <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="grid grid-cols-6 max-w-4xl">
-            <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-            <TabsTrigger value="lms">LMS</TabsTrigger>
-            <TabsTrigger value="users">Usuários</TabsTrigger>
-            <TabsTrigger value="solutions">Soluções</TabsTrigger>
-            <TabsTrigger value="implementations">Implementações</TabsTrigger>
-            <TabsTrigger value="engagement">Engajamento</TabsTrigger>
-          </TabsList>
+        <Tabs defaultValue="overview" className="space-y-6">
+          <div className="bg-white dark:bg-gray-900 p-1 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm">
+            <TabsList className="grid grid-cols-6 max-w-4xl gap-1">
+              <TabsTrigger value="overview" className="text-neutral-700 dark:text-gray-300 data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white data-[state=active]:shadow-sm">Visão Geral</TabsTrigger>
+              <TabsTrigger value="lms" className="text-neutral-700 dark:text-gray-300 data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white data-[state=active]:shadow-sm">LMS</TabsTrigger>
+              <TabsTrigger value="users" className="text-neutral-700 dark:text-gray-300 data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white data-[state=active]:shadow-sm">Usuários</TabsTrigger>
+              <TabsTrigger value="solutions" className="text-neutral-700 dark:text-gray-300 data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white data-[state=active]:shadow-sm">Soluções</TabsTrigger>
+              <TabsTrigger value="implementations" className="text-neutral-700 dark:text-gray-300 data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white data-[state=active]:shadow-sm">Implementações</TabsTrigger>
+              <TabsTrigger value="engagement" className="text-neutral-700 dark:text-gray-300 data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white data-[state=active]:shadow-sm">Engajamento</TabsTrigger>
+            </TabsList>
+          </div>
           
           <TabsContent value="overview" className="space-y-4">
             <OverviewTabContent 

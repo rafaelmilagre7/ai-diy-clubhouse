@@ -39,7 +39,7 @@ export const OverviewTabContent = ({
   const renderSkeleton = () => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
+        <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
           <CardHeader className="pb-2">
             <Skeleton className="h-5 w-[200px]" />
             <Skeleton className="h-4 w-[150px]" />
@@ -49,7 +49,7 @@ export const OverviewTabContent = ({
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
           <CardHeader className="pb-2">
             <Skeleton className="h-5 w-[200px]" />
             <Skeleton className="h-4 w-[150px]" />
@@ -62,7 +62,7 @@ export const OverviewTabContent = ({
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {Array(3).fill(0).map((_, i) => (
-          <Card key={i}>
+          <Card key={i} className="border border-gray-200 dark:border-gray-800 shadow-sm">
             <CardHeader className="pb-2">
               <Skeleton className="h-5 w-[150px]" />
               <Skeleton className="h-4 w-[100px]" />
@@ -90,10 +90,10 @@ export const OverviewTabContent = ({
 
   if (!hasData) {
     return (
-      <Alert className="mb-6">
-        <AlertTriangle className="h-5 w-5" />
-        <AlertTitle>Sem dados disponíveis</AlertTitle>
-        <AlertDescription className="space-y-4">
+      <Alert className="mb-6 bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-900">
+        <AlertTriangle className="h-5 w-5 text-amber-500" />
+        <AlertTitle className="text-neutral-800 dark:text-white">Sem dados disponíveis</AlertTitle>
+        <AlertDescription className="text-neutral-700 dark:text-neutral-300 space-y-4">
           <p>
             Não foram encontrados dados de análise para o período selecionado. 
             Tente selecionar um período diferente ou verificar se existem registros no sistema.
