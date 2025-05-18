@@ -19,19 +19,7 @@ export const ToasterProvider = () => {
           fontWeight: 500,
           padding: '16px',
           fontSize: '15px',
-        },
-        success: {
-          style: {
-            backgroundColor: '#0ABAB5',
-            color: 'white',
-          },
-        },
-        error: {
-          style: {
-            backgroundColor: '#FF5A5A',
-            color: 'white',
-          },
-        },
+        }
       }}
       visibleToasts={2}
       expand={false}
