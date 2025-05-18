@@ -1,4 +1,5 @@
 
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ForumLayout } from "@/components/forum/ForumLayout";
@@ -7,23 +8,8 @@ import { ReplyForm } from "@/components/forum/ReplyForm";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, MessageSquare } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/auth";
-import { useEffect } from "react";
-
-interface ForumPost {
-  id: string;
-  content: string;
-  created_at: string;
-  user_id: string;
-  parent_id: string | null;
-  is_solution: boolean;
-  profiles?: {
-    name: string | null;
-    avatar_url: string | null;
-  } | null;
-  reaction_count?: number;
-  user_has_reacted?: boolean;
-}
 
 interface ForumTopic {
   id: string;
@@ -32,30 +18,60 @@ interface ForumTopic {
   created_at: string;
   user_id: string;
   category_id: string;
-  view_count: number;
-  reply_count: number;
   is_locked: boolean;
-  profiles?: {
+  profiles: {
     name: string | null;
     avatar_url: string | null;
   } | null;
-  forum_categories?: {
+  forum_categories: {
     name: string;
     slug: string;
   } | null;
 }
 
+interface ForumPost {
+  id: string;
+  content: string;
+  created_at: string;
+  user_id: string;
+  parent_id: string | null;
+  is_solution: boolean;
+  profiles: {
+    name: string | null;
+    avatar_url: string | null;
+  } | null;
+  reactions: {
+    id: string;
+    user_id: string;
+    reaction_type: string;
+  }[];
+}
+
 const TopicView = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  
+  // Incrementar visualizações
+  useEffect(() => {
+    if (id) {
+      const incrementView = async () => {
+        await supabase.rpc('increment_topic_views', { topic_id: id });
+      };
+      incrementView();
+    }
+  }, [id]);
 
-  // Buscar detalhes do tópico
-  const { data: topic, isLoading: isTopicLoading, error: topicError } = useQuery({
+  // Buscar o tópico
+  const { data: topic, isLoading: topicLoading, error: topicError } = useQuery({
     queryKey: ['forumTopic', id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('forum_topics')
-        .select('*, profiles:user_id(*), forum_categories:category_id(*)')
+        .select(`
+          *,
+          profiles:user_id(*),
+          forum_categories:category_id(name, slug)
+        `)
         .eq('id', id)
         .single();
       
@@ -64,79 +80,78 @@ const TopicView = () => {
     }
   });
 
-  // Buscar posts do tópico
-  const { data: posts, isLoading: isPostsLoading, error: postsError } = useQuery({
+  // Buscar posts/respostas do tópico
+  const { data: posts, isLoading: postsLoading, error: postsError } = useQuery({
     queryKey: ['forumPosts', id],
     queryFn: async () => {
-      // Primeiro, obter todos os posts do tópico
+      // Buscar posts com reações
       const { data, error } = await supabase
         .from('forum_posts')
         .select(`
           *,
-          profiles:user_id(*)
+          profiles:user_id(*),
+          reactions:forum_reactions(*)
         `)
         .eq('topic_id', id)
         .order('created_at', { ascending: true });
       
       if (error) throw error;
       
-      // Se o usuário estiver logado, verificar reações
-      if (user?.id) {
-        const { data: reactions } = await supabase
-          .from('forum_reactions')
-          .select('post_id')
-          .eq('user_id', user.id)
-          .in('post_id', data.map(post => post.id));
+      // Processar dados para adicionar informações de reação do usuário atual
+      return data.map(post => {
+        const userReaction = post.reactions?.find(
+          (r: any) => r.user_id === user?.id
+        );
         
-        const reactedPostIds = (reactions || []).map(r => r.post_id);
-        
-        // Adicionar informação de reação do usuário a cada post
-        return data.map(post => ({
+        return {
           ...post,
-          user_has_reacted: reactedPostIds.includes(post.id)
-        })) as ForumPost[];
-      }
-      
-      return data as ForumPost[];
+          reaction_count: post.reactions?.length || 0,
+          user_has_reacted: !!userReaction
+        };
+      }) as ForumPost[];
     },
-    enabled: !!id
+    enabled: !!id && !!user?.id
   });
 
-  // Incrementar contador de visualizações do tópico
-  useEffect(() => {
-    if (topic && id) {
-      const incrementViews = async () => {
-        await supabase.rpc('increment_topic_views', { topic_id: id });
-      };
-      
-      incrementViews();
-    }
-  }, [topic, id]);
+  const isLoading = topicLoading || postsLoading;
+  const error = topicError || postsError;
 
-  if (isTopicLoading || isPostsLoading) {
+  if (isLoading) {
     return (
       <div className="container px-4 py-6 mx-auto max-w-7xl">
         <div className="animate-pulse">
-          <div className="h-8 bg-muted rounded-md w-1/2 mb-4"></div>
-          <div className="h-4 bg-muted rounded-md w-1/3 mb-8"></div>
-          <div className="bg-card shadow-sm border-none p-6 rounded-lg mb-4">
-            <div className="h-4 bg-muted rounded-md w-full mb-2"></div>
-            <div className="h-4 bg-muted rounded-md w-full mb-2"></div>
-            <div className="h-4 bg-muted rounded-md w-2/3"></div>
+          <div className="h-8 bg-muted rounded-md w-1/4 mb-4"></div>
+          <div className="h-4 bg-muted rounded-md w-1/2 mb-8"></div>
+          <div className="bg-card shadow-sm border-none p-6 rounded-lg mb-6">
+            <div className="h-6 bg-muted rounded-md w-1/3 mb-6"></div>
+            <div className="h-4 bg-muted rounded-md w-full mb-3"></div>
+            <div className="h-4 bg-muted rounded-md w-full mb-3"></div>
+            <div className="h-4 bg-muted rounded-md w-3/4"></div>
           </div>
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="bg-card shadow-sm border-none p-6 rounded-lg mb-4">
-              <div className="h-4 bg-muted rounded-md w-full mb-2"></div>
-              <div className="h-4 bg-muted rounded-md w-full mb-2"></div>
-              <div className="h-4 bg-muted rounded-md w-1/2"></div>
-            </div>
-          ))}
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="p-6 border rounded-md">
+                <div className="flex justify-between mb-4">
+                  <div className="flex gap-3">
+                    <div className="h-10 w-10 bg-muted rounded-full"></div>
+                    <div>
+                      <div className="h-4 bg-muted rounded-md w-24 mb-2"></div>
+                      <div className="h-3 bg-muted rounded-md w-40"></div>
+                    </div>
+                  </div>
+                </div>
+                <div className="h-4 bg-muted rounded-md w-full mb-3"></div>
+                <div className="h-4 bg-muted rounded-md w-full mb-3"></div>
+                <div className="h-4 bg-muted rounded-md w-3/4"></div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
-  if (topicError || !topic) {
+  if (error || !topic) {
     return (
       <div className="container px-4 py-6 mx-auto max-w-7xl">
         <div className="text-center py-10">
@@ -151,82 +166,77 @@ const TopicView = () => {
     );
   }
 
-  // Verificar se o tópico está bloqueado
-  const isLocked = topic.is_locked;
-  
-  // Verificar se o usuário atual é o autor do tópico
+  // Verificar se o usuário é o autor do tópico
   const isTopicAuthor = user?.id === topic.user_id;
 
   return (
     <div className="container px-4 py-6 mx-auto max-w-7xl">
       <div className="flex items-center gap-2 mb-4">
-        {topic.forum_categories && (
-          <Button variant="ghost" size="sm" asChild className="p-0">
-            <Link to={`/forum/category/${topic.forum_categories.slug}`} className="flex items-center">
-              <ChevronLeft className="h-4 w-4" />
-              <span>Voltar para {topic.forum_categories.name}</span>
-            </Link>
-          </Button>
-        )}
+        <Button variant="ghost" size="sm" asChild className="p-0">
+          <Link to={`/forum/category/${topic.forum_categories?.slug}`} className="flex items-center">
+            <ChevronLeft className="h-4 w-4" />
+            <span>Voltar para {topic.forum_categories?.name}</span>
+          </Link>
+        </Button>
       </div>
       
-      <div className="mb-1">
+      <div className="flex items-center gap-2 mb-1">
+        <MessageSquare className="h-6 w-6 text-primary" />
         <h1 className="text-3xl font-bold">{topic.title}</h1>
       </div>
       
-      <div className="text-sm text-muted-foreground mb-6">
-        <span>
-          Iniciado por {topic.profiles?.name || "Usuário Anônimo"} • 
-          {new Date(topic.created_at).toLocaleDateString('pt-BR')} • 
-          {topic.view_count} {topic.view_count === 1 ? 'visualização' : 'visualizações'} • 
-          {topic.reply_count} {topic.reply_count === 1 ? 'resposta' : 'respostas'}
-        </span>
-      </div>
-      
-      <div className="space-y-6">
-        {/* Primeiro post (o tópico em si) */}
-        <PostItem 
+      <ForumLayout>
+        {/* Post inicial do tópico */}
+        <PostItem
           post={{
-            id: 'topic-' + topic.id,
+            id: topic.id,
             content: topic.content,
             created_at: topic.created_at,
             user_id: topic.user_id,
             profiles: topic.profiles
           }}
+          isTopicAuthor={true}
           isTopicStarter={true}
           topicId={topic.id}
         />
         
-        {/* Respostas ao tópico */}
-        {posts && posts.length > 0 && (
-          <div className="space-y-4 mt-6">
-            {posts.map((post) => (
-              <PostItem 
-                key={post.id} 
-                post={post} 
-                isTopicAuthor={isTopicAuthor}
+        {/* Respostas/comentários */}
+        {posts && posts.length > 0 ? (
+          <div className="mt-6 space-y-4">
+            <h2 className="text-xl font-semibold">Respostas</h2>
+            {posts.map(post => (
+              <PostItem
+                key={post.id}
+                post={post}
+                isTopicAuthor={post.user_id === topic.user_id}
                 canMarkSolution={isTopicAuthor}
                 topicId={topic.id}
               />
             ))}
           </div>
+        ) : (
+          <div className="mt-6 text-center py-6">
+            <p className="text-muted-foreground">Seja o primeiro a responder este tópico.</p>
+          </div>
         )}
         
         {/* Formulário de resposta */}
-        {!isLocked && (
-          <ForumLayout title="Sua resposta">
-            <ReplyForm topicId={topic.id} />
-          </ForumLayout>
+        {!topic.is_locked && (
+          <>
+            <Separator className="my-6" />
+            <div>
+              <h3 className="text-lg font-medium mb-4">Sua resposta</h3>
+              <ReplyForm topicId={topic.id} />
+            </div>
+          </>
         )}
         
-        {isLocked && (
-          <div className="text-center py-4 bg-muted/30 rounded-md">
-            <p className="text-muted-foreground">
-              Este tópico está bloqueado. Não é possível adicionar novas respostas.
-            </p>
+        {topic.is_locked && (
+          <div className="mt-6 p-4 bg-muted rounded-md text-center">
+            <p className="text-muted-foreground">Este tópico está bloqueado. Não é possível adicionar novas respostas.</p>
           </div>
         )}
-      </div>
+      </ForumLayout>
     </div>
   );
 };

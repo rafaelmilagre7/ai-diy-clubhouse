@@ -1,7 +1,7 @@
 
 import { ForumLayout } from "@/components/forum/ForumLayout";
 import { CategoryList } from "@/components/forum/CategoryList";
-import { Stats, MessageSquare, Users } from "lucide-react";
+import { BarChart, MessageSquare, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 const ForumHome = () => {
@@ -30,7 +30,7 @@ const ForumHome = () => {
           
           <Card className="p-4 flex items-center gap-3">
             <div className="bg-primary/20 p-3 rounded-full">
-              <Stats className="h-6 w-6 text-primary" />
+              <BarChart className="h-6 w-6 text-primary" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Mensagens</p>
