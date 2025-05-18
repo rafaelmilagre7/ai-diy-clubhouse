@@ -10,7 +10,6 @@ interface AuthContextType {
   session: Session | null;
   isLoading: boolean;
   isAdmin: boolean; // Verificação centralizada e definitiva
-  isFormacao: boolean; // Verificação para perfil de formação
   signOut: () => Promise<void>;
 }
 
@@ -19,7 +18,6 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   isLoading: true,
   isAdmin: false,
-  isFormacao: false,
   signOut: async () => {}
 });
 
@@ -59,7 +57,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isFormacao, setIsFormacao] = useState(false);
   const [adminCheckComplete, setAdminCheckComplete] = useState(false);
 
   // Verificação definitiva se o usuário é admin
@@ -112,11 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .single();
           
         const isAdminByRole = profileData?.role === 'admin';
-        const isFormacaoRole = profileData?.role === 'formacao';
-        
         setIsAdmin(isAdminByRole);
-        setIsFormacao(isFormacaoRole);
-        
         saveAdminStatus(userId, isAdminByRole);
         return isAdminByRole;
       } catch (profileError) {
@@ -143,7 +136,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           await checkIsAdmin(currentSession.user.email, currentSession.user.id);
         } else {
           setIsAdmin(false);
-          setIsFormacao(false);
           setAdminCheckComplete(true);
         }
         
@@ -167,13 +159,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Reset admin status enquanto verificamos
       if (event === 'SIGNED_OUT') {
         setIsAdmin(false);
-        setIsFormacao(false);
         setAdminCheckComplete(true);
       } else if (newSession?.user?.email && newSession?.user?.id) {
         await checkIsAdmin(newSession.user.email, newSession.user.id);
       } else {
         setIsAdmin(false);
-        setIsFormacao(false);
         setAdminCheckComplete(true);
       }
     });
@@ -191,7 +181,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       await supabase.auth.signOut();
       setIsAdmin(false);
-      setIsFormacao(false);
       toast.success('Você saiu com sucesso');
     } catch (error) {
       console.error('Erro ao sair:', error);
@@ -213,7 +202,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, isAdmin, isFormacao, signOut }}>
+    <AuthContext.Provider value={{ user, session, isLoading, isAdmin, signOut }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,11 +1,15 @@
 
-import { Navigate, useLocation, Outlet } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
+import { Navigate, useLocation } from "react-router-dom";
+import { useEffect, useState, useRef, ReactNode } from "react";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "sonner";
 
-export const FormacaoProtectedRoutes = () => {
+interface FormacaoProtectedRoutesProps {
+  children: ReactNode;
+}
+
+export const FormacaoProtectedRoutes = ({ children }: FormacaoProtectedRoutesProps) => {
   const { user, isAdmin, isFormacao, isLoading } = useAuth();
   const location = useLocation();
   const [loadingTimeout, setLoadingTimeout] = useState(false);
@@ -52,5 +56,5 @@ export const FormacaoProtectedRoutes = () => {
   }
 
   // Usuário é admin ou formacao, renderiza as rotas protegidas
-  return <Outlet />;
+  return <>{children}</>;
 };

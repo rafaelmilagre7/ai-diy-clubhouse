@@ -1,15 +1,16 @@
 
-import { useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useRef, ReactNode } from "react";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import MemberLayout from "./MemberLayout";
 import FormacaoLayout from "./formacao/FormacaoLayout";
+import { toast } from "sonner";
 import { PageTransitionWithFallback } from "@/components/transitions/PageTransitionWithFallback";
 
 /**
- * LayoutProvider gerencia renderização dos layouts com base no papel do usuário
- * e na rota atual, sem interferir na navegação do React Router
+ * LayoutProvider gerencia autenticação e roteamento baseado em papéis
+ * antes de renderizar o componente de layout apropriado
  */
 const LayoutProvider = ({ children }: { children: ReactNode }) => {
   const {
@@ -19,6 +20,7 @@ const LayoutProvider = ({ children }: { children: ReactNode }) => {
     isFormacao,
     isLoading,
   } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
   const [layoutReady, setLayoutReady] = useState(false);
   const timeoutRef = useRef<number | null>(null);
@@ -34,26 +36,49 @@ const LayoutProvider = ({ children }: { children: ReactNode }) => {
     currentPath: location.pathname
   });
 
-  // Verificar quando os dados estiverem prontos para renderizar o layout
+  // Verificar autenticação assim que o estado estiver pronto
   useEffect(() => {
     // Limpar qualquer timeout existente
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
     
-    // Se não estiver carregando e temos usuário, o layout está pronto
-    if (!isLoading && user) {
-      console.log("LayoutProvider: Usuário autenticado, layout pronto");
+    // Se não estiver carregando, verificar autenticação
+    if (!isLoading) {
+      if (!user) {
+        console.log("LayoutProvider: Não autenticado, redirecionando para login");
+        navigate('/login', { replace: true });
+        return;
+      }
+      
+      // Se temos usuário, marcar layout como pronto (mesmo se ainda não tivermos perfil)
+      // Isso evitará tela em branco enquanto espera perfil
       setLayoutReady(true);
-      return;
-    }
-    
-    // Se ainda está carregando, configurar timeout
-    if (isLoading) {
+      
+      // Verificar papel do usuário e rota atual
+      if (user && profile) {
+        console.log("LayoutProvider: Verificando papel do usuário");
+        
+        const isLearningRoute = location.pathname.startsWith('/learning');
+        const isPathAdmin = location.pathname.startsWith('/admin');
+        const isPathFormacao = location.pathname.startsWith('/formacao');
+        
+        // Redirecionar apenas se estiver na rota errada
+        if (isAdmin && !isPathAdmin && !isPathFormacao && !isLearningRoute) {
+          console.log("LayoutProvider: Admin detectado, redirecionando para área admin");
+          navigate('/admin', { replace: true });
+        } 
+        else if (isFormacao && !isAdmin && !isPathFormacao && !isLearningRoute) {
+          console.log("LayoutProvider: Formacao detectado, redirecionando para área formacao");
+          navigate('/formacao', { replace: true });
+        }
+      }
+    } else {
+      // Configurar timeout para não ficar preso em carregamento infinito
       timeoutRef.current = window.setTimeout(() => {
-        console.log("LayoutProvider: Loading timeout exceeded");
+        console.log("LayoutProvider: Loading timeout exceeded, forcing layout ready");
         setLayoutReady(true);
-      }, 2000);
+      }, 2000); // 2 segundos de timeout
     }
     
     return () => {
@@ -61,16 +86,16 @@ const LayoutProvider = ({ children }: { children: ReactNode }) => {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [user, isLoading]);
+  }, [user, profile, isAdmin, isFormacao, isLoading, navigate, location.pathname]);
 
   // Verificar se estamos em páginas de formação
   const isFormacaoRoute = location.pathname.startsWith('/formacao');
+  const isLearningRoute = location.pathname.startsWith('/learning');
 
-  console.log("Tipo de rota:", { isFormacaoRoute });
+  console.log("Tipo de rota:", { isFormacaoRoute, isLearningRoute });
 
   // Se o layout está pronto, renderizar com base na rota
   if (layoutReady && user) {
-    // Para rotas de formação, usar o FormacaoLayout
     if (isFormacaoRoute && (isFormacao || isAdmin)) {
       console.log("LayoutProvider: Renderizando FormacaoLayout");
       return (
@@ -78,9 +103,7 @@ const LayoutProvider = ({ children }: { children: ReactNode }) => {
           <FormacaoLayout>{children}</FormacaoLayout>
         </PageTransitionWithFallback>
       );
-    } 
-    // Para todas as outras rotas, usar o MemberLayout
-    else {
+    } else if (isLearningRoute || !isFormacao || isAdmin) {
       console.log("LayoutProvider: Renderizando MemberLayout");
       return (
         <PageTransitionWithFallback isVisible={true}>

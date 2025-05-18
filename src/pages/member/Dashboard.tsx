@@ -12,7 +12,6 @@ import { AlertCircle, RefreshCw } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
 
 const Dashboard = () => {
-  console.log("Dashboard renderizando, verificando estado...");
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, profile, isLoading: authLoading } = useAuth();
@@ -21,21 +20,20 @@ const Dashboard = () => {
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
-  // Log de diagnóstico para ajudar na depuração
+  // Log de diagnóstico - remover após resolução do problema
   console.log("Dashboard renderizado:", { 
     user: !!user, 
     profile: !!profile,
     authLoading,
-    currentRoute: window.location.pathname,
-    currentUrl: window.location.href
+    currentRoute: window.location.pathname
   });
   
   // Otimização: Usar useMemo para lembrar o valor da categoria entre renderizações
   const initialCategory = useMemo(() => searchParams.get("category") || "general", [searchParams]);
   const [category, setCategory] = useState<string>(initialCategory);
   
-  // Se não temos dados de soluções ainda, use um array vazio como fallback
-  const { solutions = [], loading: solutionsLoading, error: solutionsError } = useSolutionsData() || {};
+  // Otimização: Adicionar configuração de staleTime mais longa para reduzir requisições
+  const { solutions, loading: solutionsLoading, error: solutionsError } = useSolutionsData();
   
   // Log diagnóstico para Supabase
   useEffect(() => {
@@ -61,12 +59,12 @@ const Dashboard = () => {
   
   // Usar as soluções filtradas para obter o progresso
   const { 
-    active = [], 
-    completed = [], 
-    recommended = [], 
+    active, 
+    completed, 
+    recommended, 
     loading: progressLoading,
     error: progressError
-  } = useDashboardProgress(filteredSolutions) || {};
+  } = useDashboardProgress(filteredSolutions);
   
   // Tratamento de erro para progresso
   useEffect(() => {
@@ -103,17 +101,23 @@ const Dashboard = () => {
     window.location.reload();
   };
 
-  console.log("Dashboard renderização final com estado:", {
-    temSolucoes: (active?.length || 0) + (completed?.length || 0) + (recommended?.length || 0) > 0,
-    hasError,
-    loading: solutionsLoading || progressLoading || authLoading,
-    active: active?.length || 0,
-    completed: completed?.length || 0,
-    recommended: recommended?.length ||
-    0
-  });
-
-  // Renderizar componente de erro se necessário
+  // Controle para exibir toast apenas na primeira visita usando localStorage
+  useEffect(() => {
+    const isFirstVisit = localStorage.getItem("firstDashboardVisit") !== "false";
+    
+    if (isFirstVisit) {
+      // Atrasar ligeiramente o toast para evitar conflito com renderização inicial
+      const timeoutId = setTimeout(() => {
+        toast("Bem-vindo ao seu dashboard personalizado!");
+        localStorage.setItem("firstDashboardVisit", "false");
+      }, 1500);
+      
+      // Limpeza do timeout quando o componente é desmontado
+      return () => clearTimeout(timeoutId);
+    }
+  }, []);
+  
+  // Se houver erro, mostrar mensagem de erro com opção de tentar novamente
   if (hasError) {
     return (
       <div className="container py-8 flex flex-col items-center justify-center min-h-[60vh]">
@@ -130,33 +134,19 @@ const Dashboard = () => {
         >
           <RefreshCw className="h-4 w-4" /> Tentar novamente
         </Button>
+        <p className="mt-8 text-sm text-muted-foreground max-w-md text-center">
+          Se o problema persistir, tente sair e entrar novamente na plataforma, ou entre em contato com o suporte.
+        </p>
       </div>
     );
   }
 
-  // Para debugging durante o desenvolvimento, mostrar conteúdo mínimo se não houver dados
-  if (!active?.length && !completed?.length && !recommended?.length && !solutionsLoading && !progressLoading) {
-    return (
-      <div className="container py-8">
-        <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-        <p className="text-muted-foreground mb-4">Bem-vindo ao seu dashboard.</p>
-        <Alert>
-          <AlertTitle>Informação de desenvolvimento</AlertTitle>
-          <AlertDescription>
-            Não foram encontradas soluções para exibir no dashboard. 
-            Isso pode ocorrer durante o desenvolvimento ou se você acabou de criar sua conta.
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
-  // Renderizar o layout com as soluções disponíveis
+  // Renderizar o layout diretamente, sem usar um componente de carregamento bloqueante
   return (
     <DashboardLayout
-      active={active || []}
-      completed={completed || []}
-      recommended={recommended || []}
+      active={active}
+      completed={completed}
+      recommended={recommended}
       category={category}
       onCategoryChange={handleCategoryChange}
       onSolutionClick={handleSolutionClick}
