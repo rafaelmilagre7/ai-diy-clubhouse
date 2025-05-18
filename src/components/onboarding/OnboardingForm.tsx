@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -36,7 +35,7 @@ import {
 } from "@/components/ui/card";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { cn } from "@/lib/utils";
-import { AlertCircle, CheckCircle, Building, User } from "lucide-react";
+import { AlertCircle, CheckCircle, Building } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useNavigate } from "react-router-dom";
 import { PhoneInput } from "@/components/onboarding/steps/inputs/PhoneInput";
@@ -250,7 +249,47 @@ export function OnboardingForm({ onSuccess }: OnboardingFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        {/* Seção 1: Informações Pessoais */}
+        {/* Seção 1: Informações Pessoais - CAMPOS OCULTOS */}
+        <div className="hidden">
+          <FormField
+            control={form.control}
+            name="nome_completo"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="flex items-center">Nome Completo*</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="Seu nome completo" 
+                    {...field}
+                    className="bg-slate-50" 
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>E-mail*</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="seu.email@exemplo.com" 
+                    type="email" 
+                    {...field} 
+                    readOnly 
+                    disabled
+                    className="bg-slate-50" 
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {/* Seção 1: Informações Pessoais - CAMPOS VISÍVEIS */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Informações Pessoais</CardTitle>
@@ -259,53 +298,7 @@ export function OnboardingForm({ onSuccess }: OnboardingFormProps) {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="nome_completo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center">
-                      Nome Completo* 
-                      <User className="h-4 w-4 ml-2 text-muted-foreground" />
-                    </FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Seu nome completo" 
-                        {...field}
-                        className="bg-slate-50" 
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Nome obtido automaticamente do seu cadastro
-                    </FormDescription>
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>E-mail*</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="seu.email@exemplo.com" 
-                        type="email" 
-                        {...field} 
-                        readOnly 
-                        disabled
-                        className="bg-slate-50" 
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Email obtido automaticamente do seu cadastro
-                    </FormDescription>
-                  </FormItem>
-                )}
-              />
-              
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-1">
               <FormField
                 control={form.control}
                 name="telefone"
