@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ForumTopicWithMeta } from '@/lib/supabase/types/forum.types';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { MessageSquare, PinIcon, LockIcon } from 'lucide-react';
+import { MessageSquare, Pin as PinIcon, Lock as LockIcon } from 'lucide-react';
 
 interface TopicRowProps {
   topic: ForumTopicWithMeta;
@@ -37,10 +37,10 @@ export const TopicRow = ({ topic }: TopicRowProps) => {
           <div className="col-span-12 md:col-span-9 space-y-1">
             <div className="flex items-center space-x-2">
               {topic.is_pinned && (
-                <PinIcon className="h-4 w-4 text-amber-500" title="Fixado" />
+                <PinIcon className="h-4 w-4 text-amber-500" aria-label="Fixado" />
               )}
               {topic.is_locked && (
-                <LockIcon className="h-4 w-4 text-red-500" title="Bloqueado" />
+                <LockIcon className="h-4 w-4 text-red-500" aria-label="Bloqueado" />
               )}
               <h3 className="text-lg font-semibold line-clamp-1">{topic.title}</h3>
             </div>

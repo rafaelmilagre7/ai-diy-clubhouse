@@ -24,7 +24,7 @@ export const ForumHeader = ({
   categorySlug,
   breadcrumbs = []
 }: ForumHeaderProps) => {
-  const { isAuthenticated } = useAuth();
+  const { profile } = useAuth();
 
   return (
     <div className="space-y-4">
@@ -68,7 +68,7 @@ export const ForumHeader = ({
         
         <div className="flex items-center">
           {showNewTopicButton && (
-            <Button asChild disabled={!isAuthenticated}>
+            <Button asChild disabled={!profile?.id}>
               <Link to={categorySlug ? `/forum/categoria/${categorySlug}/novo` : '/forum/novo'}>
                 <Plus className="mr-2 h-4 w-4" />
                 Novo Tópico

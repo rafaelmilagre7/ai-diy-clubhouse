@@ -3,9 +3,9 @@ import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './App.css';
 import Layout from './components/layout/Layout';
-import ProtectedRoutes from './auth/ProtectedRoutes';
-import AdminProtectedRoutes from './auth/AdminProtectedRoutes';
-import FormacaoProtectedRoutes from './auth/FormacaoProtectedRoutes';
+import { ProtectedRoutes } from './auth/ProtectedRoutes';
+import { AdminProtectedRoutes } from './auth/AdminProtectedRoutes';
+import { FormacaoProtectedRoutes } from './auth/FormacaoProtectedRoutes';
 
 // Páginas do fórum
 import { ForumHomePage } from './pages/forum/ForumHomePage';

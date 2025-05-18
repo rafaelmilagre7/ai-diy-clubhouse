@@ -27,7 +27,7 @@ export const PostCard = ({
   isAuthorOrAdmin,
   onMarkSolution
 }: PostCardProps) => {
-  const { isAuthenticated } = useAuth();
+  const { profile } = useAuth();
   const { toggleReaction } = useForumActions();
   const [showReplyForm, setShowReplyForm] = useState(false);
 
@@ -43,7 +43,7 @@ export const PostCard = ({
   };
 
   const handleReaction = () => {
-    if (!isAuthenticated) return;
+    if (!profile?.id) return;
     
     toggleReaction.mutate({
       postId: post.id,
@@ -100,7 +100,7 @@ export const PostCard = ({
               size="sm" 
               className="flex items-center text-muted-foreground"
               onClick={handleReaction}
-              disabled={!isAuthenticated}
+              disabled={!profile?.id}
             >
               <ThumbsUp 
                 className={`mr-1 h-4 w-4 ${post.reactions?.user_reacted ? 'fill-current text-primary' : ''}`} 
@@ -113,7 +113,7 @@ export const PostCard = ({
               size="sm" 
               className="flex items-center text-muted-foreground"
               onClick={() => setShowReplyForm(!showReplyForm)}
-              disabled={!isAuthenticated}
+              disabled={!profile?.id}
             >
               <MessageSquare className="mr-1 h-4 w-4" />
               Responder
@@ -187,7 +187,7 @@ export const PostCard = ({
                         reactionType: 'like',
                         active: !reply.reactions?.user_reacted
                       })}
-                      disabled={!isAuthenticated}
+                      disabled={!profile?.id}
                     >
                       <ThumbsUp 
                         className={`mr-1 h-3 w-3 ${reply.reactions?.user_reacted ? 'fill-current text-primary' : ''}`} 

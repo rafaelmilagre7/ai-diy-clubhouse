@@ -4,14 +4,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ForumHeader } from '@/components/forum/ForumHeader';
 import { TopicForm } from '@/components/forum/TopicForm';
 import { useForumCategories } from '@/hooks/forum/useForumCategories';
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/auth';
 
 export const NewTopicPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const { data: categories = [] } = useForumCategories();
-  const { isAuthenticated } = useAuth();
+  const { profile } = useAuth();
   const navigate = useNavigate();
   
   // Encontrar a categoria pelo slug, se fornecido
@@ -19,7 +19,7 @@ export const NewTopicPage = () => {
   const categoryId = category?.id;
 
   // Redirecionar se o usuário não estiver autenticado
-  if (!isAuthenticated) {
+  if (!profile?.id) {
     return (
       <div className="container py-8">
         <Card>
