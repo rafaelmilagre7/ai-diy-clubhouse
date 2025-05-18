@@ -1,39 +1,53 @@
 
 import React from 'react';
-import { BrowserRouter } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { LoggingProvider } from './hooks/useLogging';
-import { AuthProvider } from './contexts/auth';
-import { AppRoutes } from './routes';
-import { Toaster } from './components/ui/sonner';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import './App.css';
+import Layout from './components/layout/Layout';
+import ProtectedRoutes from './auth/ProtectedRoutes';
+import AdminProtectedRoutes from './auth/AdminProtectedRoutes';
+import FormacaoProtectedRoutes from './auth/FormacaoProtectedRoutes';
 
-// Criar uma instância do QueryClient fora do componente para evitar recriação a cada render
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutos
-      retry: 1,
-    },
-  },
-});
+// Páginas do fórum
+import { ForumHomePage } from './pages/forum/ForumHomePage';
+import { CategoryPage } from './pages/forum/CategoryPage';
+import { TopicPage } from './pages/forum/TopicPage';
+import { NewTopicPage } from './pages/forum/NewTopicPage';
+import { AdminForumPage } from './pages/forum/AdminForumPage';
 
-const App = () => {
-  console.log("Renderizando App.tsx");
-  
+function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <LoggingProvider>
-          <AuthProvider>
-            <AppRoutes />
-            <Toaster position="top-right" richColors closeButton />
-            <ReactQueryDevtools initialIsOpen={false} />
-          </AuthProvider>
-        </LoggingProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+    <BrowserRouter>
+      <Routes>
+        {/* Rotas protegidas - Membros */}
+        <Route element={<ProtectedRoutes />}>
+          <Route path="/" element={<Layout />}>
+            {/* Rotas existentes... */}
+            
+            {/* Rotas do fórum */}
+            <Route path="/forum" element={<ForumHomePage />} />
+            <Route path="/forum/categoria/:slug" element={<CategoryPage />} />
+            <Route path="/forum/topico/:id" element={<TopicPage />} />
+            <Route path="/forum/novo" element={<NewTopicPage />} />
+            <Route path="/forum/categoria/:slug/novo" element={<NewTopicPage />} />
+            
+            {/* Outras rotas existentes... */}
+          </Route>
+        </Route>
+        
+        {/* Rotas protegidas - Admin */}
+        <Route element={<AdminProtectedRoutes />}>
+          <Route path="/admin" element={<Layout />}>
+            {/* Rotas admin do fórum */}
+            <Route path="/admin/forum" element={<AdminForumPage />} />
+            
+            {/* Outras rotas admin existentes... */}
+          </Route>
+        </Route>
+        
+        {/* Outras rotas existentes... */}
+      </Routes>
+    </BrowserRouter>
   );
-};
+}
 
 export default App;
