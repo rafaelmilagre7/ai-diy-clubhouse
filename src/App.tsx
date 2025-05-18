@@ -19,29 +19,33 @@ function App() {
     <BrowserRouter>
       <Routes>
         {/* Rotas protegidas - Membros */}
-        <Route element={<ProtectedRoutes />}>
-          <Route path="/" element={<Layout />}>
-            {/* Rotas existentes... */}
-            
-            {/* Rotas do fórum */}
-            <Route path="/forum" element={<ForumHomePage />} />
-            <Route path="/forum/categoria/:slug" element={<CategoryPage />} />
-            <Route path="/forum/topico/:id" element={<TopicPage />} />
-            <Route path="/forum/novo" element={<NewTopicPage />} />
-            <Route path="/forum/categoria/:slug/novo" element={<NewTopicPage />} />
-            
-            {/* Outras rotas existentes... */}
-          </Route>
+        <Route element={
+          <ProtectedRoutes>
+            <Layout />
+          </ProtectedRoutes>
+        }>
+          {/* Rotas existentes... */}
+          
+          {/* Rotas do fórum */}
+          <Route path="/forum" element={<ForumHomePage />} />
+          <Route path="/forum/categoria/:slug" element={<CategoryPage />} />
+          <Route path="/forum/topico/:id" element={<TopicPage />} />
+          <Route path="/forum/novo" element={<NewTopicPage />} />
+          <Route path="/forum/categoria/:slug/novo" element={<NewTopicPage />} />
+          
+          {/* Outras rotas existentes... */}
         </Route>
         
         {/* Rotas protegidas - Admin */}
-        <Route element={<AdminProtectedRoutes />}>
-          <Route path="/admin" element={<Layout />}>
-            {/* Rotas admin do fórum */}
-            <Route path="/admin/forum" element={<AdminForumPage />} />
-            
-            {/* Outras rotas admin existentes... */}
-          </Route>
+        <Route element={
+          <AdminProtectedRoutes>
+            <Layout />
+          </AdminProtectedRoutes>
+        }>
+          {/* Rotas admin do fórum */}
+          <Route path="/admin/forum" element={<AdminForumPage />} />
+          
+          {/* Outras rotas admin existentes... */}
         </Route>
         
         {/* Outras rotas existentes... */}
