@@ -1,49 +1,72 @@
 
 import React from "react";
-import { Bold, Italic, List, ListOrdered, Link, Code, Quote, Image, ChevronsUp, ChevronsDown } from "lucide-react";
+import { Bold, Italic, List, ListOrdered, Link, Code, Quote, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEditorState } from "@/hooks/useEditorState";
 import { useEditorCommands } from "@/hooks/useEditorCommands";
 import { useImageUpload } from "@/hooks/useImageUpload";
 
-interface TopicEditorProps {
-  content: string;
-  onChange: (content: string) => void;
+interface ContentEditorProps {
+  content?: string;
+  onChange?: (content: string) => void;
   placeholder?: string;
+  minHeight?: string;
+  maxHeight?: string;
+  className?: string;
+  toolbarClassName?: string;
+  editorClassName?: string;
 }
 
-export function TopicEditor({ content, onChange, placeholder = "Conteúdo..." }: TopicEditorProps) {
-  const { isEmpty, editorRef, updateContent } = useEditorState({
-    initialContent: content,
-    onChange,
-    placeholder
-  });
+export function ContentEditor({
+  content = '',
+  onChange,
+  placeholder = 'Escreva aqui o conteúdo...',
+  minHeight = '200px',
+  maxHeight = '500px',
+  className = '',
+  toolbarClassName = '',
+  editorClassName = ''
+}: ContentEditorProps) {
+  const {
+    isEmpty,
+    editorRef,
+    updateContent,
+    getContent
+  } = useEditorState({ initialContent: content, onChange, placeholder });
 
-  const { execCommand } = useEditorCommands({ 
-    getContent: () => editorRef.current?.innerHTML || '', 
+  const { 
+    formatBold, 
+    formatItalic, 
+    formatUnorderedList, 
+    formatOrderedList, 
+    formatLink, 
+    formatCodeBlock, 
+    formatQuote,
+    insertHTML
+  } = useEditorCommands({ 
+    getContent, 
     updateContent 
   });
 
-  const { 
-    isUploading, 
-    fileInputRef, 
-    triggerFileInput, 
-    handleFileChange, 
-    handleImageUpload 
+  const {
+    isUploading,
+    fileInputRef,
+    triggerFileInput,
+    handleFileChange
   } = useImageUpload({
     onSuccess: (imageUrl) => {
-      execCommand('insertHTML', `<img src="${imageUrl}" alt="Uploaded image" class="max-w-full h-auto my-2 rounded" />`);
+      insertHTML(`<img src="${imageUrl}" alt="Imagem enviada" class="max-w-full h-auto my-2 rounded" />`);
     }
   });
 
   return (
-    <div className="border-0">
-      <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-muted/20">
+    <div className={`border-0 ${className}`}>
+      <div className={`flex flex-wrap items-center gap-1 p-2 border-b bg-muted/20 ${toolbarClassName}`}>
         <Button
           variant="ghost"
           size="sm"
           className="h-8 w-8 p-0"
-          onClick={() => execCommand('bold')}
+          onClick={formatBold}
           title="Negrito"
         >
           <Bold className="h-4 w-4" />
@@ -52,7 +75,7 @@ export function TopicEditor({ content, onChange, placeholder = "Conteúdo..." }:
           variant="ghost"
           size="sm"
           className="h-8 w-8 p-0"
-          onClick={() => execCommand('italic')}
+          onClick={formatItalic}
           title="Itálico"
         >
           <Italic className="h-4 w-4" />
@@ -61,7 +84,7 @@ export function TopicEditor({ content, onChange, placeholder = "Conteúdo..." }:
           variant="ghost"
           size="sm" 
           className="h-8 w-8 p-0"
-          onClick={() => execCommand('insertUnorderedList')}
+          onClick={formatUnorderedList}
           title="Lista com marcadores"
         >
           <List className="h-4 w-4" />
@@ -70,7 +93,7 @@ export function TopicEditor({ content, onChange, placeholder = "Conteúdo..." }:
           variant="ghost"
           size="sm"
           className="h-8 w-8 p-0"
-          onClick={() => execCommand('insertOrderedList')}
+          onClick={formatOrderedList}
           title="Lista numerada"
         >
           <ListOrdered className="h-4 w-4" />
@@ -79,12 +102,7 @@ export function TopicEditor({ content, onChange, placeholder = "Conteúdo..." }:
           variant="ghost"
           size="sm"
           className="h-8 w-8 p-0"
-          onClick={() => {
-            const url = prompt('Digite a URL do link:');
-            if (url) {
-              execCommand('createLink', url);
-            }
-          }}
+          onClick={formatLink}
           title="Inserir link"
         >
           <Link className="h-4 w-4" />
@@ -93,7 +111,7 @@ export function TopicEditor({ content, onChange, placeholder = "Conteúdo..." }:
           variant="ghost"
           size="sm"
           className="h-8 w-8 p-0"
-          onClick={() => execCommand('formatBlock', '<pre>')}
+          onClick={formatCodeBlock}
           title="Bloco de código"
         >
           <Code className="h-4 w-4" />
@@ -102,7 +120,7 @@ export function TopicEditor({ content, onChange, placeholder = "Conteúdo..." }:
           variant="ghost"
           size="sm"
           className="h-8 w-8 p-0"
-          onClick={() => execCommand('formatBlock', '<blockquote>')}
+          onClick={formatQuote}
           title="Citação"
         >
           <Quote className="h-4 w-4" />
@@ -113,6 +131,7 @@ export function TopicEditor({ content, onChange, placeholder = "Conteúdo..." }:
           className="h-8 w-8 p-0"
           onClick={triggerFileInput}
           title="Adicionar imagem"
+          disabled={isUploading}
         >
           <Image className="h-4 w-4" />
           <input
@@ -125,11 +144,12 @@ export function TopicEditor({ content, onChange, placeholder = "Conteúdo..." }:
         </Button>
       </div>
       
-      <div className="relative min-h-[200px] max-h-[500px]">
+      <div className="relative" style={{ minHeight, maxHeight }}>
         <div
           ref={editorRef}
           contentEditable
-          className="min-h-[200px] max-h-[500px] overflow-y-auto p-3 focus:outline-none"
+          className={`overflow-y-auto p-3 focus:outline-none ${editorClassName}`}
+          style={{ minHeight, maxHeight }}
           onInput={updateContent}
           dangerouslySetInnerHTML={{ __html: content }}
           data-placeholder={placeholder}
