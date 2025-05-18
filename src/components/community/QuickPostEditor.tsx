@@ -164,7 +164,8 @@ export const QuickPostEditor = () => {
       setIsExpanded(false);
       
       // Invalidar a query para atualizar a lista de tópicos
-      queryClient.invalidateQueries({ queryKey: ['recentForumTopics'] });
+      // Alterado para usar a mesmo queryKey do componente CommunityHome
+      queryClient.invalidateQueries({ queryKey: ['communityTopics'] });
       
       toast.success("Tópico criado com sucesso!");
       

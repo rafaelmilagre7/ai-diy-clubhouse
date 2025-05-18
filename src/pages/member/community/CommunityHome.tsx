@@ -37,7 +37,7 @@ const CommunityHome = () => {
     }
   });
 
-  // Buscar tópicos
+  // Buscar tópicos - Ajustado para usar a queryKey correta e garantir que tópicos apareçam
   const { data: topics, isLoading: topicsLoading } = useQuery({
     queryKey: ['communityTopics', selectedFilter, searchQuery, activeTab],
     queryFn: async () => {
@@ -50,7 +50,7 @@ const CommunityHome = () => {
         `)
         .order('is_pinned', { ascending: false });
         
-      // Aplicar filtros de categoria
+      // Aplicar filtros de categoria apenas se não for "todos"
       if (activeTab !== "todos") {
         const category = categories?.find(c => c.slug === activeTab);
         if (category) {
@@ -86,6 +86,7 @@ const CommunityHome = () => {
         throw error;
       }
       
+      console.log("Tópicos encontrados:", data?.length || 0);
       return data;
     },
     refetchOnWindowFocus: false,
