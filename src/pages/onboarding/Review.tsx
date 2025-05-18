@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
@@ -91,6 +90,8 @@ const Review: React.FC = () => {
     try {
       setIsSubmitting(true);
       await completeOnboarding();
+      // Após completar o onboarding, navegue para a página de sucesso
+      navigate('/onboarding/completed');
     } catch (error) {
       console.error("[Review] Erro ao finalizar onboarding:", error);
       toast.error("Erro ao finalizar o onboarding. Por favor, tente novamente.");
