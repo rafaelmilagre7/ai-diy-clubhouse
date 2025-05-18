@@ -13,6 +13,7 @@ import { TopicCard } from "@/components/community/TopicCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Topic } from "@/types/forumTypes";
 
 type TopicFilterType = "recentes" | "populares" | "sem-respostas" | "resolvidos";
 
@@ -37,19 +38,31 @@ const CommunityHome = () => {
     }
   });
 
-  // Buscar tópicos - Ajustado para usar a queryKey correta e garantir que tópicos apareçam
+  // Buscar tópicos - Corrigido para usar JOIN explícito em vez de sintaxe de relacionamento
   const { data: topics, isLoading: topicsLoading } = useQuery({
     queryKey: ['communityTopics', selectedFilter, searchQuery, activeTab],
     queryFn: async () => {
+      console.log("Buscando tópicos com filtros:", { selectedFilter, searchQuery, activeTab });
+      
+      // Construir query base para tópicos
       let query = supabase
         .from('forum_topics')
         .select(`
-          *,
-          profiles:user_id(*),
-          category:category_id(id, name, slug)
+          id, 
+          title, 
+          content, 
+          created_at, 
+          updated_at, 
+          view_count, 
+          reply_count, 
+          is_locked, 
+          is_pinned, 
+          user_id, 
+          category_id, 
+          last_activity_at
         `)
         .order('is_pinned', { ascending: false });
-        
+
       // Aplicar filtros de categoria apenas se não for "todos"
       if (activeTab !== "todos") {
         const category = categories?.find(c => c.slug === activeTab);
@@ -79,15 +92,68 @@ const CommunityHome = () => {
       // Limitar resultados
       query = query.limit(20);
       
-      const { data, error } = await query;
+      // Executar a consulta principal
+      const { data: topicsData, error: topicsError } = await query;
       
-      if (error) {
-        console.error("Erro ao buscar tópicos:", error);
-        throw error;
+      if (topicsError) {
+        console.error("Erro ao buscar tópicos:", topicsError);
+        throw topicsError;
       }
       
-      console.log("Tópicos encontrados:", data?.length || 0);
-      return data;
+      console.log("Tópicos brutos encontrados:", topicsData?.length || 0);
+      
+      // Se não temos tópicos, retornar array vazio
+      if (!topicsData || topicsData.length === 0) {
+        return [];
+      }
+      
+      // Buscar dados dos usuários para esses tópicos
+      const userIds = [...new Set(topicsData.map(topic => topic.user_id))];
+      const { data: usersData, error: usersError } = await supabase
+        .from('profiles')
+        .select('id, name, avatar_url')
+        .in('id', userIds);
+        
+      if (usersError) {
+        console.error("Erro ao buscar perfis de usuários:", usersError);
+        throw usersError;
+      }
+      
+      // Criar um mapa de usuários por ID para fácil acesso
+      const userMap = (usersData || []).reduce((acc, user) => {
+        acc[user.id] = user;
+        return acc;
+      }, {} as Record<string, any>);
+      
+      // Buscar dados das categorias para esses tópicos
+      const categoryIds = [...new Set(topicsData.map(topic => topic.category_id))];
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from('forum_categories')
+        .select('id, name, slug')
+        .in('id', categoryIds);
+        
+      if (categoriesError) {
+        console.error("Erro ao buscar categorias:", categoriesError);
+        throw categoriesError;
+      }
+      
+      // Criar um mapa de categorias por ID para fácil acesso
+      const categoryMap = (categoriesData || []).reduce((acc, category) => {
+        acc[category.id] = category;
+        return acc;
+      }, {} as Record<string, any>);
+      
+      // Montar os tópicos com os dados relacionados
+      const enrichedTopics = topicsData.map(topic => {
+        return {
+          ...topic,
+          profiles: userMap[topic.user_id] || null,
+          category: categoryMap[topic.category_id] || null
+        };
+      });
+      
+      console.log("Tópicos enriquecidos:", enrichedTopics.length);
+      return enrichedTopics as Topic[];
     },
     refetchOnWindowFocus: false,
   });
