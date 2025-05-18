@@ -7,13 +7,22 @@ interface EmailInputProps {
   onChange: (value: string) => void;
   disabled?: boolean;
   readOnly?: boolean;
+  className?: string;
+  id?: string;
 }
 
-export const EmailInput = ({ value, onChange, disabled, readOnly }: EmailInputProps) => (
-  <div>
-    <Label htmlFor="email">E-mail</Label>
+export const EmailInput = ({ 
+  value, 
+  onChange, 
+  disabled, 
+  readOnly,
+  className,
+  id = "email" 
+}: EmailInputProps) => (
+  <div className={className}>
+    <Label htmlFor={id}>E-mail</Label>
     <Input
-      id="email"
+      id={id}
       type="email"
       value={value}
       disabled={disabled}

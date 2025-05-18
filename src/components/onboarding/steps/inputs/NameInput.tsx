@@ -7,13 +7,22 @@ interface NameInputProps {
   onChange: (value: string) => void;
   disabled?: boolean;
   readOnly?: boolean;
+  className?: string;
+  id?: string;
 }
 
-export const NameInput = ({ value, onChange, disabled, readOnly }: NameInputProps) => (
-  <div>
-    <Label htmlFor="name">Nome Completo</Label>
+export const NameInput = ({ 
+  value, 
+  onChange, 
+  disabled, 
+  readOnly,
+  className,
+  id = "name"
+}: NameInputProps) => (
+  <div className={className}>
+    <Label htmlFor={id}>Nome Completo</Label>
     <Input
-      id="name"
+      id={id}
       type="text"
       value={value}
       disabled={disabled}
