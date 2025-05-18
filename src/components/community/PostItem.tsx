@@ -9,6 +9,8 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface Profile {
   name: string | null;
@@ -132,7 +134,7 @@ export const PostItem = ({ post, isTopicAuthor, isTopicStarter, canMarkSolution,
   };
 
   return (
-    <div className={`p-4 border rounded-lg ${post.is_solution ? 'border-green-500 bg-green-50/5' : ''}`}>
+    <Card className={`p-4 ${post.is_solution ? 'border-green-500 bg-green-50/5' : ''}`}>
       <div className="flex justify-between mb-4">
         <div className="flex items-start gap-3">
           <Avatar>
@@ -143,15 +145,15 @@ export const PostItem = ({ post, isTopicAuthor, isTopicStarter, canMarkSolution,
             <div className="flex items-center gap-2">
               <p className="font-medium">{post.profiles?.name || "Usuário"}</p>
               {isTopicAuthor && (
-                <span className="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full">
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs px-2 py-0.5 rounded-full">
                   Autor
-                </span>
+                </Badge>
               )}
               {post.is_solution && (
-                <span className="bg-green-500/10 text-green-500 text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
+                <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20 text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
                   <CheckCircle2 className="h-3 w-3" />
                   Solução
-                </span>
+                </Badge>
               )}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -191,6 +193,6 @@ export const PostItem = ({ post, isTopicAuthor, isTopicStarter, canMarkSolution,
           </Button>
         </div>
       )}
-    </div>
+    </Card>
   );
 };

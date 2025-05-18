@@ -7,9 +7,14 @@ import { PostItem } from "@/components/community/PostItem";
 import { ReplyForm } from "@/components/community/ReplyForm";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, MessageSquare } from "lucide-react";
+import { ChevronLeft, MessageSquare, ThumbsUp, Eye } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/auth";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface ForumTopic {
   id: string;
@@ -19,6 +24,9 @@ interface ForumTopic {
   user_id: string;
   category_id: string;
   is_locked: boolean;
+  is_pinned: boolean;
+  view_count: number;
+  reply_count: number;
   profiles: {
     name: string | null;
     avatar_url: string | null;
@@ -45,6 +53,8 @@ interface ForumPost {
     user_id: string;
     reaction_type: string;
   }[];
+  reaction_count?: number;
+  user_has_reacted?: boolean;
 }
 
 const TopicView = () => {
@@ -116,21 +126,31 @@ const TopicView = () => {
   const isLoading = topicLoading || postsLoading;
   const error = topicError || postsError;
 
+  const getInitials = (name: string | null) => {
+    if (!name) return "??";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   if (isLoading) {
     return (
       <div className="container px-4 py-6 mx-auto max-w-7xl">
         <div className="animate-pulse">
           <div className="h-8 bg-muted rounded-md w-1/4 mb-4"></div>
           <div className="h-4 bg-muted rounded-md w-1/2 mb-8"></div>
-          <div className="bg-card shadow-sm border-none p-6 rounded-lg mb-6">
+          <Card className="bg-card shadow-sm border-none p-6 rounded-lg mb-6">
             <div className="h-6 bg-muted rounded-md w-1/3 mb-6"></div>
             <div className="h-4 bg-muted rounded-md w-full mb-3"></div>
             <div className="h-4 bg-muted rounded-md w-full mb-3"></div>
             <div className="h-4 bg-muted rounded-md w-3/4"></div>
-          </div>
+          </Card>
           <div className="space-y-4">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="p-6 border rounded-md">
+              <Card key={i} className="p-6 border rounded-md">
                 <div className="flex justify-between mb-4">
                   <div className="flex gap-3">
                     <div className="h-10 w-10 bg-muted rounded-full"></div>
@@ -143,7 +163,7 @@ const TopicView = () => {
                 <div className="h-4 bg-muted rounded-md w-full mb-3"></div>
                 <div className="h-4 bg-muted rounded-md w-full mb-3"></div>
                 <div className="h-4 bg-muted rounded-md w-3/4"></div>
-              </div>
+              </Card>
             ))}
           </div>
         </div>
@@ -183,63 +203,87 @@ const TopicView = () => {
         </Button>
       </div>
       
-      <div className="flex items-center gap-2 mb-1">
-        <MessageSquare className="h-6 w-6 text-primary" />
-        <h1 className="text-3xl font-bold">{topic.title}</h1>
-      </div>
-      
-      <ForumLayout>
-        {/* Post inicial do tópico */}
-        <PostItem
-          post={{
-            id: topic.id,
-            content: topic.content,
-            created_at: topic.created_at,
-            user_id: topic.user_id,
-            profiles: topic.profiles
-          }}
-          isTopicAuthor={true}
-          isTopicStarter={true}
-          topicId={topic.id}
-        />
-        
-        {/* Respostas/comentários */}
-        {posts && posts.length > 0 ? (
-          <div className="mt-6 space-y-4">
-            <h2 className="text-xl font-semibold">Respostas</h2>
-            {posts.map(post => (
-              <PostItem
-                key={post.id}
-                post={post}
-                isTopicAuthor={post.user_id === topic.user_id}
-                canMarkSolution={isTopicAuthor}
-                topicId={topic.id}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="mt-6 text-center py-6">
-            <p className="text-muted-foreground">Seja o primeiro a responder este tópico.</p>
-          </div>
-        )}
-        
-        {/* Formulário de resposta */}
-        {!topic.is_locked && (
-          <>
-            <Separator className="my-6" />
+      <Card className="p-6 mb-6">
+        {/* Cabeçalho do Tópico */}
+        <div className="flex justify-between mb-4">
+          <div className="flex gap-3">
+            <Avatar>
+              <AvatarImage src={topic.profiles?.avatar_url || undefined} />
+              <AvatarFallback>{getInitials(topic.profiles?.name)}</AvatarFallback>
+            </Avatar>
             <div>
-              <h3 className="text-lg font-medium mb-4">Sua resposta</h3>
-              <ReplyForm topicId={topic.id} />
+              <div className="flex items-center gap-2">
+                <p className="font-medium">{topic.profiles?.name || "Usuário"}</p>
+                <span className="text-muted-foreground text-xs">•</span>
+                <p className="text-xs text-muted-foreground">
+                  {format(new Date(topic.created_at), "d 'de' MMMM 'às' HH:mm", {
+                    locale: ptBR,
+                  })}
+                </p>
+              </div>
             </div>
-          </>
-        )}
-        
-        {topic.is_locked && (
-          <div className="mt-6 p-4 bg-muted rounded-md text-center">
-            <p className="text-muted-foreground">Este tópico está bloqueado. Não é possível adicionar novas respostas.</p>
           </div>
-        )}
-      </ForumLayout>
+
+          <div className="flex gap-2">
+            {topic.is_pinned && (
+              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                Fixo
+              </Badge>
+            )}
+            {topic.is_locked && (
+              <Badge variant="outline" className="bg-muted text-muted-foreground border-muted/50">
+                Trancado
+              </Badge>
+            )}
+          </div>
+        </div>
+        
+        <h1 className="text-2xl font-bold mb-4">{topic.title}</h1>
+        <div className="whitespace-pre-wrap mb-6">{topic.content}</div>
+        
+        <div className="flex items-center gap-4 text-muted-foreground text-sm">
+          <div className="flex items-center gap-1">
+            <MessageSquare className="h-4 w-4" />
+            <span>{topic.reply_count} respostas</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Eye className="h-4 w-4" />
+            <span>{topic.view_count} visualizações</span>
+          </div>
+        </div>
+      </Card>
+      
+      {/* Respostas/comentários */}
+      {posts && posts.length > 0 ? (
+        <div className="space-y-4 mb-6">
+          <h2 className="text-xl font-semibold">Respostas</h2>
+          {posts.map(post => (
+            <PostItem
+              key={post.id}
+              post={post}
+              isTopicAuthor={post.user_id === topic.user_id}
+              canMarkSolution={isTopicAuthor}
+              topicId={topic.id}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-6 mb-6">
+          <p className="text-muted-foreground">Seja o primeiro a responder este tópico.</p>
+        </div>
+      )}
+      
+      {/* Formulário de resposta */}
+      {!topic.is_locked ? (
+        <div className="mt-6">
+          <h3 className="text-lg font-medium mb-4">Sua resposta</h3>
+          <ReplyForm topicId={topic.id} />
+        </div>
+      ) : (
+        <div className="mt-6 p-4 bg-muted rounded-md text-center">
+          <p className="text-muted-foreground">Este tópico está bloqueado. Não é possível adicionar novas respostas.</p>
+        </div>
+      )}
     </div>
   );
 };
