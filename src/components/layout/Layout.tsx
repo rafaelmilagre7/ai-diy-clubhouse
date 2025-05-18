@@ -1,14 +1,14 @@
 
 import LayoutProvider from "./LayoutProvider";
-import { ReactNode } from "react";
+import { Outlet } from "react-router-dom";
 
 /**
  * Layout is the main entry point for the member area layout
  * It delegates authentication checks and layout rendering to LayoutProvider
  */
-const Layout = ({ children }: { children: ReactNode }) => {
+const Layout = () => {
   console.log("Layout principal renderizando");
-  return <LayoutProvider>{children}</LayoutProvider>;
+  return <LayoutProvider><Outlet /></LayoutProvider>;
 };
 
 export default Layout;
