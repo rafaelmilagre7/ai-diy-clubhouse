@@ -42,22 +42,22 @@ export const PersonalInfoInputs = ({
   
   return (
     <div className="space-y-8">
-      <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4 space-y-6">
-        <h3 className="text-lg font-semibold text-[#0ABAB5]">Informações Básicas</h3>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <NameInput
-            value={userName}
-            onChange={v => onChange("name", v)}
-            disabled={true}
-            readOnly={true}
-          />
-          <EmailInput
-            value={userEmail}
-            onChange={v => onChange("email", v)}
-            disabled={true}
-            readOnly={true}
-          />
-        </div>
+      {/* Campos de nome e email ocultos, mas ainda presentes no DOM para manter a funcionalidade */}
+      <div className="hidden">
+        <NameInput
+          value={userName}
+          onChange={v => onChange("name", v)}
+          disabled={true}
+          readOnly={true}
+          hidden={true}
+        />
+        <EmailInput
+          value={userEmail}
+          onChange={v => onChange("email", v)}
+          disabled={true}
+          readOnly={true}
+          hidden={true}
+        />
       </div>
       
       <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4 space-y-6">

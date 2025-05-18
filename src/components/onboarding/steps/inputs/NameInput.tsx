@@ -9,6 +9,7 @@ interface NameInputProps {
   readOnly?: boolean;
   className?: string;
   id?: string;
+  hidden?: boolean; // Adicionando prop para ocultar o campo
 }
 
 export const NameInput = ({ 
@@ -17,9 +18,10 @@ export const NameInput = ({
   disabled, 
   readOnly,
   className,
-  id = "name"
+  id = "name",
+  hidden = false // Valor padrão é false
 }: NameInputProps) => (
-  <div className={className}>
+  <div className={`${className} ${hidden ? 'hidden' : ''}`}>
     <Label htmlFor={id}>Nome Completo</Label>
     <Input
       id={id}

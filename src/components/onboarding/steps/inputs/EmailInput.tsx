@@ -9,6 +9,7 @@ interface EmailInputProps {
   readOnly?: boolean;
   className?: string;
   id?: string;
+  hidden?: boolean; // Adicionando prop para ocultar o campo
 }
 
 export const EmailInput = ({ 
@@ -17,9 +18,10 @@ export const EmailInput = ({
   disabled, 
   readOnly,
   className,
-  id = "email" 
+  id = "email",
+  hidden = false // Valor padrão é false
 }: EmailInputProps) => (
-  <div className={className}>
+  <div className={`${className} ${hidden ? 'hidden' : ''}`}>
     <Label htmlFor={id}>E-mail</Label>
     <Input
       id={id}
