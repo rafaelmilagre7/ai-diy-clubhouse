@@ -3,8 +3,12 @@ import { ForumLayout } from "@/components/forum/ForumLayout";
 import { CategoryList } from "@/components/forum/CategoryList";
 import { BarChart, MessageSquare, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { useForumStats } from "@/hooks/useForumStats";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const ForumHome = () => {
+  const { topicCount, postCount, activeUserCount, isLoading } = useForumStats();
+
   return (
     <div className="container px-4 py-6 mx-auto max-w-7xl">
       <div className="flex flex-col gap-4">
@@ -24,7 +28,11 @@ const ForumHome = () => {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Tópicos</p>
-              <p className="text-2xl font-bold">127</p>
+              {isLoading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <p className="text-2xl font-bold">{topicCount}</p>
+              )}
             </div>
           </Card>
           
@@ -34,7 +42,11 @@ const ForumHome = () => {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Mensagens</p>
-              <p className="text-2xl font-bold">843</p>
+              {isLoading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <p className="text-2xl font-bold">{postCount}</p>
+              )}
             </div>
           </Card>
           
@@ -44,7 +56,11 @@ const ForumHome = () => {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Membros ativos</p>
-              <p className="text-2xl font-bold">56</p>
+              {isLoading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <p className="text-2xl font-bold">{activeUserCount}</p>
+              )}
             </div>
           </Card>
         </div>
