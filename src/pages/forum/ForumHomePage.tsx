@@ -24,7 +24,7 @@ export const ForumHomePage = () => {
         const topicDate = new Date(topic.last_activity_at);
         const latestDate = latest ? new Date(latest) : new Date(0);
         return topicDate > latestDate ? topic.last_activity_at : latest;
-      }, null as string | null);
+      }, null);
     }
     
     return {

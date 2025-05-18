@@ -1,82 +1,75 @@
 
-import React, { useState } from 'react';
-import { useAuth } from '@/contexts/auth';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import React from 'react';
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { useForumActions } from '@/hooks/forum/useForumActions';
-import { toast } from 'sonner';
+import { useForm } from 'react-hook-form';
+import { SendIcon } from 'lucide-react';
 
 interface PostFormProps {
   topicId: string;
   parentId?: string;
-  onPostCreated?: () => void;
+  onSuccess?: () => void;
+  placeholder?: string;
+  buttonText?: string;
 }
 
-export const PostForm = ({ topicId, parentId, onPostCreated }: PostFormProps) => {
-  const { profile } = useAuth();
+interface FormValues {
+  content: string;
+}
+
+export const PostForm = ({ 
+  topicId, 
+  parentId,
+  onSuccess,
+  placeholder = "Escreva seu comentário...",
+  buttonText = "Enviar"
+}: PostFormProps) => {
   const { createPost } = useForumActions();
-  const [content, setContent] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Se o usuário não estiver logado, não exibe o formulário
-  if (!profile?.id) {
-    return null;
-  }
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!content.trim()) {
-      toast.error('O conteúdo da resposta não pode estar vazio');
-      return;
-    }
-    
+  const { register, handleSubmit, reset, formState: { isSubmitting, errors } } = useForm<FormValues>();
+
+  const onSubmit = async (data: FormValues) => {
     try {
-      setIsSubmitting(true);
-      await createPost({
+      await createPost.mutateAsync({
+        content: data.content,
         topicId,
-        content,
         parentId
       });
       
-      // Limpar formulário e notificar sucesso
-      setContent('');
-      toast.success('Resposta publicada com sucesso');
-      
-      // Notificar componente pai
-      if (onPostCreated) {
-        onPostCreated();
+      reset();
+      if (onSuccess) {
+        onSuccess();
       }
     } catch (error) {
-      console.error('Erro ao criar post:', error);
-      toast.error('Não foi possível publicar sua resposta. Tente novamente.');
-    } finally {
-      setIsSubmitting(false);
+      console.error('Erro ao enviar resposta:', error);
     }
   };
   
   return (
-    <Card>
-      <CardContent className="p-4">
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <Textarea
-              placeholder="Escreva sua resposta aqui..."
-              className="min-h-[150px]"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              disabled={isSubmitting}
-            />
-            
-            <div className="flex justify-end">
-              <Button type="submit" disabled={isSubmitting || !content.trim()}>
-                {isSubmitting ? 'Publicando...' : 'Publicar resposta'}
-              </Button>
-            </div>
-          </div>
-        </form>
-      </CardContent>
+    <Card className="border-0 shadow-none">
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <CardContent className="p-0">
+          <Textarea
+            {...register('content', { 
+              required: 'O conteúdo é obrigatório',
+              minLength: { value: 10, message: 'A resposta deve ter pelo menos 10 caracteres' }
+            })}
+            placeholder={placeholder}
+            className="min-h-[100px] resize-y"
+          />
+          {errors.content && (
+            <p className="text-sm text-red-500 mt-1">{errors.content.message}</p>
+          )}
+        </CardContent>
+        
+        <CardFooter className="flex justify-end p-0 pt-3">
+          <Button type="submit" disabled={isSubmitting}>
+            <SendIcon className="h-4 w-4 mr-2" />
+            {buttonText}
+          </Button>
+        </CardFooter>
+      </form>
     </Card>
   );
 };

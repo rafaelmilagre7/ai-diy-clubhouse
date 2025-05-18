@@ -1,4 +1,5 @@
 
+
 // Tipos simples que serão utilizados nas interfaces
 export type ForumCategory = {
   id: string;
@@ -39,13 +40,11 @@ export type ForumPost = {
   updated_at: string;
 };
 
-export type ReactionType = 'like' | 'helpful' | 'insightful' | 'celebrate';
-
 export type ForumReaction = {
   id: string;
   post_id: string;
   user_id: string;
-  reaction_type: ReactionType;
+  reaction_type: 'like' | 'helpful' | 'insightful' | 'celebrate';
   created_at: string;
 };
 
