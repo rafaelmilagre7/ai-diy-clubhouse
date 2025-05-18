@@ -17,6 +17,7 @@ export function TopicEditor({ content, onChange, placeholder = "Conteúdo..." }:
   const editorRef = React.useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [isEmpty, setIsEmpty] = React.useState(!content);
 
   const execCommand = (command: string, value?: string) => {
     document.execCommand(command, false, value);
@@ -25,7 +26,9 @@ export function TopicEditor({ content, onChange, placeholder = "Conteúdo..." }:
 
   const updateContent = () => {
     if (editorRef.current) {
-      onChange(editorRef.current.innerHTML);
+      const html = editorRef.current.innerHTML;
+      onChange(html);
+      setIsEmpty(html === "" || html === "<br>");
     }
   };
 
@@ -171,14 +174,21 @@ export function TopicEditor({ content, onChange, placeholder = "Conteúdo..." }:
         </Button>
       </div>
       
-      <div
-        ref={editorRef}
-        contentEditable
-        className="min-h-[200px] max-h-[500px] overflow-y-auto p-3 focus:outline-none"
-        onInput={updateContent}
-        dangerouslySetInnerHTML={{ __html: content }}
-        placeholder={placeholder}
-      />
+      <div className="relative min-h-[200px] max-h-[500px]">
+        <div
+          ref={editorRef}
+          contentEditable
+          className="min-h-[200px] max-h-[500px] overflow-y-auto p-3 focus:outline-none"
+          onInput={updateContent}
+          dangerouslySetInnerHTML={{ __html: content }}
+          data-placeholder={placeholder}
+        />
+        {isEmpty && (
+          <div className="absolute top-3 left-3 pointer-events-none text-muted-foreground">
+            {placeholder}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
