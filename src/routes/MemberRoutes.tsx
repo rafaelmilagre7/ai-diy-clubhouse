@@ -25,6 +25,12 @@ import LearningPage from '@/pages/member/learning/LearningPage';
 import CourseDetails from '@/pages/member/learning/CourseDetails';
 import LessonView from '@/pages/member/learning/LessonView';
 
+// Member Forum pages
+import ForumHome from '@/pages/member/forum/ForumHome';
+import CategoryView from '@/pages/member/forum/CategoryView';
+import TopicView from '@/pages/member/forum/TopicView';
+import NewTopic from '@/pages/member/forum/NewTopic';
+
 export const memberRoutes: RouteObject[] = [
   {
     path: "/",
@@ -114,4 +120,22 @@ export const memberRoutes: RouteObject[] = [
     path: "/suggestions/new",
     element: <ProtectedRoutes><MemberLayout><NewSuggestion /></MemberLayout></ProtectedRoutes>
   },
+  
+  // Fórum Routes
+  {
+    path: "/forum",
+    element: <ProtectedRoutes><MemberLayout><ForumHome /></MemberLayout></ProtectedRoutes>
+  },
+  {
+    path: "/forum/category/:slug",
+    element: <ProtectedRoutes><MemberLayout><CategoryView /></MemberLayout></ProtectedRoutes>
+  },
+  {
+    path: "/forum/topic/:id",
+    element: <ProtectedRoutes><MemberLayout><TopicView /></MemberLayout></ProtectedRoutes>
+  },
+  {
+    path: "/forum/new-topic/:categorySlug?",
+    element: <ProtectedRoutes><MemberLayout><NewTopic /></MemberLayout></ProtectedRoutes>
+  }
 ];

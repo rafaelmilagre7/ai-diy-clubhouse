@@ -14,7 +14,8 @@ import {
   Map,
   Calendar,
   GraduationCap,
-  Wrench
+  Wrench,
+  MessagesSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -67,6 +68,11 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
       title: "Sugestões",
       href: "/suggestions",
       icon: MessageSquare,
+    },
+    {
+      title: "Fórum",
+      href: "/forum",
+      icon: MessagesSquare,
     },
     {
       title: "Perfil",
