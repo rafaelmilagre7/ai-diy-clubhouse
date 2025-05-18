@@ -15,6 +15,11 @@ import { TopicPage } from './pages/forum/TopicPage';
 import { NewTopicPage } from './pages/forum/NewTopicPage';
 import { AdminForumPage } from './pages/forum/AdminForumPage';
 
+// Importar componentes para as rotas principais
+import Dashboard from './pages/member/Dashboard';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import FormacaoDashboard from './pages/formacao/FormacaoDashboard';
+
 function App() {
   return (
     <AuthProvider>
@@ -23,7 +28,9 @@ function App() {
           {/* Rotas protegidas - Membros */}
           <Route element={<ProtectedRoutes />}>
             <Route path="/" element={<Layout />}>
-              {/* Rotas existentes... */}
+              {/* Dashboard como página inicial */}
+              <Route index element={<Dashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               
               {/* Rotas do fórum */}
               <Route path="/forum" element={<ForumHomePage />} />
@@ -39,10 +46,23 @@ function App() {
           {/* Rotas protegidas - Admin */}
           <Route element={<AdminProtectedRoutes />}>
             <Route path="/admin" element={<Layout />}>
+              {/* Dashboard admin como página inicial */}
+              <Route index element={<AdminDashboard />} />
+              
               {/* Rotas admin do fórum */}
               <Route path="/admin/forum" element={<AdminForumPage />} />
               
               {/* Outras rotas admin existentes... */}
+            </Route>
+          </Route>
+          
+          {/* Rotas protegidas - Formação */}
+          <Route element={<FormacaoProtectedRoutes />}>
+            <Route path="/formacao" element={<Layout />}>
+              {/* Dashboard formação como página inicial */}
+              <Route index element={<FormacaoDashboard />} />
+              
+              {/* Outras rotas formação existentes... */}
             </Route>
           </Route>
           
