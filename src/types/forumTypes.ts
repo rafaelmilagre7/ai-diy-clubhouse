@@ -3,6 +3,7 @@ export interface Profile {
   id: string;
   name: string | null;
   avatar_url: string | null;
+  role?: string; // Adicionando propriedade role
 }
 
 export interface Post {
