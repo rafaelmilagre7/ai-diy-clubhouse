@@ -21,7 +21,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           {/* Rotas protegidas - Membros */}
-          <Route element={<ProtectedRoutes children={null} />}>
+          <Route element={<ProtectedRoutes />}>
             <Route path="/" element={<Layout />}>
               {/* Rotas existentes... */}
               
@@ -37,7 +37,7 @@ function App() {
           </Route>
           
           {/* Rotas protegidas - Admin */}
-          <Route element={<AdminProtectedRoutes children={null} />}>
+          <Route element={<AdminProtectedRoutes />}>
             <Route path="/admin" element={<Layout />}>
               {/* Rotas admin do fórum */}
               <Route path="/admin/forum" element={<AdminForumPage />} />

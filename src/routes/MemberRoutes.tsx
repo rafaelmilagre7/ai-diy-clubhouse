@@ -1,6 +1,6 @@
 
 import { RouteObject } from "react-router-dom";
-import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
+import ProtectedRouteWithChildren from '@/components/auth/ProtectedRouteWithChildren';
 import MemberLayout from '@/components/layout/MemberLayout';
 
 // Member pages
@@ -28,90 +28,90 @@ import LessonView from '@/pages/member/learning/LessonView';
 export const memberRoutes: RouteObject[] = [
   {
     path: "/",
-    element: <ProtectedRoutes><MemberLayout><Dashboard /></MemberLayout></ProtectedRoutes>
+    element: <ProtectedRouteWithChildren><MemberLayout><Dashboard /></MemberLayout></ProtectedRouteWithChildren>
   },
   {
     path: "/dashboard",
-    element: <ProtectedRoutes><MemberLayout><Dashboard /></MemberLayout></ProtectedRoutes>
+    element: <ProtectedRouteWithChildren><MemberLayout><Dashboard /></MemberLayout></ProtectedRouteWithChildren>
   },
   {
     path: "/implementation-trail",
-    element: <ProtectedRoutes><MemberLayout><ImplementationTrailPage /></MemberLayout></ProtectedRoutes>
+    element: <ProtectedRouteWithChildren><MemberLayout><ImplementationTrailPage /></MemberLayout></ProtectedRouteWithChildren>
   },
   {
     path: "/solutions",
-    element: <ProtectedRoutes><MemberLayout><Solutions /></MemberLayout></ProtectedRoutes>
+    element: <ProtectedRouteWithChildren><MemberLayout><Solutions /></MemberLayout></ProtectedRouteWithChildren>
   },
   {
     path: "/tools",
-    element: <ProtectedRoutes><MemberLayout><Tools /></MemberLayout></ProtectedRoutes>
+    element: <ProtectedRouteWithChildren><MemberLayout><Tools /></MemberLayout></ProtectedRouteWithChildren>
   },
   {
     path: "/tools/:id",
-    element: <ProtectedRoutes><MemberLayout><ToolDetails /></MemberLayout></ProtectedRoutes>
+    element: <ProtectedRouteWithChildren><MemberLayout><ToolDetails /></MemberLayout></ProtectedRouteWithChildren>
   },
   {
     path: "/profile",
-    element: <ProtectedRoutes><MemberLayout><Profile /></MemberLayout></ProtectedRoutes>
+    element: <ProtectedRouteWithChildren><MemberLayout><Profile /></MemberLayout></ProtectedRouteWithChildren>
   },
   {
     path: "/profile/edit",
-    element: <ProtectedRoutes><MemberLayout><EditProfile /></MemberLayout></ProtectedRoutes>
+    element: <ProtectedRouteWithChildren><MemberLayout><EditProfile /></MemberLayout></ProtectedRouteWithChildren>
   },
   {
     path: "/solution/:id",
-    element: <ProtectedRoutes><MemberLayout><SolutionDetails /></MemberLayout></ProtectedRoutes>
+    element: <ProtectedRouteWithChildren><MemberLayout><SolutionDetails /></MemberLayout></ProtectedRouteWithChildren>
   },
   {
     path: "/implement/:id/:moduleIdx",
-    element: <ProtectedRoutes><MemberLayout><SolutionImplementation /></MemberLayout></ProtectedRoutes>
+    element: <ProtectedRouteWithChildren><MemberLayout><SolutionImplementation /></MemberLayout></ProtectedRouteWithChildren>
   },
   {
     path: "/implementation/:id",
-    element: <ProtectedRoutes><MemberLayout><SolutionImplementation /></MemberLayout></ProtectedRoutes>
+    element: <ProtectedRouteWithChildren><MemberLayout><SolutionImplementation /></MemberLayout></ProtectedRouteWithChildren>
   },
   {
     path: "/implementation/:id/:moduleIdx",
-    element: <ProtectedRoutes><MemberLayout><SolutionImplementation /></MemberLayout></ProtectedRoutes>
+    element: <ProtectedRouteWithChildren><MemberLayout><SolutionImplementation /></MemberLayout></ProtectedRouteWithChildren>
   },
   {
     path: "/implementation/completed/:id",
-    element: <ProtectedRoutes><MemberLayout><ImplementationCompleted /></MemberLayout></ProtectedRoutes>
+    element: <ProtectedRouteWithChildren><MemberLayout><ImplementationCompleted /></MemberLayout></ProtectedRouteWithChildren>
   },
   {
     path: "/benefits",
-    element: <ProtectedRoutes><MemberLayout><Benefits /></MemberLayout></ProtectedRoutes>
+    element: <ProtectedRouteWithChildren><MemberLayout><Benefits /></MemberLayout></ProtectedRouteWithChildren>
   },
   {
     path: "/events",
-    element: <ProtectedRoutes><MemberLayout><Events /></MemberLayout></ProtectedRoutes>
+    element: <ProtectedRouteWithChildren><MemberLayout><Events /></MemberLayout></ProtectedRouteWithChildren>
   },
   
   // Learning/LMS Routes para membro
   {
     path: "/learning",
-    element: <ProtectedRoutes><MemberLayout><LearningPage /></MemberLayout></ProtectedRoutes>
+    element: <ProtectedRouteWithChildren><MemberLayout><LearningPage /></MemberLayout></ProtectedRouteWithChildren>
   },
   {
     path: "/learning/course/:id",
-    element: <ProtectedRoutes><MemberLayout><CourseDetails /></MemberLayout></ProtectedRoutes>
+    element: <ProtectedRouteWithChildren><MemberLayout><CourseDetails /></MemberLayout></ProtectedRouteWithChildren>
   },
   {
     path: "/learning/course/:courseId/lesson/:lessonId",
-    element: <ProtectedRoutes><MemberLayout><LessonView /></MemberLayout></ProtectedRoutes>
+    element: <ProtectedRouteWithChildren><MemberLayout><LessonView /></MemberLayout></ProtectedRouteWithChildren>
   },
   
   // Sugestões Routes
   {
     path: "/suggestions",
-    element: <ProtectedRoutes><MemberLayout><Suggestions /></MemberLayout></ProtectedRoutes>
+    element: <ProtectedRouteWithChildren><MemberLayout><Suggestions /></MemberLayout></ProtectedRouteWithChildren>
   },
   {
     path: "/suggestions/:id",
-    element: <ProtectedRoutes><MemberLayout><SuggestionDetails /></MemberLayout></ProtectedRoutes>
+    element: <ProtectedRouteWithChildren><MemberLayout><SuggestionDetails /></MemberLayout></ProtectedRouteWithChildren>
   },
   {
     path: "/suggestions/new",
-    element: <ProtectedRoutes><MemberLayout><NewSuggestion /></MemberLayout></ProtectedRoutes>
+    element: <ProtectedRouteWithChildren><MemberLayout><NewSuggestion /></MemberLayout></ProtectedRouteWithChildren>
   },
 ];

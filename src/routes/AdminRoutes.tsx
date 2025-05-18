@@ -1,6 +1,6 @@
 
 import { RouteObject } from "react-router-dom";
-import { AdminProtectedRoutes } from '@/auth/AdminProtectedRoutes';
+import AdminProtectedRouteWithChildren from '@/components/auth/AdminProtectedRouteWithChildren';
 import AdminLayout from '@/components/layout/admin/AdminLayout';
 
 // Admin pages
@@ -25,171 +25,171 @@ export const adminRoutes: RouteObject[] = [
   {
     path: "/admin",
     element: (
-      <AdminProtectedRoutes>
+      <AdminProtectedRouteWithChildren>
         <AdminLayout>
           <AdminDashboard />
         </AdminLayout>
-      </AdminProtectedRoutes>
+      </AdminProtectedRouteWithChildren>
     )
   },
   {
     path: "/admin/events",
     element: (
-      <AdminProtectedRoutes>
+      <AdminProtectedRouteWithChildren>
         <AdminLayout>
           <AdminEvents />
         </AdminLayout>
-      </AdminProtectedRoutes>
+      </AdminProtectedRouteWithChildren>
     )
   },
   {
     path: "/admin/users",
     element: (
-      <AdminProtectedRoutes>
+      <AdminProtectedRouteWithChildren>
         <AdminLayout>
           <AdminUsers />
         </AdminLayout>
-      </AdminProtectedRoutes>
+      </AdminProtectedRouteWithChildren>
     )
   },
   {
     path: "/admin/solutions",
     element: (
-      <AdminProtectedRoutes>
+      <AdminProtectedRouteWithChildren>
         <AdminLayout>
           <AdminSolutions />
         </AdminLayout>
-      </AdminProtectedRoutes>
+      </AdminProtectedRouteWithChildren>
     )
   },
   {
     path: "/admin/solutions/new",
     element: (
-      <AdminProtectedRoutes>
+      <AdminProtectedRouteWithChildren>
         <AdminLayout>
           <AdminSolutionCreate />
         </AdminLayout>
-      </AdminProtectedRoutes>
+      </AdminProtectedRouteWithChildren>
     )
   },
   {
     path: "/admin/solutions/:id",
     element: (
-      <AdminProtectedRoutes>
+      <AdminProtectedRouteWithChildren>
         <AdminLayout>
           <AdminSolutionEdit />
         </AdminLayout>
-      </AdminProtectedRoutes>
+      </AdminProtectedRouteWithChildren>
     )
   },
   {
     path: "/admin/solutions/:id/editor",
     element: (
-      <AdminProtectedRoutes>
+      <AdminProtectedRouteWithChildren>
         <AdminLayout>
           <SolutionEditor />
         </AdminLayout>
-      </AdminProtectedRoutes>
+      </AdminProtectedRouteWithChildren>
     )
   },
   {
     path: "/admin/tools",
     element: (
-      <AdminProtectedRoutes>
+      <AdminProtectedRouteWithChildren>
         <AdminLayout>
           <AdminTools />
         </AdminLayout>
-      </AdminProtectedRoutes>
+      </AdminProtectedRouteWithChildren>
     )
   },
   {
     path: "/admin/tools/new",
     element: (
-      <AdminProtectedRoutes>
+      <AdminProtectedRouteWithChildren>
         <AdminLayout>
           <AdminToolEdit />
         </AdminLayout>
-      </AdminProtectedRoutes>
+      </AdminProtectedRouteWithChildren>
     )
   },
   {
     path: "/admin/tools/:id",
     element: (
-      <AdminProtectedRoutes>
+      <AdminProtectedRouteWithChildren>
         <AdminLayout>
           <AdminToolEdit />
         </AdminLayout>
-      </AdminProtectedRoutes>
+      </AdminProtectedRouteWithChildren>
     )
   },
   {
     path: "/admin/suggestions",
     element: (
-      <AdminProtectedRoutes>
+      <AdminProtectedRouteWithChildren>
         <AdminLayout>
           <AdminSuggestions />
         </AdminLayout>
-      </AdminProtectedRoutes>
+      </AdminProtectedRouteWithChildren>
     )
   },
   {
     path: "/admin/suggestions/:id",
     element: (
-      <AdminProtectedRoutes>
+      <AdminProtectedRouteWithChildren>
         <AdminLayout>
           <AdminSuggestionDetails />
         </AdminLayout>
-      </AdminProtectedRoutes>
+      </AdminProtectedRouteWithChildren>
     )
   },
   {
     path: "/admin/onboarding",
     element: (
-      <AdminProtectedRoutes>
+      <AdminProtectedRouteWithChildren>
         <AdminLayout>
           <AdminOnboarding />
         </AdminLayout>
-      </AdminProtectedRoutes>
+      </AdminProtectedRouteWithChildren>
     )
   },
   {
     path: "/admin/analytics",
     element: (
-      <AdminProtectedRoutes>
+      <AdminProtectedRouteWithChildren>
         <AdminLayout>
           <AdminAnalytics />
         </AdminLayout>
-      </AdminProtectedRoutes>
+      </AdminProtectedRouteWithChildren>
     )
   },
   {
     path: "/admin/roles",
     element: (
-      <AdminProtectedRoutes>
+      <AdminProtectedRouteWithChildren>
         <AdminLayout>
           <RolesPage />
         </AdminLayout>
-      </AdminProtectedRoutes>
+      </AdminProtectedRouteWithChildren>
     )
   },
   {
     path: "/admin/permissions/audit",
     element: (
-      <AdminProtectedRoutes>
+      <AdminProtectedRouteWithChildren>
         <AdminLayout>
           <PermissionAuditLogPage />
         </AdminLayout>
-      </AdminProtectedRoutes>
+      </AdminProtectedRouteWithChildren>
     )
   },
   {
     path: "/admin/invites",
     element: (
-      <AdminProtectedRoutes>
+      <AdminProtectedRouteWithChildren>
         <AdminLayout>
           <InvitesManagement />
         </AdminLayout>
-      </AdminProtectedRoutes>
+      </AdminProtectedRouteWithChildren>
     )
   },
 ];
