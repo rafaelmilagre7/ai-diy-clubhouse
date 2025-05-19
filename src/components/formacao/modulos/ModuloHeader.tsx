@@ -12,18 +12,20 @@ interface ModuloHeaderProps {
       title: string;
     } | null;
   };
-  onEdit: () => void;
-  isAdmin: boolean;
+  cursoTitle?: string;
+  onEdit?: () => void;
+  isAdmin?: boolean;
 }
 
 export const ModuloHeader: React.FC<ModuloHeaderProps> = ({
   modulo,
+  cursoTitle,
   onEdit,
-  isAdmin
+  isAdmin = false
 }) => {
   const navigate = useNavigate();
   const courseId = modulo.course_id;
-  const courseTitle = modulo.learning_courses?.title || 'Curso';
+  const displayTitle = cursoTitle || modulo.learning_courses?.title || 'Curso';
 
   return (
     <div className="space-y-6">
@@ -34,7 +36,7 @@ export const ModuloHeader: React.FC<ModuloHeaderProps> = ({
           onClick={() => navigate(`/formacao/cursos/${courseId}`)}
         >
           <ArrowLeft className="h-4 w-4 mr-1" />
-          Voltar para {courseTitle}
+          Voltar para {displayTitle}
         </Button>
       </div>
 
@@ -57,7 +59,7 @@ export const ModuloHeader: React.FC<ModuloHeaderProps> = ({
           )}
         </div>
 
-        {isAdmin && (
+        {isAdmin && onEdit && (
           <div className="absolute top-4 right-4">
             <Button 
               variant="secondary" 
