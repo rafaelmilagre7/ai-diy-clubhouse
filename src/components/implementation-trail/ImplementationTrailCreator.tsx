@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
+import { useLearningCourses } from "@/hooks/learning/useLearningCourses";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Loader2, RefreshCw, AlertTriangle, Info, Book } from "lucide-react";
@@ -14,6 +15,7 @@ import { supabase } from "@/lib/supabase";
 export const ImplementationTrailCreator = () => {
   const { trail, isLoading, error, hasContent, generateImplementationTrail, refreshTrail, regenerating, refreshing } = useImplementationTrail();
   const { solutions: allSolutions, loading: solutionsLoading } = useSolutionsData();
+  const { courses: allCourses, isLoading: coursesLoading } = useLearningCourses();
   const [processedSolutions, setProcessedSolutions] = useState<any[]>([]);
   const [recommendedCourses, setRecommendedCourses] = useState<any[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(false);
@@ -21,6 +23,18 @@ export const ImplementationTrailCreator = () => {
   const [missingIds, setMissingIds] = useState<string[]>([]);
   const [isProcessingData, setIsProcessingData] = useState(false);
   const [courseDataFetched, setCourseDataFetched] = useState(false);
+  
+  // Console log para debug
+  useEffect(() => {
+    if (trail) {
+      console.log("Trail data:", trail);
+      console.log("Recommended courses in trail:", trail.recommended_courses);
+    }
+    
+    if (allCourses) {
+      console.log("Available courses:", allCourses);
+    }
+  }, [trail, allCourses]);
   
   // Processar soluções quando os dados estiverem disponíveis
   useEffect(() => {
@@ -83,90 +97,68 @@ export const ImplementationTrailCreator = () => {
     processSolutions();
   }, [trail, allSolutions, isProcessingData]);
   
-  // Buscar cursos recomendados
+  // Atualização: Processar recomendações de cursos usando os dados disponíveis do useLearningCourses
   useEffect(() => {
-    const fetchRecommendedCourses = async () => {
-      // Evitar execução repetida ou quando ainda está processando
-      if (loadingCourses || courseDataFetched || isProcessingData || regenerating || refreshing) {
+    const processRecommendedCourses = async () => {
+      // Evitar execução repetida ou quando está processando
+      if (loadingCourses || courseDataFetched || !trail || coursesLoading) {
         return;
       }
-      
+
       try {
         setLoadingCourses(true);
         
-        // Log para debug
-        console.log("Verificando recommended_courses:", trail?.recommended_courses);
-        
-        // Verificar se o trail tem recomendações de cursos válidas
-        if (!trail?.recommended_courses || !Array.isArray(trail.recommended_courses) || trail.recommended_courses.length === 0) {
+        // Verificar se tem recomendações na trilha
+        if (!trail.recommended_courses || !Array.isArray(trail.recommended_courses) || trail.recommended_courses.length === 0) {
           console.log("Sem recomendações de cursos na trilha");
-          setCourseDataFetched(true);
           setRecommendedCourses([]);
+          setCourseDataFetched(true);
           return;
         }
-
+        
+        console.log("Processando recomendações de cursos:", trail.recommended_courses);
+        
+        // Extrair IDs dos cursos recomendados
         const courseIds = trail.recommended_courses
-          .filter(c => c && c.courseId)  // Filtrar entradas inválidas
+          .filter(c => c && c.courseId)
           .map(c => c.courseId);
-
-        if (courseIds.length === 0) {
+        
+        if (courseIds.length === 0 || !allCourses || allCourses.length === 0) {
           setRecommendedCourses([]);
           setCourseDataFetched(true);
           return;
         }
         
-        console.log("Buscando cursos com IDs:", courseIds);
+        console.log("IDs de cursos a buscar:", courseIds);
+        console.log("Cursos disponíveis:", allCourses.map(c => c.id));
         
-        // Buscar informações dos cursos no banco
-        const { data: courses, error } = await supabase
-          .from("learning_courses")
-          .select("*, learning_modules(count)")
-          .in("id", courseIds)
-          .eq("published", true);
+        // Filtrar os cursos correspondentes do array de todos os cursos já carregado
+        const matchingCourses = allCourses.filter(course => courseIds.includes(course.id));
         
-        if (error) {
-          console.error("Erro ao buscar cursos recomendados:", error);
-          setRecommendedCourses([]);
-          setCourseDataFetched(true);
-          return;
-        }
+        console.log("Cursos correspondentes encontrados:", matchingCourses.length);
         
-        console.log("Cursos encontrados:", courses?.length, courses);
+        // Combinar os dados dos cursos com as justificativas da trilha
+        const enrichedCourses = matchingCourses.map(course => {
+          const recommendation = trail.recommended_courses.find(r => r.courseId === course.id);
+          return {
+            ...course,
+            justification: recommendation?.justification || "Recomendado para seu perfil",
+            priority: recommendation?.priority || 1
+          };
+        });
         
-        // Mapear cursos com justificativas da trilha
-        const coursesWithDetails = courseIds
-          .map(id => {
-            const course = courses?.find(c => c.id === id);
-            const recommendation = trail.recommended_courses.find(r => r && r.courseId === id);
-            
-            if (course) {
-              return {
-                ...course,
-                justification: recommendation?.justification || "Recomendado para seu perfil",
-                priority: recommendation?.priority || 1
-              };
-            }
-            return null;
-          })
-          .filter(Boolean);
-        
-        console.log("Cursos processados:", coursesWithDetails?.length, coursesWithDetails);
-        setRecommendedCourses(coursesWithDetails || []);
-        setCourseDataFetched(true);
+        console.log("Cursos enriquecidos:", enrichedCourses);
+        setRecommendedCourses(enrichedCourses);
       } catch (error) {
         console.error("Erro ao processar cursos recomendados:", error);
-        setRecommendedCourses([]);
-        setCourseDataFetched(true);
       } finally {
         setLoadingCourses(false);
+        setCourseDataFetched(true);
       }
     };
 
-    // Se temos trail mas não temos courseDataFetched, buscar os cursos
-    if (trail && !courseDataFetched && !loadingCourses && !isProcessingData) {
-      fetchRecommendedCourses();
-    }
-  }, [trail, loadingCourses, courseDataFetched, isProcessingData, regenerating, refreshing]);
+    processRecommendedCourses();
+  }, [trail, allCourses, loadingCourses, courseDataFetched, coursesLoading]);
 
   // Função para gerar a trilha
   const handleGenerateTrail = useCallback(async () => {
@@ -210,7 +202,7 @@ export const ImplementationTrailCreator = () => {
   }, [refreshTrail]);
 
   // Estado de carregamento
-  if (isLoading || solutionsLoading || regenerating || loadingCourses) {
+  if (isLoading || solutionsLoading || regenerating || loadingCourses || coursesLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[300px] py-8">
         <Loader2 className="h-8 w-8 text-[#0ABAB5] animate-spin mb-4" />
@@ -336,7 +328,7 @@ export const ImplementationTrailCreator = () => {
         
         <TrailCoursesList courses={recommendedCourses} />
         
-        {recommendedCourses.length === 0 && (
+        {(!recommendedCourses || recommendedCourses.length === 0) && (
           <div className="text-center py-4 bg-neutral-800/20 rounded-lg border border-neutral-700/50 p-4">
             <div className="flex flex-col items-center gap-2">
               <Book className="h-8 w-8 text-neutral-500" />

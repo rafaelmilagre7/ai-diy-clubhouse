@@ -121,16 +121,24 @@ Deno.serve(async (req) => {
     }
     console.log(`Encontradas ${solutions?.length || 0} soluções publicadas`);
     
-    // Buscar cursos publicados para recomendação
+    // Buscar cursos publicados para recomendação - MELHORADO
+    console.log("Buscando cursos publicados para recomendação");
     const { data: courses, error: coursesError } = await supabase
       .from('learning_courses')
-      .select('*')
+      .select(`
+        *,
+        modules:learning_modules(count),
+        lessons:learning_modules(
+          learning_lessons(count)
+        )
+      `)
       .eq('published', true);
       
     if (coursesError) {
       console.error("Erro ao buscar cursos:", coursesError);
+    } else {
+      console.log(`Encontrados ${courses?.length || 0} cursos publicados para integração`);
     }
-    console.log(`Encontrados ${courses?.length || 0} cursos publicados para integração`);
     
     // Verificar se existe uma trilha para o usuário
     const { data: existingTrail, error: trailError } = await supabase
@@ -292,34 +300,36 @@ Deno.serve(async (req) => {
         if (!course || !solution) return false;
         
         // Garantir que temos strings para comparar
-        const courseTitle = String(course.title || '');
-        const courseDesc = String(course.description || '');
-        const solutionTitle = String(solution.title || '');
-        const solutionDesc = String(solution.description || '');
+        const courseTitle = String(course.title || '').toLowerCase();
+        const courseDesc = String(course.description || '').toLowerCase();
+        const solutionTitle = String(solution.title || '').toLowerCase();
+        const solutionDesc = String(solution.description || '').toLowerCase();
         
-        // Simplificação: considerar match com base no título/descrição
-        const courseKeywords = (courseTitle + ' ' + courseDesc).toLowerCase();
-        const solutionKeywords = (solutionTitle + ' ' + solutionDesc).toLowerCase();
-        
-        // Verificar tags se existirem
+        // Melhorar a correspondência de cursos com soluções
+        // Verificar tags da solução
         let tagMatch = false;
         if (Array.isArray(solution.tags)) {
           tagMatch = solution.tags.some((tag: string) => 
-            tag && courseKeywords.includes(String(tag).toLowerCase())
+            tag && (courseTitle.includes(tag.toLowerCase()) || courseDesc.includes(tag.toLowerCase()))
           );
         }
         
-        // Verificar categoria se existir
+        // Verificar categoria da solução
         let categoryMatch = false;
         if (solution.category) {
-          categoryMatch = courseKeywords.includes(String(solution.category).toLowerCase());
+          const category = String(solution.category).toLowerCase();
+          categoryMatch = courseTitle.includes(category) || courseDesc.includes(category);
         }
         
         // Verificar palavras-chave em comum
-        let keywordMatch = false;
-        if (courseTitle && solutionTitle) {
-          keywordMatch = solutionKeywords.includes(courseTitle.toLowerCase());
-        }
+        const solutionKeywords = (solutionTitle + ' ' + solutionDesc).split(/\s+/)
+          .filter(word => word.length > 4) // Palavras com mais de 4 caracteres
+          .map(word => word.toLowerCase());
+          
+        const courseText = courseTitle + ' ' + courseDesc;
+        const keywordMatch = solutionKeywords.some(keyword => 
+          courseText.includes(keyword)
+        );
         
         return tagMatch || categoryMatch || keywordMatch;
       }) || [];
@@ -370,34 +380,116 @@ Deno.serve(async (req) => {
       priority: 3
     }));
     
-    // Extrair recomendações de cursos de forma segura
+    // MELHORIA: Lógica de recomendação de cursos atualizada
     let courseRecommendations: {courseId: string, justification?: string, priority?: number}[] = [];
     
     try {
-      // Lista para rastrear IDs de cursos já processados
-      const processedCourseIds = new Set<string>();
+      console.log("Processando recomendações de cursos...");
       
-      // Coletar todos os cursos correspondentes em todas as soluções pontuadas
-      courseRecommendations = scoredSolutions
-        .filter(item => item.matchedCourses && item.matchedCourses.length > 0)
-        .flatMap(item => 
-          (item.matchedCourses || [])
-            .filter(course => course && course.id && !processedCourseIds.has(course.id))
+      // Garantir que temos cursos para recomendar
+      if (!courses || courses.length === 0) {
+        console.log("Nenhum curso disponível para recomendação");
+        courseRecommendations = [];
+      } else {
+        // Conjunto para rastrear IDs de cursos já recomendados
+        const recommendedCourseIds = new Set<string>();
+        
+        // 1. Primeiro adicionar cursos que correspondem às soluções
+        scoredSolutions.forEach((scoredSolution, index) => {
+          const priority = index < 3 ? 1 : (index < 7 ? 2 : 3);
+          
+          if (scoredSolution.matchedCourses && scoredSolution.matchedCourses.length > 0) {
+            scoredSolution.matchedCourses.slice(0, 2).forEach(course => {
+              if (course && course.id && !recommendedCourseIds.has(course.id)) {
+                recommendedCourseIds.add(course.id);
+                
+                courseRecommendations.push({
+                  courseId: course.id,
+                  justification: `Complementa a solução "${scoredSolution.solution.title}"`,
+                  priority: priority
+                });
+              }
+            });
+          }
+        });
+        
+        // 2. Se não temos recomendações suficientes, adicionar cursos com base no perfil do usuário
+        if (courseRecommendations.length < 5) {
+          console.log("Adicionando recomendações baseadas em perfil...");
+          
+          // Pontuação de relevância para os cursos baseada no perfil
+          const scoredCourses = courses
+            .filter(course => !recommendedCourseIds.has(course.id))
             .map(course => {
-              // Marcar este ID de curso como processado
-              if (course.id) processedCourseIds.add(course.id);
+              let score = 0;
+              let reason = '';
+              
+              // Título e descrição em minúsculas para comparação
+              const title = (course.title || '').toLowerCase();
+              const description = (course.description || '').toLowerCase();
+              const content = title + ' ' + description;
+              
+              // Verificar correspondência com objetivos
+              personalizationData.goals.forEach(goal => {
+                const goalLower = goal.toLowerCase();
+                if (content.includes(goalLower)) {
+                  score += 20;
+                  reason = 'Alinhado com seus objetivos de negócio';
+                }
+              });
+              
+              // Verificar correspondência com setor
+              if (personalizationData.industry && content.includes(personalizationData.industry.toLowerCase())) {
+                score += 15;
+                reason = reason || `Relevante para o setor ${personalizationData.industry}`;
+              }
+              
+              // Nível de conhecimento em IA
+              if (personalizationData.aiExperience <= 1 && (content.includes('iniciante') || content.includes('básico') || content.includes('introdução'))) {
+                score += 10;
+              } else if (personalizationData.aiExperience === 2 && content.includes('intermediário')) {
+                score += 10;
+              } else if (personalizationData.aiExperience >= 3 && (content.includes('avançado') || content.includes('especialista'))) {
+                score += 10;
+              }
+              
+              // Se não temos pontuação ou razão, atribuir valores padrão
+              if (score === 0) {
+                score = Math.floor(Math.random() * 30); // Pontuação aleatória entre 0 e 29
+              }
+              
+              if (!reason) {
+                reason = 'Recomendado com base no seu perfil';
+              }
               
               return {
-                courseId: course.id,
-                justification: `Curso recomendado para complementar a solução ${item.solution.title || 'selecionada'}`,
-                priority: item.priority || 1
+                course,
+                score,
+                reason
               };
-            })
-        )
-        .filter(rec => rec && rec.courseId); // Filtrar recomendações inválidas
+            });
+          
+          // Ordenar por pontuação e pegar os N melhores
+          scoredCourses.sort((a, b) => b.score - a.score);
+          
+          // Adicionar até completar 6 recomendações ou esgotar os cursos disponíveis
+          const remainingSlots = 6 - courseRecommendations.length;
+          const additionalRecommendations = scoredCourses
+            .slice(0, remainingSlots)
+            .map((item, index) => ({
+              courseId: item.course.id,
+              justification: item.reason,
+              priority: Math.min(3, Math.ceil((index + 1) / 2)) // Distribuir em prioridades 1, 2 e 3
+            }));
+          
+          courseRecommendations = [...courseRecommendations, ...additionalRecommendations];
+          console.log(`Adicionadas ${additionalRecommendations.length} recomendações de cursos baseadas em perfil`);
+        }
+      }
+      
+      console.log(`Geradas ${courseRecommendations.length} recomendações de cursos no total`);
     } catch (courseError) {
       console.error("Erro ao processar recomendações de cursos:", courseError);
-      // Em caso de erro, usar array vazio
       courseRecommendations = [];
     }
     

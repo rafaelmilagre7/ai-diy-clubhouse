@@ -45,29 +45,33 @@ export const useLearningCourses = () => {
       // Criar um conjunto com IDs dos cursos restritos para acesso mais rápido
       const restrictedIds = new Set(restrictedCourses?.map(rc => rc.course_id) || []);
       
-      // Se o usuário não estiver autenticado, filtrar os cursos restritos
-      if (!user) {
-        const filteredCourses = data.filter(course => !restrictedIds.has(course.id));
+      // Processar cursos com dados de módulos e aulas
+      const processedCourses = data.map(course => {
+        // Calcular contagem de módulos
+        const moduleCount = course.modules?.length || 0;
         
-        return filteredCourses.map(course => ({
+        // Calcular contagem total de aulas em todos os módulos
+        let lessonCount = 0;
+        if (course.modules) {
+          course.modules.forEach(module => {
+            lessonCount += (module.lessons?.length || 0);
+          });
+        }
+        
+        return {
           ...course,
           is_restricted: restrictedIds.has(course.id),
-          module_count: course.modules ? course.modules.length : 0,
-          lesson_count: course.modules ? course.modules.reduce((count, module) => {
-            return count + (module.lessons ? module.lessons.length : 0);
-          }, 0) : 0
-        }));
+          module_count: moduleCount,
+          lesson_count: lessonCount
+        };
+      });
+      
+      // Se o usuário não estiver autenticado, filtrar os cursos restritos
+      if (!user) {
+        return processedCourses.filter(course => !course.is_restricted);
       }
 
-      // Processar contagens de módulos e aulas para todos os cursos
-      return data.map(course => ({
-        ...course,
-        is_restricted: restrictedIds.has(course.id),
-        module_count: course.modules ? course.modules.length : 0,
-        lesson_count: course.modules ? course.modules.reduce((count, module) => {
-          return count + (module.lessons ? module.lessons.length : 0);
-        }, 0) : 0
-      }));
+      return processedCourses;
     }
   });
 

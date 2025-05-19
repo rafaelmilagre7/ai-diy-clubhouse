@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Book, ExternalLink, Calendar, Star } from "lucide-react";
+import { Book, ExternalLink, Calendar, Star, Clock } from "lucide-react";
+import { LearningCourse } from "@/lib/supabase/types";
 
 interface TrailCoursesListProps {
   courses: any[];
@@ -20,6 +21,8 @@ export const TrailCoursesList: React.FC<TrailCoursesListProps> = ({ courses }) =
       </div>
     );
   }
+
+  console.log("Cursos recebidos na lista:", courses);
 
   // Ordenar cursos por prioridade
   const sortedCourses = [...courses].sort((a, b) => (a.priority || 1) - (b.priority || 1));
@@ -61,7 +64,15 @@ export const TrailCoursesList: React.FC<TrailCoursesListProps> = ({ courses }) =
             
             <div className="flex items-center gap-2 text-sm text-neutral-400">
               <Calendar size={14} />
-              <span>{course.learning_modules?.count || 0} módulos</span>
+              <span>{course.module_count || 0} módulos</span>
+              
+              {course.lesson_count > 0 && (
+                <>
+                  <span className="mx-1">•</span>
+                  <Clock size={14} />
+                  <span>{course.lesson_count} aulas</span>
+                </>
+              )}
             </div>
           </CardContent>
           
