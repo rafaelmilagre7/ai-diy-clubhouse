@@ -1,64 +1,60 @@
 
 import { supabase } from "@/lib/supabase";
-import { User } from "@supabase/supabase-js";
-import type { UserProfile } from "@/lib/supabase/types";
+import { UserProfile } from "@/lib/supabase/types";
 
 /**
- * Busca os dados do perfil de um usuário no Supabase
- * @param userId ID do usuário
- * @returns Objeto com os dados do perfil
+ * Busca o perfil do usuário do Supabase
  */
-export async function fetchUserProfile(userId: string): Promise<UserProfile | null> {
-  if (!userId) {
-    console.error("ID de usuário não fornecido para busca de perfil");
-    return null;
-  }
+export const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
+  if (!userId) return null;
 
   try {
-    const { data: profile, error } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
-      .select('*, user_roles:role_id(id, name, description, permissions)')
+      .select(`
+        *,
+        user_roles:role_id (id, name, description, permissions)
+      `)
       .eq('id', userId)
       .single();
 
     if (error) {
-      console.error("Erro ao buscar perfil:", error);
+      console.error('Erro ao buscar perfil de usuário:', error);
       return null;
     }
 
-    return profile as UserProfile;
+    return data as UserProfile;
   } catch (error) {
-    console.error("Erro ao processar perfil:", error);
+    console.error('Erro ao buscar perfil de usuário:', error);
     return null;
   }
-}
+};
 
 /**
- * Atualiza os dados do perfil de um usuário no Supabase
- * @param userId ID do usuário
- * @param updates Objeto com os dados a serem atualizados
- * @returns Booleano indicando sucesso ou falha
+ * Atualiza o perfil do usuário no Supabase
  */
-export async function updateUserProfile(userId: string, updates: Partial<UserProfile>): Promise<boolean> {
-  if (!userId) {
-    console.error("ID de usuário não fornecido para atualização de perfil");
-    return false;
-  }
+export const updateUserProfile = async (
+  userId: string, 
+  profileData: Partial<UserProfile>
+): Promise<UserProfile | null> => {
+  if (!userId) return null;
 
   try {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
-      .update(updates)
-      .eq('id', userId);
+      .update(profileData)
+      .eq('id', userId)
+      .select()
+      .single();
 
     if (error) {
-      console.error("Erro ao atualizar perfil:", error);
-      return false;
+      console.error('Erro ao atualizar perfil:', error);
+      return null;
     }
 
-    return true;
+    return data as UserProfile;
   } catch (error) {
-    console.error("Erro ao processar atualização de perfil:", error);
-    return false;
+    console.error('Erro ao atualizar perfil:', error);
+    return null;
   }
-}
+};
