@@ -50,9 +50,10 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
           log("Found videos in module content", { count: module.content.videos.length });
         } 
         // Then check for videos in solution data
-        else if (solutionData.videos && Array.isArray(solutionData.videos)) {
-          setVideos(solutionData.videos);
-          log("Found videos in solution data", { count: solutionData.videos.length });
+        else if (module.content && module.content.resources && Array.isArray(module.content.resources)) {
+          const videoResources = module.content.resources.filter(r => r.type === 'video');
+          setVideos(videoResources);
+          log("Found videos in module resources", { count: videoResources.length });
         } else {
           // Fetch videos from solution_resources
           const { data: resourcesData, error: resourcesError } = await supabase

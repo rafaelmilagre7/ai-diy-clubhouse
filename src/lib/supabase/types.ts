@@ -1,4 +1,5 @@
 
+
 import { Database } from './types/database.types';
 
 // Tipos para o sistema de referrals/indicações
