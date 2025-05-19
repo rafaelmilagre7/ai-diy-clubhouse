@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { UserProfile } from "@/lib/supabase/types";
@@ -36,6 +37,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   
   // Computar papéis
   const isFormacao = !!profile?.role === !!profile?.role && ['admin', 'formacao'].includes(profile?.role!);
+  
+  // Atualizar isAdmin quando o usuário ou perfil mudar
+  useEffect(() => {
+    if (user && (
+      (profile?.role === 'admin') || 
+      (user.email && (user.email.includes('@viverdeia.ai') || user.email === 'admin@teste.com'))
+    )) {
+      setIsAdmin(true);
+    } else {
+      setIsAdmin(false);
+    }
+  }, [user, profile]);
   
   // Checar sessão quando o componente montar
   useEffect(() => {
