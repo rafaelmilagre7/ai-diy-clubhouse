@@ -40,3 +40,25 @@ export type ReferralStats = {
 
 // Re-exportando o tipo Database para manter compatibilidade
 export type { Database };
+
+// Adicionando outros tipos necessários que estavam faltando
+export type VideoFormValues = {
+  title: string;
+  description?: string;
+  url: string;
+  video_id?: string;
+  video_type?: string;
+  duration_seconds?: number;
+  thumbnail_url?: string;
+};
+
+// Definindo TrailSolution para compatibilidade
+export type TrailSolution = {
+  id: string;
+  title: string;
+  description: string;
+  thumbnail_url?: string;
+  estimated_time?: number;
+  difficulty: string;
+  category: string;
+};

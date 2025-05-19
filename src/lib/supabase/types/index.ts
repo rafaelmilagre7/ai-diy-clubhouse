@@ -40,5 +40,8 @@ export type UserProfile = {
   successful_referrals_count?: number;
 };
 
+// Definição do tipo Solution específico do Supabase
+export type Solution = Database['public']['Tables']['solutions']['Row'];
+
 // Outros tipos existentes
 export * from './database.types';

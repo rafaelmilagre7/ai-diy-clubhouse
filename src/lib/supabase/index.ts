@@ -12,18 +12,47 @@ export {
   setupLearningStorageBuckets,
   ensureBucketExists,
   extractPandaVideoInfo,
-  uploadFileWithFallback,
-  // Removi createStoragePublicPolicy daqui, pois deve vir apenas do módulo rpc
-  // Adicione outras funções que precisam ser exportadas
+  uploadFileWithFallback
 } from './storage';
 
 // Exportação explícita das funções de RPC
 export {
-  createStoragePublicPolicy as createStoragePublicPolicyRPC,
+  createStoragePublicPolicy,
   incrementTopicViews,
   incrementTopicReplies,
   deleteForumTopic,
-  deleteForumPost
-  // Adicionar outras funções de RPC conforme necessário
+  deleteForumPost,
+  // Adicionar outras funções RPC conforme necessário
 } from './rpc';
 
+// Exportação de tipos específicos para garantir compatibilidade
+// Isso resolve problemas de importação em componentes que usam esses tipos
+export type {
+  LearningLesson,
+  LearningLessonVideo,
+  LearningModule,
+  LearningCourse,
+  LearningProgress,
+  LearningResource,
+  LearningComment,
+  LearningLessonTool,
+  UserProfile
+} from './types';
+
+// Exportar o tipo Solution que é usado em vários componentes
+import type { Solution as SupabaseSolution } from './types';
+export type { SupabaseSolution };
+export { type Solution } from '@/types/solution';
+
+// Exportar tipos do módulo Module para componentes que o usam
+export type Module = {
+  id: string;
+  title: string;
+  type: string;
+  content: any;
+  solution_id: string;
+  module_order: number;
+  created_at: string;
+  updated_at: string;
+  estimated_time_minutes?: number;
+};
