@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useContext, createContext } from 'react';
 import { AuthContextType } from './types';
-import { cleanupAuthState } from './utils/authUtils';
+import { clearAuthTokens } from './index';
 import { AuthStateManager } from './managers/AuthStateManager';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
@@ -53,6 +53,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isFormacao, setIsFormacao] = useState(false);
 
+  // Verificar se usuário é admin sempre que o perfil ou dados do usuário mudarem
+  useEffect(() => {
+    if (profile) {
+      console.log("Verificando se usuário é admin baseado no perfil:", profile);
+      
+      // Verificar pelo papel do perfil
+      const profileIsAdmin = profile.role === 'admin';
+      
+      setIsAdmin(profileIsAdmin);
+      console.log("Status de admin definido como:", profileIsAdmin);
+    } else if (user?.email) {
+      console.log("Perfil não disponível, verificando admin pelo email:", user.email);
+      
+      // Verificação por email como fallback
+      const emailIsAdmin = user.email.includes('@viverdeia.ai') || 
+                          user.email === 'admin@teste.com' || 
+                          user.email === 'admin@viverdeia.ai';
+      
+      setIsAdmin(emailIsAdmin);
+      console.log("Status de admin definido como (via email):", emailIsAdmin);
+    }
+  }, [profile, user]);
+
   // Efeito para verificar se o usuário é formação com base no perfil
   useEffect(() => {
     if (profile) {
@@ -69,12 +92,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Implementação do login
   const signIn = async (email: string, password: string) => {
     try {
+      // Limpar quaisquer dados existentes de sessão anterior
+      clearAuthTokens();
+      
       // Se estamos usando Google (email e senha vazios)
       if (!email && !password) {
+        console.log("Iniciando login com Google");
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: window.location.origin,
+            redirectTo: window.location.origin + '/dashboard',
           }
         });
         
@@ -85,6 +112,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       
       // Login com email e senha
+      console.log("Iniciando login com email/senha:", email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -92,8 +120,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       if (error) throw error;
       
+      console.log("Login bem-sucedido:", data.user?.id);
       setUser(data.user);
       setSession(data.session);
+      
+      // Forçar redirecionamento após login bem-sucedido
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 500);
     } catch (error: any) {
       console.error("Erro ao fazer login:", error);
       toast.error(error.message || "Falha ao fazer login");
@@ -126,16 +160,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Implementação do logout
   const signOut = async () => {
     try {
+      // Limpar primeiro os tokens
+      clearAuthTokens();
+      
+      // Tentar fazer logout no Supabase
       await supabase.auth.signOut();
+      
+      // Limpar estados
       setUser(null);
       setSession(null);
       setProfile(null);
       setIsAdmin(false);
       setIsFormacao(false);
+      
+      // Feedback para o usuário
       toast.success("Logout realizado com sucesso");
+      
+      // Forçar redirecionamento para tela de login
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 300);
     } catch (error: any) {
       console.error("Erro ao fazer logout:", error);
       toast.error("Erro ao fazer logout");
+      
+      // Mesmo em caso de erro, tentar forçar navegação para login
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 500);
+      
       throw error;
     }
   };

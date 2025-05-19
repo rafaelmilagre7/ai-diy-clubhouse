@@ -28,6 +28,9 @@ interface SidebarNavProps {
 export const MemberSidebarNav = ({ sidebarOpen, isAdmin = false }: SidebarNavProps) => {
   const location = useLocation();
 
+  // Log para depuração
+  console.log("MemberSidebarNav rendering with isAdmin:", isAdmin);
+
   const menuItems = [
     {
       title: "Dashboard",
@@ -102,9 +105,6 @@ export const MemberSidebarNav = ({ sidebarOpen, isAdmin = false }: SidebarNavPro
     
     return location.pathname === href || location.pathname.startsWith(href + '/');
   };
-
-  // Debug log
-  console.log("MemberSidebarNav isAdmin:", isAdmin);
 
   return (
     <div className="space-y-2 py-4">

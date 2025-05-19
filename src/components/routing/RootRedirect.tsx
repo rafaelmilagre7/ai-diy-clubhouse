@@ -21,7 +21,8 @@ const RootRedirect = () => {
     isLoading, 
     timeoutExceeded,
     redirectTarget,
-    userEmail: user?.email
+    userEmail: user?.email,
+    profileRole: profile?.role
   });
   
   // Configurar timeout de carregamento
@@ -35,7 +36,7 @@ const RootRedirect = () => {
       timeoutRef.current = window.setTimeout(() => {
         console.log("RootRedirect: Loading timeout exceeded, redirecting to /login");
         setTimeoutExceeded(true);
-        toast("Tempo de carregamento excedido, redirecionando para tela de login");
+        toast.error("Tempo de carregamento excedido. Redirecionando para tela de login");
       }, 3000); // 3 segundos de timeout
     }
     
@@ -54,16 +55,22 @@ const RootRedirect = () => {
     if (!user) {
       console.log("RootRedirect: No user, redirecting to /login");
       setRedirectTarget('/login');
-    } else if (user && profile) {
-      console.log("RootRedirect: User and profile available, redirecting based on role");
-      if (profile.role === 'admin' || isAdmin) {
+    } else {
+      console.log("RootRedirect: User available, redirecting based on role");
+      
+      // Verificar se é admin por diferentes critérios
+      const userIsAdmin = isAdmin || 
+                        profile?.role === 'admin' || 
+                        (user.email && (
+                          user.email.includes('@viverdeia.ai') || 
+                          user.email === 'admin@teste.com'
+                        ));
+      
+      if (userIsAdmin) {
         setRedirectTarget('/admin');
       } else {
         setRedirectTarget('/dashboard');
       }
-    } else if (user && !profile) {
-      console.log("RootRedirect: User without profile, redirecting to dashboard");
-      setRedirectTarget('/dashboard');
     }
   }, [user, profile, isAdmin, isLoading, timeoutExceeded]);
   

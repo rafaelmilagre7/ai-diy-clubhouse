@@ -12,7 +12,7 @@ export const processUserProfile = async (user: User | string): Promise<UserProfi
   try {
     console.log("Buscando perfil para usuário:", userId);
     
-    // Primeiro tenta buscar perfil pelo id diretamente
+    // Primeiro tenta buscar perfil pelo id diretamente (forma correta)
     const { data: profileDataById, error: profileErrorById } = await supabase
       .from("profiles")
       .select("*")
@@ -24,26 +24,47 @@ export const processUserProfile = async (user: User | string): Promise<UserProfi
       return profileDataById as UserProfile;
     }
     
-    // Se não encontrou pelo id, tenta buscar usando a coluna user_id
-    const { data: profileDataByUserId, error: profileErrorByUserId } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", userId)
-      .single();
+    console.log("Perfil não encontrado pelo id, tentando criar um novo perfil");
+    
+    // Se não encontrou perfil, vamos tentar criar um
+    try {
+      // Obter dados do usuário se temos apenas o ID
+      let userData = typeof user !== 'string' ? user : null;
       
-    if (profileErrorByUserId) {
-      console.error("Erro ao buscar perfil do usuário:", profileErrorByUserId);
-      console.error("Detalhes da consulta:", { userId });
+      if (!userData) {
+        const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(userId);
+        if (authError) throw authError;
+        userData = authUser.user;
+      }
+      
+      // Determinar o papel com base no email
+      const isAdmin = userData?.email?.includes('@viverdeia.ai') || 
+                       userData?.email === 'admin@teste.com' ||
+                       userData?.email === 'admin@viverdeia.ai';
+      
+      // Criar perfil
+      const { data: newProfile, error: createError } = await supabase
+        .from("profiles")
+        .insert({
+          id: userId,
+          name: userData?.user_metadata?.name || userData?.email?.split('@')[0] || 'Usuário',
+          email: userData?.email,
+          role: isAdmin ? 'admin' : 'member'
+        })
+        .select()
+        .single();
+      
+      if (createError) {
+        console.error("Erro ao criar perfil:", createError);
+        return null;
+      }
+      
+      console.log("Novo perfil criado:", newProfile);
+      return newProfile as UserProfile;
+    } catch (createError) {
+      console.error("Erro ao criar perfil para usuário:", createError);
       return null;
     }
-    
-    if (!profileDataByUserId) {
-      console.warn("Perfil do usuário não encontrado");
-      return null;
-    }
-    
-    console.log("Perfil encontrado pelo user_id:", profileDataByUserId);
-    return profileDataByUserId as UserProfile;
   } catch (error) {
     console.error("Erro inesperado ao processar perfil de usuário:", error);
     return null;

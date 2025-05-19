@@ -17,8 +17,9 @@ export function ModernDashboardHeader() {
   
   // Debug para verificar o nome recebido
   console.log("ModernDashboardHeader:", { 
-    profile, 
+    profileName: profile?.name,
     userName,
+    user_email: user?.email,
     user_metadata: user?.user_metadata
   });
 

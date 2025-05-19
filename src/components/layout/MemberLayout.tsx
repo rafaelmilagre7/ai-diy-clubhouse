@@ -79,12 +79,22 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
     user: !!user, 
     profile, 
     isAdmin, 
-    email: user?.email 
+    email: user?.email,
+    userRole: profile?.role
   });
 
-  const profileName = profile?.name || user?.user_metadata?.name || null;
+  // Garantir que o perfil seja carregado ou usar dados do usuário como fallback
+  const profileName = profile?.name || user?.user_metadata?.name || user?.email?.split('@')[0] || null;
   const profileEmail = profile?.email || user?.email || null;
   const profileAvatar = profile?.avatar_url;
+  
+  // Calcular isAdmin com verificação adicional pelo email
+  const userIsAdmin = isAdmin || 
+                     (user?.email && (
+                      user.email.includes('@viverdeia.ai') || 
+                      user.email === 'admin@teste.com' || 
+                      user.email === 'admin@viverdeia.ai'
+                     ));
 
   return (
     <div className="flex min-h-screen bg-[#0F111A] overflow-hidden">
@@ -105,7 +115,7 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
         profileAvatar={profileAvatar}
         getInitials={getInitials}
         signOut={signOut}
-        isAdmin={isAdmin}
+        isAdmin={userIsAdmin}
       />
       
       {/* Conteúdo principal */}
