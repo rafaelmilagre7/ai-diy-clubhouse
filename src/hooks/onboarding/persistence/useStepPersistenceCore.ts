@@ -180,10 +180,8 @@ export function useStepPersistenceCore({
       
       toast.success("Onboarding concluído com sucesso!");
       
-      // Redirecionamento após delay para garantir atualização do estado - usando navigate em vez de window.location
-      setTimeout(() => {
-        navigate("/onboarding/completed");
-      }, 1000);
+      // Redirecionar para a página de conclusão do onboarding
+      navigate("/onboarding/completed");
     } catch (error: any) {
       console.error("Erro ao completar onboarding:", error);
       logError("complete_onboarding_error", { 
@@ -191,7 +189,7 @@ export function useStepPersistenceCore({
       });
       toast.error("Erro ao finalizar onboarding. Por favor, tente novamente.");
       
-      // Fallback para dashboard em caso de erro - usando navigate em vez de window.location
+      // Fallback para dashboard em caso de erro
       setTimeout(() => {
         navigate("/dashboard");
       }, 1500);

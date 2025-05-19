@@ -5,15 +5,18 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, Edit, Map, Loader2 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { useProgress } from "@/hooks/onboarding/useProgress";
-import { OnboardingProgress } from "@/types/onboarding";
+import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
 import { toast } from "sonner";
 import { ReviewStep } from "@/components/onboarding/steps/ReviewStep";
 
 export const OnboardingCompleted = () => {
   const navigate = useNavigate();
   const { progress, isLoading, refreshProgress } = useProgress();
+  const { generateImplementationTrail, regenerating } = useImplementationTrail();
+  
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [hasShownConfetti, setHasShownConfetti] = useState(false);
+  const [isGeneratingTrail, setIsGeneratingTrail] = useState(false);
   
   // Efeito para carregar dados atualizados
   useEffect(() => {
@@ -50,6 +53,38 @@ export const OnboardingCompleted = () => {
   const handleNavigateToStep = (stepId: string) => {
     console.log("[OnboardingCompleted] Navegando para editar etapa:", stepId);
     navigate(`/onboarding/${stepId}`);
+  };
+
+  // Função para gerar a trilha de implementação
+  const handleGenerateTrail = async () => {
+    if (!progress) {
+      toast.error("Dados de onboarding não encontrados");
+      return;
+    }
+
+    try {
+      setIsGeneratingTrail(true);
+      toast.info("Iniciando geração da sua trilha personalizada...");
+      
+      // Gerar trilha usando os dados completos do onboarding
+      const generatedTrail = await generateImplementationTrail(progress);
+      
+      if (generatedTrail) {
+        toast.success("Trilha de implementação gerada com sucesso!");
+        
+        // Pequeno delay para garantir que o usuário veja a mensagem de sucesso
+        setTimeout(() => {
+          navigate("/implementation-trail");
+        }, 800);
+      } else {
+        toast.error("Não foi possível gerar sua trilha. Por favor, tente novamente.");
+      }
+    } catch (error) {
+      console.error("[OnboardingCompleted] Erro ao gerar trilha:", error);
+      toast.error("Ocorreu um erro ao gerar sua trilha personalizada. Por favor, tente novamente mais tarde.");
+    } finally {
+      setIsGeneratingTrail(false);
+    }
   };
 
   if (isInitialLoad) {
@@ -104,8 +139,8 @@ export const OnboardingCompleted = () => {
         {progress && (
           <ReviewStep 
             progress={progress}
-            onComplete={() => navigate("/implementation-trail")}
-            isSubmitting={false}
+            onComplete={handleGenerateTrail}
+            isSubmitting={isGeneratingTrail || regenerating}
             navigateToStep={handleNavigateToStep}
           />
         )}
@@ -113,11 +148,21 @@ export const OnboardingCompleted = () => {
       
       <div className="flex flex-col md:flex-row justify-center gap-4 pt-4 mt-8">
         <Button
-          onClick={() => navigate("/implementation-trail")}
+          onClick={handleGenerateTrail}
+          disabled={isGeneratingTrail || regenerating}
           className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90 text-black font-medium flex items-center gap-2"
         >
-          <Map className="h-4 w-4" />
-          Acessar Minha Trilha de Implementação
+          {isGeneratingTrail || regenerating ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Gerando sua trilha personalizada...
+            </>
+          ) : (
+            <>
+              <Map className="h-4 w-4" />
+              Concluir e Gerar Minha Trilha
+            </>
+          )}
         </Button>
       </div>
     </div>

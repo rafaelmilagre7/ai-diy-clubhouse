@@ -5,20 +5,15 @@ import { useProgress } from '@/hooks/onboarding/useProgress';
 import { useLogging } from '@/hooks/useLogging';
 import { useImplementationTrail } from '@/hooks/implementation/useImplementationTrail';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { TrailGenerationHeader } from '@/components/onboarding/TrailGeneration/TrailGenerationHeader';
-import { TrailLoadingState } from '@/components/onboarding/TrailGeneration/TrailLoadingState';
-import { TrailErrorState } from '@/components/onboarding/TrailGeneration/TrailErrorState';
-import { TrailGenerationPanel } from '@/components/onboarding/TrailGenerationPanel';
-import { MilagrinhoMessage } from '@/components/onboarding/MilagrinhoMessage';
+import { Loader2, RefreshCw, ThumbsUp, AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { saveImplementationTrail } from '@/hooks/implementation/useSaveImplementationTrail';
 import { useAuth } from '@/contexts/auth';
 
-// Componente principal para geração de trilha
 const TrailGeneration = () => {
   const { progress, refreshProgress, updateProgress } = useProgress();
   const { user } = useAuth();
-  const { trail, isLoading: trailLoading, error: trailError, generateImplementationTrail } = useImplementationTrail();
+  const { generateImplementationTrail, regenerating } = useImplementationTrail();
   const { log, logError } = useLogging();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -28,66 +23,34 @@ const TrailGeneration = () => {
   const [generated, setGenerated] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [autoGenerateTriggered, setAutoGenerateTriggered] = useState(false);
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
-  const [attemptCount, setAttemptCount] = useState(0);
   const autoGenerate = searchParams.get('autoGenerate') === 'true';
-
-  // Número máximo de tentativas automáticas
-  const MAX_RETRY_ATTEMPTS = 3;
-  // Tempo limite de carregamento em milissegundos (20 segundos)
-  const LOADING_TIMEOUT = 20000;
 
   // Verificar se a trilha já existe
   useEffect(() => {
-    if (trail && !generating) {
-      setGenerated(true);
-    }
-  }, [trail, generating]);
-
-  // Função para carregar a trilha inicial
-  const loadInitialTrail = useCallback(async () => {
-    if (!progress) return;
-    
-    // Se já temos uma trilha, marcar como gerada
-    if (trail) {
-      setGenerated(true);
-      log('trail_loaded_from_storage', { success: true });
-      return;
-    }
-    
-    // Iniciar geração automática se solicitado
-    if (autoGenerate && !autoGenerateTriggered && !generated) {
-      await startTrailGeneration();
-    }
-  }, [progress, trail, autoGenerate, autoGenerateTriggered, generated]);
-
-  // Efeito para inicializar a trilha quando os dados estiverem disponíveis
-  useEffect(() => {
-    loadInitialTrail();
-  }, [loadInitialTrail]);
-
-  // Configurar temporizador para timeout
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout | undefined;
-    
-    if (generating && !generated) {
-      timeoutId = setTimeout(() => {
-        if (generating && !generated) {
-          setLoadingTimeout(true);
-          setGenerating(false);
-          setError("Tempo limite excedido ao gerar a trilha. O servidor pode estar sobrecarregado.");
-          logError("trail_generation_timeout", {
-            attempt: attemptCount,
-            duration: LOADING_TIMEOUT
-          });
+    const checkOnboardingStatus = async () => {
+      try {
+        // Forçar refresh dos dados para garantir informações atualizadas
+        await refreshProgress();
+        
+        // Se não tiver progresso ou autoGenerate não estiver habilitado, redirecionar
+        if (!progress && !autoGenerate) {
+          console.log("Dados de onboarding não encontrados, redirecionando para onboarding...");
+          navigate('/onboarding');
+          return;
         }
-      }, LOADING_TIMEOUT);
-    }
-    
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
+        
+        // Iniciar geração automática se solicitado
+        if (autoGenerate && !autoGenerateTriggered) {
+          await startTrailGeneration();
+        }
+      } catch (error) {
+        console.error("Erro ao verificar status do onboarding:", error);
+        setError("Ocorreu um erro ao verificar seu progresso de onboarding.");
+      }
     };
-  }, [generating, generated, attemptCount, logError]);
+
+    checkOnboardingStatus();
+  }, [navigate, progress, autoGenerate, autoGenerateTriggered, refreshProgress]);
 
   // Garantir que o progresso de onboarding esteja marcado como completo
   const ensureOnboardingComplete = useCallback(async () => {
@@ -117,9 +80,8 @@ const TrailGeneration = () => {
       setGenerated(false);
       setError(null);
       setAutoGenerateTriggered(true);
-      setAttemptCount(prev => prev + 1);
       
-      log('trail_generation_started', { attempt: attemptCount + 1 });
+      log('trail_generation_started', {});
       
       // Primeiro garante que o onboarding está marcado como completo
       await ensureOnboardingComplete();
@@ -127,47 +89,31 @@ const TrailGeneration = () => {
       // Gerar a trilha de implementação
       const generatedTrail = await generateImplementationTrail(progress);
       
-      if (generatedTrail && user.id) {
-        // Salvar no banco de dados
-        try {
-          await saveImplementationTrail(user.id, generatedTrail);
-          log('trail_saved_to_database', { success: true });
-        } catch (saveError) {
-          console.error("Erro ao salvar trilha no banco:", saveError);
-          logError('trail_save_error', { error: String(saveError) });
-          // Continuar mesmo com erro de salvamento
-        }
+      if (generatedTrail) {
+        log('trail_generation_success', {});
+        toast.success("Trilha personalizada gerada com sucesso!");
+        
+        // Marcar como gerado
+        setGenerating(false);
+        setGenerated(true);
+        
+        // Redirecionar após um pequeno delay
+        setTimeout(() => {
+          navigate('/implementation-trail');
+        }, 1500);
+      } else {
+        throw new Error("Não foi possível gerar a trilha");
       }
-      
-      log('trail_generation_success', {});
-      toast.success("Trilha personalizada gerada com sucesso!");
-      
-      // Marcar como gerado
-      setGenerating(false);
-      setGenerated(true);
     } catch (error: any) {
       console.error("Erro ao gerar trilha de implementação:", error);
       
       logError("trail_generation_error", {
         message: error instanceof Error ? error.message : "Erro desconhecido",
-        details: error instanceof Error ? error.stack : String(error),
-        hint: error instanceof Error && 'hint' in error ? (error as any).hint : "",
-        code: error instanceof Error && 'code' in error ? (error as any).code : "",
       });
       
       setGenerating(false);
       setError(error instanceof Error ? error.message : "Erro desconhecido ao gerar a trilha");
-      
-      // Tentar novamente automaticamente se estiver dentro do limite de tentativas
-      if (attemptCount < MAX_RETRY_ATTEMPTS) {
-        console.log(`Tentativa ${attemptCount + 1} falhou. Tentando novamente...`);
-        toast.info(`Tentativa ${attemptCount + 1} falhou. Tentando novamente automaticamente...`);
-        setTimeout(() => {
-          startTrailGeneration();
-        }, 2000); // Esperar 2 segundos antes de tentar novamente
-      } else {
-        toast.error("Não foi possível gerar sua trilha personalizada. Tente novamente mais tarde.");
-      }
+      toast.error("Não foi possível gerar sua trilha personalizada. Tente novamente.");
     }
   };
 
@@ -176,93 +122,131 @@ const TrailGeneration = () => {
     navigate('/onboarding/review');
   };
 
-  // Função para forçar uma atualização/tentativa
-  const handleForceRefresh = useCallback(() => {
-    setAttemptCount(0); // Reiniciar contador de tentativas
-    setLoadingTimeout(false);
+  // Função para tentar novamente
+  const handleRetry = () => {
     startTrailGeneration();
-  }, []);
-
-  // Função para limpar dados e reiniciar
-  const handleResetData = async () => {
-    try {
-      if (!progress?.id) return;
-      
-      // Recarregar dados
-      await refreshProgress();
-      
-      setAttemptCount(0);
-      setLoadingTimeout(false);
-      setError(null);
-      setGenerated(false);
-      
-      toast.success("Dados limpos com sucesso. Iniciando geração...");
-      setTimeout(() => {
-        startTrailGeneration();
-      }, 1000);
-    } catch (e) {
-      console.error("Erro ao limpar dados:", e);
-      toast.error("Erro ao limpar dados. Tente novamente.");
-    }
   };
-  
-  // Lidando com a navegação após a geração
-  const handleClose = useCallback(() => {
-    // Garantir que o onboarding está marcado como completo antes de redirecionar
-    ensureOnboardingComplete().then(() => {
-      navigate('/implementation-trail');
-    }).catch(err => {
-      console.error("Erro ao finalizar onboarding:", err);
-      // Redirecionar mesmo assim
-      navigate('/implementation-trail');
-    });
-  }, [navigate, ensureOnboardingComplete]);
 
-  // Renderização do componente com base no estado
   return (
     <OnboardingLayout
       currentStep={9} 
-      title="Trilha Personalizada VIVER DE IA"
+      title="Gerando Sua Trilha Personalizada"
       backUrl="/onboarding/review"
       hideProgress
     >
-      <div className="max-w-4xl mx-auto space-y-6">
-        <TrailGenerationHeader 
-          isGenerating={generating} 
-          isGenerated={generated} 
-          hasError={!!error || !!trailError}
-        />
+      <div className="max-w-3xl mx-auto space-y-6">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-bold text-white">
+            {generating ? "Gerando Sua Trilha..." : 
+             generated ? "Trilha Gerada com Sucesso!" : 
+             error ? "Erro ao Gerar Trilha" : 
+             "Vamos Criar Sua Trilha Personalizada"}
+          </h2>
+          
+          <p className="text-viverblue-light mt-2 max-w-md mx-auto">
+            {generating ? 
+              "Estamos analisando seus dados e identificando as melhores soluções e aulas para você." : 
+             generated ? 
+              "Sua trilha foi criada com sucesso e está pronta para você começar sua jornada!" : 
+             error ? 
+              "Ocorreu um problema ao tentar gerar sua trilha personalizada." : 
+              "Vamos usar seus dados de onboarding para criar uma trilha personalizada."}
+          </p>
+        </div>
         
-        {!error && !generated && !generating && !trailLoading && (
-          <MilagrinhoMessage
-            message="Vamos gerar uma trilha personalizada de implementação baseada nas suas respostas. Esta trilha vai guiar você pelos primeiros passos no VIVER DE IA Club."
-          />
+        {/* Estado de carregamento */}
+        {generating && (
+          <div className="bg-[#151823] p-8 rounded-xl border border-neutral-700/50 text-center">
+            <div className="flex flex-col items-center justify-center space-y-4">
+              <div className="relative">
+                <div className="w-20 h-20 rounded-full bg-viverblue/20 absolute animate-ping opacity-75"></div>
+                <div className="w-20 h-20 rounded-full bg-[#151823] border-2 border-dashed border-viverblue flex items-center justify-center relative animate-spin-slow">
+                  <Loader2 className="h-10 w-10 text-viverblue animate-spin" />
+                </div>
+              </div>
+              
+              <div className="mt-8 space-y-2">
+                <h3 className="text-lg font-medium text-white">Gerando sua trilha personalizada</h3>
+                <p className="text-sm text-neutral-400">
+                  Isso pode levar alguns instantes. Estamos personalizando sua trilha de implementação
+                  com base em suas respostas.
+                </p>
+              </div>
+            </div>
+          </div>
         )}
         
-        {(generating || trailLoading) && !error && !trailError && (
-          <TrailLoadingState 
-            attemptCount={attemptCount}
-            onForceRefresh={handleForceRefresh}
-          />
+        {/* Estado de sucesso */}
+        {generated && (
+          <div className="bg-[#151823] p-8 rounded-xl border border-green-500/20 text-center">
+            <div className="flex flex-col items-center justify-center space-y-4">
+              <div className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center">
+                <ThumbsUp className="h-10 w-10 text-green-500" />
+              </div>
+              
+              <div className="mt-4 space-y-2">
+                <h3 className="text-lg font-medium text-white">Trilha gerada com sucesso!</h3>
+                <p className="text-sm text-neutral-400">
+                  Estamos te redirecionando para sua trilha personalizada...
+                </p>
+              </div>
+            </div>
+          </div>
         )}
         
-        {(error || trailError) && (
-          <TrailErrorState
-            onRegenerate={startTrailGeneration}
-            onForceRefresh={handleForceRefresh}
-            onGoBack={handleGoBack}
-            onResetData={handleResetData}
-            errorDetails={error || trailError || "Erro desconhecido ao gerar trilha"}
-            loadingTimeout={loadingTimeout}
-            attemptCount={attemptCount}
-          />
+        {/* Estado de erro */}
+        {error && !generating && !generated && (
+          <div className="bg-[#151823] p-8 rounded-xl border border-red-500/20 text-center">
+            <div className="flex flex-col items-center justify-center space-y-4">
+              <div className="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center">
+                <AlertTriangle className="h-10 w-10 text-red-500" />
+              </div>
+              
+              <div className="mt-4 space-y-2">
+                <h3 className="text-lg font-medium text-white">Erro ao gerar trilha</h3>
+                <p className="text-sm text-neutral-400">
+                  {error}
+                </p>
+                
+                <div className="pt-4 flex justify-center gap-4">
+                  <Button
+                    variant="outline"
+                    onClick={handleGoBack}
+                  >
+                    Voltar para Revisão
+                  </Button>
+                  
+                  <Button
+                    onClick={handleRetry}
+                    className="bg-viverblue hover:bg-viverblue-dark text-black"
+                  >
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Tentar Novamente
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
         
-        {generated && !generating && !error && !trailError && (
-          <TrailGenerationPanel 
-            onboardingData={progress}
-            onClose={handleClose}
-          />
+        {/* Estado inicial */}
+        {!generating && !generated && !error && (
+          <div className="flex justify-center">
+            <Button
+              onClick={startTrailGeneration}
+              disabled={generating || !progress}
+              className="bg-viverblue hover:bg-viverblue-dark text-black py-6 px-8 text-lg"
+            >
+              {generating ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Gerando...
+                </>
+              ) : (
+                "Gerar Minha Trilha Personalizada"
+              )}
+            </Button>
+          </div>
         )}
       </div>
     </OnboardingLayout>

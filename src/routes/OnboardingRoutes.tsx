@@ -3,7 +3,8 @@ import { RouteObject } from "react-router-dom";
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import NovoOnboarding from '@/pages/onboarding/NovoOnboarding';
 import { OnboardingCompleted } from "@/components/onboarding/OnboardingCompleted";
-import Review from "@/pages/onboarding/Review"; // Importação da página de revisão
+import Review from "@/pages/onboarding/Review";
+import TrailGeneration from "@/pages/onboarding/steps/TrailGeneration";
 
 export const onboardingRoutes: RouteObject[] = [
   // Rota para o onboarding
@@ -15,6 +16,11 @@ export const onboardingRoutes: RouteObject[] = [
   {
     path: "/onboarding/review",
     element: <ProtectedRoutes><Review /></ProtectedRoutes>
+  },
+  // Rota para a geração da trilha
+  {
+    path: "/onboarding/trail-generation",
+    element: <ProtectedRoutes><TrailGeneration /></ProtectedRoutes>
   },
   // Rota para a página de sucesso do onboarding
   {
