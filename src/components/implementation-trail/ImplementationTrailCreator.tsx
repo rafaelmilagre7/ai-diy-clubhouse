@@ -178,7 +178,7 @@ export const ImplementationTrailCreator = () => {
       setRecommendedCourses([]);
       
       toast.info("Gerando sua trilha personalizada...");
-      // Passamos null como primeiro parâmetro, que agora é permitido pela tipagem
+      // Passamos null explicitamente, que agora é permitido pela tipagem
       await generateImplementationTrail(null, true); // Forçando regeneração completa da trilha
       
       toast.success("Trilha personalizada gerada com sucesso!");

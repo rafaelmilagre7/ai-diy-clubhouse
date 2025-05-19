@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { sanitizeTrailData, saveTrailToLocalStorage, getTrailFromLocalStorage, clearTrailFromLocalStorage } from './useImplementationTrail.utils';
 import { toast } from 'sonner';
 import { OnboardingProgress } from '@/types/onboarding';
-import { ImplementationTrail, TrailSolution } from '@/types/implementation-trail';
+import { ImplementationTrail, TrailSolution, TrailGenerationParams } from '@/types/implementation-trail';
 
 // Flag global para prevenir chamadas concorrentes
 let isGenerationInProgress = false;
@@ -12,7 +12,7 @@ let lastGenerationTimestamp = 0;
 const GENERATION_COOLDOWN = 5000; // 5 segundos
 const MAX_RETRY_ATTEMPTS = 2;
 
-export { ImplementationTrail, TrailSolution } from '@/types/implementation-trail';
+export type { ImplementationTrail, TrailSolution };
 
 export const useImplementationTrail = () => {
   const { user } = useAuth();

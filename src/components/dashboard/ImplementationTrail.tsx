@@ -92,7 +92,7 @@ export const ImplementationTrail = () => {
   }, [trail]);
 
   const handleRegenerateTrail = async () => {
-    // Chamamos com parâmetro nulo, que agora é válido na tipagem
+    // Passamos null explicitamente, que agora é válido na tipagem
     await generateImplementationTrail(null);
   };
 
