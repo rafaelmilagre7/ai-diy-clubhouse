@@ -1,6 +1,7 @@
+
 import React from "react";
 import {
-  LightBulbIcon,
+  Lightbulb,
   CheckIcon,
   PercentIcon,
 } from "lucide-react";
@@ -13,6 +14,13 @@ interface KpiCardProps {
   title: string;
   value: string | number;
   icon: React.ReactNode;
+}
+
+interface KpiGridProps {
+  completed: number;
+  inProgress: number;
+  total: number;
+  isLoading?: boolean;
 }
 
 const KpiCard: React.FC<KpiCardProps> = ({ title, value, icon }) => {
@@ -29,49 +37,55 @@ const KpiCard: React.FC<KpiCardProps> = ({ title, value, icon }) => {
   );
 };
 
-export const KpiGrid: React.FC = () => {
-  const { solutions, progressData, loading, error } = useDashboardData();
+export const KpiGrid: React.FC<KpiGridProps> = ({ 
+  completed, 
+  inProgress, 
+  total, 
+  isLoading = false 
+}) => {
+  // Calcule a taxa de conclusão
+  const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-  const activeSolutionsCount = solutions?.length || 0;
-  const completedSolutionsCount = progressData?.filter((item) => item.is_completed).length || 0;
-  const completionRate = activeSolutionsCount > 0
-    ? Math.round((completedSolutionsCount / activeSolutionsCount) * 100)
-    : 0;
-
-  const render = () => {
+  if (isLoading) {
     return (
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mt-4">
-        <KpiCard
-          title="Soluções Ativas"
-          value={activeSolutionsCount}
-          icon={<LightBulbIcon className="h-4 w-4 text-muted-foreground" />}
-        />
-        <KpiCard
-          title="Soluções Concluídas"
-          value={completedSolutionsCount}
-          icon={<CheckIcon className="h-4 w-4 text-muted-foreground" />}
-        />
-        <KpiCard
-          title="Taxa de Conclusão"
-          value={`${completionRate}%`}
-          icon={<PercentIcon className="h-4 w-4 text-muted-foreground" />}
-        />
-        
-        {/* Widget de indicações */}
-        <div className="lg:col-span-3">
-          <ReferralWidget />
-        </div>
+        {[1, 2, 3].map((i) => (
+          <Card key={i}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div className="h-5 w-24 bg-gray-200 animate-pulse rounded"></div>
+              <div className="h-4 w-4 bg-gray-200 animate-pulse rounded-full"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-8 w-16 bg-gray-200 animate-pulse rounded"></div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     );
-  };
-
-  if (loading) {
-    return <div className="text-center text-muted-foreground">Carregando KPIs...</div>;
   }
 
-  if (error) {
-    return <div className="text-center text-red-500">Erro ao carregar KPIs: {error}</div>;
-  }
-
-  return render();
+  return (
+    <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mt-4">
+      <KpiCard
+        title="Soluções Ativas"
+        value={inProgress}
+        icon={<Lightbulb className="h-4 w-4 text-muted-foreground" />}
+      />
+      <KpiCard
+        title="Soluções Concluídas"
+        value={completed}
+        icon={<CheckIcon className="h-4 w-4 text-muted-foreground" />}
+      />
+      <KpiCard
+        title="Taxa de Conclusão"
+        value={`${completionRate}%`}
+        icon={<PercentIcon className="h-4 w-4 text-muted-foreground" />}
+      />
+      
+      {/* Widget de indicações */}
+      <div className="lg:col-span-3">
+        <ReferralWidget />
+      </div>
+    </div>
+  );
 };

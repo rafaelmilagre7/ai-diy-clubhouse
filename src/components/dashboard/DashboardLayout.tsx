@@ -9,7 +9,6 @@ import { ModernDashboardHeader } from "./ModernDashboardHeader";
 import { KpiGrid } from "./KpiGrid";
 import { useAuth } from "@/contexts/auth";
 import { SolutionsGridLoader } from "./SolutionsGridLoader";
-import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardConnectionErrorState } from "./states/DashboardConnectionErrorState";
 
 interface DashboardLayoutProps {
