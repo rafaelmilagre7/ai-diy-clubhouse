@@ -19,9 +19,22 @@ interface MemberSidebarProps {
 export const MemberSidebar = ({ 
   sidebarOpen, 
   setSidebarOpen, 
+  profileName,
+  profileEmail,
+  profileAvatar,
+  getInitials,
   signOut,
   isAdmin
 }: MemberSidebarProps) => {
+  // Log para diagnóstico
+  console.log("MemberSidebar renderizando com:", {
+    sidebarOpen,
+    profileName,
+    profileEmail,
+    hasAvatar: !!profileAvatar,
+    isAdmin
+  });
+  
   return (
     <aside
       className={cn(
@@ -41,8 +54,8 @@ export const MemberSidebar = ({
           <div className="h-px bg-white/5"></div>
         </div>
 
-        {/* Navegação */}
-        <MemberSidebarNav sidebarOpen={sidebarOpen} isAdmin={isAdmin} />
+        {/* Navegação - passando isAdmin explicitamente */}
+        <MemberSidebarNav sidebarOpen={sidebarOpen} isAdmin={isAdmin} className="mb-2" />
 
         {/* Menu do usuário no rodapé da barra lateral */}
         <div className="mt-auto">
@@ -51,6 +64,10 @@ export const MemberSidebar = ({
           </div>
           <MemberUserMenu 
             sidebarOpen={sidebarOpen} 
+            profileName={profileName}
+            profileEmail={profileEmail}
+            profileAvatar={profileAvatar}
+            getInitials={getInitials}
             signOut={signOut}
           />
         </div>

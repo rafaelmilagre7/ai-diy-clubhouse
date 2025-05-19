@@ -13,6 +13,12 @@ export const TrailCurrentSolutionCard: React.FC<TrailCurrentSolutionCardProps> =
 }) => {
   // Assegurar que o ID seja sempre tratado como string
   const handleSelect = () => {
+    // Log para diagnóstico
+    console.log("TrailCurrentSolutionCard selecionando solução:", {
+      id: solution.solutionId || solution.id,
+      title: solution.title
+    });
+    
     onSelect(String(solution.solutionId || solution.id));
   };
   

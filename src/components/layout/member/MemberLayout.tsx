@@ -4,13 +4,24 @@ import { Outlet, useNavigate } from "react-router-dom";
 import { MemberSidebar } from "./MemberSidebar";
 import { useAuth } from "@/contexts/auth";
 import { clearAuthTokens } from "@/contexts/auth/utils/authUtils";
-import { getUserDisplayName } from "@/utils/auth/adminUtils";
+import { getUserDisplayName, isUserAdmin } from "@/utils/auth/adminUtils";
 import LoadingScreen from "@/components/common/LoadingScreen";
+import AuthSession from "@/components/auth/AuthSession";
 
 const MemberLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const { user, profile, isLoading, signOut } = useAuth();
+  const { user, profile, isLoading, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
+  
+  // Log para diagnóstico
+  console.log("MemberLayout renderizando:", { 
+    userExists: !!user, 
+    profileExists: !!profile, 
+    isLoading, 
+    isAdmin,
+    userEmail: user?.email,
+    profileRole: profile?.role
+  });
   
   // Verificar autenticação
   useEffect(() => {
@@ -22,11 +33,15 @@ const MemberLayout = () => {
 
   const handleSignOut = async () => {
     try {
+      console.log("MemberLayout: Iniciando logout");
+      
       // Limpar tokens antes
       clearAuthTokens();
       
       // Fazer logout
       await signOut();
+      
+      console.log("MemberLayout: Logout concluído");
       
       // Redirecionamento é tratado dentro da função signOut
     } catch (error) {
@@ -45,41 +60,47 @@ const MemberLayout = () => {
     return name.charAt(0).toUpperCase();
   };
   
-  // Verificar se o usuário é admin
-  const isAdmin = !!profile?.role && profile?.role === "admin" || 
-                 (user?.email && (user.email.includes('@viverdeia.ai') || 
-                                  user.email === 'admin@teste.com'));
+  // Verificar se o usuário é admin usando função centralizada
+  const userIsAdmin = isUserAdmin(user, profile);
 
   // Mostrar loading enquanto verifica autenticação
   if (isLoading) {
-    return <LoadingScreen message="Carregando área de membros..." />;
+    return (
+      <>
+        <AuthSession />
+        <LoadingScreen message="Carregando área de membros..." />
+      </>
+    );
   }
 
   // Se não temos usuário após carregar, não renderizar nada
   // (o efeito de redirecionamento cuidará disso)
   if (!user && !isLoading) {
-    return null;
+    return <AuthSession />;
   }
 
   return (
-    <div className="flex h-screen bg-background">
-      <MemberSidebar 
-        sidebarOpen={sidebarOpen} 
-        setSidebarOpen={setSidebarOpen}
-        profileName={userName}
-        profileEmail={userEmail}
-        profileAvatar={avatarUrl}
-        getInitials={getInitials}
-        signOut={handleSignOut}
-        isAdmin={isAdmin}
-      />
+    <>
+      <AuthSession />
+      <div className="flex h-screen bg-background">
+        <MemberSidebar 
+          sidebarOpen={sidebarOpen} 
+          setSidebarOpen={setSidebarOpen}
+          profileName={userName}
+          profileEmail={userEmail}
+          profileAvatar={avatarUrl}
+          getInitials={getInitials}
+          signOut={handleSignOut}
+          isAdmin={userIsAdmin}
+        />
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
-          <Outlet />
-        </main>
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <main className="flex-1 overflow-y-auto p-4 md:p-6">
+            <Outlet />
+          </main>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

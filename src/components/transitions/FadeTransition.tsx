@@ -6,7 +6,7 @@ interface FadeTransitionProps {
   children: React.ReactNode;
   delay?: number;
   className?: string;
-  direction?: "up" | "down" | "left" | "right"; // Adicionando a propriedade direction
+  direction?: "up" | "down" | "left" | "right"; // Definindo os valores permitidos
 }
 
 export const FadeTransition: React.FC<FadeTransitionProps> = ({ 

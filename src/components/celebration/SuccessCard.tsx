@@ -6,7 +6,7 @@ import { CheckCircle2, Sparkles } from "lucide-react";
 interface SuccessCardProps {
   title: string;
   message: string;
-  type?: "implementation" | "completion" | "achievement" | "step"; // Adicionado "step" como tipo válido
+  type?: "implementation" | "completion" | "achievement" | "step"; 
   showConfetti?: boolean;
   className?: string;
   onClick?: () => void;

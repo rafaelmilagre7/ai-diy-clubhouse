@@ -1,151 +1,99 @@
 
+import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { 
-  LayoutDashboard, 
-  Lightbulb, 
-  Settings, 
-  Trophy,
-  Gift,
-  MessageSquare,
-  ShieldCheck,
-  User,
-  BookOpen,
-  Map,
-  Calendar,
-  GraduationCap,
-  Wrench,
-  MessagesSquare,
-  UserPlus
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Link, useLocation } from "react-router-dom";
+import { Home, BookOpen, Wrench, Bell, Settings, Lightbulb, GraduationCap, UserPlus } from "lucide-react";
 
-interface SidebarNavProps {
+interface MemberSidebarNavProps {
   sidebarOpen: boolean;
+  className?: string;
   isAdmin: boolean;
 }
 
-export const MemberSidebarNav = ({ sidebarOpen, isAdmin }: SidebarNavProps) => {
-  const location = useLocation();
-  
-  // Log para debug
-  console.log("MemberSidebarNav - Status de admin:", isAdmin);
+export const MemberSidebarNav = ({ sidebarOpen, className, isAdmin }: MemberSidebarNavProps) => {
+  // Log para diagnóstico
+  console.log("MemberSidebarNav renderizando com isAdmin:", isAdmin);
 
-  const menuItems = [
-    {
-      title: "Dashboard",
-      href: "/dashboard",
-      icon: LayoutDashboard,
+  const navItems = [
+    { 
+      name: "Dashboard", 
+      path: "/", 
+      end: true, 
+      icon: Home 
     },
-    {
-      title: "Onboarding",
-      href: "/onboarding",
-      icon: BookOpen,
+    { 
+      name: "Soluções", 
+      path: "/solutions", 
+      icon: Lightbulb 
     },
-    {
-      title: "Trilha de Implementação",
-      href: "/implementation-trail",
-      icon: Map,
+    { 
+      name: "Cursos", 
+      path: "/learning", 
+      icon: GraduationCap 
     },
-    {
-      title: "Soluções",
-      href: "/solutions",
-      icon: Lightbulb,
+    { 
+      name: "Ferramentas", 
+      path: "/tools", 
+      icon: Wrench 
     },
-    {
-      title: "Cursos",
-      href: "/learning",
-      icon: GraduationCap,
+    { 
+      name: "Indicações", 
+      path: "/referrals", 
+      icon: UserPlus 
     },
-    {
-      title: "Ferramentas",
-      href: "/tools",
-      icon: Wrench,
+    { 
+      name: "Notificações", 
+      path: "/notifications", 
+      icon: Bell 
     },
-    {
-      title: "Benefícios",
-      href: "/benefits",
-      icon: Gift,
+    { 
+      name: "Perfil", 
+      path: "/profile", 
+      icon: Settings 
     },
-    {
-      title: "Sugestões",
-      href: "/suggestions",
-      icon: MessageSquare,
-    },
-    {
-      title: "Comunidade",
-      href: "/comunidade",
-      icon: MessagesSquare,
-    },
-    {
-      title: "Perfil",
-      href: "/profile",
-      icon: User,
-    },
-    {
-      title: "Eventos",
-      href: "/events",
-      icon: Calendar,
-    },
-    {
-      title: "Indicações",
-      href: "/referrals",
-      icon: UserPlus,
-    }
   ];
 
-  const isActive = (href: string) => {
-    // Para a comunidade, considerar tanto o caminho antigo quanto o novo
-    if (href === "/comunidade") {
-      return location.pathname === "/comunidade" || 
-             location.pathname === "/forum" || 
-             location.pathname.startsWith("/comunidade/") ||
-             location.pathname.startsWith("/forum/");
-    }
-    
-    return location.pathname === href || location.pathname.startsWith(href + '/');
-  };
-
   return (
-    <div className="space-y-2 py-4">
-      <div className="px-3 space-y-1">
-        {menuItems.map((item) => (
-          <Button
-            key={item.href}
-            variant="ghost"
-            className={cn(
-              "w-full justify-start gap-3 rounded-lg hover:bg-[#181A2A] text-neutral-400 dark:text-neutral-300",
-              !sidebarOpen && "justify-center",
-              isActive(item.href) && "hubla-active-nav"
-            )}
-            asChild
-          >
-            <Link to={item.href}>
-              <item.icon className={cn(
-                "h-4 w-4", 
-                isActive(item.href) ? "text-viverblue" : "text-neutral-400"
-              )} />
-              {sidebarOpen && <span>{item.title}</span>}
-            </Link>
-          </Button>
+    <nav className={cn("px-2 lg:px-4", className)}>
+      <ul className="space-y-1">
+        {navItems.map((item) => (
+          <li key={item.path}>
+            <NavLink
+              to={item.path}
+              end={item.end}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center gap-x-3 px-3 py-2 rounded-md text-sm transition-colors",
+                  isActive
+                    ? "bg-accent text-accent-foreground font-medium"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                )
+              }
+            >
+              <item.icon className="h-4 w-4" />
+              {sidebarOpen && <span>{item.name}</span>}
+            </NavLink>
+          </li>
         ))}
-
+        
         {isAdmin && (
-          <Button
-            variant="outline"
-            className={cn(
-              "w-full justify-start gap-3 border-viverblue/30 text-viverblue hover:bg-[#181A2A] mt-4",
-              !sidebarOpen && "justify-center"
-            )}
-            asChild
-          >
-            <Link to="/admin">
-              <ShieldCheck className="h-4 w-4" />
-              {sidebarOpen && <span>Painel Admin</span>}
-            </Link>
-          </Button>
+          <li>
+            <NavLink
+              to="/formacao"
+              className={({ isActive }) =>
+                cn(
+                  "mt-4 flex items-center gap-x-3 px-3 py-2 rounded-md text-sm transition-colors",
+                  isActive
+                    ? "bg-primary text-primary-foreground font-medium"
+                    : "text-muted-foreground hover:bg-primary/10 hover:text-primary",
+                )
+              }
+            >
+              <BookOpen className="h-4 w-4" />
+              {sidebarOpen && <span>Área de Formação</span>}
+            </NavLink>
+          </li>
         )}
-      </div>
-    </div>
+      </ul>
+    </nav>
   );
 };

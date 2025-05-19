@@ -17,10 +17,21 @@ const AuthSession = () => {
     setIsAdmin
   } = useAuth();
 
+  // Logs para diagnóstico
+  console.log("AuthSession: Inicializando", { 
+    userExists: !!user, 
+    profileExists: !!profile, 
+    isLoading 
+  });
+
   // Carrega o perfil do usuário quando o usuário é autenticado
   useEffect(() => {
     const loadUserProfile = async () => {
-      if (!user) return;
+      if (!user) {
+        console.log("AuthSession: Sem usuário autenticado");
+        setIsLoading(false);
+        return;
+      }
       
       try {
         console.log("AuthSession: Carregando perfil para usuário:", user.id);
@@ -95,17 +106,16 @@ const AuthSession = () => {
       }
     };
     
-    if (user) {
-      loadUserProfile();
-    } else {
-      setIsLoading(false);
-    }
+    // Executar apenas quando o componente montar
+    loadUserProfile();
   }, [user, setProfile, setIsLoading, profile, setIsAdmin]);
   
+  // Mostrar um indicador visual apenas quando estiver carregando
   if (isLoading) {
     return <LoadingScreen message="Carregando seu perfil..." />;
   }
   
+  // Não renderizar nada quando o perfil estiver carregado
   return null;
 };
 

@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { MemberSidebar } from "./member/MemberSidebar";
 import { MemberContent } from "./member/MemberContent";
-import AuthSession from "@/components/auth/AuthSession"; // Importar AuthSession
+import AuthSession from "@/components/auth/AuthSession"; 
+import { getUserDisplayName, isUserAdmin } from "@/utils/auth/adminUtils";
 
 /**
  * MemberLayout renderiza a estrutura de layout para usuários membros
@@ -11,6 +12,14 @@ import AuthSession from "@/components/auth/AuthSession"; // Importar AuthSession
  */
 const MemberLayout = ({ children }: { children: React.ReactNode }) => {
   const { user, profile, isAdmin, signOut } = useAuth();
+  
+  console.log("MemberLayout raiz renderizando:", {
+    userExists: !!user,
+    profileExists: !!profile,
+    isAdmin,
+    userEmail: user?.email,
+    profileRole: profile?.role
+  });
   
   // Estado para controlar a visibilidade da barra lateral
   const [sidebarOpen, setSidebarOpen] = useState(() => {
@@ -75,27 +84,13 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
     document.body.classList.add('dark');
   }, []);
 
-  // Logs para debug
-  console.log("MemberLayout userData:", { 
-    user: !!user, 
-    profile, 
-    isAdmin, 
-    email: user?.email,
-    userRole: profile?.role
-  });
-
   // Garantir que o perfil seja carregado ou usar dados do usuário como fallback
   const profileName = profile?.name || user?.user_metadata?.name || user?.email?.split('@')[0] || null;
   const profileEmail = profile?.email || user?.email || null;
   const profileAvatar = profile?.avatar_url;
   
-  // Calcular isAdmin com verificação adicional pelo email
-  const userIsAdmin = isAdmin || 
-                     (user?.email && (
-                      user.email.includes('@viverdeia.ai') || 
-                      user.email === 'admin@teste.com' || 
-                      user.email === 'admin@viverdeia.ai'
-                     ));
+  // Calcular isAdmin com verificação centralizada
+  const userIsAdmin = isUserAdmin(user, profile);
 
   return (
     <div className="flex min-h-screen bg-[#0F111A] overflow-hidden">

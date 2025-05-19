@@ -14,18 +14,33 @@ import { UserProfile } from '@/lib/supabase/types';
  * @returns boolean indicando se o usuário é admin
  */
 export const isUserAdmin = (user: User | null, profile: UserProfile | null): boolean => {
+  // Log para diagnóstico
+  console.log("isUserAdmin chamado com:", { 
+    userId: user?.id, 
+    userEmail: user?.email,
+    profileId: profile?.id,
+    profileRole: profile?.role
+  });
+  
   if (!user) return false;
   
   // Verificação pelo perfil (método principal)
   if (profile?.role === 'admin') {
+    console.log("Admin verificado pelo perfil");
     return true;
   }
   
   // Verificação pelo email (método secundário)
   if (user.email) {
-    return user.email.includes('@viverdeia.ai') || 
+    const isAdminByEmail = user.email.includes('@viverdeia.ai') || 
            user.email === 'admin@teste.com' || 
            user.email === 'admin@viverdeia.ai';
+    
+    if (isAdminByEmail) {
+      console.log("Admin verificado pelo email");
+    }
+    
+    return isAdminByEmail;
   }
   
   return false;
