@@ -13,7 +13,7 @@ import { getUserDisplayName, isUserAdmin } from "@/utils/auth/adminUtils";
 const MemberLayout = ({ children }: { children: React.ReactNode }) => {
   const { user, profile, isAdmin, signOut } = useAuth();
   
-  console.log("MemberLayout raiz renderizando:", {
+  console.log("MemberLayout renderizando:", {
     userExists: !!user,
     profileExists: !!profile,
     isAdmin,
@@ -89,7 +89,7 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
   const profileEmail = profile?.email || user?.email || null;
   const profileAvatar = profile?.avatar_url;
   
-  // Calcular isAdmin com verificação centralizada
+  // Calcular isAdmin com verificação centralizada usando a função helper
   const userIsAdmin = isUserAdmin(user, profile);
 
   return (
@@ -114,7 +114,7 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
         profileAvatar={profileAvatar}
         getInitials={getInitials}
         signOut={signOut}
-        isAdmin={userIsAdmin}
+        isAdmin={userIsAdmin} // Aqui passamos o valor calculado com isUserAdmin
       />
       
       {/* Conteúdo principal */}

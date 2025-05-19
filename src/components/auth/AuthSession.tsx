@@ -21,7 +21,8 @@ const AuthSession = () => {
   console.log("AuthSession: Inicializando", { 
     userExists: !!user, 
     profileExists: !!profile, 
-    isLoading 
+    isLoading,
+    userEmail: user?.email
   });
 
   // Carrega o perfil do usuário quando o usuário é autenticado
@@ -44,6 +45,12 @@ const AuthSession = () => {
         // Verificar se já temos um perfil
         if (profile) {
           console.log("AuthSession: Perfil já carregado:", profile);
+          
+          // Verificação final de admin com perfil completo
+          const finalAdminCheck = isUserAdmin(user, profile);
+          console.log("AuthSession - Verificação final com perfil existente:", finalAdminCheck);
+          setIsAdmin(finalAdminCheck);
+          
           setIsLoading(false);
           return;
         }
@@ -57,7 +64,7 @@ const AuthSession = () => {
           
           // Verificação final de admin com perfil completo
           const finalAdminCheck = isUserAdmin(user, userProfile);
-          console.log("AuthSession - Verificação final de admin:", finalAdminCheck);
+          console.log("AuthSession - Verificação final de admin com perfil carregado:", finalAdminCheck);
           setIsAdmin(finalAdminCheck);
         } else {
           console.warn("AuthSession: Perfil não encontrado, tentando criar");
