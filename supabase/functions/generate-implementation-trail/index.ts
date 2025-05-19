@@ -66,7 +66,7 @@ serve(async (req) => {
     console.log("Buscando soluções publicadas");
     const { data: solutions, error: solutionsError } = await supabaseClient
       .from("solutions")
-      .select("id, title, description, category, difficulty, tags")
+      .select("id, title, description, category, difficulty, tags, thumbnail_url")
       .eq("published", true);
 
     if (solutionsError) {
@@ -145,30 +145,59 @@ serve(async (req) => {
       .eq("user_id", userId)
       .maybeSingle();
 
+    // Buscar perfil do usuário
+    const { data: userProfile, error: profileError } = await supabaseClient
+      .from("profiles")
+      .select(`
+        name,
+        email,
+        company_name,
+        industry
+      `)
+      .eq("id", userId)
+      .maybeSingle();
+
     if (onboardingError) {
       console.log("Erro ao buscar dados de onboarding:", onboardingError);
     }
 
+    if (profileError) {
+      console.log("Erro ao buscar perfil do usuário:", profileError);
+    }
+
     const hasOnboardingData = !!onboardingData;
     console.log(`Dados de onboarding encontrados: ${hasOnboardingData}`);
+    
+    // Integrar dados do perfil e onboarding
+    const userPersonalData = {
+      name: userProfile?.name || onboardingData?.personal_info?.name || "",
+      email: userProfile?.email || onboardingData?.personal_info?.email || "",
+      company: userProfile?.company_name || onboardingData?.professional_info?.company_name || "",
+      industry: userProfile?.industry || onboardingData?.professional_info?.company_sector || "",
+    };
 
-    // Extrair informações relevantes do onboarding para personalização
+    // Extrair informações relevantes para personalização
     const personalizeData = {
+      name: userPersonalData.name,
+      firstName: userPersonalData.name?.split(' ')[0] || "",
+      email: userPersonalData.email,
+      company: userPersonalData.company,
+      industry: userPersonalData.industry,
       goals: onboardingData?.business_goals?.primary_goal 
         ? [onboardingData.business_goals.primary_goal] 
         : [],
-      industry: onboardingData?.professional_info?.company_sector || "",
       companySize: onboardingData?.professional_info?.company_size || "",
       aiExperience: onboardingData?.ai_experience?.knowledge_level === "avançado" ? 3 :
-                   onboardingData?.ai_experience?.knowledge_level === "intermediario" ? 2 : 0
+                   onboardingData?.ai_experience?.knowledge_level === "intermediario" ? 2 : 0,
+      role: onboardingData?.professional_info?.current_position || ""
     };
 
     console.log("Dados para personalização:", personalizeData);
 
     // Gerar recomendações
     // Primeiro para as soluções
-    const priority1 = generatePrioritySolutions(solutions, 3, 1);
-    const priority2 = generatePrioritySolutions(solutions, 2, 2);  
+    const priority1 = generatePrioritySolutions(solutions, 3, 1, personalizeData);
+    const priority2 = generatePrioritySolutions(solutions, 2, 2, personalizeData);  
     const priority3 = [];  // No priority 3 solutions for now
 
     // Gerar recomendações de aulas (novo)
@@ -187,6 +216,8 @@ serve(async (req) => {
             title: lesson.title,
             description: lesson.description,
             difficulty_level: lesson.difficulty_level,
+            estimated_time_minutes: lesson.estimated_time_minutes,
+            cover_image_url: lesson.cover_image_url,
             moduleTitle: module.title,
             courseTitle: course.title
           });
@@ -197,7 +228,7 @@ serve(async (req) => {
     console.log(`Extraídas ${allLessons.length} aulas de todos os cursos`);
     
     // Gerar recomendações baseadas em soluções
-    const lessonsBySolutionMatch = generateLessonRecommendations(allLessons, priority1, priority2);
+    const lessonsBySolutionMatch = generateLessonRecommendations(allLessons, priority1, priority2, personalizeData);
     
     // Adicionar recomendações baseadas em perfil
     console.log("Adicionando recomendações baseadas em perfil...");
@@ -216,21 +247,25 @@ serve(async (req) => {
       recommendedLessons = recommendedLessons.slice(0, 9);
     }
 
-    // Gerar recomendações de cursos (como backup)
+    // Gerar recomendações de cursos
     console.log("Processando recomendações de cursos...");
     let recommendedCourses = [];
     
-    // Adicionar recomendações baseadas em perfil
-    console.log("Adicionando recomendações baseadas em perfil...");
-    const coursesByProfile = courses.slice(0, 2).map((course, index) => ({
-      courseId: course.id,
-      justification: "Recomendado para seu perfil",
-      priority: index + 1
-    }));
-    
-    recommendedCourses = [...coursesByProfile];
-    console.log(`Adicionadas ${coursesByProfile.length} recomendações de cursos baseadas em perfil`);
-    console.log(`Geradas ${recommendedCourses.length} recomendações de cursos no total`);
+    if (courses && courses.length > 0) {
+      // Adicionar recomendações baseadas em perfil
+      console.log("Adicionando recomendações baseadas em perfil...");
+      const coursesByProfile = courses.slice(0, 3).map((course, index) => ({
+        courseId: course.id,
+        title: course.title,
+        description: course.description,
+        cover_image_url: course.cover_image_url,
+        justification: generatePersonalizedCourseJustification(course, personalizeData),
+        priority: index + 1
+      }));
+      
+      recommendedCourses = [...coursesByProfile];
+      console.log(`Adicionadas ${coursesByProfile.length} recomendações de cursos baseadas em perfil`);
+    }
 
     // Preparar a estrutura da trilha
     const trailData = {
@@ -314,8 +349,8 @@ serve(async (req) => {
   }
 });
 
-// Função para gerar recomendações de soluções por prioridade
-function generatePrioritySolutions(solutions: any[], count: number, priorityLevel: number) {
+// Função para gerar recomendações de soluções por prioridade com justificativas personalizadas
+function generatePrioritySolutions(solutions: any[], count: number, priorityLevel: number, personalizeData: any) {
   if (!solutions || solutions.length === 0) return [];
   
   // Embaralhar soluções para simular recomendação personalizada
@@ -324,37 +359,73 @@ function generatePrioritySolutions(solutions: any[], count: number, priorityLeve
   // Selecionar as primeiras "count" soluções
   return shuffled.slice(0, count).map(solution => ({
     solutionId: solution.id,
-    justification: getJustificationText(solution, priorityLevel),
-    priority: priorityLevel
+    justification: generatePersonalizedJustification(solution, priorityLevel, personalizeData),
+    priority: priorityLevel,
+    thumbnail_url: solution.thumbnail_url
   }));
 }
 
-// Função para gerar texto de justificativa para soluções
-function getJustificationText(solution: any, priorityLevel: number): string {
-  const priorityTexts = [
-    "Esta solução é altamente recomendada para seu perfil e objetivos de negócio.",
-    "Com base no seu perfil, esta solução pode trazer resultados significativos.",
-    "Uma adição interessante para complementar sua estratégia."
-  ];
+// Função para gerar texto de justificativa personalizada para soluções
+function generatePersonalizedJustification(solution: any, priorityLevel: number, personalizeData: any): string {
+  // Extrair dados do usuário para personalização
+  const { firstName, company, industry, companySize, aiExperience, role } = personalizeData;
   
-  const categoryTexts = {
-    Receita: " Pode ajudar a aumentar sua receita diretamente.",
-    Operacional: " Deve melhorar seus processos internos com eficiência.",
-    Estratégia: " Fortalecerá sua posição estratégica no mercado."
+  // Templates de justificativa por categoria
+  const categoryTemplates = {
+    "Receita": [
+      `${firstName ? firstName + ', esta' : 'Esta'} solução pode aumentar diretamente a receita ${company ? 'da ' + company : 'do seu negócio'}${industry ? ' no setor de ' + industry : ''}.`,
+      `${firstName ? firstName + ', ' : ''}vamos impulsionar suas vendas${companySize ? ' em sua empresa de porte ' + companySize : ''} com esta implementação de retorno rápido.`,
+      `${firstName ? firstName + ', identificamos' : 'Identificamos'} que aumentar receita é prioridade${role ? ' para sua função de ' + role : ''}, e esta solução entrega resultados tangíveis.`
+    ],
+    "Operacional": [
+      `${firstName ? firstName + ', esta' : 'Esta'} solução vai otimizar processos${company ? ' na ' + company : ''}${industry ? ' do setor de ' + industry : ''}.`,
+      `${firstName ? firstName + ', ' : ''}baseado no seu perfil, esta solução reduzirá custos operacionais${companySize ? ' em negócios de porte ' + companySize : ''} significativamente.`, 
+      `${firstName ? firstName + ', automatize' : 'Automatize'} tarefas repetitivas${role ? ' que consomem seu tempo como ' + role : ''} com esta implementação prática.`
+    ],
+    "Estratégia": [
+      `${firstName ? firstName + ', selecionamos' : 'Selecionamos'} esta solução estratégica considerando${industry ? ' os desafios específicos do setor de ' + industry : ' seus objetivos empresariais'}.`,
+      `${firstName ? firstName + ', esta solução' : 'Esta solução'} fortalecerá a posição ${company ? 'da ' + company : 'do seu negócio'} no mercado de forma sustentável.`,
+      `${firstName ? firstName + ', ' : ''}esta implementação estratégica foi escolhida${aiExperience > 1 ? ' para seu nível avançado em IA' : ' considerando seu conhecimento em IA'}.`
+    ]
   };
   
-  let text = priorityTexts[priorityLevel - 1] || "Recomendado para seu perfil.";
+  // Templates gerais por nível de prioridade
+  const priorityTemplates = [
+    `${firstName ? firstName + ', esta' : 'Esta'} é uma escolha de alta prioridade para você, considerando${industry ? ' sua atuação em ' + industry : ' seus objetivos'}. Recomendamos implementar primeiro.`,
+    `${firstName ? firstName + ', ' : ''}baseado no seu perfil, esta solução tem potencial para trazer${companySize ? ' para uma empresa de porte ' + companySize : ''} resultados expressivos.`,
+    `${firstName ? firstName + ', esta solução é' : 'Esta solução é'} complementar à sua estratégia principal, mas ainda assim valiosa${role ? ' para sua atuação como ' + role : ''}.`
+  ];
   
-  // Adicionar texto específico da categoria se disponível
-  if (solution.category && categoryTexts[solution.category]) {
-    text += categoryTexts[solution.category];
+  // Selecionar template por categoria ou prioridade
+  let templates = [];
+  if (solution.category && categoryTemplates[solution.category]) {
+    templates = categoryTemplates[solution.category];
+  } else {
+    templates = priorityTemplates;
   }
   
-  return text;
+  // Selecionar uma justificativa aleatoriamente
+  const randomIndex = Math.floor(Math.random() * templates.length);
+  return templates[randomIndex];
+}
+
+// Função para gerar justificativas personalizadas para cursos
+function generatePersonalizedCourseJustification(course: any, personalizeData: any): string {
+  const { firstName, industry, role, aiExperience } = personalizeData;
+  
+  const courseTemplates = [
+    `${firstName ? firstName + ', este' : 'Este'} curso foi selecionado especificamente para complementar sua jornada de implementação.`,
+    `${firstName ? firstName + ', ' : ''}com base no seu interesse${industry ? ' no setor de ' + industry : ''}, este conteúdo vai expandir seus conhecimentos.`,
+    `${firstName ? firstName + ', ' : ''}recomendamos esta aula${role ? ' para apoiar seu trabalho como ' + role : ''} com conhecimentos práticos.`,
+    `${firstName ? firstName + ', ' : ''}selecionamos este conteúdo${aiExperience > 1 ? ' para aprofundar seus conhecimentos avançados' : ' para fortalecer sua base de conhecimento'} em IA.`
+  ];
+  
+  const randomIndex = Math.floor(Math.random() * courseTemplates.length);
+  return courseTemplates[randomIndex];
 }
 
 // Função para gerar recomendações de aulas baseadas nas soluções recomendadas
-function generateLessonRecommendations(allLessons: any[], priority1: any[], priority2: any[]) {
+function generateLessonRecommendations(allLessons: any[], priority1: any[], priority2: any[], personalizeData: any) {
   if (!allLessons || allLessons.length === 0) return [];
   
   // Extrair palavras-chave das soluções recomendadas
@@ -411,7 +482,7 @@ function generateLessonRecommendations(allLessons: any[], priority1: any[], prio
     return {
       ...lesson,
       score,
-      justification: "Esta aula complementa perfeitamente as soluções recomendadas para você",
+      justification: generatePersonalizedLessonJustification(lesson, personalizeData),
       priority: score > 2 ? 1 : 2
     };
   });
@@ -421,6 +492,21 @@ function generateLessonRecommendations(allLessons: any[], priority1: any[], prio
     .filter(lesson => lesson.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, 5);
+}
+
+// Função para gerar justificativas personalizadas para aulas
+function generatePersonalizedLessonJustification(lesson: any, personalizeData: any): string {
+  const { firstName, industry, role, aiExperience } = personalizeData;
+  
+  const lessonTemplates = [
+    `${firstName ? firstName + ', esta' : 'Esta'} aula foi selecionada para complementar perfeitamente as soluções que recomendamos para você.`,
+    `${firstName ? firstName + ', ' : ''}com base no seu perfil${industry ? ' no setor de ' + industry : ''}, este conteúdo vai ajudar na implementação das soluções.`,
+    `${firstName ? firstName + ', ' : ''}recomendamos esta aula${role ? ' para apoiar seu trabalho como ' + role : ''} com conhecimentos práticos e aplicáveis.`,
+    `${firstName ? firstName + ', ' : ''}selecionamos este conteúdo${aiExperience > 1 ? ' para aprofundar seus conhecimentos avançados' : ' para fortalecer sua base de conhecimento'} em IA.`
+  ];
+  
+  const randomIndex = Math.floor(Math.random() * lessonTemplates.length);
+  return lessonTemplates[randomIndex];
 }
 
 // Função para extrair palavras-chave de um objeto
@@ -454,10 +540,10 @@ function extractKeywords(obj: any): string[] {
 // Função para gerar recomendações de aulas baseadas no perfil do usuário
 function generateProfileBasedLessonRecommendations(
   allLessons: any[], 
-  profile: any,
+  personalizeData: any,
   alreadyRecommendedIds: string[]
 ): any[] {
-  // Filtramos aulas que já foram recomendadas
+  // Filtrar aulas que já foram recomendadas
   const availableLessons = allLessons.filter(lesson => 
     !alreadyRecommendedIds.includes(lesson.lessonId)
   );
@@ -465,7 +551,7 @@ function generateProfileBasedLessonRecommendations(
   if (!availableLessons || availableLessons.length === 0) return [];
   
   // Se não temos dados de perfil suficientes, retornar algumas aleatórias
-  if (!profile || (!profile.goals?.length && !profile.industry)) {
+  if (!personalizeData || (!personalizeData.goals?.length && !personalizeData.industry)) {
     return availableLessons
       .sort(() => 0.5 - Math.random())
       .slice(0, 3)
@@ -482,8 +568,8 @@ function generateProfileBasedLessonRecommendations(
     const lessonText = `${lesson.title || ""} ${lesson.description || ""} ${lesson.moduleTitle || ""} ${lesson.courseTitle || ""}`.toLowerCase();
     
     // Pontuação baseada nos objetivos do usuário
-    if (profile.goals && profile.goals.length > 0) {
-      profile.goals.forEach((goal: string) => {
+    if (personalizeData.goals && personalizeData.goals.length > 0) {
+      personalizeData.goals.forEach((goal: string) => {
         if (goal && lessonText.includes(goal.toLowerCase())) {
           score += 2;
         }
@@ -491,17 +577,17 @@ function generateProfileBasedLessonRecommendations(
     }
     
     // Pontuação baseada na indústria/setor
-    if (profile.industry && lessonText.includes(profile.industry.toLowerCase())) {
+    if (personalizeData.industry && lessonText.includes(personalizeData.industry.toLowerCase())) {
       score += 1.5;
     }
     
     // Ajuste pela experiência com IA - recomendar aulas mais avançadas para usuários experientes
     if (lesson.difficulty_level) {
-      if (profile.aiExperience === 0 && lesson.difficulty_level === 'beginner') {
+      if (personalizeData.aiExperience === 0 && lesson.difficulty_level === 'beginner') {
         score += 1;
-      } else if (profile.aiExperience === 2 && lesson.difficulty_level === 'intermediate') {
+      } else if (personalizeData.aiExperience === 2 && lesson.difficulty_level === 'intermediate') {
         score += 1;
-      } else if (profile.aiExperience === 3 && lesson.difficulty_level === 'advanced') {
+      } else if (personalizeData.aiExperience === 3 && lesson.difficulty_level === 'advanced') {
         score += 1;
       }
     }
@@ -509,8 +595,8 @@ function generateProfileBasedLessonRecommendations(
     return {
       ...lesson,
       score,
-      justification: "Recomendado especificamente para seu perfil e objetivos",
-      priority: 1
+      justification: generatePersonalizedLessonJustification(lesson, personalizeData),
+      priority: 2
     };
   });
   
