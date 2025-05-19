@@ -15,6 +15,7 @@ export function ModernDashboardHeader() {
   // Efeito para atualizar o nome do usuário quando os dados mudam
   useEffect(() => {
     if (user || profile) {
+      // Usar a função utilitária para obter o nome do usuário
       const displayName = getUserDisplayName(user, profile);
       setUserName(displayName || "Membro");
       

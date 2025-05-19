@@ -27,6 +27,9 @@ interface SidebarNavProps {
 
 export const MemberSidebarNav = ({ sidebarOpen, isAdmin }: SidebarNavProps) => {
   const location = useLocation();
+  
+  // Log para debug
+  console.log("MemberSidebarNav - Status de admin:", isAdmin);
 
   const menuItems = [
     {

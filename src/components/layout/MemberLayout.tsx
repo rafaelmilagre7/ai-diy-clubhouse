@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { MemberSidebar } from "./member/MemberSidebar";
 import { MemberContent } from "./member/MemberContent";
+import AuthSession from "@/components/auth/AuthSession"; // Importar AuthSession
 
 /**
  * MemberLayout renderiza a estrutura de layout para usuários membros
@@ -98,6 +99,9 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="flex min-h-screen bg-[#0F111A] overflow-hidden">
+      {/* Incluir o componente AuthSession para inicializar e verificar a autenticação */}
+      <AuthSession />
+      
       {/* Overlay para dispositivos móveis */}
       {showOverlay && (
         <div 
