@@ -3,7 +3,7 @@
 export * from './client';
 export * from './config';
 
-// Exportamos todos os tipos necessários
+// Exportamos todos os tipos necessários exceto Solution
 export type {
   LearningLesson,
   LearningLessonVideo,
@@ -17,15 +17,14 @@ export type {
   UserRole,
   Progress,
   UserChecklist,
-  TrailSolution,
-  Solution
+  TrailSolution
 } from './types';
 
-// Importamos o Solution de types como SupabaseSolution para evitar conflitos
+// Importamos e re-exportamos o Solution de types como SupabaseSolution para evitar conflitos
 import type { Solution as SupabaseSolution } from './types';
 export type { SupabaseSolution };
 
-// E exportamos o Solution de @/types/solution
+// Exportamos o Solution de @/types/solution
 export { type Solution } from '@/types/solution';
 
 // Exportação explícita das funções de storage

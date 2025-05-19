@@ -1,4 +1,3 @@
-
 import { Database } from './types/database.types';
 
 // Tipos para o sistema de referrals/indicações
@@ -68,6 +67,8 @@ export type TrailSolution = {
   category: string;
   tags?: string[];
   checklist_items?: any[];
+  priority: number;
+  justification: string;
 };
 
 // Definindo UserChecklist para compatibilidade
