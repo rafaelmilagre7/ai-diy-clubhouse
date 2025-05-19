@@ -39,6 +39,7 @@ export const AulasList: React.FC<AulasListProps> = ({
   const navigate = useNavigate();
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [selectedAulaId, setSelectedAulaId] = React.useState<string | null>(null);
+  const [selectedAula, setSelectedAula] = React.useState<LearningLesson | null>(null);
 
   const handleViewDetails = (aulaId: string) => {
     navigate(`/formacao/aulas/${aulaId}`);
@@ -52,8 +53,9 @@ export const AulasList: React.FC<AulasListProps> = ({
     }
   };
 
-  const handleDeleteClick = (aulaId: string) => {
-    setSelectedAulaId(aulaId);
+  const handleDeleteClick = (aula: LearningLesson) => {
+    setSelectedAulaId(aula.id);
+    setSelectedAula(aula);
     setDeleteDialogOpen(true);
   };
 
@@ -63,6 +65,7 @@ export const AulasList: React.FC<AulasListProps> = ({
     }
     setDeleteDialogOpen(false);
     setSelectedAulaId(null);
+    setSelectedAula(null);
   };
 
   // Se estiver carregando, mostrar um estado de carregamento
@@ -135,7 +138,7 @@ export const AulasList: React.FC<AulasListProps> = ({
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-destructive"
-                          onClick={() => handleDeleteClick(aula.id)}
+                          onClick={() => handleDeleteClick(aula)}
                         >
                           <Trash className="h-4 w-4 mr-2" />
                           Excluir
@@ -183,7 +186,9 @@ export const AulasList: React.FC<AulasListProps> = ({
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         onConfirm={handleDeleteConfirm}
+        aula={selectedAula}
       />
     </div>
   );
 };
+

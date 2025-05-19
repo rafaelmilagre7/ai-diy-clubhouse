@@ -157,6 +157,8 @@ export const NovoModuloDialog = ({
               value={coverImageUrl}
               onChange={setCoverImageUrl}
               disabled={loading}
+              bucketName="course_images"
+              folderPath="module_covers"
             />
           </div>
 
