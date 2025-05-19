@@ -3,7 +3,7 @@
 export * from './client';
 export * from './config';
 
-// Exportamos seletivamente dos types para evitar conflitos
+// Exportamos todos os tipos necessários
 export type {
   LearningLesson,
   LearningLessonVideo,

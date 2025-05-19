@@ -3,61 +3,80 @@ import { supabase } from "@/lib/supabase";
 import type { UserProfile } from "@/lib/supabase/types";
 
 /**
- * Verifica se um determinado papel é válido para o usuário
- * @param role Papel a ser validado
+ * Verifica e valida o papel do usuário com base no email
+ * @param profileId ID do perfil do usuário
+ * @param currentRole Papel atual do usuário
  * @param email Email do usuário
+ * @returns Papel validado
  */
-export function validateRole(role: string, email?: string): boolean {
-  if (!email) return true;
+export async function validateUserRole(
+  profileId: string, 
+  currentRole: string, 
+  email: string | null
+): Promise<string> {
+  if (!email) return currentRole;
   
-  const correctRole = determineRoleFromEmail(email);
-  return role === correctRole;
-}
-
-/**
- * Valida o papel do usuário e atualiza se necessário
- * @param profile Perfil do usuário
- * @param email Email para determinar o papel correto
- */
-export async function validateUserRole(profile: UserProfile, email?: string): Promise<string> {
-  if (!email) return profile.role || 'member';
-
-  const correctRole = determineRoleFromEmail(email);
+  // Determinar o papel correto com base no email
+  let correctRole = determineRoleFromEmail(email);
   
-  // Se o papel não corresponder ao email, atualizar
-  if (profile.role !== correctRole) {
-    await supabase
-      .from('profiles')
-      .update({ role: correctRole })
-      .eq('id', profile.id);
-    
-    return correctRole;
+  // Se o papel não corresponde ao email, atualizar no banco de dados
+  if (currentRole !== correctRole) {
+    try {
+      await supabase
+        .from('profiles')
+        .update({ role: correctRole })
+        .eq('id', profileId);
+        
+      console.log(`Papel atualizado de ${currentRole} para ${correctRole}`);
+    } catch (error) {
+      console.error('Erro ao atualizar papel do usuário:', error);
+    }
   }
   
-  return profile.role || 'member';
+  return correctRole;
 }
 
 /**
- * Determina o papel correto com base no email
+ * Determina o papel baseado no endereço de email
  * @param email Email do usuário
+ * @returns Papel determinado
  */
-export function determineRoleFromEmail(email: string): string {
+function determineRoleFromEmail(email: string): string {
   if (!email) return 'member';
   
+  // Admin: emails da empresa ou específicos de administração
   if (email.includes('@viverdeia.ai') || email === 'admin@teste.com') {
     return 'admin';
-  } else if (email.includes('@formacao.viverdeia.ai') || email.includes('formacao@viverdeia.ai')) {
-    return 'formacao';
-  } else {
-    return 'member';
   }
+  
+  // Formação: emails relacionados à formação
+  if (email.includes('@formacao.viverdeia.ai') || email.includes('formacao@')) {
+    return 'formacao';
+  }
+  
+  // Por padrão, atribuir papel de membro
+  return 'member';
 }
 
 /**
- * Verifica se o usuário é um super administrador
- * @param profile Perfil do usuário
+ * Busca o papel de um usuário pelo seu ID
+ * @param userId ID do usuário
+ * @returns Papel do usuário ou null se não encontrado
  */
-export function isSuperAdmin(profile: UserProfile | null): boolean {
-  if (!profile) return false;
-  return profile.role === 'admin';
+export async function getUserRoleById(userId: string): Promise<string | null> {
+  if (!userId) return null;
+  
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single();
+      
+    if (error) throw error;
+    return data?.role || null;
+  } catch (error) {
+    console.error('Erro ao buscar papel do usuário:', error);
+    return null;
+  }
 }
