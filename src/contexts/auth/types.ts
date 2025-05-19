@@ -12,8 +12,13 @@ export interface AuthContextType {
   isFormacao: boolean;
   signOut: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
+  signInAsMember: () => Promise<void>;
+  signInAsAdmin: () => Promise<void>;
   setProfile: (profile: UserProfile | null) => void;
   setIsLoading: (isLoading: boolean) => void;
+  setUser: (user: User | null) => void;
+  setSession: (session: Session | null) => void;
+  setIsAdmin: (isAdmin: boolean) => void;
 }
 
 // Se necessário, adicione aqui outras interfaces relacionadas à autenticação

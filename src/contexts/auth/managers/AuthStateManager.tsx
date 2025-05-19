@@ -6,7 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { useAuth } from '../AuthProvider';
 import { UserProfile } from '@/lib/supabase/types';
-import { fetchUserProfile } from '../utils/profileUtils';
+import { fetchUserProfile } from '../utils/profileUtils/userProfileFunctions';
 
 interface AuthStateManagerProps {
   children: ReactNode;

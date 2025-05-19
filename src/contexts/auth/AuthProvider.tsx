@@ -8,6 +8,17 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { UserProfile } from '@/lib/supabase/types';
 
+// Usuários de teste para login rápido
+export const TEST_MEMBER = {
+  email: 'member@teste.com',
+  password: 'password123'
+};
+
+export const TEST_ADMIN = {
+  email: 'admin@teste.com',
+  password: 'admin123'
+};
+
 // Criar o contexto de autenticação
 export const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -18,7 +29,12 @@ export const AuthContext = createContext<AuthContextType>({
   isFormacao: false,
   setProfile: () => {},
   setIsLoading: () => {},
+  setUser: () => {},
+  setSession: () => {},
+  setIsAdmin: () => {},
   signIn: async () => {},
+  signInAsMember: async () => {},
+  signInAsAdmin: async () => {},
   signOut: async () => {}
 });
 
@@ -85,6 +101,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
   
+  // Implementação do login como membro (para testes)
+  const signInAsMember = async () => {
+    try {
+      await signIn(TEST_MEMBER.email, TEST_MEMBER.password);
+      toast.success("Login como membro realizado com sucesso");
+    } catch (error) {
+      toast.error("Erro ao fazer login como membro");
+      throw error;
+    }
+  };
+  
+  // Implementação do login como admin (para testes)
+  const signInAsAdmin = async () => {
+    try {
+      await signIn(TEST_ADMIN.email, TEST_ADMIN.password);
+      toast.success("Login como admin realizado com sucesso");
+    } catch (error) {
+      toast.error("Erro ao fazer login como admin");
+      throw error;
+    }
+  };
+  
   // Implementação do logout
   const signOut = async () => {
     try {
@@ -113,9 +151,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         isAdmin, 
         isFormacao, 
         signOut, 
-        signIn, 
+        signIn,
+        signInAsMember,
+        signInAsAdmin,
         setProfile, 
-        setIsLoading 
+        setIsLoading,
+        setUser,
+        setSession,
+        setIsAdmin 
       }}
     >
       <AuthStateManager>

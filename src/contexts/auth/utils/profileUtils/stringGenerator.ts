@@ -1,28 +1,51 @@
 
-/**
- * Gera um ID temporário para objetos de vídeo
- * @returns String de ID aleatório
- */
-export function generateTempId(): string {
-  return `temp_${Math.random().toString(36).substring(2, 15)}`;
+// Função para gerar strings aleatórias 
+export function generateRandomString(length: number): string {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    result += characters.charAt(randomIndex);
+  }
+  
+  return result;
 }
 
-/**
- * Gera um nome de arquivo simplificado
- * @param originalName Nome original do arquivo
- * @returns Nome simplificado
- */
-export function generateSimpleFileName(originalName: string): string {
-  if (!originalName) return '';
+// Função para gerar um avatar temporário com base no nome do usuário
+export function generateInitialsAvatar(name: string): string {
+  // Extrair as iniciais (até 2 caracteres)
+  const initials = name
+    .split(' ')
+    .filter((part) => part.length > 0)
+    .slice(0, 2)
+    .map((part) => part[0].toUpperCase())
+    .join('');
+    
+  // Cores de fundo possíveis (tons suaves)
+  const backgroundColors = [
+    '#e9f5e9', '#e3f2fd', '#fff8e1', 
+    '#f3e5f5', '#e8f5e9', '#e0f7fa',
+    '#fff3e0', '#f1f8e9', '#e8eaf6'
+  ];
   
-  // Remover a extensão
-  const nameParts = originalName.split('.');
-  const nameWithoutExtension = nameParts.slice(0, -1).join('.');
+  // Escolher uma cor aleatoriamente baseada no nome
+  const colorIndex = name
+    .split('')
+    .reduce((acc, char) => acc + char.charCodeAt(0), 0) % backgroundColors.length;
+    
+  // Construir um svg em base64
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+      <rect width="80" height="80" fill="${backgroundColors[colorIndex]}" />
+      <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="32" 
+            font-weight="bold" fill="#555" text-anchor="middle" dominant-baseline="middle">
+        ${initials}
+      </text>
+    </svg>
+  `;
   
-  // Simplificar o nome
-  return nameWithoutExtension
-    .replace(/[^\w\s]/gi, '') // Remover caracteres especiais
-    .replace(/\s+/g, '_')     // Substituir espaços por underscores
-    .toLowerCase()
-    .substring(0, 32);        // Limitar o tamanho
+  // Converter para base64
+  const base64 = btoa(svg);
+  return `data:image/svg+xml;base64,${base64}`;
 }

@@ -31,4 +31,25 @@ export const fetchUserProfile = async (userId: string) => {
   }
 };
 
-// Outras funções relacionadas ao perfil do usuário
+// Função para atualizar perfil de usuário
+export const updateUserProfile = async (userId: string, updates: Partial<UserProfile>) => {
+  try {
+    if (!userId) {
+      return { data: null, error: new Error('ID de usuário não fornecido') };
+    }
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    
+    return { data, error: null };
+  } catch (error) {
+    console.error('Erro ao atualizar perfil:', error);
+    return { data: null, error };
+  }
+};

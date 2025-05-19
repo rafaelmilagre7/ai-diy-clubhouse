@@ -1,4 +1,3 @@
-
 import { Database } from './database.types';
 
 // Tipos para tabelas de aprendizado
@@ -10,6 +9,7 @@ export interface LearningLesson {
   cover_image_url: string | null;
   module_id: string;
   published: boolean;
+  is_published: boolean; // Alias para compatibilidade
   created_at: string;
   updated_at: string;
   order_index: number;
@@ -47,9 +47,11 @@ export interface LearningModule {
   cover_image_url: string | null;
   course_id: string;
   published: boolean;
+  is_published: boolean; // Alias para compatibilidade
   created_at: string;
   updated_at: string;
   order_index: number;
+  learning_courses?: { id: string; title: string; };
 }
 
 export interface LearningCourse {
@@ -59,11 +61,17 @@ export interface LearningCourse {
   cover_image_url: string | null;
   slug: string;
   published: boolean;
+  is_published: boolean; // Alias para compatibilidade
   created_at: string;
   updated_at: string;
   order_index: number;
   created_by: string | null;
   is_restricted?: boolean;
+  modules_count?: number;
+  lessons_count?: number;
+  module_count?: number; // Alias para compatibilidade
+  lesson_count?: number; // Alias para compatibilidade
+  total_duration_minutes?: number;
 }
 
 export interface LearningProgress {
