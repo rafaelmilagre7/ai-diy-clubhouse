@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
-import { VideoFormValues } from "../types/VideoTypes";
+import { VideoFormValues } from '@/lib/supabase';
 import { AulaFormValues } from "../../schemas/aulaFormSchema";
 
 export interface VideoManagerHookReturnType {

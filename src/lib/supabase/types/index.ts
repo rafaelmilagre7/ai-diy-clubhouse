@@ -23,6 +23,7 @@ export type LearningComment = Database['public']['Tables']['learning_comments'][
 export type Solution = Database['public']['Tables']['solutions']['Row'] & {
   videos?: any[];
   checklist?: any[];
+  overview?: string;
 };
 
 export type Module = Database['public']['Tables']['modules']['Row'] & {
@@ -65,6 +66,9 @@ export interface UserChecklist {
   created_at: string;
   updated_at: string;
 }
+
+// Exportar o tipo UserRole para uso em outros arquivos
+export type UserRole = 'admin' | 'member' | 'formacao';
 
 // Outros tipos existentes
 export * from './database.types';

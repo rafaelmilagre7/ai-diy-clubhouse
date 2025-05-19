@@ -1,4 +1,3 @@
-
 import { supabase, UserRole } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
 
@@ -28,7 +27,9 @@ export const createTestUser = async (email: string, password: string, role: User
         options: {
           data: {
             name: role === 'admin' ? 'Administrador Teste' : 'Membro Teste',
-            role: role
+            role: role,
+            referrals_count: 0,
+            successful_referrals_count: 0
           },
           // Don't require email confirmation for test users
           emailRedirectTo: window.location.origin

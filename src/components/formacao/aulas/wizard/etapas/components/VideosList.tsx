@@ -1,8 +1,7 @@
-
 import React from "react";
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { VideoItem } from "./VideoItem";
-import { VideoFormValues } from "../types/VideoTypes";
+import { VideoFormValues, VideoListProps } from '../types/VideoTypes';
 
 interface VideosListProps {
   videos: VideoFormValues[];
