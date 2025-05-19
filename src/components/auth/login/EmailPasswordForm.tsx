@@ -29,7 +29,7 @@ const EmailPasswordForm = ({
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email" className="text-white">Email</Label>
         <Input
           id="email"
           type="email"
@@ -39,15 +39,16 @@ const EmailPasswordForm = ({
           disabled={isLoading}
           required
           autoComplete="username"
+          className="placeholder:text-neutral-400"
         />
       </div>
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label htmlFor="password">Senha</Label>
+          <Label htmlFor="password" className="text-white">Senha</Label>
           <Link
             to="/reset-password"
-            className="text-xs text-viverblue hover:underline hover:text-viverblue/90"
+            className="text-xs text-viverblue hover:text-viverblue-light hover:underline"
           >
             Esqueceu sua senha?
           </Link>
@@ -61,6 +62,7 @@ const EmailPasswordForm = ({
           disabled={isLoading}
           required
           autoComplete="current-password"
+          className="placeholder:text-neutral-400"
         />
       </div>
 
@@ -70,7 +72,7 @@ const EmailPasswordForm = ({
 
       <Button
         type="submit"
-        className="w-full bg-viverblue hover:bg-viverblue/90"
+        className="w-full bg-viverblue hover:bg-viverblue-dark text-white font-medium"
         disabled={isLoading}
       >
         {isLoading ? (

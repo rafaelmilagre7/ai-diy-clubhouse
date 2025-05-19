@@ -1,59 +1,44 @@
 
-import React from "react";
+import { AlertTriangle, CheckCircle, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { AlertCircle, CheckCircle } from "lucide-react";
+
+type FormMessageType = "error" | "success" | "info";
 
 interface FormMessageProps {
-  type?: "error" | "success" | "warning" | "info";
+  type?: FormMessageType;
   message?: string;
   className?: string;
-  children?: React.ReactNode;
 }
 
-export const FormMessage: React.FC<FormMessageProps> = ({
+export const FormMessage = ({
   type = "info",
   message,
   className,
-  children,
-}) => {
-  const content = message || children;
-  
-  if (!content) {
-    return null;
-  }
+}: FormMessageProps) => {
+  if (!message) return null;
 
-  const getIcon = () => {
-    switch (type) {
-      case "error":
-        return <AlertCircle className="h-4 w-4 text-red-500" />;
-      case "success":
-        return <CheckCircle className="h-4 w-4 text-viverblue" />;
-      case "warning":
-        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
-      case "info":
-      default:
-        return null;
-    }
+  const iconMap = {
+    error: <AlertTriangle className="h-4 w-4" />,
+    success: <CheckCircle className="h-4 w-4" />,
+    info: <Info className="h-4 w-4" />,
   };
-  
-  const getTextColor = () => {
-    switch (type) {
-      case "error":
-        return "text-red-500";
-      case "success":
-        return "text-viverblue";
-      case "warning":
-        return "text-yellow-500";
-      case "info":
-      default:
-        return "text-textSecondary";
-    }
+
+  const colorMap = {
+    error: "text-red-300 bg-red-900/30 border-red-700",
+    success: "text-green-300 bg-green-900/30 border-green-700",
+    info: "text-blue-300 bg-blue-900/30 border-blue-700",
   };
 
   return (
-    <div className={cn("flex items-center gap-2 text-sm mt-1", getTextColor(), className)}>
-      {getIcon()}
-      <span>{content}</span>
+    <div
+      className={cn(
+        "flex items-center gap-2 p-3 text-sm rounded-md border",
+        colorMap[type],
+        className
+      )}
+    >
+      {iconMap[type]}
+      <span>{message}</span>
     </div>
   );
 };
