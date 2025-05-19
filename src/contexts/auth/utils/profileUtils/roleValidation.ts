@@ -1,55 +1,63 @@
 
-import { UserProfile, UserRole } from "@/lib/supabase/types";
+import { supabase } from "@/lib/supabase";
+import type { UserProfile } from "@/lib/supabase/types";
 
 /**
- * Valida o role com base no nome
+ * Verifica se um determinado papel é válido para o usuário
+ * @param role Papel a ser validado
+ * @param email Email do usuário
  */
-export function validateRole(role: string | null | undefined): string {
-  if (!role) return 'member';
+export function validateRole(role: string, email?: string): boolean {
+  if (!email) return true;
   
-  const validRoles = ['admin', 'member', 'moderator', 'formacao'];
-  return validRoles.includes(role) ? role : 'member';
+  const correctRole = determineRoleFromEmail(email);
+  return role === correctRole;
 }
 
 /**
- * Valida o role do usuário com base no perfil
+ * Valida o papel do usuário e atualiza se necessário
+ * @param profile Perfil do usuário
+ * @param email Email para determinar o papel correto
  */
-export function validateUserRole(profile: UserProfile | null): string {
-  if (!profile) return 'member';
-  return validateRole(profile.role);
+export async function validateUserRole(profile: UserProfile, email?: string): Promise<string> {
+  if (!email) return profile.role || 'member';
+
+  const correctRole = determineRoleFromEmail(email);
+  
+  // Se o papel não corresponder ao email, atualizar
+  if (profile.role !== correctRole) {
+    await supabase
+      .from('profiles')
+      .update({ role: correctRole })
+      .eq('id', profile.id);
+    
+    return correctRole;
+  }
+  
+  return profile.role || 'member';
 }
 
 /**
- * Determina o role com base no email
- * Usado principalmente para testes e regras específicas de domínio
+ * Determina o papel correto com base no email
+ * @param email Email do usuário
  */
 export function determineRoleFromEmail(email: string): string {
   if (!email) return 'member';
   
-  if (email.endsWith('@admin.com') || email.includes('admin')) {
+  if (email.includes('@viverdeia.ai') || email === 'admin@teste.com') {
     return 'admin';
-  }
-  
-  if (email.endsWith('@formacao.com') || email.includes('formacao')) {
+  } else if (email.includes('@formacao.viverdeia.ai') || email.includes('formacao@viverdeia.ai')) {
     return 'formacao';
+  } else {
+    return 'member';
   }
-  
-  return 'member';
 }
 
 /**
  * Verifica se o usuário é um super administrador
+ * @param profile Perfil do usuário
  */
 export function isSuperAdmin(profile: UserProfile | null): boolean {
   if (!profile) return false;
-  
-  // Verificação por email (para testes)
-  if (profile.email && 
-     (profile.email.includes('super') || 
-      profile.email.includes('admin'))) {
-    return true;
-  }
-  
-  // Verificação por role
-  return profile.role === 'admin' && !!profile.user_roles?.id;
+  return profile.role === 'admin';
 }

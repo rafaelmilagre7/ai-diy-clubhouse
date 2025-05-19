@@ -25,7 +25,7 @@ import type { Solution as SupabaseSolution } from './types';
 export type { SupabaseSolution };
 
 // E exportamos o Solution de @/types/solution
-export type { Solution } from '@/types/solution';
+export { type Solution } from '@/types/solution';
 
 // Exportação explícita das funções de storage
 export { 
