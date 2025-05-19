@@ -98,7 +98,8 @@ serve(async (req: Request) => {
     // Se tiver número de WhatsApp e a flag estiver ativada, enviar também por WhatsApp
     if (useWhatsapp && whatsappNumber) {
       try {
-        const templateName = "member_invitation";
+        // Utilizar o template "plataforma_01" em vez de "member_invitation"
+        const templateName = "plataforma_01";
         
         // Preparar parâmetros para o template do WhatsApp
         const templateParams = {
@@ -125,7 +126,7 @@ serve(async (req: Request) => {
         
         whatsappSent = true;
       } catch (whatsappError: any) {
-        console.error("Erro ao enviar convite via WhatsApp:", whatsappError);
+        console.error("Erro detalhado ao enviar convite via WhatsApp:", whatsappError);
         errors.push({ type: "whatsapp", message: whatsappError.message });
       }
     }

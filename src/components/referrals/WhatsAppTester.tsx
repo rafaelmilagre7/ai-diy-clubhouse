@@ -19,7 +19,7 @@ export function WhatsAppTester() {
   const [result, setResult] = useState<{success: boolean; message?: string; data?: any} | null>(null);
   
   // Template specific states
-  const [templateName, setTemplateName] = useState("member_invitation");
+  const [templateName, setTemplateName] = useState("plataforma_01");
   const [templateParams, setTemplateParams] = useState({
     param1: "", // Nome da pessoa
     param2: "", // Nome do produto (Club ou Formação)
@@ -161,7 +161,7 @@ export function WhatsAppTester() {
                   <SelectValue placeholder="Selecione um template" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="member_invitation">Convite de Membro</SelectItem>
+                  <SelectItem value="plataforma_01">Convite da Plataforma</SelectItem>
                 </SelectContent>
               </Select>
             </div>
