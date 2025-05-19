@@ -30,18 +30,22 @@ export const useDataIntegrityCheck = (data: OnboardingProgress | null) => {
       let hasData = false;
       
       if (stepId === 'personal_info') {
-        // Para personal_info, verificar se temos o nome preenchido
-        hasData = !!(data[stepId]?.name || 
-                    (typeof data[stepId] === 'object' && Object.keys(data[stepId] || {}).length > 0));
+        // Para personal_info, verificar se temos informações pessoais preenchidas
+        const personalInfo = data[stepId as keyof OnboardingProgress];
+        hasData = !!(personalInfo && 
+                    typeof personalInfo === 'object' && 
+                    Object.keys(personalInfo || {}).length > 0);
                     
-        // Verificação extra: se o nome estiver diretamente no objeto principal
-        if (!hasData && data.name) {
-          hasData = true;
+        // Verificação extra: procurar por campos diretos no objeto principal
+        if (!hasData && data.personal_info && typeof data.personal_info === 'object') {
+          hasData = Object.keys(data.personal_info).length > 0;
         }
       } else if (stepId === 'professional_info') {
         // Para professional_info, verificar campos específicos
-        hasData = !!(data[stepId]?.company_name || 
-                    (typeof data[stepId] === 'object' && Object.keys(data[stepId] || {}).length > 0));
+        const professionalInfo = data[stepId as keyof OnboardingProgress];
+        hasData = !!(professionalInfo && 
+                    typeof professionalInfo === 'object' && 
+                    Object.keys(professionalInfo || {}).length > 0);
                     
         // Verificar campos diretos como fallback
         if (!hasData && (data.company_name || data.current_position)) {
@@ -49,9 +53,10 @@ export const useDataIntegrityCheck = (data: OnboardingProgress | null) => {
         }
       } else {
         // Para outros campos, verificar se o objeto existe e tem propriedades
-        hasData = !!(data[stepId] && 
-                    typeof data[stepId] === 'object' && 
-                    Object.keys(data[stepId] || {}).length > 0);
+        const stepData = data[stepId as keyof OnboardingProgress];
+        hasData = !!(stepData && 
+                    typeof stepData === 'object' && 
+                    Object.keys(stepData || {}).length > 0);
       }
       
       // Retorna true apenas se AMBAS verificações falharem
