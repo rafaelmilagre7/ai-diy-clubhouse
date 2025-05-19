@@ -8,8 +8,6 @@ import {
 import { useDashboardData } from "@/hooks/dashboard/useDashboardData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { ReferralWidget } from "@/components/referrals/ReferralWidget";
-
 interface KpiCardProps {
   title: string;
   value: string | number;
@@ -81,11 +79,6 @@ export const KpiGrid: React.FC<KpiGridProps> = ({
         value={`${completionRate}%`}
         icon={<PercentIcon className="h-4 w-4 text-muted-foreground" />}
       />
-      
-      {/* Widget de indicações */}
-      <div className="lg:col-span-3">
-        <ReferralWidget />
-      </div>
     </div>
   );
 };

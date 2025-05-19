@@ -15,7 +15,8 @@ import {
   Calendar,
   GraduationCap,
   Wrench,
-  MessagesSquare
+  MessagesSquare,
+  UserPlus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -83,6 +84,11 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
       title: "Eventos",
       href: "/events",
       icon: Calendar,
+    },
+    {
+      title: "Indicações",
+      href: "/referrals",
+      icon: UserPlus,
     }
   ];
 
