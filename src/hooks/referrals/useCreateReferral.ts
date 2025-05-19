@@ -69,16 +69,18 @@ export function useCreateReferral() {
           }
         });
         
-        console.log("Resposta do envio de convite:", inviteResponse);
+        console.log("Resposta completa do envio de convite:", inviteResponse);
         
         if (inviteResponse.error) {
+          console.error("Erro detalhado na resposta da edge function:", inviteResponse.error);
           throw new Error(inviteResponse.error.message || 'Erro ao enviar convite');
         }
         
         const responseData = inviteResponse.data;
+        console.log("Dados da resposta do convite:", responseData);
         
         // Verificar os canais que foram enviados com sucesso
-        if (responseData.success) {
+        if (responseData?.success) {
           const channels = [];
           if (responseData.channels?.email?.sent) channels.push("e-mail");
           if (responseData.channels?.whatsapp?.sent) channels.push("WhatsApp");
@@ -91,12 +93,13 @@ export function useCreateReferral() {
               : 'A indicação foi registrada, mas não foi possível enviar o convite.'
           });
         } else {
+          console.warn("Resposta de sucesso, mas sem dados de canais:", responseData);
           toast.warning('Indicação criada, mas o convite não foi enviado', {
             description: 'A pessoa indicada pode se registrar usando o link de convite que você compartilhar.'
           });
         }
       } catch (sendError: any) {
-        console.error('Erro ao enviar convite:', sendError);
+        console.error('Erro detalhado ao enviar convite:', sendError);
         toast.warning('Indicação criada, mas houve um erro ao enviar o convite', {
           description: 'Tente reenviar o convite mais tarde ou compartilhe o link diretamente.'
         });

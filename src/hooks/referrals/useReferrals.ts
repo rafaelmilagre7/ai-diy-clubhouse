@@ -24,12 +24,13 @@ export function useReferrals() {
       
       const { data, error } = await supabase
         .from('referrals')
-        .select('id, email, type, status, token, notes, created_at, updated_at, whatsapp_number')
+        .select('*')
         .eq('referrer_id', user.id)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
       
+      // Garantir que os dados têm o tipo correto antes de atualizar o estado
       setReferrals(data || []);
       
       // Calcular estatísticas

@@ -69,6 +69,23 @@ export function ReferralsList() {
     try {
       setResendingId(referral.id);
       
+      console.log("Enviando o convite novamente para:", {
+        email: referral.email,
+        type: referral.type,
+        notes: referral.notes,
+        whatsappNumber: referral.whatsapp_number,
+        useWhatsapp: !!referral.whatsapp_number
+      });
+      
+      // Atualizar contagem de envios na tabela referrals
+      try {
+        await supabase.functions.invoke('update_invite_send_stats', {
+          body: { invite_id: referral.id }
+        });
+      } catch (error) {
+        console.error("Erro ao atualizar estatísticas de envio:", error);
+      }
+      
       // Reenviar o convite com os mesmos dados
       const result = await submitReferral({
         email: referral.email,
@@ -85,6 +102,10 @@ export function ReferralsList() {
         
         // Atualizar a lista de indicações
         refresh();
+      } else {
+        toast.error("Erro ao reenviar convite", {
+          description: result?.message || "Houve um problema ao reenviar o convite."
+        });
       }
     } catch (error: any) {
       toast.error("Erro ao reenviar convite", {
