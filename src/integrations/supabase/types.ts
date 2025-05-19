@@ -2511,10 +2511,12 @@ export type Database = {
           email: string
           expires_at: string
           id: string
+          last_sent_at: string | null
           metadata: Json | null
           notes: string | null
           referrer_id: string
           role_id: string | null
+          send_attempts: number | null
           status: Database["public"]["Enums"]["referral_status"]
           token: string
           type: Database["public"]["Enums"]["referral_type"]
@@ -2526,10 +2528,12 @@ export type Database = {
           email: string
           expires_at: string
           id?: string
+          last_sent_at?: string | null
           metadata?: Json | null
           notes?: string | null
           referrer_id: string
           role_id?: string | null
+          send_attempts?: number | null
           status?: Database["public"]["Enums"]["referral_status"]
           token: string
           type: Database["public"]["Enums"]["referral_type"]
@@ -2541,10 +2545,12 @@ export type Database = {
           email?: string
           expires_at?: string
           id?: string
+          last_sent_at?: string | null
           metadata?: Json | null
           notes?: string | null
           referrer_id?: string
           role_id?: string | null
+          send_attempts?: number | null
           status?: Database["public"]["Enums"]["referral_status"]
           token?: string
           type?: Database["public"]["Enums"]["referral_type"]

@@ -16,7 +16,8 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useCreateReferral } from "@/hooks/referrals/useCreateReferral";
-import { Send, RefreshCw } from "lucide-react";
+import { Send, RefreshCw, Clock } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function ReferralsList() {
   const { referrals, loading, refresh } = useReferrals();
@@ -79,11 +80,15 @@ export function ReferralsList() {
       
       // Atualizar contagem de envios na tabela referrals
       try {
-        await supabase.functions.invoke('update_invite_send_stats', {
+        const { error: statsError } = await supabase.functions.invoke('update_invite_send_stats', {
           body: { invite_id: referral.id }
         });
-      } catch (error) {
-        console.error("Erro ao atualizar estatísticas de envio:", error);
+        
+        if (statsError) {
+          console.error("Erro ao atualizar estatísticas de envio:", statsError);
+        }
+      } catch (statsUpdateError) {
+        console.error("Exceção ao atualizar estatísticas de envio:", statsUpdateError);
       }
       
       // Reenviar o convite com os mesmos dados
@@ -108,6 +113,7 @@ export function ReferralsList() {
         });
       }
     } catch (error: any) {
+      console.error("Erro detalhado ao reenviar convite:", error);
       toast.error("Erro ao reenviar convite", {
         description: error.message || "Não foi possível reenviar o convite."
       });
@@ -137,24 +143,47 @@ export function ReferralsList() {
               <TableCell>{formatDate(referral.created_at)}</TableCell>
               <TableCell className="text-right">
                 {referral.status === "pending" && (
-                  <Button
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleResend(referral)}
-                    disabled={resendingId === referral.id}
-                  >
-                    {resendingId === referral.id ? (
-                      <>
-                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                        Reenviando...
-                      </>
-                    ) : (
-                      <>
-                        <Send className="mr-2 h-4 w-4" />
-                        Reenviar
-                      </>
-                    )}
-                  </Button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleResend(referral)}
+                          disabled={resendingId === referral.id}
+                          className="flex items-center gap-1"
+                        >
+                          {resendingId === referral.id ? (
+                            <>
+                              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                              Reenviando...
+                            </>
+                          ) : (
+                            <>
+                              <Send className="mr-2 h-4 w-4" />
+                              Reenviar
+                              {referral.send_attempts ? 
+                                <span className="ml-1 text-xs text-muted-foreground flex items-center">
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  {referral.send_attempts}
+                                </span> : null
+                              }
+                            </>
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      {referral.send_attempts ? (
+                        <TooltipContent>
+                          <p>Enviado {referral.send_attempts} {referral.send_attempts === 1 ? 'vez' : 'vezes'}</p>
+                          {referral.last_sent_at && (
+                            <p>Último envio: {formatDate(referral.last_sent_at)}</p>
+                          )}
+                        </TooltipContent>
+                      ) : (
+                        <TooltipContent>Reenviar convite</TooltipContent>
+                      )}
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
               </TableCell>
             </TableRow>
