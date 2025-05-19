@@ -17,6 +17,7 @@ export const OnboardingCompleted = () => {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [hasShownConfetti, setHasShownConfetti] = useState(false);
   const [isGeneratingTrail, setIsGeneratingTrail] = useState(false);
+  const [trailGenerated, setTrailGenerated] = useState(false);
   
   // Efeito para carregar dados atualizados
   useEffect(() => {
@@ -57,8 +58,7 @@ export const OnboardingCompleted = () => {
 
   // Função para gerar a trilha de implementação
   const handleGenerateTrail = async () => {
-    if (!progress) {
-      toast.error("Dados de onboarding não encontrados");
+    if (!progress || isGeneratingTrail || trailGenerated) {
       return;
     }
 
@@ -71,6 +71,7 @@ export const OnboardingCompleted = () => {
       
       if (generatedTrail) {
         toast.success("Trilha de implementação gerada com sucesso!");
+        setTrailGenerated(true);
         
         // Pequeno delay para garantir que o usuário veja a mensagem de sucesso
         setTimeout(() => {
@@ -149,13 +150,18 @@ export const OnboardingCompleted = () => {
       <div className="flex flex-col md:flex-row justify-center gap-4 pt-4 mt-8">
         <Button
           onClick={handleGenerateTrail}
-          disabled={isGeneratingTrail || regenerating}
+          disabled={isGeneratingTrail || regenerating || trailGenerated}
           className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90 text-black font-medium flex items-center gap-2"
         >
           {isGeneratingTrail || regenerating ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
               Gerando sua trilha personalizada...
+            </>
+          ) : trailGenerated ? (
+            <>
+              <CheckCircle2 className="h-4 w-4" />
+              Trilha Gerada com Sucesso
             </>
           ) : (
             <>
@@ -164,6 +170,16 @@ export const OnboardingCompleted = () => {
             </>
           )}
         </Button>
+        
+        {trailGenerated && (
+          <Button
+            onClick={() => navigate('/implementation-trail')}
+            variant="outline"
+            className="border-[#0ABAB5]/30 text-[#0ABAB5] hover:bg-[#0ABAB5]/10"
+          >
+            Ver Minha Trilha
+          </Button>
+        )}
       </div>
     </div>
   );

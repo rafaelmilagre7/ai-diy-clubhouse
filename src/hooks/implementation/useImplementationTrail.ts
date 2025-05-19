@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
 import { sanitizeTrailData, saveTrailToLocalStorage, getTrailFromLocalStorage, clearTrailFromLocalStorage } from './useImplementationTrail.utils';
@@ -32,6 +32,10 @@ export const useImplementationTrail = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [hasContent, setHasContent] = useState(false);
+  
+  // Referência para controlar chamadas duplicadas
+  const pendingRequestRef = useRef<boolean>(false);
+  const lastGeneratedRef = useRef<number>(0);
 
   // Carregar dados da trilha
   const loadTrailData = useCallback(async (forceRefresh = false) => {
@@ -40,7 +44,14 @@ export const useImplementationTrail = () => {
       return;
     }
 
+    // Prevenir chamadas duplicadas
+    if (pendingRequestRef.current) {
+      console.log("Requisição já em andamento, ignorando chamada duplicada");
+      return;
+    }
+
     try {
+      pendingRequestRef.current = true;
       setRefreshing(true);
       setError(null);
 
@@ -56,6 +67,7 @@ export const useImplementationTrail = () => {
           setHasContent(true);
           setIsLoading(false);
           setRefreshing(false);
+          pendingRequestRef.current = false;
           return;
         }
       }
@@ -93,6 +105,7 @@ export const useImplementationTrail = () => {
     } finally {
       setIsLoading(false);
       setRefreshing(false);
+      pendingRequestRef.current = false;
     }
   }, [user]);
 
@@ -108,7 +121,17 @@ export const useImplementationTrail = () => {
       return null;
     }
     
+    // Prevenir chamadas duplicadas ou muito próximas (limitar a uma a cada 3 segundos)
+    const now = Date.now();
+    if (pendingRequestRef.current || (now - lastGeneratedRef.current < 3000 && !forceRegenerate)) {
+      console.log("Requisição já em andamento ou muito recente, ignorando chamada duplicada");
+      toast.info("Processando sua solicitação anterior, aguarde um momento...");
+      return null;
+    }
+    
     try {
+      pendingRequestRef.current = true;
+      lastGeneratedRef.current = now;
       setRegenerating(true);
       setError(null);
       
@@ -171,6 +194,11 @@ export const useImplementationTrail = () => {
       return null;
     } finally {
       setRegenerating(false);
+      // Atraso de 1 segundo antes de liberar o flag de pendência
+      // para evitar chamadas muito rápidas sucessivas
+      setTimeout(() => {
+        pendingRequestRef.current = false;
+      }, 1000);
     }
   }, [user]);
 

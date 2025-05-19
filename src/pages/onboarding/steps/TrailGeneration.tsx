@@ -23,11 +23,14 @@ const TrailGeneration = () => {
   const [generated, setGenerated] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [autoGenerateTriggered, setAutoGenerateTriggered] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const autoGenerate = searchParams.get('autoGenerate') === 'true';
 
   // Verificar se a trilha já existe
   useEffect(() => {
     const checkOnboardingStatus = async () => {
+      if (isRedirecting) return;
+      
       try {
         // Forçar refresh dos dados para garantir informações atualizadas
         await refreshProgress();
@@ -35,12 +38,13 @@ const TrailGeneration = () => {
         // Se não tiver progresso ou autoGenerate não estiver habilitado, redirecionar
         if (!progress && !autoGenerate) {
           console.log("Dados de onboarding não encontrados, redirecionando para onboarding...");
+          setIsRedirecting(true);
           navigate('/onboarding');
           return;
         }
         
         // Iniciar geração automática se solicitado
-        if (autoGenerate && !autoGenerateTriggered) {
+        if (autoGenerate && !autoGenerateTriggered && !generating && !generated) {
           await startTrailGeneration();
         }
       } catch (error) {
@@ -50,7 +54,7 @@ const TrailGeneration = () => {
     };
 
     checkOnboardingStatus();
-  }, [navigate, progress, autoGenerate, autoGenerateTriggered, refreshProgress]);
+  }, [navigate, progress, autoGenerate, autoGenerateTriggered, refreshProgress, generating, generated, isRedirecting]);
 
   // Garantir que o progresso de onboarding esteja marcado como completo
   const ensureOnboardingComplete = useCallback(async () => {
@@ -70,7 +74,7 @@ const TrailGeneration = () => {
 
   // Função para iniciar a geração da trilha
   const startTrailGeneration = async () => {
-    if (!progress || !user) {
+    if (!progress || !user || generating || generated || isRedirecting) {
       toast.error("Dados de usuário ou onboarding não disponíveis");
       return;
     }
@@ -99,6 +103,7 @@ const TrailGeneration = () => {
         
         // Redirecionar após um pequeno delay
         setTimeout(() => {
+          setIsRedirecting(true);
           navigate('/implementation-trail');
         }, 1500);
       } else {
@@ -119,11 +124,14 @@ const TrailGeneration = () => {
 
   // Função para voltar à revisão do onboarding
   const handleGoBack = () => {
+    if (isRedirecting) return;
+    setIsRedirecting(true);
     navigate('/onboarding/review');
   };
 
   // Função para tentar novamente
   const handleRetry = () => {
+    if (isRedirecting || generating) return;
     startTrailGeneration();
   };
 
@@ -212,12 +220,14 @@ const TrailGeneration = () => {
                   <Button
                     variant="outline"
                     onClick={handleGoBack}
+                    disabled={isRedirecting}
                   >
                     Voltar para Revisão
                   </Button>
                   
                   <Button
                     onClick={handleRetry}
+                    disabled={generating || isRedirecting}
                     className="bg-viverblue hover:bg-viverblue-dark text-black"
                   >
                     <RefreshCw className="mr-2 h-4 w-4" />
@@ -234,7 +244,7 @@ const TrailGeneration = () => {
           <div className="flex justify-center">
             <Button
               onClick={startTrailGeneration}
-              disabled={generating || !progress}
+              disabled={generating || !progress || isRedirecting}
               className="bg-viverblue hover:bg-viverblue-dark text-black py-6 px-8 text-lg"
             >
               {generating ? (
