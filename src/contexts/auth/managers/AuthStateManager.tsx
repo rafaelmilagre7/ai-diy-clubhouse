@@ -1,8 +1,9 @@
+
 import { useState, useEffect, useRef } from "react";
 import { supabase } from '@/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { UserProfile } from '@/lib/supabase';
-import { processUserProfile } from '../utils/authSessionUtils';
+import { processUserProfile } from '@/hooks/auth/utils/authSessionUtils';
 import { toast } from "sonner";
 
 export interface AuthState {
@@ -100,11 +101,7 @@ export const AuthStateManager = ({ onStateChange }: AuthStateManagerProps) => {
         
         try {
           // Processar perfil do usuário de forma independente
-          const profile = await processUserProfile(
-            session.user.id,
-            session.user.email,
-            session.user.user_metadata?.name || session.user.user_metadata?.full_name
-          );
+          const profile = await processUserProfile(session.user);
           
           setProfile(profile);
           console.log("AuthStateManager: Profile processed successfully");
@@ -189,11 +186,7 @@ export const AuthStateManager = ({ onStateChange }: AuthStateManagerProps) => {
             setTimeout(async () => {
               if (!isMounted.current) return;
               
-              const profile = await processUserProfile(
-                newSession.user.id,
-                newSession.user.email,
-                newSession.user.user_metadata?.name || newSession.user.user_metadata?.full_name
-              );
+              const profile = await processUserProfile(newSession.user);
               
               setProfile(profile);
             }, 10);

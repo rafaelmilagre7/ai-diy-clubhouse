@@ -17,6 +17,7 @@ export interface LearningLesson {
   ai_assistant_enabled: boolean;
   ai_assistant_prompt: string | null;
   difficulty_level: string | null;
+  ai_assistant_id?: string | null;
   videos?: LearningLessonVideo[];
   resources?: LearningResource[];
   module?: LearningModule;
@@ -122,6 +123,7 @@ export interface UserProfile {
     id: string;
     name: string;
     description?: string;
+    permissions?: Record<string, any>;
   };
   company_name?: string;
   industry?: string;

@@ -24,14 +24,12 @@ export const useAuthSession = () => {
         console.info('Verificando sessão atual');
         
         if (session) {
-          const userId = session.user.id;
-          const email = session.user.email;
-          const name = session.user.user_metadata?.name || session.user.user_metadata?.full_name;
+          const user = session.user;
           
-          console.info(`Sessão ativa encontrada: ${userId}`);
+          console.info(`Sessão ativa encontrada: ${user.id}`);
           
           // Processar perfil do usuário
-          await processUserProfile(userId, email, name);
+          await processUserProfile(user);
         }
         
       } catch (error: any) {

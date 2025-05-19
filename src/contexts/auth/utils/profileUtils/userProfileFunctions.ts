@@ -19,7 +19,7 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
       .single();
     
     if (error) throw error;
-    return data;
+    return data as UserProfile;
   } catch (error) {
     console.error("Erro ao buscar perfil do usuário:", error);
     return null;
