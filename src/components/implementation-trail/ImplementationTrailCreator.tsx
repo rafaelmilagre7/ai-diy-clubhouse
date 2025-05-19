@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from "react";
 import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
@@ -72,6 +73,7 @@ export const ImplementationTrailCreator = () => {
       // Verifica se o trail tem recomendações de cursos
       if (!trail?.recommended_courses || !Array.isArray(trail.recommended_courses) || trail.recommended_courses.length === 0) {
         console.log("Sem recomendações de cursos na trilha");
+        setRecommendedCourses([]);
         return;
       }
 
@@ -81,6 +83,7 @@ export const ImplementationTrailCreator = () => {
 
         if (courseIds.length === 0) {
           setLoadingCourses(false);
+          setRecommendedCourses([]);
           return;
         }
         
@@ -94,6 +97,7 @@ export const ImplementationTrailCreator = () => {
         if (error) {
           console.error("Erro ao buscar cursos recomendados:", error);
           setLoadingCourses(false);
+          setRecommendedCourses([]);
           return;
         }
         
@@ -116,21 +120,20 @@ export const ImplementationTrailCreator = () => {
         setRecommendedCourses(coursesWithDetails || []);
       } catch (error) {
         console.error("Erro ao processar cursos recomendados:", error);
+        setRecommendedCourses([]);
       } finally {
         setLoadingCourses(false);
       }
     };
 
-    if (trail) {
-      fetchRecommendedCourses();
-    }
+    fetchRecommendedCourses();
   }, [trail]);
 
   // Função para gerar a trilha
   const handleGenerateTrail = async () => {
     try {
       setIsGenerating(true);
-      await generateImplementationTrail({});
+      await generateImplementationTrail({}, true); // Forçando regeneração completa da trilha
       toast.success("Trilha de implementação gerada com sucesso!");
     } catch (error) {
       console.error("Erro ao gerar trilha:", error);
@@ -143,7 +146,7 @@ export const ImplementationTrailCreator = () => {
   // Função para atualizar a trilha
   const handleRefreshTrail = async () => {
     try {
-      await refreshTrail(true);
+      await refreshTrail(true); // Forçando atualização completa
       toast.success("Trilha atualizada com sucesso!");
     } catch (error) {
       console.error("Erro ao atualizar trilha:", error);
