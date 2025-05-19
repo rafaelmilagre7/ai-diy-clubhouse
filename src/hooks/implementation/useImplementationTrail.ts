@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
@@ -335,7 +334,8 @@ export const useImplementationTrail = () => {
         const mockRecommendations: ImplementationTrail = {
           priority1: [],
           priority2: [],
-          priority3: []
+          priority3: [],
+          recommended_courses: []
         };
 
         if (availableSolutions?.length) {
@@ -408,7 +408,8 @@ export const useImplementationTrail = () => {
         const defaultTrail: ImplementationTrail = {
           priority1: [],
           priority2: [],
-          priority3: []
+          priority3: [],
+          recommended_courses: []
         };
         
         // Usar soluções reais se disponíveis
