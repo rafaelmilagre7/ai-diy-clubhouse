@@ -1,4 +1,3 @@
-
 import React, { useRef } from "react";
 import { useProgress } from "../useProgress";
 import { buildUpdateObject } from "./stepDataBuilder";
@@ -154,7 +153,7 @@ export function useStepPersistenceCore({
   };
 
   /**
-   * Finaliza o onboarding, marca como completo e redireciona para a trilha de implementação
+   * Finaliza o onboarding, marca como completo e redireciona para a página de conclusão
    */
   const completeOnboarding = async () => {
     if (!progress?.id) {
@@ -177,7 +176,7 @@ export function useStepPersistenceCore({
       
       // Atualiza dados locais
       await refreshProgress();
-      console.log("Onboarding marcado como completo, preparando redirecionamento para trilha...");
+      console.log("Onboarding marcado como completo, preparando redirecionamento para página de conclusão...");
       
       toast.success("Onboarding concluído com sucesso!");
       

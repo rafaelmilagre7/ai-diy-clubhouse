@@ -1,16 +1,61 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { OnboardingForm } from '@/components/onboarding/OnboardingForm';
 import { useNavigate } from 'react-router-dom';
 import MemberLayout from '@/components/layout/MemberLayout';
 import { MoticonAnimation } from '@/components/onboarding/MoticonAnimation';
+import { useProgress } from '@/hooks/onboarding/useProgress';
+import { Loader2 } from 'lucide-react';
 
 const NovoOnboarding: React.FC = () => {
   const navigate = useNavigate();
+  const { progress, isLoading, refreshProgress } = useProgress();
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+  // Verificar status do onboarding e redirecionar se necessário
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      try {
+        // Forçar refresh dos dados para garantir informações atualizadas
+        await refreshProgress();
+        
+        if (progress?.is_completed) {
+          console.log("Onboarding já está completo, redirecionando para página de revisão...");
+          navigate('/onboarding/completed');
+        } else if (progress?.current_step && progress.completed_steps?.length > 0) {
+          // Se já iniciou mas não completou, continuar de onde parou
+          console.log("Onboarding em andamento, redirecionando para etapa atual...");
+          navigate(`/onboarding/${progress.current_step}`);
+        }
+      } catch (error) {
+        console.error("Erro ao verificar status do onboarding:", error);
+      } finally {
+        setIsInitialLoad(false);
+      }
+    };
+
+    if (!isLoading) {
+      checkOnboardingStatus();
+    }
+  }, [navigate, progress, isLoading, refreshProgress]);
 
   const handleSuccess = () => {
     navigate('/dashboard');
   };
+
+  // Mostrar um spinner enquanto verifica o status do onboarding
+  if (isInitialLoad || isLoading) {
+    return (
+      <MemberLayout>
+        <div className="bg-gradient-to-b from-[#0F111A] to-[#161A2C] min-h-[calc(100vh-80px)] flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 animate-spin text-viverblue mx-auto" />
+            <p className="mt-4 text-viverblue-light">Verificando seu status de onboarding...</p>
+          </div>
+        </div>
+      </MemberLayout>
+    );
+  }
 
   return (
     <MemberLayout>
