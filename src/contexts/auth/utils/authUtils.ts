@@ -21,8 +21,24 @@ export const clearAuthTokens = () => {
   if (typeof sessionStorage !== 'undefined') {
     Object.keys(sessionStorage).forEach((key) => {
       if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        console.log(`Removendo token do sessionStorage: ${key}`);
         sessionStorage.removeItem(key);
       }
     });
   }
+  
+  // Remover outras chaves de estado específicas da aplicação
+  localStorage.removeItem('adminCache');
+  localStorage.removeItem('permissionsCache');
+  localStorage.removeItem('usersData');
+  localStorage.removeItem('rolesData');
+  localStorage.removeItem('lastUsersLoad');
+};
+
+/**
+ * Força atualização completa da página
+ */
+export const forcePageRefresh = (path?: string) => {
+  const url = path ? `${window.location.origin}${path}` : window.location.href;
+  window.location.href = url;
 };

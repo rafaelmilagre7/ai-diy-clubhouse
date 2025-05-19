@@ -1,10 +1,11 @@
 
-import { useState, useEffect, useRef, ReactNode } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { PageTransitionWithFallback } from "@/components/transitions/PageTransitionWithFallback";
 import { toast } from "sonner";
+import { isUserAdmin } from "@/utils/auth/adminUtils";
 
 const RootRedirect = () => {
   const { user, profile, isAdmin, isLoading } = useAuth();
@@ -58,13 +59,17 @@ const RootRedirect = () => {
     } else {
       console.log("RootRedirect: User available, redirecting based on role");
       
-      // Verificar se é admin por diferentes critérios
-      const userIsAdmin = isAdmin || 
-                        profile?.role === 'admin' || 
-                        (user.email && (
-                          user.email.includes('@viverdeia.ai') || 
-                          user.email === 'admin@teste.com'
-                        ));
+      // Verificar se é admin usando função centralizada
+      const userIsAdmin = isUserAdmin(user, profile);
+      
+      // Log detalhado para depuração
+      console.log("RootRedirect - Verificação de admin:", {
+        isAdmin,
+        userIsAdmin,
+        profileRole: profile?.role, 
+        email: user.email,
+        metadata: user.user_metadata
+      });
       
       if (userIsAdmin) {
         setRedirectTarget('/admin');

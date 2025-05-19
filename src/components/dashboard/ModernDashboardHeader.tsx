@@ -1,6 +1,8 @@
 
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/auth";
+import { getUserDisplayName } from "@/utils/auth/adminUtils";
+import { useEffect, useState } from "react";
 
 /**
  * Cabeçalho moderno para o dashboard do membro com design glassmorphism.
@@ -8,20 +10,21 @@ import { useAuth } from "@/contexts/auth";
 export function ModernDashboardHeader() {
   // Obter dados do usuário diretamente do contexto de autenticação
   const { user, profile } = useAuth();
+  const [userName, setUserName] = useState<string>("Membro");
   
-  // Extrair o primeiro nome ou usar um fallback
-  const userName = profile?.name?.split(" ")[0] || 
-                   user?.user_metadata?.name?.split(" ")[0] || 
-                   user?.email?.split("@")[0] || 
-                   "Membro";
-  
-  // Debug para verificar o nome recebido
-  console.log("ModernDashboardHeader:", { 
-    profileName: profile?.name,
-    userName,
-    user_email: user?.email,
-    user_metadata: user?.user_metadata
-  });
+  // Efeito para atualizar o nome do usuário quando os dados mudam
+  useEffect(() => {
+    const displayName = getUserDisplayName(user, profile);
+    setUserName(displayName);
+    
+    // Debug para verificar o nome recebido
+    console.log("ModernDashboardHeader - Nome do usuário:", { 
+      displayName,
+      profileName: profile?.name,
+      user_email: user?.email,
+      user_metadata: user?.user_metadata
+    });
+  }, [user, profile]);
 
   return (
     <div

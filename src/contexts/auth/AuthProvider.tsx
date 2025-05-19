@@ -1,12 +1,13 @@
 
 import React, { useState, useEffect, useContext, createContext } from 'react';
 import { AuthContextType } from './types';
-import { clearAuthTokens } from './index';
+import { clearAuthTokens, forcePageRefresh } from './utils/authUtils';
 import { AuthStateManager } from './managers/AuthStateManager';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { UserProfile } from '@/lib/supabase/types';
+import { isUserAdmin } from '@/utils/auth/adminUtils';
 
 // Usuários de teste para login rápido
 export const TEST_MEMBER = {
@@ -55,24 +56,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Verificar se usuário é admin sempre que o perfil ou dados do usuário mudarem
   useEffect(() => {
-    if (profile) {
-      console.log("Verificando se usuário é admin baseado no perfil:", profile);
-      
-      // Verificar pelo papel do perfil
-      const profileIsAdmin = profile.role === 'admin';
-      
-      setIsAdmin(profileIsAdmin);
-      console.log("Status de admin definido como:", profileIsAdmin);
-    } else if (user?.email) {
-      console.log("Perfil não disponível, verificando admin pelo email:", user.email);
-      
-      // Verificação por email como fallback
-      const emailIsAdmin = user.email.includes('@viverdeia.ai') || 
-                          user.email === 'admin@teste.com' || 
-                          user.email === 'admin@viverdeia.ai';
-      
-      setIsAdmin(emailIsAdmin);
-      console.log("Status de admin definido como (via email):", emailIsAdmin);
+    // Usar a função centralizada de verificação de admin
+    const adminStatus = isUserAdmin(user, profile);
+    
+    console.log("Verificando status admin:", {
+      adminStatus,
+      userEmail: user?.email,
+      profileRole: profile?.role,
+      previousAdminStatus: isAdmin
+    });
+    
+    setIsAdmin(adminStatus);
+    
+    // Registrar no sessionStorage para depuração
+    try {
+      sessionStorage.setItem('authDebug', JSON.stringify({
+        timestamp: new Date().toISOString(),
+        isAdmin: adminStatus,
+        userEmail: user?.email,
+        profileName: profile?.name,
+        profileRole: profile?.role,
+        userId: user?.id,
+        profileId: profile?.id
+      }));
+    } catch (e) {
+      // Ignorar erros de storage
     }
   }, [profile, user]);
 
@@ -124,9 +132,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(data.user);
       setSession(data.session);
       
+      // Verificar se o usuário é admin
+      const adminCheck = isUserAdmin(data.user, null);
+      console.log("Verificação rápida de admin:", adminCheck);
+      
       // Forçar redirecionamento após login bem-sucedido
       setTimeout(() => {
-        window.location.href = '/dashboard';
+        const redirectPath = adminCheck ? '/admin' : '/dashboard';
+        console.log(`Redirecionando para ${redirectPath} após login bem-sucedido`);
+        forcePageRefresh(redirectPath);
       }, 500);
     } catch (error: any) {
       console.error("Erro ao fazer login:", error);
@@ -164,7 +178,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       clearAuthTokens();
       
       // Tentar fazer logout no Supabase
-      await supabase.auth.signOut();
+      await supabase.auth.signOut({
+        scope: 'global' // Usar escopo global para garantir logout completo
+      });
       
       // Limpar estados
       setUser(null);
@@ -178,7 +194,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       // Forçar redirecionamento para tela de login
       setTimeout(() => {
-        window.location.href = '/login';
+        forcePageRefresh('/login');
       }, 300);
     } catch (error: any) {
       console.error("Erro ao fazer logout:", error);
@@ -186,7 +202,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       // Mesmo em caso de erro, tentar forçar navegação para login
       setTimeout(() => {
-        window.location.href = '/login';
+        forcePageRefresh('/login');
       }, 500);
       
       throw error;

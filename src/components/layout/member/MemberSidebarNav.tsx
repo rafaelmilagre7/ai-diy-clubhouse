@@ -19,17 +19,33 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/auth";
+import { useEffect, useState } from "react";
+import { isUserAdmin } from "@/utils/auth/adminUtils";
 
 interface SidebarNavProps {
   sidebarOpen: boolean;
-  isAdmin?: boolean;
 }
 
-export const MemberSidebarNav = ({ sidebarOpen, isAdmin = false }: SidebarNavProps) => {
+export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
   const location = useLocation();
+  const { user, profile, isAdmin } = useAuth();
+  const [showAdminButton, setShowAdminButton] = useState(false);
 
-  // Log para depuração
-  console.log("MemberSidebarNav rendering with isAdmin:", isAdmin);
+  // Efeito para garantir que o botão admin seja exibido corretamente
+  useEffect(() => {
+    // Verificação de admin usando a função utilitária centralizada
+    const adminStatus = isUserAdmin(user, profile);
+    
+    console.log("MemberSidebarNav - Verificação de admin:", {
+      adminStatus,
+      contextIsAdmin: isAdmin,
+      userEmail: user?.email,
+      profileRole: profile?.role
+    });
+    
+    setShowAdminButton(adminStatus);
+  }, [user, profile, isAdmin]);
 
   const menuItems = [
     {
@@ -130,7 +146,7 @@ export const MemberSidebarNav = ({ sidebarOpen, isAdmin = false }: SidebarNavPro
           </Button>
         ))}
 
-        {isAdmin && (
+        {showAdminButton && (
           <Button
             variant="outline"
             className={cn(

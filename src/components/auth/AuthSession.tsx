@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { processUserProfile } from '@/hooks/auth/utils/authSessionUtils';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { toast } from 'sonner';
+import { isUserAdmin } from '@/utils/auth/adminUtils';
 
 const AuthSession = () => {
   const { 
@@ -12,7 +13,8 @@ const AuthSession = () => {
     isLoading, 
     setProfile, 
     setIsLoading,
-    profile
+    profile,
+    setIsAdmin
   } = useAuth();
 
   // Carrega o perfil do usuário quando o usuário é autenticado
@@ -22,6 +24,11 @@ const AuthSession = () => {
       
       try {
         console.log("AuthSession: Carregando perfil para usuário:", user.id);
+        
+        // Verificação rápida de admin baseada no email
+        const quickAdminCheck = isUserAdmin(user, profile);
+        console.log("AuthSession - Verificação rápida de admin:", quickAdminCheck);
+        setIsAdmin(quickAdminCheck);
         
         // Verificar se já temos um perfil
         if (profile) {
@@ -36,6 +43,11 @@ const AuthSession = () => {
         if (userProfile) {
           console.log("AuthSession: Perfil carregado:", userProfile);
           setProfile(userProfile);
+          
+          // Verificação final de admin com perfil completo
+          const finalAdminCheck = isUserAdmin(user, userProfile);
+          console.log("AuthSession - Verificação final de admin:", finalAdminCheck);
+          setIsAdmin(finalAdminCheck);
         } else {
           console.warn("AuthSession: Perfil não encontrado, tentando criar");
           
@@ -44,17 +56,20 @@ const AuthSession = () => {
                         user.email === 'admin@teste.com' || 
                         user.email === 'admin@viverdeia.ai';
           
+          const userName = user.user_metadata?.name || 
+                          user.user_metadata?.full_name || 
+                          user.email?.split('@')[0] || 
+                          'Usuário';
+          
           // Tentar criar um perfil
           const { data: newProfile, error } = await supabase
             .from("profiles")
             .insert({
               id: user.id,
-              name: user.user_metadata?.name || 
-                    user.user_metadata?.full_name || 
-                    user.email?.split('@')[0] || 
-                    'Usuário',
+              name: userName,
               email: user.email,
-              role: isAdmin ? 'admin' : 'member'
+              role: isAdmin ? 'admin' : 'member',
+              avatar_url: user.user_metadata?.avatar_url || null
             })
             .select()
             .single();
@@ -65,6 +80,11 @@ const AuthSession = () => {
           } else if (newProfile) {
             console.log("AuthSession: Novo perfil criado:", newProfile);
             setProfile(newProfile);
+            
+            // Verificação final de admin com novo perfil
+            const finalAdminCheck = isUserAdmin(user, newProfile);
+            console.log("AuthSession - Verificação final com novo perfil:", finalAdminCheck);
+            setIsAdmin(finalAdminCheck);
           }
         }
       } catch (error) {
@@ -80,7 +100,7 @@ const AuthSession = () => {
     } else {
       setIsLoading(false);
     }
-  }, [user, setProfile, setIsLoading, profile]);
+  }, [user, setProfile, setIsLoading, profile, setIsAdmin]);
   
   if (isLoading) {
     return <LoadingScreen message="Carregando seu perfil..." />;

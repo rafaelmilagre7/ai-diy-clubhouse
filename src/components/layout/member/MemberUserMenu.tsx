@@ -1,126 +1,52 @@
 
-import { Link, useNavigate } from "react-router-dom";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { User, LogOut } from "lucide-react";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useState } from "react";
-import { toast } from "sonner";
+import { UserMenu } from "@/components/layout/shared/UserMenu";
+import { useAuth } from "@/contexts/auth";
+import { getUserDisplayName } from "@/utils/auth/adminUtils";
+import { useEffect, useState } from "react";
 
 interface MemberUserMenuProps {
   sidebarOpen: boolean;
-  profileName: string | null;
-  profileEmail: string | null;
-  profileAvatar: string | undefined;
-  getInitials: (name: string | null) => string;
   signOut: () => Promise<void>;
 }
 
-export const MemberUserMenu = ({ 
-  sidebarOpen, 
-  profileName, 
-  profileEmail, 
-  profileAvatar,
-  getInitials,
-  signOut
-}: MemberUserMenuProps) => {
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const navigate = useNavigate();
-  
-  // Log para debug
-  console.log("MemberUserMenu props:", { profileName, profileEmail, profileAvatar });
-  
-  const handleSignOut = async (e: Event) => {
-    e.preventDefault();
+export const MemberUserMenu = ({ sidebarOpen, signOut }: MemberUserMenuProps) => {
+  const { user, profile } = useAuth();
+  const [userName, setUserName] = useState<string>("");
+  const [userEmail, setUserEmail] = useState<string>("");
+  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    // Obter nome do usuário usando função utilitária centralizada
+    const displayName = getUserDisplayName(user, profile);
+    setUserName(displayName);
     
-    try {
-      setIsLoggingOut(true);
-      
-      // Informar ao usuário
-      toast.info("Saindo...");
-      
-      // Limpar token do localStorage para garantir logout
-      localStorage.removeItem('sb-zotzvtepvpnkcoobdubt-auth-token');
-      localStorage.removeItem('supabase.auth.token');
-      
-      // Remover todas as chaves relacionadas ao Supabase
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-          localStorage.removeItem(key);
-        }
-      });
-      
-      // Usar o signOut do contexto de autenticação
-      await signOut();
-      
-      // Feedback para o usuário
-      toast.success("Logout realizado com sucesso");
-      
-      // Forçar redirecionamento via location.href para garantir reset completo da aplicação
-      window.location.href = '/login';
-    } catch (error) {
-      console.error("Erro ao fazer logout:", error);
-      toast.error("Erro ao fazer logout. Redirecionando para tela de login.");
-      
-      // Força redirecionamento para login em caso de falha
-      window.location.href = '/login';
-    } finally {
-      setIsLoggingOut(false);
-    }
+    // Obter email
+    setUserEmail(profile?.email || user?.email || "");
+    
+    // Obter URL do avatar
+    setAvatarUrl(profile?.avatar_url || user?.user_metadata?.avatar_url);
+    
+    console.log("MemberUserMenu - Dados do usuário:", {
+      displayName,
+      email: profile?.email || user?.email,
+      avatarUrl: profile?.avatar_url || user?.user_metadata?.avatar_url
+    });
+  }, [user, profile]);
+
+  // Obter iniciais do nome para exibir quando não há avatar
+  const getInitials = (name: string | null) => {
+    if (!name) return "U";
+    return name.charAt(0).toUpperCase();
   };
-  
+
   return (
-    <div className="p-3">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className={cn(
-              "w-full justify-start gap-2 px-2 hover:bg-[#181A2A] text-neutral-300",
-              !sidebarOpen && "justify-center"
-            )}
-          >
-            <Avatar className="h-8 w-8 border border-white/10">
-              <AvatarImage src={profileAvatar} />
-              <AvatarFallback className="bg-[#181A2A] text-viverblue">{getInitials(profileName)}</AvatarFallback>
-            </Avatar>
-            {sidebarOpen && (
-              <div className="flex flex-col items-start text-sm">
-                <span className="font-medium text-neutral-100">{profileName || "Usuário"}</span>
-                <span className="text-muted-foreground text-xs truncate max-w-[150px]">
-                  {profileEmail || ""}
-                </span>
-              </div>
-            )}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56 bg-[#151823] border-white/5">
-          <DropdownMenuLabel className="text-neutral-200">Minha Conta</DropdownMenuLabel>
-          <DropdownMenuSeparator className="bg-white/5" />
-          <Link to="/profile">
-            <DropdownMenuItem className="hover:bg-[#181A2A]">
-              <User className="mr-2 h-4 w-4" />
-              <span>Perfil</span>
-            </DropdownMenuItem>
-          </Link>
-          <DropdownMenuItem 
-            disabled={isLoggingOut} 
-            onSelect={handleSignOut}
-            className="hover:bg-[#181A2A]"
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            <span>{isLoggingOut ? "Saindo..." : "Sair"}</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+    <UserMenu
+      sidebarOpen={sidebarOpen}
+      profileName={userName}
+      profileEmail={userEmail}
+      profileAvatar={avatarUrl}
+      getInitials={getInitials}
+      signOut={signOut}
+    />
   );
 };
