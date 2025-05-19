@@ -30,6 +30,10 @@ serve(async (req: Request) => {
     const phoneNumberId = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
     const accessToken = Deno.env.get("WHATSAPP_ACCESS_TOKEN");
 
+    console.log("Verificando configurações da API WhatsApp");
+    console.log(`WHATSAPP_PHONE_NUMBER_ID configurado: ${phoneNumberId ? "Sim" : "Não"}`);
+    console.log(`WHATSAPP_ACCESS_TOKEN configurado: ${accessToken ? "Sim" : "Não"}`);
+
     if (!phoneNumberId || !accessToken) {
       throw new Error("Configuração da API do WhatsApp ausente");
     }
@@ -41,6 +45,15 @@ serve(async (req: Request) => {
     );
 
     // Extrair dados da requisição
+    let requestData: WhatsAppMessageRequest;
+    try {
+      requestData = await req.json();
+      console.log("Dados da requisição recebidos:", JSON.stringify(requestData, null, 2));
+    } catch (parseError) {
+      console.error("Erro ao analisar JSON da requisição:", parseError);
+      throw new Error("Formato de requisição inválido");
+    }
+    
     const { 
       phoneNumber, 
       messageType, 
@@ -50,7 +63,7 @@ serve(async (req: Request) => {
       textContent,
       mediaUrl,
       userId 
-    }: WhatsAppMessageRequest = await req.json();
+    } = requestData;
 
     // Validar requisição
     if (!phoneNumber) {
@@ -59,6 +72,7 @@ serve(async (req: Request) => {
 
     // Formatar o número de telefone (remover caracteres não numéricos)
     const formattedPhone = phoneNumber.replace(/\D/g, "");
+    console.log(`Número de telefone formatado: ${formattedPhone}`);
 
     // Preparar payload para a API do WhatsApp
     let messagePayload: any = { messaging_product: "whatsapp" };
@@ -108,7 +122,10 @@ serve(async (req: Request) => {
 
     // Enviar mensagem via API do WhatsApp
     console.log(`Enviando mensagem para: ${formattedPhone}`);
+    console.log(`Payload da mensagem: ${JSON.stringify(messagePayload, null, 2)}`);
+    
     const whatsappUrl = `https://graph.facebook.com/${whatsappApiVersion}/${phoneNumberId}/messages`;
+    console.log(`URL da API: ${whatsappUrl}`);
     
     const response = await fetch(whatsappUrl, {
       method: "POST",
@@ -120,6 +137,8 @@ serve(async (req: Request) => {
     });
 
     const responseData = await response.json();
+    console.log(`Status da resposta: ${response.status} ${response.statusText}`);
+    console.log(`Corpo da resposta: ${JSON.stringify(responseData, null, 2)}`);
 
     // Registrar mensagem no banco de dados se tiver um userId
     if (userId) {

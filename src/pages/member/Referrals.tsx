@@ -1,13 +1,16 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ReferralStats } from "@/components/referrals/ReferralStats";
 import { ReferralsList } from "@/components/referrals/ReferralsList";
 import { ReferralDialog } from "@/components/referrals/ReferralDialog";
 import { useReferrals } from "@/hooks/referrals/useReferrals";
+import { WhatsAppTester } from "@/components/referrals/WhatsAppTester";
+import { Button } from "@/components/ui/button";
 
 const Referrals = () => {
   const { refresh } = useReferrals();
+  const [showTester, setShowTester] = useState(false);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -18,8 +21,22 @@ const Referrals = () => {
             Indique amigos para o Viver de IA e ganhe benefícios exclusivos
           </p>
         </div>
-        <ReferralDialog onSuccess={refresh} />
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowTester(!showTester)}
+          >
+            {showTester ? "Ocultar Teste WhatsApp" : "Testar WhatsApp"}
+          </Button>
+          <ReferralDialog onSuccess={refresh} />
+        </div>
       </div>
+
+      {showTester && (
+        <div className="bg-[#151823] p-4 rounded-lg border border-neutral-800 shadow-md">
+          <WhatsAppTester />
+        </div>
+      )}
 
       <ReferralStats />
 
