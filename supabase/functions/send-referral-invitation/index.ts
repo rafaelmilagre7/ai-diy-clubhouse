@@ -14,8 +14,8 @@ interface ReferralInvitation {
   referrerName: string;
   type: 'club' | 'formacao';
   message?: string;
-  whatsappNumber?: string; // Adicionado para suporte ao WhatsApp
-  useWhatsapp?: boolean;   // Indicador se deve usar WhatsApp
+  whatsappNumber?: string;
+  useWhatsapp?: boolean;
 }
 
 serve(async (req: Request) => {
@@ -59,7 +59,7 @@ serve(async (req: Request) => {
     // Definir o texto com base no tipo de indicação
     const typeText = type === 'club' ? 'Viver de IA Club' : 'Formação Viver de IA';
     
-    // Variável para controlar sucesso
+    // Variáveis para controlar sucesso
     let emailSent = false;
     let whatsappSent = false;
     let errors = [];
@@ -90,7 +90,7 @@ serve(async (req: Request) => {
       }
       
       emailSent = true;
-    } catch (emailError) {
+    } catch (emailError: any) {
       console.error("Erro ao enviar email de convite:", emailError);
       errors.push({ type: "email", message: emailError.message });
     }
@@ -119,28 +119,48 @@ serve(async (req: Request) => {
         }
         
         whatsappSent = true;
-      } catch (whatsappError) {
+      } catch (whatsappError: any) {
         console.error("Erro ao enviar convite via WhatsApp:", whatsappError);
         errors.push({ type: "whatsapp", message: whatsappError.message });
       }
     }
     
+    // Atualizar estatísticas de envio
+    try {
+      // Buscar o ID da indicação pelo token
+      const { data: referralData } = await supabaseClient
+        .from('referrals')
+        .select('id')
+        .eq('token', referralToken)
+        .single();
+        
+      if (referralData?.id) {
+        // Atualizar estatísticas de envio usando a função update_invite_send_attempt
+        await supabaseClient.functions.invoke("update_invite_send_stats", {
+          body: { invite_id: referralData.id }
+        });
+      }
+    } catch (statsError) {
+      console.error("Erro ao atualizar estatísticas de envio:", statsError);
+      // Não falhar a operação principal se essa parte falhar
+    }
+    
     // Definir o status conforme os resultados
     let status = 200;
-    let message = "Convite enviado com sucesso";
+    let responseMessage = "Convite enviado com sucesso";
     let success = emailSent || whatsappSent;
     
     if (!success) {
       status = 500;
-      message = "Não foi possível enviar o convite por nenhum dos canais";
+      responseMessage = "Não foi possível enviar o convite por nenhum dos canais";
     } else if (errors.length > 0) {
-      message = "Convite enviado parcialmente";
+      responseMessage = "Convite enviado parcialmente";
     }
     
     return new Response(
       JSON.stringify({
         success,
-        message,
+        message: responseMessage,
         channels: {
           email: { sent: emailSent },
           whatsapp: { sent: whatsappSent }
@@ -152,7 +172,7 @@ serve(async (req: Request) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Erro ao enviar convite:", error);
     
     return new Response(

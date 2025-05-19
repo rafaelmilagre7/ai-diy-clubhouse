@@ -24,7 +24,7 @@ export function useReferrals() {
       
       const { data, error } = await supabase
         .from('referrals')
-        .select('*')
+        .select('id, email, type, status, token, notes, created_at, updated_at, whatsapp_number')
         .eq('referrer_id', user.id)
         .order('created_at', { ascending: false });
       

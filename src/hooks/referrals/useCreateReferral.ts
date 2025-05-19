@@ -23,44 +23,82 @@ export function useCreateReferral() {
       setIsSubmitting(true);
       setError(null);
       
+      // Criar indicação no banco de dados
+      console.log("Iniciando criação de indicação:", data);
       const result = await createReferral(
         data.email,
         data.type,
         data.notes
       );
       
+      console.log("Resultado da criação de indicação:", result);
+      
       if (!result.success) {
         setError(result.message || 'Erro ao criar indicação');
         toast.error('Erro ao criar indicação', {
           description: result.message
         });
-        return;
+        return null;
       }
       
       setSuccess(true);
       setReferralToken(result.token || null);
       
+      // Preparar mensagem personalizada para WhatsApp
+      const typeText = data.type === 'club' ? 'Viver de IA Club' : 'Formação Viver de IA';
+      const referrerName = profile?.name || user?.email?.split('@')[0] || 'Um membro do Viver de IA';
+      
       // Enviar email/WhatsApp de convite
+      console.log("Enviando convite por email/WhatsApp", {
+        email: data.email,
+        token: result.token,
+        useWhatsapp: data.useWhatsapp,
+        whatsappNumber: data.whatsappNumber
+      });
+      
       try {
-        await supabase.functions.invoke('send-referral-invitation', {
+        const inviteResponse = await supabase.functions.invoke('send-referral-invitation', {
           body: {
             email: data.email,
             referralToken: result.token,
-            referrerName: profile?.name || user?.email,
+            referrerName: referrerName,
             type: data.type,
             message: data.notes,
-            whatsappNumber: data.whatsappNumber,
-            useWhatsapp: data.useWhatsapp
+            whatsappNumber: data.useWhatsapp ? data.whatsappNumber : undefined,
+            useWhatsapp: !!data.useWhatsapp
           }
         });
         
-        toast.success('Indicação criada com sucesso!', {
-          description: 'Um convite foi enviado para a pessoa indicada.'
-        });
+        console.log("Resposta do envio de convite:", inviteResponse);
+        
+        if (inviteResponse.error) {
+          throw new Error(inviteResponse.error.message || 'Erro ao enviar convite');
+        }
+        
+        const responseData = inviteResponse.data;
+        
+        // Verificar os canais que foram enviados com sucesso
+        if (responseData.success) {
+          const channels = [];
+          if (responseData.channels?.email?.sent) channels.push("e-mail");
+          if (responseData.channels?.whatsapp?.sent) channels.push("WhatsApp");
+          
+          const channelsText = channels.join(" e ");
+          
+          toast.success('Indicação criada com sucesso!', {
+            description: channels.length > 0 
+              ? `Um convite foi enviado para ${channelsText}.`
+              : 'A indicação foi registrada, mas não foi possível enviar o convite.'
+          });
+        } else {
+          toast.warning('Indicação criada, mas o convite não foi enviado', {
+            description: 'A pessoa indicada pode se registrar usando o link de convite que você compartilhar.'
+          });
+        }
       } catch (sendError: any) {
         console.error('Erro ao enviar convite:', sendError);
         toast.warning('Indicação criada, mas houve um erro ao enviar o convite', {
-          description: 'A pessoa indicada pode se registrar usando o link de convite.'
+          description: 'Tente reenviar o convite mais tarde ou compartilhe o link diretamente.'
         });
       }
       
@@ -71,6 +109,7 @@ export function useCreateReferral() {
       toast.error('Erro ao criar indicação', {
         description: err.message
       });
+      return null;
     } finally {
       setIsSubmitting(false);
     }

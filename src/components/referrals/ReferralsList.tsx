@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useReferrals } from "@/hooks/referrals/useReferrals";
 import {
   Table,
@@ -10,11 +10,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
+import { useCreateReferral } from "@/hooks/referrals/useCreateReferral";
+import { Send, RefreshCw } from "lucide-react";
 
 export function ReferralsList() {
-  const { referrals, loading } = useReferrals();
+  const { referrals, loading, refresh } = useReferrals();
+  const [resendingId, setResendingId] = useState<string | null>(null);
+  const { submitReferral } = useCreateReferral();
 
   if (loading) {
     return (
@@ -58,6 +65,36 @@ export function ReferralsList() {
     }
   };
 
+  const handleResend = async (referral: any) => {
+    try {
+      setResendingId(referral.id);
+      
+      // Reenviar o convite com os mesmos dados
+      const result = await submitReferral({
+        email: referral.email,
+        type: referral.type,
+        notes: referral.notes,
+        whatsappNumber: referral.whatsapp_number,
+        useWhatsapp: !!referral.whatsapp_number
+      });
+      
+      if (result?.success) {
+        toast.success("Convite reenviado com sucesso!", {
+          description: "Um novo convite foi enviado para o email indicado."
+        });
+        
+        // Atualizar a lista de indicações
+        refresh();
+      }
+    } catch (error: any) {
+      toast.error("Erro ao reenviar convite", {
+        description: error.message || "Não foi possível reenviar o convite."
+      });
+    } finally {
+      setResendingId(null);
+    }
+  };
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -67,6 +104,7 @@ export function ReferralsList() {
             <TableHead>Tipo</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Data</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -76,6 +114,28 @@ export function ReferralsList() {
               <TableCell>{getTypeLabel(referral.type)}</TableCell>
               <TableCell>{getStatusBadge(referral.status)}</TableCell>
               <TableCell>{formatDate(referral.created_at)}</TableCell>
+              <TableCell className="text-right">
+                {referral.status === "pending" && (
+                  <Button
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleResend(referral)}
+                    disabled={resendingId === referral.id}
+                  >
+                    {resendingId === referral.id ? (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                        Reenviando...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-4 w-4" />
+                        Reenviar
+                      </>
+                    )}
+                  </Button>
+                )}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

@@ -15,8 +15,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get('PROJECT_URL') || Deno.env.get('SUPABASE_URL')
-    const supabaseServiceKey = Deno.env.get('PRIVATE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     
     if (!supabaseUrl || !supabaseServiceKey) {
       throw new Error('Configuração de ambiente Supabase incompleta')
@@ -34,12 +34,12 @@ Deno.serve(async (req) => {
     
     // Atualizar estatísticas do convite
     const { data, error } = await supabase
-      .from('invites')
+      .from('referrals')
       .update({
         last_sent_at: new Date().toISOString(),
         send_attempts: supabase.rpc('increment', { 
           row_id: invite_id, 
-          table_name: 'invites', 
+          table_name: 'referrals', 
           column_name: 'send_attempts' 
         })
       })
@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
         }
       }
     )
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erro ao atualizar estatísticas:', error)
     
     return new Response(
