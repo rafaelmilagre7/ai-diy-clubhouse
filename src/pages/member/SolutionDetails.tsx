@@ -82,7 +82,7 @@ const SolutionDetails = () => {
             <SuccessCard
               title="Implementação Iniciada"
               message="Você começou a implementação dessa solução. Boa jornada!"
-              type="step"
+              type="implementation" // Alterado para usar um tipo válido
               onAnimationComplete={() => setShowStartSuccess(false)}
             />
           </div>

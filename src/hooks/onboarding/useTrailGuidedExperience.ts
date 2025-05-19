@@ -34,31 +34,34 @@ export const useTrailGuidedExperience = () => {
           // Dados simulados
           const mockSolutions = [
             {
-              id: 1,
+              id: "1",
               title: "Automação de Atendimento com IA",
               description: "Implemente um sistema de chatbot avançado para atendimento ao cliente",
               justification: "Com base no seu interesse em melhorar o atendimento ao cliente e reduzir custos operacionais, esta solução permitirá automatizar até 70% dos atendimentos com um assistente virtual inteligente.",
               difficulty: "medium",
               estimatedTime: "2-4 semanas",
               implementationSteps: ["Análise de requisitos", "Configuração da plataforma", "Treinamento do modelo", "Testes e ajustes"],
+              solutionId: "1"
             },
             {
-              id: 2,
+              id: "2",
               title: "Análise de Dados com Processamento de Linguagem Natural",
               description: "Utilize NLP para extrair insights de feedbacks de clientes",
               justification: "Analisando seu objetivo de melhorar a experiência do cliente, esta solução ajudará a identificar tendências, sentimentos e oportunidades de melhoria a partir dos comentários e feedbacks dos clientes.",
               difficulty: "medium",
               estimatedTime: "3-5 semanas",
               implementationSteps: ["Coleta de dados", "Pré-processamento", "Configuração do modelo", "Visualização de resultados"],
+              solutionId: "2"
             },
             {
-              id: 3,
+              id: "3",
               title: "Automação de Marketing com IA",
               description: "Personalize campanhas de marketing com base em comportamentos",
               justification: "Considerando seu objetivo de aumentar conversões, esta solução permitirá segmentar audiências e personalizar conteúdo automaticamente, aumentando a relevância das suas mensagens de marketing.",
               difficulty: "medium",
               estimatedTime: "4-6 semanas",
               implementationSteps: ["Configuração da plataforma", "Integração de dados", "Criação de segmentos", "Automação de campanhas"],
+              solutionId: "3"
             }
           ];
           
@@ -126,17 +129,16 @@ export const useTrailGuidedExperience = () => {
     }
   }, [currentStepIdx]);
   
-  // Selecionar uma solução
-  const handleSelectSolution = useCallback((solutionId: number) => {
-    // Aqui você redirecionaria para uma página de detalhes da solução
-    // Agora apenas exibimos um toast como demonstração
+  // Selecionar uma solução - agora aceita ID como string
+  const handleSelectSolution = useCallback((solutionId: string) => {
+    // Redirecionamento para página de detalhes
     toast.success("Solução selecionada", {
       description: "Em breve você será redirecionado para os detalhes da implementação."
     });
     
     // Exemplo de redirecionamento
-    // navigate(`/solutions/${solutionId}`);
-  }, []);
+    navigate(`/solutions/${solutionId}`);
+  }, [navigate]);
   
   // Atualização dos dados da trilha
   const refreshTrailData = useCallback(async () => {

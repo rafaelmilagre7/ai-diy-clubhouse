@@ -6,10 +6,11 @@ import { CheckCircle2, Sparkles } from "lucide-react";
 interface SuccessCardProps {
   title: string;
   message: string;
-  type?: "implementation" | "completion" | "achievement";
+  type?: "implementation" | "completion" | "achievement" | "step"; // Adicionado "step" como tipo válido
   showConfetti?: boolean;
   className?: string;
   onClick?: () => void;
+  onAnimationComplete?: () => void; // Adicionado callback para fim de animação
 }
 
 export const SuccessCard: React.FC<SuccessCardProps> = ({
@@ -18,8 +19,20 @@ export const SuccessCard: React.FC<SuccessCardProps> = ({
   type = "completion",
   showConfetti = false,
   className,
-  onClick
+  onClick,
+  onAnimationComplete
 }) => {
+  // Executar callback quando terminar animação, se fornecido
+  React.useEffect(() => {
+    if (onAnimationComplete) {
+      const timer = setTimeout(() => {
+        onAnimationComplete();
+      }, 3000); // Executa após 3 segundos de exibição
+      
+      return () => clearTimeout(timer);
+    }
+  }, [onAnimationComplete]);
+  
   // Definir cores baseadas no tipo
   const getColors = () => {
     switch (type) {
@@ -27,6 +40,8 @@ export const SuccessCard: React.FC<SuccessCardProps> = ({
         return "bg-gradient-to-br from-[#151823] to-[#1A1E2E] border-[#0ABAB5]/30";
       case "achievement":
         return "bg-gradient-to-br from-amber-950/40 to-amber-900/20 border-amber-500/30";
+      case "step":
+        return "bg-gradient-to-br from-indigo-950/40 to-indigo-900/20 border-indigo-500/30";
       default:
         return "bg-gradient-to-br from-[#151823] to-[#1E1F2B] border-indigo-500/30";
     }
@@ -38,6 +53,8 @@ export const SuccessCard: React.FC<SuccessCardProps> = ({
         return "text-[#0ABAB5]";
       case "achievement":
         return "text-amber-400";
+      case "step":
+        return "text-indigo-400";
       default:
         return "text-indigo-400";
     }
