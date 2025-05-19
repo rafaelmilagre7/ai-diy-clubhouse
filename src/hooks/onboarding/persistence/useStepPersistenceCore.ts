@@ -183,7 +183,7 @@ export function useStepPersistenceCore({
       
       // Redirecionamento após delay para garantir atualização do estado - usando navigate em vez de window.location
       setTimeout(() => {
-        navigate("/implementation-trail");
+        navigate("/onboarding/completed");
       }, 1000);
     } catch (error: any) {
       console.error("Erro ao completar onboarding:", error);

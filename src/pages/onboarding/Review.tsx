@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
@@ -90,8 +91,6 @@ const Review: React.FC = () => {
     try {
       setIsSubmitting(true);
       await completeOnboarding();
-      // Após completar o onboarding, navegue para a página de sucesso
-      navigate('/onboarding/completed');
     } catch (error) {
       console.error("[Review] Erro ao finalizar onboarding:", error);
       toast.error("Erro ao finalizar o onboarding. Por favor, tente novamente.");
@@ -109,8 +108,8 @@ const Review: React.FC = () => {
         title="Revisar Informações"
       >
         <div className="text-center py-8">
-          <Loader2 className="animate-spin h-8 w-8 mx-auto text-gray-500" />
-          <p className="mt-2 text-gray-500">Carregando seus dados...</p>
+          <Loader2 className="animate-spin h-8 w-8 mx-auto text-viverblue" />
+          <p className="mt-2 text-neutral-300">Carregando seus dados...</p>
         </div>
       </OnboardingLayout>
     );
@@ -132,6 +131,7 @@ const Review: React.FC = () => {
           <div className="mt-4 flex gap-3">
             <Button 
               variant="outline"
+              className="border-neutral-600 hover:bg-[#252842] hover:text-white"
               onClick={() => {
                 initialLoadRef.current = false;
                 setIsInitialLoadAttempted(false); // Resetar flag para permitir nova tentativa
@@ -143,7 +143,7 @@ const Review: React.FC = () => {
             </Button>
             <Button
               onClick={() => navigate("/onboarding/complementary")}
-              variant="default"
+              className="bg-viverblue hover:bg-viverblue-dark text-white"
             >
               Voltar à etapa anterior
             </Button>
@@ -165,7 +165,7 @@ const Review: React.FC = () => {
           message="Vamos revisar as informações que você compartilhou conosco. Se algo estiver incorreto, você pode voltar às etapas anteriores e fazer os ajustes necessários."
         />
         
-        <div className="bg-[#151823] rounded-lg p-6 border border-neutral-700/50">
+        <div className="bg-gradient-to-br from-[#1A1E2E] to-[#151823] rounded-lg p-6 border border-neutral-700/50 shadow-md">
           {/* Apenas renderizar ReviewStep se tivermos dados de progresso */}
           {progress && (
             <ReviewStep 
