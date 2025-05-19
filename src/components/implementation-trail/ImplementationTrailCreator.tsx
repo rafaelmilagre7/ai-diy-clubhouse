@@ -4,15 +4,19 @@ import { useImplementationTrail } from "@/hooks/implementation/useImplementation
 import { useSolutionsData } from "@/hooks/useSolutionsData";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, RefreshCw, AlertTriangle, Info } from "lucide-react";
+import { Loader2, RefreshCw, AlertTriangle, Info, Book } from "lucide-react";
 import { TrailSolutionsList } from "./TrailSolutionsList";
+import { TrailCoursesList } from "./TrailCoursesList";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { supabase } from "@/lib/supabase";
 
 export const ImplementationTrailCreator = () => {
   const { trail, isLoading, error, hasContent, generateImplementationTrail, refreshTrail, regenerating, refreshing } = useImplementationTrail();
   const { solutions: allSolutions, loading: solutionsLoading } = useSolutionsData();
   const [processedSolutions, setProcessedSolutions] = useState<any[]>([]);
+  const [recommendedCourses, setRecommendedCourses] = useState<any[]>([]);
+  const [loadingCourses, setLoadingCourses] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [missingIds, setMissingIds] = useState<string[]>([]);
   
@@ -62,6 +66,66 @@ export const ImplementationTrailCreator = () => {
 
     processSolutions();
   }, [trail, allSolutions]);
+  
+  // Buscar cursos recomendados
+  useEffect(() => {
+    const fetchRecommendedCourses = async () => {
+      // Verifica se o trail tem recomendações de cursos
+      if (!trail?.recommended_courses || !Array.isArray(trail.recommended_courses) || trail.recommended_courses.length === 0) {
+        console.log("Sem recomendações de cursos na trilha");
+        return;
+      }
+
+      try {
+        setLoadingCourses(true);
+        const courseIds = trail.recommended_courses.map((c: any) => c.courseId);
+
+        if (courseIds.length === 0) {
+          setLoadingCourses(false);
+          return;
+        }
+        
+        // Buscar informações dos cursos no banco
+        const { data: courses, error } = await supabase
+          .from("learning_courses")
+          .select("*, learning_modules(count)")
+          .in("id", courseIds)
+          .eq("published", true);
+        
+        if (error) {
+          console.error("Erro ao buscar cursos recomendados:", error);
+          setLoadingCourses(false);
+          return;
+        }
+        
+        // Mapear cursos com justificativas da trilha
+        const coursesWithDetails = courseIds.map(id => {
+          const course = courses?.find(c => c.id === id);
+          const recommendation = trail.recommended_courses.find((r: any) => r.courseId === id);
+          
+          if (course) {
+            return {
+              ...course,
+              justification: recommendation?.justification || "Recomendado para seu perfil",
+              priority: recommendation?.priority || 1
+            };
+          }
+          return null;
+        }).filter(Boolean);
+        
+        console.log("Cursos processados:", coursesWithDetails);
+        setRecommendedCourses(coursesWithDetails || []);
+      } catch (error) {
+        console.error("Erro ao processar cursos recomendados:", error);
+      } finally {
+        setLoadingCourses(false);
+      }
+    };
+
+    if (trail) {
+      fetchRecommendedCourses();
+    }
+  }, [trail]);
 
   // Função para gerar a trilha
   const handleGenerateTrail = async () => {
@@ -89,7 +153,7 @@ export const ImplementationTrailCreator = () => {
   };
 
   // Estado de carregamento
-  if (isLoading || solutionsLoading || regenerating) {
+  if (isLoading || solutionsLoading || regenerating || loadingCourses) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[300px] py-8">
         <Loader2 className="h-8 w-8 text-[#0ABAB5] animate-spin mb-4" />
@@ -98,7 +162,9 @@ export const ImplementationTrailCreator = () => {
             ? "Gerando sua trilha personalizada..." 
             : refreshing 
               ? "Atualizando dados da trilha..." 
-              : "Carregando sua trilha personalizada..."}
+              : loadingCourses
+                ? "Carregando aulas recomendadas..."
+                : "Carregando sua trilha personalizada..."}
         </p>
       </div>
     );
@@ -128,7 +194,7 @@ export const ImplementationTrailCreator = () => {
   }
 
   // Se não há conteúdo na trilha, exibir opção para gerar
-  if (!hasContent || processedSolutions.length === 0) {
+  if (!hasContent || (processedSolutions.length === 0 && recommendedCourses.length === 0)) {
     return (
       <div className="text-center py-8 space-y-6">
         <div className="bg-[#151823]/80 border border-[#0ABAB5]/20 rounded-lg p-8 max-w-2xl mx-auto">
@@ -160,7 +226,7 @@ export const ImplementationTrailCreator = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium text-white">Suas soluções recomendadas</h3>
+        <h3 className="text-lg font-medium text-white">Sua trilha personalizada</h3>
         <Button 
           variant="outline" 
           size="sm" 
@@ -190,7 +256,29 @@ export const ImplementationTrailCreator = () => {
       
       <Separator className="bg-neutral-800" />
       
-      <TrailSolutionsList solutions={processedSolutions} />
+      {/* Soluções recomendadas */}
+      {processedSolutions.length > 0 && (
+        <div className="space-y-4">
+          <h4 className="font-medium text-[#0ABAB5] flex items-center gap-2">
+            Soluções recomendadas para implementação
+          </h4>
+          <TrailSolutionsList solutions={processedSolutions} />
+        </div>
+      )}
+      
+      {/* Cursos recomendados */}
+      {recommendedCourses.length > 0 && (
+        <>
+          <Separator className="bg-neutral-800 my-6" />
+          <div className="space-y-4">
+            <h4 className="font-medium text-[#0ABAB5] flex items-center gap-2">
+              <Book className="h-5 w-5" />
+              Aulas recomendadas para você
+            </h4>
+            <TrailCoursesList courses={recommendedCourses} />
+          </div>
+        </>
+      )}
     </div>
   );
 };

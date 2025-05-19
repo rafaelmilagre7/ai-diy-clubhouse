@@ -1,116 +1,97 @@
 
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { TrailCurrentSolutionCard } from '../TrailCurrentSolutionCard';
-import { Sparkles, Gauge, Zap } from 'lucide-react';
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Solution } from "@/types/solution";
+import { ArrowRight, Lightbulb, Clock } from "lucide-react";
 
 interface TrailPanelSolutionsProps {
-  solutions: any[];
+  solutions: (Solution & { priority: number; justification: string })[];
 }
 
 export const TrailPanelSolutions: React.FC<TrailPanelSolutionsProps> = ({ solutions }) => {
   const navigate = useNavigate();
   
-  // Agrupar soluções por prioridade
-  const priority1 = solutions.filter(s => s.priority === 1);
-  const priority2 = solutions.filter(s => s.priority === 2);
-  const priority3 = solutions.filter(s => s.priority === 3);
-  
-  const handleNavigateToSolution = (id: string) => {
-    navigate(`/solution/${id}`);
-  };
-  
-  // Função para renderizar o header de cada grupo de prioridades
-  const renderPriorityHeader = (priority: number, title: string, description: string) => {
-    const getPriorityIcon = () => {
-      switch (priority) {
-        case 1: return <Sparkles className="h-5 w-5 text-[#0ABAB5]" />;
-        case 2: return <Gauge className="h-5 w-5 text-amber-400" />;
-        case 3: return <Zap className="h-5 w-5 text-neutral-400" />;
-        default: return null;
-      }
-    };
-    
-    const getPriorityColor = () => {
-      switch (priority) {
-        case 1: return "from-[#0ABAB5]/10 to-transparent border-[#0ABAB5]/20";
-        case 2: return "from-amber-500/10 to-transparent border-amber-500/20";
-        case 3: return "from-neutral-500/10 to-transparent border-neutral-500/20";
-        default: return "from-gray-500/10 to-transparent border-gray-500/20";
-      }
-    };
-    
+  if (!solutions || solutions.length === 0) {
     return (
-      <div className={`flex items-center gap-3 p-3 bg-gradient-to-r ${getPriorityColor()} rounded-md border mb-4`}>
-        <div className="p-1.5 rounded-full bg-[#151823]/50">
-          {getPriorityIcon()}
-        </div>
-        <div>
-          <h3 className="font-medium text-white">{title}</h3>
-          <p className="text-sm text-neutral-400">{description}</p>
-        </div>
+      <div className="text-center py-4">
+        <p className="text-sm text-neutral-400">Nenhuma solução encontrada em sua trilha.</p>
       </div>
     );
-  };
+  }
+
+  // Agrupar por prioridade
+  const byPriority: Record<number, typeof solutions> = {};
+  solutions.forEach(solution => {
+    if (!byPriority[solution.priority]) {
+      byPriority[solution.priority] = [];
+    }
+    byPriority[solution.priority].push(solution);
+  });
   
+  const priorityLabels: Record<number, string> = {
+    1: "Alta Prioridade",
+    2: "Média Prioridade", 
+    3: "Baixa Prioridade"
+  };
+
   return (
-    <div className="space-y-8">
-      {priority1.length > 0 && (
-        <div>
-          {renderPriorityHeader(
-            1, 
-            "Soluções de Alta Prioridade", 
-            "Recomendamos começar implementando estas soluções para obter resultados mais rápidos"
-          )}
-          <div className="space-y-2">
-            {priority1.map(solution => (
-              <TrailCurrentSolutionCard
-                key={solution.solutionId}
-                solution={solution}
-                onSelect={handleNavigateToSolution}
-              />
+    <div className="space-y-6">
+      {Object.keys(byPriority).map((priority) => (
+        <div key={priority} className="space-y-4">
+          <h4 className="text-white text-sm font-medium flex items-center gap-2">
+            <Badge 
+              className={`
+                ${Number(priority) === 1 ? 'bg-red-600/20 text-red-400 hover:bg-red-600/30' : 
+                 Number(priority) === 2 ? 'bg-orange-600/20 text-orange-400 hover:bg-orange-600/30' : 
+                 'bg-blue-600/20 text-blue-400 hover:bg-blue-600/30'}
+              `}
+            >
+              {priorityLabels[Number(priority)]}
+            </Badge>
+          </h4>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {byPriority[Number(priority)].map(solution => (
+              <Card key={solution.id} className="bg-[#151823] border-neutral-700/50 hover:border-[#0ABAB5]/60 transition-all">
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-start">
+                    <Badge variant="outline" className="bg-[#0ABAB5]/10 text-[#0ABAB5] border-[#0ABAB5]/30">
+                      {solution.category}
+                    </Badge>
+                    <Badge variant="outline" className="bg-[#151823]">
+                      {solution.difficulty}
+                    </Badge>
+                  </div>
+                  <CardTitle className="text-lg mt-2">{solution.title}</CardTitle>
+                  <CardDescription className="line-clamp-2">{solution.description}</CardDescription>
+                </CardHeader>
+                
+                <CardContent>
+                  <div className="text-sm text-neutral-300 bg-[#0ABAB5]/5 p-3 rounded-md border border-[#0ABAB5]/20">
+                    <p className="italic">"{solution.justification}"</p>
+                  </div>
+                  <div className="flex items-center gap-2 mt-3 text-sm text-neutral-400">
+                    <Clock size={14} />
+                    <span>{solution.estimated_time || 30} minutos estimados</span>
+                  </div>
+                </CardContent>
+                
+                <CardFooter>
+                  <Button 
+                    onClick={() => navigate(`/solution/${solution.id}`)}
+                    className="w-full bg-[#0ABAB5]/20 hover:bg-[#0ABAB5]/40 text-white border-none"
+                  >
+                    Implementar <ArrowRight size={16} className="ml-2" />
+                  </Button>
+                </CardFooter>
+              </Card>
             ))}
           </div>
         </div>
-      )}
-      
-      {priority2.length > 0 && (
-        <div>
-          {renderPriorityHeader(
-            2, 
-            "Soluções de Média Prioridade", 
-            "Boas oportunidades para expandir os benefícios de IA em seu negócio"
-          )}
-          <div className="space-y-2">
-            {priority2.map(solution => (
-              <TrailCurrentSolutionCard
-                key={solution.solutionId}
-                solution={solution}
-                onSelect={handleNavigateToSolution}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-      
-      {priority3.length > 0 && (
-        <div>
-          {renderPriorityHeader(
-            3, 
-            "Soluções Complementares", 
-            "Implementações que podem agregar mais valor ao seu negócio com IA"
-          )}
-          <div className="space-y-2">
-            {priority3.map(solution => (
-              <TrailCurrentSolutionCard
-                key={solution.solutionId}
-                solution={solution}
-                onSelect={handleNavigateToSolution}
-              />
-            ))}
-          </div>
-        </div>
-      )}
+      ))}
     </div>
   );
-};
+}

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
@@ -15,10 +14,17 @@ export type ImplementationRecommendation = {
   justification: string;
 };
 
+export type CourseRecommendation = {
+  courseId: string;
+  justification: string;
+  priority?: number;
+};
+
 export type ImplementationTrail = {
   priority1: ImplementationRecommendation[];
   priority2: ImplementationRecommendation[];
   priority3: ImplementationRecommendation[];
+  recommended_courses?: CourseRecommendation[];
 };
 
 export const useImplementationTrail = () => {
@@ -329,7 +335,7 @@ export const useImplementationTrail = () => {
           });
         } else {
           // Não usar IDs falsos, mas deixar as listas vazias
-          console.log("Não foi possível obter soluções do banco. Criando trilha vazia.");
+          console.log("Não foi poss��vel obter soluções do banco. Criando trilha vazia.");
         }
 
         // Usar as recomendações de fallback
