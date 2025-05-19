@@ -4,11 +4,13 @@ import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
 import { sanitizeTrailData, saveTrailToLocalStorage, getTrailFromLocalStorage, clearTrailFromLocalStorage } from './useImplementationTrail.utils';
 import { toast } from 'sonner';
+import { OnboardingProgress } from '@/types/onboarding';
 
 // Flag global para prevenir chamadas concorrentes
 let isGenerationInProgress = false;
 let lastGenerationTimestamp = 0;
 const GENERATION_COOLDOWN = 5000; // 5 segundos
+const MAX_RETRY_ATTEMPTS = 2;
 
 export interface ImplementationTrail {
   priority1: TrailSolution[];
@@ -37,18 +39,23 @@ export const useImplementationTrail = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [hasContent, setHasContent] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   
   // Referência para controlar chamadas duplicadas
   const pendingRequestRef = useRef<boolean>(false);
   const lastGeneratedRef = useRef<number>(0);
   // Referência para o componente montado
   const isMountedRef = useRef<boolean>(true);
+  // Referência para token de cancelamento
+  const cancelTokenRef = useRef<string | null>(null);
 
   // Quando o componente é desmontado, marca a ref
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
+      // Gerar novo token de cancelamento para invalidar operações pendentes
+      cancelTokenRef.current = Math.random().toString(36);
     };
   }, []);
 
@@ -56,14 +63,17 @@ export const useImplementationTrail = () => {
   const loadTrailData = useCallback(async (forceRefresh = false) => {
     if (!user || !isMountedRef.current) {
       setIsLoading(false);
-      return;
+      return null;
     }
 
     // Prevenir chamadas duplicadas
     if (pendingRequestRef.current) {
       console.log("[useImplementationTrail] Requisição já em andamento, ignorando chamada duplicada");
-      return;
+      return null;
     }
+
+    const currentCancelToken = Math.random().toString(36);
+    cancelTokenRef.current = currentCancelToken;
 
     try {
       pendingRequestRef.current = true;
@@ -78,14 +88,14 @@ export const useImplementationTrail = () => {
         
         if (trailData) {
           console.log("[useImplementationTrail] Usando dados da trilha do armazenamento local");
-          if (isMountedRef.current) {
+          if (isMountedRef.current && cancelTokenRef.current === currentCancelToken) {
             setTrail(sanitizeTrailData(trailData.trail_data));
             setHasContent(true);
             setIsLoading(false);
             setRefreshing(false);
           }
           pendingRequestRef.current = false;
-          return;
+          return trailData.trail_data;
         }
       }
 
@@ -96,9 +106,10 @@ export const useImplementationTrail = () => {
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
-      if (!isMountedRef.current) return;
+      // Verificar se a operação foi cancelada
+      if (!isMountedRef.current || cancelTokenRef.current !== currentCancelToken) return null;
 
       if (error) {
         if (error.code === 'PGRST116') {
@@ -119,18 +130,21 @@ export const useImplementationTrail = () => {
           
           // Salvar no armazenamento local para uso futuro
           saveTrailToLocalStorage(user.id, data);
+          return data.trail_data;
         } catch (parseError) {
           console.error("[useImplementationTrail] Erro ao processar dados da trilha:", parseError);
           setError(parseError instanceof Error ? parseError : new Error(String(parseError)));
         }
       }
+      return null;
     } catch (err) {
-      if (isMountedRef.current) {
+      if (isMountedRef.current && cancelTokenRef.current === currentCancelToken) {
         console.error("[useImplementationTrail] Erro ao processar dados da trilha:", err);
         setError(err instanceof Error ? err : new Error(String(err)));
       }
+      return null;
     } finally {
-      if (isMountedRef.current) {
+      if (isMountedRef.current && cancelTokenRef.current === currentCancelToken) {
         setIsLoading(false);
         setRefreshing(false);
       }
@@ -148,7 +162,7 @@ export const useImplementationTrail = () => {
   }, [loadTrailData]);
 
   // Função para gerar trilha de implementação
-  const generateImplementationTrail = useCallback(async (onboardingData = {}, forceRegenerate = false) => {
+  const generateImplementationTrail = useCallback(async (onboardingData: OnboardingProgress | null = null, forceRegenerate = false) => {
     // Verificações de segurança
     if (!user) {
       toast.error("Você precisa estar logado para gerar uma trilha");
@@ -178,6 +192,9 @@ export const useImplementationTrail = () => {
       return null;
     }
     
+    const currentCancelToken = Math.random().toString(36);
+    cancelTokenRef.current = currentCancelToken;
+    
     try {
       // Atualizar flags de controle
       isGenerationInProgress = true;
@@ -188,6 +205,7 @@ export const useImplementationTrail = () => {
       if (isMountedRef.current) {
         setRegenerating(true);
         setError(null);
+        setRetryCount(0); // Resetar contagem de tentativas
       }
       
       // Limpar dados locais da trilha
@@ -195,7 +213,8 @@ export const useImplementationTrail = () => {
       
       console.log("[useImplementationTrail] Iniciando geração de trilha", { 
         forceRegenerate, 
-        userId: user.id 
+        userId: user.id,
+        hasOnboardingData: !!onboardingData
       });
       
       // Verificar se já existe uma trilha e não está forçando regeneração
@@ -208,6 +227,9 @@ export const useImplementationTrail = () => {
           .limit(1)
           .maybeSingle();
           
+        // Verificar se a operação foi cancelada
+        if (!isMountedRef.current || cancelTokenRef.current !== currentCancelToken) return null;
+        
         if (existingTrail) {
           console.log("[useImplementationTrail] Trilha existente encontrada, retornando sem regenerar");
           // Se já existe uma trilha, retorná-la sem regenerar
@@ -233,27 +255,38 @@ export const useImplementationTrail = () => {
       
       console.log("[useImplementationTrail] Chamando edge function para gerar trilha");
       
-      // Simplificar dados de onboarding para evitar payload muito grande
-      const simplifiedOnboarding = {
-        personal_info: onboardingData.personal_info,
-        professional_info: onboardingData.professional_info,
-        business_goals: onboardingData.business_goals,
-        ai_experience: onboardingData.ai_experience,
-        is_completed: onboardingData.is_completed
+      // Preparar dados para envio
+      let requestData: Record<string, any> = {
+        userId: user.id,
+        hasOnboardingData: !!onboardingData
       };
+      
+      // Adicionar dados de onboarding se disponíveis
+      if (onboardingData) {
+        // Simplificar dados de onboarding para evitar payload muito grande
+        requestData = {
+          ...requestData,
+          personal_info: onboardingData.personal_info || {},
+          professional_info: onboardingData.professional_info || {},
+          business_goals: onboardingData.business_goals || {},
+          ai_experience: onboardingData.ai_experience || {},
+          is_completed: onboardingData.is_completed || false
+        };
+      }
       
       // Chamar a função de borda para gerar a trilha
       const { data, error } = await supabase.functions.invoke('generate-implementation-trail', {
-        body: { 
-          userId: user.id,
-          hasOnboardingData: true,
-          ...simplifiedOnboarding
-        }
+        body: requestData
       });
       
-      if (!isMountedRef.current) return null;
+      // Verificar se a operação foi cancelada
+      if (!isMountedRef.current || cancelTokenRef.current !== currentCancelToken) return null;
       
-      console.log("[useImplementationTrail] Resposta da função edge:", { data, error });
+      console.log("[useImplementationTrail] Resposta da função edge:", { 
+        success: data?.success, 
+        hasTrail: !!data?.trail, 
+        error
+      });
       
       if (error) {
         console.error("[useImplementationTrail] Erro na invocação da função edge:", error);
@@ -270,7 +303,7 @@ export const useImplementationTrail = () => {
       let sanitizedData;
       try {
         sanitizedData = sanitizeTrailData(data.trail?.trail_data);
-        if (isMountedRef.current) {
+        if (isMountedRef.current && cancelTokenRef.current === currentCancelToken) {
           setTrail(sanitizedData);
           setHasContent(true);
         }
@@ -287,14 +320,35 @@ export const useImplementationTrail = () => {
       console.log("[useImplementationTrail] Trilha gerada com sucesso");
       return sanitizedData;
     } catch (err) {
-      if (isMountedRef.current) {
+      if (isMountedRef.current && cancelTokenRef.current === currentCancelToken) {
         console.error("[useImplementationTrail] Erro ao gerar trilha de implementação:", err);
         setError(err instanceof Error ? err : new Error(String(err)));
+
+        // Se ainda não excedeu o número máximo de tentativas, incrementar contador
+        if (retryCount < MAX_RETRY_ATTEMPTS) {
+          const newRetryCount = retryCount + 1;
+          setRetryCount(newRetryCount);
+          
+          toast.error(`Erro ao gerar trilha. Tentativa ${newRetryCount} de ${MAX_RETRY_ATTEMPTS}.`);
+          
+          // Aguardar um tempo incremental antes de tentar novamente
+          const retryDelay = 2000 * newRetryCount;
+          setTimeout(() => {
+            if (isMountedRef.current && cancelTokenRef.current === currentCancelToken) {
+              toast.info(`Tentando gerar trilha novamente...`);
+              // Chamar novamente com recursão
+              generateImplementationTrail(onboardingData, forceRegenerate);
+            }
+          }, retryDelay);
+          
+          return null;
+        } else {
+          toast.error("Não foi possível gerar sua trilha após várias tentativas. Por favor, tente novamente mais tarde.");
+        }
       }
-      toast.error("Erro ao gerar trilha de implementação. Tentaremos novamente automaticamente.");
       return null;
     } finally {
-      if (isMountedRef.current) {
+      if (isMountedRef.current && cancelTokenRef.current === currentCancelToken) {
         setRegenerating(false);
       }
       
@@ -307,7 +361,7 @@ export const useImplementationTrail = () => {
         isGenerationInProgress = false;
       }, 2000);
     }
-  }, [user, regenerating]);
+  }, [user, regenerating, retryCount]);
 
   // Função para atualizar a trilha
   const refreshTrail = useCallback(async (forceRefresh = false) => {
