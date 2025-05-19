@@ -70,9 +70,7 @@ const AuthSession = () => {
           console.warn("AuthSession: Perfil não encontrado, tentando criar");
           
           // Verificar se o usuário é admin com base no email
-          const isAdmin = user.email?.includes('@viverdeia.ai') || 
-                        user.email === 'admin@teste.com' || 
-                        user.email === 'admin@viverdeia.ai';
+          const isAdmin = isUserAdmin(user, null);
           
           const userName = user.user_metadata?.name || 
                           user.user_metadata?.full_name || 

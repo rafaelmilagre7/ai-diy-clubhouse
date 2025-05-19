@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { MemberUserMenu } from "./MemberUserMenu";
 import { SidebarLogo } from "./navigation/SidebarLogo";
-import { MemberSidebarNav } from "./MemberSidebarNav";
+import { MemberSidebarNav } from "../MemberSidebarNav";
 
 interface MemberSidebarProps {
   sidebarOpen: boolean;

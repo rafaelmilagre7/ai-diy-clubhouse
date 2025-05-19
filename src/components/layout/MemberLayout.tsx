@@ -11,12 +11,23 @@ import { getUserDisplayName, isUserAdmin } from "@/utils/auth/adminUtils";
  * Isso inclui a barra lateral e a área de conteúdo
  */
 const MemberLayout = ({ children }: { children: React.ReactNode }) => {
-  const { user, profile, isAdmin, signOut } = useAuth();
+  const { user, profile, setIsAdmin, signOut } = useAuth();
+  
+  // Verificar se o usuário é admin usando a função centralizada
+  const userIsAdmin = isUserAdmin(user, profile);
+  
+  // Sincronizar o estado isAdmin no contexto de autenticação
+  useEffect(() => {
+    if (setIsAdmin) {
+      console.log("MemberLayout: Sincronizando estado isAdmin no contexto:", userIsAdmin);
+      setIsAdmin(userIsAdmin);
+    }
+  }, [userIsAdmin, setIsAdmin, user, profile]);
   
   console.log("MemberLayout renderizando:", {
     userExists: !!user,
     profileExists: !!profile,
-    isAdmin,
+    isAdmin: userIsAdmin,
     userEmail: user?.email,
     profileRole: profile?.role
   });
@@ -88,9 +99,6 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
   const profileName = profile?.name || user?.user_metadata?.name || user?.email?.split('@')[0] || null;
   const profileEmail = profile?.email || user?.email || null;
   const profileAvatar = profile?.avatar_url;
-  
-  // Calcular isAdmin com verificação centralizada usando a função helper
-  const userIsAdmin = isUserAdmin(user, profile);
 
   return (
     <div className="flex min-h-screen bg-[#0F111A] overflow-hidden">
@@ -114,7 +122,7 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
         profileAvatar={profileAvatar}
         getInitials={getInitials}
         signOut={signOut}
-        isAdmin={userIsAdmin} // Aqui passamos o valor calculado com isUserAdmin
+        isAdmin={userIsAdmin} // Passando o valor calculado com isUserAdmin
       />
       
       {/* Conteúdo principal */}
