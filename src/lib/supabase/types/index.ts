@@ -20,6 +20,7 @@ export type LearningComment = Database['public']['Tables']['learning_comments'][
 
 export type Solution = Database['public']['Tables']['solutions']['Row'] & {
   videos?: any[];
+  checklist?: any[];
 };
 
 export type Module = Database['public']['Tables']['modules']['Row'] & {
@@ -36,7 +37,7 @@ export type UserProfile = Database['public']['Tables']['profiles']['Row'] & {
 
 export type Referral = Database['public']['Tables']['referrals']['Row'];
 
-// Tipos para formulários
+// Tipo para formulários de vídeo
 export type VideoFormValues = {
   id?: string;
   title: string;
@@ -51,6 +52,16 @@ export type VideoFormValues = {
   embedCode?: string;
   fileName?: string;
 };
+
+// Interface para checklist de usuário
+export interface UserChecklist {
+  id: string;
+  user_id: string;
+  solution_id: string;
+  checked_items: Record<string, boolean>;
+  created_at: string;
+  updated_at: string;
+}
 
 // Outros tipos existentes
 export * from './database.types';
