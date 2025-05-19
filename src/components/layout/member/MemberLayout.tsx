@@ -44,6 +44,11 @@ const MemberLayout = () => {
     if (!name) return "U";
     return name.charAt(0).toUpperCase();
   };
+  
+  // Verificar se o usuário é admin
+  const isAdmin = !!profile?.role && profile?.role === "admin" || 
+                 (user?.email && (user.email.includes('@viverdeia.ai') || 
+                                  user.email === 'admin@teste.com'));
 
   // Mostrar loading enquanto verifica autenticação
   if (isLoading) {
@@ -66,7 +71,7 @@ const MemberLayout = () => {
         profileAvatar={avatarUrl}
         getInitials={getInitials}
         signOut={handleSignOut}
-        isAdmin={!!profile?.role === !!profile?.role && profile?.role === "admin"}
+        isAdmin={isAdmin}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">

@@ -25,21 +25,22 @@ import { isUserAdmin } from "@/utils/auth/adminUtils";
 
 interface SidebarNavProps {
   sidebarOpen: boolean;
+  isAdmin: boolean;
 }
 
-export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
+export const MemberSidebarNav = ({ sidebarOpen, isAdmin }: SidebarNavProps) => {
   const location = useLocation();
-  const { user, profile, isAdmin } = useAuth();
+  const { user, profile } = useAuth();
   const [showAdminButton, setShowAdminButton] = useState(false);
 
   // Efeito para garantir que o botão admin seja exibido corretamente
   useEffect(() => {
     // Verificação de admin usando a função utilitária centralizada
-    const adminStatus = isUserAdmin(user, profile);
+    const adminStatus = isAdmin || isUserAdmin(user, profile);
     
     console.log("MemberSidebarNav - Verificação de admin:", {
       adminStatus,
-      contextIsAdmin: isAdmin,
+      isAdmin,
       userEmail: user?.email,
       profileRole: profile?.role
     });

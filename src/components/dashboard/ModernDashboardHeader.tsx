@@ -14,16 +14,18 @@ export function ModernDashboardHeader() {
   
   // Efeito para atualizar o nome do usuário quando os dados mudam
   useEffect(() => {
-    const displayName = getUserDisplayName(user, profile);
-    setUserName(displayName);
-    
-    // Debug para verificar o nome recebido
-    console.log("ModernDashboardHeader - Nome do usuário:", { 
-      displayName,
-      profileName: profile?.name,
-      user_email: user?.email,
-      user_metadata: user?.user_metadata
-    });
+    if (user || profile) {
+      const displayName = getUserDisplayName(user, profile);
+      setUserName(displayName || "Membro");
+      
+      // Debug para verificar o nome recebido
+      console.log("ModernDashboardHeader - Nome do usuário:", { 
+        displayName,
+        profileName: profile?.name,
+        user_email: user?.email,
+        user_metadata: user?.user_metadata
+      });
+    }
   }, [user, profile]);
 
   return (

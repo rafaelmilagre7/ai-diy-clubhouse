@@ -19,10 +19,6 @@ interface MemberSidebarProps {
 export const MemberSidebar = ({ 
   sidebarOpen, 
   setSidebarOpen, 
-  profileName,
-  profileEmail,
-  profileAvatar,
-  getInitials,
   signOut,
   isAdmin
 }: MemberSidebarProps) => {
@@ -55,10 +51,6 @@ export const MemberSidebar = ({
           </div>
           <MemberUserMenu 
             sidebarOpen={sidebarOpen} 
-            profileName={profileName}
-            profileEmail={profileEmail}
-            profileAvatar={profileAvatar}
-            getInitials={getInitials}
             signOut={signOut}
           />
         </div>
