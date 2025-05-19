@@ -1,7 +1,6 @@
-
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Home, BookOpen, Wrench, Bell, Settings, Lightbulb, GraduationCap } from "lucide-react";
+import { Home, BookOpen, Wrench, Bell, Settings, Lightbulb, GraduationCap, UserPlus } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
 
 export const MemberSidebarNav = ({ sidebarOpen, className }: {
@@ -31,6 +30,11 @@ export const MemberSidebarNav = ({ sidebarOpen, className }: {
       name: "Ferramentas", 
       path: "/tools", 
       icon: Wrench 
+    },
+    { 
+      name: "Indicações", 
+      path: "/referrals", 
+      icon: UserPlus 
     },
     { 
       name: "Notificações", 

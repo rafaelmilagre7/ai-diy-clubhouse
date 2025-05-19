@@ -1,4 +1,3 @@
-
 import { RouteObject } from "react-router-dom";
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import MemberLayout from '@/components/layout/MemberLayout';
@@ -30,6 +29,9 @@ import CommunityHome from '@/pages/member/community/CommunityHome';
 import CategoryView from '@/pages/member/community/CategoryView';
 import TopicView from '@/pages/member/community/TopicView';
 import NewTopic from '@/pages/member/community/NewTopic';
+
+// Importar página de indicações
+import Referrals from '@/pages/member/Referrals';
 
 export const memberRoutes: RouteObject[] = [
   {
@@ -155,5 +157,11 @@ export const memberRoutes: RouteObject[] = [
   {
     path: "/forum/new-topic/:categorySlug?",
     element: <ProtectedRoutes><MemberLayout><NewTopic /></MemberLayout></ProtectedRoutes>
+  },
+  
+  // Adicionar rota de indicações
+  {
+    path: "/referrals",
+    element: <ProtectedRoutes><MemberLayout><Referrals /></MemberLayout></ProtectedRoutes>
   }
 ];

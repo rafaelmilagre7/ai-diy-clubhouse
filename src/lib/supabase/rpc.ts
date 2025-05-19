@@ -130,3 +130,116 @@ export async function deleteForumPost(postId: string, topicId: string): Promise<
     return { success: false, error: error.message };
   }
 }
+
+/**
+ * Cria uma nova indicação
+ * @param email Email da pessoa indicada
+ * @param type Tipo de indicação: 'club' ou 'formacao'
+ * @param notes Observações opcionais
+ */
+export async function createReferral(email: string, type: 'club' | 'formacao', notes?: string): Promise<{
+  success: boolean;
+  message?: string;
+  referral_id?: string;
+  token?: string;
+  expires_at?: string;
+}> {
+  try {
+    const { data, error } = await supabase.rpc('create_referral', {
+      p_referrer_id: supabase.auth.getUser().then(res => res.data.user?.id),
+      p_email: email,
+      p_type: type,
+      p_notes: notes
+    });
+
+    if (error) {
+      console.error('Erro ao criar indicação:', error);
+      return { success: false, message: error.message };
+    }
+
+    return {
+      success: data.success,
+      message: data.message,
+      referral_id: data.referral_id,
+      token: data.token,
+      expires_at: data.expires_at
+    };
+  } catch (error: any) {
+    console.error('Erro ao criar indicação:', error);
+    return { success: false, message: error.message };
+  }
+}
+
+/**
+ * Verifica os detalhes de uma indicação pelo token
+ * @param token Token de indicação
+ */
+export async function checkReferral(token: string): Promise<{
+  success: boolean;
+  message?: string;
+  referral_id?: string;
+  type?: string;
+  referrer_name?: string;
+  status?: string;
+  expires_at?: string;
+}> {
+  try {
+    const { data, error } = await supabase.rpc('check_referral', {
+      p_token: token
+    });
+
+    if (error) {
+      console.error('Erro ao verificar indicação:', error);
+      return { success: false, message: error.message };
+    }
+
+    return {
+      success: data.success,
+      message: data.message,
+      referral_id: data.referral_id,
+      type: data.type,
+      referrer_name: data.referrer_name,
+      status: data.status,
+      expires_at: data.expires_at
+    };
+  } catch (error: any) {
+    console.error('Erro ao verificar indicação:', error);
+    return { success: false, message: error.message };
+  }
+}
+
+/**
+ * Processa uma indicação para um usuário recém-registrado
+ * @param token Token de indicação
+ * @param userId ID do usuário
+ */
+export async function processReferral(token: string, userId: string): Promise<{
+  success: boolean;
+  message?: string;
+  referral_id?: string;
+  type?: string;
+  referrer_id?: string;
+}> {
+  try {
+    const { data, error } = await supabase.rpc('process_referral', {
+      p_token: token,
+      p_user_id: userId
+    });
+
+    if (error) {
+      console.error('Erro ao processar indicação:', error);
+      return { success: false, message: error.message };
+    }
+
+    return {
+      success: data.success,
+      message: data.message,
+      referral_id: data.referral_id,
+      type: data.type,
+      referrer_id: data.referrer_id
+    };
+  } catch (error: any) {
+    console.error('Erro ao processar indicação:', error);
+    return { success: false, message: error.message };
+  }
+}

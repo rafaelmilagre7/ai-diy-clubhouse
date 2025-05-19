@@ -220,3 +220,44 @@ export interface LearningLessonNps {
   created_at: string;
   updated_at: string;
 }
+
+// Interface para o sistema de indicações
+export interface Referral {
+  id: string;
+  referrer_id: string;
+  email: string;
+  token: string;
+  status: 'pending' | 'registered' | 'completed';
+  type: 'club' | 'formacao';
+  role_id?: string | null;
+  created_at: string;
+  completed_at?: string | null;
+  expires_at: string;
+  notes?: string | null;
+  benefits_claimed: boolean;
+  metadata: Record<string, any>;
+}
+
+export interface ReferralBenefit {
+  id: string;
+  referrer_id: string;
+  referral_id: string;
+  benefit_type: string;
+  benefit_value: string;
+  created_at: string;
+  expires_at?: string | null;
+  used: boolean;
+}
+
+export interface ReferralStats {
+  total: number;
+  pending: number;
+  completed: number;
+  conversion_rate: number;
+}
+
+export interface ReferralFormData {
+  email: string;
+  type: 'club' | 'formacao';
+  notes?: string;
+}
