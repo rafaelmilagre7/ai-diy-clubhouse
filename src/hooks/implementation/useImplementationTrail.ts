@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
@@ -160,7 +161,8 @@ export const useImplementationTrail = () => {
           trailData = {
             priority1: validPriority1,
             priority2: validPriority2,
-            priority3: validPriority3
+            priority3: validPriority3,
+            recommended_courses: trailData.recommended_courses || []
           };
           
           // Salvar no cache local
@@ -233,7 +235,7 @@ export const useImplementationTrail = () => {
   }, [loadExistingTrail, trail, lastRefresh]);
 
   // Gerar nova trilha - implementação melhorada com modo de fallback
-  const generateImplementationTrail = async (onboardingData: any) => {
+  const generateImplementationTrail = async (onboardingData: any, forceRegeneration = false) => {
     if (!user) {
       setError("Usuário não autenticado");
       return null;
@@ -258,7 +260,27 @@ export const useImplementationTrail = () => {
         .maybeSingle();
 
       if (existingTrail) {
-        console.log("Trilha existente encontrada. Solicitando atualização na Edge Function.");
+        console.log("Trilha existente encontrada", forceRegeneration ? ". Forçando regeneração." : "");
+      }
+
+      // Se estamos forçando regeneração, atualizar o status da trilha existente para "substituída"
+      if (forceRegeneration && existingTrail) {
+        try {
+          await supabase
+            .from("implementation_trails")
+            .update({ status: "substituída" })
+            .eq("id", existingTrail.id);
+          
+          console.log("Trilha anterior marcada como substituída");
+          
+          // Limpar o cache local
+          if (user?.id) {
+            clearTrailFromLocalStorage(user.id);
+          }
+        } catch (updateErr) {
+          console.error("Erro ao marcar trilha como substituída:", updateErr);
+          // Continuar mesmo com o erro - não é crítico
+        }
       }
 
       // Criar nova entrada pendente para a geração
@@ -276,6 +298,7 @@ export const useImplementationTrail = () => {
             body: {
               onboardingData,
               userId: user.id,
+              forceRegeneration: forceRegeneration
             },
           }
         );
@@ -335,7 +358,7 @@ export const useImplementationTrail = () => {
           });
         } else {
           // Não usar IDs falsos, mas deixar as listas vazias
-          console.log("Não foi poss��vel obter soluções do banco. Criando trilha vazia.");
+          console.log("Não foi possível obter soluções do banco. Criando trilha vazia.");
         }
 
         // Usar as recomendações de fallback

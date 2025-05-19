@@ -66,8 +66,8 @@ export const OnboardingCompleted = () => {
       setIsGeneratingTrail(true);
       toast.info("Iniciando geração da sua trilha personalizada...");
       
-      // Gerar trilha usando os dados completos do onboarding
-      const generatedTrail = await generateImplementationTrail(progress);
+      // Forçar regeneração da trilha (true como segundo parâmetro indica regeneração)
+      const generatedTrail = await generateImplementationTrail(progress, true);
       
       if (generatedTrail) {
         toast.success("Trilha de implementação gerada com sucesso!");
