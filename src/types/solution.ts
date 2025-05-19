@@ -19,4 +19,5 @@ export interface Solution extends Omit<SupabaseSolution, 'author_id'> {
   success_rate?: number;
   related_solutions?: string[];
   author_id?: string; // Tornando author_id opcional para compatibilidade
+  checklist_items?: any[]; // Adicionando checklist_items que está faltando
 }

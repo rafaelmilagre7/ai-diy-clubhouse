@@ -48,8 +48,13 @@ export type VideoFormValues = {
   url: string;
   video_id?: string;
   video_type?: string;
+  type?: string;
   duration_seconds?: number;
   thumbnail_url?: string;
+  filePath?: string;
+  fileName?: string;
+  fileSize?: number;
+  embedCode?: string;
 };
 
 // Definindo TrailSolution para compatibilidade
@@ -61,6 +66,7 @@ export type TrailSolution = {
   estimated_time?: number;
   difficulty: string;
   category: string;
+  checklist_items?: any[];
 };
 
 // Definindo UserChecklist para compatibilidade
