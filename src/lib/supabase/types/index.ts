@@ -137,3 +137,19 @@ export interface UserProfile {
 
 // Reexportar Database para manter compatibilidade
 export * from './database.types';
+
+// Interface de Solution para compatibilidade com index.ts
+export interface Solution {
+  id: string;
+  title: string;
+  description: string;
+  slug: string;
+  thumbnail_url?: string;
+  category: string;
+  difficulty: string;
+  estimated_time?: number;
+  published: boolean;
+  tags?: string[];
+  created_at: string;
+  updated_at: string;
+}

@@ -1,6 +1,6 @@
 
 // Re-exportação dos utilitários de autenticação
-export * from './authUtils';
+export * from './profileUtils';
 // Exportação das funções de validação de perfil
 export {
   validateUserRole,
