@@ -45,6 +45,13 @@ const LayoutProvider = ({ children }: { children: ReactNode }) => {
     
     // Se não estiver carregando, verificar autenticação
     if (!isLoading) {
+      // Para o ambiente de desenvolvimento, permitir visualização mesmo sem autenticação
+      if (import.meta.env.DEV && !user) {
+        console.log("LayoutProvider: Modo de desenvolvimento - permitindo visualização sem autenticação");
+        setLayoutReady(true);
+        return;
+      }
+      
       if (!user) {
         console.log("LayoutProvider: Não autenticado, redirecionando para login");
         navigate('/login', { replace: true });
@@ -93,6 +100,12 @@ const LayoutProvider = ({ children }: { children: ReactNode }) => {
   const isLearningRoute = location.pathname.startsWith('/learning');
 
   console.log("Tipo de rota:", { isFormacaoRoute, isLearningRoute });
+
+  // CORREÇÃO - Renderizar layout padrão para visualização no live preview quando em desenvolvimento
+  if (import.meta.env.DEV && !user) {
+    console.log("Renderizando MemberLayout para ambiente de desenvolvimento");
+    return <MemberLayout>{children}</MemberLayout>;
+  }
 
   // Se o layout está pronto, renderizar com base na rota
   if (layoutReady && user) {
