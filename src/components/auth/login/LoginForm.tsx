@@ -5,31 +5,13 @@ import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import EmailPasswordForm from "./EmailPasswordForm";
-import GoogleLoginButton from "./GoogleLoginButton";
-import Divider from "./Divider";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
-  const { signIn } = useAuth();
   const navigate = useNavigate();
-
-  const handleGoogleSignIn = async () => {
-    try {
-      setIsLoading(true);
-      setError(undefined);
-      toast.info("Iniciando login com Google...");
-      // Usando valores vazios para indicar que queremos fazer login com Google
-      await signIn("", "");
-    } catch (error) {
-      console.error("Erro ao fazer login com Google:", error);
-      setError("Não foi possível fazer login com o Google. Tente novamente.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,15 +58,8 @@ const LoginForm = () => {
         isLoading={isLoading}
         error={error}
       />
-
-      <Divider />
-
-      <GoogleLoginButton 
-        onClick={handleGoogleSignIn}
-        isLoading={isLoading}
-      />
       
-      <div className="text-center text-sm text-white/60 mt-4">
+      <div className="text-center text-sm text-white mt-4">
         <p>O acesso à plataforma é exclusivo para membros convidados</p>
       </div>
     </div>

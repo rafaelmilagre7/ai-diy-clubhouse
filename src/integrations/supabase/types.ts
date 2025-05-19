@@ -1298,6 +1298,33 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          email_enabled: boolean
+          id: string
+          updated_at: string
+          user_id: string
+          whatsapp_enabled: boolean
+        }
+        Insert: {
+          created_at?: string
+          email_enabled?: boolean
+          id?: string
+          updated_at?: string
+          user_id: string
+          whatsapp_enabled?: boolean
+        }
+        Update: {
+          created_at?: string
+          email_enabled?: boolean
+          id?: string
+          updated_at?: string
+          user_id?: string
+          whatsapp_enabled?: boolean
+        }
+        Relationships: []
+      }
       onboarding: {
         Row: {
           additional_context: string | null
@@ -2327,8 +2354,11 @@ export type Database = {
           id: string
           industry: string | null
           name: string | null
+          referrals_count: number
           role: string
           role_id: string | null
+          successful_referrals_count: number
+          whatsapp_number: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -2338,8 +2368,11 @@ export type Database = {
           id: string
           industry?: string | null
           name?: string | null
+          referrals_count?: number
           role?: string
           role_id?: string | null
+          successful_referrals_count?: number
+          whatsapp_number?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -2349,8 +2382,11 @@ export type Database = {
           id?: string
           industry?: string | null
           name?: string | null
+          referrals_count?: number
           role?: string
           role_id?: string | null
+          successful_referrals_count?: number
+          whatsapp_number?: string | null
         }
         Relationships: [
           {
@@ -2408,6 +2444,137 @@ export type Database = {
             columns: ["solution_id"]
             isOneToOne: false
             referencedRelation: "solutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referral_benefits: {
+        Row: {
+          benefit_type: string
+          benefit_value: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          referral_id: string
+          referrer_id: string
+          used: boolean
+        }
+        Insert: {
+          benefit_type: string
+          benefit_value: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          referral_id: string
+          referrer_id: string
+          used?: boolean
+        }
+        Update: {
+          benefit_type?: string
+          benefit_value?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          referral_id?: string
+          referrer_id?: string
+          used?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_benefits_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "referrals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_benefits_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_benefits_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "users_with_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referrals: {
+        Row: {
+          benefits_claimed: boolean
+          completed_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          last_sent_at: string | null
+          metadata: Json | null
+          notes: string | null
+          referrer_id: string
+          role_id: string | null
+          send_attempts: number | null
+          status: Database["public"]["Enums"]["referral_status"]
+          token: string
+          type: Database["public"]["Enums"]["referral_type"]
+        }
+        Insert: {
+          benefits_claimed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          last_sent_at?: string | null
+          metadata?: Json | null
+          notes?: string | null
+          referrer_id: string
+          role_id?: string | null
+          send_attempts?: number | null
+          status?: Database["public"]["Enums"]["referral_status"]
+          token: string
+          type: Database["public"]["Enums"]["referral_type"]
+        }
+        Update: {
+          benefits_claimed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          last_sent_at?: string | null
+          metadata?: Json | null
+          notes?: string | null
+          referrer_id?: string
+          role_id?: string | null
+          send_attempts?: number | null
+          status?: Database["public"]["Enums"]["referral_status"]
+          token?: string
+          type?: Database["public"]["Enums"]["referral_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "users_with_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "user_roles"
             referencedColumns: ["id"]
           },
         ]
@@ -3350,6 +3517,45 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_messages: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          message_content: string
+          message_type: string
+          phone_number: string
+          sent_at: string | null
+          status: string
+          template_name: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message_content: string
+          message_type: string
+          phone_number: string
+          sent_at?: string | null
+          status?: string
+          template_name?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message_content?: string
+          message_type?: string
+          phone_number?: string
+          sent_at?: string | null
+          status?: string
+          template_name?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       network_match_view: {
@@ -3526,6 +3732,10 @@ export type Database = {
         Args: { progress_id: string }
         Returns: Json
       }
+      check_referral: {
+        Args: { p_token: string }
+        Returns: Json
+      }
       check_trusted_domain: {
         Args: { p_email: string }
         Returns: Json
@@ -3536,6 +3746,17 @@ export type Database = {
           p_role_id: string
           p_expires_in?: unknown
           p_notes?: string
+        }
+        Returns: Json
+      }
+      create_referral: {
+        Args: {
+          p_referrer_id: string
+          p_email: string
+          p_type: Database["public"]["Enums"]["referral_type"]
+          p_role_id?: string
+          p_notes?: string
+          p_expires_in?: unknown
         }
         Returns: Json
       }
@@ -3560,6 +3781,10 @@ export type Database = {
         Returns: string
       }
       generate_invite_token: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_referral_token: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
@@ -3663,6 +3888,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      process_referral: {
+        Args: { p_token: string; p_user_id: string }
+        Returns: Json
+      }
       quick_check_permission: {
         Args: { user_id: string; permission_code: string }
         Returns: boolean
@@ -3706,6 +3935,8 @@ export type Database = {
         | "new_vote"
         | "comment_reply"
         | "admin_response"
+      referral_status: "pending" | "registered" | "completed"
+      referral_type: "club" | "formacao"
       solution_category: "Receita" | "Operacional" | "Estratégia"
       solution_category_bkp: "revenue" | "operational" | "strategy"
       suggestion_status:
@@ -3841,6 +4072,8 @@ export const Constants = {
         "comment_reply",
         "admin_response",
       ],
+      referral_status: ["pending", "registered", "completed"],
+      referral_type: ["club", "formacao"],
       solution_category: ["Receita", "Operacional", "Estratégia"],
       solution_category_bkp: ["revenue", "operational", "strategy"],
       suggestion_status: [

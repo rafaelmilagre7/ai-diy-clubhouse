@@ -29,7 +29,7 @@ const EmailPasswordForm = ({
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email" className="text-white">Email</Label>
         <Input
           id="email"
           type="email"
@@ -39,15 +39,16 @@ const EmailPasswordForm = ({
           disabled={isLoading}
           required
           autoComplete="username"
+          className="bg-[#1A1E2E]/80 border-[#3a3f54] text-white placeholder:text-white/50 focus:border-viverblue"
         />
       </div>
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label htmlFor="password">Senha</Label>
+          <Label htmlFor="password" className="text-white">Senha</Label>
           <Link
             to="/reset-password"
-            className="text-xs text-viverblue hover:underline hover:text-viverblue/90"
+            className="text-xs text-viverblue hover:underline hover:text-viverblue/90 font-medium"
           >
             Esqueceu sua senha?
           </Link>
@@ -61,6 +62,7 @@ const EmailPasswordForm = ({
           disabled={isLoading}
           required
           autoComplete="current-password"
+          className="bg-[#1A1E2E]/80 border-[#3a3f54] text-white placeholder:text-white/50 focus:border-viverblue"
         />
       </div>
 
@@ -70,12 +72,12 @@ const EmailPasswordForm = ({
 
       <Button
         type="submit"
-        className="w-full bg-viverblue hover:bg-viverblue/90"
+        className="w-full bg-viverblue hover:bg-viverblue/90 py-6 text-lg font-medium uppercase tracking-wide"
         disabled={isLoading}
       >
         {isLoading ? (
           <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
             Entrando...
           </>
         ) : (
