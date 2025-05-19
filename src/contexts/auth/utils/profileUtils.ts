@@ -1,13 +1,24 @@
 
-// This file is maintained for backward compatibility
-// It re-exports profile utility functions from the new structure
+// Este arquivo está sendo mantido para compatibilidade
+// Ele reexporta funcionalidades dos arquivos mais específicos
 
-export { 
-  fetchUserProfile,
-  createUserProfileIfNeeded
+import { 
+  validateRole, 
+  validateUserRole,
+  determineRoleFromEmail, 
+  isSuperAdmin 
+} from './profileUtils/roleValidation';
+
+import {
+  getUserProfile as fetchUserProfile,
+  createUserProfile as createUserProfileIfNeeded
 } from './profileUtils/userProfileFunctions';
 
-export { 
+export {
+  validateRole,
+  validateUserRole,
   determineRoleFromEmail,
-  validateUserRole
-} from './profileUtils/roleValidation';
+  isSuperAdmin,
+  fetchUserProfile,
+  createUserProfileIfNeeded
+};

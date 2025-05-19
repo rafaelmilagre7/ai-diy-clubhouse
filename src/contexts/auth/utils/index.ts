@@ -26,7 +26,7 @@ export {
 export * from './profileUtils';
 export * from './testAuth/createTestUser';
 
-// Funções de autenticação que estavam faltando
+// Funções de autenticação
 export function signInWithGoogle() {
   // Implementação básica
   console.log("Função signInWithGoogle chamada");

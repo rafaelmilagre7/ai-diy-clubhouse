@@ -45,6 +45,53 @@ export type UserProfile = {
   successful_referrals_count?: number;
 };
 
+// UserRole para autenticação
+export type UserRole = {
+  id: string;
+  name: string;
+  description?: string;
+  permissions?: Record<string, any>;
+  is_system?: boolean;
+};
+
+// Progress para componentes de implementação
+export type Progress = {
+  id: string;
+  user_id: string;
+  solution_id: string;
+  current_module: number;
+  completed_modules: number[];
+  is_completed: boolean;
+  completion_data?: Record<string, any>;
+  implementation_status?: string;
+  created_at: string;
+  last_activity: string;
+  completed_at?: string;
+};
+
+// UserChecklist para compatibilidade
+export type UserChecklist = {
+  id: string;
+  user_id: string;
+  solution_id: string;
+  checked_items: Record<string, boolean>;
+  created_at: string;
+  updated_at: string;
+};
+
+// TrailSolution para compatibilidade com TrailSolutionsList
+export type TrailSolution = {
+  id: string;
+  title: string;
+  description: string;
+  thumbnail_url?: string;
+  estimated_time?: number;
+  difficulty: string;
+  category: string;
+  tags?: string[];
+  checklist_items?: any[];
+};
+
 // Definição do tipo Solution específico do Supabase
 export type Solution = Database['public']['Tables']['solutions']['Row'] & {
   checklist_items?: any[]; // Adicionando o campo checklist_items que está faltando

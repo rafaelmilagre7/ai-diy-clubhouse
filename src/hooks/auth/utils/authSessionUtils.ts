@@ -1,65 +1,55 @@
 
-import { UserProfile } from "@/lib/supabase/types";
-import { validateRole, determineRoleFromEmail, validateUserRole } from "@/contexts/auth/utils/profileUtils/roleValidation";
-import { Session } from "@supabase/supabase-js";
+import { supabase } from '@/lib/supabase';
+import { UserProfile } from '@/lib/supabase/types';
+import { validateRole, determineRoleFromEmail } from '@/contexts/auth/utils/profileUtils/roleValidation';
+import { getUserProfile, createUserProfile } from '@/contexts/auth/utils/profileUtils/userProfileFunctions';
 
 /**
- * Processa o perfil do usuário a partir da sessão
+ * Processa o perfil do usuário após autenticação.
+ * Busca o perfil existente ou cria um novo se necessário.
+ * 
+ * @param userId - ID do usuário autenticado
+ * @returns Promise com o perfil do usuário
  */
-export function processUserProfile(session: Session | null): UserProfile | null {
-  if (!session || !session.user) return null;
+export async function processUserProfile(userId: string): Promise<UserProfile | null> {
+  if (!userId) {
+    console.error("processUserProfile: userId é necessário");
+    return null;
+  }
 
-  const { user } = session;
-  
-  // Extrair dados do usuário
-  const email = user.email || '';
-  const name = user.user_metadata?.name || user.user_metadata?.full_name || email.split('@')[0] || 'Usuário';
-  const avatar_url = user.user_metadata?.avatar_url || null;
-  
-  // Determinar role com base em regras
-  const role = validateRole(
-    user.user_metadata?.role || 
-    determineRoleFromEmail(email)
-  );
-  
-  // Construir o perfil
-  const profile: UserProfile = {
-    id: user.id,
-    email,
-    name,
-    avatar_url,
-    role,
-    created_at: user.created_at || new Date().toISOString(),
-    updated_at: user.updated_at || new Date().toISOString()
-  };
-  
-  return profile;
-}
-
-/**
- * Obtém o role do usuário
- */
-export function getUserRole(profile: UserProfile | null): string {
-  return validateUserRole(profile);
-}
-
-/**
- * Valida se o usuário tem autorização para determinado recurso
- */
-export function validateUserAuthorization(
-  profile: UserProfile | null, 
-  requiredRole: string | string[]
-): boolean {
-  if (!profile) return false;
-  
-  const userRole = validateUserRole(profile);
-  
-  // Se o usuário é admin, tem acesso a tudo
-  if (userRole === 'admin') return true;
-  
-  // Converter para array se for string
-  const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
-  
-  // Verificar se o role do usuário está na lista de roles permitidos
-  return roles.includes(userRole) || roles.includes('*');
+  try {
+    // Buscar dados do usuário no Auth
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !userData.user) {
+      console.error("Erro ao obter dados do usuário:", userError);
+      return null;
+    }
+    
+    const { email, user_metadata } = userData.user;
+    const name = user_metadata?.name || user_metadata?.full_name || 'Usuário';
+    
+    // Buscar perfil existente
+    const existingProfile = await getUserProfile(userId);
+    
+    if (existingProfile) {
+      // Se o perfil existe, apenas validar o role
+      const role = validateRole(existingProfile.role);
+      return { ...existingProfile, role };
+    }
+    
+    // Determinar o papel baseado no email
+    const role = email ? determineRoleFromEmail(email) : 'member';
+    
+    // Criar novo perfil
+    return await createUserProfile(userId, {
+      name,
+      email: email || '',
+      role
+    });
+    
+  } catch (error) {
+    console.error("Erro ao processar perfil do usuário:", error);
+    return null;
+  }
 }

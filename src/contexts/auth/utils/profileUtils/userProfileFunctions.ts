@@ -1,122 +1,113 @@
 
-import { supabase } from "@/lib/supabase";
-import { determineRoleFromEmail } from './roleValidation';
-import { UserRole } from "@/lib/supabase/types";
+import { supabase } from '@/lib/supabase';
+import { determineRoleFromEmail, validateRole } from './roleValidation';
+import { UserProfile, UserRole } from '@/lib/supabase/types';
 
-/**
- * Interface para dados de perfil de usuário
- */
-export interface UserProfileData {
-  id: string;
-  name?: string;
-  email?: string;
-  avatar_url?: string;
+interface ProfileData {
+  name: string;
+  email: string;
   role?: string;
-  role_id?: string;
+  avatar_url?: string;
+  whatsapp_number?: string;
 }
 
 /**
- * Busca o perfil de um usuário pelo ID
+ * Busca o perfil do usuário no banco de dados
  * 
- * @param userId ID do usuário
- * @returns Dados do perfil do usuário, ou null se não encontrado
+ * @param userId ID do usuário para buscar o perfil
+ * @returns UserProfile ou null se não encontrar
  */
-export async function getUserProfile(userId: string): Promise<UserProfileData | null> {
+export async function getUserProfile(userId: string): Promise<UserProfile | null> {
+  if (!userId) return null;
+
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('*')
+      .select(`
+        *,
+        user_roles:role_id (
+          id, 
+          name,
+          description
+        )
+      `)
       .eq('id', userId)
       .single();
 
-    if (error || !data) {
-      console.error("Erro ao buscar perfil:", error);
+    if (error) {
+      console.error('Erro ao buscar perfil:', error);
       return null;
     }
 
-    return data as UserProfileData;
-  } catch (error) {
-    console.error("Erro ao processar perfil:", error);
+    return data as UserProfile;
+  } catch (err) {
+    console.error('Exceção ao buscar perfil:', err);
     return null;
   }
 }
 
 /**
- * Atualiza o perfil de um usuário
+ * Cria um perfil de usuário no banco de dados
  * 
- * @param userId ID do usuário
- * @param profileData Dados a serem atualizados
- * @returns true se a atualização foi bem-sucedida, false caso contrário
+ * @param userId ID do usuário para criar o perfil
+ * @param profileData Dados para criar o perfil
+ * @returns Perfil criado ou null se falhar
  */
-export async function updateUserProfile(
+export async function createUserProfile(
   userId: string, 
-  profileData: Partial<UserProfileData>
-): Promise<boolean> {
+  profileData: ProfileData
+): Promise<UserProfile | null> {
+  if (!userId) return null;
+
   try {
-    const { error } = await supabase
-      .from('profiles')
-      .update(profileData)
-      .eq('id', userId);
-
-    if (error) {
-      console.error("Erro ao atualizar perfil:", error);
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error("Erro ao processar atualização de perfil:", error);
-    return false;
-  }
-}
-
-/**
- * Cria um perfil de usuário
- * 
- * @param userData Dados do usuário para criar perfil
- * @returns O ID do perfil criado ou null se houver falha
- */
-export async function createUserProfile(userData: {
-  id: string;
-  email: string;
-  name?: string;
-  avatar_url?: string;
-}): Promise<string | null> {
-  try {
-    // Determinar papel com base no email
-    const role = determineRoleFromEmail(userData.email);
+    // Determinar role baseado no email para usuários novos
+    const role = validateRole(profileData.role || determineRoleFromEmail(profileData.email));
     
-    // Obter ID do papel baseado no nome do papel
-    const { data: roleData } = await supabase
+    // Buscar o role_id baseado no nome do role
+    let roleId: string | null = null;
+    
+    const { data: roleData, error: roleError } = await supabase
       .from('user_roles')
       .select('id')
       .eq('name', role)
       .single();
       
-    const roleId = roleData?.id;
-    
-    // Criar perfil
+    if (!roleError && roleData) {
+      roleId = roleData.id;
+    }
+
+    // Dados para inserir
+    const newProfile = {
+      id: userId,
+      name: profileData.name,
+      email: profileData.email,
+      avatar_url: profileData.avatar_url || null,
+      role: role,
+      role_id: roleId,
+      whatsapp_number: profileData.whatsapp_number || null
+    };
+
     const { data, error } = await supabase
       .from('profiles')
-      .insert({
-        id: userData.id,
-        email: userData.email,
-        name: userData.name || 'Usuário',
-        avatar_url: userData.avatar_url,
-        role: role,
-        role_id: roleId
-      })
-      .select()
+      .insert([newProfile])
+      .select(`
+        *,
+        user_roles:role_id (
+          id, 
+          name,
+          description
+        )
+      `)
       .single();
 
     if (error) {
-      console.error("Erro ao criar perfil:", error);
+      console.error('Erro ao criar perfil:', error);
       return null;
     }
 
-    return data.id;
-  } catch (error) {
-    console.error("Erro ao processar criação de perfil:", error);
+    return data as UserProfile;
+  } catch (err) {
+    console.error('Exceção ao criar perfil:', err);
     return null;
   }
 }

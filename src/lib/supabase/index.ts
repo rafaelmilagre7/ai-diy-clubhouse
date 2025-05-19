@@ -3,7 +3,7 @@
 export * from './client';
 export * from './config';
 
-// Exportamos seletivamente dos types para evitar conflitos com Solution
+// Exportamos seletivamente dos types para evitar conflitos
 export type {
   LearningLesson,
   LearningLessonVideo,
@@ -13,8 +13,19 @@ export type {
   LearningResource,
   LearningComment,
   LearningLessonTool,
-  UserProfile
+  UserProfile,
+  UserRole,
+  Progress,
+  UserChecklist,
+  TrailSolution
 } from './types';
+
+// Importamos o Solution de types como SupabaseSolution
+import type { Solution as SupabaseSolution } from './types';
+export type { SupabaseSolution };
+
+// E exportamos o Solution de @/types/solution
+export type { Solution } from '@/types/solution';
 
 // Exportação explícita das funções de storage
 export { 
@@ -34,15 +45,7 @@ export {
   incrementTopicReplies,
   deleteForumTopic,
   deleteForumPost
-  // Adicionar outras funções RPC conforme necessário
 } from './rpc';
-
-// Exportar tipos específicos do Solution
-import type { Solution as SupabaseSolution } from './types';
-export type { SupabaseSolution };
-
-// Exportamos a versão "unificada" do Solution para ser a padrão 
-export { type Solution } from '@/types/solution';
 
 // Exportar tipos do módulo Module para componentes que o usam
 export type Module = {

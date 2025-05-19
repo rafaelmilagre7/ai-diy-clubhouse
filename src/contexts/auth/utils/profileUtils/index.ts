@@ -1,19 +1,4 @@
 
-// Re-exportar funções de validação de perfil
-import { 
-  validateRole, 
-  validateUserRole, 
-  determineRoleFromEmail, 
-  isSuperAdmin 
-} from './roleValidation';
-
-// Exportar todas as funções necessárias
-export {
-  validateRole,
-  validateUserRole,
-  determineRoleFromEmail,
-  isSuperAdmin
-};
-
-// Também exportamos outras funções relacionadas a perfis
+// Re-exportação de funções de perfil para facilitar importações
+export * from './roleValidation';
 export * from './userProfileFunctions';
