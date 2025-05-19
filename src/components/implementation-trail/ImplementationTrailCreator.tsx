@@ -261,6 +261,125 @@ export const ImplementationTrailCreator = () => {
     processRecommendedCourses();
   }, [trail, allCourses, loadingCourses, courseDataFetched, coursesLoading]);
 
+  // Modificar apenas a função loadTrailData para armazenar dados do onboarding
+  const loadTrailData = useCallback(async (forceRefresh = false) => {
+    if (!user || !isMountedRef.current) {
+      setIsLoading(false);
+      return null;
+    }
+
+    // Prevenir chamadas duplicadas
+    if (pendingRequestRef.current) {
+      console.log("[useImplementationTrail] Requisição já em andamento, ignorando chamada duplicada");
+      return null;
+    }
+
+    const currentCancelToken = Math.random().toString(36);
+    cancelTokenRef.current = currentCancelToken;
+
+    try {
+      pendingRequestRef.current = true;
+      setRefreshing(true);
+      setError(null);
+
+      let trailData;
+
+      // Buscar dados do onboarding para personalização
+      const { data: onboardingData, error: onboardingError } = await supabase
+        .from("onboarding_progress")
+        .select(`
+          personal_info,
+          professional_info,
+          business_goals,
+          business_context,
+          ai_experience
+        `)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (onboardingData) {
+        // Salvar dados do onboarding para personalização
+        try {
+          localStorage.setItem('onboarding_data', JSON.stringify(onboardingData));
+        } catch (e) {
+          console.error("Erro ao salvar dados do onboarding:", e);
+        }
+      }
+
+      // Se não forçar atualização, tentar obter do armazenamento local primeiro
+      if (!forceRefresh) {
+        trailData = getTrailFromLocalStorage(user.id);
+        
+        if (trailData) {
+          console.log("[useImplementationTrail] Usando dados da trilha do armazenamento local");
+          if (isMountedRef.current && cancelTokenRef.current === currentCancelToken) {
+            setTrail(sanitizeTrailData(trailData.trail_data));
+            setHasContent(true);
+            setIsLoading(false);
+            setRefreshing(false);
+          }
+          pendingRequestRef.current = false;
+          return trailData.trail_data;
+        }
+      }
+
+      // Buscar do banco de dados
+      const { data, error } = await supabase
+        .from("implementation_trails")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      // Verificar se a operação foi cancelada
+      if (!isMountedRef.current || cancelTokenRef.current !== currentCancelToken) return null;
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // Nenhum registro encontrado (código PGRST116), não é um erro real
+          console.log("[useImplementationTrail] Nenhuma trilha encontrada para o usuário");
+          setTrail(null);
+          setHasContent(false);
+        } else {
+          console.error("[useImplementationTrail] Erro ao carregar trilha:", error);
+          setError(error);
+        }
+      } else if (data) {
+        console.log("[useImplementationTrail] Trilha carregada com sucesso:", data);
+        try {
+          const sanitizedData = sanitizeTrailData(data.trail_data);
+          setTrail(sanitizedData);
+          setHasContent(true);
+          
+          // Salvar no armazenamento local para uso futuro
+          saveTrailToLocalStorage(user.id, data);
+          return data.trail_data;
+        } catch (parseError) {
+          console.error("[useImplementationTrail] Erro ao processar dados da trilha:", parseError);
+          setError(parseError instanceof Error ? parseError : new Error(String(parseError)));
+        }
+      }
+      return null;
+    } catch (err) {
+      if (isMountedRef.current && cancelTokenRef.current === currentCancelToken) {
+        console.error("[useImplementationTrail] Erro ao processar dados da trilha:", err);
+        setError(err instanceof Error ? err : new Error(String(err)));
+      }
+      return null;
+    } finally {
+      if (isMountedRef.current && cancelTokenRef.current === currentCancelToken) {
+        setIsLoading(false);
+        setRefreshing(false);
+      }
+      
+      // Liberar flag com atraso para evitar condição de corrida
+      setTimeout(() => {
+        pendingRequestRef.current = false;
+      }, 300);
+    }
+  }, [user]);
+
   // Função para gerar a trilha
   const handleGenerateTrail = useCallback(async () => {
     // Evitar múltiplas chamadas

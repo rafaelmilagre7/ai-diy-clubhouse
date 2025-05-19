@@ -48,9 +48,9 @@ export const TrailSolutionsList: React.FC<TrailSolutionsListProps> = ({ solution
               className="bg-[#151823] border-[#0ABAB5]/30 hover:border-[#0ABAB5]/60 transition-all cursor-pointer overflow-hidden"
               onClick={() => navigate(`/solution/${solution.id}`)}
             >
-              <div className="flex h-full">
-                {/* Imagem da solução (formato horizontal) */}
-                <div className="w-1/3 min-w-[120px] relative">
+              <div className="flex flex-col h-full">
+                {/* Imagem da solução (formato 16:9 horizontal) */}
+                <div className="w-full aspect-video relative">
                   {solution.thumbnail_url ? (
                     <img 
                       src={solution.thumbnail_url} 
@@ -62,11 +62,10 @@ export const TrailSolutionsList: React.FC<TrailSolutionsListProps> = ({ solution
                       <span className="text-2xl font-semibold text-[#0ABAB5]">{solution.title.charAt(0)}</span>
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#151823] opacity-50"></div>
                 </div>
                 
                 {/* Conteúdo da solução */}
-                <CardContent className="py-4 px-4 w-2/3 flex flex-col justify-between">
+                <CardContent className="py-4 px-4 flex flex-col justify-between flex-grow">
                   <div>
                     <div className="flex justify-between items-start mb-2">
                       <Badge variant="outline" className="bg-[#0ABAB5]/10 text-[#0ABAB5] border-[#0ABAB5]/30">
