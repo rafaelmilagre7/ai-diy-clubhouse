@@ -4,8 +4,9 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { AuthContext } from '../AuthProvider';
-import type { UserRole } from '@/lib/supabase/types';
+import { useAuth } from '../AuthProvider';
+import { UserProfile } from '@/lib/supabase/types';
+import { fetchUserProfile } from '../utils/profileUtils';
 
 interface AuthStateManagerProps {
   children: ReactNode;
@@ -43,11 +44,17 @@ const getAdminStatus = (userId: string) => {
 };
 
 export const AuthStateManager: React.FC<AuthStateManagerProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  // Aqui nós usamos o hook useAuth para acessar e modificar o estado de autenticação
+  const { 
+    setUser, 
+    setSession, 
+    setProfile, 
+    setIsLoading, 
+    setIsAdmin 
+  } = useAuth();
+
   const [adminCheckComplete, setAdminCheckComplete] = useState(false);
+  const [internalLoading, setInternalLoading] = useState(true);
 
   // Verificação definitiva se o usuário é admin
   const checkIsAdmin = async (email?: string | null, userId?: string) => {
@@ -59,8 +66,8 @@ export const AuthStateManager: React.FC<AuthStateManagerProps> = ({ children }) 
 
     // Verificação rápida por email (alta prioridade)
     const isAdminByEmail = email.includes('@viverdeia.ai') || 
-                          email === 'admin@teste.com' || 
-                          email === 'admin@viverdeia.ai';
+                         email === 'admin@teste.com' || 
+                         email === 'admin@viverdeia.ai';
     
     if (isAdminByEmail) {
       setIsAdmin(true);
@@ -124,15 +131,28 @@ export const AuthStateManager: React.FC<AuthStateManagerProps> = ({ children }) 
         // Verificar se é admin (apenas se temos um usuário)
         if (currentSession?.user?.email && currentSession?.user?.id) {
           await checkIsAdmin(currentSession.user.email, currentSession.user.id);
+          
+          // Carregar perfil do usuário
+          try {
+            const { data: userProfile } = await fetchUserProfile(currentSession.user.id);
+            if (userProfile) {
+              setProfile(userProfile as UserProfile);
+            }
+          } catch (profileError) {
+            console.error("Erro ao carregar perfil:", profileError);
+          }
         } else {
           setIsAdmin(false);
           setAdminCheckComplete(true);
+          setProfile(null);
         }
         
         setIsLoading(false);
+        setInternalLoading(false);
       } catch (error) {
         console.error('Erro ao buscar sessão:', error);
         setIsLoading(false);
+        setInternalLoading(false);
         setAdminCheckComplete(true);
       }
     };
@@ -150,11 +170,23 @@ export const AuthStateManager: React.FC<AuthStateManagerProps> = ({ children }) 
       if (event === 'SIGNED_OUT') {
         setIsAdmin(false);
         setAdminCheckComplete(true);
+        setProfile(null);
       } else if (newSession?.user?.email && newSession?.user?.id) {
         await checkIsAdmin(newSession.user.email, newSession.user.id);
+        
+        // Carregar perfil do usuário após login
+        try {
+          const { data: userProfile } = await fetchUserProfile(newSession.user.id);
+          if (userProfile) {
+            setProfile(userProfile as UserProfile);
+          }
+        } catch (profileError) {
+          console.error("Erro ao carregar perfil:", profileError);
+        }
       } else {
         setIsAdmin(false);
         setAdminCheckComplete(true);
+        setProfile(null);
       }
     });
 
@@ -162,24 +194,10 @@ export const AuthStateManager: React.FC<AuthStateManagerProps> = ({ children }) 
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
-
-  const signOut = async () => {
-    try {
-      // Limpar caches
-      localStorage.removeItem('permissionsCache');
-      
-      await supabase.auth.signOut();
-      setIsAdmin(false);
-      toast.success('Você saiu com sucesso');
-    } catch (error) {
-      console.error('Erro ao sair:', error);
-      toast.error('Ocorreu um erro ao tentar sair');
-    }
-  };
+  }, [setUser, setSession, setProfile, setIsLoading, setIsAdmin]);
 
   // Mostra loading apenas se estamos verificando o admin pela primeira vez
-  if (isLoading && !adminCheckComplete) {
+  if (internalLoading && !adminCheckComplete) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="space-y-4 w-80">
@@ -191,9 +209,5 @@ export const AuthStateManager: React.FC<AuthStateManagerProps> = ({ children }) 
     );
   }
 
-  return (
-    <AuthContext.Provider value={{ user, session, isLoading, isAdmin, signOut }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <>{children}</>;
 };

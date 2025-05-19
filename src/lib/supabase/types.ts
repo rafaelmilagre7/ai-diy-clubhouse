@@ -102,12 +102,23 @@ export type Progress = {
 export interface UserProfile {
   id: string;
   updated_at?: string;
+  created_at?: string;
   username?: string;
   full_name?: string;
+  name?: string;
   avatar_url?: string;
   website?: string;
   role?: string;
   email?: string;
+  user_roles?: {
+    id: string;
+    name: string;
+    description?: string;
+    permissions?: Record<string, any>;
+  };
+  company_name?: string;
+  industry?: string;
+  role_id?: string;
 }
 
 // Definindo UserRole para autenticação
@@ -133,6 +144,16 @@ export type LearningLesson = {
   slug?: string;
   status?: string;
   is_published?: boolean;
+  published?: boolean; // Alias para compatibilidade
+  content?: any;
+  videos?: LearningLessonVideo[];
+  resources?: LearningResource[];
+  module?: LearningModule;
+  estimated_time_minutes?: number;
+  ai_assistant_enabled?: boolean;
+  ai_assistant_id?: string;
+  ai_assistant_prompt?: string;
+  difficulty_level?: string;
 };
 
 export type LearningLessonVideo = {
@@ -183,10 +204,13 @@ export type LearningProgress = {
   lesson_id: string;
   completed: boolean;
   progress_percentage: number;
+  video_progress?: Record<string, number>;
   last_position_seconds?: number;
   created_at: string;
   updated_at: string;
   completed_at?: string;
+  notes?: string;
+  started_at?: string;
 };
 
 export type LearningResource = {
@@ -200,6 +224,10 @@ export type LearningResource = {
   order_index: number;
   created_at: string;
   updated_at: string;
+  file_url?: string;
+  file_size_bytes?: number;
+  file_type?: string;
+  name?: string;
 };
 
 export type LearningComment = {

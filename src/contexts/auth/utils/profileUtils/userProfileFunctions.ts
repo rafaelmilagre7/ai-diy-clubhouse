@@ -1,6 +1,6 @@
 
 import { supabase } from '@/lib/supabase';
-import type { UserRole } from '@/lib/supabase/types';
+import type { UserProfile, UserRole } from '@/lib/supabase/types';
 
 // Função para buscar perfil de usuário
 export const fetchUserProfile = async (userId: string) => {
@@ -11,13 +11,20 @@ export const fetchUserProfile = async (userId: string) => {
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('*')
+      .select('*, user_roles:role_id(*)')
       .eq('id', userId)
       .single();
 
     if (error) throw error;
     
-    return { data, error: null };
+    // Certifique-se de que o perfil tenha todas as propriedades necessárias
+    const profile: UserProfile = {
+      ...data,
+      // Garante que o perfil tenha o nome definido de maneira consistente
+      name: data.name || data.full_name || data.username || 'Usuário',
+    };
+    
+    return { data: profile, error: null };
   } catch (error) {
     console.error('Erro ao buscar perfil:', error);
     return { data: null, error };
