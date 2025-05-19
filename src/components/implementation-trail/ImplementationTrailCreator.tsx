@@ -133,11 +133,11 @@ export const ImplementationTrailCreator = () => {
             estimated_time_minutes,
             cover_image_url,
             module_id,
-            learning_modules:module_id (
+            learning_modules (
               id,
               title,
               course_id,
-              learning_courses:course_id (
+              learning_courses (
                 id,
                 title
               )
@@ -156,7 +156,7 @@ export const ImplementationTrailCreator = () => {
           let courseData = null;
           
           if (moduleData && moduleData.learning_courses) {
-            // Corrigindo aqui: learning_courses é um objeto, não um array
+            // Como a tipagem exata pode variar, usamos uma verificação segura
             courseData = moduleData.learning_courses;
           }
           
