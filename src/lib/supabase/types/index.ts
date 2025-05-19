@@ -1,7 +1,7 @@
 
 import { Database } from './database.types';
 
-// Tipos de tabelas
+// Tipos para tabelas de aprendizado
 export interface LearningLesson {
   id: string;
   title: string;

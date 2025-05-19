@@ -21,7 +21,7 @@ const AuthSession = () => {
       try {
         console.log("Carregando perfil para usuário:", user.id);
         
-        const profile = await processUserProfile(user);
+        const profile = await processUserProfile(user.id);
         
         if (profile) {
           console.log("Perfil carregado:", profile);

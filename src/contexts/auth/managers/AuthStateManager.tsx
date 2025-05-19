@@ -1,216 +1,209 @@
-
-import { useState, useEffect, useRef } from "react";
-import { supabase } from '@/lib/supabase';
+import { useState, useEffect, useCallback } from 'react';
 import { Session, User } from '@supabase/supabase-js';
+import { AuthContextType } from '@/contexts/auth/types';
+import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/lib/supabase';
 import { processUserProfile } from '@/hooks/auth/utils/authSessionUtils';
-import { toast } from "sonner";
+import { validateUserRole as validateUserRoleByEmail } from '@/contexts/auth/utils/profileUtils/roleValidation';
+import { TEST_ADMIN, TEST_MEMBER } from '../constants';
 
-export interface AuthState {
-  user: User | null;
-  session: Session | null;
-  profile: UserProfile | null;
-  isAdmin: boolean;
-  isFormacao: boolean;
-  isLoading: boolean;
-  authError: Error | null;
+interface AuthStateManagerProps {
+  children: React.ReactNode;
 }
 
-export interface AuthStateManagerProps {
-  onStateChange: (newState: Partial<AuthState>) => void;
-}
+export const AuthStateManager = ({ children }: AuthStateManagerProps): JSX.Element => {
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [isFormacao, setIsFormacao] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [authError, setAuthError] = useState<Error | null>(null);
 
-/**
- * Componente gerenciador centralizado de estado de autenticação
- * Responsável por inicializar e manter o estado de autenticação sincronizado
- */
-export const AuthStateManager = ({ onStateChange }: AuthStateManagerProps) => {
-  // Referências para controle de tempo e estado
-  const isMounted = useRef(true);
-  const initTimeoutRef = useRef<number | null>(null);
-  const lastAuthEvent = useRef<string | null>(null);
-  const initAttempts = useRef(0);
-  
-  // Estado local para debug
-  const [debugState, setDebugState] = useState({
-    lastEvent: '',
-    initComplete: false,
-    lastError: null as Error | null,
-  });
-  
-  // Função para atualizar o estado e enviar para o contexto pai
-  // Modificado para garantir que retorne um objeto Partial<AuthState> válido
-  const updateState = (partialState: Partial<AuthState>) => {
-    if (!isMounted.current) return;
-    
-    onStateChange(partialState);
-  };
-  
-  // Função para definir o perfil e calcular funções derivadas
-  const setProfile = (profile: UserProfile | null) => {
-    if (!isMounted.current) return;
-    
-    const isAdmin = profile?.role === 'admin';
-    const isFormacao = profile?.role === 'formacao';
-    
-    updateState({ 
-      profile, 
-      isAdmin, 
-      isFormacao 
-    });
-    
-    console.log("Auth state updated with profile:", { 
-      profileId: profile?.id,
-      isAdmin, 
-      isFormacao 
-    });
-  };
-  
-  // Inicializa a sessão de autenticação
-  const initializeAuth = async () => {
+  // Reseta o estado de autenticação
+  const resetState = useCallback(() => {
+    setSession(null);
+    setUser(null);
+    setProfile(null);
+    setIsAdmin(false);
+    setIsFormacao(false);
+    setIsLoading(false);
+    setAuthError(null);
+  }, []);
+
+  // Lidar com o login
+  const signIn = async (email?: string, password?: string): Promise<{ error: Error | null }> => {
+    setIsLoading(true);
+    setAuthError(null);
+
     try {
-      console.log("AuthStateManager: Initializing auth");
-      initAttempts.current += 1;
-      
-      // Obter sessão atual com timeout limitado
-      const sessionPromise = supabase.auth.getSession();
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Session fetch timeout")), 1500)
-      );
-      
-      // Corrida entre o fetch e o timeout
-      const { data: { session } } = await Promise.race([
-        sessionPromise,
-        timeoutPromise
-      ]) as { data: { session: any } };
-      
-      setDebugState(prev => ({ 
-        ...prev, 
-        lastEvent: 'SESSION_FETCHED',
-        initComplete: true
-      }));
-      
-      updateState({ 
-        session, 
-        user: session?.user || null, 
-        isLoading: session?.user ? true : false 
-      });
-      
-      if (session?.user) {
-        console.log("AuthStateManager: Session found for user", session.user.id);
-        
-        try {
-          // Processar perfil do usuário de forma independente
-          const profile = await processUserProfile(session.user);
-          
-          setProfile(profile);
-          console.log("AuthStateManager: Profile processed successfully");
-        } catch (profileError) {
-          console.error("Error processing user profile:", profileError);
-        }
+      const { error } = password
+        ? await supabase.auth.signInWithPassword({ email: email || '', password })
+        : await supabase.auth.signInWithOAuth({ provider: 'google' });
+
+      if (error) {
+        console.error('Erro ao fazer login:', error);
+        setAuthError(error);
+        return { error };
       }
-      
-      updateState({ isLoading: false });
-      
-    } catch (error) {
-      console.error("Auth initialization error:", error);
-      setDebugState(prev => ({ 
-        ...prev, 
-        lastEvent: 'INIT_ERROR',
-        lastError: error instanceof Error ? error : new Error(String(error)),
-        initComplete: true
-      }));
-      
-      // Se for timeout ou erro de rede, não interromper a experiência do usuário
-      updateState({ 
-        authError: error instanceof Error ? error : new Error(String(error)),
-        isLoading: false
-      });
-      
-      // Mostrar toast apenas em caso de erro crítico e não timeout
-      if (initAttempts.current >= 2 && !(error instanceof Error && error.message === "Session fetch timeout")) {
-        toast.error("Erro ao verificar autenticação", {
-          description: "Tente recarregar a página"
-        });
+
+      return { error: null };
+    } catch (error: any) {
+      console.error('Erro inesperado ao fazer login:', error);
+      setAuthError(new Error(error.message || 'Ocorreu um erro ao tentar fazer login.'));
+      return { error: new Error(error.message || 'Ocorreu um erro ao tentar fazer login.') };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Lidar com o logout
+  const signOut = async (): Promise<void> => {
+    setIsLoading(true);
+    setAuthError(null);
+
+    try {
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        console.error('Erro ao fazer logout:', error);
+        setAuthError(error);
       }
+    } catch (error: any) {
+      console.error('Erro inesperado ao fazer logout:', error);
+      setAuthError(new Error(error.message || 'Ocorreu um erro ao tentar fazer logout.'));
+    } finally {
+      resetState();
+      setIsLoading(false);
     }
   };
   
-  // Configura o listener de estado de autenticação e inicializa
-  useEffect(() => {
-    console.log("AuthStateManager: Setting up auth state listener");
+  // Simula o login como membro (para testes)
+  const signInAsMember = async (): Promise<void> => {
+    setIsLoading(true);
+    setAuthError(null);
     
-    // Configurar timeout para forçar liberação após tempo limite
-    initTimeoutRef.current = window.setTimeout(() => {
-      if (isMounted.current) {
-        console.log("AuthStateManager: Auth timeout reached, forcing isLoading=false");
-        updateState({ isLoading: false });
-        
-        setDebugState(prev => ({ 
-          ...prev, 
-          lastEvent: 'TIMEOUT_REACHED'
-        }));
-      }
-    }, 2000); // Timeout mais curto (2s) para melhor UX
-    
-    // Configurar listener de estado de autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
-        if (!isMounted.current) return;
-        
-        console.log("Auth state changed:", event, "User ID:", newSession?.user?.id);
-        lastAuthEvent.current = event;
-        
-        setDebugState(prev => ({ 
-          ...prev, 
-          lastEvent: event
-        }));
-        
-        // Atualizar estado básico imediatamente para resposta rápida da UI
-        updateState({ 
-          session: newSession, 
-          user: newSession?.user || null
-        });
-        
-        // Tratar eventos específicos
-        if (event === 'SIGNED_OUT') {
-          console.log("AuthStateManager: User signed out, resetting profile");
-          setProfile(null);
-          localStorage.removeItem('lastAuthRoute');
-        } 
-        else if (event === 'SIGNED_IN' && newSession?.user) {
-          console.log("AuthStateManager: User signed in, updating profile");
-          
-          try {
-            // Adicionar delay mínimo para evitar deadlocks com Supabase
-            setTimeout(async () => {
-              if (!isMounted.current) return;
-              
-              const profile = await processUserProfile(newSession.user);
-              
-              setProfile(profile);
-            }, 10);
-          } catch (error) {
-            console.error("Error processing profile after sign in:", error);
-          }
-        }
-      }
-    );
-    
-    // Inicializar autenticação
-    initializeAuth();
-    
-    // Cleanup
-    return () => {
-      isMounted.current = false;
-      subscription.unsubscribe();
+    try {
+      setUser({ id: 'member-test', app_metadata: {}, user_metadata: {}, aud: '', created_at: '' });
+      setIsAdmin(false);
+      setIsFormacao(false);
       
-      if (initTimeoutRef.current) {
-        clearTimeout(initTimeoutRef.current);
-      }
-    };
-  }, []);
+      // Simula um perfil de membro
+      setProfile({
+        id: 'member-test',
+        email: TEST_MEMBER,
+        name: 'Membro Teste',
+        role: 'member',
+        created_at: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      console.error('Erro ao simular login como membro:', error);
+      setAuthError(new Error(error.message || 'Ocorreu um erro ao tentar simular o login como membro.'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
-  // Não renderiza nada, apenas gerencia estado
-  return null;
+  // Simula o login como administrador (para testes)
+  const signInAsAdmin = async (): Promise<void> => {
+    setIsLoading(true);
+    setAuthError(null);
+    
+    try {
+      setUser({ id: 'admin-test', app_metadata: {}, user_metadata: {}, aud: '', created_at: '' });
+      setIsAdmin(true);
+      setIsFormacao(false);
+      
+      // Simula um perfil de administrador
+      setProfile({
+        id: 'admin-test',
+        email: TEST_ADMIN,
+        name: 'Admin Teste',
+        role: 'admin',
+        created_at: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      console.error('Erro ao simular login como administrador:', error);
+      setAuthError(new Error(error.message || 'Ocorreu um erro ao tentar simular o login como administrador.'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Processar mudanças na sessão
+  const processSessionChange = useCallback(async (session: Session | null) => {
+    if (session?.user) {
+      try {
+        setUser(session.user);
+
+        // Buscar perfil com papéis e permissões
+        const profile = await processUserProfile(session.user.id);
+
+        if (profile) {
+          setProfile(profile);
+
+          // Se o perfil existe mas não tem role_id, verificar o papel com base no email
+          if (!profile.role_id && profile.email) {
+            await validateUserRoleByEmail(profile);
+          }
+        } else {
+          console.warn('Perfil do usuário não encontrado após login.');
+        }
+      } catch (error) {
+        console.error('Erro ao processar mudança de sessão:', error);
+        setAuthError(new Error('Falha ao carregar dados do usuário.'));
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      resetState();
+    }
+  }, [setAuthError, setIsLoading, setProfile, setUser]);
+
+  // Monitorar mudanças na sessão
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      processSessionChange(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      processSessionChange(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [processSessionChange]);
+
+  // Determinar se o usuário é um administrador
+  useEffect(() => {
+    setIsAdmin(profile?.role === 'admin');
+    setIsFormacao(profile?.role === 'formacao');
+  }, [profile]);
+
+  const value: AuthContextType = {
+    session,
+    user,
+    profile,
+    isAdmin,
+    isFormacao,
+    isLoading,
+    authError,
+    signIn,
+    signOut,
+    signInAsMember,
+    signInAsAdmin,
+    setSession,
+    setUser,
+    setProfile,
+    setIsLoading,
+  };
+
+  return (
+    <AuthContextType.Provider value={value}>
+      {children}
+    </AuthContextType.Provider>
+  );
 };
