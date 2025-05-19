@@ -1,8 +1,11 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Solution } from "@/lib/supabase";
-import { Clock, ArrowRight } from "lucide-react";
+import { Clock, ArrowRight, Sparkles, Gauge, Zap } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 
 // Define uma interface TrailSolution baseada em Solution
 export interface TrailSolution extends Solution {
@@ -10,6 +13,8 @@ export interface TrailSolution extends Solution {
   progress?: number;
   next_step?: string;
   is_locked?: boolean;
+  priority?: number;
+  justification?: string;
 }
 
 interface TrailSolutionsListProps {
@@ -23,7 +28,7 @@ export const TrailSolutionsList: React.FC<TrailSolutionsListProps> = ({ solution
   
   // Agrupar soluções por prioridade
   const priorityGroups = solutions.reduce((acc, solution) => {
-    const priority = solution.priority;
+    const priority = solution.priority || 3; // Default to priority 3 if none specified
     if (!acc[priority]) {
       acc[priority] = [];
     }
@@ -119,19 +124,19 @@ export const TrailSolutionsList: React.FC<TrailSolutionsListProps> = ({ solution
                   
                   <CardContent>
                     <div className="text-sm text-neutral-400 italic mb-3 p-3 border-l-2 border-[#0ABAB5]/30 bg-[#0ABAB5]/5 rounded-r-md">
-                      "{solution.justification}"
+                      "{solution.justification || "Solução recomendada para seu caso."}"
                     </div>
                     
                     <div className="flex flex-wrap gap-2 mt-3">
                       {solution.estimated_time && (
-                        <Badge variant="info" className="flex items-center gap-1">
+                        <Badge variant="outline" className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           {solution.estimated_time} min
                         </Badge>
                       )}
                       
                       {solution.difficulty && (
-                        <Badge variant="neutral">
+                        <Badge variant="outline">
                           {solution.difficulty === "easy" && "Fácil"}
                           {solution.difficulty === "medium" && "Médio"}
                           {solution.difficulty === "advanced" && "Avançado"}
@@ -139,7 +144,7 @@ export const TrailSolutionsList: React.FC<TrailSolutionsListProps> = ({ solution
                       )}
                       
                       {solution.tags?.slice(0, 2).map((tag, i) => (
-                        <Badge key={i} variant="secondary" className="text-xs">
+                        <Badge key={i} variant="outline" className="text-xs">
                           {tag}
                         </Badge>
                       ))}

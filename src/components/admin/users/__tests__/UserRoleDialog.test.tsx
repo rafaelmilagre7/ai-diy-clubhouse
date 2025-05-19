@@ -14,6 +14,14 @@ describe('UserRoleDialog', () => {
     company_name: 'Test Company',
     industry: 'Technology',
     created_at: '2024-01-01T00:00:00Z',
+    referrals_count: 0,
+    successful_referrals_count: 0,
+    // Adicionando user_roles como opcional
+    user_roles: { 
+      id: 'member-role-id', 
+      name: 'member', 
+      description: 'Membro'
+    }
   };
 
   const mockAvailableRoles = [
