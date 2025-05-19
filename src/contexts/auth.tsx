@@ -3,21 +3,7 @@ import { Session, User } from "@supabase/supabase-js";
 import { UserProfile } from "@/lib/supabase/types";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-
-interface AuthContextType {
-  user: User | null;
-  profile: UserProfile | null;
-  isAdmin: boolean;
-  isFormacao: boolean;
-  isLoading: boolean;
-  session: Session | null;
-  signOut: () => Promise<void>;
-  signIn: (email: string, password: string) => Promise<void>;
-  signInAsMember: () => Promise<void>;
-  signInAsAdmin: () => Promise<void>;
-  setProfile: (profile: UserProfile | null) => void;
-  setIsLoading: (loading: boolean) => void;
-}
+import { AuthContextType } from "./auth/types";
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -32,6 +18,9 @@ const AuthContext = createContext<AuthContextType>({
   signInAsAdmin: async () => {},
   setProfile: () => {},
   setIsLoading: () => {},
+  setUser: () => {},
+  setSession: () => {},
+  setIsAdmin: () => {},
 });
 
 // Hook para usar o contexto de autenticação
@@ -43,10 +32,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   
   // Computar papéis
-  const isAdmin = !!profile?.role === !!profile?.role && ['admin'].includes(profile?.role!) || 
-                 (user?.email && (user.email.includes('@viverdeia.ai') || user.email === 'admin@teste.com'));
   const isFormacao = !!profile?.role === !!profile?.role && ['admin', 'formacao'].includes(profile?.role!);
   
   // Checar sessão quando o componente montar
@@ -321,7 +309,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
   
   // Contexto autenticação atualizado com as novas funções
-  const value = {
+  const value: AuthContextType = {
     user,
     profile,
     isAdmin,
@@ -334,6 +322,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     signInAsAdmin,
     setProfile,
     setIsLoading,
+    setUser,
+    setSession,
+    setIsAdmin,
   };
   
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
