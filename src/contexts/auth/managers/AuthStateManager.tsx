@@ -1,8 +1,9 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { AuthContextType } from '@/contexts/auth/types';
 import { supabase } from '@/lib/supabase';
-import { UserProfile } from '@/lib/supabase';
+import { UserProfile } from '@/lib/supabase/types';
 import { processUserProfile } from '@/hooks/auth/utils/authSessionUtils';
 import { validateUserRole as validateUserRoleByEmail } from '@/contexts/auth/utils/profileUtils/roleValidation';
 import { TEST_ADMIN, TEST_MEMBER } from '../constants';
@@ -158,7 +159,7 @@ export const AuthStateManager = ({ children }: AuthStateManagerProps): JSX.Eleme
     } else {
       resetState();
     }
-  }, [setAuthError, setIsLoading, setProfile, setUser]);
+  }, [setAuthError, setIsLoading, setProfile, setUser, resetState]);
 
   // Monitorar mudanças na sessão
   useEffect(() => {
@@ -183,7 +184,7 @@ export const AuthStateManager = ({ children }: AuthStateManagerProps): JSX.Eleme
     setIsFormacao(profile?.role === 'formacao');
   }, [profile]);
 
-  const value: AuthContextType = {
+  const authValue: AuthContextType = {
     session,
     user,
     profile,
@@ -202,7 +203,7 @@ export const AuthStateManager = ({ children }: AuthStateManagerProps): JSX.Eleme
   };
 
   return (
-    <AuthContextType.Provider value={value}>
+    <AuthContextType.Provider value={authValue}>
       {children}
     </AuthContextType.Provider>
   );

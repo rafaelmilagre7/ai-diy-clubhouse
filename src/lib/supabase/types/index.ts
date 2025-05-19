@@ -138,7 +138,7 @@ export interface UserProfile {
 // Reexportar Database para manter compatibilidade
 export * from './database.types';
 
-// Interface de Solution para compatibilidade com index.ts
+// Interface de Solution para compatibilidade
 export interface Solution {
   id: string;
   title: string;
@@ -155,7 +155,7 @@ export interface Solution {
 }
 
 // Definindo TrailSolution para compatibilidade com TrailSolutionsList
-export type TrailSolution = {
+export interface TrailSolution {
   id: string;
   title: string;
   description: string;
@@ -165,20 +165,22 @@ export type TrailSolution = {
   category: string;
   tags?: string[];
   checklist_items?: any[];
-};
+  priority: number;
+  justification: string;
+}
 
 // Definindo UserChecklist para compatibilidade
-export type UserChecklist = {
+export interface UserChecklist {
   id: string;
   user_id: string;
   solution_id: string;
   checked_items: Record<string, boolean>;
   created_at: string;
   updated_at: string;
-};
+}
 
 // Definindo Progress para componentes de implementação
-export type Progress = {
+export interface Progress {
   id: string;
   user_id: string;
   solution_id: string;
@@ -190,7 +192,7 @@ export type Progress = {
   created_at: string;
   last_activity: string;
   completed_at?: string;
-};
+}
 
 // Definindo UserRole para autenticação
 export type UserRole = {
