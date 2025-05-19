@@ -7,12 +7,17 @@ export type LearningLesson = Database['public']['Tables']['learning_lessons']['R
   resources?: LearningResource[];
   module?: LearningModule;
 };
+
 export type LearningLessonVideo = Database['public']['Tables']['learning_lesson_videos']['Row'];
 export type LearningModule = Database['public']['Tables']['learning_modules']['Row'];
 export type LearningCourse = Database['public']['Tables']['learning_courses']['Row'] & {
   is_restricted?: boolean;
 };
-export type LearningProgress = Database['public']['Tables']['learning_progress']['Row'];
+
+export type LearningProgress = Database['public']['Tables']['learning_progress']['Row'] & {
+  video_progress?: Record<string, number>; // Para compatibilidade com o campo adicionado
+};
+
 export type LearningResource = Database['public']['Tables']['learning_resources']['Row'];
 export type LearningLessonTool = Database['public']['Tables']['learning_lesson_tools']['Row'];
 export type LearningComment = Database['public']['Tables']['learning_comments']['Row'];
@@ -41,7 +46,9 @@ export type UserProfile = {
 };
 
 // Definição do tipo Solution específico do Supabase
-export type Solution = Database['public']['Tables']['solutions']['Row'];
+export type Solution = Database['public']['Tables']['solutions']['Row'] & {
+  checklist_items?: any[]; // Adicionando o campo checklist_items que está faltando
+};
 
 // Outros tipos existentes
 export * from './database.types';

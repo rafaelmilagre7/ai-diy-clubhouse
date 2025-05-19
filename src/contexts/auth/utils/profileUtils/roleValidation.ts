@@ -19,3 +19,38 @@ export function validateRole(
   // Senão, compara diretamente
   return roleName === requiredRole;
 }
+
+/**
+ * Alias para manter compatibilidade com código existente
+ */
+export const validateUserRole = validateRole;
+
+/**
+ * Determina o papel do usuário com base no email
+ * @param email Email do usuário
+ * @returns Nome do papel determinado
+ */
+export function determineRoleFromEmail(email: string): string {
+  // Verificação para administradores
+  if (email.endsWith('@viverdeia.ai') || email === 'admin@teste.com') {
+    return 'admin';
+  }
+  
+  // Verificação para usuários de formação
+  if (email.endsWith('@formacao.viverdeia.ai') || email.includes('formacao')) {
+    return 'formacao';
+  }
+  
+  // Padrão para todos os outros usuários
+  return 'member';
+}
+
+/**
+ * Verifica se o usuário é um super administrador
+ * @param role Papel do usuário
+ * @returns true se o usuário for super admin
+ */
+export function isSuperAdmin(role: string | UserRole): boolean {
+  const roleName = typeof role === 'object' ? role.name : role;
+  return roleName === 'admin';
+}

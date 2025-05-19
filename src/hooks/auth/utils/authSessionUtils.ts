@@ -1,79 +1,25 @@
-
-import { supabase, UserProfile } from "@/lib/supabase";
-import { createUserProfileIfNeeded, fetchUserProfile } from "@/contexts/auth/utils/profileUtils";
-import { determineRoleFromEmail, validateUserRole } from "@/contexts/auth/utils/profileUtils/roleValidation";
+import { Session } from '@supabase/supabase-js';
+import { 
+  validateRole as validateUserRole,
+  determineRoleFromEmail 
+} from '@/contexts/auth/utils/profileUtils/roleValidation';
 
 /**
- * Processa o perfil do usuário durante a inicialização da sessão
- * Busca o perfil existente ou cria um novo se necessário
+ * Retrieves the user's role from the session, or determines it from the email if not present.
  */
-export const processUserProfile = async (
-  userId: string,
-  email: string | undefined | null,
-  name: string | undefined | null
-): Promise<UserProfile | null> => {
-  try {
-    if (!userId) {
-      console.error("ID de usuário não fornecido para processamento de perfil");
-      return null;
-    }
-    
-    // Tentar buscar perfil existente
-    let profile = await fetchUserProfile(userId);
-    
-    // Se não encontrou perfil, criar um novo
-    if (!profile) {
-      console.log("Nenhum perfil encontrado, criando novo perfil para", email);
-      profile = await createUserProfileIfNeeded(userId, email || "", name || "Usuário");
-      
-      if (!profile) {
-        console.error("Falha ao criar perfil para", email);
-        return null;
-      }
-    }
-    
-    // Verificar e atualizar o papel do usuário se necessário
-    if (profile.role) {
-      const validatedRole = await validateUserRole(profile.id, profile.role, email);
-      if (validatedRole !== profile.role) {
-        profile.role = validatedRole;
-      }
-    }
-    
-    return profile;
-  } catch (error) {
-    console.error("Erro ao processar perfil do usuário:", error);
-    return null;
+export const getUserRole = (session: Session | null): string => {
+  if (session?.user?.user_metadata?.role) {
+    return session.user.user_metadata.role as string;
   }
+
+  // Determine role from email if role is not in user metadata
+  return determineRoleFromEmail(session?.user?.email || '');
 };
 
 /**
- * Inicializa um novo perfil com valores padrão
+ * Validates if the user's role matches the required role.
  */
-export const initializeNewProfile = async (userId: string, email: string, name: string): Promise<UserProfile | null> => {
-  try {
-    const role = determineRoleFromEmail(email);
-    
-    const { data, error } = await supabase
-      .from("profiles")
-      .insert({
-        id: userId,
-        email,
-        name,
-        role,
-        created_at: new Date().toISOString(),
-      })
-      .select()
-      .single();
-    
-    if (error) {
-      console.error("Erro ao inicializar novo perfil:", error);
-      return null;
-    }
-    
-    return data as UserProfile;
-  } catch (error) {
-    console.error("Erro inesperado ao inicializar perfil:", error);
-    return null;
-  }
+export const validateUserAuthorization = (session: Session | null, requiredRole: string | string[]): boolean => {
+  const userRole = getUserRole(session);
+  return validateUserRole(userRole, requiredRole);
 };

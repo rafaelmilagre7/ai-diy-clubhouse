@@ -1,11 +1,20 @@
 
-// Export all utility functions
-export { fetchUserProfile } from './profileUtils';
-export { signInWithGoogle } from './googleAuth';
-export { 
-  createTestUser, 
-  signInAsTestMember, 
-  signInAsTestAdmin 
-} from './testAuth';
-export { signOutUser } from './sessionUtils';
-export { isSuperAdmin } from './profileUtils/roleValidation';
+// Importações necessárias
+import { 
+  validateRole,
+  validateUserRole,
+  determineRoleFromEmail,
+  isSuperAdmin 
+} from './profileUtils/roleValidation';
+
+// Exportações
+export {
+  validateRole,
+  validateUserRole,
+  determineRoleFromEmail,
+  isSuperAdmin
+};
+
+// Outras exportações
+export * from './profileUtils';
+export * from './testAuth/createTestUser';

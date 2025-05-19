@@ -1,11 +1,19 @@
 
-// Export profile utility functions
-export { 
-  fetchUserProfile,
-  createUserProfileIfNeeded
-} from './userProfileFunctions';
-export { 
-  determineRoleFromEmail,
-  validateUserRole,
-  isSuperAdmin
+// Re-exportar funções de validação de perfil
+import { 
+  validateRole, 
+  validateUserRole, 
+  determineRoleFromEmail, 
+  isSuperAdmin 
 } from './roleValidation';
+
+// Exportar todas as funções necessárias
+export {
+  validateRole,
+  validateUserRole,
+  determineRoleFromEmail,
+  isSuperAdmin
+};
+
+// Também exportamos outras funções relacionadas a perfis, se existirem
+export * from './userProfileFunctions';
