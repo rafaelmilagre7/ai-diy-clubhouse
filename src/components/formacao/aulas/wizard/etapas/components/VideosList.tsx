@@ -2,7 +2,7 @@
 import React from "react";
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { VideoItem } from "./VideoItem";
-import { VideoFormValues } from '@/lib/supabase';
+import { VideoFormValues } from "../types/VideoTypes";
 
 interface VideosListProps {
   videos: VideoFormValues[];

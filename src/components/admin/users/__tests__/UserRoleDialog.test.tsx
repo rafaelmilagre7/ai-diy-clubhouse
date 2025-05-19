@@ -14,14 +14,6 @@ describe('UserRoleDialog', () => {
     company_name: 'Test Company',
     industry: 'Technology',
     created_at: '2024-01-01T00:00:00Z',
-    referrals_count: 0,
-    successful_referrals_count: 0,
-    // Adicionando user_roles como opcional
-    user_roles: { 
-      id: 'member-role-id', 
-      name: 'member', 
-      description: 'Membro'
-    }
   };
 
   const mockAvailableRoles = [
@@ -30,7 +22,7 @@ describe('UserRoleDialog', () => {
       name: 'member', 
       description: 'Membro', 
       is_system: true, 
-      permissions: [] as string[], 
+      permissions: [] as string[], // Alterado de {} para array de strings
       created_at: '2024-01-01T00:00:00Z' 
     },
     { 
@@ -38,7 +30,7 @@ describe('UserRoleDialog', () => {
       name: 'admin', 
       description: 'Administrador', 
       is_system: true, 
-      permissions: [] as string[], 
+      permissions: [] as string[], // Alterado de {} para array de strings
       created_at: '2024-01-01T00:00:00Z'
     }
   ];

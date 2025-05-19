@@ -23,7 +23,7 @@ export {
   incrementTopicViews,
   incrementTopicReplies,
   deleteForumTopic,
-  deleteForumPost,
-  createReferral
+  deleteForumPost
   // Adicionar outras funções de RPC conforme necessário
 } from './rpc';
+

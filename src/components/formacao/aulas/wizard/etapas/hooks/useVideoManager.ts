@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
-import { VideoFormValues } from '@/lib/supabase';
+import { VideoFormValues } from "../types/VideoTypes";
 import { AulaFormValues } from "../../schemas/aulaFormSchema";
 
 export interface VideoManagerHookReturnType {
@@ -52,8 +52,7 @@ export function useVideoManager(form: UseFormReturn<AulaFormValues>): VideoManag
       video_id: videoId,
       filePath: videoId,
       thumbnail_url: thumbnailUrl,
-      embedCode: embedCode,
-      title: newVideos[index].title || "Vídeo sem título"
+      embedCode: embedCode
     } as VideoFormValues;
     
     form.setValue("videos", newVideos, { shouldValidate: true });
@@ -69,7 +68,7 @@ export function useVideoManager(form: UseFormReturn<AulaFormValues>): VideoManag
     const currentVideos = form.getValues().videos || [];
     form.setValue("videos", [...currentVideos, { 
       id: `temp-video-${currentVideos.length}-${Date.now()}`,
-      title: "Novo vídeo", 
+      title: "", 
       description: "", 
       url: "", 
       type: "panda",

@@ -1,34 +1,27 @@
 
-import React from 'react';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Solution } from "@/lib/supabase";
-import { Clock, ArrowRight, Sparkles, Gauge, Zap } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Star, Gauge, Sparkles, Zap, Clock } from "lucide-react";
 
-// Define uma interface TrailSolution baseada em Solution
-export interface TrailSolution extends Solution {
-  status?: string;
-  progress?: number;
-  next_step?: string;
-  is_locked?: boolean;
-  priority?: number;
-  justification?: string;
+interface TrailSolution extends Solution {
+  priority: number;
+  justification: string;
 }
 
 interface TrailSolutionsListProps {
   solutions: TrailSolution[];
-  isLoading?: boolean;
-  onSelect?: (solutionId: string) => void;
 }
 
-export const TrailSolutionsList: React.FC<TrailSolutionsListProps> = ({ solutions, isLoading, onSelect }) => {
+export const TrailSolutionsList: React.FC<TrailSolutionsListProps> = ({ solutions }) => {
   const navigate = useNavigate();
   
   // Agrupar soluções por prioridade
   const priorityGroups = solutions.reduce((acc, solution) => {
-    const priority = solution.priority || 3; // Default to priority 3 if none specified
+    const priority = solution.priority;
     if (!acc[priority]) {
       acc[priority] = [];
     }
@@ -124,19 +117,19 @@ export const TrailSolutionsList: React.FC<TrailSolutionsListProps> = ({ solution
                   
                   <CardContent>
                     <div className="text-sm text-neutral-400 italic mb-3 p-3 border-l-2 border-[#0ABAB5]/30 bg-[#0ABAB5]/5 rounded-r-md">
-                      "{solution.justification || "Solução recomendada para seu caso."}"
+                      "{solution.justification}"
                     </div>
                     
                     <div className="flex flex-wrap gap-2 mt-3">
                       {solution.estimated_time && (
-                        <Badge variant="outline" className="flex items-center gap-1">
+                        <Badge variant="info" className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           {solution.estimated_time} min
                         </Badge>
                       )}
                       
                       {solution.difficulty && (
-                        <Badge variant="outline">
+                        <Badge variant="neutral">
                           {solution.difficulty === "easy" && "Fácil"}
                           {solution.difficulty === "medium" && "Médio"}
                           {solution.difficulty === "advanced" && "Avançado"}
@@ -144,7 +137,7 @@ export const TrailSolutionsList: React.FC<TrailSolutionsListProps> = ({ solution
                       )}
                       
                       {solution.tags?.slice(0, 2).map((tag, i) => (
-                        <Badge key={i} variant="outline" className="text-xs">
+                        <Badge key={i} variant="secondary" className="text-xs">
                           {tag}
                         </Badge>
                       ))}
