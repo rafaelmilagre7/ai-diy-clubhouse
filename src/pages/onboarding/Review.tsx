@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
@@ -13,8 +12,8 @@ import { steps } from "@/hooks/onboarding/useStepDefinitions";
 
 const Review: React.FC = () => {
   const navigate = useNavigate();
-  // Corrigido: Passando o objeto de navegação para o hook useOnboardingSteps
-  const { currentStepIndex, completeOnboarding } = useOnboardingSteps({ navigate });
+  // Correto: Agora não passamos mais o objeto de navegação para o hook useOnboardingSteps
+  const { currentStepIndex, completeOnboarding } = useOnboardingSteps();
   const { progress, isLoading, refreshProgress } = useProgress();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isInitialLoadAttempted, setIsInitialLoadAttempted] = useState(false);
