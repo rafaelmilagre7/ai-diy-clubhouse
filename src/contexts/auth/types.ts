@@ -20,5 +20,3 @@ export interface AuthContextType {
   setSession: (session: Session | null) => void;
   setIsAdmin: (isAdmin: boolean) => void;
 }
-
-// Se necessário, adicione aqui outras interfaces relacionadas à autenticação

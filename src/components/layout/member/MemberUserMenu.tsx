@@ -11,10 +11,10 @@ interface MemberUserMenuProps {
 
 export const MemberUserMenu = ({ sidebarOpen, signOut }: MemberUserMenuProps) => {
   const { user, profile } = useAuth();
-  const [userName, setUserName] = useState<string>("");
-  const [userEmail, setUserEmail] = useState<string>("");
+  const [userName, setUserName] = useState("");
+  const [userEmail, setUserEmail] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
-
+  
   useEffect(() => {
     // Obter nome do usuário usando função utilitária centralizada
     const displayName = getUserDisplayName(user, profile);
@@ -32,13 +32,13 @@ export const MemberUserMenu = ({ sidebarOpen, signOut }: MemberUserMenuProps) =>
       avatarUrl: profile?.avatar_url || user?.user_metadata?.avatar_url
     });
   }, [user, profile]);
-
+  
   // Obter iniciais do nome para exibir quando não há avatar
   const getInitials = (name: string | null) => {
     if (!name) return "U";
     return name.charAt(0).toUpperCase();
   };
-
+  
   return (
     <UserMenu
       sidebarOpen={sidebarOpen}
