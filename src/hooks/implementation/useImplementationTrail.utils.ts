@@ -12,11 +12,14 @@ export const sanitizeTrailData = (trailData: any) => {
     const priority1 = Array.isArray(trailData.priority1) ? trailData.priority1 : [];
     const priority2 = Array.isArray(trailData.priority2) ? trailData.priority2 : [];
     const priority3 = Array.isArray(trailData.priority3) ? trailData.priority3 : [];
+    // Garantir que temos um array válido para recommended_courses
+    const recommended_courses = Array.isArray(trailData.recommended_courses) ? trailData.recommended_courses : [];
     
     return {
       priority1,
       priority2,
-      priority3
+      priority3,
+      recommended_courses
     };
   } catch (error) {
     console.error("Erro ao sanitizar dados da trilha:", error);
