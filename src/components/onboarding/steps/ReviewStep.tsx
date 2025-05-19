@@ -1,3 +1,6 @@
+<think>
+
+</think>
 
 import React, { useEffect, useState, useMemo } from "react";
 import { OnboardingProgress } from "@/types/onboarding";
@@ -157,6 +160,11 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
     if (!dataToUse) {
       toast.error("Dados necessários não disponíveis. Por favor, recarregue a página.");
       return;
+    }
+    
+    // Adicionar mensagem de feedback ao usuário
+    if (progress?.is_completed) {
+      toast.info("Atualizando sua trilha personalizada...");
     }
     
     // Forçar prosseguimento: ignorar verificação de etapas faltantes
@@ -320,6 +328,11 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
             <span className="flex items-center gap-2">
               <Loader2 className="h-5 w-5 animate-spin" />
               Processando...
+            </span>
+          ) : progress?.is_completed ? (
+            <span className="flex items-center gap-2">
+              Atualizar Minha Trilha
+              <ArrowRight className="h-5 w-5" />
             </span>
           ) : (
             <span className="flex items-center gap-2">

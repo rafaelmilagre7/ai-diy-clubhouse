@@ -192,8 +192,11 @@ export const useImplementationTrail = () => {
         setRetryCount(0); // Resetar contagem de tentativas
       }
       
-      // Limpar dados locais da trilha
-      clearTrailFromLocalStorage(user.id);
+      // Limpar dados locais da trilha quando forçar regeneração
+      if (forceRegenerate) {
+        console.log("[useImplementationTrail] Forçando regeneração, limpando cache local");
+        clearTrailFromLocalStorage(user.id);
+      }
       
       console.log("[useImplementationTrail] Iniciando geração de trilha", { 
         forceRegenerate, 
@@ -235,6 +238,8 @@ export const useImplementationTrail = () => {
             return null;
           }
         }
+      } else {
+        console.log("[useImplementationTrail] Regeneração forçada ativada, ignorando verificação de trilha existente");
       }
       
       console.log("[useImplementationTrail] Chamando edge function para gerar trilha");

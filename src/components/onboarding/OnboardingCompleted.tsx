@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -134,20 +133,31 @@ export const OnboardingCompleted = () => {
 
   // Função para gerar a trilha de implementação
   const handleGenerateTrail = useCallback(async () => {
-    if (!progress || isGeneratingTrail || trailGenerated || isNavigating || regenerating) {
+    if (!progress || isGeneratingTrail || isNavigating || regenerating) {
       return;
     }
 
     try {
       setIsGeneratingTrail(true);
-      toast.info("Iniciando geração da sua trilha personalizada...");
       
-      // Forçar regeneração da trilha (true como segundo parâmetro indica regeneração)
+      // Ajuste aqui: Sempre exibir mensagem de acordo com o status atual
+      if (trailGenerated) {
+        toast.info("Atualizando sua trilha personalizada...");
+      } else {
+        toast.info("Iniciando geração da sua trilha personalizada...");
+      }
+      
+      // Forçar regeneração da trilha (true como segundo parâmetro indica regeneração forçada)
+      // mesmo se uma trilha já existir
       const generatedTrail = await generateImplementationTrail(progress, true);
       
       if (generatedTrail) {
-        toast.success("Trilha de implementação gerada com sucesso!");
-        setTrailGenerated(true);
+        if (trailGenerated) {
+          toast.success("Trilha de implementação atualizada com sucesso!");
+        } else {
+          toast.success("Trilha de implementação gerada com sucesso!");
+          setTrailGenerated(true);
+        }
         
         // Pequeno delay para garantir que o usuário veja a mensagem de sucesso
         setTimeout(() => {
@@ -298,23 +308,23 @@ export const OnboardingCompleted = () => {
       <div className="flex flex-col md:flex-row justify-center gap-4 pt-4 mt-8">
         <Button
           onClick={handleGenerateTrail}
-          disabled={isGeneratingTrail || regenerating || trailGenerated || isNavigating}
+          disabled={isGeneratingTrail || regenerating || isNavigating}
           className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90 text-black font-medium flex items-center gap-2"
         >
           {isGeneratingTrail || regenerating ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Gerando sua trilha personalizada...
+              {trailGenerated ? 'Atualizando sua trilha...' : 'Gerando sua trilha personalizada...'}
             </>
           ) : trailGenerated ? (
             <>
               <CheckCircle2 className="h-4 w-4" />
-              Trilha Gerada com Sucesso
+              Atualizar Minha Trilha
             </>
           ) : (
             <>
               <Map className="h-4 w-4" />
-              Concluir e Gerar Minha Trilha
+              Gerar Minha Trilha
             </>
           )}
         </Button>
