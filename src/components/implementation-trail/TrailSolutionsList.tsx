@@ -1,164 +1,75 @@
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Solution } from "@/lib/supabase";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Star, Gauge, Sparkles, Zap, Clock } from "lucide-react";
-
-interface TrailSolution extends Solution {
-  priority: number;
-  justification: string;
-}
+import { Badge } from "@/components/ui/badge";
+import { ArrowRight, ChevronRight } from "lucide-react";
 
 interface TrailSolutionsListProps {
-  solutions: TrailSolution[];
+  solutions: any[];
 }
 
 export const TrailSolutionsList: React.FC<TrailSolutionsListProps> = ({ solutions }) => {
   const navigate = useNavigate();
+
+  if (!solutions || solutions.length === 0) {
+    return (
+      <div className="text-center py-4 bg-neutral-800/20 rounded-lg border border-neutral-700/50 p-4">
+        <p className="text-neutral-400">Nenhuma solução encontrada na sua trilha.</p>
+      </div>
+    );
+  }
+
+  // Ordenar soluções por prioridade
+  const sortedSolutions = [...solutions].sort((a, b) => (a.priority || 1) - (b.priority || 1));
   
-  // Agrupar soluções por prioridade
-  const priorityGroups = solutions.reduce((acc, solution) => {
-    const priority = solution.priority;
-    if (!acc[priority]) {
-      acc[priority] = [];
-    }
-    acc[priority].push(solution);
-    return acc;
-  }, {} as Record<number, TrailSolution[]>);
+  // Agrupar por prioridade
+  const priority1 = sortedSolutions.filter(s => s.priority === 1);
+  const priority2 = sortedSolutions.filter(s => s.priority === 2);
+  const priority3 = sortedSolutions.filter(s => s.priority === 3);
 
-  // Função para obter a cor e ícone do badge de prioridade
-  const getPriorityInfo = (priority: number) => {
-    switch (priority) {
-      case 1: return { 
-        color: "bg-gradient-to-r from-[#0ABAB5]/20 to-[#34D399]/10 text-[#0ABAB5] border-[#0ABAB5]/30", 
-        icon: <Sparkles className="h-3.5 w-3.5 mr-1" />,
-        text: "Alta Prioridade",
-        cardClass: "border-l-[3px] border-l-[#0ABAB5]"
-      };
-      case 2: return { 
-        color: "bg-gradient-to-r from-amber-500/20 to-amber-400/10 text-amber-400 border-amber-500/30", 
-        icon: <Gauge className="h-3.5 w-3.5 mr-1" />,
-        text: "Média Prioridade",
-        cardClass: "border-l-[3px] border-l-amber-500"
-      };
-      case 3: return { 
-        color: "bg-gradient-to-r from-neutral-500/20 to-neutral-400/10 text-neutral-400 border-neutral-500/30", 
-        icon: <Zap className="h-3.5 w-3.5 mr-1" />,
-        text: "Para Explorar",
-        cardClass: "border-l-[3px] border-l-neutral-500"
-      };
-      default: return { 
-        color: "bg-gray-800/50 text-gray-300 border-gray-700/30", 
-        icon: null,
-        text: "Prioridade",
-        cardClass: ""
-      };
-    }
-  };
-
-  // Função para navegar para a página de detalhes da solução
-  const handleSolutionClick = (id: string) => {
-    navigate(`/solution/${id}`);
+  const renderPriorityGroup = (title: string, items: any[], badgeClass: string) => {
+    if (items.length === 0) return null;
+    
+    return (
+      <div className="space-y-4 mb-6">
+        <h4 className="text-sm font-medium flex items-center gap-2">
+          <Badge variant="outline" className={badgeClass}>
+            {title}
+          </Badge>
+        </h4>
+        <div className="space-y-3">
+          {items.map(solution => (
+            <Card key={solution.id} 
+              className="bg-[#151823] border-[#0ABAB5]/30 hover:border-[#0ABAB5]/60 transition-all cursor-pointer"
+              onClick={() => navigate(`/solution/${solution.id}`)}
+            >
+              <CardContent className="py-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h5 className="font-medium text-white mb-1">{solution.title}</h5>
+                    <p className="text-sm text-neutral-400 line-clamp-2">{solution.description}</p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-[#0ABAB5]" />
+                </div>
+                
+                <div className="mt-3 text-xs text-neutral-300 bg-[#0ABAB5]/5 p-2 rounded border border-[#0ABAB5]/20">
+                  <p className="italic">"{solution.justification || 'Recomendado com base no seu perfil'}"</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   return (
-    <div className="space-y-10">
-      {Object.keys(priorityGroups).map((priorityKey) => {
-        const priority = parseInt(priorityKey);
-        const prioritySolutions = priorityGroups[priority];
-        const priorityInfo = getPriorityInfo(priority);
-        
-        return (
-          <div key={`priority-${priority}`} className="space-y-4">
-            <div className="flex items-center gap-3">
-              <Badge 
-                variant="outline" 
-                className={`px-3 py-1.5 rounded-full flex items-center ${priorityInfo.color}`}
-              >
-                {priorityInfo.icon}
-                {priorityInfo.text}
-              </Badge>
-              
-              {priority === 1 && (
-                <span className="text-xs text-[#0ABAB5]/80 italic">
-                  Recomendado começar por estas soluções
-                </span>
-              )}
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {prioritySolutions.map((solution) => (
-                <Card 
-                  key={solution.id} 
-                  className={`border border-white/5 bg-[#151823]/80 hover:bg-[#151823] transition-all hover:-translate-y-1 hover:shadow-lg ${priorityInfo.cardClass}`}
-                >
-                  <div className="aspect-video w-full relative overflow-hidden">
-                    {solution.thumbnail_url ? (
-                      <img 
-                        src={solution.thumbnail_url} 
-                        alt={solution.title} 
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#1A1E2E] to-[#151823]">
-                        <div className="text-4xl font-bold text-[#0ABAB5]/20">{solution.title.charAt(0)}</div>
-                      </div>
-                    )}
-                    <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-[#151823] to-transparent h-12"></div>
-                  </div>
-                  
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg text-neutral-100">{solution.title}</CardTitle>
-                    <CardDescription className="line-clamp-2">{solution.description}</CardDescription>
-                  </CardHeader>
-                  
-                  <CardContent>
-                    <div className="text-sm text-neutral-400 italic mb-3 p-3 border-l-2 border-[#0ABAB5]/30 bg-[#0ABAB5]/5 rounded-r-md">
-                      "{solution.justification}"
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {solution.estimated_time && (
-                        <Badge variant="info" className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {solution.estimated_time} min
-                        </Badge>
-                      )}
-                      
-                      {solution.difficulty && (
-                        <Badge variant="neutral">
-                          {solution.difficulty === "easy" && "Fácil"}
-                          {solution.difficulty === "medium" && "Médio"}
-                          {solution.difficulty === "advanced" && "Avançado"}
-                        </Badge>
-                      )}
-                      
-                      {solution.tags?.slice(0, 2).map((tag, i) => (
-                        <Badge key={i} variant="secondary" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                  
-                  <CardFooter>
-                    <Button
-                      onClick={() => handleSolutionClick(solution.id)}
-                      className="w-full bg-gradient-to-r from-[#0ABAB5] to-[#34D399] hover:from-[#0ABAB5]/90 hover:to-[#34D399]/90"
-                    >
-                      Ver Solução
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          </div>
-        );
-      })}
+    <div>
+      {renderPriorityGroup("Prioridade Alta", priority1, "bg-[#0ABAB5]/20 text-[#0ABAB5] border-[#0ABAB5]/30")}
+      {renderPriorityGroup("Prioridade Média", priority2, "bg-amber-500/20 text-amber-500 border-amber-500/30")}
+      {renderPriorityGroup("Complementar", priority3, "bg-neutral-500/20 text-neutral-400 border-neutral-500/30")}
     </div>
   );
 };
