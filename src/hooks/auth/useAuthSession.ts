@@ -39,8 +39,8 @@ export const useAuthSession = () => {
       }
 
       try {
-        // Passar o ID do usuário como string
-        const userProfile = await processUserProfile(user.id);
+        // Agora também funciona corretamente aqui
+        const userProfile = await processUserProfile(user);
         setProfile(userProfile);
       } catch (error) {
         console.error('Erro ao carregar perfil:', error);

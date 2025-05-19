@@ -21,7 +21,7 @@ const AuthSession = () => {
       try {
         console.log("Carregando perfil para usuário:", user.id);
         
-        // Passa o ID do usuário como string
+        // Agora isso funciona corretamente com qualquer tipo
         const profile = await processUserProfile(user.id);
         
         if (profile) {

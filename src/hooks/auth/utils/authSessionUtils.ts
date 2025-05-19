@@ -3,14 +3,17 @@ import { User } from '@supabase/supabase-js';
 import { UserProfile } from '@/lib/supabase/types';
 import { supabase } from '@/lib/supabase';
 
-export const processUserProfile = async (user: User): Promise<UserProfile | null> => {
-  if (!user || !user.id) return null;
+export const processUserProfile = async (user: User | string): Promise<UserProfile | null> => {
+  // Extrair o ID do usuário dependendo do tipo do parâmetro
+  const userId = typeof user === 'string' ? user : user?.id;
+  
+  if (!userId) return null;
   
   try {
     const { data: profileData, error: profileError } = await supabase
       .from("profiles")
       .select("*")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .single();
       
     if (profileError) {
