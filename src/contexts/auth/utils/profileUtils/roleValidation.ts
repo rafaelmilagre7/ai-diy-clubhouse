@@ -1,31 +1,28 @@
 
-import { supabase } from "@/lib/supabase";
-import { UserProfile } from "@/lib/supabase/types";
+import { supabase } from '@/lib/supabase';
+import type { UserRole } from '@/lib/supabase/types';
 
-// Função para validar o papel do usuário baseado no email
-export const validateUserRole = async (profile: UserProfile): Promise<boolean> => {
-  if (!profile || !profile.email) return false;
+// Função para determinar o papel do usuário com base no email
+export const determineRoleFromEmail = (email: string): string => {
+  if (!email) return 'user';
   
-  try {
-    const { data, error } = await supabase.rpc('validateuserrole', {
-      profileid: profile.id,
-      currentrole: profile.role || 'member',
-      email: profile.email
-    });
-    
-    if (error) {
-      console.error('Erro ao validar papel do usuário:', error);
-      return false;
-    }
-    
-    // Se o papel mudou, atualizar o estado local
-    if (data && data !== profile.role) {
-      return true;
-    }
-    
-    return false;
-  } catch (error) {
-    console.error('Erro ao validar papel do usuário:', error);
-    return false;
+  if (email.includes('@viverdeia.ai') || 
+      email === 'admin@teste.com' ||
+      email === 'admin@viverdeia.ai') {
+    return 'admin';
   }
+  
+  // Adicione outras regras de verificação por email aqui
+  
+  return 'user'; // Papel padrão
 };
+
+// Função para verificar se o usuário é um super administrador
+export const isSuperAdmin = (email: string): boolean => {
+  if (!email) return false;
+  
+  return email === 'admin@viverdeia.ai' || 
+         email === 'admin@teste.com';
+};
+
+// Funções adicionais para validação de papéis

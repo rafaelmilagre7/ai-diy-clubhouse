@@ -17,7 +17,8 @@ export type {
   UserRole,
   Progress,
   UserChecklist,
-  TrailSolution
+  TrailSolution,
+  VideoFormValues
 } from './types';
 
 // Importamos e re-exportamos o Solution de types como SupabaseSolution para evitar conflitos

@@ -1,3 +1,4 @@
+
 import { Database } from './types/database.types';
 
 // Tipos para o sistema de referrals/indicações
@@ -40,11 +41,12 @@ export type ReferralStats = {
 // Re-exportando o tipo Database para manter compatibilidade
 export type { Database };
 
-// Adicionando outros tipos necessários que estavam faltando
-export type VideoFormValues = {
-  title: string;
+// Definições para tipos de vídeo
+export interface VideoFormValues {
+  id?: string;
+  title?: string;
   description?: string;
-  url: string;
+  url?: string;
   video_id?: string;
   video_type?: string;
   type?: string;
@@ -54,7 +56,7 @@ export type VideoFormValues = {
   fileName?: string;
   fileSize?: number;
   embedCode?: string;
-};
+}
 
 // Definindo TrailSolution para compatibilidade com TrailSolutionsList
 export type TrailSolution = {
@@ -96,6 +98,18 @@ export type Progress = {
   completed_at?: string;
 };
 
+// Definindo tipos para perfil de usuário
+export interface UserProfile {
+  id: string;
+  updated_at?: string;
+  username?: string;
+  full_name?: string;
+  avatar_url?: string;
+  website?: string;
+  role?: string;
+  email?: string;
+}
+
 // Definindo UserRole para autenticação
 export type UserRole = {
   id: string;
@@ -103,4 +117,115 @@ export type UserRole = {
   description?: string;
   permissions?: Record<string, any>;
   is_system?: boolean;
+};
+
+// Definições para tipos de aprendizado
+export type LearningLesson = {
+  id: string;
+  title: string;
+  description?: string;
+  module_id: string;
+  order_index: number;
+  duration_minutes?: number;
+  created_at: string;
+  updated_at: string;
+  cover_image_url?: string;
+  slug?: string;
+  status?: string;
+  is_published?: boolean;
+};
+
+export type LearningLessonVideo = {
+  id: string;
+  lesson_id: string;
+  title?: string;
+  description?: string;
+  url: string;
+  duration_seconds?: number;
+  thumbnail_url?: string;
+  order_index: number;
+  created_at: string;
+  updated_at: string;
+  video_id?: string;
+  video_type?: string;
+};
+
+export type LearningModule = {
+  id: string;
+  title: string;
+  description?: string;
+  course_id: string;
+  order_index: number;
+  created_at: string;
+  updated_at: string;
+  is_published?: boolean;
+  lessons_count?: number;
+  total_duration_minutes?: number;
+};
+
+export type LearningCourse = {
+  id: string;
+  title: string;
+  description?: string;
+  cover_image_url?: string;
+  created_at: string;
+  updated_at: string;
+  is_published?: boolean;
+  modules_count?: number;
+  lessons_count?: number;
+  total_duration_minutes?: number;
+  slug?: string;
+};
+
+export type LearningProgress = {
+  id: string;
+  user_id: string;
+  lesson_id: string;
+  completed: boolean;
+  progress_percentage: number;
+  last_position_seconds?: number;
+  created_at: string;
+  updated_at: string;
+  completed_at?: string;
+};
+
+export type LearningResource = {
+  id: string;
+  lesson_id: string;
+  title: string;
+  description?: string;
+  type: string;
+  url?: string;
+  file_path?: string;
+  order_index: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type LearningComment = {
+  id: string;
+  lesson_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+  parent_id?: string;
+  is_pinned?: boolean;
+  likes_count?: number;
+};
+
+export type LearningLessonTool = {
+  id: string;
+  lesson_id: string;
+  tool_id: string;
+  created_at: string;
+  updated_at: string;
+};
+
+// Definindo tipo Solution para compatibilidade
+export type Solution = {
+  id: string;
+  title: string;
+  description: string;
+  [key: string]: any;
 };

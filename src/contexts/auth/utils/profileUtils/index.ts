@@ -1,4 +1,4 @@
 
-// Re-exportação de funções de perfil para facilitar importações
+// Reexportar funções de validação de papel
 export * from './roleValidation';
 export * from './userProfileFunctions';
