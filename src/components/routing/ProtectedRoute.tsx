@@ -28,7 +28,8 @@ const ProtectedRoute = ({
     isLoading, 
     requireAdmin, 
     requiredRole, 
-    path: location.pathname 
+    path: location.pathname,
+    userEmail: user?.email
   });
   
   // Configurar timeout para não ficar preso em carregamento infinito

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, ReactNode } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
@@ -11,6 +11,7 @@ const RootRedirect = () => {
   const navigate = useNavigate();
   const [timeoutExceeded, setTimeoutExceeded] = useState(false);
   const [redirectTarget, setRedirectTarget] = useState<string | null>(null);
+  const timeoutRef = useRef<number | null>(null);
   
   // Registrar estado para depuração
   console.log("RootRedirect state:", { 
@@ -19,8 +20,31 @@ const RootRedirect = () => {
     isAdmin, 
     isLoading, 
     timeoutExceeded,
-    redirectTarget
+    redirectTarget,
+    userEmail: user?.email
   });
+  
+  // Configurar timeout de carregamento
+  useEffect(() => {
+    if (isLoading && !timeoutExceeded) {
+      // Limpar qualquer timeout existente
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      
+      timeoutRef.current = window.setTimeout(() => {
+        console.log("RootRedirect: Loading timeout exceeded, redirecting to /login");
+        setTimeoutExceeded(true);
+        toast("Tempo de carregamento excedido, redirecionando para tela de login");
+      }, 3000); // 3 segundos de timeout
+    }
+    
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [isLoading, timeoutExceeded]);
   
   // Determinar para onde redirecionar com base no estado da autenticação
   useEffect(() => {
@@ -37,6 +61,9 @@ const RootRedirect = () => {
       } else {
         setRedirectTarget('/dashboard');
       }
+    } else if (user && !profile) {
+      console.log("RootRedirect: User without profile, redirecting to dashboard");
+      setRedirectTarget('/dashboard');
     }
   }, [user, profile, isAdmin, isLoading, timeoutExceeded]);
   
@@ -51,19 +78,6 @@ const RootRedirect = () => {
       return () => clearTimeout(redirectTimer);
     }
   }, [redirectTarget, navigate]);
-  
-  // Handle timing out the loading state
-  useEffect(() => {
-    if (isLoading && !timeoutExceeded) {
-      const timeout = setTimeout(() => {
-        console.log("RootRedirect: Loading timeout exceeded, redirecting to /login");
-        setTimeoutExceeded(true);
-        toast("Tempo de carregamento excedido, redirecionando para tela de login");
-      }, 3000); // 3 segundos de timeout
-      
-      return () => clearTimeout(timeout);
-    }
-  }, [isLoading, timeoutExceeded]);
   
   // Mostrar tela de carregamento enquanto decide para onde redirecionar
   if ((isLoading && !timeoutExceeded) || (!redirectTarget && !timeoutExceeded)) {
