@@ -4,6 +4,9 @@ import { OnboardingProgress } from "@/types/onboarding";
 import { refreshOnboardingProgress } from "../persistence/progressPersistence";
 import { toast } from "sonner";
 
+// Timeout para requisição de refresh
+const REFRESH_TIMEOUT = 12000; // 12 segundos
+
 export const useProgressRefresh = (
   progress: OnboardingProgress | null,
   setProgress: (progress: OnboardingProgress | null) => void,
@@ -12,7 +15,7 @@ export const useProgressRefresh = (
   logDebugEvent: (eventName: string, data?: any) => void
 ) => {
   /**
-   * Recarrega os dados do progresso do banco de dados
+   * Recarrega os dados do progresso do banco de dados com timeouts
    */
   const refreshProgress = useCallback(async (): Promise<OnboardingProgress | null> => {
     if (!progress?.id) {
@@ -21,10 +24,24 @@ export const useProgressRefresh = (
       return null;
     }
     
+    // Criar promessa com timeout
+    const timeoutPromise = new Promise<{data: null, error: Error}>((resolve) => {
+      setTimeout(() => {
+        resolve({
+          data: null,
+          error: new Error("Timeout ao recarregar progresso")
+        });
+      }, REFRESH_TIMEOUT);
+    });
+    
     try {
       logDebugEvent("refreshProgress_start", { progressId: progress.id });
       
-      const { data, error } = await refreshOnboardingProgress(progress.id);
+      // Competir entre a requisição real e o timeout
+      const { data, error } = await Promise.race([
+        refreshOnboardingProgress(progress.id),
+        timeoutPromise
+      ]);
       
       if (!isMounted.current) {
         return null;

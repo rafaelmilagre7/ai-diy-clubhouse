@@ -4,13 +4,17 @@ import { useAuth } from "@/contexts/auth";
 import { useProgressState } from "./progress/useProgressState";
 import { useProgressFetch } from "./progress/useProgressFetch";
 import { useProgressUpdate } from "./progress/useProgressUpdate";
-import { useProgressRefresh } from "./progress/useProgressRefresh";
 import { toast } from "sonner";
 import { OnboardingProgress } from "@/types/onboarding";
+
+// Constantes para controle de tempo
+const FETCH_TIMEOUT = 10000; // 10 segundos para timeout da requisição
+const FETCH_DEBOUNCE = 500; // 500ms para debouncing de chamadas múltiplas
 
 export const useProgress = () => {
   const { user } = useAuth();
   const fetchInProgress = useRef(false);
+  const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const {
     progress,
     setProgress,
@@ -36,21 +40,53 @@ export const useProgress = () => {
     logDebugEvent
   );
 
+  // Função para garantir que o fetchInProgress seja resetado
+  const safeResetFetchInProgress = useCallback(() => {
+    try {
+      fetchInProgress.current = false;
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
+        fetchTimeoutRef.current = null;
+      }
+    } catch (error) {
+      console.error("[useProgress] Erro ao resetar estado de fetch:", error);
+    }
+  }, []);
+
   // Versão com debouncing para evitar chamadas múltiplas
   const refreshProgress = useCallback(async (): Promise<OnboardingProgress | null> => {
+    // Verificar se já está em andamento
     if (fetchInProgress.current) {
-      console.log("Refresh já em andamento, ignorando nova solicitação");
+      console.log("[useProgress] Refresh já em andamento, ignorando nova solicitação");
       return progress;
     }
     
     try {
       fetchInProgress.current = true;
+      
+      // Definir timeout de segurança para liberar flag em caso de erro
+      fetchTimeoutRef.current = setTimeout(() => {
+        console.log("[useProgress] Timeout de fetch atingido, resetando estado");
+        safeResetFetchInProgress();
+      }, FETCH_TIMEOUT);
+      
+      logDebugEvent("refreshProgress_started", { userId: user?.id });
       const refreshedProgress = await fetchProgress();
+      
+      // Liberar flag após conclusão bem-sucedida
+      safeResetFetchInProgress();
+      
       return refreshedProgress || null;
-    } finally {
-      fetchInProgress.current = false;
+    } catch (error) {
+      console.error("[useProgress] Erro ao atualizar progresso:", error);
+      logDebugEvent("refreshProgress_error", { error: String(error) });
+      toast.error("Erro ao atualizar seus dados. Tente novamente.");
+      
+      // Liberar flag após erro
+      safeResetFetchInProgress();
+      return null;
     }
-  }, [fetchProgress, progress]);
+  }, [fetchProgress, progress, user?.id, safeResetFetchInProgress, logDebugEvent]);
 
   const { updateProgress } = useProgressUpdate(
     progress,
@@ -102,10 +138,12 @@ export const useProgress = () => {
   useEffect(() => {
     isMounted.current = true;
     toastShownRef.current = false;
+    
     return () => {
       isMounted.current = false;
+      safeResetFetchInProgress();
     };
-  }, []);
+  }, [safeResetFetchInProgress]);
 
   // Só carregar dados uma vez na montagem
   useEffect(() => {

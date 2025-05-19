@@ -5,6 +5,28 @@ import { fetchOnboardingProgress, createInitialOnboardingProgress } from "../per
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 
+// Timeout para a requisição
+const FETCH_REQUEST_TIMEOUT = 15000; // 15 segundos
+
+// Função para criar promise com timeout
+const withTimeout = (promise: Promise<any>, timeoutMs: number, errorMessage: string) => {
+  let timeoutHandle: NodeJS.Timeout;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutHandle = setTimeout(() => reject(new Error(errorMessage)), timeoutMs);
+  });
+  
+  return Promise.race([
+    promise,
+    timeoutPromise
+  ]).then(result => {
+    clearTimeout(timeoutHandle);
+    return result;
+  }).catch(error => {
+    clearTimeout(timeoutHandle);
+    throw error;
+  });
+};
+
 export const useProgressFetch = (
   isMounted: MutableRefObject<boolean>,
   setProgress: Dispatch<SetStateAction<OnboardingProgress | null>>,
@@ -17,7 +39,7 @@ export const useProgressFetch = (
   const { user } = useAuth();
   
   /**
-   * Busca o progresso do onboarding do usuário
+   * Busca o progresso do onboarding do usuário com timeout e tratamento robusto de erros
    */
   const fetchProgress = useCallback(async (): Promise<OnboardingProgress | null> => {
     if (!user) {
@@ -30,8 +52,13 @@ export const useProgressFetch = (
       setIsLoading(true);
       logDebugEvent("fetchProgress_start", { userId: user.id });
       
-      // Passo 1: Tentar buscar progresso existente
-      const { data, error } = await fetchOnboardingProgress(user.id);
+      // Passo 1: Tentar buscar progresso existente com timeout
+      const fetchPromise = fetchOnboardingProgress(user.id);
+      const { data, error } = await withTimeout(
+        fetchPromise,
+        FETCH_REQUEST_TIMEOUT,
+        "Tempo limite excedido ao buscar progresso"
+      );
       
       if (!isMounted.current) {
         logDebugEvent("fetchProgress_unmountedDuringFetch");
@@ -57,7 +84,12 @@ export const useProgressFetch = (
         logDebugEvent("fetchProgress_creating", { userId: user.id });
         console.log("[DEBUG] Progresso não encontrado, criando...");
         
-        const { data: initialData, error: createError } = await createInitialOnboardingProgress(user);
+        const createPromise = createInitialOnboardingProgress(user);
+        const { data: initialData, error: createError } = await withTimeout(
+          createPromise,
+          FETCH_REQUEST_TIMEOUT,
+          "Tempo limite excedido ao criar progresso inicial"
+        );
         
         if (!isMounted.current) return null;
         
@@ -80,7 +112,15 @@ export const useProgressFetch = (
         return null;
       }
       
-      // Dados encontrados
+      // Verificar se os dados têm a estrutura esperada
+      if (!data.id || !data.user_id) {
+        logDebugEvent("fetchProgress_invalidData", { data });
+        console.error("[ERRO] Dados de progresso inválidos:", data);
+        lastError.current = new Error("Dados de progresso inválidos");
+        return null;
+      }
+      
+      // Dados encontrados e válidos
       logDebugEvent("fetchProgress_success", { 
         progressId: data.id,
         currentStep: data.current_step,
@@ -92,6 +132,9 @@ export const useProgressFetch = (
       setProgress(data);
       lastError.current = null;
       retryCount.current = 0;
+      
+      // Log detalhado para debugging
+      console.log("[DEBUG] Registro bruto de progresso encontrado:", data);
       
       return data;
     } catch (e: any) {

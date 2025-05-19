@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Edit, Map, Loader2 } from "lucide-react";
@@ -8,6 +8,8 @@ import { useProgress } from "@/hooks/onboarding/useProgress";
 import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
 import { toast } from "sonner";
 import { ReviewStep } from "@/components/onboarding/steps/ReviewStep";
+
+const LOADING_TIMEOUT_MS = 8000; // 8 segundos para evitar tela de loading infinita
 
 export const OnboardingCompleted = () => {
   const navigate = useNavigate();
@@ -19,35 +21,98 @@ export const OnboardingCompleted = () => {
   const [isGeneratingTrail, setIsGeneratingTrail] = useState(false);
   const [trailGenerated, setTrailGenerated] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [loadingRetries, setLoadingRetries] = useState(0);
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isLoadingHandledRef = useRef(false);
+  
+  // Efeito para controlar timeout de carregamento
+  useEffect(() => {
+    // Definir timeout para evitar tela de loading infinita
+    loadingTimeoutRef.current = setTimeout(() => {
+      if (isInitialLoad && !isLoadingHandledRef.current) {
+        console.log("[OnboardingCompleted] Timeout de carregamento atingido, forçando transição de estado");
+        setIsInitialLoad(false);
+        isLoadingHandledRef.current = true;
+        
+        // Tentar carregar dados novamente se ainda não temos progresso
+        if (!progress) {
+          console.log("[OnboardingCompleted] Dados de progresso não encontrados após timeout, tentando novamente");
+          refreshProgress().catch(err => 
+            console.error("[OnboardingCompleted] Erro ao recarregar após timeout:", err)
+          );
+        }
+      }
+    }, LOADING_TIMEOUT_MS);
+    
+    return () => {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+    };
+  }, []);
   
   // Efeito para carregar dados atualizados
   useEffect(() => {
-    const loadData = async () => {
+    // Função para carregar dados com sistema de retry
+    const loadProgressData = async () => {
       try {
-        await refreshProgress();
+        console.log("[OnboardingCompleted] Iniciando carregamento de dados, tentativa:", loadingRetries + 1);
+        const refreshedProgress = await refreshProgress();
+        
+        // Se chegamos aqui, o carregamento foi bem-sucedido
+        isLoadingHandledRef.current = true;
+        
+        if (refreshedProgress) {
+          console.log("[OnboardingCompleted] Dados carregados com sucesso:", refreshedProgress.id);
+          setIsInitialLoad(false);
+        } else if (loadingRetries < 2) {
+          // Tentar novamente em caso de falha (max 3 tentativas)
+          console.log("[OnboardingCompleted] Dados não encontrados, planejando nova tentativa");
+          setTimeout(() => {
+            setLoadingRetries(prev => prev + 1);
+          }, 2000); // Esperar 2 segundos antes de tentar novamente
+        } else {
+          // Desistir após 3 tentativas
+          console.log("[OnboardingCompleted] Máximo de tentativas atingido, desistindo");
+          setIsInitialLoad(false);
+        }
       } catch (error) {
         console.error("[OnboardingCompleted] Erro ao carregar progresso:", error);
-        toast.error("Erro ao carregar seus dados. Tente recarregar a página.");
-      } finally {
-        setIsInitialLoad(false);
+        
+        // Tentar novamente em caso de erro (max 3 tentativas)
+        if (loadingRetries < 2) {
+          setTimeout(() => {
+            setLoadingRetries(prev => prev + 1);
+          }, 2000); // Esperar 2 segundos antes de tentar novamente
+        } else {
+          // Desistir após 3 tentativas
+          setIsInitialLoad(false);
+        }
       }
     };
     
-    loadData();
-  }, [refreshProgress]);
+    // Só carregar se ainda estamos no estado inicial e não ultrapassamos tentativas
+    if (isInitialLoad && loadingRetries <= 2 && !isLoadingHandledRef.current) {
+      loadProgressData();
+    }
+  }, [loadingRetries, refreshProgress]);
   
   // Efeito para disparar confetti quando completado com sucesso
   useEffect(() => {
     if (!isInitialLoad && progress?.is_completed && !hasShownConfetti) {
       // Disparar efeito de confete quando os dados estiverem carregados
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#0ABAB5', '#6de2de', '#9EECEA']
-      });
-      
-      setHasShownConfetti(true);
+      try {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#0ABAB5', '#6de2de', '#9EECEA']
+        });
+        
+        setHasShownConfetti(true);
+      } catch (error) {
+        console.error("[OnboardingCompleted] Erro ao disparar confetti:", error);
+      }
     }
   }, [isInitialLoad, progress, hasShownConfetti]);
 
@@ -133,11 +198,44 @@ export const OnboardingCompleted = () => {
     navigate("/implementation-trail");
   }, [navigate, isNavigating]);
 
+  // Função para forçar recarregamento de dados
+  const handleForceRefresh = useCallback(async () => {
+    try {
+      toast.info("Tentando recarregar seus dados...");
+      isLoadingHandledRef.current = false;
+      setIsInitialLoad(true);
+      const refreshedProgress = await refreshProgress();
+      
+      if (refreshedProgress) {
+        toast.success("Dados recarregados com sucesso!");
+        setIsInitialLoad(false);
+      } else {
+        toast.error("Ainda não conseguimos carregar seus dados. Tente novamente.");
+        setIsInitialLoad(false);
+      }
+    } catch (error) {
+      console.error("[OnboardingCompleted] Erro ao forçar recarregamento:", error);
+      toast.error("Erro ao recarregar dados. Tente novamente.");
+      setIsInitialLoad(false);
+    }
+  }, [refreshProgress]);
+
   if (isInitialLoad || progressLoading) {
     return (
       <div className="max-w-4xl mx-auto bg-[#151823] border border-neutral-700/50 rounded-lg shadow-lg p-8 text-center">
         <Loader2 className="animate-spin h-10 w-10 text-[#0ABAB5] mx-auto" />
         <p className="mt-4 text-neutral-300">Carregando seus dados...</p>
+        
+        {loadingRetries >= 2 && (
+          <Button 
+            onClick={handleForceRefresh} 
+            variant="outline" 
+            size="sm"
+            className="mt-4 text-[#0ABAB5] border-[#0ABAB5]/30"
+          >
+            Tentar novamente
+          </Button>
+        )}
       </div>
     );
   }

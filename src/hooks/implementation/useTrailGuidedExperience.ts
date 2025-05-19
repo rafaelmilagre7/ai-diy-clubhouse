@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useImplementationTrail } from "./useImplementationTrail";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
@@ -17,6 +17,17 @@ export const useTrailGuidedExperience = () => {
   const [showMagicExperience, setShowMagicExperience] = useState(false);
   const [loadingError, setLoadingError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const generationAttemptRef = useRef(0);
+  const timeoutRef = useRef<number | null>(null);
+
+  // Limpeza de timeout ao desmontar o componente
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   // Montar lista de soluções ordenadas para a navegação
   const solutionsList = useMemo(() => {
