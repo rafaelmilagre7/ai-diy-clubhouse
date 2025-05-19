@@ -1,10 +1,19 @@
 
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/auth";
 
 /**
  * Cabeçalho moderno para o dashboard do membro com design glassmorphism.
  */
-export function ModernDashboardHeader({ userName }: { userName: string }) {
+export function ModernDashboardHeader() {
+  // Obter dados do usuário diretamente do contexto de autenticação
+  const { profile } = useAuth();
+  // Extrair o primeiro nome ou usar um fallback
+  const userName = profile?.name?.split(" ")[0] || "Membro";
+  
+  // Debug para verificar o nome recebido
+  console.log("ModernDashboardHeader profile:", profile);
+
   return (
     <div
       className={cn(
@@ -36,7 +45,7 @@ export function ModernDashboardHeader({ userName }: { userName: string }) {
             Bem-vindo ao VIVER DE IA Hub
           </span>
           <h1 className="text-xl md:text-2xl font-bold leading-tight text-white font-heading animate-slide-in" style={{ animationDelay: '0.1s' }}>
-            Olá, {userName || "Membro"}
+            Olá, {userName}
           </h1>
           <div className="mt-1 text-white/60 text-sm md:text-base animate-slide-in" style={{ animationDelay: '0.2s' }}>
             Acesse suas ferramentas e recursos de IA

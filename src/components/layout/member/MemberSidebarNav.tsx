@@ -1,6 +1,5 @@
 
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/contexts/auth";
 import { 
   LayoutDashboard, 
   Lightbulb, 
@@ -23,11 +22,11 @@ import { Link, useLocation } from "react-router-dom";
 
 interface SidebarNavProps {
   sidebarOpen: boolean;
+  isAdmin?: boolean;
 }
 
-export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
+export const MemberSidebarNav = ({ sidebarOpen, isAdmin = false }: SidebarNavProps) => {
   const location = useLocation();
-  const { isAdmin, isFormacao } = useAuth();
 
   const menuItems = [
     {
@@ -104,6 +103,9 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
     return location.pathname === href || location.pathname.startsWith(href + '/');
   };
 
+  // Debug log
+  console.log("MemberSidebarNav isAdmin:", isAdmin);
+
   return (
     <div className="space-y-2 py-4">
       <div className="px-3 space-y-1">
@@ -140,22 +142,6 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
             <Link to="/admin">
               <ShieldCheck className="h-4 w-4" />
               {sidebarOpen && <span>Painel Admin</span>}
-            </Link>
-          </Button>
-        )}
-        
-        {isFormacao && (
-          <Button
-            variant="outline"
-            className={cn(
-              "w-full justify-start gap-3 border-viverblue/30 text-viverblue hover:bg-[#181A2A] mt-4",
-              !sidebarOpen && "justify-center"
-            )}
-            asChild
-          >
-            <Link to="/formacao">
-              <GraduationCap className="h-4 w-4" />
-              {sidebarOpen && <span>Área de Cursos</span>}
             </Link>
           </Button>
         )}

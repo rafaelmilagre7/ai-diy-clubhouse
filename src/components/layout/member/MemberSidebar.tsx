@@ -13,6 +13,7 @@ interface MemberSidebarProps {
   profileAvatar: string | undefined;
   getInitials: (name: string | null) => string;
   signOut: () => Promise<void>;
+  isAdmin: boolean;
 }
 
 export const MemberSidebar = ({ 
@@ -22,7 +23,8 @@ export const MemberSidebar = ({
   profileEmail,
   profileAvatar,
   getInitials,
-  signOut
+  signOut,
+  isAdmin
 }: MemberSidebarProps) => {
   return (
     <aside
@@ -44,7 +46,7 @@ export const MemberSidebar = ({
         </div>
 
         {/* Navegação */}
-        <MemberSidebarNav sidebarOpen={sidebarOpen} />
+        <MemberSidebarNav sidebarOpen={sidebarOpen} isAdmin={isAdmin} />
 
         {/* Menu do usuário no rodapé da barra lateral */}
         <div className="mt-auto">

@@ -7,7 +7,6 @@ import { NoSolutionsPlaceholder } from "./NoSolutionsPlaceholder";
 import { Solution } from "@/lib/supabase";
 import { ModernDashboardHeader } from "./ModernDashboardHeader";
 import { KpiGrid } from "./KpiGrid";
-import { useAuth } from "@/contexts/auth";
 import { SolutionsGridLoader } from "./SolutionsGridLoader";
 import { DashboardConnectionErrorState } from "./states/DashboardConnectionErrorState";
 
@@ -45,9 +44,6 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
     (!completed || completed.length === 0) && 
     (!recommended || recommended.length === 0);
 
-  const { profile } = useAuth();
-  const userName = profile?.name?.split(" ")[0] || "Membro";
-
   // Verificar se tem dados válidos
   const hasValidData = Array.isArray(active) && Array.isArray(completed) && Array.isArray(recommended);
   
@@ -57,8 +53,8 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
 
   return (
     <div className="space-y-8 md:pt-2 animate-fade-in">
-      {/* HEADER IMERSIVO */}
-      <ModernDashboardHeader userName={userName} />
+      {/* HEADER IMERSIVO - Agora obtém o usuário diretamente */}
+      <ModernDashboardHeader />
 
       {/* CARDS DE PROGRESSO (KPI) */}
       <KpiGrid 

@@ -9,7 +9,7 @@ import { MemberContent } from "./member/MemberContent";
  * Isso inclui a barra lateral e a área de conteúdo
  */
 const MemberLayout = ({ children }: { children: React.ReactNode }) => {
-  const { profile, signOut } = useAuth();
+  const { user, profile, isAdmin, signOut } = useAuth();
   
   // Estado para controlar a visibilidade da barra lateral
   const [sidebarOpen, setSidebarOpen] = useState(() => {
@@ -74,6 +74,9 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
     document.body.classList.add('dark');
   }, []);
 
+  // Log para debug do profile
+  console.log("MemberLayout profile:", profile, "isAdmin:", isAdmin);
+
   return (
     <div className="flex min-h-screen bg-[#0F111A] overflow-hidden">
       {/* Overlay para dispositivos móveis */}
@@ -93,6 +96,7 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
         profileAvatar={profile?.avatar_url}
         getInitials={getInitials}
         signOut={signOut}
+        isAdmin={isAdmin}
       />
       
       {/* Conteúdo principal */}
