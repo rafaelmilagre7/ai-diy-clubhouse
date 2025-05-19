@@ -82,8 +82,8 @@ export const CourseCarousel: React.FC<CourseCarouselProps> = ({
                   description={course.description || ""}
                   imageUrl={course.cover_image_url}
                   progress={calculateProgress(course.id)}
-                  moduleCount={course.module_count}
-                  lessonCount={course.lesson_count}
+                  moduleCount={course.modules_count}
+                  lessonCount={course.lessons_count}
                 />
               </CarouselItem>
             ))}

@@ -1,188 +1,159 @@
-
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
-import { LearningModule, LearningLesson } from "@/lib/supabase";
-import { toast } from "sonner";
+import { LearningModule, LearningLesson } from "@/lib/supabase/types";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
+import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 import { ModuloHeader } from "@/components/formacao/modulos/ModuloHeader";
 import { AulasList } from "@/components/formacao/aulas/AulasList";
-import { NovaAulaButton } from "@/components/formacao/aulas/NovaAulaButton";
+import { useAuth } from "@/contexts/auth";
+import { NovoModuloDialog } from "@/components/formacao/modulos/NovoModuloDialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 
-const ModuloDetalhes = () => {
-  const { id } = useParams<{ id: string }>();
+// Interface para tipagem do módulo com o curso
+interface ModuloWithCourse extends LearningModule {
+  learning_courses?: {
+    id: string;
+    title: string;
+  };
+}
+
+const ModuloDetalhes: React.FC = () => {
+  const { cursoId, moduloId } = useParams<{ cursoId: string; moduloId: string }>();
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { user } = useAuth();
   
-  const [modulo, setModulo] = useState<LearningModule | null>(null);
-  const [aulas, setAulas] = useState<LearningLesson[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingAulas, setLoadingAulas] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    if (profile) {
-      setIsAdmin(profile.role === 'admin' || profile.role === 'formacao');
-    }
-  }, [profile]);
-
+  const [open, setOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [alertOpen, setAlertOpen] = useState(false);
+  
   // Buscar detalhes do módulo
-  const fetchModulo = async () => {
-    if (!id) return;
-    
-    setLoading(true);
-    try {
+  const { data: modulo, isLoading: isLoadingModulo } = useQuery({
+    queryKey: ["formacao-modulo", moduloId],
+    queryFn: async () => {
       const { data, error } = await supabase
-        .from('learning_modules')
-        .select('*, learning_courses(*)')
-        .eq('id', id)
+        .from("learning_modules")
+        .select("*, learning_courses!inner(*)")
+        .eq("id", moduloId)
         .single();
-      
+        
       if (error) throw error;
-      
-      setModulo(data);
-    } catch (error) {
-      console.error("Erro ao buscar módulo:", error);
-      toast.error("Não foi possível carregar o módulo");
-      navigate('/formacao/cursos');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+      return data as ModuloWithCourse;
+    },
+    enabled: !!moduloId
+  });
+  
   // Buscar aulas do módulo
-  const fetchAulas = async () => {
-    if (!id) return;
-    
-    setLoadingAulas(true);
-    try {
+  const { data: aulas, isLoading: isLoadingAulas, refetch: refetchAulas } = useQuery({
+    queryKey: ["formacao-aulas", moduloId],
+    queryFn: async () => {
       const { data, error } = await supabase
-        .from('learning_lessons')
-        .select('*')
-        .eq('module_id', id)
-        .order('order_index');
-      
+        .from("learning_lessons")
+        .select("*")
+        .eq("module_id", moduloId)
+        .order("order_index", { ascending: true });
+        
       if (error) throw error;
-      
-      setAulas(data || []);
-    } catch (error) {
-      console.error("Erro ao buscar aulas:", error);
-      toast.error("Não foi possível carregar as aulas");
-    } finally {
-      setLoadingAulas(false);
-    }
-  };
-
-  // Carregar dados iniciais
-  useEffect(() => {
-    fetchModulo();
-    fetchAulas();
-  }, [id]);
-
-  // Função para atualizar a lista após operações bem-sucedidas
-  const handleSuccess = () => {
-    fetchAulas();
-  };
-
-  // Função para editar aula
-  const handleEditarAula = (aula: LearningLesson) => {
-    navigate(`/formacao/aulas/${aula.id}`);
-  };
-
-  // Função para excluir aula
-  const handleExcluirAula = async (aulaId: string) => {
+      return data;
+    },
+    enabled: !!moduloId
+  });
+  
+  // Função para excluir o módulo
+  const handleDelete = async () => {
+    setIsDeleting(true);
     try {
-      // Primeiro excluir materiais relacionados
-      const { error: materiaisError } = await supabase
-        .from('learning_resources')
-        .delete()
-        .eq('lesson_id', aulaId);
-      
-      if (materiaisError) throw materiaisError;
-      
-      // Depois excluir vídeos relacionados
-      const { error: videosError } = await supabase
-        .from('learning_lesson_videos')
-        .delete()
-        .eq('lesson_id', aulaId);
-      
-      if (videosError) throw videosError;
-      
-      // Finalmente excluir a aula
       const { error } = await supabase
-        .from('learning_lessons')
+        .from('learning_modules')
         .delete()
-        .eq('id', aulaId);
-      
+        .eq('id', moduloId);
+        
       if (error) throw error;
-      
-      toast.success("Aula excluída com sucesso!");
-      fetchAulas();
+      toast.success("Módulo excluído com sucesso!");
+      navigate(`/formacao/cursos/${cursoId}`);
     } catch (error) {
-      console.error("Erro ao excluir aula:", error);
-      toast.error("Não foi possível excluir a aula. Verifique se não há dependências.");
+      console.error("Erro ao excluir módulo:", error);
+      toast.error("Ocorreu um erro ao excluir o módulo. Tente novamente.");
+    } finally {
+      setIsDeleting(false);
+      setConfirmOpen(false);
     }
   };
-
-  if (loading) {
+  
+  const isLoading = isLoadingModulo || isLoadingAulas;
+  
+  if (isLoading) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
+      <div className="container py-8">Carregando detalhes do módulo...</div>
     );
   }
-
+  
   if (!modulo) {
     return (
-      <div className="text-center py-12">
+      <div className="container py-8">
         <h2 className="text-xl font-semibold">Módulo não encontrado</h2>
         <p className="text-muted-foreground mt-2 mb-4">O módulo que você está procurando não existe ou foi removido.</p>
-        <Button onClick={() => navigate('/formacao/cursos')}>Voltar para Cursos</Button>
+        <Button onClick={() => navigate(`/formacao/cursos/${cursoId}`)}>Voltar para o curso</Button>
       </div>
     );
   }
 
-  const courseId = modulo.course_id;
-  const courseTitle = modulo.learning_courses?.title || 'Curso';
-
   return (
-    <div className="space-y-6">
-      <div className="flex items-center space-x-2">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => navigate(`/formacao/cursos/${courseId}`)}
-        >
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Voltar para {courseTitle}
-        </Button>
-      </div>
+    <div className="container py-6">
+      <Button
+        variant="ghost"
+        className="mb-4"
+        onClick={() => navigate(`/formacao/cursos/${cursoId}`)}
+      >
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Voltar para o curso
+      </Button>
       
       <ModuloHeader 
         modulo={modulo} 
-        onEdit={() => {}} 
-        isAdmin={isAdmin} 
+        cursoTitle={modulo.learning_courses?.title || ""}
       />
-
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Aulas</h2>
-        {isAdmin && (
-          <NovaAulaButton 
-            moduleId={id || ''} 
-            buttonText="Nova Aula"
-            onSuccess={handleSuccess}
-          />
-        )}
+      
+      <div className="flex justify-end my-4">
+        <Button onClick={() => setOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nova Aula
+        </Button>
       </div>
       
       <AulasList 
-        aulas={aulas} 
-        loading={loadingAulas} 
-        onEdit={handleEditarAula}
-        onDelete={handleExcluirAula}
-        isAdmin={isAdmin}
+        aulas={aulas || []} 
+        moduloId={moduloId!}
+        cursoId={cursoId!}
+        onSuccess={refetchAulas}
+      />
+      
+      <div className="flex justify-end mt-8">
+        <Button variant="destructive" onClick={() => setConfirmOpen(true)}>
+          Excluir Módulo
+        </Button>
+      </div>
+      
+      {/* Modals */}
+      <NovoModuloDialog 
+        open={open} 
+        onOpenChange={setOpen} 
+        modulo={null}
+        cursoId={cursoId!}
+        onSuccess={refetchAulas}
+      />
+      
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Tem certeza que deseja excluir este módulo?"
+        description="Esta ação é irreversível. Todas as aulas associadas a este módulo também serão excluídas."
+        onConfirm={handleDelete}
+        isLoading={isDeleting}
       />
     </div>
   );

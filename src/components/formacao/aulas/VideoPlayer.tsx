@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -130,7 +131,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       const youtubeId = getYoutubeVideoId(video.url);
       
       if (youtubeId) {
-        return <YoutubeEmbed youtubeId={youtubeId} title={video.title} />;
+        return <YoutubeEmbed youtubeId={youtubeId} title={video.title || ''} />;
       } else {
         return (
           <div className="aspect-video bg-rose-50 flex items-center justify-center">

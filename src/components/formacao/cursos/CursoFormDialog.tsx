@@ -64,7 +64,7 @@ export const CursoFormDialog = ({
       title: curso?.title || "",
       description: curso?.description || "",
       cover_image_url: curso?.cover_image_url || "",
-      published: curso?.published || false,
+      published: curso?.is_published || false,
     },
   });
   
@@ -75,7 +75,7 @@ export const CursoFormDialog = ({
         title: curso.title || "",
         description: curso.description || "",
         cover_image_url: curso.cover_image_url || "",
-        published: curso.published || false,
+        published: curso.is_published || false,
       });
     }
   }, [curso, form]);

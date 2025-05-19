@@ -135,8 +135,8 @@ export function CursosList({ cursos, loading, onEdit, onDelete, isAdmin }: Curso
               <CardDescription className="line-clamp-2">{curso.description || "Sem descrição"}</CardDescription>
               
               <div className="flex flex-wrap gap-2 mt-2">
-                <Badge variant={curso.published ? "default" : "outline"}>
-                  {curso.published ? "Publicado" : "Rascunho"}
+                <Badge variant={curso.is_published ? "default" : "outline"}>
+                  {curso.is_published ? "Publicado" : "Rascunho"}
                 </Badge>
                 
                 {/* Indicador de acesso */}

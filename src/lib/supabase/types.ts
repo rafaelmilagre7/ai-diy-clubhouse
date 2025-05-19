@@ -169,6 +169,9 @@ export type LearningLessonVideo = {
   updated_at: string;
   video_id?: string;
   video_type?: string;
+  video_file_path?: string;
+  video_file_name?: string;
+  file_size_bytes?: number;
 };
 
 export type LearningModule = {
@@ -180,8 +183,15 @@ export type LearningModule = {
   created_at: string;
   updated_at: string;
   is_published?: boolean;
+  published?: boolean; // Alias para compatibilidade
   lessons_count?: number;
   total_duration_minutes?: number;
+  cover_image_url?: string;
+  learning_courses?: {
+    id: string;
+    title: string;
+    description?: string;
+  };
 };
 
 export type LearningCourse = {
@@ -192,10 +202,14 @@ export type LearningCourse = {
   created_at: string;
   updated_at: string;
   is_published?: boolean;
+  published?: boolean; // Alias para compatibilidade
   modules_count?: number;
   lessons_count?: number;
   total_duration_minutes?: number;
   slug?: string;
+  module_count?: number; // Alias para compatibilidade
+  lesson_count?: number; // Alias para compatibilidade
+  is_restricted?: boolean;
 };
 
 export type LearningProgress = {

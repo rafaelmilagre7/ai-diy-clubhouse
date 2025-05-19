@@ -62,7 +62,7 @@ export const ModuloFormDialog = ({
       title: modulo?.title || "",
       description: modulo?.description || "",
       cover_image_url: modulo?.cover_image_url || "",
-      published: modulo?.published || false,
+      published: modulo?.is_published || false,
     },
   });
 
@@ -75,7 +75,7 @@ export const ModuloFormDialog = ({
         title: modulo.title || "",
         description: modulo.description || "",
         cover_image_url: modulo.cover_image_url || "",
-        published: modulo.published || false,
+        published: modulo.is_published || false,
       });
     } else if (open) {
       console.log("Inicializando formulário para novo módulo");
@@ -87,7 +87,7 @@ export const ModuloFormDialog = ({
         published: false,
       });
     }
-  }, [modulo, open, form.reset]);
+  }, [modulo, open, form]);
 
   const onSubmit = async (values: ModuloFormValues) => {
     setIsSubmitting(true);
