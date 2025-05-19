@@ -85,7 +85,8 @@ serve(async (req: Request) => {
       
       const components = [];
       if (templateParams) {
-        const parameters = Object.entries(templateParams).map(([_, value]) => ({
+        // Converter os parâmetros para o formato esperado pela API do WhatsApp
+        const parameters = Object.entries(templateParams).map(([param, value]) => ({
           type: "text",
           text: value
         }));
@@ -103,6 +104,9 @@ serve(async (req: Request) => {
         language: { code: templateLanguage },
         components: components.length > 0 ? components : undefined
       };
+
+      console.log("Enviando template:", templateName);
+      console.log("Componentes do template:", components);
 
     } else if (messageType === "text" && textContent) {
       messagePayload.recipient_type = "individual";

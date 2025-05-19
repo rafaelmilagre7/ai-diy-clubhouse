@@ -44,7 +44,7 @@ export function useCreateReferral() {
       setSuccess(true);
       setReferralToken(result.token || null);
       
-      // Preparar mensagem personalizada para WhatsApp
+      // Preparar mensagem personalizada para WhatsApp/Email
       const typeText = data.type === 'club' ? 'Viver de IA Club' : 'Formação Viver de IA';
       const referrerName = profile?.name || user?.email?.split('@')[0] || 'Um membro do Viver de IA';
       

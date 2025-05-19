@@ -98,19 +98,24 @@ serve(async (req: Request) => {
     // Se tiver número de WhatsApp e a flag estiver ativada, enviar também por WhatsApp
     if (useWhatsapp && whatsappNumber) {
       try {
-        // Preparar mensagem para WhatsApp
-        const whatsappMessage = 
-          `Olá! ${referrerName || 'Um amigo'} te convidou para conhecer o *${typeText}*. ` +
-          `${message ? `\n\n"${message}"\n\n` : '\n\n'}` +
-          `Clique no link abaixo para se registrar:\n${invitationUrl}\n\n` +
-          `Este convite é válido por 30 dias.`;
-
-        // Enviar usando a função de WhatsApp
+        const templateName = "member_invitation";
+        
+        // Preparar parâmetros para o template do WhatsApp
+        const templateParams = {
+          param1: "", // Nome do destinatário (não temos esse dado)
+          param2: typeText, // Nome do produto
+          param3: message || "", // Mensagem personalizada
+          param4: invitationUrl // Link de convite
+        };
+        
+        // Enviar usando a função de WhatsApp com template
         const whatsappResponse = await supabaseClient.functions.invoke("send-whatsapp-message", {
           body: {
             phoneNumber: whatsappNumber,
-            messageType: "text",
-            textContent: whatsappMessage
+            messageType: "template",
+            templateName: templateName,
+            templateLanguage: "pt_BR",
+            templateParams: templateParams
           }
         });
         
