@@ -12,6 +12,8 @@ export type LearningLessonVideo = Database['public']['Tables']['learning_lesson_
 export type LearningModule = Database['public']['Tables']['learning_modules']['Row'];
 export type LearningCourse = Database['public']['Tables']['learning_courses']['Row'] & {
   is_restricted?: boolean;
+  module_count?: number;
+  lesson_count?: number;
 };
 export type LearningProgress = Database['public']['Tables']['learning_progress']['Row'];
 export type LearningResource = Database['public']['Tables']['learning_resources']['Row'];
@@ -25,6 +27,7 @@ export type Solution = Database['public']['Tables']['solutions']['Row'] & {
 
 export type Module = Database['public']['Tables']['modules']['Row'] & {
   checklist?: any[];
+  videos?: any[];
 };
 
 export type UserProfile = Database['public']['Tables']['profiles']['Row'] & {

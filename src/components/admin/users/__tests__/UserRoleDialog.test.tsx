@@ -30,7 +30,7 @@ describe('UserRoleDialog', () => {
       name: 'member', 
       description: 'Membro', 
       is_system: true, 
-      permissions: [] as string[], // Alterado de {} para array de strings
+      permissions: [] as string[], 
       created_at: '2024-01-01T00:00:00Z' 
     },
     { 
@@ -38,7 +38,7 @@ describe('UserRoleDialog', () => {
       name: 'admin', 
       description: 'Administrador', 
       is_system: true, 
-      permissions: [] as string[], // Alterado de {} para array de strings
+      permissions: [] as string[], 
       created_at: '2024-01-01T00:00:00Z'
     }
   ];
