@@ -1,24 +1,16 @@
 
-// Este arquivo está sendo mantido para compatibilidade
-// Ele reexporta funcionalidades dos arquivos mais específicos
+// Re-exportação dos utilitários de perfil para manter compatibilidade
+export * from './profileUtils/stringGenerator';
 
-import { 
-  validateRole, 
-  validateUserRole,
-  determineRoleFromEmail, 
-  isSuperAdmin 
-} from './profileUtils/roleValidation';
-
-import {
-  getUserProfile as fetchUserProfile,
-  createUserProfile as createUserProfileIfNeeded
-} from './profileUtils/userProfileFunctions';
-
+// Exportação das funções de validação de perfil
 export {
-  validateRole,
   validateUserRole,
   determineRoleFromEmail,
-  isSuperAdmin,
+  isSuperAdmin
+} from './profileUtils/roleValidation';
+
+// Exportação das funções de gerenciamento de perfil
+export {
   fetchUserProfile,
-  createUserProfileIfNeeded
-};
+  updateUserProfile
+} from './profileUtils/userProfileFunctions';

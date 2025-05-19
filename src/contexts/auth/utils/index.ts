@@ -1,48 +1,15 @@
 
-// Importações necessárias
-import { 
-  validateRole,
+// Re-exportação dos utilitários de autenticação
+export * from './authUtils';
+// Exportação das funções de validação de perfil
+export {
   validateUserRole,
   determineRoleFromEmail,
-  isSuperAdmin 
+  isSuperAdmin
 } from './profileUtils/roleValidation';
 
-import {
-  getUserProfile,
-  createUserProfile
-} from './profileUtils/userProfileFunctions';
-
-// Exportações
+// Exportação das funções de gerenciamento de perfil
 export {
-  validateRole,
-  validateUserRole,
-  determineRoleFromEmail,
-  isSuperAdmin,
-  getUserProfile,
-  createUserProfile
-};
-
-// Outras exportações
-export * from './profileUtils';
-export * from './testAuth/createTestUser';
-
-// Funções de autenticação
-export function signInWithGoogle() {
-  // Implementação básica
-  console.log("Função signInWithGoogle chamada");
-}
-
-export function signInAsTestMember() {
-  // Implementação básica
-  console.log("Função signInAsTestMember chamada");
-}
-
-export function signInAsTestAdmin() {
-  // Implementação básica
-  console.log("Função signInAsTestAdmin chamada");
-}
-
-export function signOutUser() {
-  // Implementação básica
-  console.log("Função signOutUser chamada");
-}
+  fetchUserProfile,
+  updateUserProfile
+} from './profileUtils/userProfileFunctions';
