@@ -1,108 +1,63 @@
-
 import { supabase } from "@/lib/supabase";
-import { generateTempId } from "@/utils/stringGenerator";
+import { User } from "@supabase/supabase-js";
 import type { UserProfile } from "@/lib/supabase/types";
 
 /**
- * Busca o perfil do usuário
+ * Busca os dados do perfil de um usuário no Supabase
  * @param userId ID do usuário
- * @returns Perfil do usuário
+ * @returns Objeto com os dados do perfil
  */
-export async function getUserProfile(userId: string): Promise<UserProfile | null> {
-  if (!userId) return null;
-  
+export async function fetchUserProfile(userId: string): Promise<UserProfile | null> {
+  if (!userId) {
+    console.error("ID de usuário não fornecido para busca de perfil");
+    return null;
+  }
+
   try {
-    const { data, error } = await supabase
+    const { data: profile, error } = await supabase
       .from('profiles')
       .select('*, user_roles:role_id(id, name, description, permissions)')
       .eq('id', userId)
       .single();
-    
-    if (error) throw error;
-    return data as UserProfile;
-  } catch (error) {
-    console.error("Erro ao buscar perfil do usuário:", error);
-    return null;
-  }
-}
 
-/**
- * Cria um perfil de usuário caso não exista
- * @param userId ID do usuário
- * @param userData Dados do usuário
- * @returns Perfil criado ou existente
- */
-export async function createUserProfile(
-  userId: string, 
-  userData: { email?: string; name?: string; avatar_url?: string; role?: string }
-): Promise<UserProfile | null> {
-  if (!userId) return null;
-  
-  try {
-    // Verificar se o perfil já existe
-    const { data: existingProfile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-    
-    if (existingProfile) {
-      return existingProfile as UserProfile;
+    if (error) {
+      console.error("Erro ao buscar perfil:", error);
+      return null;
     }
-    
-    // Criar novo perfil se não existir
-    const newProfile = {
-      id: userId,
-      name: userData.name || 'Usuário',
-      email: userData.email || '',
-      avatar_url: userData.avatar_url || null,
-      role: userData.role || 'member',
-      created_at: new Date().toISOString()
-    };
-    
-    const { data, error } = await supabase
-      .from('profiles')
-      .insert([newProfile])
-      .select('*')
-      .single();
-    
-    if (error) throw error;
-    return data as UserProfile;
+
+    return profile as UserProfile;
   } catch (error) {
-    console.error("Erro ao criar perfil:", error);
+    console.error("Erro ao processar perfil:", error);
     return null;
   }
 }
 
 /**
- * Atualiza o perfil de usuário
+ * Atualiza os dados do perfil de um usuário no Supabase
  * @param userId ID do usuário
- * @param profileData Dados do perfil a serem atualizados
- * @returns Perfil atualizado
+ * @param updates Objeto com os dados a serem atualizados
+ * @returns Booleano indicando sucesso ou falha
  */
-export async function updateUserProfile(
-  userId: string,
-  profileData: Partial<UserProfile>
-): Promise<UserProfile | null> {
-  if (!userId) return null;
-  
+export async function updateUserProfile(userId: string, updates: Partial<UserProfile>): Promise<boolean> {
+  if (!userId) {
+    console.error("ID de usuário não fornecido para atualização de perfil");
+    return false;
+  }
+
   try {
-    // Não permitir atualização de campos críticos
-    const safeData = { ...profileData };
-    delete safeData.id;
-    delete safeData.created_at;
-    
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('profiles')
-      .update(safeData)
-      .eq('id', userId)
-      .select('*')
-      .single();
-    
-    if (error) throw error;
-    return data as UserProfile;
+      .update(updates)
+      .eq('id', userId);
+
+    if (error) {
+      console.error("Erro ao atualizar perfil:", error);
+      return false;
+    }
+
+    return true;
   } catch (error) {
-    console.error("Erro ao atualizar perfil:", error);
-    return null;
+    console.error("Erro ao processar atualização de perfil:", error);
+    return false;
   }
 }

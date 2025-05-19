@@ -1,9 +1,9 @@
 
 export interface VideoFormValues {
   id?: string;
-  title?: string; // Agora é opcional
+  title?: string;  // Agora é opcional
   description?: string;
-  url: string; // Mantido como obrigatório
+  url: string;     // Mantido como obrigatório
   type?: string;
   video_id?: string;
   filePath?: string;
