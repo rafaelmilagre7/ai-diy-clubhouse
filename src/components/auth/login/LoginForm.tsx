@@ -84,7 +84,7 @@ const LoginForm = () => {
         isLoading={isLoading}
       />
       
-      <div className="text-center text-sm text-white/60 mt-4">
+      <div className="text-center text-sm text-white mt-4">
         <p>O acesso à plataforma é exclusivo para membros convidados</p>
       </div>
     </div>

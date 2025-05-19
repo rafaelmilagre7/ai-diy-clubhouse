@@ -43,20 +43,20 @@ const AuthLayout = () => {
             </CardContent>
           </Card>
 
-          <div className="mt-8 text-center text-sm text-white/80 space-y-2">
-            <p className="text-base">
+          <div className="mt-8 text-center text-sm text-white space-y-2">
+            <p className="text-base text-white font-medium">
               Acesso exclusivo para membros do VIVER DE IA Club
             </p>
-            <p>
+            <p className="text-white/90">
               Não possui uma conta?{" "}
               <span className="font-medium text-white">
                 O cadastro é feito apenas por convite
               </span>
             </p>
-            <p>
+            <p className="text-white/90">
               Se você recebeu um convite, acesse o link enviado por email para ativar sua conta
             </p>
-            <p>
+            <p className="text-white/90">
               Dúvidas ou mais informações?{" "}
               <a
                 href="https://milagredigital.com/club/"
