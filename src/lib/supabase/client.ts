@@ -29,3 +29,46 @@ export const testConnection = async () => {
   }
 };
 
+// Função para garantir que um bucket de armazenamento existe
+export const ensureStorageBucketExists = async (bucketName: string) => {
+  try {
+    // Verificar se o bucket já existe
+    const { data: existingBuckets, error: listError } = await supabase.storage.listBuckets();
+    
+    if (listError) {
+      console.error('Erro ao listar buckets:', listError);
+      return false;
+    }
+    
+    const bucketExists = existingBuckets.some(bucket => bucket.name === bucketName);
+    
+    if (bucketExists) {
+      console.log(`Bucket ${bucketName} já existe`);
+      return true;
+    }
+    
+    // Se não existir, criar o bucket
+    const { data, error } = await supabase.storage.createBucket(bucketName, {
+      public: true, // Ajuste conforme necessário para segurança
+      fileSizeLimit: 50 * 1024 * 1024 // 50MB de limite por arquivo
+    });
+    
+    if (error) {
+      console.error(`Erro ao criar bucket ${bucketName}:`, error);
+      return false;
+    }
+    
+    console.log(`Bucket ${bucketName} criado com sucesso:`, data);
+    return true;
+  } catch (error) {
+    console.error(`Erro ao verificar/criar bucket ${bucketName}:`, error);
+    
+    // Em ambiente de desenvolvimento, simular sucesso para continuar
+    if (import.meta.env.DEV) {
+      console.warn('Ambiente de desenvolvimento detectado. Simulando sucesso na criação do bucket.');
+      return true;
+    }
+    
+    return false;
+  }
+};

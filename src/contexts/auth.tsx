@@ -1,19 +1,21 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
-import { Profile } from "@/lib/supabase/types";
+import { UserProfile } from "@/lib/supabase/types";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
 interface AuthContextType {
   user: User | null;
-  profile: Profile | null;
+  profile: UserProfile | null;
   isAdmin: boolean;
   isFormacao: boolean;
   isLoading: boolean;
   session: Session | null;
   signOut: () => Promise<void>;
-  setProfile: (profile: Profile | null) => void;
+  signIn: (email: string, password: string) => Promise<void>;
+  signInAsMember: () => Promise<void>;
+  signInAsAdmin: () => Promise<void>;
+  setProfile: (profile: UserProfile | null) => void;
   setIsLoading: (loading: boolean) => void;
 }
 
@@ -25,6 +27,9 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   session: null,
   signOut: async () => {},
+  signIn: async () => {},
+  signInAsMember: async () => {},
+  signInAsAdmin: async () => {},
   setProfile: () => {},
   setIsLoading: () => {},
 });
@@ -35,7 +40,7 @@ export const useAuth = () => useContext(AuthContext);
 // Provedor do contexto de autenticação
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -63,7 +68,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             name: 'Desenvolvimento',
             email: 'dev@example.com',
             role: 'admin',
-          } as Profile;
+          } as UserProfile;
           
           setUser(mockUser);
           setProfile(mockProfile);
@@ -96,7 +101,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.error("AuthProvider: Erro ao buscar perfil:", profileError.message);
           } else if (profileData) {
             console.log("AuthProvider: Perfil carregado:", profileData.id);
-            setProfile(profileData as Profile);
+            setProfile(profileData as UserProfile);
           }
         }
         
@@ -128,7 +133,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (profileError && event === 'SIGNED_IN') {
               console.error("AuthProvider: Erro ao buscar perfil após login:", profileError.message);
             } else if (profileData) {
-              setProfile(profileData as Profile);
+              setProfile(profileData as UserProfile);
             }
           }
         } else {
@@ -175,7 +180,64 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
   
-  // Contexto autenticação
+  // Funções de login/signin que estão faltando
+  const signIn = async (email: string, password: string) => {
+    try {
+      // Se estamos usando Google (email e senha vazios)
+      if (!email && !password) {
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: window.location.origin,
+          }
+        });
+        
+        if (error) throw error;
+        
+        // O redirecionamento será manipulado pelo próprio supabase
+        return;
+      }
+      
+      // Login com email e senha
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) throw error;
+      
+      setUser(data.user);
+      setSession(data.session);
+    } catch (error: any) {
+      console.error("Erro ao fazer login:", error);
+      toast.error(error.message || "Falha ao fazer login");
+      throw error;
+    }
+  };
+  
+  // Implementação do login como membro (para testes)
+  const signInAsMember = async () => {
+    try {
+      await signIn("member@teste.com", "password123");
+      toast.success("Login como membro realizado com sucesso");
+    } catch (error) {
+      toast.error("Erro ao fazer login como membro");
+      throw error;
+    }
+  };
+  
+  // Implementação do login como admin (para testes)
+  const signInAsAdmin = async () => {
+    try {
+      await signIn("admin@teste.com", "admin123");
+      toast.success("Login como admin realizado com sucesso");
+    } catch (error) {
+      toast.error("Erro ao fazer login como admin");
+      throw error;
+    }
+  };
+  
+  // Contexto autenticação atualizado com as novas funções
   const value = {
     user,
     profile,
@@ -184,6 +246,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     isLoading,
     session,
     signOut,
+    signIn,
+    signInAsMember,
+    signInAsAdmin,
     setProfile,
     setIsLoading,
   };

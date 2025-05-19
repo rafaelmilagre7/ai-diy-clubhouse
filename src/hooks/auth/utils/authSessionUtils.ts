@@ -1,31 +1,31 @@
 
-import { supabase } from "@/lib/supabase";
-import { UserProfile } from "@/lib/supabase/types";
+import { User } from '@supabase/supabase-js';
+import { UserProfile } from '@/lib/supabase/types';
+import { supabase } from '@/lib/supabase';
 
-/**
- * Processa o perfil do usuário após login ou alteração de sessão
- */
-export const processUserProfile = async (userId: string): Promise<UserProfile | null> => {
-  if (!userId) return null;
+export const processUserProfile = async (user: User): Promise<UserProfile | null> => {
+  if (!user || !user.id) return null;
   
   try {
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select(`
-        *,
-        user_roles:role_id (id, name, description, permissions)
-      `)
-      .eq('id', userId)
+    const { data: profileData, error: profileError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", user.id)
       .single();
-
-    if (error) {
-      console.error('Erro ao buscar perfil:', error);
+      
+    if (profileError) {
+      console.error("Erro ao buscar perfil do usuário:", profileError);
       return null;
     }
-
-    return profile as UserProfile;
+    
+    if (!profileData) {
+      console.warn("Perfil do usuário não encontrado");
+      return null;
+    }
+    
+    return profileData as UserProfile;
   } catch (error) {
-    console.error('Erro ao processar perfil de usuário:', error);
+    console.error("Erro inesperado ao processar perfil de usuário:", error);
     return null;
   }
 };
