@@ -1298,6 +1298,33 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          email_enabled: boolean
+          id: string
+          updated_at: string
+          user_id: string
+          whatsapp_enabled: boolean
+        }
+        Insert: {
+          created_at?: string
+          email_enabled?: boolean
+          id?: string
+          updated_at?: string
+          user_id: string
+          whatsapp_enabled?: boolean
+        }
+        Update: {
+          created_at?: string
+          email_enabled?: boolean
+          id?: string
+          updated_at?: string
+          user_id?: string
+          whatsapp_enabled?: boolean
+        }
+        Relationships: []
+      }
       onboarding: {
         Row: {
           additional_context: string | null
@@ -2331,6 +2358,7 @@ export type Database = {
           role: string
           role_id: string | null
           successful_referrals_count: number
+          whatsapp_number: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -2344,6 +2372,7 @@ export type Database = {
           role?: string
           role_id?: string | null
           successful_referrals_count?: number
+          whatsapp_number?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -2357,6 +2386,7 @@ export type Database = {
           role?: string
           role_id?: string | null
           successful_referrals_count?: number
+          whatsapp_number?: string | null
         }
         Relationships: [
           {
@@ -3478,6 +3508,45 @@ export type Database = {
         Update: {
           created_at?: string
           id?: number
+        }
+        Relationships: []
+      }
+      whatsapp_messages: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          message_content: string
+          message_type: string
+          phone_number: string
+          sent_at: string | null
+          status: string
+          template_name: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message_content: string
+          message_type: string
+          phone_number: string
+          sent_at?: string | null
+          status?: string
+          template_name?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message_content?: string
+          message_type?: string
+          phone_number?: string
+          sent_at?: string | null
+          status?: string
+          template_name?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

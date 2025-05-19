@@ -5,15 +5,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 import { useCreateReferral } from "@/hooks/referrals/useCreateReferral";
 import { ReferralFormData } from "@/lib/supabase/types";
+import { PhoneInput } from "../ui/phone-input";
 
 export function ReferralForm({ onSuccess }: { onSuccess?: () => void }) {
-  const [formData, setFormData] = useState<ReferralFormData>({
+  const [formData, setFormData] = useState<ReferralFormData & { whatsappNumber?: string; useWhatsapp?: boolean }>({
     email: "",
     type: "club",
-    notes: ""
+    notes: "",
+    whatsappNumber: "",
+    useWhatsapp: false
   });
   
   const { submitReferral, isSubmitting, success, resetForm } = useCreateReferral();
@@ -27,15 +31,30 @@ export function ReferralForm({ onSuccess }: { onSuccess?: () => void }) {
     setFormData(prev => ({ ...prev, type: value as 'club' | 'formacao' }));
   };
 
+  const handleWhatsappChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({ ...prev, useWhatsapp: e.target.checked }));
+  };
+
+  const handlePhoneChange = (value: string) => {
+    setFormData(prev => ({ ...prev, whatsappNumber: value }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = await submitReferral(formData);
+    const result = await submitReferral({
+      ...formData,
+      whatsappNumber: formData.useWhatsapp ? formData.whatsappNumber : undefined
+    });
+    
     if (result?.success) {
       setFormData({
         email: "",
         type: "club",
-        notes: ""
+        notes: "",
+        whatsappNumber: "",
+        useWhatsapp: false
       });
+      
       if (onSuccess) {
         onSuccess();
       }
@@ -73,6 +92,35 @@ export function ReferralForm({ onSuccess }: { onSuccess?: () => void }) {
             <Label htmlFor="formacao" className="font-normal">Formação Viver de IA</Label>
           </div>
         </RadioGroup>
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center space-x-2">
+          <Checkbox 
+            id="useWhatsapp" 
+            checked={formData.useWhatsapp}
+            onCheckedChange={(checked) => 
+              setFormData(prev => ({ ...prev, useWhatsapp: checked === true }))
+            }
+          />
+          <Label htmlFor="useWhatsapp">Enviar também por WhatsApp</Label>
+        </div>
+        
+        {formData.useWhatsapp && (
+          <div className="mt-3 space-y-2">
+            <Label htmlFor="whatsappNumber">Número de WhatsApp da pessoa</Label>
+            <PhoneInput
+              id="whatsappNumber"
+              placeholder="+55 (99) 99999-9999"
+              value={formData.whatsappNumber}
+              onChange={handlePhoneChange}
+              required={formData.useWhatsapp}
+            />
+            <p className="text-sm text-muted-foreground">
+              Inclua o código do país e DDD
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="space-y-2">

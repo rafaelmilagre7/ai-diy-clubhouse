@@ -14,6 +14,8 @@ interface ReferralInvitation {
   referrerName: string;
   type: 'club' | 'formacao';
   message?: string;
+  whatsappNumber?: string; // Adicionado para suporte ao WhatsApp
+  useWhatsapp?: boolean;   // Indicador se deve usar WhatsApp
 }
 
 serve(async (req: Request) => {
@@ -30,7 +32,15 @@ serve(async (req: Request) => {
     );
     
     // Extrair dados da requisição
-    const { email, referralToken, referrerName, type, message }: ReferralInvitation = await req.json();
+    const { 
+      email, 
+      referralToken, 
+      referrerName, 
+      type, 
+      message, 
+      whatsappNumber, 
+      useWhatsapp 
+    }: ReferralInvitation = await req.json();
     
     if (!email || !referralToken) {
       return new Response(
@@ -49,34 +59,96 @@ serve(async (req: Request) => {
     // Definir o texto com base no tipo de indicação
     const typeText = type === 'club' ? 'Viver de IA Club' : 'Formação Viver de IA';
     
-    // Construir o corpo do e-mail
-    const emailBody = `
-      <h1>Você foi convidado para o ${typeText}!</h1>
-      <p>${referrerName || 'Um amigo'} te convidou para conhecer o ${typeText}.</p>
-      ${message ? `<p>"${message}"</p>` : ''}
-      <p>Clique no link abaixo para se registrar:</p>
-      <p><a href="${invitationUrl}" style="background-color: #3445FF; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">Aceitar Convite</a></p>
-      <p>Ou acesse este link: <a href="${invitationUrl}">${invitationUrl}</a></p>
-      <p>Este convite é válido por 30 dias.</p>
-    `;
+    // Variável para controlar sucesso
+    let emailSent = false;
+    let whatsappSent = false;
+    let errors = [];
     
     // Enviar e-mail usando a função do Supabase
-    const { error } = await supabaseClient.functions.invoke("send-email", {
-      body: {
-        to: email,
-        subject: `${referrerName || 'Um amigo'} te convidou para o ${typeText}!`,
-        html: emailBody
+    try {
+      // Construir o corpo do e-mail
+      const emailBody = `
+        <h1>Você foi convidado para o ${typeText}!</h1>
+        <p>${referrerName || 'Um amigo'} te convidou para conhecer o ${typeText}.</p>
+        ${message ? `<p>"${message}"</p>` : ''}
+        <p>Clique no link abaixo para se registrar:</p>
+        <p><a href="${invitationUrl}" style="background-color: #3445FF; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">Aceitar Convite</a></p>
+        <p>Ou acesse este link: <a href="${invitationUrl}">${invitationUrl}</a></p>
+        <p>Este convite é válido por 30 dias.</p>
+      `;
+      
+      const { error } = await supabaseClient.functions.invoke("send-email", {
+        body: {
+          to: email,
+          subject: `${referrerName || 'Um amigo'} te convidou para o ${typeText}!`,
+          html: emailBody
+        }
+      });
+      
+      if (error) {
+        throw error;
       }
-    });
+      
+      emailSent = true;
+    } catch (emailError) {
+      console.error("Erro ao enviar email de convite:", emailError);
+      errors.push({ type: "email", message: emailError.message });
+    }
     
-    if (error) {
-      throw error;
+    // Se tiver número de WhatsApp e a flag estiver ativada, enviar também por WhatsApp
+    if (useWhatsapp && whatsappNumber) {
+      try {
+        // Preparar mensagem para WhatsApp
+        const whatsappMessage = 
+          `Olá! ${referrerName || 'Um amigo'} te convidou para conhecer o *${typeText}*. ` +
+          `${message ? `\n\n"${message}"\n\n` : '\n\n'}` +
+          `Clique no link abaixo para se registrar:\n${invitationUrl}\n\n` +
+          `Este convite é válido por 30 dias.`;
+
+        // Enviar usando a função de WhatsApp
+        const whatsappResponse = await supabaseClient.functions.invoke("send-whatsapp-message", {
+          body: {
+            phoneNumber: whatsappNumber,
+            messageType: "text",
+            textContent: whatsappMessage
+          }
+        });
+        
+        if (whatsappResponse.error) {
+          throw whatsappResponse.error;
+        }
+        
+        whatsappSent = true;
+      } catch (whatsappError) {
+        console.error("Erro ao enviar convite via WhatsApp:", whatsappError);
+        errors.push({ type: "whatsapp", message: whatsappError.message });
+      }
+    }
+    
+    // Definir o status conforme os resultados
+    let status = 200;
+    let message = "Convite enviado com sucesso";
+    let success = emailSent || whatsappSent;
+    
+    if (!success) {
+      status = 500;
+      message = "Não foi possível enviar o convite por nenhum dos canais";
+    } else if (errors.length > 0) {
+      message = "Convite enviado parcialmente";
     }
     
     return new Response(
-      JSON.stringify({ success: true, message: "Convite enviado com sucesso" }),
+      JSON.stringify({
+        success,
+        message,
+        channels: {
+          email: { sent: emailSent },
+          whatsapp: { sent: whatsappSent }
+        },
+        errors: errors.length > 0 ? errors : undefined
+      }),
       { 
-        status: 200, 
+        status, 
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       }
     );

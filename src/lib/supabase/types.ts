@@ -1,3 +1,4 @@
+
 export * from './types/database.types';
 
 export type UserRole = 'admin' | 'member' | 'formacao';
@@ -13,6 +14,7 @@ export interface UserProfile {
   role_id?: string; // Adicionando o role_id
   user_roles?: any; // Interface para a relação com a tabela user_roles
   created_at: string;
+  whatsapp_number?: string | null; // Adicionando o campo whatsapp_number
 }
 
 // Interface expandida para incluir todas as propriedades utilizadas no código
@@ -260,4 +262,30 @@ export interface ReferralFormData {
   email: string;
   type: 'club' | 'formacao';
   notes?: string;
+  whatsappNumber?: string; // Adicionado para suporte ao WhatsApp
+  useWhatsapp?: boolean;   // Flag para indicar se deve usar WhatsApp
+}
+
+// Interface para preferências de notificação
+export interface NotificationPreferences {
+  id?: string;
+  user_id?: string;
+  email_enabled: boolean;
+  whatsapp_enabled: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Interface para mensagens do WhatsApp
+export interface WhatsAppMessage {
+  id: string;
+  user_id?: string;
+  phone_number: string;
+  message_type: string;
+  message_content: string;
+  template_name?: string;
+  status: 'pending' | 'sent' | 'delivered' | 'read' | 'failed';
+  error_message?: string;
+  sent_at?: string;
+  created_at: string;
 }

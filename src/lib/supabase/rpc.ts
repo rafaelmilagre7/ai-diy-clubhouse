@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 
 /**
@@ -248,5 +247,124 @@ export async function processReferral(token: string, userId: string): Promise<{
   } catch (error: any) {
     console.error('Erro ao processar indicação:', error);
     return { success: false, message: error.message };
+  }
+}
+
+/**
+ * Enviar mensagem para número de WhatsApp
+ * @param phoneNumber Número de telefone com código do país (ex: +5511999999999)
+ * @param messageType Tipo da mensagem: 'template', 'text' ou 'media'
+ * @param options Opções adicionais para a mensagem
+ */
+export async function sendWhatsAppMessage(
+  phoneNumber: string, 
+  messageType: 'template' | 'text' | 'media',
+  options: {
+    templateName?: string;
+    templateParams?: Record<string, string>;
+    textContent?: string;
+    mediaUrl?: string;
+    userId?: string;
+  }
+): Promise<{
+  success: boolean;
+  message?: string;
+  data?: any;
+}> {
+  try {
+    const { data, error } = await supabase.functions.invoke('send-whatsapp-message', {
+      body: {
+        phoneNumber,
+        messageType,
+        ...options
+      }
+    });
+
+    if (error) {
+      console.error('Erro ao enviar mensagem WhatsApp:', error);
+      return { success: false, message: error.message };
+    }
+
+    return data;
+  } catch (err: any) {
+    console.error('Erro ao enviar mensagem WhatsApp:', err);
+    return { success: false, message: err.message };
+  }
+}
+
+/**
+ * Salva as preferências de notificação do usuário
+ * @param userId ID do usuário
+ * @param preferences Preferências de notificação
+ */
+export async function saveNotificationPreferences(
+  userId: string,
+  preferences: {
+    email_enabled?: boolean;
+    whatsapp_enabled?: boolean;
+  }
+): Promise<{
+  success: boolean;
+  message?: string;
+}> {
+  try {
+    // Verificar se já existem preferências
+    const { data: existingPrefs } = await supabase
+      .from('notification_preferences')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+    
+    if (existingPrefs) {
+      // Atualizar preferências existentes
+      const { error } = await supabase
+        .from('notification_preferences')
+        .update(preferences)
+        .eq('user_id', userId);
+      
+      if (error) throw error;
+    } else {
+      // Criar novas preferências
+      const { error } = await supabase
+        .from('notification_preferences')
+        .insert({
+          user_id: userId,
+          ...preferences
+        });
+      
+      if (error) throw error;
+    }
+    
+    return { success: true };
+  } catch (err: any) {
+    console.error('Erro ao salvar preferências de notificação:', err);
+    return { success: false, message: err.message };
+  }
+}
+
+/**
+ * Atualiza o número de WhatsApp do usuário
+ * @param userId ID do usuário
+ * @param whatsappNumber Número de WhatsApp com código do país
+ */
+export async function updateWhatsAppNumber(
+  userId: string,
+  whatsappNumber: string
+): Promise<{
+  success: boolean;
+  message?: string;
+}> {
+  try {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ whatsapp_number: whatsappNumber })
+      .eq('id', userId);
+    
+    if (error) throw error;
+    
+    return { success: true };
+  } catch (err: any) {
+    console.error('Erro ao atualizar número de WhatsApp:', err);
+    return { success: false, message: err.message };
   }
 }

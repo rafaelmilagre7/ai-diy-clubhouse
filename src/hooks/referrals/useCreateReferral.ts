@@ -6,6 +6,11 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import type { ReferralFormData } from '@/lib/supabase/types';
 
+interface ExtendedReferralFormData extends ReferralFormData {
+  whatsappNumber?: string;
+  useWhatsapp?: boolean;
+}
+
 export function useCreateReferral() {
   const { user, profile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -13,7 +18,7 @@ export function useCreateReferral() {
   const [error, setError] = useState<string | null>(null);
   const [referralToken, setReferralToken] = useState<string | null>(null);
 
-  const submitReferral = async (data: ReferralFormData) => {
+  const submitReferral = async (data: ExtendedReferralFormData) => {
     try {
       setIsSubmitting(true);
       setError(null);
@@ -35,7 +40,7 @@ export function useCreateReferral() {
       setSuccess(true);
       setReferralToken(result.token || null);
       
-      // Enviar email de convite
+      // Enviar email/WhatsApp de convite
       try {
         await supabase.functions.invoke('send-referral-invitation', {
           body: {
@@ -43,16 +48,18 @@ export function useCreateReferral() {
             referralToken: result.token,
             referrerName: profile?.name || user?.email,
             type: data.type,
-            message: data.notes
+            message: data.notes,
+            whatsappNumber: data.whatsappNumber,
+            useWhatsapp: data.useWhatsapp
           }
         });
         
         toast.success('Indicação criada com sucesso!', {
-          description: 'Um e-mail com o convite foi enviado para a pessoa indicada.'
+          description: 'Um convite foi enviado para a pessoa indicada.'
         });
-      } catch (emailError: any) {
-        console.error('Erro ao enviar email de convite:', emailError);
-        toast.warning('Indicação criada, mas houve um erro ao enviar o email', {
+      } catch (sendError: any) {
+        console.error('Erro ao enviar convite:', sendError);
+        toast.warning('Indicação criada, mas houve um erro ao enviar o convite', {
           description: 'A pessoa indicada pode se registrar usando o link de convite.'
         });
       }
