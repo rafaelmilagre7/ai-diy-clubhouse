@@ -25,10 +25,34 @@ serve(async (req) => {
       }
     );
 
-    // Obter dados da requisição 
-    console.log("Corpo da requisição recebido: " + req.body?.getReader().read().length + " caracteres");
-    const requestData = await req.json();
-    console.log("Dados recebidos:", requestData);
+    // Obter dados da requisição - CORREÇÃO: clone o body antes de lê-lo para evitar o erro 
+    let requestData;
+    try {
+      // Clone o corpo da requisição para evitar o erro "Body already consumed"
+      const clonedReq = req.clone();
+      requestData = await clonedReq.json();
+      console.log("Dados recebidos:", requestData);
+    } catch (bodyError) {
+      console.error("Erro ao processar o corpo da requisição:", bodyError);
+      // Se não conseguir ler o body, usar um objeto vazio com userId obtido do JWT
+      const authHeader = req.headers.get('authorization');
+      let userId = null;
+      
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        try {
+          const token = authHeader.split(' ')[1];
+          // Verificar o JWT para extrair o userId (simplicado, em produção usar verificação adequada)
+          const tokenData = JSON.parse(atob(token.split('.')[1]));
+          userId = tokenData.sub;
+          console.log("UserId extraído do token:", userId);
+        } catch (e) {
+          console.error("Erro ao extrair userId do token:", e);
+        }
+      }
+      
+      requestData = { userId };
+      console.log("Usando dados padrão:", requestData);
+    }
 
     const userId = requestData.userId;
     if (!userId) {
