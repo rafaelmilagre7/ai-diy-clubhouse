@@ -132,11 +132,12 @@ export const ImplementationTrailCreator = () => {
             difficulty_level,
             estimated_time_minutes,
             cover_image_url,
-            learning_module:module_id (
+            module_id,
+            learning_modules:module_id (
               id,
               title,
               course_id,
-              learning_course:course_id (
+              learning_courses:course_id (
                 id,
                 title
               )
@@ -148,14 +149,24 @@ export const ImplementationTrailCreator = () => {
 
         // Mapear lições com prioridade e justificativa
         const enrichedLessons = lessonsData.map(lesson => {
-          const recommendationData = trail.recommended_lessons.find(l => l.lessonId === lesson.id);
+          const recommendationData = trail.recommended_lessons?.find(l => l.lessonId === lesson.id);
+          
+          // Acessar dados do módulo e curso corretamente
+          const moduleData = lesson.learning_modules;
+          let courseData = null;
+          
+          if (moduleData && moduleData.learning_courses) {
+            // Corrigindo aqui: learning_courses é um objeto, não um array
+            courseData = moduleData.learning_courses;
+          }
+          
           return {
             ...lesson,
             priority: recommendationData?.priority || 2,
             justification: recommendationData?.justification || "Recomendado com base no seu perfil",
             module: {
-              ...lesson.learning_module,
-              course: lesson.learning_module?.learning_course
+              ...moduleData,
+              course: courseData
             }
           };
         });
