@@ -2,12 +2,12 @@
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
 
-// Sign in with Google - esta função está desativada
+// Esta função está completamente desativada
 export const signInWithGoogle = async (): Promise<void> => {
-  // A funcionalidade de login com Google foi desativada
+  // A funcionalidade de login com Google foi removida
   toast({
-    title: 'Funcionalidade desativada',
-    description: 'O login com Google não está mais disponível.',
+    title: 'Funcionalidade indisponível',
+    description: 'O login com Google não está mais disponível na plataforma.',
     variant: 'destructive',
   });
 };

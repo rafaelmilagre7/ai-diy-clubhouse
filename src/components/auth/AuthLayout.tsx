@@ -34,7 +34,7 @@ const AuthLayout = () => {
               <CardTitle className="text-2xl text-center text-white font-heading">
                 Acesse sua conta
               </CardTitle>
-              <CardDescription className="text-white/80 text-center text-base">
+              <CardDescription className="text-white/90 text-center text-base">
                 Entre para acessar suas soluções de IA
               </CardDescription>
             </CardHeader>
@@ -43,7 +43,7 @@ const AuthLayout = () => {
             </CardContent>
           </Card>
 
-          <div className="mt-8 text-center text-sm text-white/80 space-y-2">
+          <div className="mt-8 text-center text-sm text-white/90 space-y-2">
             <p className="text-base font-medium text-white">
               Acesso exclusivo para membros do VIVER DE IA Club
             </p>

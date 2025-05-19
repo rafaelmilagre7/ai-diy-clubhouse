@@ -29,7 +29,7 @@ const EmailPasswordForm = ({
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email" className="text-white">Email</Label>
+        <Label htmlFor="email" className="text-white font-medium">Email</Label>
         <Input
           id="email"
           type="email"
@@ -39,13 +39,13 @@ const EmailPasswordForm = ({
           disabled={isLoading}
           required
           autoComplete="username"
-          className="bg-[#1A1E2E]/80 border-[#3a3f54] text-white placeholder:text-white/50 focus:border-viverblue"
+          className="bg-[#1A1E2E]/80 border-[#3a3f54] text-white placeholder:text-white/60 focus:border-viverblue"
         />
       </div>
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label htmlFor="password" className="text-white">Senha</Label>
+          <Label htmlFor="password" className="text-white font-medium">Senha</Label>
           <Link
             to="/reset-password"
             className="text-xs text-viverblue hover:underline hover:text-viverblue/90 font-medium"
@@ -62,7 +62,7 @@ const EmailPasswordForm = ({
           disabled={isLoading}
           required
           autoComplete="current-password"
-          className="bg-[#1A1E2E]/80 border-[#3a3f54] text-white placeholder:text-white/50 focus:border-viverblue"
+          className="bg-[#1A1E2E]/80 border-[#3a3f54] text-white placeholder:text-white/60 focus:border-viverblue"
         />
       </div>
 

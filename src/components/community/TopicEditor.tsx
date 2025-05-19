@@ -177,7 +177,7 @@ export function TopicEditor({ content, onChange, placeholder = "Conteúdo..." }:
         className="min-h-[200px] max-h-[500px] overflow-y-auto p-3 focus:outline-none"
         onInput={updateContent}
         dangerouslySetInnerHTML={{ __html: content }}
-        placeholder={placeholder}
+        data-placeholder={placeholder}
       />
     </div>
   );
