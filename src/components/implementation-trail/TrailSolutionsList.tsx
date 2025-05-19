@@ -1,22 +1,24 @@
-
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import { Solution } from "@/lib/supabase";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import React from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Star, Gauge, Sparkles, Zap, Clock } from "lucide-react";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Solution } from "@/lib/supabase";
+import { Clock, ArrowRight } from "lucide-react";
 
-interface TrailSolution extends Solution {
-  priority: number;
-  justification: string;
+// Define uma interface TrailSolution baseada em Solution
+export interface TrailSolution extends Solution {
+  status?: string;
+  progress?: number;
+  next_step?: string;
+  is_locked?: boolean;
 }
 
 interface TrailSolutionsListProps {
   solutions: TrailSolution[];
+  isLoading?: boolean;
+  onSelect?: (solutionId: string) => void;
 }
 
-export const TrailSolutionsList: React.FC<TrailSolutionsListProps> = ({ solutions }) => {
+export const TrailSolutionsList: React.FC<TrailSolutionsListProps> = ({ solutions, isLoading, onSelect }) => {
   const navigate = useNavigate();
   
   // Agrupar soluções por prioridade
