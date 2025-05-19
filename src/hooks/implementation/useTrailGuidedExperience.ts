@@ -94,8 +94,8 @@ export const useTrailGuidedExperience = () => {
 
     try {
       if (shouldRegenerate) {
-        // Passamos um objeto vazio como parâmetro para atender à assinatura da função
-        await generateImplementationTrail({});
+        // Chamamos sem parâmetros ou com null
+        await generateImplementationTrail(null);
         toast.success("Trilha personalizada gerada com sucesso!");
       }
       

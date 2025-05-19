@@ -96,8 +96,8 @@ export const ImplementationTrail = () => {
   }, [trail]);
 
   const handleRegenerateTrail = async () => {
-    // Passamos um objeto vazio como parâmetro para atender à assinatura da função
-    await generateImplementationTrail({});
+    // Chamamos sem enviar parâmetros, que agora é válido
+    await generateImplementationTrail(null);
   };
 
   const handleSolutionClick = (id: string) => {

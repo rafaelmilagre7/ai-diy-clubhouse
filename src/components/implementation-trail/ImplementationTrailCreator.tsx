@@ -179,7 +179,8 @@ export const ImplementationTrailCreator = () => {
       setRecommendedCourses([]);
       
       toast.info("Gerando sua trilha personalizada...");
-      await generateImplementationTrail({}, true); // Forçando regeneração completa da trilha
+      // Chamamos sem dados de onboarding ou com null
+      await generateImplementationTrail(null, true); // Forçando regeneração completa da trilha
       
       toast.success("Trilha de implementação gerada com sucesso!");
     } catch (error) {

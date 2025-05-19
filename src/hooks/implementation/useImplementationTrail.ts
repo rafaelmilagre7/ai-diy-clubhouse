@@ -162,7 +162,8 @@ export const useImplementationTrail = () => {
   }, [loadTrailData]);
 
   // Função para gerar trilha de implementação
-  const generateImplementationTrail = useCallback(async (onboardingData: OnboardingProgress | null = null, forceRegenerate = false) => {
+  // Modificamos esta função para aceitar onboardingData como null ou parcial
+  const generateImplementationTrail = useCallback(async (onboardingData: Partial<OnboardingProgress> | null = null, forceRegenerate = false) => {
     // Verificações de segurança
     if (!user) {
       toast.error("Você precisa estar logado para gerar uma trilha");
@@ -263,7 +264,7 @@ export const useImplementationTrail = () => {
       
       // Adicionar dados de onboarding se disponíveis
       if (onboardingData) {
-        // Simplificar dados de onboarding para evitar payload muito grande
+        // Garantir que temos pelo menos objetos vazios para dados obrigatórios
         requestData = {
           ...requestData,
           personal_info: onboardingData.personal_info || {},
