@@ -1,3 +1,4 @@
+
 import { supabase } from './client';
 
 /**
@@ -145,8 +146,14 @@ export async function createReferral(email: string, type: 'club' | 'formacao', n
   expires_at?: string;
 }> {
   try {
+    // Correção: Obter o ID do usuário atual adequadamente
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData?.user?.id) {
+      return { success: false, message: "Usuário não autenticado" };
+    }
+
     const { data, error } = await supabase.rpc('create_referral', {
-      p_referrer_id: supabase.auth.getUser().then(res => res.data.user?.id),
+      p_referrer_id: userData.user.id, // Agora passando o ID diretamente
       p_email: email,
       p_type: type,
       p_notes: notes
