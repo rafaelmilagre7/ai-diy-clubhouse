@@ -1,10 +1,11 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { GripVertical } from "lucide-react";
 import { PandaVideoEmbed } from "@/components/formacao/comum/PandaVideoEmbed";
-import { VideoFormValues, VideoItemProps } from '../types/VideoTypes';
+import { VideoFormValues } from '@/lib/supabase';
 
 interface VideoItemProps {
   video: VideoFormValues;

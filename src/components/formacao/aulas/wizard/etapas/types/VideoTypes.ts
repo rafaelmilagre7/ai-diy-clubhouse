@@ -11,6 +11,7 @@ export interface VideoItemProps {
   onRemove: () => void;
   onChange: (field: string, value: any) => void;
   onEmbedChange: (embedCode: string, videoId: string, url: string, thumbnailUrl: string) => void;
+  dragHandleProps?: any;
 }
 
 export interface VideoListProps {

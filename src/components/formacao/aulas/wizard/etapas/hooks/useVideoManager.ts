@@ -52,7 +52,8 @@ export function useVideoManager(form: UseFormReturn<AulaFormValues>): VideoManag
       video_id: videoId,
       filePath: videoId,
       thumbnail_url: thumbnailUrl,
-      embedCode: embedCode
+      embedCode: embedCode,
+      title: newVideos[index].title || "Vídeo sem título"
     } as VideoFormValues;
     
     form.setValue("videos", newVideos, { shouldValidate: true });
@@ -68,7 +69,7 @@ export function useVideoManager(form: UseFormReturn<AulaFormValues>): VideoManag
     const currentVideos = form.getValues().videos || [];
     form.setValue("videos", [...currentVideos, { 
       id: `temp-video-${currentVideos.length}-${Date.now()}`,
-      title: "", 
+      title: "Novo vídeo", 
       description: "", 
       url: "", 
       type: "panda",

@@ -1,5 +1,4 @@
 
-// Atualizar a importação para usar o caminho correto
 import { VideoFormValues } from '@/lib/supabase';
 import { supabase } from "@/lib/supabase";
 
@@ -48,7 +47,7 @@ export const videoService = {
   },
 };
 
-// Adicionando a função fetchLessonVideos que está faltando
+// Função para buscar vídeos de uma lição específica
 export async function fetchLessonVideos(lessonId: string): Promise<VideoFormValues[]> {
   try {
     // Buscar vídeos da lição do banco de dados
@@ -68,7 +67,7 @@ export async function fetchLessonVideos(lessonId: string): Promise<VideoFormValu
       id: video.id,
       title: video.title,
       description: video.description || '',
-      type: video.type || 'panda',
+      type: video.video_type || 'panda',
       url: video.url || '',
       video_id: video.video_id || '',
       filePath: video.file_path || '',
@@ -76,7 +75,7 @@ export async function fetchLessonVideos(lessonId: string): Promise<VideoFormValu
       duration_seconds: video.duration_seconds || 0,
       thumbnail_url: video.thumbnail_url || '',
       embedCode: video.embed_code || '',
-      fileName: video.file_name || '',
+      fileName: video.video_file_name || '',
     }));
   } catch (error) {
     console.error('Erro ao buscar vídeos da aula:', error);
@@ -84,7 +83,7 @@ export async function fetchLessonVideos(lessonId: string): Promise<VideoFormValu
   }
 }
 
-// Adicionando a função saveVideosForLesson que é importada em lessonService.ts
+// Função para salvar vídeos de uma lição
 export async function saveVideosForLesson(
   lessonId: string,
   videos: VideoFormValues[]
