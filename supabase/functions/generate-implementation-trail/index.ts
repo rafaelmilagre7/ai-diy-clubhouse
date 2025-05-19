@@ -1,6 +1,12 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.29.0'
 
+// Configuração CORS para permitir chamadas do frontend
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
 // Tipos para triagem de soluções e recomendações
 interface ScoredSolution {
   solution: any;
@@ -25,6 +31,11 @@ interface ImplementationTrail {
 
 // Manipulador principal para a função de borda
 Deno.serve(async (req) => {
+  // Tratar preflight CORS OPTIONS
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+  
   try {
     console.log("Edge function invocada: generate-implementation-trail");
     
@@ -39,14 +50,61 @@ Deno.serve(async (req) => {
     console.log(`Configurando cliente Supabase com URL: ${supabaseUrl}`);
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
+    // Processar corpo da requisição de forma segura
+    let requestData;
+    try {
+      const bodyText = await req.text();
+      console.log("Corpo da requisição recebido:", bodyText.length, "caracteres");
+      
+      if (!bodyText || bodyText.trim() === '') {
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            message: 'Corpo da requisição vazio' 
+          }),
+          { 
+            status: 400, 
+            headers: { 
+              ...corsHeaders, 
+              'Content-Type': 'application/json' 
+            } 
+          }
+        );
+      }
+      
+      requestData = JSON.parse(bodyText);
+    } catch (parseError) {
+      console.error("Erro ao analisar corpo da requisição:", parseError);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          message: `Erro ao analisar corpo da requisição: ${parseError.message}`,
+          error: 'JSON_PARSE_ERROR'
+        }),
+        { 
+          status: 400, 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
+        }
+      );
+    }
+    
     // Obter dados da requisição
-    const { userId, hasOnboardingData, ...onboardingData } = await req.json();
-    console.log(`Dados recebidos:`, { userId, hasOnboardingData, ...onboardingData });
+    const { userId, hasOnboardingData, ...onboardingData } = requestData;
+    console.log(`Dados recebidos:`, { 
+      userId, 
+      hasOnboardingData,
+      hasPersonalInfo: !!onboardingData?.personal_info, 
+      hasProfessionalInfo: !!onboardingData?.professional_info,
+      hasBusinessGoals: !!onboardingData?.business_goals
+    });
     
     if (!userId) {
       return new Response(
         JSON.stringify({ success: false, message: 'ID do usuário é obrigatório' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
@@ -57,7 +115,10 @@ Deno.serve(async (req) => {
       .select('*')
       .eq('published', true);
       
-    if (solutionsError) throw solutionsError;
+    if (solutionsError) {
+      console.error("Erro ao buscar soluções:", solutionsError);
+      throw solutionsError;
+    }
     console.log(`Encontradas ${solutions?.length || 0} soluções publicadas`);
     
     // Buscar cursos publicados para recomendação
@@ -66,7 +127,9 @@ Deno.serve(async (req) => {
       .select('*')
       .eq('published', true);
       
-    if (coursesError) console.error("Erro ao buscar cursos:", coursesError);
+    if (coursesError) {
+      console.error("Erro ao buscar cursos:", coursesError);
+    }
     console.log(`Encontrados ${courses?.length || 0} cursos publicados para integração`);
     
     // Verificar se existe uma trilha para o usuário
@@ -107,34 +170,79 @@ Deno.serve(async (req) => {
       aiExperience: 0
     };
     
-    if (hasOnboarding) {
+    // Usar dados do onboarding ou dados passados na requisição
+    const dataToUse = hasOnboardingData && Object.keys(onboardingData).length > 0 
+      ? onboardingData 
+      : onboarding || {};
+    
+    if (dataToUse) {
       // Extrair objetivos de negócio
-      const businessGoals = onboarding.business_goals || {};
-      if (businessGoals.primary_goal) {
+      const businessGoals = dataToUse.business_goals || {};
+      if (typeof businessGoals === 'string') {
+        try {
+          const parsedGoals = JSON.parse(businessGoals);
+          if (parsedGoals.primary_goal) {
+            personalizationData.goals.push(parsedGoals.primary_goal);
+          }
+          if (Array.isArray(parsedGoals.expected_outcomes)) {
+            personalizationData.goals = [
+              ...personalizationData.goals,
+              ...parsedGoals.expected_outcomes.slice(0, 4)
+            ];
+          }
+        } catch (e) {
+          console.error("Erro ao parsear business_goals como string:", e);
+        }
+      } else if (businessGoals.primary_goal) {
         personalizationData.goals.push(businessGoals.primary_goal);
-      }
-      
-      if (Array.isArray(businessGoals.expected_outcomes)) {
-        personalizationData.goals = [
-          ...personalizationData.goals,
-          ...businessGoals.expected_outcomes.slice(0, 4)
-        ];
+        
+        if (Array.isArray(businessGoals.expected_outcomes)) {
+          personalizationData.goals = [
+            ...personalizationData.goals,
+            ...businessGoals.expected_outcomes.slice(0, 4)
+          ];
+        }
       }
       
       // Extrair informações profissionais e da empresa
-      if (onboarding.professional_info) {
-        personalizationData.industry = onboarding.professional_info.company_sector || '';
-        personalizationData.companySize = onboarding.professional_info.company_size || '';
+      let professionalInfo = dataToUse.professional_info;
+      
+      // Verificar se professionalInfo é string e tentar parsear
+      if (typeof professionalInfo === 'string') {
+        try {
+          professionalInfo = JSON.parse(professionalInfo);
+        } catch (e) {
+          console.error("Erro ao parsear professional_info como string:", e);
+          professionalInfo = {};
+        }
+      }
+      
+      if (professionalInfo && typeof professionalInfo === 'object') {
+        personalizationData.industry = professionalInfo.company_sector || '';
+        personalizationData.companySize = professionalInfo.company_size || '';
       }
       
       // Extrair nível de experiência com IA
-      if (onboarding.ai_experience && typeof onboarding.ai_knowledge_level === 'string') {
-        const knowledgeLevel = onboarding.ai_knowledge_level.toLowerCase();
+      let aiExperience = dataToUse.ai_experience;
+      let aiKnowledgeLevel = dataToUse.ai_knowledge_level;
+      
+      // Verificar se aiExperience é string e tentar parsear
+      if (typeof aiExperience === 'string') {
+        try {
+          aiExperience = JSON.parse(aiExperience);
+          aiKnowledgeLevel = aiExperience.knowledge_level;
+        } catch (e) {
+          console.error("Erro ao parsear ai_experience como string:", e);
+        }
+      }
+      
+      if (aiKnowledgeLevel && typeof aiKnowledgeLevel === 'string') {
+        const knowledgeLevel = aiKnowledgeLevel.toLowerCase();
         if (knowledgeLevel.includes('iniciante')) {
           personalizationData.aiExperience = 1;
-        } else if (knowledgeLevel.includes('intermediário')) {
+        } else if (knowledgeLevel.includes('intermediário') || knowledgeLevel.includes('intermediario')) {
           personalizationData.aiExperience = 2;
-        } else if (knowledgeLevel.includes('avançado')) {
+        } else if (knowledgeLevel.includes('avançado') || knowledgeLevel.includes('avancado')) {
           personalizationData.aiExperience = 3;
         }
       }
@@ -180,15 +288,40 @@ Deno.serve(async (req) => {
       
       // Encontrar cursos relacionados à solução (baseado em tags, categoria)
       const matchedCourses = courses?.filter(course => {
+        // Verificar se os objetos têm as propriedades necessárias
+        if (!course || !solution) return false;
+        
+        // Garantir que temos strings para comparar
+        const courseTitle = String(course.title || '');
+        const courseDesc = String(course.description || '');
+        const solutionTitle = String(solution.title || '');
+        const solutionDesc = String(solution.description || '');
+        
         // Simplificação: considerar match com base no título/descrição
-        // Em uma versão mais robusta, poderíamos usar tags ou outras metadados
-        const courseKeywords = (course.title + ' ' + (course.description || '')).toLowerCase();
-        const solutionKeywords = (solution.title + ' ' + solution.description).toLowerCase();
+        const courseKeywords = (courseTitle + ' ' + courseDesc).toLowerCase();
+        const solutionKeywords = (solutionTitle + ' ' + solutionDesc).toLowerCase();
+        
+        // Verificar tags se existirem
+        let tagMatch = false;
+        if (Array.isArray(solution.tags)) {
+          tagMatch = solution.tags.some((tag: string) => 
+            tag && courseKeywords.includes(String(tag).toLowerCase())
+          );
+        }
+        
+        // Verificar categoria se existir
+        let categoryMatch = false;
+        if (solution.category) {
+          categoryMatch = courseKeywords.includes(String(solution.category).toLowerCase());
+        }
         
         // Verificar palavras-chave em comum
-        return solution.tags?.some((tag: string) => courseKeywords.includes(tag)) || 
-               courseKeywords.includes(solution.category?.toLowerCase()) ||
-               solutionKeywords.includes(course.title.toLowerCase());
+        let keywordMatch = false;
+        if (courseTitle && solutionTitle) {
+          keywordMatch = solutionKeywords.includes(courseTitle.toLowerCase());
+        }
+        
+        return tagMatch || categoryMatch || keywordMatch;
       }) || [];
       
       return {
@@ -237,18 +370,36 @@ Deno.serve(async (req) => {
       priority: 3
     }));
     
-    // Extrair recomendações de cursos
-    const courseRecommendations = scoredSolutions
-      .filter(item => item.matchedCourses && item.matchedCourses.length > 0)
-      .flatMap(item => item.matchedCourses.map(course => ({
-        courseId: course.id,
-        justification: `Curso recomendado para complementar a solução ${item.solution.title}`,
-        priority: item.priority || 1
-      })))
-      // Remover duplicatas baseadas no courseId
-      .filter((course, index, self) => 
-        index === self.findIndex((c) => c.courseId === course.courseId)
-      );
+    // Extrair recomendações de cursos de forma segura
+    let courseRecommendations: {courseId: string, justification?: string, priority?: number}[] = [];
+    
+    try {
+      // Lista para rastrear IDs de cursos já processados
+      const processedCourseIds = new Set<string>();
+      
+      // Coletar todos os cursos correspondentes em todas as soluções pontuadas
+      courseRecommendations = scoredSolutions
+        .filter(item => item.matchedCourses && item.matchedCourses.length > 0)
+        .flatMap(item => 
+          (item.matchedCourses || [])
+            .filter(course => course && course.id && !processedCourseIds.has(course.id))
+            .map(course => {
+              // Marcar este ID de curso como processado
+              if (course.id) processedCourseIds.add(course.id);
+              
+              return {
+                courseId: course.id,
+                justification: `Curso recomendado para complementar a solução ${item.solution.title || 'selecionada'}`,
+                priority: item.priority || 1
+              };
+            })
+        )
+        .filter(rec => rec && rec.courseId); // Filtrar recomendações inválidas
+    } catch (courseError) {
+      console.error("Erro ao processar recomendações de cursos:", courseError);
+      // Em caso de erro, usar array vazio
+      courseRecommendations = [];
+    }
     
     // Montar objeto final de recomendações
     const recommendations: ImplementationTrail = {
@@ -262,7 +413,7 @@ Deno.serve(async (req) => {
       priority1Count: priority1.length,
       priority2Count: priority2.length,
       priority3Count: priority3.length,
-      hasMatchedCourses: courseRecommendations.length > 0
+      coursesRecommendedCount: courseRecommendations.length
     });
     
     // Salvar no banco de dados
@@ -282,7 +433,10 @@ Deno.serve(async (req) => {
         .select()
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao atualizar trilha existente:", error);
+        throw error;
+      }
       result = data;
       console.log(`Trilha existente atualizada com sucesso`);
     } else {
@@ -298,7 +452,10 @@ Deno.serve(async (req) => {
         .select()
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao criar nova trilha:", error);
+        throw error;
+      }
       result = data;
       console.log(`Nova trilha criada com sucesso`);
     }
@@ -309,7 +466,7 @@ Deno.serve(async (req) => {
         message: 'Trilha gerada com sucesso', 
         trail: result 
       }),
-      { headers: { 'Content-Type': 'application/json' } }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
     
   } catch (error) {
@@ -321,7 +478,7 @@ Deno.serve(async (req) => {
         message: 'Erro ao gerar trilha: ' + (error.message || 'Erro desconhecido'),
         error: error.message 
       }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

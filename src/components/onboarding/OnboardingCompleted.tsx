@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Edit, Map, Loader2 } from "lucide-react";
@@ -11,13 +11,14 @@ import { ReviewStep } from "@/components/onboarding/steps/ReviewStep";
 
 export const OnboardingCompleted = () => {
   const navigate = useNavigate();
-  const { progress, isLoading, refreshProgress } = useProgress();
-  const { generateImplementationTrail, regenerating } = useImplementationTrail();
+  const { progress, isLoading: progressLoading, refreshProgress } = useProgress();
+  const { generateImplementationTrail, regenerating, hasContent: trailExists } = useImplementationTrail();
   
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [hasShownConfetti, setHasShownConfetti] = useState(false);
   const [isGeneratingTrail, setIsGeneratingTrail] = useState(false);
   const [trailGenerated, setTrailGenerated] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   
   // Efeito para carregar dados atualizados
   useEffect(() => {
@@ -50,15 +51,25 @@ export const OnboardingCompleted = () => {
     }
   }, [isInitialLoad, progress, hasShownConfetti]);
 
+  // Efeito para verificar se a trilha já existe e definir estado
+  useEffect(() => {
+    if (trailExists) {
+      setTrailGenerated(true);
+    }
+  }, [trailExists]);
+
   // Função para navegar para uma etapa específica para edição
-  const handleNavigateToStep = (stepId: string) => {
+  const handleNavigateToStep = useCallback((stepId: string) => {
+    if (isNavigating) return;
+    
+    setIsNavigating(true);
     console.log("[OnboardingCompleted] Navegando para editar etapa:", stepId);
     navigate(`/onboarding/${stepId}`);
-  };
+  }, [navigate, isNavigating]);
 
   // Função para gerar a trilha de implementação
-  const handleGenerateTrail = async () => {
-    if (!progress || isGeneratingTrail || trailGenerated) {
+  const handleGenerateTrail = useCallback(async () => {
+    if (!progress || isGeneratingTrail || trailGenerated || isNavigating || regenerating) {
       return;
     }
 
@@ -75,10 +86,36 @@ export const OnboardingCompleted = () => {
         
         // Pequeno delay para garantir que o usuário veja a mensagem de sucesso
         setTimeout(() => {
-          navigate("/implementation-trail");
+          if (!isNavigating) {
+            setIsNavigating(true);
+            navigate("/implementation-trail");
+          }
         }, 800);
       } else {
-        toast.error("Não foi possível gerar sua trilha. Por favor, tente novamente.");
+        toast.error("Não foi possível gerar sua trilha. Tentando novamente em 3 segundos...");
+        
+        // Tentar novamente após 3 segundos (apenas uma vez)
+        setTimeout(async () => {
+          toast.info("Tentando gerar trilha novamente...");
+          const retryTrail = await generateImplementationTrail(progress, true);
+          
+          if (retryTrail) {
+            toast.success("Trilha de implementação gerada com sucesso na segunda tentativa!");
+            setTrailGenerated(true);
+            
+            setTimeout(() => {
+              if (!isNavigating) {
+                setIsNavigating(true);
+                navigate("/implementation-trail");
+              }
+            }, 800);
+          } else {
+            toast.error("Não foi possível gerar sua trilha. Por favor, tente novamente mais tarde.");
+          }
+          
+          setIsGeneratingTrail(false);
+        }, 3000);
+        return;
       }
     } catch (error) {
       console.error("[OnboardingCompleted] Erro ao gerar trilha:", error);
@@ -86,9 +123,17 @@ export const OnboardingCompleted = () => {
     } finally {
       setIsGeneratingTrail(false);
     }
-  };
+  }, [progress, isGeneratingTrail, trailGenerated, isNavigating, regenerating, generateImplementationTrail, navigate]);
 
-  if (isInitialLoad) {
+  // Navegar para a trilha se já foi gerada
+  const handleViewTrail = useCallback(() => {
+    if (isNavigating) return;
+    
+    setIsNavigating(true);
+    navigate("/implementation-trail");
+  }, [navigate, isNavigating]);
+
+  if (isInitialLoad || progressLoading) {
     return (
       <div className="max-w-4xl mx-auto bg-[#151823] border border-neutral-700/50 rounded-lg shadow-lg p-8 text-center">
         <Loader2 className="animate-spin h-10 w-10 text-[#0ABAB5] mx-auto" />
@@ -112,7 +157,12 @@ export const OnboardingCompleted = () => {
         
         <div className="pt-4">
           <Button
-            onClick={() => navigate("/onboarding")}
+            onClick={() => {
+              if (!isNavigating) {
+                setIsNavigating(true);
+                navigate("/onboarding");
+              }
+            }}
             className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90 text-black font-medium"
           >
             Continuar Onboarding
@@ -150,7 +200,7 @@ export const OnboardingCompleted = () => {
       <div className="flex flex-col md:flex-row justify-center gap-4 pt-4 mt-8">
         <Button
           onClick={handleGenerateTrail}
-          disabled={isGeneratingTrail || regenerating || trailGenerated}
+          disabled={isGeneratingTrail || regenerating || trailGenerated || isNavigating}
           className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90 text-black font-medium flex items-center gap-2"
         >
           {isGeneratingTrail || regenerating ? (
@@ -173,7 +223,8 @@ export const OnboardingCompleted = () => {
         
         {trailGenerated && (
           <Button
-            onClick={() => navigate('/implementation-trail')}
+            onClick={handleViewTrail}
+            disabled={isNavigating}
             variant="outline"
             className="border-[#0ABAB5]/30 text-[#0ABAB5] hover:bg-[#0ABAB5]/10"
           >

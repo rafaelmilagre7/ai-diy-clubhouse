@@ -19,73 +19,100 @@ export const ImplementationTrailCreator = () => {
   const [loadingCourses, setLoadingCourses] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [missingIds, setMissingIds] = useState<string[]>([]);
+  const [isProcessingData, setIsProcessingData] = useState(false);
+  const [courseDataFetched, setCourseDataFetched] = useState(false);
   
   // Processar soluções quando os dados estiverem disponíveis
   useEffect(() => {
     const processSolutions = () => {
+      if (isProcessingData) return;
+      
       if (!trail || !allSolutions?.length) {
         setProcessedSolutions([]);
         return;
       }
 
-      const result = [];
-      const missingIdsList: string[] = [];
-      
-      // Função auxiliar para processar itens por prioridade
-      const processItems = (items: any[] = [], priority: number) => {
-        items.forEach((item: any) => {
-          if (!item || !item.solutionId) return;
-          
-          const solution = allSolutions.find(s => s.id === item.solutionId);
-          if (solution) {
-            result.push({
-              ...solution,
-              ...item,
-              priority
-            });
-          } else {
-            // Registrar IDs de soluções ausentes
-            missingIdsList.push(item.solutionId);
+      try {
+        setIsProcessingData(true);
+        const result = [];
+        const missingIdsList: string[] = [];
+        
+        // Função auxiliar para processar itens por prioridade
+        const processItems = (items: any[] = [], priority: number) => {
+          if (!Array.isArray(items)) {
+            console.warn("Dados de prioridade não são um array:", items);
+            return;
           }
-        });
-      };
-      
-      // Processar cada nível de prioridade
-      processItems((trail as any).priority1 || [], 1);
-      processItems((trail as any).priority2 || [], 2);
-      processItems((trail as any).priority3 || [], 3);
+          
+          items.forEach((item: any) => {
+            if (!item || !item.solutionId) return;
+            
+            const solution = allSolutions.find(s => s.id === item.solutionId);
+            if (solution) {
+              result.push({
+                ...solution,
+                ...item,
+                priority
+              });
+            } else {
+              // Registrar IDs de soluções ausentes
+              missingIdsList.push(item.solutionId);
+            }
+          });
+        };
+        
+        // Processar cada nível de prioridade
+        if (trail.priority1) processItems(trail.priority1, 1);
+        if (trail.priority2) processItems(trail.priority2, 2);
+        if (trail.priority3) processItems(trail.priority3, 3);
 
-      setProcessedSolutions(result);
-      setMissingIds(missingIdsList);
-      
-      // Mostrar aviso se alguma solução não foi encontrada
-      if (missingIdsList.length > 0) {
-        console.warn("Algumas soluções na trilha não foram encontradas:", missingIdsList);
+        setProcessedSolutions(result);
+        setMissingIds(missingIdsList);
+        
+        // Mostrar aviso se alguma solução não foi encontrada
+        if (missingIdsList.length > 0) {
+          console.warn("Algumas soluções na trilha não foram encontradas:", missingIdsList);
+        }
+      } catch (error) {
+        console.error("Erro ao processar soluções:", error);
+      } finally {
+        setIsProcessingData(false);
       }
     };
 
     processSolutions();
-  }, [trail, allSolutions]);
+  }, [trail, allSolutions, isProcessingData]);
   
   // Buscar cursos recomendados
   useEffect(() => {
     const fetchRecommendedCourses = async () => {
-      // Verifica se o trail tem recomendações de cursos
+      // Evitar execução repetida ou quando ainda está processando
+      if (loadingCourses || courseDataFetched || isProcessingData || regenerating || refreshing) {
+        return;
+      }
+      
+      // Verificar se o trail tem recomendações de cursos válidas
       if (!trail?.recommended_courses || !Array.isArray(trail.recommended_courses) || trail.recommended_courses.length === 0) {
         console.log("Sem recomendações de cursos na trilha");
+        setCourseDataFetched(true);
         setRecommendedCourses([]);
         return;
       }
 
       try {
         setLoadingCourses(true);
-        const courseIds = trail.recommended_courses.map((c: any) => c.courseId);
+        const courseIds = trail.recommended_courses
+          .filter(c => c && c.courseId)  // Filtrar entradas inválidas
+          .map(c => c.courseId);
 
         if (courseIds.length === 0) {
           setLoadingCourses(false);
           setRecommendedCourses([]);
+          setCourseDataFetched(true);
           return;
         }
+        
+        console.log("Buscando cursos com IDs:", courseIds);
         
         // Buscar informações dos cursos no banco
         const { data: courses, error } = await supabase
@@ -96,44 +123,64 @@ export const ImplementationTrailCreator = () => {
         
         if (error) {
           console.error("Erro ao buscar cursos recomendados:", error);
-          setLoadingCourses(false);
           setRecommendedCourses([]);
+          setCourseDataFetched(true);
           return;
         }
         
-        // Mapear cursos com justificativas da trilha
-        const coursesWithDetails = courseIds.map(id => {
-          const course = courses?.find(c => c.id === id);
-          const recommendation = trail.recommended_courses.find((r: any) => r.courseId === id);
-          
-          if (course) {
-            return {
-              ...course,
-              justification: recommendation?.justification || "Recomendado para seu perfil",
-              priority: recommendation?.priority || 1
-            };
-          }
-          return null;
-        }).filter(Boolean);
+        console.log("Cursos encontrados:", courses?.length);
         
-        console.log("Cursos processados:", coursesWithDetails);
+        // Mapear cursos com justificativas da trilha
+        const coursesWithDetails = courseIds
+          .map(id => {
+            const course = courses?.find(c => c.id === id);
+            const recommendation = trail.recommended_courses.find(r => r && r.courseId === id);
+            
+            if (course) {
+              return {
+                ...course,
+                justification: recommendation?.justification || "Recomendado para seu perfil",
+                priority: recommendation?.priority || 1
+              };
+            }
+            return null;
+          })
+          .filter(Boolean);
+        
+        console.log("Cursos processados:", coursesWithDetails?.length);
         setRecommendedCourses(coursesWithDetails || []);
+        setCourseDataFetched(true);
       } catch (error) {
         console.error("Erro ao processar cursos recomendados:", error);
         setRecommendedCourses([]);
+        setCourseDataFetched(true);
       } finally {
         setLoadingCourses(false);
       }
     };
 
-    fetchRecommendedCourses();
-  }, [trail]);
+    // Se temos trail mas não temos courseDataFetched, buscar os cursos
+    if (trail && !courseDataFetched && !loadingCourses && !isProcessingData) {
+      fetchRecommendedCourses();
+    }
+  }, [trail, loadingCourses, courseDataFetched, isProcessingData, regenerating, refreshing]);
 
   // Função para gerar a trilha
-  const handleGenerateTrail = async () => {
+  const handleGenerateTrail = useCallback(async () => {
+    // Evitar múltiplas chamadas
+    if (isGenerating || regenerating) {
+      return;
+    }
+
     try {
       setIsGenerating(true);
+      // Limpar estado para permitir re-busca
+      setCourseDataFetched(false);
+      setRecommendedCourses([]);
+      
+      toast.info("Gerando sua trilha personalizada...");
       await generateImplementationTrail({}, true); // Forçando regeneração completa da trilha
+      
       toast.success("Trilha de implementação gerada com sucesso!");
     } catch (error) {
       console.error("Erro ao gerar trilha:", error);
@@ -141,18 +188,22 @@ export const ImplementationTrailCreator = () => {
     } finally {
       setIsGenerating(false);
     }
-  };
+  }, [isGenerating, regenerating, generateImplementationTrail]);
 
   // Função para atualizar a trilha
-  const handleRefreshTrail = async () => {
+  const handleRefreshTrail = useCallback(async () => {
     try {
+      // Limpar estado para permitir re-busca
+      setCourseDataFetched(false);
+      setRecommendedCourses([]);
+      
       await refreshTrail(true); // Forçando atualização completa
       toast.success("Trilha atualizada com sucesso!");
     } catch (error) {
       console.error("Erro ao atualizar trilha:", error);
       toast.error("Erro ao atualizar trilha. Tente novamente.");
     }
-  };
+  }, [refreshTrail]);
 
   // Estado de carregamento
   if (isLoading || solutionsLoading || regenerating || loadingCourses) {
@@ -181,7 +232,10 @@ export const ImplementationTrailCreator = () => {
         <p className="text-neutral-300 mb-4">
           Não foi possível carregar sua trilha personalizada.
         </p>
-        <Button onClick={handleGenerateTrail} disabled={isGenerating || regenerating}>
+        <Button 
+          onClick={handleGenerateTrail} 
+          disabled={isGenerating || regenerating}
+        >
           {isGenerating || regenerating ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -233,7 +287,7 @@ export const ImplementationTrailCreator = () => {
           variant="outline" 
           size="sm" 
           onClick={handleRefreshTrail}
-          disabled={refreshing || regenerating}
+          disabled={refreshing || regenerating || isGenerating}
           className="border-neutral-700 hover:border-[#0ABAB5] hover:bg-[#0ABAB5]/10"
         >
           {refreshing ? (
@@ -280,6 +334,27 @@ export const ImplementationTrailCreator = () => {
             <TrailCoursesList courses={recommendedCourses} />
           </div>
         </>
+      )}
+      
+      {/* Mostrar botão para gerar novamente se não temos recomendações */}
+      {processedSolutions.length === 0 && recommendedCourses.length === 0 && (
+        <div className="pt-6 text-center">
+          <p className="text-neutral-400 mb-4">Não foram encontradas recomendações na sua trilha.</p>
+          <Button 
+            onClick={handleGenerateTrail}
+            disabled={isGenerating || regenerating}
+            className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+          >
+            {isGenerating || regenerating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Gerando...
+              </>
+            ) : (
+              "Gerar Novamente"
+            )}
+          </Button>
+        </div>
       )}
     </div>
   );

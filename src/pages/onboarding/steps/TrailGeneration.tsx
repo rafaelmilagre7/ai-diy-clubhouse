@@ -13,7 +13,7 @@ import { useAuth } from '@/contexts/auth';
 const TrailGeneration = () => {
   const { progress, refreshProgress, updateProgress } = useProgress();
   const { user } = useAuth();
-  const { generateImplementationTrail, regenerating } = useImplementationTrail();
+  const { generateImplementationTrail, regenerating, hasContent: trailExists } = useImplementationTrail();
   const { log, logError } = useLogging();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -24,6 +24,9 @@ const TrailGeneration = () => {
   const [error, setError] = useState<string | null>(null);
   const [autoGenerateTriggered, setAutoGenerateTriggered] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
+  // Novo estado para controlar se já existe uma trilha
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
+  
   const autoGenerate = searchParams.get('autoGenerate') === 'true';
 
   // Verificar se a trilha já existe
@@ -35,6 +38,9 @@ const TrailGeneration = () => {
         // Forçar refresh dos dados para garantir informações atualizadas
         await refreshProgress();
         
+        // Se já verificamos a existência de trilha, não precisamos verificar novamente
+        if (initialCheckDone) return;
+        
         // Se não tiver progresso ou autoGenerate não estiver habilitado, redirecionar
         if (!progress && !autoGenerate) {
           console.log("Dados de onboarding não encontrados, redirecionando para onboarding...");
@@ -43,8 +49,30 @@ const TrailGeneration = () => {
           return;
         }
         
+        // Se já tiver uma trilha gerada
+        if (trailExists) {
+          console.log("Trilha já existe. Verificando se devemos regenerar.");
+          
+          // Se não estiver no modo autoGenerate, apenas redirecionar
+          if (!autoGenerate) {
+            console.log("Não está em modo autoGenerate. Redirecionando para a trilha existente.");
+            setIsRedirecting(true);
+            navigate('/implementation-trail');
+            return;
+          }
+          
+          // Se estiver em modo autoGenerate, verifica se já executamos
+          if (!autoGenerateTriggered) {
+            console.log("Modo autoGenerate com trilha existente. Iniciando regeneração.");
+            setGenerated(false);
+          }
+        }
+        
+        setInitialCheckDone(true);
+        
         // Iniciar geração automática se solicitado
-        if (autoGenerate && !autoGenerateTriggered && !generating && !generated) {
+        if (autoGenerate && !autoGenerateTriggered && !generating && !generated && !isRedirecting) {
+          console.log("Iniciando geração automática da trilha");
           await startTrailGeneration();
         }
       } catch (error) {
@@ -54,7 +82,18 @@ const TrailGeneration = () => {
     };
 
     checkOnboardingStatus();
-  }, [navigate, progress, autoGenerate, autoGenerateTriggered, refreshProgress, generating, generated, isRedirecting]);
+  }, [
+    navigate, 
+    progress, 
+    autoGenerate, 
+    autoGenerateTriggered, 
+    refreshProgress, 
+    generating, 
+    generated, 
+    isRedirecting, 
+    trailExists,
+    initialCheckDone
+  ]);
 
   // Garantir que o progresso de onboarding esteja marcado como completo
   const ensureOnboardingComplete = useCallback(async () => {
@@ -74,8 +113,14 @@ const TrailGeneration = () => {
 
   // Função para iniciar a geração da trilha
   const startTrailGeneration = async () => {
-    if (!progress || !user || generating || generated || isRedirecting) {
+    if (!progress || !user || generating || isRedirecting) {
       toast.error("Dados de usuário ou onboarding não disponíveis");
+      return;
+    }
+    
+    // Evitar múltiplas chamadas se já estiver gerando ou redirecionando
+    if (generating || regenerating) {
+      console.log("Geração já está em andamento, ignorando chamada duplicada");
       return;
     }
     
@@ -90,8 +135,16 @@ const TrailGeneration = () => {
       // Primeiro garante que o onboarding está marcado como completo
       await ensureOnboardingComplete();
       
+      console.log("Iniciando geração de trilha de implementação");
+      
       // Gerar a trilha de implementação
-      const generatedTrail = await generateImplementationTrail(progress);
+      const generatedTrail = await generateImplementationTrail(progress, true);
+      
+      // Se redirecionou durante a geração, interromper
+      if (isRedirecting) {
+        console.log("Redirecionamento detectado durante geração, interrompendo fluxo");
+        return;
+      }
       
       if (generatedTrail) {
         log('trail_generation_success', {});
@@ -103,13 +156,17 @@ const TrailGeneration = () => {
         
         // Redirecionar após um pequeno delay
         setTimeout(() => {
-          setIsRedirecting(true);
-          navigate('/implementation-trail');
+          if (!isRedirecting) {
+            setIsRedirecting(true);
+            navigate('/implementation-trail');
+          }
         }, 1500);
       } else {
         throw new Error("Não foi possível gerar a trilha");
       }
     } catch (error: any) {
+      if (isRedirecting) return;
+      
       console.error("Erro ao gerar trilha de implementação:", error);
       
       logError("trail_generation_error", {
@@ -119,6 +176,10 @@ const TrailGeneration = () => {
       setGenerating(false);
       setError(error instanceof Error ? error.message : "Erro desconhecido ao gerar a trilha");
       toast.error("Não foi possível gerar sua trilha personalizada. Tente novamente.");
+    } finally {
+      if (!isRedirecting) {
+        setGenerating(false);
+      }
     }
   };
 
@@ -145,14 +206,14 @@ const TrailGeneration = () => {
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold text-white">
-            {generating ? "Gerando Sua Trilha..." : 
+            {generating || regenerating ? "Gerando Sua Trilha..." : 
              generated ? "Trilha Gerada com Sucesso!" : 
              error ? "Erro ao Gerar Trilha" : 
              "Vamos Criar Sua Trilha Personalizada"}
           </h2>
           
           <p className="text-viverblue-light mt-2 max-w-md mx-auto">
-            {generating ? 
+            {generating || regenerating ? 
               "Estamos analisando seus dados e identificando as melhores soluções e aulas para você." : 
              generated ? 
               "Sua trilha foi criada com sucesso e está pronta para você começar sua jornada!" : 
@@ -163,7 +224,7 @@ const TrailGeneration = () => {
         </div>
         
         {/* Estado de carregamento */}
-        {generating && (
+        {(generating || regenerating) && (
           <div className="bg-[#151823] p-8 rounded-xl border border-neutral-700/50 text-center">
             <div className="flex flex-col items-center justify-center space-y-4">
               <div className="relative">
@@ -185,7 +246,7 @@ const TrailGeneration = () => {
         )}
         
         {/* Estado de sucesso */}
-        {generated && (
+        {generated && !generating && !regenerating && (
           <div className="bg-[#151823] p-8 rounded-xl border border-green-500/20 text-center">
             <div className="flex flex-col items-center justify-center space-y-4">
               <div className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center">
@@ -203,7 +264,7 @@ const TrailGeneration = () => {
         )}
         
         {/* Estado de erro */}
-        {error && !generating && !generated && (
+        {error && !generating && !regenerating && !generated && (
           <div className="bg-[#151823] p-8 rounded-xl border border-red-500/20 text-center">
             <div className="flex flex-col items-center justify-center space-y-4">
               <div className="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center">
@@ -227,7 +288,7 @@ const TrailGeneration = () => {
                   
                   <Button
                     onClick={handleRetry}
-                    disabled={generating || isRedirecting}
+                    disabled={generating || regenerating || isRedirecting}
                     className="bg-viverblue hover:bg-viverblue-dark text-black"
                   >
                     <RefreshCw className="mr-2 h-4 w-4" />
@@ -240,14 +301,14 @@ const TrailGeneration = () => {
         )}
         
         {/* Estado inicial */}
-        {!generating && !generated && !error && (
+        {!generating && !regenerating && !generated && !error && initialCheckDone && (
           <div className="flex justify-center">
             <Button
               onClick={startTrailGeneration}
-              disabled={generating || !progress || isRedirecting}
+              disabled={generating || regenerating || !progress || isRedirecting}
               className="bg-viverblue hover:bg-viverblue-dark text-black py-6 px-8 text-lg"
             >
-              {generating ? (
+              {generating || regenerating ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Gerando...

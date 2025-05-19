@@ -5,6 +5,11 @@ import { supabase } from '@/lib/supabase';
 import { sanitizeTrailData, saveTrailToLocalStorage, getTrailFromLocalStorage, clearTrailFromLocalStorage } from './useImplementationTrail.utils';
 import { toast } from 'sonner';
 
+// Flag global para prevenir chamadas concorrentes
+let isGenerationInProgress = false;
+let lastGenerationTimestamp = 0;
+const GENERATION_COOLDOWN = 5000; // 5 segundos
+
 export interface ImplementationTrail {
   priority1: TrailSolution[];
   priority2: TrailSolution[];
@@ -36,17 +41,27 @@ export const useImplementationTrail = () => {
   // Referência para controlar chamadas duplicadas
   const pendingRequestRef = useRef<boolean>(false);
   const lastGeneratedRef = useRef<number>(0);
+  // Referência para o componente montado
+  const isMountedRef = useRef<boolean>(true);
+
+  // Quando o componente é desmontado, marca a ref
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Carregar dados da trilha
   const loadTrailData = useCallback(async (forceRefresh = false) => {
-    if (!user) {
+    if (!user || !isMountedRef.current) {
       setIsLoading(false);
       return;
     }
 
     // Prevenir chamadas duplicadas
     if (pendingRequestRef.current) {
-      console.log("Requisição já em andamento, ignorando chamada duplicada");
+      console.log("[useImplementationTrail] Requisição já em andamento, ignorando chamada duplicada");
       return;
     }
 
@@ -62,11 +77,13 @@ export const useImplementationTrail = () => {
         trailData = getTrailFromLocalStorage(user.id);
         
         if (trailData) {
-          console.log("Usando dados da trilha do armazenamento local");
-          setTrail(sanitizeTrailData(trailData.trail_data));
-          setHasContent(true);
-          setIsLoading(false);
-          setRefreshing(false);
+          console.log("[useImplementationTrail] Usando dados da trilha do armazenamento local");
+          if (isMountedRef.current) {
+            setTrail(sanitizeTrailData(trailData.trail_data));
+            setHasContent(true);
+            setIsLoading(false);
+            setRefreshing(false);
+          }
           pendingRequestRef.current = false;
           return;
         }
@@ -81,31 +98,47 @@ export const useImplementationTrail = () => {
         .limit(1)
         .single();
 
+      if (!isMountedRef.current) return;
+
       if (error) {
         if (error.code === 'PGRST116') {
           // Nenhum registro encontrado (código PGRST116), não é um erro real
-          console.log("Nenhuma trilha encontrada para o usuário");
+          console.log("[useImplementationTrail] Nenhuma trilha encontrada para o usuário");
           setTrail(null);
           setHasContent(false);
         } else {
-          console.error("Erro ao carregar trilha:", error);
+          console.error("[useImplementationTrail] Erro ao carregar trilha:", error);
           setError(error);
         }
       } else if (data) {
-        const sanitizedData = sanitizeTrailData(data.trail_data);
-        setTrail(sanitizedData);
-        setHasContent(true);
-        
-        // Salvar no armazenamento local para uso futuro
-        saveTrailToLocalStorage(user.id, data);
+        console.log("[useImplementationTrail] Trilha carregada com sucesso:", data);
+        try {
+          const sanitizedData = sanitizeTrailData(data.trail_data);
+          setTrail(sanitizedData);
+          setHasContent(true);
+          
+          // Salvar no armazenamento local para uso futuro
+          saveTrailToLocalStorage(user.id, data);
+        } catch (parseError) {
+          console.error("[useImplementationTrail] Erro ao processar dados da trilha:", parseError);
+          setError(parseError instanceof Error ? parseError : new Error(String(parseError)));
+        }
       }
     } catch (err) {
-      console.error("Erro ao processar dados da trilha:", err);
-      setError(err instanceof Error ? err : new Error(String(err)));
+      if (isMountedRef.current) {
+        console.error("[useImplementationTrail] Erro ao processar dados da trilha:", err);
+        setError(err instanceof Error ? err : new Error(String(err)));
+      }
     } finally {
-      setIsLoading(false);
-      setRefreshing(false);
-      pendingRequestRef.current = false;
+      if (isMountedRef.current) {
+        setIsLoading(false);
+        setRefreshing(false);
+      }
+      
+      // Liberar flag com atraso para evitar condição de corrida
+      setTimeout(() => {
+        pendingRequestRef.current = false;
+      }, 300);
     }
   }, [user]);
 
@@ -116,27 +149,54 @@ export const useImplementationTrail = () => {
 
   // Função para gerar trilha de implementação
   const generateImplementationTrail = useCallback(async (onboardingData = {}, forceRegenerate = false) => {
+    // Verificações de segurança
     if (!user) {
       toast.error("Você precisa estar logado para gerar uma trilha");
       return null;
     }
     
-    // Prevenir chamadas duplicadas ou muito próximas (limitar a uma a cada 3 segundos)
+    // Verificação de concorrência global
+    if (isGenerationInProgress) {
+      console.log("[useImplementationTrail] Outra geração de trilha está em andamento globalmente");
+      toast.info("Processando solicitação anterior, aguarde...");
+      return null;
+    }
+
+    // Verificação de tempo de espera
     const now = Date.now();
-    if (pendingRequestRef.current || (now - lastGeneratedRef.current < 3000 && !forceRegenerate)) {
-      console.log("Requisição já em andamento ou muito recente, ignorando chamada duplicada");
+    if (!forceRegenerate && (now - lastGenerationTimestamp < GENERATION_COOLDOWN)) {
+      const waitTime = Math.round((GENERATION_COOLDOWN - (now - lastGenerationTimestamp)) / 1000);
+      console.log(`[useImplementationTrail] Solicitação muito recente, aguarde ${waitTime}s`);
+      toast.info(`Por favor, aguarde ${waitTime} segundos antes de tentar novamente.`);
+      return null;
+    }
+    
+    // Verificação de concorrência local
+    if (pendingRequestRef.current || regenerating) {
+      console.log("[useImplementationTrail] Requisição já em andamento localmente");
       toast.info("Processando sua solicitação anterior, aguarde um momento...");
       return null;
     }
     
     try {
+      // Atualizar flags de controle
+      isGenerationInProgress = true;
       pendingRequestRef.current = true;
+      lastGenerationTimestamp = now;
       lastGeneratedRef.current = now;
-      setRegenerating(true);
-      setError(null);
+      
+      if (isMountedRef.current) {
+        setRegenerating(true);
+        setError(null);
+      }
       
       // Limpar dados locais da trilha
       clearTrailFromLocalStorage(user.id);
+      
+      console.log("[useImplementationTrail] Iniciando geração de trilha", { 
+        forceRegenerate, 
+        userId: user.id 
+      });
       
       // Verificar se já existe uma trilha e não está forçando regeneração
       if (!forceRegenerate) {
@@ -149,58 +209,105 @@ export const useImplementationTrail = () => {
           .maybeSingle();
           
         if (existingTrail) {
+          console.log("[useImplementationTrail] Trilha existente encontrada, retornando sem regenerar");
           // Se já existe uma trilha, retorná-la sem regenerar
-          const sanitizedData = sanitizeTrailData(existingTrail.trail_data);
-          setTrail(sanitizedData);
-          setHasContent(true);
-          
-          // Salvar no armazenamento local
-          saveTrailToLocalStorage(user.id, existingTrail);
-          
-          return sanitizedData;
+          if (isMountedRef.current) {
+            try {
+              const sanitizedData = sanitizeTrailData(existingTrail.trail_data);
+              setTrail(sanitizedData);
+              setHasContent(true);
+              
+              // Salvar no armazenamento local
+              saveTrailToLocalStorage(user.id, existingTrail);
+              
+              return sanitizedData;
+            } catch (parseError) {
+              console.error("[useImplementationTrail] Erro ao processar dados da trilha existente:", parseError);
+              // Continuar para gerar uma nova trilha
+            }
+          } else {
+            return null;
+          }
         }
       }
+      
+      console.log("[useImplementationTrail] Chamando edge function para gerar trilha");
+      
+      // Simplificar dados de onboarding para evitar payload muito grande
+      const simplifiedOnboarding = {
+        personal_info: onboardingData.personal_info,
+        professional_info: onboardingData.professional_info,
+        business_goals: onboardingData.business_goals,
+        ai_experience: onboardingData.ai_experience,
+        is_completed: onboardingData.is_completed
+      };
       
       // Chamar a função de borda para gerar a trilha
       const { data, error } = await supabase.functions.invoke('generate-implementation-trail', {
         body: { 
           userId: user.id,
           hasOnboardingData: true,
-          ...onboardingData
+          ...simplifiedOnboarding
         }
       });
       
-      if (error) throw error;
+      if (!isMountedRef.current) return null;
+      
+      console.log("[useImplementationTrail] Resposta da função edge:", { data, error });
+      
+      if (error) {
+        console.error("[useImplementationTrail] Erro na invocação da função edge:", error);
+        throw error;
+      }
       
       if (!data || !data.success) {
-        throw new Error(data?.message || "Falha ao gerar trilha de implementação");
+        const errorMsg = data?.message || "Falha ao gerar trilha de implementação";
+        console.error("[useImplementationTrail] Resposta de erro da função:", errorMsg);
+        throw new Error(errorMsg);
       }
       
       // Atualizar estado com a nova trilha
-      const sanitizedData = sanitizeTrailData(data.trail?.trail_data);
-      setTrail(sanitizedData);
-      setHasContent(true);
+      let sanitizedData;
+      try {
+        sanitizedData = sanitizeTrailData(data.trail?.trail_data);
+        if (isMountedRef.current) {
+          setTrail(sanitizedData);
+          setHasContent(true);
+        }
+      } catch (parseError) {
+        console.error("[useImplementationTrail] Erro ao processar dados da nova trilha:", parseError);
+        throw parseError;
+      }
       
       // Salvar no armazenamento local
       if (data.trail) {
         saveTrailToLocalStorage(user.id, data.trail);
       }
       
+      console.log("[useImplementationTrail] Trilha gerada com sucesso");
       return sanitizedData;
     } catch (err) {
-      console.error("Erro ao gerar trilha de implementação:", err);
-      setError(err instanceof Error ? err : new Error(String(err)));
-      toast.error("Erro ao gerar trilha de implementação. Tente novamente.");
+      if (isMountedRef.current) {
+        console.error("[useImplementationTrail] Erro ao gerar trilha de implementação:", err);
+        setError(err instanceof Error ? err : new Error(String(err)));
+      }
+      toast.error("Erro ao gerar trilha de implementação. Tentaremos novamente automaticamente.");
       return null;
     } finally {
-      setRegenerating(false);
-      // Atraso de 1 segundo antes de liberar o flag de pendência
-      // para evitar chamadas muito rápidas sucessivas
+      if (isMountedRef.current) {
+        setRegenerating(false);
+      }
+      
+      // Liberar flags de concorrência com atrasos diferentes
       setTimeout(() => {
         pendingRequestRef.current = false;
-      }, 1000);
+      }, 500);
+      
+      setTimeout(() => {
+        isGenerationInProgress = false;
+      }, 2000);
     }
-  }, [user]);
+  }, [user, regenerating]);
 
   // Função para atualizar a trilha
   const refreshTrail = useCallback(async (forceRefresh = false) => {
