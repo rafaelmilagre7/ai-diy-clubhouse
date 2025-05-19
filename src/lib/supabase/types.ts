@@ -57,7 +57,7 @@ export type VideoFormValues = {
   embedCode?: string;
 };
 
-// Definindo TrailSolution para compatibilidade
+// Definindo TrailSolution para compatibilidade com TrailSolutionsList
 export type TrailSolution = {
   id: string;
   title: string;
@@ -66,6 +66,7 @@ export type TrailSolution = {
   estimated_time?: number;
   difficulty: string;
   category: string;
+  tags?: string[];
   checklist_items?: any[];
 };
 

@@ -1,8 +1,20 @@
 
 // Re-exportação centralizada para garantir compatibilidade com importações existentes
 export * from './client';
-export * from './types';
 export * from './config';
+
+// Exportamos seletivamente dos types para evitar conflitos com Solution
+export type {
+  LearningLesson,
+  LearningLessonVideo,
+  LearningModule,
+  LearningCourse,
+  LearningProgress,
+  LearningResource,
+  LearningComment,
+  LearningLessonTool,
+  UserProfile
+} from './types';
 
 // Exportação explícita das funções de storage
 export { 
@@ -25,23 +37,11 @@ export {
   // Adicionar outras funções RPC conforme necessário
 } from './rpc';
 
-// Exportar tipos específicos para garantir compatibilidade
-export type {
-  LearningLesson,
-  LearningLessonVideo,
-  LearningModule,
-  LearningCourse,
-  LearningProgress,
-  LearningResource,
-  LearningComment,
-  LearningLessonTool,
-  UserProfile,
-  Solution
-} from './types';
-
-// Exportar o tipo Solution que é usado em vários componentes
+// Exportar tipos específicos do Solution
 import type { Solution as SupabaseSolution } from './types';
 export type { SupabaseSolution };
+
+// Exportamos a versão "unificada" do Solution para ser a padrão 
 export { type Solution } from '@/types/solution';
 
 // Exportar tipos do módulo Module para componentes que o usam

@@ -7,12 +7,19 @@ import {
   isSuperAdmin 
 } from './profileUtils/roleValidation';
 
+import {
+  getUserProfile,
+  createUserProfile
+} from './profileUtils/userProfileFunctions';
+
 // Exportações
 export {
   validateRole,
   validateUserRole,
   determineRoleFromEmail,
-  isSuperAdmin
+  isSuperAdmin,
+  getUserProfile,
+  createUserProfile
 };
 
 // Outras exportações
