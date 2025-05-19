@@ -1,18 +1,17 @@
 
-import React from "react";
-import { 
-  Accordion, 
-  AccordionContent, 
-  AccordionItem, 
-  AccordionTrigger 
-} from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle, Edit, AlertCircle } from "lucide-react";
+import React, { useEffect, useState, useMemo } from "react";
 import { OnboardingProgress } from "@/types/onboarding";
+import { ReviewData } from "@/types/reviewTypes";
+import { steps } from "@/hooks/onboarding/useStepDefinitions";
+import { ArrowRight, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ReviewSectionCard } from "./ReviewSectionCard";
+import { Card } from "@/components/ui/card";
+import { toast } from "sonner";
 
 interface ReviewStepProps {
-  progress: OnboardingProgress;
-  onComplete: () => Promise<void>;
+  progress: OnboardingProgress | null;
+  onComplete: () => void;
   isSubmitting: boolean;
   navigateToStep: (stepId: string) => void;
 }
@@ -23,218 +22,292 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
   isSubmitting,
   navigateToStep,
 }) => {
-  // Verificar completude de cada seção
-  const isSectionComplete = (section: any): boolean => {
-    if (!section) return false;
+  // Estado com tipagem explícita para dados processados
+  const [processedData, setProcessedData] = useState<ReviewData | null>(null);
+  const [processingComplete, setProcessingComplete] = useState<boolean>(false);
+  const [dataIntegrityChecked, setDataIntegrityChecked] = useState<boolean>(false);
+  const [missingSteps, setMissingSteps] = useState<string[]>([]);
+  
+  // Efeito para processar dados quando progresso mudar
+  useEffect(() => {
+    if (!progress) {
+      console.log("[ReviewStep] Dados não disponíveis:", { hasProgress: !!progress });
+      setProcessingComplete(true);
+      return;
+    }
     
-    // Verificar se tem pelo menos algumas propriedades não vazias
-    const hasValues = Object.values(section).some(
-      value => value !== undefined && value !== null && value !== ''
-    );
+    try {
+      console.log("[ReviewStep] Processando dados de progresso:", progress);
+      
+      // Função para normalizar campos que podem estar como string
+      const normalizeField = (fieldName: string, value: any) => {
+        if (typeof value === 'string' && fieldName !== 'current_step' && fieldName !== 'user_id' && fieldName !== 'id') {
+          console.log(`[ReviewStep] Tentando normalizar campo ${fieldName} que está como string:`, value);
+          
+          // Tentativa de converter string para objeto
+          try {
+            if (value && value !== "{}" && value !== "") {
+              const parsed = JSON.parse(value);
+              console.log(`[ReviewStep] Campo ${fieldName} convertido de string para objeto:`, parsed);
+              return parsed;
+            }
+          } catch (e) {
+            console.error(`[ReviewStep] Falha ao converter string para objeto no campo ${fieldName}:`, e);
+          }
+        }
+        return value;
+      };
+      
+      // Criar uma cópia profunda do progresso para não modificar o original
+      const normalizedProgress = JSON.parse(JSON.stringify(progress));
+      
+      // Verificar e normalizar campos principais
+      const fieldsToNormalize = [
+        'ai_experience', 
+        'business_goals', 
+        'experience_personalization', 
+        'complementary_info',
+        'professional_info', 
+        'business_context',
+        'personal_info'
+      ];
+      
+      // Aplicar normalização a todos os campos listados
+      fieldsToNormalize.forEach(field => {
+        if (progress[field as keyof typeof progress]) {
+          const normalizedValue = normalizeField(field, progress[field as keyof typeof progress]);
+          (normalizedProgress as any)[field] = normalizedValue;
+        }
+      });
+      
+      console.log("[ReviewStep] Dados normalizados:", normalizedProgress);
+      setProcessedData(normalizedProgress as ReviewData);
+      
+      // Verificar etapas obrigatórias
+      checkMissingSteps(normalizedProgress);
+    } catch (error) {
+      console.error("[ReviewStep] Erro ao processar dados:", error);
+      toast.error("Erro ao processar dados de revisão. Algumas informações podem estar incompletas.");
+    } finally {
+      setProcessingComplete(true);
+    }
+  }, [progress]);
+
+  // Verificar etapas obrigatórias que não foram completadas
+  const checkMissingSteps = (data: any) => {
+    // Etapas mínimas obrigatórias para gerar uma trilha significativa
+    // Correção: alteramos 'professional_data' para 'professional_info'
+    const requiredSteps = ['personal_info', 'professional_info', 'business_goals'];
     
-    return hasValues;
+    const missing = requiredSteps.filter(stepId => {
+      const hasStep = data.completed_steps && Array.isArray(data.completed_steps) && 
+                     data.completed_steps.includes(stepId);
+      const hasData = !!data[stepId] && 
+                     typeof data[stepId] === 'object' && 
+                     Object.keys(data[stepId]).length > 0;
+      
+      return !hasStep || !hasData;
+    });
+    
+    setMissingSteps(missing);
+    setDataIntegrityChecked(true);
+    
+    console.log("[ReviewStep] Verificação de integridade:", { 
+      missingSteps: missing,
+      dataComplete: missing.length === 0
+    });
   };
+
+  // Usar dados processados ou fallback para dados originais
+  const dataToUse = useMemo(() => {
+    return processedData || progress;
+  }, [processedData, progress]);
+
+  // Função melhorada para manipular a finalização
+  const handleComplete = () => {
+    // Verificar se há etapas obrigatórias faltantes
+    if (missingSteps.length > 0) {
+      const stepsText = missingSteps.map(stepId => {
+        const step = steps.find(s => s.id === stepId);
+        return step ? step.title : stepId;
+      }).join(', ');
+      
+      // Alerta mas permite continuar
+      toast.warning(`Algumas etapas importantes parecem estar incompletas: ${stepsText}. Completar essas etapas resultará em uma trilha mais personalizada.`, {
+        duration: 7000,
+        action: {
+          label: "Continuar mesmo assim",
+          onClick: () => onComplete()
+        }
+      });
+      return;
+    }
+    
+    // Se tudo estiver ok, continuar normalmente
+    onComplete();
+  };
+
+  // Se ainda não tivermos dados e o processamento estiver completo, mostrar mensagem de erro
+  if (!dataToUse && processingComplete) {
+    return (
+      <div className="p-4 bg-red-900/30 border border-red-800 rounded-md">
+        <p className="text-red-400">Erro ao carregar dados para revisão. Por favor, recarregue a página ou volte às etapas anteriores.</p>
+        <Button 
+          onClick={() => window.location.reload()}
+          variant="outline" 
+          className="mt-2 border-red-800 text-red-400 hover:bg-red-900/50"
+        >
+          Recarregar página
+        </Button>
+      </div>
+    );
+  }
+
+  // Se os dados estiverem sendo processados, mostrar estado de carregamento
+  if (!processingComplete) {
+    return (
+      <div className="py-6 flex flex-col items-center text-neutral-400">
+        <Loader2 className="h-8 w-8 animate-spin mb-2 text-viverblue" />
+        <p>Processando informações...</p>
+      </div>
+    );
+  }
+
+  // Verifica se todos os passos necessários foram concluídos
+  // Exclui etapas de review e geração de trilha
+  const allStepsCompleted = steps
+    .filter(step => step.id !== "review" && step.id !== "trail_generation")
+    .every(step => {
+      if (!progress?.completed_steps || !Array.isArray(progress.completed_steps)) {
+        return false;
+      }
+      return progress.completed_steps.includes(step.id);
+    });
 
   return (
     <div className="space-y-6">
-      <div className="text-neutral-300 mb-4">
-        <p>Revise as informações que você forneceu. Você pode editar qualquer seção clicando no botão "Editar".</p>
-      </div>
-      
-      <Accordion type="single" collapsible className="w-full divide-y divide-neutral-700/30">
-        {/* Informações Pessoais */}
-        <AccordionItem value="item-1" className="border-none">
-          <AccordionTrigger className="py-4 px-4 hover:bg-neutral-800/30 rounded-t-lg transition-colors">
-            <div className="flex items-center gap-3">
-              {isSectionComplete(progress.personal_info) ? (
-                <CheckCircle className="h-5 w-5 text-emerald-500" />
-              ) : (
-                <AlertCircle className="h-5 w-5 text-amber-500" />
-              )}
-              <h3 className="text-lg font-medium text-white">Informações Pessoais</h3>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent>
-            <div className="p-4 bg-neutral-800/20 border-t border-neutral-700/30 rounded-b-lg">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs text-neutral-400">Nome</label>
-                  <p className="text-white">{progress.personal_info?.name || "Não informado"}</p>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs text-neutral-400">Email</label>
-                  <p className="text-white">{progress.personal_info?.email || "Não informado"}</p>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs text-neutral-400">Telefone</label>
-                  <p className="text-white">
-                    {progress.personal_info?.phone ? `${progress.personal_info?.ddi || "+55"} ${progress.personal_info?.phone}` : "Não informado"}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs text-neutral-400">Localização</label>
-                  <p className="text-white">
-                    {progress.personal_info?.city && progress.personal_info?.state ? 
-                      `${progress.personal_info.city}, ${progress.personal_info.state}` : 
-                      "Não informado"}
-                  </p>
-                </div>
-              </div>
+      <div className="space-y-4">
+        {steps
+          .filter((step) => step.id !== "review" && step.id !== "trail_generation")
+          .map((step, idx) => {
+            const sectionKey = step.section as keyof OnboardingProgress;
+            let sectionData = dataToUse && dataToUse[sectionKey];
+            
+            // Tratamento para dados específicos
+            switch (step.section) {
+              // Tratamento especial para business_context que pode estar em business_data
+              case 'business_context':
+                if (!sectionData || Object.keys(sectionData || {}).length === 0) {
+                  const fallbackData = dataToUse?.business_data;
+                  if (fallbackData) {
+                    if (typeof fallbackData === 'string') {
+                      try {
+                        sectionData = JSON.parse(fallbackData);
+                      } catch (e) {
+                        console.error("[ReviewStep] Erro ao parser business_data como fallback:", e);
+                      }
+                    } else {
+                      sectionData = fallbackData;
+                    }
+                    console.log("[ReviewStep] Usando business_data como fallback para business_context:", sectionData);
+                  }
+                }
+                break;
               
-              <div className="mt-4 flex justify-end">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => navigateToStep('personal_info')}
-                  className="border-neutral-600 text-neutral-200 hover:bg-neutral-800 hover:text-white"
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Editar
-                </Button>
-              </div>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-        
-        {/* Dados Profissionais */}
-        <AccordionItem value="item-2" className="border-none">
-          <AccordionTrigger className="py-4 px-4 hover:bg-neutral-800/30 transition-colors">
-            <div className="flex items-center gap-3">
-              {isSectionComplete(progress.professional_info) ? (
-                <CheckCircle className="h-5 w-5 text-emerald-500" />
-              ) : (
-                <AlertCircle className="h-5 w-5 text-amber-500" />
-              )}
-              <h3 className="text-lg font-medium text-white">Dados Profissionais</h3>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent>
-            <div className="p-4 bg-neutral-800/20 border-t border-neutral-700/30 rounded-b-lg">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs text-neutral-400">Empresa</label>
-                  <p className="text-white">{progress.professional_info?.company_name || "Não informado"}</p>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs text-neutral-400">Cargo</label>
-                  <p className="text-white">{progress.professional_info?.current_position || "Não informado"}</p>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs text-neutral-400">Tamanho da Empresa</label>
-                  <p className="text-white">{progress.professional_info?.company_size || "Não informado"}</p>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs text-neutral-400">Setor</label>
-                  <p className="text-white">{progress.professional_info?.company_sector || "Não informado"}</p>
-                </div>
-              </div>
+              // Tratamento especial para dados profissionais
+              case 'professional_info':
+                if (!sectionData || Object.keys(sectionData || {}).length === 0) {
+                  // Construir um objeto com dados diretos como fallback
+                  if (dataToUse?.company_name || dataToUse?.company_size || dataToUse?.company_sector) {
+                    const directData = {
+                      company_name: dataToUse?.company_name || "",
+                      company_size: dataToUse?.company_size || "",
+                      company_sector: dataToUse?.company_sector || "",
+                      company_website: dataToUse?.company_website || "",
+                      current_position: dataToUse?.current_position || "",
+                      annual_revenue: dataToUse?.annual_revenue || "",
+                    };
+                    
+                    // Se algum dos campos diretos tiver valor, usar esses dados
+                    if (Object.values(directData).some(value => !!value)) {
+                      sectionData = directData;
+                      console.log("[ReviewStep] Usando dados diretos para professional_info:", sectionData);
+                    }
+                  }
+                }
+                break;
               
-              <div className="mt-4 flex justify-end">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => navigateToStep('professional_info')}
-                  className="border-neutral-600 text-neutral-200 hover:bg-neutral-800 hover:text-white"
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Editar
-                </Button>
-              </div>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
+              default:
+                // Nenhum tratamento especial para outras seções
+                break;
+            }
+            
+            // Último esforço de normalização para garantir que temos um objeto e não uma string
+            if (typeof sectionData === 'string' && sectionData !== "" && sectionData !== "{}") {
+              try {
+                sectionData = JSON.parse(sectionData);
+                console.log(`[ReviewStep] Parseando string para objeto na renderização final:`, sectionData);
+              } catch (e) {
+                console.error(`[ReviewStep] Erro ao tentar parsear string:`, e, sectionData);
+              }
+            }
+            
+            // Garante que sectionData seja sempre um objeto (nunca undefined ou null)
+            const safeData = sectionData || {};
+            
+            // Highlight se for uma etapa faltante
+            const isMissingStep = missingSteps.includes(step.id);
+            
+            // Passamos o índice real (começando em 1) para a UI
+            const stepIndex = idx + 1;
 
-        {/* Adicionar mais seções aqui (seguindo o mesmo padrão) */}
-        {/* Contexto de Negócio */}
-        <AccordionItem value="item-3" className="border-none">
-          <AccordionTrigger className="py-4 px-4 hover:bg-neutral-800/30 transition-colors">
-            <div className="flex items-center gap-3">
-              {isSectionComplete(progress.business_context) ? (
-                <CheckCircle className="h-5 w-5 text-emerald-500" />
-              ) : (
-                <AlertCircle className="h-5 w-5 text-amber-500" />
-              )}
-              <h3 className="text-lg font-medium text-white">Contexto de Negócio</h3>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent>
-            <div className="p-4 bg-neutral-800/20 border-t border-neutral-700/30 rounded-b-lg">
-              <div className="grid grid-cols-1 gap-4">
-                {/* Conteúdo da seção */}
-                <div className="space-y-1">
-                  <label className="text-xs text-neutral-400">Desafios de Negócio</label>
-                  <p className="text-white">{progress.business_context?.business_challenges?.join(", ") || "Não informado"}</p>
-                </div>
-              </div>
-              
-              <div className="mt-4 flex justify-end">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => navigateToStep('business_context')}
-                  className="border-neutral-600 text-neutral-200 hover:bg-neutral-800 hover:text-white"
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Editar
-                </Button>
-              </div>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-        
-        {/* Experiência com IA */}
-        <AccordionItem value="item-4" className="border-none">
-          <AccordionTrigger className="py-4 px-4 hover:bg-neutral-800/30 transition-colors">
-            <div className="flex items-center gap-3">
-              {isSectionComplete(progress.ai_experience) ? (
-                <CheckCircle className="h-5 w-5 text-emerald-500" />
-              ) : (
-                <AlertCircle className="h-5 w-5 text-amber-500" />
-              )}
-              <h3 className="text-lg font-medium text-white">Experiência com IA</h3>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent>
-            {/* ... similar à seção anterior ... */}
-            <div className="mt-4 flex justify-end">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => navigateToStep('ai_experience')}
-                className="border-neutral-600 text-neutral-200 hover:bg-neutral-800 hover:text-white"
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Editar
-              </Button>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-      
-      <div className="mt-8 pt-4 border-t border-neutral-700/30 flex flex-col items-center">
+            // Passando o ID do passo diretamente para navegação
+            return (
+              <ReviewSectionCard
+                key={step.id}
+                step={step}
+                sectionData={safeData}
+                progress={dataToUse}
+                stepIndex={stepIndex}
+                navigateToStep={navigateToStep}
+                highlight={isMissingStep}
+              />
+            );
+          })}
+      </div>
+
+      {!allStepsCompleted && dataIntegrityChecked && (
+        <Card className="bg-amber-900/30 p-4 border border-amber-700">
+          <p className="text-amber-400">
+            <strong>Atenção:</strong> {missingSteps.length > 0 ? (
+              <>Algumas seções importantes ainda não foram preenchidas. Recomendamos completar todas as seções antes de prosseguir para obter a melhor experiência personalizada.</>
+            ) : (
+              <>Algumas seções ainda não foram preenchidas. Recomendamos completar todas as seções para uma experiência mais completa.</>
+            )}
+          </p>
+        </Card>
+      )}
+
+      <div className="pt-8 flex justify-end">
         <Button
-          onClick={onComplete}
+          onClick={handleComplete}
           disabled={isSubmitting}
           size="lg"
-          className="bg-gradient-to-r from-[#0ABAB5] to-[#34D399] hover:from-[#0ABAB5]/90 hover:to-[#34D399]/90 text-black font-medium px-10 py-6 h-auto"
+          className="bg-viverblue hover:bg-viverblue-dark text-white px-8 py-6 text-lg shadow-md hover:shadow-lg transition-all duration-300"
         >
           {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              Finalizando...
-            </>
+            <span className="flex items-center gap-2">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              Processando...
+            </span>
           ) : (
-            <>
-              <CheckCircle className="mr-2 h-5 w-5" />
-              Concluir Onboarding
-            </>
+            <span className="flex items-center gap-2">
+              Concluir e Gerar Minha Trilha
+              <ArrowRight className="h-5 w-5" />
+            </span>
           )}
         </Button>
-        
-        <p className="mt-3 text-sm text-neutral-400">
-          Ao concluir, você será direcionado para sua trilha personalizada
-        </p>
       </div>
     </div>
   );
-};
+}

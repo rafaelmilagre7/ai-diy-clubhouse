@@ -1,100 +1,159 @@
 
-import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Home, BookOpen, Wrench, Bell, Settings, Lightbulb, GraduationCap, UserPlus } from "lucide-react";
+import { useAuth } from "@/contexts/auth";
+import { 
+  LayoutDashboard, 
+  Lightbulb, 
+  Settings, 
+  Trophy,
+  Gift,
+  MessageSquare,
+  ShieldCheck,
+  User,
+  BookOpen,
+  Map,
+  Calendar,
+  GraduationCap,
+  Wrench,
+  MessagesSquare
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link, useLocation } from "react-router-dom";
 
-interface MemberSidebarNavProps {
+interface SidebarNavProps {
   sidebarOpen: boolean;
-  className?: string;
-  isAdmin: boolean;
 }
 
-export const MemberSidebarNav = ({ sidebarOpen, className, isAdmin }: MemberSidebarNavProps) => {
-  // Log para diagnóstico
-  console.log("MemberSidebarNav renderizando com isAdmin:", isAdmin);
+export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
+  const location = useLocation();
+  const { isAdmin, isFormacao } = useAuth();
 
-  // Definição dos itens de navegação padrão - sempre disponíveis
-  const navItems = [
-    { 
-      name: "Dashboard", 
-      path: "/", 
-      end: true, 
-      icon: Home 
+  const menuItems = [
+    {
+      title: "Dashboard",
+      href: "/dashboard",
+      icon: LayoutDashboard,
     },
-    { 
-      name: "Soluções", 
-      path: "/solutions", 
-      icon: Lightbulb 
+    {
+      title: "Onboarding",
+      href: "/onboarding",
+      icon: BookOpen,
     },
-    { 
-      name: "Cursos", 
-      path: "/learning", 
-      icon: GraduationCap 
+    {
+      title: "Trilha de Implementação",
+      href: "/implementation-trail",
+      icon: Map,
     },
-    { 
-      name: "Ferramentas", 
-      path: "/tools", 
-      icon: Wrench 
+    {
+      title: "Soluções",
+      href: "/solutions",
+      icon: Lightbulb,
     },
-    { 
-      name: "Indicações", 
-      path: "/referrals", 
-      icon: UserPlus 
+    {
+      title: "Cursos",
+      href: "/learning",
+      icon: GraduationCap,
     },
-    { 
-      name: "Notificações", 
-      path: "/notifications", 
-      icon: Bell 
+    {
+      title: "Ferramentas",
+      href: "/tools",
+      icon: Wrench,
     },
-    { 
-      name: "Perfil", 
-      path: "/profile", 
-      icon: Settings 
+    {
+      title: "Benefícios",
+      href: "/benefits",
+      icon: Gift,
     },
+    {
+      title: "Sugestões",
+      href: "/suggestions",
+      icon: MessageSquare,
+    },
+    {
+      title: "Comunidade",
+      href: "/comunidade",
+      icon: MessagesSquare,
+    },
+    {
+      title: "Perfil",
+      href: "/profile",
+      icon: User,
+    },
+    {
+      title: "Eventos",
+      href: "/events",
+      icon: Calendar,
+    }
   ];
 
+  const isActive = (href: string) => {
+    // Para a comunidade, considerar tanto o caminho antigo quanto o novo
+    if (href === "/comunidade") {
+      return location.pathname === "/comunidade" || 
+             location.pathname === "/forum" || 
+             location.pathname.startsWith("/comunidade/") ||
+             location.pathname.startsWith("/forum/");
+    }
+    
+    return location.pathname === href || location.pathname.startsWith(href + '/');
+  };
+
   return (
-    <nav className={cn("px-2 lg:px-4", className)}>
-      <ul className="space-y-1">
-        {navItems.map((item) => (
-          <li key={item.path}>
-            <NavLink
-              to={item.path}
-              end={item.end}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-x-3 px-3 py-2 rounded-md text-sm transition-colors",
-                  isActive
-                    ? "bg-accent text-accent-foreground font-medium"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-                )
-              }
-            >
-              <item.icon className="h-4 w-4" />
-              {sidebarOpen && <span>{item.name}</span>}
-            </NavLink>
-          </li>
+    <div className="space-y-2 py-4">
+      <div className="px-3 space-y-1">
+        {menuItems.map((item) => (
+          <Button
+            key={item.href}
+            variant="ghost"
+            className={cn(
+              "w-full justify-start gap-3 rounded-lg hover:bg-[#181A2A] text-neutral-400 dark:text-neutral-300",
+              !sidebarOpen && "justify-center",
+              isActive(item.href) && "hubla-active-nav"
+            )}
+            asChild
+          >
+            <Link to={item.href}>
+              <item.icon className={cn(
+                "h-4 w-4", 
+                isActive(item.href) ? "text-viverblue" : "text-neutral-400"
+              )} />
+              {sidebarOpen && <span>{item.title}</span>}
+            </Link>
+          </Button>
         ))}
-        
+
         {isAdmin && (
-          <li>
-            <NavLink
-              to="/formacao"
-              className={({ isActive }) =>
-                cn(
-                  "mt-4 flex items-center gap-x-3 px-3 py-2 rounded-md text-sm transition-colors",
-                  isActive
-                    ? "bg-primary text-primary-foreground font-medium"
-                    : "text-muted-foreground hover:bg-primary/10 hover:text-primary",
-                )
-              }
-            >
-              <BookOpen className="h-4 w-4" />
-              {sidebarOpen && <span>Área de Formação</span>}
-            </NavLink>
-          </li>
+          <Button
+            variant="outline"
+            className={cn(
+              "w-full justify-start gap-3 border-viverblue/30 text-viverblue hover:bg-[#181A2A] mt-4",
+              !sidebarOpen && "justify-center"
+            )}
+            asChild
+          >
+            <Link to="/admin">
+              <ShieldCheck className="h-4 w-4" />
+              {sidebarOpen && <span>Painel Admin</span>}
+            </Link>
+          </Button>
         )}
-      </ul>
-    </nav>
+        
+        {isFormacao && (
+          <Button
+            variant="outline"
+            className={cn(
+              "w-full justify-start gap-3 border-viverblue/30 text-viverblue hover:bg-[#181A2A] mt-4",
+              !sidebarOpen && "justify-center"
+            )}
+            asChild
+          >
+            <Link to="/formacao">
+              <GraduationCap className="h-4 w-4" />
+              {sidebarOpen && <span>Área de Cursos</span>}
+            </Link>
+          </Button>
+        )}
+      </div>
+    </div>
   );
 };

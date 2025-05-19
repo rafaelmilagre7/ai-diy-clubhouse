@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { MemberUserMenu } from "./MemberUserMenu";
 import { SidebarLogo } from "./navigation/SidebarLogo";
-import { MemberSidebarNav } from "../MemberSidebarNav";
+import { MemberSidebarNav } from "./MemberSidebarNav";
 
 interface MemberSidebarProps {
   sidebarOpen: boolean;
@@ -13,7 +13,6 @@ interface MemberSidebarProps {
   profileAvatar: string | undefined;
   getInitials: (name: string | null) => string;
   signOut: () => Promise<void>;
-  isAdmin: boolean;
 }
 
 export const MemberSidebar = ({ 
@@ -23,18 +22,8 @@ export const MemberSidebar = ({
   profileEmail,
   profileAvatar,
   getInitials,
-  signOut,
-  isAdmin
+  signOut
 }: MemberSidebarProps) => {
-  // Log para diagnóstico
-  console.log("MemberSidebar renderizando com:", {
-    sidebarOpen,
-    profileName,
-    profileEmail,
-    hasAvatar: !!profileAvatar,
-    isAdmin
-  });
-  
   return (
     <aside
       className={cn(
@@ -54,8 +43,8 @@ export const MemberSidebar = ({
           <div className="h-px bg-white/5"></div>
         </div>
 
-        {/* Navegação - passando isAdmin explicitamente */}
-        <MemberSidebarNav sidebarOpen={sidebarOpen} isAdmin={isAdmin} className="mb-2" />
+        {/* Navegação */}
+        <MemberSidebarNav sidebarOpen={sidebarOpen} />
 
         {/* Menu do usuário no rodapé da barra lateral */}
         <div className="mt-auto">

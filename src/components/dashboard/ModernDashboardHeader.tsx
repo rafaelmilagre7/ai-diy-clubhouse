@@ -1,34 +1,10 @@
 
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/contexts/auth";
-import { getUserDisplayName } from "@/utils/auth/adminUtils";
-import { useEffect, useState } from "react";
 
 /**
  * Cabeçalho moderno para o dashboard do membro com design glassmorphism.
  */
-export function ModernDashboardHeader() {
-  // Obter dados do usuário diretamente do contexto de autenticação
-  const { user, profile } = useAuth();
-  const [userName, setUserName] = useState<string>("Membro");
-  
-  // Efeito para atualizar o nome do usuário quando os dados mudam
-  useEffect(() => {
-    if (user || profile) {
-      // Usar a função utilitária para obter o nome do usuário
-      const displayName = getUserDisplayName(user, profile);
-      setUserName(displayName || "Membro");
-      
-      // Debug para verificar o nome recebido
-      console.log("ModernDashboardHeader - Nome do usuário:", { 
-        displayName,
-        profileName: profile?.name,
-        user_email: user?.email,
-        user_metadata: user?.user_metadata
-      });
-    }
-  }, [user, profile]);
-
+export function ModernDashboardHeader({ userName }: { userName: string }) {
   return (
     <div
       className={cn(
@@ -60,7 +36,7 @@ export function ModernDashboardHeader() {
             Bem-vindo ao VIVER DE IA Hub
           </span>
           <h1 className="text-xl md:text-2xl font-bold leading-tight text-white font-heading animate-slide-in" style={{ animationDelay: '0.1s' }}>
-            Olá, {userName}
+            Olá, {userName || "Membro"}
           </h1>
           <div className="mt-1 text-white/60 text-sm md:text-base animate-slide-in" style={{ animationDelay: '0.2s' }}>
             Acesse suas ferramentas e recursos de IA

@@ -2,7 +2,7 @@
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/auth";
-import { TopicDialog } from "./editor/TopicDialog";
+import { CreateTopicDialog } from "./CreateTopicDialog";
 
 export function QuickPostInput() {
   const { user } = useAuth();
@@ -34,7 +34,7 @@ export function QuickPostInput() {
         </div>
       </div>
 
-      <TopicDialog open={open} onOpenChange={setOpen} />
+      <CreateTopicDialog open={open} onOpenChange={setOpen} />
     </>
   );
 }

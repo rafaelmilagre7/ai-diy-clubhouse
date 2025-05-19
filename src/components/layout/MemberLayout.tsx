@@ -3,34 +3,13 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { MemberSidebar } from "./member/MemberSidebar";
 import { MemberContent } from "./member/MemberContent";
-import AuthSession from "@/components/auth/AuthSession"; 
-import { getUserDisplayName, isUserAdmin } from "@/utils/auth/adminUtils";
 
 /**
  * MemberLayout renderiza a estrutura de layout para usuários membros
  * Isso inclui a barra lateral e a área de conteúdo
  */
 const MemberLayout = ({ children }: { children: React.ReactNode }) => {
-  const { user, profile, setIsAdmin, signOut } = useAuth();
-  
-  // Verificar se o usuário é admin usando a função centralizada
-  const userIsAdmin = isUserAdmin(user, profile);
-  
-  // Sincronizar o estado isAdmin no contexto de autenticação
-  useEffect(() => {
-    if (setIsAdmin) {
-      console.log("MemberLayout: Sincronizando estado isAdmin no contexto:", userIsAdmin);
-      setIsAdmin(userIsAdmin);
-    }
-  }, [userIsAdmin, setIsAdmin, user, profile]);
-  
-  console.log("MemberLayout renderizando:", {
-    userExists: !!user,
-    profileExists: !!profile,
-    isAdmin: userIsAdmin,
-    userEmail: user?.email,
-    profileRole: profile?.role
-  });
+  const { profile, signOut } = useAuth();
   
   // Estado para controlar a visibilidade da barra lateral
   const [sidebarOpen, setSidebarOpen] = useState(() => {
@@ -95,16 +74,8 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
     document.body.classList.add('dark');
   }, []);
 
-  // Garantir que o perfil seja carregado ou usar dados do usuário como fallback
-  const profileName = profile?.name || user?.user_metadata?.name || user?.email?.split('@')[0] || null;
-  const profileEmail = profile?.email || user?.email || null;
-  const profileAvatar = profile?.avatar_url;
-
   return (
     <div className="flex min-h-screen bg-[#0F111A] overflow-hidden">
-      {/* Incluir o componente AuthSession para inicializar e verificar a autenticação */}
-      <AuthSession />
-      
       {/* Overlay para dispositivos móveis */}
       {showOverlay && (
         <div 
@@ -117,12 +88,11 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
       <MemberSidebar 
         sidebarOpen={sidebarOpen} 
         setSidebarOpen={setSidebarOpen}
-        profileName={profileName}
-        profileEmail={profileEmail}
-        profileAvatar={profileAvatar}
+        profileName={profile?.name || null}
+        profileEmail={profile?.email || null}
+        profileAvatar={profile?.avatar_url}
         getInitials={getInitials}
         signOut={signOut}
-        isAdmin={userIsAdmin} // Passando o valor calculado com isUserAdmin
       />
       
       {/* Conteúdo principal */}

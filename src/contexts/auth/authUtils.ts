@@ -2,7 +2,9 @@
 // Re-export all utils from the utils directory
 export {
   fetchUserProfile,
-  validateUserRole,
-  determineRoleFromEmail,
-  isSuperAdmin
+  signInWithGoogle,
+  createTestUser,
+  signInAsTestMember,
+  signInAsTestAdmin,
+  signOutUser
 } from './utils';

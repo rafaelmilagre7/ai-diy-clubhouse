@@ -1,4 +1,11 @@
 
-// Reexportar funções de validação de papel
-export * from './roleValidation';
-export * from './userProfileFunctions';
+// Export profile utility functions
+export { 
+  fetchUserProfile,
+  createUserProfileIfNeeded
+} from './userProfileFunctions';
+export { 
+  determineRoleFromEmail,
+  validateUserRole,
+  isSuperAdmin
+} from './roleValidation';

@@ -1,56 +1,76 @@
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Session, User } from '@supabase/supabase-js';
+import { toast } from '@/hooks/use-toast';
 import { processUserProfile } from './utils/authSessionUtils';
-import { UserProfile } from '@/lib/supabase/types';
 
 export const useAuthSession = () => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [authError, setAuthError] = useState<Error | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 3;
 
   useEffect(() => {
-    // Buscar a sessão atual
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user || null);
-    });
-
-    // Inscrever-se para mudanças futuras de sessão
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user || null);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  // Carregar o perfil do usuário quando o usuário está definido
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (!user) {
-        setProfile(null);
-        setLoading(false);
-        return;
-      }
-
+    const initSession = async () => {
       try {
-        // Agora também funciona corretamente aqui
-        const userProfile = await processUserProfile(user);
-        setProfile(userProfile);
-      } catch (error) {
-        console.error('Erro ao carregar perfil:', error);
+        console.info('Initializing authentication session...');
+        
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          throw error;
+        }
+        
+        console.info('Verificando sessão atual');
+        
+        if (session) {
+          const userId = session.user.id;
+          const email = session.user.email;
+          const name = session.user.user_metadata?.name || session.user.user_metadata?.full_name;
+          
+          console.info(`Sessão ativa encontrada: ${userId}`);
+          
+          // Processar perfil do usuário
+          await processUserProfile(userId, email, name);
+        }
+        
+      } catch (error: any) {
+        console.error('Erro ao inicializar sessão:', error);
+        setAuthError(error);
+        
+        // Tentativa automática de reinicialização
+        if (retryCount < maxRetries) {
+          console.warn(`Tentando reinicializar sessão (${retryCount + 1}/${maxRetries})...`);
+          setRetryCount(prev => prev + 1);
+          // Não definir isInitializing como false ainda, para tentar novamente
+          return;
+        } else {
+          toast({
+            title: 'Erro de autenticação',
+            description: 'Não foi possível inicializar sua sessão. Por favor, tente novamente mais tarde.',
+            variant: 'destructive',
+          });
+        }
       } finally {
-        setLoading(false);
+        // Marcar inicialização como concluída apenas se não estiver tentando novamente
+        if (retryCount >= maxRetries || !authError) {
+          setIsInitializing(false);
+        }
       }
     };
 
-    fetchProfile();
-  }, [user]);
+    if (isInitializing) {
+      initSession();
+    }
+  }, [isInitializing, retryCount, maxRetries, authError]);
 
-  return { session, user, profile, loading };
+  return {
+    isInitializing,
+    authError,
+    retryCount,
+    maxRetries,
+    setRetryCount,
+    setIsInitializing,
+    setAuthError
+  };
 };

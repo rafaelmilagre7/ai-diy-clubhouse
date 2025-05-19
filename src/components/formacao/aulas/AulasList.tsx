@@ -1,74 +1,66 @@
 
-import React from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { LearningLesson } from "@/lib/supabase/types";
+import { useState } from "react";
+import { LearningLesson } from "@/lib/supabase";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, Eye, Loader2, MoreVertical, Pencil, Trash } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { AulaDeleteDialog } from "./AulaDeleteDialog";
 import { Badge } from "@/components/ui/badge";
+import { Pencil, Trash2, FileText, Loader2, Eye } from "lucide-react";
+import { AulaDeleteDialog } from "./AulaDeleteDialog";
 import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { PublishLessonButton } from "./PublishLessonButton";
 
 interface AulasListProps {
   aulas: LearningLesson[];
-  loading?: boolean;
-  onEdit?: (aula: LearningLesson) => void;
-  onDelete?: (aulaId: string) => void;
-  isAdmin?: boolean;
-  moduloId?: string;
-  cursoId?: string;
-  onSuccess?: () => void;
+  loading: boolean;
+  onEdit: (aula: LearningLesson) => void;
+  onDelete: (id: string) => void;
+  isAdmin: boolean;
+  onRefresh?: () => void;
 }
 
-export const AulasList: React.FC<AulasListProps> = ({
-  aulas,
-  loading = false,
-  onEdit,
-  onDelete,
-  isAdmin = false,
-  moduloId,
-  cursoId,
-  onSuccess
-}) => {
-  const navigate = useNavigate();
-  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
-  const [selectedAulaId, setSelectedAulaId] = React.useState<string | null>(null);
-  const [selectedAula, setSelectedAula] = React.useState<LearningLesson | null>(null);
+export const AulasList = ({ aulas, loading, onEdit, onDelete, isAdmin, onRefresh }: AulasListProps) => {
+  const [aulaParaExcluir, setAulaParaExcluir] = useState<LearningLesson | null>(null);
+  const [publishingStates, setPublishingStates] = useState<Record<string, boolean>>({});
 
-  const handleViewDetails = (aulaId: string) => {
-    navigate(`/formacao/aulas/${aulaId}`);
+  // Abrir diálogo de confirmação para excluir
+  const handleOpenDelete = (aula: LearningLesson) => {
+    setAulaParaExcluir(aula);
   };
 
-  const handleEdit = (aula: LearningLesson) => {
-    if (onEdit) {
-      onEdit(aula);
-    } else {
-      navigate(`/formacao/aulas/${aula.id}/editar`);
+  // Confirmar exclusão
+  const handleConfirmDelete = () => {
+    if (aulaParaExcluir) {
+      onDelete(aulaParaExcluir.id);
+      setAulaParaExcluir(null);
+      // Chamar onRefresh se estiver definido
+      if (onRefresh) {
+        onRefresh();
+      }
     }
   };
 
-  const handleDeleteClick = (aula: LearningLesson) => {
-    setSelectedAulaId(aula.id);
-    setSelectedAula(aula);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (selectedAulaId && onDelete) {
-      await onDelete(selectedAulaId);
+  // Atualizar estado de publicação local
+  const handlePublishChange = (aulaId: string, published: boolean) => {
+    setPublishingStates(prevState => ({
+      ...prevState,
+      [aulaId]: published
+    }));
+    
+    // Atualizar a lista se onRefresh estiver disponível
+    if (onRefresh) {
+      onRefresh();
     }
-    setDeleteDialogOpen(false);
-    setSelectedAulaId(null);
-    setSelectedAula(null);
   };
 
-  // Se estiver carregando, mostrar um estado de carregamento
+  // Determinar se uma aula está publicada (considerando o estado local se disponível)
+  const isPublished = (aula: LearningLesson) => {
+    return aula.id in publishingStates 
+      ? publishingStates[aula.id] 
+      : !!aula.published;
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -77,118 +69,106 @@ export const AulasList: React.FC<AulasListProps> = ({
     );
   }
 
-  // Se não houver aulas, mostrar uma mensagem
-  if (!aulas || aulas.length === 0) {
+  if (aulas.length === 0) {
     return (
-      <Card>
-        <CardContent className="flex flex-col items-center justify-center py-12">
-          <p className="text-lg text-muted-foreground mb-4">
-            Nenhuma aula cadastrada neste módulo
-          </p>
-          {isAdmin && (
-            <Button variant="outline" onClick={() => navigate(`/formacao/aulas/nova?modulo=${moduloId || ''}`)}>
-              Criar primeira aula
-            </Button>
-          )}
-        </CardContent>
-      </Card>
+      <div className="text-center py-12 border rounded-lg bg-background">
+        <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+        <h3 className="text-lg font-medium">Nenhuma aula disponível</h3>
+        <p className="text-sm text-muted-foreground mt-2 mb-4">
+          Este módulo ainda não possui aulas cadastradas.
+        </p>
+      </div>
     );
   }
 
-  // Renderizar lista de aulas
   return (
-    <div className="space-y-4">
-      {aulas.map((aula) => (
-        <Card key={aula.id} className="overflow-hidden">
-          <div className="flex flex-col md:flex-row w-full">
-            <div className="flex-1">
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-lg font-medium">
-                      {aula.title}
-                    </h3>
-                    <div className="flex items-center space-x-2 mt-2">
-                      <Badge variant={aula.is_published ? "default" : "secondary"}>
-                        {aula.is_published ? "Publicada" : "Rascunho"}
-                      </Badge>
-                      {aula.duration_minutes && (
-                        <span className="text-sm text-muted-foreground">
-                          {aula.duration_minutes} min
-                        </span>
-                      )}
-                    </div>
-                  </div>
+    <>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {aulas.map((aula) => (
+          <Card key={aula.id} className="overflow-hidden">
+            {aula.cover_image_url ? (
+              <div className="aspect-video w-full overflow-hidden">
+                <img 
+                  src={aula.cover_image_url} 
+                  alt={aula.title} 
+                  className="h-full w-full object-cover transition-all hover:scale-105" 
+                />
+              </div>
+            ) : (
+              <div className="aspect-video w-full bg-muted flex items-center justify-center">
+                <FileText className="h-12 w-12 text-muted-foreground" />
+              </div>
+            )}
+            
+            <CardHeader>
+              <div className="flex justify-between items-start">
+                <CardTitle className="line-clamp-2">{aula.title}</CardTitle>
+                <Badge variant={isPublished(aula) ? "default" : "outline"}>
+                  {isPublished(aula) ? "Publicada" : "Rascunho"}
+                </Badge>
+              </div>
+              {aula.description && (
+                <p className="text-muted-foreground text-sm line-clamp-2">
+                  {aula.description}
+                </p>
+              )}
+            </CardHeader>
 
-                  {isAdmin && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleViewDetails(aula.id)}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          Ver detalhes
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleEdit(aula)}>
-                          <Pencil className="h-4 w-4 mr-2" />
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive"
-                          onClick={() => handleDeleteClick(aula)}
-                        >
-                          <Trash className="h-4 w-4 mr-2" />
-                          Excluir
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
-                </div>
-              </CardHeader>
-
-              <CardContent>
-                {aula.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {aula.description}
-                  </p>
+            <CardContent>
+              <div className="flex items-center text-sm text-muted-foreground">
+                <p>{format(new Date(aula.created_at), "dd/MM/yyyy", { locale: ptBR })}</p>
+                {aula.estimated_time_minutes > 0 && (
+                  <Badge variant="outline" className="ml-2">
+                    {aula.estimated_time_minutes} min
+                  </Badge>
                 )}
+              </div>
+            </CardContent>
 
-                <div className="flex mt-4 space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleViewDetails(aula.id)}
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    Ver detalhes
-                  </Button>
-                  {isAdmin && (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => handleEdit(aula)}
-                    >
-                      <Edit className="h-4 w-4 mr-2" />
+            <CardFooter className="flex flex-col gap-3">
+              <div className="flex justify-between w-full">
+                <Button variant="outline" size="sm" asChild>
+                  <Link to={`/formacao/aulas/${aula.id}`}>
+                    <Eye className="h-4 w-4 mr-1" />
+                    Visualizar
+                  </Link>
+                </Button>
+                
+                {isAdmin && (
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => onEdit(aula)}>
+                      <Pencil className="h-4 w-4 mr-1" />
                       Editar
                     </Button>
-                  )}
+                    <Button variant="outline" size="sm" onClick={() => handleOpenDelete(aula)}>
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Excluir
+                    </Button>
+                  </div>
+                )}
+              </div>
+              
+              {isAdmin && (
+                <div className="w-full">
+                  <PublishLessonButton 
+                    lessonId={aula.id}
+                    isPublished={isPublished(aula)}
+                    onPublishChange={(published) => handlePublishChange(aula.id, published)}
+                    showPreview={false}
+                  />
                 </div>
-              </CardContent>
-            </div>
-          </div>
-        </Card>
-      ))}
-
-      <AulaDeleteDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        onConfirm={handleDeleteConfirm}
-        aula={selectedAula}
+              )}
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
+      
+      <AulaDeleteDialog 
+        open={!!aulaParaExcluir} 
+        onOpenChange={() => setAulaParaExcluir(null)}
+        onConfirm={handleConfirmDelete}
+        aula={aulaParaExcluir}
       />
-    </div>
+    </>
   );
 };
-

@@ -1,60 +1,49 @@
 
-import { motion } from "framer-motion";
 import React from "react";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface FadeTransitionProps {
   children: React.ReactNode;
-  delay?: number;
   className?: string;
-  direction?: "up" | "down" | "left" | "right"; // Definindo os valores permitidos
+  delay?: number;
+  direction?: "up" | "down" | "left" | "right" | "none";
 }
 
-export const FadeTransition: React.FC<FadeTransitionProps> = ({ 
+export const FadeTransition: React.FC<FadeTransitionProps> = ({
   children,
+  className,
   delay = 0,
-  className = "",
-  direction
+  direction = "up"
 }) => {
-  // Configurar animações baseadas na direção
-  const getAnimationProps = () => {
-    const base = { opacity: 0 };
-    
+  // Configuração da animação baseada na direção
+  const getDirectionProps = () => {
     switch (direction) {
       case "up":
-        return { ...base, y: 20 };
+        return { initial: { y: 20 }, animate: { y: 0 } };
       case "down":
-        return { ...base, y: -20 };
+        return { initial: { y: -20 }, animate: { y: 0 } };
       case "left":
-        return { ...base, x: 20 };
+        return { initial: { x: 20 }, animate: { x: 0 } };
       case "right":
-        return { ...base, x: -20 };
+        return { initial: { x: -20 }, animate: { x: 0 } };
       default:
-        return base;
+        return { initial: {}, animate: {} };
     }
   };
-  
-  const getAnimateProps = () => {
-    const base = { opacity: 1 };
-    
-    switch (direction) {
-      case "up":
-      case "down":
-        return { ...base, y: 0 };
-      case "left":
-      case "right":
-        return { ...base, x: 0 };
-      default:
-        return base;
-    }
-  };
+
+  const directionProps = getDirectionProps();
 
   return (
     <motion.div
-      initial={getAnimationProps()}
-      animate={getAnimateProps()}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.5, delay, ease: "easeOut" }}
-      className={className}
+      initial={{ opacity: 0, ...directionProps.initial }}
+      animate={{ opacity: 1, ...directionProps.animate }}
+      transition={{ 
+        duration: 0.4, 
+        ease: "easeOut",
+        delay 
+      }}
+      className={cn(className)}
     >
       {children}
     </motion.div>

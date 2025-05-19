@@ -48,8 +48,11 @@ export const useAuthStateManager = () => {
         setUser(session.user);
         
         // Process user profile with performance optimization
-        // Agora funciona tanto com user ID quanto com objeto User
-        const profilePromise = processUserProfile(session.user);
+        const profilePromise = processUserProfile(
+          session.user.id,
+          session.user.email,
+          session.user.user_metadata?.name
+        );
         
         const profile = await profilePromise;
         

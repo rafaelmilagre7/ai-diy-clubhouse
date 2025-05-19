@@ -1,19 +1,15 @@
 
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Home, BookOpen, Wrench, Bell, Settings, Lightbulb, GraduationCap, UserPlus } from "lucide-react";
+import { Home, BookOpen, Wrench, Bell, Settings, Lightbulb, GraduationCap } from "lucide-react";
+import { useAuth } from "@/contexts/auth";
 
-interface MemberSidebarNavProps {
-  sidebarOpen: boolean;
-  className?: string;
-  isAdmin: boolean;
-}
+export const MemberSidebarNav = ({ sidebarOpen, className }: {
+  sidebarOpen: boolean,
+  className?: string
+}) => {
+  const { profile } = useAuth();
 
-export const MemberSidebarNav = ({ sidebarOpen, className, isAdmin }: MemberSidebarNavProps) => {
-  // Log para diagnóstico
-  console.log("MemberSidebarNav renderizando com isAdmin:", isAdmin);
-
-  // Definição dos itens de navegação padrão - sempre disponíveis
   const navItems = [
     { 
       name: "Dashboard", 
@@ -37,11 +33,6 @@ export const MemberSidebarNav = ({ sidebarOpen, className, isAdmin }: MemberSide
       icon: Wrench 
     },
     { 
-      name: "Indicações", 
-      path: "/referrals", 
-      icon: UserPlus 
-    },
-    { 
       name: "Notificações", 
       path: "/notifications", 
       icon: Bell 
@@ -52,6 +43,8 @@ export const MemberSidebarNav = ({ sidebarOpen, className, isAdmin }: MemberSide
       icon: Settings 
     },
   ];
+
+  const isAdmin = profile?.role === 'admin';
 
   return (
     <nav className={cn("px-2 lg:px-4", className)}>

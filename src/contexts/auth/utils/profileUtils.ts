@@ -1,16 +1,13 @@
 
-// Re-exportação dos utilitários de perfil para manter compatibilidade
-export * from './profileUtils/stringGenerator';
+// This file is maintained for backward compatibility
+// It re-exports profile utility functions from the new structure
 
-// Exportação das funções de validação de perfil
-export {
-  validateUserRole,
-  determineRoleFromEmail,
-  isSuperAdmin
-} from './profileUtils/roleValidation';
-
-// Exportação das funções de gerenciamento de perfil
-export {
+export { 
   fetchUserProfile,
-  updateUserProfile
+  createUserProfileIfNeeded
 } from './profileUtils/userProfileFunctions';
+
+export { 
+  determineRoleFromEmail,
+  validateUserRole
+} from './profileUtils/roleValidation';

@@ -1,149 +1,92 @@
 
-import React, { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Wand2 } from "lucide-react";
+import React, { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Sparkles } from 'lucide-react';
 
 interface TrailMagicExperienceProps {
   onFinish: () => void;
 }
 
 export const TrailMagicExperience: React.FC<TrailMagicExperienceProps> = ({ onFinish }) => {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [magicParticles, setMagicParticles] = useState<{ id: number; x: number; y: number }[]>([]);
+  const [step, setStep] = useState(0);
+  const [showFinishButton, setShowFinishButton] = useState(false);
   
   const messages = [
-    "Analisando seu perfil...",
-    "Identificando soluções ideais...",
-    "Personalizando recomendações...",
-    "Organizando sua trilha...",
-    "Quase pronto...",
+    "Analisando seu perfil e objetivos...",
+    "Combinando com soluções de IA de alto impacto...",
+    "Personalizando recomendações específicas...",
+    "Organizando sua trilha ideal...",
+    "Trilha personalizada pronta!"
   ];
-
+  
   useEffect(() => {
-    // Avançar os passos
-    const interval = setInterval(() => {
-      setCurrentStep(prev => {
-        if (prev >= messages.length - 1) {
-          clearInterval(interval);
-          setTimeout(() => {
-            onFinish();
-          }, 1000);
-          return prev;
+    const timers: NodeJS.Timeout[] = [];
+    
+    // Avançar pelos passos com temporizadores
+    for (let i = 1; i < messages.length; i++) {
+      const timer = setTimeout(() => {
+        setStep(i);
+        if (i === messages.length - 1) {
+          setTimeout(() => setShowFinishButton(true), 1000);
         }
-        return prev + 1;
-      });
-    }, 1800);
-
-    // Gerar partículas mágicas
-    const particleInterval = setInterval(() => {
-      setMagicParticles(prev => {
-        // Limitar a 20 partículas
-        const particles = [...prev];
-        if (particles.length > 20) {
-          particles.shift();
-        }
-        
-        // Adicionar nova partícula em posição aleatória
-        return [
-          ...particles,
-          {
-            id: Date.now(),
-            x: Math.random() * 100, // Posição percentual X
-            y: Math.random() * 100, // Posição percentual Y
-          }
-        ];
-      });
-    }, 300);
-
-    return () => {
-      clearInterval(interval);
-      clearInterval(particleInterval);
-    };
-  }, [onFinish, messages.length]);
-
+      }, i * 2000);
+      timers.push(timer);
+    }
+    
+    return () => timers.forEach(timer => clearTimeout(timer));
+  }, [messages.length]);
+  
   return (
-    <div className="relative h-[400px] flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#151823] to-[#1A1E2E] rounded-lg">
-      {/* Partículas mágicas */}
-      {magicParticles.map(particle => (
-        <motion.div
-          key={particle.id}
-          initial={{ 
-            opacity: 0.8, 
-            scale: 0.5,
-            top: `${particle.y}%`,
-            left: `${particle.x}%`
-          }}
-          animate={{
-            opacity: 0,
-            scale: 1,
-            y: -30,
-          }}
-          transition={{ duration: 2 }}
-          className="absolute"
-        >
-          <Sparkles className="h-4 w-4 text-[#0ABAB5]" />
-        </motion.div>
-      ))}
-      
-      {/* Círculo central */}
-      <motion.div 
-        className="relative z-10 w-28 h-28 rounded-full bg-gradient-to-br from-[#0ABAB5]/30 to-[#34D399]/10 flex items-center justify-center"
-        animate={{
-          scale: [1, 1.05, 1],
-          rotate: [0, 5, -5, 0],
-        }}
-        transition={{
-          duration: 4,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      >
-        <motion.div
-          animate={{
-            rotate: 360
-          }}
-          transition={{
-            duration: 10,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-        >
-          <Wand2 className="h-12 w-12 text-[#0ABAB5]" />
-        </motion.div>
-      </motion.div>
-      
-      {/* Mensagens */}
-      <div className="absolute bottom-12 text-center">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentStep}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.5 }}
-            className="h-8 flex items-center justify-center"
-          >
-            <p className="text-[#0ABAB5] font-medium">{messages[currentStep]}</p>
-          </motion.div>
-        </AnimatePresence>
-        
-        <div className="mt-4 flex justify-center">
-          <div className="flex gap-2">
-            {messages.map((_, idx) => (
-              <motion.div
-                key={idx}
-                className={`w-2 h-2 rounded-full ${idx === currentStep ? 'bg-[#0ABAB5]' : 'bg-neutral-600'}`}
-                animate={idx === currentStep ? {
-                  scale: [1, 1.5, 1],
-                } : {}}
-                transition={idx === currentStep ? {
-                  duration: 1.5,
-                  repeat: Infinity,
-                } : {}}
-              />
-            ))}
+    <div className="max-w-2xl mx-auto">
+      <div className="bg-gradient-to-br from-[#151823] to-[#1A1E2E] p-8 rounded-2xl border border-[#0ABAB5]/20 shadow-lg flex flex-col items-center justify-center min-h-[350px]">
+        <div className="relative mb-8">
+          <div className="absolute inset-0 rounded-full bg-[#0ABAB5]/20 blur-xl animate-pulse"></div>
+          <div className="relative">
+            <Sparkles className="h-16 w-16 text-[#0ABAB5] animate-pulse" />
           </div>
         </div>
+        
+        <div className="space-y-6 w-full max-w-md">
+          {messages.map((message, idx) => (
+            <div 
+              key={idx} 
+              className={`flex items-center gap-3 transition-all duration-500 ${
+                idx <= step ? 'opacity-100' : 'opacity-30'
+              }`}
+            >
+              <div className={`h-6 w-6 rounded-full flex items-center justify-center ${
+                idx < step 
+                  ? 'bg-[#0ABAB5] text-white' 
+                  : idx === step 
+                    ? 'bg-white/10 border-2 border-[#0ABAB5] animate-pulse' 
+                    : 'bg-white/5 border border-white/10'
+              }`}>
+                {idx < step ? (
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                ) : (
+                  <span className="h-2 w-2 rounded-full bg-white/70"></span>
+                )}
+              </div>
+              <span className={`text-${idx <= step ? 'white' : 'neutral-500'} ${idx === step ? 'font-medium' : ''}`}>
+                {message}
+              </span>
+            </div>
+          ))}
+        </div>
+        
+        {showFinishButton && (
+          <div className="mt-8 animate-fade-in">
+            <Button
+              onClick={onFinish}
+              className="bg-gradient-to-r from-[#0ABAB5] to-[#34D399] hover:from-[#0ABAB5]/90 hover:to-[#34D399]/90 px-6 py-2 text-base"
+            >
+              <Sparkles className="mr-2 h-4 w-4" />
+              Ver Minha Trilha
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

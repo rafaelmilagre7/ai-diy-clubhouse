@@ -16,11 +16,13 @@ export const SolutionContentSection = ({ solution }: SolutionContentSectionProps
       <div className="prose max-w-none prose-invert">
         <h2 className="text-xl font-semibold mb-4 text-neutral-100">Sobre esta solução</h2>
         
-        {solution.description && (
+        {solution.overview ? (
           <div 
             className="text-neutral-200 prose-headings:text-neutral-100 prose-p:text-neutral-200 prose-strong:text-neutral-100 prose-em:text-neutral-200 prose-li:text-neutral-200" 
-            dangerouslySetInnerHTML={renderContent(solution.description)} 
+            dangerouslySetInnerHTML={renderContent(solution.overview)} 
           />
+        ) : (
+          <p className="text-neutral-200">{solution.description}</p>
         )}
       </div>
     </div>

@@ -166,3 +166,4 @@ export const LessonContent: React.FC<LessonContentProps> = ({
     </div>
   );
 };
+

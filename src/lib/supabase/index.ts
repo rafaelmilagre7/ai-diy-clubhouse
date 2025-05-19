@@ -1,32 +1,8 @@
 
 // Re-exportação centralizada para garantir compatibilidade com importações existentes
 export * from './client';
+export * from './types';
 export * from './config';
-
-// Exportamos todos os tipos necessários exceto Solution
-export type {
-  LearningLesson,
-  LearningLessonVideo,
-  LearningModule,
-  LearningCourse,
-  LearningProgress,
-  LearningResource,
-  LearningComment,
-  LearningLessonTool,
-  UserProfile,
-  UserRole,
-  Progress,
-  UserChecklist,
-  TrailSolution,
-  VideoFormValues
-} from './types';
-
-// Importamos e re-exportamos o Solution de types como SupabaseSolution para evitar conflitos
-import type { Solution as SupabaseSolution } from './types';
-export type { SupabaseSolution };
-
-// E exportamos o Solution de @/types/solution
-export { type Solution } from '@/types/solution';
 
 // Exportação explícita das funções de storage
 export { 
@@ -36,27 +12,18 @@ export {
   setupLearningStorageBuckets,
   ensureBucketExists,
   extractPandaVideoInfo,
-  uploadFileWithFallback
+  uploadFileWithFallback,
+  // Removi createStoragePublicPolicy daqui, pois deve vir apenas do módulo rpc
+  // Adicione outras funções que precisam ser exportadas
 } from './storage';
 
 // Exportação explícita das funções de RPC
 export {
-  createStoragePublicPolicy,
+  createStoragePublicPolicy as createStoragePublicPolicyRPC,
   incrementTopicViews,
   incrementTopicReplies,
   deleteForumTopic,
   deleteForumPost
+  // Adicionar outras funções de RPC conforme necessário
 } from './rpc';
 
-// Exportar tipos do módulo Module para componentes que o usam
-export type Module = {
-  id: string;
-  title: string;
-  type: string;
-  content: any;
-  solution_id: string;
-  module_order: number;
-  created_at: string;
-  updated_at: string;
-  estimated_time_minutes?: number;
-};

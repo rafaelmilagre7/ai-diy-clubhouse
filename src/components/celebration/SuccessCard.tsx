@@ -1,88 +1,124 @@
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
+import { Card } from "@/components/ui/card";
+import { motion } from "framer-motion";
+import { CheckCircle, Award, Star } from "lucide-react";
+import confetti from "canvas-confetti";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, Sparkles } from "lucide-react";
 
 interface SuccessCardProps {
   title: string;
   message: string;
-  type?: "implementation" | "completion" | "achievement" | "step"; 
-  showConfetti?: boolean;
+  type?: "step" | "module" | "implementation";
   className?: string;
-  onClick?: () => void;
-  onAnimationComplete?: () => void; // Adicionado callback para fim de animação
+  showConfetti?: boolean;
+  onAnimationComplete?: () => void;
 }
 
 export const SuccessCard: React.FC<SuccessCardProps> = ({
   title,
   message,
-  type = "completion",
-  showConfetti = false,
+  type = "step",
   className,
-  onClick,
+  showConfetti = true,
   onAnimationComplete
 }) => {
-  // Executar callback quando terminar animação, se fornecido
-  React.useEffect(() => {
-    if (onAnimationComplete) {
-      const timer = setTimeout(() => {
-        onAnimationComplete();
-      }, 3000); // Executa após 3 segundos de exibição
-      
-      return () => clearTimeout(timer);
-    }
-  }, [onAnimationComplete]);
+  const cardRef = useRef<HTMLDivElement>(null);
   
-  // Definir cores baseadas no tipo
-  const getColors = () => {
+  // Lançar confetes quando o card aparecer
+  useEffect(() => {
+    if (showConfetti && cardRef.current) {
+      const rect = cardRef.current.getBoundingClientRect();
+      const x = (rect.left + rect.width / 2) / window.innerWidth;
+      const y = (rect.top + rect.height / 2) / window.innerHeight;
+      
+      confetti({
+        particleCount: type === "implementation" ? 150 : 75,
+        spread: 70,
+        origin: { x, y: y - 0.1 }
+      });
+    }
+  }, [showConfetti, type]);
+  
+  // Escolher o ícone baseado no tipo de conquista
+  const renderIcon = () => {
     switch (type) {
       case "implementation":
-        return "bg-gradient-to-br from-[#151823] to-[#1A1E2E] border-[#0ABAB5]/30";
-      case "achievement":
-        return "bg-gradient-to-br from-amber-950/40 to-amber-900/20 border-amber-500/30";
-      case "step":
-        return "bg-gradient-to-br from-indigo-950/40 to-indigo-900/20 border-indigo-500/30";
+        return <Award className="h-8 w-8 text-yellow-500" />;
+      case "module":
+        return <Star className="h-8 w-8 text-purple-500" />;
       default:
-        return "bg-gradient-to-br from-[#151823] to-[#1E1F2B] border-indigo-500/30";
+        return <CheckCircle className="h-8 w-8 text-green-500" />;
     }
   };
   
-  const getIconColor = () => {
+  // Estilos baseados no tipo de conquista
+  const getTypeStyles = () => {
     switch (type) {
       case "implementation":
-        return "text-[#0ABAB5]";
-      case "achievement":
-        return "text-amber-400";
-      case "step":
-        return "text-indigo-400";
+        return "bg-gradient-to-br from-yellow-50 to-amber-100 border-yellow-300";
+      case "module":
+        return "bg-gradient-to-br from-purple-50 to-violet-100 border-purple-300";
       default:
-        return "text-indigo-400";
+        return "bg-gradient-to-br from-green-50 to-emerald-100 border-green-300";
     }
   };
   
   return (
-    <div
-      className={cn(
-        "p-4 rounded-lg shadow-lg border animate-scale-in",
-        getColors(),
-        className
-      )}
-      onClick={onClick}
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9, y: 20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ 
+        type: "spring",
+        stiffness: 400,
+        damping: 15
+      }}
+      onAnimationComplete={onAnimationComplete}
+      ref={cardRef}
     >
-      <div className="flex items-start gap-4">
-        <div className={`w-10 h-10 rounded-full bg-${getIconColor().split("-")[1]}-500/20 flex items-center justify-center flex-shrink-0`}>
-          {type === "implementation" ? (
-            <Sparkles className={cn("h-5 w-5", getIconColor())} />
-          ) : (
-            <CheckCircle2 className={cn("h-5 w-5", getIconColor())} />
-          )}
+      <Card className={cn(
+        "overflow-hidden border-2 shadow-lg",
+        getTypeStyles(),
+        className
+      )}>
+        <div className="p-4 text-center">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ 
+              delay: 0.2,
+              type: "spring",
+              stiffness: 300
+            }}
+            className="mx-auto mb-3 flex justify-center"
+          >
+            <div className="relative">
+              <div className="absolute inset-0 rounded-full bg-white/80 scale-150 blur-md"></div>
+              <div className="relative bg-white p-3 rounded-full shadow-inner">
+                {renderIcon()}
+              </div>
+            </div>
+          </motion.div>
+          
+          <motion.h3
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="text-xl font-bold"
+          >
+            {title}
+          </motion.h3>
+          
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="text-gray-700 mt-2"
+          >
+            {message}
+          </motion.p>
         </div>
-        
-        <div className="flex-1">
-          <h4 className="text-lg font-medium text-white mb-1">{title}</h4>
-          <p className="text-neutral-300 text-sm">{message}</p>
-        </div>
-      </div>
-    </div>
+      </Card>
+    </motion.div>
   );
 };

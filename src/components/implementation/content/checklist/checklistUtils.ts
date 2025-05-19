@@ -14,9 +14,9 @@ export interface ChecklistItem {
  */
 export const extractChecklistFromSolution = (solution: Solution): ChecklistItem[] => {
   // Check if checklist property exists and is an array
-  if (solution.checklist_items && Array.isArray(solution.checklist_items)) {
+  if (solution.checklist && Array.isArray(solution.checklist)) {
     // Transform items to ensure they have the required properties
-    return solution.checklist_items.map((item: any, index: number) => ({
+    return solution.checklist.map((item: any, index: number) => ({
       id: item.id || `checklist-${index}`,
       title: item.title || item.text || "Item sem título",
       description: item.description,

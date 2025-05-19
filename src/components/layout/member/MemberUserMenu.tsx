@@ -1,6 +1,9 @@
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
+import { Link, useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { User, LogOut } from "lucide-react";
+import { 
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -8,9 +11,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { LogOut, Settings, User } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface MemberUserMenuProps {
   sidebarOpen: boolean;
@@ -21,78 +24,88 @@ interface MemberUserMenuProps {
   signOut: () => Promise<void>;
 }
 
-export function MemberUserMenu({ 
+export const MemberUserMenu = ({ 
   sidebarOpen, 
-  profileName,
-  profileEmail,
+  profileName, 
+  profileEmail, 
   profileAvatar,
   getInitials,
-  signOut 
-}: MemberUserMenuProps) {
-  // Log para diagnóstico
-  console.log("MemberUserMenu renderizando:", {
-    sidebarOpen,
-    profileName,
-    profileEmail,
-    hasAvatar: !!profileAvatar
-  });
+  signOut
+}: MemberUserMenuProps) => {
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const navigate = useNavigate();
   
-  const initials = getInitials(profileName);
+  const handleSignOut = async (e: Event) => {
+    e.preventDefault();
+    
+    try {
+      setIsLoggingOut(true);
+      
+      // Limpar token do localStorage para garantir logout
+      localStorage.removeItem('sb-zotzvtepvpnkcoobdubt-auth-token');
+      localStorage.removeItem('supabase.auth.token');
+      
+      // Usar o signOut do contexto de autenticação
+      await signOut();
+      
+      // Redirecionamento forçado para a página de autenticação
+      toast.success("Logout realizado com sucesso");
+      
+      // Forçar redirecionamento via location.href para garantir reset completo da aplicação
+      window.location.href = '/login';
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+      // Força redirecionamento para login em caso de falha
+      window.location.href = '/login';
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
   
   return (
-    <div className={`p-3 ${sidebarOpen ? 'flex items-center justify-between' : 'flex justify-center'}`}>
+    <div className="p-3">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="p-0 h-auto hover:bg-transparent w-full flex justify-start">
-            <div className={`flex items-center ${sidebarOpen ? 'w-full' : 'justify-center'}`}>
-              <Avatar className="h-8 w-8">
-                {profileAvatar ? (
-                  <AvatarImage src={profileAvatar} alt={profileName || "Usuário"} />
-                ) : (
-                  <AvatarFallback>{initials}</AvatarFallback>
-                )}
-              </Avatar>
-              
-              {sidebarOpen && (
-                <div className="ml-2 text-left">
-                  <p className="text-sm font-medium text-white truncate max-w-[160px]">
-                    {profileName || "Usuário"}
-                  </p>
-                  {profileEmail && (
-                    <p className="text-xs text-muted-foreground truncate max-w-[160px]">
-                      {profileEmail}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start gap-2 px-2 hover:bg-[#181A2A] text-neutral-300",
+              !sidebarOpen && "justify-center"
+            )}
+          >
+            <Avatar className="h-8 w-8 border border-white/10">
+              <AvatarImage src={profileAvatar} />
+              <AvatarFallback className="bg-[#181A2A] text-viverblue">{getInitials(profileName)}</AvatarFallback>
+            </Avatar>
+            {sidebarOpen && (
+              <div className="flex flex-col items-start text-sm">
+                <span className="font-medium text-neutral-100">{profileName}</span>
+                <span className="text-muted-foreground text-xs truncate max-w-[150px]">
+                  {profileEmail}
+                </span>
+              </div>
+            )}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem asChild>
-            <Link to="/profile" className="flex items-center cursor-pointer">
+        <DropdownMenuContent align="end" className="w-56 bg-[#151823] border-white/5">
+          <DropdownMenuLabel className="text-neutral-200">Minha Conta</DropdownMenuLabel>
+          <DropdownMenuSeparator className="bg-white/5" />
+          <Link to="/profile">
+            <DropdownMenuItem className="hover:bg-[#181A2A]">
               <User className="mr-2 h-4 w-4" />
               <span>Perfil</span>
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link to="/profile/edit" className="flex items-center cursor-pointer">
-              <Settings className="mr-2 h-4 w-4" />
-              <span>Configurações</span>
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
+            </DropdownMenuItem>
+          </Link>
           <DropdownMenuItem 
-            className="flex items-center cursor-pointer text-destructive focus:text-destructive" 
-            onClick={signOut}
+            disabled={isLoggingOut} 
+            onSelect={handleSignOut}
+            className="hover:bg-[#181A2A]"
           >
             <LogOut className="mr-2 h-4 w-4" />
-            <span>Sair</span>
+            <span>{isLoggingOut ? "Saindo..." : "Sair"}</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
   );
-}
+};

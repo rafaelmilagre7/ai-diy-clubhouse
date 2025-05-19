@@ -1,5 +1,11 @@
 
-// Re-exportar as funções de autenticação para facilitar o uso
-export * from './authUtils';
-export * from './profileUtils/roleValidation';
-export * from './profileUtils/userProfileFunctions';
+// Export all utility functions
+export { fetchUserProfile } from './profileUtils';
+export { signInWithGoogle } from './googleAuth';
+export { 
+  createTestUser, 
+  signInAsTestMember, 
+  signInAsTestAdmin 
+} from './testAuth';
+export { signOutUser } from './sessionUtils';
+export { isSuperAdmin } from './profileUtils/roleValidation';

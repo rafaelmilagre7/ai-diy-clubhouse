@@ -1,22 +1,22 @@
 
 import { Session, User } from '@supabase/supabase-js';
-import type { UserRole, UserProfile } from '@/lib/supabase/types';
+import { UserProfile } from '@/lib/supabase';
 
-// Definindo o tipo para o contexto de autenticação
+// Tipo do contexto de autenticação
 export interface AuthContextType {
-  user: User | null;
   session: Session | null;
+  user: User | null;
   profile: UserProfile | null;
-  isLoading: boolean;
   isAdmin: boolean;
   isFormacao: boolean;
+  isLoading: boolean;
+  authError: Error | null;
+  signIn: (email?: string, password?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
-  signIn: (email: string, password: string) => Promise<void>;
   signInAsMember: () => Promise<void>;
   signInAsAdmin: () => Promise<void>;
-  setProfile: (profile: UserProfile | null) => void;
-  setIsLoading: (isLoading: boolean) => void;
-  setUser: (user: User | null) => void;
-  setSession: (session: Session | null) => void;
-  setIsAdmin: (isAdmin: boolean) => void;
+  setSession: React.Dispatch<React.SetStateAction<Session | null>>;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
+  setProfile: React.Dispatch<React.SetStateAction<UserProfile | null>>;
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }

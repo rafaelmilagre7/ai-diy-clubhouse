@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
@@ -12,30 +12,21 @@ const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { user, signIn } = useAuth();
+  const { signIn, user } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  
-  // Obter a rota para redirecionamento após login
-  const from = location.state?.from?.pathname || '/dashboard';
   
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      console.log("Usuário já está logado, redirecionando para:", from);
-      navigate(from, { replace: true });
+      console.log("Usuário já está logado, redirecionando para dashboard");
+      navigate('/dashboard', { replace: true });
     }
-  }, [user, navigate, from]);
+  }, [user, navigate]);
 
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
       toast.info("Iniciando login com Google...");
-      
-      // Limpar tokens existentes para garantir login limpo
-      localStorage.removeItem('sb-zotzvtepvpnkcoobdubt-auth-token');
-      localStorage.removeItem('supabase.auth.token');
-      
       // Usar string vazias para indicar login com Google
       await signIn("", "");
       // Navigation is handled by auth state change listeners
@@ -58,10 +49,6 @@ const LoginForm = () => {
     try {
       setIsLoading(true);
       
-      // Limpar tokens existentes para garantir login limpo
-      localStorage.removeItem('sb-zotzvtepvpnkcoobdubt-auth-token');
-      localStorage.removeItem('supabase.auth.token');
-      
       // Show immediate feedback toast
       toast.info("Entrando...");
       
@@ -74,25 +61,16 @@ const LoginForm = () => {
       
       if (data.user) {
         toast.success("Login bem-sucedido! Redirecionando...");
-        console.log("Login bem-sucedido, redirecionando para:", from);
+        console.log("Login bem-sucedido, redirecionando para dashboard");
         
         // Forçar redirecionamento após autenticação bem-sucedida
         setTimeout(() => {
-          navigate(from, { replace: true });
+          navigate('/dashboard', { replace: true });
         }, 500);
       }
     } catch (error: any) {
       console.error("Erro ao fazer login:", error);
-      
-      let errorMessage = "Não foi possível fazer login. Verifique suas credenciais.";
-      
-      if (error.message === "Invalid login credentials") {
-        errorMessage = "Credenciais inválidas. Verifique seu email e senha.";
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      toast.error(errorMessage);
+      toast.error(error.message || "Não foi possível fazer login. Verifique suas credenciais.");
     } finally {
       setIsLoading(false);
     }
@@ -115,10 +93,6 @@ const LoginForm = () => {
         onClick={handleGoogleSignIn}
         isLoading={isLoading}
       />
-      
-      <div className="text-center text-sm text-white mt-4">
-        <p>O acesso à plataforma é exclusivo para membros convidados</p>
-      </div>
     </div>
   );
 };
