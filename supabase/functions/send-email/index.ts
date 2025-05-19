@@ -1,6 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -37,27 +37,27 @@ serve(async (req: Request) => {
     console.log(`Assunto: ${subject}`);
 
     // Configurar cliente SMTP usando as variáveis de ambiente do Supabase
-    const client = new SmtpClient();
-    await client.connectTLS({
-      hostname: Deno.env.get("SMTP_HOST") || "",
-      port: Number(Deno.env.get("SMTP_PORT")) || 587,
-      username: Deno.env.get("SMTP_USER") || "",
-      password: Deno.env.get("SMTP_PASS") || "",
+    const client = new SMTPClient({
+      connection: {
+        hostname: Deno.env.get("SMTP_HOST") || "",
+        port: Number(Deno.env.get("SMTP_PORT")) || 587,
+        tls: true,
+        auth: {
+          username: Deno.env.get("SMTP_USER") || "",
+          password: Deno.env.get("SMTP_PASS") || "",
+        },
+      }
     });
-
-    // Preparar destinatários CC e BCC
-    const ccAddresses = cc?.join(", ");
-    const bccAddresses = bcc?.join(", ");
 
     // Enviar email usando o cliente SMTP
     const sendResult = await client.send({
       from: from,
       to: to,
-      cc: ccAddresses,
-      bcc: bccAddresses,
+      cc: cc,
+      bcc: bcc,
       replyTo: reply_to,
       subject: subject,
-      content: html,
+      content: text || "Este é um email em formato HTML, por favor, use um cliente de email compatível.",
       html: html,
     });
 
