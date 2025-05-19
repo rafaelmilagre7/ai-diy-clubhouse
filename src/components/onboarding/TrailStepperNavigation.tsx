@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '../ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface TrailStepperNavigationProps {
@@ -18,30 +18,46 @@ export const TrailStepperNavigation: React.FC<TrailStepperNavigationProps> = ({
   onPrevious,
   onNext
 }) => {
+  const isFirstStep = currentStepIdx === 0;
+  const isLastStep = currentStepIdx === stepsLength - 1;
+  
   return (
-    <div className="flex justify-between items-center pt-4">
-      <Button
-        onClick={onPrevious}
-        disabled={currentStepIdx === 0}
-        variant="outline"
-        className="flex items-center gap-1 border-white/10 hover:bg-white/5"
-      >
-        <ChevronLeft className="h-4 w-4" />
-        Anterior
-      </Button>
-      
-      <div className="text-sm text-neutral-400">
-        Solução {currentStepIdx + 1} de {stepsLength}
+    <div className="mt-6 flex items-center justify-between">
+      <div className="flex gap-2">
+        {Array.from({ length: stepsLength }).map((_, index) => (
+          <div
+            key={index}
+            className={`w-2 h-2 rounded-full ${
+              index === currentStepIdx
+                ? 'bg-[#0ABAB5]'
+                : 'bg-neutral-600'
+            } transition-all duration-300`}
+          />
+        ))}
       </div>
       
-      <Button
-        onClick={onNext}
-        disabled={currentStepIdx >= stepsLength - 1 || !typingFinished}
-        className="flex items-center gap-1 bg-gradient-to-r from-[#0ABAB5] to-[#34D399] hover:from-[#0ABAB5]/90 hover:to-[#34D399]/90"
-      >
-        Próxima
-        <ChevronRight className="h-4 w-4" />
-      </Button>
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onPrevious}
+          disabled={isFirstStep}
+          className="border-neutral-600 text-neutral-300 hover:bg-neutral-800 disabled:opacity-50"
+        >
+          <ChevronLeft className="h-4 w-4 mr-1" />
+          Anterior
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onNext}
+          disabled={!typingFinished || isLastStep}
+          className="border-neutral-600 text-neutral-300 hover:bg-neutral-800 disabled:opacity-50"
+        >
+          Próximo
+          <ChevronRight className="h-4 w-4 ml-1" />
+        </Button>
+      </div>
     </div>
   );
 };

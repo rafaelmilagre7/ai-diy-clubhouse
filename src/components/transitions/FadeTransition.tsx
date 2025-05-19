@@ -1,49 +1,25 @@
 
-import React from "react";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import React from "react";
 
 interface FadeTransitionProps {
   children: React.ReactNode;
-  className?: string;
   delay?: number;
-  direction?: "up" | "down" | "left" | "right" | "none";
+  className?: string;
 }
 
-export const FadeTransition: React.FC<FadeTransitionProps> = ({
+export const FadeTransition: React.FC<FadeTransitionProps> = ({ 
   children,
-  className,
   delay = 0,
-  direction = "up"
+  className = ""
 }) => {
-  // Configuração da animação baseada na direção
-  const getDirectionProps = () => {
-    switch (direction) {
-      case "up":
-        return { initial: { y: 20 }, animate: { y: 0 } };
-      case "down":
-        return { initial: { y: -20 }, animate: { y: 0 } };
-      case "left":
-        return { initial: { x: 20 }, animate: { x: 0 } };
-      case "right":
-        return { initial: { x: -20 }, animate: { x: 0 } };
-      default:
-        return { initial: {}, animate: {} };
-    }
-  };
-
-  const directionProps = getDirectionProps();
-
   return (
     <motion.div
-      initial={{ opacity: 0, ...directionProps.initial }}
-      animate={{ opacity: 1, ...directionProps.animate }}
-      transition={{ 
-        duration: 0.4, 
-        ease: "easeOut",
-        delay 
-      }}
-      className={cn(className)}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5, delay, ease: "easeOut" }}
+      className={className}
     >
       {children}
     </motion.div>

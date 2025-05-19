@@ -3,55 +3,65 @@ import React, { useState, useEffect, useRef } from 'react';
 
 interface TrailTypingTextProps {
   text: string;
+  speed?: number;
+  delay?: number;
   onComplete?: () => void;
-  typingSpeed?: number;
 }
 
-export const TrailTypingText: React.FC<TrailTypingTextProps> = ({ 
-  text, 
-  onComplete,
-  typingSpeed = 30
+export const TrailTypingText: React.FC<TrailTypingTextProps> = ({
+  text,
+  speed = 20,
+  delay = 200,
+  onComplete
 }) => {
   const [displayedText, setDisplayedText] = useState('');
   const [isComplete, setIsComplete] = useState(false);
-  const textRef = useRef<HTMLDivElement>(null);
-  
+  const intervalRef = useRef<number | null>(null);
+  const textIndex = useRef(0);
+
   useEffect(() => {
+    // Reseta o estado quando o texto muda
     setDisplayedText('');
     setIsComplete(false);
+    textIndex.current = 0;
     
-    let currentIndex = 0;
-    const textToType = text || '';
-    
-    const typingInterval = setInterval(() => {
-      if (currentIndex < textToType.length) {
-        setDisplayedText(prev => prev + textToType.charAt(currentIndex));
-        currentIndex++;
-      } else {
-        clearInterval(typingInterval);
-        setIsComplete(true);
-        if (onComplete) onComplete();
+    // Limpar intervalos anteriores
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    // Adicionar atraso inicial
+    const timeoutId = setTimeout(() => {
+      intervalRef.current = window.setInterval(() => {
+        if (textIndex.current < text.length) {
+          setDisplayedText(prev => prev + text.charAt(textIndex.current));
+          textIndex.current += 1;
+        } else {
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            setIsComplete(true);
+            if (onComplete) {
+              onComplete();
+            }
+          }
+        }
+      }, speed);
+    }, delay);
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
       }
-    }, typingSpeed);
-    
-    return () => clearInterval(typingInterval);
-  }, [text, onComplete, typingSpeed]);
-  
+    };
+  }, [text, speed, delay, onComplete]);
+
   return (
     <div className="relative">
-      <div 
-        ref={textRef}
-        className="text-lg font-medium text-center text-neutral-200 italic leading-relaxed p-6 bg-gradient-to-r from-[#0ABAB5]/10 via-[#0ABAB5]/5 to-transparent rounded-md border border-[#0ABAB5]/20"
-      >
-        <span className="text-[#0ABAB5]">"</span>
-        {displayedText}
-        <span className={`inline-block ${isComplete ? 'opacity-100' : 'animate-pulse'}`}>
-          <span className="text-[#0ABAB5]">"</span>
-        </span>
-        {!isComplete && (
-          <span className="inline-block w-1.5 h-4 ml-0.5 bg-[#0ABAB5] animate-pulse" />
-        )}
-      </div>
+      <p className="text-neutral-300">{displayedText}</p>
+      {!isComplete && (
+        <span className="inline-block ml-1 w-2 h-4 bg-[#0ABAB5] animate-pulse" />
+      )}
     </div>
   );
 };
