@@ -1,56 +1,61 @@
 
-import { UserRole } from "@/lib/supabase";
-
 /**
- * Validates if the user's role matches the required role
+ * Valida se o papel especificado corresponde ao papel requerido.
+ * 
+ * @param role O papel a ser validado
+ * @param requiredRole O papel ou papéis requeridos
+ * @returns true se o papel for válido, false caso contrário
  */
-export function validateRole(
-  userRole: string | UserRole, 
-  requiredRole: string | string[]
-): boolean {
-  // Se o userRole for um objeto, pegue a propriedade name
-  const roleName = typeof userRole === 'object' ? userRole.name : userRole;
-  
-  // Se requiredRole for um array, verifica se o userRole está nesse array
-  if (Array.isArray(requiredRole)) {
-    return requiredRole.includes(roleName);
+export function validateRole(role: string, requiredRole: string | string[]): boolean {
+  // Se o papel for 'admin', ele tem acesso a tudo
+  if (role === 'admin') {
+    return true;
   }
-  
-  // Senão, compara diretamente
-  return roleName === requiredRole;
+
+  // Verificar com um array de papéis requeridos
+  if (Array.isArray(requiredRole)) {
+    return requiredRole.includes(role);
+  }
+
+  // Verificar com um único papel requerido
+  return role === requiredRole;
 }
 
 /**
- * Alias para manter compatibilidade com código existente
+ * Alias para validateRole para compatibilidade com código existente
  */
 export const validateUserRole = validateRole;
 
 /**
  * Determina o papel do usuário com base no email
- * @param email Email do usuário
- * @returns Nome do papel determinado
+ * 
+ * @param email O email do usuário
+ * @returns O papel determinado
  */
 export function determineRoleFromEmail(email: string): string {
-  // Verificação para administradores
+  if (!email) return 'member';
+  
+  // Verificar emails administrativos
   if (email.endsWith('@viverdeia.ai') || email === 'admin@teste.com') {
     return 'admin';
   }
   
-  // Verificação para usuários de formação
-  if (email.endsWith('@formacao.viverdeia.ai') || email.includes('formacao')) {
+  // Verificar emails de formação
+  if (email.includes('formacao') || email.endsWith('@formacao.viverdeia.ai')) {
     return 'formacao';
   }
   
-  // Padrão para todos os outros usuários
+  // Default para membros normais
   return 'member';
 }
 
 /**
- * Verifica se o usuário é um super administrador
- * @param role Papel do usuário
- * @returns true se o usuário for super admin
+ * Verifica se o usuário é um superadmin
+ * 
+ * @param email O email do usuário
+ * @returns true se for superadmin, false caso contrário
  */
-export function isSuperAdmin(role: string | UserRole): boolean {
-  const roleName = typeof role === 'object' ? role.name : role;
-  return roleName === 'admin';
+export function isSuperAdmin(email: string): boolean {
+  const specialEmails = ['admin@viverdeia.ai', 'rafael@viverdeia.ai'];
+  return specialEmails.includes(email);
 }

@@ -1,3 +1,3 @@
 
 // Re-exporta as funções do módulo auth session utils localizado nos hooks
-export { processUserProfile } from '@/hooks/auth/utils/authSessionUtils';
+export { processUserProfile, getUserRole, validateUserAuthorization } from '@/hooks/auth/utils/authSessionUtils';

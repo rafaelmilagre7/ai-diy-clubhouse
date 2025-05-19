@@ -15,5 +15,5 @@ export {
   isSuperAdmin
 };
 
-// Também exportamos outras funções relacionadas a perfis, se existirem
+// Também exportamos outras funções relacionadas a perfis
 export * from './userProfileFunctions';

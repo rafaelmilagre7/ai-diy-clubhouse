@@ -21,12 +21,11 @@ export {
   incrementTopicViews,
   incrementTopicReplies,
   deleteForumTopic,
-  deleteForumPost,
+  deleteForumPost
   // Adicionar outras funções RPC conforme necessário
 } from './rpc';
 
-// Exportação de tipos específicos para garantir compatibilidade
-// Isso resolve problemas de importação em componentes que usam esses tipos
+// Exportar tipos específicos para garantir compatibilidade
 export type {
   LearningLesson,
   LearningLessonVideo,
@@ -36,7 +35,8 @@ export type {
   LearningResource,
   LearningComment,
   LearningLessonTool,
-  UserProfile
+  UserProfile,
+  Solution
 } from './types';
 
 // Exportar o tipo Solution que é usado em vários componentes

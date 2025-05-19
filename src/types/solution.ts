@@ -1,9 +1,8 @@
 
-import { Solution as SupabaseSolution } from "@/lib/supabase";
 import { SolutionCategory } from "@/lib/types/categoryTypes";
 
-// Definição unificada de Solution que estende a SupabaseSolution
-export interface Solution extends Omit<SupabaseSolution, 'author_id'> {
+// Definição unificada de Solution que NÃO estende a SupabaseSolution para evitar referência circular
+export interface Solution {
   id: string;
   title: string;
   description: string;
@@ -18,6 +17,6 @@ export interface Solution extends Omit<SupabaseSolution, 'author_id'> {
   estimated_time?: number;
   success_rate?: number;
   related_solutions?: string[];
-  author_id?: string; // Tornando author_id opcional para compatibilidade
-  checklist_items?: any[]; // Adicionando checklist_items que está faltando
+  author_id?: string;
+  checklist_items?: any[];
 }
