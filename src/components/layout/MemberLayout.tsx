@@ -74,8 +74,17 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
     document.body.classList.add('dark');
   }, []);
 
-  // Log para debug do profile
-  console.log("MemberLayout profile:", profile, "isAdmin:", isAdmin);
+  // Logs para debug
+  console.log("MemberLayout userData:", { 
+    user: !!user, 
+    profile, 
+    isAdmin, 
+    email: user?.email 
+  });
+
+  const profileName = profile?.name || user?.user_metadata?.name || null;
+  const profileEmail = profile?.email || user?.email || null;
+  const profileAvatar = profile?.avatar_url;
 
   return (
     <div className="flex min-h-screen bg-[#0F111A] overflow-hidden">
@@ -91,9 +100,9 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
       <MemberSidebar 
         sidebarOpen={sidebarOpen} 
         setSidebarOpen={setSidebarOpen}
-        profileName={profile?.name || null}
-        profileEmail={profile?.email || null}
-        profileAvatar={profile?.avatar_url}
+        profileName={profileName}
+        profileEmail={profileEmail}
+        profileAvatar={profileAvatar}
         getInitials={getInitials}
         signOut={signOut}
         isAdmin={isAdmin}

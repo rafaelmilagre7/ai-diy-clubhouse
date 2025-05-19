@@ -7,12 +7,20 @@ import { useAuth } from "@/contexts/auth";
  */
 export function ModernDashboardHeader() {
   // Obter dados do usuário diretamente do contexto de autenticação
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
+  
   // Extrair o primeiro nome ou usar um fallback
-  const userName = profile?.name?.split(" ")[0] || "Membro";
+  const userName = profile?.name?.split(" ")[0] || 
+                   user?.user_metadata?.name?.split(" ")[0] || 
+                   user?.email?.split("@")[0] || 
+                   "Membro";
   
   // Debug para verificar o nome recebido
-  console.log("ModernDashboardHeader profile:", profile);
+  console.log("ModernDashboardHeader:", { 
+    profile, 
+    userName,
+    user_metadata: user?.user_metadata
+  });
 
   return (
     <div

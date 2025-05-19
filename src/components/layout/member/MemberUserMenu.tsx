@@ -35,6 +35,9 @@ export const MemberUserMenu = ({
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
   
+  // Log para debug
+  console.log("MemberUserMenu props:", { profileName, profileEmail, profileAvatar });
+  
   const handleSignOut = async (e: Event) => {
     e.preventDefault();
     
@@ -79,9 +82,9 @@ export const MemberUserMenu = ({
             </Avatar>
             {sidebarOpen && (
               <div className="flex flex-col items-start text-sm">
-                <span className="font-medium text-neutral-100">{profileName}</span>
+                <span className="font-medium text-neutral-100">{profileName || "Usuário"}</span>
                 <span className="text-muted-foreground text-xs truncate max-w-[150px]">
-                  {profileEmail}
+                  {profileEmail || ""}
                 </span>
               </div>
             )}
