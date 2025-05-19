@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useImplementationTrail } from "./useImplementationTrail";
@@ -94,7 +93,7 @@ export const useTrailGuidedExperience = () => {
 
     try {
       if (shouldRegenerate) {
-        // Chamamos sem parâmetros ou com null
+        // Chamamos com null, que é válido na tipagem atualizada
         await generateImplementationTrail(null);
         toast.success("Trilha personalizada gerada com sucesso!");
       }

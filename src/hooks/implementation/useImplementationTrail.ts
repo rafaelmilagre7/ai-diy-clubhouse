@@ -1,10 +1,10 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
 import { sanitizeTrailData, saveTrailToLocalStorage, getTrailFromLocalStorage, clearTrailFromLocalStorage } from './useImplementationTrail.utils';
 import { toast } from 'sonner';
 import { OnboardingProgress } from '@/types/onboarding';
+import { ImplementationTrail, TrailSolution } from '@/types/implementation-trail';
 
 // Flag global para prevenir chamadas concorrentes
 let isGenerationInProgress = false;
@@ -12,24 +12,7 @@ let lastGenerationTimestamp = 0;
 const GENERATION_COOLDOWN = 5000; // 5 segundos
 const MAX_RETRY_ATTEMPTS = 2;
 
-export interface ImplementationTrail {
-  priority1: TrailSolution[];
-  priority2: TrailSolution[];
-  priority3: TrailSolution[];
-  recommended_courses?: TrailCourseRecommendation[];
-}
-
-export interface TrailSolution {
-  solutionId: string;
-  justification?: string;
-  priority?: number;
-}
-
-export interface TrailCourseRecommendation {
-  courseId: string;
-  justification?: string;
-  priority?: number;
-}
+export { ImplementationTrail, TrailSolution } from '@/types/implementation-trail';
 
 export const useImplementationTrail = () => {
   const { user } = useAuth();
@@ -162,8 +145,8 @@ export const useImplementationTrail = () => {
   }, [loadTrailData]);
 
   // Função para gerar trilha de implementação
-  // Modificamos esta função para aceitar onboardingData como null ou parcial
-  const generateImplementationTrail = useCallback(async (onboardingData: Partial<OnboardingProgress> | null = null, forceRegenerate = false) => {
+  // Modificamos a função para aceitar parâmetros parciais ou nulos
+  const generateImplementationTrail = useCallback(async (onboardingData: TrailGenerationParams = null, forceRegenerate = false) => {
     // Verificações de segurança
     if (!user) {
       toast.error("Você precisa estar logado para gerar uma trilha");

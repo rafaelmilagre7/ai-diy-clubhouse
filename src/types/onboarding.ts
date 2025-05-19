@@ -1,4 +1,3 @@
-
 export interface OnboardingData {
   // 1. Dados Pessoais
   personal_info: {
@@ -206,3 +205,6 @@ export type CompleteOnboardingStep = OnboardingStep & {
   forFormation?: boolean;
   forClub?: boolean;
 };
+
+// Adicionando referência aos tipos da trilha para integração
+import { ImplementationTrail } from './implementation-trail';

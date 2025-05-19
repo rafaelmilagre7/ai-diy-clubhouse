@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
@@ -179,10 +178,10 @@ export const ImplementationTrailCreator = () => {
       setRecommendedCourses([]);
       
       toast.info("Gerando sua trilha personalizada...");
-      // Chamamos sem dados de onboarding ou com null
+      // Passamos null como primeiro parâmetro, que agora é permitido pela tipagem
       await generateImplementationTrail(null, true); // Forçando regeneração completa da trilha
       
-      toast.success("Trilha de implementação gerada com sucesso!");
+      toast.success("Trilha personalizada gerada com sucesso!");
     } catch (error) {
       console.error("Erro ao gerar trilha:", error);
       toast.error("Não foi possível gerar sua trilha. Tente novamente.");

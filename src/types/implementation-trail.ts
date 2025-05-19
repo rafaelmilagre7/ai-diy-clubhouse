@@ -1,0 +1,45 @@
+
+import { OnboardingData, OnboardingProgress } from "./onboarding";
+
+export interface TrailSolution {
+  solutionId: string;
+  justification?: string;
+  priority?: number;
+}
+
+export interface TrailCourseRecommendation {
+  courseId: string;
+  justification?: string;
+  priority?: number;
+}
+
+export interface ImplementationTrail {
+  priority1: TrailSolution[];
+  priority2: TrailSolution[];
+  priority3: TrailSolution[];
+  recommended_courses?: TrailCourseRecommendation[];
+}
+
+// Interface para a solução enriquecida com detalhes da trilha
+export interface TrailSolutionEnriched extends TrailSolution {
+  id: string;
+  title: string;
+  description: string;
+  thumbnail_url?: string;
+  category: string;
+  difficulty: string;
+  tags?: string[];
+  solution?: any;  // Detalhes completos da solução
+}
+
+// Interface para o curso recomendado na trilha
+export interface TrailCourseEnriched extends TrailCourseRecommendation {
+  id: string;
+  title: string;
+  description?: string;
+  cover_image_url?: string;
+  modules_count?: number;
+}
+
+// Parâmetros para geração da trilha
+export type TrailGenerationParams = Partial<OnboardingProgress> | null;

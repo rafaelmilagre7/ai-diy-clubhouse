@@ -1,16 +1,12 @@
-
 import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
-import { Solution } from "@/lib/supabase";
 import { supabase } from "@/lib/supabase";
 import { TrailCardLoader } from "./TrailCardLoader";
 import { TrailEmptyState } from "./TrailEmptyState";
 import { TrailCardList } from "./TrailCardList";
 import { TrailCardHeader } from "./TrailCardHeader";
-
-// Removemos a definição da interface TrailSolution daqui para evitar conflito
 
 export const ImplementationTrail = () => {
   const navigate = useNavigate();
@@ -96,7 +92,7 @@ export const ImplementationTrail = () => {
   }, [trail]);
 
   const handleRegenerateTrail = async () => {
-    // Chamamos sem enviar parâmetros, que agora é válido
+    // Chamamos com parâmetro nulo, que agora é válido na tipagem
     await generateImplementationTrail(null);
   };
 
