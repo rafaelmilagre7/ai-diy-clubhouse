@@ -13,6 +13,7 @@ export const MemberSidebarNav = ({ sidebarOpen, className, isAdmin }: MemberSide
   // Log para diagnóstico
   console.log("MemberSidebarNav renderizando com isAdmin:", isAdmin);
 
+  // Definição dos itens de navegação padrão - sempre disponíveis
   const navItems = [
     { 
       name: "Dashboard", 
