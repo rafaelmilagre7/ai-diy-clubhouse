@@ -2,28 +2,116 @@
 import { Database } from './database.types';
 
 // Tipos de tabelas
-export type LearningLesson = Database['public']['Tables']['learning_lessons']['Row'] & {
+export interface LearningLesson {
+  id: string;
+  title: string;
+  description: string | null;
+  content: any | null;
+  cover_image_url: string | null;
+  module_id: string;
+  published: boolean;
+  created_at: string;
+  updated_at: string;
+  order_index: number;
+  estimated_time_minutes: number | null;
+  ai_assistant_enabled: boolean;
+  ai_assistant_prompt: string | null;
+  difficulty_level: string | null;
   videos?: LearningLessonVideo[];
   resources?: LearningResource[];
   module?: LearningModule;
-};
+}
 
-export type LearningLessonVideo = Database['public']['Tables']['learning_lesson_videos']['Row'];
-export type LearningModule = Database['public']['Tables']['learning_modules']['Row'];
-export type LearningCourse = Database['public']['Tables']['learning_courses']['Row'] & {
+export interface LearningLessonVideo {
+  id: string;
+  lesson_id: string;
+  title: string;
+  description: string | null;
+  url: string;
+  thumbnail_url: string | null;
+  duration_seconds: number | null;
+  created_at: string;
+  order_index: number;
+  video_type: string | null;
+  file_size_bytes: number | null;
+  video_file_path: string | null;
+  video_file_name: string | null;
+  video_id: string | null;
+}
+
+export interface LearningModule {
+  id: string;
+  title: string;
+  description: string | null;
+  cover_image_url: string | null;
+  course_id: string;
+  published: boolean;
+  created_at: string;
+  updated_at: string;
+  order_index: number;
+}
+
+export interface LearningCourse {
+  id: string;
+  title: string;
+  description: string | null;
+  cover_image_url: string | null;
+  slug: string;
+  published: boolean;
+  created_at: string;
+  updated_at: string;
+  order_index: number;
+  created_by: string | null;
   is_restricted?: boolean;
-};
+}
 
-export type LearningProgress = Database['public']['Tables']['learning_progress']['Row'] & {
-  video_progress?: Record<string, number>; // Para compatibilidade com o campo adicionado
-};
+export interface LearningProgress {
+  id: string;
+  user_id: string;
+  lesson_id: string;
+  progress_percentage: number;
+  video_progress: Record<string, number>; // Para salvar progresso de vídeos individuais
+  started_at: string;
+  completed_at: string | null;
+  last_position_seconds?: number;
+  updated_at: string;
+  created_at: string;
+  notes?: string | null;
+}
 
-export type LearningResource = Database['public']['Tables']['learning_resources']['Row'];
-export type LearningLessonTool = Database['public']['Tables']['learning_lesson_tools']['Row'];
-export type LearningComment = Database['public']['Tables']['learning_comments']['Row'];
+export interface LearningResource {
+  id: string;
+  lesson_id: string;
+  name: string;
+  description: string | null;
+  file_url: string;
+  file_type: string | null;
+  file_size_bytes: number | null;
+  created_at: string;
+  order_index: number;
+}
+
+export interface LearningLessonTool {
+  id: string;
+  lesson_id: string;
+  tool_id: string;
+  created_at: string;
+  order_index: number;
+}
+
+export interface LearningComment {
+  id: string;
+  user_id: string;
+  lesson_id: string;
+  content: string;
+  parent_id: string | null;
+  created_at: string;
+  updated_at: string;
+  is_hidden: boolean;
+}
 
 // UserProfile com user_roles
-export type UserProfile = {
+export interface UserProfile {
   id: string;
   email: string;
   name: string;
@@ -43,19 +131,19 @@ export type UserProfile = {
   whatsapp_number?: string;
   referrals_count?: number;
   successful_referrals_count?: number;
-};
+}
 
 // UserRole para autenticação
-export type UserRole = {
+export interface UserRole {
   id: string;
   name: string;
   description?: string;
   permissions?: Record<string, any>;
   is_system?: boolean;
-};
+}
 
 // Progress para componentes de implementação
-export type Progress = {
+export interface Progress {
   id: string;
   user_id: string;
   solution_id: string;
@@ -67,20 +155,20 @@ export type Progress = {
   created_at: string;
   last_activity: string;
   completed_at?: string;
-};
+}
 
 // UserChecklist para compatibilidade
-export type UserChecklist = {
+export interface UserChecklist {
   id: string;
   user_id: string;
   solution_id: string;
   checked_items: Record<string, boolean>;
   created_at: string;
   updated_at: string;
-};
+}
 
 // TrailSolution para compatibilidade com TrailSolutionsList
-export type TrailSolution = {
+export interface TrailSolution {
   id: string;
   title: string;
   description: string;
@@ -90,12 +178,28 @@ export type TrailSolution = {
   category: string;
   tags?: string[];
   checklist_items?: any[];
-};
+}
 
 // Definição do tipo Solution específico do Supabase
-export type Solution = Database['public']['Tables']['solutions']['Row'] & {
-  checklist_items?: any[]; // Adicionando o campo checklist_items que está faltando
-};
+export interface Solution {
+  id: string;
+  title: string;
+  description: string;
+  thumbnail_url?: string;
+  category: string;
+  difficulty: string;
+  estimated_time?: number;
+  tags?: string[];
+  published: boolean;
+  created_at: string;
+  updated_at: string;
+  slug: string;
+  success_rate?: number;
+  checklist_items?: any[];
+  related_solutions?: string[];
+  implementation_steps?: any[];
+  completion_requirements?: Record<string, any>;
+}
 
-// Outros tipos existentes
+// Reexportar Database para manter compatibilidade
 export * from './database.types';

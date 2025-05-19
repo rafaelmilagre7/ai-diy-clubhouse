@@ -1,88 +1,106 @@
 
 import { supabase } from "@/lib/supabase";
+import type { User } from "@supabase/supabase-js";
 import type { UserProfile } from "@/lib/supabase/types";
-import { generateRandomString } from '@/utils/stringGenerator';
 
 /**
- * Processa o perfil do usuário após autenticação
- * @param userId ID do usuário autenticado
+ * Processa o perfil do usuário a partir da sessão
+ * @param user Objeto do usuário autenticado
+ * @returns Promessa com o perfil processado
  */
-export async function processUserProfile(userId: string): Promise<UserProfile | null> {
+export async function processUserProfile(user: User | null): Promise<UserProfile | null> {
+  if (!user) return null;
+  
   try {
-    // Buscar perfil do usuário
-    const { data: profile, error } = await supabase
+    // Buscar o perfil do usuário no banco de dados
+    const { data, error } = await supabase
       .from('profiles')
-      .select('*, user_roles:role_id(id, name, description)')
-      .eq('id', userId)
+      .select('*, user_roles:role_id(id, name, description, permissions)')
+      .eq('id', user.id)
       .single();
-
-    if (error) {
-      console.error('Erro ao buscar perfil:', error);
+    
+    if (error) throw error;
+    
+    if (!data) {
+      console.warn("Perfil de usuário não encontrado no banco de dados.");
       return null;
     }
-
-    // Verificamos se precisamos criar um perfil
-    if (!profile) {
-      // Buscar dados do usuário para obter informações básicas
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData?.user) return null;
-
-      const user = userData.user;
-      
-      // Criar perfil básico
-      const newProfile = {
-        id: user.id,
-        name: user.user_metadata?.name || user.user_metadata?.full_name || 'Usuário',
-        email: user.email || '',
-        avatar_url: user.user_metadata?.avatar_url || '',
-        role: 'member',
-        created_at: new Date().toISOString()
-      };
-
-      // Inserir novo perfil
-      const { data: createdProfile, error: createError } = await supabase
-        .from('profiles')
-        .insert([newProfile])
-        .select()
-        .single();
-
-      if (createError) {
-        console.error('Erro ao criar perfil:', createError);
-        return null;
-      }
-
-      return createdProfile as UserProfile;
-    }
-
-    return profile as UserProfile;
-  } catch (err) {
-    console.error('Erro ao processar perfil de usuário:', err);
+    
+    // Validar o papel do usuário com base no email
+    const validatedRole = await validateUserRole(data, user.email);
+    
+    // Construir o objeto do perfil completo
+    const profile: UserProfile = {
+      ...data,
+      role: validatedRole,
+      email: user.email || data.email,
+    };
+    
+    return profile;
+  } catch (error) {
+    console.error("Erro ao processar perfil do usuário:", error);
     return null;
   }
 }
 
 /**
- * Obtém o papel do usuário com base no perfil
+ * Obtém o papel (role) do usuário
  * @param profile Perfil do usuário
+ * @returns Papel do usuário
  */
-export function getUserRole(profile: UserProfile): string {
+export function getUserRole(profile: UserProfile | null): string {
   return profile?.role || 'member';
 }
 
 /**
- * Valida autorização do usuário para acessar recursos específicos
+ * Valida o papel do usuário com base no email
  * @param profile Perfil do usuário
- * @param requiredRole Papel necessário (opcional)
+ * @param email Email do usuário para determinar o papel correto
+ * @returns Papel validado do usuário
  */
-export function validateUserAuthorization(profile: UserProfile, requiredRole?: string): boolean {
+export async function validateUserRole(profile: UserProfile, email?: string): Promise<string> {
+  if (!email) return profile.role || 'member';
+
+  const correctRole = determineRoleFromEmail(email);
+  
+  // Se o papel não corresponder ao email, atualizar
+  if (profile.role !== correctRole) {
+    await supabase
+      .from('profiles')
+      .update({ role: correctRole })
+      .eq('id', profile.id);
+    
+    return correctRole;
+  }
+  
+  return profile.role || 'member';
+}
+
+/**
+ * Determina o papel correto com base no email
+ * @param email Email do usuário
+ */
+export function determineRoleFromEmail(email: string): string {
+  if (!email) return 'member';
+  
+  if (email.includes('@viverdeia.ai') || email === 'admin@teste.com') {
+    return 'admin';
+  } else if (email.includes('@formacao.viverdeia.ai') || email.includes('formacao@viverdeia.ai')) {
+    return 'formacao';
+  } else {
+    return 'member';
+  }
+}
+
+/**
+ * Valida se o usuário tem autorização para acessar determinadas funcionalidades
+ * @param profile Perfil do usuário
+ * @param requiredRoles Papéis permitidos
+ * @returns Se o usuário tem autorização
+ */
+export function validateUserAuthorization(profile: UserProfile | null, requiredRoles: string[] = ['admin', 'formacao']): boolean {
   if (!profile) return false;
-  if (!requiredRole) return true;
   
-  const userRole = getUserRole(profile);
-  
-  // Admin tem acesso a tudo
-  if (userRole === 'admin') return true;
-  
-  // Para outros papéis, verificar permissão específica
-  return userRole === requiredRole;
+  const userRole = profile.role || 'member';
+  return requiredRoles.includes(userRole);
 }

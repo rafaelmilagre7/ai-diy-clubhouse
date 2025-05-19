@@ -1,96 +1,108 @@
 
 import { supabase } from "@/lib/supabase";
-import type { UserProfile, UserRole } from "@/lib/supabase/types";
+import { generateTempId } from "@/utils/stringGenerator";
+import type { UserProfile } from "@/lib/supabase/types";
 
 /**
- * Obtém o perfil completo do usuário
+ * Busca o perfil do usuário
  * @param userId ID do usuário
+ * @returns Perfil do usuário
  */
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
+  if (!userId) return null;
+  
   try {
-    if (!userId) return null;
-    
-    const { data: profile, error } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
-      .select('*, user_roles:role_id(id, name, description)')
+      .select('*, user_roles:role_id(id, name, description, permissions)')
       .eq('id', userId)
       .single();
-      
-    if (error) {
-      console.error("Erro ao buscar perfil:", error);
-      return null;
-    }
     
-    return profile as UserProfile;
-  } catch (err) {
-    console.error("Erro ao processar perfil:", err);
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Erro ao buscar perfil do usuário:", error);
     return null;
   }
 }
 
 /**
- * Cria um novo perfil de usuário se não existir
- * @param user Usuário autenticado
+ * Cria um perfil de usuário caso não exista
+ * @param userId ID do usuário
+ * @param userData Dados do usuário
+ * @returns Perfil criado ou existente
  */
-export async function createUserProfile(user: any): Promise<UserProfile | null> {
+export async function createUserProfile(
+  userId: string, 
+  userData: { email?: string; name?: string; avatar_url?: string; role?: string }
+): Promise<UserProfile | null> {
+  if (!userId) return null;
+  
   try {
-    if (!user?.id) return null;
-    
-    // Verifica se já existe um perfil
+    // Verificar se o perfil já existe
     const { data: existingProfile } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', user.id)
-      .maybeSingle();
-      
+      .eq('id', userId)
+      .single();
+    
     if (existingProfile) {
       return existingProfile as UserProfile;
     }
     
-    // Determinar o papel correto
-    let userRole: string = 'member';
-    
-    if (user.email) {
-      if (user.email.includes('@viverdeia.ai') || user.email === 'admin@teste.com') {
-        userRole = 'admin';
-      } else if (user.email.includes('@formacao.viverdeia.ai')) {
-        userRole = 'formacao';
-      }
-    }
-    
-    // Buscar ID do papel
-    const { data: roleData } = await supabase
-      .from('user_roles')
-      .select('id')
-      .eq('name', userRole)
-      .single();
-      
-    const roleId = roleData?.id;
-    
-    // Criar novo perfil
+    // Criar novo perfil se não existir
     const newProfile = {
-      id: user.id,
-      email: user.email || '',
-      name: user.user_metadata?.name || user.user_metadata?.full_name || 'Usuário',
-      avatar_url: user.user_metadata?.avatar_url || '',
-      role: userRole,
-      role_id: roleId
+      id: userId,
+      name: userData.name || 'Usuário',
+      email: userData.email || '',
+      avatar_url: userData.avatar_url || null,
+      role: userData.role || 'member',
+      created_at: new Date().toISOString()
     };
     
-    const { data: profile, error } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
-      .insert(newProfile)
-      .select()
+      .insert([newProfile])
+      .select('*')
       .single();
-      
-    if (error) {
-      console.error("Erro ao criar perfil:", error);
-      return null;
-    }
     
-    return profile as UserProfile;
-  } catch (err) {
-    console.error("Erro ao criar perfil de usuário:", err);
+    if (error) throw error;
+    return data as UserProfile;
+  } catch (error) {
+    console.error("Erro ao criar perfil:", error);
+    return null;
+  }
+}
+
+/**
+ * Atualiza o perfil de usuário
+ * @param userId ID do usuário
+ * @param profileData Dados do perfil a serem atualizados
+ * @returns Perfil atualizado
+ */
+export async function updateUserProfile(
+  userId: string,
+  profileData: Partial<UserProfile>
+): Promise<UserProfile | null> {
+  if (!userId) return null;
+  
+  try {
+    // Não permitir atualização de campos críticos
+    const safeData = { ...profileData };
+    delete safeData.id;
+    delete safeData.created_at;
+    
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(safeData)
+      .eq('id', userId)
+      .select('*')
+      .single();
+    
+    if (error) throw error;
+    return data as UserProfile;
+  } catch (error) {
+    console.error("Erro ao atualizar perfil:", error);
     return null;
   }
 }

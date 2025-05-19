@@ -20,7 +20,7 @@ export type {
   TrailSolution
 } from './types';
 
-// Importamos o Solution de types como SupabaseSolution
+// Importamos o Solution de types como SupabaseSolution para evitar conflitos
 import type { Solution as SupabaseSolution } from './types';
 export type { SupabaseSolution };
 
