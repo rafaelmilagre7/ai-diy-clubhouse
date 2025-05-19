@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from "react";
 import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
@@ -90,22 +91,25 @@ export const ImplementationTrailCreator = () => {
         return;
       }
       
-      // Verificar se o trail tem recomendações de cursos válidas
-      if (!trail?.recommended_courses || !Array.isArray(trail.recommended_courses) || trail.recommended_courses.length === 0) {
-        console.log("Sem recomendações de cursos na trilha");
-        setCourseDataFetched(true);
-        setRecommendedCourses([]);
-        return;
-      }
-
       try {
         setLoadingCourses(true);
+        
+        // Log para debug
+        console.log("Verificando recommended_courses:", trail?.recommended_courses);
+        
+        // Verificar se o trail tem recomendações de cursos válidas
+        if (!trail?.recommended_courses || !Array.isArray(trail.recommended_courses) || trail.recommended_courses.length === 0) {
+          console.log("Sem recomendações de cursos na trilha");
+          setCourseDataFetched(true);
+          setRecommendedCourses([]);
+          return;
+        }
+
         const courseIds = trail.recommended_courses
           .filter(c => c && c.courseId)  // Filtrar entradas inválidas
           .map(c => c.courseId);
 
         if (courseIds.length === 0) {
-          setLoadingCourses(false);
           setRecommendedCourses([]);
           setCourseDataFetched(true);
           return;
@@ -127,7 +131,7 @@ export const ImplementationTrailCreator = () => {
           return;
         }
         
-        console.log("Cursos encontrados:", courses?.length);
+        console.log("Cursos encontrados:", courses?.length, courses);
         
         // Mapear cursos com justificativas da trilha
         const coursesWithDetails = courseIds
@@ -146,7 +150,7 @@ export const ImplementationTrailCreator = () => {
           })
           .filter(Boolean);
         
-        console.log("Cursos processados:", coursesWithDetails?.length);
+        console.log("Cursos processados:", coursesWithDetails?.length, coursesWithDetails);
         setRecommendedCourses(coursesWithDetails || []);
         setCourseDataFetched(true);
       } catch (error) {
@@ -323,20 +327,35 @@ export const ImplementationTrailCreator = () => {
       )}
       
       {/* Cursos recomendados */}
-      {recommendedCourses.length > 0 && (
-        <>
-          <Separator className="bg-neutral-800 my-6" />
-          <div className="space-y-4">
-            <h4 className="font-medium text-[#0ABAB5] flex items-center gap-2">
-              <Book className="h-5 w-5" />
-              Aulas recomendadas para você
-            </h4>
-            <TrailCoursesList courses={recommendedCourses} />
+      <Separator className="bg-neutral-800 my-6" />
+      <div className="space-y-4">
+        <h4 className="font-medium text-[#0ABAB5] flex items-center gap-2">
+          <Book className="h-5 w-5" />
+          Aulas recomendadas para você
+        </h4>
+        
+        <TrailCoursesList courses={recommendedCourses} />
+        
+        {recommendedCourses.length === 0 && (
+          <div className="text-center py-4 bg-neutral-800/20 rounded-lg border border-neutral-700/50 p-4">
+            <div className="flex flex-col items-center gap-2">
+              <Book className="h-8 w-8 text-neutral-500" />
+              <p className="text-neutral-400">Nenhuma aula recomendada encontrada na sua trilha.</p>
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={handleRefreshTrail}
+                className="mt-2"
+                disabled={refreshing || regenerating}
+              >
+                Atualizar recomendações
+              </Button>
+            </div>
           </div>
-        </>
-      )}
+        )}
+      </div>
       
-      {/* Mostrar botão para gerar novamente se não temos recomendações */}
+      {/* Mostrar botão para gerar novamente se não temos recomendações suficientes */}
       {processedSolutions.length === 0 && recommendedCourses.length === 0 && (
         <div className="pt-6 text-center">
           <p className="text-neutral-400 mb-4">Não foram encontradas recomendações na sua trilha.</p>

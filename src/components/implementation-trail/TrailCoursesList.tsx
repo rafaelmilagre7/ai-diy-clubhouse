@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Book, ExternalLink, Calendar } from "lucide-react";
+import { Book, ExternalLink, Calendar, Star } from "lucide-react";
 
 interface TrailCoursesListProps {
   courses: any[];
@@ -31,10 +31,10 @@ export const TrailCoursesList: React.FC<TrailCoursesListProps> = ({ courses }) =
           <CardHeader className="pb-2">
             <div className="flex justify-between items-start mb-1">
               <Badge variant="outline" className="bg-[#0ABAB5]/10 text-[#0ABAB5] border-[#0ABAB5]/30">
-                Aula
+                <Book className="h-3 w-3 mr-1" /> Aula
               </Badge>
               <Badge variant="outline" className="bg-[#151823]">
-                Prioridade {course.priority || 1}
+                <Star className="h-3 w-3 mr-1 text-amber-400" /> Prioridade {course.priority || 1}
               </Badge>
             </div>
             <CardTitle className="text-lg line-clamp-2">{course.title}</CardTitle>
@@ -55,8 +55,8 @@ export const TrailCoursesList: React.FC<TrailCoursesListProps> = ({ courses }) =
               </div>
             )}
             
-            <div className="text-sm text-neutral-300 bg-[#0ABAB5]/5 p-3 rounded-md border border-[#0ABAB5]/20 mb-3">
-              <p className="italic line-clamp-3">"{course.justification}"</p>
+            <div className="text-sm text-neutral-300 bg-[#0ABAB5]/5 p-3 rounded-md border border-[#0ABAB5]/20 mb-3 min-h-[80px]">
+              <p className="italic line-clamp-3">"{course.justification || 'Recomendado com base no seu perfil'}"</p>
             </div>
             
             <div className="flex items-center gap-2 text-sm text-neutral-400">

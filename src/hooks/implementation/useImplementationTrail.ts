@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
@@ -286,6 +287,16 @@ export const useImplementationTrail = () => {
         const errorMsg = data?.message || "Falha ao gerar trilha de implementação";
         console.error("[useImplementationTrail] Resposta de erro da função:", errorMsg);
         throw new Error(errorMsg);
+      }
+      
+      // Log para debug dos dados da trilha
+      if (data.trail?.trail_data) {
+        console.log("[useImplementationTrail] Dados da trilha recebidos:", {
+          "priority1": data.trail.trail_data.priority1?.length || 0,
+          "priority2": data.trail.trail_data.priority2?.length || 0,
+          "priority3": data.trail.trail_data.priority3?.length || 0,
+          "recommended_courses": data.trail.trail_data.recommended_courses?.length || 0
+        });
       }
       
       // Atualizar estado com a nova trilha
