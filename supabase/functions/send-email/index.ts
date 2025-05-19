@@ -1,6 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "https://esm.sh/resend@2.0.0";
+import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,7 +25,6 @@ serve(async (req: Request) => {
   }
 
   try {
-    const resend = new Resend(Deno.env.get("RESEND_API_KEY") || "");
     const body: EmailRequest = await req.json();
 
     if (!body.to || !body.subject || !body.html) {
@@ -37,29 +36,40 @@ serve(async (req: Request) => {
     console.log(`Enviando email para: ${to}`);
     console.log(`Assunto: ${subject}`);
 
-    const { data, error } = await resend.emails.send({
-      from,
-      to,
-      subject,
-      html,
-      text,
-      cc,
-      bcc,
-      reply_to,
+    // Configurar cliente SMTP usando as variáveis de ambiente do Supabase
+    const client = new SmtpClient();
+    await client.connectTLS({
+      hostname: Deno.env.get("SMTP_HOST") || "",
+      port: Number(Deno.env.get("SMTP_PORT")) || 587,
+      username: Deno.env.get("SMTP_USER") || "",
+      password: Deno.env.get("SMTP_PASS") || "",
     });
 
-    if (error) {
-      console.error("Erro ao enviar email:", error);
-      throw error;
-    }
+    // Preparar destinatários CC e BCC
+    const ccAddresses = cc?.join(", ");
+    const bccAddresses = bcc?.join(", ");
 
-    console.log("Email enviado com sucesso:", data);
+    // Enviar email usando o cliente SMTP
+    const sendResult = await client.send({
+      from: from,
+      to: to,
+      cc: ccAddresses,
+      bcc: bccAddresses,
+      replyTo: reply_to,
+      subject: subject,
+      content: html,
+      html: html,
+    });
+
+    await client.close();
+
+    console.log("Email enviado com sucesso:", sendResult);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         message: "Email enviado com sucesso",
-        data 
+        data: sendResult
       }),
       {
         status: 200,
