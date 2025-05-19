@@ -1,541 +1,327 @@
 
-import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.33.1';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.29.0'
+
+// Tipos para triagem de soluções e recomendações
+interface ScoredSolution {
+  solution: any;
+  score: number;
+  matchReason: string;
+  priority?: number;
+  matchedCourses?: any[];
+}
 
 interface ImplementationRecommendation {
   solutionId: string;
-  justification: string;
-  priority: number;
+  justification?: string;
+  priority?: number;
 }
 
 interface ImplementationTrail {
   priority1: ImplementationRecommendation[];
   priority2: ImplementationRecommendation[];
   priority3: ImplementationRecommendation[];
+  recommended_courses?: { courseId: string; justification?: string; priority?: number }[];
 }
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+// Manipulador principal para a função de borda
+Deno.serve(async (req) => {
   try {
     console.log("Edge function invocada: generate-implementation-trail");
     
-    // Obter dados da requisição
-    const requestData = await req.json();
-    const { onboardingData, userId } = requestData;
-    
-    console.log("Dados recebidos:", { 
-      hasOnboardingData: !!onboardingData,
-      userId: userId || "não fornecido"
-    });
-    
-    const authHeader = req.headers.get('Authorization');
-    
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'Autorização necessária',
-          details: "Header de autorização não fornecido"
-        }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
     // Configurar cliente Supabase
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     
-    if (!supabaseUrl || !supabaseKey) {
-      console.error("Erro: Variáveis de ambiente SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY não definidas");
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Variáveis de ambiente Supabase não configuradas')
+    }
+    
+    console.log(`Configurando cliente Supabase com URL: ${supabaseUrl}`);
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    // Obter dados da requisição
+    const { userId, hasOnboardingData, ...onboardingData } = await req.json();
+    console.log(`Dados recebidos:`, { userId, hasOnboardingData, ...onboardingData });
+    
+    if (!userId) {
       return new Response(
-        JSON.stringify({ 
-          error: 'Erro de configuração do servidor',
-          details: "Variáveis de ambiente necessárias não estão configuradas"
-        }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ success: false, message: 'ID do usuário é obrigatório' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
     
-    console.log("Configurando cliente Supabase com URL:", supabaseUrl);
-    
-    const supabaseClient = createClient(
-      supabaseUrl,
-      supabaseKey,
-      {
-        global: {
-          headers: { Authorization: authHeader },
-        },
-      }
-    );
-    
-    // Obter dados das soluções disponíveis
+    // Buscar soluções publicadas
     console.log("Buscando soluções publicadas");
-    
-    const { data: solutions, error: solutionsError } = await supabaseClient
+    const { data: solutions, error: solutionsError } = await supabase
       .from('solutions')
       .select('*')
       .eq('published', true);
+      
+    if (solutionsError) throw solutionsError;
+    console.log(`Encontradas ${solutions?.length || 0} soluções publicadas`);
     
-    if (solutionsError) {
-      console.error("Erro ao buscar soluções:", solutionsError);
-      throw new Error(`Erro ao buscar soluções: ${solutionsError.message}`);
-    }
-    
-    if (!solutions || solutions.length === 0) {
-      console.error("Nenhuma solução disponível para recomendação");
-      throw new Error('Nenhuma solução disponível para recomendação');
-    }
-    
-    console.log(`Encontradas ${solutions.length} soluções publicadas`);
-    
-    // Buscar dados dos cursos disponíveis para integração
-    const { data: courses, error: coursesError } = await supabaseClient
+    // Buscar cursos publicados para recomendação
+    const { data: courses, error: coursesError } = await supabase
       .from('learning_courses')
-      .select('*, learning_modules(*, learning_lessons(*))')
+      .select('*')
       .eq('published', true);
       
-    if (coursesError) {
-      console.error("Erro ao buscar cursos:", coursesError);
-      // Não bloquear o fluxo principal, apenas registrar o erro
-    }
-    
+    if (coursesError) console.error("Erro ao buscar cursos:", coursesError);
     console.log(`Encontrados ${courses?.length || 0} cursos publicados para integração`);
     
-    // Buscar dados de onboarding do usuário usando ID fornecido ou token de autenticação
-    let user;
-    let userIdToUse = userId;
-    
-    if (!userIdToUse) {
-      // Tentar obter ID do usuário a partir do token de autenticação
-      console.log("ID de usuário não fornecido, tentando obter do token");
-      try {
-        const { data: userData, error: userError } = await supabaseClient.auth.getUser();
-        
-        if (userError || !userData?.user) {
-          console.error("Erro ao obter usuário do token:", userError);
-          throw new Error('Usuário não autenticado ou token inválido');
-        }
-        
-        userIdToUse = userData.user.id;
-        user = userData.user;
-        console.log("Usuário identificado via token:", userIdToUse);
-      } catch (authError) {
-        console.error("Erro ao obter usuário do token:", authError);
-        throw new Error('Falha ao identificar usuário');
-      }
-    }
-    
-    if (!userIdToUse) {
-      console.error("Impossível identificar o usuário");
-      throw new Error('ID do usuário não fornecido e autenticação falhou');
-    }
-    
-    // Verificar se já existe uma trilha ativa para o usuário e limpar se necessário
-    try {
-      // Verificar se existe trilha pendente e removê-la
-      await supabaseClient
-        .from('implementation_trails')
-        .delete()
-        .eq('user_id', userIdToUse)
-        .eq('status', 'pending');
-      
-      // Verificar se existe trilha completa
-      const { data: existingTrail } = await supabaseClient
-        .from('implementation_trails')
-        .select('id')
-        .eq('user_id', userIdToUse)
-        .eq('status', 'completed')
-        .maybeSingle();
-      
-      if (existingTrail) {
-        // Em vez de criar novo registro, vamos atualizar o existente
-        console.log(`Trilha existente encontrada para usuário ${userIdToUse}. Atualizando registro existente.`);
-      }
-    } catch (cleanupError) {
-      console.error("Erro ao limpar trilhas existentes:", cleanupError);
-      // Continuar mesmo com erro de limpeza
-    }
-    
-    // Buscar dados do onboarding
-    console.log(`Buscando dados de onboarding para usuário ${userIdToUse}`);
-    
-    const { data: onboardingProgress, error: onboardingError } = await supabaseClient
-      .from('onboarding_progress')
+    // Verificar se existe uma trilha para o usuário
+    const { data: existingTrail, error: trailError } = await supabase
+      .from('implementation_trails')
       .select('*')
-      .eq('user_id', userIdToUse)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
+      
+    const hasExistingTrail = !!existingTrail;
     
-    if (onboardingError && !onboardingError.message.includes('Results contain 0 rows')) {
+    if (hasExistingTrail) {
+      console.log(`Trilha existente encontrada para usuário ${userId}. Atualizando registro existente.`);
+    }
+    
+    // Buscar dados de onboarding
+    console.log(`Buscando dados de onboarding para usuário ${userId}`);
+    const { data: onboarding, error: onboardingError } = await supabase
+      .from('onboarding_progress')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+      
+    if (onboardingError && onboardingError.code !== 'PGRST116') {
       console.error("Erro ao buscar dados de onboarding:", onboardingError);
-      throw new Error(`Erro ao buscar dados de onboarding: ${onboardingError.message}`);
     }
     
-    console.log("Dados de onboarding encontrados:", !!onboardingProgress);
+    const hasOnboarding = !!onboarding;
+    console.log(`Dados de onboarding encontrados: ${hasOnboarding}`);
     
-    // Definir variáveis que serão usadas para personalização
-    let businessGoals = [];
-    let industryFocus = '';
-    let aiExperience: Record<string, any> = {};
-    let companySize = '';
+    // Extrair informações para personalização
+    const personalizationData = {
+      goals: [],
+      industry: '',
+      companySize: '',
+      aiExperience: 0
+    };
     
-    // Extrair informações do onboarding para melhorar as recomendações
-    if (onboardingProgress) {
-      // Processar objetivos de negócio
-      if (typeof onboardingProgress.business_goals === 'object') {
-        businessGoals = onboardingProgress.business_goals.expected_outcomes || [];
-        // Adicionar objetivo primário se disponível
-        if (onboardingProgress.business_goals.primary_goal) {
-          businessGoals.push(onboardingProgress.business_goals.primary_goal);
-        }
-      } else if (typeof onboardingProgress.business_goals === 'string') {
-        try {
-          const parsedGoals = JSON.parse(onboardingProgress.business_goals);
-          businessGoals = parsedGoals.expected_outcomes || [];
-          // Adicionar objetivo primário se disponível
-          if (parsedGoals.primary_goal) {
-            businessGoals.push(parsedGoals.primary_goal);
-          }
-        } catch (e) {
-          console.error("Erro ao processar business_goals:", e);
-        }
+    if (hasOnboarding) {
+      // Extrair objetivos de negócio
+      const businessGoals = onboarding.business_goals || {};
+      if (businessGoals.primary_goal) {
+        personalizationData.goals.push(businessGoals.primary_goal);
       }
       
-      // Extrair setor da empresa
-      if (typeof onboardingProgress.professional_info === 'object') {
-        industryFocus = onboardingProgress.professional_info.company_sector || '';
-        companySize = onboardingProgress.professional_info.company_size || '';
-      } else if (typeof onboardingProgress.professional_info === 'string') {
-        try {
-          const parsedInfo = JSON.parse(onboardingProgress.professional_info);
-          industryFocus = parsedInfo.company_sector || '';
-          companySize = parsedInfo.company_size || '';
-        } catch (e) {
-          console.error("Erro ao processar professional_info:", e);
+      if (Array.isArray(businessGoals.expected_outcomes)) {
+        personalizationData.goals = [
+          ...personalizationData.goals,
+          ...businessGoals.expected_outcomes.slice(0, 4)
+        ];
+      }
+      
+      // Extrair informações profissionais e da empresa
+      if (onboarding.professional_info) {
+        personalizationData.industry = onboarding.professional_info.company_sector || '';
+        personalizationData.companySize = onboarding.professional_info.company_size || '';
+      }
+      
+      // Extrair nível de experiência com IA
+      if (onboarding.ai_experience && typeof onboarding.ai_knowledge_level === 'string') {
+        const knowledgeLevel = onboarding.ai_knowledge_level.toLowerCase();
+        if (knowledgeLevel.includes('iniciante')) {
+          personalizationData.aiExperience = 1;
+        } else if (knowledgeLevel.includes('intermediário')) {
+          personalizationData.aiExperience = 2;
+        } else if (knowledgeLevel.includes('avançado')) {
+          personalizationData.aiExperience = 3;
         }
       }
-      
-      // Extrair experiência com IA
-      if (typeof onboardingProgress.ai_experience === 'object') {
-        aiExperience = onboardingProgress.ai_experience;
-      } else if (typeof onboardingProgress.ai_experience === 'string') {
-        try {
-          aiExperience = JSON.parse(onboardingProgress.ai_experience);
-        } catch (e) {
-          console.error("Erro ao processar ai_experience:", e);
-        }
-      }
-      
-      // Backup para campos top-level de setor/tamanho
-      if (!industryFocus && onboardingProgress.company_sector) {
-        industryFocus = onboardingProgress.company_sector;
-      }
-      
-      if (!companySize && onboardingProgress.company_size) {
-        companySize = onboardingProgress.company_size;
-      }
-    } else if (onboardingData) {
-      // Usar dados fornecidos na requisição se disponíveis
-      // Processar objetivos de negócio
-      if (typeof onboardingData.business_goals === 'object') {
-        businessGoals = onboardingData.business_goals.expected_outcomes || [];
-        // Adicionar objetivo primário se disponível
-        if (onboardingData.business_goals.primary_goal) {
-          businessGoals.push(onboardingData.business_goals.primary_goal);
-        }
-      }
-      
-      industryFocus = onboardingData.company_sector || 
-                     (onboardingData.professional_info ? onboardingData.professional_info.company_sector : '') || 
-                     '';
-      companySize = onboardingData.company_size || 
-                   (onboardingData.professional_info ? onboardingData.professional_info.company_size : '') || 
-                   '';
-      aiExperience = onboardingData.ai_experience || {};
     }
     
-    console.log("Dados para personalização:", {
-      goals: businessGoals,
-      industry: industryFocus,
-      companySize: companySize,
-      aiExperience: typeof aiExperience === 'object' ? Object.keys(aiExperience).length : 'não disponível'
-    });
+    console.log(`Dados para personalização:`, personalizationData);
     
-    // Criar algoritmo de pontuação para as soluções
-    const scoredSolutions = solutions.map(solution => {
-      let score = 0;
-      let matchedCourses = [];
+    // Pontuação e triagem de soluções
+    const scoredSolutions: ScoredSolution[] = solutions?.map(solution => {
+      // Lógica básica de pontuação
+      let score = 50; // Pontuação base
+      let matchReason = '';
       
-      // Pontuação com base na categoria da solução
-      if (Array.isArray(businessGoals)) {
-        if (businessGoals.some(goal => 
-            goal.toLowerCase().includes('receita') || 
-            goal.toLowerCase().includes('vendas'))) {
-          if (solution.category === 'revenue' || solution.category === 'Receita') {
-            score += 3;
-          }
-        }
+      // Categorias de negócio
+      if (solution.category === 'Receita' && personalizationData.goals.some(g => 
+        g.includes('venda') || g.includes('receita') || g.includes('cliente'))) {
+        score += 30;
+        matchReason = 'Alinhado com seus objetivos de receita e vendas';
+      } else if (solution.category === 'Operacional' && personalizationData.goals.some(g => 
+        g.includes('eficiência') || g.includes('automação') || g.includes('operação') || g.includes('automacao'))) {
+        score += 30;
+        matchReason = 'Alinhado com seus objetivos de eficiência operacional';
+      } else if (solution.category === 'Estratégia' && personalizationData.goals.some(g => 
+        g.includes('estratégia') || g.includes('decisão') || g.includes('planejamento') || g.includes('estrategia') || g.includes('decisoes'))) {
+        score += 30;
+        matchReason = 'Alinhado com seus objetivos estratégicos';
+      }
+      
+      // Inovação ou personalização como objetivo
+      if (personalizationData.goals.some(g => g.includes('inovação') || g.includes('inovacao') || g.includes('personalização') || g.includes('personalizacao'))) {
+        score += 15;
+        matchReason += matchReason ? ' e inovação' : 'Focado em inovação para seu negócio';
+      }
+      
+      // Ajuste para nível de experiência com IA
+      if (solution.difficulty === 'beginner' && personalizationData.aiExperience <= 1) {
+        score += 20;
+      } else if (solution.difficulty === 'intermediate' && personalizationData.aiExperience === 2) {
+        score += 15;
+      } else if (solution.difficulty === 'advanced' && personalizationData.aiExperience >= 3) {
+        score += 10;
+      }
+      
+      // Encontrar cursos relacionados à solução (baseado em tags, categoria)
+      const matchedCourses = courses?.filter(course => {
+        // Simplificação: considerar match com base no título/descrição
+        // Em uma versão mais robusta, poderíamos usar tags ou outras metadados
+        const courseKeywords = (course.title + ' ' + (course.description || '')).toLowerCase();
+        const solutionKeywords = (solution.title + ' ' + solution.description).toLowerCase();
         
-        if (businessGoals.some(goal => 
-            goal.toLowerCase().includes('custo') || 
-            goal.toLowerCase().includes('economia'))) {
-          if (solution.category === 'optimization' || 
-             solution.category === 'operational' || 
-             solution.category === 'Operacional') {
-            score += 3;
-          }
-        }
-        
-        if (businessGoals.some(goal => 
-            goal.toLowerCase().includes('eficiência') || 
-            goal.toLowerCase().includes('produtividade'))) {
-          if (solution.category === 'optimization' || 
-             solution.category === 'automation' || 
-             solution.category === 'operational' || 
-             solution.category === 'Operacional') {
-            score += 2;
-          }
-        }
-      }
-      
-      // Pontuação com base nas tags
-      if (solution.tags && Array.isArray(solution.tags)) {
-        solution.tags.forEach(tag => {
-          if (industryFocus && typeof tag === 'string' && 
-              tag.toLowerCase().includes(industryFocus.toLowerCase())) {
-            score += 2;
-          }
-          
-          if (Array.isArray(businessGoals)) {
-            businessGoals.forEach(goal => {
-              if (typeof tag === 'string' && typeof goal === 'string' &&
-                  tag.toLowerCase().includes(goal.toLowerCase())) {
-                score += 1;
-              }
-            });
-          }
-        });
-      }
-      
-      // Ajustar com base na dificuldade e experiência com IA
-      const aiLevel = typeof aiExperience === 'object' && aiExperience.knowledge_level 
-                    ? aiExperience.knowledge_level 
-                    : 'beginner';
-      
-      if (solution.difficulty === 'beginner' && aiLevel === 'beginner') {
-        score += 2;
-      } else if (solution.difficulty === 'intermediate' && aiLevel === 'intermediate') {
-        score += 2;
-      } else if (solution.difficulty === 'advanced' && aiLevel === 'advanced') {
-        score += 2;
-      } else if (solution.difficulty === 'advanced' && aiLevel === 'beginner') {
-        score -= 1;
-      }
-      
-      // Relacionar soluções com cursos disponíveis quando possível
-      if (courses && courses.length > 0) {
-        courses.forEach(course => {
-          const modules = course.learning_modules || [];
-          
-          modules.forEach((module: any) => {
-            const lessons = module.learning_lessons || [];
-            
-            // Verificar se alguma aula menciona a solução pelo título ou categoria
-            const relatedLessons = lessons.filter((lesson: any) => {
-              const title = lesson.title?.toLowerCase() || '';
-              const desc = lesson.description?.toLowerCase() || '';
-              const solutionTitle = solution.title?.toLowerCase() || '';
-              const solutionCategory = typeof solution.category === 'string' ? 
-                                      solution.category.toLowerCase() : '';
-              
-              return title.includes(solutionTitle) || 
-                     desc.includes(solutionTitle) ||
-                     title.includes(solutionCategory) ||
-                     desc.includes(solutionCategory);
-            });
-            
-            if (relatedLessons.length > 0) {
-              matchedCourses.push({
-                course_id: course.id,
-                course_title: course.title,
-                module_id: module.id,
-                module_title: module.title,
-                lessons: relatedLessons.map((l: any) => ({ 
-                  id: l.id, 
-                  title: l.title 
-                }))
-              });
-              
-              // Aumentar pontuação para soluções que têm conteúdo educacional disponível
-              score += 1;
-            }
-          });
-        });
-      }
+        // Verificar palavras-chave em comum
+        return solution.tags?.some((tag: string) => courseKeywords.includes(tag)) || 
+               courseKeywords.includes(solution.category?.toLowerCase()) ||
+               solutionKeywords.includes(course.title.toLowerCase());
+      }) || [];
       
       return {
         solution,
         score,
-        matchedCourses: matchedCourses.length > 0 ? matchedCourses : undefined
+        matchReason: matchReason || 'Solução recomendada para seu perfil',
+        matchedCourses
       };
-    });
+    }) || [];
     
-    // Ordenar por pontuação e separar em prioridades
+    // Ordenar soluções por pontuação
     scoredSolutions.sort((a, b) => b.score - a.score);
     
-    // Gerar as justificativas com base nas características
-    const generateJustification = (solution: any, score: number) => {
-      const justifications = [
-        `Esta solução é altamente compatível com seus objetivos de negócio e pode trazer resultados significativos.`,
-        `Baseado no seu perfil, esta solução pode trazer resultados rápidos e melhorar o desempenho do seu negócio.`,
-        `Considerando seu setor ${industryFocus ? `de ${industryFocus}` : ''}, esta solução pode gerar diferencial competitivo.`,
-        `Com base no seu nível de experiência em IA, esta implementação será adequada e trará benefícios rápidos.`,
-        `Recomendamos esta solução para melhorar seus processos operacionais e otimizar resultados.`
-      ];
-      
-      // Personalizar com base na categoria
-      if (solution.category === 'revenue' || solution.category === 'Receita') {
-        justifications.push(`Esta solução pode ajudar a aumentar suas receitas e melhorar o desempenho comercial.`);
-      } else if (solution.category === 'optimization' || solution.category === 'operational' || solution.category === 'Operacional') {
-        justifications.push(`Esta solução pode otimizar seus processos e reduzir custos operacionais.`);
-      } else if (solution.category === 'automation' || solution.category === 'Automação') {
-        justifications.push(`Esta solução pode automatizar tarefas repetitivas e aumentar a produtividade.`);
-      } else if (solution.category === 'strategy' || solution.category === 'Estratégia') {
-        justifications.push(`Esta solução estratégica pode transformar a maneira como seu negócio utiliza IA.`);
-      }
-      
-      // Personalizar com base no tamanho da empresa
-      if (companySize === 'small' || companySize === 'pequena') {
-        justifications.push(`Ideal para pequenas empresas como a sua, com implementação simplificada e baixo custo.`);
-      } else if (companySize === 'medium' || companySize === 'média') {
-        justifications.push(`Perfeita para empresas de médio porte, equilibrando complexidade e resultados.`);
-      } else if (companySize === 'large' || companySize === 'grande') {
-        justifications.push(`Desenvolvida para lidar com a escala e complexidade de grandes organizações como a sua.`);
-      }
-      
-      // Se a solução tiver cursos relacionados
-      if (solution.matchedCourses && solution.matchedCourses.length > 0) {
-        justifications.push(`Temos cursos específicos na plataforma para ajudar você a implementar esta solução.`);
-      }
-      
-      // Escolher uma justificativa com base em uma fórmula derivada do score
-      const justificationIndex = Math.abs((score * solution.solution.id.charCodeAt(0)) % justifications.length);
-      return justifications[justificationIndex];
-    };
+    // Dividir em prioridades
+    const highPriority = scoredSolutions.slice(0, 3).map(item => ({
+      ...item,
+      priority: 1
+    }));
     
-    // Criar as recomendações por prioridade
-    const priority1 = scoredSolutions.slice(0, Math.min(3, scoredSolutions.length))
-      .map(item => ({
-        solutionId: item.solution.id,
-        justification: generateJustification(item, item.score),
-        matchedCourses: item.matchedCourses,
-        priority: 1
-      }));
+    const mediumPriority = scoredSolutions.slice(3, 7).map(item => ({
+      ...item,
+      priority: 2
+    }));
     
-    const priority2 = scoredSolutions.slice(Math.min(3, scoredSolutions.length), Math.min(6, scoredSolutions.length))
-      .map(item => ({
-        solutionId: item.solution.id,
-        justification: generateJustification(item, item.score),
-        matchedCourses: item.matchedCourses,
-        priority: 2
-      }));
+    const lowPriority = scoredSolutions.slice(7, 10).map(item => ({
+      ...item,
+      priority: 3
+    }));
     
-    const priority3 = scoredSolutions.slice(Math.min(6, scoredSolutions.length), Math.min(9, scoredSolutions.length))
-      .map(item => ({
-        solutionId: item.solution.id,
-        justification: generateJustification(item, item.score),
-        matchedCourses: item.matchedCourses,
-        priority: 3
-      }));
+    // Converter para formato final
+    const priority1 = highPriority.map(item => ({
+      solutionId: item.solution.id,
+      justification: item.matchReason,
+      priority: 1
+    }));
     
-    // Criar objeto de resposta
+    const priority2 = mediumPriority.map(item => ({
+      solutionId: item.solution.id,
+      justification: item.matchReason,
+      priority: 2
+    }));
+    
+    const priority3 = lowPriority.map(item => ({
+      solutionId: item.solution.id,
+      justification: item.matchReason,
+      priority: 3
+    }));
+    
+    // Extrair recomendações de cursos
+    const courseRecommendations = scoredSolutions
+      .filter(item => item.matchedCourses && item.matchedCourses.length > 0)
+      .flatMap(item => item.matchedCourses.map(course => ({
+        courseId: course.id,
+        justification: `Curso recomendado para complementar a solução ${item.solution.title}`,
+        priority: item.priority || 1
+      })))
+      // Remover duplicatas baseadas no courseId
+      .filter((course, index, self) => 
+        index === self.findIndex((c) => c.courseId === course.courseId)
+      );
+    
+    // Montar objeto final de recomendações
     const recommendations: ImplementationTrail = {
       priority1,
       priority2,
-      priority3
+      priority3,
+      recommended_courses: courseRecommendations
     };
     
-    console.log("Recomendações geradas com sucesso:", {
+    console.log(`Recomendações geradas com sucesso:`, {
       priority1Count: priority1.length,
       priority2Count: priority2.length,
       priority3Count: priority3.length,
-      hasMatchedCourses: scoredSolutions.some(s => !!s.matchedCourses)
+      hasMatchedCourses: courseRecommendations.length > 0
     });
     
-    try {
-      // Verificar se já existe uma trilha para este usuário
-      const { data: existingTrail } = await supabaseClient
+    // Salvar no banco de dados
+    let result;
+    if (hasExistingTrail) {
+      // Atualizar trilha existente
+      const { data, error } = await supabase
         .from('implementation_trails')
-        .select('id')
-        .eq('user_id', userIdToUse)
-        .eq('status', 'completed')
-        .maybeSingle();
-      
-      if (existingTrail) {
-        // Atualizar trilha existente
-        await supabaseClient
-          .from('implementation_trails')
-          .update({
-            trail_data: recommendations,
-            updated_at: new Date().toISOString(),
-            generation_attempts: supabaseClient.rpc('increment', { 
-              row_id: existingTrail.id, 
-              table_name: 'implementation_trails', 
-              column_name: 'generation_attempts' 
-            })
-          })
-          .eq('id', existingTrail.id);
+        .update({
+          trail_data: recommendations,
+          updated_at: new Date(),
+          generation_attempts: existingTrail.generation_attempts + 1,
+          status: 'completed',
+          error_message: null
+        })
+        .eq('id', existingTrail.id)
+        .select()
+        .single();
         
-        console.log("Trilha existente atualizada com sucesso");
-      } else {
-        // Criar nova trilha
-        await supabaseClient
-          .from('implementation_trails')
-          .insert({
-            user_id: userIdToUse,
-            status: 'completed',
-            trail_data: recommendations,
-            updated_at: new Date().toISOString()
-          });
+      if (error) throw error;
+      result = data;
+      console.log(`Trilha existente atualizada com sucesso`);
+    } else {
+      // Criar nova trilha
+      const { data, error } = await supabase
+        .from('implementation_trails')
+        .insert({
+          user_id: userId,
+          trail_data: recommendations,
+          status: 'completed',
+          generation_attempts: 1
+        })
+        .select()
+        .single();
         
-        console.log("Trilha registrada com sucesso no banco de dados");
-      }
-    } catch (dbError) {
-      console.error("Erro ao salvar trilha no banco de dados:", dbError);
-      // Não bloquear a resposta por causa do erro de salvamento
+      if (error) throw error;
+      result = data;
+      console.log(`Nova trilha criada com sucesso`);
     }
     
     return new Response(
       JSON.stringify({ 
         success: true, 
-        recommendations,
-        generatedAt: new Date().toISOString()
+        message: 'Trilha gerada com sucesso', 
+        trail: result 
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { headers: { 'Content-Type': 'application/json' } }
     );
     
   } catch (error) {
-    console.error('Erro na geração da trilha:', error);
+    console.error(`Erro ao gerar trilha de implementação:`, error);
     
     return new Response(
       JSON.stringify({ 
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
-        stack: error instanceof Error ? error.stack : undefined,
-        timestamp: new Date().toISOString()
+        success: false, 
+        message: 'Erro ao gerar trilha: ' + (error.message || 'Erro desconhecido'),
+        error: error.message 
       }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 });
