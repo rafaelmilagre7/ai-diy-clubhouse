@@ -1,576 +1,498 @@
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.29.0'
+// deno-lint-ignore-file no-explicit-any
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.32.0";
 
-// Configuração CORS para permitir chamadas do frontend
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
-// Tipos para triagem de soluções e recomendações
-interface ScoredSolution {
-  solution: any;
-  score: number;
-  matchReason: string;
-  priority?: number;
-  matchedCourses?: any[];
-}
-
-interface ImplementationRecommendation {
-  solutionId: string;
-  justification?: string;
-  priority?: number;
-}
-
-interface ImplementationTrail {
-  priority1: ImplementationRecommendation[];
-  priority2: ImplementationRecommendation[];
-  priority3: ImplementationRecommendation[];
-  recommended_courses?: { courseId: string; justification?: string; priority?: number }[];
-}
-
-// Manipulador principal para a função de borda
-Deno.serve(async (req) => {
-  // Tratar preflight CORS OPTIONS
+serve(async (req) => {
+  // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
-  
+
   try {
-    console.log("Edge function invocada: generate-implementation-trail");
-    
-    // Configurar cliente Supabase
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-    
-    if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error('Variáveis de ambiente Supabase não configuradas')
-    }
-    
-    console.log(`Configurando cliente Supabase com URL: ${supabaseUrl}`);
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    
-    // Processar corpo da requisição de forma segura
-    let requestData;
-    try {
-      const bodyText = await req.text();
-      console.log("Corpo da requisição recebido:", bodyText.length, "caracteres");
-      
-      if (!bodyText || bodyText.trim() === '') {
-        return new Response(
-          JSON.stringify({ 
-            success: false, 
-            message: 'Corpo da requisição vazio' 
-          }),
-          { 
-            status: 400, 
-            headers: { 
-              ...corsHeaders, 
-              'Content-Type': 'application/json' 
-            } 
-          }
-        );
+    // Configurar cliente Supabase 
+    console.log(`Configurando cliente Supabase com URL: ${Deno.env.get('SUPABASE_URL')}`);
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') || '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '',
+      {
+        auth: { persistSession: false },
       }
-      
-      requestData = JSON.parse(bodyText);
-    } catch (parseError) {
-      console.error("Erro ao analisar corpo da requisição:", parseError);
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: `Erro ao analisar corpo da requisição: ${parseError.message}`,
-          error: 'JSON_PARSE_ERROR'
-        }),
-        { 
-          status: 400, 
-          headers: { 
-            ...corsHeaders, 
-            'Content-Type': 'application/json' 
-          } 
-        }
-      );
-    }
-    
-    // Obter dados da requisição
-    const { userId, hasOnboardingData, ...onboardingData } = requestData;
-    console.log(`Dados recebidos:`, { 
-      userId, 
-      hasOnboardingData,
-      hasPersonalInfo: !!onboardingData?.personal_info, 
-      hasProfessionalInfo: !!onboardingData?.professional_info,
-      hasBusinessGoals: !!onboardingData?.business_goals
-    });
-    
+    );
+
+    // Obter dados da requisição 
+    console.log("Corpo da requisição recebido: " + req.body?.getReader().read().length + " caracteres");
+    const requestData = await req.json();
+    console.log("Dados recebidos:", requestData);
+
+    const userId = requestData.userId;
     if (!userId) {
       return new Response(
-        JSON.stringify({ success: false, message: 'ID do usuário é obrigatório' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ success: false, message: "ID do usuário ausente" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
       );
     }
-    
+
     // Buscar soluções publicadas
     console.log("Buscando soluções publicadas");
-    const { data: solutions, error: solutionsError } = await supabase
-      .from('solutions')
-      .select('*')
-      .eq('published', true);
-      
+    const { data: solutions, error: solutionsError } = await supabaseClient
+      .from("solutions")
+      .select("id, title, description, category, difficulty, tags")
+      .eq("published", true);
+
     if (solutionsError) {
       console.error("Erro ao buscar soluções:", solutionsError);
-      throw solutionsError;
+      return new Response(
+        JSON.stringify({ success: false, message: "Erro ao buscar soluções" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      );
     }
-    console.log(`Encontradas ${solutions?.length || 0} soluções publicadas`);
-    
-    // Buscar cursos publicados para recomendação - MELHORADO
+
+    console.log(`Encontradas ${solutions.length} soluções publicadas`);
+
+    // Buscar cursos e aulas publicados
     console.log("Buscando cursos publicados para recomendação");
-    const { data: courses, error: coursesError } = await supabase
-      .from('learning_courses')
+    const { data: courses, error: coursesError } = await supabaseClient
+      .from("learning_courses")
       .select(`
-        *,
-        modules:learning_modules(count),
-        lessons:learning_modules(
-          learning_lessons(count)
+        id, 
+        title, 
+        description,
+        cover_image_url,
+        learning_modules (
+          id,
+          title,
+          description,
+          learning_lessons (
+            id,
+            title,
+            description,
+            difficulty_level,
+            estimated_time_minutes,
+            cover_image_url
+          )
         )
       `)
-      .eq('published', true);
-      
+      .eq("published", true);
+
     if (coursesError) {
       console.error("Erro ao buscar cursos:", coursesError);
-    } else {
-      console.log(`Encontrados ${courses?.length || 0} cursos publicados para integração`);
+      return new Response(
+        JSON.stringify({ success: false, message: "Erro ao buscar cursos" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      );
     }
-    
-    // Verificar se existe uma trilha para o usuário
-    const { data: existingTrail, error: trailError } = await supabase
-      .from('implementation_trails')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
+
+    console.log(`Encontrados ${courses.length} cursos publicados para integração`);
+
+    // Verificar se já existe uma trilha para este usuário
+    const { data: existingTrail, error: trailError } = await supabaseClient
+      .from("implementation_trails")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-      
-    const hasExistingTrail = !!existingTrail;
-    
-    if (hasExistingTrail) {
-      console.log(`Trilha existente encontrada para usuário ${userId}. Atualizando registro existente.`);
+
+    if (trailError) {
+      console.error("Erro ao buscar trilha existente:", trailError);
+      return new Response(
+        JSON.stringify({ success: false, message: "Erro ao verificar trilha existente" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      );
     }
-    
-    // Buscar dados de onboarding
+
+    // Buscar dados de onboarding para personalização
     console.log(`Buscando dados de onboarding para usuário ${userId}`);
-    const { data: onboarding, error: onboardingError } = await supabase
-      .from('onboarding_progress')
-      .select('*')
-      .eq('user_id', userId)
+    const { data: onboardingData, error: onboardingError } = await supabaseClient
+      .from("onboarding_progress")
+      .select(`
+        personal_info,
+        professional_info,
+        business_goals,
+        ai_experience,
+        is_completed
+      `)
+      .eq("user_id", userId)
       .maybeSingle();
-      
-    if (onboardingError && onboardingError.code !== 'PGRST116') {
-      console.error("Erro ao buscar dados de onboarding:", onboardingError);
+
+    if (onboardingError) {
+      console.log("Erro ao buscar dados de onboarding:", onboardingError);
     }
-    
-    const hasOnboarding = !!onboarding;
-    console.log(`Dados de onboarding encontrados: ${hasOnboarding}`);
-    
-    // Extrair informações para personalização
-    const personalizationData = {
-      goals: [],
-      industry: '',
-      companySize: '',
-      aiExperience: 0
+
+    const hasOnboardingData = !!onboardingData;
+    console.log(`Dados de onboarding encontrados: ${hasOnboardingData}`);
+
+    // Extrair informações relevantes do onboarding para personalização
+    const personalizeData = {
+      goals: onboardingData?.business_goals?.primary_goal 
+        ? [onboardingData.business_goals.primary_goal] 
+        : [],
+      industry: onboardingData?.professional_info?.company_sector || "",
+      companySize: onboardingData?.professional_info?.company_size || "",
+      aiExperience: onboardingData?.ai_experience?.knowledge_level === "avançado" ? 3 :
+                   onboardingData?.ai_experience?.knowledge_level === "intermediario" ? 2 : 0
     };
+
+    console.log("Dados para personalização:", personalizeData);
+
+    // Gerar recomendações
+    // Primeiro para as soluções
+    const priority1 = generatePrioritySolutions(solutions, 3, 1);
+    const priority2 = generatePrioritySolutions(solutions, 2, 2);  
+    const priority3 = [];  // No priority 3 solutions for now
+
+    // Gerar recomendações de aulas (novo)
+    console.log("Processando recomendações de aulas...");
+    let recommendedLessons = [];
     
-    // Usar dados do onboarding ou dados passados na requisição
-    const dataToUse = hasOnboardingData && Object.keys(onboardingData).length > 0 
-      ? onboardingData 
-      : onboarding || {};
-    
-    if (dataToUse) {
-      // Extrair objetivos de negócio
-      const businessGoals = dataToUse.business_goals || {};
-      if (typeof businessGoals === 'string') {
-        try {
-          const parsedGoals = JSON.parse(businessGoals);
-          if (parsedGoals.primary_goal) {
-            personalizationData.goals.push(parsedGoals.primary_goal);
-          }
-          if (Array.isArray(parsedGoals.expected_outcomes)) {
-            personalizationData.goals = [
-              ...personalizationData.goals,
-              ...parsedGoals.expected_outcomes.slice(0, 4)
-            ];
-          }
-        } catch (e) {
-          console.error("Erro ao parsear business_goals como string:", e);
-        }
-      } else if (businessGoals.primary_goal) {
-        personalizationData.goals.push(businessGoals.primary_goal);
-        
-        if (Array.isArray(businessGoals.expected_outcomes)) {
-          personalizationData.goals = [
-            ...personalizationData.goals,
-            ...businessGoals.expected_outcomes.slice(0, 4)
-          ];
-        }
-      }
-      
-      // Extrair informações profissionais e da empresa
-      let professionalInfo = dataToUse.professional_info;
-      
-      // Verificar se professionalInfo é string e tentar parsear
-      if (typeof professionalInfo === 'string') {
-        try {
-          professionalInfo = JSON.parse(professionalInfo);
-        } catch (e) {
-          console.error("Erro ao parsear professional_info como string:", e);
-          professionalInfo = {};
-        }
-      }
-      
-      if (professionalInfo && typeof professionalInfo === 'object') {
-        personalizationData.industry = professionalInfo.company_sector || '';
-        personalizationData.companySize = professionalInfo.company_size || '';
-      }
-      
-      // Extrair nível de experiência com IA
-      let aiExperience = dataToUse.ai_experience;
-      let aiKnowledgeLevel = dataToUse.ai_knowledge_level;
-      
-      // Verificar se aiExperience é string e tentar parsear
-      if (typeof aiExperience === 'string') {
-        try {
-          aiExperience = JSON.parse(aiExperience);
-          aiKnowledgeLevel = aiExperience.knowledge_level;
-        } catch (e) {
-          console.error("Erro ao parsear ai_experience como string:", e);
-        }
-      }
-      
-      if (aiKnowledgeLevel && typeof aiKnowledgeLevel === 'string') {
-        const knowledgeLevel = aiKnowledgeLevel.toLowerCase();
-        if (knowledgeLevel.includes('iniciante')) {
-          personalizationData.aiExperience = 1;
-        } else if (knowledgeLevel.includes('intermediário') || knowledgeLevel.includes('intermediario')) {
-          personalizationData.aiExperience = 2;
-        } else if (knowledgeLevel.includes('avançado') || knowledgeLevel.includes('avancado')) {
-          personalizationData.aiExperience = 3;
-        }
-      }
-    }
-    
-    console.log(`Dados para personalização:`, personalizationData);
-    
-    // Pontuação e triagem de soluções
-    const scoredSolutions: ScoredSolution[] = solutions?.map(solution => {
-      // Lógica básica de pontuação
-      let score = 50; // Pontuação base
-      let matchReason = '';
-      
-      // Categorias de negócio
-      if (solution.category === 'Receita' && personalizationData.goals.some(g => 
-        g.includes('venda') || g.includes('receita') || g.includes('cliente'))) {
-        score += 30;
-        matchReason = 'Alinhado com seus objetivos de receita e vendas';
-      } else if (solution.category === 'Operacional' && personalizationData.goals.some(g => 
-        g.includes('eficiência') || g.includes('automação') || g.includes('operação') || g.includes('automacao'))) {
-        score += 30;
-        matchReason = 'Alinhado com seus objetivos de eficiência operacional';
-      } else if (solution.category === 'Estratégia' && personalizationData.goals.some(g => 
-        g.includes('estratégia') || g.includes('decisão') || g.includes('planejamento') || g.includes('estrategia') || g.includes('decisoes'))) {
-        score += 30;
-        matchReason = 'Alinhado com seus objetivos estratégicos';
-      }
-      
-      // Inovação ou personalização como objetivo
-      if (personalizationData.goals.some(g => g.includes('inovação') || g.includes('inovacao') || g.includes('personalização') || g.includes('personalizacao'))) {
-        score += 15;
-        matchReason += matchReason ? ' e inovação' : 'Focado em inovação para seu negócio';
-      }
-      
-      // Ajuste para nível de experiência com IA
-      if (solution.difficulty === 'beginner' && personalizationData.aiExperience <= 1) {
-        score += 20;
-      } else if (solution.difficulty === 'intermediate' && personalizationData.aiExperience === 2) {
-        score += 15;
-      } else if (solution.difficulty === 'advanced' && personalizationData.aiExperience >= 3) {
-        score += 10;
-      }
-      
-      // Encontrar cursos relacionados à solução (baseado em tags, categoria)
-      const matchedCourses = courses?.filter(course => {
-        // Verificar se os objetos têm as propriedades necessárias
-        if (!course || !solution) return false;
-        
-        // Garantir que temos strings para comparar
-        const courseTitle = String(course.title || '').toLowerCase();
-        const courseDesc = String(course.description || '').toLowerCase();
-        const solutionTitle = String(solution.title || '').toLowerCase();
-        const solutionDesc = String(solution.description || '').toLowerCase();
-        
-        // Melhorar a correspondência de cursos com soluções
-        // Verificar tags da solução
-        let tagMatch = false;
-        if (Array.isArray(solution.tags)) {
-          tagMatch = solution.tags.some((tag: string) => 
-            tag && (courseTitle.includes(tag.toLowerCase()) || courseDesc.includes(tag.toLowerCase()))
-          );
-        }
-        
-        // Verificar categoria da solução
-        let categoryMatch = false;
-        if (solution.category) {
-          const category = String(solution.category).toLowerCase();
-          categoryMatch = courseTitle.includes(category) || courseDesc.includes(category);
-        }
-        
-        // Verificar palavras-chave em comum
-        const solutionKeywords = (solutionTitle + ' ' + solutionDesc).split(/\s+/)
-          .filter(word => word.length > 4) // Palavras com mais de 4 caracteres
-          .map(word => word.toLowerCase());
-          
-        const courseText = courseTitle + ' ' + courseDesc;
-        const keywordMatch = solutionKeywords.some(keyword => 
-          courseText.includes(keyword)
-        );
-        
-        return tagMatch || categoryMatch || keywordMatch;
-      }) || [];
-      
-      return {
-        solution,
-        score,
-        matchReason: matchReason || 'Solução recomendada para seu perfil',
-        matchedCourses
-      };
-    }) || [];
-    
-    // Ordenar soluções por pontuação
-    scoredSolutions.sort((a, b) => b.score - a.score);
-    
-    // Dividir em prioridades
-    const highPriority = scoredSolutions.slice(0, 3).map(item => ({
-      ...item,
-      priority: 1
-    }));
-    
-    const mediumPriority = scoredSolutions.slice(3, 7).map(item => ({
-      ...item,
-      priority: 2
-    }));
-    
-    const lowPriority = scoredSolutions.slice(7, 10).map(item => ({
-      ...item,
-      priority: 3
-    }));
-    
-    // Converter para formato final
-    const priority1 = highPriority.map(item => ({
-      solutionId: item.solution.id,
-      justification: item.matchReason,
-      priority: 1
-    }));
-    
-    const priority2 = mediumPriority.map(item => ({
-      solutionId: item.solution.id,
-      justification: item.matchReason,
-      priority: 2
-    }));
-    
-    const priority3 = lowPriority.map(item => ({
-      solutionId: item.solution.id,
-      justification: item.matchReason,
-      priority: 3
-    }));
-    
-    // MELHORIA: Lógica de recomendação de cursos atualizada
-    let courseRecommendations: {courseId: string, justification?: string, priority?: number}[] = [];
-    
-    try {
-      console.log("Processando recomendações de cursos...");
-      
-      // Garantir que temos cursos para recomendar
-      if (!courses || courses.length === 0) {
-        console.log("Nenhum curso disponível para recomendação");
-        courseRecommendations = [];
-      } else {
-        // Conjunto para rastrear IDs de cursos já recomendados
-        const recommendedCourseIds = new Set<string>();
-        
-        // 1. Primeiro adicionar cursos que correspondem às soluções
-        scoredSolutions.forEach((scoredSolution, index) => {
-          const priority = index < 3 ? 1 : (index < 7 ? 2 : 3);
-          
-          if (scoredSolution.matchedCourses && scoredSolution.matchedCourses.length > 0) {
-            scoredSolution.matchedCourses.slice(0, 2).forEach(course => {
-              if (course && course.id && !recommendedCourseIds.has(course.id)) {
-                recommendedCourseIds.add(course.id);
-                
-                courseRecommendations.push({
-                  courseId: course.id,
-                  justification: `Complementa a solução "${scoredSolution.solution.title}"`,
-                  priority: priority
-                });
-              }
-            });
-          }
+    // Extrair todas as aulas de todos os cursos
+    const allLessons = [];
+    courses.forEach(course => {
+      course.learning_modules?.forEach(module => {
+        module.learning_lessons?.forEach(lesson => {
+          allLessons.push({
+            lessonId: lesson.id,
+            moduleId: module.id,
+            courseId: course.id,
+            title: lesson.title,
+            description: lesson.description,
+            difficulty_level: lesson.difficulty_level,
+            moduleTitle: module.title,
+            courseTitle: course.title
+          });
         });
-        
-        // 2. Se não temos recomendações suficientes, adicionar cursos com base no perfil do usuário
-        if (courseRecommendations.length < 5) {
-          console.log("Adicionando recomendações baseadas em perfil...");
-          
-          // Pontuação de relevância para os cursos baseada no perfil
-          const scoredCourses = courses
-            .filter(course => !recommendedCourseIds.has(course.id))
-            .map(course => {
-              let score = 0;
-              let reason = '';
-              
-              // Título e descrição em minúsculas para comparação
-              const title = (course.title || '').toLowerCase();
-              const description = (course.description || '').toLowerCase();
-              const content = title + ' ' + description;
-              
-              // Verificar correspondência com objetivos
-              personalizationData.goals.forEach(goal => {
-                const goalLower = goal.toLowerCase();
-                if (content.includes(goalLower)) {
-                  score += 20;
-                  reason = 'Alinhado com seus objetivos de negócio';
-                }
-              });
-              
-              // Verificar correspondência com setor
-              if (personalizationData.industry && content.includes(personalizationData.industry.toLowerCase())) {
-                score += 15;
-                reason = reason || `Relevante para o setor ${personalizationData.industry}`;
-              }
-              
-              // Nível de conhecimento em IA
-              if (personalizationData.aiExperience <= 1 && (content.includes('iniciante') || content.includes('básico') || content.includes('introdução'))) {
-                score += 10;
-              } else if (personalizationData.aiExperience === 2 && content.includes('intermediário')) {
-                score += 10;
-              } else if (personalizationData.aiExperience >= 3 && (content.includes('avançado') || content.includes('especialista'))) {
-                score += 10;
-              }
-              
-              // Se não temos pontuação ou razão, atribuir valores padrão
-              if (score === 0) {
-                score = Math.floor(Math.random() * 30); // Pontuação aleatória entre 0 e 29
-              }
-              
-              if (!reason) {
-                reason = 'Recomendado com base no seu perfil';
-              }
-              
-              return {
-                course,
-                score,
-                reason
-              };
-            });
-          
-          // Ordenar por pontuação e pegar os N melhores
-          scoredCourses.sort((a, b) => b.score - a.score);
-          
-          // Adicionar até completar 6 recomendações ou esgotar os cursos disponíveis
-          const remainingSlots = 6 - courseRecommendations.length;
-          const additionalRecommendations = scoredCourses
-            .slice(0, remainingSlots)
-            .map((item, index) => ({
-              courseId: item.course.id,
-              justification: item.reason,
-              priority: Math.min(3, Math.ceil((index + 1) / 2)) // Distribuir em prioridades 1, 2 e 3
-            }));
-          
-          courseRecommendations = [...courseRecommendations, ...additionalRecommendations];
-          console.log(`Adicionadas ${additionalRecommendations.length} recomendações de cursos baseadas em perfil`);
-        }
-      }
-      
-      console.log(`Geradas ${courseRecommendations.length} recomendações de cursos no total`);
-    } catch (courseError) {
-      console.error("Erro ao processar recomendações de cursos:", courseError);
-      courseRecommendations = [];
-    }
+      });
+    });
     
-    // Montar objeto final de recomendações
-    const recommendations: ImplementationTrail = {
+    console.log(`Extraídas ${allLessons.length} aulas de todos os cursos`);
+    
+    // Gerar recomendações baseadas em soluções
+    const lessonsBySolutionMatch = generateLessonRecommendations(allLessons, priority1, priority2);
+    
+    // Adicionar recomendações baseadas em perfil
+    console.log("Adicionando recomendações baseadas em perfil...");
+    const lessonsByProfile = generateProfileBasedLessonRecommendations(
+      allLessons, 
+      personalizeData, 
+      lessonsBySolutionMatch.map(l => l.lessonId)
+    );
+    
+    // Combinar todas as recomendações de aulas
+    recommendedLessons = [...lessonsBySolutionMatch, ...lessonsByProfile];
+    console.log(`Geradas ${recommendedLessons.length} recomendações de aulas no total`);
+    
+    // Limitar a quantidade de aulas recomendadas para não sobrecarregar a UI
+    if (recommendedLessons.length > 9) {
+      recommendedLessons = recommendedLessons.slice(0, 9);
+    }
+
+    // Gerar recomendações de cursos (como backup)
+    console.log("Processando recomendações de cursos...");
+    let recommendedCourses = [];
+    
+    // Adicionar recomendações baseadas em perfil
+    console.log("Adicionando recomendações baseadas em perfil...");
+    const coursesByProfile = courses.slice(0, 2).map((course, index) => ({
+      courseId: course.id,
+      justification: "Recomendado para seu perfil",
+      priority: index + 1
+    }));
+    
+    recommendedCourses = [...coursesByProfile];
+    console.log(`Adicionadas ${coursesByProfile.length} recomendações de cursos baseadas em perfil`);
+    console.log(`Geradas ${recommendedCourses.length} recomendações de cursos no total`);
+
+    // Preparar a estrutura da trilha
+    const trailData = {
       priority1,
       priority2,
       priority3,
-      recommended_courses: courseRecommendations
+      recommended_courses: recommendedCourses,
+      recommended_lessons: recommendedLessons
     };
-    
-    console.log(`Recomendações geradas com sucesso:`, {
+
+    console.log("Recomendações geradas com sucesso:", {
       priority1Count: priority1.length,
       priority2Count: priority2.length,
       priority3Count: priority3.length,
-      coursesRecommendedCount: courseRecommendations.length
+      coursesRecommendedCount: recommendedCourses.length,
+      lessonsRecommendedCount: recommendedLessons.length
     });
-    
-    // Salvar no banco de dados
-    let result;
-    if (hasExistingTrail) {
-      // Atualizar trilha existente
-      const { data, error } = await supabase
-        .from('implementation_trails')
+
+    // Salvar ou atualizar a trilha no banco de dados
+    if (existingTrail) {
+      console.log(`Trilha existente encontrada para usuário ${userId}. Atualizando registro existente.`);
+      const { error: updateError } = await supabaseClient
+        .from("implementation_trails")
         .update({
-          trail_data: recommendations,
-          updated_at: new Date(),
+          trail_data: trailData,
+          updated_at: new Date().toISOString(),
           generation_attempts: existingTrail.generation_attempts + 1,
-          status: 'completed',
+          status: "completed",
           error_message: null
         })
-        .eq('id', existingTrail.id)
-        .select()
-        .single();
-        
-      if (error) {
-        console.error("Erro ao atualizar trilha existente:", error);
-        throw error;
+        .eq("id", existingTrail.id);
+
+      if (updateError) {
+        console.error("Erro ao atualizar trilha existente:", updateError);
+        return new Response(
+          JSON.stringify({ success: false, message: "Erro ao atualizar trilha" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+        );
       }
-      result = data;
-      console.log(`Trilha existente atualizada com sucesso`);
+
+      console.log("Trilha existente atualizada com sucesso");
+      return new Response(
+        JSON.stringify({ success: true, trail: { ...existingTrail, trail_data: trailData } }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     } else {
       // Criar nova trilha
-      const { data, error } = await supabase
-        .from('implementation_trails')
+      console.log(`Criando nova trilha para usuário ${userId}`);
+      const { data: newTrail, error: createError } = await supabaseClient
+        .from("implementation_trails")
         .insert({
           user_id: userId,
-          trail_data: recommendations,
-          status: 'completed',
-          generation_attempts: 1
+          trail_data: trailData,
+          generation_attempts: 1,
+          status: "completed"
         })
         .select()
         .single();
-        
-      if (error) {
-        console.error("Erro ao criar nova trilha:", error);
-        throw error;
+
+      if (createError) {
+        console.error("Erro ao criar nova trilha:", createError);
+        return new Response(
+          JSON.stringify({ success: false, message: "Erro ao criar trilha" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+        );
       }
-      result = data;
-      console.log(`Nova trilha criada com sucesso`);
+
+      console.log("Nova trilha criada com sucesso");
+      return new Response(
+        JSON.stringify({ success: true, trail: newTrail }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
-    
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'Trilha gerada com sucesso', 
-        trail: result 
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-    
+
   } catch (error) {
-    console.error(`Erro ao gerar trilha de implementação:`, error);
-    
+    console.error("Erro na função Edge:", error);
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        message: 'Erro ao gerar trilha: ' + (error.message || 'Erro desconhecido'),
-        error: error.message 
-      }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ success: false, message: "Erro interno do servidor", error: error.message }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }
 });
+
+// Função para gerar recomendações de soluções por prioridade
+function generatePrioritySolutions(solutions: any[], count: number, priorityLevel: number) {
+  if (!solutions || solutions.length === 0) return [];
+  
+  // Embaralhar soluções para simular recomendação personalizada
+  const shuffled = [...solutions].sort(() => 0.5 - Math.random());
+  
+  // Selecionar as primeiras "count" soluções
+  return shuffled.slice(0, count).map(solution => ({
+    solutionId: solution.id,
+    justification: getJustificationText(solution, priorityLevel),
+    priority: priorityLevel
+  }));
+}
+
+// Função para gerar texto de justificativa para soluções
+function getJustificationText(solution: any, priorityLevel: number): string {
+  const priorityTexts = [
+    "Esta solução é altamente recomendada para seu perfil e objetivos de negócio.",
+    "Com base no seu perfil, esta solução pode trazer resultados significativos.",
+    "Uma adição interessante para complementar sua estratégia."
+  ];
+  
+  const categoryTexts = {
+    Receita: " Pode ajudar a aumentar sua receita diretamente.",
+    Operacional: " Deve melhorar seus processos internos com eficiência.",
+    Estratégia: " Fortalecerá sua posição estratégica no mercado."
+  };
+  
+  let text = priorityTexts[priorityLevel - 1] || "Recomendado para seu perfil.";
+  
+  // Adicionar texto específico da categoria se disponível
+  if (solution.category && categoryTexts[solution.category]) {
+    text += categoryTexts[solution.category];
+  }
+  
+  return text;
+}
+
+// Função para gerar recomendações de aulas baseadas nas soluções recomendadas
+function generateLessonRecommendations(allLessons: any[], priority1: any[], priority2: any[]) {
+  if (!allLessons || allLessons.length === 0) return [];
+  
+  // Extrair palavras-chave das soluções recomendadas
+  const keywords = [];
+  
+  // Prioridade 1 - maior peso
+  priority1.forEach(solution => {
+    // Buscar a solução completa
+    const solutionObj = { 
+      title: solution.title || "", 
+      description: solution.description || "", 
+      priority: 1 
+    };
+    
+    // Extrair palavras-chave do título e descrição
+    extractKeywords(solutionObj).forEach(kw => {
+      if (!keywords.includes(kw)) {
+        keywords.push(kw);
+      }
+    });
+  });
+  
+  // Prioridade 2 - menor peso
+  priority2.forEach(solution => {
+    const solutionObj = { 
+      title: solution.title || "", 
+      description: solution.description || "", 
+      priority: 2 
+    };
+    
+    extractKeywords(solutionObj).forEach(kw => {
+      if (!keywords.includes(kw)) {
+        keywords.push(kw);
+      }
+    });
+  });
+  
+  console.log("Palavras-chave extraídas das soluções:", keywords);
+  
+  // Pontuar as aulas com base na relevância para as palavras-chave
+  const scoredLessons = allLessons.map((lesson: any) => {
+    let score = 0;
+    
+    // Texto para análise
+    const lessonText = `${lesson.title || ""} ${lesson.description || ""} ${lesson.moduleTitle || ""} ${lesson.courseTitle || ""}`.toLowerCase();
+    
+    // Pontuar baseado na ocorrência de palavras-chave
+    keywords.forEach(keyword => {
+      if (lessonText.includes(keyword.toLowerCase())) {
+        score += 1;
+      }
+    });
+    
+    return {
+      ...lesson,
+      score,
+      justification: "Esta aula complementa perfeitamente as soluções recomendadas para você",
+      priority: score > 2 ? 1 : 2
+    };
+  });
+  
+  // Ordenar por pontuação e pegar as 5 melhores
+  return scoredLessons
+    .filter(lesson => lesson.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5);
+}
+
+// Função para extrair palavras-chave de um objeto
+function extractKeywords(obj: any): string[] {
+  if (!obj) return [];
+  
+  const text = `${obj.title || ""} ${obj.description || ""}`.toLowerCase();
+  
+  // Lista de palavras-chave relacionadas a IA e negócios
+  const keywordList = [
+    "ia", "ai", "inteligência artificial", "intelligence",
+    "automatização", "automation",
+    "chatbot", "chat", "gpt", 
+    "prompt", "prompts",
+    "productividade", "productivity",
+    "marketing", "vendas", "sales", 
+    "atendimento", "customer", "cliente", 
+    "receita", "revenue", "renda", 
+    "operacional", "operational", 
+    "estratégia", "strategy",
+    "negócio", "business", "empresa",
+    "dados", "data", "análise", "analysis",
+    "processo", "process", "workflow",
+    "implementação", "implementation"
+  ];
+  
+  // Verificar quais palavras-chave estão presentes
+  return keywordList.filter(keyword => text.includes(keyword));
+}
+
+// Função para gerar recomendações de aulas baseadas no perfil do usuário
+function generateProfileBasedLessonRecommendations(
+  allLessons: any[], 
+  profile: any,
+  alreadyRecommendedIds: string[]
+): any[] {
+  // Filtramos aulas que já foram recomendadas
+  const availableLessons = allLessons.filter(lesson => 
+    !alreadyRecommendedIds.includes(lesson.lessonId)
+  );
+  
+  if (!availableLessons || availableLessons.length === 0) return [];
+  
+  // Se não temos dados de perfil suficientes, retornar algumas aleatórias
+  if (!profile || (!profile.goals?.length && !profile.industry)) {
+    return availableLessons
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 3)
+      .map(lesson => ({
+        ...lesson,
+        justification: "Recomendado para expandir seu conhecimento",
+        priority: 2
+      }));
+  }
+  
+  // Pontuar aulas com base no perfil
+  const scoredLessons = availableLessons.map(lesson => {
+    let score = 0;
+    const lessonText = `${lesson.title || ""} ${lesson.description || ""} ${lesson.moduleTitle || ""} ${lesson.courseTitle || ""}`.toLowerCase();
+    
+    // Pontuação baseada nos objetivos do usuário
+    if (profile.goals && profile.goals.length > 0) {
+      profile.goals.forEach((goal: string) => {
+        if (goal && lessonText.includes(goal.toLowerCase())) {
+          score += 2;
+        }
+      });
+    }
+    
+    // Pontuação baseada na indústria/setor
+    if (profile.industry && lessonText.includes(profile.industry.toLowerCase())) {
+      score += 1.5;
+    }
+    
+    // Ajuste pela experiência com IA - recomendar aulas mais avançadas para usuários experientes
+    if (lesson.difficulty_level) {
+      if (profile.aiExperience === 0 && lesson.difficulty_level === 'beginner') {
+        score += 1;
+      } else if (profile.aiExperience === 2 && lesson.difficulty_level === 'intermediate') {
+        score += 1;
+      } else if (profile.aiExperience === 3 && lesson.difficulty_level === 'advanced') {
+        score += 1;
+      }
+    }
+    
+    return {
+      ...lesson,
+      score,
+      justification: "Recomendado especificamente para seu perfil e objetivos",
+      priority: 1
+    };
+  });
+  
+  // Ordenar por pontuação e retornar as melhores
+  return scoredLessons
+    .filter(lesson => lesson.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 4);
+}

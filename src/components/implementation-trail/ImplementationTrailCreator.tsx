@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
@@ -8,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Loader2, RefreshCw, AlertTriangle, Info, Book } from "lucide-react";
 import { TrailSolutionsList } from "./TrailSolutionsList";
 import { TrailCoursesList } from "./TrailCoursesList";
+import { TrailLessonsList } from "./TrailLessonsList";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/lib/supabase";
@@ -18,6 +18,7 @@ export const ImplementationTrailCreator = () => {
   const { courses: allCourses, isLoading: coursesLoading } = useLearningCourses();
   const [processedSolutions, setProcessedSolutions] = useState<any[]>([]);
   const [recommendedCourses, setRecommendedCourses] = useState<any[]>([]);
+  const [recommendedLessons, setRecommendedLessons] = useState<any[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [missingIds, setMissingIds] = useState<string[]>([]);
@@ -29,6 +30,7 @@ export const ImplementationTrailCreator = () => {
     if (trail) {
       console.log("Trail data:", trail);
       console.log("Recommended courses in trail:", trail.recommended_courses);
+      console.log("Recommended lessons in trail:", trail.recommended_lessons);
     }
     
     if (allCourses) {
@@ -97,11 +99,108 @@ export const ImplementationTrailCreator = () => {
     processSolutions();
   }, [trail, allSolutions, isProcessingData]);
   
-  // Atualização: Processar recomendações de cursos usando os dados disponíveis do useLearningCourses
+  // Atualização: Processar recomendações de aulas específicas
   useEffect(() => {
+    const processRecommendedLessons = async () => {
+      // Evitar execução repetida ou quando está processando
+      if (loadingCourses || courseDataFetched || !trail) {
+        return;
+      }
+
+      try {
+        setLoadingCourses(true);
+        
+        // Verificar se tem recomendações de aulas na trilha
+        if (!trail.recommended_lessons || !Array.isArray(trail.recommended_lessons) || trail.recommended_lessons.length === 0) {
+          console.log("Sem recomendações de aulas na trilha");
+          
+          // Verificar se temos recomendações de cursos para tentar extrair aulas deles
+          if (trail.recommended_courses && trail.recommended_courses.length > 0 && allCourses && allCourses.length > 0) {
+            console.log("Tentando extrair aulas dos cursos recomendados");
+            
+            // Obter todas as aulas disponíveis
+            const allAvailableLessons = allCourses.flatMap(course => course.all_lessons || []);
+            
+            if (allAvailableLessons.length > 0) {
+              // Obter os IDs dos cursos recomendados
+              const recommendedCourseIds = trail.recommended_courses.map(c => c.courseId);
+              
+              // Filtrar aulas dos cursos recomendados 
+              const lessonsFromRecommendedCourses = allAvailableLessons
+                .filter(lesson => recommendedCourseIds.includes(lesson.module.course.id))
+                .slice(0, 6) // Limitar a 6 aulas para não sobrecarregar a interface
+                .map(lesson => ({
+                  ...lesson,
+                  justification: `Aula do curso "${lesson.module.course.title}" recomendado para seu perfil`,
+                  priority: 1
+                }));
+              
+              if (lessonsFromRecommendedCourses.length > 0) {
+                console.log("Aulas extraídas dos cursos recomendados:", lessonsFromRecommendedCourses);
+                setRecommendedLessons(lessonsFromRecommendedCourses);
+                setCourseDataFetched(true);
+                setLoadingCourses(false);
+                return;
+              }
+            }
+          }
+          
+          // Se não temos recomendações de aulas nem conseguimos extrair dos cursos
+          setRecommendedLessons([]);
+          setCourseDataFetched(true);
+          setLoadingCourses(false);
+          return;
+        }
+        
+        console.log("Processando recomendações de aulas:", trail.recommended_lessons);
+        
+        // Extrair IDs das aulas recomendadas
+        const lessonIds = trail.recommended_lessons
+          .filter(l => l && l.lessonId)
+          .map(l => l.lessonId);
+        
+        if (lessonIds.length === 0 || !allCourses || allCourses.length === 0) {
+          setRecommendedLessons([]);
+          setCourseDataFetched(true);
+          setLoadingCourses(false);
+          return;
+        }
+        
+        // Obter todas as aulas disponíveis
+        const allAvailableLessons = allCourses.flatMap(course => course.all_lessons || []);
+        
+        console.log("Todas as aulas disponíveis:", allAvailableLessons.length);
+        console.log("IDs de aulas a buscar:", lessonIds);
+        
+        // Filtrar as aulas correspondentes
+        const matchingLessons = allAvailableLessons.filter(lesson => lessonIds.includes(lesson.id));
+        
+        console.log("Aulas correspondentes encontradas:", matchingLessons.length);
+        
+        // Combinar os dados das aulas com as justificativas da trilha
+        const enrichedLessons = matchingLessons.map(lesson => {
+          const recommendation = trail.recommended_lessons.find(r => r.lessonId === lesson.id);
+          return {
+            ...lesson,
+            justification: recommendation?.justification || "Recomendado para seu perfil",
+            priority: recommendation?.priority || 1
+          };
+        });
+        
+        console.log("Aulas enriquecidas:", enrichedLessons);
+        setRecommendedLessons(enrichedLessons);
+      } catch (error) {
+        console.error("Erro ao processar aulas recomendadas:", error);
+      } finally {
+        setLoadingCourses(false);
+        setCourseDataFetched(true);
+      }
+    };
+
+    // Processar recomendações de cursos (código existente)
     const processRecommendedCourses = async () => {
       // Evitar execução repetida ou quando está processando
-      if (loadingCourses || courseDataFetched || !trail || coursesLoading) {
+      if (loadingCourses || courseDataFetched || !trail) {
         return;
       }
 
@@ -157,6 +256,8 @@ export const ImplementationTrailCreator = () => {
       }
     };
 
+    // Chamar ambos os processadores
+    processRecommendedLessons();
     processRecommendedCourses();
   }, [trail, allCourses, loadingCourses, courseDataFetched, coursesLoading]);
 
@@ -246,7 +347,7 @@ export const ImplementationTrailCreator = () => {
   }
 
   // Se não há conteúdo na trilha, exibir opção para gerar
-  if (!hasContent || (processedSolutions.length === 0 && recommendedCourses.length === 0)) {
+  if (!hasContent || (processedSolutions.length === 0 && recommendedCourses.length === 0 && recommendedLessons.length === 0)) {
     return (
       <div className="text-center py-8 space-y-6">
         <div className="bg-[#151823]/80 border border-[#0ABAB5]/20 rounded-lg p-8 max-w-2xl mx-auto">
@@ -318,7 +419,7 @@ export const ImplementationTrailCreator = () => {
         </div>
       )}
       
-      {/* Cursos recomendados */}
+      {/* Aulas recomendadas */}
       <Separator className="bg-neutral-800 my-6" />
       <div className="space-y-4">
         <h4 className="font-medium text-[#0ABAB5] flex items-center gap-2">
@@ -326,9 +427,9 @@ export const ImplementationTrailCreator = () => {
           Aulas recomendadas para você
         </h4>
         
-        <TrailCoursesList courses={recommendedCourses} />
-        
-        {(!recommendedCourses || recommendedCourses.length === 0) && (
+        {recommendedLessons && recommendedLessons.length > 0 ? (
+          <TrailLessonsList lessons={recommendedLessons} />
+        ) : (
           <div className="text-center py-4 bg-neutral-800/20 rounded-lg border border-neutral-700/50 p-4">
             <div className="flex flex-col items-center gap-2">
               <Book className="h-8 w-8 text-neutral-500" />
@@ -348,7 +449,7 @@ export const ImplementationTrailCreator = () => {
       </div>
       
       {/* Mostrar botão para gerar novamente se não temos recomendações suficientes */}
-      {processedSolutions.length === 0 && recommendedCourses.length === 0 && (
+      {processedSolutions.length === 0 && recommendedLessons.length === 0 && recommendedCourses.length === 0 && (
         <div className="pt-6 text-center">
           <p className="text-neutral-400 mb-4">Não foram encontradas recomendações na sua trilha.</p>
           <Button 

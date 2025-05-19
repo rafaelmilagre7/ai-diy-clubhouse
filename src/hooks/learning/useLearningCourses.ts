@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { LearningCourse } from "@/lib/supabase/types";
+import { LearningCourse, LearningLesson, LearningModule } from "@/lib/supabase/types";
 import { useAuth } from "@/contexts/auth";
 
 export const useLearningCourses = () => {
@@ -14,14 +14,25 @@ export const useLearningCourses = () => {
   } = useQuery({
     queryKey: ["learning-courses", user?.id],
     queryFn: async () => {
-      // Buscar todos os cursos publicados
+      // Buscar todos os cursos publicados com módulos e aulas
       const { data, error } = await supabase
         .from("learning_courses")
         .select(`
           *,
-          modules:learning_modules(count),
-          lessons:learning_modules(
-            lessons:learning_lessons(count)
+          modules:learning_modules(
+            id, 
+            title, 
+            description,
+            order_index,
+            lessons:learning_lessons(
+              id, 
+              title, 
+              description,
+              order_index,
+              cover_image_url,
+              estimated_time_minutes,
+              difficulty_level
+            )
           )
         `)
         .eq("published", true)
@@ -52,9 +63,28 @@ export const useLearningCourses = () => {
         
         // Calcular contagem total de aulas em todos os módulos
         let lessonCount = 0;
+        let lessons = [];
+        
         if (course.modules) {
           course.modules.forEach(module => {
-            lessonCount += (module.lessons?.length || 0);
+            if (module.lessons) {
+              lessonCount += module.lessons.length;
+              
+              // Adicionar informações do curso e módulo a cada aula
+              const moduleLessons = module.lessons.map(lesson => ({
+                ...lesson,
+                module: {
+                  id: module.id,
+                  title: module.title,
+                  course: {
+                    id: course.id,
+                    title: course.title
+                  }
+                }
+              }));
+              
+              lessons = [...lessons, ...moduleLessons];
+            }
           });
         }
         
@@ -62,7 +92,8 @@ export const useLearningCourses = () => {
           ...course,
           is_restricted: restrictedIds.has(course.id),
           module_count: moduleCount,
-          lesson_count: lessonCount
+          lesson_count: lessonCount,
+          all_lessons: lessons // Lista plana de todas as aulas do curso
         };
       });
       
@@ -72,12 +103,19 @@ export const useLearningCourses = () => {
       }
 
       return processedCourses;
-    }
+    },
+    enabled: true // Sempre buscar os cursos disponíveis
   });
 
   return {
     courses,
     isLoading,
-    error
+    error,
+    // Método de conveniência para obter todas as aulas de todos os cursos
+    getAllLessons: () => {
+      if (!courses || courses.length === 0) return [];
+      
+      return courses.flatMap(course => course.all_lessons || []);
+    }
   };
 };
