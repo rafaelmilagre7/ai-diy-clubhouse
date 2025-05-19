@@ -1,10 +1,9 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/auth";
+import { useAuth, clearAuthTokens } from "@/contexts/auth";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
-import { clearAuthTokens } from '@/contexts/auth';
 import EmailPasswordForm from "./EmailPasswordForm";
 import GoogleLoginButton from "./GoogleLoginButton";
 import Divider from "./Divider";
