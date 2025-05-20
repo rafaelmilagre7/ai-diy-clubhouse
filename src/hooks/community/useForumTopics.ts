@@ -43,7 +43,8 @@ export const useForumTopics = ({
             user_id, 
             category_id, 
             last_activity_at
-          `);
+          `)
+          .order('is_pinned', { ascending: false });
 
         // Aplicar filtros de categoria apenas se não for "todos"
         if (activeTab !== "todos") {
@@ -65,6 +66,7 @@ export const useForumTopics = ({
             query = query.eq('reply_count', 0).order('created_at', { ascending: false });
             break;
           case "resolvidos":
+            // Filtrar apenas tópicos marcados como resolvidos
             query = query.eq('is_solved', true).order('last_activity_at', { ascending: false });
             break;
         }

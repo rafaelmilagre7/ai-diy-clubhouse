@@ -1,136 +1,77 @@
 
-/**
- * Módulo para funções de RPC do Supabase
- */
-
-import { supabase } from "./client";
-
-/**
- * Cria uma política pública para um bucket de armazenamento
- */
-export async function createStoragePublicPolicy(bucketName: string): Promise<{ success: boolean; error?: string }> {
-  try {
-    const { data, error } = await supabase.rpc('create_storage_public_policy', {
-      bucket_name: bucketName
-    });
-    
-    if (error) {
-      return { success: false, error: error.message };
-    }
-    
-    return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message };
-  }
-}
+import { supabase } from "./index";
 
 /**
  * Incrementa o contador de visualizações de um tópico
  */
-export async function incrementTopicViews(topicId: string): Promise<void> {
+export const incrementTopicViews = async (topicId: string): Promise<void> => {
   try {
-    await supabase.rpc('increment_topic_views', { topic_id: topicId });
+    const { error } = await supabase.rpc('increment_topic_views', {
+      topic_id: topicId
+    });
+
+    if (error) {
+      console.error('Erro ao incrementar visualizações:', error);
+      throw error;
+    }
   } catch (error) {
-    console.error("Erro ao incrementar visualizações:", error);
+    console.error('Falha ao chamar RPC incrementar visualizações:', error);
+    // Fallback: Se o RPC falhar, tente uma abordagem direta
+    try {
+      const { data } = await supabase
+        .from('forum_topics')
+        .select('view_count')
+        .eq('id', topicId)
+        .single();
+
+      if (data) {
+        const currentCount = data.view_count || 0;
+        await supabase
+          .from('forum_topics')
+          .update({ view_count: currentCount + 1 })
+          .eq('id', topicId);
+      }
+    } catch (fallbackError) {
+      console.error('Também falhou o fallback de incrementar visualizações:', fallbackError);
+    }
   }
-}
+};
 
 /**
  * Incrementa o contador de respostas de um tópico
  */
-export async function incrementTopicReplies(topicId: string): Promise<void> {
+export const incrementTopicReplies = async (topicId: string): Promise<void> => {
   try {
-    await supabase.rpc('increment_topic_replies', { topic_id: topicId });
+    const { error } = await supabase.rpc('increment_topic_replies', {
+      topic_id: topicId
+    });
+
+    if (error) {
+      console.error('Erro ao incrementar respostas:', error);
+      throw error;
+    }
   } catch (error) {
-    console.error("Erro ao incrementar respostas:", error);
-  }
-}
+    console.error('Falha ao chamar RPC incrementar respostas:', error);
+    // Fallback: Se o RPC falhar, tente uma abordagem direta
+    try {
+      const { data } = await supabase
+        .from('forum_topics')
+        .select('reply_count')
+        .eq('id', topicId)
+        .single();
 
-/**
- * Exclui um tópico do fórum e suas postagens
- */
-export async function deleteForumTopic(topicId: string): Promise<{ success: boolean; error?: string }> {
-  try {
-    // Primeiro exclui todas as postagens relacionadas
-    const { error: postsError } = await supabase
-      .from('forum_posts')
-      .delete()
-      .eq('topic_id', topicId);
-      
-    if (postsError) throw postsError;
-    
-    // Depois exclui o tópico
-    const { error: topicError } = await supabase
-      .from('forum_topics')
-      .delete()
-      .eq('id', topicId);
-      
-    if (topicError) throw topicError;
-    
-    return { success: true };
-  } catch (error: any) {
-    console.error("Erro ao excluir tópico:", error);
-    return { success: false, error: error.message };
-  }
-}
-
-/**
- * Exclui uma postagem do fórum
- */
-export async function deleteForumPost(postId: string): Promise<{ success: boolean; error?: string }> {
-  try {
-    const { data, error } = await supabase.rpc('deleteForumPost', { post_id: postId });
-      
-    if (error) throw error;
-    
-    if (!data.success) {
-      throw new Error(data.error);
-    }
-    
-    return { success: true };
-  } catch (error: any) {
-    console.error("Erro ao excluir postagem:", error);
-    return { success: false, error: error.message };
-  }
-}
-
-/**
- * Marca um tópico como resolvido
- */
-export async function markTopicAsSolved(
-  topicId: string, 
-  isSolved: boolean, 
-  solutionPostId?: string
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    if (isSolved && solutionPostId) {
-      // Marcar como resolvido
-      const { data, error } = await supabase.rpc('mark_topic_as_solved', {
-        topic_id: topicId,
-        post_id: solutionPostId
-      });
-      
-      if (error) throw error;
-      
-      if (!data.success) {
-        throw new Error(data.error);
+      if (data) {
+        const currentCount = data.reply_count || 0;
+        await supabase
+          .from('forum_topics')
+          .update({ 
+            reply_count: currentCount + 1,
+            last_activity_at: new Date().toISOString()
+          })
+          .eq('id', topicId);
       }
-    } else {
-      // Desmarcar como resolvido
-      const { data, error } = await supabase.rpc('unmark_topic_as_solved', {
-        topic_id: topicId
-      });
-      
-      if (error) throw error;
-      
-      if (!data.success) {
-        throw new Error(data.error);
-      }
+    } catch (fallbackError) {
+      console.error('Também falhou o fallback de incrementar respostas:', fallbackError);
     }
-    
-    return { success: true };
-  } catch (error: any) {
-    console.error("Erro ao atualizar estado de solução do tópico:", error);
-    return { success: false, error: error.message };
   }
-}
+};

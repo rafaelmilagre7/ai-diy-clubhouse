@@ -73,6 +73,6 @@ export const memberRoutes: RouteObject[] = [
   // Rotas legadas - temporárias para redirecionamento
   createProtectedRoute("/forum", CommunityHome),
   createProtectedRoute("/forum/category/:slug", CategoryView),
-  createProtectedRoute("/forum/topic/:id", TopicView),
+  createProtectedRoute("/forum/topic/:topicId", TopicView),
   createProtectedRoute("/forum/new-topic/:categorySlug?", NewTopic)
 ];

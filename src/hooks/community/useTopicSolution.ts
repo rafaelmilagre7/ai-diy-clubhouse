@@ -1,9 +1,9 @@
 
-import { useState } from "react";
-import { useAuth } from "@/contexts/auth";
-import { supabase } from "@/lib/supabase";
-import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
+import { useAuth } from '@/contexts/auth';
+import { useUser } from '@/hooks/useUser';
 
 interface UseTopicSolutionProps {
   topicId: string;
@@ -11,98 +11,89 @@ interface UseTopicSolutionProps {
   initialSolvedState?: boolean;
 }
 
-export function useTopicSolution({
-  topicId,
+export const useTopicSolution = ({ 
+  topicId, 
   topicAuthorId,
-  initialSolvedState = false
-}: UseTopicSolutionProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSolved, setIsSolved] = useState(initialSolvedState);
-  const { user, isAdmin } = useAuth();
-  const queryClient = useQueryClient();
+  initialSolvedState = false 
+}: UseTopicSolutionProps) => {
+  const [isSolved, setIsSolved] = useState<boolean>(initialSolvedState);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const { user } = useAuth();
+  const { profile } = useUser();
+  
+  // Atualizar o estado quando o initialSolvedState mudar
+  useEffect(() => {
+    setIsSolved(initialSolvedState);
+  }, [initialSolvedState]);
 
-  // Verifica se o usuário pode marcar como resolvido (autor do tópico ou admin)
-  const canMarkAsSolved = user?.id === topicAuthorId || isAdmin;
+  // Verifica se o usuário pode marcar o tópico como resolvido
+  const canMarkAsSolved = !!user && (
+    // Autor do tópico ou admin pode marcar como resolvido
+    user.id === topicAuthorId || 
+    profile?.role === 'admin'
+  );
 
-  const markAsSolved = async (solutionPostId?: string) => {
-    if (!user?.id) {
-      toast.error("Você precisa estar logado para realizar esta ação");
+  // Marcar tópico como resolvido
+  const markAsSolved = async () => {
+    if (!canMarkAsSolved || !topicId) {
+      toast.error('Você não tem permissão para marcar este tópico como resolvido');
       return;
     }
-
-    if (!canMarkAsSolved) {
-      toast.error("Apenas o autor do tópico ou administradores podem marcar como resolvido");
-      return;
-    }
-
-    if (!solutionPostId) {
-      toast.error("É necessário escolher um post como solução");
-      return;
-    }
-
-    setIsSubmitting(true);
 
     try {
-      const { data, error } = await supabase.rpc('mark_topic_as_solved', {
-        topic_id: topicId,
-        post_id: solutionPostId
-      });
+      setIsSubmitting(true);
+      console.log('Marcando tópico como resolvido:', topicId);
+      
+      // Atualiza o status na tabela forum_topics
+      const { error } = await supabase
+        .from('forum_topics')
+        .update({ is_solved: true })
+        .eq('id', topicId);
 
       if (error) {
-        throw new Error(error.message);
+        console.error('Erro ao marcar tópico como resolvido:', error);
+        toast.error('Não foi possível marcar o tópico como resolvido');
+        return;
       }
 
       setIsSolved(true);
-      toast.success("Tópico marcado como resolvido com sucesso!");
-      
-      // Invalidar queries para recarregar os dados
-      queryClient.invalidateQueries({ queryKey: ['forumTopic', topicId] });
-      queryClient.invalidateQueries({ queryKey: ['forumTopics'] });
-      queryClient.invalidateQueries({ queryKey: ['communityTopics'] });
-      queryClient.invalidateQueries({ queryKey: ['forumStats'] });
-      
-    } catch (error: any) {
-      console.error("Erro ao marcar tópico como resolvido:", error);
-      toast.error(error.message || "Não foi possível marcar o tópico como resolvido");
+      toast.success('Tópico marcado como resolvido!');
+    } catch (error) {
+      console.error('Erro ao marcar tópico como resolvido:', error);
+      toast.error('Ocorreu um erro ao processar sua solicitação');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Desmarcar tópico como resolvido
   const unmarkAsSolved = async () => {
-    if (!user?.id) {
-      toast.error("Você precisa estar logado para realizar esta ação");
+    if (!canMarkAsSolved || !topicId) {
+      toast.error('Você não tem permissão para modificar este tópico');
       return;
     }
-
-    if (!canMarkAsSolved) {
-      toast.error("Apenas o autor do tópico ou administradores podem alterar a resolução do tópico");
-      return;
-    }
-
-    setIsSubmitting(true);
 
     try {
-      const { data, error } = await supabase.rpc('unmark_topic_as_solved', {
-        topic_id: topicId
-      });
+      setIsSubmitting(true);
+      console.log('Desmarcando tópico como resolvido:', topicId);
+      
+      // Atualiza o status na tabela forum_topics
+      const { error } = await supabase
+        .from('forum_topics')
+        .update({ is_solved: false })
+        .eq('id', topicId);
 
       if (error) {
-        throw new Error(error.message);
+        console.error('Erro ao desmarcar tópico como resolvido:', error);
+        toast.error('Não foi possível desmarcar o tópico como resolvido');
+        return;
       }
 
       setIsSolved(false);
-      toast.success("Tópico desmarcado como resolvido!");
-      
-      // Invalidar queries para recarregar os dados
-      queryClient.invalidateQueries({ queryKey: ['forumTopic', topicId] });
-      queryClient.invalidateQueries({ queryKey: ['forumTopics'] });
-      queryClient.invalidateQueries({ queryKey: ['communityTopics'] });
-      queryClient.invalidateQueries({ queryKey: ['forumStats'] });
-      
-    } catch (error: any) {
-      console.error("Erro ao desmarcar tópico como resolvido:", error);
-      toast.error(error.message || "Não foi possível desmarcar o tópico como resolvido");
+      toast.success('Tópico desmarcado como resolvido');
+    } catch (error) {
+      console.error('Erro ao desmarcar tópico como resolvido:', error);
+      toast.error('Ocorreu um erro ao processar sua solicitação');
     } finally {
       setIsSubmitting(false);
     }
@@ -115,4 +106,4 @@ export function useTopicSolution({
     markAsSolved,
     unmarkAsSolved
   };
-}
+};

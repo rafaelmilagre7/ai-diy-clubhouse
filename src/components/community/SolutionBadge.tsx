@@ -1,18 +1,24 @@
 
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface SolutionBadgeProps {
   isSolved: boolean;
   className?: string;
 }
 
-export const SolutionBadge = ({ isSolved, className = "" }: SolutionBadgeProps) => {
+export const SolutionBadge = ({ isSolved, className }: SolutionBadgeProps) => {
   if (!isSolved) return null;
   
   return (
-    <span className={`inline-flex items-center gap-1 text-xs text-green-600 ${className}`}>
-      <CheckCircle2 className="h-3.5 w-3.5" />
+    <div 
+      className={cn(
+        "inline-flex items-center rounded-full text-xs font-medium bg-green-500/20 text-green-500 px-2 py-0.5",
+        className
+      )}
+    >
+      <CheckCircle className="h-3 w-3 mr-1" />
       <span>Resolvido</span>
-    </span>
+    </div>
   );
 };
