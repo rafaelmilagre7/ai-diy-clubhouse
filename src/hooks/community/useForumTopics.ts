@@ -94,9 +94,15 @@ export const useForumTopics = ({
         
         // Converter e garantir que os dados estão no formato correto
         const formattedTopics: Topic[] = topicsData.map(topic => {
-          // Garantindo que profiles e category são objetos, não arrays
-          const profileData = topic.profiles && typeof topic.profiles === 'object' ? topic.profiles : null;
-          const categoryData = topic.category && typeof topic.category === 'object' ? topic.category : null;
+          // Verificando se profiles e category são objetos válidos
+          // Precisamos verificar explicitamente se não são arrays
+          const profileData = topic.profiles && 
+            typeof topic.profiles === 'object' && 
+            !Array.isArray(topic.profiles) ? topic.profiles : null;
+          
+          const categoryData = topic.category && 
+            typeof topic.category === 'object' && 
+            !Array.isArray(topic.category) ? topic.category : null;
           
           return {
             id: topic.id,
@@ -112,15 +118,15 @@ export const useForumTopics = ({
             is_pinned: topic.is_pinned,
             is_locked: topic.is_locked,
             profiles: profileData ? {
-              id: String(profileData.id || ''),
-              name: String(profileData.name || ''),
-              avatar_url: String(profileData.avatar_url || ''),
-              role: String(profileData.role || '')
+              id: profileData.id ? String(profileData.id) : '',
+              name: profileData.name ? String(profileData.name) : '',
+              avatar_url: profileData.avatar_url ? String(profileData.avatar_url) : '',
+              role: profileData.role ? String(profileData.role) : ''
             } : null,
             category: categoryData ? {
-              id: String(categoryData.id || ''),
-              name: String(categoryData.name || ''),
-              slug: String(categoryData.slug || '')
+              id: categoryData.id ? String(categoryData.id) : '',
+              name: categoryData.name ? String(categoryData.name) : '',
+              slug: categoryData.slug ? String(categoryData.slug) : ''
             } : null
           };
         });
