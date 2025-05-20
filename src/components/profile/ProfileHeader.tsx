@@ -29,12 +29,21 @@ export const ProfileHeader = ({
   completionRate,
   avatarInitials
 }: ProfileHeaderProps) => {
+  // Função para validar a URL da imagem
+  const isValidImageUrl = (url: string | undefined | null): boolean => {
+    if (!url) return false;
+    return url.startsWith('http://') || url.startsWith('https://');
+  };
+
+  // Verificar se a URL da imagem é válida
+  const validAvatarUrl = isValidImageUrl(profileAvatar) ? profileAvatar : undefined;
+
   return (
     <Card className="md:col-span-1 glass-dark hover:shadow-lg transition-all duration-300">
       <CardContent className="pt-6">
         <div className="flex flex-col items-center text-center">
           <Avatar className="h-24 w-24 border-2 border-viverblue/20 shadow-md">
-            <AvatarImage src={profileAvatar || undefined} />
+            <AvatarImage src={validAvatarUrl} />
             <AvatarFallback className="text-2xl bg-gradient-viver text-white">{avatarInitials}</AvatarFallback>
           </Avatar>
           <h2 className="mt-4 text-xl font-semibold text-high-contrast">{profileName || "Usuário"}</h2>

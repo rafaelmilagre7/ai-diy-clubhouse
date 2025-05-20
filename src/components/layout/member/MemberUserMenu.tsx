@@ -35,6 +35,15 @@ export const MemberUserMenu = ({
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
   
+  // Função para validar a URL da imagem
+  const isValidImageUrl = (url: string | undefined | null): boolean => {
+    if (!url) return false;
+    return url.startsWith('http://') || url.startsWith('https://');
+  };
+
+  // Verificar se a URL da imagem é válida
+  const validAvatarUrl = isValidImageUrl(profileAvatar) ? profileAvatar : undefined;
+  
   const handleSignOut = async (e: Event) => {
     e.preventDefault();
     
@@ -74,7 +83,7 @@ export const MemberUserMenu = ({
             )}
           >
             <Avatar className="h-8 w-8 border border-white/10">
-              <AvatarImage src={profileAvatar} />
+              <AvatarImage src={validAvatarUrl} />
               <AvatarFallback className="bg-[#181A2A] text-viverblue">{getInitials(profileName)}</AvatarFallback>
             </Avatar>
             {sidebarOpen && (

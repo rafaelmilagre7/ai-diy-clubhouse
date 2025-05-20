@@ -25,6 +25,15 @@ const EditProfile = () => {
     }
   }, [profile]);
 
+  // Função para validar a URL da imagem
+  const isValidImageUrl = (url: string | undefined | null): boolean => {
+    if (!url) return false;
+    return url.startsWith('http://') || url.startsWith('https://');
+  };
+
+  // Verificar se a URL da imagem é válida
+  const validAvatarUrl = isValidImageUrl(avatarUrl) ? avatarUrl : undefined;
+
   const getInitials = (name: string | null) => {
     if (!name) return "U";
     return name
@@ -105,7 +114,7 @@ const EditProfile = () => {
         {/* Imagem de Perfil */}
         <div className="md:col-span-1 flex flex-col items-center">
           <Avatar className="w-40 h-40 mb-4">
-            <AvatarImage src={avatarUrl} />
+            <AvatarImage src={validAvatarUrl} />
             <AvatarFallback>{getInitials(name)}</AvatarFallback>
           </Avatar>
           <FileUpload
