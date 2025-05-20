@@ -1,7 +1,6 @@
 
 import React, { useState } from "react";
-import { ForumLayout } from "@/components/community/ForumLayout";
-import { MessageSquare, Users, BarChart, Search, Filter } from "lucide-react";
+import { MessageSquare, Users, BarChart, Search } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useForumStats } from "@/hooks/useForumStats";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Topic } from "@/types/forumTypes";
 import { QuickPostInput } from "@/components/community/QuickPostInput";
+import { toast } from "sonner";
 
 type TopicFilterType = "recentes" | "populares" | "sem-respostas" | "resolvidos";
 
@@ -23,140 +23,170 @@ const CommunityHome = () => {
   const [selectedFilter, setSelectedFilter] = useState<TopicFilterType>("recentes");
   const { topicCount, postCount, activeUserCount, isLoading: statsLoading } = useForumStats();
 
-  // Buscar categorias
-  const { data: categories, isLoading: categoriesLoading } = useQuery({
+  // Buscar categorias com tratamento de erro aprimorado
+  const { data: categories, isLoading: categoriesLoading, error: categoriesError } = useQuery({
     queryKey: ['forumCategories'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('forum_categories')
-        .select('*')
-        .eq('is_active', true)
-        .order('order_index', { ascending: true });
-      
-      if (error) throw error;
-      return data;
-    }
-  });
-
-  // Buscar tópicos - Corrigido para usar JOIN explícito em vez de sintaxe de relacionamento
-  const { data: topics, isLoading: topicsLoading } = useQuery({
-    queryKey: ['communityTopics', selectedFilter, searchQuery, activeTab],
-    queryFn: async () => {
-      console.log("Buscando tópicos com filtros:", { selectedFilter, searchQuery, activeTab });
-      
-      // Construir query base para tópicos
-      let query = supabase
-        .from('forum_topics')
-        .select(`
-          id, 
-          title, 
-          content, 
-          created_at, 
-          updated_at, 
-          view_count, 
-          reply_count, 
-          is_locked, 
-          is_pinned, 
-          user_id, 
-          category_id, 
-          last_activity_at
-        `)
-        .order('is_pinned', { ascending: false });
-
-      // Aplicar filtros de categoria apenas se não for "todos"
-      if (activeTab !== "todos") {
-        const category = categories?.find(c => c.slug === activeTab);
-        if (category) {
-          query = query.eq('category_id', category.id);
-        }
-      }
-      
-      // Aplicar filtros adicionais
-      switch (selectedFilter) {
-        case "recentes":
-          query = query.order('last_activity_at', { ascending: false });
-          break;
-        case "populares":
-          query = query.order('view_count', { ascending: false });
-          break;
-        case "sem-respostas":
-          query = query.eq('reply_count', 0).order('created_at', { ascending: false });
-          break;
-      }
-      
-      // Aplicar filtro de busca
-      if (searchQuery) {
-        query = query.ilike('title', `%${searchQuery}%`);
-      }
-      
-      // Limitar resultados
-      query = query.limit(20);
-      
-      // Executar a consulta principal
-      const { data: topicsData, error: topicsError } = await query;
-      
-      if (topicsError) {
-        console.error("Erro ao buscar tópicos:", topicsError);
-        throw topicsError;
-      }
-      
-      console.log("Tópicos brutos encontrados:", topicsData?.length || 0);
-      
-      // Se não temos tópicos, retornar array vazio
-      if (!topicsData || topicsData.length === 0) {
+      try {
+        const { data, error } = await supabase
+          .from('forum_categories')
+          .select('*')
+          .eq('is_active', true)
+          .order('order_index', { ascending: true });
+        
+        if (error) throw error;
+        return data || [];
+      } catch (error: any) {
+        console.error("Erro ao buscar categorias:", error.message);
+        toast.error("Não foi possível carregar as categorias. Por favor, tente novamente.");
         return [];
       }
-      
-      // Buscar dados dos usuários para esses tópicos
-      const userIds = [...new Set(topicsData.map(topic => topic.user_id))];
-      const { data: usersData, error: usersError } = await supabase
-        .from('profiles')
-        .select('id, name, avatar_url')
-        .in('id', userIds);
-        
-      if (usersError) {
-        console.error("Erro ao buscar perfis de usuários:", usersError);
-        throw usersError;
-      }
-      
-      // Criar um mapa de usuários por ID para fácil acesso
-      const userMap = (usersData || []).reduce((acc, user) => {
-        acc[user.id] = user;
-        return acc;
-      }, {} as Record<string, any>);
-      
-      // Buscar dados das categorias para esses tópicos
-      const categoryIds = [...new Set(topicsData.map(topic => topic.category_id))];
-      const { data: categoriesData, error: categoriesError } = await supabase
-        .from('forum_categories')
-        .select('id, name, slug')
-        .in('id', categoryIds);
-        
-      if (categoriesError) {
-        console.error("Erro ao buscar categorias:", categoriesError);
-        throw categoriesError;
-      }
-      
-      // Criar um mapa de categorias por ID para fácil acesso
-      const categoryMap = (categoriesData || []).reduce((acc, category) => {
-        acc[category.id] = category;
-        return acc;
-      }, {} as Record<string, any>);
-      
-      // Montar os tópicos com os dados relacionados
-      const enrichedTopics = topicsData.map(topic => {
-        return {
-          ...topic,
-          profiles: userMap[topic.user_id] || null,
-          category: categoryMap[topic.category_id] || null
-        };
-      });
-      
-      console.log("Tópicos enriquecidos:", enrichedTopics.length);
-      return enrichedTopics as Topic[];
     },
+    staleTime: 1000 * 60 * 5, // 5 minutos de cache
+    retry: 2
+  });
+
+  // Buscar tópicos com tratamento de erro aprimorado
+  const { data: topics, isLoading: topicsLoading, error: topicsError } = useQuery({
+    queryKey: ['communityTopics', selectedFilter, searchQuery, activeTab],
+    queryFn: async () => {
+      try {
+        console.log("Buscando tópicos com filtros:", { selectedFilter, searchQuery, activeTab });
+        
+        // Construir query base para tópicos
+        let query = supabase
+          .from('forum_topics')
+          .select(`
+            id, 
+            title, 
+            content, 
+            created_at, 
+            updated_at, 
+            view_count, 
+            reply_count, 
+            is_locked, 
+            is_pinned, 
+            user_id, 
+            category_id, 
+            last_activity_at
+          `)
+          .order('is_pinned', { ascending: false });
+
+        // Aplicar filtros de categoria apenas se não for "todos"
+        if (activeTab !== "todos") {
+          const category = categories?.find(c => c.slug === activeTab);
+          if (category) {
+            query = query.eq('category_id', category.id);
+          }
+        }
+        
+        // Aplicar filtros adicionais
+        switch (selectedFilter) {
+          case "recentes":
+            query = query.order('last_activity_at', { ascending: false });
+            break;
+          case "populares":
+            query = query.order('view_count', { ascending: false });
+            break;
+          case "sem-respostas":
+            query = query.eq('reply_count', 0).order('created_at', { ascending: false });
+            break;
+          case "resolvidos":
+            // Implementação futura
+            query = query.order('last_activity_at', { ascending: false });
+            break;
+        }
+        
+        // Aplicar filtro de busca
+        if (searchQuery) {
+          query = query.ilike('title', `%${searchQuery}%`);
+        }
+        
+        // Limitar resultados
+        query = query.limit(20);
+        
+        // Executar a consulta principal
+        const { data: topicsData, error: topicsError } = await query;
+        
+        if (topicsError) {
+          throw topicsError;
+        }
+        
+        // Se não temos tópicos, retornar array vazio
+        if (!topicsData || topicsData.length === 0) {
+          return [];
+        }
+        
+        // Buscar dados dos usuários para esses tópicos
+        const userIds = [...new Set(topicsData.map(topic => topic.user_id))];
+        const { data: usersData, error: usersError } = await supabase
+          .from('profiles')
+          .select('id, name, avatar_url, role')
+          .in('id', userIds);
+          
+        if (usersError) {
+          throw usersError;
+        }
+        
+        // Criar um mapa de usuários por ID para fácil acesso
+        const userMap = (usersData || []).reduce((acc, user) => {
+          acc[user.id] = user;
+          return acc;
+        }, {} as Record<string, any>);
+        
+        // Buscar dados das categorias para esses tópicos
+        const categoryIds = [...new Set(topicsData.map(topic => topic.category_id))];
+        const { data: categoriesData, error: categoriesError } = await supabase
+          .from('forum_categories')
+          .select('id, name, slug')
+          .in('id', categoryIds);
+          
+        if (categoriesError) {
+          throw categoriesError;
+        }
+        
+        // Criar um mapa de categorias por ID para fácil acesso
+        const categoryMap = (categoriesData || []).reduce((acc, category) => {
+          acc[category.id] = category;
+          return acc;
+        }, {} as Record<string, any>);
+        
+        // Montar os tópicos com os dados relacionados
+        const enrichedTopics = topicsData.map(topic => {
+          return {
+            ...topic,
+            profiles: userMap[topic.user_id] || null,
+            category: categoryMap[topic.category_id] || null
+          };
+        });
+        
+        return enrichedTopics as Topic[];
+      } catch (error: any) {
+        console.error('Erro ao buscar tópicos:', error.message);
+        toast.error("Não foi possível carregar os tópicos. Por favor, tente novamente.");
+        return [];
+      }
+    },
+    staleTime: 1000 * 60 * 2, // 2 minutos de cache
+    retry: 2,
     refetchOnWindowFocus: false,
   });
+
+  // Mostrar erro se houver problema em ambas as consultas
+  if (categoriesError && topicsError) {
+    return (
+      <div className="container px-4 py-6 mx-auto max-w-7xl">
+        <div className="text-center py-10">
+          <MessageSquare className="h-12 w-12 mx-auto text-red-500 mb-4" />
+          <h1 className="text-2xl font-bold mb-2">Erro ao carregar a comunidade</h1>
+          <p className="text-muted-foreground mb-6">Não foi possível carregar o conteúdo da comunidade. Por favor, tente novamente mais tarde.</p>
+          <Button onClick={() => window.location.reload()}>
+            Tentar novamente
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   // Preparar tabs para as categorias
   const renderCategoryTabs = () => {

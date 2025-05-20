@@ -40,9 +40,9 @@ export const TopicList = ({ categoryId, categorySlug }: TopicListProps) => {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['forumTopics', categoryId, currentPage],
     queryFn: async () => {
-      console.log("Buscando tópicos para categoria:", categoryId, "página:", currentPage);
-      
       try {
+        console.log("Buscando tópicos para categoria:", categoryId, "página:", currentPage);
+        
         // Primeiro buscar todos os tópicos fixados
         const { data: pinnedTopics, error: pinnedError } = await supabase
           .from('forum_topics')
@@ -54,10 +54,7 @@ export const TopicList = ({ categoryId, categorySlug }: TopicListProps) => {
           .eq('is_pinned', true)
           .order('last_activity_at', { ascending: false });
         
-        if (pinnedError) {
-          console.error("Erro ao buscar tópicos fixados:", pinnedError);
-          throw pinnedError;
-        }
+        if (pinnedError) throw pinnedError;
         
         // Depois buscar os tópicos normais, paginados
         const { data: regularTopics, error: regularError, count } = await supabase
@@ -71,29 +68,21 @@ export const TopicList = ({ categoryId, categorySlug }: TopicListProps) => {
           .order('last_activity_at', { ascending: false })
           .range(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage - 1);
         
-        if (regularError) {
-          console.error("Erro ao buscar tópicos regulares:", regularError);
-          throw regularError;
-        }
-        
-        console.log("Tópicos encontrados:", {
-          pinnedCount: pinnedTopics?.length || 0,
-          regularCount: regularTopics?.length || 0,
-          totalCount: count || 0
-        });
+        if (regularError) throw regularError;
         
         return { 
-          pinnedTopics: pinnedTopics as Topic[],
-          regularTopics: regularTopics as Topic[],
+          pinnedTopics: pinnedTopics as Topic[] || [],
+          regularTopics: regularTopics as Topic[] || [],
           totalCount: count || 0
         };
-      } catch (error) {
-        console.error("Erro ao buscar tópicos:", error);
+      } catch (error: any) {
+        console.error("Erro ao buscar tópicos:", error.message);
         throw error;
       }
     },
     refetchOnWindowFocus: false,
-    retry: 1,
+    retry: 2,
+    staleTime: 1000 * 60 * 2, // 2 minutos de cache
   });
 
   const handleRetry = () => {
@@ -174,6 +163,9 @@ export const TopicList = ({ categoryId, categorySlug }: TopicListProps) => {
         .slice(0, 2);
     };
 
+    // Tratar casos onde last_activity_at pode estar ausente
+    const lastActivityDate = topic.last_activity_at ? new Date(topic.last_activity_at) : new Date(topic.created_at);
+
     return (
       <Card key={topic.id} className="mb-3 p-4 hover:bg-accent/50 transition-all">
         <Link to={`/comunidade/topico/${topic.id}`} className="block">
@@ -201,7 +193,7 @@ export const TopicList = ({ categoryId, categorySlug }: TopicListProps) => {
                 <span>Por {topic.profiles?.name || "Usuário"}</span>
                 <span>•</span>
                 <span>
-                  {format(new Date(topic.last_activity_at), "d 'de' MMMM 'às' HH:mm", {
+                  {format(lastActivityDate, "d 'de' MMMM 'às' HH:mm", {
                     locale: ptBR,
                   })}
                 </span>
