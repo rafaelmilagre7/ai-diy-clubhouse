@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Link } from "react-router-dom";
@@ -36,12 +36,36 @@ interface TopicListProps {
 export const TopicList = ({ categoryId, categorySlug }: TopicListProps) => {
   const [currentPage, setCurrentPage] = useState<number>(0);
   const itemsPerPage = 10;
+  const [errorCount, setErrorCount] = useState<number>(0);
+
+  // Usando useEffect para logs de diagnóstico
+  useEffect(() => {
+    console.log("TopicList montado:", {
+      categoryId,
+      categorySlug,
+      currentPage
+    });
+    
+    return () => {
+      console.log("TopicList desmontado");
+    };
+  }, [categoryId, categorySlug, currentPage]);
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['forumTopics', categoryId, currentPage],
     queryFn: async () => {
       try {
         console.log("Buscando tópicos para categoria:", categoryId, "página:", currentPage);
+        
+        // Verificação de segurança para categoryId
+        if (!categoryId) {
+          console.error("CategoryId está vazio ou inválido");
+          return { 
+            pinnedTopics: [],
+            regularTopics: [],
+            totalCount: 0
+          };
+        }
         
         // Primeiro buscar todos os tópicos fixados
         const { data: pinnedTopics, error: pinnedError } = await supabase
@@ -54,7 +78,10 @@ export const TopicList = ({ categoryId, categorySlug }: TopicListProps) => {
           .eq('is_pinned', true)
           .order('last_activity_at', { ascending: false });
         
-        if (pinnedError) throw pinnedError;
+        if (pinnedError) {
+          console.error("Erro ao buscar tópicos fixados:", pinnedError);
+          throw pinnedError;
+        }
         
         // Depois buscar os tópicos normais, paginados
         const { data: regularTopics, error: regularError, count } = await supabase
@@ -68,7 +95,16 @@ export const TopicList = ({ categoryId, categorySlug }: TopicListProps) => {
           .order('last_activity_at', { ascending: false })
           .range(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage - 1);
         
-        if (regularError) throw regularError;
+        if (regularError) {
+          console.error("Erro ao buscar tópicos regulares:", regularError);
+          throw regularError;
+        }
+        
+        console.log("Tópicos carregados com sucesso:", {
+          fixados: pinnedTopics?.length || 0,
+          regulares: regularTopics?.length || 0,
+          total: count || 0
+        });
         
         return { 
           pinnedTopics: pinnedTopics as Topic[] || [],
@@ -77,16 +113,31 @@ export const TopicList = ({ categoryId, categorySlug }: TopicListProps) => {
         };
       } catch (error: any) {
         console.error("Erro ao buscar tópicos:", error.message);
+        setErrorCount(prev => prev + 1);
         throw error;
       }
     },
     refetchOnWindowFocus: false,
-    retry: 2,
+    retry: 3,
     staleTime: 1000 * 60 * 2, // 2 minutos de cache
+    onError: (err) => {
+      console.error("Erro na query de tópicos:", err);
+    }
   });
+
+  // Monitorar erros para exibir feedback ao usuário
+  useEffect(() => {
+    if (errorCount > 2) {
+      toast.error("Problemas ao carregar os tópicos. Tentando novamente...", {
+        id: "topic-list-error",
+        duration: 3000
+      });
+    }
+  }, [errorCount]);
 
   const handleRetry = () => {
     toast.info("Atualizando lista de tópicos...");
+    setErrorCount(0);
     refetch();
   };
 

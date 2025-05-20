@@ -31,129 +31,48 @@ import CategoryView from '@/pages/member/community/CategoryView';
 import TopicView from '@/pages/member/community/TopicView';
 import NewTopic from '@/pages/member/community/NewTopic';
 
+// Função helper para criar rotas protegidas com MemberLayout
+const createProtectedRoute = (path: string, Component: React.ComponentType<any>) => ({
+  path,
+  element: <ProtectedRoutes><MemberLayout><Component /></MemberLayout></ProtectedRoutes>
+});
+
 export const memberRoutes: RouteObject[] = [
-  {
-    path: "/",
-    element: <ProtectedRoutes><MemberLayout><Dashboard /></MemberLayout></ProtectedRoutes>
-  },
-  {
-    path: "/dashboard",
-    element: <ProtectedRoutes><MemberLayout><Dashboard /></MemberLayout></ProtectedRoutes>
-  },
-  {
-    path: "/implementation-trail",
-    element: <ProtectedRoutes><MemberLayout><ImplementationTrailPage /></MemberLayout></ProtectedRoutes>
-  },
-  {
-    path: "/solutions",
-    element: <ProtectedRoutes><MemberLayout><Solutions /></MemberLayout></ProtectedRoutes>
-  },
-  {
-    path: "/tools",
-    element: <ProtectedRoutes><MemberLayout><Tools /></MemberLayout></ProtectedRoutes>
-  },
-  {
-    path: "/tools/:id",
-    element: <ProtectedRoutes><MemberLayout><ToolDetails /></MemberLayout></ProtectedRoutes>
-  },
-  {
-    path: "/profile",
-    element: <ProtectedRoutes><MemberLayout><Profile /></MemberLayout></ProtectedRoutes>
-  },
-  {
-    path: "/profile/edit",
-    element: <ProtectedRoutes><MemberLayout><EditProfile /></MemberLayout></ProtectedRoutes>
-  },
-  {
-    path: "/solution/:id",
-    element: <ProtectedRoutes><MemberLayout><SolutionDetails /></MemberLayout></ProtectedRoutes>
-  },
-  {
-    path: "/implement/:id/:moduleIdx",
-    element: <ProtectedRoutes><MemberLayout><SolutionImplementation /></MemberLayout></ProtectedRoutes>
-  },
-  {
-    path: "/implementation/:id",
-    element: <ProtectedRoutes><MemberLayout><SolutionImplementation /></MemberLayout></ProtectedRoutes>
-  },
-  {
-    path: "/implementation/:id/:moduleIdx",
-    element: <ProtectedRoutes><MemberLayout><SolutionImplementation /></MemberLayout></ProtectedRoutes>
-  },
-  {
-    path: "/implementation/completed/:id",
-    element: <ProtectedRoutes><MemberLayout><ImplementationCompleted /></MemberLayout></ProtectedRoutes>
-  },
-  {
-    path: "/benefits",
-    element: <ProtectedRoutes><MemberLayout><Benefits /></MemberLayout></ProtectedRoutes>
-  },
-  {
-    path: "/events",
-    element: <ProtectedRoutes><MemberLayout><Events /></MemberLayout></ProtectedRoutes>
-  },
+  createProtectedRoute("/", Dashboard),
+  createProtectedRoute("/dashboard", Dashboard),
+  createProtectedRoute("/implementation-trail", ImplementationTrailPage),
+  createProtectedRoute("/solutions", Solutions),
+  createProtectedRoute("/tools", Tools),
+  createProtectedRoute("/tools/:id", ToolDetails),
+  createProtectedRoute("/profile", Profile),
+  createProtectedRoute("/profile/edit", EditProfile),
+  createProtectedRoute("/solution/:id", SolutionDetails),
+  createProtectedRoute("/implement/:id/:moduleIdx", SolutionImplementation),
+  createProtectedRoute("/implementation/:id", SolutionImplementation),
+  createProtectedRoute("/implementation/:id/:moduleIdx", SolutionImplementation),
+  createProtectedRoute("/implementation/completed/:id", ImplementationCompleted),
+  createProtectedRoute("/benefits", Benefits),
+  createProtectedRoute("/events", Events),
   
-  // Learning/LMS Routes para membro
-  {
-    path: "/learning",
-    element: <ProtectedRoutes><MemberLayout><LearningPage /></MemberLayout></ProtectedRoutes>
-  },
-  {
-    path: "/learning/course/:id",
-    element: <ProtectedRoutes><MemberLayout><CourseDetails /></MemberLayout></ProtectedRoutes>
-  },
-  {
-    path: "/learning/course/:courseId/lesson/:lessonId",
-    element: <ProtectedRoutes><MemberLayout><LessonView /></MemberLayout></ProtectedRoutes>
-  },
+  // Learning/LMS Routes
+  createProtectedRoute("/learning", LearningPage),
+  createProtectedRoute("/learning/course/:id", CourseDetails),
+  createProtectedRoute("/learning/course/:courseId/lesson/:lessonId", LessonView),
   
   // Sugestões Routes
-  {
-    path: "/suggestions",
-    element: <ProtectedRoutes><MemberLayout><Suggestions /></MemberLayout></ProtectedRoutes>
-  },
-  {
-    path: "/suggestions/:id",
-    element: <ProtectedRoutes><MemberLayout><SuggestionDetails /></MemberLayout></ProtectedRoutes>
-  },
-  {
-    path: "/suggestions/new",
-    element: <ProtectedRoutes><MemberLayout><NewSuggestion /></MemberLayout></ProtectedRoutes>
-  },
+  createProtectedRoute("/suggestions", Suggestions),
+  createProtectedRoute("/suggestions/:id", SuggestionDetails),
+  createProtectedRoute("/suggestions/new", NewSuggestion),
   
-  // Comunidade Routes - Novas rotas
-  {
-    path: "/comunidade",
-    element: <ProtectedRoutes><MemberLayout><CommunityHome /></MemberLayout></ProtectedRoutes>
-  },
-  {
-    path: "/comunidade/categoria/:slug",
-    element: <ProtectedRoutes><MemberLayout><CategoryView /></MemberLayout></ProtectedRoutes>
-  },
-  {
-    path: "/comunidade/topico/:id",
-    element: <ProtectedRoutes><MemberLayout><TopicView /></MemberLayout></ProtectedRoutes>
-  },
-  {
-    path: "/comunidade/novo-topico/:categorySlug?",
-    element: <ProtectedRoutes><MemberLayout><NewTopic /></MemberLayout></ProtectedRoutes>
-  },
+  // Comunidade Routes - Definidas com prioridade
+  createProtectedRoute("/comunidade", CommunityHome),
+  createProtectedRoute("/comunidade/categoria/:slug", CategoryView),
+  createProtectedRoute("/comunidade/topico/:id", TopicView),
+  createProtectedRoute("/comunidade/novo-topico/:categorySlug?", NewTopic),
   
   // Rotas legadas - temporárias para redirecionamento
-  {
-    path: "/forum",
-    element: <ProtectedRoutes><MemberLayout><CommunityHome /></MemberLayout></ProtectedRoutes>
-  },
-  {
-    path: "/forum/category/:slug",
-    element: <ProtectedRoutes><MemberLayout><CategoryView /></MemberLayout></ProtectedRoutes>
-  },
-  {
-    path: "/forum/topic/:id",
-    element: <ProtectedRoutes><MemberLayout><TopicView /></MemberLayout></ProtectedRoutes>
-  },
-  {
-    path: "/forum/new-topic/:categorySlug?",
-    element: <ProtectedRoutes><MemberLayout><NewTopic /></MemberLayout></ProtectedRoutes>
-  }
+  createProtectedRoute("/forum", CommunityHome),
+  createProtectedRoute("/forum/category/:slug", CategoryView),
+  createProtectedRoute("/forum/topic/:id", TopicView),
+  createProtectedRoute("/forum/new-topic/:categorySlug?", NewTopic)
 ];

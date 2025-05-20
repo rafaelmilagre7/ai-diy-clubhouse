@@ -10,6 +10,11 @@ export const CommunityRedirects = () => {
   const navigate = useNavigate();
   
   useEffect(() => {
+    // Não fazer redirecionamento se já estivermos em uma rota da comunidade
+    if (location.pathname.startsWith('/comunidade')) {
+      return;
+    }
+    
     // Mapeia as rotas antigas para as novas
     const pathMappings: Record<string, string> = {
       '/forum': '/comunidade',
@@ -26,6 +31,7 @@ export const CommunityRedirects = () => {
         
         // Só redireciona se não estiver já no novo caminho (evita loops)
         if (newLocation !== location.pathname) {
+          console.log(`CommunityRedirects: Redirecionando de ${location.pathname} para ${newLocation}`);
           // Redireciona preservando query params
           navigate(`${newLocation}${location.search}`, { 
             replace: true, // Substitui a entrada no histórico para não criar redirecionamentos desnecessários

@@ -1,6 +1,7 @@
 
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/auth";
+import { useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
   Lightbulb, 
@@ -18,7 +19,7 @@ import {
   MessagesSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 interface SidebarNavProps {
   sidebarOpen: boolean;
@@ -73,6 +74,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
       title: "Comunidade",
       href: "/comunidade",
       icon: MessagesSquare,
+      highlight: true
     },
     {
       title: "Perfil",
@@ -86,41 +88,59 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
     }
   ];
 
+  // Função aprimorada para verificar se uma rota está ativa
   const isActive = (href: string) => {
-    // Para a comunidade, considerar tanto o caminho antigo quanto o novo
+    const currentPath = location.pathname;
+    
+    // Verificação especial para a comunidade (inclui rotas antigas)
     if (href === "/comunidade") {
-      return location.pathname === "/comunidade" || 
-             location.pathname === "/forum" || 
-             location.pathname.startsWith("/comunidade/") ||
-             location.pathname.startsWith("/forum/");
+      console.log(`Verificando rota: ${currentPath}, resultado:`, 
+        currentPath === "/comunidade" || 
+        currentPath === "/forum" || 
+        currentPath.startsWith("/comunidade/") ||
+        currentPath.startsWith("/forum/")
+      );
+      
+      return currentPath === "/comunidade" || 
+             currentPath === "/forum" || 
+             currentPath.startsWith("/comunidade/") ||
+             currentPath.startsWith("/forum/");
     }
     
-    return location.pathname === href || location.pathname.startsWith(href + '/');
+    // Verificação padrão para outras rotas
+    return currentPath === href || currentPath.startsWith(href + '/');
   };
 
   return (
     <div className="space-y-2 py-4">
       <div className="px-3 space-y-1">
-        {menuItems.map((item) => (
-          <Button
-            key={item.href}
-            variant="ghost"
-            className={cn(
-              "w-full justify-start gap-3 rounded-lg hover:bg-[#181A2A] text-neutral-400 dark:text-neutral-300",
-              !sidebarOpen && "justify-center",
-              isActive(item.href) && "hubla-active-nav"
-            )}
-            asChild
-          >
-            <Link to={item.href}>
-              <item.icon className={cn(
-                "h-4 w-4", 
-                isActive(item.href) ? "text-viverblue" : "text-neutral-400"
-              )} />
-              {sidebarOpen && <span>{item.title}</span>}
-            </Link>
-          </Button>
-        ))}
+        {menuItems.map((item) => {
+          const active = isActive(item.href);
+          
+          return (
+            <Button
+              key={item.href}
+              variant="ghost"
+              className={cn(
+                "w-full justify-start gap-3 rounded-lg hover:bg-[#181A2A] text-neutral-400 dark:text-neutral-300",
+                !sidebarOpen && "justify-center",
+                active && "hubla-active-nav",
+                item.highlight && "relative"
+              )}
+              asChild
+            >
+              <Link to={item.href}>
+                <item.icon className={cn(
+                  "h-4 w-4", 
+                  active ? "text-viverblue" : "text-neutral-400"
+                )} />
+                {sidebarOpen && (
+                  <span>{item.title}</span>
+                )}
+              </Link>
+            </Button>
+          );
+        })}
 
         {isAdmin && (
           <Button

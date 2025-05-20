@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MessageSquare, Users, BarChart, Search } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useForumStats } from "@/hooks/useForumStats";
@@ -14,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Topic } from "@/types/forumTypes";
 import { QuickPostInput } from "@/components/community/QuickPostInput";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/auth";
 
 type TopicFilterType = "recentes" | "populares" | "sem-respostas" | "resolvidos";
 
@@ -21,7 +21,18 @@ const CommunityHome = () => {
   const [activeTab, setActiveTab] = useState<string>("todos");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedFilter, setSelectedFilter] = useState<TopicFilterType>("recentes");
+  const { user } = useAuth();
   const { topicCount, postCount, activeUserCount, isLoading: statsLoading } = useForumStats();
+
+  // Log para debugging
+  useEffect(() => {
+    console.log("CommunityHome renderizado:", { 
+      path: window.location.pathname,
+      authenticated: !!user,
+      activeTab,
+      selectedFilter
+    });
+  }, [user, activeTab, selectedFilter]);
 
   // Buscar categorias com tratamento de erro aprimorado
   const { data: categories, isLoading: categoriesLoading, error: categoriesError } = useQuery({
