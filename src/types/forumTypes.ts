@@ -42,5 +42,5 @@ export interface Topic {
   is_pinned: boolean;
   is_locked: boolean;
   profiles?: Profile | null;
-  category?: ForumCategory | null;
+  category?: Partial<ForumCategory> | null;
 }

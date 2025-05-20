@@ -94,6 +94,10 @@ export const useForumTopics = ({
         
         // Converter e garantir que os dados estão no formato correto
         const formattedTopics: Topic[] = topicsData.map(topic => {
+          // Garantindo que profiles e category são objetos, não arrays
+          const profileData = topic.profiles && typeof topic.profiles === 'object' ? topic.profiles : null;
+          const categoryData = topic.category && typeof topic.category === 'object' ? topic.category : null;
+          
           return {
             id: topic.id,
             title: topic.title,
@@ -107,16 +111,16 @@ export const useForumTopics = ({
             reply_count: topic.reply_count,
             is_pinned: topic.is_pinned,
             is_locked: topic.is_locked,
-            profiles: topic.profiles ? {
-              id: String(topic.profiles.id || ''),
-              name: String(topic.profiles.name || ''),
-              avatar_url: String(topic.profiles.avatar_url || ''),
-              role: String(topic.profiles.role || '')
+            profiles: profileData ? {
+              id: String(profileData.id || ''),
+              name: String(profileData.name || ''),
+              avatar_url: String(profileData.avatar_url || ''),
+              role: String(profileData.role || '')
             } : null,
-            category: topic.category ? {
-              id: String(topic.category.id || ''),
-              name: String(topic.category.name || ''),
-              slug: String(topic.category.slug || '')
+            category: categoryData ? {
+              id: String(categoryData.id || ''),
+              name: String(categoryData.name || ''),
+              slug: String(categoryData.slug || '')
             } : null
           };
         });
