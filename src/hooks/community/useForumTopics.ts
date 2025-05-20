@@ -42,9 +42,7 @@ export const useForumTopics = ({
             is_solved,
             user_id, 
             category_id, 
-            last_activity_at,
-            profiles(id, name, avatar_url, role),
-            category:category_id(id, name, slug)
+            last_activity_at
           `)
           .order('is_pinned', { ascending: false });
 
@@ -84,8 +82,6 @@ export const useForumTopics = ({
         // Executar a consulta principal
         const { data: topicsData, error: topicsError } = await query;
         
-        console.log("Tópicos brutos encontrados:", topicsData?.length || 0);
-        
         if (topicsError) {
           throw topicsError;
         }
@@ -95,17 +91,32 @@ export const useForumTopics = ({
           return [];
         }
         
-        // Converter e garantir que os dados estão no formato correto
-        const formattedTopics: Topic[] = topicsData.map(topic => {
-          // Verificando se profiles e category são objetos válidos
-          // Precisamos verificar explicitamente se não são arrays
-          const profileData = topic.profiles && 
-            typeof topic.profiles === 'object' && 
-            !Array.isArray(topic.profiles) ? topic.profiles : null;
+        // Buscar perfis de usuários em uma consulta separada
+        const userIds = topicsData.map(topic => topic.user_id);
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('*')
+          .in('id', userIds);
           
-          const categoryData = topic.category && 
-            typeof topic.category === 'object' && 
-            !Array.isArray(topic.category) ? topic.category : null;
+        if (profilesError) {
+          console.warn("Erro ao buscar perfis:", profilesError.message);
+        }
+        
+        // Buscar categorias em uma consulta separada
+        const categoryIds = topicsData.map(topic => topic.category_id);
+        const { data: categoriesData, error: categoriesError } = await supabase
+          .from('forum_categories')
+          .select('id, name, slug')
+          .in('id', categoryIds);
+          
+        if (categoriesError) {
+          console.warn("Erro ao buscar categorias:", categoriesError.message);
+        }
+        
+        // Mapear os perfis e categorias para os tópicos
+        const formattedTopics: Topic[] = topicsData.map(topic => {
+          const userProfile = profilesData?.find(profile => profile.id === topic.user_id);
+          const topicCategory = categoriesData?.find(cat => cat.id === topic.category_id);
           
           return {
             id: topic.id,
@@ -116,25 +127,26 @@ export const useForumTopics = ({
             last_activity_at: topic.last_activity_at,
             user_id: topic.user_id,
             category_id: topic.category_id,
-            view_count: topic.view_count,
-            reply_count: topic.reply_count,
-            is_pinned: topic.is_pinned,
-            is_locked: topic.is_locked,
+            view_count: topic.view_count || 0,
+            reply_count: topic.reply_count || 0,
+            is_pinned: topic.is_pinned || false,
+            is_locked: topic.is_locked || false,
             is_solved: topic.is_solved || false,
-            profiles: profileData ? {
-              id: profileData.id ? String(profileData.id) : '',
-              name: profileData.name ? String(profileData.name) : '',
-              avatar_url: profileData.avatar_url ? String(profileData.avatar_url) : '',
-              role: profileData.role ? String(profileData.role) : ''
+            profiles: userProfile ? {
+              id: userProfile.id,
+              name: userProfile.name || 'Usuário',
+              avatar_url: userProfile.avatar_url,
+              role: userProfile.role || ''
             } : null,
-            category: categoryData ? {
-              id: categoryData.id ? String(categoryData.id) : '',
-              name: categoryData.name ? String(categoryData.name) : '',
-              slug: categoryData.slug ? String(categoryData.slug) : ''
+            category: topicCategory ? {
+              id: topicCategory.id,
+              name: topicCategory.name,
+              slug: topicCategory.slug
             } : null
           };
         });
         
+        console.log(`Tópicos formatados: ${formattedTopics.length}`);
         return formattedTopics;
       } catch (error: any) {
         console.error('Erro ao buscar tópicos:', error.message);

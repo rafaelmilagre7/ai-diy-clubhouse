@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
 import { Topic } from "@/types/forumTypes";
 import { SolutionBadge } from "./SolutionBadge";
-import { getInitials } from "@/utils/user";
+import { getInitials, getAvatarUrl } from "@/utils/user";
 
 interface TopicItemProps {
   topic: Topic;
@@ -20,13 +20,20 @@ export const TopicItem = ({ topic, isPinned = false }: TopicItemProps) => {
     ? new Date(topic.last_activity_at) 
     : new Date(topic.created_at);
 
+  const avatarUrl = topic.profiles?.avatar_url 
+    ? getAvatarUrl(topic.profiles.avatar_url) 
+    : undefined;
+    
+  const userName = topic.profiles?.name || "Usuário";
+  const userInitials = getInitials(userName);
+
   return (
     <Card className="mb-3 p-4 hover:bg-accent/50 transition-all">
       <Link to={`/comunidade/topico/${topic.id}`} className="block">
         <div className="flex items-start gap-3">
           <Avatar>
-            <AvatarImage src={topic.profiles?.avatar_url || undefined} />
-            <AvatarFallback>{getInitials(topic.profiles?.name)}</AvatarFallback>
+            <AvatarImage src={avatarUrl} />
+            <AvatarFallback>{userInitials}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -45,13 +52,19 @@ export const TopicItem = ({ topic, isPinned = false }: TopicItemProps) => {
               </div>
             </div>
             <div className="flex flex-wrap gap-2 mt-1 text-sm text-muted-foreground">
-              <span>Por {topic.profiles?.name || "Usuário"}</span>
+              <span>Por {userName}</span>
               <span>•</span>
               <span>
                 {format(lastActivityDate, "d 'de' MMMM 'às' HH:mm", {
                   locale: ptBR,
                 })}
               </span>
+              {topic.category && (
+                <>
+                  <span>•</span>
+                  <span>{topic.category.name}</span>
+                </>
+              )}
             </div>
           </div>
         </div>
