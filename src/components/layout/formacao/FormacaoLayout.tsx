@@ -56,6 +56,11 @@ const FormacaoLayout = ({ children }: { children: React.ReactNode }) => {
     };
   }, [sidebarOpen]);
 
+  // Handler para signOut que ignora o retorno
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
   // Log para debugging
   console.log("FormacaoLayout renderizando com sidebarOpen:", sidebarOpen);
   console.log("Perfil do usuário:", profile);
@@ -70,7 +75,7 @@ const FormacaoLayout = ({ children }: { children: React.ReactNode }) => {
         profileEmail={profile?.email || null}
         profileAvatar={profile?.avatar_url}
         getInitials={getInitials}
-        signOut={signOut}
+        signOut={handleSignOut}
       />
       
       {/* Conteúdo principal */}

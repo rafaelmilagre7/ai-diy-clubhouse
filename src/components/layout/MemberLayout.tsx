@@ -74,6 +74,11 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
     document.body.classList.add('dark');
   }, []);
 
+  // Handler para signOut que ignora o retorno
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
   return (
     <div className="flex min-h-screen bg-[#0F111A] overflow-hidden">
       {/* Overlay para dispositivos móveis */}
@@ -92,7 +97,7 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
         profileEmail={profile?.email || null}
         profileAvatar={profile?.avatar_url}
         getInitials={getInitials}
-        signOut={signOut}
+        signOut={handleSignOut}
       />
       
       {/* Conteúdo principal */}
