@@ -1,77 +1,34 @@
 
 /**
- * Retorna as iniciais de um nome
- * @param name Nome completo
- * @returns Iniciais (máximo 2 caracteres)
+ * Obtém as iniciais de um nome (até 2 caracteres)
  */
-export const getInitials = (name?: string): string => {
+export const getInitials = (name?: string | null): string => {
   if (!name) return 'U';
   
-  const parts = name.trim().split(/\s+/);
-  
-  if (parts.length === 1) {
-    return parts[0].charAt(0).toUpperCase();
-  }
-  
-  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  return name
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .substring(0, 2);
 };
 
 /**
- * Formata uma URL de avatar para exibição
- * @param url URL do avatar (pode ser do Supabase Storage ou URL externa)
- * @returns URL formatada para exibição
+ * Formata a URL de um avatar, se necessário
  */
 export const getAvatarUrl = (url?: string | null): string | undefined => {
   if (!url) return undefined;
   
-  // Se já for uma URL completa, retorna como está
+  // Se a URL já for absoluta, retorna ela mesma
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
   
-  // Se for uma URL do Supabase Storage, constrói a URL completa
-  if (url.startsWith('avatars/')) {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-    return `${supabaseUrl}/storage/v1/object/public/profiles/${url}`;
+  // Se for um caminho relativo ao storage do Supabase
+  if (url.startsWith('/')) {
+    // Você pode ajustar isso com base na configuração do seu projeto Supabase
+    return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/avatars${url}`;
   }
   
   return url;
-};
-
-/**
- * Verifica se o usuário tem o papel de administrador
- * @param role Papel do usuário
- * @returns true se for admin, false caso contrário
- */
-export const isAdmin = (role?: string): boolean => {
-  return role === 'admin';
-};
-
-/**
- * Verifica se o usuário tem o papel de formação
- * @param role Papel do usuário
- * @returns true se for formação, false caso contrário
- */
-export const isFormacao = (role?: string): boolean => {
-  return role === 'formacao';
-};
-
-/**
- * Retorna o nome do papel do usuário formatado para exibição
- * @param role Papel do usuário
- * @returns Nome formatado do papel
- */
-export const getRoleName = (role?: string): string => {
-  if (!role) return 'Membro';
-  
-  switch (role.toLowerCase()) {
-    case 'admin':
-      return 'Administrador';
-    case 'formacao':
-      return 'Formação';
-    case 'member':
-      return 'Membro';
-    default:
-      return role.charAt(0).toUpperCase() + role.slice(1);
-  }
 };

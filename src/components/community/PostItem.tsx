@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { deleteForumPost } from "@/lib/supabase/rpc";
 import { Separator } from "@/components/ui/separator";
+import { usePostInteractions } from "@/hooks/usePostInteractions";
 
 interface PostItemProps {
   post: Post;
@@ -123,7 +124,7 @@ export function PostItem({
                 {format(new Date(post.created_at), "d 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
               </span>
               
-              {post.profiles?.user_id === topicAuthorId && (
+              {post.user_id === topicAuthorId && (
                 <span className="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full ml-2">
                   Autor
                 </span>
