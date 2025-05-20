@@ -18,6 +18,11 @@ export const forumRouteMapping: Record<string, string> = {
  * @returns true se a rota atual corresponde à rota verificada ou suas sub-rotas
  */
 export const isActiveRoute = (currentPath: string, routeToCheck: string): boolean => {
+  // Tratamento especial para rota raiz
+  if (routeToCheck === "/") {
+    return currentPath === "/";
+  }
+  
   // Caso especial para a comunidade
   if (routeToCheck === "/comunidade") {
     return currentPath === "/comunidade" || 
@@ -26,7 +31,8 @@ export const isActiveRoute = (currentPath: string, routeToCheck: string): boolea
   
   // Verificação padrão para outras rotas
   return currentPath === routeToCheck || 
-         currentPath.startsWith(routeToCheck + '/');
+         (currentPath.startsWith(routeToCheck) && 
+         (currentPath.length === routeToCheck.length || currentPath[routeToCheck.length] === '/'));
 };
 
 /**
@@ -40,9 +46,11 @@ export const checkForumRedirect = (currentPath: string): {
 } | null => {
   // Verificar se o caminho atual começa com algum dos prefixos antigos
   for (const [oldPath, newPath] of Object.entries(forumRouteMapping)) {
-    if (currentPath.startsWith(oldPath)) {
+    if (currentPath === oldPath || currentPath.startsWith(oldPath + '/')) {
       // Substitui apenas o prefixo, mantendo o resto da URL
       const redirectPath = currentPath.replace(oldPath, newPath);
+      console.log(`checkForumRedirect: Convertendo ${oldPath} para ${newPath} -> ${redirectPath}`);
+      
       return {
         path: redirectPath,
         options: { 

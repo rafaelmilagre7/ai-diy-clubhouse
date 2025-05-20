@@ -11,8 +11,14 @@ export const CommunityRedirects = () => {
   const navigate = useNavigate();
   
   useEffect(() => {
-    // Não aplicar redirecionamentos nas rotas já da comunidade
+    // Não processar redirecionamentos nas rotas já da comunidade
     if (location.pathname.startsWith('/comunidade')) {
+      console.log("CommunityRedirects: Ignorando rota de comunidade:", location.pathname);
+      return;
+    }
+    
+    // Não processar redirecionamentos para rotas não relacionadas ao fórum
+    if (!location.pathname.startsWith('/forum')) {
       return;
     }
     
@@ -22,12 +28,22 @@ export const CommunityRedirects = () => {
     
     if (redirect) {
       console.log(`CommunityRedirects: Redirecionando de ${location.pathname} para ${redirect.path}`);
+      
+      // Prevenção contra loops de redirecionamento
+      if (redirect.path === location.pathname) {
+        console.error("CommunityRedirects: Loop de redirecionamento detectado, abortando");
+        return;
+      }
+      
       // Redireciona preservando query params
       navigate(
         `${redirect.path}${location.search}`, 
         { 
           ...redirect.options,
-          state: location.state // Preserva o estado
+          state: { 
+            ...location.state,
+            redirectedFrom: location.pathname // Marcar origem do redirecionamento
+          }
         }
       );
     }

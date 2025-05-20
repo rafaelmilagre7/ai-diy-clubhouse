@@ -61,9 +61,10 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/suggestions/:id", SuggestionDetails),
   createProtectedRoute("/suggestions/new", NewSuggestion),
   
-  // Comunidade Routes - Definimos com prioridade
-  createProtectedRoute("/comunidade/*", CommunityPages),
+  // Comunidade Routes - Definimos com prioridade mais alta para sobrescrever rotas antigas
+  createProtectedRoute("/comunidade", CommunityPages),
+  createProtectedRoute("/comunidade/*", CommunityPages)
   
-  // Rotas legadas - para compatibilidade temporária
-  createProtectedRoute("/forum/*", CommunityPages)
+  // REMOVIDO: Rotas legadas para evitar conflitos
+  // createProtectedRoute("/forum/*", CommunityPages)
 ];

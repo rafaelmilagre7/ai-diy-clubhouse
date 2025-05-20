@@ -1,5 +1,6 @@
 
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import { authRoutes } from '../../routes/AuthRoutes';
 import { adminRoutes } from '../../routes/AdminRoutes';
 import { memberRoutes } from '../../routes/MemberRoutes';
@@ -10,6 +11,16 @@ import NotFound from '@/pages/NotFound';
 import InvitePage from '@/pages/InvitePage';
 
 const AppRoutes = () => {
+  const location = useLocation();
+  
+  // Para diagnóstico - mostrar quando a rota muda
+  useEffect(() => {
+    console.log("AppRoutes: Navegação para rota:", location.pathname, {
+      search: location.search,
+      state: location.state
+    });
+  }, [location]);
+  
   return (
     <>
       {/* Componente auxiliar para redirecionar antigas URLs */}
