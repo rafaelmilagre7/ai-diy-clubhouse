@@ -1,9 +1,9 @@
 
 export interface Profile {
-  id: string;
+  id?: string;
   name: string | null;
   avatar_url: string | null;
-  role?: string; // Adicionando propriedade role
+  role?: string;
 }
 
 export interface Post {
@@ -12,10 +12,10 @@ export interface Post {
   created_at: string;
   updated_at: string;
   user_id: string;
-  parent_id: string | null;
-  is_solution: boolean;
-  profiles: Profile;
+  parent_id?: string | null;
+  profiles?: Profile | null;
   replies?: Post[];
+  is_solution?: boolean;
 }
 
 export interface Topic {
@@ -24,17 +24,12 @@ export interface Topic {
   content: string;
   created_at: string;
   updated_at: string;
-  view_count: number;
-  reply_count: number;
-  is_locked: boolean;
-  is_pinned: boolean;
+  last_activity_at: string;
   user_id: string;
   category_id: string;
-  last_activity_at: string;
-  profiles: Profile;
-  category?: {
-    id: string;
-    name: string;
-    slug: string;
-  } | null;
+  view_count: number;
+  reply_count: number;
+  is_pinned: boolean;
+  is_locked: boolean;
+  profiles?: Profile;
 }
