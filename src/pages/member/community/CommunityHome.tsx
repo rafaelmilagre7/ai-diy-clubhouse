@@ -133,24 +133,24 @@ const CommunityHome = () => {
         
         // Converter e garantir que os dados estão no formato correto
         const formattedTopics = topicsData.map(topic => {
-          // Verificar e tratar correctly o campo profiles
+          // Verificar e tratar corretamente o campo profiles
           let formattedProfile = null;
-          if (topic.profiles && typeof topic.profiles === 'object' && !Array.isArray(topic.profiles)) {
+          if (topic.profiles && typeof topic.profiles === 'object') {
             formattedProfile = {
-              id: topic.profiles.id,
-              name: topic.profiles.name,
-              avatar_url: topic.profiles.avatar_url,
-              role: topic.profiles.role
+              id: String(topic.profiles.id || ''),
+              name: String(topic.profiles.name || ''),
+              avatar_url: String(topic.profiles.avatar_url || ''),
+              role: String(topic.profiles.role || '')
             };
           }
           
-          // Verificar e tratar correctly o campo category
+          // Verificar e tratar corretamente o campo category
           let formattedCategory = null;
-          if (topic.category && typeof topic.category === 'object' && !Array.isArray(topic.category)) {
+          if (topic.category && typeof topic.category === 'object') {
             formattedCategory = {
-              id: topic.category.id,
-              name: topic.category.name,
-              slug: topic.category.slug
+              id: String(topic.category.id || ''),
+              name: String(topic.category.name || ''),
+              slug: String(topic.category.slug || '')
             };
           }
           
