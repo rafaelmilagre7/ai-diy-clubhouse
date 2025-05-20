@@ -147,7 +147,7 @@ const CommunityHome = () => {
           is_locked: topic.is_locked,
           profiles: topic.profiles,
           category: topic.category
-        })) as Topic[];
+        } as Topic));
         
         return formattedTopics;
       } catch (error: any) {
