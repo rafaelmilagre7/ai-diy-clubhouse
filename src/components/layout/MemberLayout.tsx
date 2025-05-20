@@ -76,7 +76,11 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
 
   // Handler para signOut que ignora o retorno
   const handleSignOut = async () => {
-    await signOut();
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+    }
   };
 
   return (

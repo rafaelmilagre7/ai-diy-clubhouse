@@ -11,25 +11,38 @@ const NovoOnboarding: React.FC = () => {
   const navigate = useNavigate();
   const { progress, isLoading, refreshProgress } = useProgress();
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [hasChecked, setHasChecked] = useState(false);
 
   // Verificar status do onboarding e redirecionar se necessário
   useEffect(() => {
     const checkOnboardingStatus = async () => {
       try {
+        if (hasChecked) {
+          return; // Evita verificações múltiplas
+        }
+
         // Forçar refresh dos dados para garantir informações atualizadas
         await refreshProgress();
+        setHasChecked(true);
         
         if (progress?.is_completed) {
           console.log("Onboarding já está completo, redirecionando para página de revisão...");
           navigate('/onboarding/completed');
-        } else if (progress?.current_step && progress.completed_steps?.length > 0) {
+          return;
+        } 
+        
+        if (progress?.current_step && progress.completed_steps?.length > 0) {
           // Se já iniciou mas não completou, continuar de onde parou
           console.log("Onboarding em andamento, redirecionando para etapa atual...");
           navigate(`/onboarding/${progress.current_step}`);
+          return;
         }
+        
+        // Se chegou até aqui, o usuário pode iniciar o onboarding normalmente
+        setIsInitialLoad(false);
       } catch (error) {
         console.error("Erro ao verificar status do onboarding:", error);
-      } finally {
+        // Mesmo com erro, permitir que o usuário tente preencher
         setIsInitialLoad(false);
       }
     };
@@ -37,7 +50,7 @@ const NovoOnboarding: React.FC = () => {
     if (!isLoading) {
       checkOnboardingStatus();
     }
-  }, [navigate, progress, isLoading, refreshProgress]);
+  }, [navigate, progress, isLoading, refreshProgress, hasChecked]);
 
   const handleSuccess = () => {
     navigate('/dashboard');
