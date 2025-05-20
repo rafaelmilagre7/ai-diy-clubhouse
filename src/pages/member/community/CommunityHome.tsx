@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { MessageSquare, Users, BarChart, Search } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -132,22 +131,39 @@ const CommunityHome = () => {
         }
         
         // Converter e garantir que os dados estão no formato correto
-        const formattedTopics = topicsData.map(topic => ({
-          id: topic.id,
-          title: topic.title,
-          content: topic.content,
-          created_at: topic.created_at,
-          updated_at: topic.updated_at,
-          last_activity_at: topic.last_activity_at,
-          user_id: topic.user_id,
-          category_id: topic.category_id,
-          view_count: topic.view_count,
-          reply_count: topic.reply_count,
-          is_pinned: topic.is_pinned,
-          is_locked: topic.is_locked,
-          profiles: topic.profiles,
-          category: topic.category
-        } as Topic));
+        const formattedTopics = topicsData.map(topic => {
+          // Garantir que profiles tenha o formato correto
+          const formattedProfile = topic.profiles ? {
+            id: topic.profiles.id,
+            name: topic.profiles.name,
+            avatar_url: topic.profiles.avatar_url,
+            role: topic.profiles.role
+          } : null;
+          
+          // Garantir que category tenha o formato correto
+          const formattedCategory = topic.category ? {
+            id: topic.category.id,
+            name: topic.category.name,
+            slug: topic.category.slug
+          } : null;
+          
+          return {
+            id: topic.id,
+            title: topic.title,
+            content: topic.content,
+            created_at: topic.created_at,
+            updated_at: topic.updated_at,
+            last_activity_at: topic.last_activity_at,
+            user_id: topic.user_id,
+            category_id: topic.category_id,
+            view_count: topic.view_count,
+            reply_count: topic.reply_count,
+            is_pinned: topic.is_pinned,
+            is_locked: topic.is_locked,
+            profiles: formattedProfile,
+            category: formattedCategory
+          } as Topic;
+        });
         
         return formattedTopics;
       } catch (error: any) {

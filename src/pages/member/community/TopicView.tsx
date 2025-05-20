@@ -88,7 +88,25 @@ const TopicView = () => {
       }
 
       if (topicData) {
-        setTopic(topicData as Topic);
+        // Garante que o dado retornado está no formato correto
+        const formattedTopic: Topic = {
+          id: topicData.id,
+          title: topicData.title,
+          content: topicData.content,
+          created_at: topicData.created_at,
+          updated_at: topicData.updated_at,
+          last_activity_at: topicData.last_activity_at,
+          user_id: topicData.user_id,
+          category_id: topicData.category_id,
+          view_count: topicData.view_count,
+          reply_count: topicData.reply_count,
+          is_pinned: topicData.is_pinned,
+          is_locked: topicData.is_locked,
+          profiles: topicData.profiles,
+          category: topicData.category
+        };
+        
+        setTopic(formattedTopic);
         setCategoryId(topicData.category_id); // Define o ID da categoria
       }
 
