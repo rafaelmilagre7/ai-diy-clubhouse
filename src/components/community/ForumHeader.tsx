@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useForumCategories } from "@/hooks/community/useForumCategories";
+import { useState } from "react";
+import { CreateTopicDialog } from "./CreateTopicDialog";
 
 interface ForumHeaderProps {
   title?: string;
@@ -19,6 +21,7 @@ export const ForumHeader = ({
   categorySlug
 }: ForumHeaderProps) => {
   const { categories } = useForumCategories();
+  const [createTopicOpen, setCreateTopicOpen] = useState(false);
   
   // Garantir que temos um slug de categoria válido para o botão de novo tópico
   const getValidCategorySlug = () => {
@@ -30,6 +33,16 @@ export const ForumHeader = ({
     return categories && categories.length > 0 ? categories[0].slug : "";
   };
 
+  // Encontrar o ID da categoria com base no slug
+  const getValidCategoryId = () => {
+    if (categorySlug) {
+      const category = categories?.find(cat => cat.slug === categorySlug);
+      if (category) return category.id;
+    }
+    
+    return categories && categories.length > 0 ? categories[0].id : "";
+  };
+
   return (
     <div className="mb-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
@@ -39,15 +52,28 @@ export const ForumHeader = ({
         </div>
         
         {showNewTopicButton && categories && categories.length > 0 && (
-          <div className="mt-4 md:mt-0">
-            <Button asChild className="flex items-center gap-2">
+          <div className="mt-4 md:mt-0 flex gap-2">
+            <Button 
+              onClick={() => setCreateTopicOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <PlusCircle className="h-4 w-4" />
+              <span>Novo Tópico</span>
+            </Button>
+            
+            <Button asChild variant="outline" className="flex items-center gap-2">
               <Link to={`/comunidade/novo-topico/${getValidCategorySlug()}`}>
-                <PlusCircle className="h-4 w-4" />
-                <span>Novo Tópico</span>
+                <span>Criação Avançada</span>
               </Link>
             </Button>
           </div>
         )}
+        
+        <CreateTopicDialog 
+          open={createTopicOpen} 
+          onOpenChange={setCreateTopicOpen}
+          preselectedCategory={getValidCategoryId()}
+        />
       </div>
       
       <ForumStatistics />
