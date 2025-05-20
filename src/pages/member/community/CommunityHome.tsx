@@ -136,21 +136,23 @@ const CommunityHome = () => {
           // Verificar e tratar corretamente o campo profiles
           let formattedProfile = null;
           if (topic.profiles && typeof topic.profiles === 'object') {
+            const profileData = topic.profiles as any; // Usamos any para contornar a incompatibilidade
             formattedProfile = {
-              id: String(topic.profiles.id || ''),
-              name: String(topic.profiles.name || ''),
-              avatar_url: String(topic.profiles.avatar_url || ''),
-              role: String(topic.profiles.role || '')
+              id: String(profileData.id || ''),
+              name: String(profileData.name || ''),
+              avatar_url: String(profileData.avatar_url || ''),
+              role: String(profileData.role || '')
             };
           }
           
           // Verificar e tratar corretamente o campo category
           let formattedCategory = null;
           if (topic.category && typeof topic.category === 'object') {
+            const categoryData = topic.category as any; // Usamos any para contornar a incompatibilidade
             formattedCategory = {
-              id: String(topic.category.id || ''),
-              name: String(topic.category.name || ''),
-              slug: String(topic.category.slug || '')
+              id: String(categoryData.id || ''),
+              name: String(categoryData.name || ''),
+              slug: String(categoryData.slug || '')
             };
           }
           
