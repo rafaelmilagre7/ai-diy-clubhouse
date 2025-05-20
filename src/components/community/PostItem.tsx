@@ -9,6 +9,7 @@ import { PostHeader } from "./PostHeader";
 import { DeleteConfirmationDialog } from "./DeleteConfirmationDialog";
 import { usePostInteractions } from "@/hooks/usePostInteractions";
 import { getInitials } from "@/utils/user";
+import { useTopicSolution } from "@/hooks/community/useTopicSolution";
 
 interface PostItemProps {
   post: Post;
@@ -19,6 +20,7 @@ interface PostItemProps {
   isAdmin?: boolean;
   currentUserId?: string;
   onReplyAdded?: () => void;
+  topicAuthorId?: string;
 }
 
 export const PostItem = ({
@@ -29,7 +31,8 @@ export const PostItem = ({
   isLocked = false,
   isAdmin = false,
   currentUserId,
-  onReplyAdded
+  onReplyAdded,
+  topicAuthorId
 }: PostItemProps) => {
   // Verificar se o usuário atual pode excluir este post
   const canDelete = isAdmin || (currentUserId && post.user_id === currentUserId);
@@ -49,6 +52,26 @@ export const PostItem = ({
     onReplyAdded
   });
   
+  // Hook para gerenciar marcação de soluções
+  const {
+    isSubmitting: isSubmittingSolution,
+    markAsSolved,
+    unmarkAsSolved
+  } = useTopicSolution({
+    topicId,
+    topicAuthorId: topicAuthorId || '',
+    initialSolvedState: false
+  });
+
+  // Manipuladores para marcar/desmarcar como solução
+  const handleMarkAsSolution = async () => {
+    await markAsSolved(post.id);
+  };
+
+  const handleUnmarkAsSolution = async () => {
+    await unmarkAsSolved();
+  };
+  
   // Renderização dos posts aninhados (respostas a respostas)
   const renderNestedReplies = () => {
     if (!post.replies || post.replies.length === 0) return null;
@@ -66,6 +89,7 @@ export const PostItem = ({
             isAdmin={isAdmin}
             currentUserId={currentUserId}
             onReplyAdded={onReplyAdded}
+            topicAuthorId={topicAuthorId}
           />
         ))}
       </div>
@@ -78,7 +102,7 @@ export const PostItem = ({
         <div className="absolute left-[-24px] top-6 h-[calc(100%-24px)] w-0.5 bg-border"></div>
       )}
       
-      <Card className="p-4">
+      <Card className={`p-4 ${post.is_solution ? "border-green-500 border-2" : ""}`}>
         <div className="flex gap-4">
           <Avatar className="h-10 w-10">
             <AvatarImage src={post.profiles?.avatar_url || undefined} alt={post.profiles?.name || 'Usuário'} />
@@ -106,6 +130,10 @@ export const PostItem = ({
               isReply={true}
               onReply={toggleReplyForm}
               canMarkAsSolved={isTopicAuthor || isAdmin}
+              isSolutionPost={post.is_solution}
+              isSubmitting={isSubmittingSolution}
+              onMarkAsSolved={handleMarkAsSolution}
+              onUnmarkAsSolved={handleUnmarkAsSolution}
               onDelete={openDeleteDialog}
             />
             

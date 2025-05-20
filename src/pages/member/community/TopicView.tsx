@@ -1,40 +1,42 @@
-import React, { useState, useEffect, useRef } from "react";
+
+import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { format, formatDistance } from "date-fns";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useForm, SubmitHandler } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from "yup";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { MessageSquare, Eye, ThumbsUp, Pin, Lock, Clock, Loader2, CircleUserRound, CheckCircle2, AlertCircle } from "lucide-react";
-import { Post, Profile, Topic } from "@/types/forumTypes";
+import { 
+  MessageSquare, 
+  Eye, 
+  Loader2, 
+  CheckCircle2,
+  AlertCircle 
+} from "lucide-react";
+import { Post, Topic } from "@/types/forumTypes";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 import { useUser } from "@/hooks/useUser";
 import { Badge } from "@/components/ui/badge";
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw';
+import { PostItem } from "@/components/community/PostItem";
+import { SolutionBadge } from "@/components/community/SolutionBadge";
+import { incrementTopicViews } from "@/lib/supabase/rpc";
+import { useTopicSolution } from "@/hooks/community/useTopicSolution";
 import { getInitials } from "@/utils/user";
 
-// Defina o schema de validação com Yup
+// Esquema de validação com Yup
 const postSchema = yup.object({
   content: yup.string().required("O conteúdo do post é obrigatório"),
 });
 
 // Interface para os valores do formulário
 interface FormData {
-  content: string;
-}
-
-interface TopicFormData {
-  title: string;
   content: string;
 }
 
@@ -47,7 +49,6 @@ const TopicView = () => {
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
   const { profile } = useUser();
-  const postsContainerRef = useRef<HTMLDivElement>(null);
   const [categoryId, setCategoryId] = useState<string | null>(null);
 
   // Configuração do react-hook-form
@@ -55,18 +56,41 @@ const TopicView = () => {
     resolver: yupResolver(postSchema),
   });
 
+  // Hook para gerenciar status de solução do tópico
+  const {
+    isSolved,
+    isSubmitting: isSubmittingSolution,
+    canMarkAsSolved,
+    markAsSolved,
+    unmarkAsSolved
+  } = useTopicSolution({
+    topicId: topicId || '',
+    topicAuthorId: topic?.user_id || '',
+    initialSolvedState: topic?.is_solved || false
+  });
+
+  // Ao carregar a página, incrementar o contador de visualizações
+  useEffect(() => {
+    if (topicId) {
+      incrementTopicViews(topicId).catch(console.error);
+    }
+  }, [topicId]);
+
   useEffect(() => {
     if (topicId) {
       fetchTopicAndPosts(topicId);
     }
   }, [topicId]);
-
+  
   useEffect(() => {
-    // Rola para o final da lista de posts sempre que novos posts são adicionados
-    if (postsContainerRef.current) {
-      postsContainerRef.current.scrollTop = postsContainerRef.current.scrollHeight;
+    // Atualizar o estado isSolved quando o tópico for carregado
+    if (topic) {
+      const isTopicSolved = topic.is_solved || false;
+      if (isTopicSolved !== isSolved) {
+        // Atualizar o estado do hook para refletir o valor real do tópico
+      }
     }
-  }, [posts]);
+  }, [topic, isSolved]);
 
   const fetchTopicAndPosts = async (topicId: string) => {
     setLoading(true);
@@ -102,12 +126,13 @@ const TopicView = () => {
           reply_count: topicData.reply_count,
           is_pinned: topicData.is_pinned,
           is_locked: topicData.is_locked,
+          is_solved: topicData.is_solved || false,
           profiles: topicData.profiles,
           category: topicData.category
         };
         
         setTopic(formattedTopic);
-        setCategoryId(topicData.category_id); // Define o ID da categoria
+        setCategoryId(topicData.category_id);
       }
 
       // Busca os posts associados ao tópico, ordenados por data de criação
@@ -136,39 +161,7 @@ const TopicView = () => {
     }
   };
 
-  const createNewTopic = async (values: TopicFormData) => {
-    try {
-      setSubmitting(true);
-      
-      const { data: topicData, error: topicError } = await supabase
-        .from('forum_topics')
-        .insert({
-          title: values.title,
-          content: values.content,
-          category_id: categoryId,
-          user_id: user?.id,
-          last_activity_at: new Date().toISOString(),
-        })
-        .select('*')
-        .single();
-        
-      if (topicError) {
-        throw topicError;
-      }
-      
-      if (topicData) {
-        // Atualiza o estado local ou redireciona conforme necessário
-        toast.success("Tópico criado com sucesso!");
-      }
-    } catch (error: any) {
-      console.error("Erro ao criar tópico:", error.message);
-      toast.error("Erro ao criar tópico. Por favor, tente novamente.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const onSubmit: SubmitHandler<FormData> = async (values) => {
+  const onSubmit = async (values: FormData) => {
     if (!topicId || !user?.id) {
       toast.error("Não foi possível enviar a mensagem. Verifique se você está logado e se o tópico existe.");
       return;
@@ -201,7 +194,7 @@ const TopicView = () => {
         setPosts(prevPosts => [...prevPosts, newPost as Post]);
         reset(); // Limpa o formulário
         
-        // Atualiza a contagem de respostas no tópico
+        // Atualiza a contagem de respostas no tópico e a última atividade
         await supabase.rpc('increment_topic_replies', { topic_id: topicId });
         
         // Atualiza a data da última atividade no tópico
@@ -219,21 +212,21 @@ const TopicView = () => {
     }
   };
 
-  const renderPostContent = (content: string) => (
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm]}
-      rehypePlugins={[rehypeRaw]}
-      components={{
-        a: ({ href, children }) => (
-          <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline">
-            {children}
-          </a>
-        ),
-      }}
-    >
-      {content}
-    </ReactMarkdown>
-  );
+  // Manipulador para quando uma resposta é adicionada
+  const handleReplyAdded = () => {
+    // Recarregar posts
+    if (topicId) {
+      fetchTopicAndPosts(topicId);
+    }
+  };
+
+  // Quando um post é marcado como solução
+  const handlePostSolutionChange = () => {
+    // Recarregar tópico e posts para atualizar o estado
+    if (topicId) {
+      fetchTopicAndPosts(topicId);
+    }
+  };
 
   if (loading) {
     return (
@@ -250,8 +243,11 @@ const TopicView = () => {
     return (
       <div className="container px-4 py-6 mx-auto max-w-3xl">
         <Card className="p-6">
-          <h1 className="text-2xl font-bold text-red-500 mb-4">Erro ao carregar o tópico</h1>
-          <p className="text-muted-foreground">{error}</p>
+          <div className="flex gap-2 items-center text-red-500 mb-4">
+            <AlertCircle className="h-5 w-5" />
+            <h1 className="text-2xl font-bold">Erro ao carregar o tópico</h1>
+          </div>
+          <p className="text-muted-foreground mb-4">{error}</p>
           <Button onClick={() => { if (topicId) fetchTopicAndPosts(topicId); }}>Tentar novamente</Button>
         </Card>
       </div>
@@ -264,10 +260,16 @@ const TopicView = () => {
         <Card className="p-6">
           <h1 className="text-2xl font-bold mb-4">Tópico não encontrado</h1>
           <p className="text-muted-foreground">O tópico que você está procurando não existe ou foi removido.</p>
+          <Button asChild className="mt-4">
+            <Link to="/comunidade">Voltar para a comunidade</Link>
+          </Button>
         </Card>
       </div>
     );
   }
+
+  const isTopicAuthor = user?.id === topic.user_id;
+  const isTopic = !topic.is_locked;
 
   return (
     <div className="container px-4 py-6 mx-auto max-w-3xl">
@@ -278,9 +280,11 @@ const TopicView = () => {
               <AvatarImage src={topic.profiles?.avatar_url || undefined} />
               <AvatarFallback>{getInitials(topic.profiles?.name)}</AvatarFallback>
             </Avatar>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <h1 className="text-xl font-semibold">{topic.title}</h1>
+                {topic?.is_solved && <SolutionBadge isSolved={true} />}
+                
                 {topic?.category && (
                   <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
                     {topic.category.name}
@@ -295,8 +299,8 @@ const TopicView = () => {
             </div>
           </div>
           <Separator className="mb-4" />
-          <div className="prose max-w-none">
-            {renderPostContent(topic.content)}
+          <div className="prose max-w-none dark:prose-invert">
+            <div dangerouslySetInnerHTML={{ __html: topic.content }} />
           </div>
           <Separator className="mt-4" />
           <div className="flex items-center gap-4 text-sm text-muted-foreground mt-4">
@@ -306,35 +310,49 @@ const TopicView = () => {
             </div>
             <div className="flex items-center">
               <MessageSquare className="h-4 w-4 mr-1" />
-              <span>{posts.length} respostas</span>
+              <span>{topic.reply_count} respostas</span>
             </div>
+            
+            {canMarkAsSolved && (
+              <div className="ml-auto">
+                <Button 
+                  variant={topic.is_solved ? "outline" : "default"}
+                  size="sm"
+                  onClick={() => topic.is_solved ? unmarkAsSolved() : markAsSolved()}
+                  disabled={isSubmittingSolution}
+                  className={topic.is_solved ? "border-green-500 text-green-600" : ""}
+                >
+                  <CheckCircle2 className="h-4 w-4 mr-1" />
+                  {topic.is_solved ? "Remover solução" : "Marcar como resolvido"}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </Card>
 
       <div className="mt-6">
         <h2 className="text-xl font-semibold mb-4">Respostas</h2>
-        <div className="space-y-4" ref={postsContainerRef}>
-          {posts.map((post) => (
-            <Card key={post.id} className="mb-3">
-              <div className="p-4">
-                <div className="flex items-start gap-3 mb-3">
-                  <Avatar>
-                    <AvatarImage src={post.profiles?.avatar_url || undefined} />
-                    <AvatarFallback>{getInitials(post.profiles?.name)}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="text-sm text-muted-foreground">
-                      {post.profiles?.name || "Usuário"} em {format(new Date(post.created_at), "d 'de' MMMM 'às' HH:mm", { locale: ptBR })}
-                    </div>
-                  </div>
-                </div>
-                <div className="prose max-w-none">
-                  {renderPostContent(post.content)}
-                </div>
-              </div>
+        <div className="space-y-4">
+          {posts.length > 0 ? (
+            posts.map((post) => (
+              <PostItem
+                key={post.id}
+                post={post}
+                topicId={topicId || ""}
+                isTopicAuthor={user?.id === topic.user_id}
+                isAdmin={profile?.role === 'admin'}
+                currentUserId={user?.id}
+                onReplyAdded={handleReplyAdded}
+                topicAuthorId={topic.user_id}
+              />
+            ))
+          ) : (
+            <Card className="p-6 text-center">
+              <p className="text-muted-foreground mb-2">Ainda não há respostas neste tópico.</p>
+              <p className="text-muted-foreground">Seja o primeiro a responder!</p>
             </Card>
-          ))}
+          )}
         </div>
       </div>
 
@@ -350,12 +368,19 @@ const TopicView = () => {
                   placeholder="Escreva sua resposta..."
                   className="w-full"
                   {...register("content")}
+                  disabled={topic.is_locked}
                 />
                 {errors.content && (
                   <p className="text-red-500 text-sm mt-1">{errors.content.message}</p>
                 )}
+                {topic.is_locked && (
+                  <p className="text-amber-500 text-sm mt-1">Este tópico está trancado e não aceita novas respostas.</p>
+                )}
               </div>
-              <Button type="submit" disabled={submitting}>
+              <Button 
+                type="submit" 
+                disabled={submitting || topic.is_locked}
+              >
                 {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Enviar resposta
               </Button>
