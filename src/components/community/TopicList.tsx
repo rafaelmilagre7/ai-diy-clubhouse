@@ -120,8 +120,10 @@ export const TopicList = ({ categoryId, categorySlug }: TopicListProps) => {
     refetchOnWindowFocus: false,
     retry: 3,
     staleTime: 1000 * 60 * 2, // 2 minutos de cache
-    onError: (err) => {
-      console.error("Erro na query de tópicos:", err);
+    meta: {
+      onError: (err) => {
+        console.error("Erro na query de tópicos:", err);
+      }
     }
   });
 
