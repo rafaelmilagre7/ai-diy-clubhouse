@@ -23,10 +23,12 @@ export const isActiveRoute = (currentPath: string, routeToCheck: string): boolea
     return currentPath === "/";
   }
   
-  // Caso especial para a comunidade
+  // Tratamento especial para comunidade com logs para diagnóstico
   if (routeToCheck === "/comunidade") {
-    return currentPath === "/comunidade" || 
-           currentPath.startsWith("/comunidade/");
+    const isCommunityRoute = currentPath === "/comunidade" || 
+                             currentPath.startsWith("/comunidade/");
+    console.log(`isActiveRoute: Verificando '${currentPath}' para comunidade, resultado: ${isCommunityRoute}`);
+    return isCommunityRoute;
   }
   
   // Verificação padrão para outras rotas
@@ -60,5 +62,6 @@ export const checkForumRedirect = (currentPath: string): {
     }
   }
   
+  console.log(`checkForumRedirect: Nenhum redirecionamento necessário para ${currentPath}`);
   return null;
 };

@@ -34,6 +34,9 @@ const createProtectedRoute = (path: string, Component: React.ComponentType<any>)
   element: <ProtectedRoutes><MemberLayout><Component /></MemberLayout></ProtectedRoutes>
 });
 
+// Log para diagnóstico
+console.log("Carregando rotas de membros");
+
 export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/", Dashboard),
   createProtectedRoute("/dashboard", Dashboard),
@@ -61,10 +64,7 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/suggestions/:id", SuggestionDetails),
   createProtectedRoute("/suggestions/new", NewSuggestion),
   
-  // Comunidade Routes - Definimos com prioridade mais alta para sobrescrever rotas antigas
+  // Comunidade Routes - Com alta prioridade e estrutura simplificada
   createProtectedRoute("/comunidade", CommunityPages),
   createProtectedRoute("/comunidade/*", CommunityPages)
-  
-  // REMOVIDO: Rotas legadas para evitar conflitos
-  // createProtectedRoute("/forum/*", CommunityPages)
 ];

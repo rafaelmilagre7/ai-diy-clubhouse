@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, Link } from 'react-router-dom';
 import CommunityHome from './CommunityHome';
 import TopicView from './TopicView';
 import NewTopic from './NewTopic';
@@ -8,6 +8,8 @@ import CategoryView from './CategoryView';
 import { Helmet } from 'react-helmet-async';
 
 export default function CommunityPages() {
+  console.log("CommunityPages: Componente raiz da comunidade sendo renderizado");
+  
   // Configurando roteamento interno para a seção de comunidade
   return (
     <>

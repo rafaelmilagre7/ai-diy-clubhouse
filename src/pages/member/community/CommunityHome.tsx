@@ -9,6 +9,7 @@ import { useForumTopics, TopicFilterType } from "@/hooks/community/useForumTopic
 import { TopicItem } from "@/components/community/TopicItem";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ForumHeader } from "@/components/community/ForumHeader";
+import { Link } from "react-router-dom";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -140,7 +141,7 @@ export default function CommunityHome() {
                   : "Ainda não há tópicos nesta categoria."}
               </p>
               <Button asChild>
-                <a href="/comunidade/novo-topico/geral">Criar o primeiro tópico</a>
+                <Link to="/comunidade/novo-topico/geral">Criar o primeiro tópico</Link>
               </Button>
             </div>
           )}

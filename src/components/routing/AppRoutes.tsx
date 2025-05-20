@@ -1,6 +1,6 @@
 
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { authRoutes } from '../../routes/AuthRoutes';
 import { adminRoutes } from '../../routes/AdminRoutes';
 import { memberRoutes } from '../../routes/MemberRoutes';
@@ -12,6 +12,7 @@ import InvitePage from '@/pages/InvitePage';
 
 const AppRoutes = () => {
   const location = useLocation();
+  const [navigationEvents, setNavigationEvents] = useState<{path: string, timestamp: number}[]>([]);
   
   // Para diagnóstico - mostrar quando a rota muda
   useEffect(() => {
@@ -19,12 +20,40 @@ const AppRoutes = () => {
       search: location.search,
       state: location.state
     });
+    
+    // Armazenar eventos de navegação recentes para detectar loops
+    const now = Date.now();
+    setNavigationEvents(prev => {
+      // Adicionar evento atual
+      const updated = [...prev, {path: location.pathname, timestamp: now}];
+      
+      // Remover eventos antigos (mais de 10 segundos)
+      const filtered = updated.filter(event => now - event.timestamp < 10000);
+      
+      // Detectar possíveis loops
+      const recentPathCounts: Record<string, number> = {};
+      filtered.forEach(event => {
+        recentPathCounts[event.path] = (recentPathCounts[event.path] || 0) + 1;
+      });
+      
+      // Alertar se houver muitos eventos para a mesma rota
+      Object.entries(recentPathCounts).forEach(([path, count]) => {
+        if (count > 3) {
+          console.warn(`AppRoutes: Possível loop de navegação detectado para a rota ${path} (${count} eventos em 10s)`);
+        }
+      });
+      
+      return filtered;
+    });
   }, [location]);
+  
+  // Verificar se estamos em uma rota de comunidade para evitar renderizar CommunityRedirects
+  const isCommunityRoute = location.pathname.startsWith('/comunidade');
   
   return (
     <>
-      {/* Componente auxiliar para redirecionar antigas URLs */}
-      <CommunityRedirects />
+      {/* Componente auxiliar para redirecionar antigas URLs - não renderizar em rotas de comunidade */}
+      {!isCommunityRoute && <CommunityRedirects />}
       
       <Routes>
         {/* Convite Routes - Alta prioridade e fora do sistema de autenticação */}

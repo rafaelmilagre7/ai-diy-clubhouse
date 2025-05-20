@@ -15,6 +15,7 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const timeoutRef = useRef<number | null>(null);
   const hasToastShown = useRef(false);
+  const navigationCountRef = useRef<Record<string, number>>({});
 
   console.log("ProtectedRoutes: verificando rota", {
     path: location.pathname,
@@ -22,6 +23,30 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
     isLoading, 
     loadingTimeout
   });
+  
+  // Detectar possíveis loops de navegação
+  useEffect(() => {
+    // Incrementar contador para este caminho
+    navigationCountRef.current[location.pathname] = 
+      (navigationCountRef.current[location.pathname] || 0) + 1;
+    
+    // Verificar possíveis loops
+    if (navigationCountRef.current[location.pathname] > 5) {
+      console.error(`ProtectedRoutes: Possível loop de navegação para ${location.pathname} (${navigationCountRef.current[location.pathname]} navegações)`);
+      
+      // Limpar contador após detectar um possível loop
+      navigationCountRef.current = {};
+    }
+    
+    // Limpar contadores antigos após 10 segundos
+    const cleanupTimeout = setTimeout(() => {
+      navigationCountRef.current = {};
+    }, 10000);
+    
+    return () => {
+      clearTimeout(cleanupTimeout);
+    };
+  }, [location.pathname]);
   
   // Configurar timeout de carregamento
   useEffect(() => {
