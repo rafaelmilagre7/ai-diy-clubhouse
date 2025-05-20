@@ -100,9 +100,13 @@ export const PostItem = ({
             </div>
             
             <PostActions
-              onReplyClick={toggleReplyForm}
-              isLocked={isLocked}
-              isNestedReply={isNestedReply}
+              postId={post.id}
+              isOwner={currentUserId === post.user_id}
+              isAdmin={isAdmin}
+              isReply={true}
+              onReply={toggleReplyForm}
+              canMarkAsSolved={isTopicAuthor || isAdmin}
+              onDelete={openDeleteDialog}
             />
             
             {showReplyForm && (
