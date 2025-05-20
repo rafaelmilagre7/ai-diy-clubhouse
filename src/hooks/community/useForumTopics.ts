@@ -1,8 +1,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { Topic, ForumCategory } from "@/types/forumTypes";
 import { toast } from "sonner";
+import { Topic, ForumCategory } from "@/types/forumTypes";
 
 export type TopicFilterType = "recentes" | "populares" | "sem-respostas" | "resolvidos";
 
@@ -38,7 +38,8 @@ export const useForumTopics = ({
             view_count, 
             reply_count, 
             is_locked, 
-            is_pinned, 
+            is_pinned,
+            is_solved,
             user_id, 
             category_id, 
             last_activity_at,
@@ -67,8 +68,8 @@ export const useForumTopics = ({
             query = query.eq('reply_count', 0).order('created_at', { ascending: false });
             break;
           case "resolvidos":
-            // Implementação futura para tópicos resolvidos
-            query = query.order('last_activity_at', { ascending: false });
+            // Filtrar apenas tópicos marcados como resolvidos
+            query = query.eq('is_solved', true).order('last_activity_at', { ascending: false });
             break;
         }
         
@@ -117,6 +118,7 @@ export const useForumTopics = ({
             reply_count: topic.reply_count,
             is_pinned: topic.is_pinned,
             is_locked: topic.is_locked,
+            is_solved: topic.is_solved || false,
             profiles: profileData ? {
               id: profileData.id ? String(profileData.id) : '',
               name: profileData.name ? String(profileData.name) : '',

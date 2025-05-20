@@ -131,3 +131,74 @@ export async function deleteForumPost(postId: string, topicId: string): Promise<
     return { success: false, error: error.message };
   }
 }
+
+/**
+ * Marca um tópico como resolvido ou não resolvido
+ * @param topicId ID do tópico a ser atualizado
+ * @param solved Status de resolução (true = resolvido, false = não resolvido)
+ * @param solutionPostId ID opcional do post que contém a solução
+ */
+export async function markTopicAsSolved(
+  topicId: string, 
+  solved: boolean, 
+  solutionPostId?: string
+): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  try {
+    // Atualizar status do tópico
+    const { error: topicError } = await supabase
+      .from('forum_topics')
+      .update({ is_solved: solved })
+      .eq('id', topicId);
+
+    if (topicError) {
+      console.error('Erro ao marcar tópico como resolvido:', topicError);
+      return { success: false, error: topicError.message };
+    }
+
+    // Se um post de solução foi especificado, marcá-lo como solução
+    if (solved && solutionPostId) {
+      // Primeiro reseta qualquer post que estivesse marcado como solução 
+      const { error: resetError } = await supabase
+        .from('forum_posts')
+        .update({ is_solution: false })
+        .eq('topic_id', topicId)
+        .eq('is_solution', true);
+      
+      if (resetError) {
+        console.error('Erro ao redefinir posts de solução:', resetError);
+        // Não falhar completamente por causa disso
+      }
+
+      // Marcar o post específico como solução
+      const { error: postError } = await supabase
+        .from('forum_posts')
+        .update({ is_solution: true })
+        .eq('id', solutionPostId);
+
+      if (postError) {
+        console.error('Erro ao marcar post como solução:', postError);
+        return { success: false, error: postError.message };
+      }
+    } else if (!solved) {
+      // Se marcando como não resolvido, limpar qualquer post marcado como solução
+      const { error: resetError } = await supabase
+        .from('forum_posts')
+        .update({ is_solution: false })
+        .eq('topic_id', topicId)
+        .eq('is_solution', true);
+      
+      if (resetError) {
+        console.error('Erro ao redefinir posts de solução:', resetError);
+        // Não falhar completamente por causa disso
+      }
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Erro ao marcar tópico como resolvido:', error);
+    return { success: false, error: error.message };
+  }
+}

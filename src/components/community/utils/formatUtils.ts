@@ -53,3 +53,23 @@ export const formatNumber = (num: number): string => {
   }
   return num.toString();
 };
+
+/**
+ * Determina se um usuário pode marcar um tópico como resolvido
+ */
+export const canMarkTopicAsSolved = (
+  userId: string | undefined, 
+  topicAuthorId: string, 
+  isAdmin: boolean
+): boolean => {
+  if (!userId) return false;
+  return userId === topicAuthorId || isAdmin;
+};
+
+/**
+ * Trunca texto longo com elipses
+ */
+export const truncateText = (text: string, maxLength: number): string => {
+  if (text.length <= maxLength) return text;
+  return `${text.substring(0, maxLength)}...`;
+};
