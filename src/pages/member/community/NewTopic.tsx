@@ -5,7 +5,10 @@ import { ForumLayout } from "@/components/community/ForumLayout";
 import { NewTopicForm } from "@/components/community/NewTopicForm";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Pencil } from "lucide-react";
+import { ChevronLeft, Pencil, AlertCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useForumCategories } from "@/hooks/community/useForumCategories";
 
 interface ForumCategory {
   id: string;
@@ -16,6 +19,10 @@ interface ForumCategory {
 const NewTopic = () => {
   const { categorySlug } = useParams<{ categorySlug?: string }>();
   const navigate = useNavigate();
+  const [loadingRedirect, setLoadingRedirect] = useState(false);
+  
+  // Buscar todas as categorias para fallback
+  const { categories: allCategories, isLoading: loadingAllCategories } = useForumCategories();
 
   const { data: category, isLoading, error } = useQuery({
     queryKey: ['forumCategory', categorySlug],
@@ -39,7 +46,17 @@ const NewTopic = () => {
     enabled: !!categorySlug
   });
 
-  if (isLoading) {
+  // Redirecionar para a primeira categoria disponível se a atual não existir
+  useEffect(() => {
+    if (!isLoading && !loadingAllCategories && !category && allCategories.length > 0 && categorySlug) {
+      setLoadingRedirect(true);
+      const firstCategory = allCategories[0];
+      console.log("Categoria não encontrada, redirecionando para:", firstCategory.slug);
+      navigate(`/comunidade/novo-topico/${firstCategory.slug}`, { replace: true });
+    }
+  }, [category, isLoading, categorySlug, allCategories, loadingAllCategories, navigate]);
+
+  if (isLoading || loadingAllCategories || loadingRedirect) {
     return (
       <div className="container px-4 py-6 mx-auto max-w-7xl">
         <div className="animate-pulse">
@@ -58,10 +75,39 @@ const NewTopic = () => {
   if (error || (categorySlug && !category)) {
     return (
       <div className="container px-4 py-6 mx-auto max-w-7xl">
-        <div className="text-center py-10">
+        <div className="mb-6">
+          <Button variant="ghost" size="sm" asChild className="p-0">
+            <Link to="/comunidade" className="flex items-center">
+              <ChevronLeft className="h-4 w-4" />
+              <span>Voltar para a Comunidade</span>
+            </Link>
+          </Button>
+        </div>
+
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Categoria não encontrada</AlertTitle>
+          <AlertDescription>
+            A categoria solicitada não existe ou foi removida.
+            {allCategories.length > 0 && (
+              <div className="mt-4">
+                <h3 className="font-medium mb-2">Categorias disponíveis:</h3>
+                <div className="flex flex-wrap gap-2">
+                  {allCategories.map((cat) => (
+                    <Button key={cat.id} size="sm" variant="outline" asChild>
+                      <Link to={`/comunidade/novo-topico/${cat.slug}`}>{cat.name}</Link>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </AlertDescription>
+        </Alert>
+        
+        <div className="text-center py-6">
           <Pencil className="h-12 w-12 mx-auto text-muted-foreground" />
-          <h1 className="text-2xl font-bold mt-4">Categoria não encontrada</h1>
-          <p className="text-muted-foreground mt-2 mb-6">A categoria selecionada não existe ou foi removida.</p>
+          <h1 className="text-2xl font-bold mt-4">Selecione uma categoria</h1>
+          <p className="text-muted-foreground mt-2 mb-6">Para criar um novo tópico, escolha uma das categorias disponíveis.</p>
           <Button asChild>
             <Link to="/comunidade">Voltar para a Comunidade</Link>
           </Button>

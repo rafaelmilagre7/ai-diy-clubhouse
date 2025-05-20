@@ -42,9 +42,20 @@ export default function CommunityHome() {
     { value: "resolvidos", label: "Resolvidos" }
   ];
 
+  // Determinar qual categoria usar para "Novo Tópico"
+  const getDefaultCategorySlug = () => {
+    if (activeTab !== "todos" && categories?.some(cat => cat.slug === activeTab)) {
+      return activeTab;
+    }
+    return categories && categories.length > 0 ? categories[0].slug : "";
+  };
+
   return (
     <div className="container max-w-6xl py-8 px-4">
-      <ForumHeader />
+      <ForumHeader 
+        showNewTopicButton={true}
+        categorySlug={getDefaultCategorySlug()}
+      />
       
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="relative flex-grow">
@@ -141,7 +152,9 @@ export default function CommunityHome() {
                   : "Ainda não há tópicos nesta categoria."}
               </p>
               <Button asChild>
-                <Link to="/comunidade/novo-topico/geral">Criar o primeiro tópico</Link>
+                <Link to={`/comunidade/novo-topico/${getDefaultCategorySlug()}`}>
+                  Criar o primeiro tópico
+                </Link>
               </Button>
             </div>
           )}
