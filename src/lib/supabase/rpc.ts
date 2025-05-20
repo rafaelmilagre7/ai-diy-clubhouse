@@ -1,5 +1,5 @@
 
-import { supabase } from "./index";
+import { supabase } from "./client";
 
 /**
  * Incrementa o contador de visualizações de um tópico

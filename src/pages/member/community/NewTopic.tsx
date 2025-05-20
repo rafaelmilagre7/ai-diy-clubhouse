@@ -1,5 +1,5 @@
 
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ForumLayout } from "@/components/community/ForumLayout";
 import { NewTopicForm } from "@/components/community/NewTopicForm";
@@ -15,19 +15,25 @@ interface ForumCategory {
 
 const NewTopic = () => {
   const { categorySlug } = useParams<{ categorySlug?: string }>();
+  const navigate = useNavigate();
 
   const { data: category, isLoading, error } = useQuery({
     queryKey: ['forumCategory', categorySlug],
     queryFn: async () => {
       if (!categorySlug) return null;
       
+      console.log("Buscando categoria:", categorySlug);
       const { data, error } = await supabase
         .from('forum_categories')
         .select('id, name, slug')
         .eq('slug', categorySlug)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao buscar categoria:", error);
+        throw error;
+      }
+      console.log("Categoria encontrada:", data);
       return data as ForumCategory;
     },
     enabled: !!categorySlug

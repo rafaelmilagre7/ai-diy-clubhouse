@@ -1,77 +1,59 @@
 
 import { useState } from "react";
-import { Post } from "@/types/forumTypes";
-import { deleteForumPost } from "@/lib/supabase/rpc";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
+import { deleteForumPost } from "@/lib/supabase/rpc";
+import { useAuth } from "@/contexts/auth";
 
 interface UsePostInteractionsProps {
-  post: Post;
+  postId: string;
   topicId: string;
-  onReplyAdded?: () => void;
+  authorId: string;
+  onPostDeleted?: () => void;
 }
 
-export const usePostInteractions = ({ post, topicId, onReplyAdded }: UsePostInteractionsProps) => {
-  const [showReplyForm, setShowReplyForm] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+export const usePostInteractions = ({
+  postId,
+  topicId,
+  authorId,
+  onPostDeleted
+}: UsePostInteractionsProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
-
-  // Alternar visibilidade do formulário de resposta
-  const toggleReplyForm = () => {
-    setShowReplyForm(!showReplyForm);
-  };
-
-  // Abrir diálogo de confirmação de exclusão
-  const openDeleteDialog = () => {
-    setShowDeleteDialog(true);
-  };
-
-  // Fechar diálogo de confirmação de exclusão
-  const closeDeleteDialog = () => {
-    setShowDeleteDialog(false);
-  };
-
-  // Manipulador para quando uma resposta é adicionada com sucesso
-  const handleReplySuccess = () => {
-    setShowReplyForm(false);
-    if (onReplyAdded) {
-      onReplyAdded();
-    }
-    toast.success("Sua resposta foi adicionada com sucesso!");
-  };
-
-  // Manipulador para excluir um post
+  const { user } = useAuth();
+  
+  const isAuthor = user?.id === authorId;
+  
   const handleDeletePost = async () => {
-    setIsDeleting(true);
+    if (!user) {
+      toast.error("Você precisa estar logado para excluir um post");
+      return;
+    }
+    
     try {
-      const { success, error } = await deleteForumPost(post.id);
+      setIsDeleting(true);
       
-      if (!success) {
-        throw new Error(error || "Erro ao excluir postagem");
+      const result = await deleteForumPost(postId);
+      
+      if (!result.success) {
+        throw new Error(result.error || "Erro ao excluir post");
       }
       
-      toast.success("Postagem excluída com sucesso!");
-      closeDeleteDialog();
+      toast.success("Post excluído com sucesso");
       
-      // Se houver callback de onReplyAdded, chamá-lo para atualizar a lista
-      if (onReplyAdded) {
-        onReplyAdded();
+      if (onPostDeleted) {
+        onPostDeleted();
       }
     } catch (error: any) {
-      console.error("Erro ao excluir postagem:", error);
-      toast.error(error.message || "Não foi possível excluir a postagem");
+      console.error("Erro ao excluir post:", error);
+      toast.error(`Não foi possível excluir o post: ${error.message || "Erro desconhecido"}`);
     } finally {
       setIsDeleting(false);
     }
   };
-
+  
   return {
-    showReplyForm,
-    showDeleteDialog,
+    isAuthor,
     isDeleting,
-    toggleReplyForm,
-    openDeleteDialog,
-    closeDeleteDialog,
-    handleReplySuccess,
     handleDeletePost
   };
 };

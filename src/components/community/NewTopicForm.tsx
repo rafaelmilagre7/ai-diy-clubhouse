@@ -56,7 +56,10 @@ export const NewTopicForm = ({ categoryId, categorySlug }: NewTopicFormProps) =>
           title: title.trim(),
           content: content.trim(),
           category_id: categoryId,
-          user_id: user.id
+          user_id: user.id,
+          view_count: 0,
+          reply_count: 0,
+          last_activity_at: new Date().toISOString()
         })
         .select("id")
         .single();
