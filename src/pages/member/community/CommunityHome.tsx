@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { MessageSquare, Users, BarChart, Search } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -132,20 +133,26 @@ const CommunityHome = () => {
         
         // Converter e garantir que os dados estão no formato correto
         const formattedTopics = topicsData.map(topic => {
-          // Garantir que profiles tenha o formato correto
-          const formattedProfile = topic.profiles ? {
-            id: topic.profiles.id,
-            name: topic.profiles.name,
-            avatar_url: topic.profiles.avatar_url,
-            role: topic.profiles.role
-          } : null;
+          // Verificar e tratar correctly o campo profiles
+          let formattedProfile = null;
+          if (topic.profiles && typeof topic.profiles === 'object' && !Array.isArray(topic.profiles)) {
+            formattedProfile = {
+              id: topic.profiles.id,
+              name: topic.profiles.name,
+              avatar_url: topic.profiles.avatar_url,
+              role: topic.profiles.role
+            };
+          }
           
-          // Garantir que category tenha o formato correto
-          const formattedCategory = topic.category ? {
-            id: topic.category.id,
-            name: topic.category.name,
-            slug: topic.category.slug
-          } : null;
+          // Verificar e tratar correctly o campo category
+          let formattedCategory = null;
+          if (topic.category && typeof topic.category === 'object' && !Array.isArray(topic.category)) {
+            formattedCategory = {
+              id: topic.category.id,
+              name: topic.category.name,
+              slug: topic.category.slug
+            };
+          }
           
           return {
             id: topic.id,
