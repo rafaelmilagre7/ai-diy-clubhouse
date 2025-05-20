@@ -25,11 +25,6 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
-        options: {
-          redirectTo: window.location.origin.includes('localhost')
-            ? 'http://localhost:3000/auth'
-            : 'https://app.viverdeia.ai/auth'
-        }
       });
       
       if (error) throw error;

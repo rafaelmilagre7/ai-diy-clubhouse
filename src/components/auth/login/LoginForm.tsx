@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -44,12 +45,7 @@ export const LoginForm = () => {
       // Login com redirecionamento explícito
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password,
-        options: {
-          redirectTo: window.location.origin.includes('localhost') 
-            ? 'http://localhost:3000/auth'
-            : 'https://app.viverdeia.ai/auth',
-        }
+        password
       });
       
       if (error) throw error;
