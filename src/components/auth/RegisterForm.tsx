@@ -53,6 +53,9 @@ const RegisterForm = () => {
           data: {
             name,
           },
+          emailRedirectTo: window.location.origin.includes('localhost') 
+            ? 'http://localhost:3000/auth' 
+            : 'https://app.viverdeia.ai/auth'
         },
       });
       
@@ -82,7 +85,9 @@ const RegisterForm = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth`,
+          redirectTo: window.location.origin.includes('localhost') 
+            ? 'http://localhost:3000/auth' 
+            : 'https://app.viverdeia.ai/auth',
         },
       });
       

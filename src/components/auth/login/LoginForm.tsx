@@ -1,68 +1,144 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/auth";
-import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import EmailPasswordForm from "./EmailPasswordForm";
+import { toast } from "@/hooks/use-toast";
+import { cleanupAuthState } from "@/utils/authUtils";
 
-const LoginForm = () => {
+export const LoginForm = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | undefined>(undefined);
-  const navigate = useNavigate();
 
-  const handleEmailSignIn = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email || !password) {
-      setError("Por favor, preencha todos os campos.");
+      toast({
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha email e senha.",
+        variant: "destructive",
+      });
       return;
     }
     
     try {
       setIsLoading(true);
-      setError(undefined);
-      toast.info("Entrando...");
       
+      // Limpar estado de autenticação anterior para evitar conflitos
+      cleanupAuthState();
+      
+      // Tentativa de logout global para garantir um estado limpo
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continuar mesmo se falhar
+        console.log("Erro ao limpar sessão anterior:", err);
+      }
+      
+      // Login com redirecionamento explícito
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
+        options: {
+          redirectTo: window.location.origin.includes('localhost') 
+            ? 'http://localhost:3000/auth'
+            : 'https://app.viverdeia.ai/auth',
+        }
       });
       
       if (error) throw error;
       
+      // Redirecionamento completo após login bem-sucedido
       if (data.user) {
-        toast.success("Login bem-sucedido! Redirecionando...");
-        navigate('/dashboard', { replace: true });
+        toast({
+          title: "Login realizado com sucesso",
+          description: "Bem-vindo de volta!",
+        });
+        
+        // Forçar redirecionamento completo para o domínio correto
+        const redirectUrl = window.location.origin.includes('localhost')
+          ? 'http://localhost:3000/dashboard'
+          : 'https://app.viverdeia.ai/dashboard';
+          
+        window.location.href = redirectUrl;
       }
     } catch (error: any) {
       console.error("Erro ao fazer login:", error);
-      setError(error.message === "Invalid login credentials"
-        ? "Credenciais inválidas. Verifique seu email e senha."
-        : error.message || "Não foi possível fazer login. Verifique suas credenciais.");
+      toast({
+        title: "Erro de autenticação",
+        description: error.message || "Não foi possível fazer login. Verifique suas credenciais.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleTogglePassword = () => {
+    setShowPassword(!showPassword);
+  };
+
   return (
-    <div className="space-y-4">
-      <EmailPasswordForm
-        email={email}
-        setEmail={setEmail}
-        password={password}
-        setPassword={setPassword}
-        onSubmit={handleEmailSignIn}
-        isLoading={isLoading}
-        error={error}
-      />
-      
-      <div className="text-center text-sm text-white mt-4">
-        <p>O acesso à plataforma é exclusivo para membros convidados</p>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <Mail className="h-5 w-5 text-gray-400" />
+          </div>
+          <Input
+            id="email"
+            type="email"
+            placeholder="seu@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="pl-10 bg-gray-800 border-gray-700 text-white"
+          />
+        </div>
       </div>
-    </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="password">Senha</Label>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <Lock className="h-5 w-5 text-gray-400" />
+          </div>
+          <Input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            placeholder="********"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="pl-10 pr-10 bg-gray-800 border-gray-700 text-white"
+          />
+          <button
+            type="button"
+            onClick={handleTogglePassword}
+            className="absolute inset-y-0 right-0 flex items-center pr-3"
+          >
+            {showPassword ? (
+              <EyeOff className="h-5 w-5 text-gray-400" />
+            ) : (
+              <Eye className="h-5 w-5 text-gray-400" />
+            )}
+          </button>
+        </div>
+      </div>
+
+      <Button
+        type="submit"
+        className="w-full bg-viverblue hover:bg-viverblue/90"
+        disabled={isLoading}
+      >
+        {isLoading ? "Entrando..." : "Entrar"}
+      </Button>
+    </form>
   );
 };
 

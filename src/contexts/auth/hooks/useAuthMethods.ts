@@ -1,123 +1,113 @@
 
-import { useState } from 'react';
+import { useState } from "react";
 import { supabase } from '@/lib/supabase';
-import { TEST_ADMIN, TEST_MEMBER } from '@/contexts/auth/constants';
-import { toast } from '@/hooks/use-toast';
+import { toast } from "sonner";
+import { cleanupAuthState, redirectToDomain } from "@/utils/authUtils";
 
 interface UseAuthMethodsProps {
-  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsLoading: (isLoading: boolean) => void;
 }
 
 export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
-  // Função para fazer login com credenciais
-  const signIn = async (email?: string, password?: string): Promise<{ error: Error | null }> => {
+  const [authError, setAuthError] = useState<Error | null>(null);
+  
+  /**
+   * Login com email e senha
+   */
+  const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
+      setAuthError(null);
       
-      // Se email e senha não forem fornecidos, usar login com Google
-      if (!email || !password) {
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: `${window.location.origin}/auth/callback`,
-          },
-        });
-        
-        if (error) throw error;
-        return { error: null };
-      }
+      // Limpar estado de autenticação anterior
+      cleanupAuthState();
       
-      // Login com email/senha
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
+        options: {
+          redirectTo: window.location.origin.includes('localhost')
+            ? 'http://localhost:3000/auth'
+            : 'https://app.viverdeia.ai/auth'
+        }
       });
       
       if (error) throw error;
       
-      toast({
-        title: 'Login realizado com sucesso',
-        description: 'Bem-vindo ao VIVER DE IA Club!',
-      });
+      toast.success("Login realizado com sucesso");
       
-      return { error: null };
+      // Redirecionar para o domínio correto
+      redirectToDomain('/dashboard');
       
+      return { success: true, data };
     } catch (error: any) {
-      console.error('Erro no login:', error);
-      toast({
-        title: 'Erro de autenticação',
-        description: error.message || 'Falha na autenticação. Verifique suas credenciais.',
-        variant: 'destructive',
+      console.error('Erro ao fazer login:', error);
+      setAuthError(error);
+      
+      toast.error("Erro ao fazer login", {
+        description: error.message,
       });
-      return { error };
+      
+      return { success: false, error };
     } finally {
       setIsLoading(false);
     }
   };
-
-  // Função para fazer logout
+  
+  /**
+   * Login como membro (para teste)
+   */
+  const signInAsMember = async () => {
+    return signIn("user@teste.com", "123456");
+  };
+  
+  /**
+   * Login como admin (para teste)
+   */
+  const signInAsAdmin = async () => {
+    return signIn("admin@teste.com", "123456");
+  };
+  
+  /**
+   * Logout
+   */
   const signOut = async () => {
     try {
       setIsLoading(true);
       
-      const { error } = await supabase.auth.signOut();
+      // Limpar estado de autenticação
+      cleanupAuthState();
       
-      if (error) throw error;
+      // Tentar logout global para garantir limpeza completa
+      await supabase.auth.signOut({ scope: 'global' });
       
-      window.location.href = '/login';
+      toast.success("Logout realizado com sucesso");
+      
+      // Redirecionamento forçado para garantir limpeza completa do estado
+      window.location.href = window.location.origin.includes('localhost')
+        ? 'http://localhost:3000/login'
+        : 'https://app.viverdeia.ai/login';
+        
+      return { success: true };
     } catch (error: any) {
       console.error('Erro ao fazer logout:', error);
-      toast({
-        title: 'Erro ao sair',
-        description: 'Não foi possível fazer logout. Tente novamente.',
-        variant: 'destructive',
-      });
       
-      // Em caso de erro, forçar redirecionamento para login
-      window.location.href = '/login';
+      // Mesmo em caso de erro, forçar redirecionamento para login
+      window.location.href = window.location.origin.includes('localhost')
+        ? 'http://localhost:3000/login'
+        : 'https://app.viverdeia.ai/login';
+      
+      return { success: false, error };
     } finally {
       setIsLoading(false);
     }
   };
-
-  // Login de teste como membro (apenas ambiente de desenvolvimento)
-  const signInAsMember = async () => {
-    if (process.env.NODE_ENV !== 'development') {
-      console.error('Login de teste disponível apenas em ambiente de desenvolvimento');
-      return;
-    }
-    
-    try {
-      setIsLoading(true);
-      await signIn(TEST_MEMBER.email, TEST_MEMBER.password);
-    } catch (error) {
-      console.error('Erro ao fazer login como membro:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Login de teste como admin (apenas ambiente de desenvolvimento)
-  const signInAsAdmin = async () => {
-    if (process.env.NODE_ENV !== 'development') {
-      console.error('Login de teste disponível apenas em ambiente de desenvolvimento');
-      return;
-    }
-    
-    try {
-      setIsLoading(true);
-      await signIn(TEST_ADMIN.email, TEST_ADMIN.password);
-    } catch (error) {
-      console.error('Erro ao fazer login como admin:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  
   return {
     signIn,
     signOut,
     signInAsMember,
     signInAsAdmin,
+    authError
   };
 };
