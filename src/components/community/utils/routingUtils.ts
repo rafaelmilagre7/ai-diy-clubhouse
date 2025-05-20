@@ -21,9 +21,7 @@ export const isActiveRoute = (currentPath: string, routeToCheck: string): boolea
   // Caso especial para a comunidade
   if (routeToCheck === "/comunidade") {
     return currentPath === "/comunidade" || 
-           currentPath === "/forum" || 
-           currentPath.startsWith("/comunidade/") ||
-           currentPath.startsWith("/forum/");
+           currentPath.startsWith("/comunidade/");
   }
   
   // Verificação padrão para outras rotas
@@ -40,11 +38,6 @@ export const checkForumRedirect = (currentPath: string): {
   path: string, 
   options: NavigateOptions 
 } | null => {
-  // Não fazer redirecionamento se já estivermos em uma rota da comunidade
-  if (currentPath.startsWith('/comunidade')) {
-    return null;
-  }
-  
   // Verificar se o caminho atual começa com algum dos prefixos antigos
   for (const [oldPath, newPath] of Object.entries(forumRouteMapping)) {
     if (currentPath.startsWith(oldPath)) {

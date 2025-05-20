@@ -136,7 +136,8 @@ export const useForumTopics = ({
               id: userProfile.id,
               name: userProfile.name || 'Usuário',
               avatar_url: userProfile.avatar_url,
-              role: userProfile.role || ''
+              role: userProfile.role || '',
+              user_id: userProfile.id // Garantindo que tenhamos o user_id
             } : null,
             category: topicCategory ? {
               id: topicCategory.id,

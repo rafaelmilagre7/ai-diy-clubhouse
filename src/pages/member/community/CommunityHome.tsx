@@ -22,7 +22,7 @@ export default function CommunityHome() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<TopicFilterType>("recentes");
   
-  // Buscar categorias - note que aqui estamos desestruturando categories diretamente
+  // Buscar categorias
   const { categories, isLoading: loadingCategories } = useForumCategories();
   
   // Buscar tópicos com base nos filtros

@@ -11,6 +11,11 @@ export const CommunityRedirects = () => {
   const navigate = useNavigate();
   
   useEffect(() => {
+    // Não aplicar redirecionamentos nas rotas já da comunidade
+    if (location.pathname.startsWith('/comunidade')) {
+      return;
+    }
+    
     console.log("CommunityRedirects verificando:", location.pathname);
     
     const redirect = checkForumRedirect(location.pathname);
