@@ -2,12 +2,28 @@
 import { CircleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { useForumCategories } from "@/hooks/community/useForumCategories";
+import { useState } from "react";
+import { CreateTopicDialog } from "./CreateTopicDialog";
 
 interface TopicListErrorProps {
   onRetry: () => void;
+  categorySlug?: string;
 }
 
-export const TopicListError = ({ onRetry }: TopicListErrorProps) => {
+export const TopicListError = ({ onRetry, categorySlug }: TopicListErrorProps) => {
+  const [createTopicOpen, setCreateTopicOpen] = useState(false);
+  const { categories } = useForumCategories();
+  
+  const getValidCategoryId = () => {
+    if (categorySlug) {
+      const category = categories?.find(cat => cat.slug === categorySlug);
+      if (category) return category.id;
+    }
+    
+    return categories && categories.length > 0 ? categories[0].id : "";
+  };
+  
   return (
     <div className="text-center py-8 space-y-4 border border-red-200 rounded-lg bg-red-50/30 p-6">
       <CircleAlert className="h-12 w-12 mx-auto text-red-500 mb-4" />
@@ -18,15 +34,30 @@ export const TopicListError = ({ onRetry }: TopicListErrorProps) => {
       <Separator className="my-4" />
       <div className="flex flex-col items-center">
         <p className="text-sm text-muted-foreground mb-4">
-          Tente novamente ou volte mais tarde para conferir as discussões.
+          Tente novamente ou crie um novo tópico.
         </p>
-        <Button 
-          onClick={onRetry}
-          size="lg"
-          className="px-8"
-        >
-          Tentar novamente
-        </Button>
+        <div className="flex gap-3">
+          <Button 
+            onClick={onRetry}
+            variant="outline"
+            size="lg"
+          >
+            Tentar novamente
+          </Button>
+          
+          <Button 
+            onClick={() => setCreateTopicOpen(true)}
+            size="lg"
+          >
+            Criar novo tópico
+          </Button>
+        </div>
+        
+        <CreateTopicDialog 
+          open={createTopicOpen} 
+          onOpenChange={setCreateTopicOpen}
+          preselectedCategory={getValidCategoryId()}
+        />
       </div>
     </div>
   );

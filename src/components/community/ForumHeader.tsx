@@ -2,9 +2,8 @@
 import { ForumStatistics } from "./ForumStatistics";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
-import { Link } from "react-router-dom";
-import { useForumCategories } from "@/hooks/community/useForumCategories";
 import { useState } from "react";
+import { useForumCategories } from "@/hooks/community/useForumCategories";
 import { CreateTopicDialog } from "./CreateTopicDialog";
 
 interface ForumHeaderProps {
@@ -23,16 +22,6 @@ export const ForumHeader = ({
   const { categories } = useForumCategories();
   const [createTopicOpen, setCreateTopicOpen] = useState(false);
   
-  // Garantir que temos um slug de categoria válido para o botão de novo tópico
-  const getValidCategorySlug = () => {
-    // Se já temos um slug e ele é válido, usa ele
-    if (categorySlug && categories?.some(cat => cat.slug === categorySlug)) {
-      return categorySlug;
-    }
-    // Caso contrário usa a primeira categoria
-    return categories && categories.length > 0 ? categories[0].slug : "";
-  };
-
   // Encontrar o ID da categoria com base no slug
   const getValidCategoryId = () => {
     if (categorySlug) {
@@ -52,19 +41,13 @@ export const ForumHeader = ({
         </div>
         
         {showNewTopicButton && categories && categories.length > 0 && (
-          <div className="mt-4 md:mt-0 flex gap-2">
+          <div className="mt-4 md:mt-0">
             <Button 
               onClick={() => setCreateTopicOpen(true)}
               className="flex items-center gap-2"
             >
               <PlusCircle className="h-4 w-4" />
               <span>Novo Tópico</span>
-            </Button>
-            
-            <Button asChild variant="outline" className="flex items-center gap-2">
-              <Link to={`/comunidade/novo-topico/${getValidCategorySlug()}`}>
-                <span>Criação Avançada</span>
-              </Link>
             </Button>
           </div>
         )}

@@ -9,7 +9,7 @@ import { useForumTopics, TopicFilterType } from "@/hooks/community/useForumTopic
 import { TopicItem } from "@/components/community/TopicItem";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ForumHeader } from "@/components/community/ForumHeader";
-import { Link } from "react-router-dom";
+import { ForumBreadcrumbs } from "@/components/community/ForumBreadcrumbs";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -17,11 +17,13 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { CreateTopicDialog } from "@/components/community/CreateTopicDialog";
 
 export default function CommunityHome() {
   const [activeTab, setActiveTab] = useState("todos");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<TopicFilterType>("recentes");
+  const [createTopicOpen, setCreateTopicOpen] = useState(false);
   
   // Buscar categorias
   const { categories, isLoading: loadingCategories } = useForumCategories();
@@ -42,19 +44,22 @@ export default function CommunityHome() {
     { value: "resolvidos", label: "Resolvidos" }
   ];
 
-  // Determinar qual categoria usar para "Novo Tópico"
-  const getDefaultCategorySlug = () => {
-    if (activeTab !== "todos" && categories?.some(cat => cat.slug === activeTab)) {
-      return activeTab;
+  // Obter o ID da categoria a partir do slug
+  const getDefaultCategoryId = () => {
+    if (activeTab !== "todos") {
+      const category = categories?.find(cat => cat.slug === activeTab);
+      if (category) return category.id;
     }
-    return categories && categories.length > 0 ? categories[0].slug : "";
+    return categories && categories.length > 0 ? categories[0].id : "";
   };
 
   return (
     <div className="container max-w-6xl py-8 px-4">
+      <ForumBreadcrumbs categorySlug={activeTab !== "todos" ? activeTab : undefined} />
+      
       <ForumHeader 
         showNewTopicButton={true}
-        categorySlug={getDefaultCategorySlug()}
+        categorySlug={activeTab !== "todos" ? activeTab : undefined}
       />
       
       <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -151,11 +156,17 @@ export default function CommunityHome() {
                   ? "Não encontramos resultados para sua busca." 
                   : "Ainda não há tópicos nesta categoria."}
               </p>
-              <Button asChild>
-                <Link to={`/comunidade/novo-topico/${getDefaultCategorySlug()}`}>
-                  Criar o primeiro tópico
-                </Link>
+              <Button 
+                onClick={() => setCreateTopicOpen(true)}
+              >
+                Criar o primeiro tópico
               </Button>
+              
+              <CreateTopicDialog 
+                open={createTopicOpen} 
+                onOpenChange={setCreateTopicOpen}
+                preselectedCategory={getDefaultCategoryId()}
+              />
             </div>
           )}
         </TabsContent>

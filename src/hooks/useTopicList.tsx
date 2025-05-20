@@ -7,6 +7,7 @@ import { Topic } from "@/types/forumTypes";
 
 interface UseTopicListProps {
   categoryId: string;
+  categorySlug?: string;
   itemsPerPage?: number;
 }
 
@@ -16,7 +17,7 @@ interface TopicListData {
   totalCount: number;
 }
 
-export const useTopicList = ({ categoryId, itemsPerPage = 10 }: UseTopicListProps) => {
+export const useTopicList = ({ categoryId, categorySlug, itemsPerPage = 10 }: UseTopicListProps) => {
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [errorCount, setErrorCount] = useState<number>(0);
 
@@ -24,6 +25,7 @@ export const useTopicList = ({ categoryId, itemsPerPage = 10 }: UseTopicListProp
   useEffect(() => {
     console.log("useTopicList hook inicializado:", {
       categoryId,
+      categorySlug,
       currentPage,
       itemsPerPage
     });
@@ -31,7 +33,7 @@ export const useTopicList = ({ categoryId, itemsPerPage = 10 }: UseTopicListProp
     return () => {
       console.log("useTopicList hook desmontado");
     };
-  }, [categoryId, currentPage, itemsPerPage]);
+  }, [categoryId, categorySlug, currentPage, itemsPerPage]);
 
   const fetchTopics = async (): Promise<TopicListData> => {
     try {
@@ -198,6 +200,7 @@ export const useTopicList = ({ categoryId, itemsPerPage = 10 }: UseTopicListProp
     hasTopics,
     isLoading,
     error,
+    categorySlug,
     handleRetry,
     handlePageChange
   };
