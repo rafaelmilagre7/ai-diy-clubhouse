@@ -5,7 +5,7 @@ import CommunityHome from './CommunityHome';
 import TopicView from './TopicView';
 import NewTopic from './NewTopic';
 import CategoryView from './CategoryView';
-import { Helmet } from 'react-helmet';
+import { Helmet } from 'react-helmet-async';
 
 export default function CommunityPages() {
   // Configurando roteamento interno para a seção de comunidade
