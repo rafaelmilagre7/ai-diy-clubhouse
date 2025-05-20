@@ -31,7 +31,7 @@ export interface Topic {
   reply_count: number;
   is_pinned: boolean;
   is_locked: boolean;
-  profiles?: Profile;
+  profiles?: Profile | null;
   category?: {
     id: string;
     name: string;

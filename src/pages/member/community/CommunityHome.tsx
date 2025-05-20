@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { MessageSquare, Users, BarChart, Search } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -130,7 +131,25 @@ const CommunityHome = () => {
           return [];
         }
         
-        return topicsData as Topic[];
+        // Converter e garantir que os dados estão no formato correto
+        const formattedTopics = topicsData.map(topic => ({
+          id: topic.id,
+          title: topic.title,
+          content: topic.content,
+          created_at: topic.created_at,
+          updated_at: topic.updated_at,
+          last_activity_at: topic.last_activity_at,
+          user_id: topic.user_id,
+          category_id: topic.category_id,
+          view_count: topic.view_count,
+          reply_count: topic.reply_count,
+          is_pinned: topic.is_pinned,
+          is_locked: topic.is_locked,
+          profiles: topic.profiles,
+          category: topic.category
+        })) as Topic[];
+        
+        return formattedTopics;
       } catch (error: any) {
         console.error('Erro ao buscar tópicos:', error.message);
         toast.error("Não foi possível carregar os tópicos. Por favor, tente novamente.");

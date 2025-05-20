@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { format, formatDistance } from "date-fns";
@@ -30,6 +31,11 @@ const postSchema = yup.object({
 
 // Interface para os valores do formulário
 interface FormData {
+  content: string;
+}
+
+interface TopicFormData {
+  title: string;
   content: string;
 }
 
@@ -72,7 +78,8 @@ const TopicView = () => {
         .from('forum_topics')
         .select(`
           *,
-          profiles:user_id(*)
+          profiles:user_id(*),
+          category:category_id(id, name, slug)
         `)
         .eq('id', topicId)
         .single();
@@ -82,7 +89,7 @@ const TopicView = () => {
       }
 
       if (topicData) {
-        setTopic(topicData);
+        setTopic(topicData as Topic);
         setCategoryId(topicData.category_id); // Define o ID da categoria
       }
 
@@ -101,7 +108,7 @@ const TopicView = () => {
       }
 
       if (postsData) {
-        setPosts(postsData);
+        setPosts(postsData as Post[]);
       }
     } catch (err: any) {
       console.error("Erro ao buscar tópico e posts:", err.message);
@@ -112,7 +119,7 @@ const TopicView = () => {
     }
   };
 
-  const createNewTopic = async (values: FormData) => {
+  const createNewTopic = async (values: TopicFormData) => {
     try {
       setSubmitting(true);
       
@@ -174,7 +181,7 @@ const TopicView = () => {
 
       // Atualiza o estado local adicionando o novo post
       if (newPost) {
-        setPosts(prevPosts => [...prevPosts, newPost]);
+        setPosts(prevPosts => [...prevPosts, newPost as Post]);
         reset(); // Limpa o formulário
         
         // Atualiza a contagem de respostas no tópico
