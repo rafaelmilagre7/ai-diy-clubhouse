@@ -48,13 +48,9 @@ export const useTopicList = ({ categoryId, itemsPerPage = 10 }: UseTopicListProp
       }
       
       // Primeiro buscar todos os tópicos fixados
-      const { data: pinnedTopics, error: pinnedError } = await supabase
+      const { data: pinnedTopicsData, error: pinnedError } = await supabase
         .from('forum_topics')
-        .select(`
-          *,
-          profiles:user_id(*),
-          category:category_id(id, name, slug)
-        `)
+        .select('*')
         .eq('category_id', categoryId)
         .eq('is_pinned', true)
         .order('last_activity_at', { ascending: false });
@@ -65,13 +61,9 @@ export const useTopicList = ({ categoryId, itemsPerPage = 10 }: UseTopicListProp
       }
       
       // Depois buscar os tópicos normais, paginados
-      const { data: regularTopics, error: regularError, count } = await supabase
+      const { data: regularTopicsData, error: regularError, count } = await supabase
         .from('forum_topics')
-        .select(`
-          *,
-          profiles:user_id(*),
-          category:category_id(id, name, slug)
-        `, { count: 'exact' })
+        .select('*', { count: 'exact' })
         .eq('category_id', categoryId)
         .eq('is_pinned', false)
         .order('last_activity_at', { ascending: false })
@@ -81,16 +73,74 @@ export const useTopicList = ({ categoryId, itemsPerPage = 10 }: UseTopicListProp
         console.error("Erro ao buscar tópicos regulares:", regularError);
         throw regularError;
       }
+
+      // Agora, buscar os perfis dos usuários separadamente
+      const allTopics = [...(pinnedTopicsData || []), ...(regularTopicsData || [])];
+      const userIds = [...new Set(allTopics.map(topic => topic.user_id))];
+
+      let userProfiles: any[] = [];
+      if (userIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, name, avatar_url, role')
+          .in('id', userIds);
+
+        if (profilesError) {
+          console.error("Erro ao buscar perfis:", profilesError);
+        } else {
+          userProfiles = profiles || [];
+        }
+      }
+
+      // Buscar categorias relacionadas
+      const categoryIds = [...new Set(allTopics.map(topic => topic.category_id))];
+      let categories: any[] = [];
+      if (categoryIds.length > 0) {
+        const { data: categoriesData, error: categoriesError } = await supabase
+          .from('forum_categories')
+          .select('id, name, slug')
+          .in('id', categoryIds);
+
+        if (categoriesError) {
+          console.error("Erro ao buscar categorias:", categoriesError);
+        } else {
+          categories = categoriesData || [];
+        }
+      }
+
+      // Mapear manualmente os dados de perfil e categoria para cada tópico
+      const mapTopicWithRelations = (topic: any): Topic => {
+        const userProfile = userProfiles.find(profile => profile.id === topic.user_id);
+        const category = categories.find(cat => cat.id === topic.category_id);
+
+        return {
+          ...topic,
+          profiles: userProfile ? {
+            id: userProfile.id,
+            name: userProfile.name || 'Usuário',
+            avatar_url: userProfile.avatar_url,
+            role: userProfile.role || ''
+          } : null,
+          category: category ? {
+            id: category.id,
+            name: category.name,
+            slug: category.slug
+          } : null
+        };
+      };
+      
+      const pinnedTopics = (pinnedTopicsData || []).map(mapTopicWithRelations);
+      const regularTopics = (regularTopicsData || []).map(mapTopicWithRelations);
       
       console.log("Tópicos carregados com sucesso:", {
-        fixados: pinnedTopics?.length || 0,
-        regulares: regularTopics?.length || 0,
+        fixados: pinnedTopics.length,
+        regulares: regularTopics.length,
         total: count || 0
       });
       
       return { 
-        pinnedTopics: pinnedTopics as Topic[] || [],
-        regularTopics: regularTopics as Topic[] || [],
+        pinnedTopics,
+        regularTopics,
         totalCount: count || 0
       };
     } catch (error: any) {
