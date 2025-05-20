@@ -133,12 +133,12 @@ export const ImplementationTrailCreator = () => {
             estimated_time_minutes,
             cover_image_url,
             module_id,
-            learning_modules (
-              id,
-              title,
+            learning_modules:learning_modules!inner (
+              id, 
+              title, 
               course_id,
-              learning_courses (
-                id,
+              learning_courses:learning_courses!inner (
+                id, 
                 title
               )
             )
@@ -151,13 +151,18 @@ export const ImplementationTrailCreator = () => {
         const enrichedLessons = lessonsData.map(lesson => {
           const recommendationData = trail.recommended_lessons?.find(l => l.lessonId === lesson.id);
           
-          // Acessar dados do módulo e curso corretamente
-          const moduleData = lesson.learning_modules;
+          // Acessar dados do módulo e curso com segurança
+          let moduleData = null;
           let courseData = null;
           
-          if (moduleData && moduleData.learning_courses) {
-            // Como a tipagem exata pode variar, usamos uma verificação segura
-            courseData = moduleData.learning_courses;
+          // Verificamos se learning_modules existe e é um array
+          if (lesson.learning_modules && Array.isArray(lesson.learning_modules) && lesson.learning_modules.length > 0) {
+            moduleData = lesson.learning_modules[0]; // Pegamos o primeiro módulo
+            
+            // Verificamos se o módulo tem learning_courses e é um array
+            if (moduleData.learning_courses && Array.isArray(moduleData.learning_courses) && moduleData.learning_courses.length > 0) {
+              courseData = moduleData.learning_courses[0]; // Pegamos o primeiro curso
+            }
           }
           
           return {
@@ -165,8 +170,12 @@ export const ImplementationTrailCreator = () => {
             priority: recommendationData?.priority || 2,
             justification: recommendationData?.justification || "Recomendado com base no seu perfil",
             module: {
-              ...moduleData,
-              course: courseData
+              id: moduleData?.id || '',
+              title: moduleData?.title || 'Módulo sem nome',
+              course: {
+                id: courseData?.id || '',
+                title: courseData?.title || 'Curso sem nome'
+              }
             }
           };
         });
