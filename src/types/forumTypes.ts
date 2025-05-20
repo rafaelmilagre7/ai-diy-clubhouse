@@ -17,6 +17,17 @@ export interface UserProfile {
   role?: string;
 }
 
+export interface Profile {
+  id: string;
+  name: string;
+  avatar_url?: string | null;
+  email?: string;
+  role?: string;
+  role_id?: string;
+  company_name?: string;
+  industry?: string;
+}
+
 export interface Topic {
   id: string;
   title: string;
@@ -44,4 +55,6 @@ export interface Post {
   updated_at: string;
   profiles?: UserProfile | null;
   is_accepted_solution?: boolean;
+  is_solution?: boolean;
+  parent_id?: string | null;
 }

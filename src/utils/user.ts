@@ -1,39 +1,77 @@
 
 /**
- * Funções utilitárias para manipulação de dados de usuários
+ * Retorna as iniciais de um nome
+ * @param name Nome completo
+ * @returns Iniciais (máximo 2 caracteres)
  */
-
-/**
- * Obtém as iniciais do nome do usuário
- */
-export function getInitials(name?: string | null): string {
+export const getInitials = (name?: string): string => {
   if (!name) return 'U';
   
-  // Obtém as iniciais do nome completo
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .map(part => part.charAt(0).toUpperCase())
-    .slice(0, 2)
-    .join('');
-}
+  const parts = name.trim().split(/\s+/);
+  
+  if (parts.length === 1) {
+    return parts[0].charAt(0).toUpperCase();
+  }
+  
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+};
 
 /**
- * Formata a URL do avatar para garantir que tenha o formato correto
+ * Formata uma URL de avatar para exibição
+ * @param url URL do avatar (pode ser do Supabase Storage ou URL externa)
+ * @returns URL formatada para exibição
  */
-export function getAvatarUrl(avatarUrl?: string | null): string | undefined {
-  if (!avatarUrl) return undefined;
+export const getAvatarUrl = (url?: string | null): string | undefined => {
+  if (!url) return undefined;
   
-  // Se a URL já começa com http ou https, retorne-a diretamente
-  if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')) {
-    return avatarUrl;
+  // Se já for uma URL completa, retorna como está
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
   }
   
-  // Se é uma URL relativa ao storage do Supabase, garanta que começa com /
-  if (!avatarUrl.startsWith('/')) {
-    avatarUrl = '/' + avatarUrl;
+  // Se for uma URL do Supabase Storage, constrói a URL completa
+  if (url.startsWith('avatars/')) {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+    return `${supabaseUrl}/storage/v1/object/public/profiles/${url}`;
   }
   
-  // Retorna a URL formatada
-  return `https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public${avatarUrl}`;
-}
+  return url;
+};
+
+/**
+ * Verifica se o usuário tem o papel de administrador
+ * @param role Papel do usuário
+ * @returns true se for admin, false caso contrário
+ */
+export const isAdmin = (role?: string): boolean => {
+  return role === 'admin';
+};
+
+/**
+ * Verifica se o usuário tem o papel de formação
+ * @param role Papel do usuário
+ * @returns true se for formação, false caso contrário
+ */
+export const isFormacao = (role?: string): boolean => {
+  return role === 'formacao';
+};
+
+/**
+ * Retorna o nome do papel do usuário formatado para exibição
+ * @param role Papel do usuário
+ * @returns Nome formatado do papel
+ */
+export const getRoleName = (role?: string): string => {
+  if (!role) return 'Membro';
+  
+  switch (role.toLowerCase()) {
+    case 'admin':
+      return 'Administrador';
+    case 'formacao':
+      return 'Formação';
+    case 'member':
+      return 'Membro';
+    default:
+      return role.charAt(0).toUpperCase() + role.slice(1);
+  }
+};
