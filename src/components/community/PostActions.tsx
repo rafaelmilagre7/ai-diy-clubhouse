@@ -13,7 +13,7 @@ interface PostActionsProps {
   isOwner: boolean;
   isAdmin: boolean;
   isReply: boolean;
-  onReply: () => void; // Renomeado de onReplyClick para onReply
+  onReply: () => void;
   canMarkAsSolved?: boolean;
   isSolutionPost?: boolean;
   isSubmitting?: boolean;

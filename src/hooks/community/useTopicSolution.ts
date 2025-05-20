@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/contexts/auth";
-import { markTopicAsSolved } from "@/lib/supabase/rpc";
+import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -35,13 +35,21 @@ export function useTopicSolution({
       return;
     }
 
+    if (!solutionPostId) {
+      toast.error("É necessário escolher um post como solução");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const { success, error } = await markTopicAsSolved(topicId, true, solutionPostId);
+      const { data, error } = await supabase.rpc('mark_topic_as_solved', {
+        topic_id: topicId,
+        post_id: solutionPostId
+      });
 
-      if (!success) {
-        throw new Error(error || "Erro ao marcar tópico como resolvido");
+      if (error) {
+        throw new Error(error.message);
       }
 
       setIsSolved(true);
@@ -51,6 +59,7 @@ export function useTopicSolution({
       queryClient.invalidateQueries({ queryKey: ['forumTopic', topicId] });
       queryClient.invalidateQueries({ queryKey: ['forumTopics'] });
       queryClient.invalidateQueries({ queryKey: ['communityTopics'] });
+      queryClient.invalidateQueries({ queryKey: ['forumStats'] });
       
     } catch (error: any) {
       console.error("Erro ao marcar tópico como resolvido:", error);
@@ -74,10 +83,12 @@ export function useTopicSolution({
     setIsSubmitting(true);
 
     try {
-      const { success, error } = await markTopicAsSolved(topicId, false);
+      const { data, error } = await supabase.rpc('unmark_topic_as_solved', {
+        topic_id: topicId
+      });
 
-      if (!success) {
-        throw new Error(error || "Erro ao desmarcar tópico como resolvido");
+      if (error) {
+        throw new Error(error.message);
       }
 
       setIsSolved(false);
@@ -87,6 +98,7 @@ export function useTopicSolution({
       queryClient.invalidateQueries({ queryKey: ['forumTopic', topicId] });
       queryClient.invalidateQueries({ queryKey: ['forumTopics'] });
       queryClient.invalidateQueries({ queryKey: ['communityTopics'] });
+      queryClient.invalidateQueries({ queryKey: ['forumStats'] });
       
     } catch (error: any) {
       console.error("Erro ao desmarcar tópico como resolvido:", error);

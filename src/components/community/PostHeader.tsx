@@ -1,54 +1,62 @@
 
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Profile } from "@/types/forumTypes";
-import { getInitials } from "@/utils/user";
+import { CheckCircle2 } from "lucide-react";
 
 interface PostHeaderProps {
-  profile: Profile | null;
+  profile: {
+    name?: string | null;
+    role?: string | null;
+    avatar_url?: string | null;
+  } | null;
   createdAt: string;
-  isTopicAuthor: boolean;
-  userId: string;
+  isTopicAuthor?: boolean;
+  userId?: string;
   isAdmin?: boolean;
-  showActions?: boolean;
   contextMenu?: React.ReactNode;
+  isSolution?: boolean;
 }
 
 export const PostHeader = ({
   profile,
   createdAt,
-  isTopicAuthor,
+  isTopicAuthor = false,
   userId,
-  isAdmin,
-  showActions = true,
-  contextMenu
+  isAdmin = false,
+  contextMenu,
+  isSolution = false
 }: PostHeaderProps) => {
   return (
-    <div className="flex justify-between items-start mb-1">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="font-medium">{profile?.name || "Usuário"}</span>
-        <span className="text-xs text-muted-foreground">•</span>
-        <span className="text-xs text-muted-foreground">
-          {format(new Date(createdAt), "d 'de' MMMM 'às' HH:mm", {
-            locale: ptBR,
-          })}
-        </span>
+    <div className="flex justify-between items-start">
+      <div>
+        <div className="flex items-center gap-2">
+          <h3 className="font-medium text-base leading-none">
+            {profile?.name || "Usuário Anônimo"}
+            {isSolution && (
+              <span className="ml-2 text-green-600 text-xs inline-flex items-center gap-1">
+                <CheckCircle2 className="h-3 w-3" />
+                Solução
+              </span>
+            )}
+          </h3>
+          {isTopicAuthor && (
+            <span className="bg-primary/10 text-primary text-xs px-1.5 py-0.5 rounded">
+              Autor
+            </span>
+          )}
+          {isAdmin && (
+            <span className="bg-red-500/10 text-red-500 text-xs px-1.5 py-0.5 rounded">
+              Admin
+            </span>
+          )}
+        </div>
         
-        {isTopicAuthor && profile?.id === userId && (
-          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-            Autor
-          </span>
-        )}
-
-        {profile?.role === 'admin' && (
-          <span className="text-xs bg-red-500/10 text-red-500 px-2 py-0.5 rounded-full">
-            Admin
-          </span>
-        )}
+        <p className="text-sm text-muted-foreground mt-1">
+          {format(new Date(createdAt), "d 'de' MMMM 'às' HH:mm", { locale: ptBR })}
+        </p>
       </div>
-
-      {showActions && contextMenu}
+      
+      {contextMenu}
     </div>
   );
 };

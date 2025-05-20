@@ -416,6 +416,7 @@ export type Database = {
           id: string
           is_locked: boolean
           is_pinned: boolean
+          is_solved: boolean | null
           last_activity_at: string
           reply_count: number
           title: string
@@ -430,6 +431,7 @@ export type Database = {
           id?: string
           is_locked?: boolean
           is_pinned?: boolean
+          is_solved?: boolean | null
           last_activity_at?: string
           reply_count?: number
           title: string
@@ -444,6 +446,7 @@ export type Database = {
           id?: string
           is_locked?: boolean
           is_pinned?: boolean
+          is_solved?: boolean | null
           last_activity_at?: string
           reply_count?: number
           title?: string
@@ -3776,6 +3779,10 @@ export type Database = {
         Args: { suggestion_id: string }
         Returns: undefined
       }
+      deleteforumpost: {
+        Args: { post_id: string }
+        Returns: Json
+      }
       determinerolefromemail: {
         Args: { email: string }
         Returns: string
@@ -3880,6 +3887,10 @@ export type Database = {
         }
         Returns: string
       }
+      mark_topic_as_solved: {
+        Args: { topic_id: string; post_id: string }
+        Returns: Json
+      }
       merge_json_data: {
         Args: { target: Json; source: Json }
         Returns: Json
@@ -3907,6 +3918,10 @@ export type Database = {
       sync_profile_roles: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      unmark_topic_as_solved: {
+        Args: { topic_id: string }
+        Returns: Json
       }
       update_invite_send_attempt: {
         Args: { invite_id: string }

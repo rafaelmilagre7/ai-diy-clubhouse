@@ -79,21 +79,13 @@ export async function deleteForumTopic(topicId: string): Promise<{ success: bool
  */
 export async function deleteForumPost(postId: string): Promise<{ success: boolean; error?: string }> {
   try {
-    // Exclui todas as respostas desta postagem primeiro
-    const { error: repliesError } = await supabase
-      .from('forum_posts')
-      .delete()
-      .eq('parent_id', postId);
+    const { data, error } = await supabase.rpc('deleteForumPost', { post_id: postId });
       
-    if (repliesError) throw repliesError;
+    if (error) throw error;
     
-    // Depois exclui a postagem em si
-    const { error: postError } = await supabase
-      .from('forum_posts')
-      .delete()
-      .eq('id', postId);
-      
-    if (postError) throw postError;
+    if (!data.success) {
+      throw new Error(data.error);
+    }
     
     return { success: true };
   } catch (error: any) {
@@ -111,43 +103,29 @@ export async function markTopicAsSolved(
   solutionPostId?: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // Primeiro, atualiza o tópico
-    const { error: topicError } = await supabase
-      .from('forum_topics')
-      .update({ is_solved: isSolved })
-      .eq('id', topicId);
-      
-    if (topicError) throw topicError;
-    
-    // Se for para marcar como resolvido e tiver um ID de post de solução
     if (isSolved && solutionPostId) {
-      // Primeiro, desmarca qualquer post que esteja marcado como solução
-      const { error: resetError } = await supabase
-        .from('forum_posts')
-        .update({ is_solution: false })
-        .eq('topic_id', topicId)
-        .eq('is_solution', true);
-        
-      if (resetError) throw resetError;
+      // Marcar como resolvido
+      const { data, error } = await supabase.rpc('mark_topic_as_solved', {
+        topic_id: topicId,
+        post_id: solutionPostId
+      });
       
-      // Agora marca o post específico como solução
-      const { error: markError } = await supabase
-        .from('forum_posts')
-        .update({ is_solution: true })
-        .eq('id', solutionPostId);
-        
-      if (markError) throw markError;
-    } 
-    // Se for para desmarcar como resolvido
-    else if (!isSolved) {
-      // Desmarca todos os posts de solução deste tópico
-      const { error: resetError } = await supabase
-        .from('forum_posts')
-        .update({ is_solution: false })
-        .eq('topic_id', topicId)
-        .eq('is_solution', true);
-        
-      if (resetError) throw resetError;
+      if (error) throw error;
+      
+      if (!data.success) {
+        throw new Error(data.error);
+      }
+    } else {
+      // Desmarcar como resolvido
+      const { data, error } = await supabase.rpc('unmark_topic_as_solved', {
+        topic_id: topicId
+      });
+      
+      if (error) throw error;
+      
+      if (!data.success) {
+        throw new Error(data.error);
+      }
     }
     
     return { success: true };

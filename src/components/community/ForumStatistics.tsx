@@ -1,7 +1,5 @@
 
 import { Card, CardContent } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
 import { Loader2, MessageSquare, Users, BookOpen, CheckCircle2 } from "lucide-react";
 import { useForumStats } from "@/hooks/useForumStats";
 

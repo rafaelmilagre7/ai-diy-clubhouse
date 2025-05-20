@@ -117,6 +117,7 @@ export const PostItem = ({
               userId={post.user_id}
               isAdmin={isAdmin}
               contextMenu={canDelete ? <PostContextMenu onDeleteClick={openDeleteDialog} /> : undefined}
+              isSolution={post.is_solution}
             />
             
             <div className="mt-2 prose prose-sm max-w-none dark:prose-invert">
@@ -129,7 +130,7 @@ export const PostItem = ({
               isAdmin={isAdmin}
               isReply={true}
               onReply={toggleReplyForm}
-              canMarkAsSolved={isTopicAuthor || isAdmin}
+              canMarkAsSolved={(isTopicAuthor || isAdmin) && !isNestedReply}
               isSolutionPost={post.is_solution}
               isSubmitting={isSubmittingSolution}
               onMarkAsSolved={handleMarkAsSolution}
