@@ -52,7 +52,8 @@ export const useTopicList = ({ categoryId, itemsPerPage = 10 }: UseTopicListProp
         .from('forum_topics')
         .select(`
           *,
-          profiles:user_id(*)
+          profiles:user_id(*),
+          category:category_id(id, name, slug)
         `)
         .eq('category_id', categoryId)
         .eq('is_pinned', true)
@@ -68,7 +69,8 @@ export const useTopicList = ({ categoryId, itemsPerPage = 10 }: UseTopicListProp
         .from('forum_topics')
         .select(`
           *,
-          profiles:user_id(*)
+          profiles:user_id(*),
+          category:category_id(id, name, slug)
         `, { count: 'exact' })
         .eq('category_id', categoryId)
         .eq('is_pinned', false)

@@ -32,4 +32,9 @@ export interface Topic {
   is_pinned: boolean;
   is_locked: boolean;
   profiles?: Profile;
+  category?: {
+    id: string;
+    name: string;
+    slug: string;
+  };
 }

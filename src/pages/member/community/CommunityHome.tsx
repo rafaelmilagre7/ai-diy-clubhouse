@@ -79,7 +79,9 @@ const CommunityHome = () => {
             is_pinned, 
             user_id, 
             category_id, 
-            last_activity_at
+            last_activity_at,
+            profiles:user_id(*),
+            category:category_id(id, name, slug)
           `)
           .order('is_pinned', { ascending: false });
 
@@ -128,50 +130,7 @@ const CommunityHome = () => {
           return [];
         }
         
-        // Buscar dados dos usuários para esses tópicos
-        const userIds = [...new Set(topicsData.map(topic => topic.user_id))];
-        const { data: usersData, error: usersError } = await supabase
-          .from('profiles')
-          .select('id, name, avatar_url, role')
-          .in('id', userIds);
-          
-        if (usersError) {
-          throw usersError;
-        }
-        
-        // Criar um mapa de usuários por ID para fácil acesso
-        const userMap = (usersData || []).reduce((acc, user) => {
-          acc[user.id] = user;
-          return acc;
-        }, {} as Record<string, any>);
-        
-        // Buscar dados das categorias para esses tópicos
-        const categoryIds = [...new Set(topicsData.map(topic => topic.category_id))];
-        const { data: categoriesData, error: categoriesError } = await supabase
-          .from('forum_categories')
-          .select('id, name, slug')
-          .in('id', categoryIds);
-          
-        if (categoriesError) {
-          throw categoriesError;
-        }
-        
-        // Criar um mapa de categorias por ID para fácil acesso
-        const categoryMap = (categoriesData || []).reduce((acc, category) => {
-          acc[category.id] = category;
-          return acc;
-        }, {} as Record<string, any>);
-        
-        // Montar os tópicos com os dados relacionados
-        const enrichedTopics = topicsData.map(topic => {
-          return {
-            ...topic,
-            profiles: userMap[topic.user_id] || null,
-            category: categoryMap[topic.category_id] || null
-          };
-        });
-        
-        return enrichedTopics as Topic[];
+        return topicsData as Topic[];
       } catch (error: any) {
         console.error('Erro ao buscar tópicos:', error.message);
         toast.error("Não foi possível carregar os tópicos. Por favor, tente novamente.");
