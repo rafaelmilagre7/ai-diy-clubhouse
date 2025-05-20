@@ -7,44 +7,47 @@ export const useForumStats = () => {
     queryKey: ['forumStats'],
     queryFn: async () => {
       try {
-        // Buscar estatísticas através de uma única chamada RPC para melhor desempenho
-        const { data, error } = await supabase.rpc('get_forum_statistics');
+        // Buscar contagem de tópicos
+        const { count: topicCount, error: topicsError } = await supabase
+          .from('forum_topics')
+          .select('*', { count: 'exact', head: true });
         
-        if (error) throw error;
+        if (topicsError) throw topicsError;
         
-        // Se não conseguimos usar a função RPC, tentamos o método tradicional
-        if (!data) {
-          // Buscar contagem de tópicos
-          const { count: topicCount, error: topicsError } = await supabase
-            .from('forum_topics')
-            .select('*', { count: 'exact', head: true });
-          
-          if (topicsError) throw topicsError;
-          
-          // Buscar contagem de posts
-          const { count: postCount, error: postsError } = await supabase
-            .from('forum_posts')
-            .select('*', { count: 'exact', head: true });
-          
-          if (postsError) throw postsError;
-          
-          // Buscar usuários ativos limitando melhor os dados
-          const { data: uniqueUserIds, error: usersError } = await supabase
-            .rpc('count_distinct_forum_users');
-          
-          if (usersError) throw usersError;
-          
-          return {
-            topicCount: topicCount || 0,
-            postCount: postCount || 0,
-            activeUserCount: uniqueUserIds || 0
-          };
-        }
+        // Buscar contagem de posts
+        const { count: postCount, error: postsError } = await supabase
+          .from('forum_posts')
+          .select('*', { count: 'exact', head: true });
+        
+        if (postsError) throw postsError;
+        
+        // Buscar usuários ativos (usuários distintos que possuem tópicos)
+        const { data: uniqueUsers, error: usersError } = await supabase
+          .from('forum_topics')
+          .select('user_id', { count: 'exact' })
+          .not('user_id', 'is', null);
+        
+        if (usersError) throw usersError;
+        
+        // Calcular usuários únicos
+        const uniqueUserIds = new Set();
+        uniqueUsers?.forEach(item => {
+          if (item.user_id) uniqueUserIds.add(item.user_id);
+        });
+        
+        // Buscar contagem de tópicos resolvidos
+        const { count: solvedCount, error: solvedError } = await supabase
+          .from('forum_topics')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_solved', true);
+        
+        if (solvedError) throw solvedError;
         
         return {
-          topicCount: data.topic_count || 0,
-          postCount: data.post_count || 0,
-          activeUserCount: data.active_user_count || 0
+          topicCount: topicCount || 0,
+          postCount: postCount || 0,
+          activeUserCount: uniqueUserIds.size || 0,
+          solvedCount: solvedCount || 0
         };
       } catch (error) {
         console.error("Erro ao buscar estatísticas do fórum:", error);
@@ -52,7 +55,8 @@ export const useForumStats = () => {
         return {
           topicCount: 0,
           postCount: 0,
-          activeUserCount: 0
+          activeUserCount: 0,
+          solvedCount: 0
         };
       }
     },
@@ -65,6 +69,7 @@ export const useForumStats = () => {
     topicCount: data?.topicCount || 0,
     postCount: data?.postCount || 0,
     activeUserCount: data?.activeUserCount || 0,
+    solvedCount: data?.solvedCount || 0,
     isLoading,
     error
   };

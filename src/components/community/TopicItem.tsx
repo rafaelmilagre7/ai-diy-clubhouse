@@ -1,7 +1,7 @@
 
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { MessageSquare, CheckCircle2 } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
@@ -44,7 +44,7 @@ export const TopicItem = ({ topic, isPinned = false }: TopicItemProps) => {
                 {isPinned && <span className="text-primary mr-1">[Fixo] </span>}
                 {topic.is_locked && <span className="text-muted-foreground mr-1">[Trancado] </span>}
                 {topic.title}
-                {topic.is_solved && <SolutionBadge isSolved={topic.is_solved} />}
+                {topic.is_solved && <SolutionBadge isSolved={topic.is_solved} className="ml-2" />}
               </h3>
               <div className="flex gap-4 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">

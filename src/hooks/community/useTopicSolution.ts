@@ -50,6 +50,7 @@ export function useTopicSolution({
       // Invalidar queries para recarregar os dados
       queryClient.invalidateQueries({ queryKey: ['forumTopic', topicId] });
       queryClient.invalidateQueries({ queryKey: ['forumTopics'] });
+      queryClient.invalidateQueries({ queryKey: ['communityTopics'] });
       
     } catch (error: any) {
       console.error("Erro ao marcar tópico como resolvido:", error);
@@ -85,6 +86,7 @@ export function useTopicSolution({
       // Invalidar queries para recarregar os dados
       queryClient.invalidateQueries({ queryKey: ['forumTopic', topicId] });
       queryClient.invalidateQueries({ queryKey: ['forumTopics'] });
+      queryClient.invalidateQueries({ queryKey: ['communityTopics'] });
       
     } catch (error: any) {
       console.error("Erro ao desmarcar tópico como resolvido:", error);

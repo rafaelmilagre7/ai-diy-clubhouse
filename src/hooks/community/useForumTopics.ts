@@ -43,7 +43,7 @@ export const useForumTopics = ({
             user_id, 
             category_id, 
             last_activity_at,
-            profiles:user_id(*),
+            profiles(id, name, avatar_url, role),
             category:category_id(id, name, slug)
           `)
           .order('is_pinned', { ascending: false });
@@ -83,6 +83,8 @@ export const useForumTopics = ({
         
         // Executar a consulta principal
         const { data: topicsData, error: topicsError } = await query;
+        
+        console.log("Tópicos brutos encontrados:", topicsData?.length || 0);
         
         if (topicsError) {
           throw topicsError;
