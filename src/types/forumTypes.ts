@@ -43,4 +43,21 @@ export interface Topic {
   is_locked: boolean;
   profiles?: Profile | null;
   category?: Partial<ForumCategory> | null;
+  is_solved?: boolean;
+}
+
+export interface ForumReaction {
+  id: string;
+  post_id: string;
+  user_id: string;
+  reaction_type: 'like' | 'helpful' | 'celebrate' | 'insightful';
+  created_at: string;
+}
+
+export interface ForumStatistics {
+  topicCount: number;
+  postCount: number;
+  activeUserCount: number;
+  isLoading: boolean;
+  error: Error | null;
 }

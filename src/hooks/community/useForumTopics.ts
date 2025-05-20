@@ -67,7 +67,7 @@ export const useForumTopics = ({
             query = query.eq('reply_count', 0).order('created_at', { ascending: false });
             break;
           case "resolvidos":
-            // Implementação futura
+            // Implementação futura para tópicos resolvidos
             query = query.order('last_activity_at', { ascending: false });
             break;
         }
