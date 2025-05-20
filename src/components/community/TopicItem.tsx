@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
 import { Topic } from "@/types/forumTypes";
 import { SolutionBadge } from "./SolutionBadge";
+import { getInitials } from "@/utils/user";
 
 interface TopicItemProps {
   topic: Topic;
@@ -14,17 +15,6 @@ interface TopicItemProps {
 }
 
 export const TopicItem = ({ topic, isPinned = false }: TopicItemProps) => {
-  // Função para obter as iniciais do nome do usuário
-  const getInitials = (name: string | null) => {
-    if (!name) return "??";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   // Tratar casos onde last_activity_at pode estar ausente
   const lastActivityDate = topic.last_activity_at 
     ? new Date(topic.last_activity_at) 

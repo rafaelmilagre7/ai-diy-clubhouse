@@ -1,22 +1,29 @@
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useState } from "react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { Card } from "@/components/ui/card";
-import { ReplyForm } from "@/components/community/ReplyForm";
-import { Post } from "@/types/forumTypes";
-import { PostActions } from "./PostActions";
-import { PostContextMenu } from "./PostContextMenu";
 import { PostHeader } from "./PostHeader";
-import { DeleteConfirmationDialog } from "./DeleteConfirmationDialog";
-import { usePostInteractions } from "@/hooks/usePostInteractions";
-import { getInitials } from "@/utils/user";
-import { useTopicSolution } from "@/hooks/community/useTopicSolution";
+import { PostActions } from "./PostActions";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface PostItemProps {
-  post: Post;
+  post: {
+    id: string;
+    content: string;
+    created_at: string;
+    user_id: string;
+    is_solution?: boolean;
+    profiles?: {
+      name: string | null;
+      avatar_url: string | null;
+      role?: string | null;
+    } | null;
+  };
   topicId: string;
-  isTopicAuthor: boolean;
-  isNestedReply?: boolean;
-  isLocked?: boolean;
+  isTopicAuthor?: boolean;
   isAdmin?: boolean;
   currentUserId?: string;
   onReplyAdded?: () => void;
@@ -26,141 +33,176 @@ interface PostItemProps {
 export const PostItem = ({
   post,
   topicId,
-  isTopicAuthor,
-  isNestedReply = false,
-  isLocked = false,
+  isTopicAuthor = false,
   isAdmin = false,
   currentUserId,
   onReplyAdded,
   topicAuthorId
 }: PostItemProps) => {
-  // Verificar se o usuário atual pode excluir este post
-  const canDelete = isAdmin || (currentUserId && post.user_id === currentUserId);
+  const [showReplyForm, setShowReplyForm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const queryClient = useQueryClient();
   
-  const {
-    showReplyForm,
-    showDeleteDialog,
-    isDeleting,
-    toggleReplyForm,
-    openDeleteDialog,
-    closeDeleteDialog,
-    handleReplySuccess,
-    handleDeletePost
-  } = usePostInteractions({
-    post,
-    topicId,
-    onReplyAdded
-  });
+  // Determina se este usuário pode marcar a solução (autor do tópico ou admin)
+  const canMarkAsSolved = (currentUserId === topicAuthorId || isAdmin) && !post.is_solution;
   
-  // Hook para gerenciar marcação de soluções
-  const {
-    isSubmitting: isSubmittingSolution,
-    markAsSolved,
-    unmarkAsSolved
-  } = useTopicSolution({
-    topicId,
-    topicAuthorId: topicAuthorId || '',
-    initialSolvedState: false
-  });
-
-  // Manipuladores para marcar/desmarcar como solução
-  const handleMarkAsSolution = async () => {
-    await markAsSolved(post.id);
-  };
-
-  const handleUnmarkAsSolution = async () => {
-    await unmarkAsSolved();
+  const handleReply = () => {
+    setShowReplyForm(!showReplyForm);
   };
   
-  // Renderização dos posts aninhados (respostas a respostas)
-  const renderNestedReplies = () => {
-    if (!post.replies || post.replies.length === 0) return null;
+  const handleMarkAsSolved = async () => {
+    if (!currentUserId) {
+      toast.error("Você precisa estar logado para realizar esta ação");
+      return;
+    }
     
-    return (
-      <div className="mt-3">
-        {post.replies.map((reply) => (
-          <PostItem
-            key={reply.id}
-            post={reply}
-            topicId={topicId}
-            isTopicAuthor={isTopicAuthor}
-            isNestedReply={true}
-            isLocked={isLocked}
-            isAdmin={isAdmin}
-            currentUserId={currentUserId}
-            onReplyAdded={onReplyAdded}
-            topicAuthorId={topicAuthorId}
-          />
-        ))}
-      </div>
-    );
+    setIsSubmitting(true);
+    try {
+      const { data, error } = await supabase.rpc('mark_topic_as_solved', {
+        topic_id: topicId,
+        post_id: post.id
+      });
+      
+      if (error) throw error;
+      
+      toast.success("Resposta marcada como solução!");
+      
+      // Invalidar queries para recarregar os dados
+      queryClient.invalidateQueries({ queryKey: ['forumTopic', topicId] });
+      queryClient.invalidateQueries({ queryKey: ['forumTopics'] });
+      queryClient.invalidateQueries({ queryKey: ['communityTopics'] });
+      queryClient.invalidateQueries({ queryKey: ['forumStats'] });
+      
+    } catch (error: any) {
+      console.error("Erro ao marcar como solução:", error);
+      toast.error("Não foi possível marcar como solução");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  const handleUnmarkAsSolved = async () => {
+    if (!currentUserId) {
+      toast.error("Você precisa estar logado para realizar esta ação");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      const { data, error } = await supabase.rpc('unmark_topic_as_solved', {
+        topic_id: topicId
+      });
+      
+      if (error) throw error;
+      
+      toast.success("Solução removida do tópico!");
+      
+      // Invalidar queries para recarregar os dados
+      queryClient.invalidateQueries({ queryKey: ['forumTopic', topicId] });
+      queryClient.invalidateQueries({ queryKey: ['forumTopics'] });
+      queryClient.invalidateQueries({ queryKey: ['communityTopics'] });
+      queryClient.invalidateQueries({ queryKey: ['forumStats'] });
+      
+    } catch (error: any) {
+      console.error("Erro ao remover solução:", error);
+      toast.error("Não foi possível remover a solução");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!currentUserId) {
+      toast.error("Você precisa estar logado para realizar esta ação");
+      return;
+    }
+    
+    if (!confirm("Tem certeza que deseja excluir esta mensagem?")) {
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      const { data, error } = await supabase.rpc('deleteForumPost', {
+        post_id: post.id
+      });
+      
+      if (error) throw error;
+      
+      toast.success("Mensagem excluída com sucesso!");
+      
+      // Invalidar queries para recarregar os dados
+      queryClient.invalidateQueries({ queryKey: ['forumTopic', topicId] });
+      
+    } catch (error: any) {
+      console.error("Erro ao excluir mensagem:", error);
+      toast.error("Não foi possível excluir a mensagem");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div className={`relative ${isNestedReply ? "ml-12 my-3" : "mb-6"}`}>
-      {isNestedReply && (
-        <div className="absolute left-[-24px] top-6 h-[calc(100%-24px)] w-0.5 bg-border"></div>
-      )}
-      
-      <Card className={`p-4 ${post.is_solution ? "border-green-500 border-2" : ""}`}>
-        <div className="flex gap-4">
-          <Avatar className="h-10 w-10">
-            <AvatarImage src={post.profiles?.avatar_url || undefined} alt={post.profiles?.name || 'Usuário'} />
-            <AvatarFallback>{getInitials(post.profiles?.name)}</AvatarFallback>
-          </Avatar>
-          
-          <div className="flex-1">
-            <PostHeader
-              profile={post.profiles}
-              createdAt={post.created_at}
-              isTopicAuthor={isTopicAuthor}
-              userId={post.user_id}
-              isAdmin={isAdmin}
-              contextMenu={canDelete ? <PostContextMenu onDeleteClick={openDeleteDialog} /> : undefined}
-              isSolution={post.is_solution}
-            />
-            
-            <div className="mt-2 prose prose-sm max-w-none dark:prose-invert">
-              <div dangerouslySetInnerHTML={{ __html: post.content }} />
-            </div>
-            
-            <PostActions
-              postId={post.id}
-              isOwner={currentUserId === post.user_id}
-              isAdmin={isAdmin}
-              isReply={true}
-              onReply={toggleReplyForm}
-              canMarkAsSolved={(isTopicAuthor || isAdmin) && !isNestedReply}
-              isSolutionPost={post.is_solution}
-              isSubmitting={isSubmittingSolution}
-              onMarkAsSolved={handleMarkAsSolution}
-              onUnmarkAsSolved={handleUnmarkAsSolution}
-              onDelete={openDeleteDialog}
-            />
-            
-            {showReplyForm && (
-              <div className="mt-4">
-                <ReplyForm 
-                  topicId={topicId} 
-                  parentId={post.id} 
-                  onSuccess={handleReplySuccess}
-                  onCancel={toggleReplyForm}
-                  placeholder={`Respondendo para ${post.profiles?.name || "Usuário"}...`}
-                />
-              </div>
-            )}
-          </div>
+    <Card className={post.is_solution ? "border-green-500 border-2" : ""}>
+      <div className="p-4">
+        <PostHeader 
+          profile={post.profiles}
+          createdAt={post.created_at}
+          isTopicAuthor={isTopicAuthor}
+          userId={currentUserId}
+          isAdmin={isAdmin}
+          isSolution={post.is_solution}
+        />
+        
+        <div className="prose prose-sm dark:prose-invert max-w-none mt-3">
+          {post.content}
         </div>
-      </Card>
-      
-      {renderNestedReplies()}
-
-      <DeleteConfirmationDialog 
-        isOpen={showDeleteDialog}
-        onClose={closeDeleteDialog}
-        onDelete={handleDeletePost}
-        isDeleting={isDeleting}
-      />
-    </div>
+        
+        <PostActions
+          postId={post.id}
+          isOwner={currentUserId === post.user_id}
+          isAdmin={isAdmin}
+          isReply={true}
+          onReply={handleReply}
+          canMarkAsSolved={canMarkAsSolved}
+          isSolutionPost={post.is_solution}
+          isSubmitting={isSubmitting}
+          onMarkAsSolved={handleMarkAsSolved}
+          onUnmarkAsSolved={handleUnmarkAsSolved}
+          onDelete={handleDelete}
+        />
+        
+        {showReplyForm && (
+          <div className="mt-4 pl-4 border-l-2">
+            {/* Implementar formulário de resposta aqui */}
+            <div className="p-3 bg-muted/50 rounded-md">
+              <textarea 
+                className="w-full p-2 rounded-md border" 
+                rows={3} 
+                placeholder="Escreva sua resposta..."
+              />
+              <div className="flex justify-end gap-2 mt-2">
+                <button 
+                  className="px-3 py-1 text-sm rounded-md"
+                  onClick={() => setShowReplyForm(false)}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  className="px-3 py-1 text-sm bg-primary text-white rounded-md"
+                  onClick={() => {
+                    // Lógica para enviar resposta
+                    if (onReplyAdded) onReplyAdded();
+                    setShowReplyForm(false);
+                  }}
+                >
+                  Responder
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </Card>
   );
 };
