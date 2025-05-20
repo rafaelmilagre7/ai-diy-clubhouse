@@ -1,33 +1,48 @@
 
 /**
- * Obtém as iniciais de um nome (até 2 caracteres)
+ * Utilitários para gerenciamento de usuários
  */
-export const getInitials = (name?: string | null): string => {
-  if (!name) return 'U';
-  
+
+/**
+ * Obtém as iniciais do nome do usuário
+ */
+export const getInitials = (name: string | null | undefined): string => {
+  if (!name) return "U";
   return name
-    .split(' ')
-    .map(n => n[0])
-    .join('')
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
     .toUpperCase()
     .substring(0, 2);
 };
 
 /**
- * Formata a URL de um avatar, se necessário
+ * Verifica se uma URL é válida (http ou https)
  */
-export const getAvatarUrl = (url?: string | null): string | undefined => {
+export const isValidImageUrl = (url: string | undefined | null): boolean => {
+  if (!url) return false;
+  return url.startsWith('http://') || url.startsWith('https://');
+};
+
+/**
+ * Formata a URL do avatar para garantir que seja válida
+ */
+export const getAvatarUrl = (url: string | null | undefined): string | undefined => {
   if (!url) return undefined;
   
-  // Se a URL já for absoluta, retorna ela mesma
-  if (url.startsWith('http://') || url.startsWith('https://')) {
+  // Se já for uma URL completa, retornar como está
+  if (isValidImageUrl(url)) {
     return url;
   }
   
-  // Se for um caminho relativo ao storage do Supabase
+  // Se começar com / (caminho relativo), adicionar domínio da API
   if (url.startsWith('/')) {
-    // Você pode ajustar isso com base na configuração do seu projeto Supabase
-    return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/avatars${url}`;
+    return `${import.meta.env.VITE_SUPABASE_URL}${url}`;
+  }
+  
+  // Se for um ID de storage do Supabase
+  if (url.includes('storage/v1')) {
+    return `${import.meta.env.VITE_SUPABASE_URL}/${url}`;
   }
   
   return url;

@@ -18,7 +18,6 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { deleteForumPost } from "@/lib/supabase/rpc";
 import { Separator } from "@/components/ui/separator";
-import { usePostInteractions } from "@/hooks/usePostInteractions";
 
 interface PostItemProps {
   post: Post;
@@ -108,20 +107,37 @@ export function PostItem({
     }
   };
 
+  // Garantir que temos dados válidos para o usuário
+  const userName = post.profiles?.name || "Usuário";
+  const userAvatarUrl = post.profiles?.avatar_url 
+    ? getAvatarUrl(post.profiles.avatar_url) 
+    : undefined;
+  const userInitials = getInitials(userName);
+  
+  // Formatar a data de criação ou usar fallback
+  const formattedDate = (() => {
+    try {
+      return format(new Date(post.created_at), "d 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR });
+    } catch (e) {
+      console.error("Erro ao formatar data:", e);
+      return "Data desconhecida";
+    }
+  })();
+
   return (
     <Card className="p-6">
       <div className="flex items-start gap-3">
         <Avatar>
-          <AvatarImage src={post.profiles?.avatar_url ? getAvatarUrl(post.profiles.avatar_url) : undefined} />
-          <AvatarFallback>{getInitials(post.profiles?.name)}</AvatarFallback>
+          <AvatarImage src={userAvatarUrl} />
+          <AvatarFallback>{userInitials}</AvatarFallback>
         </Avatar>
         
         <div className="flex-1">
           <div className="flex items-center justify-between">
             <div>
-              <span className="font-medium">{post.profiles?.name || "Usuário"}</span>
+              <span className="font-medium">{userName}</span>
               <span className="text-sm text-muted-foreground ml-2">
-                {format(new Date(post.created_at), "d 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+                {formattedDate}
               </span>
               
               {post.user_id === topicAuthorId && (

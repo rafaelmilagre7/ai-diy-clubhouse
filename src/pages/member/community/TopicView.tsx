@@ -17,7 +17,8 @@ import {
   Eye, 
   Loader2, 
   CheckCircle2,
-  AlertCircle 
+  AlertCircle,
+  RefreshCw 
 } from "lucide-react";
 import { Post, Topic } from "@/types/forumTypes";
 import { supabase } from "@/lib/supabase";
@@ -28,7 +29,7 @@ import { PostItem } from "@/components/community/PostItem";
 import { SolutionBadge } from "@/components/community/SolutionBadge";
 import { incrementTopicViews } from "@/lib/supabase/rpc";
 import { useTopicSolution } from "@/hooks/community/useTopicSolution";
-import { getInitials } from "@/utils/user";
+import { getInitials, getAvatarUrl } from "@/utils/user";
 
 // Esquema de validação com Yup
 const postSchema = yup.object({
@@ -47,6 +48,7 @@ const TopicView = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState<number>(0);
   const { user } = useAuth();
   const { profile } = useUser();
   const [categoryId, setCategoryId] = useState<string | null>(null);
@@ -80,7 +82,7 @@ const TopicView = () => {
     if (topicId) {
       fetchTopicAndPosts(topicId);
     }
-  }, [topicId]);
+  }, [topicId, retryCount]);
   
   useEffect(() => {
     // Atualizar o estado isSolved quando o tópico for carregado
@@ -93,69 +95,142 @@ const TopicView = () => {
   }, [topic, isSolved]);
 
   const fetchTopicAndPosts = async (topicId: string) => {
+    console.log("Iniciando busca do tópico:", topicId);
     setLoading(true);
     setError(null);
+    
     try {
-      // Busca os dados do tópico
+      // 1. Primeiro buscar o tópico principal com seu conteúdo básico
       const { data: topicData, error: topicError } = await supabase
         .from('forum_topics')
         .select(`
-          *,
-          profiles:user_id(*),
-          category:category_id(id, name, slug)
+          id, title, content, created_at, updated_at, last_activity_at,
+          user_id, category_id, view_count, reply_count, is_pinned, is_locked, is_solved
         `)
         .eq('id', topicId)
         .single();
 
       if (topicError) {
-        throw topicError;
+        console.error("Erro ao buscar tópico:", topicError);
+        throw new Error(`Falha ao carregar o tópico: ${topicError.message}`);
       }
 
-      if (topicData) {
-        // Garante que o dado retornado está no formato correto
-        const formattedTopic: Topic = {
-          id: topicData.id,
-          title: topicData.title,
-          content: topicData.content,
-          created_at: topicData.created_at,
-          updated_at: topicData.updated_at,
-          last_activity_at: topicData.last_activity_at,
-          user_id: topicData.user_id,
-          category_id: topicData.category_id,
-          view_count: topicData.view_count,
-          reply_count: topicData.reply_count,
-          is_pinned: topicData.is_pinned,
-          is_locked: topicData.is_locked,
-          is_solved: topicData.is_solved || false,
-          profiles: topicData.profiles,
-          category: topicData.category
-        };
-        
-        setTopic(formattedTopic);
-        setCategoryId(topicData.category_id);
+      if (!topicData) {
+        throw new Error("Tópico não encontrado");
       }
 
-      // Busca os posts associados ao tópico, ordenados por data de criação
+      // 2. Buscar os dados da categoria
+      const { data: categoryData, error: categoryError } = await supabase
+        .from('forum_categories')
+        .select('id, name, slug')
+        .eq('id', topicData.category_id)
+        .single();
+
+      if (categoryError && categoryError.code !== 'PGRST116') { // Ignorar erro quando não encontra
+        console.warn("Erro ao buscar categoria:", categoryError);
+      }
+
+      // 3. Buscar os dados do autor do tópico
+      const { data: authorData, error: authorError } = await supabase
+        .from('profiles')
+        .select('id, name, avatar_url, role')
+        .eq('id', topicData.user_id)
+        .single();
+
+      if (authorError && authorError.code !== 'PGRST116') { // Ignorar erro quando não encontra
+        console.warn("Erro ao buscar perfil do autor:", authorError);
+      }
+
+      // 4. Construir o objeto do tópico com todos os dados reunidos
+      const formattedTopic: Topic = {
+        id: topicData.id,
+        title: topicData.title,
+        content: topicData.content,
+        created_at: topicData.created_at,
+        updated_at: topicData.updated_at,
+        last_activity_at: topicData.last_activity_at,
+        user_id: topicData.user_id,
+        category_id: topicData.category_id,
+        view_count: topicData.view_count || 0,
+        reply_count: topicData.reply_count || 0,
+        is_pinned: topicData.is_pinned || false,
+        is_locked: topicData.is_locked || false,
+        is_solved: topicData.is_solved || false,
+        profiles: authorData || {
+          id: topicData.user_id,
+          name: 'Usuário',
+          avatar_url: null,
+          role: ''
+        },
+        category: categoryData || null
+      };
+      
+      setTopic(formattedTopic);
+      setCategoryId(topicData.category_id);
+      
+      // 5. Buscar as respostas/posts associados ao tópico
       const { data: postsData, error: postsError } = await supabase
         .from('forum_posts')
         .select(`
-          *,
-          profiles:user_id(*)
+          id, content, user_id, topic_id, created_at, updated_at, is_solution, parent_id
         `)
         .eq('topic_id', topicId)
         .order('created_at', { ascending: true });
 
       if (postsError) {
-        throw postsError;
+        console.error("Erro ao buscar posts:", postsError);
+        throw new Error(`Falha ao carregar as respostas: ${postsError.message}`);
       }
 
-      if (postsData) {
-        setPosts(postsData as Post[]);
+      // 6. Se não há posts, definir array vazio e encerrar
+      if (!postsData || postsData.length === 0) {
+        setPosts([]);
+        setLoading(false);
+        return;
       }
+
+      // 7. Buscar os dados de todos os autores dos posts em uma única consulta
+      const userIds = [...new Set(postsData.map(post => post.user_id))];
+      const { data: usersData, error: usersError } = await supabase
+        .from('profiles')
+        .select('id, name, avatar_url, role')
+        .in('id', userIds);
+
+      if (usersError) {
+        console.warn("Erro ao buscar perfis dos usuários:", usersError);
+      }
+
+      // 8. Mapear os posts com os dados dos usuários
+      const formattedPosts: Post[] = postsData.map(post => {
+        const userProfile = usersData?.find(user => user.id === post.user_id);
+        
+        return {
+          id: post.id,
+          content: post.content,
+          user_id: post.user_id,
+          topic_id: post.topic_id,
+          created_at: post.created_at,
+          updated_at: post.updated_at,
+          is_solution: post.is_solution || false,
+          parent_id: post.parent_id,
+          profiles: userProfile || {
+            id: post.user_id,
+            name: 'Usuário',
+            avatar_url: null,
+            role: ''
+          }
+        };
+      });
+
+      setPosts(formattedPosts);
+      
     } catch (err: any) {
       console.error("Erro ao buscar tópico e posts:", err.message);
-      setError("Falha ao carregar o tópico e as mensagens. Por favor, tente novamente.");
-      toast.error("Falha ao carregar o tópico e as mensagens. Por favor, tente novamente.");
+      setError(`Falha ao carregar o tópico e as mensagens. ${err.message}`);
+      toast.error(`Falha ao carregar o tópico. Tente novamente.`, {
+        id: 'topic-error',
+        description: err.message
+      });
     } finally {
       setLoading(false);
     }
@@ -180,8 +255,7 @@ const TopicView = () => {
           user_id: user.id,
         })
         .select(`
-          *,
-          profiles:user_id(*)
+          id, content, user_id, topic_id, created_at, updated_at, is_solution, parent_id
         `)
         .single();
 
@@ -189,9 +263,26 @@ const TopicView = () => {
         throw postError;
       }
 
-      // Atualiza o estado local adicionando o novo post
+      // Buscar o perfil do usuário atual para adicionar ao novo post
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('id, name, avatar_url, role')
+        .eq('id', user.id)
+        .single();
+
+      // Atualiza o estado local adicionando o novo post com o perfil
       if (newPost) {
-        setPosts(prevPosts => [...prevPosts, newPost as Post]);
+        const formattedPost: Post = {
+          ...newPost,
+          profiles: userProfile || {
+            id: user.id,
+            name: 'Usuário',
+            avatar_url: null,
+            role: ''
+          }
+        };
+        
+        setPosts(prevPosts => [...prevPosts, formattedPost]);
         reset(); // Limpa o formulário
         
         // Atualiza a contagem de respostas no tópico e a última atividade
@@ -202,6 +293,8 @@ const TopicView = () => {
           .from('forum_topics')
           .update({ last_activity_at: new Date().toISOString() })
           .eq('id', topicId);
+
+        toast.success("Resposta enviada com sucesso!");
       }
     } catch (err: any) {
       console.error("Erro ao criar post:", err.message);
@@ -220,11 +313,11 @@ const TopicView = () => {
     }
   };
 
-  // Quando um post é marcado como solução
-  const handlePostSolutionChange = () => {
-    // Recarregar tópico e posts para atualizar o estado
+  // Tratador para tentar novamente
+  const handleRetry = () => {
     if (topicId) {
-      fetchTopicAndPosts(topicId);
+      setRetryCount(prev => prev + 1);
+      toast.info("Tentando carregar o tópico novamente...");
     }
   };
 
@@ -232,8 +325,11 @@ const TopicView = () => {
     return (
       <div className="container px-4 py-6 mx-auto max-w-3xl">
         <Card className="p-6">
-          <h1 className="text-2xl font-bold mb-4">Carregando tópico...</h1>
-          <p className="text-muted-foreground">Aguarde enquanto o tópico e as mensagens são carregados.</p>
+          <div className="flex flex-col items-center justify-center py-8">
+            <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+            <h1 className="text-2xl font-bold mb-2">Carregando tópico...</h1>
+            <p className="text-muted-foreground">Aguarde enquanto o tópico e as mensagens são carregados.</p>
+          </div>
         </Card>
       </div>
     );
@@ -243,12 +339,15 @@ const TopicView = () => {
     return (
       <div className="container px-4 py-6 mx-auto max-w-3xl">
         <Card className="p-6">
-          <div className="flex gap-2 items-center text-red-500 mb-4">
-            <AlertCircle className="h-5 w-5" />
-            <h1 className="text-2xl font-bold">Erro ao carregar o tópico</h1>
+          <div className="flex flex-col items-center justify-center py-8">
+            <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
+            <h1 className="text-2xl font-bold mb-2">Erro ao carregar o tópico</h1>
+            <p className="text-muted-foreground mb-4">{error}</p>
+            <Button onClick={handleRetry} className="flex items-center gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Tentar novamente
+            </Button>
           </div>
-          <p className="text-muted-foreground mb-4">{error}</p>
-          <Button onClick={() => { if (topicId) fetchTopicAndPosts(topicId); }}>Tentar novamente</Button>
         </Card>
       </div>
     );
@@ -258,11 +357,14 @@ const TopicView = () => {
     return (
       <div className="container px-4 py-6 mx-auto max-w-3xl">
         <Card className="p-6">
-          <h1 className="text-2xl font-bold mb-4">Tópico não encontrado</h1>
-          <p className="text-muted-foreground">O tópico que você está procurando não existe ou foi removido.</p>
-          <Button asChild className="mt-4">
-            <Link to="/comunidade">Voltar para a comunidade</Link>
-          </Button>
+          <div className="flex flex-col items-center justify-center py-8">
+            <AlertCircle className="h-12 w-12 text-amber-500 mb-4" />
+            <h1 className="text-2xl font-bold mb-2">Tópico não encontrado</h1>
+            <p className="text-muted-foreground">O tópico que você está procurando não existe ou foi removido.</p>
+            <Button asChild className="mt-4">
+              <Link to="/comunidade">Voltar para a comunidade</Link>
+            </Button>
+          </div>
         </Card>
       </div>
     );
@@ -277,7 +379,7 @@ const TopicView = () => {
         <div className="p-6">
           <div className="flex items-start gap-3 mb-4">
             <Avatar>
-              <AvatarImage src={topic.profiles?.avatar_url || undefined} />
+              <AvatarImage src={topic.profiles?.avatar_url ? getAvatarUrl(topic.profiles.avatar_url) : undefined} />
               <AvatarFallback>{getInitials(topic.profiles?.name)}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
@@ -368,7 +470,7 @@ const TopicView = () => {
                   placeholder="Escreva sua resposta..."
                   className="w-full"
                   {...register("content")}
-                  disabled={topic.is_locked}
+                  disabled={topic.is_locked || submitting}
                 />
                 {errors.content && (
                   <p className="text-red-500 text-sm mt-1">{errors.content.message}</p>
