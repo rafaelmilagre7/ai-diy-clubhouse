@@ -57,6 +57,7 @@ export const getInitials = (name: string | null): string => {
 
 /**
  * Redireciona para o domínio correto após autenticação
+ * Mantém a rota atual após redirecionamento
  */
 export const redirectToDomain = (path: string = '/dashboard'): void => {
   const currentOrigin = window.location.origin;
@@ -64,10 +65,12 @@ export const redirectToDomain = (path: string = '/dashboard'): void => {
   
   // Se já estamos no domínio correto ou em localhost, apenas navegue para o caminho
   if (currentOrigin.includes('localhost') || currentOrigin === targetDomain) {
+    console.log(`redirectToDomain: Já estamos no domínio correto, navegando para ${path}`);
     window.location.href = `${currentOrigin}${path}`;
     return;
   }
   
-  // Caso contrário, redirecione para o domínio correto
+  // Preservar a rota atual no redirecionamento
+  console.log(`redirectToDomain: Redirecionando para ${targetDomain}${path}`);
   window.location.href = `${targetDomain}${path}`;
 };

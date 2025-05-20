@@ -48,12 +48,17 @@ const AppRoutes = () => {
   }, [location]);
   
   // Verificar se estamos em uma rota de comunidade para evitar renderizar CommunityRedirects
-  const isCommunityRoute = location.pathname.startsWith('/comunidade');
+  // Ou em uma rota de autenticação/convite onde não precisamos do redirecionamento
+  const skipRedirects = 
+    location.pathname.startsWith('/comunidade') || 
+    location.pathname.startsWith('/login') ||
+    location.pathname.startsWith('/auth') ||
+    location.pathname.startsWith('/convite');
   
   return (
     <>
-      {/* Componente auxiliar para redirecionar antigas URLs - não renderizar em rotas de comunidade */}
-      {!isCommunityRoute && <CommunityRedirects />}
+      {/* Componente auxiliar para redirecionar antigas URLs - não renderizar em rotas onde não é necessário */}
+      {!skipRedirects && <CommunityRedirects />}
       
       <Routes>
         {/* Convite Routes - Alta prioridade e fora do sistema de autenticação */}

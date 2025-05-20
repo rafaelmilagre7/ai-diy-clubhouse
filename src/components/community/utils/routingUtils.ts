@@ -23,7 +23,7 @@ export const isActiveRoute = (currentPath: string, routeToCheck: string): boolea
     return currentPath === "/";
   }
   
-  // Tratamento especial para comunidade com logs para diagnóstico
+  // Tratamento especial para comunidade
   if (routeToCheck === "/comunidade") {
     const isCommunityRoute = currentPath === "/comunidade" || 
                              currentPath.startsWith("/comunidade/");
@@ -31,10 +31,16 @@ export const isActiveRoute = (currentPath: string, routeToCheck: string): boolea
     return isCommunityRoute;
   }
   
-  // Verificação padrão para outras rotas
-  return currentPath === routeToCheck || 
-         (currentPath.startsWith(routeToCheck) && 
-         (currentPath.length === routeToCheck.length || currentPath[routeToCheck.length] === '/'));
+  // Verificação para evitar correspondências parciais (ex: /com não deve corresponder a /comunidade)
+  if (currentPath === routeToCheck) {
+    return true;
+  }
+  
+  if (currentPath.startsWith(routeToCheck + '/')) {
+    return true;
+  }
+  
+  return false;
 };
 
 /**
