@@ -2,9 +2,10 @@
 import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ForumCategory } from "@/types/forumTypes";
 
 interface CategoryTabsProps {
-  categories: any[] | undefined;
+  categories: ForumCategory[] | undefined;
   isLoading: boolean;
 }
 

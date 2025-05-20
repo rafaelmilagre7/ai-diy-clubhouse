@@ -1,9 +1,19 @@
 
 export interface Profile {
-  id?: string;
+  id: string;
   name: string | null;
   avatar_url: string | null;
   role?: string;
+}
+
+export interface ForumCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string | null;
+  icon?: string | null;
+  order_index?: number;
+  is_active?: boolean;
 }
 
 export interface Post {
@@ -32,9 +42,5 @@ export interface Topic {
   is_pinned: boolean;
   is_locked: boolean;
   profiles?: Profile | null;
-  category?: {
-    id: string;
-    name: string;
-    slug: string;
-  } | null;
+  category?: ForumCategory | null;
 }

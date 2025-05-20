@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { Topic } from "@/types/forumTypes";
+import { Topic, ForumCategory } from "@/types/forumTypes";
 import { toast } from "sonner";
 
 export type TopicFilterType = "recentes" | "populares" | "sem-respostas" | "resolvidos";
@@ -10,7 +10,7 @@ interface UseForumTopicsProps {
   activeTab: string;
   selectedFilter: TopicFilterType;
   searchQuery: string;
-  categories?: any[];
+  categories?: ForumCategory[];
 }
 
 export const useForumTopics = ({ 
@@ -22,7 +22,7 @@ export const useForumTopics = ({
   
   return useQuery({
     queryKey: ['communityTopics', selectedFilter, searchQuery, activeTab],
-    queryFn: async () => {
+    queryFn: async (): Promise<Topic[]> => {
       try {
         console.log("Buscando tópicos com filtros:", { selectedFilter, searchQuery, activeTab });
         
@@ -93,30 +93,7 @@ export const useForumTopics = ({
         }
         
         // Converter e garantir que os dados estão no formato correto
-        const formattedTopics = topicsData.map(topic => {
-          // Verificar e tratar corretamente o campo profiles
-          let formattedProfile = null;
-          if (topic.profiles && typeof topic.profiles === 'object') {
-            const profileData = topic.profiles as any; // Usamos any para contornar a incompatibilidade
-            formattedProfile = {
-              id: String(profileData.id || ''),
-              name: String(profileData.name || ''),
-              avatar_url: String(profileData.avatar_url || ''),
-              role: String(profileData.role || '')
-            };
-          }
-          
-          // Verificar e tratar corretamente o campo category
-          let formattedCategory = null;
-          if (topic.category && typeof topic.category === 'object') {
-            const categoryData = topic.category as any; // Usamos any para contornar a incompatibilidade
-            formattedCategory = {
-              id: String(categoryData.id || ''),
-              name: String(categoryData.name || ''),
-              slug: String(categoryData.slug || '')
-            };
-          }
-          
+        const formattedTopics: Topic[] = topicsData.map(topic => {
           return {
             id: topic.id,
             title: topic.title,
@@ -130,9 +107,18 @@ export const useForumTopics = ({
             reply_count: topic.reply_count,
             is_pinned: topic.is_pinned,
             is_locked: topic.is_locked,
-            profiles: formattedProfile,
-            category: formattedCategory
-          } as Topic;
+            profiles: topic.profiles ? {
+              id: String(topic.profiles.id || ''),
+              name: String(topic.profiles.name || ''),
+              avatar_url: String(topic.profiles.avatar_url || ''),
+              role: String(topic.profiles.role || '')
+            } : null,
+            category: topic.category ? {
+              id: String(topic.category.id || ''),
+              name: String(topic.category.name || ''),
+              slug: String(topic.category.slug || '')
+            } : null
+          };
         });
         
         return formattedTopics;

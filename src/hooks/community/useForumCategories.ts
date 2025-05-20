@@ -2,11 +2,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { ForumCategory } from "@/types/forumTypes";
 
 export const useForumCategories = () => {
   return useQuery({
     queryKey: ['forumCategories'],
-    queryFn: async () => {
+    queryFn: async (): Promise<ForumCategory[]> => {
       try {
         const { data, error } = await supabase
           .from('forum_categories')

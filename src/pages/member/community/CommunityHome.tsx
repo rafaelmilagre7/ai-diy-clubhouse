@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from "react";
 import { MessageSquare } from "lucide-react";
-import { useForumStats } from "@/hooks/useForumStats";
 import { QuickPostInput } from "@/components/community/QuickPostInput";
 import { TopicCard } from "@/components/community/TopicCard";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
@@ -13,6 +12,7 @@ import { TopicsSkeleton } from "@/components/community/TopicsSkeleton";
 import { EmptyTopicsState } from "@/components/community/EmptyTopicsState";
 import { useForumCategories } from "@/hooks/community/useForumCategories";
 import { useForumTopics, TopicFilterType } from "@/hooks/community/useForumTopics";
+import { useForumStats } from "@/hooks/community/useForumStats";
 
 const CommunityHome = () => {
   const [activeTab, setActiveTab] = useState<string>("todos");

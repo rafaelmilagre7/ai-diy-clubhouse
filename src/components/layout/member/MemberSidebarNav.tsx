@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { isActiveRoute } from "@/components/community/utils/routingUtils";
 
 interface SidebarNavProps {
   sidebarOpen: boolean;
@@ -88,34 +89,11 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
     }
   ];
 
-  // Função aprimorada para verificar se uma rota está ativa
-  const isActive = (href: string) => {
-    const currentPath = location.pathname;
-    
-    // Verificação especial para a comunidade (inclui rotas antigas)
-    if (href === "/comunidade") {
-      console.log(`Verificando rota: ${currentPath}, resultado:`, 
-        currentPath === "/comunidade" || 
-        currentPath === "/forum" || 
-        currentPath.startsWith("/comunidade/") ||
-        currentPath.startsWith("/forum/")
-      );
-      
-      return currentPath === "/comunidade" || 
-             currentPath === "/forum" || 
-             currentPath.startsWith("/comunidade/") ||
-             currentPath.startsWith("/forum/");
-    }
-    
-    // Verificação padrão para outras rotas
-    return currentPath === href || currentPath.startsWith(href + '/');
-  };
-
   return (
     <div className="space-y-2 py-4">
       <div className="px-3 space-y-1">
         {menuItems.map((item) => {
-          const active = isActive(item.href);
+          const active = isActiveRoute(location.pathname, item.href);
           
           return (
             <Button
