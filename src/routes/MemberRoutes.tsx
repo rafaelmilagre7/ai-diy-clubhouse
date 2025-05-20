@@ -67,7 +67,7 @@ export const memberRoutes: RouteObject[] = [
   // Comunidade Routes - Definidas com prioridade
   createProtectedRoute("/comunidade", CommunityHome),
   createProtectedRoute("/comunidade/categoria/:slug", CategoryView),
-  createProtectedRoute("/comunidade/topico/:id", TopicView),
+  createProtectedRoute("/comunidade/topico/:topicId", TopicView),
   createProtectedRoute("/comunidade/novo-topico/:categorySlug?", NewTopic),
   
   // Rotas legadas - temporárias para redirecionamento

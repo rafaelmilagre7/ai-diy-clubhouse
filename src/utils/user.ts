@@ -1,42 +1,39 @@
 
 /**
- * Utilitário para manipulação de dados de usuário
+ * Funções utilitárias para manipulação de dados de usuários
  */
 
 /**
  * Obtém as iniciais do nome do usuário
- * @param name Nome do usuário
- * @returns Iniciais do nome ou placeholder
  */
-export const getInitials = (name: string | null | undefined): string => {
-  if (!name) return "U";
+export function getInitials(name?: string | null): string {
+  if (!name) return 'U';
   
+  // Obtém as iniciais do nome completo
   return name
-    .split(" ")
-    .map(n => n[0])
-    .join("")
-    .toUpperCase()
-    .substring(0, 2);
-};
+    .split(' ')
+    .filter(Boolean)
+    .map(part => part.charAt(0).toUpperCase())
+    .slice(0, 2)
+    .join('');
+}
 
 /**
- * Obtém o caminho para a imagem de avatar do usuário ou um placeholder
- * @param url URL do avatar
- * @returns URL do avatar ou undefined
+ * Formata a URL do avatar para garantir que tenha o formato correto
  */
-export const getAvatarUrl = (url: string | null | undefined): string | undefined => {
-  if (!url) return undefined;
+export function getAvatarUrl(avatarUrl?: string | null): string | undefined {
+  if (!avatarUrl) return undefined;
   
-  // Se a URL já começar com http(s), retorná-la diretamente
-  if (url.startsWith('http')) {
-    return url;
+  // Se a URL já começa com http ou https, retorne-a diretamente
+  if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')) {
+    return avatarUrl;
   }
   
-  // Se for um caminho relativo no Supabase Storage
-  if (url.startsWith('/')) {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-    return `${supabaseUrl}/storage/v1/object/public${url}`;
+  // Se é uma URL relativa ao storage do Supabase, garanta que começa com /
+  if (!avatarUrl.startsWith('/')) {
+    avatarUrl = '/' + avatarUrl;
   }
   
-  return url;
-};
+  // Retorna a URL formatada
+  return `https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public${avatarUrl}`;
+}
