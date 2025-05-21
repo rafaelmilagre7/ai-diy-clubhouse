@@ -15,7 +15,7 @@ export interface UserProfile {
   name: string;
   avatar_url?: string | null;
   role?: string;
-  user_id?: string; // Adicionando esta propriedade para resolver o erro
+  user_id?: string;
 }
 
 export interface Profile {
@@ -27,6 +27,12 @@ export interface Profile {
   role_id?: string;
   company_name?: string;
   industry?: string;
+  current_position?: string;
+  professional_bio?: string;
+  skills?: string[];
+  linkedin_url?: string;
+  available_for_networking?: boolean;
+  last_active?: string;
 }
 
 export interface Topic {
@@ -58,4 +64,13 @@ export interface Post {
   is_accepted_solution?: boolean;
   is_solution?: boolean;
   parent_id?: string | null;
+}
+
+export interface MemberConnection {
+  id: string;
+  requester_id: string;
+  recipient_id: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  created_at: string;
+  updated_at: string;
 }

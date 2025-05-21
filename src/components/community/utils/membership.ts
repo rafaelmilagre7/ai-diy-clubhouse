@@ -61,3 +61,16 @@ export const getColorFromName = (name: string): string => {
   
   return colors[charCodeSum % colors.length];
 };
+
+// Formatar o status de conexão para exibição
+export const formatConnectionStatus = (status: string): string => {
+  switch (status) {
+    case 'connected':
+      return 'Conectado';
+    case 'pending':
+      return 'Solicitação enviada';
+    case 'none':
+    default:
+      return 'Conectar';
+  }
+};

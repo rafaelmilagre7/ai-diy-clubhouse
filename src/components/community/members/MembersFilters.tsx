@@ -2,104 +2,128 @@
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
 import { Search, X } from 'lucide-react';
 
 interface MembersFiltersProps {
-  onFilterChange: (filters: { search?: string; industry?: string; role?: string }) => void;
+  onFilterChange: (filters: any) => void;
   industries: string[];
   roles: string[];
-  currentFilters: { search?: string; industry?: string; role?: string };
+  currentFilters: {
+    search?: string;
+    industry?: string;
+    role?: string;
+  };
 }
 
-export const MembersFilters = ({ 
-  onFilterChange, 
-  industries, 
-  roles, 
-  currentFilters 
+export const MembersFilters = ({
+  onFilterChange,
+  industries,
+  roles,
+  currentFilters,
 }: MembersFiltersProps) => {
-  const [search, setSearch] = useState(currentFilters.search || '');
-  
-  const handleSearch = () => {
-    onFilterChange({ search });
-  };
+  const [searchInput, setSearchInput] = useState(currentFilters.search || '');
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onFilterChange({ search: searchInput });
   };
 
   const handleClearFilters = () => {
-    setSearch('');
-    onFilterChange({ search: '', industry: undefined, role: undefined });
+    setSearchInput('');
+    onFilterChange({
+      search: '',
+      industry: '',
+      role: '',
+    });
   };
 
-  const hasActiveFilters = !!(currentFilters.search || currentFilters.industry || currentFilters.role);
+  const hasFilters = !!(currentFilters.search || currentFilters.industry || currentFilters.role);
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row gap-2">
-        <div className="relative flex-1">
+    <div className="bg-background rounded-md border p-4 mb-6 space-y-4">
+      <h3 className="text-lg font-medium mb-2">Filtrar membros</h3>
+      
+      <form onSubmit={handleSearchSubmit} className="flex space-x-2">
+        <div className="relative flex-grow">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
+            type="search"
             placeholder="Buscar por nome..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="pr-8"
+            className="pl-9"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
           />
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="absolute right-0 top-0"
-            onClick={handleSearch}
+        </div>
+        <Button type="submit">Buscar</Button>
+      </form>
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="text-sm text-muted-foreground block mb-2">Setor</label>
+          <Select
+            value={currentFilters.industry || ''}
+            onValueChange={(value) => onFilterChange({ industry: value })}
           >
-            <Search className="h-4 w-4" />
-          </Button>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecionar setor" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem value="">Todos os setores</SelectItem>
+                {industries.map((industry) => (
+                  <SelectItem key={industry} value={industry}>
+                    {industry}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         </div>
         
-        <Select 
-          value={currentFilters.industry} 
-          onValueChange={(value) => onFilterChange({ industry: value || undefined })}
-        >
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Setor" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">Todos os setores</SelectItem>
-            {industries.map(industry => (
-              <SelectItem key={industry} value={industry}>{industry}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        
-        <Select 
-          value={currentFilters.role} 
-          onValueChange={(value) => onFilterChange({ role: value || undefined })}
-        >
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Cargo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">Todos os cargos</SelectItem>
-            {roles.map(role => (
-              <SelectItem key={role} value={role}>{role}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        
-        {hasActiveFilters && (
-          <Button variant="outline" onClick={handleClearFilters} className="shrink-0">
-            <X className="h-4 w-4 mr-1" /> Limpar
-          </Button>
-        )}
+        <div>
+          <label className="text-sm text-muted-foreground block mb-2">Cargo</label>
+          <Select
+            value={currentFilters.role || ''}
+            onValueChange={(value) => onFilterChange({ role: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecionar cargo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem value="">Todos os cargos</SelectItem>
+                {roles.map((role) => (
+                  <SelectItem key={role} value={role}>
+                    {role}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
+      
+      {hasFilters && (
+        <div className="flex justify-end">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleClearFilters}
+            className="flex items-center text-muted-foreground"
+          >
+            <X className="mr-1 h-4 w-4" />
+            Limpar filtros
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

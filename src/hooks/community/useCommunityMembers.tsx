@@ -47,8 +47,11 @@ export const useCommunityMembers = ({
       }
 
       // Buscar total de membros (para paginação)
-      const { count: totalCount } = await query.count();
+      const countQuery = query;
+      const { count, error: countError } = await countQuery.count();
       
+      if (countError) throw countError;
+
       // Aplicar paginação
       const { data, error } = await query
         .range(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage - 1)
@@ -58,18 +61,20 @@ export const useCommunityMembers = ({
 
       // Buscar indústrias disponíveis para filtro
       if (!availableIndustries.length) {
-        const { data: industries } = await supabase
+        const { data: industries, error: indError } = await supabase
           .from('profiles')
           .select('industry')
           .neq('industry', null)
-          .order('industry')
-          .distinct();
+          .order('industry');
+        
+        if (indError) throw indError;
         
         if (industries) {
           const uniqueIndustries = industries
             .map(item => item.industry)
             .filter((value): value is string => 
-              value !== null && value !== undefined && value !== '');
+              value !== null && value !== undefined && value !== '')
+            .filter((value, index, self) => self.indexOf(value) === index);
           
           setAvailableIndustries(uniqueIndustries);
         }
@@ -77,18 +82,20 @@ export const useCommunityMembers = ({
 
       // Buscar cargos disponíveis para filtro
       if (!availableRoles.length) {
-        const { data: roles } = await supabase
+        const { data: roles, error: rolesError } = await supabase
           .from('profiles')
           .select('current_position')
           .neq('current_position', null)
-          .order('current_position')
-          .distinct();
+          .order('current_position');
+        
+        if (rolesError) throw rolesError;
         
         if (roles) {
           const uniqueRoles = roles
             .map(item => item.current_position)
             .filter((value): value is string => 
-              value !== null && value !== undefined && value !== '');
+              value !== null && value !== undefined && value !== '')
+            .filter((value, index, self) => self.indexOf(value) === index);
           
           setAvailableRoles(uniqueRoles);
         }
@@ -96,7 +103,7 @@ export const useCommunityMembers = ({
 
       return {
         members: data as Profile[],
-        totalCount: totalCount || 0
+        totalCount: count || 0
       };
     } catch (error) {
       console.error('Erro ao buscar membros:', error);

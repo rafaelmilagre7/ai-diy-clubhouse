@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Building2, Briefcase, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getInitials } from '@/lib/utils';
+import { getInitials } from '@/components/community/utils/membership';
 
 interface MemberCardProps {
   member: Profile;

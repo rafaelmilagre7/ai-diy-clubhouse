@@ -1,14 +1,12 @@
 
 import { useState } from 'react';
 import { useCommunityMembers } from '@/hooks/community/useCommunityMembers';
+import { useNetworkConnections } from '@/hooks/community/useNetworkConnections';
 import { MembersFilters } from './MembersFilters';
 import { MembersList } from './MembersList';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 
 export const MembersDirectory = () => {
-  const { toast } = useToast();
-  const [connectedMembers] = useState<Set<string>>(new Set());
-  
   const {
     members,
     isLoading,
@@ -23,12 +21,19 @@ export const MembersDirectory = () => {
     handleRetry
   } = useCommunityMembers();
 
-  const handleConnect = (memberId: string) => {
-    toast({
-      title: "Solicitação de conexão enviada",
-      description: "O membro será notificado sobre seu interesse em conectar.",
-    });
-    // Aqui você adicionaria a lógica para enviar a solicitação de conexão
+  const {
+    connectedMembers,
+    sendConnectionRequest,
+    isLoading: connectionsLoading
+  } = useNetworkConnections();
+
+  const handleConnect = async (memberId: string) => {
+    const success = await sendConnectionRequest(memberId);
+    if (success) {
+      toast.success("Solicitação de conexão enviada", {
+        description: "O membro será notificado sobre seu interesse em conectar.",
+      });
+    }
   };
 
   if (isError) {
@@ -66,7 +71,7 @@ export const MembersDirectory = () => {
 
       <MembersList
         members={members}
-        isLoading={isLoading}
+        isLoading={isLoading || connectionsLoading}
         totalPages={totalPages}
         currentPage={currentPage}
         onPageChange={handlePageChange}

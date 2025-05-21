@@ -1149,6 +1149,62 @@ export type Database = {
           },
         ]
       }
+      member_connections: {
+        Row: {
+          created_at: string | null
+          id: string
+          recipient_id: string
+          requester_id: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          recipient_id: string
+          requester_id: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          recipient_id?: string
+          requester_id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_connections_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_connections_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "users_with_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_connections_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_connections_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "users_with_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       modules: {
         Row: {
           certificate_template: Json | null
@@ -2350,44 +2406,62 @@ export type Database = {
       }
       profiles: {
         Row: {
+          available_for_networking: boolean | null
           avatar_url: string | null
           company_name: string | null
           created_at: string
+          current_position: string | null
           email: string
           id: string
           industry: string | null
+          last_active: string | null
+          linkedin_url: string | null
           name: string | null
+          professional_bio: string | null
           referrals_count: number
           role: string
           role_id: string | null
+          skills: string[] | null
           successful_referrals_count: number
           whatsapp_number: string | null
         }
         Insert: {
+          available_for_networking?: boolean | null
           avatar_url?: string | null
           company_name?: string | null
           created_at?: string
+          current_position?: string | null
           email: string
           id: string
           industry?: string | null
+          last_active?: string | null
+          linkedin_url?: string | null
           name?: string | null
+          professional_bio?: string | null
           referrals_count?: number
           role?: string
           role_id?: string | null
+          skills?: string[] | null
           successful_referrals_count?: number
           whatsapp_number?: string | null
         }
         Update: {
+          available_for_networking?: boolean | null
           avatar_url?: string | null
           company_name?: string | null
           created_at?: string
+          current_position?: string | null
           email?: string
           id?: string
           industry?: string | null
+          last_active?: string | null
+          linkedin_url?: string | null
           name?: string | null
+          professional_bio?: string | null
           referrals_count?: number
           role?: string
           role_id?: string | null
+          skills?: string[] | null
           successful_referrals_count?: number
           whatsapp_number?: string | null
         }
