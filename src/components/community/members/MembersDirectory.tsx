@@ -28,9 +28,8 @@ export const MembersDirectory = () => {
   } = useNetworkConnections();
 
   const handleConnect = async (memberId: string) => {
-    const result = await sendConnectionRequest(memberId);
-    // Não verificamos mais result diretamente, pois a função já mostra os toasts necessários
-    if (result === true) {
+    const success = await sendConnectionRequest(memberId);
+    if (success) {
       toast.success("Solicitação de conexão enviada", {
         description: "O membro será notificado sobre seu interesse em conectar.",
       });

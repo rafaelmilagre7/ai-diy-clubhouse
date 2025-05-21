@@ -43,7 +43,7 @@ export const useConnectionRequests = () => {
         // Processar os dados para o formato ConnectionMember
         const requests: ConnectionMember[] = data?.map(item => ({
           id: item.requester_id,
-          name: item.profiles?.name,
+          name: item.profiles?.name || null,
           avatar_url: item.profiles?.avatar_url,
           company_name: item.profiles?.company_name,
           current_position: item.profiles?.current_position,
@@ -84,8 +84,8 @@ export const useConnectionRequests = () => {
   }, [user?.id]);
 
   // Aceitar uma solicitação de conexão
-  const acceptConnectionRequest = async (requesterId: string) => {
-    if (!user?.id) return;
+  const acceptConnectionRequest = async (requesterId: string): Promise<boolean> => {
+    if (!user?.id) return false;
 
     setProcessingRequests(prev => new Set([...prev, requesterId]));
 
@@ -117,8 +117,8 @@ export const useConnectionRequests = () => {
   };
 
   // Rejeitar uma solicitação de conexão
-  const rejectConnectionRequest = async (requesterId: string) => {
-    if (!user?.id) return;
+  const rejectConnectionRequest = async (requesterId: string): Promise<boolean> => {
+    if (!user?.id) return false;
 
     setProcessingRequests(prev => new Set([...prev, requesterId]));
 
