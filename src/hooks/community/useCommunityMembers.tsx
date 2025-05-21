@@ -47,8 +47,7 @@ export const useCommunityMembers = ({
       }
 
       // Buscar total de membros (para paginação)
-      const countQuery = query;
-      const { count, error: countError } = await countQuery.count();
+      const { count: totalCount, error: countError } = await query.count();
       
       if (countError) throw countError;
 
@@ -62,7 +61,7 @@ export const useCommunityMembers = ({
       // Buscar indústrias disponíveis para filtro
       if (!availableIndustries.length) {
         const { data: industries, error: indError } = await supabase
-          .from('profiles')
+          .from("profiles")
           .select('industry')
           .neq('industry', null)
           .order('industry');
@@ -83,7 +82,7 @@ export const useCommunityMembers = ({
       // Buscar cargos disponíveis para filtro
       if (!availableRoles.length) {
         const { data: roles, error: rolesError } = await supabase
-          .from('profiles')
+          .from("profiles")
           .select('current_position')
           .neq('current_position', null)
           .order('current_position');
@@ -103,7 +102,7 @@ export const useCommunityMembers = ({
 
       return {
         members: data as Profile[],
-        totalCount: count || 0
+        totalCount: totalCount || 0
       };
     } catch (error) {
       console.error('Erro ao buscar membros:', error);

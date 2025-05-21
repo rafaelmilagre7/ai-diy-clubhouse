@@ -12,6 +12,7 @@ interface ReplyFormProps {
   onSuccess?: () => void;
   onCancel?: () => void;
   placeholder?: string;
+  onPostCreated?: () => void;
 }
 
 export const ReplyForm = ({ 
@@ -19,25 +20,29 @@ export const ReplyForm = ({
   parentId, 
   onSuccess, 
   onCancel, 
-  placeholder = "Escreva sua resposta..." 
+  placeholder = "Escreva sua resposta...",
+  onPostCreated
 }: ReplyFormProps) => {
   const {
     content,
     isSubmitting,
     textareaRef,
     handleTextareaInput,
-    handleSubmit,
+    handleSubmit: submitForm,
     handleCancel,
     user
   } = useReplyForm({
     topicId,
     parentId,
-    onSuccess,
+    onSuccess: () => {
+      if (onSuccess) onSuccess();
+      if (onPostCreated) onPostCreated();
+    },
     onCancel
   });
   
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={submitForm} className="space-y-4">
       <div className="flex gap-3">
         <Avatar className="h-10 w-10 mt-1">
           <AvatarImage src={user?.user_metadata?.avatar_url || undefined} />

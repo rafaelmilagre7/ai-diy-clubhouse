@@ -2,6 +2,7 @@
 import * as React from "react";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Slot } from "@radix-ui/react-slot";
 
 const Breadcrumb = React.forwardRef<
   HTMLElement,
@@ -43,16 +44,22 @@ const BreadcrumbItem = React.forwardRef<
 ));
 BreadcrumbItem.displayName = "BreadcrumbItem";
 
-const BreadcrumbLink = React.forwardRef<
-  HTMLAnchorElement,
-  React.AnchorHTMLAttributes<HTMLAnchorElement>
->(({ className, ...props }, ref) => (
-  <a
-    ref={ref}
-    className={cn("text-muted-foreground hover:text-foreground transition-colors", className)}
-    {...props}
-  />
-));
+interface BreadcrumbLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
+  asChild?: boolean;
+}
+
+const BreadcrumbLink = React.forwardRef<HTMLAnchorElement, BreadcrumbLinkProps>(
+  ({ className, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "a";
+    return (
+      <Comp
+        ref={ref}
+        className={cn("text-muted-foreground hover:text-foreground transition-colors", className)}
+        {...props}
+      />
+    );
+  }
+);
 BreadcrumbLink.displayName = "BreadcrumbLink";
 
 const BreadcrumbPage = React.forwardRef<
