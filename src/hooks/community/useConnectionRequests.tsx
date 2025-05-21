@@ -41,7 +41,7 @@ export const useConnectionRequests = () => {
         if (error) throw error;
 
         // Processar os dados para o formato ConnectionMember
-        const requests = data?.map(item => ({
+        const requests: ConnectionMember[] = data?.map(item => ({
           id: item.requester_id,
           name: item.profiles?.name,
           avatar_url: item.profiles?.avatar_url,
@@ -101,9 +101,12 @@ export const useConnectionRequests = () => {
       // Remover solicitação da lista de pendentes
       setIncomingRequests(prev => prev.filter(request => request.id !== requesterId));
       toast.success('Solicitação aceita com sucesso');
+      
+      return true;
     } catch (error) {
       console.error('Erro ao aceitar solicitação:', error);
       toast.error('Não foi possível aceitar a solicitação');
+      return false;
     } finally {
       setProcessingRequests(prev => {
         const updated = new Set([...prev]);
@@ -131,9 +134,12 @@ export const useConnectionRequests = () => {
       // Remover solicitação da lista de pendentes
       setIncomingRequests(prev => prev.filter(request => request.id !== requesterId));
       toast.success('Solicitação rejeitada');
+      
+      return true;
     } catch (error) {
       console.error('Erro ao rejeitar solicitação:', error);
       toast.error('Não foi possível rejeitar a solicitação');
+      return false;
     } finally {
       setProcessingRequests(prev => {
         const updated = new Set([...prev]);
