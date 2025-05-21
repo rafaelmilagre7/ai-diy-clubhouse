@@ -11,16 +11,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Search, X } from 'lucide-react';
+import { CommunityMemberFilters } from '@/hooks/community/useCommunityMembers';
 
 interface MembersFiltersProps {
-  onFilterChange: (filters: any) => void;
+  onFilterChange: (filters: CommunityMemberFilters) => void;
   industries: string[];
   roles: string[];
-  currentFilters: {
-    search?: string;
-    industry?: string;
-    role?: string;
-  };
+  currentFilters: CommunityMemberFilters;
 }
 
 export const MembersFilters = ({
@@ -33,7 +30,7 @@ export const MembersFilters = ({
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onFilterChange({ search: searchInput });
+    onFilterChange({ ...currentFilters, search: searchInput });
   };
 
   const handleClearFilters = () => {
@@ -70,7 +67,7 @@ export const MembersFilters = ({
           <label className="text-sm text-muted-foreground block mb-2">Setor</label>
           <Select
             value={currentFilters.industry || ''}
-            onValueChange={(value) => onFilterChange({ industry: value })}
+            onValueChange={(value) => onFilterChange({ ...currentFilters, industry: value })}
           >
             <SelectTrigger>
               <SelectValue placeholder="Selecionar setor" />
@@ -92,7 +89,7 @@ export const MembersFilters = ({
           <label className="text-sm text-muted-foreground block mb-2">Cargo</label>
           <Select
             value={currentFilters.role || ''}
-            onValueChange={(value) => onFilterChange({ role: value })}
+            onValueChange={(value) => onFilterChange({ ...currentFilters, role: value })}
           >
             <SelectTrigger>
               <SelectValue placeholder="Selecionar cargo" />

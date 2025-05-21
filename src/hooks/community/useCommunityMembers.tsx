@@ -3,10 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useState } from "react";
 
-interface CommunityMemberFilters {
+export interface CommunityMemberFilters {
   search?: string;
-  role?: string[];
-  skills?: string[];
+  industry?: string;
+  role?: string;
 }
 
 export const useCommunityMembers = (initialFilters: CommunityMemberFilters = {}) => {
@@ -14,12 +14,35 @@ export const useCommunityMembers = (initialFilters: CommunityMemberFilters = {})
   const [page, setPage] = useState(0);
   const itemsPerPage = 12;
   
-  const { data, isLoading, error } = useQuery({
+  // Dados mockados para indústrias e cargos disponíveis
+  const availableIndustries = [
+    'Tecnologia',
+    'Saúde',
+    'Educação',
+    'Finanças',
+    'Varejo',
+    'Marketing',
+    'Consultoria',
+    'Outros'
+  ];
+  
+  const availableRoles = [
+    'CEO',
+    'Fundador',
+    'Diretor',
+    'Gerente',
+    'Especialista',
+    'Analista',
+    'Consultor',
+    'Outros'
+  ];
+  
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['community-members', filters, page],
     queryFn: async () => {
       let query = supabase
         .from('profiles')
-        .select('*', { count: 'exact' })
+        .select('*')
         .eq('active', true);
         
       // Aplicar filtros
@@ -27,14 +50,12 @@ export const useCommunityMembers = (initialFilters: CommunityMemberFilters = {})
         query = query.ilike('name', `%${filters.search}%`);
       }
       
-      if (filters.role && filters.role.length > 0) {
-        query = query.in('role', filters.role);
+      if (filters.industry) {
+        query = query.eq('industry', filters.industry);
       }
       
-      // Para skills (um array)
-      if (filters.skills && filters.skills.length > 0) {
-        // Supabase permite filtrar por overlaps com arrays
-        query = query.overlaps('skills', filters.skills);
+      if (filters.role) {
+        query = query.eq('current_position', filters.role);
       }
       
       // Paginação
@@ -42,11 +63,9 @@ export const useCommunityMembers = (initialFilters: CommunityMemberFilters = {})
       const end = start + itemsPerPage - 1;
       
       // Execute duas consultas separadas: uma para os dados e outra para a contagem
-      const dataPromise = query
+      const { data: members, error: dataError } = await query
         .range(start, end)
         .order('name', { ascending: true });
-      
-      const { data, error: dataError } = await dataPromise;
       
       if (dataError) throw dataError;
       
@@ -59,7 +78,7 @@ export const useCommunityMembers = (initialFilters: CommunityMemberFilters = {})
       if (countError) throw countError;
       
       return {
-        members: data || [],
+        members: members || [],
         count: count || 0
       };
     },
@@ -77,14 +96,22 @@ export const useCommunityMembers = (initialFilters: CommunityMemberFilters = {})
     setPage(0); // Resetar para primeira página ao filtrar
   };
   
+  const handleRetry = () => {
+    refetch();
+  };
+  
   return {
     members: data?.members || [],
     isLoading,
     error,
+    isError: !!error,
     filters,
     handleFilterChange,
-    page,
+    currentPage: page, // Renomeado de page para currentPage
     totalPages,
-    handlePageChange
+    handlePageChange,
+    availableIndustries,
+    availableRoles,
+    handleRetry
   };
 };

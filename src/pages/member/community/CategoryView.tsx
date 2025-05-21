@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, PlusCircle, AlertCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { ForumCategory } from "@/types/forumTypes";
+import { useTopicList } from "@/hooks/useTopicList";
 
 const CategoryView = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -27,6 +28,12 @@ const CategoryView = () => {
     },
     enabled: !!slug,
     retry: 1
+  });
+
+  const topicListData = useTopicList({
+    categoryId: category?.id || '',
+    categorySlug: slug,
+    itemsPerPage: 10
   });
 
   if (isLoading) {
@@ -84,7 +91,17 @@ const CategoryView = () => {
       </div>
       
       <ForumLayout>
-        {category && <TopicList categoryId={category.id} categorySlug={category.slug} />}
+        {category && (
+          <TopicList 
+            pinnedTopics={topicListData.pinnedTopics}
+            regularTopics={topicListData.regularTopics}
+            currentPage={topicListData.currentPage}
+            totalPages={topicListData.totalPages}
+            onPageChange={topicListData.handlePageChange}
+            categoryId={category.id}
+            categorySlug={category.slug}
+          />
+        )}
       </ForumLayout>
       
       <div className="mt-6 sm:hidden">
