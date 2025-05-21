@@ -13,9 +13,16 @@ import { useForumCategories } from "@/hooks/community/useForumCategories";
 interface ForumBreadcrumbsProps {
   categorySlug?: string;
   topicTitle?: string;
+  section?: string;
+  sectionTitle?: string;
 }
 
-export const ForumBreadcrumbs = ({ categorySlug, topicTitle }: ForumBreadcrumbsProps) => {
+export const ForumBreadcrumbs = ({ 
+  categorySlug, 
+  topicTitle, 
+  section,
+  sectionTitle
+}: ForumBreadcrumbsProps) => {
   const { categories } = useForumCategories();
   
   // Encontrar a categoria atual com base no slug
@@ -31,6 +38,15 @@ export const ForumBreadcrumbs = ({ categorySlug, topicTitle }: ForumBreadcrumbsP
             <Link to="/comunidade">Comunidade</Link>
           </BreadcrumbLink>
         </BreadcrumbItem>
+        
+        {section && (
+          <>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{sectionTitle || section}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </>
+        )}
         
         {currentCategory && (
           <>
