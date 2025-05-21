@@ -22,7 +22,7 @@ interface ConnectionMember {
   industry: string | null;
 }
 
-// Interface para a resposta da consulta de solicitações recebidas
+// Interface corrigida para a resposta da consulta de solicitações recebidas
 interface RequestWithProfile {
   requester_id: string;
   profiles: {
@@ -115,7 +115,7 @@ const ConnectionManagement = () => {
       const memberRequests: ConnectionMember[] = [];
       
       if (requests) {
-        requests.forEach((req: RequestWithProfile) => {
+        requests.forEach((req: any) => {
           if (req.profiles) {
             // Criar objeto tipado corretamente
             const member: ConnectionMember = {
