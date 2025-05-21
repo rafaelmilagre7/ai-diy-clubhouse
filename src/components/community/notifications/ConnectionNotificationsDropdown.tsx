@@ -17,8 +17,8 @@ import { ptBR } from 'date-fns/locale';
 import { useConnectionNotifications } from '@/hooks/community/useConnectionNotifications';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useNetworkConnections } from '@/hooks/community/useNetworkConnections';
 import { Link } from 'react-router-dom';
+import { useConnectionRequests } from '@/hooks/community/useConnectionRequests';
 
 export const ConnectionNotificationsDropdown = () => {
   const { 
@@ -29,7 +29,7 @@ export const ConnectionNotificationsDropdown = () => {
     markAllAsRead 
   } = useConnectionNotifications();
   
-  const { acceptConnectionRequest, rejectConnectionRequest } = useNetworkConnections();
+  const { acceptConnectionRequest, rejectConnectionRequest } = useConnectionRequests();
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
 
   const handleAccept = async (requesterId: string, notificationId: string) => {
