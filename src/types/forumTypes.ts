@@ -74,3 +74,12 @@ export interface MemberConnection {
   created_at: string;
   updated_at: string;
 }
+
+export interface ConnectionMember {
+  id: string;
+  name: string | null;
+  avatar_url?: string | null;
+  company_name?: string | null;
+  current_position?: string | null;
+  industry?: string | null;
+}
