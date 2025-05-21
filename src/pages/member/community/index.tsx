@@ -1,18 +1,21 @@
 
-import { Route, Routes } from 'react-router-dom';
-import CommunityHome from './CommunityHome';
-import CategoryTopics from './CategoryTopics';
-import TopicDetail from './TopicDetail';
-import CommunityMembers from './CommunityMembers';
+import { Routes, Route } from "react-router-dom";
+import ForumHome from "./ForumHome";
+import CategoryView from "./CategoryView";
+import TopicView from "./TopicView";
+import NewTopicPage from "./NewTopicPage";
+import { MembersDirectory } from "@/components/community/members/MembersDirectory";
+import ConnectionManagement from "./ConnectionManagement";
 
 const CommunityPages = () => {
   return (
     <Routes>
-      <Route path="/" element={<CommunityHome />} />
-      <Route path="/categoria/:categorySlug" element={<CategoryTopics />} />
-      <Route path="/topico/:topicId" element={<TopicDetail />} />
-      <Route path="/membros" element={<CommunityMembers />} />
-      <Route path="*" element={<CommunityHome />} />
+      <Route path="/" element={<ForumHome />} />
+      <Route path="/categoria/:slug" element={<CategoryView />} />
+      <Route path="/topico/:id" element={<TopicView />} />
+      <Route path="/novo-topico/:categorySlug" element={<NewTopicPage />} />
+      <Route path="/membros" element={<MembersDirectory />} />
+      <Route path="/conexoes" element={<ConnectionManagement />} />
     </Routes>
   );
 };
