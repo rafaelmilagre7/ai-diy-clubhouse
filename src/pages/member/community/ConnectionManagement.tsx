@@ -1,52 +1,33 @@
 
 import { useState } from 'react';
 import { useNetworkConnections } from '@/hooks/community/useNetworkConnections';
+import { useConnectionRequests } from '@/hooks/community/useConnectionRequests';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, UserX, UserCheck } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { EmptyTopicsState } from '@/components/community/EmptyTopicsState';
-import { useAuth } from '@/contexts/auth';
+import { ConnectionsTabContent } from '@/components/community/connections/ConnectionsTabContent';
+import { PendingConnectionsTabContent } from '@/components/community/connections/PendingConnectionsTabContent';
+import { ConnectionRequestsTabContent } from '@/components/community/connections/ConnectionRequestsTabContent';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { Link } from 'react-router-dom';
-
-interface ConnectionMember {
-  id: string;
-  name: string;
-  avatar_url: string | null;
-  company_name: string | null;
-  current_position: string | null;
-  industry: string | null;
-}
-
-// Interface corrigida para a resposta da consulta de solicitações recebidas
-interface RequestWithProfile {
-  requester_id: string;
-  profiles: {
-    id: string;
-    name: string;
-    avatar_url: string | null;
-    company_name: string | null;
-    current_position: string | null;
-    industry: string | null;
-  };
-}
+import { ConnectionMember } from '@/types/forumTypes';
 
 const ConnectionManagement = () => {
   const { 
     connectedMembers, 
     pendingConnections, 
-    isLoading: connectionsLoading,
-    acceptConnectionRequest,
-    rejectConnectionRequest,
+    isLoading: connectionsLoading
   } = useNetworkConnections();
+
+  const {
+    incomingRequests,
+    incomingLoading,
+    processingRequests,
+    acceptConnectionRequest,
+    rejectConnectionRequest
+  } = useConnectionRequests();
   
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('connections');
-  const [processingRequests, setProcessingRequests] = useState<Set<string>>(new Set());
 
   const { data: membersData, isLoading: membersLoading } = useQuery({
     queryKey: ['connection-members', [...connectedMembers, ...pendingConnections]],
@@ -89,97 +70,26 @@ const ConnectionManagement = () => {
     enabled: connectedMembers.size > 0 || pendingConnections.size > 0
   });
 
-  const { data: incomingRequests, isLoading: incomingLoading } = useQuery({
-    queryKey: ['incoming-requests', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [] as ConnectionMember[];
-      
-      // Buscar solicitações recebidas
-      const { data: requests } = await supabase
-        .from('member_connections')
-        .select(`
-          requester_id,
-          profiles:requester_id (
-            id, 
-            name, 
-            avatar_url, 
-            company_name, 
-            current_position,
-            industry
-          )
-        `)
-        .eq('recipient_id', user.id)
-        .eq('status', 'pending');
-      
-      // Converter e garantir que sejam do tipo correto
-      const memberRequests: ConnectionMember[] = [];
-      
-      if (requests) {
-        requests.forEach((req: any) => {
-          if (req.profiles) {
-            // Criar objeto tipado corretamente
-            const member: ConnectionMember = {
-              id: req.profiles.id,
-              name: req.profiles.name,
-              avatar_url: req.profiles.avatar_url,
-              company_name: req.profiles.company_name,
-              current_position: req.profiles.current_position,
-              industry: req.profiles.industry
-            };
-            memberRequests.push(member);
-          }
-        });
-      }
-      
-      return memberRequests;
-    },
-    enabled: !!user?.id
-  });
-
   const isLoading = connectionsLoading || membersLoading || incomingLoading;
 
   const handleAccept = async (memberId: string) => {
-    setProcessingRequests(prev => new Set(prev).add(memberId));
     try {
       await acceptConnectionRequest(memberId);
       toast.success("Solicitação de conexão aceita");
     } catch (error) {
       toast.error("Erro ao aceitar solicitação");
       console.error(error);
-    } finally {
-      setProcessingRequests(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(memberId);
-        return newSet;
-      });
     }
   };
 
   const handleReject = async (memberId: string) => {
-    setProcessingRequests(prev => new Set(prev).add(memberId));
     try {
       await rejectConnectionRequest(memberId);
       toast.success("Solicitação de conexão rejeitada");
     } catch (error) {
       toast.error("Erro ao rejeitar solicitação");
       console.error(error);
-    } finally {
-      setProcessingRequests(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(memberId);
-        return newSet;
-      });
     }
-  };
-
-  const getInitials = (name: string | null) => {
-    if (!name) return "U";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .substring(0, 2);
   };
 
   return (
@@ -213,135 +123,24 @@ const ConnectionManagement = () => {
         {!isLoading && (
           <>
             <TabsContent value="connections" className="mt-2">
-              {membersData?.connections && membersData.connections.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {membersData.connections.map((member) => (
-                    <Card key={member.id} className="overflow-hidden">
-                      <CardContent className="p-4">
-                        <Link to={`/comunidade/membro/${member.id}`} className="flex items-center space-x-4">
-                          <Avatar className="h-12 w-12">
-                            <AvatarImage src={member.avatar_url || undefined} alt={member.name || "Usuário"} />
-                            <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
-                          </Avatar>
-                          <div className="space-y-1">
-                            <p className="font-medium">{member.name}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {member.current_position || ""}
-                              {member.current_position && member.company_name && " • "}
-                              {member.company_name || ""}
-                            </p>
-                            {member.industry && (
-                              <p className="text-xs text-muted-foreground">{member.industry}</p>
-                            )}
-                          </div>
-                        </Link>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <EmptyTopicsState searchQuery="Você ainda não tem conexões" />
-              )}
+              <ConnectionsTabContent 
+                connections={membersData?.connections || []} 
+              />
             </TabsContent>
 
             <TabsContent value="pending" className="mt-2">
-              {membersData?.pending && membersData.pending.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {membersData.pending.map((member) => (
-                    <Card key={member.id} className="overflow-hidden">
-                      <CardContent className="p-4">
-                        <div className="flex items-center space-x-4">
-                          <Avatar className="h-12 w-12">
-                            <AvatarImage src={member.avatar_url || undefined} alt={member.name || "Usuário"} />
-                            <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
-                          </Avatar>
-                          <div className="space-y-1 flex-grow">
-                            <Link to={`/comunidade/membro/${member.id}`} className="font-medium hover:underline">
-                              {member.name}
-                            </Link>
-                            <p className="text-sm text-muted-foreground">
-                              {member.current_position || ""}
-                              {member.current_position && member.company_name && " • "}
-                              {member.company_name || ""}
-                            </p>
-                            <p className="text-xs text-muted-foreground italic">
-                              Solicitação enviada
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <EmptyTopicsState searchQuery="Você não tem solicitações pendentes" />
-              )}
+              <PendingConnectionsTabContent 
+                pendingConnections={membersData?.pending || []} 
+              />
             </TabsContent>
 
             <TabsContent value="requests" className="mt-2">
-              {incomingRequests && incomingRequests.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {incomingRequests.map((member) => (
-                    <Card key={member.id} className="overflow-hidden">
-                      <CardContent className="p-4">
-                        <div className="flex items-center space-x-4">
-                          <Avatar className="h-12 w-12">
-                            <AvatarImage src={member.avatar_url || undefined} alt={member.name || "Usuário"} />
-                            <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
-                          </Avatar>
-                          <div className="space-y-1 flex-grow">
-                            <Link to={`/comunidade/membro/${member.id}`} className="font-medium hover:underline">
-                              {member.name}
-                            </Link>
-                            <p className="text-sm text-muted-foreground">
-                              {member.current_position || ""}
-                              {member.current_position && member.company_name && " • "}
-                              {member.company_name || ""}
-                            </p>
-                            
-                            <div className="flex space-x-2 mt-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-8"
-                                onClick={() => handleReject(member.id)}
-                                disabled={processingRequests.has(member.id)}
-                              >
-                                {processingRequests.has(member.id) ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <>
-                                    <UserX className="h-4 w-4 mr-1" />
-                                    <span>Recusar</span>
-                                  </>
-                                )}
-                              </Button>
-                              <Button
-                                variant="default"
-                                size="sm"
-                                className="h-8"
-                                onClick={() => handleAccept(member.id)}
-                                disabled={processingRequests.has(member.id)}
-                              >
-                                {processingRequests.has(member.id) ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <>
-                                    <UserCheck className="h-4 w-4 mr-1" />
-                                    <span>Aceitar</span>
-                                  </>
-                                )}
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <EmptyTopicsState searchQuery="Você não tem solicitações recebidas" />
-              )}
+              <ConnectionRequestsTabContent 
+                requests={incomingRequests} 
+                processingRequests={processingRequests}
+                onAccept={handleAccept}
+                onReject={handleReject}
+              />
             </TabsContent>
           </>
         )}
