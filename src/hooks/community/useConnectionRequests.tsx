@@ -1,118 +1,150 @@
 
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { supabase } from '@/lib/supabase';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 import { ConnectionMember } from '@/types/forumTypes';
 
 export const useConnectionRequests = () => {
   const { user } = useAuth();
+  const [incomingRequests, setIncomingRequests] = useState<ConnectionMember[]>([]);
+  const [incomingLoading, setIncomingLoading] = useState(true);
   const [processingRequests, setProcessingRequests] = useState<Set<string>>(new Set());
 
-  const { data: incomingRequests, isLoading: incomingLoading } = useQuery({
-    queryKey: ['incoming-requests', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [] as ConnectionMember[];
-      
-      // Buscar solicitações recebidas
-      const { data: requests } = await supabase
-        .from('member_connections')
-        .select(`
-          requester_id,
-          profiles:requester_id (
-            id, 
-            name, 
-            avatar_url, 
-            company_name, 
-            current_position,
-            industry
-          )
-        `)
-        .eq('recipient_id', user.id)
-        .eq('status', 'pending');
-      
-      // Converter e garantir que sejam do tipo correto
-      const memberRequests: ConnectionMember[] = [];
-      
-      if (requests) {
-        requests.forEach((req: any) => {
-          if (req.profiles) {
-            // Criar objeto tipado corretamente
-            const member: ConnectionMember = {
-              id: req.profiles.id,
-              name: req.profiles.name,
-              avatar_url: req.profiles.avatar_url,
-              company_name: req.profiles.company_name,
-              current_position: req.profiles.current_position,
-              industry: req.profiles.industry
-            };
-            memberRequests.push(member);
-          }
-        });
-      }
-      
-      return memberRequests;
-    },
-    enabled: !!user?.id
-  });
+  useEffect(() => {
+    if (!user?.id) {
+      setIncomingLoading(false);
+      return;
+    }
 
-  const acceptConnectionRequest = async (memberId: string) => {
-    if (!user) return;
-    
-    setProcessingRequests(prev => new Set(prev).add(memberId));
-    
+    const fetchIncomingRequests = async () => {
+      try {
+        setIncomingLoading(true);
+        
+        // Buscar solicitações recebidas pendentes
+        const { data, error } = await supabase
+          .from('member_connections')
+          .select(`
+            requester_id,
+            profiles:requester_id (
+              id,
+              name,
+              avatar_url,
+              company_name,
+              current_position,
+              industry
+            )
+          `)
+          .eq('recipient_id', user.id)
+          .eq('status', 'pending');
+
+        if (error) throw error;
+
+        // Processar os dados para o formato ConnectionMember
+        const requests = data?.map(item => ({
+          id: item.requester_id,
+          name: item.profiles?.name,
+          avatar_url: item.profiles?.avatar_url,
+          company_name: item.profiles?.company_name,
+          current_position: item.profiles?.current_position,
+          industry: item.profiles?.industry
+        })) || [];
+
+        setIncomingRequests(requests);
+      } catch (error) {
+        console.error('Erro ao buscar solicitações de conexão:', error);
+        toast.error('Não foi possível carregar as solicitações de conexão');
+      } finally {
+        setIncomingLoading(false);
+      }
+    };
+
+    fetchIncomingRequests();
+
+    // Configurar subscription para atualizações em tempo real
+    const channel = supabase
+      .channel('member_connections_changes')
+      .on('postgres_changes', 
+        {
+          event: '*',
+          schema: 'public',
+          table: 'member_connections',
+          filter: `recipient_id=eq.${user.id}`
+        }, 
+        () => {
+          // Quando houver mudança na tabela, atualizar solicitações
+          fetchIncomingRequests();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
+
+  // Aceitar uma solicitação de conexão
+  const acceptConnectionRequest = async (requesterId: string) => {
+    if (!user?.id) return;
+
+    setProcessingRequests(prev => new Set([...prev, requesterId]));
+
     try {
       const { error } = await supabase
         .from('member_connections')
         .update({ status: 'accepted' })
-        .eq('requester_id', memberId)
+        .eq('requester_id', requesterId)
         .eq('recipient_id', user.id);
-      
+
       if (error) throw error;
-      
-      return true;
-    } catch (error: any) {
+
+      // Remover solicitação da lista de pendentes
+      setIncomingRequests(prev => prev.filter(request => request.id !== requesterId));
+      toast.success('Solicitação aceita com sucesso');
+    } catch (error) {
       console.error('Erro ao aceitar solicitação:', error);
-      throw error;
+      toast.error('Não foi possível aceitar a solicitação');
     } finally {
       setProcessingRequests(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(memberId);
-        return newSet;
+        const updated = new Set([...prev]);
+        updated.delete(requesterId);
+        return updated;
       });
     }
   };
 
-  const rejectConnectionRequest = async (memberId: string) => {
-    if (!user) return;
-    
-    setProcessingRequests(prev => new Set(prev).add(memberId));
-    
+  // Rejeitar uma solicitação de conexão
+  const rejectConnectionRequest = async (requesterId: string) => {
+    if (!user?.id) return;
+
+    setProcessingRequests(prev => new Set([...prev, requesterId]));
+
     try {
       const { error } = await supabase
         .from('member_connections')
         .update({ status: 'rejected' })
-        .eq('requester_id', memberId)
+        .eq('requester_id', requesterId)
         .eq('recipient_id', user.id);
-      
+
       if (error) throw error;
-      
-      return true;
-    } catch (error: any) {
+
+      // Remover solicitação da lista de pendentes
+      setIncomingRequests(prev => prev.filter(request => request.id !== requesterId));
+      toast.success('Solicitação rejeitada');
+    } catch (error) {
       console.error('Erro ao rejeitar solicitação:', error);
-      throw error;
+      toast.error('Não foi possível rejeitar a solicitação');
     } finally {
       setProcessingRequests(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(memberId);
-        return newSet;
+        const updated = new Set([...prev]);
+        updated.delete(requesterId);
+        return updated;
       });
     }
   };
 
   return {
-    incomingRequests: incomingRequests || [],
+    incomingRequests,
     incomingLoading,
     processingRequests,
     acceptConnectionRequest,

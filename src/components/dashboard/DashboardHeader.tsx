@@ -1,7 +1,7 @@
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, Settings } from "lucide-react";
+import { Search, Filter, Settings, Users } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
 import { Link } from "react-router-dom";
 import { useState } from "react";
@@ -37,6 +37,12 @@ export const DashboardHeader = ({
         </p>
       </div>
       <div className="flex items-center gap-2">
+        <Link to="/comunidade/conexoes">
+          <Button variant="outline" size="sm" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            <span className="hidden sm:inline">Minhas Conexões</span>
+          </Button>
+        </Link>
         {isAdmin && (
           <Link to="/admin/solutions">
             <Button variant="default" className="bg-viverblue hover:bg-viverblue/90">

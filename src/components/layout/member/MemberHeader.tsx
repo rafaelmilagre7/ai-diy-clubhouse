@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import {
   Menu,
   Search,
-  Bell,
   Settings,
 } from "lucide-react";
 
