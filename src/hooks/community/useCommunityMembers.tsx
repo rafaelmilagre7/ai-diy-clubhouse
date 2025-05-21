@@ -1,162 +1,90 @@
 
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
-import { Profile } from '@/types/forumTypes';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import { useState } from "react";
 
-interface MemberFilters {
+interface CommunityMemberFilters {
   search?: string;
-  industry?: string;
-  role?: string;
+  role?: string[];
+  skills?: string[];
 }
 
-interface UseCommunityMembersProps {
-  initialFilters?: MemberFilters;
-  itemsPerPage?: number;
-}
-
-export const useCommunityMembers = ({
-  initialFilters = {},
-  itemsPerPage = 12
-}: UseCommunityMembersProps = {}) => {
-  const [currentPage, setCurrentPage] = useState(0);
-  const [filters, setFilters] = useState<MemberFilters>(initialFilters);
-  const [availableIndustries, setAvailableIndustries] = useState<string[]>([]);
-  const [availableRoles, setAvailableRoles] = useState<string[]>([]);
-
-  const fetchMembers = async () => {
-    try {
-      // Construir a query base
+export const useCommunityMembers = (initialFilters: CommunityMemberFilters = {}) => {
+  const [filters, setFilters] = useState<CommunityMemberFilters>(initialFilters);
+  const [page, setPage] = useState(0);
+  const itemsPerPage = 12;
+  
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['community-members', filters, page],
+    queryFn: async () => {
       let query = supabase
         .from('profiles')
-        .select('*')
-        .neq('name', null);
-
+        .select('*', { count: 'exact' })
+        .eq('active', true);
+        
       // Aplicar filtros
       if (filters.search) {
         query = query.ilike('name', `%${filters.search}%`);
       }
-
-      if (filters.industry) {
-        query = query.eq('industry', filters.industry);
-      }
-
-      if (filters.role) {
-        query = query.eq('current_position', filters.role);
-      }
-
-      // Buscar total de membros (para paginação)
-      const { count: totalCount, error: countError } = await query.count();
       
-      if (countError) throw countError;
-
-      // Aplicar paginação
-      const { data, error } = await query
-        .range(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage - 1)
+      if (filters.role && filters.role.length > 0) {
+        query = query.in('role', filters.role);
+      }
+      
+      // Para skills (um array)
+      if (filters.skills && filters.skills.length > 0) {
+        // Supabase permite filtrar por overlaps com arrays
+        query = query.overlaps('skills', filters.skills);
+      }
+      
+      // Paginação
+      const start = page * itemsPerPage;
+      const end = start + itemsPerPage - 1;
+      
+      // Execute duas consultas separadas: uma para os dados e outra para a contagem
+      const dataPromise = query
+        .range(start, end)
         .order('name', { ascending: true });
-
-      if (error) throw error;
-
-      // Buscar indústrias disponíveis para filtro
-      if (!availableIndustries.length) {
-        const { data: industries, error: indError } = await supabase
-          .from("profiles")
-          .select('industry')
-          .neq('industry', null)
-          .order('industry');
+      
+      const { data, error: dataError } = await dataPromise;
+      
+      if (dataError) throw dataError;
+      
+      // Consulta separada para contagem
+      const { count, error: countError } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('active', true);
         
-        if (indError) throw indError;
-        
-        if (industries) {
-          const uniqueIndustries = industries
-            .map(item => item.industry)
-            .filter((value): value is string => 
-              value !== null && value !== undefined && value !== '')
-            .filter((value, index, self) => self.indexOf(value) === index);
-          
-          setAvailableIndustries(uniqueIndustries);
-        }
-      }
-
-      // Buscar cargos disponíveis para filtro
-      if (!availableRoles.length) {
-        const { data: roles, error: rolesError } = await supabase
-          .from("profiles")
-          .select('current_position')
-          .neq('current_position', null)
-          .order('current_position');
-        
-        if (rolesError) throw rolesError;
-        
-        if (roles) {
-          const uniqueRoles = roles
-            .map(item => item.current_position)
-            .filter((value): value is string => 
-              value !== null && value !== undefined && value !== '')
-            .filter((value, index, self) => self.indexOf(value) === index);
-          
-          setAvailableRoles(uniqueRoles);
-        }
-      }
-
+      if (countError) throw countError;
+      
       return {
-        members: data as Profile[],
-        totalCount: totalCount || 0
+        members: data || [],
+        count: count || 0
       };
-    } catch (error) {
-      console.error('Erro ao buscar membros:', error);
-      throw error;
-    }
-  };
-
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    refetch
-  } = useQuery({
-    queryKey: ['communityMembers', currentPage, filters],
-    queryFn: fetchMembers,
-    meta: {
-      onError: (err: Error) => {
-        console.error('Erro na consulta de membros:', err);
-      }
-    }
+    },
+    refetchOnWindowFocus: false
   });
-
-  const members = data?.members || [];
-  const totalCount = data?.totalCount || 0;
-  const totalPages = Math.ceil(totalCount / itemsPerPage);
-
+  
+  const totalPages = Math.ceil((data?.count || 0) / itemsPerPage);
+  
   const handlePageChange = (newPage: number) => {
-    setCurrentPage(newPage);
+    setPage(newPage);
   };
-
-  const handleFilterChange = (newFilters: Partial<MemberFilters>) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
-    setCurrentPage(0); // Resetar para primeira página ao filtrar
+  
+  const handleFilterChange = (newFilters: CommunityMemberFilters) => {
+    setFilters(newFilters);
+    setPage(0); // Resetar para primeira página ao filtrar
   };
-
-  const handleRetry = () => {
-    toast.info('Atualizando lista de membros...');
-    refetch();
-  };
-
+  
   return {
-    members,
+    members: data?.members || [],
     isLoading,
-    isError,
     error,
-    totalCount,
-    totalPages,
-    currentPage,
     filters,
-    availableIndustries,
-    availableRoles,
-    handlePageChange,
     handleFilterChange,
-    handleRetry
+    page,
+    totalPages,
+    handlePageChange
   };
 };

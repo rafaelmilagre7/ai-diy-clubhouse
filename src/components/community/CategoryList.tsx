@@ -4,7 +4,7 @@ import { CategoryCard } from "./CategoryCard";
 import { CategoryLoading } from "./CategoryLoading";
 import { CategoryError } from "./CategoryError";
 import { EmptyCategories } from "./EmptyCategories";
-import { Grid } from "@/components/ui/grid";
+import { ForumCategory } from "@/types/forumTypes";
 
 interface CategoryListProps {
   onCategorySelect?: (categorySlug: string) => void;
@@ -29,14 +29,18 @@ export const CategoryList = ({ onCategorySelect }: CategoryListProps) => {
   }
   
   return (
-    <Grid className="grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {categories.map((category) => (
         <CategoryCard 
           key={category.id} 
-          category={category} 
+          id={category.id}
+          name={category.name}
+          description={category.description}
+          slug={category.slug}
+          icon={category.icon}
           onClick={() => onCategorySelect && onCategorySelect(category.slug)}
         />
       ))}
-    </Grid>
+    </div>
   );
 };

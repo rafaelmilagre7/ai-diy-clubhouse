@@ -1,7 +1,6 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { getInitials } from "@/components/community/utils/membership";
+import { getInitials } from "@/utils/user";
 import { PostActions } from "./PostActions";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -28,6 +27,11 @@ interface PostItemProps {
   isSolved?: boolean;
   isTopicStarter?: boolean;
   onMarkAsSolution?: (postId: string) => void;
+  topicId?: string;
+  isTopicAuthor?: boolean;
+  isAdmin?: boolean;
+  currentUserId?: string;
+  onReplyAdded?: () => void;
 }
 
 export const PostItem = ({ 
@@ -35,7 +39,12 @@ export const PostItem = ({
   topicAuthorId,
   isSolved,
   isTopicStarter,
-  onMarkAsSolution 
+  onMarkAsSolution,
+  topicId,
+  isTopicAuthor,
+  isAdmin,
+  currentUserId,
+  onReplyAdded
 }: PostItemProps) => {
   const formattedDate = formatDistanceToNow(
     new Date(post.created_at), 

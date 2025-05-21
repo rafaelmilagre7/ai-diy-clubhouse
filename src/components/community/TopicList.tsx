@@ -12,6 +12,9 @@ export interface TopicListProps {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  categoryId?: string;
+  categorySlug?: string;
+  searchQuery?: string;
 }
 
 export const TopicList = ({ 
@@ -19,12 +22,15 @@ export const TopicList = ({
   regularTopics,
   currentPage,
   totalPages,
-  onPageChange
+  onPageChange,
+  categoryId,
+  categorySlug,
+  searchQuery
 }: TopicListProps) => {
   const hasTopics = pinnedTopics.length > 0 || regularTopics.length > 0;
   
   if (!hasTopics) {
-    return <EmptyTopicsState />;
+    return <EmptyTopicsState searchQuery={searchQuery} />;
   }
   
   return (
