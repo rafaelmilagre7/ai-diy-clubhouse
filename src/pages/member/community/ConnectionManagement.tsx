@@ -51,14 +51,25 @@ const ConnectionManagement = () => {
       const connections: ConnectionMember[] = [];
       const pending: ConnectionMember[] = [];
       
-      profiles?.forEach(profile => {
-        const typedProfile = profile as ConnectionMember;
-        if (connectedMembers.has(profile.id)) {
-          connections.push(typedProfile);
-        } else if (pendingConnections.has(profile.id)) {
-          pending.push(typedProfile);
-        }
-      });
+      if (profiles) {
+        profiles.forEach(profile => {
+          // Corrigir a conversão de tipo criando um novo objeto tipado
+          const typedProfile: ConnectionMember = {
+            id: profile.id,
+            name: profile.name,
+            avatar_url: profile.avatar_url,
+            company_name: profile.company_name,
+            current_position: profile.current_position,
+            industry: profile.industry
+          };
+          
+          if (connectedMembers.has(profile.id)) {
+            connections.push(typedProfile);
+          } else if (pendingConnections.has(profile.id)) {
+            pending.push(typedProfile);
+          }
+        });
+      }
       
       return { connections, pending };
     },
@@ -88,7 +99,26 @@ const ConnectionManagement = () => {
         .eq('status', 'pending');
       
       // Converter e garantir que sejam do tipo correto
-      return (requests?.map(r => r.profiles as ConnectionMember) || []) as ConnectionMember[];
+      const memberRequests: ConnectionMember[] = [];
+      
+      if (requests) {
+        requests.forEach(req => {
+          if (req.profiles) {
+            // Criar objeto tipado corretamente
+            const member: ConnectionMember = {
+              id: req.profiles.id,
+              name: req.profiles.name,
+              avatar_url: req.profiles.avatar_url,
+              company_name: req.profiles.company_name,
+              current_position: req.profiles.current_position,
+              industry: req.profiles.industry
+            };
+            memberRequests.push(member);
+          }
+        });
+      }
+      
+      return memberRequests;
     },
     enabled: !!user?.id
   });
