@@ -4,22 +4,22 @@ import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
-export interface ConnectionNotification {
+interface ConnectionNotification {
   id: string;
   user_id: string;
   sender_id: string;
+  sender_name?: string | null;
+  sender_avatar?: string | null;
   type: 'request' | 'accepted' | 'rejected';
   is_read: boolean;
   created_at: string;
-  sender_name?: string;
-  sender_avatar?: string;
 }
 
 export const useConnectionNotifications = () => {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<ConnectionNotification[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!user?.id) {
@@ -35,8 +35,7 @@ export const useConnectionNotifications = () => {
           .from('connection_notifications')
           .select(`
             *,
-            sender:sender_id(
-              id,
+            profiles:sender_id (
               name,
               avatar_url
             )
@@ -46,48 +45,44 @@ export const useConnectionNotifications = () => {
 
         if (error) throw error;
 
-        // Processar notificações para facilitar o uso
-        const processedNotifications = data.map(notification => ({
-          ...notification,
-          sender_name: notification.sender?.name || 'Usuário',
-          sender_avatar: notification.sender?.avatar_url
+        // Processar notificações para adicionar informações do perfil
+        const processedNotifications: ConnectionNotification[] = (data || []).map(notification => ({
+          id: notification.id,
+          user_id: notification.user_id,
+          sender_id: notification.sender_id,
+          sender_name: notification.profiles?.name,
+          sender_avatar: notification.profiles?.avatar_url,
+          type: notification.type,
+          is_read: notification.is_read,
+          created_at: notification.created_at
         }));
 
         setNotifications(processedNotifications);
         
-        // Calcular quantidade de não lidas
+        // Calcular número de notificações não lidas
         const unread = processedNotifications.filter(n => !n.is_read).length;
         setUnreadCount(unread);
       } catch (error) {
-        console.error('Erro ao buscar notificações:', error);
-        toast.error('Não foi possível carregar as notificações');
+        console.error('Erro ao carregar notificações:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchNotifications();
-    
-    // Configurar subscription para atualizações em tempo real
+
+    // Configurar assinatura de tempo real
     const channel = supabase
-      .channel('connection_notifications')
+      .channel('connection_notifications_changes')
       .on('postgres_changes', 
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'connection_notifications',
           filter: `user_id=eq.${user.id}`
         }, 
-        (payload) => {
-          // Buscar dados do remetente
-          fetchSenderInfo(payload.new).then(notification => {
-            setNotifications(prev => [notification, ...prev]);
-            setUnreadCount(count => count + 1);
-            
-            // Exibir notificação ao usuário
-            const message = getNotificationMessage(notification.type, notification.sender_name || 'Usuário');
-            toast.info(message);
-          });
+        () => {
+          fetchNotifications();
         }
       )
       .subscribe();
@@ -97,61 +92,26 @@ export const useConnectionNotifications = () => {
     };
   }, [user?.id]);
 
-  // Buscar informações do remetente
-  const fetchSenderInfo = async (notification: any): Promise<ConnectionNotification> => {
-    try {
-      const { data } = await supabase
-        .from('profiles')
-        .select('name, avatar_url')
-        .eq('id', notification.sender_id)
-        .single();
-      
-      return {
-        ...notification,
-        sender_name: data?.name || 'Usuário',
-        sender_avatar: data?.avatar_url
-      };
-    } catch (error) {
-      console.error('Erro ao buscar detalhes do remetente:', error);
-      return {
-        ...notification,
-        sender_name: 'Usuário',
-        sender_avatar: undefined
-      };
-    }
-  };
-
-  // Obter mensagem para cada tipo de notificação
-  const getNotificationMessage = (type: string, senderName: string) => {
-    switch (type) {
-      case 'request':
-        return `${senderName} enviou uma solicitação de conexão`;
-      case 'accepted':
-        return `${senderName} aceitou sua solicitação de conexão`;
-      case 'rejected':
-        return `${senderName} rejeitou sua solicitação de conexão`;
-      default:
-        return `Nova notificação de ${senderName}`;
-    }
-  };
-
-  // Função para marcar notificações como lidas
+  // Marcar uma notificação como lida
   const markAsRead = async (notificationId: string) => {
+    if (!user?.id) return;
+
     try {
       const { error } = await supabase
         .from('connection_notifications')
         .update({ is_read: true })
-        .eq('id', notificationId);
-      
+        .eq('id', notificationId)
+        .eq('user_id', user.id);
+
       if (error) throw error;
-      
+
       // Atualizar estado local
       setNotifications(prev => 
         prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
       );
       
-      // Atualizar contador de não lidas
-      setUnreadCount(count => Math.max(0, count - 1));
+      // Recalcular contagem de não lidas
+      setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
       console.error('Erro ao marcar notificação como lida:', error);
     }
@@ -160,22 +120,22 @@ export const useConnectionNotifications = () => {
   // Marcar todas as notificações como lidas
   const markAllAsRead = async () => {
     if (!user?.id) return;
-    
+
     try {
       const { error } = await supabase
         .from('connection_notifications')
         .update({ is_read: true })
         .eq('user_id', user.id)
         .eq('is_read', false);
-      
+
       if (error) throw error;
-      
+
       // Atualizar estado local
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
       setUnreadCount(0);
     } catch (error) {
       console.error('Erro ao marcar todas notificações como lidas:', error);
-      toast.error('Não foi possível atualizar as notificações');
+      toast.error('Erro ao marcar notificações como lidas');
     }
   };
 

@@ -7,17 +7,115 @@ import { ConnectionMember } from '@/types/forumTypes';
 
 export const useNetworkConnections = () => {
   const { user } = useAuth();
-  const [connectedMembers, setConnectedMembers] = useState<Set<string>>(new Set());
-  const [pendingConnections, setPendingConnections] = useState<Set<string>>(new Set());
+  const [connectedMembers, setConnectedMembers] = useState<ConnectionMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [processingRequest, setProcessingRequest] = useState(false);
+  const [pendingRequests, setPendingRequests] = useState<ConnectionMember[]>([]);
 
   useEffect(() => {
     if (!user?.id) {
       setIsLoading(false);
       return;
     }
-    
-    fetchNetworkConnections();
+
+    const fetchConnections = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Buscar todas as conexões aceitas (enviadas ou recebidas)
+        const { data: connectionsData, error: connectionsError } = await supabase
+          .from('member_connections')
+          .select(`
+            requester_id,
+            recipient_id,
+            profiles:requester_id (
+              id, 
+              name,
+              avatar_url,
+              company_name,
+              current_position,
+              industry
+            ),
+            recipients:recipient_id (
+              id,
+              name,
+              avatar_url,
+              company_name,
+              current_position,
+              industry
+            )
+          `)
+          .or(`requester_id.eq.${user.id},recipient_id.eq.${user.id}`)
+          .eq('status', 'accepted');
+
+        if (connectionsError) throw connectionsError;
+
+        // Processar dados para o formato ConnectionMember
+        const connections: ConnectionMember[] = connectionsData?.map(conn => {
+          if (conn.requester_id === user.id) {
+            // O usuário é o solicitante, então a conexão é com o destinatário
+            return {
+              id: conn.recipient_id,
+              name: conn.recipients?.name || null,
+              avatar_url: conn.recipients?.avatar_url,
+              company_name: conn.recipients?.company_name,
+              current_position: conn.recipients?.current_position,
+              industry: conn.recipients?.industry
+            };
+          } else {
+            // O usuário é o destinatário, então a conexão é com o solicitante
+            return {
+              id: conn.requester_id,
+              name: conn.profiles?.name || null,
+              avatar_url: conn.profiles?.avatar_url,
+              company_name: conn.profiles?.company_name,
+              current_position: conn.profiles?.current_position,
+              industry: conn.profiles?.industry
+            };
+          }
+        }) || [];
+
+        setConnectedMembers(connections);
+        
+        // Buscar solicitações pendentes enviadas pelo usuário
+        const { data: pendingData, error: pendingError } = await supabase
+          .from('member_connections')
+          .select(`
+            recipient_id,
+            recipients:recipient_id (
+              id,
+              name,
+              avatar_url,
+              company_name,
+              current_position,
+              industry
+            )
+          `)
+          .eq('requester_id', user.id)
+          .eq('status', 'pending');
+          
+        if (pendingError) throw pendingError;
+        
+        // Processar solicitações pendentes
+        const pending: ConnectionMember[] = pendingData?.map(item => ({
+          id: item.recipient_id,
+          name: item.recipients?.name || null,
+          avatar_url: item.recipients?.avatar_url,
+          company_name: item.recipients?.company_name,
+          current_position: item.recipients?.current_position,
+          industry: item.recipients?.industry
+        })) || [];
+        
+        setPendingRequests(pending);
+      } catch (error) {
+        console.error('Erro ao buscar conexões:', error);
+        toast.error('Não foi possível carregar suas conexões');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchConnections();
     
     // Configurar subscription para atualizações em tempo real
     const channel = supabase
@@ -28,9 +126,10 @@ export const useNetworkConnections = () => {
           schema: 'public',
           table: 'member_connections',
           filter: `requester_id=eq.${user.id}`
-        }, 
+        },
         () => {
-          fetchNetworkConnections();
+          // Quando houver mudança na tabela como solicitante
+          fetchConnections();
         }
       )
       .on('postgres_changes', 
@@ -39,89 +138,54 @@ export const useNetworkConnections = () => {
           schema: 'public',
           table: 'member_connections',
           filter: `recipient_id=eq.${user.id}`
-        }, 
+        },
         () => {
-          fetchNetworkConnections();
+          // Quando houver mudança na tabela como destinatário
+          fetchConnections();
         }
       )
       .subscribe();
-      
+
     return () => {
       supabase.removeChannel(channel);
     };
   }, [user?.id]);
-  
-  // Buscar conexões do usuário
-  const fetchNetworkConnections = async () => {
-    if (!user?.id) return;
-    
-    try {
-      setIsLoading(true);
-      
-      // Buscar conexões aceitas (onde o usuário é o solicitante)
-      const { data: sentConnections } = await supabase
-        .from('member_connections')
-        .select('recipient_id, status')
-        .eq('requester_id', user.id);
-        
-      // Buscar conexões aceitas (onde o usuário é o destinatário)
-      const { data: receivedConnections } = await supabase
-        .from('member_connections')
-        .select('requester_id, status')
-        .eq('recipient_id', user.id);
-        
-      // Processar conexões aceitas
-      const connected = new Set<string>();
-      const pending = new Set<string>();
-      
-      sentConnections?.forEach(conn => {
-        if (conn.status === 'accepted') {
-          connected.add(conn.recipient_id);
-        } else if (conn.status === 'pending') {
-          pending.add(conn.recipient_id);
-        }
-      });
-      
-      receivedConnections?.forEach(conn => {
-        if (conn.status === 'accepted') {
-          connected.add(conn.requester_id);
-        }
-      });
-      
-      setConnectedMembers(connected);
-      setPendingConnections(pending);
-    } catch (error) {
-      console.error('Erro ao buscar conexões:', error);
-      toast.error('Não foi possível carregar suas conexões');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // Enviar solicitação de conexão
+
+  // Enviar uma solicitação de conexão
   const sendConnectionRequest = async (memberId: string): Promise<boolean> => {
     if (!user?.id) return false;
     
+    // Verificar se já existe uma conexão com este membro
+    const isConnected = connectedMembers.some(member => member.id === memberId);
+    if (isConnected) {
+      toast.info('Você já está conectado com este membro');
+      return false;
+    }
+    
+    // Verificar se já existe uma solicitação pendente
+    const isPending = pendingRequests.some(request => request.id === memberId);
+    if (isPending) {
+      toast.info('Você já enviou uma solicitação para este membro');
+      return false;
+    }
+
+    setProcessingRequest(true);
+
     try {
-      // Verificar se já existe uma conexão
-      const { data: existingConnection } = await supabase
+      // Verificar se já existe uma conexão ou solicitação
+      const { count, error: countError } = await supabase
         .from('member_connections')
-        .select('*')
-        .or(`and(requester_id.eq.${user.id},recipient_id.eq.${memberId}),and(requester_id.eq.${memberId},recipient_id.eq.${user.id})`)
-        .single();
+        .select('*', { count: 'exact', head: true })
+        .or(`and(requester_id.eq.${user.id},recipient_id.eq.${memberId}),and(requester_id.eq.${memberId},recipient_id.eq.${user.id})`);
+        
+      if (countError) throw countError;
       
-      if (existingConnection) {
-        if (existingConnection.status === 'pending') {
-          toast.info('Você já tem uma solicitação pendente com este membro');
-        } else if (existingConnection.status === 'accepted') {
-          toast.info('Vocês já estão conectados');
-        } else {
-          toast.info('Não é possível enviar solicitação para este membro');
-        }
+      if (count && count > 0) {
+        toast.info('Já existe uma conexão ou solicitação com este membro');
         return false;
       }
       
-      // Criar nova solicitação
+      // Criar solicitação
       const { error } = await supabase
         .from('member_connections')
         .insert({
@@ -129,24 +193,42 @@ export const useNetworkConnections = () => {
           recipient_id: memberId,
           status: 'pending'
         });
-        
+
       if (error) throw error;
       
-      // Atualizar estado local
-      setPendingConnections(prev => new Set([...prev, memberId]));
+      // Atualizar lista de solicitações pendentes
+      const { data: memberData } = await supabase
+        .from('profiles')
+        .select('id, name, avatar_url, company_name, current_position, industry')
+        .eq('id', memberId)
+        .single();
+        
+      if (memberData) {
+        setPendingRequests(prev => [...prev, {
+          id: memberId,
+          name: memberData.name,
+          avatar_url: memberData.avatar_url,
+          company_name: memberData.company_name,
+          current_position: memberData.current_position,
+          industry: memberData.industry
+        }]);
+      }
+      
       return true;
     } catch (error) {
-      console.error('Erro ao enviar solicitação de conexão:', error);
-      toast.error('Não foi possível enviar a solicitação de conexão');
+      console.error('Erro ao enviar solicitação:', error);
+      toast.error('Não foi possível enviar a solicitação');
       return false;
+    } finally {
+      setProcessingRequest(false);
     }
   };
-  
+
   return {
     connectedMembers,
-    pendingConnections,
+    pendingRequests,
     isLoading,
-    sendConnectionRequest,
-    refreshConnections: fetchNetworkConnections
+    processingRequest,
+    sendConnectionRequest
   };
 };
