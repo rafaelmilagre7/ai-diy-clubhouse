@@ -1,7 +1,7 @@
 
 import { useParams } from 'react-router-dom';
 import { ForumHeader } from '@/components/community/ForumHeader';
-import { TopicList } from '@/components/community/TopicList';
+import { SimpleTopicList } from '@/components/community/TopicList';
 import { ForumBreadcrumbs } from '@/components/community/ForumBreadcrumbs';
 import { CommunityNavigation } from '@/components/community/CommunityNavigation';
 import { Button } from '@/components/ui/button';
@@ -55,7 +55,7 @@ const CategoryView = () => {
       <CommunityNavigation activeCategory={category?.slug} />
       
       {category?.id && (
-        <TopicList categoryId={category.id} />
+        <SimpleTopicList categoryId={category.id} categorySlug={category.slug} />
       )}
     </div>
   );

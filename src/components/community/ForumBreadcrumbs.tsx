@@ -10,7 +10,8 @@ import {
 } from "@/components/ui/breadcrumb";
 import { useForumCategories } from "@/hooks/community/useForumCategories";
 
-interface ForumBreadcrumbsProps {
+export interface ForumBreadcrumbsProps {
+  categoryName?: string;
   categorySlug?: string;
   topicTitle?: string;
   section?: string;
@@ -18,6 +19,7 @@ interface ForumBreadcrumbsProps {
 }
 
 export const ForumBreadcrumbs = ({ 
+  categoryName, 
   categorySlug, 
   topicTitle, 
   section,
@@ -25,10 +27,12 @@ export const ForumBreadcrumbs = ({
 }: ForumBreadcrumbsProps) => {
   const { categories } = useForumCategories();
   
-  // Encontrar a categoria atual com base no slug
+  // Encontrar a categoria atual com base no slug ou nome fornecido
   const currentCategory = categorySlug 
     ? categories?.find(cat => cat.slug === categorySlug)
-    : null;
+    : categoryName 
+      ? categories?.find(cat => cat.name === categoryName) 
+      : null;
   
   return (
     <Breadcrumb className="mb-4">
@@ -48,18 +52,18 @@ export const ForumBreadcrumbs = ({
           </>
         )}
         
-        {currentCategory && (
+        {(currentCategory || categoryName) && (
           <>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               {topicTitle ? (
                 <BreadcrumbLink asChild>
-                  <Link to={`/comunidade/categoria/${categorySlug}`}>
-                    {currentCategory.name}
+                  <Link to={`/comunidade/categoria/${categorySlug || currentCategory?.slug}`}>
+                    {currentCategory?.name || categoryName}
                   </Link>
                 </BreadcrumbLink>
               ) : (
-                <BreadcrumbPage>{currentCategory.name}</BreadcrumbPage>
+                <BreadcrumbPage>{currentCategory?.name || categoryName}</BreadcrumbPage>
               )}
             </BreadcrumbItem>
           </>

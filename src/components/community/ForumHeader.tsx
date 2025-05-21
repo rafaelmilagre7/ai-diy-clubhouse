@@ -5,19 +5,22 @@ import { PlusCircle } from "lucide-react";
 import { useState } from "react";
 import { useForumCategories } from "@/hooks/community/useForumCategories";
 import { CreateTopicDialog } from "./CreateTopicDialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
-interface ForumHeaderProps {
+export interface ForumHeaderProps {
   title?: string;
   description?: string;
   showNewTopicButton?: boolean;
   categorySlug?: string;
+  isLoading?: boolean;
 }
 
 export const ForumHeader = ({
   title = "Comunidade",
   description = "Compartilhe conhecimento, faça perguntas e conecte-se com outros membros da comunidade.",
   showNewTopicButton = true,
-  categorySlug
+  categorySlug,
+  isLoading = false
 }: ForumHeaderProps) => {
   const { categories } = useForumCategories();
   const [createTopicOpen, setCreateTopicOpen] = useState(false);
@@ -31,6 +34,18 @@ export const ForumHeader = ({
     
     return categories && categories.length > 0 ? categories[0].id : "";
   };
+
+  if (isLoading) {
+    return (
+      <div className="mb-8">
+        <div className="flex flex-col space-y-2 mb-4">
+          <Skeleton className="h-8 w-1/3" />
+          <Skeleton className="h-4 w-2/3" />
+        </div>
+        <Skeleton className="h-24 w-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="mb-8">

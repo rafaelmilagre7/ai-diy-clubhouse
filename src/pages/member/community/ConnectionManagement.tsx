@@ -39,7 +39,7 @@ const ConnectionManagement = () => {
     queryKey: ['connection-members', [...connectedMembers, ...pendingConnections]],
     queryFn: async () => {
       const allIds = [...connectedMembers, ...pendingConnections];
-      if (allIds.length === 0) return { connections: [], pending: [] };
+      if (allIds.length === 0) return { connections: [] as ConnectionMember[], pending: [] as ConnectionMember[] };
       
       // Buscar informações dos membros
       const { data: profiles } = await supabase
@@ -52,10 +52,11 @@ const ConnectionManagement = () => {
       const pending: ConnectionMember[] = [];
       
       profiles?.forEach(profile => {
+        const typedProfile = profile as ConnectionMember;
         if (connectedMembers.has(profile.id)) {
-          connections.push(profile as ConnectionMember);
+          connections.push(typedProfile);
         } else if (pendingConnections.has(profile.id)) {
-          pending.push(profile as ConnectionMember);
+          pending.push(typedProfile);
         }
       });
       
@@ -67,7 +68,7 @@ const ConnectionManagement = () => {
   const { data: incomingRequests, isLoading: incomingLoading } = useQuery({
     queryKey: ['incoming-requests', user?.id],
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!user?.id) return [] as ConnectionMember[];
       
       // Buscar solicitações recebidas
       const { data: requests } = await supabase
@@ -86,7 +87,8 @@ const ConnectionManagement = () => {
         .eq('recipient_id', user.id)
         .eq('status', 'pending');
       
-      return (requests?.map(r => r.profiles) || []) as ConnectionMember[];
+      // Converter e garantir que sejam do tipo correto
+      return (requests?.map(r => r.profiles as ConnectionMember) || []) as ConnectionMember[];
     },
     enabled: !!user?.id
   });

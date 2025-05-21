@@ -1,9 +1,13 @@
 
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { MessageSquare, Users, Calendar, Bookmark, Award } from 'lucide-react';
+import { MessageSquare, Users, Calendar, Bookmark, Award, UserPlus } from 'lucide-react';
 
-export const CommunityNavigation = () => {
+interface CommunityNavigationProps {
+  activeCategory?: string;
+}
+
+export const CommunityNavigation = ({ activeCategory }: CommunityNavigationProps = {}) => {
   const { pathname } = useLocation();
   
   const navItems = [
@@ -17,6 +21,11 @@ export const CommunityNavigation = () => {
       name: 'Membros', 
       path: '/comunidade/membros', 
       icon: Users 
+    },
+    { 
+      name: 'Conexões',
+      path: '/comunidade/conexoes',
+      icon: UserPlus
     },
     { 
       name: 'Eventos', 

@@ -8,6 +8,7 @@ import { CommunityNavigation } from '@/components/community/CommunityNavigation'
 import { NewTopicForm } from '@/components/forum/NewTopicForm';
 import { ForumCategory } from '@/types/forumTypes';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 
 const NewTopicPage = () => {
   const { categorySlug } = useParams<{ categorySlug: string }>();
@@ -28,8 +29,13 @@ const NewTopicPage = () => {
       return data as ForumCategory;
     },
     enabled: !!categorySlug,
-    onError: () => {
-      navigate('/comunidade');
+    meta: {
+      onSettled: (data, error) => {
+        if (error) {
+          toast.error("Categoria não encontrada");
+          navigate('/comunidade', { replace: true });
+        }
+      }
     }
   });
   
