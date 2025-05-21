@@ -15,7 +15,7 @@ import { ConnectionMember } from '@/types/forumTypes';
 const ConnectionManagement = () => {
   const { 
     connectedMembers, 
-    pendingConnections, 
+    pendingRequests, 
     isLoading: connectionsLoading
   } = useNetworkConnections();
 
@@ -29,17 +29,21 @@ const ConnectionManagement = () => {
   
   const [activeTab, setActiveTab] = useState('connections');
 
+  // Criar IDs de membros para consultas
+  const connectedMemberIds = connectedMembers.map(member => member.id);
+  const pendingRequestIds = pendingRequests.map(member => member.id);
+  const allMemberIds = [...connectedMemberIds, ...pendingRequestIds];
+
   const { data: membersData, isLoading: membersLoading } = useQuery({
-    queryKey: ['connection-members', [...connectedMembers, ...pendingConnections]],
+    queryKey: ['connection-members', allMemberIds],
     queryFn: async () => {
-      const allIds = [...connectedMembers, ...pendingConnections];
-      if (allIds.length === 0) return { connections: [] as ConnectionMember[], pending: [] as ConnectionMember[] };
+      if (allMemberIds.length === 0) return { connections: [] as ConnectionMember[], pending: [] as ConnectionMember[] };
       
       // Buscar informações dos membros
       const { data: profiles } = await supabase
         .from('profiles')
         .select('id, name, avatar_url, company_name, current_position, industry')
-        .in('id', allIds);
+        .in('id', allMemberIds);
       
       // Separar perfis de conexões e pendentes
       const connections: ConnectionMember[] = [];
@@ -57,9 +61,9 @@ const ConnectionManagement = () => {
             industry: profile.industry
           };
           
-          if (connectedMembers.has(profile.id)) {
+          if (connectedMemberIds.includes(profile.id)) {
             connections.push(typedProfile);
-          } else if (pendingConnections.has(profile.id)) {
+          } else if (pendingRequestIds.includes(profile.id)) {
             pending.push(typedProfile);
           }
         });
@@ -67,7 +71,7 @@ const ConnectionManagement = () => {
       
       return { connections, pending };
     },
-    enabled: connectedMembers.size > 0 || pendingConnections.size > 0
+    enabled: allMemberIds.length > 0
   });
 
   const isLoading = connectionsLoading || membersLoading || incomingLoading;

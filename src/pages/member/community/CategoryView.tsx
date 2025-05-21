@@ -1,62 +1,39 @@
 
+import React from 'react';
 import { useParams } from 'react-router-dom';
-import { ForumHeader } from '@/components/community/ForumHeader';
-import { SimpleTopicList } from '@/components/community/TopicList';
 import { ForumBreadcrumbs } from '@/components/community/ForumBreadcrumbs';
 import { CommunityNavigation } from '@/components/community/CommunityNavigation';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { ForumCategory } from '@/types/forumTypes';
 
 const CategoryView = () => {
-  const { slug } = useParams<{ slug: string }>();
-
-  const { data: category, isLoading: categoryLoading } = useQuery({
-    queryKey: ['forum-category', slug],
-    queryFn: async () => {
-      if (!slug) return null;
-      const { data, error } = await supabase
-        .from('forum_categories')
-        .select('*')
-        .eq('slug', slug)
-        .single();
-        
-      if (error) throw error;
-      return data as ForumCategory;
-    },
-    enabled: !!slug
-  });
+  const { categoryId } = useParams<{ categoryId: string }>();
 
   return (
     <div className="container max-w-7xl mx-auto py-6">
       <ForumBreadcrumbs 
-        categoryName={category?.name} 
-        categorySlug={category?.slug} 
+        section="forum"
+        sectionTitle="Fórum - Categoria"
       />
       
-      <div className="flex justify-between items-center mb-6">
-        <ForumHeader
-          title={category?.name || 'Carregando...'}
-          description={category?.description || ''}
-          isLoading={categoryLoading}
-        />
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <h1 className="text-3xl font-bold">Categoria</h1>
+          <p className="text-muted-foreground">
+            Tópicos relacionados a esta categoria
+          </p>
+        </div>
         
-        {category?.id && (
-          <Button asChild>
-            <Link to={`/comunidade/novo-topico/${slug}`}>
-              Criar novo tópico
-            </Link>
-          </Button>
-        )}
+        <Button>Novo Tópico</Button>
       </div>
-
-      <CommunityNavigation activeCategory={category?.slug} />
       
-      {category?.id && (
-        <SimpleTopicList categoryId={category.id} categorySlug={category.slug} />
-      )}
+      <CommunityNavigation />
+      
+      <div className="py-10 text-center">
+        <p className="text-lg mb-2">Esta funcionalidade está sendo implementada</p>
+        <p className="text-muted-foreground">
+          Em breve você poderá visualizar todos os tópicos desta categoria
+        </p>
+      </div>
     </div>
   );
 };

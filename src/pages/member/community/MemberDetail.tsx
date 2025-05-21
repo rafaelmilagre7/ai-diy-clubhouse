@@ -96,6 +96,7 @@ const MemberDetail = () => {
     );
   }
   
+  // Formatar memberSince de forma segura, verificando se created_at existe
   const memberSince = profile.created_at 
     ? format(new Date(profile.created_at), "MMMM 'de' yyyy", { locale: ptBR })
     : "Data desconhecida";

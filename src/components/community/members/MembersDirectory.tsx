@@ -53,6 +53,9 @@ export const MembersDirectory = () => {
     );
   }
 
+  // Converter connectedMembers em um Set de IDs para verificação mais eficiente
+  const connectedMemberIds = new Set(connectedMembers.map(member => member.id));
+
   return (
     <div className="space-y-6">
       <div>
@@ -76,7 +79,7 @@ export const MembersDirectory = () => {
         currentPage={currentPage}
         onPageChange={handlePageChange}
         onConnect={handleConnect}
-        connectedMembers={connectedMembers}
+        connectedMembers={connectedMemberIds}
       />
     </div>
   );
