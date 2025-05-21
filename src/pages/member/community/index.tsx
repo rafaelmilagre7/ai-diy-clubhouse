@@ -1,6 +1,6 @@
 
 import { Routes, Route } from "react-router-dom";
-import ForumHome from "./ForumHome";
+import CommunityHome from "./CommunityHome";
 import CategoryView from "./CategoryView";
 import TopicView from "./TopicView";
 import NewTopicPage from "./NewTopicPage";
@@ -10,7 +10,7 @@ import ConnectionManagement from "./ConnectionManagement";
 const CommunityPages = () => {
   return (
     <Routes>
-      <Route path="/" element={<ForumHome />} />
+      <Route path="/" element={<CommunityHome />} />
       <Route path="/categoria/:slug" element={<CategoryView />} />
       <Route path="/topico/:id" element={<TopicView />} />
       <Route path="/novo-topico/:categorySlug" element={<NewTopicPage />} />

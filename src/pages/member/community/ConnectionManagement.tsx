@@ -86,7 +86,7 @@ const ConnectionManagement = () => {
         .eq('recipient_id', user.id)
         .eq('status', 'pending');
       
-      return requests?.map(r => r.profiles) || [];
+      return (requests?.map(r => r.profiles) || []) as ConnectionMember[];
     },
     enabled: !!user?.id
   });
@@ -236,7 +236,7 @@ const ConnectionManagement = () => {
             <TabsContent value="requests" className="mt-2">
               {incomingRequests && incomingRequests.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {incomingRequests.map((member: ConnectionMember) => (
+                  {incomingRequests.map((member) => (
                     <Card key={member.id} className="overflow-hidden">
                       <CardContent className="p-4">
                         <div className="flex items-center space-x-4">
