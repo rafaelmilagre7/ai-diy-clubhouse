@@ -22,6 +22,19 @@ interface ConnectionMember {
   industry: string | null;
 }
 
+// Interface para a resposta da consulta de solicitações recebidas
+interface RequestWithProfile {
+  requester_id: string;
+  profiles: {
+    id: string;
+    name: string;
+    avatar_url: string | null;
+    company_name: string | null;
+    current_position: string | null;
+    industry: string | null;
+  };
+}
+
 const ConnectionManagement = () => {
   const { 
     connectedMembers, 
@@ -102,7 +115,7 @@ const ConnectionManagement = () => {
       const memberRequests: ConnectionMember[] = [];
       
       if (requests) {
-        requests.forEach(req => {
+        requests.forEach((req: RequestWithProfile) => {
           if (req.profiles) {
             // Criar objeto tipado corretamente
             const member: ConnectionMember = {
