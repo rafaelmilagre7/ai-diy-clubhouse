@@ -4071,6 +4071,7 @@ export type Database = {
       }
     }
     Enums: {
+      connection_status: "pending" | "accepted" | "rejected"
       difficulty_level: "beginner" | "intermediate" | "advanced"
       difficulty_level_new: "easy" | "medium" | "advanced"
       forum_reaction_type: "like" | "helpful" | "insightful" | "celebrate"
@@ -4207,6 +4208,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      connection_status: ["pending", "accepted", "rejected"],
       difficulty_level: ["beginner", "intermediate", "advanced"],
       difficulty_level_new: ["easy", "medium", "advanced"],
       forum_reaction_type: ["like", "helpful", "insightful", "celebrate"],
