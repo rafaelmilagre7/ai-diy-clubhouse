@@ -11,8 +11,8 @@ import { getInitials } from './ConnectionCard';
 interface ConnectionRequestCardProps {
   member: ConnectionMember;
   isProcessing: boolean;
-  onAccept: (memberId: string) => void;
-  onReject: (memberId: string) => void;
+  onAccept: (memberId: string) => Promise<boolean | void>;
+  onReject: (memberId: string) => Promise<boolean | void>;
 }
 
 export const ConnectionRequestCard: React.FC<ConnectionRequestCardProps> = ({

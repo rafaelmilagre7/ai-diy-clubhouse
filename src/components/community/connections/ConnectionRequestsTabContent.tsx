@@ -1,14 +1,19 @@
 
 import React from 'react';
-import { ConnectionRequestCard } from './ConnectionRequestCard';
-import { EmptyTopicsState } from '@/components/community/EmptyTopicsState';
+import { Link } from 'react-router-dom';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Loader2, UserCheck, UserX } from 'lucide-react';
 import { ConnectionMember } from '@/types/forumTypes';
+import { EmptyTopicsState } from '@/components/community/EmptyTopicsState';
+import { getInitials } from './ConnectionCard';
 
 interface ConnectionRequestsTabContentProps {
   requests: ConnectionMember[];
   processingRequests: Set<string>;
-  onAccept: (memberId: string) => Promise<void>;
-  onReject: (memberId: string) => Promise<void>;
+  onAccept: (memberId: string) => Promise<boolean | void>;
+  onReject: (memberId: string) => Promise<boolean | void>;
   isLoading?: boolean;
 }
 
