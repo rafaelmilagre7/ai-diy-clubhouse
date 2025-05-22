@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,9 +12,14 @@ import { getInitials } from '@/utils/user';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
+// Tipo estendido para dados da API que podem incluir mais campos que o tipo Profile
+interface ProfileWithDates extends Profile {
+  created_at?: string;
+}
+
 const MemberDetail = () => {
   const { memberId } = useParams<{ memberId: string }>();
-  const [member, setMember] = useState<Profile | null>(null);
+  const [member, setMember] = useState<ProfileWithDates | null>(null);
   const [loading, setLoading] = useState(true);
   const { pendingRequests, connectedMembers, sendConnectionRequest, processingRequest } = useNetworkConnections();
 
@@ -32,7 +36,7 @@ const MemberDetail = () => {
           .single();
           
         if (error) throw error;
-        setMember(data as Profile);
+        setMember(data as ProfileWithDates);
       } catch (error) {
         console.error('Erro ao buscar dados do membro:', error);
       } finally {

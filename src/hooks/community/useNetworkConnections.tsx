@@ -26,6 +26,7 @@ export const useNetworkConnections = () => {
         const { data: connectionsData, error: connectionsError } = await supabase
           .from('member_connections')
           .select(`
+            id,
             requester_id,
             recipient_id,
             profiles:requester_id (
@@ -81,6 +82,7 @@ export const useNetworkConnections = () => {
         const { data: pendingData, error: pendingError } = await supabase
           .from('member_connections')
           .select(`
+            id,
             recipient_id,
             recipients:recipient_id (
               id,

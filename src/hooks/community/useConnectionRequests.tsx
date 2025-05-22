@@ -25,6 +25,7 @@ export const useConnectionRequests = () => {
         const { data, error } = await supabase
           .from('member_connections')
           .select(`
+            id,
             requester_id,
             profiles:requester_id (
               id,

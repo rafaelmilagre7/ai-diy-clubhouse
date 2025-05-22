@@ -25,9 +25,6 @@ const ConnectionManagement = () => {
     rejectConnectionRequest
   } = useConnectionRequests();
   
-  // Converter Set para Array para os IDs em processamento
-  const processingRequestsArray = Array.from(processingRequests);
-  
   // Calcular contagens para badges
   const pendingCount = pendingRequests.length + incomingRequests.length;
   
@@ -59,7 +56,7 @@ const ConnectionManagement = () => {
           ) : connectedMembers.length > 0 ? (
             <div className="grid gap-4 sm:grid-cols-2">
               {connectedMembers.map(member => (
-                <ConnectionCard key={member.id} connection={member} />
+                <ConnectionCard key={member.id} member={member} />
               ))}
             </div>
           ) : (
@@ -97,13 +94,13 @@ const ConnectionManagement = () => {
                 <div className="mb-6">
                   <h3 className="text-lg font-medium mb-3">Solicitações Recebidas</h3>
                   <div className="space-y-3">
-                    {incomingRequests.map(request => (
+                    {incomingRequests.map(member => (
                       <ConnectionRequestCard
-                        key={request.id}
-                        request={request}
+                        key={member.id}
+                        member={member}
                         onAccept={acceptConnectionRequest}
                         onReject={rejectConnectionRequest}
-                        isProcessing={processingRequestsArray.includes(request.id)}
+                        isProcessing={processingRequests.has(member.id)}
                       />
                     ))}
                   </div>
@@ -114,8 +111,8 @@ const ConnectionManagement = () => {
                 <div className="mb-6">
                   <h3 className="text-lg font-medium mb-3">Solicitações Enviadas</h3>
                   <div className="space-y-3">
-                    {pendingRequests.map(request => (
-                      <PendingConnectionCard key={request.id} request={request} />
+                    {pendingRequests.map(member => (
+                      <PendingConnectionCard key={member.id} member={member} />
                     ))}
                   </div>
                 </div>
