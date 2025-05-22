@@ -146,7 +146,7 @@ export const OnboardingCompleted: React.FC = () => {
             
             <Button 
               className="w-full bg-viverblue/10 hover:bg-viverblue/20 text-viverblue"
-              onClick={() => navigate("/member/trail")}
+              onClick={() => navigate("/implementation-trail")}
               variant="outline"
             >
               Ver minha trilha personalizada
