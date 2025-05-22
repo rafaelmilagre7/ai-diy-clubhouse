@@ -1,345 +1,160 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { CheckCircle2, Edit, Map, Loader2 } from "lucide-react";
-import confetti from "canvas-confetti";
 import { useProgress } from "@/hooks/onboarding/useProgress";
-import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Loader2, Check, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
-import { ReviewStep } from "@/components/onboarding/steps/ReviewStep";
+import { MoticonAnimation } from "./MoticonAnimation";
 
-const LOADING_TIMEOUT_MS = 8000; // 8 segundos para evitar tela de loading infinita
-
-export const OnboardingCompleted = () => {
+export const OnboardingCompleted: React.FC = () => {
   const navigate = useNavigate();
-  const { progress, isLoading: progressLoading, refreshProgress } = useProgress();
-  const { generateImplementationTrail, regenerating, hasContent: trailExists } = useImplementationTrail();
+  const { progress, isLoading, refreshProgress } = useProgress();
+  const [retryCount, setRetryCount] = useState(0);
+  const [showError, setShowError] = useState(false);
   
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const [hasShownConfetti, setHasShownConfetti] = useState(false);
-  const [isGeneratingTrail, setIsGeneratingTrail] = useState(false);
-  const [trailGenerated, setTrailGenerated] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
-  const [loadingRetries, setLoadingRetries] = useState(0);
-  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isLoadingHandledRef = useRef(false);
+  // Log para debugging
+  useEffect(() => {
+    console.log("[OnboardingCompleted] Iniciando carregamento de dados, tentativa:", retryCount + 1);
+  }, [retryCount]);
   
-  // Efeito para controlar timeout de carregamento
+  // Efeito para tentar recarregar o progresso se não tiver carregado
   useEffect(() => {
-    // Definir timeout para evitar tela de loading infinita
-    loadingTimeoutRef.current = setTimeout(() => {
-      if (isInitialLoad && !isLoadingHandledRef.current) {
-        console.log("[OnboardingCompleted] Timeout de carregamento atingido, forçando transição de estado");
-        setIsInitialLoad(false);
-        isLoadingHandledRef.current = true;
-        
-        // Tentar carregar dados novamente se ainda não temos progresso
-        if (!progress) {
-          console.log("[OnboardingCompleted] Dados de progresso não encontrados após timeout, tentando novamente");
-          refreshProgress().catch(err => 
-            console.error("[OnboardingCompleted] Erro ao recarregar após timeout:", err)
-          );
-        }
-      }
-    }, LOADING_TIMEOUT_MS);
-    
-    return () => {
-      if (loadingTimeoutRef.current) {
-        clearTimeout(loadingTimeoutRef.current);
-      }
-    };
-  }, []);
-  
-  // Efeito para carregar dados atualizados
-  useEffect(() => {
-    // Função para carregar dados com sistema de retry
-    const loadProgressData = async () => {
-      try {
-        console.log("[OnboardingCompleted] Iniciando carregamento de dados, tentativa:", loadingRetries + 1);
-        const refreshedProgress = await refreshProgress();
-        
-        // Se chegamos aqui, o carregamento foi bem-sucedido
-        isLoadingHandledRef.current = true;
-        
-        if (refreshedProgress) {
-          console.log("[OnboardingCompleted] Dados carregados com sucesso:", refreshedProgress.id);
-          setIsInitialLoad(false);
-        } else if (loadingRetries < 2) {
-          // Tentar novamente em caso de falha (max 3 tentativas)
-          console.log("[OnboardingCompleted] Dados não encontrados, planejando nova tentativa");
-          setTimeout(() => {
-            setLoadingRetries(prev => prev + 1);
-          }, 2000); // Esperar 2 segundos antes de tentar novamente
-        } else {
-          // Desistir após 3 tentativas
-          console.log("[OnboardingCompleted] Máximo de tentativas atingido, desistindo");
-          setIsInitialLoad(false);
-        }
-      } catch (error) {
-        console.error("[OnboardingCompleted] Erro ao carregar progresso:", error);
-        
-        // Tentar novamente em caso de erro (max 3 tentativas)
-        if (loadingRetries < 2) {
-          setTimeout(() => {
-            setLoadingRetries(prev => prev + 1);
-          }, 2000); // Esperar 2 segundos antes de tentar novamente
-        } else {
-          // Desistir após 3 tentativas
-          setIsInitialLoad(false);
-        }
-      }
-    };
-    
-    // Só carregar se ainda estamos no estado inicial e não ultrapassamos tentativas
-    if (isInitialLoad && loadingRetries <= 2 && !isLoadingHandledRef.current) {
-      loadProgressData();
-    }
-  }, [loadingRetries, refreshProgress]);
-  
-  // Efeito para disparar confetti quando completado com sucesso
-  useEffect(() => {
-    if (!isInitialLoad && progress?.is_completed && !hasShownConfetti) {
-      // Disparar efeito de confete quando os dados estiverem carregados
-      try {
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ['#0ABAB5', '#6de2de', '#9EECEA']
-        });
-        
-        setHasShownConfetti(true);
-      } catch (error) {
-        console.error("[OnboardingCompleted] Erro ao disparar confetti:", error);
-      }
-    }
-  }, [isInitialLoad, progress, hasShownConfetti]);
-
-  // Efeito para verificar se a trilha já existe e definir estado
-  useEffect(() => {
-    if (trailExists) {
-      setTrailGenerated(true);
-    }
-  }, [trailExists]);
-
-  // Função para navegar para uma etapa específica para edição
-  const handleNavigateToStep = useCallback((stepId: string) => {
-    if (isNavigating) return;
-    
-    setIsNavigating(true);
-    console.log("[OnboardingCompleted] Navegando para editar etapa:", stepId);
-    navigate(`/onboarding/${stepId}`);
-  }, [navigate, isNavigating]);
-
-  // Função para gerar a trilha de implementação
-  const handleGenerateTrail = useCallback(async () => {
-    if (!progress || isGeneratingTrail || isNavigating || regenerating) {
+    // Se já temos dados válidos, não precisamos fazer nada
+    if (progress?.is_completed) {
       return;
     }
-
-    try {
-      setIsGeneratingTrail(true);
-      
-      // Ajuste aqui: Sempre exibir mensagem de acordo com o status atual
-      if (trailGenerated) {
-        toast.info("Atualizando sua trilha personalizada...");
-      } else {
-        toast.info("Iniciando geração da sua trilha personalizada...");
-      }
-      
-      // Forçar regeneração da trilha (true como segundo parâmetro indica regeneração forçada)
-      // mesmo se uma trilha já existir
-      const generatedTrail = await generateImplementationTrail(progress, true);
-      
-      if (generatedTrail) {
-        if (trailGenerated) {
-          toast.success("Trilha de implementação atualizada com sucesso!");
-        } else {
-          toast.success("Trilha de implementação gerada com sucesso!");
-          setTrailGenerated(true);
-        }
-        
-        // Pequeno delay para garantir que o usuário veja a mensagem de sucesso
-        setTimeout(() => {
-          if (!isNavigating) {
-            setIsNavigating(true);
-            navigate("/implementation-trail");
-          }
-        }, 800);
-      } else {
-        toast.error("Não foi possível gerar sua trilha. Tentando novamente em 3 segundos...");
-        
-        // Tentar novamente após 3 segundos (apenas uma vez)
-        setTimeout(async () => {
-          toast.info("Tentando gerar trilha novamente...");
-          const retryTrail = await generateImplementationTrail(progress, true);
-          
-          if (retryTrail) {
-            toast.success("Trilha de implementação gerada com sucesso na segunda tentativa!");
-            setTrailGenerated(true);
-            
-            setTimeout(() => {
-              if (!isNavigating) {
-                setIsNavigating(true);
-                navigate("/implementation-trail");
-              }
-            }, 800);
-          } else {
-            toast.error("Não foi possível gerar sua trilha. Por favor, tente novamente mais tarde.");
-          }
-          
-          setIsGeneratingTrail(false);
-        }, 3000);
+    
+    // Tentar atualizar os dados
+    const loadData = async () => {
+      if (retryCount >= 3) {
+        // Limite de tentativas atingido, mostrar erro
+        setShowError(true);
         return;
       }
-    } catch (error) {
-      console.error("[OnboardingCompleted] Erro ao gerar trilha:", error);
-      toast.error("Ocorreu um erro ao gerar sua trilha personalizada. Por favor, tente novamente mais tarde.");
-    } finally {
-      setIsGeneratingTrail(false);
-    }
-  }, [progress, isGeneratingTrail, trailGenerated, isNavigating, regenerating, generateImplementationTrail, navigate]);
-
-  // Navegar para a trilha se já foi gerada
-  const handleViewTrail = useCallback(() => {
-    if (isNavigating) return;
+      
+      try {
+        console.log("[OnboardingCompleted] Dados não encontrados, planejando nova tentativa");
+        
+        // Esperar um pouco antes da próxima tentativa (500ms * número da tentativa)
+        setTimeout(async () => {
+          await refreshProgress();
+          
+          // Incrementar o contador de tentativas
+          setRetryCount(prev => prev + 1);
+        }, 500 * (retryCount + 1));
+      } catch (error) {
+        console.error("[OnboardingCompleted] Erro ao buscar dados:", error);
+        setShowError(true);
+      }
+    };
     
-    setIsNavigating(true);
-    navigate("/implementation-trail");
-  }, [navigate, isNavigating]);
-
-  // Função para forçar recarregamento de dados
-  const handleForceRefresh = useCallback(async () => {
+    loadData();
+  }, [progress, retryCount, refreshProgress]);
+  
+  // Função para tentar novamente manualmente
+  const handleRetry = async () => {
+    setShowError(false);
+    setRetryCount(0);
+    
     try {
       toast.info("Tentando recarregar seus dados...");
-      isLoadingHandledRef.current = false;
-      setIsInitialLoad(true);
-      const refreshedProgress = await refreshProgress();
-      
-      if (refreshedProgress) {
-        toast.success("Dados recarregados com sucesso!");
-        setIsInitialLoad(false);
-      } else {
-        toast.error("Ainda não conseguimos carregar seus dados. Tente novamente.");
-        setIsInitialLoad(false);
-      }
+      await refreshProgress();
     } catch (error) {
-      console.error("[OnboardingCompleted] Erro ao forçar recarregamento:", error);
-      toast.error("Erro ao recarregar dados. Tente novamente.");
-      setIsInitialLoad(false);
+      console.error("[OnboardingCompleted] Erro ao recarregar dados:", error);
+      setShowError(true);
+      toast.error("Erro ao carregar dados. Tente novamente mais tarde.");
     }
-  }, [refreshProgress]);
-
-  if (isInitialLoad || progressLoading) {
+  };
+  
+  // Tela de carregamento
+  if (isLoading || (!progress && !showError && retryCount < 3)) {
     return (
-      <div className="max-w-4xl mx-auto bg-[#151823] border border-neutral-700/50 rounded-lg shadow-lg p-8 text-center">
-        <Loader2 className="animate-spin h-10 w-10 text-[#0ABAB5] mx-auto" />
-        <p className="mt-4 text-neutral-300">Carregando seus dados...</p>
-        
-        {loadingRetries >= 2 && (
-          <Button 
-            onClick={handleForceRefresh} 
-            variant="outline" 
-            size="sm"
-            className="mt-4 text-[#0ABAB5] border-[#0ABAB5]/30"
-          >
-            Tentar novamente
-          </Button>
-        )}
+      <div className="container mx-auto py-12 px-4">
+        <Card className="max-w-lg mx-auto bg-[#0F111A]/80 border-neutral-800">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 text-viverblue animate-spin mb-4" />
+            <p className="text-lg text-neutral-300">Carregando seus dados...</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
-
-  if (!progress?.is_completed) {
+  
+  // Tela de erro
+  if (showError || (!progress && retryCount >= 3)) {
     return (
-      <div className="max-w-4xl mx-auto bg-[#151823] border border-neutral-700/50 rounded-lg shadow-lg p-8 text-center space-y-6">
-        <div className="w-20 h-20 rounded-full bg-amber-600/20 flex items-center justify-center mx-auto">
-          <Edit className="h-10 w-10 text-amber-500" />
-        </div>
-        
-        <h3 className="text-2xl font-bold text-white">Onboarding Incompleto</h3>
-        
-        <p className="text-neutral-200 max-w-md mx-auto">
-          Parece que você ainda não completou todas as etapas do onboarding. Complete todas as etapas para personalizar sua experiência.
-        </p>
-        
-        <div className="pt-4">
-          <Button
-            onClick={() => {
-              if (!isNavigating) {
-                setIsNavigating(true);
-                navigate("/onboarding");
-              }
-            }}
-            className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90 text-black font-medium"
-          >
-            Continuar Onboarding
-          </Button>
-        </div>
+      <div className="container mx-auto py-12 px-4">
+        <Card className="max-w-lg mx-auto bg-[#0F111A]/80 border-neutral-800">
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <div className="text-amber-500 bg-amber-950/30 p-3 rounded-full mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-alert-triangle"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <h3 className="text-lg font-semibold text-amber-200 mb-2">Erro ao carregar dados</h3>
+            <p className="text-neutral-300 text-center mb-6">
+              Não conseguimos carregar seus dados de onboarding. Verifique sua conexão ou tente novamente mais tarde.
+            </p>
+            <div className="flex gap-3">
+              <Button 
+                variant="outline"
+                className="border-neutral-700 hover:bg-neutral-800"
+                onClick={() => navigate("/dashboard")}
+              >
+                Voltar ao Dashboard
+              </Button>
+              <Button 
+                onClick={handleRetry}
+                className="bg-viverblue hover:bg-viverblue-dark"
+              >
+                Tentar novamente
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
-
+  
+  // Tela de sucesso
   return (
-    <div className="max-w-6xl mx-auto bg-[#151823] border border-neutral-700/50 rounded-lg shadow-lg p-8 space-y-6">
-      <div className="text-center mb-8">
-        <div className="w-20 h-20 rounded-full bg-[#0ABAB5]/20 flex items-center justify-center mx-auto">
-          <CheckCircle2 className="h-10 w-10 text-[#0ABAB5]" />
-        </div>
-        
-        <h3 className="text-2xl font-bold text-white mt-4">Onboarding Concluído com Sucesso!</h3>
-        
-        <p className="text-neutral-200 max-w-md mx-auto mt-2">
-          Obrigado por compartilhar suas informações. Aqui está um resumo dos seus dados. Você pode editar qualquer seção se necessário.
-        </p>
-      </div>
-      
-      <div className="bg-gradient-to-br from-[#1A1E2E] to-[#151823] rounded-lg p-6 border border-neutral-700/50 shadow-md">
-        {progress && (
-          <ReviewStep 
-            progress={progress}
-            onComplete={handleGenerateTrail}
-            isSubmitting={isGeneratingTrail || regenerating}
-            navigateToStep={handleNavigateToStep}
-          />
-        )}
-      </div>
-      
-      <div className="flex flex-col md:flex-row justify-center gap-4 pt-4 mt-8">
-        <Button
-          onClick={handleGenerateTrail}
-          disabled={isGeneratingTrail || regenerating || isNavigating}
-          className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90 text-black font-medium flex items-center gap-2"
-        >
-          {isGeneratingTrail || regenerating ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              {trailGenerated ? 'Atualizando sua trilha...' : 'Gerando sua trilha personalizada...'}
-            </>
-          ) : trailGenerated ? (
-            <>
-              <CheckCircle2 className="h-4 w-4" />
-              Atualizar Minha Trilha
-            </>
-          ) : (
-            <>
-              <Map className="h-4 w-4" />
-              Gerar Minha Trilha
-            </>
-          )}
-        </Button>
-        
-        {trailGenerated && (
-          <Button
-            onClick={handleViewTrail}
-            disabled={isNavigating}
-            variant="outline"
-            className="border-[#0ABAB5]/30 text-[#0ABAB5] hover:bg-[#0ABAB5]/10"
-          >
-            Ver Minha Trilha
-          </Button>
-        )}
-      </div>
+    <div className="container mx-auto py-12 px-4">
+      <Card className="max-w-lg mx-auto bg-[#0F111A]/80 border-neutral-800">
+        <CardContent className="flex flex-col items-center justify-center py-8">
+          <div className="flex justify-center mb-6">
+            <MoticonAnimation />
+          </div>
+          
+          <div className="bg-green-900/20 p-3 rounded-full border border-green-600/30 mb-6">
+            <Check className="h-6 w-6 text-green-400" />
+          </div>
+          
+          <h2 className="text-2xl font-bold text-white mb-2">Onboarding Concluído!</h2>
+          <p className="text-neutral-300 text-center mb-8">
+            Parabéns! Você completou o onboarding do VIVER DE IA Club. 
+            Agora você pode acessar todos os recursos da plataforma.
+          </p>
+          
+          <div className="space-y-4 w-full">
+            <Button 
+              className="w-full bg-viverblue hover:bg-viverblue-dark"
+              onClick={() => navigate("/dashboard")}
+            >
+              Ir para o Dashboard
+              <ChevronRight className="h-4 w-4 ml-2" />
+            </Button>
+            
+            <Button 
+              className="w-full bg-viverblue/10 hover:bg-viverblue/20 text-viverblue"
+              onClick={() => navigate("/member/trail")}
+              variant="outline"
+            >
+              Ver minha trilha personalizada
+              <ChevronRight className="h-4 w-4 ml-2" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
