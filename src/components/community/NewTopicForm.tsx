@@ -1,190 +1,139 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Loader2 } from "lucide-react";
-import { TopicEditor } from "./TopicEditor";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useForumCategories } from "@/hooks/community/useForumCategories";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface NewTopicFormProps {
   categoryId?: string;
   categorySlug?: string;
+  onCancel?: () => void;
 }
 
-export const NewTopicForm = ({ categoryId, categorySlug }: NewTopicFormProps) => {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [selectedCategoryId, setSelectedCategoryId] = useState(categoryId || "");
+export const NewTopicForm = ({ categoryId, categorySlug, onCancel }: NewTopicFormProps) => {
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string>("editor");
-  const { user } = useAuth();
   const navigate = useNavigate();
-  const { categories, isLoading: loadingCategories } = useForumCategories();
+  const { user } = useAuth();
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    
-    if (!title.trim()) {
-      setError("O título do tópico é obrigatório");
-      return;
-    }
-    
-    if (!content.trim()) {
-      setError("O conteúdo do tópico é obrigatório");
-      return;
-    }
-    
-    if (!selectedCategoryId) {
-      setError("Por favor, selecione uma categoria para o tópico");
-      return;
-    }
     
     if (!user?.id) {
-      setError("Você precisa estar logado para criar um tópico");
+      toast.error('É necessário estar logado para criar um tópico');
       return;
     }
     
+    if (!title.trim() || !content.trim()) {
+      toast.error('Preencha todos os campos obrigatórios');
+      return;
+    }
+    
+    if (!categoryId) {
+      toast.error('Selecione uma categoria para o tópico');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
     try {
-      setIsSubmitting(true);
-      
-      // Inserir o novo tópico
-      const { data: topicData, error: topicError } = await supabase
-        .from("forum_topics")
+      const { data, error } = await supabase
+        .from('forum_topics')
         .insert({
           title: title.trim(),
           content: content.trim(),
-          category_id: selectedCategoryId,
           user_id: user.id,
-          view_count: 0,
-          reply_count: 0,
-          is_pinned: false,
-          is_locked: false,
-          last_activity_at: new Date().toISOString()
+          category_id: categoryId
         })
-        .select("id")
+        .select('id')
         .single();
-        
-      if (topicError) throw topicError;
       
-      toast.success("Tópico criado com sucesso!");
-      navigate(`/comunidade/topico/${topicData.id}`);
+      if (error) throw error;
+      
+      toast.success('Tópico criado com sucesso!');
+      
+      // Redirecionar para o tópico criado ou para a categoria
+      if (data?.id) {
+        navigate(`/comunidade/topico/${data.id}`);
+      } else if (categorySlug) {
+        navigate(`/comunidade/categoria/${categorySlug}`);
+      } else {
+        navigate('/comunidade/forum');
+      }
       
     } catch (error: any) {
-      console.error("Erro ao criar tópico:", error);
-      setError("Não foi possível criar o tópico. Tente novamente mais tarde.");
-      toast.error("Não foi possível criar o tópico. Tente novamente mais tarde.");
+      console.error('Erro ao criar tópico:', error);
+      toast.error(error.message || 'Não foi possível criar o tópico');
     } finally {
       setIsSubmitting(false);
     }
   };
   
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    } else if (categorySlug) {
+      navigate(`/comunidade/categoria/${categorySlug}`);
+    } else {
+      navigate('/comunidade/forum');
+    }
+  };
+  
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-      
-      <div className="space-y-2">
-        <label htmlFor="title" className="block text-sm font-medium">Título</label>
-        <Input 
-          id="title"
-          placeholder="Digite um título claro e descritivo"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          disabled={isSubmitting}
-          className="w-full"
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <label htmlFor="category" className="block text-sm font-medium">Categoria</label>
-        <Select 
-          value={selectedCategoryId} 
-          onValueChange={setSelectedCategoryId}
-          disabled={isSubmitting || loadingCategories}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Selecione uma categoria" />
-          </SelectTrigger>
-          <SelectContent>
-            {loadingCategories ? (
-              <div className="flex items-center justify-center py-2">
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                <span>Carregando categorias...</span>
-              </div>
-            ) : (
-              categories?.map((category) => (
-                <SelectItem key={category.id} value={category.id}>
-                  {category.name}
-                </SelectItem>
-              ))
-            )}
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <div className="space-y-2 border rounded-md overflow-hidden">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="border-b px-3">
-            <TabsList className="h-9">
-              <TabsTrigger value="editor" className="text-xs">Editor</TabsTrigger>
-              <TabsTrigger value="preview" className="text-xs">Prévia</TabsTrigger>
-            </TabsList>
-          </div>
-          <TabsContent value="editor" className="mt-0 p-0">
-            <TopicEditor 
-              content={content} 
-              onChange={setContent} 
-              placeholder="Descreva seu tópico em detalhes..." 
+    <Card>
+      <CardContent className="p-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <label htmlFor="title" className="block text-sm font-medium">
+              Título
+            </label>
+            <Input
+              id="title"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              placeholder="Digite um título para o tópico"
+              required
             />
-          </TabsContent>
-          <TabsContent value="preview" className="mt-0">
-            {content ? (
-              <div 
-                className="prose max-w-none p-4"
-                dangerouslySetInnerHTML={{ __html: content }}
-              />
-            ) : (
-              <div className="p-4 text-muted-foreground italic">
-                Nenhum conteúdo para visualizar
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
-      </div>
-      
-      <div className="flex justify-end">
-        <Button 
-          type="submit" 
-          disabled={isSubmitting || !title.trim() || !content.trim() || !selectedCategoryId}
-          className="min-w-[120px]"
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Criando...
-            </>
-          ) : "Criar Tópico"}
-        </Button>
-      </div>
-    </form>
+          </div>
+          
+          <div className="space-y-2">
+            <label htmlFor="content" className="block text-sm font-medium">
+              Conteúdo
+            </label>
+            <Textarea
+              id="content"
+              value={content}
+              onChange={e => setContent(e.target.value)}
+              placeholder="Digite o conteúdo do tópico"
+              rows={10}
+              required
+            />
+          </div>
+          
+          <div className="flex justify-end space-x-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={handleCancel}
+              disabled={isSubmitting}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Enviando...' : 'Criar Tópico'}
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 };

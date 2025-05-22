@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
 import { Topic } from "@/types/forumTypes";
 import { SolutionBadge } from "./SolutionBadge";
-import { getInitials, getAvatarUrl } from "@/utils/user";
+import { getInitials, getAvatarUrl } from "@/components/community/utils/membership";
 
 interface TopicItemProps {
   topic: Topic;

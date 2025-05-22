@@ -1,153 +1,137 @@
 
-import { useState } from 'react';
-import { useNetworkConnections } from '@/hooks/community/useNetworkConnections';
+import React, { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useConnectionRequests } from '@/hooks/community/useConnectionRequests';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { ConnectionsTabContent } from '@/components/community/connections/ConnectionsTabContent';
-import { PendingConnectionsTabContent } from '@/components/community/connections/PendingConnectionsTabContent';
-import { ConnectionRequestsTabContent } from '@/components/community/connections/ConnectionRequestsTabContent';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { ConnectionMember } from '@/types/forumTypes';
+import { useNetworkConnections } from '@/hooks/community/useNetworkConnections';
+import { ConnectionCard } from '@/components/community/connections/ConnectionCard';
+import { ConnectionRequestCard } from '@/components/community/connections/ConnectionRequestCard';
+import { PendingConnectionCard } from '@/components/community/connections/PendingConnectionCard';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const ConnectionManagement = () => {
+  const [activeTab, setActiveTab] = useState('connections');
+  
   const { 
     connectedMembers, 
     pendingRequests, 
-    isLoading: connectionsLoading
+    isLoading: connectionsLoading 
   } = useNetworkConnections();
-
-  const {
-    incomingRequests,
+  
+  const { 
+    incomingRequests, 
     incomingLoading,
     processingRequests,
     acceptConnectionRequest,
     rejectConnectionRequest
   } = useConnectionRequests();
   
-  const [activeTab, setActiveTab] = useState('connections');
-
-  // Criar IDs de membros para consultas
-  const connectedMemberIds = connectedMembers.map(member => member.id);
-  const pendingRequestIds = pendingRequests.map(member => member.id);
-  const allMemberIds = [...connectedMemberIds, ...pendingRequestIds];
-
-  const { data: membersData, isLoading: membersLoading } = useQuery({
-    queryKey: ['connection-members', allMemberIds],
-    queryFn: async () => {
-      if (allMemberIds.length === 0) return { connections: [] as ConnectionMember[], pending: [] as ConnectionMember[] };
-      
-      // Buscar informações dos membros
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, name, avatar_url, company_name, current_position, industry')
-        .in('id', allMemberIds);
-      
-      // Separar perfis de conexões e pendentes
-      const connections: ConnectionMember[] = [];
-      const pending: ConnectionMember[] = [];
-      
-      if (profiles) {
-        profiles.forEach(profile => {
-          // Corrigir a conversão de tipo criando um novo objeto tipado
-          const typedProfile: ConnectionMember = {
-            id: profile.id,
-            name: profile.name,
-            avatar_url: profile.avatar_url,
-            company_name: profile.company_name,
-            current_position: profile.current_position,
-            industry: profile.industry
-          };
-          
-          if (connectedMemberIds.includes(profile.id)) {
-            connections.push(typedProfile);
-          } else if (pendingRequestIds.includes(profile.id)) {
-            pending.push(typedProfile);
-          }
-        });
-      }
-      
-      return { connections, pending };
-    },
-    enabled: allMemberIds.length > 0
-  });
-
-  const isLoading = connectionsLoading || membersLoading || incomingLoading;
-
-  const handleAccept = async (memberId: string) => {
-    try {
-      await acceptConnectionRequest(memberId);
-      toast.success("Solicitação de conexão aceita");
-    } catch (error) {
-      toast.error("Erro ao aceitar solicitação");
-      console.error(error);
-    }
-  };
-
-  const handleReject = async (memberId: string) => {
-    try {
-      await rejectConnectionRequest(memberId);
-      toast.success("Solicitação de conexão rejeitada");
-    } catch (error) {
-      toast.error("Erro ao rejeitar solicitação");
-      console.error(error);
-    }
-  };
-
+  // Converter Set para Array para os IDs em processamento
+  const processingRequestsArray = Array.from(processingRequests);
+  
+  // Calcular contagens para badges
+  const pendingCount = pendingRequests.length + incomingRequests.length;
+  
   return (
-    <div className="container px-4 py-6 mx-auto max-w-6xl">
-      <h1 className="text-2xl font-bold mb-6">Minhas Conexões</h1>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-3 mb-6">
+    <div className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="connections">
-            Conexões
+            Suas Conexões ({connectedMembers.length})
           </TabsTrigger>
           <TabsTrigger value="pending">
-            Enviadas
-          </TabsTrigger>
-          <TabsTrigger value="requests">
-            Recebidas
-            {incomingRequests && incomingRequests.length > 0 && (
-              <span className="ml-2 bg-viverblue text-white text-xs rounded-full px-2 py-0.5">
-                {incomingRequests.length}
-              </span>
-            )}
+            Pendentes {pendingCount > 0 && `(${pendingCount})`}
           </TabsTrigger>
         </TabsList>
-
-        {isLoading && (
-          <div className="flex justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
-        )}
-
-        {!isLoading && (
-          <>
-            <TabsContent value="connections" className="mt-2">
-              <ConnectionsTabContent 
-                connections={membersData?.connections || []} 
-              />
-            </TabsContent>
-
-            <TabsContent value="pending" className="mt-2">
-              <PendingConnectionsTabContent 
-                pendingConnections={membersData?.pending || []} 
-              />
-            </TabsContent>
-
-            <TabsContent value="requests" className="mt-2">
-              <ConnectionRequestsTabContent 
-                requests={incomingRequests} 
-                processingRequests={processingRequests}
-                onAccept={handleAccept}
-                onReject={handleReject}
-              />
-            </TabsContent>
-          </>
-        )}
+        
+        <TabsContent value="connections" className="mt-6">
+          {connectionsLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map(index => (
+                <div key={index} className="flex items-center space-x-4 p-4 border rounded-md">
+                  <Skeleton className="w-12 h-12 rounded-full" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-48" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : connectedMembers.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {connectedMembers.map(member => (
+                <ConnectionCard key={member.id} connection={member} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-10 border rounded-lg">
+              <p className="text-lg font-medium mb-2">Você ainda não tem conexões</p>
+              <p className="text-muted-foreground">
+                Encontre outros membros na comunidade e conecte-se com eles
+              </p>
+            </div>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="pending" className="mt-6">
+          {(incomingLoading || connectionsLoading) ? (
+            <div className="space-y-3">
+              {[1, 2].map(index => (
+                <div key={index} className="flex items-center justify-between p-4 border rounded-md">
+                  <div className="flex items-center space-x-4">
+                    <Skeleton className="w-12 h-12 rounded-full" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-4 w-48" />
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Skeleton className="h-9 w-20" />
+                    <Skeleton className="h-9 w-20" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <>
+              {incomingRequests.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium mb-3">Solicitações Recebidas</h3>
+                  <div className="space-y-3">
+                    {incomingRequests.map(request => (
+                      <ConnectionRequestCard
+                        key={request.id}
+                        request={request}
+                        onAccept={acceptConnectionRequest}
+                        onReject={rejectConnectionRequest}
+                        isProcessing={processingRequestsArray.includes(request.id)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {pendingRequests.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium mb-3">Solicitações Enviadas</h3>
+                  <div className="space-y-3">
+                    {pendingRequests.map(request => (
+                      <PendingConnectionCard key={request.id} request={request} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {incomingRequests.length === 0 && pendingRequests.length === 0 && (
+                <div className="text-center py-10 border rounded-lg">
+                  <p className="text-lg font-medium mb-2">Nenhuma solicitação pendente</p>
+                  <p className="text-muted-foreground">
+                    Você não tem solicitações de conexão pendentes no momento
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+        </TabsContent>
       </Tabs>
     </div>
   );

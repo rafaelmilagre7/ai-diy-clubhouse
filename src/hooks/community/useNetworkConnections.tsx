@@ -214,6 +214,7 @@ export const useNetworkConnections = () => {
         }]);
       }
       
+      toast.success('Solicitação de conexão enviada com sucesso');
       return true;
     } catch (error) {
       console.error('Erro ao enviar solicitação:', error);
