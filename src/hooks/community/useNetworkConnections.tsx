@@ -58,20 +58,20 @@ export const useNetworkConnections = () => {
             return {
               id: conn.recipient_id,
               name: conn.recipients?.name || null,
-              avatar_url: conn.recipients?.avatar_url,
-              company_name: conn.recipients?.company_name,
-              current_position: conn.recipients?.current_position,
-              industry: conn.recipients?.industry
+              avatar_url: conn.recipients?.avatar_url || null,
+              company_name: conn.recipients?.company_name || null,
+              current_position: conn.recipients?.current_position || null,
+              industry: conn.recipients?.industry || null
             };
           } else {
             // O usuário é o destinatário, então a conexão é com o solicitante
             return {
               id: conn.requester_id,
               name: conn.profiles?.name || null,
-              avatar_url: conn.profiles?.avatar_url,
-              company_name: conn.profiles?.company_name,
-              current_position: conn.profiles?.current_position,
-              industry: conn.profiles?.industry
+              avatar_url: conn.profiles?.avatar_url || null,
+              company_name: conn.profiles?.company_name || null,
+              current_position: conn.profiles?.current_position || null,
+              industry: conn.profiles?.industry || null
             };
           }
         }) || [];
@@ -102,10 +102,10 @@ export const useNetworkConnections = () => {
         const pending: ConnectionMember[] = pendingData?.map(item => ({
           id: item.recipient_id,
           name: item.recipients?.name || null,
-          avatar_url: item.recipients?.avatar_url,
-          company_name: item.recipients?.company_name,
-          current_position: item.recipients?.current_position,
-          industry: item.recipients?.industry
+          avatar_url: item.recipients?.avatar_url || null,
+          company_name: item.recipients?.company_name || null,
+          current_position: item.recipients?.current_position || null,
+          industry: item.recipients?.industry || null
         })) || [];
         
         setPendingRequests(pending);

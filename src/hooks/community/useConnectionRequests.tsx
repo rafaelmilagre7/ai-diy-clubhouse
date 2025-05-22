@@ -45,10 +45,10 @@ export const useConnectionRequests = () => {
         const requests: ConnectionMember[] = data?.map(item => ({
           id: item.requester_id,
           name: item.profiles?.name || null,
-          avatar_url: item.profiles?.avatar_url,
-          company_name: item.profiles?.company_name,
-          current_position: item.profiles?.current_position,
-          industry: item.profiles?.industry
+          avatar_url: item.profiles?.avatar_url || null,
+          company_name: item.profiles?.company_name || null,
+          current_position: item.profiles?.current_position || null,
+          industry: item.profiles?.industry || null
         })) || [];
 
         setIncomingRequests(requests);
