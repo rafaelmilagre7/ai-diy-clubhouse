@@ -30,6 +30,14 @@ const CommunityPages = () => {
       <Route path="membro/:memberId" element={<MemberDetail />} />
       <Route path="membros" element={<CommunityMembers />} />
       <Route path="conexoes" element={<ConnectionsPage />} />
+      {/* 
+        Recursos será implementado no futuro
+        <Route path="recursos" element={<ResourcesPage />} /> 
+        
+        Sistema de gamificação com pontos e loja serão implementados futuramente
+        <Route path="conquistas" element={<AchievementsPage />} />
+        <Route path="loja" element={<CommunityShopPage />} />
+      */}
     </Routes>
   );
 };

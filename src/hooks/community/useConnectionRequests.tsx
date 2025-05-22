@@ -10,6 +10,7 @@ export const useConnectionRequests = () => {
   const [incomingRequests, setIncomingRequests] = useState<ConnectionMember[]>([]);
   const [incomingLoading, setIncomingLoading] = useState(true);
   const [processingRequests, setProcessingRequests] = useState<Set<string>>(new Set());
+  const [newRequestsCount, setNewRequestsCount] = useState(0);
 
   useEffect(() => {
     if (!user?.id) {
@@ -52,6 +53,7 @@ export const useConnectionRequests = () => {
         })) || [];
 
         setIncomingRequests(requests);
+        setNewRequestsCount(requests.length);
       } catch (error) {
         console.error('Erro ao buscar solicitações de conexão:', error);
         toast.error('Não foi possível carregar as solicitações de conexão');
@@ -101,6 +103,7 @@ export const useConnectionRequests = () => {
 
       // Remover solicitação da lista de pendentes
       setIncomingRequests(prev => prev.filter(request => request.id !== requesterId));
+      setNewRequestsCount(prev => Math.max(0, prev - 1));
       toast.success('Solicitação aceita com sucesso');
       
       return true;
@@ -134,6 +137,7 @@ export const useConnectionRequests = () => {
 
       // Remover solicitação da lista de pendentes
       setIncomingRequests(prev => prev.filter(request => request.id !== requesterId));
+      setNewRequestsCount(prev => Math.max(0, prev - 1));
       toast.success('Solicitação rejeitada');
       
       return true;
@@ -154,6 +158,7 @@ export const useConnectionRequests = () => {
     incomingRequests,
     incomingLoading,
     processingRequests,
+    newRequestsCount,
     acceptConnectionRequest,
     rejectConnectionRequest
   };
