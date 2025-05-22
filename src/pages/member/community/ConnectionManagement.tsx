@@ -11,7 +11,14 @@ import { Card, CardContent } from '@/components/ui/card';
 
 const ConnectionManagement: React.FC = () => {
   const { connectedMembers, pendingRequests, isLoading: connectionsLoading } = useNetworkConnections();
-  const { incomingRequests, incomingLoading, newRequestsCount } = useConnectionRequests();
+  const { 
+    incomingRequests, 
+    incomingLoading, 
+    newRequestsCount,
+    processingRequests,
+    acceptConnectionRequest,
+    rejectConnectionRequest
+  } = useConnectionRequests();
   const [activeTab, setActiveTab] = useState('connections');
 
   // Para futura implementação de gamificação e loja de comunidade
@@ -52,12 +59,15 @@ const ConnectionManagement: React.FC = () => {
             <ConnectionRequestsTabContent 
               requests={incomingRequests}
               isLoading={incomingLoading}
+              processingRequests={processingRequests}
+              onAccept={acceptConnectionRequest}
+              onReject={rejectConnectionRequest}
             />
           </TabsContent>
 
           <TabsContent value="pending" className="mt-2">
             <PendingConnectionsTabContent 
-              pendingRequests={pendingRequests}
+              pendingConnections={pendingRequests}
               isLoading={connectionsLoading}
             />
           </TabsContent>

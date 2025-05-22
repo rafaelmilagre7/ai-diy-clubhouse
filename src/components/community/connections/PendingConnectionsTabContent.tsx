@@ -6,11 +6,17 @@ import { ConnectionMember } from '@/types/forumTypes';
 
 interface PendingConnectionsTabContentProps {
   pendingConnections: ConnectionMember[];
+  isLoading?: boolean;
 }
 
 export const PendingConnectionsTabContent: React.FC<PendingConnectionsTabContentProps> = ({ 
-  pendingConnections 
+  pendingConnections,
+  isLoading = false
 }) => {
+  if (isLoading) {
+    return <div className="p-4 text-center">Carregando solicitações pendentes...</div>;
+  }
+
   if (pendingConnections.length === 0) {
     return <EmptyTopicsState searchQuery="Você não tem solicitações pendentes" />;
   }

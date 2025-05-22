@@ -74,11 +74,6 @@ export const CommunityNavigation = ({ activeCategory }: CommunityNavigationProps
           >
             <item.icon className="h-4 w-4" />
             <span>{item.name}</span>
-            {item.beta && (
-              <span className="bg-amber-400 text-amber-900 text-xs rounded-full px-1.5 py-0.5 font-medium">
-                Em breve
-              </span>
-            )}
           </Link>
         ))}
       </div>

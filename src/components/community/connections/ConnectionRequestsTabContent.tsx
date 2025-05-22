@@ -9,14 +9,20 @@ interface ConnectionRequestsTabContentProps {
   processingRequests: Set<string>;
   onAccept: (memberId: string) => Promise<void>;
   onReject: (memberId: string) => Promise<void>;
+  isLoading?: boolean;
 }
 
 export const ConnectionRequestsTabContent: React.FC<ConnectionRequestsTabContentProps> = ({
   requests,
   processingRequests,
   onAccept,
-  onReject
+  onReject,
+  isLoading = false
 }) => {
+  if (isLoading) {
+    return <div className="p-4 text-center">Carregando solicitações recebidas...</div>;
+  }
+
   if (requests.length === 0) {
     return <EmptyTopicsState searchQuery="Você não tem solicitações recebidas" />;
   }
