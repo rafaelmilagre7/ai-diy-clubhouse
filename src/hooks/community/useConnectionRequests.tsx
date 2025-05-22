@@ -42,7 +42,7 @@ export const useConnectionRequests = () => {
         if (error) throw error;
 
         // Processar os dados para o formato ConnectionMember
-        const requests: ConnectionMember[] = data?.map(item => ({
+        const requests: ConnectionMember[] = data?.map((item: any) => ({
           id: item.requester_id,
           name: item.profiles?.name || null,
           avatar_url: item.profiles?.avatar_url || null,

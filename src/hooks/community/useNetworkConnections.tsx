@@ -52,7 +52,7 @@ export const useNetworkConnections = () => {
         if (connectionsError) throw connectionsError;
 
         // Processar dados para o formato ConnectionMember
-        const connections: ConnectionMember[] = connectionsData?.map(conn => {
+        const connections: ConnectionMember[] = connectionsData?.map((conn: any) => {
           if (conn.requester_id === user.id) {
             // O usuário é o solicitante, então a conexão é com o destinatário
             return {
@@ -99,7 +99,7 @@ export const useNetworkConnections = () => {
         if (pendingError) throw pendingError;
         
         // Processar solicitações pendentes
-        const pending: ConnectionMember[] = pendingData?.map(item => ({
+        const pending: ConnectionMember[] = pendingData?.map((item: any) => ({
           id: item.recipient_id,
           name: item.recipients?.name || null,
           avatar_url: item.recipients?.avatar_url || null,
