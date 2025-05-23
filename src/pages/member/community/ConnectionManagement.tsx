@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -16,6 +15,7 @@ import { MemberConnection } from '@/types/forumTypes';
 const ConnectionManagement = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('connections');
+  const [processingRequests, setProcessingRequests] = useState(new Set<string>());
   
   // Buscar conexões onde o usuário é o destinatário (solicitações recebidas)
   const { data: connectionRequests, refetch: refetchRequests } = useQuery({
@@ -76,6 +76,7 @@ const ConnectionManagement = () => {
   
   // Funções para aceitar/rejeitar solicitações
   const handleAcceptRequest = async (requesterId: string): Promise<boolean> => {
+    setProcessingRequests(prev => new Set(prev).add(requesterId));
     try {
       const { error } = await supabase
         .from('member_connections')
@@ -93,10 +94,17 @@ const ConnectionManagement = () => {
       console.error('Erro ao aceitar solicitação:', error);
       toast.error('Não foi possível aceitar a solicitação.');
       return false;
+    } finally {
+      setProcessingRequests(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(requesterId);
+        return newSet;
+      });
     }
   };
   
   const handleRejectRequest = async (requesterId: string): Promise<boolean> => {
+    setProcessingRequests(prev => new Set(prev).add(requesterId));
     try {
       const { error } = await supabase
         .from('member_connections')
@@ -113,6 +121,12 @@ const ConnectionManagement = () => {
       console.error('Erro ao rejeitar solicitação:', error);
       toast.error('Não foi possível rejeitar a solicitação.');
       return false;
+    } finally {
+      setProcessingRequests(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(requesterId);
+        return newSet;
+      });
     }
   };
   
@@ -199,6 +213,7 @@ const ConnectionManagement = () => {
           <TabsContent value="requests">
             <ConnectionRequestsTabContent 
               requests={connectionRequests || []} 
+              processingRequests={processingRequests}
               onAccept={handleAcceptRequest}
               onReject={handleRejectRequest}
             />

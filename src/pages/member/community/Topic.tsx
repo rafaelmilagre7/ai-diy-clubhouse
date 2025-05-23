@@ -83,10 +83,18 @@ const TopicPage = () => {
             {/* Conteúdo do tópico como primeiro post */}
             {topic && (
               <PostItem
-                content={topic.content}
-                createdAt={topic.created_at}
-                user={topic.profiles}
+                post={{
+                  id: topic.id,
+                  content: topic.content,
+                  user_id: topic.user_id,
+                  topic_id: topic.id,
+                  created_at: topic.created_at,
+                  updated_at: topic.updated_at,
+                  profiles: topic.profiles,
+                  is_solution: false
+                }}
                 isTopicStarter={true}
+                topicAuthorId={topic.user_id}
               />
             )}
             
@@ -99,10 +107,9 @@ const TopicPage = () => {
                 {posts.map((post) => (
                   <PostItem
                     key={post.id}
-                    content={post.content}
-                    createdAt={post.created_at}
-                    user={post.profiles}
+                    post={post}
                     isTopicStarter={false}
+                    topicAuthorId={topic?.user_id}
                   />
                 ))}
               </div>

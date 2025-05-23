@@ -6,11 +6,13 @@ import { ConnectionMember } from '@/types/forumTypes';
 
 interface PendingConnectionsTabContentProps {
   pendingConnections: ConnectionMember[];
+  onCancelRequest?: (recipientId: string) => Promise<void>;
   isLoading?: boolean;
 }
 
 export const PendingConnectionsTabContent: React.FC<PendingConnectionsTabContentProps> = ({ 
   pendingConnections,
+  onCancelRequest,
   isLoading = false
 }) => {
   if (isLoading) {
@@ -24,7 +26,11 @@ export const PendingConnectionsTabContent: React.FC<PendingConnectionsTabContent
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {pendingConnections.map((member) => (
-        <PendingConnectionCard key={member.id} member={member} />
+        <PendingConnectionCard 
+          key={member.id} 
+          member={member} 
+          onCancel={onCancelRequest}
+        />
       ))}
     </div>
   );

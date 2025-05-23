@@ -6,7 +6,7 @@ import { ForumHeader } from '@/components/community/ForumHeader';
 import { ForumBreadcrumbs } from '@/components/community/ForumBreadcrumbs';
 import { CommunityNavigation } from '@/components/community/CommunityNavigation';
 import { Button } from '@/components/ui/button';
-import { TopicList } from '@/components/community/TopicList';
+import { SimpleTopicList } from '@/components/community/TopicList';
 import { PlusCircle } from 'lucide-react';
 import { ForumCategory } from '@/types/forumTypes';
 import { CreateTopicDialog } from '@/components/community/CreateTopicDialog';
@@ -63,7 +63,7 @@ const CategoryPage = () => {
       </div>
       
       {category ? (
-        <TopicList categoryId={category.id} />
+        <SimpleTopicList categoryId={category.id} categorySlug={categorySlug} />
       ) : (
         <EmptyTopicsState 
           categorySlug={categorySlug} 

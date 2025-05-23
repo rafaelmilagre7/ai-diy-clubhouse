@@ -1,18 +1,12 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, UserCheck, UserX } from 'lucide-react';
-import { ConnectionMember } from '@/types/forumTypes';
-import { EmptyTopicsState } from '@/components/community/EmptyTopicsState';
-import { getInitials } from './ConnectionCard';
 import { ConnectionRequestCard } from './ConnectionRequestCard';
+import { EmptyTopicsState } from '@/components/community/EmptyTopicsState';
+import { ConnectionMember } from '@/types/forumTypes';
 
 interface ConnectionRequestsTabContentProps {
   requests: ConnectionMember[];
-  processingRequests: Set<string>;
+  processingRequests?: Set<string>;
   onAccept: (memberId: string) => Promise<boolean | void>;
   onReject: (memberId: string) => Promise<boolean | void>;
   isLoading?: boolean;
@@ -20,7 +14,7 @@ interface ConnectionRequestsTabContentProps {
 
 export const ConnectionRequestsTabContent: React.FC<ConnectionRequestsTabContentProps> = ({
   requests,
-  processingRequests,
+  processingRequests = new Set(),
   onAccept,
   onReject,
   isLoading = false
