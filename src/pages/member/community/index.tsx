@@ -1,44 +1,40 @@
 
-import { useEffect } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import Forum from './Forum';
-import TopicDetail from './TopicDetail';
-import CreateTopic from './CreateTopic';
-import MemberDetail from './MemberDetail';
-import CategoryView from './CategoryView';
-import { CommunityMembers } from './CommunityMembers';
-import { ConnectionsPage } from './ConnectionsPage';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { Suspense, lazy } from 'react';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+
+// Páginas da comunidade
+const CommunityOverview = lazy(() => import('./Overview'));
+const ForumPage = lazy(() => import('./Forum'));
+const CategoryPage = lazy(() => import('./Category'));
+const TopicPage = lazy(() => import('./Topic'));
+const NewTopicPage = lazy(() => import('./NewTopic'));
+const MembersPage = lazy(() => import('./Members'));
+const MemberProfilePage = lazy(() => import('./MemberProfile'));
+const ConnectionManagementPage = lazy(() => import('./ConnectionManagement'));
+
+// Componente de loading
+const LoadingFallback = () => (
+  <div className="flex justify-center items-center h-[50vh]">
+    <LoadingSpinner size="lg" />
+  </div>
+);
 
 const CommunityPages = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  
-  // Redirecionar da rota raiz para o fórum
-  useEffect(() => {
-    if (location.pathname === '/comunidade') {
-      navigate('/comunidade/forum');
-    }
-  }, [location.pathname, navigate]);
-
   return (
-    <Routes>
-      <Route path="forum" element={<Forum />} />
-      <Route path="forum/topico/:id" element={<TopicDetail />} />
-      <Route path="forum/novo-topico" element={<CreateTopic />} />
-      <Route path="forum/novo-topico/:categoryId" element={<CreateTopic />} />
-      <Route path="forum/categoria/:categoryId" element={<CategoryView />} />
-      <Route path="membro/:memberId" element={<MemberDetail />} />
-      <Route path="membros" element={<CommunityMembers />} />
-      <Route path="conexoes" element={<ConnectionsPage />} />
-      {/* 
-        Recursos será implementado no futuro
-        <Route path="recursos" element={<ResourcesPage />} /> 
-        
-        Sistema de gamificação com pontos e loja serão implementados futuramente
-        <Route path="conquistas" element={<AchievementsPage />} />
-        <Route path="loja" element={<CommunityShopPage />} />
-      */}
-    </Routes>
+    <Suspense fallback={<LoadingFallback />}>
+      <Routes>
+        <Route path="/" element={<CommunityOverview />} />
+        <Route path="/forum" element={<ForumPage />} />
+        <Route path="/categoria/:categorySlug" element={<CategoryPage />} />
+        <Route path="/topico/:topicId" element={<TopicPage />} />
+        <Route path="/novo-topico/:categorySlug" element={<NewTopicPage />} />
+        <Route path="/membros" element={<MembersPage />} />
+        <Route path="/membro/:memberId" element={<MemberProfilePage />} />
+        <Route path="/conexoes" element={<ConnectionManagementPage />} />
+        <Route path="*" element={<Navigate to="/comunidade/forum" replace />} />
+      </Routes>
+    </Suspense>
   );
 };
 

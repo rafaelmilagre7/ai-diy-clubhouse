@@ -5,6 +5,7 @@ import { useForumCategories } from '@/hooks/community/useForumCategories';
 import { useNavigate } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface CreateTopicDialogProps {
   open: boolean;
@@ -18,12 +19,17 @@ export const CreateTopicDialog = ({ open, onOpenChange, preselectedCategory }: C
   const navigate = useNavigate();
 
   const handleCreateTopic = () => {
-    if (!selectedCategory) return;
+    if (!selectedCategory) {
+      toast.error("Por favor, selecione uma categoria");
+      return;
+    }
     
     const category = categories?.find(c => c.id === selectedCategory);
     if (category) {
       navigate(`/comunidade/novo-topico/${category.slug}`);
       onOpenChange(false);
+    } else {
+      toast.error("Categoria inválida");
     }
   };
 

@@ -10,12 +10,12 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 
 interface NewTopicFormProps {
-  categoryId?: string;
-  categorySlug?: string;
+  categoryId: string;
+  categorySlug: string;
   onCancel?: () => void;
 }
 
-export const NewTopicForm = ({ categoryId, categorySlug, onCancel }: NewTopicFormProps) => {
+export const NewTopicForm: React.FC<NewTopicFormProps> = ({ categoryId, categorySlug, onCancel }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,13 +43,15 @@ export const NewTopicForm = ({ categoryId, categorySlug, onCancel }: NewTopicFor
     setIsSubmitting(true);
     
     try {
+      // Inserir o novo tópico
       const { data, error } = await supabase
         .from('forum_topics')
         .insert({
           title: title.trim(),
           content: content.trim(),
           user_id: user.id,
-          category_id: categoryId
+          category_id: categoryId,
+          last_activity_at: new Date().toISOString()
         })
         .select('id')
         .single();
