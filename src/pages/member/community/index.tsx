@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
-// Páginas da comunidade
+// Páginas da comunidade - agora referenciando os arquivos que criamos
 const CommunityOverview = lazy(() => import('./Overview'));
 const ForumPage = lazy(() => import('./Forum'));
 const CategoryPage = lazy(() => import('./Category'));

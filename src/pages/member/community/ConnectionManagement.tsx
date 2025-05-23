@@ -1,94 +1,218 @@
 
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useNetworkConnections } from '@/hooks/community/useNetworkConnections';
-import { useConnectionRequests } from '@/hooks/community/useConnectionRequests';
-import { ConnectionsTabContent } from '@/components/community/connections/ConnectionsTabContent';
+import { ForumBreadcrumbs } from '@/components/community/ForumBreadcrumbs';
+import { ForumHeader } from '@/components/community/ForumHeader';
+import { CommunityNavigation } from '@/components/community/CommunityNavigation';
 import { ConnectionRequestsTabContent } from '@/components/community/connections/ConnectionRequestsTabContent';
 import { PendingConnectionsTabContent } from '@/components/community/connections/PendingConnectionsTabContent';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import { ConnectionsTabContent } from '@/components/community/connections/ConnectionsTabContent';
+import { useAuth } from '@/contexts/auth';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
+import { MemberConnection } from '@/types/forumTypes';
 
-const ConnectionManagement: React.FC = () => {
-  const { connectedMembers, pendingRequests, isLoading: connectionsLoading } = useNetworkConnections();
-  const { 
-    incomingRequests, 
-    incomingLoading, 
-    newRequestsCount,
-    processingRequests,
-    acceptConnectionRequest,
-    rejectConnectionRequest
-  } = useConnectionRequests();
+const ConnectionManagement = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('connections');
-
-  // Para futura implementação de gamificação e loja de comunidade
-  // const [points, setPoints] = useState(0);
-
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
+  
+  // Buscar conexões onde o usuário é o destinatário (solicitações recebidas)
+  const { data: connectionRequests, refetch: refetchRequests } = useQuery({
+    queryKey: ['connection-requests', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('member_connections')
+        .select('*, requester:requester_id(id, name, avatar_url, company_name, current_position)')
+        .eq('recipient_id', user?.id)
+        .eq('status', 'pending');
+        
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id
+  });
+  
+  // Buscar conexões pendentes enviadas pelo usuário
+  const { data: pendingConnections, refetch: refetchPending } = useQuery({
+    queryKey: ['pending-connections', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('member_connections')
+        .select('*, recipient:recipient_id(id, name, avatar_url, company_name, current_position)')
+        .eq('requester_id', user?.id)
+        .eq('status', 'pending');
+        
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id
+  });
+  
+  // Buscar conexões aceitas
+  const { data: connections, refetch: refetchConnections } = useQuery({
+    queryKey: ['active-connections', user?.id],
+    queryFn: async () => {
+      const { data: sentConnections, error: sentError } = await supabase
+        .from('member_connections')
+        .select('*, connection:recipient_id(id, name, avatar_url, company_name, current_position)')
+        .eq('requester_id', user?.id)
+        .eq('status', 'accepted');
+        
+      if (sentError) throw sentError;
+      
+      const { data: receivedConnections, error: receivedError } = await supabase
+        .from('member_connections')
+        .select('*, connection:requester_id(id, name, avatar_url, company_name, current_position)')
+        .eq('recipient_id', user?.id)
+        .eq('status', 'accepted');
+        
+      if (receivedError) throw receivedError;
+      
+      return [...(sentConnections || []), ...(receivedConnections || [])];
+    },
+    enabled: !!user?.id
+  });
+  
+  // Funções para aceitar/rejeitar solicitações
+  const handleAcceptRequest = async (requesterId: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('member_connections')
+        .update({ status: 'accepted' })
+        .eq('requester_id', requesterId)
+        .eq('recipient_id', user?.id);
+      
+      if (error) throw error;
+      
+      toast.success('Solicitação de conexão aceita!');
+      refetchRequests();
+      refetchConnections();
+      return true;
+    } catch (error) {
+      console.error('Erro ao aceitar solicitação:', error);
+      toast.error('Não foi possível aceitar a solicitação.');
+      return false;
+    }
   };
-
+  
+  const handleRejectRequest = async (requesterId: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('member_connections')
+        .update({ status: 'rejected' })
+        .eq('requester_id', requesterId)
+        .eq('recipient_id', user?.id);
+      
+      if (error) throw error;
+      
+      toast.success('Solicitação de conexão rejeitada.');
+      refetchRequests();
+      return true;
+    } catch (error) {
+      console.error('Erro ao rejeitar solicitação:', error);
+      toast.error('Não foi possível rejeitar a solicitação.');
+      return false;
+    }
+  };
+  
+  // Função para cancelar solicitação pendente
+  const handleCancelRequest = async (recipientId: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('member_connections')
+        .delete()
+        .eq('requester_id', user?.id)
+        .eq('recipient_id', recipientId)
+        .eq('status', 'pending');
+      
+      if (error) throw error;
+      
+      toast.success('Solicitação de conexão cancelada.');
+      refetchPending();
+    } catch (error) {
+      console.error('Erro ao cancelar solicitação:', error);
+      toast.error('Não foi possível cancelar a solicitação.');
+    }
+  };
+  
+  // Função para remover uma conexão
+  const handleRemoveConnection = async (connectionId: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('member_connections')
+        .delete()
+        .eq('id', connectionId);
+      
+      if (error) throw error;
+      
+      toast.success('Conexão removida com sucesso.');
+      refetchConnections();
+    } catch (error) {
+      console.error('Erro ao remover conexão:', error);
+      toast.error('Não foi possível remover a conexão.');
+    }
+  };
+  
   return (
-    <Card className="bg-card border-border/40">
-      <CardContent className="pt-6">
-        <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList className="mb-6">
+    <div className="container mx-auto max-w-7xl py-6">
+      <ForumBreadcrumbs 
+        section="conexoes" 
+        sectionTitle="Gerenciar Conexões" 
+      />
+      
+      <ForumHeader 
+        title="Gerenciar Conexões" 
+        description="Gerencie suas conexões com outros membros da comunidade"
+      />
+      
+      <CommunityNavigation />
+      
+      <div className="mt-6">
+        <Tabs 
+          value={activeTab} 
+          onValueChange={setActiveTab}
+          className="w-full"
+        >
+          <TabsList className="grid grid-cols-3 mb-6">
             <TabsTrigger value="connections">
-              Minhas conexões ({connectedMembers.length})
+              Minhas Conexões
+              {connections?.length ? ` (${connections.length})` : ''}
             </TabsTrigger>
-            <TabsTrigger value="requests" className="relative">
-              Solicitações recebidas
-              {newRequestsCount > 0 && (
-                <Badge variant="destructive" className="ml-2 text-xs h-5 min-w-5 px-1 flex items-center justify-center">
-                  {newRequestsCount}
-                </Badge>
-              )}
+            <TabsTrigger value="requests">
+              Solicitações Recebidas
+              {connectionRequests?.length ? ` (${connectionRequests.length})` : ''}
             </TabsTrigger>
             <TabsTrigger value="pending">
-              Solicitações enviadas ({pendingRequests.length})
+              Solicitações Enviadas
+              {pendingConnections?.length ? ` (${pendingConnections.length})` : ''}
             </TabsTrigger>
           </TabsList>
-
-          <TabsContent value="connections" className="mt-2">
+          
+          <TabsContent value="connections">
             <ConnectionsTabContent 
-              connections={connectedMembers} 
+              connections={connections || []} 
+              onRemoveConnection={handleRemoveConnection}
             />
           </TabsContent>
-
-          <TabsContent value="requests" className="mt-2">
+          
+          <TabsContent value="requests">
             <ConnectionRequestsTabContent 
-              requests={incomingRequests}
-              isLoading={incomingLoading}
-              processingRequests={processingRequests}
-              onAccept={acceptConnectionRequest}
-              onReject={rejectConnectionRequest}
+              requests={connectionRequests || []} 
+              onAccept={handleAcceptRequest}
+              onReject={handleRejectRequest}
             />
           </TabsContent>
-
-          <TabsContent value="pending" className="mt-2">
+          
+          <TabsContent value="pending">
             <PendingConnectionsTabContent 
-              pendingConnections={pendingRequests}
-              isLoading={connectionsLoading}
+              pendingConnections={pendingConnections || []} 
+              onCancelRequest={handleCancelRequest}
             />
           </TabsContent>
         </Tabs>
-
-        {/* Para futura implementação do sistema de gamificação e loja da comunidade */}
-        {/* 
-        <div className="mt-10 p-4 border border-dashed border-neutral-700 rounded-md">
-          <h3 className="text-lg font-medium text-neutral-200 mb-2">Sistema de Gamificação</h3>
-          <p className="text-neutral-400">
-            Em breve você poderá ganhar pontos por participar ativamente na comunidade e
-            trocar por benefícios exclusivos na loja da comunidade.
-          </p>
-          <div className="mt-4 flex items-center gap-2">
-            <Trophy className="text-amber-400 h-5 w-5" />
-            <span className="text-neutral-300">Seus pontos: <span className="font-medium">{points}</span></span>
-          </div>
-        </div>
-        */}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

@@ -3,14 +3,40 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ForumBreadcrumbs } from '@/components/community/ForumBreadcrumbs';
 import { NewTopicForm } from '@/components/community/NewTopicForm';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 const CreateTopic = () => {
-  const { categoryId } = useParams<{ categoryId: string }>();
+  const { categorySlug } = useParams<{ categorySlug: string }>();
   const navigate = useNavigate();
   
+  // Buscar o ID da categoria com base no slug
+  const { data: category, isLoading } = useQuery({
+    queryKey: ['forumCategory', categorySlug],
+    queryFn: async () => {
+      if (!categorySlug) return null;
+      
+      const { data, error } = await supabase
+        .from('forum_categories')
+        .select('id, name, slug')
+        .eq('slug', categorySlug)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    meta: {
+      onError: (error: any) => {
+        toast.error("Categoria não encontrada");
+        navigate('/comunidade/forum', { replace: true });
+      }
+    }
+  });
+  
   const handleCancel = () => {
-    navigate(categoryId 
-      ? `/comunidade/forum/categoria/${categoryId}`
+    navigate(categorySlug 
+      ? `/comunidade/categoria/${categorySlug}`
       : '/comunidade/forum'
     );
   };
@@ -20,6 +46,8 @@ const CreateTopic = () => {
       <ForumBreadcrumbs 
         section="novo-topico"
         sectionTitle="Novo Tópico"
+        categoryName={category?.name}
+        categorySlug={categorySlug}
       />
       
       <div className="mt-6">
@@ -28,10 +56,20 @@ const CreateTopic = () => {
           Compartilhe suas dúvidas, insights ou discussões com a comunidade
         </p>
         
-        <NewTopicForm 
-          categoryId={categoryId} 
-          onCancel={handleCancel}
-        />
+        {isLoading ? (
+          <div className="animate-pulse">
+            <div className="h-10 bg-neutral-800 rounded mb-4"></div>
+            <div className="h-40 bg-neutral-800 rounded"></div>
+          </div>
+        ) : (
+          category && (
+            <NewTopicForm 
+              categoryId={category.id} 
+              categorySlug={categorySlug || ''}
+              onCancel={handleCancel}
+            />
+          )
+        )}
       </div>
     </div>
   );
