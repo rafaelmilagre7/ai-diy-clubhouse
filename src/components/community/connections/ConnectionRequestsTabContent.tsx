@@ -8,6 +8,7 @@ import { Loader2, UserCheck, UserX } from 'lucide-react';
 import { ConnectionMember } from '@/types/forumTypes';
 import { EmptyTopicsState } from '@/components/community/EmptyTopicsState';
 import { getInitials } from './ConnectionCard';
+import { ConnectionRequestCard } from './ConnectionRequestCard';
 
 interface ConnectionRequestsTabContentProps {
   requests: ConnectionMember[];
