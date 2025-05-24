@@ -28,6 +28,7 @@ interface PostItemProps {
   isAuthor?: boolean;
   onMarkAsSolution?: () => void;
   isMarkingSolved?: boolean;
+  topicId?: string;
 }
 
 export const PostItem = ({ 
@@ -35,7 +36,8 @@ export const PostItem = ({
   canMarkAsSolution = false,
   isAuthor = false,
   onMarkAsSolution,
-  isMarkingSolved = false
+  isMarkingSolved = false,
+  topicId
 }: PostItemProps) => {
   const [showReplyForm, setShowReplyForm] = useState(false);
 
@@ -89,10 +91,12 @@ export const PostItem = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setShowReplyForm(!showReplyForm)}>
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Responder
-            </DropdownMenuItem>
+            {topicId && (
+              <DropdownMenuItem onClick={() => setShowReplyForm(!showReplyForm)}>
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Responder
+              </DropdownMenuItem>
+            )}
             
             {canMarkAsSolution && !post.is_solution && (
               <DropdownMenuItem 
@@ -127,10 +131,10 @@ export const PostItem = ({
       </div>
       
       {/* Formulário de Resposta */}
-      {showReplyForm && (
+      {showReplyForm && topicId && (
         <div className="mt-4 pt-4 border-t">
           <ReplyForm 
-            topicId={post.id} // Isso precisa ser o topic_id, não o post_id
+            topicId={topicId}
             parentId={post.id}
             onSuccess={() => setShowReplyForm(false)}
             onCancel={() => setShowReplyForm(false)}

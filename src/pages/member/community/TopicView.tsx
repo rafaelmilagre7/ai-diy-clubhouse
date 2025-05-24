@@ -1,7 +1,6 @@
 
 import { useParams, Link } from 'react-router-dom';
 import { ForumBreadcrumbs } from '@/components/community/ForumBreadcrumbs';
-import { CommunityNavigation } from '@/components/community/CommunityNavigation';
 import { PostItem } from '@/components/community/PostItem';
 import { ReplyForm } from '@/components/community/ReplyForm';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -152,6 +151,7 @@ const TopicView = () => {
                 isAuthor={isPostAuthor(post.user_id)}
                 onMarkAsSolution={() => handleMarkAsSolution(post.id)}
                 isMarkingSolved={isMarkingSolved}
+                topicId={topic.id}
               />
             ))}
           </div>

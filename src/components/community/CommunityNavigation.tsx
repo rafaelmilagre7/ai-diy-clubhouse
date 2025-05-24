@@ -4,10 +4,16 @@ import { cn } from '@/lib/utils';
 import { MessageSquare, Users, Bookmark, UserPlus } from 'lucide-react';
 
 interface CommunityNavigationProps {
-  activeCategory?: string;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
+  categories?: any[];
 }
 
-export const CommunityNavigation = ({ activeCategory }: CommunityNavigationProps = {}) => {
+export const CommunityNavigation = ({ 
+  activeTab, 
+  onTabChange, 
+  categories 
+}: CommunityNavigationProps = {}) => {
   const { pathname } = useLocation();
   
   const navItems = [
@@ -32,23 +38,7 @@ export const CommunityNavigation = ({ activeCategory }: CommunityNavigationProps
       path: '/comunidade/recursos', 
       icon: Bookmark,
       disabled: true
-    },
-    /* Removido conforme solicitado pelo cliente
-    { 
-      name: 'Eventos', 
-      path: '/comunidade/eventos', 
-      icon: Calendar,
-      disabled: true
-    },
-    { 
-      name: 'Conquistas', 
-      path: '/comunidade/conquistas', 
-      icon: Award,
-      disabled: true,
-      beta: true
-    },
-    */
-    // Nota: Sistema de gamificação e loja da comunidade serão implementados no futuro
+    }
   ];
   
   const isActive = (path: string, exact = false) => {
