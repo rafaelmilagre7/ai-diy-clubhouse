@@ -54,16 +54,14 @@ export const CommunityNavigation = ({
         {navItems.map(item => (
           <Link
             key={item.path}
-            to={item.disabled ? '#' : item.path}
+            to={item.path}
             className={cn(
               "flex items-center space-x-2 px-4 py-2 rounded-md whitespace-nowrap transition-colors text-sm font-medium",
               isActive(item.path, item.exact)
                 ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-              item.disabled && "opacity-50 cursor-not-allowed hover:bg-transparent hover:text-muted-foreground"
+                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             )}
-            onClick={(e) => {
-              if (item.disabled) e.preventDefault();
+            onClick={() => {
               if (onTabChange && item.name === 'Fórum') onTabChange('todos');
             }}
           >
