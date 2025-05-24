@@ -1,10 +1,12 @@
 
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Loader2 } from "lucide-react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { useReplyForm } from "@/hooks/useReplyForm";
-import { getInitials } from "@/utils/user";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent } from '@/components/ui/card';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/auth';
+import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ReplyFormProps {
   topicId: string;
@@ -21,72 +23,92 @@ export const ReplyForm = ({
   onSuccess, 
   onCancel, 
   placeholder = "Escreva sua resposta...",
-  onPostCreated
+  onPostCreated 
 }: ReplyFormProps) => {
-  const {
-    content,
-    isSubmitting,
-    textareaRef,
-    handleTextareaInput,
-    handleSubmit: submitForm,
-    handleCancel,
-    user
-  } = useReplyForm({
-    topicId,
-    parentId,
-    onSuccess: () => {
+  const [content, setContent] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!user?.id) {
+      toast.error('É necessário estar logado para responder');
+      return;
+    }
+    
+    if (!content.trim()) {
+      toast.error('Digite uma resposta antes de enviar');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      const { error } = await supabase
+        .from('forum_posts')
+        .insert({
+          topic_id: topicId,
+          user_id: user.id,
+          content: content.trim(),
+          parent_id: parentId || null
+        });
+      
+      if (error) throw error;
+      
+      // Limpar formulário
+      setContent('');
+      
+      // Invalidar queries relacionadas
+      queryClient.invalidateQueries({ queryKey: ['forum-posts', topicId] });
+      queryClient.invalidateQueries({ queryKey: ['forum-topic', topicId] });
+      
+      toast.success('Resposta enviada com sucesso!');
+      
       if (onSuccess) onSuccess();
       if (onPostCreated) onPostCreated();
-    },
-    onCancel
-  });
-  
-  return (
-    <form onSubmit={submitForm} className="space-y-4">
-      <div className="flex gap-3">
-        <Avatar className="h-10 w-10 mt-1">
-          <AvatarImage src={user?.user_metadata?.avatar_url || undefined} />
-          <AvatarFallback>
-            {getInitials(user?.user_metadata?.name || user?.email || 'U')}
-          </AvatarFallback>
-        </Avatar>
-        
-        <div className="flex-1">
-          <Textarea
-            placeholder={placeholder}
-            value={content}
-            onChange={handleTextareaInput}
-            ref={textareaRef}
-            rows={4}
-            className="resize-none"
-            disabled={isSubmitting}
-          />
-        </div>
-      </div>
       
-      <div className="flex justify-end gap-2">
-        {onCancel && (
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={handleCancel}
-            disabled={isSubmitting}
-          >
-            Cancelar
-          </Button>
-        )}
-        
-        <Button type="submit" disabled={isSubmitting || !content.trim()}>
-          {isSubmitting ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Enviando...
-            </>
-          ) : (
-            "Enviar Resposta"
-          )}
-        </Button>
-      </div>
-    </form>
+    } catch (error: any) {
+      console.error('Erro ao enviar resposta:', error);
+      toast.error('Erro ao enviar resposta');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardContent className="p-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder={placeholder}
+            rows={4}
+            required
+          />
+          
+          <div className="flex justify-end gap-2">
+            {onCancel && (
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={onCancel}
+                disabled={isSubmitting}
+              >
+                Cancelar
+              </Button>
+            )}
+            <Button 
+              type="submit" 
+              disabled={isSubmitting || !content.trim()}
+            >
+              {isSubmitting ? 'Enviando...' : 'Responder'}
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 };

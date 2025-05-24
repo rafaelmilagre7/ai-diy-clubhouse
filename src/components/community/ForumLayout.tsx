@@ -1,24 +1,14 @@
 
-import React from "react";
+import { ReactNode } from 'react';
 
 interface ForumLayoutProps {
-  children: React.ReactNode;
-  sidebar?: React.ReactNode;
+  children: ReactNode;
 }
 
-export const ForumLayout = ({ children, sidebar }: ForumLayoutProps) => {
+export const ForumLayout = ({ children }: ForumLayoutProps) => {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-      <div className="lg:col-span-3">
-        <div className="bg-card shadow-sm rounded-lg">
-          {children}
-        </div>
-      </div>
-      {sidebar && (
-        <div className="lg:col-span-1">
-          {sidebar}
-        </div>
-      )}
+    <div className="max-w-4xl mx-auto">
+      {children}
     </div>
   );
 };

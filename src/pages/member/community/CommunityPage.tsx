@@ -3,13 +3,13 @@ import { useState } from "react";
 import { CommunityNavigation } from "@/components/community/CommunityNavigation";
 import { ForumBreadcrumbs } from "@/components/community/ForumBreadcrumbs";
 import { TopicCard } from "@/components/community/TopicCard";
+import { CreateTopicDialog } from "@/components/community/CreateTopicDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Search, AlertCircle, RefreshCw } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { Link } from "react-router-dom";
 import { useForumTopics } from "@/hooks/community/useForumTopics";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -17,6 +17,7 @@ const CommunityPage = () => {
   const [activeTab, setActiveTab] = useState("todos");
   const [selectedFilter, setSelectedFilter] = useState<"recentes" | "populares" | "sem-respostas" | "resolvidos">("recentes");
   const [searchQuery, setSearchQuery] = useState("");
+  const [createTopicOpen, setCreateTopicOpen] = useState(false);
 
   // Buscar categorias
   const { 
@@ -87,11 +88,9 @@ const CommunityPage = () => {
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Atualizar
           </Button>
-          <Button asChild>
-            <Link to="/comunidade/novo-topico">
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Tópico
-            </Link>
+          <Button onClick={() => setCreateTopicOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Tópico
           </Button>
         </div>
       </div>
@@ -181,11 +180,9 @@ const CommunityPage = () => {
                   Limpar busca
                 </Button>
               ) : (
-                <Button asChild>
-                  <Link to="/comunidade/novo-topico">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Criar primeiro tópico
-                  </Link>
+                <Button onClick={() => setCreateTopicOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Criar primeiro tópico
                 </Button>
               )}
             </div>
@@ -196,6 +193,11 @@ const CommunityPage = () => {
           ))
         )}
       </div>
+
+      <CreateTopicDialog 
+        open={createTopicOpen} 
+        onOpenChange={setCreateTopicOpen}
+      />
     </div>
   );
 };

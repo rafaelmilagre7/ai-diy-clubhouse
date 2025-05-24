@@ -1,33 +1,27 @@
 
-/**
- * Converte um nome completo em iniciais (até 2 letras)
- */
 export const getInitials = (name: string): string => {
-  if (!name) return '??';
+  if (!name) return 'U';
   
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) {
-    return parts[0].substring(0, 2).toUpperCase();
+  const words = name.trim().split(' ');
+  if (words.length === 1) {
+    return words[0].charAt(0).toUpperCase();
   }
   
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return (words[0].charAt(0) + words[words.length - 1].charAt(0)).toUpperCase();
 };
 
-/**
- * Processa URL do avatar para garantir que seja válida
- */
-export const getAvatarUrl = (url?: string | null): string | undefined => {
+export const getAvatarUrl = (url: string | null | undefined): string | undefined => {
   if (!url) return undefined;
   
-  // Se já for uma URL completa (http:// ou https://), retorna como está
-  if (url.startsWith('http://') || url.startsWith('https://')) {
+  // Se já é uma URL completa, retorna como está
+  if (url.startsWith('http')) {
     return url;
   }
   
-  // Se for uma URL relativa de storage do Supabase
-  if (url.startsWith('/storage/')) {
-    // Aqui poderia concatenar com a URL base do Supabase se necessário
-    return url;
+  // Se é um caminho do Supabase storage, constrói a URL completa
+  if (url.startsWith('avatars/') || url.startsWith('/avatars/')) {
+    const cleanPath = url.startsWith('/') ? url.slice(1) : url;
+    return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/${cleanPath}`;
   }
   
   return url;
