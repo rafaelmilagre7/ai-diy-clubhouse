@@ -1,5 +1,5 @@
 
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { ForumHeader } from '@/components/community/ForumHeader';
@@ -52,7 +52,7 @@ const NewTopicPage = () => {
         description={`Categoria: ${category?.name || 'Carregando...'}`}
       />
       
-      <CommunityNavigation activeCategory={category?.slug} />
+      <CommunityNavigation activeTab={category?.slug} />
       
       <div className="mt-6 mb-10">
         {isLoading ? (

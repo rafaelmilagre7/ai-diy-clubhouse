@@ -7,12 +7,14 @@ interface CommunityNavigationProps {
   activeTab?: string;
   onTabChange?: (tab: string) => void;
   categories?: any[];
+  activeCategory?: string;
 }
 
 export const CommunityNavigation = ({ 
   activeTab, 
   onTabChange, 
-  categories 
+  categories,
+  activeCategory
 }: CommunityNavigationProps = {}) => {
   const { pathname } = useLocation();
   

@@ -29,6 +29,8 @@ interface PostItemProps {
   onMarkAsSolution?: () => void;
   isMarkingSolved?: boolean;
   topicId?: string;
+  isTopicStarter?: boolean;
+  topicAuthorId?: string;
 }
 
 export const PostItem = ({ 
@@ -37,7 +39,9 @@ export const PostItem = ({
   isAuthor = false,
   onMarkAsSolution,
   isMarkingSolved = false,
-  topicId
+  topicId,
+  isTopicStarter = false,
+  topicAuthorId
 }: PostItemProps) => {
   const [showReplyForm, setShowReplyForm] = useState(false);
 
@@ -67,6 +71,10 @@ export const PostItem = ({
           <div>
             <div className="flex items-center gap-2">
               <span className="font-medium text-sm">{post.profiles?.name || 'Usuário'}</span>
+              
+              {isTopicStarter && (
+                <Badge variant="outline" className="text-xs">Autor</Badge>
+              )}
               
               {post.profiles?.role === 'admin' && (
                 <Badge variant="default" className="text-xs">Admin</Badge>

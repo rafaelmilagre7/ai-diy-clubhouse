@@ -51,7 +51,7 @@ const CategoryPage = () => {
         description={category?.description || ''}
       />
       
-      <CommunityNavigation activeCategory={categorySlug} />
+      <CommunityNavigation activeTab={categorySlug} />
       
       <div className="flex items-center justify-between mt-6 mb-4">
         <h3 className="text-xl font-medium">Tópicos</h3>

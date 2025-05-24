@@ -87,9 +87,7 @@ const TopicPage = () => {
                   id: topic.id,
                   content: topic.content,
                   user_id: topic.user_id,
-                  topic_id: topic.id,
                   created_at: topic.created_at,
-                  updated_at: topic.updated_at,
                   profiles: topic.profiles,
                   is_solution: false
                 }}
