@@ -24,143 +24,177 @@ export const useForumTopics = ({
     queryKey: ['forum-topics', selectedFilter, searchQuery, activeTab],
     queryFn: async (): Promise<Topic[]> => {
       try {
-        console.log("Buscando tópicos com filtros:", { selectedFilter, searchQuery, activeTab });
+        console.log("🔍 Iniciando busca de tópicos:", { selectedFilter, searchQuery, activeTab });
         
-        // Construir query base para tópicos
+        // Primeira abordagem: buscar tópicos com relações usando joins simples
         let query = supabase
           .from('forum_topics')
           .select(`
-            id, 
-            title, 
-            content, 
-            created_at, 
-            updated_at, 
-            view_count, 
-            reply_count, 
-            is_locked, 
-            is_pinned,
-            is_solved,
-            user_id, 
-            category_id, 
-            last_activity_at,
-            profiles:user_id (id, name, avatar_url, role),
-            category:forum_categories!forum_topics_category_id_fkey (id, name, slug)
+            *,
+            profiles!forum_topics_user_id_fkey (
+              id,
+              name,
+              avatar_url,
+              role
+            ),
+            forum_categories!forum_topics_category_id_fkey (
+              id,
+              name,
+              slug
+            )
           `)
-          .order('is_pinned', { ascending: false });
+          .order('is_pinned', { ascending: false })
+          .order('last_activity_at', { ascending: false });
 
-        // Aplicar filtros de categoria apenas se não for "todos"
-        if (activeTab !== "todos") {
+        // Aplicar filtros de categoria
+        if (activeTab !== "todos" && categories.length > 0) {
           const category = categories.find(c => c.slug === activeTab);
           if (category) {
+            console.log("📂 Filtrando por categoria:", category.name);
             query = query.eq('category_id', category.id);
           }
         }
         
         // Aplicar filtros adicionais
         switch (selectedFilter) {
-          case "recentes":
-            query = query.order('last_activity_at', { ascending: false });
-            break;
           case "populares":
             query = query.order('view_count', { ascending: false });
             break;
           case "sem-respostas":
-            query = query.eq('reply_count', 0).order('created_at', { ascending: false });
+            query = query.eq('reply_count', 0);
             break;
           case "resolvidos":
-            query = query.eq('is_solved', true).order('last_activity_at', { ascending: false });
+            query = query.eq('is_solved', true);
+            break;
+          default: // "recentes"
             break;
         }
         
         // Aplicar filtro de busca
-        if (searchQuery) {
-          query = query.ilike('title', `%${searchQuery}%`);
+        if (searchQuery && searchQuery.trim()) {
+          console.log("🔎 Aplicando filtro de busca:", searchQuery);
+          query = query.ilike('title', `%${searchQuery.trim()}%`);
         }
         
         // Limitar resultados
         query = query.limit(50);
         
-        // Executar a consulta
-        const { data: topicsData, error: topicsError } = await query;
+        console.log("🚀 Executando query...");
+        const { data: topicsData, error } = await query;
         
-        if (topicsError) {
-          console.error("Erro ao buscar tópicos:", topicsError);
-          throw topicsError;
+        if (error) {
+          console.error("❌ Erro na query de tópicos:", error);
+          throw error;
         }
         
-        // Se não temos tópicos, retornar array vazio
+        console.log("✅ Dados brutos recebidos:", {
+          quantidade: topicsData?.length || 0,
+          primeiroItem: topicsData?.[0] || null
+        });
+        
         if (!topicsData || topicsData.length === 0) {
+          console.log("📭 Nenhum tópico encontrado");
           return [];
         }
         
-        // Agora, buscar os perfis dos usuários separadamente
-        const userIds = [...new Set(topicsData.map(topic => topic.user_id))];
-
-        let userProfiles: any[] = [];
-        if (userIds.length > 0) {
-          const { data: profiles, error: profilesError } = await supabase
-            .from('profiles')
-            .select('id, name, avatar_url, role')
-            .in('id', userIds);
-
-          if (profilesError) {
-            console.error("Erro ao buscar perfis:", profilesError);
-          } else {
-            userProfiles = profiles || [];
-          }
-        }
-
-        // Buscar categorias relacionadas
-        const categoryIds = [...new Set(topicsData.map(topic => topic.category_id))];
-        let categoriesData: any[] = [];
-        if (categoryIds.length > 0) {
-          const { data: categoriesResult, error: categoriesError } = await supabase
-            .from('forum_categories')
-            .select('id, name, slug')
-            .in('id', categoryIds);
-
-          if (categoriesError) {
-            console.error("Erro ao buscar categorias:", categoriesError);
-          } else {
-            categoriesData = categoriesResult || [];
-          }
-        }
-
-        // Mapear manualmente os dados de perfil e categoria para cada tópico
-        const mapTopicWithRelations = (topic: any): Topic => {
-          const userProfile = userProfiles.find(profile => profile.id === topic.user_id);
-          const category = categoriesData.find(cat => cat.id === topic.category_id);
-
-          return {
-            ...topic,
-            profiles: userProfile ? {
-              id: userProfile.id,
-              name: userProfile.name || 'Usuário',
-              avatar_url: userProfile.avatar_url,
-              role: userProfile.role || '',
-              user_id: userProfile.id
+        // Mapear os dados para o formato esperado
+        const formattedTopics: Topic[] = topicsData.map(topic => {
+          const formattedTopic: Topic = {
+            id: topic.id,
+            title: topic.title || 'Tópico sem título',
+            content: topic.content || '',
+            created_at: topic.created_at,
+            updated_at: topic.updated_at,
+            last_activity_at: topic.last_activity_at || topic.created_at,
+            user_id: topic.user_id,
+            category_id: topic.category_id,
+            view_count: topic.view_count || 0,
+            reply_count: topic.reply_count || 0,
+            is_pinned: topic.is_pinned || false,
+            is_locked: topic.is_locked || false,
+            is_solved: topic.is_solved || false,
+            profiles: topic.profiles ? {
+              id: topic.profiles.id,
+              name: topic.profiles.name || 'Usuário',
+              avatar_url: topic.profiles.avatar_url,
+              role: topic.profiles.role || 'member',
+              user_id: topic.profiles.id
             } : null,
-            category: category ? {
-              id: category.id,
-              name: category.name,
-              slug: category.slug
+            category: topic.forum_categories ? {
+              id: topic.forum_categories.id,
+              name: topic.forum_categories.name || 'Sem categoria',
+              slug: topic.forum_categories.slug || 'sem-categoria'
             } : null
           };
-        };
+          
+          return formattedTopic;
+        });
         
-        const formattedTopics: Topic[] = topicsData.map(mapTopicWithRelations);
+        console.log("🎯 Tópicos formatados:", {
+          total: formattedTopics.length,
+          comPerfil: formattedTopics.filter(t => t.profiles).length,
+          comCategoria: formattedTopics.filter(t => t.category).length
+        });
         
-        console.log(`Tópicos encontrados: ${formattedTopics.length}`);
         return formattedTopics;
         
       } catch (error: any) {
-        console.error('Erro ao buscar tópicos:', error);
-        toast.error("Não foi possível carregar os tópicos. Tente novamente.");
-        return [];
+        console.error('💥 Erro crítico ao buscar tópicos:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        
+        // Em caso de erro, tentar buscar apenas os tópicos básicos
+        try {
+          console.log("🔄 Tentando busca simplificada...");
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('forum_topics')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(10);
+            
+          if (fallbackError) {
+            console.error("❌ Erro na busca simplificada:", fallbackError);
+            toast.error("Não foi possível carregar os tópicos.");
+            return [];
+          }
+          
+          console.log("✅ Busca simplificada bem-sucedida:", fallbackData?.length || 0);
+          
+          return (fallbackData || []).map(topic => ({
+            id: topic.id,
+            title: topic.title || 'Tópico sem título',
+            content: topic.content || '',
+            created_at: topic.created_at,
+            updated_at: topic.updated_at,
+            last_activity_at: topic.last_activity_at || topic.created_at,
+            user_id: topic.user_id,
+            category_id: topic.category_id,
+            view_count: topic.view_count || 0,
+            reply_count: topic.reply_count || 0,
+            is_pinned: topic.is_pinned || false,
+            is_locked: topic.is_locked || false,
+            is_solved: topic.is_solved || false,
+            profiles: null,
+            category: null
+          }));
+          
+        } catch (fallbackError) {
+          console.error("💀 Erro na busca de fallback:", fallbackError);
+          toast.error("Erro ao carregar tópicos. Tente recarregar a página.");
+          return [];
+        }
       }
     },
-    staleTime: 2 * 60 * 1000, // 2 minutos de cache
-    retry: 2,
+    staleTime: 1 * 60 * 1000, // 1 minuto de cache
+    retry: 1,
     refetchOnWindowFocus: false,
+    meta: {
+      onError: (error: any) => {
+        console.error("🚨 Erro capturado pelo React Query:", error);
+      }
+    }
   });
 };

@@ -6,11 +6,12 @@ import { TopicCard } from "@/components/community/TopicCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, AlertCircle, RefreshCw } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Link } from "react-router-dom";
 import { useForumTopics } from "@/hooks/community/useForumTopics";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const CommunityPage = () => {
   const [activeTab, setActiveTab] = useState("todos");
@@ -18,22 +19,38 @@ const CommunityPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Buscar categorias
-  const { data: categories = [] } = useQuery({
+  const { 
+    data: categories = [], 
+    isLoading: categoriesLoading,
+    error: categoriesError 
+  } = useQuery({
     queryKey: ['forum-categories'],
     queryFn: async () => {
+      console.log("📂 Buscando categorias do fórum...");
       const { data, error } = await supabase
         .from('forum_categories')
         .select('*')
         .eq('is_active', true)
         .order('order_index', { ascending: true });
 
-      if (error) throw error;
-      return data;
-    }
+      if (error) {
+        console.error("❌ Erro ao buscar categorias:", error);
+        throw error;
+      }
+      
+      console.log("✅ Categorias carregadas:", data?.length || 0);
+      return data || [];
+    },
+    retry: 2
   });
 
   // Buscar tópicos com filtros
-  const { data: topics = [], isLoading, error } = useForumTopics({
+  const { 
+    data: topics = [], 
+    isLoading: topicsLoading, 
+    error: topicsError,
+    refetch: refetchTopics 
+  } = useForumTopics({
     activeTab,
     selectedFilter,
     searchQuery,
@@ -41,8 +58,17 @@ const CommunityPage = () => {
   });
 
   const handleTabChange = (tab: string) => {
+    console.log("🔄 Mudando aba para:", tab);
     setActiveTab(tab);
   };
+
+  const handleRefresh = () => {
+    console.log("🔄 Atualizando tópicos...");
+    refetchTopics();
+  };
+
+  const isLoading = categoriesLoading || topicsLoading;
+  const hasError = categoriesError || topicsError;
 
   return (
     <div className="container max-w-7xl mx-auto py-6">
@@ -56,12 +82,18 @@ const CommunityPage = () => {
           </p>
         </div>
         
-        <Button asChild>
-          <Link to="/comunidade/novo-topico">
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Tópico
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
+          <Button asChild>
+            <Link to="/comunidade/novo-topico">
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Tópico
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <CommunityNavigation 
@@ -69,6 +101,14 @@ const CommunityPage = () => {
         onTabChange={handleTabChange}
         categories={categories}
       />
+
+      {/* Debug info para desenvolvimento */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mb-4 p-3 bg-gray-100 rounded text-xs">
+          <strong>Debug:</strong> Categorias: {categories.length} | Tópicos: {topics.length} | 
+          Filtro: {selectedFilter} | Aba: {activeTab} | Busca: {searchQuery || 'nenhuma'}
+        </div>
+      )}
 
       {/* Filtros e Busca */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
@@ -95,6 +135,19 @@ const CommunityPage = () => {
         </Select>
       </div>
 
+      {/* Tratamento de erro */}
+      {hasError && (
+        <Alert className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Ocorreu um erro ao carregar os dados da comunidade. 
+            <Button variant="link" onClick={handleRefresh} className="p-0 ml-1 h-auto">
+              Tente novamente
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Lista de Tópicos */}
       <div className="space-y-4">
         {isLoading ? (
@@ -106,22 +159,34 @@ const CommunityPage = () => {
               </div>
             ))}
           </div>
-        ) : error ? (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">Erro ao carregar tópicos. Tente novamente.</p>
-          </div>
         ) : topics.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">Nenhum tópico encontrado.</p>
-            {searchQuery && (
-              <Button 
-                variant="outline" 
-                onClick={() => setSearchQuery("")}
-                className="mt-2"
-              >
-                Limpar busca
-              </Button>
-            )}
+          <div className="text-center py-12">
+            <div className="max-w-md mx-auto">
+              <h3 className="text-lg font-medium mb-2">
+                {searchQuery ? 'Nenhum tópico encontrado' : 'Ainda não há tópicos'}
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                {searchQuery 
+                  ? 'Tente ajustar sua pesquisa ou limpar os filtros.'
+                  : 'Seja o primeiro a iniciar uma discussão na comunidade!'
+                }
+              </p>
+              {searchQuery ? (
+                <Button 
+                  variant="outline" 
+                  onClick={() => setSearchQuery("")}
+                >
+                  Limpar busca
+                </Button>
+              ) : (
+                <Button asChild>
+                  <Link to="/comunidade/novo-topico">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Criar primeiro tópico
+                  </Link>
+                </Button>
+              )}
+            </div>
           </div>
         ) : (
           topics.map((topic) => (

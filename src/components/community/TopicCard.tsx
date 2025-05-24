@@ -4,7 +4,7 @@ import { format, formatDistance } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, Eye, ThumbsUp, Pin, Lock, Clock } from "lucide-react";
+import { MessageSquare, Eye, Pin, Lock, Clock, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Topic } from "@/types/forumTypes";
 import { getInitials } from "@/utils/user";
@@ -16,34 +16,56 @@ interface TopicCardProps {
 }
 
 export const TopicCard = ({ topic, className = "", compact = false }: TopicCardProps) => {
-  // Extrair uma prévia do conteúdo
+  // Função para extrair prévia do conteúdo
   const getContentPreview = (content: string) => {
-    // Remove qualquer HTML/markdown para ter texto puro
-    const plainText = content.replace(/<[^>]*>/g, '');
+    if (!content) return "Sem conteúdo disponível";
+    const plainText = content.replace(/<[^>]*>/g, '').trim();
     return plainText.length > 120 ? plainText.substring(0, 120) + "..." : plainText;
   };
   
-  // Calcular tempo relativo
+  // Função para calcular tempo relativo com fallback
   const getRelativeTime = (date: string) => {
-    return formatDistance(new Date(date), new Date(), {
-      addSuffix: true,
-      locale: ptBR,
-    });
+    try {
+      return formatDistance(new Date(date), new Date(), {
+        addSuffix: true,
+        locale: ptBR,
+      });
+    } catch (error) {
+      return 'há algum tempo';
+    }
   };
+
+  // Valores com fallback
+  const authorName = topic.profiles?.name || 'Usuário Anônimo';
+  const categoryName = topic.category?.name || 'Sem categoria';
+  const topicId = topic.id || '';
+  const safeViewCount = Math.max(0, topic.view_count || 0);
+  const safeReplyCount = Math.max(0, topic.reply_count || 0);
   
   return (
     <Card className={`p-4 mb-3 hover:bg-accent/50 transition-all ${className}`}>
-      <Link to={`/comunidade/topico/${topic.id}`} className="block">
+      <Link 
+        to={topicId ? `/comunidade/topico/${topicId}` : '#'} 
+        className="block"
+        onClick={(e) => {
+          if (!topicId) {
+            e.preventDefault();
+            console.warn('Tópico sem ID válido:', topic);
+          }
+        }}
+      >
         <div className="flex items-start gap-3">
           <Avatar className="h-10 w-10 shrink-0">
             <AvatarImage src={topic.profiles?.avatar_url || undefined} />
-            <AvatarFallback>{getInitials(topic.profiles?.name)}</AvatarFallback>
+            <AvatarFallback>
+              {topic.profiles?.name ? getInitials(topic.profiles.name) : <User className="h-5 w-5" />}
+            </AvatarFallback>
           </Avatar>
           
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1 flex-wrap">
               <span className="font-medium truncate">
-                {topic.profiles?.name || "Usuário"}
+                {authorName}
               </span>
               
               <div className="flex items-center">
@@ -53,15 +75,20 @@ export const TopicCard = ({ topic, className = "", compact = false }: TopicCardP
               
               {topic.category && (
                 <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                  {topic.category.name}
+                  {categoryName}
                 </Badge>
               )}
             </div>
             
-            <h3 className="text-lg font-semibold mb-1 line-clamp-1">
-              {topic.is_pinned && <Pin className="h-3 w-3 inline mr-1 text-primary" />}
-              {topic.is_locked && <Lock className="h-3 w-3 inline mr-1 text-muted-foreground" />}
-              {topic.title}
+            <h3 className="text-lg font-semibold mb-1 line-clamp-1 flex items-center gap-2">
+              {topic.is_pinned && <Pin className="h-3 w-3 text-primary" />}
+              {topic.is_locked && <Lock className="h-3 w-3 text-muted-foreground" />}
+              <span className="truncate">{topic.title || 'Tópico sem título'}</span>
+              {topic.is_solved && (
+                <Badge className="bg-green-600 hover:bg-green-500 text-white text-xs">
+                  Resolvido
+                </Badge>
+              )}
             </h3>
             
             {!compact && (
@@ -73,16 +100,17 @@ export const TopicCard = ({ topic, className = "", compact = false }: TopicCardP
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <div className="flex items-center">
                 <MessageSquare className="h-4 w-4 mr-1" />
-                <span>{topic.reply_count}</span>
+                <span>{safeReplyCount}</span>
               </div>
               
               <div className="flex items-center">
                 <Eye className="h-4 w-4 mr-1" />
-                <span>{topic.view_count}</span>
+                <span>{safeViewCount}</span>
               </div>
               
               <div className="flex items-center ml-auto">
-                {new Date(topic.last_activity_at).getTime() !== new Date(topic.created_at).getTime() && (
+                {topic.last_activity_at && 
+                 new Date(topic.last_activity_at).getTime() !== new Date(topic.created_at).getTime() && (
                   <span className="text-xs">
                     Última atividade {getRelativeTime(topic.last_activity_at)}
                   </span>
