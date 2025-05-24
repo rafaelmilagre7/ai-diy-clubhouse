@@ -26,7 +26,7 @@ const CommunityPage = () => {
   } = useQuery({
     queryKey: ['forum-categories'],
     queryFn: async () => {
-      console.log("📂 Buscando categorias do fórum...");
+      console.log("📂 Buscando categorias...");
       const { data, error } = await supabase
         .from('forum_categories')
         .select('*')
@@ -44,7 +44,7 @@ const CommunityPage = () => {
     retry: 2
   });
 
-  // Buscar tópicos com filtros
+  // Buscar tópicos
   const { 
     data: topics = [], 
     isLoading: topicsLoading, 
@@ -63,7 +63,7 @@ const CommunityPage = () => {
   };
 
   const handleRefresh = () => {
-    console.log("🔄 Atualizando tópicos...");
+    console.log("🔄 Atualizando...");
     refetchTopics();
   };
 
@@ -71,14 +71,14 @@ const CommunityPage = () => {
   const hasError = categoriesError || topicsError;
 
   return (
-    <div className="container max-w-7xl mx-auto py-6">
+    <div className="container max-w-7xl mx-auto py-6 px-4">
       <ForumBreadcrumbs />
       
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Comunidade</h1>
-          <p className="text-muted-foreground mt-1">
-            Conecte-se, compartilhe conhecimento e tire dúvidas com outros membros
+          <h1 className="text-2xl sm:text-3xl font-bold">Comunidade</h1>
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+            Conecte-se, compartilhe conhecimento e tire dúvidas
           </p>
         </div>
         
@@ -102,16 +102,8 @@ const CommunityPage = () => {
         categories={categories}
       />
 
-      {/* Debug info para desenvolvimento */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="mb-4 p-3 bg-gray-100 rounded text-xs">
-          <strong>Debug:</strong> Categorias: {categories.length} | Tópicos: {topics.length} | 
-          Filtro: {selectedFilter} | Aba: {activeTab} | Busca: {searchQuery || 'nenhuma'}
-        </div>
-      )}
-
       {/* Filtros e Busca */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
@@ -124,7 +116,7 @@ const CommunityPage = () => {
         
         <Select value={selectedFilter} onValueChange={(value: any) => setSelectedFilter(value)}>
           <SelectTrigger className="w-full sm:w-48">
-            <SelectValue placeholder="Filtrar por" />
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="recentes">Mais Recentes</SelectItem>
@@ -137,15 +129,24 @@ const CommunityPage = () => {
 
       {/* Tratamento de erro */}
       {hasError && (
-        <Alert className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Ocorreu um erro ao carregar os dados da comunidade. 
-            <Button variant="link" onClick={handleRefresh} className="p-0 ml-1 h-auto">
+        <Alert className="mb-6 border-red-200 bg-red-50">
+          <AlertCircle className="h-4 w-4 text-red-600" />
+          <AlertDescription className="text-red-800">
+            Erro ao carregar dados da comunidade. 
+            <Button variant="link" onClick={handleRefresh} className="p-0 ml-1 h-auto text-red-600">
               Tente novamente
             </Button>
           </AlertDescription>
         </Alert>
+      )}
+
+      {/* Contador de tópicos */}
+      {!isLoading && !hasError && (
+        <div className="mb-4">
+          <p className="text-sm text-muted-foreground">
+            {topics.length} {topics.length === 1 ? 'tópico encontrado' : 'tópicos encontrados'}
+          </p>
+        </div>
       )}
 
       {/* Lista de Tópicos */}
@@ -153,22 +154,23 @@ const CommunityPage = () => {
         {isLoading ? (
           <div className="space-y-4">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="p-4 border rounded-lg animate-pulse">
-                <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
-                <div className="h-3 bg-muted rounded w-1/2"></div>
+              <div key={i} className="p-4 border rounded-lg animate-pulse bg-muted/20">
+                <div className="h-4 bg-muted rounded w-3/4 mb-3"></div>
+                <div className="h-3 bg-muted rounded w-1/2 mb-2"></div>
+                <div className="h-3 bg-muted rounded w-1/3"></div>
               </div>
             ))}
           </div>
         ) : topics.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="text-center py-12 bg-muted/20 rounded-lg">
             <div className="max-w-md mx-auto">
               <h3 className="text-lg font-medium mb-2">
                 {searchQuery ? 'Nenhum tópico encontrado' : 'Ainda não há tópicos'}
               </h3>
-              <p className="text-muted-foreground mb-4">
+              <p className="text-muted-foreground mb-4 text-sm">
                 {searchQuery 
                   ? 'Tente ajustar sua pesquisa ou limpar os filtros.'
-                  : 'Seja o primeiro a iniciar uma discussão na comunidade!'
+                  : 'Seja o primeiro a iniciar uma discussão!'
                 }
               </p>
               {searchQuery ? (
