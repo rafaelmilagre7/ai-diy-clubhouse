@@ -93,34 +93,62 @@ export const useForumTopics = ({
           return [];
         }
         
-        // Mapear os dados para o formato esperado
-        const formattedTopics: Topic[] = topicsData.map(topic => ({
-          id: topic.id,
-          title: topic.title,
-          content: topic.content,
-          created_at: topic.created_at,
-          updated_at: topic.updated_at,
-          last_activity_at: topic.last_activity_at,
-          user_id: topic.user_id,
-          category_id: topic.category_id,
-          view_count: topic.view_count || 0,
-          reply_count: topic.reply_count || 0,
-          is_pinned: topic.is_pinned || false,
-          is_locked: topic.is_locked || false,
-          is_solved: topic.is_solved || false,
-          profiles: topic.profiles ? {
-            id: topic.profiles.id,
-            name: topic.profiles.name || 'Usuário',
-            avatar_url: topic.profiles.avatar_url,
-            role: topic.profiles.role || '',
-            user_id: topic.profiles.id
-          } : null,
-          category: topic.category ? {
-            id: topic.category.id,
-            name: topic.category.name,
-            slug: topic.category.slug
-          } : null
-        }));
+        // Agora, buscar os perfis dos usuários separadamente
+        const userIds = [...new Set(topicsData.map(topic => topic.user_id))];
+
+        let userProfiles: any[] = [];
+        if (userIds.length > 0) {
+          const { data: profiles, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, name, avatar_url, role')
+            .in('id', userIds);
+
+          if (profilesError) {
+            console.error("Erro ao buscar perfis:", profilesError);
+          } else {
+            userProfiles = profiles || [];
+          }
+        }
+
+        // Buscar categorias relacionadas
+        const categoryIds = [...new Set(topicsData.map(topic => topic.category_id))];
+        let categoriesData: any[] = [];
+        if (categoryIds.length > 0) {
+          const { data: categoriesResult, error: categoriesError } = await supabase
+            .from('forum_categories')
+            .select('id, name, slug')
+            .in('id', categoryIds);
+
+          if (categoriesError) {
+            console.error("Erro ao buscar categorias:", categoriesError);
+          } else {
+            categoriesData = categoriesResult || [];
+          }
+        }
+
+        // Mapear manualmente os dados de perfil e categoria para cada tópico
+        const mapTopicWithRelations = (topic: any): Topic => {
+          const userProfile = userProfiles.find(profile => profile.id === topic.user_id);
+          const category = categoriesData.find(cat => cat.id === topic.category_id);
+
+          return {
+            ...topic,
+            profiles: userProfile ? {
+              id: userProfile.id,
+              name: userProfile.name || 'Usuário',
+              avatar_url: userProfile.avatar_url,
+              role: userProfile.role || '',
+              user_id: userProfile.id
+            } : null,
+            category: category ? {
+              id: category.id,
+              name: category.name,
+              slug: category.slug
+            } : null
+          };
+        };
+        
+        const formattedTopics: Topic[] = topicsData.map(mapTopicWithRelations);
         
         console.log(`Tópicos encontrados: ${formattedTopics.length}`);
         return formattedTopics;
