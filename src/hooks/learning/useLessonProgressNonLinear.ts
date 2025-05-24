@@ -153,12 +153,7 @@ export function useLessonProgressNonLinear({
     },
     onError: (error) => {
       console.error("Erro ao salvar progresso:", error);
-      toast.error("Não foi possível salvar seu progresso. Tentando novamente...");
-      
-      // Retry após 2 segundos
-      setTimeout(() => {
-        updateProgressMutation.retry();
-      }, 2000);
+      toast.error("Não foi possível salvar seu progresso. Tente novamente.");
     }
   });
 
