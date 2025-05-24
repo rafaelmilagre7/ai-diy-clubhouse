@@ -3982,6 +3982,10 @@ export type Database = {
         Args: { suggestion_id: string }
         Returns: undefined
       }
+      increment_topic_replies: {
+        Args: { topic_id: string }
+        Returns: undefined
+      }
       increment_topic_views: {
         Args: { topic_id: string }
         Returns: undefined
@@ -4019,6 +4023,10 @@ export type Database = {
       }
       mark_topic_as_solved: {
         Args: { topic_id: string; post_id: string }
+        Returns: Json
+      }
+      mark_topic_solved: {
+        Args: { p_topic_id: string; p_post_id: string }
         Returns: Json
       }
       merge_json_data: {

@@ -17,11 +17,11 @@ export const useForumTopics = ({
   activeTab, 
   selectedFilter, 
   searchQuery, 
-  categories 
+  categories = []
 }: UseForumTopicsProps) => {
   
   return useQuery({
-    queryKey: ['communityTopics', selectedFilter, searchQuery, activeTab],
+    queryKey: ['forum-topics', selectedFilter, searchQuery, activeTab],
     queryFn: async (): Promise<Topic[]> => {
       try {
         console.log("Buscando tópicos com filtros:", { selectedFilter, searchQuery, activeTab });
@@ -42,13 +42,15 @@ export const useForumTopics = ({
             is_solved,
             user_id, 
             category_id, 
-            last_activity_at
+            last_activity_at,
+            profiles:user_id (id, name, avatar_url, role),
+            category:forum_categories!forum_topics_category_id_fkey (id, name, slug)
           `)
           .order('is_pinned', { ascending: false });
 
         // Aplicar filtros de categoria apenas se não for "todos"
         if (activeTab !== "todos") {
-          const category = categories?.find(c => c.slug === activeTab);
+          const category = categories.find(c => c.slug === activeTab);
           if (category) {
             query = query.eq('category_id', category.id);
           }
@@ -66,7 +68,6 @@ export const useForumTopics = ({
             query = query.eq('reply_count', 0).order('created_at', { ascending: false });
             break;
           case "resolvidos":
-            // Filtrar apenas tópicos marcados como resolvidos
             query = query.eq('is_solved', true).order('last_activity_at', { ascending: false });
             break;
         }
@@ -77,12 +78,13 @@ export const useForumTopics = ({
         }
         
         // Limitar resultados
-        query = query.limit(20);
+        query = query.limit(50);
         
-        // Executar a consulta principal
+        // Executar a consulta
         const { data: topicsData, error: topicsError } = await query;
         
         if (topicsError) {
+          console.error("Erro ao buscar tópicos:", topicsError);
           throw topicsError;
         }
         
@@ -91,71 +93,45 @@ export const useForumTopics = ({
           return [];
         }
         
-        // Buscar perfis de usuários em uma consulta separada
-        const userIds = topicsData.map(topic => topic.user_id);
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, name, avatar_url, role')
-          .in('id', userIds);
-          
-        if (profilesError) {
-          console.warn("Erro ao buscar perfis:", profilesError.message);
-        }
+        // Mapear os dados para o formato esperado
+        const formattedTopics: Topic[] = topicsData.map(topic => ({
+          id: topic.id,
+          title: topic.title,
+          content: topic.content,
+          created_at: topic.created_at,
+          updated_at: topic.updated_at,
+          last_activity_at: topic.last_activity_at,
+          user_id: topic.user_id,
+          category_id: topic.category_id,
+          view_count: topic.view_count || 0,
+          reply_count: topic.reply_count || 0,
+          is_pinned: topic.is_pinned || false,
+          is_locked: topic.is_locked || false,
+          is_solved: topic.is_solved || false,
+          profiles: topic.profiles ? {
+            id: topic.profiles.id,
+            name: topic.profiles.name || 'Usuário',
+            avatar_url: topic.profiles.avatar_url,
+            role: topic.profiles.role || '',
+            user_id: topic.profiles.id
+          } : null,
+          category: topic.category ? {
+            id: topic.category.id,
+            name: topic.category.name,
+            slug: topic.category.slug
+          } : null
+        }));
         
-        // Buscar categorias em uma consulta separada
-        const categoryIds = topicsData.map(topic => topic.category_id).filter(Boolean);
-        const { data: categoriesData, error: categoriesError } = await supabase
-          .from('forum_categories')
-          .select('id, name, slug')
-          .in('id', categoryIds);
-          
-        if (categoriesError) {
-          console.warn("Erro ao buscar categorias:", categoriesError.message);
-        }
-        
-        // Mapear os perfis e categorias para os tópicos
-        const formattedTopics: Topic[] = topicsData.map(topic => {
-          const userProfile = profilesData?.find(profile => profile.id === topic.user_id);
-          const topicCategory = categoriesData?.find(cat => cat.id === topic.category_id);
-          
-          return {
-            id: topic.id,
-            title: topic.title,
-            content: topic.content,
-            created_at: topic.created_at,
-            updated_at: topic.updated_at,
-            last_activity_at: topic.last_activity_at,
-            user_id: topic.user_id,
-            category_id: topic.category_id,
-            view_count: topic.view_count || 0,
-            reply_count: topic.reply_count || 0,
-            is_pinned: topic.is_pinned || false,
-            is_locked: topic.is_locked || false,
-            is_solved: topic.is_solved || false,
-            profiles: userProfile ? {
-              id: userProfile.id,
-              name: userProfile.name || 'Usuário',
-              avatar_url: userProfile.avatar_url,
-              role: userProfile.role || '',
-              user_id: userProfile.id // Garantindo que tenhamos o user_id
-            } : null,
-            category: topicCategory ? {
-              id: topicCategory.id,
-              name: topicCategory.name,
-              slug: topicCategory.slug
-            } : null
-          };
-        });
-        
-        console.log(`Tópicos formatados: ${formattedTopics.length}`);
+        console.log(`Tópicos encontrados: ${formattedTopics.length}`);
         return formattedTopics;
+        
       } catch (error: any) {
-        console.error('Erro ao buscar tópicos:', error.message);
-        toast.error("Não foi possível carregar os tópicos. Por favor, tente novamente.");
+        console.error('Erro ao buscar tópicos:', error);
+        toast.error("Não foi possível carregar os tópicos. Tente novamente.");
         return [];
       }
     },
-    staleTime: 1000 * 60 * 2, // 2 minutos de cache
+    staleTime: 2 * 60 * 1000, // 2 minutos de cache
     retry: 2,
     refetchOnWindowFocus: false,
   });

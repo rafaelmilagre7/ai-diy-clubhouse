@@ -47,19 +47,21 @@ export const ReplyForm = ({
         <Avatar className="h-10 w-10 mt-1">
           <AvatarImage src={user?.user_metadata?.avatar_url || undefined} />
           <AvatarFallback>
-            {getInitials(user?.user_metadata?.name || user?.email)}
+            {getInitials(user?.user_metadata?.name || user?.email || 'U')}
           </AvatarFallback>
         </Avatar>
         
-        <Textarea
-          placeholder={placeholder}
-          value={content}
-          onChange={handleTextareaInput}
-          ref={textareaRef}
-          rows={3}
-          className="flex-1 resize-none"
-          disabled={isSubmitting}
-        />
+        <div className="flex-1">
+          <Textarea
+            placeholder={placeholder}
+            value={content}
+            onChange={handleTextareaInput}
+            ref={textareaRef}
+            rows={4}
+            className="resize-none"
+            disabled={isSubmitting}
+          />
+        </div>
       </div>
       
       <div className="flex justify-end gap-2">

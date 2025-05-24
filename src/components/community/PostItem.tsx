@@ -1,108 +1,141 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getInitials } from "@/utils/user";
-import { PostActions } from "./PostActions";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { CheckCircle2, MoreHorizontal, MessageSquare, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { PostHeader } from "./PostHeader";
+import { getInitials } from "@/utils/user";
+import { useState } from "react";
+import { ReplyForm } from "./ReplyForm";
 
 interface PostItemProps {
   post: {
     id: string;
     content: string;
     user_id: string;
-    topic_id: string;
     created_at: string;
-    updated_at: string;
+    is_solution?: boolean;
     profiles?: {
       id: string;
       name: string;
       avatar_url?: string | null;
       role?: string;
     } | null;
-    replies?: any[];
-    is_solution?: boolean;
   };
-  topicAuthorId?: string;
-  isSolved?: boolean;
-  isTopicStarter?: boolean;
-  onMarkAsSolution?: (postId: string) => void;
-  topicId?: string;
-  isTopicAuthor?: boolean;
-  isAdmin?: boolean;
-  currentUserId?: string;
-  onReplyAdded?: () => void;
+  canMarkAsSolution?: boolean;
+  isAuthor?: boolean;
+  onMarkAsSolution?: () => void;
+  isMarkingSolved?: boolean;
 }
 
 export const PostItem = ({ 
   post, 
-  topicAuthorId,
-  isSolved,
-  isTopicStarter,
+  canMarkAsSolution = false,
+  isAuthor = false,
   onMarkAsSolution,
-  topicId,
-  isTopicAuthor,
-  isAdmin,
-  currentUserId,
-  onReplyAdded
+  isMarkingSolved = false
 }: PostItemProps) => {
+  const [showReplyForm, setShowReplyForm] = useState(false);
+
   const formattedDate = formatDistanceToNow(
     new Date(post.created_at), 
     { addSuffix: true, locale: ptBR }
   );
-  
-  const isAuthor = post.user_id === topicAuthorId;
+
+  const handleMarkAsSolution = () => {
+    if (onMarkAsSolution) {
+      onMarkAsSolution();
+    }
+  };
 
   return (
     <div className="border rounded-lg p-4 bg-background">
-      <PostHeader 
-        post={post} 
-        formattedDate={formattedDate} 
-        isTopicStarter={isTopicStarter}
-        isAuthor={isAuthor}
-      />
-      
-      <div className="mt-3 prose prose-sm max-w-none">
-        {post.content}
-      </div>
-      
-      <div className="mt-4 flex justify-between items-center">
-        <PostActions 
-          post={post} 
-          isAuthor={isAuthor} 
-          isSolution={post.is_solution || false}
-          canMarkSolution={topicAuthorId === post.user_id && !isSolved} 
-          onMarkAsSolution={onMarkAsSolution}
-        />
-      </div>
-      
-      {/* Respostas a este post, se houver */}
-      {post.replies && post.replies.length > 0 && (
-        <div className="mt-4 pl-6 border-l space-y-4">
-          {post.replies.map((reply: any) => (
-            <div key={reply.id} className="border-t pt-4">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-6 w-6">
-                  <AvatarImage src={reply.profiles?.avatar_url || undefined} />
-                  <AvatarFallback className="text-xs">
-                    {getInitials(reply.profiles?.name || '')}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <span className="font-medium text-sm">{reply.profiles?.name}</span>
-                  <span className="text-xs text-muted-foreground ml-2">
-                    {formatDistanceToNow(
-                      new Date(reply.created_at), 
-                      { addSuffix: true, locale: ptBR }
-                    )}
-                  </span>
-                </div>
-              </div>
-              <div className="mt-2 prose prose-sm max-w-none pl-9">
-                {reply.content}
-              </div>
+      {/* Cabeçalho do Post */}
+      <div className="flex justify-between items-start mb-3">
+        <div className="flex items-center gap-3">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={post.profiles?.avatar_url || undefined} />
+            <AvatarFallback className="text-xs">
+              {getInitials(post.profiles?.name || 'U')}
+            </AvatarFallback>
+          </Avatar>
+          
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-sm">{post.profiles?.name || 'Usuário'}</span>
+              
+              {post.profiles?.role === 'admin' && (
+                <Badge variant="default" className="text-xs">Admin</Badge>
+              )}
+              
+              {post.is_solution && (
+                <Badge className="bg-green-600 hover:bg-green-500 gap-1 text-white text-xs">
+                  <CheckCircle2 className="h-3 w-3" />
+                  Solução
+                </Badge>
+              )}
             </div>
-          ))}
+            <span className="text-xs text-muted-foreground">{formattedDate}</span>
+          </div>
+        </div>
+
+        {/* Menu de Ações */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setShowReplyForm(!showReplyForm)}>
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Responder
+            </DropdownMenuItem>
+            
+            {canMarkAsSolution && !post.is_solution && (
+              <DropdownMenuItem 
+                onClick={handleMarkAsSolution}
+                disabled={isMarkingSolved}
+                className="text-green-600"
+              >
+                {isMarkingSolved ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                )}
+                Marcar como solução
+              </DropdownMenuItem>
+            )}
+            
+            <DropdownMenuItem>Reportar</DropdownMenuItem>
+            
+            {isAuthor && (
+              <>
+                <DropdownMenuItem>Editar</DropdownMenuItem>
+                <DropdownMenuItem className="text-destructive">Excluir</DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      
+      {/* Conteúdo do Post */}
+      <div className="prose prose-sm max-w-none mb-3">
+        <div dangerouslySetInnerHTML={{ __html: post.content }} />
+      </div>
+      
+      {/* Formulário de Resposta */}
+      {showReplyForm && (
+        <div className="mt-4 pt-4 border-t">
+          <ReplyForm 
+            topicId={post.id} // Isso precisa ser o topic_id, não o post_id
+            parentId={post.id}
+            onSuccess={() => setShowReplyForm(false)}
+            onCancel={() => setShowReplyForm(false)}
+            placeholder="Responder a este post..."
+          />
         </div>
       )}
     </div>
