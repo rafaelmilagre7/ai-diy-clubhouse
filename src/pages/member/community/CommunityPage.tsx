@@ -7,7 +7,7 @@ import { CreateTopicDialog } from "@/components/community/CreateTopicDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, AlertCircle, RefreshCw } from "lucide-react";
+import { Plus, Search, AlertCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useForumTopics } from "@/hooks/community/useForumTopics";
@@ -49,8 +49,7 @@ const CommunityPage = () => {
   const { 
     data: topics = [], 
     isLoading: topicsLoading, 
-    error: topicsError,
-    refetch: refetchTopics 
+    error: topicsError
   } = useForumTopics({
     activeTab,
     selectedFilter,
@@ -61,11 +60,6 @@ const CommunityPage = () => {
   const handleTabChange = (tab: string) => {
     console.log("🔄 Mudando aba para:", tab);
     setActiveTab(tab);
-  };
-
-  const handleRefresh = () => {
-    console.log("🔄 Atualizando...");
-    refetchTopics();
   };
 
   const isLoading = categoriesLoading || topicsLoading;
@@ -84,10 +78,6 @@ const CommunityPage = () => {
         </div>
         
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            Atualizar
-          </Button>
           <Button onClick={() => setCreateTopicOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Novo Tópico
@@ -131,10 +121,7 @@ const CommunityPage = () => {
         <Alert className="mb-6 border-red-200 bg-red-50">
           <AlertCircle className="h-4 w-4 text-red-600" />
           <AlertDescription className="text-red-800">
-            Erro ao carregar dados da comunidade. 
-            <Button variant="link" onClick={handleRefresh} className="p-0 ml-1 h-auto text-red-600">
-              Tente novamente
-            </Button>
+            Erro ao carregar dados da comunidade. Recarregue a página para tentar novamente.
           </AlertDescription>
         </Alert>
       )}

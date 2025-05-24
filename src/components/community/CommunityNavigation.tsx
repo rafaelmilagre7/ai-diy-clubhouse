@@ -1,7 +1,7 @@
 
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { MessageSquare, Users, Bookmark, UserPlus, Home } from 'lucide-react';
+import { MessageSquare, Users, UserPlus, Home } from 'lucide-react';
 
 interface CommunityNavigationProps {
   activeTab?: string;
@@ -51,9 +51,9 @@ export const CommunityNavigation = ({
   return (
     <nav className="mb-6 border-b">
       <div className="flex overflow-x-auto py-2 space-x-1 px-1">
-        {navItems.map(item => (
+        {navItems.map((item, index) => (
           <Link
-            key={item.path}
+            key={`${item.path}-${index}`}
             to={item.path}
             className={cn(
               "flex items-center space-x-2 px-4 py-2 rounded-md whitespace-nowrap transition-colors text-sm font-medium",
@@ -85,9 +85,9 @@ export const CommunityNavigation = ({
           >
             Todas as categorias
           </button>
-          {categories.map(category => (
+          {categories.map((category, index) => (
             <button
-              key={category.id}
+              key={`category-${category.id}-${index}`}
               onClick={() => onTabChange?.(category.slug)}
               className={cn(
                 "px-3 py-1 rounded-md whitespace-nowrap transition-colors text-xs",
