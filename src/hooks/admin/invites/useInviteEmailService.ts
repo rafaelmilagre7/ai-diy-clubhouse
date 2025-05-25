@@ -173,7 +173,7 @@ export function useInviteEmailService() {
     }
   }, []);
 
-  // Gerar link de convite - Melhorado para robustez máxima
+  // Gerar link de convite - Corrigido para usar domínio correto
   const getInviteLink = useCallback((token: string) => {
     // Verificar se o token existe
     if (!token) {
@@ -195,11 +195,13 @@ export function useInviteEmailService() {
       console.warn("Token contém caracteres não alfanuméricos:", token);
     }
     
-    // Construir URL absoluta com origem da janela atual
-    const baseUrl = `${window.location.origin}/convite/${encodeURIComponent(cleanToken)}`;
-    console.log("URL do convite gerado:", baseUrl);
+    // Usar domínio correto da aplicação em produção
+    const baseUrl = 'https://app.viverdeia.ai';
+    const inviteUrl = `${baseUrl}/convite/${encodeURIComponent(cleanToken)}`;
     
-    return baseUrl;
+    console.log("URL do convite gerado:", inviteUrl);
+    
+    return inviteUrl;
   }, []);
 
   // Limpar a fila de emails pendentes
