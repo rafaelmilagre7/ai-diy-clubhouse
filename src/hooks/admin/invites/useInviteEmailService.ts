@@ -35,9 +35,8 @@ export function useInviteEmailService() {
       setIsSending(true);
       setSendError(null);
 
-      // Verificar se o URL está correto antes de enviar
-      const urlPattern = new RegExp('^https?://[a-z0-9-]+(\\.[a-z0-9-]+)+([/?].*)?$', 'i');
-      if (!urlPattern.test(inviteUrl)) {
+      // Validação mais flexível da URL
+      if (!inviteUrl || !inviteUrl.includes('/convite/') || inviteUrl.length < 20) {
         console.error("URL inválida gerada para o convite:", inviteUrl);
         setSendError(new Error('URL inválida gerada'));
         return {
@@ -173,7 +172,7 @@ export function useInviteEmailService() {
     }
   }, []);
 
-  // Gerar link de convite - Corrigido para usar domínio correto
+  // Gerar link de convite - Corrigido para usar domínio de produção fixo
   const getInviteLink = useCallback((token: string) => {
     // Verificar se o token existe
     if (!token) {
@@ -196,10 +195,18 @@ export function useInviteEmailService() {
     }
     
     // Usar domínio correto da aplicação em produção
-    const baseUrl = 'https://app.viverdeia.ai';
+    // Detectar ambiente e usar URL apropriada
+    const isProduction = window.location.hostname === 'app.viverdeia.ai' || 
+                        window.location.hostname === 'ai-diy-clubhouse.lovable.app';
+    
+    const baseUrl = isProduction 
+      ? 'https://app.viverdeia.ai' 
+      : window.location.origin;
+    
     const inviteUrl = `${baseUrl}/convite/${encodeURIComponent(cleanToken)}`;
     
     console.log("URL do convite gerado:", inviteUrl);
+    console.log("Ambiente detectado:", isProduction ? 'produção' : 'desenvolvimento');
     
     return inviteUrl;
   }, []);

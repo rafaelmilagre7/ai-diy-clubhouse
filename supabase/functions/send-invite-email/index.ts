@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,7 +24,27 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Log environment variables (sem expor valores)
+  console.log("Variáveis de ambiente disponíveis:", {
+    supabaseUrl: Deno.env.get("SUPABASE_URL") ? "Configurado" : "Não configurado",
+    supabaseServiceKey: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ? "Configurado" : "Não configurado",
+    resendApiKey: Deno.env.get("RESEND_API_KEY") ? "Configurado" : "Não configurado"
+  });
+
   try {
+    // Inicializar cliente Supabase
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
+    
+    console.log("Cliente Supabase inicializado com sucesso");
+
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     if (!resendApiKey) {
       console.error("RESEND_API_KEY não está configurada");
@@ -51,16 +72,17 @@ const handler = async (req: Request): Promise<Response> => {
       inviteId 
     }: InviteEmailRequest = await req.json();
 
-    console.log("Enviando convite por email:", { email, inviteUrl, roleName });
+    console.log("Preparando envio de convite para", email, "com papel", roleName);
+    console.log("URL do convite:", inviteUrl);
 
-    // Validar URL do convite
-    const urlPattern = /^https:\/\/app\.viverdeia\.ai\/convite\/[A-Z0-9]+$/i;
-    if (!urlPattern.test(inviteUrl)) {
+    // Validação flexível de URL - apenas verificar se contém os elementos básicos
+    if (!inviteUrl || !inviteUrl.includes('/convite/') || inviteUrl.length < 20) {
       console.error("URL do convite inválida:", inviteUrl);
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: "URL do convite inválida" 
+          error: "URL do convite inválida",
+          details: `URL recebida: ${inviteUrl}`
         }),
         {
           status: 400,
@@ -68,6 +90,13 @@ const handler = async (req: Request): Promise<Response> => {
         }
       );
     }
+
+    console.log("Enviando email para:", email);
+    console.log("Enviando email via Resend");
+    
+    // Usar endereço de remetente configurado
+    const fromAddress = "VIVER DE IA Club <no-reply@inteligenciapraviver.com>";
+    console.log("Usando endereço de remetente:", fromAddress);
 
     // Formatar data de expiração
     const expirationDate = new Date(expiresAt).toLocaleDateString('pt-BR', {
@@ -79,7 +108,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     const emailResponse = await resend.emails.send({
-      from: "Viver de IA <noreply@viverdeia.ai>",
+      from: fromAddress,
       to: [email],
       subject: `Convite para a plataforma Viver de IA - ${roleName}`,
       html: `
@@ -166,13 +195,37 @@ const handler = async (req: Request): Promise<Response> => {
       `,
     });
 
-    console.log("Email enviado com sucesso:", emailResponse);
+    console.log("Resposta do Resend:", { data: emailResponse.data, error: emailResponse.error });
+    console.log("Email enviado com sucesso:", { success: true, messageId: emailResponse.data?.id });
+
+    // Atualizar estatísticas do convite se ID foi fornecido
+    if (inviteId) {
+      console.log("Atualizando estatísticas do convite", inviteId);
+      try {
+        const { error: updateError } = await supabase
+          .from('invites')
+          .update({ 
+            last_sent_at: new Date().toISOString(),
+            send_attempts: supabase.sql`COALESCE(send_attempts, 0) + 1`
+          })
+          .eq('id', inviteId);
+
+        if (updateError) {
+          console.error("Erro ao atualizar estatísticas:", updateError);
+        } else {
+          console.log("Estatísticas do convite", inviteId, "atualizadas com sucesso");
+        }
+      } catch (statsError) {
+        console.error("Erro ao atualizar estatísticas:", statsError);
+      }
+    }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         message: "Email enviado com sucesso",
-        emailId: emailResponse.data?.id 
+        emailId: emailResponse.data?.id,
+        inviteUrl: inviteUrl // Retornar a URL para debug
       }),
       {
         status: 200,
@@ -185,7 +238,8 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message || "Erro interno do servidor" 
+        error: error.message || "Erro interno do servidor",
+        details: error.toString()
       }),
       {
         status: 500,
