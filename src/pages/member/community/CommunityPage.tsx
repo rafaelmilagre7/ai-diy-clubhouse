@@ -175,8 +175,8 @@ const CommunityPage = () => {
             </div>
           </div>
         ) : (
-          topics.map((topic) => (
-            <TopicCard key={topic.id} topic={topic} />
+          topics.map((topic, index) => (
+            <TopicCard key={`${topic.id}-${index}`} topic={topic} />
           ))
         )}
       </div>

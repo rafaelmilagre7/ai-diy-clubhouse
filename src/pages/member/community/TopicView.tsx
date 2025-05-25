@@ -1,5 +1,5 @@
 
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ForumBreadcrumbs } from '@/components/community/ForumBreadcrumbs';
 import { PostItem } from '@/components/community/PostItem';
 import { ReplyForm } from '@/components/community/ReplyForm';
@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ChevronLeft, MessageSquare, CheckCircle, AlertCircle } from 'lucide-react';
+import { ChevronLeft, MessageSquare, CheckCircle, AlertCircle, Eye, Clock } from 'lucide-react';
 import { useTopicDetails } from '@/hooks/community/useTopicDetails';
 import { useAuth } from '@/contexts/auth';
 import { getInitials } from '@/utils/user';
@@ -17,6 +17,7 @@ import { getInitials } from '@/utils/user';
 const TopicView = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const navigate = useNavigate();
   
   const { topic, posts, isLoading, error, markAsSolved, isMarkingSolved } = useTopicDetails(id!);
 
@@ -37,8 +38,8 @@ const TopicView = () => {
 
   if (isLoading) {
     return (
-      <div className="container max-w-7xl mx-auto py-6">
-        <div className="space-y-4">
+      <div className="container max-w-4xl mx-auto py-6 px-4">
+        <div className="space-y-6">
           <Skeleton className="h-8 w-3/4" />
           <div className="flex items-center space-x-4">
             <Skeleton className="h-12 w-12 rounded-full" />
@@ -55,13 +56,13 @@ const TopicView = () => {
 
   if (error || !topic) {
     return (
-      <div className="container max-w-7xl mx-auto py-6">
+      <div className="container max-w-4xl mx-auto py-6 px-4">
         <div className="text-center py-10">
           <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h1 className="text-2xl font-bold mb-2">Tópico não encontrado</h1>
           <p className="text-muted-foreground mb-6">O tópico que você está procurando não existe ou foi removido.</p>
-          <Button asChild>
-            <Link to="/comunidade">Voltar para a Comunidade</Link>
+          <Button onClick={() => navigate('/comunidade')}>
+            Voltar para a Comunidade
           </Button>
         </div>
       </div>
@@ -69,13 +70,11 @@ const TopicView = () => {
   }
 
   return (
-    <div className="container max-w-7xl mx-auto py-6">
+    <div className="container max-w-4xl mx-auto py-6 px-4">
       <div className="flex items-center gap-2 mb-4">
-        <Button variant="ghost" size="sm" asChild>
-          <Link to="/comunidade" className="flex items-center">
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Voltar para a Comunidade
-          </Link>
+        <Button variant="ghost" size="sm" onClick={() => navigate('/comunidade')}>
+          <ChevronLeft className="h-4 w-4 mr-1" />
+          Voltar para a Comunidade
         </Button>
       </div>
 
@@ -85,35 +84,42 @@ const TopicView = () => {
         topicTitle={topic.title}
       />
       
-      <div className="mt-6">
+      <div className="mt-6 space-y-6">
         {/* Cabeçalho do Tópico */}
-        <div className="flex items-start gap-2 mb-4">
-          <MessageSquare className="h-6 w-6 text-primary mt-1" />
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold mb-2 flex items-center gap-2">
-              {topic.is_pinned && <span className="text-primary">[Fixo]</span>}
-              {topic.is_locked && <span className="text-muted-foreground">[Trancado]</span>}
-              {topic.title}
-              {topic.is_solved && (
-                <Badge className="bg-green-600 hover:bg-green-500 gap-1">
-                  <CheckCircle className="h-3 w-3" />
-                  Resolvido
-                </Badge>
-              )}
-            </h1>
-            
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-              <span>{topic.view_count} visualizações</span>
-              <span>•</span>
-              <span>{topic.reply_count} respostas</span>
-              <span>•</span>
-              <span>Criado em {format(new Date(topic.created_at), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
+        <div className="bg-card border rounded-lg p-6">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                {topic.is_pinned && <Badge variant="outline" className="text-primary border-primary">Fixo</Badge>}
+                {topic.is_locked && <Badge variant="outline" className="text-muted-foreground">Trancado</Badge>}
+                {topic.is_solved && (
+                  <Badge className="bg-green-600 hover:bg-green-500 gap-1">
+                    <CheckCircle className="h-3 w-3" />
+                    Resolvido
+                  </Badge>
+                )}
+              </div>
+              
+              <h1 className="text-2xl font-bold mb-3">{topic.title}</h1>
+              
+              <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                <div className="flex items-center gap-1">
+                  <Eye className="h-4 w-4" />
+                  <span>{topic.view_count} visualizações</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <MessageSquare className="h-4 w-4" />
+                  <span>{topic.reply_count} respostas</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Clock className="h-4 w-4" />
+                  <span>Criado em {format(new Date(topic.created_at), "d 'de' MMMM", { locale: ptBR })}</span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Post Principal do Tópico */}
-        <div className="bg-card border rounded-lg p-6 mb-6">
+          {/* Autor e Conteúdo Principal */}
           <div className="flex items-start gap-3 mb-4">
             <Avatar className="h-10 w-10">
               <AvatarImage src={topic.profiles?.avatar_url || undefined} />
@@ -121,7 +127,7 @@ const TopicView = () => {
             </Avatar>
             
             <div className="flex-1">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 mb-2">
                 <span className="font-medium">{topic.profiles?.name || 'Usuário'}</span>
                 <Badge variant="outline" className="text-xs">Autor</Badge>
                 {topic.profiles?.role === 'admin' && (
@@ -141,7 +147,7 @@ const TopicView = () => {
         
         {/* Respostas */}
         {posts && posts.length > 0 && (
-          <div className="space-y-4 mb-8">
+          <div className="space-y-4">
             <h2 className="text-xl font-semibold">Respostas ({posts.length})</h2>
             {posts.map((post) => (
               <PostItem
@@ -159,7 +165,7 @@ const TopicView = () => {
         
         {/* Formulário de Resposta */}
         {!topic.is_locked ? (
-          <div>
+          <div className="bg-card border rounded-lg p-6">
             <h3 className="text-lg font-medium mb-4">Sua resposta</h3>
             <ReplyForm 
               topicId={topic.id} 

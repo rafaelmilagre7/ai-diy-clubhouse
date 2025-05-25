@@ -31,16 +31,23 @@ export const useForumTopics = ({
           categoriesCount: categories.length
         });
         
-        // Construir query básica - removendo o join problemático
+        // Construir query básica
         let query = supabase
           .from('forum_topics')
           .select(`
-            *,
-            category:forum_categories!category_id (
-              id,
-              name,
-              slug
-            )
+            id,
+            title,
+            content,
+            created_at,
+            updated_at,
+            last_activity_at,
+            user_id,
+            category_id,
+            view_count,
+            reply_count,
+            is_pinned,
+            is_locked,
+            is_solved
           `)
           .order('is_pinned', { ascending: false })
           .order('created_at', { ascending: false });
@@ -106,9 +113,27 @@ export const useForumTopics = ({
           }
         }
 
+        // Buscar categorias separadamente
+        const categoryIds = [...new Set(topicsData.map(topic => topic.category_id))];
+        let categoriesData: any[] = [];
+        
+        if (categoryIds.length > 0) {
+          const { data: categoriesResult, error: categoriesError } = await supabase
+            .from('forum_categories')
+            .select('id, name, slug')
+            .in('id', categoryIds);
+            
+          if (categoriesError) {
+            console.error("❌ Erro ao buscar categorias:", categoriesError);
+          } else {
+            categoriesData = categoriesResult || [];
+          }
+        }
+
         // Mapear os dados para o formato correto
         const formattedTopics: Topic[] = topicsData.map(topic => {
           const userProfile = profiles.find(profile => profile.id === topic.user_id);
+          const category = categoriesData.find(cat => cat.id === topic.category_id);
           
           return {
             id: topic.id,
@@ -131,10 +156,10 @@ export const useForumTopics = ({
               role: userProfile.role || 'member',
               user_id: userProfile.id
             } : null,
-            category: topic.category ? {
-              id: topic.category.id,
-              name: topic.category.name || 'Sem categoria',
-              slug: topic.category.slug || 'sem-categoria'
+            category: category ? {
+              id: category.id,
+              name: category.name || 'Sem categoria',
+              slug: category.slug || 'sem-categoria'
             } : null
           };
         });

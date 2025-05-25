@@ -39,17 +39,23 @@ export const TopicCard = ({ topic, className = "", compact = false }: TopicCardP
   const safeViewCount = Math.max(0, topic.view_count || 0);
   const safeReplyCount = Math.max(0, topic.reply_count || 0);
   
+  // Verificar se o ID é válido antes de renderizar o link
+  if (!topicId) {
+    console.warn('Tópico sem ID válido:', topic);
+    return (
+      <Card className={`p-4 opacity-50 ${className}`}>
+        <div className="text-center text-muted-foreground">
+          <p>Tópico inválido</p>
+        </div>
+      </Card>
+    );
+  }
+  
   return (
     <Card className={`p-4 hover:bg-accent/50 transition-all duration-200 border-l-4 ${topic.is_pinned ? 'border-l-primary' : 'border-l-transparent'} ${className}`}>
       <Link 
-        to={topicId ? `/comunidade/topico/${topicId}` : '#'} 
+        to={`/comunidade/topico/${topicId}`} 
         className="block"
-        onClick={(e) => {
-          if (!topicId) {
-            e.preventDefault();
-            console.warn('Tópico sem ID válido:', topic);
-          }
-        }}
       >
         <div className="flex items-start gap-3">
           <Avatar className="h-10 w-10 shrink-0">
