@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   DropdownMenu,
@@ -47,7 +46,8 @@ export const ConnectionNotificationsDropdown = () => {
           type,
           is_read,
           created_at,
-          profiles:sender_id(
+          sender_id,
+          profiles!connection_notifications_sender_id_fkey (
             id, 
             name, 
             avatar_url, 
@@ -61,18 +61,25 @@ export const ConnectionNotificationsDropdown = () => {
       if (error) throw error;
 
       // Mapear os dados corretamente
-      return (data || []).map(notification => ({
-        id: notification.id,
-        type: notification.type,
-        is_read: notification.is_read,
-        created_at: notification.created_at,
-        sender: {
-          id: notification.profiles?.id || '',
-          name: notification.profiles?.name || 'Usuário desconhecido',
-          avatar_url: notification.profiles?.avatar_url,
-          company_name: notification.profiles?.company_name
-        }
-      }));
+      return (data || []).map(notification => {
+        // O profiles pode vir como objeto único ou array, vamos tratar ambos os casos
+        const profile = Array.isArray(notification.profiles) 
+          ? notification.profiles[0] 
+          : notification.profiles;
+
+        return {
+          id: notification.id,
+          type: notification.type,
+          is_read: notification.is_read,
+          created_at: notification.created_at,
+          sender: {
+            id: profile?.id || notification.sender_id || '',
+            name: profile?.name || 'Usuário desconhecido',
+            avatar_url: profile?.avatar_url,
+            company_name: profile?.company_name
+          }
+        };
+      });
     },
     refetchInterval: 30000 // Refetch a cada 30 segundos
   });
