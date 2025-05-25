@@ -59,5 +59,4 @@ export function useInviteEmailService(): InviteEmailServiceReturn {
   };
 }
 
-// Re-export dos tipos para compatibilidade
-export type { SendInviteResponse } from './emailService/types';
+// Removido a re-exportação do tipo SendInviteResponse para evitar conflito
