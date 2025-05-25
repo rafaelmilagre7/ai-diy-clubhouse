@@ -7,11 +7,16 @@ import { Topic, Post } from '@/types/forumTypes';
 export const useTopicDetails = (topicId: string) => {
   const queryClient = useQueryClient();
 
+  console.log('🔍 useTopicDetails hook chamado com ID:', topicId);
+
   // Buscar dados do tópico
   const { data: topic, isLoading: topicLoading, error: topicError } = useQuery({
     queryKey: ['forum-topic', topicId],
     queryFn: async (): Promise<Topic | null> => {
-      if (!topicId) return null;
+      if (!topicId) {
+        console.warn('⚠️ TopicId não fornecido');
+        return null;
+      }
       
       console.log('🔍 Buscando detalhes do tópico:', topicId);
       
@@ -39,13 +44,15 @@ export const useTopicDetails = (topicId: string) => {
           
         if (topicFetchError) {
           console.error('❌ Erro ao buscar tópico:', topicFetchError);
-          throw topicFetchError;
+          throw new Error(`Erro ao buscar tópico: ${topicFetchError.message}`);
         }
         
         if (!topicData) {
-          console.warn('⚠️ Tópico não encontrado');
+          console.warn('⚠️ Tópico não encontrado com ID:', topicId);
           return null;
         }
+
+        console.log('✅ Dados do tópico encontrados:', topicData);
 
         // Buscar perfil do autor
         const { data: profileData, error: profileError } = await supabase
@@ -54,6 +61,10 @@ export const useTopicDetails = (topicId: string) => {
           .eq('id', topicData.user_id)
           .single();
 
+        if (profileError) {
+          console.warn('⚠️ Erro ao buscar perfil do autor:', profileError);
+        }
+
         // Buscar categoria
         const { data: categoryData, error: categoryError } = await supabase
           .from('forum_categories')
@@ -61,11 +72,20 @@ export const useTopicDetails = (topicId: string) => {
           .eq('id', topicData.category_id)
           .single();
 
-        // Incrementar contador de visualizações
-        await supabase
+        if (categoryError) {
+          console.warn('⚠️ Erro ao buscar categoria:', categoryError);
+        }
+
+        // Incrementar contador de visualizações de forma assíncrona
+        supabase
           .from('forum_topics')
           .update({ view_count: (topicData.view_count || 0) + 1 })
-          .eq('id', topicId);
+          .eq('id', topicId)
+          .then(({ error }) => {
+            if (error) {
+              console.warn('⚠️ Erro ao incrementar view_count:', error);
+            }
+          });
         
         // Montar objeto do tópico
         const topic: Topic = {

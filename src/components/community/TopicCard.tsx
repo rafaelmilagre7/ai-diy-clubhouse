@@ -51,14 +51,16 @@ export const TopicCard = ({ topic, className = "", compact = false }: TopicCardP
     );
   }
   
+  console.log('🔗 TopicCard renderizado - ID:', topicId, 'Título:', topic.title);
+  
   return (
-    <Card className={`group p-4 hover:bg-accent/50 transition-all duration-200 border-l-4 cursor-pointer ${
-      topic.is_pinned ? 'border-l-primary' : 'border-l-transparent'
-    } ${className}`}>
-      <Link 
-        to={`/comunidade/topico/${topicId}`} 
-        className="block h-full"
-      >
+    <Link 
+      to={`/comunidade/topico/${topicId}`} 
+      className="block w-full"
+    >
+      <Card className={`group p-4 hover:bg-accent/50 transition-all duration-200 border-l-4 cursor-pointer hover:shadow-md ${
+        topic.is_pinned ? 'border-l-primary' : 'border-l-transparent'
+      } ${className}`}>
         <div className="flex items-start gap-3 h-full">
           <Avatar className="h-10 w-10 shrink-0">
             <AvatarImage src={topic.profiles?.avatar_url || undefined} />
@@ -137,7 +139,7 @@ export const TopicCard = ({ topic, className = "", compact = false }: TopicCardP
             </div>
           </div>
         </div>
-      </Link>
-    </Card>
+      </Card>
+    </Link>
   );
 };
