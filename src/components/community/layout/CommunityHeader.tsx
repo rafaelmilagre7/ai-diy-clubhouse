@@ -3,8 +3,11 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Users, MessageSquare, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useForumStats } from '@/hooks/community/useForumStats';
 
 export const CommunityHeader = () => {
+  const { topicCount, postCount, activeUserCount, isLoading } = useForumStats();
+
   return (
     <div className="mb-8">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -19,7 +22,7 @@ export const CommunityHeader = () => {
         
         <div className="flex gap-3">
           <Button variant="outline" size="lg" asChild>
-            <Link to="/comunidade/membros">
+            <Link to="/comunidade?tab=members">
               <Users className="h-4 w-4 mr-2" />
               Explorar Membros
             </Link>
@@ -42,7 +45,9 @@ export const CommunityHeader = () => {
               <MessageSquare className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="text-2xl font-bold">1,234</p>
+              <p className="text-2xl font-bold">
+                {isLoading ? '...' : topicCount.toLocaleString()}
+              </p>
               <p className="text-sm text-muted-foreground">Discussões</p>
             </div>
           </div>
@@ -54,7 +59,9 @@ export const CommunityHeader = () => {
               <Users className="h-5 w-5 text-green-500" />
             </div>
             <div>
-              <p className="text-2xl font-bold">5,678</p>
+              <p className="text-2xl font-bold">
+                {isLoading ? '...' : activeUserCount.toLocaleString()}
+              </p>
               <p className="text-sm text-muted-foreground">Membros Ativos</p>
             </div>
           </div>
@@ -66,8 +73,10 @@ export const CommunityHeader = () => {
               <TrendingUp className="h-5 w-5 text-blue-500" />
             </div>
             <div>
-              <p className="text-2xl font-bold">892</p>
-              <p className="text-sm text-muted-foreground">Soluções</p>
+              <p className="text-2xl font-bold">
+                {isLoading ? '...' : postCount.toLocaleString()}
+              </p>
+              <p className="text-sm text-muted-foreground">Respostas</p>
             </div>
           </div>
         </div>
