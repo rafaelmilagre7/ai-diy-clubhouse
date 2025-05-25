@@ -125,14 +125,23 @@ export const MemberSidebar: React.FC<MemberSidebarProps> = ({
         sidebarOpen ? "w-64" : "w-16"
       )}>
         
-        {/* Header da sidebar */}
+        {/* Header da sidebar com logo restaurada */}
         <div className="flex h-16 items-center justify-between px-4 border-b border-[#2A2E42]">
-          {sidebarOpen && (
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-r from-primary to-primary/60 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">AI</span>
-              </div>
-              <span className="text-white font-semibold">Viver de IA</span>
+          {sidebarOpen ? (
+            <div className="flex items-center">
+              <img
+                src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
+                alt="VIVER DE IA Club"
+                className="h-8 w-auto"
+              />
+            </div>
+          ) : (
+            <div className="flex items-center justify-center w-full">
+              <img
+                src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
+                alt="VIVER DE IA Club"
+                className="h-6 w-auto"
+              />
             </div>
           )}
           
