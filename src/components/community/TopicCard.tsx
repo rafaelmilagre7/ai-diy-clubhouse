@@ -56,9 +56,9 @@ export const TopicCard = ({ topic, className = "", compact = false }: TopicCardP
   return (
     <Link 
       to={`/comunidade/topico/${topicId}`} 
-      className="block w-full"
+      className="block w-full no-underline"
     >
-      <Card className={`group p-4 hover:bg-accent/50 transition-all duration-200 border-l-4 cursor-pointer hover:shadow-md ${
+      <Card className={`group p-4 hover:bg-accent/50 transition-all duration-200 border-l-4 cursor-pointer hover:shadow-md hover:border-primary/20 ${
         topic.is_pinned ? 'border-l-primary' : 'border-l-transparent'
       } ${className}`}>
         <div className="flex items-start gap-3 h-full">

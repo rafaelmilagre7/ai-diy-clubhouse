@@ -20,12 +20,6 @@ export const CommunityNavigation = ({
   
   const navItems = [
     { 
-      name: 'Início', 
-      path: '/comunidade', 
-      icon: Home,
-      exact: true
-    },
-    { 
       name: 'Fórum', 
       path: '/comunidade', 
       icon: MessageSquare,
@@ -44,8 +38,11 @@ export const CommunityNavigation = ({
   ];
   
   const isActive = (path: string, exact = false) => {
-    if (exact) return pathname === path;
-    return pathname.startsWith(path);
+    if (exact) {
+      // Para a rota exata '/comunidade', verificar se não é uma subrota
+      return pathname === path;
+    }
+    return pathname.startsWith(path) && pathname !== '/comunidade';
   };
   
   return (
