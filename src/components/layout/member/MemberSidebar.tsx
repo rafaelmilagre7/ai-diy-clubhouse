@@ -21,7 +21,9 @@ import {
   X,
   LogOut,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Map,
+  GraduationCap
 } from 'lucide-react';
 
 interface MemberSidebarProps {
@@ -53,9 +55,19 @@ export const MemberSidebar: React.FC<MemberSidebarProps> = ({
       exact: true
     },
     {
+      name: 'Onboarding',
+      href: '/onboarding',
+      icon: BookOpen
+    },
+    {
+      name: 'Trilha de Implementação',
+      href: '/implementation-trail',
+      icon: Map
+    },
+    {
       name: 'Aprendizado',
       href: '/learning',
-      icon: BookOpen
+      icon: GraduationCap
     },
     {
       name: 'Soluções',
