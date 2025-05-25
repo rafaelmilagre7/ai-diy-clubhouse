@@ -1,114 +1,131 @@
 
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/auth';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useForumCategories } from '@/hooks/community/useForumCategories';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/auth';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 
 interface CreateTopicDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  preselectedCategory?: string;
 }
 
-export const CreateTopicDialog = ({ 
-  open, 
-  onOpenChange, 
-  preselectedCategory 
-}: CreateTopicDialogProps) => {
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [categoryId, setCategoryId] = useState(preselectedCategory || '');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const { categories } = useForumCategories();
+export const CreateTopicDialog = ({ open, onOpenChange }: CreateTopicDialogProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const queryClient = useQueryClient();
+  
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  
+  // Buscar categorias
+  const { data: categories = [] } = useQuery({
+    queryKey: ['forum-categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('forum_categories')
+        .select('*')
+        .eq('is_active', true)
+        .order('order_index', { ascending: true });
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+  
+  // Mutation para criar tópico
+  const createTopicMutation = useMutation({
+    mutationFn: async (topicData: { title: string; content: string; category_id: string }) => {
+      if (!user?.id) throw new Error('Usuário não autenticado');
+      
+      const { data, error } = await supabase
+        .from('forum_topics')
+        .insert({
+          title: topicData.title,
+          content: topicData.content,
+          category_id: topicData.category_id,
+          user_id: user.id
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success('Tópico criado com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['forum-topics'] });
+      onOpenChange(false);
+      resetForm();
+      navigate(`/comunidade/topico/${data.id}`);
+    },
+    onError: () => {
+      toast.error('Erro ao criar tópico');
+    }
+  });
+  
+  const resetForm = () => {
+    setTitle('');
+    setContent('');
+    setSelectedCategory('');
+  };
+  
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user?.id) {
-      toast.error('É necessário estar logado para criar um tópico');
-      return;
-    }
-    
-    if (!title.trim() || !content.trim() || !categoryId) {
+    if (!title.trim() || !content.trim() || !selectedCategory) {
       toast.error('Preencha todos os campos obrigatórios');
       return;
     }
     
-    setIsSubmitting(true);
-    
-    try {
-      const { data, error } = await supabase
-        .from('forum_topics')
-        .insert({
-          title: title.trim(),
-          content: content.trim(),
-          user_id: user.id,
-          category_id: categoryId,
-          last_activity_at: new Date().toISOString()
-        })
-        .select('id')
-        .single();
-      
-      if (error) throw error;
-      
-      toast.success('Tópico criado com sucesso!');
-      onOpenChange(false);
-      
-      // Limpar formulário
-      setTitle('');
-      setContent('');
-      setCategoryId('');
-      
-      // Navegar para o tópico criado
-      if (data?.id) {
-        navigate(`/comunidade/topico/${data.id}`);
-      }
-      
-    } catch (error: any) {
-      console.error('Erro ao criar tópico:', error);
-      toast.error('Erro ao criar tópico');
-    } finally {
-      setIsSubmitting(false);
+    const category = categories.find(c => c.slug === selectedCategory);
+    if (!category) {
+      toast.error('Categoria inválida');
+      return;
     }
+    
+    createTopicMutation.mutate({
+      title: title.trim(),
+      content: content.trim(),
+      category_id: category.id
+    });
   };
-
+  
+  const handleOpenFullPage = () => {
+    onOpenChange(false);
+    navigate('/comunidade/novo-topico');
+  };
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Criar Novo Tópico</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="text-sm font-medium">Título</label>
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Digite o título do tópico"
-              required
-            />
-          </div>
-          
-          <div>
-            <label className="text-sm font-medium">Categoria</label>
-            <Select value={categoryId} onValueChange={setCategoryId} required>
+          <div className="space-y-2">
+            <Label htmlFor="category">Categoria *</Label>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory} required>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione uma categoria" />
               </SelectTrigger>
               <SelectContent>
-                {categories.map(category => (
-                  <SelectItem key={category.id} value={category.id}>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.slug}>
                     {category.name}
                   </SelectItem>
                 ))}
@@ -116,28 +133,48 @@ export const CreateTopicDialog = ({
             </Select>
           </div>
           
-          <div>
-            <label className="text-sm font-medium">Conteúdo</label>
-            <Textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Descreva seu tópico..."
-              rows={6}
+          <div className="space-y-2">
+            <Label htmlFor="title">Título *</Label>
+            <Input
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Digite um título claro e descritivo"
+              maxLength={200}
               required
             />
           </div>
           
-          <div className="flex justify-end gap-2">
+          <div className="space-y-2">
+            <Label htmlFor="content">Conteúdo *</Label>
+            <Textarea
+              id="content"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Descreva sua dúvida, ideia ou compartilhe seu conhecimento..."
+              rows={6}
+              maxLength={1000}
+              required
+            />
+            <p className="text-xs text-muted-foreground">
+              {content.length}/1000 caracteres
+            </p>
+          </div>
+          
+          <div className="flex gap-2 pt-4">
+            <Button 
+              type="submit" 
+              disabled={createTopicMutation.isPending}
+              className="flex-1"
+            >
+              {createTopicMutation.isPending ? 'Criando...' : 'Criar Tópico'}
+            </Button>
             <Button 
               type="button" 
-              variant="outline" 
-              onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
+              variant="outline"
+              onClick={handleOpenFullPage}
             >
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Criando...' : 'Criar Tópico'}
+              Editor Completo
             </Button>
           </div>
         </form>

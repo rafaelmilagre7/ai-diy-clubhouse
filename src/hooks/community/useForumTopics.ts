@@ -49,36 +49,39 @@ export const useForumTopics = ({
             is_locked,
             is_solved
           `)
-          .order('is_pinned', { ascending: false })
-          .order('created_at', { ascending: false });
+          .order('is_pinned', { ascending: false });
 
         // Aplicar filtro de categoria se não for "todos"
         if (activeTab !== "todos" && categories.length > 0) {
           const category = categories.find(c => c.slug === activeTab);
           if (category) {
+            console.log("🏷️ Filtrando por categoria:", category.name);
             query = query.eq('category_id', category.id);
           }
         }
         
-        // Aplicar filtros específicos
+        // Aplicar filtros específicos com ordenação
         switch (selectedFilter) {
           case "populares":
             query = query.order('view_count', { ascending: false });
             break;
           case "sem-respostas":
-            query = query.eq('reply_count', 0);
+            query = query.eq('reply_count', 0).order('created_at', { ascending: false });
             break;
           case "resolvidos":
-            query = query.eq('is_solved', true);
+            query = query.eq('is_solved', true).order('created_at', { ascending: false });
             break;
           default:
-            // "recentes" - já ordenado por created_at
+            // "recentes" - ordenar por atividade mais recente
+            query = query.order('last_activity_at', { ascending: false });
             break;
         }
         
         // Filtro de busca
         if (searchQuery && searchQuery.trim()) {
-          query = query.ilike('title', `%${searchQuery.trim()}%`);
+          const searchTerm = searchQuery.trim();
+          console.log("🔍 Aplicando busca por:", searchTerm);
+          query = query.or(`title.ilike.%${searchTerm}%,content.ilike.%${searchTerm}%`);
         }
         
         // Limitar resultados
@@ -96,7 +99,9 @@ export const useForumTopics = ({
           return [];
         }
 
-        // Buscar perfis dos usuários separadamente
+        console.log("📊 Tópicos encontrados na query:", topicsData.length);
+
+        // Buscar perfis dos usuários em lote
         const userIds = [...new Set(topicsData.map(topic => topic.user_id))];
         let profiles: any[] = [];
         
@@ -110,11 +115,12 @@ export const useForumTopics = ({
             console.error("❌ Erro ao buscar perfis:", profilesError);
           } else {
             profiles = profilesData || [];
+            console.log("👥 Perfis carregados:", profiles.length);
           }
         }
 
-        // Buscar categorias separadamente
-        const categoryIds = [...new Set(topicsData.map(topic => topic.category_id))];
+        // Buscar categorias em lote
+        const categoryIds = [...new Set(topicsData.map(topic => topic.category_id).filter(Boolean))];
         let categoriesData: any[] = [];
         
         if (categoryIds.length > 0) {
@@ -127,6 +133,7 @@ export const useForumTopics = ({
             console.error("❌ Erro ao buscar categorias:", categoriesError);
           } else {
             categoriesData = categoriesResult || [];
+            console.log("🏷️ Categorias carregadas:", categoriesData.length);
           }
         }
 
@@ -144,8 +151,8 @@ export const useForumTopics = ({
             last_activity_at: topic.last_activity_at || topic.created_at,
             user_id: topic.user_id,
             category_id: topic.category_id,
-            view_count: topic.view_count || 0,
-            reply_count: topic.reply_count || 0,
+            view_count: Math.max(0, topic.view_count || 0),
+            reply_count: Math.max(0, topic.reply_count || 0),
             is_pinned: topic.is_pinned || false,
             is_locked: topic.is_locked || false,
             is_solved: topic.is_solved || false,
@@ -164,7 +171,7 @@ export const useForumTopics = ({
           };
         });
         
-        console.log("✅ Tópicos carregados:", formattedTopics.length);
+        console.log("✅ Tópicos processados com sucesso:", formattedTopics.length);
         return formattedTopics;
         
       } catch (error: any) {
@@ -174,7 +181,7 @@ export const useForumTopics = ({
       }
     },
     staleTime: 30000, // 30 segundos
-    retry: 1,
+    retry: 2,
     refetchOnWindowFocus: false
   });
 };
