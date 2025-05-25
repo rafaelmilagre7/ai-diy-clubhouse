@@ -7,7 +7,7 @@ import { CreateTopicDialog } from "@/components/community/CreateTopicDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, AlertCircle } from "lucide-react";
+import { Plus, Search, AlertCircle, RefreshCw } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useForumTopics } from "@/hooks/community/useForumTopics";
@@ -23,7 +23,8 @@ const CommunityPage = () => {
   const { 
     data: categories = [], 
     isLoading: categoriesLoading,
-    error: categoriesError 
+    error: categoriesError,
+    refetch: refetchCategories
   } = useQuery({
     queryKey: ['forum-categories'],
     queryFn: async () => {
@@ -42,14 +43,16 @@ const CommunityPage = () => {
       console.log("✅ Categorias carregadas:", data?.length || 0);
       return data || [];
     },
-    retry: 2
+    retry: 2,
+    staleTime: 60000 // 1 minuto
   });
 
   // Buscar tópicos
   const { 
     data: topics = [], 
     isLoading: topicsLoading, 
-    error: topicsError
+    error: topicsError,
+    refetch: refetchTopics
   } = useForumTopics({
     activeTab,
     selectedFilter,
@@ -60,6 +63,12 @@ const CommunityPage = () => {
   const handleTabChange = (tab: string) => {
     console.log("🔄 Mudando aba para:", tab);
     setActiveTab(tab);
+  };
+
+  const handleRefresh = () => {
+    console.log("🔄 Atualizando dados...");
+    refetchCategories();
+    refetchTopics();
   };
 
   const isLoading = categoriesLoading || topicsLoading;
@@ -78,6 +87,12 @@ const CommunityPage = () => {
         </div>
         
         <div className="flex gap-2">
+          {hasError && (
+            <Button variant="outline" size="sm" onClick={handleRefresh}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Tentar novamente
+            </Button>
+          )}
           <Button onClick={() => setCreateTopicOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Novo Tópico
@@ -121,7 +136,14 @@ const CommunityPage = () => {
         <Alert className="mb-6 border-red-200 bg-red-50">
           <AlertCircle className="h-4 w-4 text-red-600" />
           <AlertDescription className="text-red-800">
-            Erro ao carregar dados da comunidade. Recarregue a página para tentar novamente.
+            Erro ao carregar dados da comunidade. 
+            <Button 
+              variant="link" 
+              className="h-auto p-0 ml-1 text-red-800 underline"
+              onClick={handleRefresh}
+            >
+              Clique aqui para tentar novamente.
+            </Button>
           </AlertDescription>
         </Alert>
       )}
@@ -141,9 +163,14 @@ const CommunityPage = () => {
           <div className="space-y-4">
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="p-4 border rounded-lg animate-pulse bg-muted/20">
-                <div className="h-4 bg-muted rounded w-3/4 mb-3"></div>
-                <div className="h-3 bg-muted rounded w-1/2 mb-2"></div>
-                <div className="h-3 bg-muted rounded w-1/3"></div>
+                <div className="flex items-start gap-3">
+                  <div className="h-10 w-10 bg-muted rounded-full"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-muted rounded w-3/4"></div>
+                    <div className="h-3 bg-muted rounded w-1/2"></div>
+                    <div className="h-3 bg-muted rounded w-1/3"></div>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -175,8 +202,8 @@ const CommunityPage = () => {
             </div>
           </div>
         ) : (
-          topics.map((topic, index) => (
-            <TopicCard key={`${topic.id}-${index}`} topic={topic} />
+          topics.map((topic) => (
+            <TopicCard key={topic.id} topic={topic} />
           ))
         )}
       </div>

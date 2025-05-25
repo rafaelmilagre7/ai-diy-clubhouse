@@ -52,12 +52,14 @@ export const TopicCard = ({ topic, className = "", compact = false }: TopicCardP
   }
   
   return (
-    <Card className={`p-4 hover:bg-accent/50 transition-all duration-200 border-l-4 ${topic.is_pinned ? 'border-l-primary' : 'border-l-transparent'} ${className}`}>
+    <Card className={`group p-4 hover:bg-accent/50 transition-all duration-200 border-l-4 cursor-pointer ${
+      topic.is_pinned ? 'border-l-primary' : 'border-l-transparent'
+    } ${className}`}>
       <Link 
         to={`/comunidade/topico/${topicId}`} 
-        className="block"
+        className="block h-full"
       >
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-3 h-full">
           <Avatar className="h-10 w-10 shrink-0">
             <AvatarImage src={topic.profiles?.avatar_url || undefined} />
             <AvatarFallback className="bg-primary/10">
@@ -65,9 +67,9 @@ export const TopicCard = ({ topic, className = "", compact = false }: TopicCardP
             </AvatarFallback>
           </Avatar>
           
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 space-y-2">
             {/* Header com autor e tempo */}
-            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2 flex-wrap">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
               <span className="font-medium text-foreground truncate">
                 {authorName}
               </span>
@@ -85,34 +87,16 @@ export const TopicCard = ({ topic, className = "", compact = false }: TopicCardP
             </div>
             
             {/* Título com ícones */}
-            <h3 className="text-base font-semibold mb-2 line-clamp-2 flex items-start gap-2">
-              <div className="flex items-center gap-1 shrink-0">
-                {topic.is_pinned && <Pin className="h-3 w-3 text-primary" />}
-                {topic.is_locked && <Lock className="h-3 w-3 text-muted-foreground" />}
-                {topic.is_solved && <CheckCircle className="h-3 w-3 text-green-600" />}
-              </div>
-              <span className="flex-1">{topic.title || 'Tópico sem título'}</span>
-            </h3>
-            
-            {/* Preview do conteúdo */}
-            {!compact && (
-              <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
-                {getContentPreview(topic.content)}
-              </p>
-            )}
-            
-            {/* Footer com estatísticas */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <div className="flex items-center">
-                  <MessageSquare className="h-4 w-4 mr-1" />
-                  <span>{safeReplyCount}</span>
+            <div className="space-y-1">
+              <div className="flex items-start gap-2">
+                <div className="flex items-center gap-1 shrink-0 mt-0.5">
+                  {topic.is_pinned && <Pin className="h-3 w-3 text-primary" />}
+                  {topic.is_locked && <Lock className="h-3 w-3 text-muted-foreground" />}
+                  {topic.is_solved && <CheckCircle className="h-3 w-3 text-green-600" />}
                 </div>
-                
-                <div className="flex items-center">
-                  <Eye className="h-4 w-4 mr-1" />
-                  <span>{safeViewCount}</span>
-                </div>
+                <h3 className="text-base font-semibold line-clamp-2 group-hover:text-primary transition-colors">
+                  {topic.title || 'Tópico sem título'}
+                </h3>
               </div>
               
               {/* Status badges */}
@@ -127,6 +111,28 @@ export const TopicCard = ({ topic, className = "", compact = false }: TopicCardP
                     Fixo
                   </Badge>
                 )}
+              </div>
+            </div>
+            
+            {/* Preview do conteúdo */}
+            {!compact && (
+              <p className="text-muted-foreground text-sm line-clamp-2">
+                {getContentPreview(topic.content)}
+              </p>
+            )}
+            
+            {/* Footer com estatísticas */}
+            <div className="flex items-center justify-between pt-2">
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <MessageSquare className="h-4 w-4" />
+                  <span>{safeReplyCount}</span>
+                </div>
+                
+                <div className="flex items-center gap-1">
+                  <Eye className="h-4 w-4" />
+                  <span>{safeViewCount}</span>
+                </div>
               </div>
             </div>
           </div>
