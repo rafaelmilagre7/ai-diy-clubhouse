@@ -1,17 +1,15 @@
 
-import { useState } from 'react';
+import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { CommunityMemberFilters } from '@/hooks/community/useCommunityMembers';
+import { Search, Filter } from 'lucide-react';
 
 interface MembersFiltersProps {
-  onFilterChange: (filters: CommunityMemberFilters) => void;
+  onFilterChange: (filters: any) => void;
   industries: string[];
   roles: string[];
-  currentFilters: CommunityMemberFilters;
+  currentFilters: any;
 }
 
 export const MembersFilters = ({
@@ -20,92 +18,70 @@ export const MembersFilters = ({
   roles,
   currentFilters
 }: MembersFiltersProps) => {
-  const [localFilters, setLocalFilters] = useState<CommunityMemberFilters>(currentFilters);
-
-  const handleApplyFilters = () => {
-    onFilterChange(localFilters);
+  const handleSearchChange = (value: string) => {
+    onFilterChange({ ...currentFilters, search: value });
   };
 
-  const handleClearFilters = () => {
-    const emptyFilters = { search: '', industry: '', role: '', onlyAvailableForNetworking: false };
-    setLocalFilters(emptyFilters);
-    onFilterChange(emptyFilters);
+  const handleIndustryChange = (value: string) => {
+    onFilterChange({ ...currentFilters, industry: value === 'all' ? '' : value });
+  };
+
+  const handleRoleChange = (value: string) => {
+    onFilterChange({ ...currentFilters, role: value === 'all' ? '' : value });
+  };
+
+  const clearFilters = () => {
+    onFilterChange({
+      search: '',
+      industry: '',
+      role: '',
+      onlyAvailableForNetworking: false
+    });
   };
 
   return (
-    <div className="bg-white rounded-lg border p-4 space-y-4">
-      <h3 className="font-medium">Filtros</h3>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div>
-          <Label htmlFor="search">Buscar</Label>
+    <div className="bg-muted/50 p-4 rounded-lg space-y-4">
+      <div className="flex flex-col lg:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            id="search"
-            placeholder="Nome ou empresa..."
-            value={localFilters.search || ''}
-            onChange={(e) => setLocalFilters({ ...localFilters, search: e.target.value })}
+            placeholder="Buscar por nome ou empresa..."
+            value={currentFilters.search || ''}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            className="pl-10"
           />
         </div>
+        
+        <Select value={currentFilters.industry || 'all'} onValueChange={handleIndustryChange}>
+          <SelectTrigger className="w-full lg:w-48">
+            <SelectValue placeholder="Indústria" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as indústrias</SelectItem>
+            {industries.map((industry) => (
+              <SelectItem key={industry} value={industry}>
+                {industry}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        
+        <Select value={currentFilters.role || 'all'} onValueChange={handleRoleChange}>
+          <SelectTrigger className="w-full lg:w-48">
+            <SelectValue placeholder="Cargo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os cargos</SelectItem>
+            {roles.map((role) => (
+              <SelectItem key={role} value={role}>
+                {role}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        <div>
-          <Label>Setor</Label>
-          <Select
-            value={localFilters.industry || ''}
-            onValueChange={(value) => setLocalFilters({ ...localFilters, industry: value })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione o setor" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">Todos os setores</SelectItem>
-              {industries.map((industry) => (
-                <SelectItem key={industry} value={industry}>
-                  {industry}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <Label>Cargo</Label>
-          <Select
-            value={localFilters.role || ''}
-            onValueChange={(value) => setLocalFilters({ ...localFilters, role: value })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione o cargo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">Todos os cargos</SelectItem>
-              {roles.map((role) => (
-                <SelectItem key={role} value={role}>
-                  {role}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex flex-col justify-end">
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="networking"
-              checked={localFilters.onlyAvailableForNetworking || false}
-              onCheckedChange={(checked) => 
-                setLocalFilters({ ...localFilters, onlyAvailableForNetworking: checked })
-              }
-            />
-            <Label htmlFor="networking">Disponível para networking</Label>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex gap-2">
-        <Button onClick={handleApplyFilters}>
-          Aplicar Filtros
-        </Button>
-        <Button variant="outline" onClick={handleClearFilters}>
+        <Button variant="outline" onClick={clearFilters}>
+          <Filter className="h-4 w-4 mr-2" />
           Limpar
         </Button>
       </div>

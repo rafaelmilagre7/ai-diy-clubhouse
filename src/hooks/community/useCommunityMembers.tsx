@@ -36,10 +36,12 @@ export const useCommunityMembers = (initialFilters: CommunityMemberFilters = {})
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['community-members', filters, page],
     queryFn: async () => {
+      const currentUser = await supabase.auth.getUser();
+      
       let query = supabase
         .from('profiles')
         .select('*')
-        .neq('id', (await supabase.auth.getUser()).data.user?.id || '')
+        .neq('id', currentUser.data.user?.id || '')
         .not('name', 'is', null);
         
       // Aplicar filtros
@@ -59,12 +61,28 @@ export const useCommunityMembers = (initialFilters: CommunityMemberFilters = {})
         query = query.eq('available_for_networking', true);
       }
       
-      // Contar total
-      const { count } = await supabase
+      // Contar total primeiro
+      let countQuery = supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true })
-        .neq('id', (await supabase.auth.getUser()).data.user?.id || '')
+        .neq('id', currentUser.data.user?.id || '')
         .not('name', 'is', null);
+        
+      // Aplicar os mesmos filtros para contagem
+      if (filters.search) {
+        countQuery = countQuery.or(`name.ilike.%${filters.search}%,company_name.ilike.%${filters.search}%`);
+      }
+      if (filters.industry) {
+        countQuery = countQuery.eq('industry', filters.industry);
+      }
+      if (filters.role) {
+        countQuery = countQuery.eq('current_position', filters.role);
+      }
+      if (filters.onlyAvailableForNetworking) {
+        countQuery = countQuery.eq('available_for_networking', true);
+      }
+      
+      const { count } = await countQuery;
       
       // Buscar dados paginados
       const start = page * itemsPerPage;
