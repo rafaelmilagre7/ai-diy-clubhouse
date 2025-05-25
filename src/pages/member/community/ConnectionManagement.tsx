@@ -1,232 +1,123 @@
+
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ForumBreadcrumbs } from '@/components/community/ForumBreadcrumbs';
-import { ForumHeader } from '@/components/community/ForumHeader';
-import { CommunityNavigation } from '@/components/community/CommunityNavigation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Users, UserPlus, Clock, UserCheck } from 'lucide-react';
+import { ConnectionsTabContent } from '@/components/community/connections/ConnectionsTabContent';
 import { ConnectionRequestsTabContent } from '@/components/community/connections/ConnectionRequestsTabContent';
 import { PendingConnectionsTabContent } from '@/components/community/connections/PendingConnectionsTabContent';
-import { ConnectionsTabContent } from '@/components/community/connections/ConnectionsTabContent';
-import { useAuth } from '@/contexts/auth';
-import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
-import { MemberConnection } from '@/types/forumTypes';
+import { useConnectionsManagement } from '@/hooks/community/useConnectionsManagement';
 
 const ConnectionManagement = () => {
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('connections');
-  const [processingRequests, setProcessingRequests] = useState(new Set<string>());
-  
-  // Buscar conexões onde o usuário é o destinatário (solicitações recebidas)
-  const { data: connectionRequests, refetch: refetchRequests } = useQuery({
-    queryKey: ['connection-requests', user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('member_connections')
-        .select('*, requester:requester_id(id, name, avatar_url, company_name, current_position)')
-        .eq('recipient_id', user?.id)
-        .eq('status', 'pending');
-        
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!user?.id
-  });
-  
-  // Buscar conexões pendentes enviadas pelo usuário
-  const { data: pendingConnections, refetch: refetchPending } = useQuery({
-    queryKey: ['pending-connections', user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('member_connections')
-        .select('*, recipient:recipient_id(id, name, avatar_url, company_name, current_position)')
-        .eq('requester_id', user?.id)
-        .eq('status', 'pending');
-        
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!user?.id
-  });
-  
-  // Buscar conexões aceitas
-  const { data: connections, refetch: refetchConnections } = useQuery({
-    queryKey: ['active-connections', user?.id],
-    queryFn: async () => {
-      const { data: sentConnections, error: sentError } = await supabase
-        .from('member_connections')
-        .select('*, connection:recipient_id(id, name, avatar_url, company_name, current_position)')
-        .eq('requester_id', user?.id)
-        .eq('status', 'accepted');
-        
-      if (sentError) throw sentError;
-      
-      const { data: receivedConnections, error: receivedError } = await supabase
-        .from('member_connections')
-        .select('*, connection:requester_id(id, name, avatar_url, company_name, current_position)')
-        .eq('recipient_id', user?.id)
-        .eq('status', 'accepted');
-        
-      if (receivedError) throw receivedError;
-      
-      return [...(sentConnections || []), ...(receivedConnections || [])];
-    },
-    enabled: !!user?.id
-  });
-  
-  // Funções para aceitar/rejeitar solicitações
-  const handleAcceptRequest = async (requesterId: string): Promise<boolean> => {
-    setProcessingRequests(prev => new Set(prev).add(requesterId));
-    try {
-      const { error } = await supabase
-        .from('member_connections')
-        .update({ status: 'accepted' })
-        .eq('requester_id', requesterId)
-        .eq('recipient_id', user?.id);
-      
-      if (error) throw error;
-      
-      toast.success('Solicitação de conexão aceita!');
-      refetchRequests();
-      refetchConnections();
-      return true;
-    } catch (error) {
-      console.error('Erro ao aceitar solicitação:', error);
-      toast.error('Não foi possível aceitar a solicitação.');
-      return false;
-    } finally {
-      setProcessingRequests(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(requesterId);
-        return newSet;
-      });
-    }
-  };
-  
-  const handleRejectRequest = async (requesterId: string): Promise<boolean> => {
-    setProcessingRequests(prev => new Set(prev).add(requesterId));
-    try {
-      const { error } = await supabase
-        .from('member_connections')
-        .update({ status: 'rejected' })
-        .eq('requester_id', requesterId)
-        .eq('recipient_id', user?.id);
-      
-      if (error) throw error;
-      
-      toast.success('Solicitação de conexão rejeitada.');
-      refetchRequests();
-      return true;
-    } catch (error) {
-      console.error('Erro ao rejeitar solicitação:', error);
-      toast.error('Não foi possível rejeitar a solicitação.');
-      return false;
-    } finally {
-      setProcessingRequests(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(requesterId);
-        return newSet;
-      });
-    }
-  };
-  
-  // Função para cancelar solicitação pendente
-  const handleCancelRequest = async (recipientId: string): Promise<void> => {
-    try {
-      const { error } = await supabase
-        .from('member_connections')
-        .delete()
-        .eq('requester_id', user?.id)
-        .eq('recipient_id', recipientId)
-        .eq('status', 'pending');
-      
-      if (error) throw error;
-      
-      toast.success('Solicitação de conexão cancelada.');
-      refetchPending();
-    } catch (error) {
-      console.error('Erro ao cancelar solicitação:', error);
-      toast.error('Não foi possível cancelar a solicitação.');
-    }
-  };
-  
-  // Função para remover uma conexão
-  const handleRemoveConnection = async (connectionId: string): Promise<void> => {
-    try {
-      const { error } = await supabase
-        .from('member_connections')
-        .delete()
-        .eq('id', connectionId);
-      
-      if (error) throw error;
-      
-      toast.success('Conexão removida com sucesso.');
-      refetchConnections();
-    } catch (error) {
-      console.error('Erro ao remover conexão:', error);
-      toast.error('Não foi possível remover a conexão.');
-    }
-  };
-  
+  const { connections, pendingRequests, sentRequests } = useConnectionsManagement();
+
   return (
-    <div className="container mx-auto max-w-7xl py-6">
-      <ForumBreadcrumbs 
-        section="conexoes" 
-        sectionTitle="Gerenciar Conexões" 
-      />
-      
-      <ForumHeader 
-        title="Gerenciar Conexões" 
-        description="Gerencie suas conexões com outros membros da comunidade"
-      />
-      
-      <CommunityNavigation />
-      
-      <div className="mt-6">
-        <Tabs 
-          value={activeTab} 
-          onValueChange={setActiveTab}
-          className="w-full"
-        >
-          <TabsList className="grid grid-cols-3 mb-6">
-            <TabsTrigger value="connections">
-              Minhas Conexões
-              {connections?.length ? ` (${connections.length})` : ''}
-            </TabsTrigger>
-            <TabsTrigger value="requests">
-              Solicitações Recebidas
-              {connectionRequests?.length ? ` (${connectionRequests.length})` : ''}
-            </TabsTrigger>
-            <TabsTrigger value="pending">
-              Solicitações Enviadas
-              {pendingConnections?.length ? ` (${pendingConnections.length})` : ''}
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="connections">
-            <ConnectionsTabContent 
-              connections={connections || []} 
-              onRemoveConnection={handleRemoveConnection}
-            />
-          </TabsContent>
-          
-          <TabsContent value="requests">
-            <ConnectionRequestsTabContent 
-              requests={connectionRequests || []} 
-              processingRequests={processingRequests}
-              onAccept={handleAcceptRequest}
-              onReject={handleRejectRequest}
-            />
-          </TabsContent>
-          
-          <TabsContent value="pending">
-            <PendingConnectionsTabContent 
-              pendingConnections={pendingConnections || []} 
-              onCancelRequest={handleCancelRequest}
-            />
-          </TabsContent>
-        </Tabs>
+    <div className="space-y-6">
+      {/* Header com estatísticas */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-500/10 rounded-lg">
+                <UserCheck className="h-5 w-5 text-blue-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{connections.length}</p>
+                <p className="text-sm text-muted-foreground">Conexões</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-green-500/10 rounded-lg">
+                <UserPlus className="h-5 w-5 text-green-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{pendingRequests.length}</p>
+                <p className="text-sm text-muted-foreground">Solicitações</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-yellow-500/10 rounded-lg">
+                <Clock className="h-5 w-5 text-yellow-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{sentRequests.length}</p>
+                <p className="text-sm text-muted-foreground">Enviadas</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Tabs de gerenciamento */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Gerenciar Conexões
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="connections" className="flex items-center gap-2">
+                <UserCheck className="h-4 w-4" />
+                Minhas Conexões
+                {connections.length > 0 && (
+                  <Badge variant="secondary" className="ml-1">
+                    {connections.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+              
+              <TabsTrigger value="requests" className="flex items-center gap-2">
+                <UserPlus className="h-4 w-4" />
+                Solicitações
+                {pendingRequests.length > 0 && (
+                  <Badge variant="default" className="ml-1">
+                    {pendingRequests.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+              
+              <TabsTrigger value="sent" className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Enviadas
+                {sentRequests.length > 0 && (
+                  <Badge variant="outline" className="ml-1">
+                    {sentRequests.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
+
+            <div className="mt-6">
+              <TabsContent value="connections" className="mt-0">
+                <ConnectionsTabContent />
+              </TabsContent>
+              
+              <TabsContent value="requests" className="mt-0">
+                <ConnectionRequestsTabContent />
+              </TabsContent>
+              
+              <TabsContent value="sent" className="mt-0">
+                <PendingConnectionsTabContent />
+              </TabsContent>
+            </div>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };

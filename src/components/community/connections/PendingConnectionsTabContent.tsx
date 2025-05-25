@@ -1,84 +1,55 @@
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building2, Briefcase, Clock, X } from 'lucide-react';
-import { getInitials } from '@/components/community/utils/membership';
+import React from 'react';
+import { PendingConnectionCard } from './PendingConnectionCard';
+import { useConnectionsManagement } from '@/hooks/community/useConnectionsManagement';
+import { Card, CardContent } from '@/components/ui/card';
+import { Clock } from 'lucide-react';
 
-interface PendingConnectionsTabContentProps {
-  pendingConnections: any[];
-  onCancelRequest: (recipientId: string) => void;
-}
+export const PendingConnectionsTabContent = () => {
+  const { sentRequests, isLoading } = useConnectionsManagement();
 
-export const PendingConnectionsTabContent = ({
-  pendingConnections,
-  onCancelRequest
-}: PendingConnectionsTabContentProps) => {
-  if (pendingConnections.length === 0) {
+  if (isLoading) {
     return (
-      <div className="text-center py-8">
-        <h3 className="text-lg font-medium mb-2">Nenhuma solicitação enviada</h3>
-        <p className="text-muted-foreground">
-          Você não enviou nenhuma solicitação de conexão pendente.
-        </p>
+      <div className="space-y-4">
+        {Array.from({ length: 2 }).map((_, i) => (
+          <Card key={i}>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-4">
+                <div className="h-12 w-12 bg-muted rounded-full animate-pulse" />
+                <div className="space-y-2 flex-grow">
+                  <div className="h-4 bg-muted rounded animate-pulse" />
+                  <div className="h-3 bg-muted rounded w-2/3 animate-pulse" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
+    );
+  }
+
+  if (sentRequests.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <Clock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Nenhuma solicitação enviada</h3>
+          <p className="text-muted-foreground">
+            Suas solicitações de conexão enviadas aparecerão aqui.
+          </p>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
     <div className="space-y-4">
-      {pendingConnections.map((connection) => {
-        const recipient = connection.recipient;
-        
-        return (
-          <Card key={connection.id}>
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <Avatar className="h-12 w-12">
-                    <AvatarImage src={recipient?.avatar_url || ''} />
-                    <AvatarFallback>
-                      {getInitials(recipient?.name || 'Usuário')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <CardTitle className="text-base">{recipient?.name || 'Usuário'}</CardTitle>
-                    {recipient?.current_position && (
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <Briefcase className="w-3 h-3 mr-1" />
-                        {recipient.current_position}
-                      </div>
-                    )}
-                    <div className="flex items-center text-xs text-amber-600">
-                      <Clock className="w-3 h-3 mr-1" />
-                      Aguardando resposta
-                    </div>
-                  </div>
-                </div>
-                
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-red-600 border-red-600 hover:bg-red-50"
-                  onClick={() => onCancelRequest(connection.recipient_id)}
-                >
-                  <X className="h-4 w-4 mr-1" />
-                  Cancelar
-                </Button>
-              </div>
-            </CardHeader>
-            
-            {recipient?.company_name && (
-              <CardContent>
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <Building2 className="h-4 w-4 mr-2" />
-                  {recipient.company_name}
-                </div>
-              </CardContent>
-            )}
-          </Card>
-        );
-      })}
+      {sentRequests.map((request) => (
+        <PendingConnectionCard
+          key={request.id}
+          request={request}
+        />
+      ))}
     </div>
   );
 };
