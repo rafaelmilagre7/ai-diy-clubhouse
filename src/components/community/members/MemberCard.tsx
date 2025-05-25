@@ -4,14 +4,22 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { MapPin, Briefcase, UserPlus } from 'lucide-react';
+import { MapPin, Briefcase, UserPlus, UserCheck } from 'lucide-react';
 import { Profile } from '@/types/forumTypes';
 
 interface MemberCardProps {
   member: Profile;
+  onConnect?: (memberId: string) => void;
+  isConnected?: boolean;
 }
 
-export const MemberCard = ({ member }: MemberCardProps) => {
+export const MemberCard = ({ member, onConnect, isConnected = false }: MemberCardProps) => {
+  const handleConnect = () => {
+    if (onConnect && !isConnected) {
+      onConnect(member.id);
+    }
+  };
+
   return (
     <Card className="hover:shadow-lg transition-all duration-200">
       <CardContent className="p-6">
@@ -61,10 +69,26 @@ export const MemberCard = ({ member }: MemberCardProps) => {
         )}
         
         <div className="flex gap-2">
-          <Button className="flex-1" variant="outline">
-            <UserPlus className="h-4 w-4 mr-2" />
-            Conectar
-          </Button>
+          {onConnect && (
+            <Button 
+              className="flex-1" 
+              variant={isConnected ? "secondary" : "outline"}
+              onClick={handleConnect}
+              disabled={isConnected}
+            >
+              {isConnected ? (
+                <>
+                  <UserCheck className="h-4 w-4 mr-2" />
+                  Conectado
+                </>
+              ) : (
+                <>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Conectar
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
