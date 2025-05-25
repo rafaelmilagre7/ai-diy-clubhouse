@@ -13,16 +13,6 @@ interface TopicListErrorProps {
 
 export const TopicListError = ({ onRetry, categorySlug }: TopicListErrorProps) => {
   const [createTopicOpen, setCreateTopicOpen] = useState(false);
-  const { categories } = useForumCategories();
-  
-  const getValidCategoryId = () => {
-    if (categorySlug) {
-      const category = categories?.find(cat => cat.slug === categorySlug);
-      if (category) return category.id;
-    }
-    
-    return categories && categories.length > 0 ? categories[0].id : "";
-  };
   
   return (
     <div className="text-center py-8 space-y-4 border border-red-200 rounded-lg bg-red-50/30 p-6">
@@ -56,7 +46,6 @@ export const TopicListError = ({ onRetry, categorySlug }: TopicListErrorProps) =
         <CreateTopicDialog 
           open={createTopicOpen} 
           onOpenChange={setCreateTopicOpen}
-          preselectedCategory={getValidCategoryId()}
         />
       </div>
     </div>
