@@ -2,6 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useState } from "react";
+import { Profile } from "@/types/forumTypes";
 
 export interface CommunityMemberFilters {
   search?: string;
@@ -15,28 +16,22 @@ export const useCommunityMembers = (initialFilters: CommunityMemberFilters = {})
   const [page, setPage] = useState(0);
   const itemsPerPage = 12;
   
-  // Dados mockados para indústrias e cargos disponíveis
-  const availableIndustries = [
-    'Tecnologia',
-    'Saúde',
-    'Educação',
-    'Finanças',
-    'Varejo',
-    'Marketing',
-    'Consultoria',
-    'Outros'
-  ];
-  
-  const availableRoles = [
-    'CEO',
-    'Fundador',
-    'Diretor',
-    'Gerente',
-    'Especialista',
-    'Analista',
-    'Consultor',
-    'Outros'
-  ];
+  // Buscar indústrias e cargos disponíveis dos dados reais
+  const { data: availableOptions } = useQuery({
+    queryKey: ['community-members-options'],
+    queryFn: async () => {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('industry, current_position')
+        .not('industry', 'is', null)
+        .not('current_position', 'is', null);
+      
+      const industries = [...new Set(profiles?.map(p => p.industry).filter(Boolean))] as string[];
+      const roles = [...new Set(profiles?.map(p => p.current_position).filter(Boolean))] as string[];
+      
+      return { industries, roles };
+    }
+  });
   
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['community-members', filters, page],
@@ -44,11 +39,12 @@ export const useCommunityMembers = (initialFilters: CommunityMemberFilters = {})
       let query = supabase
         .from('profiles')
         .select('*')
-        .eq('active', true);
+        .neq('id', (await supabase.auth.getUser()).data.user?.id || '')
+        .not('name', 'is', null);
         
       // Aplicar filtros
       if (filters.search) {
-        query = query.ilike('name', `%${filters.search}%`);
+        query = query.or(`name.ilike.%${filters.search}%,company_name.ilike.%${filters.search}%`);
       }
       
       if (filters.industry) {
@@ -63,27 +59,25 @@ export const useCommunityMembers = (initialFilters: CommunityMemberFilters = {})
         query = query.eq('available_for_networking', true);
       }
       
-      // Paginação
+      // Contar total
+      const { count } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .neq('id', (await supabase.auth.getUser()).data.user?.id || '')
+        .not('name', 'is', null);
+      
+      // Buscar dados paginados
       const start = page * itemsPerPage;
       const end = start + itemsPerPage - 1;
       
-      // Execute duas consultas separadas: uma para os dados e outra para a contagem
       const { data: members, error: dataError } = await query
         .range(start, end)
         .order('name', { ascending: true });
       
       if (dataError) throw dataError;
       
-      // Consulta separada para contagem
-      const { count, error: countError } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('active', true);
-        
-      if (countError) throw countError;
-      
       return {
-        members: members || [],
+        members: members as Profile[] || [],
         count: count || 0
       };
     },
@@ -115,8 +109,8 @@ export const useCommunityMembers = (initialFilters: CommunityMemberFilters = {})
     currentPage: page,
     totalPages,
     handlePageChange,
-    availableIndustries,
-    availableRoles,
+    availableIndustries: availableOptions?.industries || [],
+    availableRoles: availableOptions?.roles || [],
     handleRetry
   };
 };

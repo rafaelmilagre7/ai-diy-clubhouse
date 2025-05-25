@@ -1,28 +1,11 @@
 
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Search, X, SlidersHorizontal } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { CommunityMemberFilters } from '@/hooks/community/useCommunityMembers';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  SheetFooter,
-} from "@/components/ui/sheet";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 
 interface MembersFiltersProps {
   onFilterChange: (filters: CommunityMemberFilters) => void;
@@ -35,212 +18,97 @@ export const MembersFilters = ({
   onFilterChange,
   industries,
   roles,
-  currentFilters,
+  currentFilters
 }: MembersFiltersProps) => {
-  const [searchInput, setSearchInput] = useState(currentFilters.search || '');
-  const [isOpen, setIsOpen] = useState(false);
+  const [localFilters, setLocalFilters] = useState<CommunityMemberFilters>(currentFilters);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onFilterChange({ ...currentFilters, search: searchInput });
+  const handleApplyFilters = () => {
+    onFilterChange(localFilters);
   };
 
   const handleClearFilters = () => {
-    setSearchInput('');
-    onFilterChange({
-      search: '',
-      industry: '',
-      role: '',
-      onlyAvailableForNetworking: false,
-    });
-  };
-
-  const hasFilters = !!(
-    currentFilters.search || 
-    currentFilters.industry || 
-    currentFilters.role || 
-    currentFilters.onlyAvailableForNetworking
-  );
-
-  const applyFilters = (newFilters: Partial<CommunityMemberFilters>) => {
-    onFilterChange({
-      ...currentFilters,
-      ...newFilters
-    });
-    setIsOpen(false);
+    const emptyFilters = { search: '', industry: '', role: '', onlyAvailableForNetworking: false };
+    setLocalFilters(emptyFilters);
+    onFilterChange(emptyFilters);
   };
 
   return (
-    <div className="bg-background rounded-md border p-4 mb-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Filtrar membros</h3>
-        
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="sm" className="lg:hidden">
-              <SlidersHorizontal className="h-4 w-4 mr-2" />
-              Filtros
-            </Button>
-          </SheetTrigger>
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>Filtros</SheetTitle>
-              <SheetDescription>
-                Filtre membros por setor, cargo e outras características
-              </SheetDescription>
-            </SheetHeader>
-            
-            <div className="py-4 space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="mobile-industry">Setor</Label>
-                <Select
-                  value={currentFilters.industry || ''}
-                  onValueChange={(value) => applyFilters({ industry: value })}
-                >
-                  <SelectTrigger id="mobile-industry">
-                    <SelectValue placeholder="Todos os setores" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="">Todos os setores</SelectItem>
-                      {industries.map((industry) => (
-                        <SelectItem key={industry} value={industry}>
-                          {industry}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="mobile-role">Cargo</Label>
-                <Select
-                  value={currentFilters.role || ''}
-                  onValueChange={(value) => applyFilters({ role: value })}
-                >
-                  <SelectTrigger id="mobile-role">
-                    <SelectValue placeholder="Todos os cargos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="">Todos os cargos</SelectItem>
-                      {roles.map((role) => (
-                        <SelectItem key={role} value={role}>
-                          {role}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="flex items-center space-x-2 pt-2">
-                <Switch 
-                  id="mobile-networking" 
-                  checked={currentFilters.onlyAvailableForNetworking || false}
-                  onCheckedChange={(checked) => 
-                    applyFilters({ onlyAvailableForNetworking: checked })
-                  }
-                />
-                <Label htmlFor="mobile-networking">Abertos para networking</Label>
-              </div>
-            </div>
-            
-            <SheetFooter>
-              <Button variant="outline" onClick={handleClearFilters}>
-                Limpar filtros
-              </Button>
-              <Button onClick={() => setIsOpen(false)}>Aplicar</Button>
-            </SheetFooter>
-          </SheetContent>
-        </Sheet>
-      </div>
+    <div className="bg-white rounded-lg border p-4 space-y-4">
+      <h3 className="font-medium">Filtros</h3>
       
-      <form onSubmit={handleSearchSubmit} className="flex space-x-2">
-        <div className="relative flex-grow">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div>
+          <Label htmlFor="search">Buscar</Label>
           <Input
-            type="search"
-            placeholder="Buscar por nome..."
-            className="pl-9"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
+            id="search"
+            placeholder="Nome ou empresa..."
+            value={localFilters.search || ''}
+            onChange={(e) => setLocalFilters({ ...localFilters, search: e.target.value })}
           />
         </div>
-        <Button type="submit">Buscar</Button>
-      </form>
-      
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
         <div>
-          <label className="text-sm text-muted-foreground block mb-2">Setor</label>
+          <Label>Setor</Label>
           <Select
-            value={currentFilters.industry || ''}
-            onValueChange={(value) => onFilterChange({ ...currentFilters, industry: value })}
+            value={localFilters.industry || ''}
+            onValueChange={(value) => setLocalFilters({ ...localFilters, industry: value })}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecionar setor" />
+              <SelectValue placeholder="Selecione o setor" />
             </SelectTrigger>
             <SelectContent>
-              <SelectGroup>
-                <SelectItem value="">Todos os setores</SelectItem>
-                {industries.map((industry) => (
-                  <SelectItem key={industry} value={industry}>
-                    {industry}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
+              <SelectItem value="">Todos os setores</SelectItem>
+              {industries.map((industry) => (
+                <SelectItem key={industry} value={industry}>
+                  {industry}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
-        
+
         <div>
-          <label className="text-sm text-muted-foreground block mb-2">Cargo</label>
+          <Label>Cargo</Label>
           <Select
-            value={currentFilters.role || ''}
-            onValueChange={(value) => onFilterChange({ ...currentFilters, role: value })}
+            value={localFilters.role || ''}
+            onValueChange={(value) => setLocalFilters({ ...localFilters, role: value })}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecionar cargo" />
+              <SelectValue placeholder="Selecione o cargo" />
             </SelectTrigger>
             <SelectContent>
-              <SelectGroup>
-                <SelectItem value="">Todos os cargos</SelectItem>
-                {roles.map((role) => (
-                  <SelectItem key={role} value={role}>
-                    {role}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
+              <SelectItem value="">Todos os cargos</SelectItem>
+              {roles.map((role) => (
+                <SelectItem key={role} value={role}>
+                  {role}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
-        
-        <div className="flex items-center space-x-2">
-          <Switch 
-            id="networking" 
-            checked={currentFilters.onlyAvailableForNetworking || false}
-            onCheckedChange={(checked) => 
-              onFilterChange({ ...currentFilters, onlyAvailableForNetworking: checked })
-            }
-          />
-          <Label htmlFor="networking">Abertos para networking</Label>
+
+        <div className="flex flex-col justify-end">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="networking"
+              checked={localFilters.onlyAvailableForNetworking || false}
+              onCheckedChange={(checked) => 
+                setLocalFilters({ ...localFilters, onlyAvailableForNetworking: checked })
+              }
+            />
+            <Label htmlFor="networking">Disponível para networking</Label>
+          </div>
         </div>
       </div>
-      
-      {hasFilters && (
-        <div className="flex justify-end">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleClearFilters}
-            className="flex items-center text-muted-foreground"
-          >
-            <X className="mr-1 h-4 w-4" />
-            Limpar filtros
-          </Button>
-        </div>
-      )}
+
+      <div className="flex gap-2">
+        <Button onClick={handleApplyFilters}>
+          Aplicar Filtros
+        </Button>
+        <Button variant="outline" onClick={handleClearFilters}>
+          Limpar
+        </Button>
+      </div>
     </div>
   );
 };
