@@ -2,6 +2,8 @@
 import { useState } from 'react';
 import { useModeration } from '@/hooks/admin/useModeration';
 
+type ReportType = 'spam' | 'inappropriate' | 'harassment' | 'misinformation' | 'other';
+
 export const useReporting = () => {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportTarget, setReportTarget] = useState<{
@@ -23,7 +25,7 @@ export const useReporting = () => {
   };
 
   const submitReport = async (reportData: {
-    report_type: string;
+    report_type: ReportType;
     reason: string;
     description?: string;
   }) => {

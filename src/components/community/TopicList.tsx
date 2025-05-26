@@ -59,7 +59,7 @@ export const TopicList = ({ categoryId, categorySlug }: TopicListProps) => {
             <Separator className="flex-1" />
           </div>
           {pinnedTopics.map((topic) => (
-            <TopicItem key={topic.id} topic={topic} isPinned={true} />
+            <TopicItem key={topic.id} topic={topic} />
           ))}
         </div>
       )}

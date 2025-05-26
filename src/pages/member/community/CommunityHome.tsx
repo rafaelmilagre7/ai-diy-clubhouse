@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -152,7 +153,6 @@ export default function CommunityHome() {
               <TopicItem
                 key={topic.id}
                 topic={topic}
-                isPinned={topic.is_pinned}
               />
             ))
           ) : (

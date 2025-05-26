@@ -13,8 +13,6 @@ import AdminOnboarding from '@/pages/admin/AdminOnboarding';
 import AdminSuggestions from '@/pages/admin/AdminSuggestions';
 import AdminEvents from '@/pages/admin/AdminEvents';
 import AdminRoles from '@/pages/admin/AdminRoles';
-import AdminInvites from '@/pages/admin/AdminInvites';
-import AdminPermissionsAudit from '@/pages/admin/AdminPermissionsAudit';
 
 // Community moderation
 import CommunityModerationPage from '@/pages/admin/community/CommunityModerationPage';
@@ -22,7 +20,7 @@ import CommunityModerationPage from '@/pages/admin/community/CommunityModeration
 // Função helper para criar rotas protegidas com AdminLayout
 const createAdminRoute = (path: string, Component: React.ComponentType<any>) => ({
   path,
-  element: <ProtectedRoutes requiredRole="admin"><AdminLayout><Component /></AdminLayout></ProtectedRoutes>
+  element: <ProtectedRoutes><AdminLayout><Component /></AdminLayout></ProtectedRoutes>
 });
 
 export const adminRoutes: RouteObject[] = [
@@ -35,8 +33,6 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin/suggestions", AdminSuggestions),
   createAdminRoute("/admin/events", AdminEvents),
   createAdminRoute("/admin/roles", AdminRoles),
-  createAdminRoute("/admin/invites", AdminInvites),
-  createAdminRoute("/admin/permissions/audit", AdminPermissionsAudit),
   
   // Community moderation routes
   createAdminRoute("/admin/community", CommunityModerationPage),

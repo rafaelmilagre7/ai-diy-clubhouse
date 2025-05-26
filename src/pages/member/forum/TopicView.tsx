@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ForumLayout } from "@/components/forum/ForumLayout";
-import { PostItem } from "@/components/forum/PostItem";
+import { PostItem } from "@/components/community/PostItem";
 import { ReplyForm } from "@/components/forum/ReplyForm";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -193,11 +193,10 @@ const TopicView = () => {
             content: topic.content,
             created_at: topic.created_at,
             user_id: topic.user_id,
+            topic_id: topic.id,
             profiles: topic.profiles
           }}
-          isTopicAuthor={true}
-          isTopicStarter={true}
-          topicId={topic.id}
+          showTopicContext={false}
         />
         
         {/* Respostas/comentários */}
@@ -208,9 +207,7 @@ const TopicView = () => {
               <PostItem
                 key={post.id}
                 post={post}
-                isTopicAuthor={post.user_id === topic.user_id}
-                canMarkSolution={isTopicAuthor}
-                topicId={topic.id}
+                showTopicContext={false}
               />
             ))}
           </div>

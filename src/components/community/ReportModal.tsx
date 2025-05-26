@@ -20,11 +20,13 @@ import {
 import { useState } from "react";
 import { AlertTriangle } from "lucide-react";
 
+type ReportType = 'spam' | 'inappropriate' | 'harassment' | 'misinformation' | 'other';
+
 interface ReportModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: {
-    report_type: string;
+    report_type: ReportType;
     reason: string;
     description?: string;
   }) => Promise<void>;
@@ -32,17 +34,17 @@ interface ReportModalProps {
 }
 
 export const ReportModal = ({ open, onOpenChange, onSubmit, targetType }: ReportModalProps) => {
-  const [reportType, setReportType] = useState('');
+  const [reportType, setReportType] = useState<ReportType | ''>('');
   const [reason, setReason] = useState('');
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const reportTypes = [
-    { value: 'spam', label: 'Spam ou publicidade não solicitada' },
-    { value: 'inappropriate', label: 'Conteúdo inadequado ou ofensivo' },
-    { value: 'harassment', label: 'Assédio ou bullying' },
-    { value: 'misinformation', label: 'Informação falsa ou enganosa' },
-    { value: 'other', label: 'Outro motivo' }
+    { value: 'spam' as const, label: 'Spam ou publicidade não solicitada' },
+    { value: 'inappropriate' as const, label: 'Conteúdo inadequado ou ofensivo' },
+    { value: 'harassment' as const, label: 'Assédio ou bullying' },
+    { value: 'misinformation' as const, label: 'Informação falsa ou enganosa' },
+    { value: 'other' as const, label: 'Outro motivo' }
   ];
 
   const handleSubmit = async () => {
@@ -83,7 +85,7 @@ export const ReportModal = ({ open, onOpenChange, onSubmit, targetType }: Report
         <div className="space-y-4">
           <div>
             <Label htmlFor="report-type">Tipo de Problema</Label>
-            <Select value={reportType} onValueChange={setReportType}>
+            <Select value={reportType} onValueChange={(value: ReportType) => setReportType(value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o tipo de problema" />
               </SelectTrigger>
