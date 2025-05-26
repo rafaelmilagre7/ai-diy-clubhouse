@@ -18,17 +18,29 @@ export const forumRouteMapping: Record<string, string> = {
  * @returns true se a rota atual corresponde à rota verificada ou suas sub-rotas
  */
 export const isActiveRoute = (currentPath: string, routeToCheck: string): boolean => {
-  // Caso especial para a comunidade
-  if (routeToCheck === "/comunidade") {
-    return currentPath === "/comunidade" || 
-           currentPath === "/forum" || 
-           currentPath.startsWith("/comunidade/") ||
-           currentPath.startsWith("/forum/");
+  // Tratamento especial para rota raiz
+  if (routeToCheck === "/") {
+    return currentPath === "/";
   }
   
-  // Verificação padrão para outras rotas
-  return currentPath === routeToCheck || 
-         currentPath.startsWith(routeToCheck + '/');
+  // Tratamento especial para comunidade
+  if (routeToCheck === "/comunidade") {
+    const isCommunityRoute = currentPath === "/comunidade" || 
+                             currentPath.startsWith("/comunidade/");
+    console.log(`isActiveRoute: Verificando '${currentPath}' para comunidade, resultado: ${isCommunityRoute}`);
+    return isCommunityRoute;
+  }
+  
+  // Verificação para evitar correspondências parciais (ex: /com não deve corresponder a /comunidade)
+  if (currentPath === routeToCheck) {
+    return true;
+  }
+  
+  if (currentPath.startsWith(routeToCheck + '/')) {
+    return true;
+  }
+  
+  return false;
 };
 
 /**
@@ -40,16 +52,13 @@ export const checkForumRedirect = (currentPath: string): {
   path: string, 
   options: NavigateOptions 
 } | null => {
-  // Não fazer redirecionamento se já estivermos em uma rota da comunidade
-  if (currentPath.startsWith('/comunidade')) {
-    return null;
-  }
-  
   // Verificar se o caminho atual começa com algum dos prefixos antigos
   for (const [oldPath, newPath] of Object.entries(forumRouteMapping)) {
-    if (currentPath.startsWith(oldPath)) {
+    if (currentPath === oldPath || currentPath.startsWith(oldPath + '/')) {
       // Substitui apenas o prefixo, mantendo o resto da URL
       const redirectPath = currentPath.replace(oldPath, newPath);
+      console.log(`checkForumRedirect: Convertendo ${oldPath} para ${newPath} -> ${redirectPath}`);
+      
       return {
         path: redirectPath,
         options: { 
@@ -59,5 +68,6 @@ export const checkForumRedirect = (currentPath: string): {
     }
   }
   
+  console.log(`checkForumRedirect: Nenhum redirecionamento necessário para ${currentPath}`);
   return null;
 };

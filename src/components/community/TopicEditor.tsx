@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Bold, Italic, List, ListOrdered, Link, Code, Quote, Image, ChevronsUp, ChevronsDown } from "lucide-react";
+import { Bold, Italic, List, ListOrdered, Link, Code, Quote, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth";

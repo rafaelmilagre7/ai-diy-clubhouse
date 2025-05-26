@@ -1,31 +1,32 @@
 
-export interface Profile {
-  id: string;
-  name: string | null;
-  avatar_url: string | null;
-  role?: string;
-}
-
 export interface ForumCategory {
   id: string;
   name: string;
   slug: string;
-  description?: string | null;
-  icon?: string | null;
-  order_index?: number;
-  is_active?: boolean;
+  description?: string;
+  topic_count?: number;
+  color?: string;
+  icon?: string;
+  order?: number;
 }
 
-export interface Post {
+export interface UserProfile {
   id: string;
-  content: string;
-  created_at: string;
-  updated_at: string;
-  user_id: string;
-  parent_id?: string | null;
-  profiles?: Profile | null;
-  replies?: Post[];
-  is_solution?: boolean;
+  name: string;
+  avatar_url?: string | null;
+  role?: string;
+  user_id?: string; // Adicionando esta propriedade para resolver o erro
+}
+
+export interface Profile {
+  id: string;
+  name: string;
+  avatar_url?: string | null;
+  email?: string;
+  role?: string;
+  role_id?: string;
+  company_name?: string;
+  industry?: string;
 }
 
 export interface Topic {
@@ -34,13 +35,27 @@ export interface Topic {
   content: string;
   created_at: string;
   updated_at: string;
-  last_activity_at: string;
   user_id: string;
   category_id: string;
   view_count: number;
   reply_count: number;
   is_pinned: boolean;
   is_locked: boolean;
-  profiles?: Profile | null;
-  category?: Partial<ForumCategory> | null;
+  is_solved: boolean;
+  last_activity_at: string;
+  profiles?: UserProfile | null;
+  category?: ForumCategory | null;
+}
+
+export interface Post {
+  id: string;
+  content: string;
+  user_id: string;
+  topic_id: string;
+  created_at: string;
+  updated_at: string;
+  profiles?: UserProfile | null;
+  is_accepted_solution?: boolean;
+  is_solution?: boolean;
+  parent_id?: string | null;
 }

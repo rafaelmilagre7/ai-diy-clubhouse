@@ -26,16 +26,16 @@ import CourseDetails from '@/pages/member/learning/CourseDetails';
 import LessonView from '@/pages/member/learning/LessonView';
 
 // Member Community pages
-import CommunityHome from '@/pages/member/community/CommunityHome';
-import CategoryView from '@/pages/member/community/CategoryView';
-import TopicView from '@/pages/member/community/TopicView';
-import NewTopic from '@/pages/member/community/NewTopic';
+import CommunityPages from '@/pages/member/community/index';
 
 // Função helper para criar rotas protegidas com MemberLayout
 const createProtectedRoute = (path: string, Component: React.ComponentType<any>) => ({
   path,
   element: <ProtectedRoutes><MemberLayout><Component /></MemberLayout></ProtectedRoutes>
 });
+
+// Log para diagnóstico
+console.log("Carregando rotas de membros");
 
 export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/", Dashboard),
@@ -64,15 +64,7 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/suggestions/:id", SuggestionDetails),
   createProtectedRoute("/suggestions/new", NewSuggestion),
   
-  // Comunidade Routes - Definidas com prioridade
-  createProtectedRoute("/comunidade", CommunityHome),
-  createProtectedRoute("/comunidade/categoria/:slug", CategoryView),
-  createProtectedRoute("/comunidade/topico/:id", TopicView),
-  createProtectedRoute("/comunidade/novo-topico/:categorySlug?", NewTopic),
-  
-  // Rotas legadas - temporárias para redirecionamento
-  createProtectedRoute("/forum", CommunityHome),
-  createProtectedRoute("/forum/category/:slug", CategoryView),
-  createProtectedRoute("/forum/topic/:id", TopicView),
-  createProtectedRoute("/forum/new-topic/:categorySlug?", NewTopic)
+  // Comunidade Routes - Com alta prioridade e estrutura simplificada
+  createProtectedRoute("/comunidade", CommunityPages),
+  createProtectedRoute("/comunidade/*", CommunityPages)
 ];

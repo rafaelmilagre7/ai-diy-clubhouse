@@ -5,17 +5,24 @@ import { toast } from "sonner";
 import { ForumCategory } from "@/types/forumTypes";
 
 export const useForumCategories = () => {
-  return useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['forumCategories'],
     queryFn: async (): Promise<ForumCategory[]> => {
       try {
+        console.log('Buscando categorias do fórum...');
+        
         const { data, error } = await supabase
           .from('forum_categories')
           .select('*')
           .eq('is_active', true)
           .order('order_index', { ascending: true });
         
-        if (error) throw error;
+        if (error) {
+          console.error("Erro ao buscar categorias:", error.message);
+          throw error;
+        }
+        
+        console.log('Categorias carregadas:', data?.length || 0);
         return data || [];
       } catch (error: any) {
         console.error("Erro ao buscar categorias:", error.message);
@@ -24,6 +31,14 @@ export const useForumCategories = () => {
       }
     },
     staleTime: 1000 * 60 * 5, // 5 minutos de cache
-    retry: 2
+    retry: 2,
+    refetchOnWindowFocus: false
   });
+  
+  return {
+    categories: data || [],
+    isLoading,
+    error,
+    refetch
+  };
 };

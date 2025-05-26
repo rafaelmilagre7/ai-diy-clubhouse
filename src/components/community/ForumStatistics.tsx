@@ -1,65 +1,59 @@
 
-import React from "react";
-import { MessageSquare, Users, BarChart } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
+import { Loader2, MessageSquare, Users, BookOpen, CheckCircle2 } from "lucide-react";
+import { useForumStats } from "@/hooks/useForumStats";
 
-interface ForumStatisticsProps {
-  topicCount: number;
-  postCount: number;
-  activeUserCount: number;
-  isLoading: boolean;
-}
+export const ForumStatistics = () => {
+  const { topicCount, postCount, activeUserCount, solvedCount, isLoading } = useForumStats();
 
-export const ForumStatistics = ({
-  topicCount,
-  postCount,
-  activeUserCount,
-  isLoading
-}: ForumStatisticsProps) => {
+  if (isLoading) {
+    return (
+      <Card className="mb-6">
+        <CardContent className="p-4 flex justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-      <Card className="p-4 flex items-center gap-3">
-        <div className="bg-primary/20 p-3 rounded-full">
-          <MessageSquare className="h-6 w-6 text-primary" />
+    <Card className="mb-6">
+      <CardContent className="p-4">
+        <h3 className="text-lg font-medium mb-3">Estatísticas do Fórum</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="flex flex-col items-center">
+            <div className="flex items-center justify-center mb-2 h-10 w-10 rounded-full bg-primary/10">
+              <MessageSquare className="h-5 w-5 text-primary" />
+            </div>
+            <span className="text-xl font-bold">{topicCount}</span>
+            <span className="text-sm text-muted-foreground">Tópicos</span>
+          </div>
+          
+          <div className="flex flex-col items-center">
+            <div className="flex items-center justify-center mb-2 h-10 w-10 rounded-full bg-primary/10">
+              <BookOpen className="h-5 w-5 text-primary" />
+            </div>
+            <span className="text-xl font-bold">{postCount}</span>
+            <span className="text-sm text-muted-foreground">Respostas</span>
+          </div>
+          
+          <div className="flex flex-col items-center">
+            <div className="flex items-center justify-center mb-2 h-10 w-10 rounded-full bg-primary/10">
+              <Users className="h-5 w-5 text-primary" />
+            </div>
+            <span className="text-xl font-bold">{activeUserCount}</span>
+            <span className="text-sm text-muted-foreground">Participantes</span>
+          </div>
+          
+          <div className="flex flex-col items-center">
+            <div className="flex items-center justify-center mb-2 h-10 w-10 rounded-full bg-green-500/10">
+              <CheckCircle2 className="h-5 w-5 text-green-500" />
+            </div>
+            <span className="text-xl font-bold">{solvedCount}</span>
+            <span className="text-sm text-muted-foreground">Resolvidos</span>
+          </div>
         </div>
-        <div>
-          <p className="text-sm text-muted-foreground">Tópicos</p>
-          {isLoading ? (
-            <Skeleton className="h-8 w-16" />
-          ) : (
-            <p className="text-2xl font-bold">{topicCount}</p>
-          )}
-        </div>
-      </Card>
-      
-      <Card className="p-4 flex items-center gap-3">
-        <div className="bg-primary/20 p-3 rounded-full">
-          <BarChart className="h-6 w-6 text-primary" />
-        </div>
-        <div>
-          <p className="text-sm text-muted-foreground">Mensagens</p>
-          {isLoading ? (
-            <Skeleton className="h-8 w-16" />
-          ) : (
-            <p className="text-2xl font-bold">{postCount}</p>
-          )}
-        </div>
-      </Card>
-      
-      <Card className="p-4 flex items-center gap-3">
-        <div className="bg-primary/20 p-3 rounded-full">
-          <Users className="h-6 w-6 text-primary" />
-        </div>
-        <div>
-          <p className="text-sm text-muted-foreground">Membros ativos</p>
-          {isLoading ? (
-            <Skeleton className="h-8 w-16" />
-          ) : (
-            <p className="text-2xl font-bold">{activeUserCount}</p>
-          )}
-        </div>
-      </Card>
-    </div>
+      </CardContent>
+    </Card>
   );
 };

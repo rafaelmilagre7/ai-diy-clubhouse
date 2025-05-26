@@ -1,23 +1,20 @@
+
 import { supabase } from './client';
 
 /**
- * Cria uma política de acesso público para um bucket de armazenamento
- * @param bucketName Nome do bucket a ser configurado
+ * Cria uma política pública para um bucket de armazenamento
  */
-export async function createStoragePublicPolicy(bucketName: string): Promise<{
-  success: boolean;
-  error?: string;
-}> {
+export async function createStoragePublicPolicy(bucketName: string): Promise<{ success: boolean, error?: string }> {
   try {
     const { data, error } = await supabase.rpc('create_storage_public_policy', {
       bucket_name: bucketName
     });
-
+    
     if (error) {
       console.error(`Erro ao criar políticas para ${bucketName}:`, error);
       return { success: false, error: error.message };
     }
-
+    
     return { success: true };
   } catch (error: any) {
     console.error(`Erro ao criar políticas para ${bucketName}:`, error);
@@ -26,8 +23,7 @@ export async function createStoragePublicPolicy(bucketName: string): Promise<{
 }
 
 /**
- * Incrementa o contador de visualizações de um tópico
- * @param topicId ID do tópico a ser incrementado
+ * Incrementa as visualizações de um tópico
  */
 export async function incrementTopicViews(topicId: string): Promise<void> {
   try {
@@ -39,94 +35,98 @@ export async function incrementTopicViews(topicId: string): Promise<void> {
 
 /**
  * Incrementa o contador de respostas de um tópico
- * @param topicId ID do tópico a ser incrementado
  */
 export async function incrementTopicReplies(topicId: string): Promise<void> {
   try {
-    await supabase.rpc('increment', { 
-      row_id: topicId, 
-      table_name: 'forum_topics', 
-      column_name: 'reply_count' 
-    });
+    await supabase.rpc('increment_topic_replies', { topic_id: topicId });
   } catch (error) {
     console.error('Erro ao incrementar respostas do tópico:', error);
   }
 }
 
 /**
- * Deleta um tópico e suas respostas associadas
- * @param topicId ID do tópico a ser deletado
+ * Deleta um tópico do fórum
  */
-export async function deleteForumTopic(topicId: string): Promise<{
-  success: boolean;
-  error?: string;
-}> {
+export async function deleteForumTopic(topicId: string): Promise<{ success: boolean, error?: string }> {
   try {
-    // Primeiro, deletar todos os posts relacionados ao tópico
+    // Primeiro exclui todos os posts associados ao tópico
     const { error: postsError } = await supabase
       .from('forum_posts')
       .delete()
       .eq('topic_id', topicId);
-
+      
     if (postsError) {
-      console.error('Erro ao excluir posts do tópico:', postsError);
+      console.error("Erro ao excluir posts do tópico:", postsError);
       return { success: false, error: postsError.message };
     }
-
-    // Em seguida, deletar o tópico
+    
+    // Depois exclui o tópico
     const { error: topicError } = await supabase
       .from('forum_topics')
       .delete()
       .eq('id', topicId);
-
+      
     if (topicError) {
-      console.error('Erro ao excluir tópico:', topicError);
+      console.error("Erro ao excluir tópico:", topicError);
       return { success: false, error: topicError.message };
     }
-
+    
     return { success: true };
   } catch (error: any) {
-    console.error('Erro ao excluir tópico:', error);
+    console.error("Erro ao excluir tópico:", error);
     return { success: false, error: error.message };
   }
 }
 
 /**
- * Deleta um comentário/post específico
- * @param postId ID do post a ser deletado
- * @param topicId ID do tópico associado (para decrementar contadores)
+ * Deleta um post do fórum
  */
-export async function deleteForumPost(postId: string, topicId: string): Promise<{
-  success: boolean;
-  error?: string;
-}> {
+export async function deleteForumPost(postId: string): Promise<{ success: boolean, error?: string }> {
   try {
+    // Verificar se o post é uma solução marcada
+    const { data: postData } = await supabase
+      .from('forum_posts')
+      .select('topic_id, is_solution')
+      .eq('id', postId)
+      .single();
+      
     // Excluir o post
     const { error } = await supabase
       .from('forum_posts')
       .delete()
       .eq('id', postId);
-
+      
     if (error) {
-      console.error('Erro ao excluir post:', error);
       return { success: false, error: error.message };
     }
-
-    // Decrementar o contador de respostas do tópico
-    try {
-      await supabase.rpc('decrement', {
-        row_id: topicId,
-        table_name: 'forum_topics',
-        column_name: 'reply_count'
-      });
-    } catch (error) {
-      // Não falhar a operação principal se essa parte falhar
-      console.error('Erro ao decrementar contador de respostas:', error);
+    
+    // Se o post era uma solução, atualizar o tópico
+    if (postData?.is_solution) {
+      await supabase
+        .from('forum_topics')
+        .update({ is_solved: false })
+        .eq('id', postData.topic_id);
     }
-
+    
+    // Decrementar contagem de respostas no tópico
+    if (postData?.topic_id) {
+      const { data } = await supabase
+        .from('forum_topics')
+        .select('reply_count')
+        .eq('id', postData.topic_id)
+        .single();
+        
+      if (data && data.reply_count > 0) {
+        await supabase
+          .from('forum_topics')
+          .update({ reply_count: data.reply_count - 1 })
+          .eq('id', postData.topic_id);
+      }
+    }
+    
     return { success: true };
   } catch (error: any) {
-    console.error('Erro ao excluir post:', error);
+    console.error("Erro ao excluir post:", error);
     return { success: false, error: error.message };
   }
 }

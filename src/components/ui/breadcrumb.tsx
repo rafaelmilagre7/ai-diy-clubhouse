@@ -20,7 +20,7 @@ const BreadcrumbList = React.forwardRef<
   <ol
     ref={ref}
     className={cn(
-      "flex flex-wrap items-center gap-1.5 break-words text-sm text-muted-foreground",
+      "flex flex-wrap items-center gap-1.5 break-words text-sm text-muted-foreground sm:gap-2.5",
       className
     )}
     {...props}
@@ -45,12 +45,16 @@ const BreadcrumbLink = React.forwardRef<
   React.ComponentPropsWithoutRef<"a"> & {
     asChild?: boolean
   }
->(({ className, asChild = false, ...props }, ref) => {
+>(({ asChild, className, ...props }, ref) => {
   const Comp = asChild ? Slot : "a"
+
   return (
     <Comp
       ref={ref}
-      className={cn("transition-colors hover:text-foreground cursor-pointer", className)}
+      className={cn(
+        "transition-colors hover:text-foreground hover:underline",
+        className
+      )}
       {...props}
     />
   )
@@ -83,10 +87,25 @@ const BreadcrumbSeparator = ({
     className={cn("[&>svg]:size-3.5", className)}
     {...props}
   >
-    {children || <ChevronRight className="h-4 w-4" />}
+    {children || <ChevronRight />}
   </li>
 )
 BreadcrumbSeparator.displayName = "BreadcrumbSeparator"
+
+const BreadcrumbEllipsis = ({
+  className,
+  ...props
+}: React.ComponentProps<"span">) => (
+  <span
+    role="presentation"
+    aria-hidden="true"
+    className={cn("flex h-9 w-9 items-center justify-center", className)}
+    {...props}
+  >
+    <span className="text-base">...</span>
+  </span>
+)
+BreadcrumbEllipsis.displayName = "BreadcrumbElliphis"
 
 export {
   Breadcrumb,
@@ -95,4 +114,5 @@ export {
   BreadcrumbLink,
   BreadcrumbPage,
   BreadcrumbSeparator,
+  BreadcrumbEllipsis,
 }

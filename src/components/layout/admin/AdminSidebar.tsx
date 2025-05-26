@@ -37,7 +37,7 @@ export const AdminSidebar = ({ sidebarOpen, setSidebarOpen }: AdminSidebarProps)
     >
       <div className="flex h-16 items-center justify-between px-4">
         {sidebarOpen ? (
-          <Link to="/admin" className="flex items-center">
+          <Link to="/dashboard" className="flex items-center">
             <img
               src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
               alt="VIVER DE IA Club"
@@ -45,7 +45,7 @@ export const AdminSidebar = ({ sidebarOpen, setSidebarOpen }: AdminSidebarProps)
             />
           </Link>
         ) : (
-          <Link to="/admin" className="mx-auto">
+          <Link to="/dashboard" className="mx-auto">
             <div className="h-8 w-8 flex items-center justify-center bg-viverblue rounded-full text-white font-bold">
               VI
             </div>

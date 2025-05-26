@@ -29,7 +29,7 @@ export const ForumSearch = ({
           onChange={(e) => onSearchChange(e.target.value)}
         />
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0">
         <Button
           variant={selectedFilter === "recentes" ? "default" : "outline"}
           size="sm"
@@ -51,7 +51,14 @@ export const ForumSearch = ({
         >
           Sem respostas
         </Button>
+        <Button
+          variant={selectedFilter === "resolvidos" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setSelectedFilter("resolvidos")}
+        >
+          Resolvidos
+        </Button>
       </div>
     </div>
   );
-};
+}
