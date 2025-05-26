@@ -1,33 +1,22 @@
 
-export const getInitials = (name: string): string => {
-  if (!name || name.trim() === '') {
-    return 'U';
-  }
+export const getInitials = (name: string | null | undefined): string => {
+  if (!name) return 'U';
   
-  const words = name.trim().split(' ');
-  if (words.length === 1) {
-    return words[0].charAt(0).toUpperCase();
-  }
-  
-  return (words[0].charAt(0) + words[words.length - 1].charAt(0)).toUpperCase();
+  return name
+    .split(' ')
+    .map(part => part.charAt(0))
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 };
 
-export const formatUserName = (name?: string | null): string => {
-  if (!name || name.trim() === '') {
-    return 'Usuário';
-  }
-  return name.trim();
-};
-
-export const getUserDisplayRole = (role?: string): string => {
-  switch (role) {
-    case 'admin':
-      return 'Administrador';
-    case 'moderator':
-      return 'Moderador';
-    case 'member':
-      return 'Membro';
-    default:
-      return 'Membro';
-  }
+export const getUserDisplayRole = (role: string): string => {
+  const roleMap: Record<string, string> = {
+    'admin': 'Administrador',
+    'member': 'Membro',
+    'formacao': 'Formação',
+    'moderator': 'Moderador'
+  };
+  
+  return roleMap[role] || 'Membro';
 };

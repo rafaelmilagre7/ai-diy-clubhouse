@@ -8,27 +8,31 @@ interface ForumHeaderProps {
   title: string;
   description: string;
   showNewTopicButton?: boolean;
+  categorySlug?: string;
 }
 
-export const ForumHeader: React.FC<ForumHeaderProps> = ({ 
+export const ForumHeader = ({ 
   title, 
   description, 
-  showNewTopicButton = true 
-}) => {
+  showNewTopicButton = true,
+  categorySlug 
+}: ForumHeaderProps) => {
+  const newTopicPath = categorySlug ? `/comunidade/novo-topico/${categorySlug}` : '/comunidade/novo-topico';
+
   return (
-    <div className="bg-white border-b">
-      <div className="container max-w-4xl mx-auto py-8 px-4">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="bg-white border-b shadow-sm">
+      <div className="container max-w-7xl mx-auto py-6 px-4">
+        <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
             <p className="text-gray-600 mt-2">{description}</p>
           </div>
           
           {showNewTopicButton && (
-            <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
-              <Link to="/comunidade/novo-topico">
-                <Plus className="h-5 w-5 mr-2" />
-                Novo Tópico
+            <Button asChild>
+              <Link to={newTopicPath}>
+                <Plus className="h-4 w-4 mr-2" />
+                Novo tópico
               </Link>
             </Button>
           )}

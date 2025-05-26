@@ -2,82 +2,98 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
 import { useAuth } from '@/contexts/auth';
 import { useQueryClient } from '@tanstack/react-query';
+import { Send } from 'lucide-react';
 
 interface ReplyFormProps {
   topicId: string;
   parentId?: string;
   onSuccess?: () => void;
+  placeholder?: string;
 }
 
-export const ReplyForm: React.FC<ReplyFormProps> = ({ topicId, parentId, onSuccess }) => {
+export const ReplyForm: React.FC<ReplyFormProps> = ({
+  topicId,
+  parentId,
+  onSuccess,
+  placeholder = "Escreva sua resposta..."
+}) => {
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!content.trim()) {
-      toast.error('O conteúdo da resposta não pode estar vazio');
-      return;
-    }
-    
-    if (!user?.id) {
-      toast.error('Você precisa estar logado para enviar uma resposta');
-      return;
-    }
+    if (!content.trim() || !user) return;
+
+    setIsSubmitting(true);
     
     try {
-      setIsSubmitting(true);
-      
       const { error } = await supabase
         .from('forum_posts')
         .insert({
-          topic_id: topicId,
-          user_id: user.id,
           content: content.trim(),
-          ...(parentId && { parent_id: parentId })
+          user_id: user.id,
+          topic_id: topicId,
+          parent_id: parentId || null
         });
-        
+
       if (error) throw error;
-      
+
       setContent('');
-      toast.success('Resposta enviada com sucesso!');
-      
-      // Invalidar as queries relacionadas
-      queryClient.invalidateQueries({ queryKey: ['forum-topic', topicId] });
+      toast({
+        title: "Resposta enviada!",
+        description: "Sua resposta foi publicada com sucesso.",
+      });
+
+      // Invalidar queries relacionadas
       queryClient.invalidateQueries({ queryKey: ['forum-posts', topicId] });
+      queryClient.invalidateQueries({ queryKey: ['forum-topic', topicId] });
       
-      if (onSuccess) {
-        onSuccess();
-      }
+      onSuccess?.();
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao enviar resposta:', error);
-      toast.error('Não foi possível enviar sua resposta. Tente novamente mais tarde.');
+      toast({
+        title: "Erro ao enviar resposta",
+        description: error.message || "Tente novamente mais tarde.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
-  
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <Textarea
-        placeholder="Escreva sua resposta..."
         value={content}
         onChange={(e) => setContent(e.target.value)}
+        placeholder={placeholder}
         rows={4}
-        className="w-full resize-none"
-        disabled={isSubmitting}
+        className="resize-none"
       />
+      
       <div className="flex justify-end">
-        <Button type="submit" disabled={isSubmitting || !content.trim()}>
-          {isSubmitting ? 'Enviando...' : 'Enviar Resposta'}
+        <Button 
+          type="submit" 
+          disabled={!content.trim() || isSubmitting}
+          className="min-w-[120px]"
+        >
+          {isSubmitting ? (
+            "Enviando..."
+          ) : (
+            <>
+              <Send className="h-4 w-4 mr-2" />
+              Enviar
+            </>
+          )}
         </Button>
       </div>
     </form>
