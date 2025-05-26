@@ -12,37 +12,47 @@ const RootRedirect = () => {
   const [timeoutExceeded, setTimeoutExceeded] = useState(false);
   const [redirectTarget, setRedirectTarget] = useState<string | null>(null);
   
-  // Registrar estado para depuração
-  console.log("RootRedirect state:", { 
+  console.log("RootRedirect estado:", { 
     user: !!user, 
     profile: !!profile, 
     isAdmin, 
     isLoading, 
     timeoutExceeded,
-    redirectTarget
+    redirectTarget,
+    currentPath: window.location.pathname
   });
   
   // Determinar para onde redirecionar com base no estado da autenticação
   useEffect(() => {
-    // Não fazer nada enquanto carrega
+    // Se já determinamos o target, não fazer nada
+    if (redirectTarget) return;
+    
+    // Não fazer nada enquanto carrega e não excedeu timeout
     if (isLoading && !timeoutExceeded) return;
     
-    if (!user) {
-      console.log("RootRedirect: No user, redirecting to /login");
+    console.log("RootRedirect: Determinando redirecionamento");
+    
+    if (!user || timeoutExceeded) {
+      console.log("RootRedirect: Sem usuário ou timeout, redirecionando para /login");
       setRedirectTarget('/login');
     } else if (user && profile) {
-      console.log("RootRedirect: User and profile available, redirecting based on role");
+      console.log("RootRedirect: Usuário e perfil disponíveis, redirecionando baseado no papel");
       if (profile.role === 'admin' || isAdmin) {
         setRedirectTarget('/admin');
       } else {
         setRedirectTarget('/dashboard');
       }
+    } else if (user && !profile && !isLoading) {
+      // Usuário existe mas perfil não carregou
+      console.log("RootRedirect: Usuário sem perfil, redirecionando para dashboard padrão");
+      setRedirectTarget('/dashboard');
     }
-  }, [user, profile, isAdmin, isLoading, timeoutExceeded]);
+  }, [user, profile, isAdmin, isLoading, timeoutExceeded, redirectTarget]);
   
   // Realizar o redirecionamento quando o alvo for definido
   useEffect(() => {
     if (redirectTarget) {
+      console.log("RootRedirect: Executando redirecionamento para", redirectTarget);
       // Pequeno delay para garantir que a UI reaja antes do redirecionamento
       const redirectTimer = setTimeout(() => {
         navigate(redirectTarget, { replace: true });
@@ -56,10 +66,10 @@ const RootRedirect = () => {
   useEffect(() => {
     if (isLoading && !timeoutExceeded) {
       const timeout = setTimeout(() => {
-        console.log("RootRedirect: Loading timeout exceeded, redirecting to /login");
+        console.log("RootRedirect: Timeout de carregamento excedido");
         setTimeoutExceeded(true);
         toast("Tempo de carregamento excedido, redirecionando para tela de login");
-      }, 3000); // 3 segundos de timeout
+      }, 5000); // 5 segundos de timeout
       
       return () => clearTimeout(timeout);
     }
@@ -78,7 +88,7 @@ const RootRedirect = () => {
   }
   
   // Fallback redirect se algo deu errado
-  if (timeoutExceeded || !redirectTarget) {
+  if (timeoutExceeded && !redirectTarget) {
     return <Navigate to="/login" replace />;
   }
   
