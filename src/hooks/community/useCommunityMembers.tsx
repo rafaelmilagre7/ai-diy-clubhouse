@@ -69,8 +69,8 @@ export const useCommunityMembers = () => {
       const to = from + ITEMS_PER_PAGE - 1;
       query = query.range(from, to);
 
-      // Ordenar por último acesso
-      query = query.order('last_active', { ascending: false });
+      // Ordenar por último acesso (com fallback para created_at)
+      query = query.order('last_active', { ascending: false, nullsLast: true });
 
       const { data, error, count } = await query;
 
@@ -90,7 +90,7 @@ export const useCommunityMembers = () => {
     retry: 2
   });
 
-  // Buscar setores únicos para filtros
+  // Buscar setores únicos para filtros (apenas dos que têm dados)
   const { data: availableIndustries = [] } = useQuery({
     queryKey: ['available-industries'],
     queryFn: async (): Promise<string[]> => {
@@ -98,7 +98,8 @@ export const useCommunityMembers = () => {
         .from('profiles')
         .select('industry')
         .not('industry', 'is', null)
-        .not('industry', 'eq', '');
+        .not('industry', 'eq', '')
+        .neq('id', user?.id || '');
 
       if (error) throw error;
 
@@ -107,7 +108,7 @@ export const useCommunityMembers = () => {
     }
   });
 
-  // Buscar cargos únicos para filtros
+  // Buscar cargos únicos para filtros (apenas dos que têm dados)
   const { data: availableRoles = [] } = useQuery({
     queryKey: ['available-roles'],
     queryFn: async (): Promise<string[]> => {
@@ -115,7 +116,8 @@ export const useCommunityMembers = () => {
         .from('profiles')
         .select('current_position')
         .not('current_position', 'is', null)
-        .not('current_position', 'eq', '');
+        .not('current_position', 'eq', '')
+        .neq('id', user?.id || '');
 
       if (error) throw error;
 

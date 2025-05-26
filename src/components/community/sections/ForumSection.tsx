@@ -141,18 +141,18 @@ export const ForumSection = () => {
                   <CardContent className="py-12 text-center">
                     <MessageSquare className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
                     <h3 className="text-lg font-semibold mb-2">
-                      {searchQuery.trim() ? 'Nenhuma discussão encontrada' : 'Nenhuma discussão ainda'}
+                      {searchQuery ? 'Nenhuma discussão encontrada' : 'Seja o primeiro a iniciar uma discussão!'}
                     </h3>
-                    <p className="text-muted-foreground mb-6">
-                      {searchQuery.trim() 
-                        ? `Não encontramos discussões com "${searchQuery.trim()}"`
-                        : 'Seja o primeiro a iniciar uma discussão na comunidade!'
+                    <p className="text-muted-foreground mb-4">
+                      {searchQuery 
+                        ? 'Tente ajustar os filtros ou termos de busca.'
+                        : 'Compartilhe suas dúvidas, ideias ou conhecimentos com a comunidade.'
                       }
                     </p>
                     <Button asChild>
                       <Link to="/comunidade/novo-topico">
                         <Plus className="h-4 w-4 mr-2" />
-                        Criar primeira discussão
+                        Criar primeiro tópico
                       </Link>
                     </Button>
                   </CardContent>
@@ -164,32 +164,8 @@ export const ForumSection = () => {
 
         {/* Sidebar com categorias */}
         <div className="xl:col-span-1">
-          <div className="space-y-6 sticky top-6">
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Categorias</h3>
-              <CategoryList compact onCategorySelect={(slug) => window.location.href = `/comunidade/categoria/${slug}`} />
-            </div>
-
-            {/* Estatísticas rápidas */}
-            <Card>
-              <CardContent className="p-4">
-                <h4 className="font-medium mb-4">Estatísticas da Comunidade</h4>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Total de tópicos</span>
-                    <span className="font-medium">{topics.length}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Categorias ativas</span>
-                    <span className="font-medium">{categories.length}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Tópicos resolvidos</span>
-                    <span className="font-medium">{topics.filter(t => t.is_solved).length}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          <div className="sticky top-6">
+            <CategoryList categories={categories} />
           </div>
         </div>
       </div>

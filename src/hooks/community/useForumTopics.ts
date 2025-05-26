@@ -84,7 +84,7 @@ export const useForumTopics = ({
             break;
           default:
             // "recentes" - ordenar por atividade mais recente
-            query = query.order('last_activity_at', { ascending: false });
+            query = query.order('last_activity_at', { ascending: false, nullsLast: true });
             break;
         }
         

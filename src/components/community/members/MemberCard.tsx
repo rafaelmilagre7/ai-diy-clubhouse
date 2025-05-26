@@ -95,7 +95,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({ member }) => {
     );
   };
 
-  // Funções para lidar com dados vazios
+  // Funções para lidar com dados vazios ou em branco
   const displayName = member.name?.trim() || 'Membro da Comunidade';
   const displayPosition = member.current_position?.trim() || 'Profissional';
   const displayCompany = member.company_name?.trim();
@@ -142,13 +142,6 @@ export const MemberCard: React.FC<MemberCardProps> = ({ member }) => {
                 Disponível para networking
               </Badge>
             )}
-            
-            {/* Badge para perfis incompletos */}
-            {(!displayCompany || !displayIndustry) && (
-              <Badge variant="outline" className="text-xs text-amber-600 border-amber-600">
-                Perfil em construção
-              </Badge>
-            )}
           </div>
 
           {/* Bio profissional */}
@@ -158,7 +151,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({ member }) => {
             </p>
           ) : (
             <p className="text-sm text-muted-foreground/60 text-center italic">
-              Biografia profissional não informada
+              Membro ativo da comunidade
             </p>
           )}
 
