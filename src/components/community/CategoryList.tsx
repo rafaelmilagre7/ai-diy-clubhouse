@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useForumCategories } from '@/hooks/community/useForumCategories';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -15,9 +16,18 @@ interface CategoryListProps {
 
 export const CategoryList: React.FC<CategoryListProps> = ({ onCategorySelect }) => {
   const { categories, isLoading, error, refetch } = useForumCategories();
+  const navigate = useNavigate();
 
   const handleRetry = () => {
     refetch();
+  };
+
+  const handleCategoryClick = (category: ForumCategory) => {
+    if (onCategorySelect) {
+      onCategorySelect(category.slug);
+    } else {
+      navigate(`/comunidade/categoria/${category.slug}`);
+    }
   };
 
   if (isLoading) {
@@ -76,13 +86,16 @@ export const CategoryList: React.FC<CategoryListProps> = ({ onCategorySelect }) 
         <Card 
           key={category.id} 
           className="hover:shadow-md transition-shadow cursor-pointer group"
-          onClick={() => onCategorySelect?.(category.slug)}
+          onClick={() => handleCategoryClick(category)}
         >
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
               <div 
                 className="h-12 w-12 rounded-lg flex items-center justify-center text-2xl flex-shrink-0"
-                style={{ backgroundColor: `${category.color || '#3B82F6'}20`, color: category.color || '#3B82F6' }}
+                style={{ 
+                  backgroundColor: `${category.color || '#3B82F6'}20`, 
+                  color: category.color || '#3B82F6' 
+                }}
               >
                 {category.icon || '💬'}
               </div>

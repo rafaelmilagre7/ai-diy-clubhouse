@@ -1,56 +1,195 @@
 
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Filter, TrendingUp, Clock, CheckCircle } from 'lucide-react';
-import { ForumCategories } from '@/components/community/forum/ForumCategories';
-import { ForumTopics } from '@/components/community/forum/ForumTopics';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Search, Plus, TrendingUp, Clock, CheckCircle, MessageSquare } from 'lucide-react';
+import { useForumCategories } from '@/hooks/community/useForumCategories';
+import { useForumTopics } from '@/hooks/community/useForumTopics';
+import { TopicCard } from '@/components/community/forum/TopicCard';
+import { CategoryList } from '@/components/community/CategoryList';
 
 export const ForumSection = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState('recent');
+  const [activeFilter, setActiveFilter] = useState<'recentes' | 'populares' | 'sem-respostas' | 'resolvidos'>('recentes');
+
+  const { categories } = useForumCategories();
+  
+  const { data: topics = [], isLoading: topicsLoading } = useForumTopics({
+    activeTab: 'todos',
+    selectedFilter: activeFilter,
+    searchQuery,
+    categories
+  });
 
   const filters = [
-    { id: 'recent', label: 'Recentes', icon: Clock },
-    { id: 'trending', label: 'Em Alta', icon: TrendingUp },
-    { id: 'solved', label: 'Resolvidos', icon: CheckCircle },
+    { id: 'recentes' as const, label: 'Recentes', icon: Clock },
+    { id: 'populares' as const, label: 'Em Alta', icon: TrendingUp },
+    { id: 'sem-respostas' as const, label: 'Sem Respostas', icon: MessageSquare },
+    { id: 'resolvidos' as const, label: 'Resolvidos', icon: CheckCircle },
   ];
 
+  // Separar tópicos fixados dos regulares
+  const pinnedTopics = topics.filter(topic => topic.is_pinned);
+  const regularTopics = topics.filter(topic => !topic.is_pinned);
+
   return (
-    <div className="space-y-6">
-      {/* Search and Filters */}
-      <div className="flex flex-col lg:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar discussões, tópicos ou soluções..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
+    <div className="space-y-8">
+      {/* Header com busca e novo tópico */}
+      <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+        <div className="flex-1 max-w-md">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar discussões, tópicos ou soluções..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
         </div>
         
-        <div className="flex gap-2 overflow-x-auto">
-          {filters.map((filter) => (
-            <Button
-              key={filter.id}
-              variant={activeFilter === filter.id ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveFilter(filter.id)}
-              className="flex items-center gap-2 whitespace-nowrap"
-            >
-              <filter.icon className="h-4 w-4" />
-              {filter.label}
-            </Button>
-          ))}
-        </div>
+        <Button asChild>
+          <Link to="/comunidade/novo-topico">
+            <Plus className="h-4 w-4 mr-2" />
+            Novo tópico
+          </Link>
+        </Button>
       </div>
 
-      {/* Categories Overview */}
-      <ForumCategories />
+      {/* Filtros */}
+      <div className="flex gap-2 overflow-x-auto pb-2">
+        {filters.map((filter) => (
+          <Button
+            key={filter.id}
+            variant={activeFilter === filter.id ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveFilter(filter.id)}
+            className="flex items-center gap-2 whitespace-nowrap"
+          >
+            <filter.icon className="h-4 w-4" />
+            {filter.label}
+          </Button>
+        ))}
+      </div>
 
-      {/* Recent Topics */}
-      <ForumTopics searchQuery={searchQuery} filter={activeFilter} />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Lista de tópicos */}
+        <div className="lg:col-span-2 space-y-6">
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Discussões Recentes</h2>
+            
+            {topicsLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Card key={i} className="animate-pulse">
+                    <CardContent className="p-4">
+                      <div className="flex gap-3">
+                        <div className="h-10 w-10 bg-neutral-800 rounded-full"></div>
+                        <div className="flex-1 space-y-2">
+                          <div className="h-5 bg-neutral-800 rounded w-3/4"></div>
+                          <div className="h-4 bg-neutral-800 rounded w-1/2"></div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : topics.length > 0 ? (
+              <div className="space-y-6">
+                {/* Tópicos Fixados */}
+                {pinnedTopics.length > 0 && (
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                      📌 Tópicos Fixados
+                    </h3>
+                    <div className="space-y-2">
+                      {pinnedTopics.slice(0, 3).map((topic) => (
+                        <TopicCard key={topic.id} topic={topic} isPinned />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tópicos Regulares */}
+                <div className="space-y-3">
+                  {pinnedTopics.length > 0 && (
+                    <h3 className="text-sm font-medium text-muted-foreground">
+                      Discussões Recentes
+                    </h3>
+                  )}
+                  <div className="space-y-2">
+                    {regularTopics.slice(0, 10).map((topic) => (
+                      <TopicCard key={topic.id} topic={topic} />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Link para ver mais */}
+                {topics.length > 10 && (
+                  <div className="text-center pt-4">
+                    <Button variant="outline" asChild>
+                      <Link to="/comunidade">Ver todas as discussões</Link>
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Card className="border-dashed">
+                <CardContent className="py-12 text-center">
+                  <MessageSquare className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">
+                    {searchQuery.trim() ? 'Nenhuma discussão encontrada' : 'Nenhuma discussão ainda'}
+                  </h3>
+                  <p className="text-muted-foreground mb-6">
+                    {searchQuery.trim() 
+                      ? `Não encontramos discussões com "${searchQuery.trim()}"`
+                      : 'Seja o primeiro a iniciar uma discussão na comunidade!'
+                    }
+                  </p>
+                  <Button asChild>
+                    <Link to="/comunidade/novo-topico">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Criar primeira discussão
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+
+        {/* Sidebar com categorias */}
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Categorias</h3>
+            <CategoryList onCategorySelect={(slug) => window.location.href = `/comunidade/categoria/${slug}`} />
+          </div>
+
+          {/* Estatísticas rápidas */}
+          <Card>
+            <CardContent className="p-4">
+              <h4 className="font-medium mb-3">Estatísticas da Comunidade</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Total de tópicos</span>
+                  <span className="font-medium">{topics.length}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Categorias ativas</span>
+                  <span className="font-medium">{categories.length}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Tópicos resolvidos</span>
+                  <span className="font-medium">{topics.filter(t => t.is_solved).length}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };

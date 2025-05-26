@@ -4,12 +4,18 @@ export const getInitials = (name?: string | null): string => {
   
   return name
     .split(' ')
-    .map(n => n[0])
+    .map(part => part.charAt(0))
     .join('')
     .toUpperCase()
-    .slice(0, 2);
+    .substring(0, 2);
 };
 
 export const formatUserName = (name?: string | null): string => {
-  return name || 'Usuário';
+  if (!name) return 'Usuário';
+  return name;
+};
+
+export const getAvatarUrl = (url?: string | null): string | undefined => {
+  if (!url) return undefined;
+  return url;
 };

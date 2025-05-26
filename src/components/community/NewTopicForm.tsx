@@ -1,26 +1,35 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
+import { useForumCategories } from '@/hooks/community/useForumCategories';
 
 interface NewTopicFormProps {
-  categoryId: string;
-  categorySlug: string;
+  categoryId?: string;
+  categorySlug?: string;
   onCancel?: () => void;
 }
 
-export const NewTopicForm: React.FC<NewTopicFormProps> = ({ categoryId, categorySlug, onCancel }) => {
+export const NewTopicForm: React.FC<NewTopicFormProps> = ({ 
+  categoryId: initialCategoryId, 
+  categorySlug, 
+  onCancel 
+}) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState(initialCategoryId || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { categories, isLoading: categoriesLoading } = useForumCategories();
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +44,7 @@ export const NewTopicForm: React.FC<NewTopicFormProps> = ({ categoryId, category
       return;
     }
     
-    if (!categoryId) {
+    if (!selectedCategoryId) {
       toast.error('Selecione uma categoria para o tópico');
       return;
     }
@@ -43,6 +52,13 @@ export const NewTopicForm: React.FC<NewTopicFormProps> = ({ categoryId, category
     setIsSubmitting(true);
     
     try {
+      console.log('Criando tópico:', {
+        title: title.trim(),
+        content: content.trim(),
+        user_id: user.id,
+        category_id: selectedCategoryId
+      });
+
       // Inserir o novo tópico
       const { data, error } = await supabase
         .from('forum_topics')
@@ -50,28 +66,30 @@ export const NewTopicForm: React.FC<NewTopicFormProps> = ({ categoryId, category
           title: title.trim(),
           content: content.trim(),
           user_id: user.id,
-          category_id: categoryId,
+          category_id: selectedCategoryId,
           last_activity_at: new Date().toISOString()
         })
         .select('id')
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Erro do Supabase:', error);
+        throw error;
+      }
       
+      console.log('Tópico criado com sucesso:', data);
       toast.success('Tópico criado com sucesso!');
       
-      // Redirecionar para o tópico criado ou para a categoria
+      // Redirecionar para o tópico criado
       if (data?.id) {
         navigate(`/comunidade/topico/${data.id}`);
-      } else if (categorySlug) {
-        navigate(`/comunidade/categoria/${categorySlug}`);
       } else {
-        navigate('/comunidade/forum');
+        navigate('/comunidade');
       }
       
     } catch (error: any) {
       console.error('Erro ao criar tópico:', error);
-      toast.error(error.message || 'Não foi possível criar o tópico');
+      toast.error(`Erro ao criar tópico: ${error.message || 'Erro desconhecido'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -80,48 +98,88 @@ export const NewTopicForm: React.FC<NewTopicFormProps> = ({ categoryId, category
   const handleCancel = () => {
     if (onCancel) {
       onCancel();
-    } else if (categorySlug) {
-      navigate(`/comunidade/categoria/${categorySlug}`);
     } else {
-      navigate('/comunidade/forum');
+      navigate('/comunidade');
     }
   };
   
+  if (categoriesLoading) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="animate-pulse space-y-4">
+            <div className="h-6 bg-neutral-800 rounded w-1/4"></div>
+            <div className="h-10 bg-neutral-800 rounded"></div>
+            <div className="h-6 bg-neutral-800 rounded w-1/4"></div>
+            <div className="h-32 bg-neutral-800 rounded"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
   return (
     <Card>
+      <CardHeader>
+        <CardTitle>Criar Novo Tópico</CardTitle>
+      </CardHeader>
       <CardContent className="p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <label htmlFor="title" className="block text-sm font-medium">
-              Título
-            </label>
-            <Input
-              id="title"
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              placeholder="Digite um título para o tópico"
-              required
-            />
+            <Label htmlFor="category">Categoria *</Label>
+            <Select 
+              value={selectedCategoryId} 
+              onValueChange={setSelectedCategoryId}
+              disabled={!!initialCategoryId}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione uma categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
           <div className="space-y-2">
-            <label htmlFor="content" className="block text-sm font-medium">
-              Conteúdo
-            </label>
+            <Label htmlFor="title">Título *</Label>
+            <Input
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Digite um título claro e descritivo"
+              maxLength={200}
+              required
+            />
+            <p className="text-sm text-muted-foreground">
+              {title.length}/200 caracteres
+            </p>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="content">Conteúdo *</Label>
             <Textarea
               id="content"
               value={content}
-              onChange={e => setContent(e.target.value)}
-              placeholder="Digite o conteúdo do tópico"
-              rows={10}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Descreva sua dúvida, ideia ou compartilhe seu conhecimento..."
+              rows={8}
+              maxLength={5000}
               required
             />
+            <p className="text-sm text-muted-foreground">
+              {content.length}/5000 caracteres
+            </p>
           </div>
           
-          <div className="flex justify-end space-x-2">
+          <div className="flex gap-3 justify-end">
             <Button 
               type="button" 
-              variant="outline" 
+              variant="outline"
               onClick={handleCancel}
               disabled={isSubmitting}
             >
@@ -129,9 +187,9 @@ export const NewTopicForm: React.FC<NewTopicFormProps> = ({ categoryId, category
             </Button>
             <Button 
               type="submit" 
-              disabled={isSubmitting}
+              disabled={isSubmitting || !title.trim() || !content.trim() || !selectedCategoryId}
             >
-              {isSubmitting ? 'Enviando...' : 'Criar Tópico'}
+              {isSubmitting ? 'Criando...' : 'Criar Tópico'}
             </Button>
           </div>
         </form>

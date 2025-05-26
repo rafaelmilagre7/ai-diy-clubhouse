@@ -21,10 +21,17 @@ export const usePostInteractions = ({
   const { user } = useAuth();
   
   const isAuthor = user?.id === authorId;
+  const isAdmin = user && ['admin'].includes(user.role || '');
+  const canDelete = isAuthor || isAdmin;
   
   const handleDeletePost = async () => {
     if (!user) {
       toast.error("Você precisa estar logado para excluir um post");
+      return;
+    }
+    
+    if (!canDelete) {
+      toast.error("Você não tem permissão para excluir este post");
       return;
     }
     
@@ -52,6 +59,8 @@ export const usePostInteractions = ({
   
   return {
     isAuthor,
+    isAdmin,
+    canDelete,
     isDeleting,
     handleDeletePost
   };
