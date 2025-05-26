@@ -12,9 +12,13 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface CategoryListProps {
   onCategorySelect?: (categorySlug: string) => void;
+  compact?: boolean;
 }
 
-export const CategoryList: React.FC<CategoryListProps> = ({ onCategorySelect }) => {
+export const CategoryList: React.FC<CategoryListProps> = ({ 
+  onCategorySelect,
+  compact = false 
+}) => {
   const { categories, isLoading, error, refetch } = useForumCategories();
   const navigate = useNavigate();
 
@@ -32,16 +36,16 @@ export const CategoryList: React.FC<CategoryListProps> = ({ onCategorySelect }) 
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {Array.from({ length: 6 }).map((_, i) => (
+      <div className={`${compact ? 'space-y-2' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'}`}>
+        {Array.from({ length: compact ? 3 : 6 }).map((_, i) => (
           <Card key={i} className="animate-pulse">
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                <Skeleton className="h-12 w-12 rounded-lg" />
+            <CardContent className={compact ? "p-3" : "p-6"}>
+              <div className="flex items-start gap-3">
+                <Skeleton className={`${compact ? 'h-8 w-8' : 'h-12 w-12'} rounded-lg`} />
                 <div className="flex-1 space-y-2">
-                  <Skeleton className="h-5 w-32" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className={`${compact ? 'h-4 w-24' : 'h-5 w-32'}`} />
+                  {!compact && <Skeleton className="h-4 w-full" />}
+                  <Skeleton className="h-3 w-16" />
                 </div>
               </div>
             </CardContent>
@@ -69,14 +73,66 @@ export const CategoryList: React.FC<CategoryListProps> = ({ onCategorySelect }) 
   if (!categories || categories.length === 0) {
     return (
       <Card className="border-dashed">
-        <CardContent className="py-12 text-center">
-          <MessageSquare className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Nenhuma categoria encontrada</h3>
-          <p className="text-muted-foreground">
+        <CardContent className={`${compact ? 'py-6' : 'py-12'} text-center`}>
+          <MessageSquare className={`${compact ? 'h-8 w-8' : 'h-16 w-16'} text-muted-foreground mx-auto mb-4`} />
+          <h3 className={`${compact ? 'text-base' : 'text-lg'} font-semibold mb-2`}>
+            Nenhuma categoria encontrada
+          </h3>
+          <p className="text-muted-foreground text-sm">
             As categorias do fórum serão carregadas em breve.
           </p>
         </CardContent>
       </Card>
+    );
+  }
+
+  if (compact) {
+    return (
+      <div className="space-y-2">
+        {categories.slice(0, 5).map((category) => (
+          <Card 
+            key={category.id} 
+            className="hover:bg-accent/50 transition-colors cursor-pointer"
+            onClick={() => handleCategoryClick(category)}
+          >
+            <CardContent className="p-3">
+              <div className="flex items-center gap-3">
+                <div 
+                  className="h-8 w-8 rounded-md flex items-center justify-center text-lg flex-shrink-0"
+                  style={{ 
+                    backgroundColor: `${category.color || '#3B82F6'}20`, 
+                    color: category.color || '#3B82F6' 
+                  }}
+                >
+                  {category.icon || '💬'}
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium text-sm truncate">
+                      {category.name}
+                    </h4>
+                    <Badge variant="secondary" className="text-xs">
+                      {category.topic_count || 0}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+        
+        {categories.length > 5 && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full"
+            onClick={() => navigate('/comunidade')}
+          >
+            Ver todas as categorias
+          </Button>
+        )}
+      </div>
     );
   }
 

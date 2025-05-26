@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Search, Plus, TrendingUp, Clock, CheckCircle, MessageSquare } from 'lucide-react';
 import { useForumCategories } from '@/hooks/community/useForumCategories';
 import { useForumTopics } from '@/hooks/community/useForumTopics';
@@ -75,9 +74,9 @@ export const ForumSection = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
         {/* Lista de tópicos */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="xl:col-span-3 space-y-6">
           <div>
             <h2 className="text-xl font-semibold mb-4">Discussões Recentes</h2>
             
@@ -87,10 +86,10 @@ export const ForumSection = () => {
                   <Card key={i} className="animate-pulse">
                     <CardContent className="p-4">
                       <div className="flex gap-3">
-                        <div className="h-10 w-10 bg-neutral-800 rounded-full"></div>
+                        <div className="h-10 w-10 bg-muted rounded-full"></div>
                         <div className="flex-1 space-y-2">
-                          <div className="h-5 bg-neutral-800 rounded w-3/4"></div>
-                          <div className="h-4 bg-neutral-800 rounded w-1/2"></div>
+                          <div className="h-5 bg-muted rounded w-3/4"></div>
+                          <div className="h-4 bg-muted rounded w-1/2"></div>
                         </div>
                       </div>
                     </CardContent>
@@ -162,10 +161,10 @@ export const ForumSection = () => {
         </div>
 
         {/* Sidebar com categorias */}
-        <div className="space-y-6">
+        <div className="xl:col-span-1 space-y-6">
           <div>
             <h3 className="text-lg font-semibold mb-4">Categorias</h3>
-            <CategoryList onCategorySelect={(slug) => window.location.href = `/comunidade/categoria/${slug}`} />
+            <CategoryList compact onCategorySelect={(slug) => window.location.href = `/comunidade/categoria/${slug}`} />
           </div>
 
           {/* Estatísticas rápidas */}
