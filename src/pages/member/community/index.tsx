@@ -1,22 +1,22 @@
 
+import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import CommunityPage from './CommunityPage';
-import TopicView from './TopicView';
-import NewTopic from './NewTopic';
-import Category from './Category';
-import CommunityMembers from './CommunityMembers';
+import ForumPage from './ForumPage';
+import TopicDetailsPage from './TopicDetailsPage';
+import MembersPage from './MembersPage';
 import ConnectionsPage from './ConnectionsPage';
+import MessagesPage from './MessagesPage';
+import MemberDetailsPage from './MemberDetailsPage';
 
 const CommunityPages = () => {
   return (
     <Routes>
-      <Route index element={<CommunityPage />} />
-      <Route path="topico/:id" element={<TopicView />} />
-      <Route path="novo-topico" element={<NewTopic />} />
-      <Route path="novo-topico/:categorySlug" element={<NewTopic />} />
-      <Route path="categoria/:categorySlug" element={<Category />} />
-      <Route path="membros" element={<CommunityMembers />} />
+      <Route index element={<ForumPage />} />
+      <Route path="topico/:id" element={<TopicDetailsPage />} />
+      <Route path="membros" element={<MembersPage />} />
+      <Route path="membro/:id" element={<MemberDetailsPage />} />
       <Route path="conexoes" element={<ConnectionsPage />} />
+      <Route path="mensagens" element={<MessagesPage />} />
     </Routes>
   );
 };

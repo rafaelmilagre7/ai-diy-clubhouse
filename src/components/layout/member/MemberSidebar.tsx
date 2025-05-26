@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ConnectionNotificationsDropdown } from '@/components/community/notifications/ConnectionNotificationsDropdown';
+import { ConnectionNotificationsDropdown, ForumNotificationsDropdown } from '@/components/community/notifications/ConnectionNotificationsDropdown';
 import { 
   LayoutDashboard, 
   BookOpen, 
@@ -107,6 +106,11 @@ export const MemberSidebar: React.FC<MemberSidebarProps> = ({
       name: 'Conexões',
       href: '/comunidade/conexoes',
       icon: UserPlus
+    },
+    {
+      name: 'Mensagens',
+      href: '/comunidade/mensagens',
+      icon: MessageSquare
     }
   ];
 
@@ -146,7 +150,12 @@ export const MemberSidebar: React.FC<MemberSidebarProps> = ({
           )}
           
           <div className="flex items-center space-x-2">
-            {sidebarOpen && <ConnectionNotificationsDropdown />}
+            {sidebarOpen && (
+              <>
+                <ConnectionNotificationsDropdown />
+                <ForumNotificationsDropdown />
+              </>
+            )}
             <Button
               variant="ghost"
               size="sm"

@@ -2,11 +2,22 @@
 import React from 'react';
 import { ConnectionCard } from './ConnectionCard';
 import { useConnectionsManagement } from '@/hooks/community/useConnectionsManagement';
+import { useDirectMessages } from '@/hooks/community/useDirectMessages';
 import { Card, CardContent } from '@/components/ui/card';
 import { Users } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/auth';
 
 export const ConnectionsTabContent = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const { connections, removeConnection, isLoading } = useConnectionsManagement();
+  const { sendMessage } = useDirectMessages();
+
+  const handleStartConversation = (memberId: string) => {
+    // Redirecionar para a página de mensagens
+    navigate('/comunidade/mensagens');
+  };
 
   if (isLoading) {
     return (
@@ -46,7 +57,6 @@ export const ConnectionsTabContent = () => {
     <div className="space-y-4">
       {connections.map((connection) => {
         // Determinar qual perfil mostrar (o outro usuário na conexão)
-        const { data: { user } } = { data: { user: { id: 'current-user' } } }; // Placeholder
         const member = connection.requester_id === user?.id ? connection.recipient : connection.requester;
         
         return (
@@ -60,6 +70,7 @@ export const ConnectionsTabContent = () => {
               current_position: member.current_position
             }}
             onRemoveConnection={() => removeConnection(connection.id)}
+            onStartConversation={handleStartConversation}
           />
         );
       })}
