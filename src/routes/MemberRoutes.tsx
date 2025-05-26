@@ -64,7 +64,9 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/suggestions/:id", SuggestionDetails),
   createProtectedRoute("/suggestions/new", NewSuggestion),
   
-  // Comunidade Routes - Com alta prioridade e estrutura simplificada
-  createProtectedRoute("/comunidade", CommunityPages),
-  createProtectedRoute("/comunidade/*", CommunityPages)
+  // Comunidade Routes - Configuração corrigida
+  {
+    path: "/comunidade/*",
+    element: <ProtectedRoutes><MemberLayout><CommunityPages /></MemberLayout></ProtectedRoutes>
+  }
 ];

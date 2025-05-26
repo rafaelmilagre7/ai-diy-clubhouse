@@ -25,7 +25,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Map,
-  GraduationCap
+  GraduationCap,
+  MessageSquareMore
 } from 'lucide-react';
 
 interface MemberSidebarProps {
@@ -113,7 +114,7 @@ export const MemberSidebar: React.FC<MemberSidebarProps> = ({
     {
       name: 'Mensagens',
       href: '/comunidade/mensagens',
-      icon: MessageSquare
+      icon: MessageSquareMore
     }
   ];
 
@@ -121,7 +122,7 @@ export const MemberSidebar: React.FC<MemberSidebarProps> = ({
     if (exact) {
       return location.pathname === path;
     }
-    return location.pathname.startsWith(path) && location.pathname !== '/comunidade';
+    return location.pathname.startsWith(path);
   };
 
   return (
