@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { UserPlus, MessageSquare, CheckCircle, Clock } from 'lucide-react';
+import { UserPlus, MessageSquare, CheckCircle, Clock, Building, MapPin } from 'lucide-react';
 import { getInitials } from '@/utils/user';
 import { Profile } from '@/types/forumTypes';
 import { useNetworkConnections } from '@/hooks/community/useNetworkConnections';
@@ -23,6 +23,13 @@ export const MemberCard: React.FC<MemberCardProps> = ({ member }) => {
     sendConnectionRequest, 
     processingRequest 
   } = useNetworkConnections();
+
+  console.log('MemberCard renderizando membro:', { 
+    id: member.id, 
+    name: member.name,
+    company: member.company_name,
+    position: member.current_position 
+  });
 
   // Verificar status da conexão
   const isConnected = connectedMembers.some(conn => conn.id === member.id);
@@ -88,6 +95,13 @@ export const MemberCard: React.FC<MemberCardProps> = ({ member }) => {
     );
   };
 
+  // Funções para lidar com dados vazios
+  const displayName = member.name?.trim() || 'Membro da Comunidade';
+  const displayPosition = member.current_position?.trim() || 'Profissional';
+  const displayCompany = member.company_name?.trim();
+  const displayIndustry = member.industry?.trim();
+  const displayBio = member.professional_bio?.trim();
+
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardContent className="p-6">
@@ -95,41 +109,56 @@ export const MemberCard: React.FC<MemberCardProps> = ({ member }) => {
           {/* Avatar e informações básicas */}
           <div className="text-center">
             <Avatar className="h-16 w-16 mx-auto mb-3">
-              <AvatarImage src={member.avatar_url || undefined} alt={member.name || "Usuário"} />
-              <AvatarFallback className="text-lg">
+              <AvatarImage src={member.avatar_url || undefined} alt={displayName} />
+              <AvatarFallback className="text-lg bg-primary/10">
                 {getInitials(member.name)}
               </AvatarFallback>
             </Avatar>
             
-            <h3 className="font-semibold text-lg">{member.name || 'Usuário'}</h3>
+            <h3 className="font-semibold text-lg">{displayName}</h3>
             
-            {member.current_position && (
-              <p className="text-sm text-muted-foreground">{member.current_position}</p>
-            )}
-            
-            {member.company_name && (
-              <p className="text-sm text-muted-foreground font-medium">{member.company_name}</p>
-            )}
+            <div className="space-y-1 mt-2">
+              <p className="text-sm text-muted-foreground">{displayPosition}</p>
+              
+              {displayCompany && (
+                <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
+                  <Building className="h-3 w-3" />
+                  <span>{displayCompany}</span>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Badges */}
+          {/* Badges e informações adicionais */}
           <div className="flex flex-wrap gap-2 justify-center">
-            {member.industry && (
+            {displayIndustry && (
               <Badge variant="secondary" className="text-xs">
-                {member.industry}
+                {displayIndustry}
               </Badge>
             )}
+            
             {member.available_for_networking && (
               <Badge variant="outline" className="text-xs text-green-600 border-green-600">
                 Disponível para networking
               </Badge>
             )}
+            
+            {/* Badge para perfis incompletos */}
+            {(!displayCompany || !displayIndustry) && (
+              <Badge variant="outline" className="text-xs text-amber-600 border-amber-600">
+                Perfil em construção
+              </Badge>
+            )}
           </div>
 
           {/* Bio profissional */}
-          {member.professional_bio && (
+          {displayBio ? (
             <p className="text-sm text-muted-foreground text-center line-clamp-2">
-              {member.professional_bio}
+              {displayBio}
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground/60 text-center italic">
+              Biografia profissional não informada
             </p>
           )}
 

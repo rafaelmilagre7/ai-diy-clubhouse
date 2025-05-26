@@ -53,15 +53,32 @@ export const CommunityNavigation = () => {
   ];
 
   const isActive = (item: typeof navigationItems[0]) => {
+    console.log('CommunityNavigation: Verificando ativação', { 
+      itemPath: item.path, 
+      currentPath: location.pathname, 
+      exact: item.exact,
+      external: item.external 
+    });
+
     if (item.external) return false;
+    
     if (item.exact) {
       return location.pathname === item.path;
     }
+    
+    // Para rotas específicas da comunidade, usar comparação exata
     return location.pathname === item.path;
   };
 
   const handleNavigation = (item: typeof navigationItems[0]) => {
     console.log('CommunityNavigation: Navegando para', item.path);
+    
+    if (item.external) {
+      // Para rotas externas, ainda navegar normalmente
+      navigate(item.path);
+      return;
+    }
+    
     navigate(item.path);
   };
 
@@ -69,21 +86,26 @@ export const CommunityNavigation = () => {
     <div className="border-b">
       <div className="flex items-center justify-between">
         <div className="flex space-x-1 overflow-x-auto pb-px">
-          {navigationItems.map((item) => (
-            <Button
-              key={item.id}
-              variant="ghost"
-              size="sm"
-              onClick={() => handleNavigation(item)}
-              className={cn(
-                "flex items-center gap-2 whitespace-nowrap border-b-2 border-transparent rounded-none",
-                isActive(item) && "border-primary text-primary bg-primary/5"
-              )}
-            >
-              <item.icon className="h-4 w-4" />
-              <span className="hidden sm:inline">{item.label}</span>
-            </Button>
-          ))}
+          {navigationItems.map((item) => {
+            const active = isActive(item);
+            
+            return (
+              <Button
+                key={item.id}
+                variant="ghost"
+                size="sm"
+                onClick={() => handleNavigation(item)}
+                className={cn(
+                  "flex items-center gap-2 whitespace-nowrap border-b-2 border-transparent rounded-none px-4 py-3",
+                  active && "border-primary text-primary bg-primary/5",
+                  !active && "hover:bg-muted/50"
+                )}
+              >
+                <item.icon className="h-4 w-4" />
+                <span className="hidden sm:inline">{item.label}</span>
+              </Button>
+            );
+          })}
         </div>
         
         <div className="flex items-center space-x-2">
