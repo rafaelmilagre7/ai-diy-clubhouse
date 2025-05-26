@@ -83,7 +83,7 @@ export const LoginForm = () => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email" className="text-white">Email</Label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
             <Mail className="h-5 w-5 text-gray-400" />
@@ -100,7 +100,7 @@ export const LoginForm = () => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Senha</Label>
+        <Label htmlFor="password" className="text-white">Senha</Label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
             <Lock className="h-5 w-5 text-gray-400" />
