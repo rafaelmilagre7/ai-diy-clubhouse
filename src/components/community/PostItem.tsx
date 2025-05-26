@@ -15,6 +15,7 @@ import { Post } from '@/types/forumTypes';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAuth } from '@/contexts/auth';
+import { usePostInteractions } from '@/hooks/usePostInteractions';
 
 interface PostItemProps {
   post: Post;
@@ -23,6 +24,7 @@ interface PostItemProps {
   onMarkAsSolution: () => void;
   isMarkingSolved: boolean;
   topicId: string;
+  onPostDeleted?: () => void;
 }
 
 export const PostItem: React.FC<PostItemProps> = ({
@@ -31,10 +33,18 @@ export const PostItem: React.FC<PostItemProps> = ({
   isAuthor,
   onMarkAsSolution,
   isMarkingSolved,
-  topicId
+  topicId,
+  onPostDeleted
 }) => {
   const { user } = useAuth();
   const [isExpanded, setIsExpanded] = useState(false);
+
+  const { handleDeletePost, isDeleting } = usePostInteractions({
+    postId: post.id,
+    topicId,
+    authorId: post.user_id,
+    onPostDeleted
+  });
 
   const getInitials = (name: string) => {
     return name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
@@ -115,9 +125,13 @@ export const PostItem: React.FC<PostItemProps> = ({
                       </DropdownMenuItem>
                     )}
                     {isPostAuthor && (
-                      <DropdownMenuItem className="text-red-600">
+                      <DropdownMenuItem 
+                        onClick={handleDeletePost}
+                        disabled={isDeleting}
+                        className="text-red-600"
+                      >
                         <Trash2 className="h-4 w-4 mr-2" />
-                        Excluir
+                        {isDeleting ? 'Excluindo...' : 'Excluir'}
                       </DropdownMenuItem>
                     )}
                   </DropdownMenuContent>

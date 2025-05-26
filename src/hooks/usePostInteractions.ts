@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
 import { deleteForumPost } from "@/lib/supabase/rpc";
 import { useAuth } from "@/contexts/auth";
 
@@ -32,7 +31,7 @@ export const usePostInteractions = ({
     try {
       setIsDeleting(true);
       
-      const result = await deleteForumPost(postId);
+      const result = await deleteForumPost(postId, topicId);
       
       if (!result.success) {
         throw new Error(result.error || "Erro ao excluir post");
