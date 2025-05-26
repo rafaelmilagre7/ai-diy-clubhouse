@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -28,7 +27,9 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     console.log("MemberLayout renderizado para rota:", location.pathname, {
       profile: !!profile,
-      sidebarOpen
+      sidebarOpen,
+      profileAvatar: profile?.avatar_url,
+      profileName: profile?.name
     });
   }, [location.pathname, profile, sidebarOpen]);
 
@@ -50,7 +51,7 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
     localStorage.setItem("sidebarOpen", String(sidebarOpen));
   }, [sidebarOpen]);
 
-  // Função para obter iniciais do nome do usuário
+  // Função melhorada para obter iniciais do nome do usuário
   const getInitials = (name: string | null) => {
     if (!name) return "U";
     return name
@@ -98,6 +99,19 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // Verificar se o avatar é válido
+  const isValidAvatarUrl = (url: string | undefined | null): boolean => {
+    if (!url) return false;
+    try {
+      new URL(url);
+      return url.startsWith('http://') || url.startsWith('https://');
+    } catch {
+      return false;
+    }
+  };
+
+  const validAvatarUrl = isValidAvatarUrl(profile?.avatar_url) ? profile?.avatar_url : undefined;
+
   return (
     <div className="flex min-h-screen bg-[#0F111A] overflow-hidden">
       {/* Overlay para dispositivos móveis */}
@@ -114,7 +128,7 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
         setSidebarOpen={setSidebarOpen}
         profileName={profile?.name || null}
         profileEmail={profile?.email || null}
-        profileAvatar={profile?.avatar_url}
+        profileAvatar={validAvatarUrl}
         getInitials={getInitials}
         signOut={handleSignOut}
       />

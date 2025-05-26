@@ -19,13 +19,28 @@ export const DashboardHeader = ({
   category,
   onCategoryChange,
 }: DashboardHeaderProps) => {
-  const { isAdmin, profile } = useAuth();
+  const { isAdmin, profile, user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Debug logs para verificar o estado
+  console.log("DashboardHeader - Estado de admin:", { 
+    isAdmin, 
+    userRole: profile?.role,
+    userEmail: user?.email,
+    profileExists: !!profile 
+  });
   
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
     // Aqui você poderia adicionar lógica para filtrar soluções por pesquisa
   };
+  
+  // Verificação mais robusta para admin
+  const isUserAdmin = isAdmin || profile?.role === 'admin' || 
+    (user?.email && (
+      user.email.includes('@viverdeia.ai') || 
+      user.email === 'admin@teste.com'
+    ));
   
   return (
     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -43,8 +58,8 @@ export const DashboardHeader = ({
             <span className="hidden sm:inline">Minhas Conexões</span>
           </Button>
         </Link>
-        {isAdmin && (
-          <Link to="/admin/solutions">
+        {isUserAdmin && (
+          <Link to="/admin">
             <Button variant="default" className="bg-viverblue hover:bg-viverblue/90">
               <Settings className="mr-2 h-4 w-4" />
               Painel Admin

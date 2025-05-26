@@ -29,11 +29,24 @@ export const ProfileHeader = ({
   completionRate,
   avatarInitials
 }: ProfileHeaderProps) => {
-  // Função para validar a URL da imagem
+  // Função melhorada para validar a URL da imagem
   const isValidImageUrl = (url: string | undefined | null): boolean => {
     if (!url) return false;
-    return url.startsWith('http://') || url.startsWith('https://');
+    // Verificar se é uma URL válida
+    try {
+      new URL(url);
+      return url.startsWith('http://') || url.startsWith('https://');
+    } catch {
+      return false;
+    }
   };
+
+  // Debug para verificar o avatar
+  console.log("ProfileHeader - Avatar info:", { 
+    profileAvatar, 
+    isValid: isValidImageUrl(profileAvatar),
+    avatarInitials 
+  });
 
   // Verificar se a URL da imagem é válida
   const validAvatarUrl = isValidImageUrl(profileAvatar) ? profileAvatar : undefined;
@@ -43,8 +56,19 @@ export const ProfileHeader = ({
       <CardContent className="pt-6">
         <div className="flex flex-col items-center text-center">
           <Avatar className="h-24 w-24 border-2 border-viverblue/20 shadow-md">
-            <AvatarImage src={validAvatarUrl} />
-            <AvatarFallback className="text-2xl bg-gradient-viver text-white">{avatarInitials}</AvatarFallback>
+            {validAvatarUrl ? (
+              <AvatarImage 
+                src={validAvatarUrl} 
+                alt={profileName || "Avatar do usuário"}
+                onError={(e) => {
+                  console.log("Erro ao carregar avatar:", validAvatarUrl);
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            ) : null}
+            <AvatarFallback className="text-2xl bg-gradient-viver text-white font-semibold">
+              {avatarInitials}
+            </AvatarFallback>
           </Avatar>
           <h2 className="mt-4 text-xl font-semibold text-high-contrast">{profileName || "Usuário"}</h2>
           <p className="text-sm text-medium-contrast mt-1">{profileEmail || ""}</p>
