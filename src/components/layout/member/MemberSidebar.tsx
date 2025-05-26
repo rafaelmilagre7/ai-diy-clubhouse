@@ -5,8 +5,6 @@ import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ConnectionNotificationsDropdown } from '@/components/community/notifications/ConnectionNotificationsDropdown';
-import { ForumNotificationsDropdown } from '@/components/community/notifications/ForumNotificationsDropdown';
 import { MessageNotificationsDropdown } from '@/components/community/notifications/MessageNotificationsDropdown';
 import { 
   LayoutDashboard, 
@@ -26,7 +24,8 @@ import {
   ChevronRight,
   Map,
   GraduationCap,
-  MessageSquareMore
+  MessageSquareMore,
+  ShieldCheck
 } from 'lucide-react';
 
 interface MemberSidebarProps {
@@ -88,6 +87,11 @@ export const MemberSidebar: React.FC<MemberSidebarProps> = ({
       icon: Gift
     },
     {
+      name: 'Sugestões',
+      href: '/suggestions',
+      icon: Lightbulb
+    },
+    {
       name: 'Eventos',
       href: '/events',
       icon: Calendar
@@ -142,14 +146,14 @@ export const MemberSidebar: React.FC<MemberSidebarProps> = ({
         sidebarOpen ? "w-64" : "w-16"
       )}>
         
-        {/* Header da sidebar com logo restaurada */}
+        {/* Header da sidebar com logo corrigida */}
         <div className="flex h-16 items-center justify-between px-4 border-b border-[#2A2E42]">
           {sidebarOpen ? (
-            <div className="flex items-center">
+            <div className="flex items-center min-w-0">
               <img
                 src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
                 alt="VIVER DE IA Club"
-                className="h-8 w-auto"
+                className="h-8 w-auto max-w-[140px] object-contain"
               />
             </div>
           ) : (
@@ -157,24 +161,21 @@ export const MemberSidebar: React.FC<MemberSidebarProps> = ({
               <img
                 src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
                 alt="VIVER DE IA Club"
-                className="h-6 w-auto"
+                className="h-6 w-6 object-contain rounded"
               />
             </div>
           )}
           
+          {/* Apenas uma seção de notificações */}
           <div className="flex items-center space-x-2">
             {sidebarOpen && (
-              <>
-                <MessageNotificationsDropdown />
-                <ConnectionNotificationsDropdown />
-                <ForumNotificationsDropdown />
-              </>
+              <MessageNotificationsDropdown />
             )}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="text-gray-400 hover:text-white hover:bg-[#2A2E42]"
+              className="text-gray-400 hover:text-white hover:bg-[#2A2E42] shrink-0"
             >
               {sidebarOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
             </Button>
@@ -191,14 +192,15 @@ export const MemberSidebar: React.FC<MemberSidebarProps> = ({
                 to={item.href}
                 className={cn(
                   "flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                  !sidebarOpen && "justify-center",
                   isActive(item.href, item.exact)
                     ? "bg-primary text-primary-foreground"
                     : "text-gray-300 hover:bg-[#2A2E42] hover:text-white"
                 )}
                 title={!sidebarOpen ? item.name : undefined}
               >
-                <item.icon className={cn("h-4 w-4", sidebarOpen ? "mr-3" : "")} />
-                {sidebarOpen && <span>{item.name}</span>}
+                <item.icon className={cn("h-4 w-4 shrink-0", sidebarOpen ? "mr-3" : "")} />
+                {sidebarOpen && <span className="truncate">{item.name}</span>}
               </Link>
             ))}
 
@@ -220,6 +222,7 @@ export const MemberSidebar: React.FC<MemberSidebarProps> = ({
                 to={item.href}
                 className={cn(
                   "flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                  !sidebarOpen && "justify-center",
                   isActive(item.href, item.exact)
                     ? "bg-primary text-primary-foreground"
                     : "text-gray-300 hover:bg-[#2A2E42] hover:text-white"
@@ -227,8 +230,8 @@ export const MemberSidebar: React.FC<MemberSidebarProps> = ({
                 title={!sidebarOpen ? item.name : undefined}
                 onClick={() => console.log('Clicando em:', item.name, 'para:', item.href)}
               >
-                <item.icon className={cn("h-4 w-4", sidebarOpen ? "mr-3" : "")} />
-                {sidebarOpen && <span>{item.name}</span>}
+                <item.icon className={cn("h-4 w-4 shrink-0", sidebarOpen ? "mr-3" : "")} />
+                {sidebarOpen && <span className="truncate">{item.name}</span>}
               </Link>
             ))}
           </nav>
@@ -237,7 +240,7 @@ export const MemberSidebar: React.FC<MemberSidebarProps> = ({
         {/* Perfil do usuário */}
         <div className="border-t border-[#2A2E42] p-4">
           <div className="flex items-center space-x-3">
-            <Avatar className="h-8 w-8">
+            <Avatar className="h-8 w-8 shrink-0">
               <AvatarImage src={profileAvatar || undefined} />
               <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                 {getInitials(profileName)}
@@ -262,8 +265,8 @@ export const MemberSidebar: React.FC<MemberSidebarProps> = ({
                 to="/profile"
                 className="flex items-center rounded-lg px-2 py-1.5 text-sm text-gray-300 hover:bg-[#2A2E42] hover:text-white transition-colors"
               >
-                <User className="h-4 w-4 mr-2" />
-                Perfil
+                <User className="h-4 w-4 mr-2 shrink-0" />
+                <span className="truncate">Perfil</span>
               </Link>
               
               <Button
@@ -272,8 +275,8 @@ export const MemberSidebar: React.FC<MemberSidebarProps> = ({
                 onClick={signOut}
                 className="w-full justify-start text-gray-300 hover:bg-[#2A2E42] hover:text-white h-auto py-1.5 px-2"
               >
-                <LogOut className="h-4 w-4 mr-2" />
-                Sair
+                <LogOut className="h-4 w-4 mr-2 shrink-0" />
+                <span className="truncate">Sair</span>
               </Button>
             </div>
           )}

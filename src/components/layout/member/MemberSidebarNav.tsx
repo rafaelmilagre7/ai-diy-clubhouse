@@ -6,7 +6,6 @@ import {
   LayoutDashboard, 
   Lightbulb, 
   Settings, 
-  Trophy,
   Gift,
   MessageSquare,
   ShieldCheck,
@@ -71,7 +70,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
     {
       title: "Sugestões",
       href: "/suggestions",
-      icon: MessageSquare,
+      icon: Lightbulb,
     },
     {
       title: "Comunidade",
@@ -103,7 +102,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
               variant="ghost"
               className={cn(
                 "w-full justify-start gap-3 rounded-lg hover:bg-[#181A2A] text-neutral-400 dark:text-neutral-300",
-                !sidebarOpen && "justify-center",
+                !sidebarOpen && "justify-center px-2",
                 active && "hubla-active-nav",
                 item.highlight && "relative"
               )}
@@ -111,31 +110,34 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
             >
               <Link to={item.href}>
                 <item.icon className={cn(
-                  "h-4 w-4", 
+                  "h-4 w-4 shrink-0", 
                   active ? "text-viverblue" : "text-neutral-400"
                 )} />
                 {sidebarOpen && (
-                  <span>{item.title}</span>
+                  <span className="truncate">{item.title}</span>
                 )}
               </Link>
             </Button>
           );
         })}
 
+        {/* Painel Admin - Apenas para administradores */}
         {isAdmin && (
-          <Button
-            variant="outline"
-            className={cn(
-              "w-full justify-start gap-3 border-viverblue/30 text-viverblue hover:bg-[#181A2A] mt-4",
-              !sidebarOpen && "justify-center"
-            )}
-            asChild
-          >
-            <Link to="/admin">
-              <ShieldCheck className="h-4 w-4" />
-              {sidebarOpen && <span>Painel Admin</span>}
-            </Link>
-          </Button>
+          <div className="pt-2 border-t border-[#2A2E42] mt-4">
+            <Button
+              variant="outline"
+              className={cn(
+                "w-full justify-start gap-3 border-viverblue/30 text-viverblue hover:bg-[#181A2A]",
+                !sidebarOpen && "justify-center px-2"
+              )}
+              asChild
+            >
+              <Link to="/admin">
+                <ShieldCheck className="h-4 w-4 shrink-0" />
+                {sidebarOpen && <span className="truncate">Painel Admin</span>}
+              </Link>
+            </Button>
+          </div>
         )}
       </div>
     </div>

@@ -59,8 +59,9 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/learning/course/:id", CourseDetails),
   createProtectedRoute("/learning/course/:courseId/lesson/:lessonId", LessonView),
   
-  // Sugestões Routes
+  // Sugestões Routes - Restauradas
   createProtectedRoute("/suggestions", Suggestions),
+  createProtectedRoute("/sugestoes", Suggestions), // Rota alternativa em português
   createProtectedRoute("/suggestions/:id", SuggestionDetails),
   createProtectedRoute("/suggestions/new", NewSuggestion),
   
