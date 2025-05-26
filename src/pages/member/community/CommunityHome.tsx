@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -18,6 +17,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CreateTopicDialog } from "@/components/community/CreateTopicDialog";
+import { useReporting } from "@/hooks/community/useReporting";
+import { ReportModal } from "@/components/community/ReportModal";
 
 export default function CommunityHome() {
   const [activeTab, setActiveTab] = useState("todos");
@@ -53,8 +54,14 @@ export default function CommunityHome() {
     return categories && categories.length > 0 ? categories[0].id : "";
   };
 
+  const { 
+    isReportModalOpen, 
+    closeReportModal, 
+    submitReport 
+  } = useReporting();
+
   return (
-    <div className="container max-w-6xl py-8 px-4">
+    <div className="container mx-auto px-4 py-6 max-w-6xl">
       <ForumBreadcrumbs categorySlug={activeTab !== "todos" ? activeTab : undefined} />
       
       <ForumHeader 
@@ -171,6 +178,14 @@ export default function CommunityHome() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Report Modal */}
+      <ReportModal
+        open={isReportModalOpen}
+        onOpenChange={closeReportModal}
+        onSubmit={submitReport}
+        targetType="topic"
+      />
     </div>
   );
 }

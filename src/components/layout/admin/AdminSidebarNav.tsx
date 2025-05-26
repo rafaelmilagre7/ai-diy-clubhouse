@@ -74,6 +74,15 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
     },
   ];
 
+  const communityItems = [
+    {
+      title: "Moderação",
+      href: "/admin/community",
+      icon: Shield,
+      permission: "community.moderate"
+    }
+  ];
+
   const formacaoItems = [
     {
       title: "LMS Dashboard",
@@ -155,6 +164,17 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
     <div className="space-y-4 py-4">
       <div className="px-3 space-y-1">
         {menuItems.map(item => renderMenuItem(item))}
+
+        {/* Nova seção para Comunidade */}
+        <Separator className="my-4" />
+        
+        {sidebarOpen && (
+          <div className="mb-2 px-2 text-xs font-semibold text-gray-500">
+            COMUNIDADE
+          </div>
+        )}
+        
+        {communityItems.map(item => renderMenuItem(item))}
 
         <Separator className="my-4" />
         

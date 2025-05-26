@@ -149,6 +149,114 @@ export type Database = {
           },
         ]
       }
+      community_reports: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          post_id: string | null
+          reason: string
+          report_type: string
+          reported_user_id: string | null
+          reporter_id: string
+          resolution_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          topic_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          post_id?: string | null
+          reason: string
+          report_type: string
+          reported_user_id?: string | null
+          reporter_id: string
+          resolution_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          topic_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          post_id?: string | null
+          reason?: string
+          report_type?: string
+          reported_user_id?: string | null
+          reporter_id?: string
+          resolution_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          topic_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_reports_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "forum_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_reports_reported_user_id_fkey"
+            columns: ["reported_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_reports_reported_user_id_fkey"
+            columns: ["reported_user_id"]
+            isOneToOne: false
+            referencedRelation: "users_with_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "users_with_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_reports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_reports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "users_with_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_reports_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "forum_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       connection_notifications: {
         Row: {
           created_at: string
@@ -1568,6 +1676,145 @@ export type Database = {
           {
             foreignKeyName: "member_connections_requester_id_fkey"
             columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "users_with_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      moderation_actions: {
+        Row: {
+          action_type: string
+          created_at: string
+          details: Json | null
+          duration_hours: number | null
+          expires_at: string | null
+          id: string
+          moderator_id: string
+          post_id: string | null
+          reason: string
+          target_user_id: string | null
+          topic_id: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          details?: Json | null
+          duration_hours?: number | null
+          expires_at?: string | null
+          id?: string
+          moderator_id: string
+          post_id?: string | null
+          reason: string
+          target_user_id?: string | null
+          topic_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          details?: Json | null
+          duration_hours?: number | null
+          expires_at?: string | null
+          id?: string
+          moderator_id?: string
+          post_id?: string | null
+          reason?: string
+          target_user_id?: string | null
+          topic_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "moderation_actions_moderator_id_fkey"
+            columns: ["moderator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_actions_moderator_id_fkey"
+            columns: ["moderator_id"]
+            isOneToOne: false
+            referencedRelation: "users_with_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_actions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "forum_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_actions_target_user_id_fkey"
+            columns: ["target_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_actions_target_user_id_fkey"
+            columns: ["target_user_id"]
+            isOneToOne: false
+            referencedRelation: "users_with_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_actions_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "forum_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      moderation_settings: {
+        Row: {
+          auto_moderation_enabled: boolean
+          default_suspension_hours: number
+          id: string
+          max_warnings_before_suspension: number
+          new_user_moderation: boolean
+          profanity_filter_enabled: boolean
+          settings: Json | null
+          spam_detection_enabled: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          auto_moderation_enabled?: boolean
+          default_suspension_hours?: number
+          id?: string
+          max_warnings_before_suspension?: number
+          new_user_moderation?: boolean
+          profanity_filter_enabled?: boolean
+          settings?: Json | null
+          spam_detection_enabled?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          auto_moderation_enabled?: boolean
+          default_suspension_hours?: number
+          id?: string
+          max_warnings_before_suspension?: number
+          new_user_moderation?: boolean
+          profanity_filter_enabled?: boolean
+          settings?: Json | null
+          spam_detection_enabled?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "moderation_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_settings_updated_by_fkey"
+            columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "users_with_roles"
             referencedColumns: ["id"]
@@ -3950,6 +4197,94 @@ export type Database = {
             columns: ["solution_id"]
             isOneToOne: false
             referencedRelation: "solutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_moderation_status: {
+        Row: {
+          ban_reason: string | null
+          banned_by: string | null
+          created_at: string
+          id: string
+          is_banned: boolean
+          is_suspended: boolean
+          suspended_by: string | null
+          suspended_until: string | null
+          suspension_reason: string | null
+          updated_at: string
+          user_id: string
+          warning_count: number
+        }
+        Insert: {
+          ban_reason?: string | null
+          banned_by?: string | null
+          created_at?: string
+          id?: string
+          is_banned?: boolean
+          is_suspended?: boolean
+          suspended_by?: string | null
+          suspended_until?: string | null
+          suspension_reason?: string | null
+          updated_at?: string
+          user_id: string
+          warning_count?: number
+        }
+        Update: {
+          ban_reason?: string | null
+          banned_by?: string | null
+          created_at?: string
+          id?: string
+          is_banned?: boolean
+          is_suspended?: boolean
+          suspended_by?: string | null
+          suspended_until?: string | null
+          suspension_reason?: string | null
+          updated_at?: string
+          user_id?: string
+          warning_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_moderation_status_banned_by_fkey"
+            columns: ["banned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_moderation_status_banned_by_fkey"
+            columns: ["banned_by"]
+            isOneToOne: false
+            referencedRelation: "users_with_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_moderation_status_suspended_by_fkey"
+            columns: ["suspended_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_moderation_status_suspended_by_fkey"
+            columns: ["suspended_by"]
+            isOneToOne: false
+            referencedRelation: "users_with_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_moderation_status_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_moderation_status_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users_with_roles"
             referencedColumns: ["id"]
           },
         ]

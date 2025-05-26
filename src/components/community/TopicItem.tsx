@@ -1,74 +1,124 @@
 
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { MessageSquare } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Pin, Lock, CheckCircle, MessageCircle, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Topic } from "@/types/forumTypes";
-import { SolutionBadge } from "./SolutionBadge";
-import { getInitials, getAvatarUrl } from "@/utils/user";
+import { ModerationActions } from "./ModerationActions";
+import { useReporting } from "@/hooks/community/useReporting";
 
 interface TopicItemProps {
   topic: Topic;
-  isPinned?: boolean;
 }
 
-export const TopicItem = ({ topic, isPinned = false }: TopicItemProps) => {
-  // Tratar casos onde last_activity_at pode estar ausente
-  const lastActivityDate = topic.last_activity_at 
-    ? new Date(topic.last_activity_at) 
-    : new Date(topic.created_at);
+export const TopicItem = ({ topic }: TopicItemProps) => {
+  const { openReportModal } = useReporting();
+  
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
-  const avatarUrl = topic.profiles?.avatar_url 
-    ? getAvatarUrl(topic.profiles.avatar_url) 
-    : undefined;
-    
-  const userName = topic.profiles?.name || "Usuário";
-  const userInitials = getInitials(userName);
+  const getInitials = (name: string) => {
+    return name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
+  };
 
   return (
-    <Card className="mb-3 p-4 hover:bg-accent/50 transition-all">
-      <Link to={`/comunidade/topico/${topic.id}`} className="block">
-        <div className="flex items-start gap-3">
-          <Avatar>
-            <AvatarImage src={avatarUrl} />
-            <AvatarFallback>{userInitials}</AvatarFallback>
-          </Avatar>
+    <div className="flex flex-col sm:flex-row gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+      {/* Avatar do Autor */}
+      <div className="flex-shrink-0">
+        <Avatar className="h-10 w-10">
+          <AvatarImage src={topic.profiles?.avatar_url || ''} />
+          <AvatarFallback className="bg-viverblue text-white text-sm">
+            {getInitials(topic.profiles?.name || 'Usuário')}
+          </AvatarFallback>
+        </Avatar>
+      </div>
+
+      {/* Conteúdo Principal */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between gap-2">
           <div className="flex-1">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <h3 className="text-lg font-medium flex items-center flex-wrap">
-                {isPinned && <span className="text-primary mr-1">[Fixo] </span>}
-                {topic.is_locked && <span className="text-muted-foreground mr-1">[Trancado] </span>}
+            {/* Título com badges */}
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <Link
+                to={`/comunidade/topico/${topic.id}`}
+                className="font-semibold text-foreground hover:text-viverblue transition-colors line-clamp-2 flex-1"
+              >
                 {topic.title}
-                {topic.is_solved && <SolutionBadge isSolved={topic.is_solved} className="ml-2" />}
-              </h3>
-              <div className="flex gap-4 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <MessageSquare className="h-3 w-3" />
-                  {topic.reply_count}
-                </span>
-                <span>{topic.view_count} visualizações</span>
-              </div>
+              </Link>
+              
+              {topic.is_pinned && (
+                <Badge variant="secondary" className="gap-1 bg-blue-100 text-blue-700">
+                  <Pin className="h-3 w-3" />
+                  Fixado
+                </Badge>
+              )}
+              
+              {topic.is_locked && (
+                <Badge variant="secondary" className="gap-1 bg-red-100 text-red-700">
+                  <Lock className="h-3 w-3" />
+                  Travado
+                </Badge>
+              )}
+              
+              {topic.is_solved && (
+                <Badge variant="secondary" className="gap-1 bg-green-100 text-green-700">
+                  <CheckCircle className="h-3 w-3" />
+                  Resolvido
+                </Badge>
+              )}
             </div>
-            <div className="flex flex-wrap gap-2 mt-1 text-sm text-muted-foreground">
-              <span>Por {userName}</span>
-              <span>•</span>
-              <span>
-                {format(lastActivityDate, "d 'de' MMMM 'às' HH:mm", {
-                  locale: ptBR,
-                })}
-              </span>
+
+            {/* Meta informações */}
+            <div className="flex items-center text-sm text-muted-foreground gap-4 flex-wrap">
+              <span>Por {topic.profiles?.name || 'Usuário'}</span>
+              <span>{formatDate(topic.created_at)}</span>
               {topic.category && (
-                <>
-                  <span>•</span>
-                  <span>{topic.category.name}</span>
-                </>
+                <Badge variant="outline" className="text-xs">
+                  {topic.category.name}
+                </Badge>
               )}
             </div>
           </div>
+
+          {/* Ações de Moderação */}
+          <div className="flex-shrink-0">
+            <ModerationActions
+              type="topic"
+              itemId={topic.id}
+              currentState={{
+                isPinned: topic.is_pinned,
+                isLocked: topic.is_locked,
+                isHidden: false // Topics não têm campo is_hidden diretamente
+              }}
+              onReport={() => openReportModal('topic', topic.id, topic.user_id)}
+            />
+          </div>
         </div>
-      </Link>
-    </Card>
+
+        {/* Estatísticas */}
+        <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
+          <div className="flex items-center gap-1">
+            <MessageCircle className="h-4 w-4" />
+            <span>{topic.reply_count || 0} respostas</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Eye className="h-4 w-4" />
+            <span>{topic.view_count || 0} visualizações</span>
+          </div>
+          {topic.last_activity_at && (
+            <span className="text-xs">
+              Última atividade: {formatDate(topic.last_activity_at)}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
