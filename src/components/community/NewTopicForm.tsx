@@ -7,8 +7,8 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Loader2, Eye, Edit } from "lucide-react";
-import { TopicEditor } from "./TopicEditor";
+import { AlertCircle, Loader2 } from "lucide-react";
+import { VisualTopicEditor } from "./VisualTopicEditor";
 import {
   Select,
   SelectContent,
@@ -17,7 +17,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useForumCategories } from "@/hooks/community/useForumCategories";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface NewTopicFormProps {
   categoryId?: string;
@@ -30,7 +29,6 @@ export const NewTopicForm = ({ categoryId, categorySlug }: NewTopicFormProps) =>
   const [selectedCategoryId, setSelectedCategoryId] = useState(categoryId || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string>("editor");
   const { user } = useAuth();
   const navigate = useNavigate();
   const { categories, isLoading: loadingCategories } = useForumCategories();
@@ -173,41 +171,11 @@ export const NewTopicForm = ({ categoryId, categorySlug }: NewTopicFormProps) =>
       
       <div className="space-y-2">
         <label className="block text-sm font-medium">Conteúdo</label>
-        <div className="border rounded-md overflow-hidden">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <div className="border-b px-3">
-              <TabsList className="h-9">
-                <TabsTrigger value="editor" className="text-xs flex items-center gap-1">
-                  <Edit className="h-3 w-3" />
-                  Editor
-                </TabsTrigger>
-                <TabsTrigger value="preview" className="text-xs flex items-center gap-1">
-                  <Eye className="h-3 w-3" />
-                  Prévia
-                </TabsTrigger>
-              </TabsList>
-            </div>
-            <TabsContent value="editor" className="mt-0 p-0">
-              <TopicEditor 
-                content={content} 
-                onChange={setContent} 
-                placeholder="Descreva seu tópico em detalhes..." 
-              />
-            </TabsContent>
-            <TabsContent value="preview" className="mt-0">
-              {content ? (
-                <div 
-                  className="prose prose-sm max-w-none p-4 min-h-[200px]"
-                  dangerouslySetInnerHTML={{ __html: convertMarkdownToHtml(content) }}
-                />
-              ) : (
-                <div className="p-4 text-muted-foreground italic min-h-[200px] flex items-center justify-center">
-                  Nenhum conteúdo para visualizar
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </div>
+        <VisualTopicEditor 
+          content={content} 
+          onChange={setContent} 
+          placeholder="Descreva seu tópico em detalhes..." 
+        />
       </div>
       
       <div className="flex justify-end">
