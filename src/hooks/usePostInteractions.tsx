@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/auth";
 import { deleteForumPost } from "@/lib/supabase/rpc";
+import { supabase } from "@/lib/supabase";
 
 interface UsePostInteractionsProps {
   postId: string;
@@ -71,7 +72,7 @@ export const usePostInteractions = ({
       setIsMarkingSolution(true);
       
       // Usar a função RPC do Supabase para marcar como solução
-      const { data, error } = await queryClient.getQueryClient().rpc('mark_topic_solved', {
+      const { data, error } = await supabase.rpc('mark_topic_solved', {
         p_topic_id: topicId,
         p_post_id: postId
       });
