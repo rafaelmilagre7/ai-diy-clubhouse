@@ -1,13 +1,20 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, MoreHorizontal } from 'lucide-react';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { CheckCircle, MoreHorizontal, Flag, Edit, Trash2 } from 'lucide-react';
 import { Post } from '@/types/forumTypes';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useAuth } from '@/contexts/auth';
 
 interface PostItemProps {
   post: Post;
@@ -26,6 +33,9 @@ export const PostItem: React.FC<PostItemProps> = ({
   isMarkingSolved,
   topicId
 }) => {
+  const { user } = useAuth();
+  const [isExpanded, setIsExpanded] = useState(false);
+
   const getInitials = (name: string) => {
     return name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
   };
@@ -41,8 +51,13 @@ export const PostItem: React.FC<PostItemProps> = ({
     }
   };
 
+  const isPostAuthor = user?.id === post.user_id;
+  const contentPreview = post.content.length > 300 
+    ? post.content.substring(0, 300) + '...'
+    : post.content;
+
   return (
-    <Card className={post.is_solution ? 'border-green-200 bg-green-50/30' : ''}>
+    <Card className={`${post.is_solution ? 'border-green-200 bg-green-50/30' : ''} transition-colors hover:shadow-md`}>
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
           <Avatar className="h-10 w-10 flex-shrink-0">
@@ -62,37 +77,69 @@ export const PostItem: React.FC<PostItemProps> = ({
                 {post.is_solution && (
                   <Badge className="bg-green-100 text-green-800 border-green-200">
                     <CheckCircle className="h-3 w-3 mr-1" />
-                    Solução
+                    Solução Aceita
                   </Badge>
                 )}
               </div>
               
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span>{formatDate(post.created_at)}</span>
-                <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {canMarkAsSolution && !post.is_solution && (
+                      <DropdownMenuItem 
+                        onClick={onMarkAsSolution}
+                        disabled={isMarkingSolved}
+                        className="text-green-600"
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        {isMarkingSolved ? 'Marcando...' : 'Marcar como solução'}
+                      </DropdownMenuItem>
+                    )}
+                    {isPostAuthor && (
+                      <DropdownMenuItem className="text-blue-600">
+                        <Edit className="h-4 w-4 mr-2" />
+                        Editar
+                      </DropdownMenuItem>
+                    )}
+                    {(isPostAuthor || user?.id) && (
+                      <DropdownMenuItem className="text-red-600">
+                        <Flag className="h-4 w-4 mr-2" />
+                        Reportar
+                      </DropdownMenuItem>
+                    )}
+                    {isPostAuthor && (
+                      <DropdownMenuItem className="text-red-600">
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Excluir
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
             
             <div className="prose prose-sm max-w-none mb-4">
-              <div className="whitespace-pre-wrap">{post.content}</div>
-            </div>
-            
-            {canMarkAsSolution && !post.is_solution && (
-              <div className="flex justify-end">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onMarkAsSolution}
-                  disabled={isMarkingSolved}
-                  className="text-green-600 border-green-200 hover:bg-green-50"
-                >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  {isMarkingSolved ? 'Marcando...' : 'Marcar como solução'}
-                </Button>
+              <div className="whitespace-pre-wrap">
+                {isExpanded || post.content.length <= 300 ? post.content : contentPreview}
               </div>
-            )}
+              {post.content.length > 300 && (
+                <Button
+                  variant="link"
+                  size="sm"
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="p-0 h-auto text-primary"
+                >
+                  {isExpanded ? 'Ver menos' : 'Ver mais'}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </CardContent>

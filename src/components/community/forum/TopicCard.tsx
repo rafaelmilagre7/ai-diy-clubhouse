@@ -8,6 +8,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Topic } from '@/types/forumTypes';
 import { Link } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 interface TopicCardProps {
   topic: Topic;
@@ -25,10 +26,18 @@ export const TopicCard = ({ topic, isPinned }: TopicCardProps) => {
     locale: ptBR
   });
 
+  const getInitials = (name: string) => {
+    return name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
+  };
+
   return (
-    <Card className={`hover:shadow-md transition-all duration-200 ${isPinned ? 'border-primary/50 bg-primary/5' : ''}`}>
-      <CardContent className="p-4">
-        <Link to={`/comunidade/topico/${topic.id}`} className="block">
+    <Link to={`/comunidade/topico/${topic.id}`} className="block">
+      <Card className={cn(
+        "hover:shadow-md transition-all duration-200 cursor-pointer hover:border-primary/50",
+        isPinned && "border-primary/50 bg-primary/5",
+        topic.is_solved && "border-green-200 bg-green-50/30"
+      )}>
+        <CardContent className="p-4">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2">
@@ -40,7 +49,8 @@ export const TopicCard = ({ topic, isPinned }: TopicCardProps) => {
               </div>
               
               <p className="text-muted-foreground text-sm line-clamp-2 mb-3">
-                {topic.content.replace(/<[^>]*>/g, '').substring(0, 150)}...
+                {topic.content.replace(/<[^>]*>/g, '').substring(0, 150)}
+                {topic.content.length > 150 && '...'}
               </p>
 
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -64,8 +74,8 @@ export const TopicCard = ({ topic, isPinned }: TopicCardProps) => {
               <div className="flex items-center gap-2">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={topic.profiles?.avatar_url || ''} />
-                  <AvatarFallback>
-                    {topic.profiles?.name?.charAt(0) || 'U'}
+                  <AvatarFallback className="text-xs">
+                    {getInitials(topic.profiles?.name || 'Usuário')}
                   </AvatarFallback>
                 </Avatar>
                 <div className="text-xs">
@@ -81,8 +91,8 @@ export const TopicCard = ({ topic, isPinned }: TopicCardProps) => {
               )}
             </div>
           </div>
-        </Link>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </Link>
   );
 };
