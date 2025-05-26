@@ -1,191 +1,236 @@
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/auth';
-import { ForumBreadcrumbs } from '@/components/community/ForumBreadcrumbs';
-import { CommunityNavigation } from '@/components/community/CommunityNavigation';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, AlertCircle, ImagePlus, Youtube } from 'lucide-react';
+import { CategorySelector } from '@/components/community/CategorySelector';
+import { useAuth } from '@/contexts/auth';
+import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 const NewTopic = () => {
+  const navigate = useNavigate();
   const { categorySlug } = useParams();
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState(categorySlug || '');
-  
-  // Buscar categorias
-  const { data: categories = [] } = useQuery({
-    queryKey: ['forum-categories'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('forum_categories')
-        .select('*')
-        .eq('is_active', true)
-        .order('order_index', { ascending: true });
-      
-      if (error) throw error;
-      return data || [];
-    }
+
+  const [formData, setFormData] = useState({
+    title: '',
+    content: '',
+    categoryId: ''
   });
-  
-  // Mutation para criar tópico
-  const createTopicMutation = useMutation({
-    mutationFn: async (topicData: { title: string; content: string; category_id: string }) => {
-      if (!user?.id) throw new Error('Usuário não autenticado');
-      
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (!user?.id) {
+      setError('É necessário estar logado para criar um tópico');
+      return;
+    }
+
+    if (!formData.title.trim()) {
+      setError('O título é obrigatório');
+      return;
+    }
+
+    if (!formData.content.trim()) {
+      setError('O conteúdo é obrigatório');
+      return;
+    }
+
+    if (!formData.categoryId) {
+      setError('Selecione uma categoria');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
       const { data, error } = await supabase
         .from('forum_topics')
         .insert({
-          title: topicData.title,
-          content: topicData.content,
-          category_id: topicData.category_id,
-          user_id: user.id
+          title: formData.title.trim(),
+          content: formData.content.trim(),
+          user_id: user.id,
+          category_id: formData.categoryId,
+          last_activity_at: new Date().toISOString()
         })
-        .select()
+        .select('id')
         .single();
-      
+
       if (error) throw error;
-      return data;
-    },
-    onSuccess: (data) => {
+
       toast.success('Tópico criado com sucesso!');
-      queryClient.invalidateQueries({ queryKey: ['forum-topics'] });
       navigate(`/comunidade/topico/${data.id}`);
-    },
-    onError: () => {
-      toast.error('Erro ao criar tópico');
+
+    } catch (error: any) {
+      console.error('Erro ao criar tópico:', error);
+      setError(`Erro ao criar tópico: ${error.message || 'Erro desconhecido'}`);
+    } finally {
+      setIsSubmitting(false);
     }
-  });
-  
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!title.trim() || !content.trim() || !selectedCategory) {
-      toast.error('Preencha todos os campos obrigatórios');
-      return;
-    }
-    
-    const category = categories.find(c => c.slug === selectedCategory);
-    if (!category) {
-      toast.error('Categoria inválida');
-      return;
-    }
-    
-    createTopicMutation.mutate({
-      title: title.trim(),
-      content: content.trim(),
-      category_id: category.id
-    });
   };
-  
+
+  const handleCancel = () => {
+    navigate('/comunidade');
+  };
+
+  // Funções para futuras implementações
+  const handleImageUpload = () => {
+    toast.info('Upload de imagens será implementado em breve');
+  };
+
+  const handleYouTubeEmbed = () => {
+    toast.info('Embed de vídeos YouTube será implementado em breve');
+  };
+
   return (
-    <div className="container max-w-4xl mx-auto py-6 px-4">
-      <div className="flex items-center gap-2 mb-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/comunidade')}>
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Voltar para a Comunidade
-        </Button>
-      </div>
-      
-      <ForumBreadcrumbs 
-        section="novo-topico"
-        sectionTitle="Novo Tópico"
-      />
-      
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Criar Novo Tópico</h1>
-          <p className="text-muted-foreground mt-1">
-            Compartilhe suas dúvidas, ideias ou conhecimentos com a comunidade
-          </p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b shadow-sm">
+        <div className="container max-w-4xl mx-auto py-6 px-4">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCancel}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Voltar
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Criar Novo Tópico</h1>
+              <p className="text-gray-600">Compartilhe suas ideias com a comunidade</p>
+            </div>
+          </div>
         </div>
       </div>
-      
-      <CommunityNavigation />
-      
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>Novo Tópico de Discussão</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="category">Categoria *</Label>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory} required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma categoria" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.slug}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="title">Título *</Label>
-              <Input
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Digite um título claro e descritivo"
-                maxLength={200}
-                required
-              />
-              <p className="text-sm text-muted-foreground">
-                {title.length}/200 caracteres
-              </p>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="content">Conteúdo *</Label>
-              <Textarea
-                id="content"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Descreva sua dúvida, ideia ou compartilhe seu conhecimento..."
-                rows={8}
-                maxLength={5000}
-                required
-              />
-              <p className="text-sm text-muted-foreground">
-                {content.length}/5000 caracteres
-              </p>
-            </div>
-            
-            <div className="flex gap-3">
-              <Button 
-                type="submit" 
-                disabled={createTopicMutation.isPending}
-              >
-                {createTopicMutation.isPending ? 'Criando...' : 'Criar Tópico'}
-              </Button>
-              <Button 
-                type="button" 
-                variant="outline"
-                onClick={() => navigate('/comunidade')}
-              >
-                Cancelar
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+
+      {/* Formulário */}
+      <div className="container max-w-4xl mx-auto py-8 px-4">
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle>Nova Discussão</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-red-700">{error}</div>
+                </div>
+              )}
+
+              {/* Categoria */}
+              <div className="space-y-2">
+                <Label htmlFor="category" className="text-base font-medium">
+                  Categoria *
+                </Label>
+                <CategorySelector
+                  value={formData.categoryId}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, categoryId: value }))}
+                  required
+                />
+              </div>
+
+              {/* Título */}
+              <div className="space-y-2">
+                <Label htmlFor="title" className="text-base font-medium">
+                  Título *
+                </Label>
+                <Input
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="Digite um título claro e descritivo"
+                  maxLength={200}
+                  className="h-12 text-base"
+                  disabled={isSubmitting}
+                />
+                <p className="text-sm text-gray-500">
+                  {formData.title.length}/200 caracteres
+                </p>
+              </div>
+
+              {/* Conteúdo */}
+              <div className="space-y-2">
+                <Label htmlFor="content" className="text-base font-medium">
+                  Conteúdo *
+                </Label>
+                <div className="space-y-3">
+                  {/* Barra de ferramentas */}
+                  <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleImageUpload}
+                      className="flex items-center gap-2"
+                    >
+                      <ImagePlus className="h-4 w-4" />
+                      Imagem
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleYouTubeEmbed}
+                      className="flex items-center gap-2"
+                    >
+                      <Youtube className="h-4 w-4" />
+                      YouTube
+                    </Button>
+                    <div className="text-xs text-gray-500 ml-auto">
+                      Markdown suportado
+                    </div>
+                  </div>
+
+                  <Textarea
+                    id="content"
+                    value={formData.content}
+                    onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
+                    placeholder="Descreva sua dúvida, ideia ou compartilhe seu conhecimento..."
+                    rows={12}
+                    maxLength={5000}
+                    className="text-base resize-none"
+                    disabled={isSubmitting}
+                  />
+                  <p className="text-sm text-gray-500">
+                    {formData.content.length}/5000 caracteres
+                  </p>
+                </div>
+              </div>
+
+              {/* Botões */}
+              <div className="flex gap-4 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCancel}
+                  disabled={isSubmitting}
+                  className="flex-1"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting || !formData.title.trim() || !formData.content.trim() || !formData.categoryId}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                >
+                  {isSubmitting ? 'Criando...' : 'Publicar Tópico'}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

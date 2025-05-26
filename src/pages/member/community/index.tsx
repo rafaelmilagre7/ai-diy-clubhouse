@@ -2,13 +2,13 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { CommunityRedirect } from '@/components/community/CommunityRedirect';
-import CommunityMain from './CommunityMain';
+import CommunityHome from './CommunityHome';
 import CommunityMembers from './CommunityMembers';
 import ConnectionsPage from './ConnectionsPage';
 import MessagesPage from './MessagesPage';
 import NotificationsPage from './NotificationsPage';
 import CategoryTopics from './CategoryTopics';
-import NewTopicPage from './NewTopicPage';
+import NewTopic from './NewTopic';
 import TopicDetailPage from './TopicDetailPage';
 
 // Página temporária para sugestões
@@ -27,21 +27,21 @@ const SuggestionsPage = () => (
 );
 
 const CommunityPages = () => {
-  console.log('CommunityPages renderizando - rotas da comunidade disponíveis');
+  console.log('CommunityPages renderizando - nova estrutura consolidada');
   
   return (
     <>
       <CommunityRedirect />
       <Routes>
-        <Route index element={<CommunityMain />} />
+        <Route index element={<CommunityHome />} />
         <Route path="membros" element={<CommunityMembers />} />
         <Route path="conexoes" element={<ConnectionsPage />} />
         <Route path="mensagens" element={<MessagesPage />} />
         <Route path="notificacoes" element={<NotificationsPage />} />
         <Route path="sugestoes" element={<SuggestionsPage />} />
         <Route path="categoria/:categorySlug" element={<CategoryTopics />} />
-        <Route path="novo-topico" element={<NewTopicPage />} />
-        <Route path="novo-topico/:categorySlug" element={<NewTopicPage />} />
+        <Route path="novo-topico" element={<NewTopic />} />
+        <Route path="novo-topico/:categorySlug" element={<NewTopic />} />
         <Route path="topico/:topicId" element={<TopicDetailPage />} />
       </Routes>
     </>

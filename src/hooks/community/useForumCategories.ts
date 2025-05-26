@@ -6,21 +6,28 @@ import { ForumCategory } from '@/types/forumTypes';
 export const useForumCategories = () => {
   const query = useQuery({
     queryKey: ['forum-categories'],
-    queryFn: async () => {
+    queryFn: async (): Promise<ForumCategory[]> => {
       const { data, error } = await supabase
         .from('forum_categories')
         .select('*')
         .eq('is_active', true)
         .order('order_index', { ascending: true });
       
-      if (error) throw error;
-      return data as ForumCategory[];
+      if (error) {
+        console.error('Erro ao carregar categorias:', error);
+        throw error;
+      }
+      
+      return data || [];
     },
     staleTime: 5 * 60 * 1000, // 5 minutos
+    refetchOnWindowFocus: false,
   });
 
   return {
-    ...query,
-    categories: query.data || []
+    categories: query.data || [],
+    isLoading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch
   };
 };

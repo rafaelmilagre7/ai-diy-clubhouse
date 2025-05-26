@@ -1,126 +1,111 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import { MessageSquare, Eye, Clock, Pin, Lock, CheckCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Topic } from '@/types/forumTypes';
-import { getInitials, getUserDisplayRole } from '@/utils/user';
-import { cn } from '@/lib/utils';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { getInitials } from '@/utils/user';
 
 interface TopicCardProps {
   topic: Topic;
   isPinned?: boolean;
+  showCategory?: boolean;
 }
 
-export const TopicCard: React.FC<TopicCardProps> = ({ topic, isPinned = false }) => {
-  const formatTimeAgo = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffInHours < 1) return 'Agora há pouco';
-    if (diffInHours < 24) return `${diffInHours}h atrás`;
-    
-    const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 7) return `${diffInDays}d atrás`;
-    
-    return date.toLocaleDateString('pt-BR');
-  };
+export const TopicCard: React.FC<TopicCardProps> = ({ 
+  topic, 
+  isPinned = false,
+  showCategory = true 
+}) => {
+  const authorName = topic.profiles?.name || 'Usuário';
+  const categoryName = topic.category?.name || 'Geral';
+  
+  const timeAgo = formatDistanceToNow(new Date(topic.last_activity_at), {
+    addSuffix: true,
+    locale: ptBR
+  });
 
   return (
-    <Card className={cn(
-      "hover:shadow-md transition-all duration-200",
-      isPinned && "border-yellow-200 bg-yellow-50/50",
-      topic.is_solved && "border-green-200 bg-green-50/50"
-    )}>
+    <Card className={`hover:shadow-md transition-all duration-200 ${isPinned ? 'border-blue-200 bg-blue-50/50' : ''}`}>
       <CardContent className="p-4">
-        <Link to={`/comunidade/topico/${topic.id}`} className="block">
-          <div className="space-y-3">
-            {/* Header com badges */}
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                {topic.is_pinned && (
-                  <Badge variant="secondary" className="text-xs">
-                    <Pin className="h-3 w-3 mr-1" />
-                    Fixado
-                  </Badge>
-                )}
+        <div className="flex items-start gap-3">
+          {/* Avatar */}
+          <Avatar className="h-10 w-10 flex-shrink-0">
+            <AvatarImage src={topic.profiles?.avatar_url || undefined} />
+            <AvatarFallback>{getInitials(authorName)}</AvatarFallback>
+          </Avatar>
+
+          {/* Conteúdo principal */}
+          <div className="flex-1 min-w-0">
+            {/* Cabeçalho */}
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <div className="flex-1">
+                <Link 
+                  to={`/comunidade/topico/${topic.id}`}
+                  className="block hover:text-blue-600 transition-colors"
+                >
+                  <h3 className="font-semibold text-lg leading-tight line-clamp-2">
+                    {isPinned && <Pin className="inline h-4 w-4 text-blue-600 mr-1" />}
+                    {topic.is_locked && <Lock className="inline h-4 w-4 text-gray-600 mr-1" />}
+                    {topic.title}
+                    {topic.is_solved && <CheckCircle className="inline h-4 w-4 text-green-600 ml-1" />}
+                  </h3>
+                </Link>
+                
+                {/* Resumo do conteúdo */}
+                <p className="text-gray-600 text-sm mt-1 line-clamp-2">
+                  {topic.content.substring(0, 120)}...
+                </p>
+              </div>
+
+              {/* Status badges */}
+              <div className="flex flex-col items-end gap-1">
                 {topic.is_solved && (
-                  <Badge className="text-xs bg-green-600 hover:bg-green-700">
-                    <CheckCircle className="h-3 w-3 mr-1" />
+                  <Badge variant="outline" className="text-green-700 border-green-300">
                     Resolvido
                   </Badge>
                 )}
-                {topic.is_locked && (
-                  <Badge variant="outline" className="text-xs">
-                    <Lock className="h-3 w-3 mr-1" />
-                    Bloqueado
-                  </Badge>
-                )}
-                {topic.category && (
-                  <Badge variant="outline" className="text-xs">
-                    {topic.category.name}
+                {showCategory && topic.category && (
+                  <Badge variant="secondary" className="text-xs">
+                    {categoryName}
                   </Badge>
                 )}
               </div>
             </div>
 
-            {/* Título */}
-            <div>
-              <h3 className="font-semibold text-lg line-clamp-2 hover:text-primary transition-colors">
-                {topic.title}
-              </h3>
-            </div>
-
-            {/* Conteúdo preview */}
-            <div>
-              <p className="text-muted-foreground text-sm line-clamp-2">
-                {topic.content}
-              </p>
-            </div>
-
-            {/* Footer com autor e estatísticas */}
-            <div className="flex items-center justify-between pt-2 border-t border-border/50">
-              {/* Autor */}
-              <div className="flex items-center gap-2">
-                <Avatar className="h-6 w-6">
-                  <AvatarImage src={topic.profiles?.avatar_url || undefined} />
-                  <AvatarFallback className="text-xs">
-                    {getInitials(topic.profiles?.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="text-xs text-muted-foreground">
-                  <span className="font-medium">
-                    {topic.profiles?.name || 'Usuário'}
-                  </span>
-                  {topic.profiles?.role && (
-                    <span className="ml-1">
-                      • {getUserDisplayRole(topic.profiles.role)}
-                    </span>
-                  )}
-                </div>
+            {/* Meta informações */}
+            <div className="flex items-center justify-between text-sm text-gray-500">
+              <div className="flex items-center gap-4">
+                <span className="flex items-center gap-1">
+                  <MessageSquare className="h-4 w-4" />
+                  {topic.reply_count}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Eye className="h-4 w-4" />
+                  {topic.view_count}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Clock className="h-4 w-4" />
+                  {timeAgo}
+                </span>
               </div>
 
-              {/* Estatísticas */}
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <Eye className="h-3 w-3" />
-                  <span>{topic.view_count}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <MessageSquare className="h-3 w-3" />
-                  <span>{topic.reply_count}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  <span>{formatTimeAgo(topic.last_activity_at)}</span>
-                </div>
+              <div className="text-right">
+                <p className="font-medium">{authorName}</p>
+                {topic.profiles?.role === 'admin' && (
+                  <Badge variant="outline" className="text-xs">
+                    Admin
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
-        </Link>
+        </div>
       </CardContent>
     </Card>
   );
