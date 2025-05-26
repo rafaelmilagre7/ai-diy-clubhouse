@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 
 // Timeout para a requisição
-const FETCH_REQUEST_TIMEOUT = 15000; // 15 segundos
+const FETCH_REQUEST_TIMEOUT = 8000; // Reduzido para 8 segundos
 
 // Função para criar promise com timeout
 const withTimeout = (promise: Promise<any>, timeoutMs: number, errorMessage: string) => {
@@ -48,11 +48,34 @@ export const useProgressFetch = (
       return null;
     }
     
-    // Verificar se já temos ID de progresso (para evitar chamadas desnecessárias)
+    // Se já temos um ID de progresso e estamos apenas atualizando, buscar diretamente por ID
     if (progressId.current) {
-      logDebugEvent("fetchProgress_usingCached", { progressId: progressId.current });
-      // Se já temos um ID salvo, podemos economizar uma chamada à API
-      return null;
+      logDebugEvent("fetchProgress_refreshingExisting", { progressId: progressId.current });
+      try {
+        setIsLoading(true);
+        const { refreshOnboardingProgress } = await import('../persistence/progressPersistence');
+        const { data, error } = await refreshOnboardingProgress(progressId.current);
+        
+        if (!isMounted.current) return null;
+        
+        if (error || !data) {
+          console.log("[WARN] Erro ao atualizar progresso existente, buscando novamente:", error);
+          // Se falhar, limpar o ID e buscar do zero
+          progressId.current = null;
+        } else {
+          setProgress(data);
+          lastError.current = null;
+          retryCount.current = 0;
+          return data;
+        }
+      } catch (e) {
+        console.log("[WARN] Exceção ao atualizar progresso, tentando busca completa:", e);
+        progressId.current = null;
+      } finally {
+        if (isMounted.current) {
+          setIsLoading(false);
+        }
+      }
     }
     
     try {
@@ -139,9 +162,6 @@ export const useProgressFetch = (
       setProgress(data);
       lastError.current = null;
       retryCount.current = 0;
-      
-      // Log detalhado para debugging
-      console.log("[DEBUG] Registro bruto de progresso encontrado:", data);
       
       return data;
     } catch (e: any) {

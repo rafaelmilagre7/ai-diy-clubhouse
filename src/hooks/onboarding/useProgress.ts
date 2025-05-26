@@ -7,9 +7,9 @@ import { useProgressUpdate } from "./progress/useProgressUpdate";
 import { toast } from "sonner";
 import { OnboardingProgress } from "@/types/onboarding";
 
-// Constantes para controle de tempo
-const FETCH_TIMEOUT = 10000; // 10 segundos para timeout da requisição
-const FETCH_DEBOUNCE = 500; // 500ms para debouncing de chamadas múltiplas
+// Constantes para controle de tempo - reduzidas para melhor performance
+const FETCH_TIMEOUT = 6000; // 6 segundos para timeout da requisição
+const FETCH_DEBOUNCE = 200; // 200ms para debouncing
 
 export const useProgress = () => {
   const { user } = useAuth();
@@ -90,7 +90,9 @@ export const useProgress = () => {
         } catch (error) {
           console.error("[useProgress] Erro ao atualizar progresso:", error);
           logDebugEvent("refreshProgress_error", { error: String(error) });
-          toast.error("Erro ao atualizar seus dados. Tente novamente.");
+          
+          // Não mostrar toast para evitar spam
+          console.log("[useProgress] Erro silencioso ao atualizar progresso");
           
           // Liberar flag após erro
           safeResetFetchInProgress();
@@ -180,11 +182,11 @@ export const useProgress = () => {
       clearTimeout(debounceTimerRef.current);
     }
     
-    // Adicionar delay para evitar múltiplas requisições simultâneas
+    // Reduzir delay para resposta mais rápida
     const delayedFetch = setTimeout(() => {
       fetchProgress();
       hasInitialized.current = true;
-    }, 300);
+    }, 100);
     
     return () => clearTimeout(delayedFetch);
   }, [user, fetchProgress]);
