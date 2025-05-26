@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForumCategories } from '@/hooks/community/useForumCategories';
 import { useForumTopics } from '@/hooks/community/useForumTopics';
@@ -15,12 +16,12 @@ export const SkoolStyleForum = () => {
 
   const { categories, isLoading: categoriesLoading } = useForumCategories();
   
-  const { data: topics = [], isLoading: topicsLoading } = useForumTopics({
-    activeTab: 'todos',
+  const { data: topicsData, isLoading: topicsLoading } = useForumTopics({
     selectedFilter,
-    searchQuery,
-    categories
+    searchQuery
   });
+
+  const topics = topicsData?.topics || [];
 
   return (
     <div className="min-h-screen bg-gray-50">

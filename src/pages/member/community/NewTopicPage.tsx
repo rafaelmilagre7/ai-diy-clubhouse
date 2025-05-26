@@ -17,7 +17,7 @@ const NewTopicPage = () => {
   const { categorySlug } = useParams();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { data: categories = [] } = useForumCategories();
+  const { categories } = useForumCategories();
 
   const [formData, setFormData] = useState({
     title: '',

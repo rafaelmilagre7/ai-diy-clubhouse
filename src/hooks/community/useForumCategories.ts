@@ -26,6 +26,7 @@ export const useForumCategories = () => {
 
   return {
     categories: query.data || [],
+    data: query.data || [], // Mantém compatibilidade
     isLoading: query.isLoading,
     error: query.error,
     refetch: query.refetch

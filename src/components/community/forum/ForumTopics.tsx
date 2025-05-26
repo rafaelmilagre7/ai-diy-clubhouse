@@ -16,15 +16,14 @@ interface ForumTopicsProps {
 
 export const ForumTopics = ({ searchQuery, filter }: ForumTopicsProps) => {
   const { categories, isLoading: categoriesLoading, error: categoriesError, refetch: refetchCategories } = useForumCategories();
-  const { data: topics, isLoading: topicsLoading, error: topicsError, refetch: refetchTopics } = useForumTopics({
-    activeTab: 'todos',
+  const { data: topicsData, isLoading: topicsLoading, error: topicsError, refetch: refetchTopics } = useForumTopics({
     selectedFilter: filter as any,
-    searchQuery,
-    categories
+    searchQuery
   });
 
   const isLoading = categoriesLoading || topicsLoading;
   const hasError = categoriesError || topicsError;
+  const topics = topicsData?.topics || [];
 
   if (isLoading) {
     return <TopicListSkeleton />;

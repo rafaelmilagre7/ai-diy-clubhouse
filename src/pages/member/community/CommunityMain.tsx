@@ -14,13 +14,11 @@ const CommunityMain = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<TopicFilterType>('recentes');
 
-  const { data: categories = [], isLoading: categoriesLoading } = useForumCategories();
+  const { categories, isLoading: categoriesLoading } = useForumCategories();
   
-  const { data: topics = [], isLoading: topicsLoading } = useForumTopics({
-    activeTab: 'todos',
+  const { data: topicsData, isLoading: topicsLoading } = useForumTopics({
     selectedFilter: activeFilter,
-    searchQuery,
-    categories
+    searchQuery
   });
 
   const filters = [
@@ -30,6 +28,7 @@ const CommunityMain = () => {
     { id: 'resolvidos' as const, label: 'Resolvidos', icon: CheckCircle },
   ];
 
+  const topics = topicsData?.topics || [];
   // Separar tópicos fixados dos regulares
   const pinnedTopics = topics.filter(topic => topic.is_pinned);
   const regularTopics = topics.filter(topic => !topic.is_pinned);
