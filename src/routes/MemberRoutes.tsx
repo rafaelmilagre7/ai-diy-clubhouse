@@ -1,10 +1,8 @@
 
 import { Route } from 'react-router-dom';
-import { ProtectedRoute } from '@/auth/ProtectedRoutes';
-import { MemberLayout } from '@/components/layout/MemberLayout';
+import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
+import MemberLayout from '@/components/layout/MemberLayout';
 import Dashboard from '@/pages/member/Dashboard';
-import SolutionDetail from '@/pages/member/SolutionDetail';
-import ImplementationPage from '@/pages/member/ImplementationPage';
 import { ProfilePage } from '@/pages/member/ProfilePage';
 import CommunityPages from '@/pages/member/community';
 import LearningPages from '@/pages/member/learning';
@@ -19,89 +17,71 @@ export const memberRoutes = [
   {
     path: "/dashboard",
     element: (
-      <ProtectedRoute>
+      <ProtectedRoutes>
         <MemberLayout>
           <Dashboard />
         </MemberLayout>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/solution/:id",
-    element: (
-      <ProtectedRoute>
-        <MemberLayout>
-          <SolutionDetail />
-        </MemberLayout>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/solution/:id/implement",
-    element: (
-      <ProtectedRoute>
-        <ImplementationPage />
-      </ProtectedRoute>
+      </ProtectedRoutes>
     ),
   },
   {
     path: "/profile",
     element: (
-      <ProtectedRoute>
+      <ProtectedRoutes>
         <MemberLayout>
           <ProfilePage />
         </MemberLayout>
-      </ProtectedRoute>
+      </ProtectedRoutes>
     ),
   },
   {
     path: "/comunidade/*",
     element: (
-      <ProtectedRoute>
+      <ProtectedRoutes>
         <MemberLayout>
           <CommunityPages />
         </MemberLayout>
-      </ProtectedRoute>
+      </ProtectedRoutes>
     ),
   },
   {
     path: "/comunidade/novo-topico",
     element: (
-      <ProtectedRoute>
+      <ProtectedRoutes>
         <MemberLayout>
           <NewTopicPage />
         </MemberLayout>
-      </ProtectedRoute>
+      </ProtectedRoutes>
     ),
   },
   {
     path: "/comunidade/topico/:topicId",
     element: (
-      <ProtectedRoute>
+      <ProtectedRoutes>
         <MemberLayout>
           <TopicDetailPage />
         </MemberLayout>
-      </ProtectedRoute>
+      </ProtectedRoutes>
     ),
   },
   {
     path: "/comunidade/categoria/:categorySlug",
     element: (
-      <ProtectedRoute>
+      <ProtectedRoutes>
         <MemberLayout>
           <CategoryTopics />
         </MemberLayout>
-      </ProtectedRoute>
+      </ProtectedRoutes>
     ),
   },
   {
     path: "/learning/*",
     element: (
-      <ProtectedRoute>
+      <ProtectedRoutes>
         <MemberLayout>
           <LearningPages />
         </MemberLayout>
-      </ProtectedRoute>
+      </ProtectedRoutes>
     ),
   },
 ];
