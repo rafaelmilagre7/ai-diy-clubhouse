@@ -24,7 +24,7 @@ const AuthLayout = () => {
             <h2 className="mt-6 text-3xl font-heading font-bold text-white drop-shadow-md">
               Potencialize seu Alcance com IA
             </h2>
-            <p className="mt-2 text-white text-lg">
+            <p className="mt-2 text-white/90 text-lg">
               Transforme seu negócio com inteligência artificial
             </p>
           </div>
@@ -43,20 +43,20 @@ const AuthLayout = () => {
             </CardContent>
           </Card>
 
-          <div className="mt-8 text-center text-sm text-white/90 space-y-2">
+          <div className="mt-8 text-center text-sm text-white/95 space-y-2">
             <p className="text-base font-medium text-white">
               Acesso exclusivo para membros do VIVER DE IA Club
             </p>
-            <p>
+            <p className="text-white/85">
               Não possui uma conta?{" "}
-              <span className="font-medium text-white">
+              <span className="font-medium text-white/95">
                 O cadastro é feito apenas por convite
               </span>
             </p>
-            <p className="text-white/90">
+            <p className="text-white/85">
               Se você recebeu um convite, acesse o link enviado por email para ativar sua conta
             </p>
-            <p>
+            <p className="text-white/85">
               Dúvidas ou mais informações?{" "}
               <a
                 href="https://milagredigital.com/club/"

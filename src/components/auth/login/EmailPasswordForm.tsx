@@ -29,7 +29,7 @@ const EmailPasswordForm = ({
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email" className="text-white font-medium">Email</Label>
+        <Label htmlFor="email" className="text-white/90 font-medium text-sm">Email</Label>
         <Input
           id="email"
           type="email"
@@ -45,7 +45,7 @@ const EmailPasswordForm = ({
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label htmlFor="password" className="text-white font-medium">Senha</Label>
+          <Label htmlFor="password" className="text-white/90 font-medium text-sm">Senha</Label>
           <Link
             to="/reset-password"
             className="text-xs text-viverblue hover:underline hover:text-viverblue/90 font-medium"
