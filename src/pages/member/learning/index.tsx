@@ -7,6 +7,8 @@ import MemberCertificates from './MemberCertificates';
 import MemberLearning from './MemberLearning';
 
 const LearningPages = () => {
+  console.log('LearningPages component renderizando - sistema de learning configurado');
+  
   return (
     <Routes>
       <Route index element={<MemberLearning />} />
