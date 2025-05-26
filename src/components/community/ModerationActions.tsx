@@ -7,6 +7,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { DeleteConfirmationDialog } from "./DeleteConfirmationDialog";
+import { useDeleteConfirmation } from "@/hooks/community/useDeleteConfirmation";
 import { usePermissions } from "@/hooks/auth/usePermissions";
 import { useModeration } from "@/hooks/admin/useModeration";
 import { 
@@ -42,6 +44,14 @@ export const ModerationActions = ({
 }: ModerationActionsProps) => {
   const { hasPermission } = usePermissions();
   const { performModerationAction } = useModeration();
+  const {
+    isOpen,
+    isDeleting,
+    pendingAction,
+    openDeleteDialog,
+    closeDeleteDialog,
+    confirmDelete
+  } = useDeleteConfirmation();
   
   const canModerate = hasPermission('community.moderate');
   const canReport = true; // Qualquer usuário pode reportar
@@ -56,6 +66,21 @@ export const ModerationActions = ({
     } catch (error) {
       console.error('Erro na ação de moderação:', error);
     }
+  };
+
+  const handleDelete = () => {
+    const deleteAction = async () => {
+      await handleAction('delete', 'Conteúdo removido por moderação');
+      toast.success(`${type === 'topic' ? 'Tópico' : 'Post'} excluído com sucesso`);
+    };
+
+    openDeleteDialog({
+      type,
+      itemId,
+      action: deleteAction,
+      title: `Excluir ${type === 'topic' ? 'tópico' : 'resposta'}`,
+      description: `Tem certeza que deseja excluir ${type === 'topic' ? 'este tópico' : 'esta resposta'}? Esta ação não pode ser desfeita e todo o conteúdo será removido permanentemente.`
+    });
   };
 
   const actions = [
@@ -98,11 +123,7 @@ export const ModerationActions = ({
       {
         icon: Trash2,
         label: 'Excluir',
-        action: () => {
-          if (confirm('Tem certeza que deseja excluir este item?')) {
-            handleAction('delete', 'Conteúdo removido por moderação');
-          }
-        },
+        action: handleDelete,
         show: true,
         variant: 'destructive' as const
       }
@@ -118,35 +139,46 @@ export const ModerationActions = ({
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm">
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
-        {visibleActions.map((action, index) => {
-          if ('separator' in action) {
-            return <DropdownMenuSeparator key={index} />;
-          }
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          {visibleActions.map((action, index) => {
+            if ('separator' in action) {
+              return <DropdownMenuSeparator key={index} />;
+            }
 
-          const Icon = action.icon;
-          return (
-            <DropdownMenuItem
-              key={index}
-              onClick={action.action}
-              className={`flex items-center gap-2 ${
-                action.variant === 'destructive' 
-                  ? 'text-red-600 focus:text-red-600' 
-                  : ''
-              }`}
-            >
-              <Icon className="h-4 w-4" />
-              {action.label}
-            </DropdownMenuItem>
-          );
-        })}
-      </DropdownMenuContent>
-    </DropdownMenu>
+            const Icon = action.icon;
+            return (
+              <DropdownMenuItem
+                key={index}
+                onClick={action.action}
+                className={`flex items-center gap-2 ${
+                  action.variant === 'destructive' 
+                    ? 'text-red-600 focus:text-red-600' 
+                    : ''
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                {action.label}
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <DeleteConfirmationDialog
+        isOpen={isOpen}
+        onClose={closeDeleteDialog}
+        onDelete={confirmDelete}
+        isDeleting={isDeleting}
+        title={pendingAction?.title}
+        description={pendingAction?.description}
+      />
+    </>
   );
 };
