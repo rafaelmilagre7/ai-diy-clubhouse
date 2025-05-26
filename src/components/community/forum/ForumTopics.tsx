@@ -6,7 +6,8 @@ import { TopicCard } from './TopicCard';
 import { TopicListSkeleton } from './TopicListSkeleton';
 import { EmptyTopicsState } from './EmptyTopicsState';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface ForumTopicsProps {
   searchQuery: string;
@@ -14,24 +15,43 @@ interface ForumTopicsProps {
 }
 
 export const ForumTopics = ({ searchQuery, filter }: ForumTopicsProps) => {
-  const { categories } = useForumCategories();
-  const { data: topics, isLoading, error } = useForumTopics({
+  const { categories, isLoading: categoriesLoading, error: categoriesError, refetch: refetchCategories } = useForumCategories();
+  const { data: topics, isLoading: topicsLoading, error: topicsError, refetch: refetchTopics } = useForumTopics({
     activeTab: 'todos',
     selectedFilter: filter as any,
     searchQuery,
     categories
   });
 
+  const isLoading = categoriesLoading || topicsLoading;
+  const hasError = categoriesError || topicsError;
+
   if (isLoading) {
     return <TopicListSkeleton />;
   }
 
-  if (error) {
+  if (hasError) {
     return (
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          Erro ao carregar tópicos. Tente novamente em alguns instantes.
+        <AlertDescription className="flex items-center justify-between">
+          <span>
+            Erro ao carregar dados da comunidade. 
+            {categoriesError && " (Problemas com categorias)"}
+            {topicsError && " (Problemas com tópicos)"}
+          </span>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => {
+              refetchCategories();
+              refetchTopics();
+            }}
+            className="ml-2"
+          >
+            <RefreshCw className="h-4 w-4 mr-1" />
+            Tentar novamente
+          </Button>
         </AlertDescription>
       </Alert>
     );

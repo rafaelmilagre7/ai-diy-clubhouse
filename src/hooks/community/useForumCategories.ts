@@ -9,7 +9,7 @@ export const useForumCategories = () => {
     queryKey: ['forumCategories'],
     queryFn: async (): Promise<ForumCategory[]> => {
       try {
-        console.log('Buscando categorias do fórum...');
+        console.log('🔍 Buscando categorias do fórum...');
         
         const { data, error } = await supabase
           .from('forum_categories')
@@ -18,21 +18,33 @@ export const useForumCategories = () => {
           .order('order_index', { ascending: true });
         
         if (error) {
-          console.error("Erro ao buscar categorias:", error.message);
+          console.error("❌ Erro ao buscar categorias:", {
+            message: error.message,
+            code: error.code,
+            details: error.details,
+            hint: error.hint
+          });
           throw error;
         }
         
-        console.log('Categorias carregadas:', data?.length || 0);
+        console.log('✅ Categorias carregadas:', data?.length || 0);
         return data || [];
       } catch (error: any) {
-        console.error("Erro ao buscar categorias:", error.message);
-        toast.error("Não foi possível carregar as categorias. Por favor, tente novamente.");
+        console.error("💥 Erro detalhado ao buscar categorias:", {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint
+        });
+        
+        // Retornar array vazio em caso de erro para não quebrar a UI
         return [];
       }
     },
     staleTime: 1000 * 60 * 5, // 5 minutos de cache
-    retry: 2,
-    refetchOnWindowFocus: false
+    retry: 1, // Reduzir tentativas
+    refetchOnWindowFocus: false,
+    enabled: true // Sempre habilitado
   });
   
   return {

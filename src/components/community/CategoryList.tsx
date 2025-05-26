@@ -1,38 +1,20 @@
 
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { useForumCategories } from '@/hooks/community/useForumCategories';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Eye } from 'lucide-react';
+import { MessageSquare, AlertCircle, RefreshCw } from 'lucide-react';
 import { ForumCategory } from '@/types/forumTypes';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface CategoryListProps {
   onCategorySelect?: (categorySlug: string) => void;
 }
 
 export const CategoryList: React.FC<CategoryListProps> = ({ onCategorySelect }) => {
-  const { data: categories, isLoading } = useQuery({
-    queryKey: ['forum-categories'],
-    queryFn: async (): Promise<ForumCategory[]> => {
-      const { data, error } = await supabase
-        .from('forum_categories')
-        .select(`
-          *,
-          topics:forum_topics(count)
-        `)
-        .eq('is_active', true)
-        .order('order_index', { ascending: true });
-        
-      if (error) throw error;
-      
-      return (data || []).map(category => ({
-        ...category,
-        topic_count: category.topics?.[0]?.count || 0
-      }));
-    }
-  });
+  const { categories, isLoading, error, refetch } = useForumCategories();
 
   if (isLoading) {
     return (
@@ -52,6 +34,21 @@ export const CategoryList: React.FC<CategoryListProps> = ({ onCategorySelect }) 
           </Card>
         ))}
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription className="flex items-center justify-between">
+          <span>Erro ao carregar categorias do fórum.</span>
+          <Button variant="outline" size="sm" onClick={refetch}>
+            <RefreshCw className="h-4 w-4 mr-1" />
+            Tentar novamente
+          </Button>
+        </AlertDescription>
+      </Alert>
     );
   }
 
@@ -81,7 +78,7 @@ export const CategoryList: React.FC<CategoryListProps> = ({ onCategorySelect }) 
             <div className="flex items-start gap-4">
               <div 
                 className="h-12 w-12 rounded-lg flex items-center justify-center text-2xl flex-shrink-0"
-                style={{ backgroundColor: `${category.color}20`, color: category.color }}
+                style={{ backgroundColor: `${category.color || '#3B82F6'}20`, color: category.color || '#3B82F6' }}
               >
                 {category.icon || '💬'}
               </div>

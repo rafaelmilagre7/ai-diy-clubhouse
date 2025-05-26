@@ -1,5 +1,4 @@
 
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -32,7 +31,7 @@ export const useForumTopics = ({
           categoriesCount: categories.length
         });
         
-        // Construir query básica
+        // Construir query básica com join explícito
         let query = supabase
           .from('forum_topics')
           .select(`
@@ -49,13 +48,13 @@ export const useForumTopics = ({
             is_pinned,
             is_locked,
             is_solved,
-            profiles!user_id (
+            profiles:profiles!forum_topics_user_id_fkey (
               id,
               name,
               avatar_url,
               role
             ),
-            forum_categories!category_id (
+            forum_categories:forum_categories!forum_topics_category_id_fkey (
               id,
               name,
               slug
@@ -146,14 +145,20 @@ export const useForumTopics = ({
         return formattedTopics;
         
       } catch (error: any) {
-        console.error('💥 Erro ao buscar tópicos:', error);
-        toast.error("Erro ao carregar tópicos");
+        console.error('💥 Erro detalhado ao buscar tópicos:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint
+        });
+        
+        // Não mostrar toast para evitar spam de notificações
         return [];
       }
     },
     staleTime: 30000, // 30 segundos
-    retry: 2,
-    refetchOnWindowFocus: false
+    retry: 1, // Reduzir tentativas para evitar spam
+    refetchOnWindowFocus: false,
+    enabled: true // Sempre habilitado
   });
 };
-
