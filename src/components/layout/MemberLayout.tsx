@@ -1,8 +1,10 @@
 
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { MemberSidebar } from "./member/MemberSidebar";
 import { MemberContent } from "./member/MemberContent";
+import { toast } from "sonner";
 
 /**
  * MemberLayout renderiza a estrutura de layout para usuários membros
@@ -10,17 +12,25 @@ import { MemberContent } from "./member/MemberContent";
  */
 const MemberLayout = ({ children }: { children: React.ReactNode }) => {
   const { profile, signOut } = useAuth();
+  const location = useLocation();
   
   // Estado para controlar a visibilidade da barra lateral
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     // Recuperar estado do localStorage, padrão é aberto em desktop
     const savedState = localStorage.getItem("sidebarOpen");
-    console.log("Estado inicial da sidebar recuperado:", savedState);
     return savedState !== null ? savedState === "true" : window.innerWidth >= 768;
   });
 
   // Overlay para o menu mobile
   const [showOverlay, setShowOverlay] = useState(false);
+
+  // Log para debugging de layout e navegação
+  useEffect(() => {
+    console.log("MemberLayout renderizado para rota:", location.pathname, {
+      profile: !!profile,
+      sidebarOpen
+    });
+  }, [location.pathname, profile, sidebarOpen]);
 
   // Atualizar overlay baseado no estado da sidebar em mobile
   useEffect(() => {
@@ -37,7 +47,6 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
 
   // Efeito para persistir o estado da barra lateral
   useEffect(() => {
-    console.log("Persistindo estado da sidebar:", sidebarOpen);
     localStorage.setItem("sidebarOpen", String(sidebarOpen));
   }, [sidebarOpen]);
 
@@ -56,7 +65,11 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const handleResize = () => {
       const isMobile = window.innerWidth < 768;
-      console.log("Detectado redimensionamento:", { isMobile, width: window.innerWidth });
+      if (isMobile && sidebarOpen) {
+        setShowOverlay(true);
+      } else {
+        setShowOverlay(false);
+      }
     };
 
     window.addEventListener('resize', handleResize);
@@ -66,13 +79,24 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, []);
+  }, [sidebarOpen]);
 
   // Forçar o tema escuro 
   useEffect(() => {
     document.documentElement.classList.add('dark');
     document.body.classList.add('dark');
   }, []);
+
+  // Handler para signOut que ignora o retorno
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast.success("Logout realizado com sucesso");
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+      toast.error("Erro ao fazer logout");
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-[#0F111A] overflow-hidden">
@@ -92,7 +116,7 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
         profileEmail={profile?.email || null}
         profileAvatar={profile?.avatar_url}
         getInitials={getInitials}
-        signOut={signOut}
+        signOut={handleSignOut}
       />
       
       {/* Conteúdo principal */}

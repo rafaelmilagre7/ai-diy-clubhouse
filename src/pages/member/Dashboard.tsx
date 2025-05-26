@@ -19,21 +19,13 @@ const Dashboard = () => {
   // Estado para controle de erros
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [renderCount, setRenderCount] = useState(0);
   
-  // Incrementar contador de renderização para debug
-  useEffect(() => {
-    setRenderCount(prev => {
-      const newCount = prev + 1;
-      console.log(`Dashboard renderização #${newCount}:`, { 
-        user: !!user, 
-        profile: !!profile,
-        authLoading,
-        currentRoute: window.location.pathname,
-        timestamp: new Date().toISOString()
-      });
-      return newCount;
-    });
+  // Log de diagnóstico - remover após resolução do problema
+  console.log("Dashboard renderizado:", { 
+    user: !!user, 
+    profile: !!profile,
+    authLoading,
+    currentRoute: window.location.pathname
   });
   
   // Otimização: Usar useMemo para lembrar o valor da categoria entre renderizações
@@ -46,34 +38,23 @@ const Dashboard = () => {
   // Log diagnóstico para Supabase
   useEffect(() => {
     if (solutionsError) {
-      console.error("Dashboard: Erro ao carregar soluções:", solutionsError);
+      console.error("Erro ao carregar soluções:", solutionsError);
       setHasError(true);
       setErrorMessage("Não foi possível carregar as soluções. Verifique sua conexão com a internet.");
       toast.error("Erro ao carregar soluções", {
         description: "Tente atualizar a página"
       });
-    } else if (solutions) {
-      console.log("Dashboard: Soluções carregadas com sucesso:", solutions?.length || 0);
+    } else {
+      console.log("Soluções carregadas:", solutions?.length || 0);
     }
   }, [solutionsError, solutions]);
   
   // Otimização: Usar useMemo para o array de soluções para evitar recálculos desnecessários
   const filteredSolutions = useMemo(() => {
-    if (!solutions || solutions.length === 0) {
-      console.log("Dashboard: Sem soluções para filtrar");
-      return [];
-    }
-    const filtered = category !== "general" 
+    if (!solutions || solutions.length === 0) return [];
+    return category !== "general" 
       ? solutions.filter(s => s.category === category)
       : solutions;
-    
-    console.log("Dashboard: Soluções filtradas:", {
-      category,
-      total: solutions.length,
-      filtered: filtered.length
-    });
-    
-    return filtered;
   }, [solutions, category]);
   
   // Usar as soluções filtradas para obter o progresso
@@ -85,56 +66,36 @@ const Dashboard = () => {
     error: progressError
   } = useDashboardProgress(filteredSolutions);
   
-  // Log dos dados de progresso
-  useEffect(() => {
-    console.log("Dashboard: Dados de progresso atualizados:", {
-      active: active?.length || 0,
-      completed: completed?.length || 0,
-      recommended: recommended?.length || 0,
-      progressLoading,
-      progressError: !!progressError
-    });
-  }, [active, completed, recommended, progressLoading, progressError]);
-  
   // Tratamento de erro para progresso
   useEffect(() => {
     if (progressError) {
-      console.error("Dashboard: Erro ao carregar progresso:", progressError);
+      console.error("Erro ao carregar progresso:", progressError);
       setHasError(true);
       setErrorMessage("Não foi possível carregar seu progresso. Por favor, tente novamente mais tarde.");
     }
   }, [progressError]);
   
-  // Verificação de autenticação - mais robusta
+  // Verificação de autenticação
   useEffect(() => {
-    console.log("Dashboard: Verificando autenticação:", {
-      authLoading,
-      user: !!user,
-      shouldRedirect: !authLoading && !user
-    });
-    
     if (!authLoading && !user) {
-      console.error("Dashboard: Usuário não autenticado, redirecionando para login");
+      console.error("Usuário não autenticado no Dashboard");
       navigate('/login', { replace: true });
     }
   }, [user, authLoading, navigate]);
   
   // Função para lidar com a mudança de categoria - memoizada para evitar recriação
   const handleCategoryChange = useCallback((newCategory: string) => {
-    console.log("Dashboard: Mudando categoria de", category, "para", newCategory);
     setCategory(newCategory);
     setSearchParams({ category: newCategory });
-  }, [setSearchParams, category]);
+  }, [setSearchParams]);
 
   // Função para navegar para a página de detalhes da solução - memoizada
   const handleSolutionClick = useCallback((solution: Solution) => {
-    console.log("Dashboard: Navegando para solução:", solution.id);
     navigate(`/solution/${solution.id}`);
   }, [navigate]);
   
   // Função para atualizar a página em caso de erro
   const handleRetry = () => {
-    console.log("Dashboard: Tentando novamente após erro");
     setHasError(false);
     setErrorMessage(null);
     window.location.reload();
@@ -144,10 +105,9 @@ const Dashboard = () => {
   useEffect(() => {
     const isFirstVisit = localStorage.getItem("firstDashboardVisit") !== "false";
     
-    if (isFirstVisit && user) {
+    if (isFirstVisit) {
       // Atrasar ligeiramente o toast para evitar conflito com renderização inicial
       const timeoutId = setTimeout(() => {
-        console.log("Dashboard: Exibindo toast de boas-vindas");
         toast("Bem-vindo ao seu dashboard personalizado!");
         localStorage.setItem("firstDashboardVisit", "false");
       }, 1500);
@@ -155,20 +115,10 @@ const Dashboard = () => {
       // Limpeza do timeout quando o componente é desmontado
       return () => clearTimeout(timeoutId);
     }
-  }, [user]);
-
-  // Log antes de renderizar
-  console.log("Dashboard: Prestes a renderizar com estado:", {
-    hasError,
-    authLoading,
-    solutionsLoading,
-    progressLoading,
-    renderCount
-  });
+  }, []);
   
   // Se houver erro, mostrar mensagem de erro com opção de tentar novamente
   if (hasError) {
-    console.log("Dashboard: Renderizando estado de erro");
     return (
       <div className="container py-8 flex flex-col items-center justify-center min-h-[60vh]">
         <Alert variant="destructive" className="mb-4 max-w-md">
@@ -191,14 +141,12 @@ const Dashboard = () => {
     );
   }
 
-  console.log("Dashboard: Renderizando DashboardLayout");
-  
   // Renderizar o layout diretamente, sem usar um componente de carregamento bloqueante
   return (
     <DashboardLayout
-      active={active || []}
-      completed={completed || []}
-      recommended={recommended || []}
+      active={active}
+      completed={completed}
+      recommended={recommended}
       category={category}
       onCategoryChange={handleCategoryChange}
       onSolutionClick={handleSolutionClick}

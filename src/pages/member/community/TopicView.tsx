@@ -1,560 +1,375 @@
-
-import { useEffect, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase, deleteForumTopic } from "@/lib/supabase";
-import { Button } from "@/components/ui/button";
-import { 
-  ChevronLeft, 
-  MessageSquare, 
-  Eye, 
-  Clock, 
-  AlertTriangle, 
-  Pin, 
-  Lock, 
-  Trash2, 
-  MoreVertical 
-} from "lucide-react";
-import { format } from "date-fns";
+import React, { useState, useEffect, useRef } from "react";
+import { useParams, Link } from "react-router-dom";
+import { format, formatDistance } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { PostItem } from "@/components/community/PostItem";
-import { ReplyForm } from "@/components/community/ReplyForm";
-import { Card } from "@/components/ui/card";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/contexts/auth";
+import { useForm, SubmitHandler } from "react-hook-form";
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from "yup";
 import { toast } from "sonner";
-import { Post, Topic } from "@/types/forumTypes";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator
-} from "@/components/ui/dropdown-menu";
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel,
-  AlertDialogContent, 
-  AlertDialogDescription,
-  AlertDialogFooter, 
-  AlertDialogHeader,
-  AlertDialogTitle
-} from "@/components/ui/alert-dialog";
+import { Card } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import { MessageSquare, Eye, ThumbsUp, Pin, Lock, Clock, Loader2, CircleUserRound, CheckCircle2, AlertCircle } from "lucide-react";
+import { Post, Profile, Topic } from "@/types/forumTypes";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/auth";
+import { useUser } from "@/hooks/useUser";
+import { Badge } from "@/components/ui/badge";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
+import { getInitials } from "@/utils/user";
+
+// Defina o schema de validação com Yup
+const postSchema = yup.object({
+  content: yup.string().required("O conteúdo do post é obrigatório"),
+});
+
+// Interface para os valores do formulário
+interface FormData {
+  content: string;
+}
+
+interface TopicFormData {
+  title: string;
+  content: string;
+}
 
 const TopicView = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const { topicId } = useParams<{ topicId: string }>();
+  const [topic, setTopic] = useState<Topic | null>(null);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [submitting, setSubmitting] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  
-  // Verificar se o usuário possui papel de admin
+  const { profile } = useUser();
+  const postsContainerRef = useRef<HTMLDivElement>(null);
+  const [categoryId, setCategoryId] = useState<string | null>(null);
+
+  // Configuração do react-hook-form
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({
+    resolver: yupResolver(postSchema),
+  });
+
   useEffect(() => {
-    const checkIsAdmin = async () => {
-      if (!user) return;
-      
-      try {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single();
-        
-        setIsAdmin(profile?.role === 'admin');
-      } catch (error) {
-        console.error('Erro ao verificar papel do usuário:', error);
+    if (topicId) {
+      fetchTopicAndPosts(topicId);
+    }
+  }, [topicId]);
+
+  useEffect(() => {
+    // Rola para o final da lista de posts sempre que novos posts são adicionados
+    if (postsContainerRef.current) {
+      postsContainerRef.current.scrollTop = postsContainerRef.current.scrollHeight;
+    }
+  }, [posts]);
+
+  const fetchTopicAndPosts = async (topicId: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Busca os dados do tópico
+      const { data: topicData, error: topicError } = await supabase
+        .from('forum_topics')
+        .select(`
+          *,
+          profiles:user_id(*),
+          category:category_id(id, name, slug)
+        `)
+        .eq('id', topicId)
+        .single();
+
+      if (topicError) {
+        throw topicError;
       }
-    };
-    
-    checkIsAdmin();
-  }, [user]);
-  
-  // Buscar dados do tópico - Versão corrigida usando joins manuais
-  const { 
-    data: topic, 
-    isLoading: topicLoading, 
-    error: topicError 
-  } = useQuery({
-    queryKey: ['forumTopic', id],
-    queryFn: async () => {
-      if (!id) throw new Error('ID do tópico não fornecido');
-      
-      try {
-        // Incrementar visualização
-        await supabase.rpc('increment_topic_views', { topic_id: id });
-        
-        // Buscar o tópico básico
-        const { data: topicData, error: topicError } = await supabase
-          .from('forum_topics')
-          .select(`
-            id, 
-            title, 
-            content, 
-            created_at, 
-            updated_at, 
-            view_count, 
-            reply_count, 
-            is_locked, 
-            is_pinned, 
-            user_id, 
-            category_id, 
-            last_activity_at
-          `)
-          .eq('id', id)
-          .single();
-        
-        if (topicError) {
-          console.error('Erro ao buscar tópico:', topicError);
-          throw topicError;
-        }
-        
-        if (!topicData) throw new Error('Tópico não encontrado');
-        
-        // Buscar dados do usuário que criou o tópico
-        const { data: userData, error: userError } = await supabase
-          .from('profiles')
-          .select('id, name, avatar_url, role')
-          .eq('id', topicData.user_id)
-          .single();
-        
-        if (userError && userError.code !== 'PGRST116') {
-          console.error('Erro ao buscar dados do usuário:', userError);
-        }
-        
-        // Buscar dados da categoria do tópico
-        const { data: categoryData, error: categoryError } = await supabase
-          .from('forum_categories')
-          .select('id, name, slug')
-          .eq('id', topicData.category_id)
-          .single();
-        
-        if (categoryError && categoryError.code !== 'PGRST116') {
-          console.error('Erro ao buscar dados da categoria:', categoryError);
-        }
-        
-        // Montar o objeto de tópico completo
-        const fullTopic: Topic = {
-          ...topicData,
-          profiles: userData || null,
-          category: categoryData || null
+
+      if (topicData) {
+        // Garante que o dado retornado está no formato correto
+        const formattedTopic: Topic = {
+          id: topicData.id,
+          title: topicData.title,
+          content: topicData.content,
+          created_at: topicData.created_at,
+          updated_at: topicData.updated_at,
+          last_activity_at: topicData.last_activity_at,
+          user_id: topicData.user_id,
+          category_id: topicData.category_id,
+          view_count: topicData.view_count,
+          reply_count: topicData.reply_count,
+          is_pinned: topicData.is_pinned,
+          is_locked: topicData.is_locked,
+          profiles: topicData.profiles,
+          category: topicData.category
         };
         
-        return fullTopic;
-      } catch (error) {
-        console.error('Erro ao buscar tópico:', error);
-        throw error;
+        setTopic(formattedTopic);
+        setCategoryId(topicData.category_id); // Define o ID da categoria
       }
-    },
-    retry: false,
-  });
-  
-  // Buscar posts/respostas com a mesma abordagem manual
-  const { 
-    data: posts, 
-    isLoading: postsLoading, 
-    refetch: refetchPosts 
-  } = useQuery({
-    queryKey: ['forumPosts', id],
-    queryFn: async () => {
-      if (!id) throw new Error('ID do tópico não fornecido');
-      
-      // Buscar todos os posts do tópico
+
+      // Busca os posts associados ao tópico, ordenados por data de criação
       const { data: postsData, error: postsError } = await supabase
         .from('forum_posts')
         .select(`
-          id,
-          content,
-          created_at,
-          updated_at,
-          user_id,
-          parent_id,
-          is_solution,
-          topic_id
+          *,
+          profiles:user_id(*)
         `)
-        .eq('topic_id', id)
+        .eq('topic_id', topicId)
         .order('created_at', { ascending: true });
-      
+
       if (postsError) {
-        console.error('Erro ao buscar posts:', postsError);
         throw postsError;
       }
-      
-      if (!postsData || postsData.length === 0) {
-        return [];
+
+      if (postsData) {
+        setPosts(postsData as Post[]);
       }
-      
-      // Buscar informações dos usuários
-      const userIds = [...new Set(postsData.map(post => post.user_id))];
-      const { data: usersData, error: usersError } = await supabase
-        .from('profiles')
-        .select('id, name, avatar_url, role')
-        .in('id', userIds);
-      
-      if (usersError) {
-        console.error('Erro ao buscar dados dos usuários:', usersError);
-        throw usersError;
-      }
-      
-      // Criar mapa de usuários para acesso fácil
-      const usersMap: Record<string, any> = {};
-      if (usersData) {
-        usersData.forEach(user => {
-          usersMap[user.id] = user;
-        });
-      }
-      
-      // Enriquecer posts com dados de usuário
-      const enrichedPosts = postsData.map(post => ({
-        ...post,
-        profiles: usersMap[post.user_id] || null
-      }));
-      
-      // Organizar posts em hierarquia (posts principais e respostas aninhadas)
-      const mainPosts: Post[] = [];
-      const repliesMap: Record<string, Post[]> = {};
-      
-      // Primeiro, separar posts principais e respostas
-      enrichedPosts.forEach(post => {
-        if (!post.parent_id) {
-          mainPosts.push(post as Post);
-        } else {
-          if (!repliesMap[post.parent_id]) {
-            repliesMap[post.parent_id] = [];
-          }
-          repliesMap[post.parent_id].push(post as Post);
-        }
-      });
-      
-      // Depois, adicionar respostas aos posts principais
-      mainPosts.forEach(post => {
-        if (repliesMap[post.id]) {
-          post.replies = repliesMap[post.id];
-        }
-      });
-      
-      return mainPosts;
-    },
-    enabled: !!topic,
-  });
-  
-  const getInitials = (name: string | null) => {
-    if (!name) return "??";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
-  
-  const togglePinned = async () => {
-    if (!topic) return;
-    
-    try {
-      const { error } = await supabase
-        .from('forum_topics')
-        .update({ is_pinned: !topic.is_pinned })
-        .eq('id', topic.id);
-      
-      if (error) throw error;
-      
-      queryClient.invalidateQueries({ queryKey: ['forumTopic', id] });
-      toast.success(topic.is_pinned ? 'Tópico desfixado com sucesso!' : 'Tópico fixado com sucesso!');
-    } catch (error) {
-      console.error('Erro ao fixar/desfixar tópico:', error);
-      toast.error('Erro ao processar solicitação');
-    }
-  };
-  
-  const toggleLocked = async () => {
-    if (!topic) return;
-    
-    try {
-      const { error } = await supabase
-        .from('forum_topics')
-        .update({ is_locked: !topic.is_locked })
-        .eq('id', topic.id);
-      
-      if (error) throw error;
-      
-      queryClient.invalidateQueries({ queryKey: ['forumTopic', id] });
-      toast.success(topic.is_locked ? 'Tópico desbloqueado com sucesso!' : 'Tópico bloqueado com sucesso!');
-    } catch (error) {
-      console.error('Erro ao bloquear/desbloquear tópico:', error);
-      toast.error('Erro ao processar solicitação');
+    } catch (err: any) {
+      console.error("Erro ao buscar tópico e posts:", err.message);
+      setError("Falha ao carregar o tópico e as mensagens. Por favor, tente novamente.");
+      toast.error("Falha ao carregar o tópico e as mensagens. Por favor, tente novamente.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Função para excluir tópico
-  const handleDeleteTopic = async () => {
-    if (!topic || !id) return;
-    
+  const createNewTopic = async (values: TopicFormData) => {
     try {
-      setIsDeleting(true);
+      setSubmitting(true);
       
-      const { success, error } = await deleteForumTopic(id);
-      
-      if (!success) {
-        throw new Error(error || 'Erro desconhecido ao excluir tópico');
+      const { data: topicData, error: topicError } = await supabase
+        .from('forum_topics')
+        .insert({
+          title: values.title,
+          content: values.content,
+          category_id: categoryId,
+          user_id: user?.id,
+          last_activity_at: new Date().toISOString(),
+        })
+        .select('*')
+        .single();
+        
+      if (topicError) {
+        throw topicError;
       }
       
-      queryClient.invalidateQueries({ queryKey: ['communityTopics'] });
-      toast.success('Tópico excluído com sucesso');
-      navigate('/comunidade');
+      if (topicData) {
+        // Atualiza o estado local ou redireciona conforme necessário
+        toast.success("Tópico criado com sucesso!");
+      }
     } catch (error: any) {
-      console.error('Erro ao excluir tópico:', error);
-      toast.error(`Erro ao excluir tópico: ${error.message || 'Erro desconhecido'}`);
+      console.error("Erro ao criar tópico:", error.message);
+      toast.error("Erro ao criar tópico. Por favor, tente novamente.");
     } finally {
-      setIsDeleting(false);
-      setShowDeleteDialog(false);
+      setSubmitting(false);
     }
   };
-  
-  if (topicError) {
+
+  const onSubmit: SubmitHandler<FormData> = async (values) => {
+    if (!topicId || !user?.id) {
+      toast.error("Não foi possível enviar a mensagem. Verifique se você está logado e se o tópico existe.");
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      // Insere o novo post no banco de dados
+      const { data: newPost, error: postError } = await supabase
+        .from('forum_posts')
+        .insert({
+          content: values.content,
+          topic_id: topicId,
+          user_id: user.id,
+        })
+        .select(`
+          *,
+          profiles:user_id(*)
+        `)
+        .single();
+
+      if (postError) {
+        throw postError;
+      }
+
+      // Atualiza o estado local adicionando o novo post
+      if (newPost) {
+        setPosts(prevPosts => [...prevPosts, newPost as Post]);
+        reset(); // Limpa o formulário
+        
+        // Atualiza a contagem de respostas no tópico
+        await supabase.rpc('increment_topic_replies', { topic_id: topicId });
+        
+        // Atualiza a data da última atividade no tópico
+        await supabase
+          .from('forum_topics')
+          .update({ last_activity_at: new Date().toISOString() })
+          .eq('id', topicId);
+      }
+    } catch (err: any) {
+      console.error("Erro ao criar post:", err.message);
+      setError("Falha ao enviar a mensagem. Por favor, tente novamente.");
+      toast.error("Falha ao enviar a mensagem. Por favor, tente novamente.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const renderPostContent = (content: string) => (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      rehypePlugins={[rehypeRaw]}
+      components={{
+        a: ({ href, children }) => (
+          <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline">
+            {children}
+          </a>
+        ),
+      }}
+    >
+      {content}
+    </ReactMarkdown>
+  );
+
+  if (loading) {
     return (
-      <div className="container px-4 py-6 mx-auto max-w-5xl">
-        <div className="text-center py-12">
-          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Tópico não encontrado</h2>
-          <p className="text-muted-foreground mb-6">O tópico que você está procurando não existe ou foi removido.</p>
-          <Button asChild>
-            <Link to="/comunidade">Voltar para a Comunidade</Link>
-          </Button>
-        </div>
+      <div className="container px-4 py-6 mx-auto max-w-3xl">
+        <Card className="p-6">
+          <h1 className="text-2xl font-bold mb-4">Carregando tópico...</h1>
+          <p className="text-muted-foreground">Aguarde enquanto o tópico e as mensagens são carregados.</p>
+        </Card>
       </div>
     );
   }
-  
-  return (
-    <div className="container px-4 py-6 mx-auto max-w-5xl">
-      <div className="mb-6">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => navigate(-1)}
-          className="text-muted-foreground"
-        >
-          <ChevronLeft className="h-4 w-4 mr-1" />
-          Voltar
-        </Button>
+
+  if (error) {
+    return (
+      <div className="container px-4 py-6 mx-auto max-w-3xl">
+        <Card className="p-6">
+          <h1 className="text-2xl font-bold text-red-500 mb-4">Erro ao carregar o tópico</h1>
+          <p className="text-muted-foreground">{error}</p>
+          <Button onClick={() => { if (topicId) fetchTopicAndPosts(topicId); }}>Tentar novamente</Button>
+        </Card>
       </div>
-      
-      {topicLoading ? (
-        <div className="space-y-6">
-          <Skeleton className="h-10 w-3/4" />
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-10 w-10 rounded-full" />
-            <Skeleton className="h-5 w-40" />
-          </div>
-          <Skeleton className="h-40 w-full" />
-        </div>
-      ) : topic ? (
-        <>
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                {topic.category && (
+    );
+  }
+
+  if (!topic) {
+    return (
+      <div className="container px-4 py-6 mx-auto max-w-3xl">
+        <Card className="p-6">
+          <h1 className="text-2xl font-bold mb-4">Tópico não encontrado</h1>
+          <p className="text-muted-foreground">O tópico que você está procurando não existe ou foi removido.</p>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container px-4 py-6 mx-auto max-w-3xl">
+      <Card className="mb-6">
+        <div className="p-6">
+          <div className="flex items-start gap-3 mb-4">
+            <Avatar>
+              <AvatarImage src={topic.profiles?.avatar_url || undefined} />
+              <AvatarFallback>{getInitials(topic.profiles?.name)}</AvatarFallback>
+            </Avatar>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <h1 className="text-xl font-semibold">{topic.title}</h1>
+                {topic?.category && (
                   <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
                     {topic.category.name}
                   </Badge>
                 )}
-                
-                {topic.is_pinned && (
-                  <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20">
-                    <Pin className="h-3 w-3 mr-1" />
-                    Fixado
-                  </Badge>
-                )}
-                
-                {topic.is_locked && (
-                  <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20">
-                    <Lock className="h-3 w-3 mr-1" />
-                    Bloqueado
-                  </Badge>
-                )}
               </div>
-
-              {/* Menu de ações do tópico */}
-              {(isAdmin || (user && topic.profiles && user.id === topic.profiles.id)) && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <MoreVertical className="h-4 w-4" />
-                      <span className="sr-only">Opções do tópico</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="min-w-[200px]">
-                    {isAdmin && (
-                      <>
-                        <DropdownMenuItem onClick={togglePinned}>
-                          <Pin className="h-4 w-4 mr-2" />
-                          {topic.is_pinned ? 'Desfixar tópico' : 'Fixar tópico'}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={toggleLocked}>
-                          <Lock className="h-4 w-4 mr-2" />
-                          {topic.is_locked ? 'Desbloquear tópico' : 'Bloquear tópico'}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                      </>
-                    )}
-                    <DropdownMenuItem 
-                      onClick={() => setShowDeleteDialog(true)}
-                      className="text-red-500 hover:text-red-700 focus:text-red-700"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Excluir tópico
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-            </div>
-            
-            <h1 className="text-2xl md:text-3xl font-bold mb-4">{topic.title}</h1>
-            
-            <div className="flex flex-wrap items-center gap-3 mb-4 text-sm">
-              <div className="flex items-center gap-1.5">
-                <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                <span>{topic.reply_count} respostas</span>
-              </div>
-              
-              <div className="flex items-center gap-1.5">
-                <Eye className="h-4 w-4 text-muted-foreground" />
-                <span>{topic.view_count} visualizações</span>
-              </div>
-              
-              <div className="flex items-center gap-1.5">
-                <Clock className="h-4 w-4 text-muted-foreground" />
+              <div className="text-sm text-muted-foreground">
                 <span>
-                  {format(new Date(topic.created_at), "d 'de' MMMM 'de' yyyy 'às' HH:mm", {
-                    locale: ptBR,
-                  })}
+                  Por {topic.profiles?.name || "Usuário"} em {format(new Date(topic.created_at), "d 'de' MMMM 'às' HH:mm", { locale: ptBR })}
                 </span>
               </div>
             </div>
-            
-            <Card className="p-4">
-              <div className="flex gap-4">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={topic.profiles?.avatar_url || undefined} alt={topic.profiles?.name || 'Usuário'} />
-                  <AvatarFallback>{getInitials(topic.profiles?.name)}</AvatarFallback>
-                </Avatar>
-                
-                <div className="flex-1">
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <span className="font-medium">{topic.profiles?.name || "Usuário"}</span>
-                    <span className="text-xs text-muted-foreground">•</span>
-                    <span className="text-xs text-muted-foreground">
-                      {format(new Date(topic.created_at), "d 'de' MMMM 'às' HH:mm", {
-                        locale: ptBR,
-                      })}
-                    </span>
-                    
-                    <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                      Autor
-                    </span>
+          </div>
+          <Separator className="mb-4" />
+          <div className="prose max-w-none">
+            {renderPostContent(topic.content)}
+          </div>
+          <Separator className="mt-4" />
+          <div className="flex items-center gap-4 text-sm text-muted-foreground mt-4">
+            <div className="flex items-center">
+              <Eye className="h-4 w-4 mr-1" />
+              <span>{topic.view_count} visualizações</span>
+            </div>
+            <div className="flex items-center">
+              <MessageSquare className="h-4 w-4 mr-1" />
+              <span>{posts.length} respostas</span>
+            </div>
+          </div>
+        </div>
+      </Card>
 
-                    {topic.profiles?.role === 'admin' && (
-                      <span className="text-xs bg-red-500/10 text-red-500 px-2 py-0.5 rounded-full">
-                        Admin
-                      </span>
-                    )}
+      <div className="mt-6">
+        <h2 className="text-xl font-semibold mb-4">Respostas</h2>
+        <div className="space-y-4" ref={postsContainerRef}>
+          {posts.map((post) => (
+            <Card key={post.id} className="mb-3">
+              <div className="p-4">
+                <div className="flex items-start gap-3 mb-3">
+                  <Avatar>
+                    <AvatarImage src={post.profiles?.avatar_url || undefined} />
+                    <AvatarFallback>{getInitials(post.profiles?.name)}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <div className="text-sm text-muted-foreground">
+                      {post.profiles?.name || "Usuário"} em {format(new Date(post.created_at), "d 'de' MMMM 'às' HH:mm", { locale: ptBR })}
+                    </div>
                   </div>
-                  
-                  <div className="mt-2 prose prose-sm max-w-none dark:prose-invert">
-                    <div dangerouslySetInnerHTML={{ __html: topic.content }} />
-                  </div>
+                </div>
+                <div className="prose max-w-none">
+                  {renderPostContent(post.content)}
                 </div>
               </div>
             </Card>
-          </div>
-          
-          {/* Seção de resposta principal */}
-          {!topic.is_locked && (
-            <div className="mb-10">
-              <h2 className="text-lg font-medium mb-3">Sua resposta</h2>
-              <ReplyForm 
-                topicId={topic.id} 
-                onSuccess={() => refetchPosts()}
-              />
-            </div>
-          )}
-          
-          {/* Seção de respostas */}
-          <div className="mb-6">
-            <h2 className="text-lg font-medium mb-3">
-              {topic.reply_count === 0 
-                ? 'Nenhuma resposta ainda' 
-                : topic.reply_count === 1 
-                  ? '1 resposta' 
-                  : `${topic.reply_count} respostas`}
-            </h2>
-            
-            {postsLoading ? (
-              <div className="space-y-4">
-                {Array.from({ length: 2 }).map((_, i) => (
-                  <Card key={i} className="p-4 animate-pulse">
-                    <div className="flex gap-3">
-                      <Skeleton className="h-10 w-10 rounded-full" />
-                      <div className="flex-1">
-                        <Skeleton className="h-4 w-40 mb-2" />
-                        <Skeleton className="h-20 w-full" />
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            ) : posts && posts.length > 0 ? (
-              <div className="space-y-6">
-                {posts.map((post) => (
-                  <PostItem
-                    key={post.id}
-                    post={post}
-                    topicId={topic.id}
-                    isTopicAuthor={post.user_id === topic.user_id}
-                    isLocked={topic.is_locked}
-                    onReplyAdded={() => refetchPosts()}
-                    isAdmin={isAdmin}
-                    currentUserId={user?.id}
-                  />
-                ))}
-              </div>
-            ) : (
-              <Card className="p-6 text-center">
-                <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                <p className="text-muted-foreground mb-4">Seja o primeiro a responder a este tópico!</p>
-              </Card>
-            )}
-          </div>
-        </>
-      ) : null}
+          ))}
+        </div>
+      </div>
 
-      {/* Diálogo de confirmação para excluir tópico */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Excluir tópico</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir este tópico? Esta ação não pode ser desfeita e todas as respostas 
-              relacionadas também serão excluídas.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDeleteTopic} 
-              disabled={isDeleting}
-              className="bg-red-500 hover:bg-red-600 text-white"
-            >
-              {isDeleting ? 'Excluindo...' : 'Excluir'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Formulário de nova resposta */}
+      {user ? (
+        <Card className="mt-6">
+          <div className="p-6">
+            <h3 className="text-lg font-semibold mb-4">Adicionar uma resposta</h3>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div>
+                <Textarea
+                  id="content"
+                  placeholder="Escreva sua resposta..."
+                  className="w-full"
+                  {...register("content")}
+                />
+                {errors.content && (
+                  <p className="text-red-500 text-sm mt-1">{errors.content.message}</p>
+                )}
+              </div>
+              <Button type="submit" disabled={submitting}>
+                {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Enviar resposta
+              </Button>
+            </form>
+          </div>
+        </Card>
+      ) : (
+        <Card className="mt-6 p-6 text-center">
+          <MessageSquare className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+          <p className="text-muted-foreground">
+            Você precisa estar <Link to="/login" className="text-primary underline">logado</Link> para responder a este tópico.
+          </p>
+        </Card>
+      )}
     </div>
   );
 };

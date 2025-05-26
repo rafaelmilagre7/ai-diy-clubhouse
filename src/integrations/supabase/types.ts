@@ -149,177 +149,6 @@ export type Database = {
           },
         ]
       }
-      connection_notifications: {
-        Row: {
-          created_at: string
-          id: string
-          is_read: boolean
-          sender_id: string
-          type: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_read?: boolean
-          sender_id: string
-          type: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_read?: boolean
-          sender_id?: string
-          type?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "connection_notifications_sender_id_fkey"
-            columns: ["sender_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "connection_notifications_sender_id_fkey"
-            columns: ["sender_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "connection_notifications_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "connection_notifications_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      connection_recommendations: {
-        Row: {
-          created_at: string
-          id: string
-          is_dismissed: boolean | null
-          reason: string | null
-          recommended_user_id: string
-          score: number | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_dismissed?: boolean | null
-          reason?: string | null
-          recommended_user_id: string
-          score?: number | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_dismissed?: boolean | null
-          reason?: string | null
-          recommended_user_id?: string
-          score?: number | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "connection_recommendations_recommended_user_id_fkey"
-            columns: ["recommended_user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "connection_recommendations_recommended_user_id_fkey"
-            columns: ["recommended_user_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "connection_recommendations_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "connection_recommendations_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      conversations: {
-        Row: {
-          created_at: string
-          id: string
-          last_message_at: string | null
-          participant_1_id: string
-          participant_2_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          last_message_at?: string | null
-          participant_1_id: string
-          participant_2_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          last_message_at?: string | null
-          participant_1_id?: string
-          participant_2_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "conversations_participant_1_id_fkey"
-            columns: ["participant_1_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "conversations_participant_1_id_fkey"
-            columns: ["participant_1_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "conversations_participant_2_id_fkey"
-            columns: ["participant_2_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "conversations_participant_2_id_fkey"
-            columns: ["participant_2_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       course_access_control: {
         Row: {
           course_id: string | null
@@ -352,65 +181,6 @@ export type Database = {
             columns: ["role_id"]
             isOneToOne: false
             referencedRelation: "user_roles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      direct_messages: {
-        Row: {
-          content: string
-          created_at: string
-          id: string
-          is_read: boolean | null
-          recipient_id: string
-          sender_id: string
-          updated_at: string
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          id?: string
-          is_read?: boolean | null
-          recipient_id: string
-          sender_id: string
-          updated_at?: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          id?: string
-          is_read?: boolean | null
-          recipient_id?: string
-          sender_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "direct_messages_recipient_id_fkey"
-            columns: ["recipient_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "direct_messages_recipient_id_fkey"
-            columns: ["recipient_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "direct_messages_sender_id_fkey"
-            columns: ["sender_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "direct_messages_sender_id_fkey"
-            columns: ["sender_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
             referencedColumns: ["id"]
           },
         ]
@@ -555,145 +325,6 @@ export type Database = {
         }
         Relationships: []
       }
-      forum_mentions: {
-        Row: {
-          created_at: string
-          id: string
-          is_read: boolean | null
-          mentioned_by_user_id: string
-          mentioned_user_id: string
-          post_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_read?: boolean | null
-          mentioned_by_user_id: string
-          mentioned_user_id: string
-          post_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_read?: boolean | null
-          mentioned_by_user_id?: string
-          mentioned_user_id?: string
-          post_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "forum_mentions_mentioned_by_user_id_fkey"
-            columns: ["mentioned_by_user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "forum_mentions_mentioned_by_user_id_fkey"
-            columns: ["mentioned_by_user_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "forum_mentions_mentioned_user_id_fkey"
-            columns: ["mentioned_user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "forum_mentions_mentioned_user_id_fkey"
-            columns: ["mentioned_user_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "forum_mentions_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "forum_posts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      forum_notifications: {
-        Row: {
-          created_at: string
-          id: string
-          is_read: boolean | null
-          post_id: string | null
-          topic_id: string | null
-          triggered_by_user_id: string
-          type: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_read?: boolean | null
-          post_id?: string | null
-          topic_id?: string | null
-          triggered_by_user_id: string
-          type: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_read?: boolean | null
-          post_id?: string | null
-          topic_id?: string | null
-          triggered_by_user_id?: string
-          type?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "forum_notifications_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "forum_posts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "forum_notifications_topic_id_fkey"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "forum_topics"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "forum_notifications_triggered_by_user_id_fkey"
-            columns: ["triggered_by_user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "forum_notifications_triggered_by_user_id_fkey"
-            columns: ["triggered_by_user_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "forum_notifications_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "forum_notifications_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       forum_posts: {
         Row: {
           content: string
@@ -785,7 +416,6 @@ export type Database = {
           id: string
           is_locked: boolean
           is_pinned: boolean
-          is_solved: boolean | null
           last_activity_at: string
           reply_count: number
           title: string
@@ -800,7 +430,6 @@ export type Database = {
           id?: string
           is_locked?: boolean
           is_pinned?: boolean
-          is_solved?: boolean | null
           last_activity_at?: string
           reply_count?: number
           title: string
@@ -815,7 +444,6 @@ export type Database = {
           id?: string
           is_locked?: boolean
           is_pinned?: boolean
-          is_solved?: boolean | null
           last_activity_at?: string
           reply_count?: number
           title?: string
@@ -1518,62 +1146,6 @@ export type Database = {
           },
         ]
       }
-      member_connections: {
-        Row: {
-          created_at: string | null
-          id: string
-          recipient_id: string
-          requester_id: string
-          status: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          recipient_id: string
-          requester_id: string
-          status?: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          recipient_id?: string
-          requester_id?: string
-          status?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "member_connections_recipient_id_fkey"
-            columns: ["recipient_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "member_connections_recipient_id_fkey"
-            columns: ["recipient_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "member_connections_requester_id_fkey"
-            columns: ["requester_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "member_connections_requester_id_fkey"
-            columns: ["requester_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       modules: {
         Row: {
           certificate_template: Json | null
@@ -1750,42 +1322,6 @@ export type Database = {
           updated_at?: string
           user_id?: string
           whatsapp_enabled?: boolean
-        }
-        Relationships: []
-      }
-      notifications: {
-        Row: {
-          created_at: string
-          data: Json | null
-          expires_at: string | null
-          id: string
-          is_read: boolean | null
-          message: string
-          title: string
-          type: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          data?: Json | null
-          expires_at?: string | null
-          id?: string
-          is_read?: boolean | null
-          message: string
-          title: string
-          type: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          data?: Json | null
-          expires_at?: string | null
-          id?: string
-          is_read?: boolean | null
-          message?: string
-          title?: string
-          type?: string
-          user_id?: string
         }
         Relationships: []
       }
@@ -2811,62 +2347,44 @@ export type Database = {
       }
       profiles: {
         Row: {
-          available_for_networking: boolean | null
           avatar_url: string | null
           company_name: string | null
           created_at: string
-          current_position: string | null
           email: string
           id: string
           industry: string | null
-          last_active: string | null
-          linkedin_url: string | null
           name: string | null
-          professional_bio: string | null
           referrals_count: number
           role: string
           role_id: string | null
-          skills: string[] | null
           successful_referrals_count: number
           whatsapp_number: string | null
         }
         Insert: {
-          available_for_networking?: boolean | null
           avatar_url?: string | null
           company_name?: string | null
           created_at?: string
-          current_position?: string | null
           email: string
           id: string
           industry?: string | null
-          last_active?: string | null
-          linkedin_url?: string | null
           name?: string | null
-          professional_bio?: string | null
           referrals_count?: number
           role?: string
           role_id?: string | null
-          skills?: string[] | null
           successful_referrals_count?: number
           whatsapp_number?: string | null
         }
         Update: {
-          available_for_networking?: boolean | null
           avatar_url?: string | null
           company_name?: string | null
           created_at?: string
-          current_position?: string | null
           email?: string
           id?: string
           industry?: string | null
-          last_active?: string | null
-          linkedin_url?: string | null
           name?: string | null
-          professional_bio?: string | null
           referrals_count?: number
           role?: string
           role_id?: string | null
-          skills?: string[] | null
           successful_referrals_count?: number
           whatsapp_number?: string | null
         }
@@ -4258,10 +3776,6 @@ export type Database = {
         Args: { suggestion_id: string }
         Returns: undefined
       }
-      deleteforumpost: {
-        Args: { post_id: string }
-        Returns: Json
-      }
       determinerolefromemail: {
         Args: { email: string }
         Returns: string
@@ -4331,10 +3845,6 @@ export type Database = {
         Args: { suggestion_id: string }
         Returns: undefined
       }
-      increment_topic_replies: {
-        Args: { topic_id: string }
-        Returns: undefined
-      }
       increment_topic_views: {
         Args: { topic_id: string }
         Returns: undefined
@@ -4370,14 +3880,6 @@ export type Database = {
         }
         Returns: string
       }
-      mark_topic_as_solved: {
-        Args: { topic_id: string; post_id: string }
-        Returns: Json
-      }
-      mark_topic_solved: {
-        Args: { p_topic_id: string; p_post_id: string }
-        Returns: Json
-      }
       merge_json_data: {
         Args: { target: Json; source: Json }
         Returns: Json
@@ -4406,10 +3908,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
-      unmark_topic_as_solved: {
-        Args: { topic_id: string }
-        Returns: Json
-      }
       update_invite_send_attempt: {
         Args: { invite_id: string }
         Returns: undefined
@@ -4428,7 +3926,6 @@ export type Database = {
       }
     }
     Enums: {
-      connection_status: "pending" | "accepted" | "rejected"
       difficulty_level: "beginner" | "intermediate" | "advanced"
       difficulty_level_new: "easy" | "medium" | "advanced"
       forum_reaction_type: "like" | "helpful" | "insightful" | "celebrate"
@@ -4565,7 +4062,6 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      connection_status: ["pending", "accepted", "rejected"],
       difficulty_level: ["beginner", "intermediate", "advanced"],
       difficulty_level_new: ["easy", "medium", "advanced"],
       forum_reaction_type: ["like", "helpful", "insightful", "celebrate"],

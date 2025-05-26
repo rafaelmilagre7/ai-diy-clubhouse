@@ -16,7 +16,12 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   const timeoutRef = useRef<number | null>(null);
   const hasToastShown = useRef(false);
 
-  console.log("ProtectedRoutes state:", { user, isLoading, loadingTimeout });
+  console.log("ProtectedRoutes: verificando rota", {
+    path: location.pathname,
+    user: !!user,
+    isLoading, 
+    loadingTimeout
+  });
   
   // Configurar timeout de carregamento
   useEffect(() => {

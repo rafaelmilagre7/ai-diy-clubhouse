@@ -1,9 +1,7 @@
 
-import { Link, useNavigate } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { User, LogOut } from "lucide-react";
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -11,9 +9,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useState } from "react";
-import { toast } from "sonner";
+import { LogOut, Settings, User } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface MemberUserMenuProps {
   sidebarOpen: boolean;
@@ -32,86 +29,48 @@ export const MemberUserMenu = ({
   getInitials,
   signOut
 }: MemberUserMenuProps) => {
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const navigate = useNavigate();
-  
-  // Função para validar a URL da imagem
-  const isValidImageUrl = (url: string | undefined | null): boolean => {
-    if (!url) return false;
-    return url.startsWith('http://') || url.startsWith('https://');
-  };
-
-  // Verificar se a URL da imagem é válida
-  const validAvatarUrl = isValidImageUrl(profileAvatar) ? profileAvatar : undefined;
-  
-  const handleSignOut = async (e: Event) => {
-    e.preventDefault();
-    
-    try {
-      setIsLoggingOut(true);
-      
-      // Limpar token do localStorage para garantir logout
-      localStorage.removeItem('sb-zotzvtepvpnkcoobdubt-auth-token');
-      localStorage.removeItem('supabase.auth.token');
-      
-      // Usar o signOut do contexto de autenticação
-      await signOut();
-      
-      // Redirecionamento forçado para a página de autenticação
-      toast.success("Logout realizado com sucesso");
-      
-      // Forçar redirecionamento via location.href para garantir reset completo da aplicação
-      window.location.href = '/login';
-    } catch (error) {
-      console.error("Erro ao fazer logout:", error);
-      // Força redirecionamento para login em caso de falha
-      window.location.href = '/login';
-    } finally {
-      setIsLoggingOut(false);
-    }
-  };
-  
   return (
-    <div className="p-3">
+    <div className="mt-auto border-t border-gray-700 p-4">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className={cn(
-              "w-full justify-start gap-2 px-2 hover:bg-[#181A2A] text-neutral-300",
-              !sidebarOpen && "justify-center"
-            )}
+          <Button 
+            variant="ghost" 
+            className={`w-full flex items-center gap-3 px-2 text-white hover:bg-gray-700 ${!sidebarOpen ? "justify-center" : "justify-start"}`}
           >
-            <Avatar className="h-8 w-8 border border-white/10">
-              <AvatarImage src={validAvatarUrl} />
-              <AvatarFallback className="bg-[#181A2A] text-viverblue">{getInitials(profileName)}</AvatarFallback>
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={profileAvatar} alt={profileName || "Usuário"} />
+              <AvatarFallback className="bg-gray-600 text-white">{getInitials(profileName)}</AvatarFallback>
             </Avatar>
             {sidebarOpen && (
-              <div className="flex flex-col items-start text-sm">
-                <span className="font-medium text-neutral-100">{profileName}</span>
-                <span className="text-muted-foreground text-xs truncate max-w-[150px]">
-                  {profileEmail}
-                </span>
+              <div className="flex flex-col items-start text-left">
+                <span className="text-sm font-medium">{profileName || "Usuário"}</span>
+                <span className="text-xs text-gray-400">{profileEmail || "Sem email"}</span>
               </div>
             )}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56 bg-[#151823] border-white/5">
-          <DropdownMenuLabel className="text-neutral-200">Minha Conta</DropdownMenuLabel>
-          <DropdownMenuSeparator className="bg-white/5" />
-          <Link to="/profile">
-            <DropdownMenuItem className="hover:bg-[#181A2A]">
+        <DropdownMenuContent align="end" className="w-56 bg-gray-800 text-gray-200 border-gray-700">
+          <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+          <DropdownMenuSeparator className="bg-gray-700" />
+          <DropdownMenuItem asChild>
+            <Link to="/profile" className="cursor-pointer w-full flex items-center text-gray-200 hover:bg-gray-700 hover:text-white">
               <User className="mr-2 h-4 w-4" />
               <span>Perfil</span>
-            </DropdownMenuItem>
-          </Link>
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to="/settings" className="cursor-pointer w-full flex items-center text-gray-200 hover:bg-gray-700 hover:text-white">
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Configurações</span>
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator className="bg-gray-700" />
           <DropdownMenuItem 
-            disabled={isLoggingOut} 
-            onSelect={handleSignOut}
-            className="hover:bg-[#181A2A]"
+            onClick={signOut}
+            className="cursor-pointer text-red-400 hover:text-red-300 hover:bg-gray-700 focus:bg-gray-700"
           >
             <LogOut className="mr-2 h-4 w-4" />
-            <span>{isLoggingOut ? "Saindo..." : "Sair"}</span>
+            <span>Sair</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
