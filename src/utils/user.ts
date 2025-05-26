@@ -1,21 +1,33 @@
 
-export const getInitials = (name?: string | null): string => {
-  if (!name) return 'U';
+export const getInitials = (name: string): string => {
+  if (!name || name.trim() === '') {
+    return 'U';
+  }
   
-  return name
-    .split(' ')
-    .map(part => part.charAt(0))
-    .join('')
-    .toUpperCase()
-    .substring(0, 2);
+  const words = name.trim().split(' ');
+  if (words.length === 1) {
+    return words[0].charAt(0).toUpperCase();
+  }
+  
+  return (words[0].charAt(0) + words[words.length - 1].charAt(0)).toUpperCase();
 };
 
 export const formatUserName = (name?: string | null): string => {
-  if (!name) return 'Usuário';
-  return name;
+  if (!name || name.trim() === '') {
+    return 'Usuário';
+  }
+  return name.trim();
 };
 
-export const getAvatarUrl = (url?: string | null): string | undefined => {
-  if (!url) return undefined;
-  return url;
+export const getUserDisplayRole = (role?: string): string => {
+  switch (role) {
+    case 'admin':
+      return 'Administrador';
+    case 'moderator':
+      return 'Moderador';
+    case 'member':
+      return 'Membro';
+    default:
+      return 'Membro';
+  }
 };

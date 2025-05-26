@@ -15,7 +15,12 @@ const SuggestionsPage = () => (
   <div className="container max-w-7xl mx-auto py-6">
     <div className="text-center py-12">
       <h1 className="text-2xl font-bold mb-4">Sugestões da Comunidade</h1>
-      <p className="text-muted-foreground">Em breve...</p>
+      <p className="text-muted-foreground">
+        Compartilhe suas ideias para melhorar a plataforma e a comunidade.
+      </p>
+      <p className="text-muted-foreground mt-2">
+        Em breve você poderá enviar sugestões e votar nas ideias de outros membros.
+      </p>
     </div>
   </div>
 );

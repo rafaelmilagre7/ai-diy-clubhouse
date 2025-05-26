@@ -1,5 +1,6 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,40 +9,87 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MessageSquare, Users } from 'lucide-react';
-import { useDirectMessages } from '@/hooks/community/useDirectMessages';
-import { useMessageNotifications } from '@/hooks/community/useMessageNotifications';
+import { MessageSquareMore } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { getInitials } from '@/utils/user';
-import { useAuth } from '@/contexts/auth';
-import { Link } from 'react-router-dom';
+
+interface MessageNotification {
+  id: string;
+  sender: {
+    id: string;
+    name: string;
+    avatar_url?: string;
+  };
+  message: string;
+  read: boolean;
+  created_at: string;
+}
+
+// Dados mockados para demonstração
+const mockMessages: MessageNotification[] = [
+  {
+    id: '1',
+    sender: {
+      id: '1',
+      name: 'Ana Costa',
+      avatar_url: undefined
+    },
+    message: 'Olá! Vi sua resposta sobre IA no e-commerce e gostaria de trocar uma ideia...',
+    read: false,
+    created_at: new Date(Date.now() - 1000 * 60 * 15).toISOString()
+  },
+  {
+    id: '2',
+    sender: {
+      id: '2',
+      name: 'Pedro Silva',
+      avatar_url: undefined
+    },
+    message: 'Obrigado pela ajuda com a automação! Funcionou perfeitamente.',
+    read: false,
+    created_at: new Date(Date.now() - 1000 * 60 * 45).toISOString()
+  }
+];
 
 export const MessageNotificationsDropdown = () => {
-  const { user } = useAuth();
-  const { conversations, conversationsLoading } = useDirectMessages();
-  const { unreadCount } = useMessageNotifications();
+  const [messages, setMessages] = useState<MessageNotification[]>(mockMessages);
+  const [isOpen, setIsOpen] = useState(false);
 
-  const conversationsWithUnread = conversations.filter(conv => 
-    conv.unread_count && conv.unread_count > 0
-  ).slice(0, 5);
+  const unreadCount = messages.filter(m => !m.read).length;
 
-  const getOtherParticipant = (conversation: any) => {
-    return conversation.participant_1_id === user?.id 
-      ? conversation.participant_2 
-      : conversation.participant_1;
+  const markAsRead = (id: string) => {
+    setMessages(prev => 
+      prev.map(m => m.id === id ? { ...m, read: true } : m)
+    );
+  };
+
+  const formatTime = (date: string) => {
+    try {
+      return formatDistanceToNow(new Date(date), { 
+        addSuffix: true, 
+        locale: ptBR 
+      });
+    } catch {
+      return 'Data inválida';
+    }
+  };
+
+  const truncateMessage = (message: string, maxLength: number = 50) => {
+    return message.length > maxLength ? message.substring(0, maxLength) + '...' : message;
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="relative">
-          <MessageSquare className="h-5 w-5" />
+          <MessageSquareMore className="h-4 w-4" />
           {unreadCount > 0 && (
             <Badge 
               variant="destructive" 
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+              className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
             >
               {unreadCount > 9 ? '9+' : unreadCount}
             </Badge>
@@ -50,93 +98,63 @@ export const MessageNotificationsDropdown = () => {
       </DropdownMenuTrigger>
       
       <DropdownMenuContent align="end" className="w-80">
-        <DropdownMenuLabel className="flex items-center justify-between">
-          Mensagens
-          {unreadCount > 0 && (
-            <Badge variant="secondary">{unreadCount} não lidas</Badge>
+        <DropdownMenuLabel>Mensagens</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        
+        <div className="max-h-96 overflow-y-auto">
+          {messages.length === 0 ? (
+            <div className="p-4 text-center text-muted-foreground">
+              Nenhuma mensagem
+            </div>
+          ) : (
+            messages.map((message) => (
+              <DropdownMenuItem 
+                key={message.id}
+                className={`p-3 cursor-pointer ${!message.read ? 'bg-blue-50' : ''}`}
+                onClick={() => {
+                  markAsRead(message.id);
+                  window.location.href = '/comunidade/mensagens';
+                }}
+              >
+                <div className="flex gap-3 w-full">
+                  <Avatar className="h-8 w-8 flex-shrink-0">
+                    <AvatarImage src={message.sender.avatar_url || ''} />
+                    <AvatarFallback className="text-xs">
+                      {getInitials(message.sender.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <p className="font-medium text-sm truncate">
+                          {message.sender.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {truncateMessage(message.message)}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {formatTime(message.created_at)}
+                        </p>
+                      </div>
+                      {!message.read && (
+                        <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1"></div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </DropdownMenuItem>
+            ))
           )}
-        </DropdownMenuLabel>
+        </div>
         
         <DropdownMenuSeparator />
         
-        {conversationsLoading ? (
-          <div className="p-4 space-y-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex items-center space-x-3 animate-pulse">
-                <div className="h-8 w-8 bg-muted rounded-full" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-muted rounded w-3/4" />
-                  <div className="h-3 bg-muted rounded w-1/2" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : conversationsWithUnread.length === 0 ? (
-          <div className="p-4 text-center text-sm text-muted-foreground">
-            <Users className="h-8 w-8 mx-auto mb-2" />
-            Nenhuma mensagem não lida
-          </div>
-        ) : (
-          <div className="max-h-96 overflow-y-auto">
-            {conversationsWithUnread.map((conversation) => {
-              const otherParticipant = getOtherParticipant(conversation);
-              
-              return (
-                <DropdownMenuItem
-                  key={conversation.id}
-                  className="p-3 cursor-pointer"
-                  asChild
-                >
-                  <Link to="/comunidade/mensagens" className="block">
-                    <div className="flex items-center space-x-3 w-full">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={otherParticipant?.avatar_url || undefined} />
-                        <AvatarFallback className="text-xs">
-                          {getInitials(otherParticipant?.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <p className="font-medium text-sm truncate">
-                            {otherParticipant?.name || 'Usuário'}
-                          </p>
-                          {conversation.unread_count && conversation.unread_count > 0 && (
-                            <Badge variant="destructive" className="ml-2 text-xs">
-                              {conversation.unread_count}
-                            </Badge>
-                          )}
-                        </div>
-                        
-                        {conversation.last_message && (
-                          <p className="text-xs text-muted-foreground truncate">
-                            {conversation.last_message.content}
-                          </p>
-                        )}
-                        
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(conversation.last_message_at).toLocaleDateString('pt-BR', {
-                            day: '2-digit',
-                            month: 'short',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                  </Link>
-                </DropdownMenuItem>
-              );
-            })}
-            
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link to="/comunidade/mensagens" className="text-center w-full">
-                Ver todas as mensagens
-              </Link>
-            </DropdownMenuItem>
-          </div>
-        )}
+        <DropdownMenuItem 
+          className="p-3 text-center text-sm font-medium cursor-pointer"
+          onClick={() => window.location.href = '/comunidade/mensagens'}
+        >
+          Ver todas as mensagens
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

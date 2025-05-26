@@ -1,5 +1,6 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,89 +9,103 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Bell, Check, CheckCheck, Trash2, MessageSquare, Users, Calendar } from 'lucide-react';
-import { useNotifications } from '@/hooks/community/useNotifications';
+import { Bell, MessageSquare, CheckCircle, User, Calendar } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useNavigate } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+
+interface Notification {
+  id: string;
+  type: 'reply' | 'solution' | 'mention' | 'event';
+  title: string;
+  message: string;
+  read: boolean;
+  created_at: string;
+  link?: string;
+}
+
+// Dados mockados para demonstração
+const mockNotifications: Notification[] = [
+  {
+    id: '1',
+    type: 'reply',
+    title: 'Nova resposta no seu tópico',
+    message: 'João Silva respondeu ao tópico "Como implementar IA no e-commerce"',
+    read: false,
+    created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 min atrás
+    link: '/comunidade/topico/123'
+  },
+  {
+    id: '2',
+    type: 'solution',
+    title: 'Solução aceita',
+    message: 'Sua resposta foi marcada como solução por Maria Santos',
+    read: false,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2h atrás
+    link: '/comunidade/topico/456'
+  },
+  {
+    id: '3',
+    type: 'mention',
+    title: 'Você foi mencionado',
+    message: 'Carlos mencionou você em "Dúvidas sobre automação"',
+    read: true,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5h atrás
+    link: '/comunidade/topico/789'
+  }
+];
+
+const getNotificationIcon = (type: string) => {
+  switch (type) {
+    case 'reply':
+      return <MessageSquare className="h-4 w-4 text-blue-500" />;
+    case 'solution':
+      return <CheckCircle className="h-4 w-4 text-green-500" />;
+    case 'mention':
+      return <User className="h-4 w-4 text-purple-500" />;
+    case 'event':
+      return <Calendar className="h-4 w-4 text-orange-500" />;
+    default:
+      return <Bell className="h-4 w-4 text-gray-500" />;
+  }
+};
 
 export const NotificationsDropdown = () => {
-  const navigate = useNavigate();
-  const { 
-    notifications, 
-    unreadCount, 
-    markAsRead, 
-    markAllAsRead, 
-    deleteNotification,
-    isLoading 
-  } = useNotifications();
+  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
+  const [isOpen, setIsOpen] = useState(false);
 
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case 'message':
-        return <MessageSquare className="h-4 w-4" />;
-      case 'connection_request':
-      case 'connection_accepted':
-        return <Users className="h-4 w-4" />;
-      case 'event':
-        return <Calendar className="h-4 w-4" />;
-      default:
-        return <Bell className="h-4 w-4" />;
-    }
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const markAsRead = (id: string) => {
+    setNotifications(prev => 
+      prev.map(n => n.id === id ? { ...n, read: true } : n)
+    );
   };
 
-  const handleNotificationClick = (notification: any) => {
-    // Marcar como lida se não estiver
-    if (!notification.is_read) {
-      markAsRead(notification.id);
-    }
-
-    // Navegar baseado no tipo
-    switch (notification.type) {
-      case 'message':
-        navigate('/comunidade/mensagens');
-        break;
-      case 'connection_request':
-      case 'connection_accepted':
-        navigate('/comunidade/conexoes');
-        break;
-      case 'forum_reply':
-      case 'forum_mention':
-        if (notification.data?.topic_id) {
-          navigate(`/comunidade/topico/${notification.data.topic_id}`);
-        } else {
-          navigate('/comunidade');
-        }
-        break;
-      default:
-        break;
-    }
+  const markAllAsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
 
-  const formatTime = (timestamp: string) => {
+  const formatTime = (date: string) => {
     try {
-      return formatDistanceToNow(new Date(timestamp), { 
+      return formatDistanceToNow(new Date(date), { 
         addSuffix: true, 
         locale: ptBR 
       });
     } catch {
-      return 'Agora mesmo';
+      return 'Data inválida';
     }
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="relative">
-          <Bell className="h-5 w-5" />
+          <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
             <Badge 
               variant="destructive" 
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+              className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
             >
               {unreadCount > 9 ? '9+' : unreadCount}
             </Badge>
@@ -99,104 +114,75 @@ export const NotificationsDropdown = () => {
       </DropdownMenuTrigger>
       
       <DropdownMenuContent align="end" className="w-80">
-        <DropdownMenuLabel className="flex items-center justify-between">
-          Notificações
+        <div className="flex items-center justify-between p-2">
+          <DropdownMenuLabel className="p-0">Notificações</DropdownMenuLabel>
           {unreadCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => markAllAsRead()}
-              className="h-6 text-xs"
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={markAllAsRead}
+              className="text-xs h-auto p-1"
             >
-              <CheckCheck className="h-3 w-3 mr-1" />
               Marcar todas como lidas
             </Button>
           )}
-        </DropdownMenuLabel>
+        </div>
         
         <DropdownMenuSeparator />
         
-        {isLoading ? (
-          <div className="p-4 space-y-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex items-center space-x-3 animate-pulse">
-                <div className="h-8 w-8 bg-muted rounded-full" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-muted rounded w-3/4" />
-                  <div className="h-3 bg-muted rounded w-1/2" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : notifications.length === 0 ? (
-          <div className="p-4 text-center text-sm text-muted-foreground">
-            <Bell className="h-8 w-8 mx-auto mb-2" />
-            Nenhuma notificação
-          </div>
-        ) : (
-          <div className="max-h-96 overflow-y-auto">
-            {notifications.slice(0, 10).map((notification) => (
-              <DropdownMenuItem
+        <div className="max-h-96 overflow-y-auto">
+          {notifications.length === 0 ? (
+            <div className="p-4 text-center text-muted-foreground">
+              Nenhuma notificação
+            </div>
+          ) : (
+            notifications.map((notification) => (
+              <DropdownMenuItem 
                 key={notification.id}
-                className={cn(
-                  "p-3 cursor-pointer flex items-start space-x-3",
-                  !notification.is_read && "bg-muted/50"
-                )}
-                onClick={() => handleNotificationClick(notification)}
+                className={`p-3 cursor-pointer ${!notification.read ? 'bg-blue-50' : ''}`}
+                onClick={() => {
+                  markAsRead(notification.id);
+                  if (notification.link) {
+                    window.location.href = notification.link;
+                  }
+                }}
               >
-                <div className="flex-shrink-0 mt-1">
-                  {getNotificationIcon(notification.type)}
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium text-sm truncate">
-                      {notification.title}
-                    </h4>
-                    <div className="flex items-center space-x-1 ml-2">
-                      {!notification.is_read && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            markAsRead(notification.id);
-                          }}
-                          className="h-6 w-6 p-0"
-                        >
-                          <Check className="h-3 w-3" />
-                        </Button>
+                <div className="flex gap-3 w-full">
+                  <div className="flex-shrink-0 mt-0.5">
+                    {getNotificationIcon(notification.type)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <p className="font-medium text-sm truncate">
+                          {notification.title}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                          {notification.message}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {formatTime(notification.created_at)}
+                        </p>
+                      </div>
+                      {!notification.read && (
+                        <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1"></div>
                       )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteNotification(notification.id);
-                        }}
-                        className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
                     </div>
                   </div>
-                  
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                    {notification.message}
-                  </p>
-                  
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {formatTime(notification.created_at)}
-                  </p>
                 </div>
               </DropdownMenuItem>
-            ))}
-            
-            {notifications.length > 10 && (
-              <DropdownMenuSeparator />
-            )}
-          </div>
-        )}
+            ))
+          )}
+        </div>
+        
+        <DropdownMenuSeparator />
+        
+        <DropdownMenuItem 
+          className="p-3 text-center text-sm font-medium cursor-pointer"
+          onClick={() => window.location.href = '/comunidade/notificacoes'}
+        >
+          Ver todas as notificações
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
