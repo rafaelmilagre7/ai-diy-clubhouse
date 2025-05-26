@@ -1,4 +1,5 @@
 
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -48,13 +49,13 @@ export const useForumTopics = ({
             is_pinned,
             is_locked,
             is_solved,
-            profiles:user_id (
+            profiles!user_id (
               id,
               name,
               avatar_url,
               role
             ),
-            category:forum_categories (
+            forum_categories!category_id (
               id,
               name,
               slug
@@ -113,7 +114,7 @@ export const useForumTopics = ({
         console.log("📊 Tópicos encontrados:", topicsData.length);
 
         // Mapear os dados para o formato correto
-        const formattedTopics: Topic[] = topicsData.map(topic => ({
+        const formattedTopics: Topic[] = topicsData.map((topic: any) => ({
           id: topic.id,
           title: topic.title || 'Tópico sem título',
           content: topic.content || '',
@@ -134,10 +135,10 @@ export const useForumTopics = ({
             role: topic.profiles.role || 'member',
             user_id: topic.profiles.id
           } : null,
-          category: topic.category ? {
-            id: topic.category.id,
-            name: topic.category.name || 'Sem categoria',
-            slug: topic.category.slug || 'sem-categoria'
+          category: topic.forum_categories ? {
+            id: topic.forum_categories.id,
+            name: topic.forum_categories.name || 'Sem categoria',
+            slug: topic.forum_categories.slug || 'sem-categoria'
           } : null
         }));
         
@@ -155,3 +156,4 @@ export const useForumTopics = ({
     refetchOnWindowFocus: false
   });
 };
+
