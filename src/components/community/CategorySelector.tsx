@@ -1,53 +1,49 @@
 
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { useForumCategories } from '@/hooks/community/useForumCategories';
-import { Skeleton } from '@/components/ui/skeleton';
 
 interface CategorySelectorProps {
-  value?: string;
+  value: string;
   onValueChange: (value: string) => void;
-  placeholder?: string;
   required?: boolean;
 }
 
-export const CategorySelector: React.FC<CategorySelectorProps> = ({
-  value,
-  onValueChange,
-  placeholder = "Selecione uma categoria",
-  required = false
-}) => {
+export const CategorySelector = ({ value, onValueChange, required }: CategorySelectorProps) => {
   const { categories, isLoading, error } = useForumCategories();
 
   if (isLoading) {
-    return <Skeleton className="h-10 w-full" />;
+    return (
+      <Select disabled>
+        <SelectTrigger>
+          <SelectValue placeholder="Carregando categorias..." />
+        </SelectTrigger>
+      </Select>
+    );
   }
 
   if (error) {
+    console.error('Erro ao carregar categorias:', error);
     return (
-      <div className="text-sm text-red-600">
-        Erro ao carregar categorias. Tente novamente.
-      </div>
+      <Select disabled>
+        <SelectTrigger>
+          <SelectValue placeholder="Erro ao carregar categorias" />
+        </SelectTrigger>
+      </Select>
     );
   }
 
   return (
     <Select value={value} onValueChange={onValueChange} required={required}>
-      <SelectTrigger className="w-full">
-        <SelectValue placeholder={placeholder} />
+      <SelectTrigger>
+        <SelectValue placeholder="Selecione uma categoria" />
       </SelectTrigger>
       <SelectContent>
         {categories.map((category) => (
           <SelectItem key={category.id} value={category.id}>
             <div className="flex items-center gap-2">
-              {category.icon && <span>{category.icon}</span>}
-              <span>{category.name}</span>
-              {category.description && (
-                <Badge variant="secondary" className="text-xs">
-                  {category.description}
-                </Badge>
-              )}
+              {category.icon && <span className="text-sm">{category.icon}</span>}
+              {category.name}
             </div>
           </SelectItem>
         ))}

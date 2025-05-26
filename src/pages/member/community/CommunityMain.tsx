@@ -35,8 +35,15 @@ const CommunityMain = () => {
   const regularTopics = topics.filter(topic => !topic.is_pinned);
 
   const handleNewTopic = () => {
-    console.log('Navegando para novo tópico...');
-    navigate('/comunidade/novo-topico');
+    console.log('🚀 CommunityMain: Botão Novo tópico clicado');
+    console.log('🚀 CommunityMain: Rota atual:', window.location.pathname);
+    
+    try {
+      navigate('/comunidade/novo-topico');
+      console.log('✅ CommunityMain: Navegação para novo tópico executada');
+    } catch (error) {
+      console.error('❌ CommunityMain: Erro na navegação:', error);
+    }
   };
 
   console.log('CommunityMain - Categorias carregadas:', categories?.length || 0);
@@ -47,6 +54,7 @@ const CommunityMain = () => {
       <ForumHeader
         title="Comunidade Viver de IA"
         description="Conecte-se, aprenda e compartilhe conhecimento com outros membros"
+        showNewTopicButton={true}
       />
       
       <div className="container max-w-7xl mx-auto py-6 px-4">
@@ -78,8 +86,12 @@ const CommunityMain = () => {
                 </div>
               </div>
               
-              {/* Botão Novo tópico com onClick e Link como fallback */}
-              <Button onClick={handleNewTopic} className="flex items-center gap-2">
+              {/* Botão Novo tópico alternativo */}
+              <Button 
+                onClick={handleNewTopic} 
+                className="flex items-center gap-2"
+                data-testid="new-topic-button-alt"
+              >
                 <Plus className="h-4 w-4" />
                 Novo tópico
               </Button>

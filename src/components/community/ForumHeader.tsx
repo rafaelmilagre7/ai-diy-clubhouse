@@ -14,8 +14,15 @@ export const ForumHeader = ({ title, description, showNewTopicButton = false }: 
   const navigate = useNavigate();
 
   const handleNewTopic = () => {
-    console.log('Navegando para novo tópico...');
-    navigate('/comunidade/novo-topico');
+    console.log('🚀 ForumHeader: Navegando para novo tópico...');
+    console.log('🚀 ForumHeader: Rota atual:', window.location.pathname);
+    
+    try {
+      navigate('/comunidade/novo-topico');
+      console.log('✅ ForumHeader: Navegação executada com sucesso');
+    } catch (error) {
+      console.error('❌ ForumHeader: Erro na navegação:', error);
+    }
   };
 
   return (
@@ -32,7 +39,11 @@ export const ForumHeader = ({ title, description, showNewTopicButton = false }: 
           </div>
           
           {showNewTopicButton && (
-            <Button onClick={handleNewTopic} className="flex items-center gap-2">
+            <Button 
+              onClick={handleNewTopic} 
+              className="flex items-center gap-2"
+              data-testid="new-topic-button"
+            >
               <Plus className="h-4 w-4" />
               Novo tópico
             </Button>
