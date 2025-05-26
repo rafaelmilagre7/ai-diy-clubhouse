@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -72,7 +71,6 @@ export default function CommunityHome() {
       <ForumHeader 
         showNewTopicButton={true}
         onNewTopicClick={handleNewTopicClick}
-        categorySlug={activeTab !== "todos" ? activeTab : undefined}
       />
       
       <div className="flex flex-col md:flex-row gap-4 mb-6">
