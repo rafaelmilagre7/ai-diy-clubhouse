@@ -28,7 +28,21 @@ interface SidebarNavProps {
 
 export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
   const location = useLocation();
-  const { isAdmin, isFormacao } = useAuth();
+  const { isAdmin, user, profile } = useAuth();
+
+  // Verificação mais robusta para admin
+  const isUserAdmin = isAdmin || profile?.role === 'admin' || 
+    (user?.email && (
+      user.email.includes('@viverdeia.ai') || 
+      user.email === 'admin@teste.com'
+    ));
+
+  console.log("MemberSidebarNav - Admin status:", { 
+    isAdmin, 
+    isUserAdmin, 
+    userEmail: user?.email,
+    profileRole: profile?.role 
+  });
 
   const menuItems = [
     {
@@ -120,7 +134,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
           );
         })}
 
-        {isAdmin && (
+        {isUserAdmin && (
           <Button
             variant="outline"
             className={cn(
@@ -132,22 +146,6 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
             <Link to="/admin">
               <ShieldCheck className="h-4 w-4" />
               {sidebarOpen && <span>Painel Admin</span>}
-            </Link>
-          </Button>
-        )}
-        
-        {isFormacao && (
-          <Button
-            variant="outline"
-            className={cn(
-              "w-full justify-start gap-3 border-viverblue/30 text-viverblue hover:bg-[#181A2A] mt-4",
-              !sidebarOpen && "justify-center"
-            )}
-            asChild
-          >
-            <Link to="/formacao">
-              <GraduationCap className="h-4 w-4" />
-              {sidebarOpen && <span>Área de Cursos</span>}
             </Link>
           </Button>
         )}

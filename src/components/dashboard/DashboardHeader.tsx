@@ -1,7 +1,7 @@
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, Settings, Users } from "lucide-react";
+import { Search, Filter, Users } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
 import { Link } from "react-router-dom";
 import { useState } from "react";
@@ -19,29 +19,12 @@ export const DashboardHeader = ({
   category,
   onCategoryChange,
 }: DashboardHeaderProps) => {
-  const { isAdmin, profile, user } = useAuth();
+  const { profile } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  
-  // Debug logs para verificar o estado
-  console.log("DashboardHeader - Estado de admin:", { 
-    isAdmin, 
-    userRole: profile?.role,
-    userEmail: user?.email,
-    profileExists: !!profile 
-  });
   
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
-  
-  // Verificação mais robusta para admin
-  const isUserAdmin = isAdmin || profile?.role === 'admin' || 
-    (user?.email && (
-      user.email.includes('@viverdeia.ai') || 
-      user.email === 'admin@teste.com'
-    ));
-  
-  console.log("DashboardHeader - isUserAdmin final:", isUserAdmin);
   
   return (
     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -59,14 +42,6 @@ export const DashboardHeader = ({
             <span className="hidden sm:inline">Minhas Conexões</span>
           </Button>
         </Link>
-        {isUserAdmin && (
-          <Link to="/admin">
-            <Button variant="default" className="bg-viverblue hover:bg-viverblue/90 flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              <span className="hidden sm:inline">Painel Admin</span>
-            </Button>
-          </Link>
-        )}
         <div className="relative flex-1 md:w-64">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
