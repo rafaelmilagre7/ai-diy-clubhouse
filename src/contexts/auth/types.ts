@@ -20,4 +20,7 @@ export interface AuthContextType {
   signOut: () => Promise<void>;
   setProfile: (profile: Profile | null) => void;
   setIsLoading: (loading: boolean) => void;
+  signIn: (email: string, password: string) => Promise<any>;
+  signInAsMember: () => Promise<any>;
+  signInAsAdmin: () => Promise<any>;
 }

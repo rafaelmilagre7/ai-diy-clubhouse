@@ -24,6 +24,9 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   setProfile: (profile: Profile | null) => void;
   setIsLoading: (loading: boolean) => void;
+  signIn: (email: string, password: string) => Promise<any>;
+  signInAsMember: () => Promise<any>;
+  signInAsAdmin: () => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -35,7 +38,10 @@ const AuthContext = createContext<AuthContextType>({
   isFormacao: false,
   signOut: async () => {},
   setProfile: () => {},
-  setIsLoading: () => {}
+  setIsLoading: () => {},
+  signIn: async () => {},
+  signInAsMember: async () => {},
+  signInAsAdmin: async () => {}
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -82,6 +88,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Erro ao carregar perfil:', error);
     }
+  };
+
+  // Métodos de login
+  const signIn = async (email: string, password: string) => {
+    try {
+      setIsLoading(true);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) throw error;
+      
+      toast.success("Login realizado com sucesso");
+      return { success: true, data };
+    } catch (error: any) {
+      console.error('Erro ao fazer login:', error);
+      toast.error("Erro ao fazer login", {
+        description: error.message,
+      });
+      return { success: false, error };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signInAsMember = async () => {
+    return signIn("user@teste.com", "123456");
+  };
+
+  const signInAsAdmin = async () => {
+    return signIn("admin@teste.com", "123456");
   };
 
   useEffect(() => {
@@ -162,7 +201,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isFormacao,
       signOut,
       setProfile,
-      setIsLoading
+      setIsLoading,
+      signIn,
+      signInAsMember,
+      signInAsAdmin
     }}>
       {children}
     </AuthContext.Provider>
