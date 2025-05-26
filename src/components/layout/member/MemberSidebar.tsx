@@ -125,12 +125,7 @@ export const MemberSidebar: React.FC<MemberSidebarProps> = ({
       return location.pathname === path;
     }
     
-    // Para rotas da comunidade, verificar exatamente
-    if (path.startsWith('/comunidade/')) {
-      return location.pathname === path;
-    }
-    
-    return location.pathname.startsWith(path);
+    return location.pathname === path;
   };
 
   return (

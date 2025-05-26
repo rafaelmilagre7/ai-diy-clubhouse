@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { CommunityRedirect } from '@/components/community/CommunityRedirect';
 import CommunityHome from './CommunityHome';
 import CommunityMembers from './CommunityMembers';
 import ConnectionsPage from './ConnectionsPage';
@@ -29,18 +30,21 @@ const CommunityPages = () => {
   console.log('CommunityPages renderizando - rotas da comunidade disponíveis');
   
   return (
-    <Routes>
-      <Route index element={<CommunityHome />} />
-      <Route path="membros" element={<CommunityMembers />} />
-      <Route path="conexoes" element={<ConnectionsPage />} />
-      <Route path="mensagens" element={<MessagesPage />} />
-      <Route path="notificacoes" element={<NotificationsPage />} />
-      <Route path="sugestoes" element={<SuggestionsPage />} />
-      <Route path="categoria/:categorySlug" element={<CategoryTopics />} />
-      <Route path="novo-topico" element={<NewTopicPage />} />
-      <Route path="novo-topico/:categorySlug" element={<NewTopicPage />} />
-      <Route path="topico/:topicId" element={<TopicDetailPage />} />
-    </Routes>
+    <>
+      <CommunityRedirect />
+      <Routes>
+        <Route index element={<CommunityHome />} />
+        <Route path="membros" element={<CommunityMembers />} />
+        <Route path="conexoes" element={<ConnectionsPage />} />
+        <Route path="mensagens" element={<MessagesPage />} />
+        <Route path="notificacoes" element={<NotificationsPage />} />
+        <Route path="sugestoes" element={<SuggestionsPage />} />
+        <Route path="categoria/:categorySlug" element={<CategoryTopics />} />
+        <Route path="novo-topico" element={<NewTopicPage />} />
+        <Route path="novo-topico/:categorySlug" element={<NewTopicPage />} />
+        <Route path="topico/:topicId" element={<TopicDetailPage />} />
+      </Routes>
+    </>
   );
 };
 

@@ -57,10 +57,11 @@ export const CommunityNavigation = () => {
     if (item.exact) {
       return location.pathname === item.path;
     }
-    return location.pathname.startsWith(item.path);
+    return location.pathname === item.path;
   };
 
   const handleNavigation = (item: typeof navigationItems[0]) => {
+    console.log('CommunityNavigation: Navegando para', item.path);
     navigate(item.path);
   };
 

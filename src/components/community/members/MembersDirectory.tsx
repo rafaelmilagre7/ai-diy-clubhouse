@@ -10,6 +10,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 
 export const MembersDirectory = () => {
+  console.log('MembersDirectory renderizando - iniciando carregamento de membros');
+  
   const {
     members,
     isLoading,
@@ -23,6 +25,14 @@ export const MembersDirectory = () => {
     handleFilterChange,
     handleRetry
   } = useCommunityMembers();
+
+  console.log('MembersDirectory estado:', { 
+    membersCount: members.length, 
+    isLoading, 
+    isError, 
+    currentPage,
+    totalPages 
+  });
 
   if (isError) {
     return (
@@ -89,12 +99,12 @@ export const MembersDirectory = () => {
           <CardContent className="py-12 text-center">
             <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">
-              {filters.search.trim() ? 'Nenhum membro encontrado' : 'Nenhum membro ainda'}
+              {filters.search.trim() ? 'Nenhum membro encontrado' : 'Carregando membros...'}
             </h3>
             <p className="text-muted-foreground">
               {filters.search.trim() 
                 ? `Não encontramos membros com os filtros "${filters.search.trim()}"`
-                : 'Os membros da comunidade aparecerão aqui em breve.'
+                : 'Os membros da comunidade estão sendo carregados.'
               }
             </p>
           </CardContent>
