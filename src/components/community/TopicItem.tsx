@@ -1,3 +1,4 @@
+
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Pin, Lock, CheckCircle, MessageCircle, Eye } from "lucide-react";
@@ -5,6 +6,7 @@ import { Link } from "react-router-dom";
 import { Topic } from "@/types/forumTypes";
 import { ModerationActions } from "./ModerationActions";
 import { useReporting } from "@/hooks/community/useReporting";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface TopicItemProps {
   topic: Topic;
@@ -12,6 +14,7 @@ interface TopicItemProps {
 
 export const TopicItem = ({ topic }: TopicItemProps) => {
   const { openReportModal } = useReporting();
+  const queryClient = useQueryClient();
   
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
@@ -25,6 +28,15 @@ export const TopicItem = ({ topic }: TopicItemProps) => {
 
   const getInitials = (name: string) => {
     return name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
+  };
+
+  const handleModerationSuccess = () => {
+    // Invalidar queries relacionadas para atualizar a UI
+    queryClient.invalidateQueries({ queryKey: ['communityTopics'] });
+    queryClient.invalidateQueries({ queryKey: ['topics'] });
+    queryClient.invalidateQueries({ queryKey: ['forumTopics'] });
+    
+    console.log('Queries invalidadas após ação de moderação');
   };
 
   console.log("TopicItem: Gerando link para tópico:", topic.id, "URL será:", `/comunidade/topico/${topic.id}`);
@@ -99,6 +111,7 @@ export const TopicItem = ({ topic }: TopicItemProps) => {
                 isHidden: false // Topics não têm campo is_hidden diretamente
               }}
               onReport={() => openReportModal('topic', topic.id, topic.user_id)}
+              onSuccess={handleModerationSuccess}
             />
           </div>
         </div>

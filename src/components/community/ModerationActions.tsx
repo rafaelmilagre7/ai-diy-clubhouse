@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -34,13 +33,15 @@ interface ModerationActionsProps {
     isHidden?: boolean;
   };
   onReport?: () => void;
+  onSuccess?: () => void; // Novo callback para atualizar a UI
 }
 
 export const ModerationActions = ({ 
   type, 
   itemId, 
   currentState = {}, 
-  onReport 
+  onReport,
+  onSuccess 
 }: ModerationActionsProps) => {
   const { hasPermission } = usePermissions();
   const { performModerationAction } = useModeration();
@@ -63,6 +64,11 @@ export const ModerationActions = ({
         [type === 'topic' ? 'topic_id' : 'post_id']: itemId,
         reason
       });
+      
+      // Chamar callback de sucesso para atualizar a UI
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
       console.error('Erro na ação de moderação:', error);
     }
@@ -72,6 +78,11 @@ export const ModerationActions = ({
     const deleteAction = async () => {
       await handleAction('delete', 'Conteúdo removido por moderação');
       toast.success(`${type === 'topic' ? 'Tópico' : 'Post'} excluído com sucesso`);
+      
+      // Chamar callback de sucesso após exclusão bem-sucedida
+      if (onSuccess) {
+        onSuccess();
+      }
     };
 
     openDeleteDialog({

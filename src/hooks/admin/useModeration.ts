@@ -1,7 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 import { CommunityReport, ModerationAction, UserModerationStatus, ModerationStats } from '@/types/moderationTypes';
 
 export const useModeration = () => {
@@ -10,6 +10,7 @@ export const useModeration = () => {
   const [stats, setStats] = useState<ModerationStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [isActing, setIsActing] = useState(false);
+  const queryClient = useQueryClient();
 
   const fetchReports = async (status?: string) => {
     try {
@@ -160,6 +161,11 @@ export const useModeration = () => {
 
       // Executar a ação específica
       await executeAction(actionData);
+      
+      // Invalidar queries relevantes para atualizar a UI
+      queryClient.invalidateQueries({ queryKey: ['communityTopics'] });
+      queryClient.invalidateQueries({ queryKey: ['topics'] });
+      queryClient.invalidateQueries({ queryKey: ['forumTopics'] });
       
       toast.success('Ação de moderação executada com sucesso');
       await Promise.all([fetchActions(), fetchStats()]);
