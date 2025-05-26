@@ -14,10 +14,20 @@ import { useAuth } from "@/contexts/auth";
 import { useForumCategories } from '@/hooks/community/useForumCategories';
 import { AlertCircle, ArrowLeft } from 'lucide-react';
 
-export const NewTopicForm: React.FC = () => {
+interface NewTopicFormProps {
+  categoryId?: string;
+  categorySlug?: string;
+  onCancel?: () => void;
+}
+
+export const NewTopicForm: React.FC<NewTopicFormProps> = ({ 
+  categoryId, 
+  categorySlug, 
+  onCancel 
+}) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [selectedCategoryId, setSelectedCategoryId] = useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState(categoryId || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -76,6 +86,14 @@ export const NewTopicForm: React.FC = () => {
       setIsSubmitting(false);
     }
   };
+
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    } else {
+      navigate('/comunidade');
+    }
+  };
   
   if (categoriesLoading) {
     return (
@@ -104,7 +122,7 @@ export const NewTopicForm: React.FC = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate('/comunidade')}
+              onClick={handleCancel}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -182,7 +200,7 @@ export const NewTopicForm: React.FC = () => {
                 <Button 
                   type="button" 
                   variant="outline"
-                  onClick={() => navigate('/comunidade')}
+                  onClick={handleCancel}
                   disabled={isSubmitting}
                   className="flex-1"
                 >
