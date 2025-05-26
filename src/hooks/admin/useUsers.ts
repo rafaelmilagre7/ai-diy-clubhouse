@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { supabase, UserProfile } from '@/lib/supabase';
 import { usePermissions } from '@/hooks/auth/usePermissions';
@@ -36,21 +35,24 @@ const FALLBACK_ROLES: Role[] = [
     name: "admin",
     description: "Administrador do sistema",
     is_system: true,
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   },
   {
     id: "fallback-role-2",
     name: "member",
     description: "Membro padrão",
     is_system: true,
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   },
   {
     id: "fallback-role-3",
     name: "formacao",
     description: "Usuário da formação",
     is_system: true,
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   }
 ];
 

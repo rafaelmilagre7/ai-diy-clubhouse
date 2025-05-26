@@ -26,13 +26,23 @@ export interface UpdateRoleData {
 export const useRoles = () => {
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  
+  // Estados para controlar diálogos
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
 
   const fetchRoles = async () => {
     try {
       setLoading(true);
+      setIsLoading(true);
+      setError(null);
       const { data, error } = await supabase
         .from('user_roles')
         .select('*')
@@ -42,9 +52,11 @@ export const useRoles = () => {
       setRoles(data || []);
     } catch (error) {
       console.error('Erro ao carregar papéis:', error);
+      setError(error as Error);
       toast.error('Erro ao carregar papéis');
     } finally {
       setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -123,12 +135,24 @@ export const useRoles = () => {
   return {
     roles,
     loading,
+    isLoading,
     isCreating,
     isUpdating,
     isDeleting,
+    error,
     createRole,
     updateRole,
     deleteRole,
-    refetch: fetchRoles
+    refetch: fetchRoles,
+    fetchRoles,
+    // Estados de diálogo
+    createDialogOpen,
+    setCreateDialogOpen,
+    editDialogOpen,
+    setEditDialogOpen,
+    deleteDialogOpen,
+    setDeleteDialogOpen,
+    selectedRole,
+    setSelectedRole
   };
 };

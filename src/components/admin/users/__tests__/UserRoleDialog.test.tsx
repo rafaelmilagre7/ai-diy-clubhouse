@@ -22,16 +22,16 @@ describe('UserRoleDialog', () => {
       name: 'member', 
       description: 'Membro', 
       is_system: true, 
-      permissions: [] as string[], // Alterado de {} para array de strings
-      created_at: '2024-01-01T00:00:00Z' 
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z'
     },
     { 
       id: 'admin-role-id', 
       name: 'admin', 
       description: 'Administrador', 
       is_system: true, 
-      permissions: [] as string[], // Alterado de {} para array de strings
-      created_at: '2024-01-01T00:00:00Z'
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z'
     }
   ];
 
