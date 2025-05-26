@@ -23,17 +23,20 @@ interface TopicWithDetails extends Topic {
 }
 
 const TopicView = () => {
-  const { id } = useParams<{ id: string }>();
+  const { topicId } = useParams<{ topicId: string }>();
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
 
+  console.log("TopicView: parâmetro topicId da URL:", topicId);
+
   // Incrementar visualizações do tópico
   useEffect(() => {
-    if (id && user?.id) {
+    if (topicId && user?.id) {
       const incrementViews = async () => {
         try {
+          console.log("TopicView: incrementando visualizações para tópico:", topicId);
           const { error } = await supabase.rpc('increment_topic_views', { 
-            topic_id: id 
+            topic_id: topicId 
           });
           if (error) console.error('Erro ao incrementar visualizações:', error);
         } catch (error) {
@@ -43,7 +46,7 @@ const TopicView = () => {
       
       incrementViews();
     }
-  }, [id, user?.id]);
+  }, [topicId, user?.id]);
 
   // Buscar dados do tópico
   const { 
@@ -51,9 +54,14 @@ const TopicView = () => {
     isLoading: topicLoading, 
     error: topicError 
   } = useQuery({
-    queryKey: ['topic', id],
+    queryKey: ['topic', topicId],
     queryFn: async (): Promise<TopicWithDetails> => {
-      if (!id) throw new Error('ID do tópico não fornecido');
+      console.log("TopicView: buscando tópico com ID:", topicId);
+      
+      if (!topicId) {
+        console.error("TopicView: topicId está undefined");
+        throw new Error('ID do tópico não fornecido');
+      }
       
       const { data, error } = await supabase
         .from('forum_topics')
@@ -62,13 +70,24 @@ const TopicView = () => {
           profiles:user_id(*),
           forum_categories:category_id(id, name, slug)
         `)
-        .eq('id', id)
+        .eq('id', topicId)
         .single();
 
-      if (error) throw error;
+      console.log("TopicView: resultado da query do tópico:", { data, error });
+
+      if (error) {
+        console.error("TopicView: erro na query do tópico:", error);
+        throw error;
+      }
+      
+      if (!data) {
+        console.error("TopicView: nenhum dado retornado para o tópico");
+        throw new Error('Tópico não encontrado');
+      }
+
       return data;
     },
-    enabled: !!id
+    enabled: !!topicId
   });
 
   // Buscar posts do tópico
@@ -78,9 +97,14 @@ const TopicView = () => {
     error: postsError,
     refetch: refetchPosts
   } = useQuery({
-    queryKey: ['posts', id],
+    queryKey: ['posts', topicId],
     queryFn: async (): Promise<Post[]> => {
-      if (!id) throw new Error('ID do tópico não fornecido');
+      console.log("TopicView: buscando posts para tópico:", topicId);
+      
+      if (!topicId) {
+        console.error("TopicView: topicId está undefined para buscar posts");
+        throw new Error('ID do tópico não fornecido');
+      }
       
       const { data, error } = await supabase
         .from('forum_posts')
@@ -88,13 +112,19 @@ const TopicView = () => {
           *,
           profiles:user_id(*)
         `)
-        .eq('topic_id', id)
+        .eq('topic_id', topicId)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      console.log("TopicView: resultado da query dos posts:", { data, error, count: data?.length });
+
+      if (error) {
+        console.error("TopicView: erro na query dos posts:", error);
+        throw error;
+      }
+      
       return data || [];
     },
-    enabled: !!id
+    enabled: !!topicId
   });
 
   const isLoading = topicLoading || postsLoading;
@@ -107,9 +137,17 @@ const TopicView = () => {
   const handleReplyAdded = () => {
     refetchPosts();
     // Invalidar cache do tópico para atualizar contadores
-    queryClient.invalidateQueries({ queryKey: ['topic', id] });
+    queryClient.invalidateQueries({ queryKey: ['topic', topicId] });
     queryClient.invalidateQueries({ queryKey: ['topics'] });
   };
+
+  console.log("TopicView: estado atual:", {
+    topicId,
+    isLoading,
+    error: error?.message,
+    topicFound: !!topic,
+    topicTitle: topic?.title
+  });
 
   if (isLoading) {
     return (
@@ -137,6 +175,8 @@ const TopicView = () => {
   }
 
   if (error || !topic) {
+    console.error("TopicView: renderizando estado de erro:", { error: error?.message, topic: !!topic });
+    
     return (
       <div className="container mx-auto px-4 py-6 max-w-4xl">
         <div className="text-center py-12">
@@ -145,6 +185,9 @@ const TopicView = () => {
           <p className="text-muted-foreground mb-6">
             O tópico que você está procurando não existe ou foi removido.
           </p>
+          <div className="text-sm text-muted-foreground mb-4">
+            Debug: topicId = {topicId}, erro = {error?.message}
+          </div>
           <Button asChild>
             <Link to="/comunidade">Voltar para a Comunidade</Link>
           </Button>
@@ -152,6 +195,8 @@ const TopicView = () => {
       </div>
     );
   }
+
+  console.log("TopicView: renderizando tópico com sucesso:", topic.title);
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-4xl">
