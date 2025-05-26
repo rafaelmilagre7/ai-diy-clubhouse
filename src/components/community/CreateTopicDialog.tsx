@@ -31,22 +31,34 @@ interface CreateTopicDialogProps {
   trigger?: React.ReactNode;
   categoryId?: string;
   onTopicCreated?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  preselectedCategory?: string;
 }
 
 export function CreateTopicDialog({ 
   trigger, 
   categoryId, 
-  onTopicCreated 
+  onTopicCreated,
+  open: externalOpen,
+  onOpenChange: externalOnOpenChange,
+  preselectedCategory
 }: CreateTopicDialogProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [selectedCategoryId, setSelectedCategoryId] = useState(categoryId || "");
+  const [selectedCategoryId, setSelectedCategoryId] = useState(
+    preselectedCategory || categoryId || ""
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { categories, isLoading: loadingCategories } = useForumCategories();
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // Usar controle externo se fornecido, senão usar interno
+  const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setOpen = externalOnOpenChange || setInternalOpen;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,7 +99,7 @@ export function CreateTopicDialog({
       // Reset form
       setTitle("");
       setContent("");
-      setSelectedCategoryId(categoryId || "");
+      setSelectedCategoryId(preselectedCategory || categoryId || "");
       setOpen(false);
       
       // Navigate to topic or callback
@@ -121,7 +133,7 @@ export function CreateTopicDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={isOpen} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
           <Button className="gap-2">
