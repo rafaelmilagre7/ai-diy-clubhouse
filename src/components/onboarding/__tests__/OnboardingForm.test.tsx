@@ -1,7 +1,5 @@
-
 import React from 'react';
-import { render } from '@testing-library/react';
-import { screen } from '@testing-library/dom';
+import { render, screen } from '@testing-library/react';
 import { OnboardingForm } from '../OnboardingForm';
 import { BrowserRouter } from 'react-router-dom';
 
