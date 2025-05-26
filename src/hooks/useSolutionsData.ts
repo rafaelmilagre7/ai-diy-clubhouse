@@ -6,7 +6,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/auth';
 
-// Mock data para fallback
+// Mock data para fallback - removido modules
 const mockSolutions: Solution[] = [
   {
     id: '1',
@@ -16,9 +16,10 @@ const mockSolutions: Solution[] = [
     difficulty: 'Fácil',
     published: true,
     created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    slug: 'assistente-ia-whatsapp',
     tags: ['WhatsApp', 'IA', 'Atendimento'],
-    estimated_time: 60,
-    modules: []
+    estimated_time: 60
   },
   {
     id: '2', 
@@ -28,9 +29,10 @@ const mockSolutions: Solution[] = [
     difficulty: 'Médio',
     published: true,
     created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    slug: 'crm-inteligente',
     tags: ['CRM', 'Vendas', 'Automação'],
-    estimated_time: 120,
-    modules: []
+    estimated_time: 120
   }
 ];
 
