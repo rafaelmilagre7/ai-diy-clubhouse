@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { ForumCategory } from '@/types/forumTypes';
 
 export const useForumCategories = () => {
-  return useQuery({
+  const query = useQuery({
     queryKey: ['forum-categories'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -18,4 +18,9 @@ export const useForumCategories = () => {
     },
     staleTime: 5 * 60 * 1000, // 5 minutos
   });
+
+  return {
+    ...query,
+    categories: query.data || []
+  };
 };

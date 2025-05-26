@@ -5,14 +5,22 @@ import { Badge } from '@/components/ui/badge';
 import { MessageSquare, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ForumCategory } from '@/types/forumTypes';
+import { useForumCategories } from '@/hooks/community/useForumCategories';
 
 interface CategoryListProps {
-  categories: ForumCategory[];
+  categories?: ForumCategory[];
   compact?: boolean;
   onCategorySelect?: (categorySlug: string) => void;
 }
 
-export const CategoryList = ({ categories, compact = false, onCategorySelect }: CategoryListProps) => {
+export const CategoryList = ({ categories: propCategories, compact = false, onCategorySelect }: CategoryListProps) => {
+  const { categories: hookCategories, isLoading } = useForumCategories();
+  const categories = propCategories || hookCategories;
+
+  if (isLoading) {
+    return <div>Carregando categorias...</div>;
+  }
+
   return (
     <div className="space-y-3">
       <h3 className="text-lg font-semibold mb-4">Categorias</h3>
