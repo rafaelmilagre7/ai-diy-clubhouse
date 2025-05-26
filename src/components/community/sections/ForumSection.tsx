@@ -76,117 +76,121 @@ export const ForumSection = () => {
 
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
         {/* Lista de tópicos */}
-        <div className="xl:col-span-3 space-y-6">
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Discussões Recentes</h2>
-            
-            {topicsLoading ? (
-              <div className="space-y-3">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Card key={i} className="animate-pulse">
-                    <CardContent className="p-4">
-                      <div className="flex gap-3">
-                        <div className="h-10 w-10 bg-muted rounded-full"></div>
-                        <div className="flex-1 space-y-2">
-                          <div className="h-5 bg-muted rounded w-3/4"></div>
-                          <div className="h-4 bg-muted rounded w-1/2"></div>
+        <div className="xl:col-span-3">
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold mb-6">Discussões Recentes</h2>
+              
+              {topicsLoading ? (
+                <div className="space-y-4">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Card key={i} className="animate-pulse">
+                      <CardContent className="p-6">
+                        <div className="flex gap-4">
+                          <div className="h-10 w-10 bg-muted rounded-full flex-shrink-0"></div>
+                          <div className="flex-1 space-y-3">
+                            <div className="h-5 bg-muted rounded w-3/4"></div>
+                            <div className="h-4 bg-muted rounded w-1/2"></div>
+                          </div>
                         </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : topics.length > 0 ? (
+                <div className="space-y-6">
+                  {/* Tópicos Fixados */}
+                  {pinnedTopics.length > 0 && (
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                        📌 Tópicos Fixados
+                      </h3>
+                      <div className="space-y-3">
+                        {pinnedTopics.slice(0, 3).map((topic) => (
+                          <TopicCard key={topic.id} topic={topic} isPinned />
+                        ))}
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : topics.length > 0 ? (
-              <div className="space-y-6">
-                {/* Tópicos Fixados */}
-                {pinnedTopics.length > 0 && (
-                  <div className="space-y-3">
-                    <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                      📌 Tópicos Fixados
-                    </h3>
-                    <div className="space-y-2">
-                      {pinnedTopics.slice(0, 3).map((topic) => (
-                        <TopicCard key={topic.id} topic={topic} isPinned />
+                    </div>
+                  )}
+
+                  {/* Tópicos Regulares */}
+                  <div className="space-y-4">
+                    {pinnedTopics.length > 0 && (
+                      <h3 className="text-sm font-medium text-muted-foreground">
+                        Discussões Recentes
+                      </h3>
+                    )}
+                    <div className="space-y-3">
+                      {regularTopics.slice(0, 10).map((topic) => (
+                        <TopicCard key={topic.id} topic={topic} />
                       ))}
                     </div>
                   </div>
-                )}
 
-                {/* Tópicos Regulares */}
-                <div className="space-y-3">
-                  {pinnedTopics.length > 0 && (
-                    <h3 className="text-sm font-medium text-muted-foreground">
-                      Discussões Recentes
-                    </h3>
+                  {/* Link para ver mais */}
+                  {topics.length > 10 && (
+                    <div className="text-center pt-6">
+                      <Button variant="outline" asChild>
+                        <Link to="/comunidade">Ver todas as discussões</Link>
+                      </Button>
+                    </div>
                   )}
-                  <div className="space-y-2">
-                    {regularTopics.slice(0, 10).map((topic) => (
-                      <TopicCard key={topic.id} topic={topic} />
-                    ))}
-                  </div>
                 </div>
-
-                {/* Link para ver mais */}
-                {topics.length > 10 && (
-                  <div className="text-center pt-4">
-                    <Button variant="outline" asChild>
-                      <Link to="/comunidade">Ver todas as discussões</Link>
+              ) : (
+                <Card className="border-dashed">
+                  <CardContent className="py-12 text-center">
+                    <MessageSquare className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">
+                      {searchQuery.trim() ? 'Nenhuma discussão encontrada' : 'Nenhuma discussão ainda'}
+                    </h3>
+                    <p className="text-muted-foreground mb-6">
+                      {searchQuery.trim() 
+                        ? `Não encontramos discussões com "${searchQuery.trim()}"`
+                        : 'Seja o primeiro a iniciar uma discussão na comunidade!'
+                      }
+                    </p>
+                    <Button asChild>
+                      <Link to="/comunidade/novo-topico">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Criar primeira discussão
+                      </Link>
                     </Button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <Card className="border-dashed">
-                <CardContent className="py-12 text-center">
-                  <MessageSquare className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">
-                    {searchQuery.trim() ? 'Nenhuma discussão encontrada' : 'Nenhuma discussão ainda'}
-                  </h3>
-                  <p className="text-muted-foreground mb-6">
-                    {searchQuery.trim() 
-                      ? `Não encontramos discussões com "${searchQuery.trim()}"`
-                      : 'Seja o primeiro a iniciar uma discussão na comunidade!'
-                    }
-                  </p>
-                  <Button asChild>
-                    <Link to="/comunidade/novo-topico">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Criar primeira discussão
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Sidebar com categorias */}
-        <div className="xl:col-span-1 space-y-6">
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Categorias</h3>
-            <CategoryList compact onCategorySelect={(slug) => window.location.href = `/comunidade/categoria/${slug}`} />
-          </div>
+        <div className="xl:col-span-1">
+          <div className="space-y-6 sticky top-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Categorias</h3>
+              <CategoryList compact onCategorySelect={(slug) => window.location.href = `/comunidade/categoria/${slug}`} />
+            </div>
 
-          {/* Estatísticas rápidas */}
-          <Card>
-            <CardContent className="p-4">
-              <h4 className="font-medium mb-3">Estatísticas da Comunidade</h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Total de tópicos</span>
-                  <span className="font-medium">{topics.length}</span>
+            {/* Estatísticas rápidas */}
+            <Card>
+              <CardContent className="p-4">
+                <h4 className="font-medium mb-4">Estatísticas da Comunidade</h4>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Total de tópicos</span>
+                    <span className="font-medium">{topics.length}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Categorias ativas</span>
+                    <span className="font-medium">{categories.length}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Tópicos resolvidos</span>
+                    <span className="font-medium">{topics.filter(t => t.is_solved).length}</span>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Categorias ativas</span>
-                  <span className="font-medium">{categories.length}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Tópicos resolvidos</span>
-                  <span className="font-medium">{topics.filter(t => t.is_solved).length}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
