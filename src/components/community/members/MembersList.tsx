@@ -12,9 +12,6 @@ interface MembersListProps {
   totalPages: number;
   currentPage: number;
   onPageChange: (page: number) => void;
-  onConnect?: (memberId: string) => void;
-  onMessage?: (memberId: string) => void;
-  connectedMembers: Set<string>;
 }
 
 export const MembersList = ({
@@ -22,10 +19,7 @@ export const MembersList = ({
   isLoading,
   totalPages,
   currentPage,
-  onPageChange,
-  onConnect,
-  onMessage,
-  connectedMembers
+  onPageChange
 }: MembersListProps) => {
   if (isLoading) {
     return <MembersSkeleton />;
@@ -42,9 +36,6 @@ export const MembersList = ({
           <MemberCard
             key={member.id}
             member={member}
-            onConnect={onConnect}
-            onMessage={onMessage}
-            isConnected={connectedMembers.has(member.id)}
           />
         ))}
       </div>
