@@ -1,6 +1,6 @@
 
 import { RouteObject } from "react-router-dom";
-import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
+import AuthenticatedRoute from '@/components/routing/AuthenticatedRoute';
 import MemberLayout from '@/components/layout/MemberLayout';
 
 // Member pages
@@ -31,11 +31,11 @@ import CommunityPages from '@/pages/member/community/index';
 // Função helper para criar rotas protegidas com MemberLayout
 const createProtectedRoute = (path: string, Component: React.ComponentType<any>) => ({
   path,
-  element: <ProtectedRoutes><MemberLayout><Component /></MemberLayout></ProtectedRoutes>
+  element: <AuthenticatedRoute><MemberLayout><Component /></MemberLayout></AuthenticatedRoute>
 });
 
 // Log para diagnóstico
-console.log("Carregando rotas de membros");
+console.log("Carregando rotas de membros com ProtectedRoute unificado");
 
 export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/", Dashboard),
@@ -67,6 +67,6 @@ export const memberRoutes: RouteObject[] = [
   // Comunidade Routes - Configuração corrigida
   {
     path: "/comunidade/*",
-    element: <ProtectedRoutes><MemberLayout><CommunityPages /></MemberLayout></ProtectedRoutes>
+    element: <AuthenticatedRoute><MemberLayout><CommunityPages /></MemberLayout></AuthenticatedRoute>
   }
 ];
