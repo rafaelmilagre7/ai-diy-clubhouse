@@ -18,7 +18,7 @@ import {
   Trash2,
   Calendar 
 } from 'lucide-react';
-import { Post } from '@/types/forumTypes';
+import { Post, Topic } from '@/types/forumTypes';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { getInitials } from '@/utils/user';
@@ -27,25 +27,28 @@ import { usePostInteractions } from '@/hooks/usePostInteractions';
 
 interface ReplyItemProps {
   reply: Post;
-  topicId: string;
+  topic: Topic;
   onReplyDeleted?: () => void;
 }
 
 export const ReplyItem: React.FC<ReplyItemProps> = ({ 
   reply, 
-  topicId, 
+  topic,
   onReplyDeleted 
 }) => {
   const { user } = useAuth();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const { 
-    canDelete, 
-    isDeleting, 
-    handleDeletePost 
+    canDelete,
+    canMarkAsSolution,
+    isDeleting,
+    isMarkingSolution,
+    handleDeletePost,
+    handleMarkAsSolution
   } = usePostInteractions({
     postId: reply.id,
-    topicId,
+    topicId: topic.id,
     authorId: reply.user_id,
     onPostDeleted: onReplyDeleted
   });
@@ -62,6 +65,7 @@ export const ReplyItem: React.FC<ReplyItemProps> = ({
   };
 
   const isAuthor = user?.id === reply.user_id;
+  const canMarkThisAsSolution = canMarkAsSolution(topic.user_id);
   const contentPreview = reply.content.length > 300 
     ? reply.content.substring(0, 300) + '...'
     : reply.content;
@@ -108,10 +112,14 @@ export const ReplyItem: React.FC<ReplyItemProps> = ({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  {!reply.is_solution && (
-                    <DropdownMenuItem className="text-green-600">
+                  {!reply.is_solution && !topic.is_solved && canMarkThisAsSolution && (
+                    <DropdownMenuItem 
+                      onClick={() => handleMarkAsSolution(topic.user_id)}
+                      disabled={isMarkingSolution}
+                      className="text-green-600"
+                    >
                       <CheckCircle className="h-4 w-4 mr-2" />
-                      Marcar como solução
+                      {isMarkingSolution ? 'Marcando...' : 'Marcar como solução'}
                     </DropdownMenuItem>
                   )}
                   {isAuthor && (

@@ -123,7 +123,7 @@ export const TopicDetailView: React.FC<TopicDetailViewProps> = ({ topic }) => {
       </Card>
 
       {/* Lista de Respostas */}
-      <TopicRepliesList topicId={topic.id} />
+      <TopicRepliesList topicId={topic.id} topic={topic} />
 
       {/* Formulário de Resposta */}
       {user && !topic.is_locked && (

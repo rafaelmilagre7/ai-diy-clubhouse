@@ -2,78 +2,105 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/auth";
 import { deleteForumPost } from "@/lib/supabase/rpc";
-import { Post } from "@/types/forumTypes";
 
 interface UsePostInteractionsProps {
-  post: Post;
+  postId: string;
   topicId: string;
-  onReplyAdded?: () => void;
+  authorId: string;
+  onPostDeleted?: () => void;
 }
 
 export const usePostInteractions = ({
-  post,
+  postId,
   topicId,
-  onReplyAdded
+  authorId,
+  onPostDeleted
 }: UsePostInteractionsProps) => {
-  const [showReplyForm, setShowReplyForm] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isMarkingSolution, setIsMarkingSolution] = useState(false);
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   
-  const handleReplySuccess = () => {
-    setShowReplyForm(false);
-    if (onReplyAdded) onReplyAdded();
+  // Verificar se o usuário pode deletar (autor ou admin)
+  const canDelete = user && (user.id === authorId || user.role === 'admin');
+  
+  // Verificar se pode marcar como solução (precisa ser autor do tópico ou admin)
+  const canMarkAsSolution = (topicAuthorId: string) => {
+    return user && (user.id === topicAuthorId || user.role === 'admin');
   };
 
   const handleDeletePost = async () => {
-    if (!post.id || !topicId) return;
+    if (!postId || !topicId) return;
     
     try {
       setIsDeleting(true);
       
-      const { success, error } = await deleteForumPost(post.id, topicId);
+      const { success, error } = await deleteForumPost(postId, topicId);
       
       if (!success) {
         throw new Error(error || "Erro desconhecido ao excluir resposta");
       }
       
-      queryClient.invalidateQueries({ queryKey: ['forumPosts', topicId] });
-      queryClient.invalidateQueries({ queryKey: ['forumTopic', topicId] });
+      // Invalidar queries para atualizar a interface
+      queryClient.invalidateQueries({ queryKey: ['forum-replies', topicId] });
+      queryClient.invalidateQueries({ queryKey: ['forum-topic-detail', topicId] });
+      queryClient.invalidateQueries({ queryKey: ['forum-topics'] });
+      
       toast.success("Resposta excluída com sucesso");
       
-      if (onReplyAdded) {
-        onReplyAdded();
+      if (onPostDeleted) {
+        onPostDeleted();
       }
     } catch (error: any) {
       console.error("Erro ao excluir resposta:", error);
       toast.error(`Erro ao excluir resposta: ${error.message || "Erro desconhecido"}`);
     } finally {
       setIsDeleting(false);
-      setShowDeleteDialog(false);
     }
   };
 
-  const toggleReplyForm = () => {
-    setShowReplyForm(!showReplyForm);
-  };
-
-  const openDeleteDialog = () => {
-    setShowDeleteDialog(true);
-  };
-
-  const closeDeleteDialog = () => {
-    setShowDeleteDialog(false);
+  const handleMarkAsSolution = async (topicAuthorId: string) => {
+    if (!canMarkAsSolution(topicAuthorId)) {
+      toast.error("Você não tem permissão para marcar esta resposta como solução");
+      return;
+    }
+    
+    try {
+      setIsMarkingSolution(true);
+      
+      // Usar a função RPC do Supabase para marcar como solução
+      const { data, error } = await queryClient.getQueryClient().rpc('mark_topic_solved', {
+        p_topic_id: topicId,
+        p_post_id: postId
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Invalidar queries para atualizar a interface
+      queryClient.invalidateQueries({ queryKey: ['forum-replies', topicId] });
+      queryClient.invalidateQueries({ queryKey: ['forum-topic-detail', topicId] });
+      queryClient.invalidateQueries({ queryKey: ['forum-topics'] });
+      
+      toast.success("Resposta marcada como solução!");
+      
+    } catch (error: any) {
+      console.error("Erro ao marcar como solução:", error);
+      toast.error(`Erro ao marcar como solução: ${error.message || "Erro desconhecido"}`);
+    } finally {
+      setIsMarkingSolution(false);
+    }
   };
 
   return {
-    showReplyForm,
-    showDeleteDialog,
+    canDelete,
+    canMarkAsSolution,
     isDeleting,
-    toggleReplyForm,
-    openDeleteDialog,
-    closeDeleteDialog,
-    handleReplySuccess,
-    handleDeletePost
+    isMarkingSolution,
+    handleDeletePost,
+    handleMarkAsSolution
   };
 };

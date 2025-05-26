@@ -5,15 +5,16 @@ import { supabase } from '@/lib/supabase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { MessageSquare, AlertCircle } from 'lucide-react';
-import { Post } from '@/types/forumTypes';
+import { Post, Topic } from '@/types/forumTypes';
 import { ReplyItem } from './ReplyItem';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface TopicRepliesListProps {
   topicId: string;
+  topic: Topic;
 }
 
-export const TopicRepliesList: React.FC<TopicRepliesListProps> = ({ topicId }) => {
+export const TopicRepliesList: React.FC<TopicRepliesListProps> = ({ topicId, topic }) => {
   const { data: replies = [], isLoading, error, refetch } = useQuery({
     queryKey: ['forum-replies', topicId],
     queryFn: async (): Promise<Post[]> => {
@@ -100,7 +101,7 @@ export const TopicRepliesList: React.FC<TopicRepliesListProps> = ({ topicId }) =
           <ReplyItem 
             key={reply.id} 
             reply={reply} 
-            topicId={topicId}
+            topic={topic}
             onReplyDeleted={refetch}
           />
         ))}
