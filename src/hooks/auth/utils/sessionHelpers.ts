@@ -1,4 +1,3 @@
-
 import { supabase, UserProfile } from "@/lib/supabase";
 import { processUserProfile } from "@/contexts/auth/utils/profileOperations";
 import { determineRoleFromEmail, validateUserRole } from "@/contexts/auth/utils/roleValidation";

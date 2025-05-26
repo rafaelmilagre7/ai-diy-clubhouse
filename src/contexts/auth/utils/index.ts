@@ -1,11 +1,10 @@
 
 // Export all utility functions
-export { fetchUserProfile } from './profileUtils';
+export { fetchUserProfile, createUserProfileIfNeeded, processUserProfile } from './profileOperations';
 export { 
   createTestUser, 
   signInAsTestMember, 
   signInAsTestAdmin 
 } from './testAuth';
 export { signOutUser } from './sessionUtils';
-export { isSuperAdmin } from './profileUtils/roleValidation';
-
+export { determineRoleFromEmail, validateUserRole, isSuperAdmin } from './roleValidation';
