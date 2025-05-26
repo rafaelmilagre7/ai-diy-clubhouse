@@ -1,161 +1,101 @@
 
-import React, { useState, useRef } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Send, X } from 'lucide-react';
+import { useReplyForm } from '@/hooks/useReplyForm';
 import { useAuth } from '@/contexts/auth';
-import { useQueryClient } from '@tanstack/react-query';
-import { incrementTopicReplies } from '@/lib/supabase/rpc';
-import { AlertCircle } from 'lucide-react';
+import { getInitials } from '@/utils/user';
 
 interface CreateReplyFormProps {
   topicId: string;
+  parentId?: string;
   onSuccess?: () => void;
   onCancel?: () => void;
+  placeholder?: string;
 }
 
-export const CreateReplyForm: React.FC<CreateReplyFormProps> = ({ 
-  topicId, 
+export const CreateReplyForm: React.FC<CreateReplyFormProps> = ({
+  topicId,
+  parentId,
   onSuccess,
-  onCancel 
+  onCancel,
+  placeholder = "Escreva sua resposta..."
 }) => {
-  const [content, setContent] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  const {
+    content,
+    isSubmitting,
+    textareaRef,
+    handleTextareaInput,
+    handleSubmit,
+    handleCancel
+  } = useReplyForm({
+    topicId,
+    parentId,
+    onSuccess,
+    onCancel
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    
-    if (!content.trim()) {
-      setError('O conteúdo da resposta não pode estar vazio');
-      return;
-    }
-    
-    if (!user?.id) {
-      setError('Você precisa estar logado para enviar uma resposta');
-      return;
-    }
-    
-    try {
-      setIsSubmitting(true);
-      console.log('Enviando resposta:', { topicId, content: content.trim() });
-      
-      // Inserir a resposta
-      const { data, error: insertError } = await supabase
-        .from('forum_posts')
-        .insert({
-          topic_id: topicId,
-          user_id: user.id,
-          content: content.trim()
-        })
-        .select('*')
-        .single();
-        
-      if (insertError) {
-        console.error('Erro ao inserir resposta:', insertError);
-        throw insertError;
-      }
-      
-      console.log('Resposta criada:', data);
-      
-      // Incrementar contador de respostas do tópico
-      await incrementTopicReplies(topicId);
-      
-      // Limpar formulário
-      setContent('');
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
-      }
-      
-      toast.success('Resposta enviada com sucesso!');
-      
-      // Invalidar cache das queries
-      queryClient.invalidateQueries({ queryKey: ['forum-replies', topicId] });
-      queryClient.invalidateQueries({ queryKey: ['forum-topic-detail', topicId] });
-      queryClient.invalidateQueries({ queryKey: ['forum-topics'] });
-      
-      if (onSuccess) {
-        onSuccess();
-      }
-      
-    } catch (error: any) {
-      console.error('Erro ao enviar resposta:', error);
-      setError(`Não foi possível enviar sua resposta: ${error.message || 'Erro desconhecido'}`);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleTextareaInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setContent(e.target.value);
-    setError(null);
-    
-    // Auto-resize textarea
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
-    }
-  };
-
-  const handleCancel = () => {
-    setContent('');
-    setError(null);
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-    }
-    if (onCancel) {
-      onCancel();
-    }
-  };
+  if (!user) {
+    return (
+      <Card className="border-dashed">
+        <CardContent className="p-6 text-center">
+          <p className="text-muted-foreground">
+            Faça login para participar da discussão.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
       <CardContent className="p-6">
         <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          
-          <div className="space-y-2">
-            <Textarea
-              ref={textareaRef}
-              placeholder="Escreva sua resposta..."
-              value={content}
-              onChange={handleTextareaInput}
-              rows={4}
-              className="w-full resize-none"
-              disabled={isSubmitting}
-              maxLength={5000}
-            />
-            <p className="text-sm text-muted-foreground text-right">
-              {content.length}/5000 caracteres
-            </p>
+          <div className="flex gap-3">
+            <Avatar className="h-10 w-10 flex-shrink-0">
+              <AvatarImage src={user.user_metadata?.avatar_url} />
+              <AvatarFallback>
+                {getInitials(user.user_metadata?.name || user.email || 'Usuário')}
+              </AvatarFallback>
+            </Avatar>
+            
+            <div className="flex-1">
+              <Textarea
+                ref={textareaRef}
+                placeholder={placeholder}
+                value={content}
+                onChange={handleTextareaInput}
+                className="min-h-[100px] resize-none border-gray-200 focus:border-blue-500"
+                disabled={isSubmitting}
+              />
+            </div>
           </div>
           
           <div className="flex justify-end gap-3">
-            <Button 
-              type="button" 
-              variant="outline"
-              onClick={handleCancel}
-              disabled={isSubmitting}
-            >
-              Cancelar
-            </Button>
+            {onCancel && (
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={handleCancel}
+                disabled={isSubmitting}
+              >
+                <X className="h-4 w-4 mr-2" />
+                Cancelar
+              </Button>
+            )}
+            
             <Button 
               type="submit" 
               disabled={isSubmitting || !content.trim()}
+              className="bg-blue-600 hover:bg-blue-700"
             >
-              {isSubmitting ? 'Enviando...' : 'Enviar Resposta'}
+              <Send className="h-4 w-4 mr-2" />
+              {isSubmitting ? 'Enviando...' : 'Responder'}
             </Button>
           </div>
         </form>

@@ -1,46 +1,21 @@
 
 import { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export const CommunityRedirect = () => {
-  const navigate = useNavigate();
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const tab = searchParams.get('tab');
-    
-    console.log('CommunityRedirect: Verificando redirecionamento', { 
-      pathname: location.pathname, 
-      tab,
-      fullURL: location.pathname + location.search 
-    });
-    
-    // Se estamos em /comunidade com query parameter tab, redirecionar para a rota correta
-    if (location.pathname === '/comunidade' && tab) {
-      let newPath = '/comunidade';
-      
-      switch (tab) {
-        case 'members':
-          newPath = '/comunidade/membros';
-          break;
-        case 'connections':
-          newPath = '/comunidade/conexoes';
-          break;
-        case 'messages':
-          newPath = '/comunidade/mensagens';
-          break;
-        case 'suggestions':
-          newPath = '/comunidade/sugestoes';
-          break;
-        default:
-          newPath = '/comunidade';
-      }
-      
-      console.log('CommunityRedirect: Redirecionando de', location.pathname + location.search, 'para', newPath);
-      navigate(newPath, { replace: true });
+    // Se o usuário está em /comunidade exatamente, não precisa redirecionar
+    if (location.pathname === '/comunidade') {
+      console.log('Usuário na página principal da comunidade');
+      return;
     }
-  }, [location, navigate]);
+
+    // Log para debug de rotas
+    console.log('CommunityRedirect - Rota atual:', location.pathname);
+  }, [location.pathname, navigate]);
 
   return null;
 };

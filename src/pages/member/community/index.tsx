@@ -2,7 +2,7 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { CommunityRedirect } from '@/components/community/CommunityRedirect';
-import CommunityHome from './CommunityHome';
+import CommunityMain from './CommunityMain';
 import CommunityMembers from './CommunityMembers';
 import ConnectionsPage from './ConnectionsPage';
 import MessagesPage from './MessagesPage';
@@ -33,7 +33,7 @@ const CommunityPages = () => {
     <>
       <CommunityRedirect />
       <Routes>
-        <Route index element={<CommunityHome />} />
+        <Route index element={<CommunityMain />} />
         <Route path="membros" element={<CommunityMembers />} />
         <Route path="conexoes" element={<ConnectionsPage />} />
         <Route path="mensagens" element={<MessagesPage />} />

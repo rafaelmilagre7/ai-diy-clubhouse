@@ -121,7 +121,7 @@ export const SkoolStyleForum = () => {
                       <Avatar className="h-12 w-12 flex-shrink-0">
                         <AvatarImage src={topic.profiles?.avatar_url || undefined} />
                         <AvatarFallback className="bg-blue-100 text-blue-600 font-medium">
-                          {getInitials(topic.profiles?.name)}
+                          {getInitials(topic.profiles?.name || 'Usuário')}
                         </AvatarFallback>
                       </Avatar>
 
