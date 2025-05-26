@@ -63,13 +63,9 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
 
   return (
     <div className="space-y-8 md:pt-2 animate-fade-in">
-      {console.log("🎨 DashboardLayout: Renderizando header")}
-      
       {/* HEADER IMERSIVO */}
       <ModernDashboardHeader userName={userName} />
 
-      {console.log("📈 DashboardLayout: Renderizando KPI Grid")}
-      
       {/* CARDS DE PROGRESSO (KPI) */}
       <KpiGrid 
         completed={completed?.length || 0} 
@@ -78,65 +74,42 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
         isLoading={isLoading}
       />
 
-      {console.log("📋 DashboardLayout: Renderizando conteúdo principal", { isLoading, hasNoSolutions })}
-
       {/* Conteúdo principal */}
       {isLoading ? (
         <div className="space-y-10">
-          {console.log("⏳ DashboardLayout: Renderizando loaders")}
           <SolutionsGridLoader title="Em andamento" count={2} />
           <SolutionsGridLoader title="Concluídas" count={2} />
           <SolutionsGridLoader title="Recomendadas" count={3} />
         </div>
       ) : hasNoSolutions ? (
-        <>
-          {console.log("🚫 DashboardLayout: Renderizando placeholder - sem soluções")}
-          <NoSolutionsPlaceholder />
-        </>
+        <NoSolutionsPlaceholder />
       ) : (
         <div className="space-y-10">
-          {console.log("✅ DashboardLayout: Renderizando soluções", {
-            activeCount: active?.length,
-            completedCount: completed?.length,
-            recommendedCount: recommended?.length
-          })}
-          
           {/* Soluções Ativas */}
           {active && active.length > 0 && (
-            <>
-              {console.log("🔥 DashboardLayout: Renderizando soluções ativas")}
-              <ActiveSolutions
-                solutions={active}
-                onSolutionClick={onSolutionClick}
-              />
-            </>
+            <ActiveSolutions
+              solutions={active}
+              onSolutionClick={onSolutionClick}
+            />
           )}
 
           {/* Soluções Completadas */}
           {completed && completed.length > 0 && (
-            <>
-              {console.log("✅ DashboardLayout: Renderizando soluções completadas")}
-              <CompletedSolutions
-                solutions={completed}
-                onSolutionClick={onSolutionClick}
-              />
-            </>
+            <CompletedSolutions
+              solutions={completed}
+              onSolutionClick={onSolutionClick}
+            />
           )}
 
           {/* Soluções Recomendadas */}
           {recommended && recommended.length > 0 && (
-            <>
-              {console.log("💡 DashboardLayout: Renderizando soluções recomendadas")}
-              <RecommendedSolutions
-                solutions={recommended}
-                onSolutionClick={onSolutionClick}
-              />
-            </>
+            <RecommendedSolutions
+              solutions={recommended}
+              onSolutionClick={onSolutionClick}
+            />
           )}
         </div>
       )}
-
-      {console.log("🏁 DashboardLayout: Renderização concluída")}
     </div>
   );
 });
