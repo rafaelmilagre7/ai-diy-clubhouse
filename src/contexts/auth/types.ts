@@ -1,46 +1,23 @@
 
-import { Session, User } from '@supabase/supabase-js';
-import { UserProfile } from '@/lib/supabase';
+import { User, Session } from '@supabase/supabase-js';
 
-export interface AuthContextType {
-  session: Session | null;
-  user: User | null;
-  profile: UserProfile | null;
-  isAdmin: boolean;
-  isFormacao: boolean;
-  isLoading: boolean;
-  authError: Error | null;
-  signIn: (email: string, password: string) => Promise<{
-    success: boolean;
-    data?: any;
-    error?: any;
-  }>;
-  signOut: () => Promise<{
-    success: boolean;
-    error?: any;
-  }>;
-  signInAsMember: () => Promise<{
-    success: boolean;
-    data?: any;
-    error?: any;
-  }>;
-  signInAsAdmin: () => Promise<{
-    success: boolean;
-    data?: any;
-    error?: any;
-  }>;
-  setSession: React.Dispatch<React.SetStateAction<Session | null>>;
-  setUser: React.Dispatch<React.SetStateAction<User | null>>;
-  setProfile: React.Dispatch<React.SetStateAction<UserProfile | null>>;
-  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
+export interface Profile {
+  id: string;
+  name: string | null;
+  email: string | null;
+  avatar_url: string | null;
+  role: string;
+  created_at: string;
 }
 
-export const TEST_ADMIN = {
-  email: "admin@teste.com",
-  password: "123456"
-};
-
-export const TEST_MEMBER = {
-  email: "user@teste.com",
-  password: "123456"
-};
+export interface AuthContextType {
+  user: User | null;
+  session: Session | null;
+  profile: Profile | null;
+  isLoading: boolean;
+  isAdmin: boolean;
+  isFormacao: boolean;
+  signOut: () => Promise<void>;
+  setProfile: (profile: Profile | null) => void;
+  setIsLoading: (loading: boolean) => void;
+}

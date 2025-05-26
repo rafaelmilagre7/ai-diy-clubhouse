@@ -28,21 +28,9 @@ interface SidebarNavProps {
 
 export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
   const location = useLocation();
-  const { isAdmin, user, profile } = useAuth();
+  const { isAdmin } = useAuth();
 
-  // Verificação mais robusta para admin
-  const isUserAdmin = isAdmin || profile?.role === 'admin' || 
-    (user?.email && (
-      user.email.includes('@viverdeia.ai') || 
-      user.email === 'admin@teste.com'
-    ));
-
-  console.log("MemberSidebarNav - Admin status:", { 
-    isAdmin, 
-    isUserAdmin, 
-    userEmail: user?.email,
-    profileRole: profile?.role 
-  });
+  console.log("MemberSidebarNav - isAdmin:", isAdmin);
 
   const menuItems = [
     {
@@ -134,7 +122,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
           );
         })}
 
-        {isUserAdmin && (
+        {isAdmin && (
           <Button
             variant="outline"
             className={cn(
