@@ -6,11 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { useNavigate } from "react-router-dom";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 import { useForumCategories } from '@/hooks/community/useForumCategories';
+import { AlertCircle } from 'lucide-react';
 
 interface NewTopicFormProps {
   categoryId?: string;
@@ -23,29 +25,50 @@ export const NewTopicForm: React.FC<NewTopicFormProps> = ({
   categorySlug, 
   onCancel 
 }) => {
+  const [searchParams] = useSearchParams();
+  const categoryFromUrl = searchParams.get('categoria');
+  
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState(initialCategoryId || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
   const navigate = useNavigate();
   const { user } = useAuth();
   const { categories, isLoading: categoriesLoading } = useForumCategories();
+
+  // Buscar categoria pela URL se fornecida
+  React.useEffect(() => {
+    if (categoryFromUrl && categories.length > 0 && !selectedCategoryId) {
+      const category = categories.find(cat => cat.slug === categoryFromUrl);
+      if (category) {
+        setSelectedCategoryId(category.id);
+      }
+    }
+  }, [categoryFromUrl, categories, selectedCategoryId]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     
     if (!user?.id) {
-      toast.error('É necessário estar logado para criar um tópico');
+      setError('É necessário estar logado para criar um tópico');
       return;
     }
     
-    if (!title.trim() || !content.trim()) {
-      toast.error('Preencha todos os campos obrigatórios');
+    if (!title.trim()) {
+      setError('O título é obrigatório');
+      return;
+    }
+    
+    if (!content.trim()) {
+      setError('O conteúdo é obrigatório');
       return;
     }
     
     if (!selectedCategoryId) {
-      toast.error('Selecione uma categoria para o tópico');
+      setError('Selecione uma categoria para o tópico');
       return;
     }
     
@@ -89,7 +112,7 @@ export const NewTopicForm: React.FC<NewTopicFormProps> = ({
       
     } catch (error: any) {
       console.error('Erro ao criar tópico:', error);
-      toast.error(`Erro ao criar tópico: ${error.message || 'Erro desconhecido'}`);
+      setError(`Erro ao criar tópico: ${error.message || 'Erro desconhecido'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -98,6 +121,8 @@ export const NewTopicForm: React.FC<NewTopicFormProps> = ({
   const handleCancel = () => {
     if (onCancel) {
       onCancel();
+    } else if (categorySlug) {
+      navigate(`/comunidade/categoria/${categorySlug}`);
     } else {
       navigate('/comunidade');
     }
@@ -125,11 +150,21 @@ export const NewTopicForm: React.FC<NewTopicFormProps> = ({
       </CardHeader>
       <CardContent className="p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
           <div className="space-y-2">
             <Label htmlFor="category">Categoria *</Label>
             <Select 
               value={selectedCategoryId} 
-              onValueChange={setSelectedCategoryId}
+              onValueChange={(value) => {
+                setSelectedCategoryId(value);
+                setError(null);
+              }}
               disabled={!!initialCategoryId}
             >
               <SelectTrigger>
@@ -150,10 +185,14 @@ export const NewTopicForm: React.FC<NewTopicFormProps> = ({
             <Input
               id="title"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                setError(null);
+              }}
               placeholder="Digite um título claro e descritivo"
               maxLength={200}
               required
+              disabled={isSubmitting}
             />
             <p className="text-sm text-muted-foreground">
               {title.length}/200 caracteres
@@ -165,11 +204,15 @@ export const NewTopicForm: React.FC<NewTopicFormProps> = ({
             <Textarea
               id="content"
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={(e) => {
+                setContent(e.target.value);
+                setError(null);
+              }}
               placeholder="Descreva sua dúvida, ideia ou compartilhe seu conhecimento..."
               rows={8}
               maxLength={5000}
               required
+              disabled={isSubmitting}
             />
             <p className="text-sm text-muted-foreground">
               {content.length}/5000 caracteres

@@ -1,14 +1,20 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { MessageSquare, Eye, CheckCircle, Pin } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { 
+  MessageSquare, 
+  Eye, 
+  Clock, 
+  CheckCircle, 
+  Pin,
+  Lock 
+} from 'lucide-react';
+import { Topic } from '@/types/forumTypes';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Topic } from '@/types/forumTypes';
-import { Link } from 'react-router-dom';
-import { cn } from '@/lib/utils';
 import { getInitials } from '@/utils/user';
 
 interface TopicCardProps {
@@ -16,80 +22,100 @@ interface TopicCardProps {
   isPinned?: boolean;
 }
 
-export const TopicCard = ({ topic, isPinned }: TopicCardProps) => {
-  const timeAgo = formatDistanceToNow(new Date(topic.created_at), {
-    addSuffix: true,
-    locale: ptBR
-  });
+export const TopicCard: React.FC<TopicCardProps> = ({ topic, isPinned = false }) => {
+  const formatDate = (date: string) => {
+    try {
+      return formatDistanceToNow(new Date(date), { 
+        addSuffix: true, 
+        locale: ptBR 
+      });
+    } catch {
+      return 'Data inválida';
+    }
+  };
 
-  const lastActivity = formatDistanceToNow(new Date(topic.last_activity_at), {
-    addSuffix: true,
-    locale: ptBR
-  });
+  const contentPreview = topic.content.length > 150 
+    ? topic.content.substring(0, 150) + '...'
+    : topic.content;
 
   return (
-    <Link to={`/comunidade/topico/${topic.id}`} className="block">
-      <Card className={cn(
-        "hover:shadow-md transition-all duration-200 cursor-pointer hover:border-primary/50",
-        isPinned && "border-primary/50 bg-primary/5",
-        topic.is_solved && "border-green-200 bg-green-50/30"
-      )}>
-        <CardContent className="p-4">
+    <Card className={`transition-all hover:shadow-md ${isPinned ? 'border-blue-200 bg-blue-50/30' : ''}`}>
+      <CardContent className="p-6">
+        <div className="space-y-4">
+          {/* Cabeçalho */}
           <div className="flex items-start justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-2">
-                {isPinned && <Pin className="h-4 w-4 text-primary" />}
-                {topic.is_solved && <CheckCircle className="h-4 w-4 text-green-500" />}
-                <h3 className="font-semibold text-lg leading-tight hover:text-primary transition-colors line-clamp-2">
-                  {topic.title}
-                </h3>
-              </div>
-              
-              <p className="text-muted-foreground text-sm line-clamp-2 mb-3">
-                {topic.content.replace(/<[^>]*>/g, '').substring(0, 150)}
-                {topic.content.length > 150 && '...'}
-              </p>
-
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <Eye className="h-3 w-3" />
-                  <span>{topic.view_count}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <MessageSquare className="h-3 w-3" />
-                  <span>{topic.reply_count}</span>
-                </div>
-                {topic.category && (
-                  <Badge variant="secondary" className="text-xs">
-                    {topic.category.name}
-                  </Badge>
-                )}
-              </div>
-            </div>
-
-            <div className="flex flex-col items-end gap-2 text-right min-w-0">
+            <div className="flex-1 space-y-2">
               <div className="flex items-center gap-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={topic.profiles?.avatar_url || ''} />
-                  <AvatarFallback className="text-xs">
-                    {getInitials(topic.profiles?.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="text-xs">
-                  <p className="font-medium">{topic.profiles?.name || 'Usuário'}</p>
-                  <p className="text-muted-foreground">{timeAgo}</p>
-                </div>
+                {topic.is_pinned && (
+                  <Pin className="h-4 w-4 text-blue-600" />
+                )}
+                {topic.is_locked && (
+                  <Lock className="h-4 w-4 text-red-600" />
+                )}
+                <Link 
+                  to={`/comunidade/topico/${topic.id}`}
+                  className="text-lg font-semibold hover:text-primary transition-colors line-clamp-2"
+                >
+                  {topic.title}
+                </Link>
               </div>
               
-              {topic.last_activity_at !== topic.created_at && (
-                <div className="text-xs text-muted-foreground">
-                  Última atividade: {lastActivity}
-                </div>
+              {topic.category && (
+                <Badge variant="outline" className="w-fit">
+                  {topic.category.name}
+                </Badge>
               )}
             </div>
+
+            {topic.is_solved && (
+              <Badge className="bg-green-100 text-green-800 border-green-200 flex items-center gap-1">
+                <CheckCircle className="h-3 w-3" />
+                Resolvido
+              </Badge>
+            )}
           </div>
-        </CardContent>
-      </Card>
-    </Link>
+
+          {/* Prévia do conteúdo */}
+          <p className="text-muted-foreground text-sm line-clamp-2">
+            {contentPreview}
+          </p>
+
+          {/* Rodapé */}
+          <div className="flex items-center justify-between">
+            {/* Informações do autor */}
+            <div className="flex items-center gap-2">
+              <Avatar className="h-6 w-6">
+                <AvatarImage src={topic.profiles?.avatar_url || ''} />
+                <AvatarFallback className="text-xs">
+                  {getInitials(topic.profiles?.name || 'Usuário')}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-sm text-muted-foreground">
+                {topic.profiles?.name || 'Usuário'}
+              </span>
+              {topic.profiles?.role === 'admin' && (
+                <Badge variant="secondary" className="text-xs">Admin</Badge>
+              )}
+            </div>
+
+            {/* Estatísticas */}
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <Eye className="h-4 w-4" />
+                <span>{topic.view_count}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <MessageSquare className="h-4 w-4" />
+                <span>{topic.reply_count}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Clock className="h-4 w-4" />
+                <span>{formatDate(topic.last_activity_at || topic.created_at)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
