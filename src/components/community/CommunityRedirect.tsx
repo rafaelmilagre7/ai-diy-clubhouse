@@ -1,21 +1,14 @@
 
-import { useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
 
 export const CommunityRedirect = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    // Se o usuário está em /comunidade exatamente, não precisa redirecionar
-    if (location.pathname === '/comunidade') {
-      console.log('Usuário na página principal da comunidade');
-      return;
-    }
-
-    // Log para debug de rotas
-    console.log('CommunityRedirect - Rota atual:', location.pathname);
-  }, [location.pathname, navigate]);
-
+  
+  // Se estiver na rota exata /comunidade, redireciona para /comunidade (index)
+  if (location.pathname === '/comunidade') {
+    return null; // Não redireciona, deixa carregar a página principal
+  }
+  
   return null;
 };

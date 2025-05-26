@@ -3,110 +3,86 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { MessageSquare, Eye, Clock, Pin, Lock, CheckCircle } from 'lucide-react';
+import { MessageSquare, Eye, Clock, Pin, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Topic } from '@/types/forumTypes';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { getInitials } from '@/utils/user';
+import { Topic } from '@/types/forumTypes';
 
 interface TopicCardProps {
   topic: Topic;
   isPinned?: boolean;
-  showCategory?: boolean;
 }
 
-export const TopicCard: React.FC<TopicCardProps> = ({ 
-  topic, 
-  isPinned = false,
-  showCategory = true 
-}) => {
+export const TopicCard = ({ topic, isPinned = false }: TopicCardProps) => {
   const authorName = topic.profiles?.name || 'Usuário';
-  const categoryName = topic.category?.name || 'Geral';
-  
-  const timeAgo = formatDistanceToNow(new Date(topic.last_activity_at), {
+  const authorAvatar = topic.profiles?.avatar_url;
+  const categoryName = topic.category?.name;
+  const categoryIcon = topic.category?.icon;
+
+  const timeAgo = formatDistanceToNow(new Date(topic.created_at), {
     addSuffix: true,
-    locale: ptBR
+    locale: ptBR,
   });
 
   return (
-    <Card className={`hover:shadow-md transition-all duration-200 ${isPinned ? 'border-blue-200 bg-blue-50/50' : ''}`}>
-      <CardContent className="p-4">
-        <div className="flex items-start gap-3">
-          {/* Avatar */}
-          <Avatar className="h-10 w-10 flex-shrink-0">
-            <AvatarImage src={topic.profiles?.avatar_url || undefined} />
-            <AvatarFallback>{getInitials(authorName)}</AvatarFallback>
-          </Avatar>
+    <Link to={`/comunidade/topico/${topic.id}`}>
+      <Card className={`hover:shadow-md transition-shadow cursor-pointer ${isPinned ? 'border-blue-200 bg-blue-50/50' : ''}`}>
+        <CardContent className="p-4">
+          <div className="flex gap-4">
+            {/* Avatar do autor */}
+            <Avatar className="h-10 w-10 flex-shrink-0">
+              <AvatarImage src={authorAvatar || undefined} />
+              <AvatarFallback>
+                {authorName.substring(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
 
-          {/* Conteúdo principal */}
-          <div className="flex-1 min-w-0">
-            {/* Cabeçalho */}
-            <div className="flex items-start justify-between gap-2 mb-2">
-              <div className="flex-1">
-                <Link 
-                  to={`/comunidade/topico/${topic.id}`}
-                  className="block hover:text-blue-600 transition-colors"
-                >
-                  <h3 className="font-semibold text-lg leading-tight line-clamp-2">
-                    {isPinned && <Pin className="inline h-4 w-4 text-blue-600 mr-1" />}
-                    {topic.is_locked && <Lock className="inline h-4 w-4 text-gray-600 mr-1" />}
-                    {topic.title}
-                    {topic.is_solved && <CheckCircle className="inline h-4 w-4 text-green-600 ml-1" />}
-                  </h3>
-                </Link>
-                
-                {/* Resumo do conteúdo */}
-                <p className="text-gray-600 text-sm mt-1 line-clamp-2">
-                  {topic.content.substring(0, 120)}...
-                </p>
+            {/* Conteúdo principal */}
+            <div className="flex-1 min-w-0">
+              {/* Título com badges */}
+              <div className="flex items-start gap-2 mb-2">
+                <h3 className="font-medium text-gray-900 leading-tight flex-1">
+                  {isPinned && <Pin className="inline h-4 w-4 text-blue-600 mr-1" />}
+                  {topic.is_solved && <CheckCircle className="inline h-4 w-4 text-green-600 mr-1" />}
+                  {topic.title}
+                </h3>
               </div>
 
-              {/* Status badges */}
-              <div className="flex flex-col items-end gap-1">
-                {topic.is_solved && (
-                  <Badge variant="outline" className="text-green-700 border-green-300">
-                    Resolvido
-                  </Badge>
-                )}
-                {showCategory && topic.category && (
-                  <Badge variant="secondary" className="text-xs">
+              {/* Metadados */}
+              <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
+                <span className="flex items-center gap-1">
+                  por <span className="font-medium">{authorName}</span>
+                </span>
+                
+                {categoryName && (
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    {categoryIcon && <span className="text-xs">{categoryIcon}</span>}
                     {categoryName}
                   </Badge>
                 )}
-              </div>
-            </div>
-
-            {/* Meta informações */}
-            <div className="flex items-center justify-between text-sm text-gray-500">
-              <div className="flex items-center gap-4">
+                
                 <span className="flex items-center gap-1">
-                  <MessageSquare className="h-4 w-4" />
-                  {topic.reply_count}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Eye className="h-4 w-4" />
-                  {topic.view_count}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Clock className="h-4 w-4" />
+                  <Clock className="h-3 w-3" />
                   {timeAgo}
                 </span>
               </div>
 
-              <div className="text-right">
-                <p className="font-medium">{authorName}</p>
-                {topic.profiles?.role === 'admin' && (
-                  <Badge variant="outline" className="text-xs">
-                    Admin
-                  </Badge>
-                )}
+              {/* Estatísticas */}
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <MessageSquare className="h-3 w-3" />
+                  {topic.reply_count} {topic.reply_count === 1 ? 'resposta' : 'respostas'}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Eye className="h-3 w-3" />
+                  {topic.view_count} {topic.view_count === 1 ? 'visualização' : 'visualizações'}
+                </span>
               </div>
             </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </Link>
   );
 };

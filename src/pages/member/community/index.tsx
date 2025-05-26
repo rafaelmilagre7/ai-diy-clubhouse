@@ -8,7 +8,7 @@ import ConnectionsPage from './ConnectionsPage';
 import MessagesPage from './MessagesPage';
 import NotificationsPage from './NotificationsPage';
 import CategoryTopics from './CategoryTopics';
-import NewTopic from './NewTopic';
+import NewTopicPage from './NewTopicPage';
 import TopicDetailPage from './TopicDetailPage';
 
 // Página temporária para sugestões
@@ -27,7 +27,7 @@ const SuggestionsPage = () => (
 );
 
 const CommunityPages = () => {
-  console.log('CommunityPages renderizando - nova estrutura consolidada');
+  console.log('CommunityPages renderizando - rotas configuradas');
   
   return (
     <>
@@ -40,8 +40,8 @@ const CommunityPages = () => {
         <Route path="notificacoes" element={<NotificationsPage />} />
         <Route path="sugestoes" element={<SuggestionsPage />} />
         <Route path="categoria/:categorySlug" element={<CategoryTopics />} />
-        <Route path="novo-topico" element={<NewTopic />} />
-        <Route path="novo-topico/:categorySlug" element={<NewTopic />} />
+        <Route path="novo-topico" element={<NewTopicPage />} />
+        <Route path="novo-topico/:categorySlug" element={<NewTopicPage />} />
         <Route path="topico/:topicId" element={<TopicDetailPage />} />
       </Routes>
     </>

@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Send } from 'lucide-react';
+import { ArrowLeft, Send, AlertCircle } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
@@ -17,7 +17,7 @@ const NewTopicPage = () => {
   const { categorySlug } = useParams();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { categories } = useForumCategories();
+  const { categories, isLoading: categoriesLoading, error: categoriesError } = useForumCategories();
 
   const [formData, setFormData] = useState({
     title: '',
@@ -25,24 +25,63 @@ const NewTopicPage = () => {
     categoryId: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  console.log('NewTopicPage - Dados:', {
+    user: user?.id,
+    categories: categories?.length || 0,
+    categorySlug,
+    formData
+  });
 
   // Pre-selecionar categoria se fornecida via URL
   React.useEffect(() => {
     if (categorySlug && categories.length > 0) {
       const category = categories.find(cat => cat.slug === categorySlug);
       if (category) {
+        console.log('Pré-selecionando categoria:', category);
         setFormData(prev => ({ ...prev, categoryId: category.id }));
       }
     }
   }, [categorySlug, categories]);
 
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+    
+    if (!formData.title.trim()) {
+      errors.title = 'Título é obrigatório';
+    } else if (formData.title.trim().length < 10) {
+      errors.title = 'Título deve ter pelo menos 10 caracteres';
+    }
+    
+    if (!formData.content.trim()) {
+      errors.content = 'Conteúdo é obrigatório';
+    } else if (formData.content.trim().length < 20) {
+      errors.content = 'Conteúdo deve ter pelo menos 20 caracteres';
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user || !formData.title.trim() || !formData.content.trim()) {
+    console.log('Iniciando submit do formulário...');
+    
+    if (!user) {
+      toast({
+        title: "Acesso negado",
+        description: "Você precisa estar logado para criar um tópico.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!validateForm()) {
       toast({
         title: "Campos obrigatórios",
-        description: "Por favor, preencha título e conteúdo.",
+        description: "Por favor, corrija os erros no formulário.",
         variant: "destructive",
       });
       return;
@@ -51,6 +90,13 @@ const NewTopicPage = () => {
     setIsSubmitting(true);
     
     try {
+      console.log('Inserindo tópico no banco...', {
+        title: formData.title.trim(),
+        content: formData.content.trim(),
+        user_id: user.id,
+        category_id: formData.categoryId || null
+      });
+
       const { data, error } = await supabase
         .from('forum_topics')
         .insert({
@@ -62,7 +108,12 @@ const NewTopicPage = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao inserir tópico:', error);
+        throw error;
+      }
+
+      console.log('Tópico criado com sucesso:', data);
 
       toast({
         title: "Tópico criado!",
@@ -82,6 +133,25 @@ const NewTopicPage = () => {
       setIsSubmitting(false);
     }
   };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-6 text-center">
+            <AlertCircle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">Acesso Restrito</h3>
+            <p className="text-muted-foreground mb-4">
+              Você precisa estar logado para criar um tópico.
+            </p>
+            <Button onClick={() => navigate('/comunidade')}>
+              Voltar para a comunidade
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -111,24 +181,32 @@ const NewTopicPage = () => {
                 <label className="text-sm font-medium">
                   Categoria
                 </label>
-                <Select 
-                  value={formData.categoryId} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, categoryId: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione uma categoria (opcional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        <div className="flex items-center gap-2">
-                          <span>{category.icon}</span>
-                          <span>{category.name}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {categoriesLoading ? (
+                  <div className="h-10 bg-gray-100 rounded animate-pulse"></div>
+                ) : categoriesError ? (
+                  <div className="text-red-600 text-sm">
+                    Erro ao carregar categorias: {categoriesError.message}
+                  </div>
+                ) : (
+                  <Select 
+                    value={formData.categoryId} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, categoryId: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma categoria (opcional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          <div className="flex items-center gap-2">
+                            <span>{category.icon || '📁'}</span>
+                            <span>{category.name}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
 
               {/* Título */}
@@ -140,8 +218,11 @@ const NewTopicPage = () => {
                   value={formData.title}
                   onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                   placeholder="Descreva sua dúvida, implementação ou discussão..."
-                  className="text-lg"
+                  className={`text-lg ${formErrors.title ? 'border-red-500' : ''}`}
                 />
+                {formErrors.title && (
+                  <p className="text-red-500 text-sm">{formErrors.title}</p>
+                )}
               </div>
 
               {/* Conteúdo */}
@@ -154,8 +235,11 @@ const NewTopicPage = () => {
                   onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
                   placeholder="Detalhe sua pergunta, compartilhe sua experiência ou inicie uma discussão..."
                   rows={10}
-                  className="resize-none"
+                  className={`resize-none ${formErrors.content ? 'border-red-500' : ''}`}
                 />
+                {formErrors.content && (
+                  <p className="text-red-500 text-sm">{formErrors.content}</p>
+                )}
                 <div className="text-xs text-muted-foreground">
                   Dica: Seja específico e forneça contexto para obter melhores respostas.
                 </div>

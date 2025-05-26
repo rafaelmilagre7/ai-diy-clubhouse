@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, Plus, TrendingUp, Clock, CheckCircle, MessageSquare } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForumCategories } from '@/hooks/community/useForumCategories';
 import { useForumTopics, TopicFilterType } from '@/hooks/community/useForumTopics';
 import { TopicCard } from '@/components/community/TopicCard';
@@ -11,6 +11,7 @@ import { CategoryList } from '@/components/community/CategoryList';
 import { ForumHeader } from '@/components/community/ForumHeader';
 
 const CommunityMain = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<TopicFilterType>('recentes');
 
@@ -32,6 +33,14 @@ const CommunityMain = () => {
   // Separar tópicos fixados dos regulares
   const pinnedTopics = topics.filter(topic => topic.is_pinned);
   const regularTopics = topics.filter(topic => !topic.is_pinned);
+
+  const handleNewTopic = () => {
+    console.log('Navegando para novo tópico...');
+    navigate('/comunidade/novo-topico');
+  };
+
+  console.log('CommunityMain - Categorias carregadas:', categories?.length || 0);
+  console.log('CommunityMain - Tópicos carregados:', topics?.length || 0);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -69,11 +78,10 @@ const CommunityMain = () => {
                 </div>
               </div>
               
-              <Button asChild>
-                <Link to="/comunidade/novo-topico">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Novo tópico
-                </Link>
+              {/* Botão Novo tópico com onClick e Link como fallback */}
+              <Button onClick={handleNewTopic} className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Novo tópico
               </Button>
             </div>
 
@@ -126,11 +134,9 @@ const CommunityMain = () => {
                       <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
                       <h3 className="text-lg font-medium mb-2">Nenhum tópico encontrado</h3>
                       <p className="mb-4">Seja o primeiro a iniciar uma discussão!</p>
-                      <Button asChild>
-                        <Link to="/comunidade/novo-topico">
-                          <Plus className="h-4 w-4 mr-2" />
-                          Criar primeiro tópico
-                        </Link>
+                      <Button onClick={handleNewTopic}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Criar primeiro tópico
                       </Button>
                     </div>
                   )}
