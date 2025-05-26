@@ -416,7 +416,6 @@ export type Database = {
           id: string
           is_locked: boolean
           is_pinned: boolean
-          is_solved: boolean | null
           last_activity_at: string
           reply_count: number
           title: string
@@ -431,7 +430,6 @@ export type Database = {
           id?: string
           is_locked?: boolean
           is_pinned?: boolean
-          is_solved?: boolean | null
           last_activity_at?: string
           reply_count?: number
           title: string
@@ -446,7 +444,6 @@ export type Database = {
           id?: string
           is_locked?: boolean
           is_pinned?: boolean
-          is_solved?: boolean | null
           last_activity_at?: string
           reply_count?: number
           title?: string
@@ -1145,62 +1142,6 @@ export type Database = {
             columns: ["lesson_id"]
             isOneToOne: false
             referencedRelation: "learning_lessons"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      member_connections: {
-        Row: {
-          created_at: string | null
-          id: string
-          recipient_id: string
-          requester_id: string
-          status: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          recipient_id: string
-          requester_id: string
-          status?: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          recipient_id?: string
-          requester_id?: string
-          status?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "member_connections_recipient_id_fkey"
-            columns: ["recipient_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "member_connections_recipient_id_fkey"
-            columns: ["recipient_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "member_connections_requester_id_fkey"
-            columns: ["requester_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "member_connections_requester_id_fkey"
-            columns: ["requester_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
             referencedColumns: ["id"]
           },
         ]
@@ -2406,62 +2347,44 @@ export type Database = {
       }
       profiles: {
         Row: {
-          available_for_networking: boolean | null
           avatar_url: string | null
           company_name: string | null
           created_at: string
-          current_position: string | null
           email: string
           id: string
           industry: string | null
-          last_active: string | null
-          linkedin_url: string | null
           name: string | null
-          professional_bio: string | null
           referrals_count: number
           role: string
           role_id: string | null
-          skills: string[] | null
           successful_referrals_count: number
           whatsapp_number: string | null
         }
         Insert: {
-          available_for_networking?: boolean | null
           avatar_url?: string | null
           company_name?: string | null
           created_at?: string
-          current_position?: string | null
           email: string
           id: string
           industry?: string | null
-          last_active?: string | null
-          linkedin_url?: string | null
           name?: string | null
-          professional_bio?: string | null
           referrals_count?: number
           role?: string
           role_id?: string | null
-          skills?: string[] | null
           successful_referrals_count?: number
           whatsapp_number?: string | null
         }
         Update: {
-          available_for_networking?: boolean | null
           avatar_url?: string | null
           company_name?: string | null
           created_at?: string
-          current_position?: string | null
           email?: string
           id?: string
           industry?: string | null
-          last_active?: string | null
-          linkedin_url?: string | null
           name?: string | null
-          professional_bio?: string | null
           referrals_count?: number
           role?: string
           role_id?: string | null
-          skills?: string[] | null
           successful_referrals_count?: number
           whatsapp_number?: string | null
         }
@@ -3853,10 +3776,6 @@ export type Database = {
         Args: { suggestion_id: string }
         Returns: undefined
       }
-      deleteforumpost: {
-        Args: { post_id: string }
-        Returns: Json
-      }
       determinerolefromemail: {
         Args: { email: string }
         Returns: string
@@ -3961,10 +3880,6 @@ export type Database = {
         }
         Returns: string
       }
-      mark_topic_as_solved: {
-        Args: { topic_id: string; post_id: string }
-        Returns: Json
-      }
       merge_json_data: {
         Args: { target: Json; source: Json }
         Returns: Json
@@ -3992,10 +3907,6 @@ export type Database = {
       sync_profile_roles: {
         Args: Record<PropertyKey, never>
         Returns: undefined
-      }
-      unmark_topic_as_solved: {
-        Args: { topic_id: string }
-        Returns: Json
       }
       update_invite_send_attempt: {
         Args: { invite_id: string }

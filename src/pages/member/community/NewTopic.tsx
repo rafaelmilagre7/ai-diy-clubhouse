@@ -1,15 +1,11 @@
 
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ForumLayout } from "@/components/community/ForumLayout";
 import { NewTopicForm } from "@/components/community/NewTopicForm";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Pencil, AlertCircle } from "lucide-react";
-import { useState, useEffect } from "react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useForumCategories } from "@/hooks/community/useForumCategories";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { ChevronLeft, Pencil } from "lucide-react";
 
 interface ForumCategory {
   id: string;
@@ -19,45 +15,25 @@ interface ForumCategory {
 
 const NewTopic = () => {
   const { categorySlug } = useParams<{ categorySlug?: string }>();
-  const navigate = useNavigate();
-  const [loadingRedirect, setLoadingRedirect] = useState(false);
-  
-  // Buscar todas as categorias para fallback
-  const { categories: allCategories, isLoading: loadingAllCategories } = useForumCategories();
 
   const { data: category, isLoading, error } = useQuery({
     queryKey: ['forumCategory', categorySlug],
     queryFn: async () => {
       if (!categorySlug) return null;
       
-      console.log("Buscando categoria:", categorySlug);
       const { data, error } = await supabase
         .from('forum_categories')
         .select('id, name, slug')
         .eq('slug', categorySlug)
         .single();
       
-      if (error) {
-        console.error("Erro ao buscar categoria:", error);
-        throw error;
-      }
-      console.log("Categoria encontrada:", data);
+      if (error) throw error;
       return data as ForumCategory;
     },
     enabled: !!categorySlug
   });
 
-  // Redirecionar para a primeira categoria disponível se a atual não existir
-  useEffect(() => {
-    if (!isLoading && !loadingAllCategories && !category && allCategories.length > 0 && categorySlug) {
-      setLoadingRedirect(true);
-      const firstCategory = allCategories[0];
-      console.log("Categoria não encontrada, redirecionando para:", firstCategory.slug);
-      navigate(`/comunidade/novo-topico/${firstCategory.slug}`, { replace: true });
-    }
-  }, [category, isLoading, categorySlug, allCategories, loadingAllCategories, navigate]);
-
-  if (isLoading || loadingAllCategories || loadingRedirect) {
+  if (isLoading) {
     return (
       <div className="container px-4 py-6 mx-auto max-w-7xl">
         <div className="animate-pulse">
@@ -73,31 +49,31 @@ const NewTopic = () => {
     );
   }
 
+  if (error || (categorySlug && !category)) {
+    return (
+      <div className="container px-4 py-6 mx-auto max-w-7xl">
+        <div className="text-center py-10">
+          <Pencil className="h-12 w-12 mx-auto text-muted-foreground" />
+          <h1 className="text-2xl font-bold mt-4">Categoria não encontrada</h1>
+          <p className="text-muted-foreground mt-2 mb-6">A categoria selecionada não existe ou foi removida.</p>
+          <Button asChild>
+            <Link to="/comunidade">Voltar para a Comunidade</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container px-4 py-6 mx-auto max-w-7xl">
-      <Breadcrumb className="mb-6">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link to="/comunidade">Comunidade</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          {category && (
-            <>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link to={`/comunidade/categoria/${category.slug}`}>{category.name}</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-            </>
-          )}
-          <BreadcrumbItem>
-            <BreadcrumbLink>Novo Tópico</BreadcrumbLink>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <div className="flex items-center gap-2 mb-4">
+        <Button variant="ghost" size="sm" asChild className="p-0">
+          <Link to={category ? `/comunidade/categoria/${category.slug}` : "/comunidade"} className="flex items-center">
+            <ChevronLeft className="h-4 w-4" />
+            <span>Voltar para {category ? category.name : 'a Comunidade'}</span>
+          </Link>
+        </Button>
+      </div>
       
       <div className="flex items-center gap-2 mb-1">
         <Pencil className="h-6 w-6 text-primary" />
@@ -110,12 +86,24 @@ const NewTopic = () => {
         </p>
       ) : (
         <p className="text-muted-foreground mb-6">
-          Selecione uma categoria para seu tópico
+          Por favor, selecione uma categoria para criar seu tópico
         </p>
       )}
       
       <ForumLayout>
-        <NewTopicForm categoryId={category?.id} categorySlug={category?.slug} />
+        {category ? (
+          <NewTopicForm categoryId={category.id} categorySlug={category.slug} />
+        ) : (
+          <div className="text-center py-10">
+            <h3 className="text-lg font-medium">Selecione uma categoria</h3>
+            <p className="text-muted-foreground mt-2 mb-6">
+              Por favor, navegue até uma categoria específica para criar um novo tópico.
+            </p>
+            <Button asChild>
+              <Link to="/comunidade">Ver categorias</Link>
+            </Button>
+          </div>
+        )}
       </ForumLayout>
     </div>
   );

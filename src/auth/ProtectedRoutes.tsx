@@ -15,44 +15,8 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const timeoutRef = useRef<number | null>(null);
   const hasToastShown = useRef(false);
-  const navigationCountRef = useRef<Record<string, number>>({});
-  const routeTransitionRef = useRef<string | null>(null);
 
-  console.log("ProtectedRoutes: verificando rota", {
-    path: location.pathname,
-    user: !!user,
-    isLoading, 
-    loadingTimeout,
-    previousRoute: routeTransitionRef.current
-  });
-  
-  // Rastrear transições de rota para diagnóstico
-  useEffect(() => {
-    // Registrar transição de rota
-    console.log(`ProtectedRoutes: Transição de rota ${routeTransitionRef.current || 'inicial'} -> ${location.pathname}`);
-    routeTransitionRef.current = location.pathname;
-    
-    // Incrementar contador para este caminho
-    navigationCountRef.current[location.pathname] = 
-      (navigationCountRef.current[location.pathname] || 0) + 1;
-    
-    // Verificar possíveis loops
-    if (navigationCountRef.current[location.pathname] > 5) {
-      console.error(`ProtectedRoutes: Possível loop de navegação para ${location.pathname} (${navigationCountRef.current[location.pathname]} navegações)`);
-      
-      // Limpar contador após detectar um possível loop
-      navigationCountRef.current = {};
-    }
-    
-    // Limpar contadores antigos após 10 segundos
-    const cleanupTimeout = setTimeout(() => {
-      navigationCountRef.current = {};
-    }, 10000);
-    
-    return () => {
-      clearTimeout(cleanupTimeout);
-    };
-  }, [location.pathname]);
+  console.log("ProtectedRoutes state:", { user, isLoading, loadingTimeout });
   
   // Configurar timeout de carregamento
   useEffect(() => {
@@ -65,7 +29,7 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
       timeoutRef.current = window.setTimeout(() => {
         console.log("ProtectedRoutes: Loading timeout exceeded");
         setLoadingTimeout(true);
-      }, 5000); // Mantido em 5 segundos
+      }, 5000); // Aumentado para 5 segundos
     }
     
     return () => {
@@ -82,18 +46,12 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
 
   // Se o usuário não estiver autenticado, redireciona para a página de login
   if (!user) {
-    // Salvar a rota atual para redirecionamento após login
-    const returnPath = location.pathname !== "/login" ? location.pathname : "/dashboard";
-    console.log(`ProtectedRoutes: Usuário não autenticado, redirecionando para login (retorno: ${returnPath})`);
-    
     // Exibir toast apenas uma vez
     if (!hasToastShown.current) {
       toast("Por favor, faça login para acessar esta página");
       hasToastShown.current = true;
     }
-    
-    // Passar a rota atual como estado para redirecionamento após login
-    return <Navigate to="/login" state={{ from: returnPath }} replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Usuário está autenticado, renderizar as rotas protegidas

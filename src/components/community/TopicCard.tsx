@@ -7,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageSquare, Eye, ThumbsUp, Pin, Lock, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Topic } from "@/types/forumTypes";
-import { getInitials } from "@/utils/user";
 
 interface TopicCardProps {
   topic: Topic;
@@ -16,6 +15,16 @@ interface TopicCardProps {
 }
 
 export const TopicCard = ({ topic, className = "", compact = false }: TopicCardProps) => {
+  const getInitials = (name: string | null) => {
+    if (!name) return "??";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   // Extrair uma prévia do conteúdo
   const getContentPreview = (content: string) => {
     // Remove qualquer HTML/markdown para ter texto puro

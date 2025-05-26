@@ -12,16 +12,18 @@ export {
   setupLearningStorageBuckets,
   ensureBucketExists,
   extractPandaVideoInfo,
-  uploadFileWithFallback
+  uploadFileWithFallback,
+  // Removi createStoragePublicPolicy daqui, pois deve vir apenas do módulo rpc
   // Adicione outras funções que precisam ser exportadas
 } from './storage';
 
 // Exportação explícita das funções de RPC
 export {
-  createStoragePublicPolicy,
+  createStoragePublicPolicy as createStoragePublicPolicyRPC,
   incrementTopicViews,
   incrementTopicReplies,
   deleteForumTopic,
   deleteForumPost
   // Adicionar outras funções de RPC conforme necessário
 } from './rpc';
+

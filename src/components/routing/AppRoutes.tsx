@@ -1,6 +1,5 @@
 
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { authRoutes } from '../../routes/AuthRoutes';
 import { adminRoutes } from '../../routes/AdminRoutes';
 import { memberRoutes } from '../../routes/MemberRoutes';
@@ -11,54 +10,10 @@ import NotFound from '@/pages/NotFound';
 import InvitePage from '@/pages/InvitePage';
 
 const AppRoutes = () => {
-  const location = useLocation();
-  const [navigationEvents, setNavigationEvents] = useState<{path: string, timestamp: number}[]>([]);
-  
-  // Para diagnóstico - mostrar quando a rota muda
-  useEffect(() => {
-    console.log("AppRoutes: Navegação para rota:", location.pathname, {
-      search: location.search,
-      state: location.state
-    });
-    
-    // Armazenar eventos de navegação recentes para detectar loops
-    const now = Date.now();
-    setNavigationEvents(prev => {
-      // Adicionar evento atual
-      const updated = [...prev, {path: location.pathname, timestamp: now}];
-      
-      // Remover eventos antigos (mais de 10 segundos)
-      const filtered = updated.filter(event => now - event.timestamp < 10000);
-      
-      // Detectar possíveis loops
-      const recentPathCounts: Record<string, number> = {};
-      filtered.forEach(event => {
-        recentPathCounts[event.path] = (recentPathCounts[event.path] || 0) + 1;
-      });
-      
-      // Alertar se houver muitos eventos para a mesma rota
-      Object.entries(recentPathCounts).forEach(([path, count]) => {
-        if (count > 3) {
-          console.warn(`AppRoutes: Possível loop de navegação detectado para a rota ${path} (${count} eventos em 10s)`);
-        }
-      });
-      
-      return filtered;
-    });
-  }, [location]);
-  
-  // Verificar se estamos em uma rota de comunidade para evitar renderizar CommunityRedirects
-  // Ou em uma rota de autenticação/convite onde não precisamos do redirecionamento
-  const skipRedirects = 
-    location.pathname.startsWith('/comunidade') || 
-    location.pathname.startsWith('/login') ||
-    location.pathname.startsWith('/auth') ||
-    location.pathname.startsWith('/convite');
-  
   return (
     <>
-      {/* Componente auxiliar para redirecionar antigas URLs - não renderizar em rotas onde não é necessário */}
-      {!skipRedirects && <CommunityRedirects />}
+      {/* Componente auxiliar para redirecionar antigas URLs */}
+      <CommunityRedirects />
       
       <Routes>
         {/* Convite Routes - Alta prioridade e fora do sistema de autenticação */}

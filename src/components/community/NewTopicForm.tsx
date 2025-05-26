@@ -3,64 +3,51 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Loader2 } from "lucide-react";
-import { TopicEditor } from "./TopicEditor";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useForumCategories } from "@/hooks/community/useForumCategories";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2 } from "lucide-react";
 
 interface NewTopicFormProps {
-  categoryId?: string;
-  categorySlug?: string;
+  categoryId: string;
+  categorySlug: string;
 }
 
 export const NewTopicForm = ({ categoryId, categorySlug }: NewTopicFormProps) => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [selectedCategoryId, setSelectedCategoryId] = useState(categoryId || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string>("editor");
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { categories, isLoading: loadingCategories } = useForumCategories();
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     
     if (!title.trim()) {
-      setError("O título do tópico é obrigatório");
+      toast.error("O título do tópico é obrigatório");
       return;
     }
     
     if (!content.trim()) {
-      setError("O conteúdo do tópico é obrigatório");
-      return;
-    }
-    
-    if (!selectedCategoryId) {
-      setError("Por favor, selecione uma categoria para o tópico");
+      toast.error("O conteúdo do tópico é obrigatório");
       return;
     }
     
     if (!user?.id) {
-      setError("Você precisa estar logado para criar um tópico");
+      toast.error("Você precisa estar logado para criar um tópico");
       return;
     }
     
     try {
       setIsSubmitting(true);
+      
+      console.log("Criando novo tópico:", {
+        categoryId,
+        title: title.trim(),
+        content: content.trim(),
+        userId: user.id
+      });
       
       // Inserir o novo tópico
       const { data: topicData, error: topicError } = await supabase
@@ -68,26 +55,29 @@ export const NewTopicForm = ({ categoryId, categorySlug }: NewTopicFormProps) =>
         .insert({
           title: title.trim(),
           content: content.trim(),
-          category_id: selectedCategoryId,
-          user_id: user.id,
-          view_count: 0,
-          reply_count: 0,
-          is_pinned: false,
-          is_locked: false,
-          last_activity_at: new Date().toISOString()
+          category_id: categoryId,
+          user_id: user.id
         })
         .select("id")
         .single();
         
-      if (topicError) throw topicError;
+      if (topicError) {
+        console.error("Erro ao criar tópico:", topicError);
+        throw topicError;
+      }
+      
+      if (!topicData || !topicData.id) {
+        throw new Error("Não foi possível obter o ID do tópico criado");
+      }
+      
+      console.log("Tópico criado com sucesso:", topicData);
       
       toast.success("Tópico criado com sucesso!");
       navigate(`/comunidade/topico/${topicData.id}`);
       
     } catch (error: any) {
       console.error("Erro ao criar tópico:", error);
-      setError("Não foi possível criar o tópico. Tente novamente mais tarde.");
-      toast.error("Não foi possível criar o tópico. Tente novamente mais tarde.");
+      toast.error(`Não foi possível criar o tópico: ${error.message || "Erro desconhecido"}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -95,13 +85,6 @@ export const NewTopicForm = ({ categoryId, categorySlug }: NewTopicFormProps) =>
   
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-      
       <div className="space-y-2">
         <label htmlFor="title" className="block text-sm font-medium">Título</label>
         <Input 
@@ -115,74 +98,32 @@ export const NewTopicForm = ({ categoryId, categorySlug }: NewTopicFormProps) =>
       </div>
       
       <div className="space-y-2">
-        <label htmlFor="category" className="block text-sm font-medium">Categoria</label>
-        <Select 
-          value={selectedCategoryId} 
-          onValueChange={setSelectedCategoryId}
-          disabled={isSubmitting || loadingCategories}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Selecione uma categoria" />
-          </SelectTrigger>
-          <SelectContent>
-            {loadingCategories ? (
-              <div className="flex items-center justify-center py-2">
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                <span>Carregando categorias...</span>
-              </div>
-            ) : (
-              categories?.map((category) => (
-                <SelectItem key={category.id} value={category.id}>
-                  {category.name}
-                </SelectItem>
-              ))
-            )}
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <div className="space-y-2 border rounded-md overflow-hidden">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="border-b px-3">
-            <TabsList className="h-9">
-              <TabsTrigger value="editor" className="text-xs">Editor</TabsTrigger>
-              <TabsTrigger value="preview" className="text-xs">Prévia</TabsTrigger>
-            </TabsList>
-          </div>
-          <TabsContent value="editor" className="mt-0 p-0">
-            <TopicEditor 
-              content={content} 
-              onChange={setContent} 
-              placeholder="Descreva seu tópico em detalhes..." 
-            />
-          </TabsContent>
-          <TabsContent value="preview" className="mt-0">
-            {content ? (
-              <div 
-                className="prose max-w-none p-4"
-                dangerouslySetInnerHTML={{ __html: content }}
-              />
-            ) : (
-              <div className="p-4 text-muted-foreground italic">
-                Nenhum conteúdo para visualizar
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+        <label htmlFor="content" className="block text-sm font-medium">Conteúdo</label>
+        <Textarea 
+          id="content"
+          placeholder="Descreva seu tópico em detalhes..."
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          disabled={isSubmitting}
+          rows={8}
+          className="w-full resize-none"
+        />
       </div>
       
       <div className="flex justify-end">
         <Button 
           type="submit" 
-          disabled={isSubmitting || !title.trim() || !content.trim() || !selectedCategoryId}
+          disabled={isSubmitting}
           className="min-w-[120px]"
         >
           {isSubmitting ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               Criando...
             </>
-          ) : "Criar Tópico"}
+          ) : (
+            "Criar Tópico"
+          )}
         </Button>
       </div>
     </form>

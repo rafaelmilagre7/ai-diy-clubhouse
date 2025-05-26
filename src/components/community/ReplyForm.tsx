@@ -1,10 +1,14 @@
 
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/auth";
+import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { useReplyForm } from "@/hooks/useReplyForm";
-import { getInitials } from "@/utils/user";
+import { incrementTopicReplies } from "@/lib/supabase/rpc";
 
 interface ReplyFormProps {
   topicId: string;
@@ -12,7 +16,6 @@ interface ReplyFormProps {
   onSuccess?: () => void;
   onCancel?: () => void;
   placeholder?: string;
-  onPostCreated?: () => void;
 }
 
 export const ReplyForm = ({ 
@@ -20,35 +23,121 @@ export const ReplyForm = ({
   parentId, 
   onSuccess, 
   onCancel, 
-  placeholder = "Escreva sua resposta...",
-  onPostCreated
+  placeholder = "Escreva sua resposta..." 
 }: ReplyFormProps) => {
-  const {
-    content,
-    isSubmitting,
-    textareaRef,
-    handleTextareaInput,
-    handleSubmit: submitForm,
-    handleCancel,
-    user
-  } = useReplyForm({
-    topicId,
-    parentId,
-    onSuccess: () => {
-      if (onSuccess) onSuccess();
-      if (onPostCreated) onPostCreated();
-    },
-    onCancel
-  });
+  const [content, setContent] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const getInitials = (name: string | null) => {
+    if (!name) return "??";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!content.trim()) {
+      toast.error("O conteúdo da resposta não pode estar vazio");
+      return;
+    }
+    
+    if (!user?.id) {
+      toast.error("Você precisa estar logado para enviar uma resposta");
+      return;
+    }
+    
+    try {
+      setIsSubmitting(true);
+      
+      console.log("Enviando resposta:", { 
+        topicId, 
+        content: content.trim(),
+        parentId: parentId || null
+      });
+      
+      // Inserir a resposta
+      const { data, error } = await supabase
+        .from("forum_posts")
+        .insert({
+          topic_id: topicId,
+          user_id: user.id,
+          content: content.trim(),
+          ...(parentId && { parent_id: parentId })
+        })
+        .select("*");
+        
+      if (error) {
+        console.error("Erro ao inserir resposta:", error);
+        throw error;
+      }
+      
+      console.log("Resposta enviada com sucesso:", data);
+      
+      // Incrementar contador e atualizar data de última atividade usando a função RPC
+      await incrementTopicReplies(topicId);
+      
+      // Atualizar também a data de última atividade
+      await supabase
+        .from("forum_topics")
+        .update({ 
+          last_activity_at: new Date().toISOString()
+        })
+        .eq("id", topicId);
+      
+      setContent("");
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+      }
+      
+      toast.success("Resposta enviada com sucesso!");
+      
+      // Atualizar cache do React Query
+      queryClient.invalidateQueries({ queryKey: ['forumTopic', topicId] });
+      queryClient.invalidateQueries({ queryKey: ['forumPosts', topicId] });
+      queryClient.invalidateQueries({ queryKey: ['communityTopics'] });
+      
+      if (onSuccess) {
+        onSuccess();
+      }
+      
+    } catch (error: any) {
+      console.error("Erro ao enviar resposta:", error);
+      toast.error(`Não foi possível enviar sua resposta: ${error.message || "Erro desconhecido"}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleTextareaInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setContent(e.target.value);
+    
+    // Auto-resize textarea
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  };
+  
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    }
+  };
   
   return (
-    <form onSubmit={submitForm} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div className="flex gap-3">
         <Avatar className="h-10 w-10 mt-1">
           <AvatarImage src={user?.user_metadata?.avatar_url || undefined} />
-          <AvatarFallback>
-            {getInitials(user?.user_metadata?.name || user?.email)}
-          </AvatarFallback>
+          <AvatarFallback>{getInitials(user?.user_metadata?.name || user?.email)}</AvatarFallback>
         </Avatar>
         
         <Textarea

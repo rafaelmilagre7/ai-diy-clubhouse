@@ -48,13 +48,6 @@ export const useProgressFetch = (
       return null;
     }
     
-    // Verificar se já temos ID de progresso (para evitar chamadas desnecessárias)
-    if (progressId.current) {
-      logDebugEvent("fetchProgress_usingCached", { progressId: progressId.current });
-      // Se já temos um ID salvo, podemos economizar uma chamada à API
-      return null;
-    }
-    
     try {
       setIsLoading(true);
       logDebugEvent("fetchProgress_start", { userId: user.id });

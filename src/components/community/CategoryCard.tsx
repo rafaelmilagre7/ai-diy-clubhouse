@@ -9,10 +9,9 @@ interface CategoryCardProps {
   description: string | null;
   slug: string;
   icon: string | null;
-  onClick?: () => void;
 }
 
-export const CategoryCard = ({ id, name, description, slug, icon, onClick }: CategoryCardProps) => {
+export const CategoryCard = ({ id, name, description, slug, icon }: CategoryCardProps) => {
   // Lista de cores para categorias
   const categoryColors = [
     "bg-blue-500/10 text-blue-500",
@@ -30,7 +29,7 @@ export const CategoryCard = ({ id, name, description, slug, icon, onClick }: Cat
   const colorClass = categoryColors[colorIndex];
   
   return (
-    <Link to={`/comunidade/categoria/${slug}`} onClick={onClick}>
+    <Link to={`/comunidade/categoria/${slug}`}>
       <Card className="h-full p-5 flex flex-col hover:bg-accent/50 transition-colors cursor-pointer border-transparent hover:border-muted">
         <div className="flex items-center gap-3 mb-3">
           <div className={`w-10 h-10 rounded-full ${colorClass} flex items-center justify-center`}>

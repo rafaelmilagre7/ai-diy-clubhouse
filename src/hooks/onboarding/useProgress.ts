@@ -15,7 +15,6 @@ export const useProgress = () => {
   const { user } = useAuth();
   const fetchInProgress = useRef(false);
   const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const {
     progress,
     setProgress,
@@ -62,42 +61,31 @@ export const useProgress = () => {
       return progress;
     }
     
-    // Limpar timer de debounce anterior se existir
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-      debounceTimerRef.current = null;
+    try {
+      fetchInProgress.current = true;
+      
+      // Definir timeout de segurança para liberar flag em caso de erro
+      fetchTimeoutRef.current = setTimeout(() => {
+        console.log("[useProgress] Timeout de fetch atingido, resetando estado");
+        safeResetFetchInProgress();
+      }, FETCH_TIMEOUT);
+      
+      logDebugEvent("refreshProgress_started", { userId: user?.id });
+      const refreshedProgress = await fetchProgress();
+      
+      // Liberar flag após conclusão bem-sucedida
+      safeResetFetchInProgress();
+      
+      return refreshedProgress || null;
+    } catch (error) {
+      console.error("[useProgress] Erro ao atualizar progresso:", error);
+      logDebugEvent("refreshProgress_error", { error: String(error) });
+      toast.error("Erro ao atualizar seus dados. Tente novamente.");
+      
+      // Liberar flag após erro
+      safeResetFetchInProgress();
+      return null;
     }
-    
-    // Criar nova promessa com debounce
-    return new Promise((resolve) => {
-      debounceTimerRef.current = setTimeout(async () => {
-        try {
-          fetchInProgress.current = true;
-          
-          // Definir timeout de segurança para liberar flag em caso de erro
-          fetchTimeoutRef.current = setTimeout(() => {
-            console.log("[useProgress] Timeout de fetch atingido, resetando estado");
-            safeResetFetchInProgress();
-          }, FETCH_TIMEOUT);
-          
-          logDebugEvent("refreshProgress_started", { userId: user?.id });
-          const refreshedProgress = await fetchProgress();
-          
-          // Liberar flag após conclusão bem-sucedida
-          safeResetFetchInProgress();
-          
-          resolve(refreshedProgress || null);
-        } catch (error) {
-          console.error("[useProgress] Erro ao atualizar progresso:", error);
-          logDebugEvent("refreshProgress_error", { error: String(error) });
-          toast.error("Erro ao atualizar seus dados. Tente novamente.");
-          
-          // Liberar flag após erro
-          safeResetFetchInProgress();
-          resolve(null);
-        }
-      }, FETCH_DEBOUNCE);
-    });
   }, [fetchProgress, progress, user?.id, safeResetFetchInProgress, logDebugEvent]);
 
   const { updateProgress } = useProgressUpdate(
@@ -154,39 +142,24 @@ export const useProgress = () => {
     return () => {
       isMounted.current = false;
       safeResetFetchInProgress();
-      // Limpar temporizadores pendentes
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
     };
   }, [safeResetFetchInProgress]);
 
-  // Só carregar dados uma vez na montagem e quando houver mudança no user
+  // Só carregar dados uma vez na montagem
   useEffect(() => {
     if (!user) {
       console.log("[DEBUG] Sem usuário autenticado, não buscando progresso");
       return;
     }
     
-    if (hasInitialized.current && progressId.current) {
+    if (hasInitialized.current) {
       console.log("[DEBUG] Progresso já inicializado, ignorando");
       return;
     }
     
     console.log("[DEBUG] Inicializando useProgress, buscando dados para usuário:", user.id);
-    
-    // Limpar timer anterior se existir
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-    
-    // Adicionar delay para evitar múltiplas requisições simultâneas
-    const delayedFetch = setTimeout(() => {
-      fetchProgress();
-      hasInitialized.current = true;
-    }, 300);
-    
-    return () => clearTimeout(delayedFetch);
+    fetchProgress();
+    hasInitialized.current = true;
   }, [user, fetchProgress]);
 
   return {

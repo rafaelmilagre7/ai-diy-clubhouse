@@ -40,23 +40,14 @@ export const AuthStateManager: FC<AuthStateManagerProps> = ({ onStateChange }) =
 
             onStateChange({ session, user: session?.user || null });
 
-            // Verificar se é um login inicial ou apenas uma atualização de sessão
-            const isInitialLogin = !localStorage.getItem('lastAuthRoute');
-            
-            // Apenas redirecionar para o domínio correto em logins iniciais
-            // Isso evita redirecionamentos durante navegações internas
-            if (isInitialLogin) {
-              const currentOrigin = window.location.origin;
-              const targetDomain = 'https://app.viverdeia.ai';
+            // Garantir que a página seja atualizada no domínio correto
+            const currentOrigin = window.location.origin;
+            const targetDomain = 'https://app.viverdeia.ai';
 
-              // Redirecionar apenas se for um domínio de produção diferente do alvo
-              if (!currentOrigin.includes('localhost') && currentOrigin !== targetDomain) {
-                toast.info("Redirecionando para o domínio principal...");
-                // Preservar a rota atual durante o redirecionamento
-                const currentPath = window.location.pathname;
-                redirectToDomain(currentPath);
-                return;
-              }
+            if (!currentOrigin.includes('localhost') && currentOrigin !== targetDomain) {
+              toast.info("Redirecionando para o domínio principal...");
+              redirectToDomain();
+              return;
             }
 
             // Processar perfil do usuário em segundo plano

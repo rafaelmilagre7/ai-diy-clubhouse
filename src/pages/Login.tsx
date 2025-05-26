@@ -33,7 +33,7 @@ const Login = () => {
     }
   };
 
-  const handleTestUserLogin = async (loginFn: () => Promise<any>, userType: string) => {
+  const handleTestUserLogin = async (loginFn: () => Promise<void>, userType: string) => {
     try {
       setIsLoading(true);
       setError(null);
