@@ -31,10 +31,12 @@ export const TopicItem = ({ topic }: TopicItemProps) => {
   };
 
   const handleModerationSuccess = () => {
-    // Invalidar queries relacionadas para atualizar a UI
+    // Invalidar queries relacionadas para atualizar a UI e estatísticas
     queryClient.invalidateQueries({ queryKey: ['communityTopics'] });
     queryClient.invalidateQueries({ queryKey: ['topics'] });
     queryClient.invalidateQueries({ queryKey: ['forumTopics'] });
+    queryClient.invalidateQueries({ queryKey: ['forumCategories'] });
+    queryClient.invalidateQueries({ queryKey: ['forumStats'] });
     
     console.log('Queries invalidadas após ação de moderação');
   };

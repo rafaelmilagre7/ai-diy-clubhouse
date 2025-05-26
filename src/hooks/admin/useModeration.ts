@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -162,10 +163,12 @@ export const useModeration = () => {
       // Executar a ação específica
       await executeAction(actionData);
       
-      // Invalidar queries relevantes para atualizar a UI
+      // Invalidar queries relevantes para atualizar a UI e estatísticas
       queryClient.invalidateQueries({ queryKey: ['communityTopics'] });
       queryClient.invalidateQueries({ queryKey: ['topics'] });
       queryClient.invalidateQueries({ queryKey: ['forumTopics'] });
+      queryClient.invalidateQueries({ queryKey: ['forumCategories'] });
+      queryClient.invalidateQueries({ queryKey: ['forumStats'] });
       
       toast.success('Ação de moderação executada com sucesso');
       await Promise.all([fetchActions(), fetchStats()]);
