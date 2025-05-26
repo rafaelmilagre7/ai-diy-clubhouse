@@ -1,27 +1,34 @@
 
-export const getInitials = (name: string | null | undefined): string => {
-  if (!name) return 'U';
+/**
+ * Converte um nome completo em iniciais (até 2 letras)
+ */
+export const getInitials = (name: string): string => {
+  if (!name) return '??';
   
-  return name
-    .split(' ')
-    .map(part => part.charAt(0))
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) {
+    return parts[0].substring(0, 2).toUpperCase();
+  }
+  
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 };
 
-export const getUserDisplayRole = (role: string): string => {
-  const roleMap: Record<string, string> = {
-    'admin': 'Administrador',
-    'member': 'Membro',
-    'formacao': 'Formação',
-    'moderator': 'Moderador'
-  };
+/**
+ * Processa URL do avatar para garantir que seja válida
+ */
+export const getAvatarUrl = (url?: string | null): string | undefined => {
+  if (!url) return undefined;
   
-  return roleMap[role] || 'Membro';
-};
-
-export const formatUserName = (name: string | null | undefined): string => {
-  if (!name) return 'Usuário';
-  return name;
+  // Se já for uma URL completa (http:// ou https://), retorna como está
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  // Se for uma URL relativa de storage do Supabase
+  if (url.startsWith('/storage/')) {
+    // Aqui poderia concatenar com a URL base do Supabase se necessário
+    return url;
+  }
+  
+  return url;
 };

@@ -1,331 +1,66 @@
 
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { MessageNotificationsDropdown } from '@/components/community/notifications/MessageNotificationsDropdown';
-import { 
-  LayoutDashboard, 
-  BookOpen, 
-  Lightbulb, 
-  Wrench, 
-  User, 
-  Gift,
-  Calendar,
-  MessageSquare,
-  Users,
-  UserPlus,
-  Menu,
-  X,
-  LogOut,
-  ChevronLeft,
-  ChevronRight,
-  Map,
-  GraduationCap,
-  MessageSquareMore,
-  ShieldCheck
-} from 'lucide-react';
+import { cn } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
+import { MemberUserMenu } from "./MemberUserMenu";
+import { SidebarLogo } from "./navigation/SidebarLogo";
+import { MemberSidebarNav } from "./MemberSidebarNav";
 
 interface MemberSidebarProps {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
   profileName: string | null;
   profileEmail: string | null;
-  profileAvatar?: string | null;
+  profileAvatar: string | undefined;
   getInitials: (name: string | null) => string;
-  signOut: () => void;
+  signOut: () => Promise<void>;
 }
 
-export const MemberSidebar: React.FC<MemberSidebarProps> = ({
-  sidebarOpen,
-  setSidebarOpen,
+export const MemberSidebar = ({ 
+  sidebarOpen, 
+  setSidebarOpen, 
   profileName,
   profileEmail,
   profileAvatar,
   getInitials,
   signOut
-}) => {
-  const location = useLocation();
-
-  const navigation = [
-    {
-      name: 'Dashboard',
-      href: '/dashboard',
-      icon: LayoutDashboard,
-      exact: true
-    },
-    {
-      name: 'Onboarding',
-      href: '/onboarding',
-      icon: BookOpen
-    },
-    {
-      name: 'Trilha de Implementação',
-      href: '/implementation-trail',
-      icon: Map
-    },
-    {
-      name: 'Aprendizado',
-      href: '/learning',
-      icon: GraduationCap
-    },
-    {
-      name: 'Soluções',
-      href: '/solutions',
-      icon: Lightbulb
-    },
-    {
-      name: 'Ferramentas',
-      href: '/tools',
-      icon: Wrench
-    },
-    {
-      name: 'Benefícios',
-      href: '/benefits',
-      icon: Gift
-    },
-    {
-      name: 'Sugestões',
-      href: '/sugestoes',
-      icon: Lightbulb
-    },
-    {
-      name: 'Eventos',
-      href: '/events',
-      icon: Calendar
-    }
-  ];
-
-  const communityNavigation = [
-    {
-      name: 'Fórum',
-      href: '/comunidade',
-      icon: MessageSquare,
-      exact: true
-    },
-    {
-      name: 'Membros',
-      href: '/comunidade/membros',
-      icon: Users
-    },
-    {
-      name: 'Conexões',
-      href: '/comunidade/conexoes',
-      icon: UserPlus
-    },
-    {
-      name: 'Mensagens',
-      href: '/comunidade/mensagens',
-      icon: MessageSquareMore
-    }
-  ];
-
-  const isActive = (path: string, exact = false) => {
-    console.log('Verificando ativação:', { path, currentPath: location.pathname, exact });
-    
-    if (exact) {
-      return location.pathname === path;
-    }
-    
-    // Para rotas da comunidade, verificar exatamente para evitar conflitos
-    if (path.startsWith('/comunidade/')) {
-      return location.pathname === path;
-    }
-    
-    // Para outras rotas, usar startsWith
-    return location.pathname.startsWith(path);
-  };
-
-  // Verificar se é admin baseado no email
-  const isAdmin = profileEmail === 'rafael@viverdeia.ai' || 
-                  profileEmail?.includes('@viverdeia.ai') ||
-                  profileEmail === 'admin@teste.com';
-
-  console.log('MemberSidebar - verificação admin:', {
-    profileEmail,
-    isAdmin,
-    shouldShowAdminPanel: isAdmin
-  });
-
+}: MemberSidebarProps) => {
   return (
-    <>
-      {/* Sidebar para desktop e mobile */}
-      <div className={cn(
-        "fixed inset-y-0 left-0 z-50 flex flex-col bg-[#1A1E2E] border-r border-[#2A2E42] transition-all duration-300 ease-in-out",
-        sidebarOpen ? "w-64" : "w-16"
-      )}>
+    <aside
+      className={cn(
+        "fixed inset-y-0 left-0 z-50 flex h-full flex-col hubla-sidebar transition-all duration-300 ease-in-out",
+        sidebarOpen ? "w-64" : "w-[70px]",
+        // Em desktops, sempre visível
+        "md:translate-x-0",
+        // Em mobile, mostrar apenas quando aberto
+        sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+      )}
+    >
+      <div className="flex flex-col h-full">
+        {/* Área do logo */}
+        <SidebarLogo sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
         
-        {/* Header da sidebar com logo corrigida */}
-        <div className="flex h-16 items-center justify-between px-4 border-b border-[#2A2E42]">
-          {sidebarOpen ? (
-            <div className="flex items-center min-w-0">
-              <img
-                src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
-                alt="VIVER DE IA Club"
-                className="h-8 w-auto max-w-[140px] object-contain"
-              />
-            </div>
-          ) : (
-            <div className="flex items-center justify-center w-full">
-              <img
-                src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
-                alt="VIVER DE IA Club"
-                className="h-6 w-6 object-contain rounded"
-              />
-            </div>
-          )}
-          
-          {/* Apenas uma seção de notificações */}
-          <div className="flex items-center space-x-2">
-            {sidebarOpen && (
-              <MessageNotificationsDropdown />
-            )}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="text-gray-400 hover:text-white hover:bg-[#2A2E42] shrink-0"
-            >
-              {sidebarOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-            </Button>
-          </div>
+        <div className="my-1 px-3">
+          <div className="h-px bg-white/5"></div>
         </div>
 
-        {/* Navegação principal */}
-        <ScrollArea className="flex-1 px-2 py-4">
-          <nav className="space-y-2">
-            {/* Navegação principal */}
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={cn(
-                  "flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                  !sidebarOpen && "justify-center",
-                  isActive(item.href, item.exact)
-                    ? "bg-primary text-primary-foreground"
-                    : "text-gray-300 hover:bg-[#2A2E42] hover:text-white"
-                )}
-                title={!sidebarOpen ? item.name : undefined}
-              >
-                <item.icon className={cn("h-4 w-4 shrink-0", sidebarOpen ? "mr-3" : "")} />
-                {sidebarOpen && <span className="truncate">{item.name}</span>}
-              </Link>
-            ))}
+        {/* Navegação */}
+        <MemberSidebarNav sidebarOpen={sidebarOpen} />
 
-            {/* Separador */}
-            <div className="my-4 border-t border-[#2A2E42]" />
-            
-            {/* Seção Comunidade */}
-            {sidebarOpen && (
-              <div className="px-3 py-2">
-                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                  Comunidade
-                </h3>
-              </div>
-            )}
-            
-            {communityNavigation.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={cn(
-                  "flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                  !sidebarOpen && "justify-center",
-                  isActive(item.href, item.exact)
-                    ? "bg-primary text-primary-foreground"
-                    : "text-gray-300 hover:bg-[#2A2E42] hover:text-white"
-                )}
-                title={!sidebarOpen ? item.name : undefined}
-                onClick={() => console.log('Clicando em:', item.name, 'para:', item.href)}
-              >
-                <item.icon className={cn("h-4 w-4 shrink-0", sidebarOpen ? "mr-3" : "")} />
-                {sidebarOpen && <span className="truncate">{item.name}</span>}
-              </Link>
-            ))}
-
-            {/* Painel Admin - Apenas para administradores */}
-            {isAdmin && (
-              <>
-                <div className="my-4 border-t border-[#2A2E42]" />
-                {sidebarOpen && (
-                  <div className="px-3 py-2">
-                    <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                      Administração
-                    </h3>
-                  </div>
-                )}
-                <Link
-                  to="/admin"
-                  className={cn(
-                    "flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                    !sidebarOpen && "justify-center",
-                    isActive('/admin')
-                      ? "bg-viverblue text-white"
-                      : "text-viverblue hover:bg-[#2A2E42] hover:text-viverblue"
-                  )}
-                  title={!sidebarOpen ? "Painel Admin" : undefined}
-                >
-                  <ShieldCheck className={cn("h-4 w-4 shrink-0", sidebarOpen ? "mr-3" : "")} />
-                  {sidebarOpen && <span className="truncate">Painel Admin</span>}
-                </Link>
-              </>
-            )}
-          </nav>
-        </ScrollArea>
-
-        {/* Perfil do usuário */}
-        <div className="border-t border-[#2A2E42] p-4">
-          <div className="flex items-center space-x-3">
-            <Avatar className="h-8 w-8 shrink-0">
-              <AvatarImage 
-                src={profileAvatar || undefined} 
-                alt={profileName || "Usuário"}
-                onError={() => console.log('Erro ao carregar avatar:', profileAvatar)}
-                onLoad={() => console.log('Avatar carregado com sucesso:', profileAvatar)}
-              />
-              <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                {getInitials(profileName)}
-              </AvatarFallback>
-            </Avatar>
-            
-            {sidebarOpen && (
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">
-                  {profileName || 'Usuário'}
-                </p>
-                <p className="text-xs text-gray-400 truncate">
-                  {profileEmail}
-                </p>
-              </div>
-            )}
+        {/* Menu do usuário no rodapé da barra lateral */}
+        <div className="mt-auto">
+          <div className="my-1 px-3">
+            <div className="h-px bg-white/5"></div>
           </div>
-          
-          {sidebarOpen && (
-            <div className="mt-3 space-y-1">
-              <Link
-                to="/profile"
-                className="flex items-center rounded-lg px-2 py-1.5 text-sm text-gray-300 hover:bg-[#2A2E42] hover:text-white transition-colors"
-              >
-                <User className="h-4 w-4 mr-2 shrink-0" />
-                <span className="truncate">Perfil</span>
-              </Link>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={signOut}
-                className="w-full justify-start text-gray-300 hover:bg-[#2A2E42] hover:text-white h-auto py-1.5 px-2"
-              >
-                <LogOut className="h-4 w-4 mr-2 shrink-0" />
-                <span className="truncate">Sair</span>
-              </Button>
-            </div>
-          )}
+          <MemberUserMenu 
+            sidebarOpen={sidebarOpen} 
+            profileName={profileName}
+            profileEmail={profileEmail}
+            profileAvatar={profileAvatar}
+            getInitials={getInitials}
+            signOut={signOut}
+          />
         </div>
       </div>
-    </>
+    </aside>
   );
 };

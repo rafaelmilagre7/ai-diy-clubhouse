@@ -1,98 +1,87 @@
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/auth';
-import { useQueryClient } from '@tanstack/react-query';
-import { Send } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Loader2 } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useReplyForm } from "@/hooks/useReplyForm";
+import { getInitials } from "@/utils/user";
 
 interface ReplyFormProps {
   topicId: string;
   parentId?: string;
   onSuccess?: () => void;
+  onCancel?: () => void;
   placeholder?: string;
+  onPostCreated?: () => void;
 }
 
-export const ReplyForm: React.FC<ReplyFormProps> = ({
-  topicId,
-  parentId,
-  onSuccess,
-  placeholder = "Escreva sua resposta..."
-}) => {
-  const [content, setContent] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!content.trim() || !user) return;
-
-    setIsSubmitting(true);
-    
-    try {
-      const { error } = await supabase
-        .from('forum_posts')
-        .insert({
-          content: content.trim(),
-          user_id: user.id,
-          topic_id: topicId,
-          parent_id: parentId || null
-        });
-
-      if (error) throw error;
-
-      setContent('');
-      toast({
-        title: "Resposta enviada!",
-        description: "Sua resposta foi publicada com sucesso.",
-      });
-
-      // Invalidar queries relacionadas
-      queryClient.invalidateQueries({ queryKey: ['forum-posts', topicId] });
-      queryClient.invalidateQueries({ queryKey: ['forum-topic', topicId] });
-      
-      onSuccess?.();
-      
-    } catch (error: any) {
-      console.error('Erro ao enviar resposta:', error);
-      toast({
-        title: "Erro ao enviar resposta",
-        description: error.message || "Tente novamente mais tarde.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
+export const ReplyForm = ({ 
+  topicId, 
+  parentId, 
+  onSuccess, 
+  onCancel, 
+  placeholder = "Escreva sua resposta...",
+  onPostCreated
+}: ReplyFormProps) => {
+  const {
+    content,
+    isSubmitting,
+    textareaRef,
+    handleTextareaInput,
+    handleSubmit: submitForm,
+    handleCancel,
+    user
+  } = useReplyForm({
+    topicId,
+    parentId,
+    onSuccess: () => {
+      if (onSuccess) onSuccess();
+      if (onPostCreated) onPostCreated();
+    },
+    onCancel
+  });
+  
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <Textarea
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        placeholder={placeholder}
-        rows={4}
-        className="resize-none"
-      />
+    <form onSubmit={submitForm} className="space-y-4">
+      <div className="flex gap-3">
+        <Avatar className="h-10 w-10 mt-1">
+          <AvatarImage src={user?.user_metadata?.avatar_url || undefined} />
+          <AvatarFallback>
+            {getInitials(user?.user_metadata?.name || user?.email)}
+          </AvatarFallback>
+        </Avatar>
+        
+        <Textarea
+          placeholder={placeholder}
+          value={content}
+          onChange={handleTextareaInput}
+          ref={textareaRef}
+          rows={3}
+          className="flex-1 resize-none"
+          disabled={isSubmitting}
+        />
+      </div>
       
-      <div className="flex justify-end">
-        <Button 
-          type="submit" 
-          disabled={!content.trim() || isSubmitting}
-          className="min-w-[120px]"
-        >
+      <div className="flex justify-end gap-2">
+        {onCancel && (
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={handleCancel}
+            disabled={isSubmitting}
+          >
+            Cancelar
+          </Button>
+        )}
+        
+        <Button type="submit" disabled={isSubmitting || !content.trim()}>
           {isSubmitting ? (
-            "Enviando..."
-          ) : (
             <>
-              <Send className="h-4 w-4 mr-2" />
-              Enviar
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Enviando...
             </>
+          ) : (
+            "Enviar Resposta"
           )}
         </Button>
       </div>

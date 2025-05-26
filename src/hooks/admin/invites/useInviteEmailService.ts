@@ -1,62 +1,236 @@
 
-import { useCallback } from 'react';
-import { SendInviteEmailParams, SendInviteResponse, InviteEmailServiceReturn } from './emailService/types';
-import { useLinkGenerator } from './emailService/linkGenerator';
-import { useEmailQueue } from './emailService/emailQueue';
-import { useEmailSender } from './emailService/emailSender';
+import { useCallback, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
+import { SendInviteResponse } from './types';
 
-export function useInviteEmailService(): InviteEmailServiceReturn {
-  const { getInviteLink } = useLinkGenerator();
-  const { 
-    addToQueue, 
-    removeFromQueue, 
-    clearEmailQueue, 
-    retryAllPendingEmails: retryQueue,
-    pendingEmails 
-  } = useEmailQueue();
-  const { sendEmail, isSending, sendError } = useEmailSender();
+interface SendInviteEmailParams {
+  email: string;
+  inviteUrl: string;
+  roleName: string;
+  expiresAt: string;
+  senderName?: string;
+  notes?: string;
+  inviteId?: string;
+  retryCount?: number;
+}
 
-  const sendInviteEmail = useCallback(async (params: SendInviteEmailParams): Promise<SendInviteResponse> => {
-    const result = await sendEmail(params);
-    
-    // Se falhou e ainda há tentativas disponíveis, adicionar à fila
-    if (!result.success && (params.retryCount || 0) < 3) {
-      console.log(`Adicionando email para ${params.email} à fila de retentativas (tentativa ${(params.retryCount || 0) + 1})`);
+export function useInviteEmailService() {
+  const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState<Error | null>(null);
+  const [emailQueue, setEmailQueue] = useState<SendInviteEmailParams[]>([]);
+
+  // Função para enviar email de convite com retentativas
+  const sendInviteEmail = useCallback(async ({
+    email,
+    inviteUrl,
+    roleName,
+    expiresAt,
+    senderName,
+    notes,
+    inviteId,
+    retryCount = 0,
+  }: SendInviteEmailParams): Promise<SendInviteResponse> => {
+    try {
+      setIsSending(true);
+      setSendError(null);
+
+      // Verificar se o URL está correto antes de enviar
+      const urlPattern = new RegExp('^https?://[a-z0-9-]+(\\.[a-z0-9-]+)+([/?].*)?$', 'i');
+      if (!urlPattern.test(inviteUrl)) {
+        console.error("URL inválida gerada para o convite:", inviteUrl);
+        setSendError(new Error('URL inválida gerada'));
+        return {
+          success: false,
+          message: 'Erro ao gerar URL do convite',
+          error: 'URL inválida gerada'
+        };
+      }
       
-      const retryParams = {
-        ...params,
-        retryCount: (params.retryCount || 0) + 1
+      console.log("Enviando convite por email: ", {
+        email,
+        inviteUrl,
+        roleName,
+        retryAttempt: retryCount
+      });
+      
+      // Adicionar timeout para garantir que a solicitação não fique pendente indefinidamente
+      const timeoutPromise = new Promise<{ error: string }>((_, reject) => 
+        setTimeout(() => reject({ error: 'Tempo limite excedido ao enviar email' }), 30000)
+      );
+      
+      // Chamar a edge function para envio de email
+      const resultPromise = supabase.functions.invoke('send-invite-email', {
+        body: {
+          email,
+          inviteUrl,
+          roleName,
+          expiresAt,
+          senderName,
+          notes,
+          inviteId
+        }
+      });
+      
+      // Usar Promise.race para implementar timeout
+      const { data, error } = await Promise.race([
+        resultPromise,
+        timeoutPromise.then((e) => { throw e; })
+      ]) as { data: any, error: Error | null };
+      
+      if (error) {
+        console.error("Erro ao chamar a edge function:", error);
+        
+        // Verificar se é o caso de adicionar à fila para retentativa
+        if (retryCount < 3) {
+          console.log(`Adicionando email para ${email} à fila de retentativas (tentativa ${retryCount + 1})`);
+          
+          const retryParams = {
+            email,
+            inviteUrl,
+            roleName,
+            expiresAt,
+            senderName,
+            notes,
+            inviteId,
+            retryCount: retryCount + 1
+          };
+          
+          // Adicionar à fila e agendar nova tentativa
+          setEmailQueue(prev => [...prev, retryParams]);
+          
+          // Programar retentativa após um intervalo (aumento exponencial)
+          setTimeout(() => {
+            sendInviteEmail(retryParams)
+              .then(result => {
+                if (result.success) {
+                  // Remover da fila após sucesso
+                  setEmailQueue(prev => prev.filter(item => 
+                    item.email !== email || item.inviteId !== inviteId
+                  ));
+                }
+              });
+          }, Math.pow(2, retryCount) * 5000); // 5s, 10s, 20s
+        }
+        
+        setSendError(error);
+        return {
+          success: false,
+          message: 'Erro ao enviar e-mail de convite',
+          error: error.message || 'Falha na conexão com o servidor'
+        };
+      }
+      
+      console.log("Resposta da edge function:", data);
+      
+      if (!data.success) {
+        console.error("Edge function reportou erro:", data.error || data.message);
+        setSendError(new Error(data.message || data.error || 'Erro ao enviar e-mail'));
+        
+        return {
+          success: false,
+          message: data.message || 'Erro ao enviar e-mail',
+          error: data.error
+        };
+      }
+      
+      return {
+        success: true,
+        message: 'Email enviado com sucesso',
+        emailId: data.emailId
       };
+    } catch (err: any) {
+      console.error('Erro ao enviar email de convite:', err);
+      setSendError(err);
       
-      addToQueue(retryParams);
+      // Se for um erro de timeout ou conexão, também adicionar à fila de retentativas
+      if (retryCount < 3 && (err.message?.includes('Tempo limite') || err.message?.includes('conexão'))) {
+        const retryParams = {
+          email,
+          inviteUrl,
+          roleName,
+          expiresAt,
+          senderName,
+          notes,
+          inviteId,
+          retryCount: retryCount + 1
+        };
+        
+        setEmailQueue(prev => [...prev, retryParams]);
+        
+        setTimeout(() => {
+          sendInviteEmail(retryParams);
+        }, Math.pow(2, retryCount) * 5000);
+      }
       
-      // Programar retentativa após um intervalo (aumento exponencial)
-      setTimeout(() => {
-        sendInviteEmail(retryParams)
-          .then(retryResult => {
-            if (retryResult.success) {
-              removeFromQueue(params.email, params.inviteId);
-            }
-          });
-      }, Math.pow(2, params.retryCount || 0) * 5000); // 5s, 10s, 20s
+      return {
+        success: false,
+        message: 'Erro ao enviar email de convite',
+        error: err.message
+      };
+    } finally {
+      setIsSending(false);
+    }
+  }, []);
+
+  // Gerar link de convite - Melhorado para robustez máxima
+  const getInviteLink = useCallback((token: string) => {
+    // Verificar se o token existe
+    if (!token) {
+      console.error("Erro: Token vazio ao gerar link de convite");
+      return "";
     }
     
-    return result;
-  }, [sendEmail, addToQueue, removeFromQueue]);
+    // Limpar o token de espaços e normalizar
+    const cleanToken = token.trim().replace(/[\s\n\r\t]+/g, '');
+    
+    console.log("Gerando link de convite para token:", {
+      original: token,
+      limpo: cleanToken,
+      comprimento: cleanToken.length
+    });
+    
+    // Verificação de integridade do token
+    if (!cleanToken.match(/^[A-Z0-9]+$/i)) {
+      console.warn("Token contém caracteres não alfanuméricos:", token);
+    }
+    
+    // Construir URL absoluta com origem da janela atual
+    const baseUrl = `${window.location.origin}/convite/${encodeURIComponent(cleanToken)}`;
+    console.log("URL do convite gerado:", baseUrl);
+    
+    return baseUrl;
+  }, []);
 
+  // Limpar a fila de emails pendentes
+  const clearEmailQueue = useCallback(() => {
+    setEmailQueue([]);
+  }, []);
+
+  // Tentar reenviar todos os emails pendentes
   const retryAllPendingEmails = useCallback(() => {
-    retryQueue(sendInviteEmail);
-  }, [retryQueue, sendInviteEmail]);
+    const pendingEmails = [...emailQueue];
+    clearEmailQueue();
+    
+    pendingEmails.forEach(params => {
+      sendInviteEmail(params)
+        .then(result => {
+          if (result.success) {
+            toast.success(`Email para ${params.email} reenviado com sucesso`);
+          } else {
+            toast.error(`Falha ao reenviar email para ${params.email}`);
+          }
+        });
+    });
+  }, [emailQueue, clearEmailQueue, sendInviteEmail]);
 
   return {
     sendInviteEmail,
     getInviteLink,
     isSending,
     sendError,
-    pendingEmails,
+    pendingEmails: emailQueue.length,
     retryAllPendingEmails,
     clearEmailQueue
   };
 }
-
-// Removido a re-exportação do tipo SendInviteResponse para evitar conflito

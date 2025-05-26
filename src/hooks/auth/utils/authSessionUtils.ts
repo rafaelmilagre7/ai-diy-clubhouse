@@ -1,6 +1,7 @@
+
 import { supabase, UserProfile } from "@/lib/supabase";
-import { createUserProfileIfNeeded, fetchUserProfile } from "@/contexts/auth/utils/profileOperations";
-import { determineRoleFromEmail, validateUserRole } from "@/contexts/auth/utils/roleValidation";
+import { createUserProfileIfNeeded, fetchUserProfile } from "@/contexts/auth/utils/profileUtils";
+import { determineRoleFromEmail, validateUserRole } from "@/contexts/auth/utils/profileUtils/roleValidation";
 
 /**
  * Processa o perfil do usuário durante a inicialização da sessão

@@ -1,163 +1,122 @@
-import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { Profile } from '@/types/forumTypes';
-import { useAuth } from '@/contexts/auth';
-import { toast } from 'sonner';
 
-export interface MembersFilters {
-  search: string;
-  industry: string;
-  role: string;
-  availability: string;
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import { useState } from "react";
+
+export interface CommunityMemberFilters {
+  search?: string;
+  industry?: string;
+  role?: string;
+  onlyAvailableForNetworking?: boolean;
 }
 
-const ITEMS_PER_PAGE = 12;
-
-export const useCommunityMembers = () => {
-  const { user } = useAuth();
-  const [currentPage, setCurrentPage] = useState(0);
-  const [filters, setFilters] = useState<MembersFilters>({
-    search: '',
-    industry: '',
-    role: '',
-    availability: ''
-  });
-
-  // Buscar membros com filtros e paginação
-  const { 
-    data: membersData, 
-    isLoading, 
-    isError, 
-    refetch 
-  } = useQuery({
-    queryKey: ['community-members', currentPage, filters],
+export const useCommunityMembers = (initialFilters: CommunityMemberFilters = {}) => {
+  const [filters, setFilters] = useState<CommunityMemberFilters>(initialFilters);
+  const [page, setPage] = useState(0);
+  const itemsPerPage = 12;
+  
+  // Dados mockados para indústrias e cargos disponíveis
+  const availableIndustries = [
+    'Tecnologia',
+    'Saúde',
+    'Educação',
+    'Finanças',
+    'Varejo',
+    'Marketing',
+    'Consultoria',
+    'Outros'
+  ];
+  
+  const availableRoles = [
+    'CEO',
+    'Fundador',
+    'Diretor',
+    'Gerente',
+    'Especialista',
+    'Analista',
+    'Consultor',
+    'Outros'
+  ];
+  
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['community-members', filters, page],
     queryFn: async () => {
-      console.log('Buscando membros da comunidade...');
-      
       let query = supabase
         .from('profiles')
-        .select('*', { count: 'exact' });
-
-      // Excluir o próprio usuário se estiver logado
-      if (user?.id) {
-        query = query.neq('id', user.id);
-      }
-
+        .select('*')
+        .eq('active', true);
+        
       // Aplicar filtros
       if (filters.search) {
-        query = query.or(`name.ilike.%${filters.search}%,company_name.ilike.%${filters.search}%,current_position.ilike.%${filters.search}%`);
+        query = query.ilike('name', `%${filters.search}%`);
       }
-
+      
       if (filters.industry) {
         query = query.eq('industry', filters.industry);
       }
-
+      
       if (filters.role) {
-        query = query.ilike('current_position', `%${filters.role}%`);
+        query = query.eq('current_position', filters.role);
       }
-
-      if (filters.availability === 'available') {
+      
+      if (filters.onlyAvailableForNetworking) {
         query = query.eq('available_for_networking', true);
-      } else if (filters.availability === 'busy') {
-        query = query.eq('available_for_networking', false);
       }
-
+      
       // Paginação
-      const from = currentPage * ITEMS_PER_PAGE;
-      const to = from + ITEMS_PER_PAGE - 1;
-      query = query.range(from, to);
-
-      // Ordenar por último acesso (com fallback para created_at)
-      query = query.order('last_active', { ascending: false, nullsFirst: false });
-
-      const { data, error, count } = await query;
-
-      if (error) {
-        console.error('Erro ao buscar membros:', error);
-        throw error;
-      }
-
-      console.log(`Encontrados ${data?.length || 0} membros de ${count || 0} total`);
-
+      const start = page * itemsPerPage;
+      const end = start + itemsPerPage - 1;
+      
+      // Execute duas consultas separadas: uma para os dados e outra para a contagem
+      const { data: members, error: dataError } = await query
+        .range(start, end)
+        .order('name', { ascending: true });
+      
+      if (dataError) throw dataError;
+      
+      // Consulta separada para contagem
+      const { count, error: countError } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('active', true);
+        
+      if (countError) throw countError;
+      
       return {
-        members: data || [],
-        total: count || 0
+        members: members || [],
+        count: count || 0
       };
     },
-    staleTime: 30000, // 30 segundos
-    retry: 2
+    refetchOnWindowFocus: false
   });
-
-  // Buscar setores únicos para filtros (apenas dos que têm dados)
-  const { data: availableIndustries = [] } = useQuery({
-    queryKey: ['available-industries'],
-    queryFn: async (): Promise<string[]> => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('industry')
-        .not('industry', 'is', null)
-        .not('industry', 'eq', '')
-        .neq('id', user?.id || '');
-
-      if (error) throw error;
-
-      const industries = [...new Set(data?.map(item => item.industry).filter(Boolean))];
-      return industries.sort();
-    }
-  });
-
-  // Buscar cargos únicos para filtros (apenas dos que têm dados)
-  const { data: availableRoles = [] } = useQuery({
-    queryKey: ['available-roles'],
-    queryFn: async (): Promise<string[]> => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('current_position')
-        .not('current_position', 'is', null)
-        .not('current_position', 'eq', '')
-        .neq('id', user?.id || '');
-
-      if (error) throw error;
-
-      const roles = [...new Set(data?.map(item => item.current_position).filter(Boolean))];
-      return roles.sort();
-    }
-  });
-
-  const members = membersData?.members || [];
-  const totalItems = membersData?.total || 0;
-  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+  
+  const totalPages = Math.ceil((data?.count || 0) / itemsPerPage);
+  
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
   };
-
-  const handleFilterChange = (newFilters: Partial<MembersFilters>) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
-    setCurrentPage(0); // Reset para primeira página quando filtros mudam
+  
+  const handleFilterChange = (newFilters: CommunityMemberFilters) => {
+    setFilters(newFilters);
+    setPage(0); // Resetar para primeira página ao filtrar
   };
-
+  
   const handleRetry = () => {
     refetch();
   };
-
-  // Reset página quando filtros mudam
-  useEffect(() => {
-    setCurrentPage(0);
-  }, [filters]);
-
+  
   return {
-    members,
+    members: data?.members || [],
     isLoading,
-    isError,
-    totalPages,
-    currentPage,
+    error,
+    isError: !!error,
     filters,
+    handleFilterChange,
+    currentPage: page,
+    totalPages,
+    handlePageChange,
     availableIndustries,
     availableRoles,
-    handlePageChange,
-    handleFilterChange,
     handleRetry
   };
 };

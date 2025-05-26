@@ -1,176 +1,65 @@
 
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { UserPlus, MessageSquare, CheckCircle, Clock, Building, MapPin } from 'lucide-react';
-import { getInitials } from '@/utils/user';
 import { Profile } from '@/types/forumTypes';
-import { useNetworkConnections } from '@/hooks/community/useNetworkConnections';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Building2, Briefcase, MapPin } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { getInitials } from '@/components/community/utils/membership';
 
 interface MemberCardProps {
   member: Profile;
+  onConnect?: (memberId: string) => void;
+  isConnected?: boolean;
 }
 
-export const MemberCard: React.FC<MemberCardProps> = ({ member }) => {
-  const navigate = useNavigate();
-  const { 
-    connectedMembers, 
-    pendingRequests, 
-    sendConnectionRequest, 
-    processingRequest 
-  } = useNetworkConnections();
-
-  console.log('MemberCard renderizando membro:', { 
-    id: member.id, 
-    name: member.name,
-    company: member.company_name,
-    position: member.current_position 
-  });
-
-  // Verificar status da conexão
-  const isConnected = connectedMembers.some(conn => conn.id === member.id);
-  const isPending = pendingRequests.some(req => req.id === member.id);
-
-  const handleConnect = async () => {
-    if (isConnected || isPending || processingRequest) return;
-    
-    const success = await sendConnectionRequest(member.id);
-    if (success) {
-      toast.success('Solicitação de conexão enviada!');
-    }
-  };
-
-  const handleMessage = () => {
-    if (!isConnected) {
-      toast.info('Você precisa estar conectado para enviar mensagens');
-      return;
-    }
-    navigate('/comunidade/mensagens', { 
-      state: { selectedMemberId: member.id } 
-    });
-  };
-
-  const getConnectionButton = () => {
-    if (isConnected) {
-      return (
-        <Button 
-          size="sm" 
-          className="w-full bg-green-600 hover:bg-green-700"
-          onClick={handleMessage}
-        >
-          <CheckCircle className="h-4 w-4 mr-2" />
-          Conectado
-        </Button>
-      );
-    }
-
-    if (isPending) {
-      return (
-        <Button 
-          size="sm" 
-          variant="outline" 
-          className="w-full" 
-          disabled
-        >
-          <Clock className="h-4 w-4 mr-2" />
-          Pendente
-        </Button>
-      );
-    }
-
-    return (
-      <Button 
-        size="sm" 
-        className="w-full" 
-        onClick={handleConnect}
-        disabled={processingRequest}
-      >
-        <UserPlus className="h-4 w-4 mr-2" />
-        {processingRequest ? 'Enviando...' : 'Conectar'}
-      </Button>
-    );
-  };
-
-  // Funções para lidar com dados vazios ou em branco
-  const displayName = member.name?.trim() || 'Membro da Comunidade';
-  const displayPosition = member.current_position?.trim() || 'Profissional';
-  const displayCompany = member.company_name?.trim();
-  const displayIndustry = member.industry?.trim();
-  const displayBio = member.professional_bio?.trim();
-
+export const MemberCard = ({ member, onConnect, isConnected = false }: MemberCardProps) => {
   return (
-    <Card className="hover:shadow-lg transition-shadow">
-      <CardContent className="p-6">
-        <div className="flex flex-col items-center space-y-4">
-          {/* Avatar e informações básicas */}
-          <div className="text-center">
-            <Avatar className="h-16 w-16 mx-auto mb-3">
-              <AvatarImage src={member.avatar_url || undefined} alt={displayName} />
-              <AvatarFallback className="text-lg bg-primary/10">
-                {getInitials(member.name)}
-              </AvatarFallback>
-            </Avatar>
-            
-            <h3 className="font-semibold text-lg">{displayName}</h3>
-            
-            <div className="space-y-1 mt-2">
-              <p className="text-sm text-muted-foreground">{displayPosition}</p>
-              
-              {displayCompany && (
-                <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
-                  <Building className="h-3 w-3" />
-                  <span>{displayCompany}</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Badges e informações adicionais */}
-          <div className="flex flex-wrap gap-2 justify-center">
-            {displayIndustry && (
-              <Badge variant="secondary" className="text-xs">
-                {displayIndustry}
-              </Badge>
-            )}
-            
-            {member.available_for_networking && (
-              <Badge variant="outline" className="text-xs text-green-600 border-green-600">
-                Disponível para networking
-              </Badge>
+    <Card className="h-full overflow-hidden transition-all hover:shadow-md">
+      <CardHeader className="pb-2 space-y-2 flex items-center">
+        <div className="flex items-center space-x-3 w-full">
+          <Avatar className="h-12 w-12">
+            <AvatarImage src={member.avatar_url || ''} alt={member.name || 'Membro'} />
+            <AvatarFallback className="bg-primary text-primary-foreground">
+              {getInitials(member.name || 'Usuário')}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-medium truncate">{member.name}</h3>
+            {member.current_position && (
+              <div className="flex items-center text-xs text-muted-foreground gap-1">
+                <Briefcase className="w-3 h-3" />
+                <span className="truncate">{member.current_position}</span>
+              </div>
             )}
           </div>
-
-          {/* Bio profissional */}
-          {displayBio ? (
-            <p className="text-sm text-muted-foreground text-center line-clamp-2">
-              {displayBio}
-            </p>
-          ) : (
-            <p className="text-sm text-muted-foreground/60 text-center italic">
-              Membro ativo da comunidade
-            </p>
-          )}
-
-          {/* Botões de ação */}
-          <div className="w-full space-y-2">
-            {getConnectionButton()}
-            
-            {isConnected && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full"
-                onClick={handleMessage}
-              >
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Enviar mensagem
-              </Button>
-            )}
+        </div>
+      </CardHeader>
+      
+      <CardContent className="space-y-3 pt-1">
+        {member.company_name && (
+          <div className="flex items-center text-sm gap-2">
+            <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <span className="truncate">{member.company_name}</span>
           </div>
+        )}
+        
+        {member.industry && (
+          <Badge variant="outline" className="w-fit">
+            {member.industry}
+          </Badge>
+        )}
+
+        <div className="pt-3">
+          <Button 
+            variant={isConnected ? "secondary" : "default"}
+            size="sm"
+            className="w-full"
+            onClick={() => onConnect?.(member.id)}
+            disabled={isConnected}
+          >
+            {isConnected ? 'Conectado' : 'Conectar'}
+          </Button>
         </div>
       </CardContent>
     </Card>

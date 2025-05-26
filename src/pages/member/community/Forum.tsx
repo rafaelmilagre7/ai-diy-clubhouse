@@ -4,11 +4,8 @@ import { ForumBreadcrumbs } from '@/components/community/ForumBreadcrumbs';
 import { ForumHeader } from '@/components/community/ForumHeader';
 import { CategoryList } from '@/components/community/CategoryList';
 import { CommunityNavigation } from '@/components/community/CommunityNavigation';
-import { useForumCategories } from '@/hooks/community/useForumCategories';
 
 const Forum = () => {
-  const { categories, isLoading } = useForumCategories();
-
   return (
     <div className="container max-w-7xl mx-auto py-6">
       <ForumBreadcrumbs 
@@ -25,11 +22,7 @@ const Forum = () => {
       <CommunityNavigation />
       
       <div className="mt-6">
-        {isLoading ? (
-          <div>Carregando categorias...</div>
-        ) : (
-          <CategoryList categories={categories} />
-        )}
+        <CategoryList />
       </div>
     </div>
   );

@@ -1,110 +1,37 @@
 
-import React, { useState, useEffect, useRef } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import React, { useEffect } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
-import { PageTransitionWithFallback } from "@/components/transitions/PageTransitionWithFallback";
 import { toast } from "sonner";
-import type { ProtectedRouteProps, RouteAccessConfig } from "./types/ProtectedRouteTypes";
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
-  children,
-  requireAuth = true,
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  requireAdmin?: boolean;
+  requiredRole?: string;
+}
+
+const ProtectedRoute = ({ 
+  children, 
   requireAdmin = false,
-  requireFormacao = false,
-  allowedRoles = [],
-  fallbackRoute = "/login",
-  timeoutMs = 1500, // Reduzido ainda mais
-  showTransitions = false
-}) => {
-  const { user, profile, isAdmin, isFormacao, isLoading } = useAuth();
+  requiredRole
+}: ProtectedRouteProps) => {
+  const { user, isAdmin, isLoading } = useAuth();
   const location = useLocation();
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
-  const [accessChecked, setAccessChecked] = useState(false);
-  const timeoutRef = useRef<number | null>(null);
-  const hasToastShown = useRef(false);
-
-  console.log("🔐 ProtectedRoute: Verificando acesso", {
-    path: location.pathname,
-    requireAuth,
-    requireAdmin,
-    requireFormacao,
-    user: !!user,
-    profile: !!profile,
-    isAdmin,
-    isFormacao,
-    isLoading,
-    loadingTimeout,
-    accessChecked
+  const [loadingTimeout, setLoadingTimeout] = React.useState(false);
+  const timeoutRef = React.useRef<number | null>(null);
+  
+  // Debug logs
+  console.log("ProtectedRoute:", { 
+    user, 
+    isAdmin, 
+    isLoading, 
+    requireAdmin, 
+    requiredRole, 
+    path: location.pathname 
   });
-
-  // Função para verificar acesso
-  const checkAccess = (): RouteAccessConfig => {
-    console.log("🔍 ProtectedRoute: Executando checkAccess");
-    
-    if (!requireAuth) {
-      console.log("✅ ProtectedRoute: Rota não requer autenticação");
-      return {
-        isAuthenticated: true,
-        hasRequiredRole: true,
-        shouldRedirect: false,
-        redirectTarget: ""
-      };
-    }
-
-    if (!user) {
-      console.log("❌ ProtectedRoute: Usuário não autenticado");
-      return {
-        isAuthenticated: false,
-        hasRequiredRole: false,
-        shouldRedirect: true,
-        redirectTarget: fallbackRoute
-      };
-    }
-
-    let hasRequiredRole = true;
-
-    if (requireAdmin && !isAdmin) {
-      console.log("❌ ProtectedRoute: Requer admin mas usuário não é admin");
-      hasRequiredRole = false;
-    }
-
-    if (requireFormacao && !(isFormacao || isAdmin)) {
-      console.log("❌ ProtectedRoute: Requer formação mas usuário não tem acesso");
-      hasRequiredRole = false;
-    }
-
-    if (allowedRoles.length > 0 && profile) {
-      const userRole = profile.role;
-      const hasCustomRole = allowedRoles.includes(userRole) || 
-                           (allowedRoles.includes('admin') && isAdmin) ||
-                           (allowedRoles.includes('formacao') && isFormacao);
-      
-      if (!hasCustomRole) {
-        console.log("❌ ProtectedRoute: Usuário não tem role necessário");
-        hasRequiredRole = false;
-      }
-    }
-
-    const shouldRedirect = !hasRequiredRole;
-    const redirectTarget = shouldRedirect ? 
-      (requireAdmin || requireFormacao ? "/dashboard" : fallbackRoute) : "";
-
-    console.log("✅ ProtectedRoute: Verificação de acesso concluída", {
-      hasRequiredRole,
-      shouldRedirect,
-      redirectTarget
-    });
-
-    return {
-      isAuthenticated: true,
-      hasRequiredRole,
-      shouldRedirect,
-      redirectTarget
-    };
-  };
-
-  // Timeout mais otimizado
+  
+  // Configurar timeout para não ficar preso em carregamento infinito
   useEffect(() => {
     if (isLoading && !loadingTimeout) {
       if (timeoutRef.current) {
@@ -112,14 +39,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       }
       
       timeoutRef.current = window.setTimeout(() => {
-        console.log("⏰ ProtectedRoute: Timeout de carregamento atingido");
+        console.log("ProtectedRoute: Loading timeout exceeded");
         setLoadingTimeout(true);
-        
-        if (!hasToastShown.current) {
-          toast.warning("Carregamento está demorando mais que o esperado");
-          hasToastShown.current = true;
-        }
-      }, timeoutMs);
+        toast("Tempo limite de carregamento excedido, redirecionando para login");
+      }, 3000); // 3 segundos de timeout
     }
     
     return () => {
@@ -127,70 +50,28 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [isLoading, loadingTimeout, timeoutMs]);
-
-  // Verificar acesso mais rapidamente
-  useEffect(() => {
-    if (!isLoading || loadingTimeout) {
-      console.log("✅ ProtectedRoute: Marcando acesso como verificado");
-      setAccessChecked(true);
-    }
   }, [isLoading, loadingTimeout]);
 
-  // Loading otimizado
-  if ((isLoading && !loadingTimeout) || !accessChecked) {
-    console.log("⏳ ProtectedRoute: Mostrando tela de carregamento");
-    
-    const LoadingComponent = (
-      <LoadingScreen message="Verificando acesso..." />
-    );
-
-    return showTransitions ? (
-      <PageTransitionWithFallback isVisible={true}>
-        {LoadingComponent}
-      </PageTransitionWithFallback>
-    ) : LoadingComponent;
+  // Se estiver carregando, mostra tela de loading (mas só se o timeout não foi excedido)
+  if (isLoading && !loadingTimeout) {
+    return <LoadingScreen message="Verificando sua autenticação..." />;
   }
 
-  // Verificar acesso final
-  const accessConfig = checkAccess();
-
-  if (accessConfig.shouldRedirect) {
-    console.log("🔀 ProtectedRoute: Redirecionando", accessConfig.redirectTarget);
-    
-    if (!hasToastShown.current) {
-      if (!accessConfig.isAuthenticated) {
-        toast.error("Por favor, faça login para acessar esta página");
-      } else if (requireAdmin) {
-        toast.error("Você não tem permissão para acessar a área administrativa");
-      } else if (requireFormacao) {
-        toast.error("Você não tem permissão para acessar a área de formação");
-      } else {
-        toast.error("Você não tem permissão para acessar esta área");
-      }
-      hasToastShown.current = true;
-    }
-
-    const returnPath = location.pathname !== fallbackRoute ? location.pathname : "/dashboard";
-    
-    return (
-      <Navigate 
-        to={accessConfig.redirectTarget} 
-        state={{ from: returnPath }} 
-        replace 
-      />
-    );
+  // Se não houver usuário autenticado, redireciona para login
+  if (!user) {
+    console.log("ProtectedRoute: No user, redirecting to login");
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+  
+  // Verificar com base em requiredRole ou requireAdmin
+  if ((requiredRole === 'admin' || requireAdmin) && !isAdmin) {
+    console.log("Usuário não é admin, redirecionando para dashboard");
+    toast.error("Você não tem permissão para acessar esta área");
+    return <Navigate to="/dashboard" replace />;
   }
 
-  // Renderizar children
-  console.log("✅ ProtectedRoute: Renderizando children");
-  const ChildrenComponent = <>{children}</>;
-
-  return showTransitions ? (
-    <PageTransitionWithFallback isVisible={true}>
-      {ChildrenComponent}
-    </PageTransitionWithFallback>
-  ) : ChildrenComponent;
+  // Usuário está autenticado, renderiza os filhos
+  return <>{children}</>;
 };
 
 export default ProtectedRoute;

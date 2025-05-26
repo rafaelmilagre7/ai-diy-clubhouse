@@ -1,76 +1,59 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MessageSquare, UserMinus, ExternalLink } from 'lucide-react';
-import { getInitials } from '@/utils/user';
-import { Link } from 'react-router-dom';
-
-interface Member {
-  id: string;
-  name: string;
-  avatar_url?: string;
-  company_name?: string;
-  current_position?: string;
-}
+import { ConnectionMember } from '@/types/forumTypes';
+import { Trash2 } from 'lucide-react';
 
 interface ConnectionCardProps {
-  member: Member;
-  onRemoveConnection: () => void;
-  onStartConversation?: (memberId: string) => void;
+  member: ConnectionMember;
+  onRemove?: (connectionId: string) => Promise<void>;
 }
 
-export const ConnectionCard: React.FC<ConnectionCardProps> = ({
-  member,
-  onRemoveConnection,
-  onStartConversation
-}) => {
+export const getInitials = (name: string | null): string => {
+  if (!name) return "U";
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .substring(0, 2);
+};
+
+export const ConnectionCard: React.FC<ConnectionCardProps> = ({ member, onRemove }) => {
   return (
-    <Card>
+    <Card className="overflow-hidden">
       <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4 flex-grow">
+        <div className="flex items-center space-x-4">
+          <Link to={`/comunidade/membro/${member.id}`} className="flex items-center space-x-4 flex-grow">
             <Avatar className="h-12 w-12">
               <AvatarImage src={member.avatar_url || undefined} alt={member.name || "Usuário"} />
               <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
             </Avatar>
-            <div className="space-y-1 flex-grow">
+            <div className="space-y-1">
               <p className="font-medium">{member.name}</p>
               <p className="text-sm text-muted-foreground">
                 {member.current_position || ""}
                 {member.current_position && member.company_name && " • "}
                 {member.company_name || ""}
               </p>
+              {member.industry && (
+                <p className="text-xs text-muted-foreground">{member.industry}</p>
+              )}
             </div>
-          </div>
-          
-          <div className="flex space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onStartConversation?.(member.id)}
-              className="flex items-center space-x-1"
-            >
-              <MessageSquare className="h-4 w-4" />
-              <span className="hidden sm:inline">Mensagem</span>
-            </Button>
-            
-            <Link to={`/comunidade/membro/${member.id}`}>
-              <Button variant="ghost" size="sm">
-                <ExternalLink className="h-4 w-4" />
-              </Button>
-            </Link>
-            
+          </Link>
+          {onRemove && (
             <Button
               variant="ghost"
               size="sm"
-              onClick={onRemoveConnection}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={() => onRemove(member.id)}
+              className="text-destructive hover:text-destructive"
             >
-              <UserMinus className="h-4 w-4" />
+              <Trash2 className="h-4 w-4" />
             </Button>
-          </div>
+          )}
         </div>
       </CardContent>
     </Card>

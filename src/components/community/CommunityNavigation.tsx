@@ -1,118 +1,82 @@
 
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { MessageSquare, Users, Lightbulb, Calendar, UserPlus, MessageSquareMore } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { NotificationsDropdown } from './notifications/NotificationsDropdown';
-import { MessageNotificationsDropdown } from './notifications/MessageNotificationsDropdown';
+import { MessageSquare, Users, Bookmark, UserPlus } from 'lucide-react';
 
-export const CommunityNavigation = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
+interface CommunityNavigationProps {
+  activeCategory?: string;
+}
 
-  const navigationItems = [
-    {
-      id: 'forum',
-      label: 'Fórum',
+export const CommunityNavigation = ({ activeCategory }: CommunityNavigationProps = {}) => {
+  const { pathname } = useLocation();
+  
+  const navItems = [
+    { 
+      name: 'Fórum', 
+      path: '/comunidade', 
       icon: MessageSquare,
-      path: '/comunidade',
       exact: true
     },
-    {
-      id: 'members',
-      label: 'Membros',
-      icon: Users,
-      path: '/comunidade/membros'
+    { 
+      name: 'Membros', 
+      path: '/comunidade/membros', 
+      icon: Users 
     },
-    {
-      id: 'connections',
-      label: 'Conexões',
-      icon: UserPlus,
-      path: '/comunidade/conexoes'
+    { 
+      name: 'Conexões',
+      path: '/comunidade/conexoes',
+      icon: UserPlus
     },
-    {
-      id: 'messages',
-      label: 'Mensagens',
-      icon: MessageSquareMore,
-      path: '/comunidade/mensagens'
+    { 
+      name: 'Recursos', 
+      path: '/comunidade/recursos', 
+      icon: Bookmark,
+      disabled: true
     },
-    {
-      id: 'suggestions',
-      label: 'Sugestões',
-      icon: Lightbulb,
-      path: '/comunidade/sugestoes'
-    },
-    {
-      id: 'events',
-      label: 'Eventos',
+    /* Removido conforme solicitado pelo cliente
+    { 
+      name: 'Eventos', 
+      path: '/comunidade/eventos', 
       icon: Calendar,
-      path: '/events',
-      external: true
-    }
+      disabled: true
+    },
+    { 
+      name: 'Conquistas', 
+      path: '/comunidade/conquistas', 
+      icon: Award,
+      disabled: true,
+      beta: true
+    },
+    */
+    // Nota: Sistema de gamificação e loja da comunidade serão implementados no futuro
   ];
-
-  const isActive = (item: typeof navigationItems[0]) => {
-    console.log('CommunityNavigation: Verificando ativação', { 
-      itemPath: item.path, 
-      currentPath: location.pathname, 
-      exact: item.exact,
-      external: item.external 
-    });
-
-    if (item.external) return false;
-    
-    if (item.exact) {
-      return location.pathname === item.path;
-    }
-    
-    // Para rotas específicas da comunidade, usar comparação exata
-    return location.pathname === item.path;
+  
+  const isActive = (path: string, exact = false) => {
+    if (exact) return pathname === path;
+    return pathname.startsWith(path);
   };
-
-  const handleNavigation = (item: typeof navigationItems[0]) => {
-    console.log('CommunityNavigation: Navegando para', item.path);
-    
-    if (item.external) {
-      // Para rotas externas, ainda navegar normalmente
-      navigate(item.path);
-      return;
-    }
-    
-    navigate(item.path);
-  };
-
+  
   return (
-    <div className="border-b">
-      <div className="flex items-center justify-between">
-        <div className="flex space-x-1 overflow-x-auto pb-px">
-          {navigationItems.map((item) => {
-            const active = isActive(item);
-            
-            return (
-              <Button
-                key={item.id}
-                variant="ghost"
-                size="sm"
-                onClick={() => handleNavigation(item)}
-                className={cn(
-                  "flex items-center gap-2 whitespace-nowrap border-b-2 border-transparent rounded-none px-4 py-3",
-                  active && "border-primary text-primary bg-primary/5",
-                  !active && "hover:bg-muted/50"
-                )}
-              >
-                <item.icon className="h-4 w-4" />
-                <span className="hidden sm:inline">{item.label}</span>
-              </Button>
-            );
-          })}
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          <MessageNotificationsDropdown />
-          <NotificationsDropdown />
-        </div>
+    <nav className="mb-6 border-b pb-1">
+      <div className="flex overflow-x-auto py-2 space-x-2 px-1">
+        {navItems.map(item => (
+          <Link
+            key={item.path}
+            to={item.disabled ? '#' : item.path}
+            className={cn(
+              "flex items-center space-x-2 px-3 py-2 rounded-md whitespace-nowrap transition-colors",
+              isActive(item.path, item.exact)
+                ? "bg-primary text-primary-foreground font-medium"
+                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+              item.disabled && "opacity-50 cursor-not-allowed hover:bg-transparent hover:text-muted-foreground"
+            )}
+            onClick={(e) => item.disabled && e.preventDefault()}
+          >
+            <item.icon className="h-4 w-4" />
+            <span>{item.name}</span>
+          </Link>
+        ))}
       </div>
-    </div>
+    </nav>
   );
 };

@@ -18,10 +18,10 @@ export {
 
 // Exportação explícita das funções de RPC
 export {
+  createStoragePublicPolicy,
   incrementTopicViews,
   incrementTopicReplies,
-  decrementTopicReplies,
-  deleteForumPost,
   deleteForumTopic,
-  createStoragePublicPolicy
+  deleteForumPost
+  // Adicionar outras funções de RPC conforme necessário
 } from './rpc';

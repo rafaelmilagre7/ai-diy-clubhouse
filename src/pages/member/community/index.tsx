@@ -1,50 +1,40 @@
 
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import { CommunityRedirect } from '@/components/community/CommunityRedirect';
-import CommunityHome from './CommunityHome';
-import CommunityMembers from './CommunityMembers';
-import ConnectionsPage from './ConnectionsPage';
-import MessagesPage from './MessagesPage';
-import NotificationsPage from './NotificationsPage';
-import CategoryTopics from './CategoryTopics';
-import NewTopicPage from './NewTopicPage';
-import TopicDetailPage from './TopicDetailPage';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { Suspense, lazy } from 'react';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
-// Página temporária para sugestões
-const SuggestionsPage = () => (
-  <div className="container max-w-7xl mx-auto py-6">
-    <div className="text-center py-12">
-      <h1 className="text-2xl font-bold mb-4">Sugestões da Comunidade</h1>
-      <p className="text-muted-foreground">
-        Compartilhe suas ideias para melhorar a plataforma e a comunidade.
-      </p>
-      <p className="text-muted-foreground mt-2">
-        Em breve você poderá enviar sugestões e votar nas ideias de outros membros.
-      </p>
-    </div>
+// Páginas da comunidade - agora referenciando os arquivos que criamos
+const CommunityOverview = lazy(() => import('./Overview'));
+const ForumPage = lazy(() => import('./Forum'));
+const CategoryPage = lazy(() => import('./Category'));
+const TopicPage = lazy(() => import('./Topic'));
+const NewTopicPage = lazy(() => import('./NewTopic'));
+const MembersPage = lazy(() => import('./Members'));
+const MemberProfilePage = lazy(() => import('./MemberProfile'));
+const ConnectionManagementPage = lazy(() => import('./ConnectionManagement'));
+
+// Componente de loading
+const LoadingFallback = () => (
+  <div className="flex justify-center items-center h-[50vh]">
+    <LoadingSpinner size="lg" />
   </div>
 );
 
 const CommunityPages = () => {
-  console.log('CommunityPages renderizando - rotas configuradas');
-  
   return (
-    <>
-      <CommunityRedirect />
+    <Suspense fallback={<LoadingFallback />}>
       <Routes>
-        <Route index element={<CommunityHome />} />
-        <Route path="membros" element={<CommunityMembers />} />
-        <Route path="conexoes" element={<ConnectionsPage />} />
-        <Route path="mensagens" element={<MessagesPage />} />
-        <Route path="notificacoes" element={<NotificationsPage />} />
-        <Route path="sugestoes" element={<SuggestionsPage />} />
-        <Route path="categoria/:categorySlug" element={<CategoryTopics />} />
-        <Route path="novo-topico" element={<NewTopicPage />} />
-        <Route path="novo-topico/:categorySlug" element={<NewTopicPage />} />
-        <Route path="topico/:topicId" element={<TopicDetailPage />} />
+        <Route path="/" element={<CommunityOverview />} />
+        <Route path="/forum" element={<ForumPage />} />
+        <Route path="/categoria/:categorySlug" element={<CategoryPage />} />
+        <Route path="/topico/:topicId" element={<TopicPage />} />
+        <Route path="/novo-topico/:categorySlug" element={<NewTopicPage />} />
+        <Route path="/membros" element={<MembersPage />} />
+        <Route path="/membro/:memberId" element={<MemberProfilePage />} />
+        <Route path="/conexoes" element={<ConnectionManagementPage />} />
+        <Route path="*" element={<Navigate to="/comunidade/forum" replace />} />
       </Routes>
-    </>
+    </Suspense>
   );
 };
 

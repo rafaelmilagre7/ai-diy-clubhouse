@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { OnboardingForm } from '../OnboardingForm';
 import { BrowserRouter } from 'react-router-dom';
 
@@ -21,11 +21,11 @@ describe('OnboardingForm Component', () => {
   });
   
   test('renderiza o formulário corretamente', async () => {
-    const { findByText, getByLabelText } = render(<OnboardingForm />, { wrapper: FormWrapper });
+    render(<OnboardingForm />, { wrapper: FormWrapper });
     
     // Verificar se os elementos principais estão presentes
-    expect(await findByText(/Informações Pessoais/i)).toBeInTheDocument();
-    expect(getByLabelText(/Nome Completo/i)).toBeInTheDocument();
-    expect(getByLabelText(/E-mail/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Informações Pessoais/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Nome Completo/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/E-mail/i)).toBeInTheDocument();
   });
 });

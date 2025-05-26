@@ -1,188 +1,157 @@
 
-import React from 'react';
-import { useAuth } from '@/contexts/auth';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
-import { 
-  BookOpen, 
-  Users, 
-  MessageSquare, 
-  TrendingUp, 
-  CheckCircle, 
-  Calendar,
-  Target,
-  Award
-} from 'lucide-react';
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useSolutionsData } from "@/hooks/useSolutionsData";
+import { useDashboardProgress } from "@/hooks/useDashboardProgress";
+import { toast } from "sonner";
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { Solution } from "@/lib/supabase";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { AlertCircle, RefreshCw } from "lucide-react";
+import { useAuth } from "@/contexts/auth";
 
 const Dashboard = () => {
-  const { profile } = useAuth();
-
-  const dashboardCards = [
-    {
-      title: "Trilha de Aprendizado",
-      description: "Continue sua jornada de aprendizado em IA",
-      icon: BookOpen,
-      link: "/learning",
-      color: "bg-blue-500"
-    },
-    {
-      title: "Comunidade",
-      description: "Conecte-se com outros membros",
-      icon: Users,
-      link: "/comunidade",
-      color: "bg-green-500"
-    },
-    {
-      title: "Fórum",
-      description: "Participe das discussões",
-      icon: MessageSquare,
-      link: "/comunidade",
-      color: "bg-purple-500"
-    },
-    {
-      title: "Implementações",
-      description: "Acompanhe suas implementações",
-      icon: CheckCircle,
-      link: "/learning",
-      color: "bg-orange-500"
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { user, profile, isLoading: authLoading } = useAuth();
+  
+  // Estado para controle de erros
+  const [hasError, setHasError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  
+  // Log de diagnóstico - remover após resolução do problema
+  console.log("Dashboard renderizado:", { 
+    user: !!user, 
+    profile: !!profile,
+    authLoading,
+    currentRoute: window.location.pathname
+  });
+  
+  // Otimização: Usar useMemo para lembrar o valor da categoria entre renderizações
+  const initialCategory = useMemo(() => searchParams.get("category") || "general", [searchParams]);
+  const [category, setCategory] = useState<string>(initialCategory);
+  
+  // Otimização: Adicionar configuração de staleTime mais longa para reduzir requisições
+  const { solutions, loading: solutionsLoading, error: solutionsError } = useSolutionsData();
+  
+  // Log diagnóstico para Supabase
+  useEffect(() => {
+    if (solutionsError) {
+      console.error("Erro ao carregar soluções:", solutionsError);
+      setHasError(true);
+      setErrorMessage("Não foi possível carregar as soluções. Verifique sua conexão com a internet.");
+      toast.error("Erro ao carregar soluções", {
+        description: "Tente atualizar a página"
+      });
+    } else {
+      console.log("Soluções carregadas:", solutions?.length || 0);
     }
-  ];
+  }, [solutionsError, solutions]);
+  
+  // Otimização: Usar useMemo para o array de soluções para evitar recálculos desnecessários
+  const filteredSolutions = useMemo(() => {
+    if (!solutions || solutions.length === 0) return [];
+    return category !== "general" 
+      ? solutions.filter(s => s.category === category)
+      : solutions;
+  }, [solutions, category]);
+  
+  // Usar as soluções filtradas para obter o progresso
+  const { 
+    active, 
+    completed, 
+    recommended, 
+    loading: progressLoading,
+    error: progressError
+  } = useDashboardProgress(filteredSolutions);
+  
+  // Tratamento de erro para progresso
+  useEffect(() => {
+    if (progressError) {
+      console.error("Erro ao carregar progresso:", progressError);
+      setHasError(true);
+      setErrorMessage("Não foi possível carregar seu progresso. Por favor, tente novamente mais tarde.");
+    }
+  }, [progressError]);
+  
+  // Verificação de autenticação
+  useEffect(() => {
+    if (!authLoading && !user) {
+      console.error("Usuário não autenticado no Dashboard");
+      navigate('/login', { replace: true });
+    }
+  }, [user, authLoading, navigate]);
+  
+  // Função para lidar com a mudança de categoria - memoizada para evitar recriação
+  const handleCategoryChange = useCallback((newCategory: string) => {
+    setCategory(newCategory);
+    setSearchParams({ category: newCategory });
+  }, [setSearchParams]);
 
-  const quickStats = [
-    { label: "Cursos Iniciados", value: "3", icon: BookOpen },
-    { label: "Implementações", value: "1", icon: Target },
-    { label: "Conexões", value: "12", icon: Users },
-    { label: "Certificados", value: "0", icon: Award }
-  ];
+  // Função para navegar para a página de detalhes da solução - memoizada
+  const handleSolutionClick = useCallback((solution: Solution) => {
+    navigate(`/solution/${solution.id}`);
+  }, [navigate]);
+  
+  // Função para atualizar a página em caso de erro
+  const handleRetry = () => {
+    setHasError(false);
+    setErrorMessage(null);
+    window.location.reload();
+  };
 
-  return (
-    <div className="container max-w-7xl mx-auto py-6 px-4">
-      {/* Header de Boas-vindas */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">
-          Bem-vindo de volta, {profile?.name || 'Membro'}! 👋
-        </h1>
-        <p className="text-muted-foreground">
-          Aqui está um resumo do seu progresso na jornada VIVER DE IA
+  // Controle para exibir toast apenas na primeira visita usando localStorage
+  useEffect(() => {
+    const isFirstVisit = localStorage.getItem("firstDashboardVisit") !== "false";
+    
+    if (isFirstVisit) {
+      // Atrasar ligeiramente o toast para evitar conflito com renderização inicial
+      const timeoutId = setTimeout(() => {
+        toast("Bem-vindo ao seu dashboard personalizado!");
+        localStorage.setItem("firstDashboardVisit", "false");
+      }, 1500);
+      
+      // Limpeza do timeout quando o componente é desmontado
+      return () => clearTimeout(timeoutId);
+    }
+  }, []);
+  
+  // Se houver erro, mostrar mensagem de erro com opção de tentar novamente
+  if (hasError) {
+    return (
+      <div className="container py-8 flex flex-col items-center justify-center min-h-[60vh]">
+        <Alert variant="destructive" className="mb-4 max-w-md">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Problema ao carregar o dashboard</AlertTitle>
+          <AlertDescription>
+            {errorMessage || "Ocorreu um erro inesperado. Por favor, tente novamente."}
+          </AlertDescription>
+        </Alert>
+        <Button 
+          onClick={handleRetry} 
+          className="mt-4 flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" /> Tentar novamente
+        </Button>
+        <p className="mt-8 text-sm text-muted-foreground max-w-md text-center">
+          Se o problema persistir, tente sair e entrar novamente na plataforma, ou entre em contato com o suporte.
         </p>
       </div>
+    );
+  }
 
-      {/* Stats Rápidas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {quickStats.map((stat, index) => (
-          <Card key={index}>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    {stat.label}
-                  </p>
-                  <p className="text-2xl font-bold">{stat.value}</p>
-                </div>
-                <stat.icon className="h-8 w-8 text-muted-foreground" />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Cards de Navegação Principal */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {dashboardCards.map((card, index) => (
-          <Link key={index} to={card.link}>
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader className="pb-3">
-                <div className={`inline-flex p-3 rounded-lg ${card.color} w-fit mb-2`}>
-                  <card.icon className="h-6 w-6 text-white" />
-                </div>
-                <CardTitle className="text-lg">{card.title}</CardTitle>
-                <CardDescription className="text-sm">
-                  {card.description}
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
-        ))}
-      </div>
-
-      {/* Seção de Atividade Recente */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Atividade Recente
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
-                <BookOpen className="h-4 w-4 text-blue-500" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Curso iniciado</p>
-                  <p className="text-xs text-muted-foreground">Fundamentos de IA</p>
-                </div>
-                <span className="text-xs text-muted-foreground">2h atrás</span>
-              </div>
-              
-              <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
-                <MessageSquare className="h-4 w-4 text-green-500" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Novo tópico criado</p>
-                  <p className="text-xs text-muted-foreground">Discussão sobre ChatGPT</p>
-                </div>
-                <span className="text-xs text-muted-foreground">1 dia atrás</span>
-              </div>
-            </div>
-            
-            <Button variant="outline" className="w-full mt-4" asChild>
-              <Link to="/comunidade">Ver todas as atividades</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Próximos Passos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 p-3 border rounded-lg">
-                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Completar módulo atual</p>
-                  <p className="text-xs text-muted-foreground">Fundamentos de IA - Aula 3</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-3 p-3 border rounded-lg">
-                <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Participar do fórum</p>
-                  <p className="text-xs text-muted-foreground">Conecte-se com outros membros</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-3 p-3 border rounded-lg">
-                <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Primeira implementação</p>
-                  <p className="text-xs text-muted-foreground">Aplique o conhecimento na prática</p>
-                </div>
-              </div>
-            </div>
-            
-            <Button className="w-full mt-4" asChild>
-              <Link to="/learning">Continuar Aprendizado</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+  // Renderizar o layout diretamente, sem usar um componente de carregamento bloqueante
+  return (
+    <DashboardLayout
+      active={active}
+      completed={completed}
+      recommended={recommended}
+      category={category}
+      onCategoryChange={handleCategoryChange}
+      onSolutionClick={handleSolutionClick}
+      isLoading={solutionsLoading || progressLoading || authLoading}
+    />
   );
 };
 

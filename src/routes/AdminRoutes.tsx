@@ -1,6 +1,6 @@
 
 import { RouteObject } from "react-router-dom";
-import AdminRoute from '@/components/routing/AdminRoute';
+import { AdminProtectedRoutes } from '@/auth/AdminProtectedRoutes';
 import AdminLayout from '@/components/layout/admin/AdminLayout';
 
 // Admin pages
@@ -25,171 +25,171 @@ export const adminRoutes: RouteObject[] = [
   {
     path: "/admin",
     element: (
-      <AdminRoute>
+      <AdminProtectedRoutes>
         <AdminLayout>
           <AdminDashboard />
         </AdminLayout>
-      </AdminRoute>
+      </AdminProtectedRoutes>
     )
   },
   {
     path: "/admin/events",
     element: (
-      <AdminRoute>
+      <AdminProtectedRoutes>
         <AdminLayout>
           <AdminEvents />
         </AdminLayout>
-      </AdminRoute>
+      </AdminProtectedRoutes>
     )
   },
   {
     path: "/admin/users",
     element: (
-      <AdminRoute>
+      <AdminProtectedRoutes>
         <AdminLayout>
           <AdminUsers />
         </AdminLayout>
-      </AdminRoute>
+      </AdminProtectedRoutes>
     )
   },
   {
     path: "/admin/solutions",
     element: (
-      <AdminRoute>
+      <AdminProtectedRoutes>
         <AdminLayout>
           <AdminSolutions />
         </AdminLayout>
-      </AdminRoute>
+      </AdminProtectedRoutes>
     )
   },
   {
     path: "/admin/solutions/new",
     element: (
-      <AdminRoute>
+      <AdminProtectedRoutes>
         <AdminLayout>
           <AdminSolutionCreate />
         </AdminLayout>
-      </AdminRoute>
+      </AdminProtectedRoutes>
     )
   },
   {
     path: "/admin/solutions/:id",
     element: (
-      <AdminRoute>
+      <AdminProtectedRoutes>
         <AdminLayout>
           <AdminSolutionEdit />
         </AdminLayout>
-      </AdminRoute>
+      </AdminProtectedRoutes>
     )
   },
   {
     path: "/admin/solutions/:id/editor",
     element: (
-      <AdminRoute>
+      <AdminProtectedRoutes>
         <AdminLayout>
           <SolutionEditor />
         </AdminLayout>
-      </AdminRoute>
+      </AdminProtectedRoutes>
     )
   },
   {
     path: "/admin/tools",
     element: (
-      <AdminRoute>
+      <AdminProtectedRoutes>
         <AdminLayout>
           <AdminTools />
         </AdminLayout>
-      </AdminRoute>
+      </AdminProtectedRoutes>
     )
   },
   {
     path: "/admin/tools/new",
     element: (
-      <AdminRoute>
+      <AdminProtectedRoutes>
         <AdminLayout>
           <AdminToolEdit />
         </AdminLayout>
-      </AdminRoute>
+      </AdminProtectedRoutes>
     )
   },
   {
     path: "/admin/tools/:id",
     element: (
-      <AdminRoute>
+      <AdminProtectedRoutes>
         <AdminLayout>
           <AdminToolEdit />
         </AdminLayout>
-      </AdminRoute>
+      </AdminProtectedRoutes>
     )
   },
   {
     path: "/admin/suggestions",
     element: (
-      <AdminRoute>
+      <AdminProtectedRoutes>
         <AdminLayout>
           <AdminSuggestions />
         </AdminLayout>
-      </AdminRoute>
+      </AdminProtectedRoutes>
     )
   },
   {
     path: "/admin/suggestions/:id",
     element: (
-      <AdminRoute>
+      <AdminProtectedRoutes>
         <AdminLayout>
           <AdminSuggestionDetails />
         </AdminLayout>
-      </AdminRoute>
+      </AdminProtectedRoutes>
     )
   },
   {
     path: "/admin/onboarding",
     element: (
-      <AdminRoute>
+      <AdminProtectedRoutes>
         <AdminLayout>
           <AdminOnboarding />
         </AdminLayout>
-      </AdminRoute>
+      </AdminProtectedRoutes>
     )
   },
   {
     path: "/admin/analytics",
     element: (
-      <AdminRoute>
+      <AdminProtectedRoutes>
         <AdminLayout>
           <AdminAnalytics />
         </AdminLayout>
-      </AdminRoute>
+      </AdminProtectedRoutes>
     )
   },
   {
     path: "/admin/roles",
     element: (
-      <AdminRoute>
+      <AdminProtectedRoutes>
         <AdminLayout>
           <RolesPage />
         </AdminLayout>
-      </AdminRoute>
+      </AdminProtectedRoutes>
     )
   },
   {
     path: "/admin/permissions/audit",
     element: (
-      <AdminRoute>
+      <AdminProtectedRoutes>
         <AdminLayout>
           <PermissionAuditLogPage />
         </AdminLayout>
-      </AdminRoute>
+      </AdminProtectedRoutes>
     )
   },
   {
     path: "/admin/invites",
     element: (
-      <AdminRoute>
+      <AdminProtectedRoutes>
         <AdminLayout>
           <InvitesManagement />
         </AdminLayout>
-      </AdminRoute>
+      </AdminProtectedRoutes>
     )
   },
 ];

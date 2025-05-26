@@ -1,105 +1,128 @@
 
-import React from 'react';
-import { TopicCard } from './TopicCard';
-import { EmptyTopicsState } from './EmptyTopicsState';
-import { Topic } from '@/types/forumTypes';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Topic } from "@/types/forumTypes";
+import { TopicItem } from "./TopicItem";
+import { Card } from "@/components/ui/card";
+import { Pagination } from "@/components/ui/pagination";
+import { EmptyTopicsState } from "./EmptyTopicsState";
+import { PinIcon } from "lucide-react";
+import { useTopicList } from "@/hooks/useTopicList";
 
-interface TopicListProps {
-  pinnedTopics: Topic[];
+export interface TopicListProps {
+  pinnedTopics?: Topic[];
   regularTopics: Topic[];
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  categoryId?: string;
+  categorySlug?: string;
+  searchQuery?: string;
 }
 
-export const TopicList: React.FC<TopicListProps> = ({
-  pinnedTopics,
+interface SimplifiedTopicListProps {
+  categoryId: string;
+  categorySlug?: string;
+}
+
+export const TopicList = ({ 
+  pinnedTopics = [], 
   regularTopics,
   currentPage,
   totalPages,
-  onPageChange
-}) => {
+  onPageChange,
+  categoryId,
+  categorySlug,
+  searchQuery
+}: TopicListProps) => {
   const hasTopics = pinnedTopics.length > 0 || regularTopics.length > 0;
-
+  
   if (!hasTopics) {
-    return <EmptyTopicsState />;
+    return <EmptyTopicsState searchQuery={searchQuery} />;
   }
-
+  
   return (
     <div className="space-y-6">
-      {/* Tópicos Fixados */}
-      {pinnedTopics.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-            📌 Tópicos Fixados
-          </h3>
-          <div className="space-y-2">
-            {pinnedTopics.map((topic) => (
-              <TopicCard key={topic.id} topic={topic} isPinned />
-            ))}
+      {/* Tópicos fixados */}
+      {pinnedTopics && pinnedTopics.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-1 text-muted-foreground text-sm">
+            <PinIcon className="h-4 w-4" />
+            <span>Tópicos fixados</span>
           </div>
+          
+          <Card className="divide-y">
+            {pinnedTopics.map((topic) => (
+              <TopicItem key={topic.id} topic={topic} isPinned />
+            ))}
+          </Card>
         </div>
       )}
-
-      {/* Tópicos Regulares */}
-      <div className="space-y-3">
-        {pinnedTopics.length > 0 && (
-          <h3 className="text-sm font-medium text-muted-foreground">
-            Discussões Recentes
-          </h3>
+      
+      {/* Tópicos regulares */}
+      <div className="space-y-2">
+        {pinnedTopics && pinnedTopics.length > 0 && (
+          <div className="text-sm text-muted-foreground">
+            Tópicos
+          </div>
         )}
-        <div className="space-y-2">
+        
+        <Card className="divide-y">
           {regularTopics.map((topic) => (
-            <TopicCard key={topic.id} topic={topic} />
+            <TopicItem key={topic.id} topic={topic} />
           ))}
-        </div>
+        </Card>
       </div>
-
+      
       {/* Paginação */}
       {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 pt-6">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage === 0}
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Anterior
-          </Button>
-          
-          <div className="flex items-center gap-1">
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              const pageNum = currentPage - 2 + i;
-              if (pageNum < 0 || pageNum >= totalPages) return null;
-              
-              return (
-                <Button
-                  key={pageNum}
-                  variant={pageNum === currentPage ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => onPageChange(pageNum)}
-                  className="w-10"
-                >
-                  {pageNum + 1}
-                </Button>
-              );
-            })}
-          </div>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage >= totalPages - 1}
-          >
-            Próxima
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+        <div className="flex justify-center mt-6">
+          <Pagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={onPageChange}
+          />
         </div>
       )}
     </div>
+  );
+};
+
+// Componente simplificado que usa o useTopicList hook
+export const SimpleTopicList = ({ categoryId, categorySlug }: SimplifiedTopicListProps) => {
+  const { 
+    pinnedTopics, 
+    regularTopics, 
+    totalPages, 
+    currentPage, 
+    isLoading, 
+    error, 
+    handlePageChange,
+    hasTopics 
+  } = useTopicList({ categoryId, categorySlug });
+
+  if (isLoading) {
+    return <div className="py-10 text-center">Carregando tópicos...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="py-10 text-center">
+        <p className="text-red-500">Erro ao carregar tópicos.</p>
+        <button className="mt-2 text-primary underline" onClick={() => window.location.reload()}>
+          Tentar novamente
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <TopicList
+      pinnedTopics={pinnedTopics}
+      regularTopics={regularTopics}
+      currentPage={currentPage}
+      totalPages={totalPages}
+      onPageChange={handlePageChange}
+      categoryId={categoryId}
+      categorySlug={categorySlug}
+    />
   );
 };

@@ -1,9 +1,9 @@
 
 // Auth
-export { default as Login } from './Login';
-export { default as Register } from './auth/Register';
-export { default as ForgotPassword } from './auth/ResetPassword';
-export { default as ResetPassword } from './auth/SetNewPassword';
+export { default as Login } from './Auth';
+export { default as Register } from './Auth';
+export { default as ForgotPassword } from './Auth';
+export { default as ResetPassword } from './Auth';
 
 // Admin
 export { default as AdminDashboard } from './admin/AdminDashboard';

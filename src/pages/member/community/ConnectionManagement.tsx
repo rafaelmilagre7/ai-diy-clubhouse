@@ -1,192 +1,232 @@
-
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
+import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Users, UserCheck, UserPlus, MessageSquare } from 'lucide-react';
-import { useNetworkConnections } from '@/hooks/community/useNetworkConnections';
-import { getInitials } from '@/utils/user';
-import { useNavigate } from 'react-router-dom';
+import { ForumBreadcrumbs } from '@/components/community/ForumBreadcrumbs';
+import { ForumHeader } from '@/components/community/ForumHeader';
+import { CommunityNavigation } from '@/components/community/CommunityNavigation';
+import { ConnectionRequestsTabContent } from '@/components/community/connections/ConnectionRequestsTabContent';
+import { PendingConnectionsTabContent } from '@/components/community/connections/PendingConnectionsTabContent';
+import { ConnectionsTabContent } from '@/components/community/connections/ConnectionsTabContent';
+import { useAuth } from '@/contexts/auth';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
+import { MemberConnection } from '@/types/forumTypes';
 
 const ConnectionManagement = () => {
-  const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
-  const { connectedMembers, pendingRequests, isLoading } = useNetworkConnections();
-
-  const filteredConnections = connectedMembers.filter(member =>
-    member.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.company_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const handleMessage = (memberId: string) => {
-    navigate('/comunidade/mensagens', { 
-      state: { selectedMemberId: memberId } 
-    });
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState('connections');
+  const [processingRequests, setProcessingRequests] = useState(new Set<string>());
+  
+  // Buscar conexões onde o usuário é o destinatário (solicitações recebidas)
+  const { data: connectionRequests, refetch: refetchRequests } = useQuery({
+    queryKey: ['connection-requests', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('member_connections')
+        .select('*, requester:requester_id(id, name, avatar_url, company_name, current_position)')
+        .eq('recipient_id', user?.id)
+        .eq('status', 'pending');
+        
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id
+  });
+  
+  // Buscar conexões pendentes enviadas pelo usuário
+  const { data: pendingConnections, refetch: refetchPending } = useQuery({
+    queryKey: ['pending-connections', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('member_connections')
+        .select('*, recipient:recipient_id(id, name, avatar_url, company_name, current_position)')
+        .eq('requester_id', user?.id)
+        .eq('status', 'pending');
+        
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id
+  });
+  
+  // Buscar conexões aceitas
+  const { data: connections, refetch: refetchConnections } = useQuery({
+    queryKey: ['active-connections', user?.id],
+    queryFn: async () => {
+      const { data: sentConnections, error: sentError } = await supabase
+        .from('member_connections')
+        .select('*, connection:recipient_id(id, name, avatar_url, company_name, current_position)')
+        .eq('requester_id', user?.id)
+        .eq('status', 'accepted');
+        
+      if (sentError) throw sentError;
+      
+      const { data: receivedConnections, error: receivedError } = await supabase
+        .from('member_connections')
+        .select('*, connection:requester_id(id, name, avatar_url, company_name, current_position)')
+        .eq('recipient_id', user?.id)
+        .eq('status', 'accepted');
+        
+      if (receivedError) throw receivedError;
+      
+      return [...(sentConnections || []), ...(receivedConnections || [])];
+    },
+    enabled: !!user?.id
+  });
+  
+  // Funções para aceitar/rejeitar solicitações
+  const handleAcceptRequest = async (requesterId: string): Promise<boolean> => {
+    setProcessingRequests(prev => new Set(prev).add(requesterId));
+    try {
+      const { error } = await supabase
+        .from('member_connections')
+        .update({ status: 'accepted' })
+        .eq('requester_id', requesterId)
+        .eq('recipient_id', user?.id);
+      
+      if (error) throw error;
+      
+      toast.success('Solicitação de conexão aceita!');
+      refetchRequests();
+      refetchConnections();
+      return true;
+    } catch (error) {
+      console.error('Erro ao aceitar solicitação:', error);
+      toast.error('Não foi possível aceitar a solicitação.');
+      return false;
+    } finally {
+      setProcessingRequests(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(requesterId);
+        return newSet;
+      });
+    }
   };
-
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Card key={i}>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4 animate-pulse">
-                <div className="h-12 w-12 bg-muted rounded-full" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-muted rounded w-3/4" />
-                  <div className="h-3 bg-muted rounded w-1/2" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  }
-
+  
+  const handleRejectRequest = async (requesterId: string): Promise<boolean> => {
+    setProcessingRequests(prev => new Set(prev).add(requesterId));
+    try {
+      const { error } = await supabase
+        .from('member_connections')
+        .update({ status: 'rejected' })
+        .eq('requester_id', requesterId)
+        .eq('recipient_id', user?.id);
+      
+      if (error) throw error;
+      
+      toast.success('Solicitação de conexão rejeitada.');
+      refetchRequests();
+      return true;
+    } catch (error) {
+      console.error('Erro ao rejeitar solicitação:', error);
+      toast.error('Não foi possível rejeitar a solicitação.');
+      return false;
+    } finally {
+      setProcessingRequests(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(requesterId);
+        return newSet;
+      });
+    }
+  };
+  
+  // Função para cancelar solicitação pendente
+  const handleCancelRequest = async (recipientId: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('member_connections')
+        .delete()
+        .eq('requester_id', user?.id)
+        .eq('recipient_id', recipientId)
+        .eq('status', 'pending');
+      
+      if (error) throw error;
+      
+      toast.success('Solicitação de conexão cancelada.');
+      refetchPending();
+    } catch (error) {
+      console.error('Erro ao cancelar solicitação:', error);
+      toast.error('Não foi possível cancelar a solicitação.');
+    }
+  };
+  
+  // Função para remover uma conexão
+  const handleRemoveConnection = async (connectionId: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('member_connections')
+        .delete()
+        .eq('id', connectionId);
+      
+      if (error) throw error;
+      
+      toast.success('Conexão removida com sucesso.');
+      refetchConnections();
+    } catch (error) {
+      console.error('Erro ao remover conexão:', error);
+      toast.error('Não foi possível remover a conexão.');
+    }
+  };
+  
   return (
-    <div className="space-y-6">
-      <Tabs defaultValue="connections" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="connections" className="flex items-center gap-2">
-            <UserCheck className="h-4 w-4" />
-            Conexões ({connectedMembers.length})
-          </TabsTrigger>
-          <TabsTrigger value="pending" className="flex items-center gap-2">
-            <UserPlus className="h-4 w-4" />
-            Pendentes ({pendingRequests.length})
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="connections" className="space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar conexões..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
-
-          {filteredConnections.length === 0 ? (
-            <Card className="border-dashed">
-              <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                <Users className="h-16 w-16 text-muted-foreground mb-4" />
-                <h3 className="text-xl font-semibold mb-2">
-                  {searchTerm ? 'Nenhuma conexão encontrada' : 'Nenhuma conexão ainda'}
-                </h3>
-                <p className="text-muted-foreground max-w-md">
-                  {searchTerm 
-                    ? 'Tente ajustar sua busca ou explorar novos membros para conectar.'
-                    : 'Comece a construir sua rede conectando-se com outros membros da comunidade.'
-                  }
-                </p>
-                {!searchTerm && (
-                  <Button 
-                    className="mt-4" 
-                    onClick={() => navigate('/comunidade/membros')}
-                  >
-                    Explorar membros
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredConnections.map((member) => (
-                <Card key={member.id}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center space-x-4 mb-4">
-                      <Avatar className="h-12 w-12">
-                        <AvatarImage src={member.avatar_url || undefined} />
-                        <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold truncate">{member.name || 'Usuário'}</h4>
-                        <p className="text-sm text-muted-foreground truncate">
-                          {member.current_position || 'Profissional'}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    {member.company_name && (
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {member.company_name}
-                      </p>
-                    )}
-                    
-                    {member.industry && (
-                      <Badge variant="secondary" className="mb-4">
-                        {member.industry}
-                      </Badge>
-                    )}
-                    
-                    <Button 
-                      size="sm" 
-                      className="w-full"
-                      onClick={() => handleMessage(member.id)}
-                    >
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Enviar mensagem
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="pending" className="space-y-4">
-          {pendingRequests.length === 0 ? (
-            <Card className="border-dashed">
-              <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                <UserPlus className="h-16 w-16 text-muted-foreground mb-4" />
-                <h3 className="text-xl font-semibold mb-2">Nenhuma solicitação pendente</h3>
-                <p className="text-muted-foreground max-w-md">
-                  Você não tem solicitações de conexão pendentes no momento.
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {pendingRequests.map((member) => (
-                <Card key={member.id}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center space-x-4 mb-4">
-                      <Avatar className="h-12 w-12">
-                        <AvatarImage src={member.avatar_url || undefined} />
-                        <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold truncate">{member.name || 'Usuário'}</h4>
-                        <p className="text-sm text-muted-foreground truncate">
-                          {member.current_position || 'Profissional'}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    {member.company_name && (
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {member.company_name}
-                      </p>
-                    )}
-                    
-                    <Badge variant="outline" className="mb-4">
-                      Solicitação enviada
-                    </Badge>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+    <div className="container mx-auto max-w-7xl py-6">
+      <ForumBreadcrumbs 
+        section="conexoes" 
+        sectionTitle="Gerenciar Conexões" 
+      />
+      
+      <ForumHeader 
+        title="Gerenciar Conexões" 
+        description="Gerencie suas conexões com outros membros da comunidade"
+      />
+      
+      <CommunityNavigation />
+      
+      <div className="mt-6">
+        <Tabs 
+          value={activeTab} 
+          onValueChange={setActiveTab}
+          className="w-full"
+        >
+          <TabsList className="grid grid-cols-3 mb-6">
+            <TabsTrigger value="connections">
+              Minhas Conexões
+              {connections?.length ? ` (${connections.length})` : ''}
+            </TabsTrigger>
+            <TabsTrigger value="requests">
+              Solicitações Recebidas
+              {connectionRequests?.length ? ` (${connectionRequests.length})` : ''}
+            </TabsTrigger>
+            <TabsTrigger value="pending">
+              Solicitações Enviadas
+              {pendingConnections?.length ? ` (${pendingConnections.length})` : ''}
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="connections">
+            <ConnectionsTabContent 
+              connections={connections || []} 
+              onRemoveConnection={handleRemoveConnection}
+            />
+          </TabsContent>
+          
+          <TabsContent value="requests">
+            <ConnectionRequestsTabContent 
+              requests={connectionRequests || []} 
+              processingRequests={processingRequests}
+              onAccept={handleAcceptRequest}
+              onReject={handleRejectRequest}
+            />
+          </TabsContent>
+          
+          <TabsContent value="pending">
+            <PendingConnectionsTabContent 
+              pendingConnections={pendingConnections || []} 
+              onCancelRequest={handleCancelRequest}
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };

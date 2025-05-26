@@ -6,6 +6,7 @@ import {
   LayoutDashboard, 
   Lightbulb, 
   Settings, 
+  Trophy,
   Gift,
   MessageSquare,
   ShieldCheck,
@@ -27,22 +28,7 @@ interface SidebarNavProps {
 
 export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
   const location = useLocation();
-  const { user, profile, isAdmin } = useAuth();
-
-  console.log("MemberSidebarNav - Verificação de Admin:", {
-    user: !!user,
-    userEmail: user?.email,
-    profile: !!profile,
-    profileRole: profile?.role,
-    isAdmin,
-    shouldShowAdmin: isAdmin || profile?.role === 'admin' || user?.email === 'rafael@viverdeia.ai'
-  });
-
-  // Verificação mais robusta para admin
-  const isUserAdmin = isAdmin || 
-                     profile?.role === 'admin' || 
-                     user?.email === 'rafael@viverdeia.ai' ||
-                     user?.email?.includes('@viverdeia.ai');
+  const { isAdmin, isFormacao } = useAuth();
 
   const menuItems = [
     {
@@ -82,8 +68,8 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
     },
     {
       title: "Sugestões",
-      href: "/sugestoes",
-      icon: Lightbulb,
+      href: "/suggestions",
+      icon: MessageSquare,
     },
     {
       title: "Comunidade",
@@ -115,7 +101,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
               variant="ghost"
               className={cn(
                 "w-full justify-start gap-3 rounded-lg hover:bg-[#181A2A] text-neutral-400 dark:text-neutral-300",
-                !sidebarOpen && "justify-center px-2",
+                !sidebarOpen && "justify-center",
                 active && "hubla-active-nav",
                 item.highlight && "relative"
               )}
@@ -123,34 +109,47 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
             >
               <Link to={item.href}>
                 <item.icon className={cn(
-                  "h-4 w-4 shrink-0", 
+                  "h-4 w-4", 
                   active ? "text-viverblue" : "text-neutral-400"
                 )} />
                 {sidebarOpen && (
-                  <span className="truncate">{item.title}</span>
+                  <span>{item.title}</span>
                 )}
               </Link>
             </Button>
           );
         })}
 
-        {/* Painel Admin - Apenas para administradores */}
-        {isUserAdmin && (
-          <div className="pt-2 border-t border-[#2A2E42] mt-4">
-            <Button
-              variant="outline"
-              className={cn(
-                "w-full justify-start gap-3 border-viverblue/30 text-viverblue hover:bg-[#181A2A]",
-                !sidebarOpen && "justify-center px-2"
-              )}
-              asChild
-            >
-              <Link to="/admin">
-                <ShieldCheck className="h-4 w-4 shrink-0" />
-                {sidebarOpen && <span className="truncate">Painel Admin</span>}
-              </Link>
-            </Button>
-          </div>
+        {isAdmin && (
+          <Button
+            variant="outline"
+            className={cn(
+              "w-full justify-start gap-3 border-viverblue/30 text-viverblue hover:bg-[#181A2A] mt-4",
+              !sidebarOpen && "justify-center"
+            )}
+            asChild
+          >
+            <Link to="/admin">
+              <ShieldCheck className="h-4 w-4" />
+              {sidebarOpen && <span>Painel Admin</span>}
+            </Link>
+          </Button>
+        )}
+        
+        {isFormacao && (
+          <Button
+            variant="outline"
+            className={cn(
+              "w-full justify-start gap-3 border-viverblue/30 text-viverblue hover:bg-[#181A2A] mt-4",
+              !sidebarOpen && "justify-center"
+            )}
+            asChild
+          >
+            <Link to="/formacao">
+              <GraduationCap className="h-4 w-4" />
+              {sidebarOpen && <span>Área de Cursos</span>}
+            </Link>
+          </Button>
         )}
       </div>
     </div>

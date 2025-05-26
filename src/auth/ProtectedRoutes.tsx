@@ -9,23 +9,50 @@ interface ProtectedRoutesProps {
   children: ReactNode;
 }
 
-/**
- * Componente básico de proteção de rotas mantido para compatibilidade
- * Recomenda-se usar AuthenticatedRoute para novos desenvolvimentos
- */
 export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   const { user, isLoading } = useAuth();
   const location = useLocation();
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const timeoutRef = useRef<number | null>(null);
   const hasToastShown = useRef(false);
+  const navigationCountRef = useRef<Record<string, number>>({});
+  const routeTransitionRef = useRef<string | null>(null);
 
-  console.log("ProtectedRoutes (legacy): verificando rota", {
+  console.log("ProtectedRoutes: verificando rota", {
     path: location.pathname,
     user: !!user,
     isLoading, 
-    loadingTimeout
+    loadingTimeout,
+    previousRoute: routeTransitionRef.current
   });
+  
+  // Rastrear transições de rota para diagnóstico
+  useEffect(() => {
+    // Registrar transição de rota
+    console.log(`ProtectedRoutes: Transição de rota ${routeTransitionRef.current || 'inicial'} -> ${location.pathname}`);
+    routeTransitionRef.current = location.pathname;
+    
+    // Incrementar contador para este caminho
+    navigationCountRef.current[location.pathname] = 
+      (navigationCountRef.current[location.pathname] || 0) + 1;
+    
+    // Verificar possíveis loops
+    if (navigationCountRef.current[location.pathname] > 5) {
+      console.error(`ProtectedRoutes: Possível loop de navegação para ${location.pathname} (${navigationCountRef.current[location.pathname]} navegações)`);
+      
+      // Limpar contador após detectar um possível loop
+      navigationCountRef.current = {};
+    }
+    
+    // Limpar contadores antigos após 10 segundos
+    const cleanupTimeout = setTimeout(() => {
+      navigationCountRef.current = {};
+    }, 10000);
+    
+    return () => {
+      clearTimeout(cleanupTimeout);
+    };
+  }, [location.pathname]);
   
   // Configurar timeout de carregamento
   useEffect(() => {
@@ -36,9 +63,9 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
       }
       
       timeoutRef.current = window.setTimeout(() => {
-        console.log("ProtectedRoutes (legacy): Loading timeout exceeded");
+        console.log("ProtectedRoutes: Loading timeout exceeded");
         setLoadingTimeout(true);
-      }, 3000);
+      }, 5000); // Mantido em 5 segundos
     }
     
     return () => {
@@ -57,7 +84,7 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   if (!user) {
     // Salvar a rota atual para redirecionamento após login
     const returnPath = location.pathname !== "/login" ? location.pathname : "/dashboard";
-    console.log(`ProtectedRoutes (legacy): Usuário não autenticado, redirecionando para login (retorno: ${returnPath})`);
+    console.log(`ProtectedRoutes: Usuário não autenticado, redirecionando para login (retorno: ${returnPath})`);
     
     // Exibir toast apenas uma vez
     if (!hasToastShown.current) {

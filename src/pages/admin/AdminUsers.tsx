@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useUsers } from "@/hooks/admin/useUsers";
 import { UsersHeader } from "@/components/admin/users/UsersHeader";
@@ -173,18 +174,11 @@ const AdminUsers = () => {
     <div className="space-y-6">
       {/* Banner informativo quando o admin foi verificado por email */}
       {showAdminInfo && (
-        <div className="flex items-center gap-3 py-3 px-4 bg-viverblue/10 border border-viverblue/30 rounded-lg mb-4 animate-fade-in">
-          <div className="flex-shrink-0">
-            <ShieldCheck className="h-5 w-5 text-viverblue" />
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-gray-900 dark:text-white">
-              Acesso de administrador concedido
-            </p>
-            <p className="text-xs text-gray-600 dark:text-gray-300">
-              Você tem acesso completo ao gerenciamento de usuários.
-            </p>
-          </div>
+        <div className="flex items-center gap-2 py-2 px-4 bg-blue-50 border border-blue-200 rounded-md mb-4 animate-fade-in">
+          <ShieldCheck className="h-5 w-5 text-blue-600" />
+          <p className="text-sm text-blue-700">
+            Acesso de administrador concedido. Você tem acesso completo ao gerenciamento de usuários.
+          </p>
         </div>
       )}
       

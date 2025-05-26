@@ -1,44 +1,44 @@
 
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { ForumCategory } from '@/types/forumTypes';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
+import { ForumCategory } from "@/types/forumTypes";
 
 export const useForumCategories = () => {
-  const query = useQuery({
-    queryKey: ['forum-categories'],
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['forumCategories'],
     queryFn: async (): Promise<ForumCategory[]> => {
-      console.log('🔍 Buscando categorias do banco de dados...');
-      
-      const { data, error } = await supabase
-        .from('forum_categories')
-        .select('*')
-        .eq('is_active', true)
-        .order('order_index', { ascending: true });
-      
-      if (error) {
-        console.error('❌ Erro ao carregar categorias:', error);
-        throw error;
+      try {
+        console.log('Buscando categorias do fórum...');
+        
+        const { data, error } = await supabase
+          .from('forum_categories')
+          .select('*')
+          .eq('is_active', true)
+          .order('order_index', { ascending: true });
+        
+        if (error) {
+          console.error("Erro ao buscar categorias:", error.message);
+          throw error;
+        }
+        
+        console.log('Categorias carregadas:', data?.length || 0);
+        return data || [];
+      } catch (error: any) {
+        console.error("Erro ao buscar categorias:", error.message);
+        toast.error("Não foi possível carregar as categorias. Por favor, tente novamente.");
+        return [];
       }
-      
-      console.log('✅ Categorias carregadas do banco:', data?.length || 0, data);
-      
-      return data || [];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 5, // 5 minutos de cache
+    retry: 2,
+    refetchOnWindowFocus: false
   });
-
-  console.log('useForumCategories - Estado atual:', {
-    isLoading: query.isLoading,
-    error: query.error,
-    categoriesCount: query.data?.length || 0
-  });
-
+  
   return {
-    categories: query.data || [],
-    data: query.data || [], // Mantém compatibilidade
-    isLoading: query.isLoading,
-    error: query.error,
-    refetch: query.refetch
+    categories: data || [],
+    isLoading,
+    error,
+    refetch
   };
 };

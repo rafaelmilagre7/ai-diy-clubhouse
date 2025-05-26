@@ -9,7 +9,6 @@ import { formacaoRoutes } from '../../routes/FormacaoRoutes';
 import { CommunityRedirects } from './CommunityRedirects';
 import NotFound from '@/pages/NotFound';
 import InvitePage from '@/pages/InvitePage';
-import RootRedirect from './RootRedirect';
 
 const AppRoutes = () => {
   const location = useLocation();
@@ -62,9 +61,6 @@ const AppRoutes = () => {
       {!skipRedirects && <CommunityRedirects />}
       
       <Routes>
-        {/* Rota principal da home */}
-        <Route path="/" element={<RootRedirect />} />
-        
         {/* Convite Routes - Alta prioridade e fora do sistema de autenticação */}
         <Route path="/convite/:token" element={<InvitePage />} />
         <Route path="/convite" element={<InvitePage />} />

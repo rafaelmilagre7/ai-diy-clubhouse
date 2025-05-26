@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types/database.types';
 
@@ -5,12 +6,13 @@ import type { Database } from './types/database.types';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Log informativo se as variáveis não estiverem definidas (mas não bloquear a inicialização)
+// Verificação de segurança para as variáveis de ambiente
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Variáveis de ambiente do Supabase não configuradas. Usando valores de fallback.');
+  console.error('Erro crítico: Variáveis de ambiente do Supabase não estão configuradas.');
+  console.error('Certifique-se de definir VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no seu arquivo .env.local');
 }
 
-// Criação do cliente Supabase com tipagem correta usando valores de fallback
+// Criação do cliente Supabase com tipagem correta
 export const supabase = createClient<Database>(
   supabaseUrl || 'https://zotzvtepvpnkcoobdubt.supabase.co',
   supabaseAnonKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvdHp2dGVwdnBua2Nvb2JkdWJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNzgzODAsImV4cCI6MjA1OTk1NDM4MH0.dxjPkqTPnK8gjjxJbooPX5_kpu3INciLeDpuU8dszHQ'

@@ -1,3 +1,4 @@
+
 export interface ForumCategory {
   id: string;
   name: string;
@@ -7,8 +8,6 @@ export interface ForumCategory {
   color?: string;
   icon?: string;
   order?: number;
-  is_active?: boolean;
-  order_index?: number;
 }
 
 export interface UserProfile {

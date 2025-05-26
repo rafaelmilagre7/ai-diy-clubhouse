@@ -1,108 +1,162 @@
 
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { Topic } from '@/types/forumTypes';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
+import { Topic, ForumCategory } from "@/types/forumTypes";
 
-export type TopicFilterType = 'recentes' | 'populares' | 'sem-respostas' | 'resolvidos';
+export type TopicFilterType = "recentes" | "populares" | "sem-respostas" | "resolvidos";
 
 interface UseForumTopicsProps {
-  categorySlug?: string;
-  selectedFilter?: TopicFilterType;
-  searchQuery?: string;
-  page?: number;
-  limit?: number;
+  activeTab: string;
+  selectedFilter: TopicFilterType;
+  searchQuery: string;
+  categories?: ForumCategory[];
 }
 
-interface TopicsResponse {
-  topics: Topic[];
-  totalCount: number;
-  hasMore: boolean;
-}
-
-export const useForumTopics = ({
-  categorySlug,
-  selectedFilter = 'recentes',
-  searchQuery = '',
-  page = 0,
-  limit = 20
-}: UseForumTopicsProps = {}) => {
+export const useForumTopics = ({ 
+  activeTab, 
+  selectedFilter, 
+  searchQuery, 
+  categories 
+}: UseForumTopicsProps) => {
   
   return useQuery({
-    queryKey: ['forum-topics', categorySlug, selectedFilter, searchQuery, page],
-    queryFn: async (): Promise<TopicsResponse> => {
-      let query = supabase
-        .from('forum_topics')
-        .select(`
-          *,
-          profiles:user_id (
-            id,
-            name,
-            avatar_url,
-            role
-          ),
-          category:forum_categories (
-            id,
-            name,
-            slug,
-            icon
-          )
-        `, { count: 'exact' });
-
-      // Filtrar por categoria se especificado
-      if (categorySlug) {
-        const { data: category } = await supabase
-          .from('forum_categories')
-          .select('id')
-          .eq('slug', categorySlug)
-          .single();
+    queryKey: ['communityTopics', selectedFilter, searchQuery, activeTab],
+    queryFn: async (): Promise<Topic[]> => {
+      try {
+        console.log("Buscando tópicos com filtros:", { selectedFilter, searchQuery, activeTab });
         
-        if (category) {
-          query = query.eq('category_id', category.id);
+        // Construir query base para tópicos
+        let query = supabase
+          .from('forum_topics')
+          .select(`
+            id, 
+            title, 
+            content, 
+            created_at, 
+            updated_at, 
+            view_count, 
+            reply_count, 
+            is_locked, 
+            is_pinned,
+            is_solved,
+            user_id, 
+            category_id, 
+            last_activity_at
+          `)
+          .order('is_pinned', { ascending: false });
+
+        // Aplicar filtros de categoria apenas se não for "todos"
+        if (activeTab !== "todos") {
+          const category = categories?.find(c => c.slug === activeTab);
+          if (category) {
+            query = query.eq('category_id', category.id);
+          }
         }
+        
+        // Aplicar filtros adicionais
+        switch (selectedFilter) {
+          case "recentes":
+            query = query.order('last_activity_at', { ascending: false });
+            break;
+          case "populares":
+            query = query.order('view_count', { ascending: false });
+            break;
+          case "sem-respostas":
+            query = query.eq('reply_count', 0).order('created_at', { ascending: false });
+            break;
+          case "resolvidos":
+            // Filtrar apenas tópicos marcados como resolvidos
+            query = query.eq('is_solved', true).order('last_activity_at', { ascending: false });
+            break;
+        }
+        
+        // Aplicar filtro de busca
+        if (searchQuery) {
+          query = query.ilike('title', `%${searchQuery}%`);
+        }
+        
+        // Limitar resultados
+        query = query.limit(20);
+        
+        // Executar a consulta principal
+        const { data: topicsData, error: topicsError } = await query;
+        
+        if (topicsError) {
+          throw topicsError;
+        }
+        
+        // Se não temos tópicos, retornar array vazio
+        if (!topicsData || topicsData.length === 0) {
+          return [];
+        }
+        
+        // Buscar perfis de usuários em uma consulta separada
+        const userIds = topicsData.map(topic => topic.user_id);
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, name, avatar_url, role')
+          .in('id', userIds);
+          
+        if (profilesError) {
+          console.warn("Erro ao buscar perfis:", profilesError.message);
+        }
+        
+        // Buscar categorias em uma consulta separada
+        const categoryIds = topicsData.map(topic => topic.category_id).filter(Boolean);
+        const { data: categoriesData, error: categoriesError } = await supabase
+          .from('forum_categories')
+          .select('id, name, slug')
+          .in('id', categoryIds);
+          
+        if (categoriesError) {
+          console.warn("Erro ao buscar categorias:", categoriesError.message);
+        }
+        
+        // Mapear os perfis e categorias para os tópicos
+        const formattedTopics: Topic[] = topicsData.map(topic => {
+          const userProfile = profilesData?.find(profile => profile.id === topic.user_id);
+          const topicCategory = categoriesData?.find(cat => cat.id === topic.category_id);
+          
+          return {
+            id: topic.id,
+            title: topic.title,
+            content: topic.content,
+            created_at: topic.created_at,
+            updated_at: topic.updated_at,
+            last_activity_at: topic.last_activity_at,
+            user_id: topic.user_id,
+            category_id: topic.category_id,
+            view_count: topic.view_count || 0,
+            reply_count: topic.reply_count || 0,
+            is_pinned: topic.is_pinned || false,
+            is_locked: topic.is_locked || false,
+            is_solved: topic.is_solved || false,
+            profiles: userProfile ? {
+              id: userProfile.id,
+              name: userProfile.name || 'Usuário',
+              avatar_url: userProfile.avatar_url,
+              role: userProfile.role || '',
+              user_id: userProfile.id // Garantindo que tenhamos o user_id
+            } : null,
+            category: topicCategory ? {
+              id: topicCategory.id,
+              name: topicCategory.name,
+              slug: topicCategory.slug
+            } : null
+          };
+        });
+        
+        console.log(`Tópicos formatados: ${formattedTopics.length}`);
+        return formattedTopics;
+      } catch (error: any) {
+        console.error('Erro ao buscar tópicos:', error.message);
+        toast.error("Não foi possível carregar os tópicos. Por favor, tente novamente.");
+        return [];
       }
-
-      // Aplicar filtros
-      switch (selectedFilter) {
-        case 'populares':
-          query = query.order('view_count', { ascending: false });
-          break;
-        case 'sem-respostas':
-          query = query.eq('reply_count', 0).order('created_at', { ascending: false });
-          break;
-        case 'resolvidos':
-          query = query.eq('is_solved', true).order('created_at', { ascending: false });
-          break;
-        default:
-          query = query.order('last_activity_at', { ascending: false });
-      }
-
-      // Busca por texto
-      if (searchQuery.trim()) {
-        query = query.or(`title.ilike.%${searchQuery}%,content.ilike.%${searchQuery}%`);
-      }
-
-      // Paginação
-      const from = page * limit;
-      const to = from + limit - 1;
-      query = query.range(from, to);
-
-      const { data, error, count } = await query;
-      
-      if (error) {
-        console.error('Erro ao carregar tópicos:', error);
-        throw error;
-      }
-      
-      const totalCount = count || 0;
-      const hasMore = (from + (data?.length || 0)) < totalCount;
-
-      return {
-        topics: data as Topic[] || [],
-        totalCount,
-        hasMore
-      };
     },
-    staleTime: 30 * 1000, // 30 segundos
+    staleTime: 1000 * 60 * 2, // 2 minutos de cache
+    retry: 2,
     refetchOnWindowFocus: false,
   });
 };

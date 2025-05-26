@@ -93,11 +93,8 @@ const TopicPage = () => {
                   profiles: topic.profiles,
                   is_solution: false
                 }}
-                canMarkAsSolution={false}
-                isAuthor={false}
-                onMarkAsSolution={() => {}}
-                isMarkingSolved={false}
-                topicId={topic.id}
+                isTopicStarter={true}
+                topicAuthorId={topic.user_id}
               />
             )}
             
@@ -111,11 +108,8 @@ const TopicPage = () => {
                   <PostItem
                     key={post.id}
                     post={post}
-                    canMarkAsSolution={false}
-                    isAuthor={false}
-                    onMarkAsSolution={() => {}}
-                    isMarkingSolved={false}
-                    topicId={topic?.id || ''}
+                    isTopicStarter={false}
+                    topicAuthorId={topic?.user_id}
                   />
                 ))}
               </div>

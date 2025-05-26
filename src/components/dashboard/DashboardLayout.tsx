@@ -9,6 +9,7 @@ import { ModernDashboardHeader } from "./ModernDashboardHeader";
 import { KpiGrid } from "./KpiGrid";
 import { useAuth } from "@/contexts/auth";
 import { SolutionsGridLoader } from "./SolutionsGridLoader";
+import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardConnectionErrorState } from "./states/DashboardConnectionErrorState";
 
 interface DashboardLayoutProps {
@@ -21,6 +22,7 @@ interface DashboardLayoutProps {
   isLoading?: boolean;
 }
 
+// Otimização: Usar memo para evitar re-renderizações desnecessárias
 export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
   active,
   completed,
@@ -30,36 +32,29 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
   onSolutionClick,
   isLoading = false
 }) => {
-  console.log("🏗️ DashboardLayout: Iniciando renderização", { 
+  // Log de diagnóstico para ajudar a depurar o problema
+  console.log("DashboardLayout renderizado:", { 
     active: active?.length || 0,
     completed: completed?.length || 0,
     recommended: recommended?.length || 0,
     isLoading,
-    category
+    hasData: !!(active?.length || completed?.length || recommended?.length)
   });
-
-  const { profile } = useAuth();
-  const userName = profile?.name?.split(" ")[0] || "Membro";
-
-  // Verificar se tem dados válidos
-  const hasValidData = Array.isArray(active) && Array.isArray(completed) && Array.isArray(recommended);
-  console.log("✅ DashboardLayout: Validação de dados", { hasValidData, isLoading });
-  
-  if (!hasValidData && !isLoading) {
-    console.log("❌ DashboardLayout: Dados inválidos, renderizando erro de conexão");
-    return <DashboardConnectionErrorState />;
-  }
 
   const hasNoSolutions = !isLoading && 
     (!active || active.length === 0) && 
     (!completed || completed.length === 0) && 
     (!recommended || recommended.length === 0);
 
-  console.log("📊 DashboardLayout: Estado das soluções", {
-    hasNoSolutions,
-    isLoading,
-    userName
-  });
+  const { profile } = useAuth();
+  const userName = profile?.name?.split(" ")[0] || "Membro";
+
+  // Verificar se tem dados válidos
+  const hasValidData = Array.isArray(active) && Array.isArray(completed) && Array.isArray(recommended);
+  
+  if (!hasValidData && !isLoading) {
+    return <DashboardConnectionErrorState />;
+  }
 
   return (
     <div className="space-y-8 md:pt-2 animate-fade-in">
@@ -74,7 +69,7 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
         isLoading={isLoading}
       />
 
-      {/* Conteúdo principal */}
+      {/* Mostrar loaders enquanto carrega, ou conteúdo quando pronto */}
       {isLoading ? (
         <div className="space-y-10">
           <SolutionsGridLoader title="Em andamento" count={2} />

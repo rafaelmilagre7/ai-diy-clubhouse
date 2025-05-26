@@ -1,8 +1,16 @@
 
-import { ChevronRight, Home } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { useForumCategories } from "@/hooks/community/useForumCategories";
 
-interface ForumBreadcrumbsProps {
+export interface ForumBreadcrumbsProps {
   categoryName?: string;
   categorySlug?: string;
   topicTitle?: string;
@@ -13,47 +21,63 @@ interface ForumBreadcrumbsProps {
 export const ForumBreadcrumbs = ({ 
   categoryName, 
   categorySlug, 
-  topicTitle,
+  topicTitle, 
   section,
-  sectionTitle 
+  sectionTitle
 }: ForumBreadcrumbsProps) => {
+  const { categories } = useForumCategories();
+  
+  // Encontrar a categoria atual com base no slug ou nome fornecido
+  const currentCategory = categorySlug 
+    ? categories?.find(cat => cat.slug === categorySlug)
+    : categoryName 
+      ? categories?.find(cat => cat.name === categoryName) 
+      : null;
+  
   return (
-    <nav className="flex items-center space-x-2 text-sm text-muted-foreground mb-4">
-      <Link 
-        to="/comunidade" 
-        className="flex items-center hover:text-foreground transition-colors"
-      >
-        <Home className="h-4 w-4 mr-1" />
-        Comunidade
-      </Link>
-      
-      {section && sectionTitle && (
-        <>
-          <ChevronRight className="h-4 w-4" />
-          <span>{sectionTitle}</span>
-        </>
-      )}
-      
-      {categoryName && categorySlug && (
-        <>
-          <ChevronRight className="h-4 w-4" />
-          <Link 
-            to={`/comunidade/categoria/${categorySlug}`}
-            className="hover:text-foreground transition-colors"
-          >
-            {categoryName}
-          </Link>
-        </>
-      )}
-      
-      {topicTitle && (
-        <>
-          <ChevronRight className="h-4 w-4" />
-          <span className="text-foreground font-medium line-clamp-1">
-            {topicTitle}
-          </span>
-        </>
-      )}
-    </nav>
+    <Breadcrumb className="mb-4">
+      <BreadcrumbList>
+        <BreadcrumbItem>
+          <BreadcrumbLink asChild>
+            <Link to="/comunidade">Comunidade</Link>
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+        
+        {section && (
+          <>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{sectionTitle || section}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </>
+        )}
+        
+        {(currentCategory || categoryName) && (
+          <>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              {topicTitle ? (
+                <BreadcrumbLink asChild>
+                  <Link to={`/comunidade/categoria/${categorySlug || currentCategory?.slug}`}>
+                    {currentCategory?.name || categoryName}
+                  </Link>
+                </BreadcrumbLink>
+              ) : (
+                <BreadcrumbPage>{currentCategory?.name || categoryName}</BreadcrumbPage>
+              )}
+            </BreadcrumbItem>
+          </>
+        )}
+        
+        {topicTitle && (
+          <>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{topicTitle}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </>
+        )}
+      </BreadcrumbList>
+    </Breadcrumb>
   );
 };
