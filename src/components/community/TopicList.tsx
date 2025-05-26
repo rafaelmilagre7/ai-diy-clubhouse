@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card";
 import { Pagination } from "@/components/ui/pagination";
 import { EmptyTopicsState } from "./EmptyTopicsState";
 import { PinIcon } from "lucide-react";
-import { useTopicList } from "@/hooks/useTopicList";
 
 export interface TopicListProps {
   pinnedTopics?: Topic[];
@@ -16,11 +15,6 @@ export interface TopicListProps {
   categoryId?: string;
   categorySlug?: string;
   searchQuery?: string;
-}
-
-interface SimplifiedTopicListProps {
-  categoryId: string;
-  categorySlug?: string;
 }
 
 export const TopicList = ({ 
@@ -83,46 +77,5 @@ export const TopicList = ({
         </div>
       )}
     </div>
-  );
-};
-
-// Componente simplificado que usa o useTopicList hook
-export const SimpleTopicList = ({ categoryId, categorySlug }: SimplifiedTopicListProps) => {
-  const { 
-    pinnedTopics, 
-    regularTopics, 
-    totalPages, 
-    currentPage, 
-    isLoading, 
-    error, 
-    handlePageChange,
-    hasTopics 
-  } = useTopicList({ categoryId, categorySlug });
-
-  if (isLoading) {
-    return <div className="py-10 text-center">Carregando tópicos...</div>;
-  }
-
-  if (error) {
-    return (
-      <div className="py-10 text-center">
-        <p className="text-red-500">Erro ao carregar tópicos.</p>
-        <button className="mt-2 text-primary underline" onClick={() => window.location.reload()}>
-          Tentar novamente
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <TopicList
-      pinnedTopics={pinnedTopics}
-      regularTopics={regularTopics}
-      currentPage={currentPage}
-      totalPages={totalPages}
-      onPageChange={handlePageChange}
-      categoryId={categoryId}
-      categorySlug={categorySlug}
-    />
   );
 };

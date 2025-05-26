@@ -7,7 +7,6 @@ export interface CommunityMemberFilters {
   search?: string;
   industry?: string;
   role?: string;
-  onlyAvailableForNetworking?: boolean;
 }
 
 export const useCommunityMembers = (initialFilters: CommunityMemberFilters = {}) => {
@@ -59,10 +58,6 @@ export const useCommunityMembers = (initialFilters: CommunityMemberFilters = {})
         query = query.eq('current_position', filters.role);
       }
       
-      if (filters.onlyAvailableForNetworking) {
-        query = query.eq('available_for_networking', true);
-      }
-      
       // Paginação
       const start = page * itemsPerPage;
       const end = start + itemsPerPage - 1;
@@ -112,7 +107,7 @@ export const useCommunityMembers = (initialFilters: CommunityMemberFilters = {})
     isError: !!error,
     filters,
     handleFilterChange,
-    currentPage: page,
+    currentPage: page, // Renomeado de page para currentPage
     totalPages,
     handlePageChange,
     availableIndustries,

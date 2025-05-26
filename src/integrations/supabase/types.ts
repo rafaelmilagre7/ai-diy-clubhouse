@@ -149,62 +149,6 @@ export type Database = {
           },
         ]
       }
-      connection_notifications: {
-        Row: {
-          created_at: string
-          id: string
-          is_read: boolean
-          sender_id: string
-          type: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_read?: boolean
-          sender_id: string
-          type: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_read?: boolean
-          sender_id?: string
-          type?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "connection_notifications_sender_id_fkey"
-            columns: ["sender_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "connection_notifications_sender_id_fkey"
-            columns: ["sender_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "connection_notifications_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "connection_notifications_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       course_access_control: {
         Row: {
           course_id: string | null
@@ -4071,7 +4015,6 @@ export type Database = {
       }
     }
     Enums: {
-      connection_status: "pending" | "accepted" | "rejected"
       difficulty_level: "beginner" | "intermediate" | "advanced"
       difficulty_level_new: "easy" | "medium" | "advanced"
       forum_reaction_type: "like" | "helpful" | "insightful" | "celebrate"
@@ -4208,7 +4151,6 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      connection_status: ["pending", "accepted", "rejected"],
       difficulty_level: ["beginner", "intermediate", "advanced"],
       difficulty_level_new: ["easy", "medium", "advanced"],
       forum_reaction_type: ["like", "helpful", "insightful", "celebrate"],

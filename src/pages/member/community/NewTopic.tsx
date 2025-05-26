@@ -7,9 +7,9 @@ import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Pencil, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useForumCategories } from "@/hooks/community/useForumCategories";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { toast } from "sonner";
 
 interface ForumCategory {
   id: string;
@@ -115,24 +115,7 @@ const NewTopic = () => {
       )}
       
       <ForumLayout>
-        {category ? (
-          <NewTopicForm 
-            categoryId={category.id} 
-            categorySlug={category.slug} 
-            onCancel={() => navigate(`/comunidade/categoria/${category.slug}`)}
-          />
-        ) : (
-          <div className="text-center py-10">
-            <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground" />
-            <h3 className="text-lg font-medium mt-4">Categoria não encontrada</h3>
-            <p className="text-muted-foreground mt-2 mb-6">
-              Por favor, selecione uma categoria válida para criar seu tópico.
-            </p>
-            <Button asChild>
-              <Link to="/comunidade/forum">Ver categorias</Link>
-            </Button>
-          </div>
-        )}
+        <NewTopicForm categoryId={category?.id} categorySlug={category?.slug} />
       </ForumLayout>
     </div>
   );

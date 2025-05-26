@@ -1,13 +1,9 @@
 
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { MessageSquare, Users, Bookmark, UserPlus } from 'lucide-react';
+import { MessageSquare, Users, Calendar, Bookmark, Award } from 'lucide-react';
 
-interface CommunityNavigationProps {
-  activeCategory?: string;
-}
-
-export const CommunityNavigation = ({ activeCategory }: CommunityNavigationProps = {}) => {
+export const CommunityNavigation = () => {
   const { pathname } = useLocation();
   
   const navItems = [
@@ -23,21 +19,15 @@ export const CommunityNavigation = ({ activeCategory }: CommunityNavigationProps
       icon: Users 
     },
     { 
-      name: 'Conexões',
-      path: '/comunidade/conexoes',
-      icon: UserPlus
+      name: 'Eventos', 
+      path: '/comunidade/eventos', 
+      icon: Calendar,
+      disabled: true
     },
     { 
       name: 'Recursos', 
       path: '/comunidade/recursos', 
       icon: Bookmark,
-      disabled: true
-    },
-    /* Removido conforme solicitado pelo cliente
-    { 
-      name: 'Eventos', 
-      path: '/comunidade/eventos', 
-      icon: Calendar,
       disabled: true
     },
     { 
@@ -47,8 +37,6 @@ export const CommunityNavigation = ({ activeCategory }: CommunityNavigationProps
       disabled: true,
       beta: true
     },
-    */
-    // Nota: Sistema de gamificação e loja da comunidade serão implementados no futuro
   ];
   
   const isActive = (path: string, exact = false) => {
@@ -74,6 +62,11 @@ export const CommunityNavigation = ({ activeCategory }: CommunityNavigationProps
           >
             <item.icon className="h-4 w-4" />
             <span>{item.name}</span>
+            {item.beta && (
+              <span className="bg-amber-400 text-amber-900 text-xs rounded-full px-1.5 py-0.5 font-medium">
+                Em breve
+              </span>
+            )}
           </Link>
         ))}
       </div>
