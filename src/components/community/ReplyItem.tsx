@@ -205,7 +205,7 @@ export const ReplyItem: React.FC<ReplyItemProps> = ({
         isOpen={showReportDialog}
         onClose={() => setShowReportDialog(false)}
         postId={reply.id}
-        postType="reply"
+        postType="post"
       />
     </>
   );
