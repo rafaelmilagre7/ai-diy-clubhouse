@@ -1,7 +1,7 @@
 
 // Exportar apenas a implementação unificada
 export { AuthProvider, useAuth } from './AuthProvider';
-export type { AuthContextType, Profile } from './types';
+export type { AuthContextType, Profile } from './AuthProvider';
 
 // Constantes de teste
 export const TEST_ADMIN = {

@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 
-interface Profile {
+export interface Profile {
   id: string;
   name: string | null;
   email: string | null;
@@ -14,7 +14,7 @@ interface Profile {
   created_at: string;
 }
 
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null;
   session: Session | null;
   profile: Profile | null;
