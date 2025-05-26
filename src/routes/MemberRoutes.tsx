@@ -3,7 +3,7 @@ import { Route } from 'react-router-dom';
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import MemberLayout from '@/components/layout/MemberLayout';
 import Dashboard from '@/pages/member/Dashboard';
-import { ProfilePage } from '@/pages/member/ProfilePage';
+import Profile from '@/pages/member/Profile';
 import CommunityPages from '@/pages/member/community';
 import LearningPages from '@/pages/member/learning';
 import ConnectionsPage from '@/pages/member/community/ConnectionsPage';
@@ -29,7 +29,7 @@ export const memberRoutes = [
     element: (
       <ProtectedRoutes>
         <MemberLayout>
-          <ProfilePage />
+          <Profile />
         </MemberLayout>
       </ProtectedRoutes>
     ),
