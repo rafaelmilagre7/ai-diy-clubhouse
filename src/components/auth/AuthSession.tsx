@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
-import { processUserProfile } from '@/hooks/auth/utils/authSessionUtils';
+import { processUserProfile } from '@/contexts/auth/utils/profileOperations';
 import LoadingScreen from '@/components/common/LoadingScreen';
 
 const AuthSession = () => {
