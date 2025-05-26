@@ -1,15 +1,13 @@
 
-import { useState } from 'react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle, Reply, User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { CheckCircle, MoreHorizontal } from 'lucide-react';
 import { Post } from '@/types/forumTypes';
-import { getInitials } from '@/utils/user';
-import { ReplyForm } from './ReplyForm';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface PostItemProps {
   post: Post;
@@ -20,100 +18,83 @@ interface PostItemProps {
   topicId: string;
 }
 
-export const PostItem = ({
+export const PostItem: React.FC<PostItemProps> = ({
   post,
   canMarkAsSolution,
   isAuthor,
   onMarkAsSolution,
   isMarkingSolved,
   topicId
-}: PostItemProps) => {
-  const [showReplyForm, setShowReplyForm] = useState(false);
-  
+}) => {
+  const getInitials = (name: string) => {
+    return name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
+  };
+
+  const formatDate = (date: string) => {
+    try {
+      return formatDistanceToNow(new Date(date), { 
+        addSuffix: true, 
+        locale: ptBR 
+      });
+    } catch {
+      return 'Data inválida';
+    }
+  };
+
   return (
-    <Card className={`${post.is_solution ? 'border-green-500 bg-green-50/50' : ''}`}>
+    <Card className={post.is_solution ? 'border-green-200 bg-green-50/30' : ''}>
       <CardContent className="p-6">
-        {/* Header do Post */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10">
-              <AvatarImage src={post.profiles?.avatar_url || undefined} />
-              <AvatarFallback>
-                {post.profiles?.name ? getInitials(post.profiles.name) : <User className="h-5 w-5" />}
-              </AvatarFallback>
-            </Avatar>
-            
-            <div>
+        <div className="flex items-start gap-4">
+          <Avatar className="h-10 w-10 flex-shrink-0">
+            <AvatarImage src={post.profiles?.avatar_url || ''} />
+            <AvatarFallback className="text-xs">
+              {getInitials(post.profiles?.name || 'Usuário')}
+            </AvatarFallback>
+          </Avatar>
+          
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <span className="font-medium">
-                  {post.profiles?.name || 'Usuário Anônimo'}
-                </span>
-                {isAuthor && (
-                  <Badge variant="outline" className="text-xs">Autor</Badge>
-                )}
+                <span className="font-medium">{post.profiles?.name || 'Usuário'}</span>
                 {post.profiles?.role === 'admin' && (
-                  <Badge variant="default" className="text-xs">Admin</Badge>
+                  <Badge variant="secondary" className="text-xs">Admin</Badge>
                 )}
                 {post.is_solution && (
-                  <Badge className="bg-green-600 hover:bg-green-500 gap-1">
-                    <CheckCircle className="h-3 w-3" />
+                  <Badge className="bg-green-100 text-green-800 border-green-200">
+                    <CheckCircle className="h-3 w-3 mr-1" />
                     Solução
                   </Badge>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground">
-                {format(new Date(post.created_at), "d 'de' MMMM 'às' HH:mm", { locale: ptBR })}
-              </p>
+              
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>{formatDate(post.created_at)}</span>
+                <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-          </div>
-          
-          {/* Ações */}
-          <div className="flex items-center gap-2">
+            
+            <div className="prose prose-sm max-w-none mb-4">
+              <div className="whitespace-pre-wrap">{post.content}</div>
+            </div>
+            
             {canMarkAsSolution && !post.is_solution && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onMarkAsSolution}
-                disabled={isMarkingSolved}
-                className="text-green-600 border-green-600 hover:bg-green-50"
-              >
-                <CheckCircle className="h-4 w-4 mr-1" />
-                {isMarkingSolved ? 'Marcando...' : 'Marcar como Solução'}
-              </Button>
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onMarkAsSolution}
+                  disabled={isMarkingSolved}
+                  className="text-green-600 border-green-200 hover:bg-green-50"
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  {isMarkingSolved ? 'Marcando...' : 'Marcar como solução'}
+                </Button>
+              </div>
             )}
           </div>
         </div>
-        
-        {/* Conteúdo */}
-        <div className="prose prose-sm max-w-none mb-4">
-          <div dangerouslySetInnerHTML={{ __html: post.content }} />
-        </div>
-        
-        {/* Ações do Post */}
-        <div className="flex items-center gap-2 pt-4 border-t">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowReplyForm(!showReplyForm)}
-          >
-            <Reply className="h-4 w-4 mr-1" />
-            Responder
-          </Button>
-        </div>
-        
-        {/* Formulário de Resposta */}
-        {showReplyForm && (
-          <div className="mt-4 pt-4 border-t bg-muted/20 p-4 rounded-lg">
-            <h4 className="font-medium mb-3">Responder a {post.profiles?.name || 'Usuário'}</h4>
-            <ReplyForm
-              topicId={topicId}
-              parentId={post.id}
-              placeholder="Digite sua resposta..."
-              buttonText="Enviar Resposta"
-              onPostCreated={() => setShowReplyForm(false)}
-            />
-          </div>
-        )}
       </CardContent>
     </Card>
   );

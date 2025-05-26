@@ -5,6 +5,9 @@ import CommunityHome from './CommunityHome';
 import CommunityMembers from './CommunityMembers';
 import ConnectionsPage from './ConnectionsPage';
 import MessagesPage from './MessagesPage';
+import CategoryTopics from './CategoryTopics';
+import NewTopicPage from './NewTopicPage';
+import TopicDetailPage from './TopicDetailPage';
 
 // Páginas temporárias para sugestões e eventos
 const SuggestionsPage = () => (
@@ -34,6 +37,10 @@ const CommunityPages = () => {
       <Route path="mensagens" element={<MessagesPage />} />
       <Route path="sugestoes" element={<SuggestionsPage />} />
       <Route path="eventos" element={<EventsPage />} />
+      <Route path="categoria/:categorySlug" element={<CategoryTopics />} />
+      <Route path="novo-topico" element={<NewTopicPage />} />
+      <Route path="novo-topico/:categorySlug" element={<NewTopicPage />} />
+      <Route path="topico/:topicId" element={<TopicDetailPage />} />
     </Routes>
   );
 };

@@ -1,104 +1,83 @@
 
-import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/auth';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/auth';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ReplyFormProps {
   topicId: string;
-  onPostCreated?: () => void;
   parentId?: string;
-  placeholder?: string;
-  buttonText?: string;
+  onSuccess?: () => void;
 }
 
-export const ReplyForm = ({ 
-  topicId, 
-  onPostCreated, 
-  parentId,
-  placeholder = "Escreva sua resposta...",
-  buttonText = "Enviar Resposta"
-}: ReplyFormProps) => {
-  const { user } = useAuth();
+export const ReplyForm: React.FC<ReplyFormProps> = ({ topicId, parentId, onSuccess }) => {
   const [content, setContent] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
   const queryClient = useQueryClient();
-  
-  const createPostMutation = useMutation({
-    mutationFn: async (postData: { content: string; topic_id: string; parent_id?: string }) => {
-      if (!user?.id) throw new Error('Usuário não autenticado');
-      
-      const { data, error } = await supabase
-        .from('forum_posts')
-        .insert({
-          content: postData.content,
-          topic_id: postData.topic_id,
-          parent_id: postData.parent_id || null,
-          user_id: user.id
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      // Atualizar contador de respostas do tópico
-      await supabase.rpc('increment_topic_reply_count', {
-        topic_id: postData.topic_id
-      });
-      
-      return data;
-    },
-    onSuccess: () => {
-      toast.success('Resposta enviada com sucesso!');
-      setContent('');
-      // Invalidar queries relacionadas
-      queryClient.invalidateQueries({ queryKey: ['forum-posts', topicId] });
-      queryClient.invalidateQueries({ queryKey: ['forum-topic', topicId] });
-      queryClient.invalidateQueries({ queryKey: ['forum-topics'] });
-      onPostCreated?.();
-    },
-    onError: (error: any) => {
-      console.error('Erro ao criar post:', error);
-      toast.error('Erro ao enviar resposta');
-    }
-  });
-  
-  const handleSubmit = (e: React.FormEvent) => {
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!content.trim()) {
-      toast.error('Digite o conteúdo da resposta');
+      toast.error('O conteúdo da resposta não pode estar vazio');
       return;
     }
     
-    createPostMutation.mutate({
-      content: content.trim(),
-      topic_id: topicId,
-      parent_id: parentId
-    });
+    if (!user?.id) {
+      toast.error('Você precisa estar logado para enviar uma resposta');
+      return;
+    }
+    
+    try {
+      setIsSubmitting(true);
+      
+      const { error } = await supabase
+        .from('forum_posts')
+        .insert({
+          topic_id: topicId,
+          user_id: user.id,
+          content: content.trim(),
+          ...(parentId && { parent_id: parentId })
+        });
+        
+      if (error) throw error;
+      
+      setContent('');
+      toast.success('Resposta enviada com sucesso!');
+      
+      // Invalidar as queries relacionadas
+      queryClient.invalidateQueries({ queryKey: ['forum-topic', topicId] });
+      queryClient.invalidateQueries({ queryKey: ['forum-posts', topicId] });
+      
+      if (onSuccess) {
+        onSuccess();
+      }
+      
+    } catch (error) {
+      console.error('Erro ao enviar resposta:', error);
+      toast.error('Não foi possível enviar sua resposta. Tente novamente mais tarde.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <Textarea
+        placeholder="Escreva sua resposta..."
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        placeholder={placeholder}
         rows={4}
-        maxLength={5000}
-        required
+        className="w-full resize-none"
+        disabled={isSubmitting}
       />
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          {content.length}/5000 caracteres
-        </p>
-        <Button 
-          type="submit" 
-          disabled={createPostMutation.isPending || !content.trim()}
-        >
-          {createPostMutation.isPending ? 'Enviando...' : buttonText}
+      <div className="flex justify-end">
+        <Button type="submit" disabled={isSubmitting || !content.trim()}>
+          {isSubmitting ? 'Enviando...' : 'Enviar Resposta'}
         </Button>
       </div>
     </form>

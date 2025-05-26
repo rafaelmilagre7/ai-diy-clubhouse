@@ -1,11 +1,11 @@
 
-import { ReactNode } from 'react';
+import React from 'react';
 
 interface ForumLayoutProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
-export const ForumLayout = ({ children }: ForumLayoutProps) => {
+export const ForumLayout: React.FC<ForumLayoutProps> = ({ children }) => {
   return (
     <div className="max-w-4xl mx-auto">
       {children}

@@ -1,52 +1,50 @@
 
 import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, SearchX } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { MessageSquare, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface EmptyTopicsStateProps {
   searchQuery?: string;
-  categorySlug?: string;
-  onNewTopic?: () => void;
-  message?: string;
 }
 
-export const EmptyTopicsState: React.FC<EmptyTopicsStateProps> = ({
-  searchQuery,
-  categorySlug,
-  onNewTopic,
-  message
-}) => {
-  const isSearch = !!searchQuery;
-  
+export const EmptyTopicsState: React.FC<EmptyTopicsStateProps> = ({ searchQuery }) => {
+  const navigate = useNavigate();
+
+  if (searchQuery) {
+    return (
+      <Card className="border-dashed">
+        <CardContent className="py-12 text-center">
+          <MessageSquare className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-xl font-semibold mb-2">Nenhum tópico encontrado</h3>
+          <p className="text-muted-foreground mb-6">
+            Não encontramos tópicos que correspondam à sua busca por "{searchQuery}".
+            Tente usar termos diferentes ou criar um novo tópico.
+          </p>
+          <Button onClick={() => navigate('/comunidade/novo-topico')}>
+            <Plus className="h-4 w-4 mr-2" />
+            Criar Novo Tópico
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <SearchX className="w-16 h-16 text-muted-foreground" />
-      
-      <h3 className="mt-4 text-xl font-medium">
-        {isSearch 
-          ? `Nenhum resultado para "${searchQuery}"`
-          : message || "Nenhum tópico encontrado"}
-      </h3>
-      
-      <p className="mt-2 text-muted-foreground max-w-md">
-        {isSearch 
-          ? "Tente utilizar termos mais gerais ou palavras-chave diferentes."
-          : "Seja o primeiro a iniciar uma discussão nessa categoria!"}
-      </p>
-      
-      {categorySlug && !isSearch && (
-        <Button 
-          className="mt-6"
-          onClick={onNewTopic}
-          asChild
-        >
-          <Link to={`/comunidade/novo-topico/${categorySlug}`}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Criar novo tópico
-          </Link>
+    <Card className="border-dashed">
+      <CardContent className="py-12 text-center">
+        <MessageSquare className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+        <h3 className="text-xl font-semibold mb-2">Nenhum tópico nesta categoria</h3>
+        <p className="text-muted-foreground mb-6">
+          Seja o primeiro a iniciar uma discussão nesta categoria.
+          Compartilhe suas dúvidas, ideias ou conhecimentos!
+        </p>
+        <Button onClick={() => navigate('/comunidade/novo-topico')}>
+          <Plus className="h-4 w-4 mr-2" />
+          Criar Primeiro Tópico
         </Button>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 };

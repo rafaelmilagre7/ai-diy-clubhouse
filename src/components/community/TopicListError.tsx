@@ -1,53 +1,29 @@
 
-import { CircleAlert } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { useForumCategories } from "@/hooks/community/useForumCategories";
-import { useState } from "react";
-import { CreateTopicDialog } from "./CreateTopicDialog";
+import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 
 interface TopicListErrorProps {
   onRetry: () => void;
   categorySlug?: string;
 }
 
-export const TopicListError = ({ onRetry, categorySlug }: TopicListErrorProps) => {
-  const [createTopicOpen, setCreateTopicOpen] = useState(false);
-  
+export const TopicListError: React.FC<TopicListErrorProps> = ({ onRetry, categorySlug }) => {
   return (
-    <div className="text-center py-8 space-y-4 border border-red-200 rounded-lg bg-red-50/30 p-6">
-      <CircleAlert className="h-12 w-12 mx-auto text-red-500 mb-4" />
-      <h3 className="text-xl font-medium mb-2">Erro ao carregar tópicos</h3>
-      <p className="text-muted-foreground mb-2">
-        Não foi possível carregar os tópicos desta categoria devido a um problema de conexão com o servidor.
-      </p>
-      <Separator className="my-4" />
-      <div className="flex flex-col items-center">
-        <p className="text-sm text-muted-foreground mb-4">
-          Tente novamente ou crie um novo tópico.
+    <Card className="border-destructive/50">
+      <CardContent className="py-12 text-center">
+        <AlertCircle className="h-16 w-16 text-destructive mx-auto mb-4" />
+        <h3 className="text-xl font-semibold mb-2">Erro ao carregar tópicos</h3>
+        <p className="text-muted-foreground mb-6">
+          Não foi possível carregar os tópicos {categorySlug ? `da categoria ${categorySlug}` : ''}.
+          Verifique sua conexão e tente novamente.
         </p>
-        <div className="flex gap-3">
-          <Button 
-            onClick={onRetry}
-            variant="outline"
-            size="lg"
-          >
-            Tentar novamente
-          </Button>
-          
-          <Button 
-            onClick={() => setCreateTopicOpen(true)}
-            size="lg"
-          >
-            Criar novo tópico
-          </Button>
-        </div>
-        
-        <CreateTopicDialog 
-          open={createTopicOpen} 
-          onOpenChange={setCreateTopicOpen}
-        />
-      </div>
-    </div>
+        <Button onClick={onRetry} variant="outline">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Tentar Novamente
+        </Button>
+      </CardContent>
+    </Card>
   );
 };
