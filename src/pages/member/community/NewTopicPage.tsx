@@ -52,7 +52,7 @@ const NewTopicPage = () => {
         description={`Categoria: ${category?.name || 'Carregando...'}`}
       />
       
-      <CommunityNavigation activeTab={category?.slug} />
+      <CommunityNavigation />
       
       <div className="mt-6 mb-10">
         {isLoading ? (
