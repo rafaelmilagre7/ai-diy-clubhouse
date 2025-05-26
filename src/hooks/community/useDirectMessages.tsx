@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
+import { useEffect } from 'react';
 
 export interface DirectMessage {
   id: string;
@@ -80,12 +81,16 @@ export const useDirectMessages = () => {
             .single();
 
           // Contar mensagens não lidas
+          const otherUserId = conversation.participant_1_id === user.id 
+            ? conversation.participant_2_id 
+            : conversation.participant_1_id;
+
           const { count: unreadCount } = await supabase
             .from('direct_messages')
             .select('*', { count: 'exact', head: true })
             .eq('recipient_id', user.id)
-            .eq('is_read', false)
-            .or(`sender_id.eq.${conversation.participant_1_id === user.id ? conversation.participant_2_id : conversation.participant_1_id}`);
+            .eq('sender_id', otherUserId)
+            .eq('is_read', false);
 
           return {
             ...conversation,
@@ -169,6 +174,43 @@ export const useDirectMessages = () => {
       queryClient.invalidateQueries({ queryKey: ['conversations', user?.id] });
     }
   });
+
+  // Configurar realtime para mensagens
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel('direct-messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'direct_messages',
+          filter: `recipient_id=eq.${user.id}`
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['conversations', user?.id] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'direct_messages',
+          filter: `sender_id=eq.${user.id}`
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['conversations', user?.id] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, queryClient]);
 
   return {
     conversations,

@@ -5,6 +5,7 @@ import CommunityHome from './CommunityHome';
 import CommunityMembers from './CommunityMembers';
 import ConnectionsPage from './ConnectionsPage';
 import MessagesPage from './MessagesPage';
+import NotificationsPage from './NotificationsPage';
 import CategoryTopics from './CategoryTopics';
 import NewTopicPage from './NewTopicPage';
 import TopicDetailPage from './TopicDetailPage';
@@ -35,6 +36,7 @@ const CommunityPages = () => {
       <Route path="membros" element={<CommunityMembers />} />
       <Route path="conexoes" element={<ConnectionsPage />} />
       <Route path="mensagens" element={<MessagesPage />} />
+      <Route path="notificacoes" element={<NotificationsPage />} />
       <Route path="sugestoes" element={<SuggestionsPage />} />
       <Route path="eventos" element={<EventsPage />} />
       <Route path="categoria/:categorySlug" element={<CategoryTopics />} />

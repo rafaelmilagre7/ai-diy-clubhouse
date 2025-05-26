@@ -1,10 +1,15 @@
 
-export const getInitials = (name: string | null | undefined) => {
+export const getInitials = (name?: string | null): string => {
   if (!name) return 'U';
+  
   return name
     .split(' ')
-    .map((n) => n[0])
+    .map(n => n[0])
     .join('')
     .toUpperCase()
-    .substring(0, 2);
+    .slice(0, 2);
+};
+
+export const formatUserName = (name?: string | null): string => {
+  return name || 'Usuário';
 };
