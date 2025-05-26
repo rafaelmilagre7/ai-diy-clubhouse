@@ -119,9 +119,17 @@ export const MemberSidebar: React.FC<MemberSidebarProps> = ({
   ];
 
   const isActive = (path: string, exact = false) => {
+    console.log('Verificando ativação:', { path, currentPath: location.pathname, exact });
+    
     if (exact) {
       return location.pathname === path;
     }
+    
+    // Para rotas da comunidade, verificar exatamente
+    if (path.startsWith('/comunidade/')) {
+      return location.pathname === path;
+    }
+    
     return location.pathname.startsWith(path);
   };
 
@@ -216,6 +224,7 @@ export const MemberSidebar: React.FC<MemberSidebarProps> = ({
                     : "text-gray-300 hover:bg-[#2A2E42] hover:text-white"
                 )}
                 title={!sidebarOpen ? item.name : undefined}
+                onClick={() => console.log('Clicando em:', item.name, 'para:', item.href)}
               >
                 <item.icon className={cn("h-4 w-4", sidebarOpen ? "mr-3" : "")} />
                 {sidebarOpen && <span>{item.name}</span>}

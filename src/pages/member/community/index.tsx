@@ -26,7 +26,7 @@ const SuggestionsPage = () => (
 );
 
 const CommunityPages = () => {
-  console.log('Renderizando CommunityPages - rotas da comunidade');
+  console.log('CommunityPages renderizando - rotas da comunidade disponíveis');
   
   return (
     <Routes>

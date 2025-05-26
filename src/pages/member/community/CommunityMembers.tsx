@@ -1,10 +1,13 @@
 
+import React from 'react';
 import { ForumBreadcrumbs } from '@/components/community/ForumBreadcrumbs';
 import { ForumHeader } from '@/components/community/ForumHeader';
 import { MembersDirectory } from '@/components/community/members/MembersDirectory';
 import { CommunityNavigation } from '@/components/community/CommunityNavigation';
 
 export const CommunityMembers = () => {
+  console.log('CommunityMembers renderizado - página de membros da comunidade');
+  
   return (
     <div className="container max-w-7xl mx-auto py-6">
       <ForumBreadcrumbs 
