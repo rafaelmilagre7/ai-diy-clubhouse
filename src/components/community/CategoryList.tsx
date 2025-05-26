@@ -8,9 +8,11 @@ import { ForumCategory } from '@/types/forumTypes';
 
 interface CategoryListProps {
   categories: ForumCategory[];
+  compact?: boolean;
+  onCategorySelect?: (categorySlug: string) => void;
 }
 
-export const CategoryList = ({ categories }: CategoryListProps) => {
+export const CategoryList = ({ categories, compact = false, onCategorySelect }: CategoryListProps) => {
   return (
     <div className="space-y-3">
       <h3 className="text-lg font-semibold mb-4">Categorias</h3>
@@ -25,9 +27,11 @@ export const CategoryList = ({ categories }: CategoryListProps) => {
                     <div className="text-2xl">{category.icon}</div>
                     <div>
                       <h4 className="font-medium">{category.name}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {category.description}
-                      </p>
+                      {!compact && (
+                        <p className="text-sm text-muted-foreground">
+                          {category.description}
+                        </p>
+                      )}
                     </div>
                   </div>
                   

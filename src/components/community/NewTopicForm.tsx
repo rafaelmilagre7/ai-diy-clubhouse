@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 import { useForumCategories } from '@/hooks/community/useForumCategories';
@@ -33,7 +33,8 @@ export const NewTopicForm: React.FC<NewTopicFormProps> = ({
   
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { categories, isLoading: categoriesLoading } = useForumCategories();
+  const { toast } = useToast();
+  const { data: categories = [], isLoading: categoriesLoading } = useForumCategories();
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,7 +77,10 @@ export const NewTopicForm: React.FC<NewTopicFormProps> = ({
       
       if (error) throw error;
       
-      toast.success('Tópico criado com sucesso!');
+      toast({
+        title: "Tópico criado com sucesso!",
+        description: "Seu tópico foi publicado na comunidade.",
+      });
       navigate(`/comunidade/topico/${data.id}`);
       
     } catch (error: any) {

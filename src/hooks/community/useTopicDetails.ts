@@ -1,7 +1,12 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase, incrementTopicViews } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { Topic } from '@/types/forumTypes';
+
+const incrementTopicViews = async (topicId: string) => {
+  const { error } = await supabase.rpc('increment_topic_views', { topic_id: topicId });
+  if (error) console.error('Erro ao incrementar visualizações:', error);
+};
 
 export const useTopicDetails = (topicId: string) => {
   return useQuery({

@@ -5,14 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Search, Plus, TrendingUp, Clock, CheckCircle, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useForumCategories } from '@/hooks/community/useForumCategories';
-import { useForumTopics } from '@/hooks/community/useForumTopics';
+import { useForumTopics, TopicFilterType } from '@/hooks/community/useForumTopics';
 import { TopicCard } from '@/components/community/TopicCard';
 import { CategoryList } from '@/components/community/CategoryList';
 import { ForumHeader } from '@/components/community/ForumHeader';
 
 const CommunityMain = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<'recentes' | 'populares' | 'sem-respostas' | 'resolvidos'>('recentes');
+  const [activeFilter, setActiveFilter] = useState<TopicFilterType>('recentes');
 
   const { data: categories = [], isLoading: categoriesLoading } = useForumCategories();
   

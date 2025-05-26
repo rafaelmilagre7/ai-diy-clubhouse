@@ -16,24 +16,25 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAuth } from '@/contexts/auth';
 import { usePostInteractions } from '@/hooks/usePostInteractions';
+import { getInitials, getUserDisplayRole } from '@/utils/user';
 
 interface PostItemProps {
   post: Post;
-  canMarkAsSolution: boolean;
-  isAuthor: boolean;
-  onMarkAsSolution: () => void;
-  isMarkingSolved: boolean;
   topicId: string;
+  canMarkAsSolution?: boolean;
+  isAuthor?: boolean;
+  onMarkAsSolution?: () => void;
+  isMarkingSolved?: boolean;
   onPostDeleted?: () => void;
 }
 
 export const PostItem: React.FC<PostItemProps> = ({
   post,
-  canMarkAsSolution,
-  isAuthor,
-  onMarkAsSolution,
-  isMarkingSolved,
   topicId,
+  canMarkAsSolution = false,
+  isAuthor = false,
+  onMarkAsSolution,
+  isMarkingSolved = false,
   onPostDeleted
 }) => {
   const { user } = useAuth();
@@ -45,10 +46,6 @@ export const PostItem: React.FC<PostItemProps> = ({
     authorId: post.user_id,
     onPostDeleted
   });
-
-  const getInitials = (name: string) => {
-    return name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
-  };
 
   const formatDate = (date: string) => {
     try {
@@ -82,7 +79,9 @@ export const PostItem: React.FC<PostItemProps> = ({
               <div className="flex items-center gap-2">
                 <span className="font-medium">{post.profiles?.name || 'Usuário'}</span>
                 {post.profiles?.role === 'admin' && (
-                  <Badge variant="secondary" className="text-xs">Admin</Badge>
+                  <Badge variant="secondary" className="text-xs">
+                    {getUserDisplayRole(post.profiles.role)}
+                  </Badge>
                 )}
                 {post.is_solution && (
                   <Badge className="bg-green-100 text-green-800 border-green-200">
@@ -102,7 +101,7 @@ export const PostItem: React.FC<PostItemProps> = ({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    {canMarkAsSolution && !post.is_solution && (
+                    {canMarkAsSolution && !post.is_solution && onMarkAsSolution && (
                       <DropdownMenuItem 
                         onClick={onMarkAsSolution}
                         disabled={isMarkingSolved}

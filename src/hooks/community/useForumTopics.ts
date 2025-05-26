@@ -3,9 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Topic } from '@/types/forumTypes';
 
+export type TopicFilterType = 'recentes' | 'populares' | 'sem-respostas' | 'resolvidos';
+
 interface UseForumTopicsProps {
   activeTab: string;
-  selectedFilter: 'recentes' | 'populares' | 'sem-respostas' | 'resolvidos';
+  selectedFilter: TopicFilterType;
   searchQuery: string;
   categories: any[];
   categorySlug?: string;
@@ -71,7 +73,7 @@ export const useForumTopics = ({
       if (error) throw error;
       return data as Topic[];
     },
-    enabled: categories.length > 0,
+    enabled: categories && categories.length > 0,
     staleTime: 30 * 1000, // 30 segundos
   });
 };

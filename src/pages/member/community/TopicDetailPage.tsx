@@ -12,7 +12,7 @@ const TopicDetailPage = () => {
   const { topicId } = useParams<{ topicId: string }>();
   const navigate = useNavigate();
   
-  const { topic, isLoading, error } = useTopicDetails(topicId!);
+  const { data: topic, isLoading, error } = useTopicDetails(topicId!);
 
   if (isLoading) {
     return (

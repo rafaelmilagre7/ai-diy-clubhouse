@@ -20,3 +20,8 @@ export const getUserDisplayRole = (role: string): string => {
   
   return roleMap[role] || 'Membro';
 };
+
+export const formatUserName = (name: string | null | undefined): string => {
+  if (!name) return 'Usuário';
+  return name;
+};
