@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ConnectionNotificationsDropdown } from '@/components/community/notifications/ConnectionNotificationsDropdown';
 import { ForumNotificationsDropdown } from '@/components/community/notifications/ForumNotificationsDropdown';
+import { MessageNotificationsDropdown } from '@/components/community/notifications/MessageNotificationsDropdown';
 import { 
   LayoutDashboard, 
   BookOpen, 
@@ -154,6 +155,7 @@ export const MemberSidebar: React.FC<MemberSidebarProps> = ({
           <div className="flex items-center space-x-2">
             {sidebarOpen && (
               <>
+                <MessageNotificationsDropdown />
                 <ConnectionNotificationsDropdown />
                 <ForumNotificationsDropdown />
               </>

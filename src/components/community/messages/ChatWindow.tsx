@@ -4,10 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, MessageSquare } from 'lucide-react';
+import { Send, MessageSquare, MoreVertical } from 'lucide-react';
 import { useDirectMessages, Conversation } from '@/hooks/community/useDirectMessages';
 import { getInitials } from '@/utils/user';
 import { useAuth } from '@/contexts/auth';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface ChatWindowProps {
   conversation: Conversation;
@@ -60,16 +66,62 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
     }
   };
 
+  const formatMessageTime = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffInDays === 0) {
+      return date.toLocaleTimeString('pt-BR', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } else if (diffInDays === 1) {
+      return 'Ontem';
+    } else if (diffInDays < 7) {
+      return date.toLocaleDateString('pt-BR', { weekday: 'short' });
+    } else {
+      return date.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: 'short'
+      });
+    }
+  };
+
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="border-b">
-        <CardTitle className="flex items-center space-x-3">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={otherParticipant?.avatar_url || undefined} />
-            <AvatarFallback>{getInitials(otherParticipant?.name)}</AvatarFallback>
-          </Avatar>
-          <span>{otherParticipant?.name || 'Usuário'}</span>
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center space-x-3">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={otherParticipant?.avatar_url || undefined} />
+              <AvatarFallback>{getInitials(otherParticipant?.name)}</AvatarFallback>
+            </Avatar>
+            <div>
+              <span>{otherParticipant?.name || 'Usuário'}</span>
+              <div className="flex items-center space-x-1 mt-1">
+                <div className="h-2 w-2 bg-green-500 rounded-full"></div>
+                <span className="text-xs text-muted-foreground">Online</span>
+              </div>
+            </div>
+          </CardTitle>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>
+                Ver perfil
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-red-600">
+                Bloquear usuário
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </CardHeader>
       
       <CardContent className="flex-1 flex flex-col p-0">
@@ -96,42 +148,49 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
               </p>
             </div>
           ) : (
-            messages.map((msg) => {
+            messages.map((msg, index) => {
               const isOwn = msg.sender_id === user?.id;
+              const showAvatar = index === 0 || messages[index - 1]?.sender_id !== msg.sender_id;
+              const showTimestamp = index === messages.length - 1 || 
+                messages[index + 1]?.sender_id !== msg.sender_id ||
+                new Date(messages[index + 1]?.created_at).getTime() - new Date(msg.created_at).getTime() > 300000; // 5 minutes
               
               return (
-                <div
-                  key={msg.id}
-                  className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div className={`flex space-x-2 max-w-xs lg:max-w-md ${isOwn ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={
+                <div key={msg.id}>
+                  <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`flex space-x-2 max-w-xs lg:max-w-md ${isOwn ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                      {showAvatar ? (
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={
+                            isOwn 
+                              ? user?.user_metadata?.avatar_url 
+                              : otherParticipant?.avatar_url || undefined
+                          } />
+                          <AvatarFallback>
+                            {getInitials(isOwn ? user?.user_metadata?.name : otherParticipant?.name)}
+                          </AvatarFallback>
+                        </Avatar>
+                      ) : (
+                        <div className="h-8 w-8" />
+                      )}
+                      
+                      <div className={`px-3 py-2 rounded-lg ${
                         isOwn 
-                          ? user?.user_metadata?.avatar_url 
-                          : otherParticipant?.avatar_url || undefined
-                      } />
-                      <AvatarFallback>
-                        {getInitials(isOwn ? user?.user_metadata?.name : otherParticipant?.name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    
-                    <div className={`px-3 py-2 rounded-lg ${
-                      isOwn 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'bg-muted'
-                    }`}>
-                      <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                      <p className={`text-xs mt-1 ${
-                        isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'bg-muted'
                       }`}>
-                        {new Date(msg.created_at).toLocaleTimeString('pt-BR', {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </p>
+                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                      </div>
                     </div>
                   </div>
+                  
+                  {showTimestamp && (
+                    <div className={`text-xs text-muted-foreground mt-1 ${
+                      isOwn ? 'text-right' : 'text-left'
+                    }`}>
+                      {formatMessageTime(msg.created_at)}
+                    </div>
+                  )}
                 </div>
               );
             })
@@ -148,12 +207,17 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
               onKeyPress={handleKeyPress}
               placeholder="Digite sua mensagem..."
               className="flex-1 min-h-0 resize-none"
-              rows={2}
+              rows={1}
+              style={{
+                minHeight: '40px',
+                maxHeight: '120px'
+              }}
             />
             <Button 
               onClick={handleSendMessage}
               disabled={!message.trim() || isSending}
               size="sm"
+              className="self-end"
             >
               <Send className="h-4 w-4" />
             </Button>
