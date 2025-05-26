@@ -15,7 +15,7 @@ export interface UserProfile {
   name: string;
   avatar_url?: string | null;
   role?: string;
-  user_id?: string; // Adicionando esta propriedade para resolver o erro
+  user_id?: string;
 }
 
 export interface Profile {

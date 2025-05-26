@@ -20,6 +20,7 @@ interface ForumTopic {
   category_id: string;
   is_locked: boolean;
   profiles: {
+    id: string;
     name: string | null;
     avatar_url: string | null;
   } | null;
@@ -33,10 +34,13 @@ interface ForumPost {
   id: string;
   content: string;
   created_at: string;
+  updated_at: string;
   user_id: string;
+  topic_id: string;
   parent_id: string | null;
   is_solution: boolean;
   profiles: {
+    id: string;
     name: string | null;
     avatar_url: string | null;
   } | null;
@@ -69,7 +73,7 @@ const TopicView = () => {
         .from('forum_topics')
         .select(`
           *,
-          profiles:user_id(*),
+          profiles:user_id(id, name, avatar_url),
           forum_categories:category_id(name, slug)
         `)
         .eq('id', id)
@@ -84,12 +88,11 @@ const TopicView = () => {
   const { data: posts, isLoading: postsLoading, error: postsError } = useQuery({
     queryKey: ['forumPosts', id],
     queryFn: async () => {
-      // Buscar posts com reações
       const { data, error } = await supabase
         .from('forum_posts')
         .select(`
           *,
-          profiles:user_id(*),
+          profiles:user_id(id, name, avatar_url),
           reactions:forum_reactions(*)
         `)
         .eq('topic_id', id)
@@ -105,6 +108,8 @@ const TopicView = () => {
         
         return {
           ...post,
+          topic_id: id || '',
+          updated_at: post.updated_at || post.created_at,
           reaction_count: post.reactions?.length || 0,
           user_has_reacted: !!userReaction
         };
@@ -192,9 +197,14 @@ const TopicView = () => {
             id: topic.id,
             content: topic.content,
             created_at: topic.created_at,
+            updated_at: topic.created_at,
             user_id: topic.user_id,
             topic_id: topic.id,
-            profiles: topic.profiles
+            profiles: topic.profiles ? {
+              id: topic.profiles.id,
+              name: topic.profiles.name,
+              avatar_url: topic.profiles.avatar_url
+            } : null
           }}
           showTopicContext={false}
         />
@@ -206,7 +216,20 @@ const TopicView = () => {
             {posts.map(post => (
               <PostItem
                 key={post.id}
-                post={post}
+                post={{
+                  id: post.id,
+                  content: post.content,
+                  created_at: post.created_at,
+                  updated_at: post.updated_at,
+                  user_id: post.user_id,
+                  topic_id: post.topic_id,
+                  is_solution: post.is_solution,
+                  profiles: post.profiles ? {
+                    id: post.profiles.id,
+                    name: post.profiles.name,
+                    avatar_url: post.profiles.avatar_url
+                  } : null
+                }}
                 showTopicContext={false}
               />
             ))}
