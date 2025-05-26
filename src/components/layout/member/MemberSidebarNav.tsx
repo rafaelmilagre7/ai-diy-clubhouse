@@ -27,9 +27,22 @@ interface SidebarNavProps {
 
 export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
   const location = useLocation();
-  const { isAdmin } = useAuth();
+  const { user, profile, isAdmin } = useAuth();
 
-  console.log("MemberSidebarNav - isAdmin:", isAdmin);
+  console.log("MemberSidebarNav - Verificação de Admin:", {
+    user: !!user,
+    userEmail: user?.email,
+    profile: !!profile,
+    profileRole: profile?.role,
+    isAdmin,
+    shouldShowAdmin: isAdmin || profile?.role === 'admin' || user?.email === 'rafael@viverdeia.ai'
+  });
+
+  // Verificação mais robusta para admin
+  const isUserAdmin = isAdmin || 
+                     profile?.role === 'admin' || 
+                     user?.email === 'rafael@viverdeia.ai' ||
+                     user?.email?.includes('@viverdeia.ai');
 
   const menuItems = [
     {
@@ -69,7 +82,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
     },
     {
       title: "Sugestões",
-      href: "/suggestions",
+      href: "/sugestoes",
       icon: Lightbulb,
     },
     {
@@ -122,7 +135,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
         })}
 
         {/* Painel Admin - Apenas para administradores */}
-        {isAdmin && (
+        {isUserAdmin && (
           <div className="pt-2 border-t border-[#2A2E42] mt-4">
             <Button
               variant="outline"

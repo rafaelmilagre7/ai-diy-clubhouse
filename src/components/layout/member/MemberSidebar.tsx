@@ -88,7 +88,7 @@ export const MemberSidebar: React.FC<MemberSidebarProps> = ({
     },
     {
       name: 'Sugestões',
-      href: '/suggestions',
+      href: '/sugestoes',
       icon: Lightbulb
     },
     {
@@ -137,6 +137,17 @@ export const MemberSidebar: React.FC<MemberSidebarProps> = ({
     // Para outras rotas, usar startsWith
     return location.pathname.startsWith(path);
   };
+
+  // Verificar se é admin baseado no email
+  const isAdmin = profileEmail === 'rafael@viverdeia.ai' || 
+                  profileEmail?.includes('@viverdeia.ai') ||
+                  profileEmail === 'admin@teste.com';
+
+  console.log('MemberSidebar - verificação admin:', {
+    profileEmail,
+    isAdmin,
+    shouldShowAdminPanel: isAdmin
+  });
 
   return (
     <>
@@ -234,6 +245,34 @@ export const MemberSidebar: React.FC<MemberSidebarProps> = ({
                 {sidebarOpen && <span className="truncate">{item.name}</span>}
               </Link>
             ))}
+
+            {/* Painel Admin - Apenas para administradores */}
+            {isAdmin && (
+              <>
+                <div className="my-4 border-t border-[#2A2E42]" />
+                {sidebarOpen && (
+                  <div className="px-3 py-2">
+                    <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Administração
+                    </h3>
+                  </div>
+                )}
+                <Link
+                  to="/admin"
+                  className={cn(
+                    "flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                    !sidebarOpen && "justify-center",
+                    isActive('/admin')
+                      ? "bg-viverblue text-white"
+                      : "text-viverblue hover:bg-[#2A2E42] hover:text-viverblue"
+                  )}
+                  title={!sidebarOpen ? "Painel Admin" : undefined}
+                >
+                  <ShieldCheck className={cn("h-4 w-4 shrink-0", sidebarOpen ? "mr-3" : "")} />
+                  {sidebarOpen && <span className="truncate">Painel Admin</span>}
+                </Link>
+              </>
+            )}
           </nav>
         </ScrollArea>
 
@@ -241,7 +280,12 @@ export const MemberSidebar: React.FC<MemberSidebarProps> = ({
         <div className="border-t border-[#2A2E42] p-4">
           <div className="flex items-center space-x-3">
             <Avatar className="h-8 w-8 shrink-0">
-              <AvatarImage src={profileAvatar || undefined} />
+              <AvatarImage 
+                src={profileAvatar || undefined} 
+                alt={profileName || "Usuário"}
+                onError={() => console.log('Erro ao carregar avatar:', profileAvatar)}
+                onLoad={() => console.log('Avatar carregado com sucesso:', profileAvatar)}
+              />
               <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                 {getInitials(profileName)}
               </AvatarFallback>

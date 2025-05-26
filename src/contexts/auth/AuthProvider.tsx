@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
@@ -50,7 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Verificação simples de admin baseada no email
+  // Verificação mais robusta de admin
   const isAdmin = user?.email === 'rafael@viverdeia.ai' || 
                   user?.email === 'admin@teste.com' ||
                   user?.email?.includes('@viverdeia.ai') ||
@@ -65,6 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isFormacao,
     userEmail: user?.email,
     profileRole: profile?.role,
+    profileAvatarUrl: profile?.avatar_url,
     isLoading
   });
 
@@ -99,7 +99,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (data) {
-        console.log('AuthProvider: Perfil carregado com sucesso:', data);
+        console.log('AuthProvider: Perfil carregado com sucesso:', {
+          id: data.id,
+          name: data.name,
+          email: data.email,
+          role: data.role,
+          avatar_url: data.avatar_url,
+          hasAvatar: !!data.avatar_url
+        });
         setProfile(data);
       }
     } catch (error) {
