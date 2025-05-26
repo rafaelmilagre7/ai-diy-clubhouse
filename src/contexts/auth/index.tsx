@@ -72,9 +72,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                          email === 'admin@teste.com' || 
                          email === 'admin@viverdeia.ai';
     
+    console.log("checkIsAdmin - Verificação por email:", { email, isAdminByEmail });
+    
     if (isAdminByEmail) {
       setIsAdmin(true);
       saveAdminStatus(userId, true);
+      console.log("checkIsAdmin - Definido como admin por email");
       return true;
     }
 
@@ -82,6 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const cachedAdminStatus = getAdminStatus(userId);
     if (cachedAdminStatus !== null) {
       setIsAdmin(cachedAdminStatus);
+      console.log("checkIsAdmin - Status do cache:", cachedAdminStatus);
       return cachedAdminStatus;
     }
 
@@ -96,6 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const adminStatus = !!data;
       setIsAdmin(adminStatus);
       saveAdminStatus(userId, adminStatus);
+      console.log("checkIsAdmin - Status RPC:", adminStatus);
       return adminStatus;
     } catch (error) {
       console.error('Erro ao verificar status de admin:', error);
@@ -111,10 +116,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const isAdminByRole = profileData?.role === 'admin';
         setIsAdmin(isAdminByRole);
         saveAdminStatus(userId, isAdminByRole);
+        console.log("checkIsAdmin - Status do perfil:", isAdminByRole);
         return isAdminByRole;
       } catch (profileError) {
         console.error('Erro ao verificar perfil:', profileError);
         setIsAdmin(isAdminByEmail); // Usar resultado da verificação por email como fallback final
+        console.log("checkIsAdmin - Fallback para email:", isAdminByEmail);
         return isAdminByEmail;
       }
     } finally {

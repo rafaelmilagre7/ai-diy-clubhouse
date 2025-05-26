@@ -32,7 +32,6 @@ export const DashboardHeader = ({
   
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-    // Aqui você poderia adicionar lógica para filtrar soluções por pesquisa
   };
   
   // Verificação mais robusta para admin
@@ -41,6 +40,8 @@ export const DashboardHeader = ({
       user.email.includes('@viverdeia.ai') || 
       user.email === 'admin@teste.com'
     ));
+  
+  console.log("DashboardHeader - isUserAdmin final:", isUserAdmin);
   
   return (
     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -60,9 +61,9 @@ export const DashboardHeader = ({
         </Link>
         {isUserAdmin && (
           <Link to="/admin">
-            <Button variant="default" className="bg-viverblue hover:bg-viverblue/90">
-              <Settings className="mr-2 h-4 w-4" />
-              Painel Admin
+            <Button variant="default" className="bg-viverblue hover:bg-viverblue/90 flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              <span className="hidden sm:inline">Painel Admin</span>
             </Button>
           </Link>
         )}
