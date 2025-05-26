@@ -1,22 +1,43 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { MapPin, Briefcase, UserPlus, UserCheck } from 'lucide-react';
+import { MapPin, Briefcase, UserPlus, UserCheck, MessageSquare } from 'lucide-react';
 import { Profile } from '@/types/forumTypes';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useNavigate } from 'react-router-dom';
 
 interface MemberCardProps {
   member: Profile;
   onConnect?: (memberId: string) => void;
+  onMessage?: (memberId: string) => void;
   isConnected?: boolean;
 }
 
-export const MemberCard = ({ member, onConnect, isConnected = false }: MemberCardProps) => {
+export const MemberCard = ({ member, onConnect, onMessage, isConnected = false }: MemberCardProps) => {
+  const navigate = useNavigate();
+
   const handleConnect = () => {
     if (onConnect && !isConnected) {
       onConnect(member.id);
+    }
+  };
+
+  const handleMessage = () => {
+    if (onMessage) {
+      onMessage(member.id);
+    } else {
+      // Navegar para a página de mensagens com o usuário selecionado
+      navigate('/comunidade/mensagens', { 
+        state: { selectedMemberId: member.id } 
+      });
     }
   };
 
@@ -24,12 +45,16 @@ export const MemberCard = ({ member, onConnect, isConnected = false }: MemberCar
     <Card className="hover:shadow-lg transition-all duration-200">
       <CardContent className="p-6">
         <div className="flex items-center gap-4 mb-4">
-          <Avatar className="h-16 w-16">
-            <AvatarImage src={member.avatar_url || ''} />
-            <AvatarFallback className="text-lg">
-              {member.name?.charAt(0) || 'U'}
-            </AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <Avatar className="h-16 w-16">
+              <AvatarImage src={member.avatar_url || ''} />
+              <AvatarFallback className="text-lg">
+                {member.name?.charAt(0) || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            {/* Status online indicator */}
+            <div className="absolute -bottom-1 -right-1 h-5 w-5 bg-green-500 border-2 border-white rounded-full"></div>
+          </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-lg leading-tight">{member.name || 'Usuário'}</h3>
             <p className="text-muted-foreground text-sm">
@@ -89,6 +114,20 @@ export const MemberCard = ({ member, onConnect, isConnected = false }: MemberCar
               )}
             </Button>
           )}
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" variant="outline">
+                <MessageSquare className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleMessage}>
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Enviar mensagem
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </CardContent>
     </Card>

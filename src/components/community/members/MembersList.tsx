@@ -13,6 +13,7 @@ interface MembersListProps {
   currentPage: number;
   onPageChange: (page: number) => void;
   onConnect?: (memberId: string) => void;
+  onMessage?: (memberId: string) => void;
   connectedMembers: Set<string>;
 }
 
@@ -23,6 +24,7 @@ export const MembersList = ({
   currentPage,
   onPageChange,
   onConnect,
+  onMessage,
   connectedMembers
 }: MembersListProps) => {
   if (isLoading) {
@@ -41,6 +43,7 @@ export const MembersList = ({
             key={member.id}
             member={member}
             onConnect={onConnect}
+            onMessage={onMessage}
             isConnected={connectedMembers.has(member.id)}
           />
         ))}

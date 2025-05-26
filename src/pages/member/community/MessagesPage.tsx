@@ -1,9 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { ConversationsList } from '@/components/community/messages/ConversationsList';
 import { ChatWindow } from '@/components/community/messages/ChatWindow';
 import { StartConversationDialog } from '@/components/community/messages/StartConversationDialog';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { MessageSquare } from 'lucide-react';
 import { Conversation, useDirectMessages } from '@/hooks/community/useDirectMessages';
 import { useAuth } from '@/contexts/auth';
@@ -11,8 +12,17 @@ import { supabase } from '@/lib/supabase';
 
 const MessagesPage = () => {
   const { user } = useAuth();
+  const location = useLocation();
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const { conversations } = useDirectMessages();
+
+  // Verificar se foi passado um membro selecionado via state
+  useEffect(() => {
+    const selectedMemberId = location.state?.selectedMemberId;
+    if (selectedMemberId && user) {
+      handleStartConversation(selectedMemberId);
+    }
+  }, [location.state, user]);
 
   const handleStartConversation = async (memberId: string) => {
     try {

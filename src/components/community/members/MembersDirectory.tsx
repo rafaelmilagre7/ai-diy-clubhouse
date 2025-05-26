@@ -5,8 +5,10 @@ import { useNetworkConnections } from '@/hooks/community/useNetworkConnections';
 import { MembersFilters } from './MembersFilters';
 import { MembersList } from './MembersList';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 export const MembersDirectory = () => {
+  const navigate = useNavigate();
   const {
     members,
     isLoading,
@@ -34,6 +36,12 @@ export const MembersDirectory = () => {
         description: "O membro será notificado sobre seu interesse em conectar.",
       });
     }
+  };
+
+  const handleMessage = (memberId: string) => {
+    navigate('/comunidade/mensagens', { 
+      state: { selectedMemberId: memberId } 
+    });
   };
 
   if (isError) {
@@ -79,6 +87,7 @@ export const MembersDirectory = () => {
         currentPage={currentPage}
         onPageChange={handlePageChange}
         onConnect={handleConnect}
+        onMessage={handleMessage}
         connectedMembers={connectedMemberIds}
       />
     </div>
