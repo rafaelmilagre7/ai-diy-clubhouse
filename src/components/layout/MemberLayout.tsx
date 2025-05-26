@@ -87,11 +87,15 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
     document.body.classList.add('dark');
   }, []);
 
-  // Handler para signOut que ignora o retorno
+  // Handler para signOut que lida com o retorno da função
   const handleSignOut = async () => {
     try {
-      await signOut();
-      toast.success("Logout realizado com sucesso");
+      const result = await signOut();
+      if (result.success) {
+        toast.success("Logout realizado com sucesso");
+      } else {
+        toast.error("Erro ao fazer logout");
+      }
     } catch (error) {
       console.error("Erro ao fazer logout:", error);
       toast.error("Erro ao fazer logout");

@@ -24,20 +24,26 @@ const Login = () => {
       setIsLoading(true);
       setError(null);
       // Usar string vazias para indicar login com Google
-      await signIn("", "");
-    } catch (err) {
+      const result = await signIn("", "");
+      if (!result.success) {
+        throw new Error(result.error?.message || "Erro ao fazer login");
+      }
+    } catch (err: any) {
       console.error("Erro ao fazer login:", err);
-      setError("Ocorreu um erro durante o login. Por favor, tente novamente.");
+      setError(err?.message || "Ocorreu um erro durante o login. Por favor, tente novamente.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleTestUserLogin = async (loginFn: () => Promise<any>, userType: string) => {
+  const handleTestUserLogin = async (loginFn: () => Promise<{ success: boolean; data?: any; error?: any; }>, userType: string) => {
     try {
       setIsLoading(true);
       setError(null);
-      await loginFn();
+      const result = await loginFn();
+      if (!result.success) {
+        throw new Error(result.error?.message || `Erro ao fazer login como ${userType}`);
+      }
     } catch (err: any) {
       console.error(`Erro ao fazer login como ${userType}:`, err);
       setError(err?.message || `Ocorreu um erro ao fazer login como ${userType}.`);

@@ -56,10 +56,15 @@ const FormacaoLayout = ({ children }: { children: React.ReactNode }) => {
     };
   }, [sidebarOpen]);
 
-  // Handler para signOut que ignora o retorno
+  // Handler para signOut que lida com o retorno da função
   const handleSignOut = async () => {
     try {
-      await signOut();
+      const result = await signOut();
+      if (result.success) {
+        console.log("Logout realizado com sucesso");
+      } else {
+        console.error("Erro ao fazer logout:", result.error);
+      }
     } catch (error) {
       console.error("Erro ao fazer logout:", error);
     }
