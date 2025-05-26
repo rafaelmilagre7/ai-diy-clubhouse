@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -48,7 +47,7 @@ const TopicView = () => {
     }
   }, [topicId, user?.id]);
 
-  // Buscar dados do tópico
+  // Buscar dados do tópico - Corrigindo a query para usar joins manuais
   const { 
     data: topic, 
     isLoading: topicLoading, 
@@ -63,34 +62,53 @@ const TopicView = () => {
         throw new Error('ID do tópico não fornecido');
       }
       
-      const { data, error } = await supabase
+      // Buscar o tópico principal
+      const { data: topicData, error: topicError } = await supabase
         .from('forum_topics')
-        .select(`
-          *,
-          profiles:user_id(*),
-          forum_categories:category_id(id, name, slug)
-        `)
+        .select('*')
         .eq('id', topicId)
         .single();
 
-      console.log("TopicView: resultado da query do tópico:", { data, error });
-
-      if (error) {
-        console.error("TopicView: erro na query do tópico:", error);
-        throw error;
+      if (topicError) {
+        console.error("TopicView: erro na query do tópico:", topicError);
+        throw topicError;
       }
       
-      if (!data) {
+      if (!topicData) {
         console.error("TopicView: nenhum dado retornado para o tópico");
         throw new Error('Tópico não encontrado');
       }
 
-      return data;
+      // Buscar o perfil do usuário
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', topicData.user_id)
+        .single();
+
+      // Buscar a categoria
+      const { data: categoryData } = await supabase
+        .from('forum_categories')
+        .select('id, name, slug')
+        .eq('id', topicData.category_id)
+        .single();
+
+      console.log("TopicView: dados carregados com sucesso:", {
+        topic: topicData.title,
+        profile: profileData?.name,
+        category: categoryData?.name
+      });
+
+      return {
+        ...topicData,
+        profiles: profileData,
+        forum_categories: categoryData
+      };
     },
     enabled: !!topicId
   });
 
-  // Buscar posts do tópico
+  // Buscar posts do tópico - Corrigindo a query para usar joins manuais
   const { 
     data: posts, 
     isLoading: postsLoading, 
@@ -106,23 +124,36 @@ const TopicView = () => {
         throw new Error('ID do tópico não fornecido');
       }
       
-      const { data, error } = await supabase
+      // Buscar os posts
+      const { data: postsData, error: postsError } = await supabase
         .from('forum_posts')
-        .select(`
-          *,
-          profiles:user_id(*)
-        `)
+        .select('*')
         .eq('topic_id', topicId)
         .order('created_at', { ascending: true });
 
-      console.log("TopicView: resultado da query dos posts:", { data, error, count: data?.length });
-
-      if (error) {
-        console.error("TopicView: erro na query dos posts:", error);
-        throw error;
+      if (postsError) {
+        console.error("TopicView: erro na query dos posts:", postsError);
+        throw postsError;
       }
+
+      if (!postsData) return [];
+
+      // Buscar perfis dos usuários dos posts
+      const userIds = [...new Set(postsData.map(post => post.user_id))];
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('id', userIds);
+
+      // Mapear posts com perfis
+      const postsWithProfiles = postsData.map(post => ({
+        ...post,
+        profiles: profilesData?.find(profile => profile.id === post.user_id) || null
+      }));
+
+      console.log("TopicView: posts carregados:", postsWithProfiles.length);
       
-      return data || [];
+      return postsWithProfiles;
     },
     enabled: !!topicId
   });
@@ -185,9 +216,6 @@ const TopicView = () => {
           <p className="text-muted-foreground mb-6">
             O tópico que você está procurando não existe ou foi removido.
           </p>
-          <div className="text-sm text-muted-foreground mb-4">
-            Debug: topicId = {topicId}, erro = {error?.message}
-          </div>
           <Button asChild>
             <Link to="/comunidade">Voltar para a Comunidade</Link>
           </Button>

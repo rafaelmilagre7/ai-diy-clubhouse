@@ -1,4 +1,3 @@
-
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Pin, Lock, CheckCircle, MessageCircle, Eye } from "lucide-react";
@@ -27,6 +26,8 @@ export const TopicItem = ({ topic }: TopicItemProps) => {
   const getInitials = (name: string) => {
     return name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
   };
+
+  console.log("TopicItem: Gerando link para tópico:", topic.id, "URL será:", `/comunidade/topico/${topic.id}`);
 
   return (
     <div className="flex flex-col sm:flex-row gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">

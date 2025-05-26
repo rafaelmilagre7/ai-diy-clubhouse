@@ -25,8 +25,11 @@ import LearningPage from '@/pages/member/learning/LearningPage';
 import CourseDetails from '@/pages/member/learning/CourseDetails';
 import LessonView from '@/pages/member/learning/LessonView';
 
-// Member Community pages
-import CommunityPages from '@/pages/member/community/index';
+// Member Community pages - Agora importadas diretamente
+import CommunityHome from '@/pages/member/community/CommunityHome';
+import TopicView from '@/pages/member/community/TopicView';
+import CategoryView from '@/pages/member/community/CategoryView';
+import NewTopic from '@/pages/member/community/NewTopic';
 
 // Função helper para criar rotas protegidas com MemberLayout
 const createProtectedRoute = (path: string, Component: React.ComponentType<any>) => ({
@@ -35,7 +38,7 @@ const createProtectedRoute = (path: string, Component: React.ComponentType<any>)
 });
 
 // Log para diagnóstico
-console.log("Carregando rotas de membros");
+console.log("Carregando rotas de membros com estrutura simplificada");
 
 export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/", Dashboard),
@@ -64,7 +67,9 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/suggestions/:id", SuggestionDetails),
   createProtectedRoute("/suggestions/new", NewSuggestion),
   
-  // Comunidade Routes - Com alta prioridade e estrutura simplificada
-  createProtectedRoute("/comunidade", CommunityPages),
-  createProtectedRoute("/comunidade/*", CommunityPages)
+  // Comunidade Routes - Agora com estrutura direta e simplificada
+  createProtectedRoute("/comunidade", CommunityHome),
+  createProtectedRoute("/comunidade/topico/:topicId", TopicView),
+  createProtectedRoute("/comunidade/categoria/:slug", CategoryView),
+  createProtectedRoute("/comunidade/novo-topico/:categorySlug", NewTopic)
 ];
