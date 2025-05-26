@@ -2,8 +2,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
-import { useConnectionMonitor } from "@/hooks/useConnectionMonitor";
-import { LoadingErrorBoundary } from "@/components/common/LoadingErrorBoundary";
 import { MemberSidebar } from "./member/MemberSidebar";
 import { MemberContent } from "./member/MemberContent";
 import { toast } from "sonner";
@@ -15,7 +13,6 @@ import { toast } from "sonner";
 const MemberLayout = ({ children }: { children: React.ReactNode }) => {
   const { profile, signOut } = useAuth();
   const location = useLocation();
-  const connectionStatus = useConnectionMonitor();
   
   // Estado para controlar a visibilidade da barra lateral
   const [sidebarOpen, setSidebarOpen] = useState(() => {
@@ -31,10 +28,9 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     console.log("MemberLayout renderizado para rota:", location.pathname, {
       profile: !!profile,
-      sidebarOpen,
-      connectionStatus: connectionStatus.isOnline
+      sidebarOpen
     });
-  }, [location.pathname, profile, sidebarOpen, connectionStatus.isOnline]);
+  }, [location.pathname, profile, sidebarOpen]);
 
   // Atualizar overlay baseado no estado da sidebar em mobile
   useEffect(() => {
@@ -107,36 +103,34 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <LoadingErrorBoundary>
-      <div className="flex min-h-screen bg-[#0F111A] overflow-hidden">
-        {/* Overlay para dispositivos móveis */}
-        {showOverlay && (
-          <div 
-            className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
-            onClick={handleOverlayClick}
-          />
-        )}
-        
-        {/* Barra lateral garantida para ser renderizada sempre */}
-        <MemberSidebar 
-          sidebarOpen={sidebarOpen} 
-          setSidebarOpen={setSidebarOpen}
-          profileName={profile?.name || null}
-          profileEmail={profile?.email || null}
-          profileAvatar={profile?.avatar_url}
-          getInitials={getInitials}
-          signOut={handleSignOut}
+    <div className="flex min-h-screen bg-[#0F111A] overflow-hidden">
+      {/* Overlay para dispositivos móveis */}
+      {showOverlay && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          onClick={handleOverlayClick}
         />
-        
-        {/* Conteúdo principal */}
-        <MemberContent 
-          sidebarOpen={sidebarOpen} 
-          setSidebarOpen={setSidebarOpen}
-        >
-          {children}
-        </MemberContent>
-      </div>
-    </LoadingErrorBoundary>
+      )}
+      
+      {/* Barra lateral garantida para ser renderizada sempre */}
+      <MemberSidebar 
+        sidebarOpen={sidebarOpen} 
+        setSidebarOpen={setSidebarOpen}
+        profileName={profile?.name || null}
+        profileEmail={profile?.email || null}
+        profileAvatar={profile?.avatar_url}
+        getInitials={getInitials}
+        signOut={handleSignOut}
+      />
+      
+      {/* Conteúdo principal */}
+      <MemberContent 
+        sidebarOpen={sidebarOpen} 
+        setSidebarOpen={setSidebarOpen}
+      >
+        {children}
+      </MemberContent>
+    </div>
   );
 };
 
