@@ -61,12 +61,17 @@ export default function CommunityHome() {
     submitReport 
   } = useReporting();
 
+  const handleNewTopicClick = () => {
+    setCreateTopicOpen(true);
+  };
+
   return (
     <div className="container mx-auto px-4 py-6 max-w-6xl">
       <ForumBreadcrumbs categorySlug={activeTab !== "todos" ? activeTab : undefined} />
       
       <ForumHeader 
         showNewTopicButton={true}
+        onNewTopicClick={handleNewTopicClick}
         categorySlug={activeTab !== "todos" ? activeTab : undefined}
       />
       
@@ -164,20 +169,25 @@ export default function CommunityHome() {
                   : "Ainda não há tópicos nesta categoria."}
               </p>
               <Button 
-                onClick={() => setCreateTopicOpen(true)}
+                onClick={handleNewTopicClick}
               >
                 Criar o primeiro tópico
               </Button>
-              
-              <CreateTopicDialog 
-                open={createTopicOpen} 
-                onOpenChange={setCreateTopicOpen}
-                preselectedCategory={getDefaultCategoryId()}
-              />
             </div>
           )}
         </TabsContent>
       </Tabs>
+
+      {/* CreateTopicDialog - centralizado aqui */}
+      <CreateTopicDialog 
+        open={createTopicOpen} 
+        onOpenChange={setCreateTopicOpen}
+        preselectedCategory={getDefaultCategoryId()}
+        onTopicCreated={() => {
+          setCreateTopicOpen(false);
+          // Opcional: recarregar tópicos
+        }}
+      />
 
       {/* Report Modal */}
       <ReportModal
