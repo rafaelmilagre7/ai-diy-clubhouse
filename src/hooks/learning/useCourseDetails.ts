@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -23,7 +22,7 @@ export function useCourseDetails(courseId?: string) {
     queryKey: ["learning-course-access", user?.id, courseId],
     queryFn: async () => {
       if (!courseId || !user?.id) return true; // Se não tiver curso ou usuário, não tem como verificar
-      const result = await checkCourseAccess(courseId);
+      const result = await checkCourseAccess(courseId, user.id);
       return result;
     },
     enabled: !!user?.id && !!courseId
