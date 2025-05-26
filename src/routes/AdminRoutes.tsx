@@ -1,195 +1,56 @@
 
 import { RouteObject } from "react-router-dom";
 import { AdminProtectedRoutes } from '@/auth/AdminProtectedRoutes';
-import AdminLayout from '@/components/layout/admin/AdminLayout';
-
-// Admin pages
 import AdminDashboard from '@/pages/admin/AdminDashboard';
 import AdminUsers from '@/pages/admin/AdminUsers';
 import AdminSolutions from '@/pages/admin/AdminSolutions';
-import AdminTools from '@/pages/admin/AdminTools';
-import AdminSuggestions from '@/pages/admin/AdminSuggestions';
-import AdminOnboarding from '@/pages/admin/AdminOnboarding';
+import AdminSolutionEditor from '@/pages/admin/AdminSolutionEditor';
 import AdminAnalytics from '@/pages/admin/AdminAnalytics';
-import AdminSolutionCreate from '@/pages/admin/AdminSolutionCreate';
-import AdminSolutionEdit from '@/pages/admin/AdminSolutionEdit';
-import SolutionEditor from '@/pages/admin/SolutionEditor';
-import AdminToolEdit from '@/pages/admin/AdminToolEdit';
-import AdminSuggestionDetails from '@/pages/admin/AdminSuggestionDetails';
+import AdminTools from '@/pages/admin/AdminTools';
+import AdminOnboarding from '@/pages/admin/AdminOnboarding';
 import AdminEvents from '@/pages/admin/AdminEvents';
-import RolesPage from '@/pages/admin/RolesPage';
-import PermissionAuditLogPage from '@/pages/admin/PermissionAuditLogPage';
-import InvitesManagement from '@/pages/admin/InvitesManagement';
+import AdminRoles from '@/pages/admin/AdminRoles';
+import SupabaseDiagnostics from '@/pages/admin/SupabaseDiagnostics';
 
 export const adminRoutes: RouteObject[] = [
   {
     path: "/admin",
-    element: (
-      <AdminProtectedRoutes>
-        <AdminLayout>
-          <AdminDashboard />
-        </AdminLayout>
-      </AdminProtectedRoutes>
-    )
-  },
-  {
-    path: "/admin/events",
-    element: (
-      <AdminProtectedRoutes>
-        <AdminLayout>
-          <AdminEvents />
-        </AdminLayout>
-      </AdminProtectedRoutes>
-    )
+    element: <AdminProtectedRoutes><AdminDashboard /></AdminProtectedRoutes>
   },
   {
     path: "/admin/users",
-    element: (
-      <AdminProtectedRoutes>
-        <AdminLayout>
-          <AdminUsers />
-        </AdminLayout>
-      </AdminProtectedRoutes>
-    )
+    element: <AdminProtectedRoutes><AdminUsers /></AdminProtectedRoutes>
   },
   {
     path: "/admin/solutions",
-    element: (
-      <AdminProtectedRoutes>
-        <AdminLayout>
-          <AdminSolutions />
-        </AdminLayout>
-      </AdminProtectedRoutes>
-    )
+    element: <AdminProtectedRoutes><AdminSolutions /></AdminProtectedRoutes>
   },
   {
-    path: "/admin/solutions/new",
-    element: (
-      <AdminProtectedRoutes>
-        <AdminLayout>
-          <AdminSolutionCreate />
-        </AdminLayout>
-      </AdminProtectedRoutes>
-    )
-  },
-  {
-    path: "/admin/solutions/:id",
-    element: (
-      <AdminProtectedRoutes>
-        <AdminLayout>
-          <AdminSolutionEdit />
-        </AdminLayout>
-      </AdminProtectedRoutes>
-    )
-  },
-  {
-    path: "/admin/solutions/:id/editor",
-    element: (
-      <AdminProtectedRoutes>
-        <AdminLayout>
-          <SolutionEditor />
-        </AdminLayout>
-      </AdminProtectedRoutes>
-    )
-  },
-  {
-    path: "/admin/tools",
-    element: (
-      <AdminProtectedRoutes>
-        <AdminLayout>
-          <AdminTools />
-        </AdminLayout>
-      </AdminProtectedRoutes>
-    )
-  },
-  {
-    path: "/admin/tools/new",
-    element: (
-      <AdminProtectedRoutes>
-        <AdminLayout>
-          <AdminToolEdit />
-        </AdminLayout>
-      </AdminProtectedRoutes>
-    )
-  },
-  {
-    path: "/admin/tools/:id",
-    element: (
-      <AdminProtectedRoutes>
-        <AdminLayout>
-          <AdminToolEdit />
-        </AdminLayout>
-      </AdminProtectedRoutes>
-    )
-  },
-  {
-    path: "/admin/suggestions",
-    element: (
-      <AdminProtectedRoutes>
-        <AdminLayout>
-          <AdminSuggestions />
-        </AdminLayout>
-      </AdminProtectedRoutes>
-    )
-  },
-  {
-    path: "/admin/suggestions/:id",
-    element: (
-      <AdminProtectedRoutes>
-        <AdminLayout>
-          <AdminSuggestionDetails />
-        </AdminLayout>
-      </AdminProtectedRoutes>
-    )
-  },
-  {
-    path: "/admin/onboarding",
-    element: (
-      <AdminProtectedRoutes>
-        <AdminLayout>
-          <AdminOnboarding />
-        </AdminLayout>
-      </AdminProtectedRoutes>
-    )
+    path: "/admin/solutions/:solutionId",
+    element: <AdminProtectedRoutes><AdminSolutionEditor /></AdminProtectedRoutes>
   },
   {
     path: "/admin/analytics",
-    element: (
-      <AdminProtectedRoutes>
-        <AdminLayout>
-          <AdminAnalytics />
-        </AdminLayout>
-      </AdminProtectedRoutes>
-    )
+    element: <AdminProtectedRoutes><AdminAnalytics /></AdminProtectedRoutes>
+  },
+  {
+    path: "/admin/tools",
+    element: <AdminProtectedRoutes><AdminTools /></AdminProtectedRoutes>
+  },
+  {
+    path: "/admin/onboarding",
+    element: <AdminProtectedRoutes><AdminOnboarding /></AdminProtectedRoutes>
+  },
+  {
+    path: "/admin/events",
+    element: <AdminProtectedRoutes><AdminEvents /></AdminProtectedRoutes>
   },
   {
     path: "/admin/roles",
-    element: (
-      <AdminProtectedRoutes>
-        <AdminLayout>
-          <RolesPage />
-        </AdminLayout>
-      </AdminProtectedRoutes>
-    )
+    element: <AdminProtectedRoutes><AdminRoles /></AdminProtectedRoutes>
   },
   {
-    path: "/admin/permissions/audit",
-    element: (
-      <AdminProtectedRoutes>
-        <AdminLayout>
-          <PermissionAuditLogPage />
-        </AdminLayout>
-      </AdminProtectedRoutes>
-    )
-  },
-  {
-    path: "/admin/invites",
-    element: (
-      <AdminProtectedRoutes>
-        <AdminLayout>
-          <InvitesManagement />
-        </AdminLayout>
-      </AdminProtectedRoutes>
-    )
-  },
+    path: "/admin/diagnostics",
+    element: <AdminProtectedRoutes><SupabaseDiagnostics /></AdminProtectedRoutes>
+  }
 ];
