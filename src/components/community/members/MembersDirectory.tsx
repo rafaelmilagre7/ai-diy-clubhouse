@@ -1,15 +1,15 @@
 
-import { useState } from 'react';
+import React from 'react';
 import { useCommunityMembers } from '@/hooks/community/useCommunityMembers';
-import { useNetworkConnections } from '@/hooks/community/useNetworkConnections';
+import { MemberCard } from './MemberCard';
 import { MembersFilters } from './MembersFilters';
-import { MembersList } from './MembersList';
-import { EmptyMembersState } from './EmptyMembersState';
-import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
+import { MembersPagination } from './MembersPagination';
+import { Card, CardContent } from '@/components/ui/card';
+import { Users, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 
 export const MembersDirectory = () => {
-  const navigate = useNavigate();
   const {
     members,
     isLoading,
@@ -24,113 +24,81 @@ export const MembersDirectory = () => {
     handleRetry
   } = useCommunityMembers();
 
-  const {
-    connectedMembers,
-    sendConnectionRequest,
-    isLoading: connectionsLoading
-  } = useNetworkConnections();
-
-  const handleConnect = async (memberId: string) => {
-    const success = await sendConnectionRequest(memberId);
-    if (success) {
-      toast.success("Solicitação de conexão enviada", {
-        description: "O membro será notificado sobre seu interesse em conectar.",
-      });
-    }
-  };
-
-  const handleMessage = (memberId: string) => {
-    navigate('/comunidade/mensagens', { 
-      state: { selectedMemberId: memberId } 
-    });
-  };
-
-  const handleClearFilters = () => {
-    handleFilterChange({
-      search: '',
-      industry: '',
-      role: '',
-      availability: ''
-    });
-  };
-
   if (isError) {
     return (
-      <div className="text-center py-8 space-y-4 border border-red-200 rounded-lg bg-red-50/30 p-6">
-        <h3 className="text-xl font-medium mb-2">Erro ao carregar membros</h3>
-        <p className="text-muted-foreground mb-2">
-          Não foi possível carregar a lista de membros da comunidade.
-        </p>
-        <button
-          onClick={handleRetry}
-          className="px-4 py-2 bg-primary text-primary-foreground rounded-md"
-        >
-          Tentar novamente
-        </button>
-      </div>
-    );
-  }
-
-  const hasFilters = filters.search || filters.industry || filters.role || filters.availability;
-
-  // Converter connectedMembers em um Set de IDs para verificação mais eficiente
-  const connectedMemberIds = new Set(connectedMembers.map(member => member.id));
-
-  // Mostrar estado vazio se não há membros e não há filtros ativos
-  if (!isLoading && members.length === 0 && !hasFilters) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-bold mb-1">Diretório de Membros</h2>
-          <p className="text-muted-foreground">
-            Conecte-se com outros empresários e profissionais da comunidade.
-          </p>
-        </div>
-
-        <MembersFilters
-          onFilterChange={handleFilterChange}
-          industries={availableIndustries}
-          roles={availableRoles}
-          currentFilters={filters}
-        />
-
-        <EmptyMembersState hasFilters={false} />
-      </div>
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription className="flex items-center justify-between">
+          <span>Erro ao carregar membros da comunidade.</span>
+          <Button variant="outline" size="sm" onClick={handleRetry}>
+            Tentar novamente
+          </Button>
+        </AlertDescription>
+      </Alert>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold mb-1">Diretório de Membros</h2>
-        <p className="text-muted-foreground">
-          Conecte-se com outros empresários e profissionais da comunidade.
-        </p>
-      </div>
-
+      {/* Filtros */}
       <MembersFilters
+        filters={filters}
+        availableIndustries={availableIndustries}
+        availableRoles={availableRoles}
         onFilterChange={handleFilterChange}
-        industries={availableIndustries}
-        roles={availableRoles}
-        currentFilters={filters}
       />
 
-      {!isLoading && members.length === 0 && hasFilters ? (
-        <EmptyMembersState 
-          hasFilters={true} 
-          onClearFilters={handleClearFilters} 
-        />
+      {/* Lista de membros */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="h-16 w-16 bg-muted rounded-full" />
+                  <div className="space-y-2 text-center w-full">
+                    <div className="h-5 bg-muted rounded w-3/4 mx-auto" />
+                    <div className="h-4 bg-muted rounded w-1/2 mx-auto" />
+                    <div className="h-3 bg-muted rounded w-2/3 mx-auto" />
+                  </div>
+                  <div className="h-8 bg-muted rounded w-full" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : members.length > 0 ? (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {members.map((member) => (
+              <MemberCard key={member.id} member={member} />
+            ))}
+          </div>
+
+          {/* Paginação */}
+          {totalPages > 1 && (
+            <MembersPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          )}
+        </>
       ) : (
-        <MembersList
-          members={members}
-          isLoading={isLoading || connectionsLoading}
-          totalPages={totalPages}
-          currentPage={currentPage}
-          onPageChange={handlePageChange}
-          onConnect={handleConnect}
-          onMessage={handleMessage}
-          connectedMembers={connectedMemberIds}
-        />
+        <Card className="border-dashed">
+          <CardContent className="py-12 text-center">
+            <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">
+              {filters.search.trim() ? 'Nenhum membro encontrado' : 'Nenhum membro ainda'}
+            </h3>
+            <p className="text-muted-foreground">
+              {filters.search.trim() 
+                ? `Não encontramos membros com os filtros "${filters.search.trim()}"`
+                : 'Os membros da comunidade aparecerão aqui em breve.'
+              }
+            </p>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

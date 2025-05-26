@@ -1,133 +1,154 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { MapPin, Briefcase, UserPlus, UserCheck, MessageSquare } from 'lucide-react';
+import { UserPlus, MessageSquare, CheckCircle, Clock } from 'lucide-react';
+import { getInitials } from '@/utils/user';
 import { Profile } from '@/types/forumTypes';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { useNetworkConnections } from '@/hooks/community/useNetworkConnections';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 interface MemberCardProps {
   member: Profile;
-  onConnect?: (memberId: string) => void;
-  onMessage?: (memberId: string) => void;
-  isConnected?: boolean;
 }
 
-export const MemberCard = ({ member, onConnect, onMessage, isConnected = false }: MemberCardProps) => {
+export const MemberCard: React.FC<MemberCardProps> = ({ member }) => {
   const navigate = useNavigate();
+  const { 
+    connectedMembers, 
+    pendingRequests, 
+    sendConnectionRequest, 
+    processingRequest 
+  } = useNetworkConnections();
 
-  const handleConnect = () => {
-    if (onConnect && !isConnected) {
-      onConnect(member.id);
+  // Verificar status da conexão
+  const isConnected = connectedMembers.some(conn => conn.id === member.id);
+  const isPending = pendingRequests.some(req => req.id === member.id);
+
+  const handleConnect = async () => {
+    if (isConnected || isPending || processingRequest) return;
+    
+    const success = await sendConnectionRequest(member.id);
+    if (success) {
+      toast.success('Solicitação de conexão enviada!');
     }
   };
 
   const handleMessage = () => {
-    if (onMessage) {
-      onMessage(member.id);
-    } else {
-      // Navegar para a página de mensagens com o usuário selecionado
-      navigate('/comunidade/mensagens', { 
-        state: { selectedMemberId: member.id } 
-      });
+    if (!isConnected) {
+      toast.info('Você precisa estar conectado para enviar mensagens');
+      return;
     }
+    navigate('/comunidade/mensagens', { 
+      state: { selectedMemberId: member.id } 
+    });
+  };
+
+  const getConnectionButton = () => {
+    if (isConnected) {
+      return (
+        <Button 
+          size="sm" 
+          className="w-full bg-green-600 hover:bg-green-700"
+          onClick={handleMessage}
+        >
+          <CheckCircle className="h-4 w-4 mr-2" />
+          Conectado
+        </Button>
+      );
+    }
+
+    if (isPending) {
+      return (
+        <Button 
+          size="sm" 
+          variant="outline" 
+          className="w-full" 
+          disabled
+        >
+          <Clock className="h-4 w-4 mr-2" />
+          Pendente
+        </Button>
+      );
+    }
+
+    return (
+      <Button 
+        size="sm" 
+        className="w-full" 
+        onClick={handleConnect}
+        disabled={processingRequest}
+      >
+        <UserPlus className="h-4 w-4 mr-2" />
+        {processingRequest ? 'Enviando...' : 'Conectar'}
+      </Button>
+    );
   };
 
   return (
-    <Card className="hover:shadow-lg transition-all duration-200">
+    <Card className="hover:shadow-lg transition-shadow">
       <CardContent className="p-6">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="relative">
-            <Avatar className="h-16 w-16">
-              <AvatarImage src={member.avatar_url || ''} />
+        <div className="flex flex-col items-center space-y-4">
+          {/* Avatar e informações básicas */}
+          <div className="text-center">
+            <Avatar className="h-16 w-16 mx-auto mb-3">
+              <AvatarImage src={member.avatar_url || undefined} alt={member.name || "Usuário"} />
               <AvatarFallback className="text-lg">
-                {member.name?.charAt(0) || 'U'}
+                {getInitials(member.name)}
               </AvatarFallback>
             </Avatar>
-            {/* Status online indicator */}
-            <div className="absolute -bottom-1 -right-1 h-5 w-5 bg-green-500 border-2 border-white rounded-full"></div>
+            
+            <h3 className="font-semibold text-lg">{member.name || 'Usuário'}</h3>
+            
+            {member.current_position && (
+              <p className="text-sm text-muted-foreground">{member.current_position}</p>
+            )}
+            
+            {member.company_name && (
+              <p className="text-sm text-muted-foreground font-medium">{member.company_name}</p>
+            )}
           </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-lg leading-tight">{member.name || 'Usuário'}</h3>
-            <p className="text-muted-foreground text-sm">
-              {member.current_position || 'Profissional'}
-            </p>
-          </div>
-        </div>
-        
-        <div className="space-y-2 mb-4">
-          {member.company_name && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Briefcase className="h-4 w-4" />
-              <span className="truncate">{member.company_name}</span>
-            </div>
-          )}
-          {member.industry && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <MapPin className="h-4 w-4" />
-              <span className="truncate">{member.industry}</span>
-            </div>
-          )}
-        </div>
-        
-        {member.skills && member.skills.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-4">
-            {member.skills.slice(0, 3).map((skill, index) => (
-              <Badge key={index} variant="secondary" className="text-xs">
-                {skill}
+
+          {/* Badges */}
+          <div className="flex flex-wrap gap-2 justify-center">
+            {member.industry && (
+              <Badge variant="secondary" className="text-xs">
+                {member.industry}
               </Badge>
-            ))}
-            {member.skills.length > 3 && (
-              <Badge variant="outline" className="text-xs">
-                +{member.skills.length - 3}
+            )}
+            {member.available_for_networking && (
+              <Badge variant="outline" className="text-xs text-green-600 border-green-600">
+                Disponível para networking
               </Badge>
             )}
           </div>
-        )}
-        
-        <div className="flex gap-2">
-          {onConnect && (
-            <Button 
-              className="flex-1" 
-              variant={isConnected ? "secondary" : "outline"}
-              onClick={handleConnect}
-              disabled={isConnected}
-            >
-              {isConnected ? (
-                <>
-                  <UserCheck className="h-4 w-4 mr-2" />
-                  Conectado
-                </>
-              ) : (
-                <>
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Conectar
-                </>
-              )}
-            </Button>
+
+          {/* Bio profissional */}
+          {member.professional_bio && (
+            <p className="text-sm text-muted-foreground text-center line-clamp-2">
+              {member.professional_bio}
+            </p>
           )}
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="sm" variant="outline">
-                <MessageSquare className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleMessage}>
+
+          {/* Botões de ação */}
+          <div className="w-full space-y-2">
+            {getConnectionButton()}
+            
+            {isConnected && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full"
+                onClick={handleMessage}
+              >
                 <MessageSquare className="h-4 w-4 mr-2" />
                 Enviar mensagem
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </Button>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
