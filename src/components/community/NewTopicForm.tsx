@@ -7,46 +7,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 import { useForumCategories } from '@/hooks/community/useForumCategories';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, ArrowLeft } from 'lucide-react';
 
-interface NewTopicFormProps {
-  categoryId?: string;
-  categorySlug?: string;
-  onCancel?: () => void;
-}
-
-export const NewTopicForm: React.FC<NewTopicFormProps> = ({ 
-  categoryId: initialCategoryId, 
-  categorySlug, 
-  onCancel 
-}) => {
-  const [searchParams] = useSearchParams();
-  const categoryFromUrl = searchParams.get('categoria');
-  
+export const NewTopicForm: React.FC = () => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [selectedCategoryId, setSelectedCategoryId] = useState(initialCategoryId || '');
+  const [selectedCategoryId, setSelectedCategoryId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   const navigate = useNavigate();
   const { user } = useAuth();
   const { categories, isLoading: categoriesLoading } = useForumCategories();
-
-  // Buscar categoria pela URL se fornecida
-  React.useEffect(() => {
-    if (categoryFromUrl && categories.length > 0 && !selectedCategoryId) {
-      const category = categories.find(cat => cat.slug === categoryFromUrl);
-      if (category) {
-        setSelectedCategoryId(category.id);
-      }
-    }
-  }, [categoryFromUrl, categories, selectedCategoryId]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,14 +52,6 @@ export const NewTopicForm: React.FC<NewTopicFormProps> = ({
     setIsSubmitting(true);
     
     try {
-      console.log('Criando tópico:', {
-        title: title.trim(),
-        content: content.trim(),
-        user_id: user.id,
-        category_id: selectedCategoryId
-      });
-
-      // Inserir o novo tópico
       const { data, error } = await supabase
         .from('forum_topics')
         .insert({
@@ -95,20 +64,10 @@ export const NewTopicForm: React.FC<NewTopicFormProps> = ({
         .select('id')
         .single();
       
-      if (error) {
-        console.error('Erro do Supabase:', error);
-        throw error;
-      }
+      if (error) throw error;
       
-      console.log('Tópico criado com sucesso:', data);
       toast.success('Tópico criado com sucesso!');
-      
-      // Redirecionar para o tópico criado
-      if (data?.id) {
-        navigate(`/comunidade/topico/${data.id}`);
-      } else {
-        navigate('/comunidade');
-      }
+      navigate(`/comunidade/topico/${data.id}`);
       
     } catch (error: any) {
       console.error('Erro ao criar tópico:', error);
@@ -118,125 +77,129 @@ export const NewTopicForm: React.FC<NewTopicFormProps> = ({
     }
   };
   
-  const handleCancel = () => {
-    if (onCancel) {
-      onCancel();
-    } else if (categorySlug) {
-      navigate(`/comunidade/categoria/${categorySlug}`);
-    } else {
-      navigate('/comunidade');
-    }
-  };
-  
   if (categoriesLoading) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="animate-pulse space-y-4">
-            <div className="h-6 bg-neutral-800 rounded w-1/4"></div>
-            <div className="h-10 bg-neutral-800 rounded"></div>
-            <div className="h-6 bg-neutral-800 rounded w-1/4"></div>
-            <div className="h-32 bg-neutral-800 rounded"></div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="min-h-screen bg-gray-50">
+        <div className="container max-w-2xl mx-auto py-8 px-4">
+          <Card>
+            <CardContent className="p-8">
+              <div className="animate-pulse space-y-6">
+                <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+                <div className="h-12 bg-gray-200 rounded"></div>
+                <div className="h-32 bg-gray-200 rounded"></div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     );
   }
   
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Criar Novo Tópico</CardTitle>
-      </CardHeader>
-      <CardContent className="p-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          
-          <div className="space-y-2">
-            <Label htmlFor="category">Categoria *</Label>
-            <Select 
-              value={selectedCategoryId} 
-              onValueChange={(value) => {
-                setSelectedCategoryId(value);
-                setError(null);
-              }}
-              disabled={!!initialCategoryId}
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b shadow-sm">
+        <div className="container max-w-2xl mx-auto py-6 px-4">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/comunidade')}
+              className="flex items-center gap-2"
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione uma categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="title">Título *</Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => {
-                setTitle(e.target.value);
-                setError(null);
-              }}
-              placeholder="Digite um título claro e descritivo"
-              maxLength={200}
-              required
-              disabled={isSubmitting}
-            />
-            <p className="text-sm text-muted-foreground">
-              {title.length}/200 caracteres
-            </p>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="content">Conteúdo *</Label>
-            <Textarea
-              id="content"
-              value={content}
-              onChange={(e) => {
-                setContent(e.target.value);
-                setError(null);
-              }}
-              placeholder="Descreva sua dúvida, ideia ou compartilhe seu conhecimento..."
-              rows={8}
-              maxLength={5000}
-              required
-              disabled={isSubmitting}
-            />
-            <p className="text-sm text-muted-foreground">
-              {content.length}/5000 caracteres
-            </p>
-          </div>
-          
-          <div className="flex gap-3 justify-end">
-            <Button 
-              type="button" 
-              variant="outline"
-              onClick={handleCancel}
-              disabled={isSubmitting}
-            >
-              Cancelar
+              <ArrowLeft className="h-4 w-4" />
+              Voltar
             </Button>
-            <Button 
-              type="submit" 
-              disabled={isSubmitting || !title.trim() || !content.trim() || !selectedCategoryId}
-            >
-              {isSubmitting ? 'Criando...' : 'Criar Tópico'}
-            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Criar Novo Tópico</h1>
+              <p className="text-gray-600">Compartilhe suas ideias com a comunidade</p>
+            </div>
           </div>
-        </form>
-      </CardContent>
-    </Card>
+        </div>
+      </div>
+
+      <div className="container max-w-2xl mx-auto py-8 px-4">
+        <Card className="shadow-sm">
+          <CardContent className="p-8">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              
+              <div className="space-y-2">
+                <Label htmlFor="category" className="text-base font-medium">Categoria *</Label>
+                <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+                  <SelectTrigger className="h-12">
+                    <SelectValue placeholder="Selecione uma categoria" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="title" className="text-base font-medium">Título *</Label>
+                <Input
+                  id="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Digite um título claro e descritivo"
+                  maxLength={200}
+                  className="h-12 text-base"
+                  disabled={isSubmitting}
+                />
+                <p className="text-sm text-gray-500">
+                  {title.length}/200 caracteres
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="content" className="text-base font-medium">Conteúdo *</Label>
+                <Textarea
+                  id="content"
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Descreva sua dúvida, ideia ou compartilhe seu conhecimento..."
+                  rows={10}
+                  maxLength={5000}
+                  className="text-base resize-none"
+                  disabled={isSubmitting}
+                />
+                <p className="text-sm text-gray-500">
+                  {content.length}/5000 caracteres
+                </p>
+              </div>
+              
+              <div className="flex gap-4 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  onClick={() => navigate('/comunidade')}
+                  disabled={isSubmitting}
+                  className="flex-1"
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={isSubmitting || !title.trim() || !content.trim() || !selectedCategoryId}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                >
+                  {isSubmitting ? 'Criando...' : 'Publicar Tópico'}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 };

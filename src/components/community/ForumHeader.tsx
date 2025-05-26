@@ -2,46 +2,38 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 interface ForumHeaderProps {
   title: string;
-  description?: string;
+  description: string;
   showNewTopicButton?: boolean;
-  categorySlug?: string;
 }
 
 export const ForumHeader: React.FC<ForumHeaderProps> = ({ 
   title, 
-  description,
-  showNewTopicButton = true,
-  categorySlug 
+  description, 
+  showNewTopicButton = true 
 }) => {
-  const navigate = useNavigate();
-
-  const handleNewTopic = () => {
-    if (categorySlug) {
-      navigate(`/comunidade/novo-topico/${categorySlug}`);
-    } else {
-      navigate('/comunidade/novo-topico');
-    }
-  };
-
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold">{title}</h1>
-        {description && (
-          <p className="text-muted-foreground mt-1">{description}</p>
-        )}
+    <div className="bg-white border-b">
+      <div className="container max-w-4xl mx-auto py-8 px-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
+            <p className="text-gray-600 mt-2">{description}</p>
+          </div>
+          
+          {showNewTopicButton && (
+            <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
+              <Link to="/comunidade/novo-topico">
+                <Plus className="h-5 w-5 mr-2" />
+                Novo Tópico
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
-      
-      {showNewTopicButton && (
-        <Button onClick={handleNewTopic} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Novo Tópico
-        </Button>
-      )}
     </div>
   );
 };
