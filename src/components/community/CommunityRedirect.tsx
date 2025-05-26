@@ -10,8 +10,13 @@ export const CommunityRedirect = () => {
     const searchParams = new URLSearchParams(location.search);
     const tab = searchParams.get('tab');
     
-    console.log('CommunityRedirect: Verificando redirecionamento', { pathname: location.pathname, tab });
+    console.log('CommunityRedirect: Verificando redirecionamento', { 
+      pathname: location.pathname, 
+      tab,
+      fullURL: location.pathname + location.search 
+    });
     
+    // Se estamos em /comunidade com query parameter tab, redirecionar para a rota correta
     if (location.pathname === '/comunidade' && tab) {
       let newPath = '/comunidade';
       
@@ -32,7 +37,7 @@ export const CommunityRedirect = () => {
           newPath = '/comunidade';
       }
       
-      console.log('CommunityRedirect: Redirecionando para', newPath);
+      console.log('CommunityRedirect: Redirecionando de', location.pathname + location.search, 'para', newPath);
       navigate(newPath, { replace: true });
     }
   }, [location, navigate]);
