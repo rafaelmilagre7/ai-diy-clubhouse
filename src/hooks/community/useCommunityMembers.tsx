@@ -70,7 +70,7 @@ export const useCommunityMembers = () => {
       query = query.range(from, to);
 
       // Ordenar por último acesso (com fallback para created_at)
-      query = query.order('last_active', { ascending: false, nullsLast: true });
+      query = query.order('last_active', { ascending: false, nullsFirst: false });
 
       const { data, error, count } = await query;
 

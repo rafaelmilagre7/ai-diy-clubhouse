@@ -165,7 +165,7 @@ export const ForumSection = () => {
         {/* Sidebar com categorias */}
         <div className="xl:col-span-1">
           <div className="sticky top-6">
-            <CategoryList categories={categories} />
+            <CategoryList compact />
           </div>
         </div>
       </div>
