@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Search, MessageSquare } from 'lucide-react';
-import { useDirectMessages, Conversation } from '@/hooks/community/useDirectMessages';
+import { useDirectMessages, Conversation } from '@/hooks/community/useDirectMessages.tsx';
 import { getInitials } from '@/utils/user';
 import { useAuth } from '@/contexts/auth';
 import { cn } from '@/lib/utils';

@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Send, MessageSquare, MoreVertical } from 'lucide-react';
-import { useDirectMessages, Conversation } from '@/hooks/community/useDirectMessages';
+import { useDirectMessages, Conversation } from '@/hooks/community/useDirectMessages.tsx';
 import { getInitials } from '@/utils/user';
 import { useAuth } from '@/contexts/auth';
 import {
