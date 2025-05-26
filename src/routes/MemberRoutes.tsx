@@ -5,7 +5,7 @@ import MemberLayout from '@/components/layout/MemberLayout';
 import Dashboard from '@/pages/member/Dashboard';
 import Profile from '@/pages/member/Profile';
 import CommunityPages from '@/pages/member/community';
-import LearningPages from '@/pages/member/learning';
+import LearningPages from '@/pages/member/learning/index';
 import ConnectionsPage from '@/pages/member/community/ConnectionsPage';
 import MessagesPage from '@/pages/member/community/MessagesPage';
 import NotificationsPage from '@/pages/member/community/NotificationsPage';
