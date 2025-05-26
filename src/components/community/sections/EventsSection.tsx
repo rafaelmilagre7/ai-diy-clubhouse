@@ -1,110 +1,84 @@
 
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, MapPin, Users, Plus } from 'lucide-react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
+import { Search, Calendar, CalendarDays, Users, MapPin } from 'lucide-react';
 
 export const EventsSection = () => {
-  // Mock events data
-  const events = [
-    {
-      id: 1,
-      title: 'Workshop: Implementando IA em Pequenas Empresas',
-      description: 'Aprenda estratégias práticas para implementar soluções de IA em negócios de pequeno e médio porte.',
-      date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      time: '19:00',
-      location: 'Online via Zoom',
-      attendees: 45,
-      maxAttendees: 100,
-      type: 'Workshop',
-      featured: true
-    },
-    {
-      id: 2,
-      title: 'Networking: Profissionais de IA em São Paulo',
-      description: 'Encontro presencial para networking entre profissionais de IA da região metropolitana de São Paulo.',
-      date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-      time: '18:30',
-      location: 'São Paulo, SP',
-      attendees: 23,
-      maxAttendees: 50,
-      type: 'Networking',
-      featured: false
-    }
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState('upcoming');
+
+  const filters = [
+    { id: 'upcoming', label: 'Próximos' },
+    { id: 'this-week', label: 'Esta Semana' },
+    { id: 'this-month', label: 'Este Mês' },
+    { id: 'past', label: 'Passados' },
   ];
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold">Eventos da Comunidade</h2>
-          <p className="text-muted-foreground">Participe dos nossos encontros e workshops</p>
+      {/* Header com busca */}
+      <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+        <div className="flex-1 max-w-md">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar eventos..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
         </div>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Criar Evento
-        </Button>
       </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {events.map((event) => (
-          <Card key={event.id} className={`hover:shadow-lg transition-all duration-200 ${event.featured ? 'ring-2 ring-primary/20' : ''}`}>
-            <CardContent className="p-6">
-              {event.featured && (
-                <Badge className="mb-4">Evento em Destaque</Badge>
-              )}
-              
-              <div className="flex items-start justify-between mb-4">
-                <Badge variant="outline">{event.type}</Badge>
-                <div className="text-right">
-                  <div className="text-sm text-muted-foreground">
-                    {format(event.date, "d 'de' MMMM", { locale: ptBR })}
-                  </div>
-                  <div className="text-sm font-medium">{event.time}</div>
-                </div>
-              </div>
-              
-              <h3 className="font-semibold text-lg mb-3">{event.title}</h3>
-              <p className="text-muted-foreground mb-4">{event.description}</p>
-              
-              <div className="space-y-2 mb-4">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Calendar className="h-4 w-4" />
-                  {format(event.date, "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Clock className="h-4 w-4" />
-                  {event.time}
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <MapPin className="h-4 w-4" />
-                  {event.location}
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Users className="h-4 w-4" />
-                  {event.attendees}/{event.maxAttendees} participantes
-                </div>
-              </div>
-              
-              <div className="flex gap-2">
-                <Button className="flex-1">Participar</Button>
-                <Button variant="outline">Detalhes</Button>
-              </div>
-            </CardContent>
-          </Card>
+
+      {/* Filtros */}
+      <div className="flex gap-2 overflow-x-auto pb-2">
+        {filters.map((filter) => (
+          <Button
+            key={filter.id}
+            variant={activeFilter === filter.id ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveFilter(filter.id)}
+            className="whitespace-nowrap"
+          >
+            {filter.label}
+          </Button>
         ))}
       </div>
-      
-      {/* Calendar View */}
-      <Card>
-        <CardContent className="p-6">
-          <h3 className="font-semibold text-lg mb-4">Calendário de Eventos</h3>
-          <div className="text-center text-muted-foreground py-8">
-            <Calendar className="h-12 w-12 mx-auto mb-4" />
-            <p>Calendário interativo será implementado aqui</p>
+
+      {/* Estado vazio temporário */}
+      <Card className="border-dashed">
+        <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+          <Calendar className="h-16 w-16 text-muted-foreground mb-4" />
+          <h3 className="text-xl font-semibold mb-2">Calendário de Eventos</h3>
+          <p className="text-muted-foreground mb-6 max-w-md">
+            Fique por dentro dos próximos eventos da comunidade. Lives, workshops, 
+            networking e muito mais!
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 w-full max-w-2xl">
+            <div className="flex flex-col items-center p-4 border border-dashed rounded-lg">
+              <CalendarDays className="h-8 w-8 text-muted-foreground mb-2" />
+              <h4 className="font-medium mb-1">Lives Semanais</h4>
+              <p className="text-sm text-muted-foreground text-center">
+                Participe das lives toda semana
+              </p>
+            </div>
+            <div className="flex flex-col items-center p-4 border border-dashed rounded-lg">
+              <Users className="h-8 w-8 text-muted-foreground mb-2" />
+              <h4 className="font-medium mb-1">Networking</h4>
+              <p className="text-sm text-muted-foreground text-center">
+                Eventos de conexão entre membros
+              </p>
+            </div>
+            <div className="flex flex-col items-center p-4 border border-dashed rounded-lg">
+              <MapPin className="h-8 w-8 text-muted-foreground mb-2" />
+              <h4 className="font-medium mb-1">Workshops</h4>
+              <p className="text-sm text-muted-foreground text-center">
+                Sessões práticas e hands-on
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>

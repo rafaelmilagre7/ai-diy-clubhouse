@@ -1,103 +1,80 @@
 
-import { Link, useLocation } from 'react-router-dom';
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { MessageSquare, Users, Lightbulb, Calendar, UserPlus, MessageSquareMore } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { MessageSquare, Users, UserPlus, Home } from 'lucide-react';
 
-interface CommunityNavigationProps {
-  activeTab?: string;
-  onTabChange?: (tab: string) => void;
-  categories?: any[];
-  activeCategory?: string;
-}
+export const CommunityNavigation = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
 
-export const CommunityNavigation = ({ 
-  activeTab, 
-  onTabChange, 
-  categories = [],
-  activeCategory
-}: CommunityNavigationProps = {}) => {
-  const { pathname } = useLocation();
-  
-  const navItems = [
-    { 
-      name: 'Fórum', 
-      path: '/comunidade', 
+  const navigationItems = [
+    {
+      id: 'forum',
+      label: 'Fórum',
       icon: MessageSquare,
+      path: '/comunidade',
       exact: true
     },
-    { 
-      name: 'Membros', 
-      path: '/comunidade/membros', 
-      icon: Users 
+    {
+      id: 'members',
+      label: 'Membros',
+      icon: Users,
+      path: '/comunidade/membros'
     },
-    { 
-      name: 'Conexões',
-      path: '/comunidade/conexoes',
-      icon: UserPlus
+    {
+      id: 'connections',
+      label: 'Conexões',
+      icon: UserPlus,
+      path: '/comunidade/conexoes'
+    },
+    {
+      id: 'messages',
+      label: 'Mensagens',
+      icon: MessageSquareMore,
+      path: '/comunidade/mensagens'
+    },
+    {
+      id: 'suggestions',
+      label: 'Sugestões',
+      icon: Lightbulb,
+      path: '/comunidade/sugestoes'
+    },
+    {
+      id: 'events',
+      label: 'Eventos',
+      icon: Calendar,
+      path: '/comunidade/eventos'
     }
   ];
-  
-  const isActive = (path: string, exact = false) => {
-    if (exact) {
-      // Para a rota exata '/comunidade', verificar se não é uma subrota
-      return pathname === path;
+
+  const isActive = (item: typeof navigationItems[0]) => {
+    if (item.exact) {
+      return location.pathname === item.path;
     }
-    return pathname.startsWith(path) && pathname !== '/comunidade';
+    return location.pathname.startsWith(item.path);
   };
-  
+
   return (
-    <nav className="mb-6 border-b">
-      <div className="flex overflow-x-auto py-2 space-x-1 px-1">
-        {navItems.map((item, index) => (
-          <Link
-            key={`${item.path}-${index}`}
-            to={item.path}
+    <div className="border-b">
+      <div className="flex space-x-1 overflow-x-auto pb-px">
+        {navigationItems.map((item) => (
+          <Button
+            key={item.id}
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(item.path)}
             className={cn(
-              "flex items-center space-x-2 px-4 py-2 rounded-md whitespace-nowrap transition-colors text-sm font-medium",
-              isActive(item.path, item.exact)
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              "flex items-center gap-2 whitespace-nowrap border-b-2 border-transparent rounded-none",
+              isActive(item) && "border-primary text-primary bg-primary/5"
             )}
-            onClick={() => {
-              if (onTabChange && item.name === 'Fórum') onTabChange('todos');
-            }}
           >
             <item.icon className="h-4 w-4" />
-            <span>{item.name}</span>
-          </Link>
+            <span className="hidden sm:inline">{item.label}</span>
+          </Button>
         ))}
       </div>
-      
-      {/* Categorias do fórum */}
-      {pathname === '/comunidade' && categories.length > 0 && (
-        <div className="flex overflow-x-auto py-2 space-x-1 px-1 border-t bg-muted/20">
-          <button
-            onClick={() => onTabChange?.('todos')}
-            className={cn(
-              "px-3 py-1 rounded-md whitespace-nowrap transition-colors text-xs",
-              activeTab === 'todos'
-                ? "bg-background text-foreground font-medium shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            Todas as categorias
-          </button>
-          {categories.map((category, index) => (
-            <button
-              key={`category-${category.id}-${index}`}
-              onClick={() => onTabChange?.(category.slug)}
-              className={cn(
-                "px-3 py-1 rounded-md whitespace-nowrap transition-colors text-xs",
-                activeTab === category.slug
-                  ? "bg-background text-foreground font-medium shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {category.name}
-            </button>
-          ))}
-        </div>
-      )}
-    </nav>
+    </div>
   );
 };

@@ -4,6 +4,7 @@ import { useCommunityMembers } from '@/hooks/community/useCommunityMembers';
 import { useNetworkConnections } from '@/hooks/community/useNetworkConnections';
 import { MembersFilters } from './MembersFilters';
 import { MembersList } from './MembersList';
+import { EmptyMembersState } from './EmptyMembersState';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
@@ -44,6 +45,15 @@ export const MembersDirectory = () => {
     });
   };
 
+  const handleClearFilters = () => {
+    handleFilterChange({
+      search: '',
+      industry: '',
+      role: '',
+      availability: ''
+    });
+  };
+
   if (isError) {
     return (
       <div className="text-center py-8 space-y-4 border border-red-200 rounded-lg bg-red-50/30 p-6">
@@ -61,8 +71,33 @@ export const MembersDirectory = () => {
     );
   }
 
+  const hasFilters = filters.search || filters.industry || filters.role || filters.availability;
+
   // Converter connectedMembers em um Set de IDs para verificação mais eficiente
   const connectedMemberIds = new Set(connectedMembers.map(member => member.id));
+
+  // Mostrar estado vazio se não há membros e não há filtros ativos
+  if (!isLoading && members.length === 0 && !hasFilters) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold mb-1">Diretório de Membros</h2>
+          <p className="text-muted-foreground">
+            Conecte-se com outros empresários e profissionais da comunidade.
+          </p>
+        </div>
+
+        <MembersFilters
+          onFilterChange={handleFilterChange}
+          industries={availableIndustries}
+          roles={availableRoles}
+          currentFilters={filters}
+        />
+
+        <EmptyMembersState hasFilters={false} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -80,16 +115,23 @@ export const MembersDirectory = () => {
         currentFilters={filters}
       />
 
-      <MembersList
-        members={members}
-        isLoading={isLoading || connectionsLoading}
-        totalPages={totalPages}
-        currentPage={currentPage}
-        onPageChange={handlePageChange}
-        onConnect={handleConnect}
-        onMessage={handleMessage}
-        connectedMembers={connectedMemberIds}
-      />
+      {!isLoading && members.length === 0 && hasFilters ? (
+        <EmptyMembersState 
+          hasFilters={true} 
+          onClearFilters={handleClearFilters} 
+        />
+      ) : (
+        <MembersList
+          members={members}
+          isLoading={isLoading || connectionsLoading}
+          totalPages={totalPages}
+          currentPage={currentPage}
+          onPageChange={handlePageChange}
+          onConnect={handleConnect}
+          onMessage={handleMessage}
+          connectedMembers={connectedMemberIds}
+        />
+      )}
     </div>
   );
 };
