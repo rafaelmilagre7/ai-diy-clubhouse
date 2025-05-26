@@ -47,15 +47,21 @@ export const CommunityNavigation = () => {
       id: 'events',
       label: 'Eventos',
       icon: Calendar,
-      path: '/comunidade/eventos'
+      path: '/events',
+      external: true
     }
   ];
 
   const isActive = (item: typeof navigationItems[0]) => {
+    if (item.external) return false;
     if (item.exact) {
       return location.pathname === item.path;
     }
     return location.pathname.startsWith(item.path);
+  };
+
+  const handleNavigation = (item: typeof navigationItems[0]) => {
+    navigate(item.path);
   };
 
   return (
@@ -67,7 +73,7 @@ export const CommunityNavigation = () => {
               key={item.id}
               variant="ghost"
               size="sm"
-              onClick={() => navigate(item.path)}
+              onClick={() => handleNavigation(item)}
               className={cn(
                 "flex items-center gap-2 whitespace-nowrap border-b-2 border-transparent rounded-none",
                 isActive(item) && "border-primary text-primary bg-primary/5"

@@ -9,6 +9,7 @@ import { ptBR } from 'date-fns/locale';
 import { Topic } from '@/types/forumTypes';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { getInitials } from '@/utils/user';
 
 interface TopicCardProps {
   topic: Topic;
@@ -25,10 +26,6 @@ export const TopicCard = ({ topic, isPinned }: TopicCardProps) => {
     addSuffix: true,
     locale: ptBR
   });
-
-  const getInitials = (name: string) => {
-    return name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
-  };
 
   return (
     <Link to={`/comunidade/topico/${topic.id}`} className="block">
@@ -75,7 +72,7 @@ export const TopicCard = ({ topic, isPinned }: TopicCardProps) => {
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={topic.profiles?.avatar_url || ''} />
                   <AvatarFallback className="text-xs">
-                    {getInitials(topic.profiles?.name || 'Usuário')}
+                    {getInitials(topic.profiles?.name)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="text-xs">

@@ -34,12 +34,16 @@ export const useCommunityMembers = () => {
   } = useQuery({
     queryKey: ['community-members', currentPage, filters],
     queryFn: async () => {
-      if (!user?.id) return { members: [], total: 0 };
-
+      console.log('Buscando membros da comunidade...');
+      
       let query = supabase
         .from('profiles')
-        .select('*', { count: 'exact' })
-        .neq('id', user.id); // Excluir o próprio usuário
+        .select('*', { count: 'exact' });
+
+      // Excluir o próprio usuário se estiver logado
+      if (user?.id) {
+        query = query.neq('id', user.id);
+      }
 
       // Aplicar filtros
       if (filters.search) {
@@ -75,12 +79,15 @@ export const useCommunityMembers = () => {
         throw error;
       }
 
+      console.log(`Encontrados ${data?.length || 0} membros de ${count || 0} total`);
+
       return {
         members: data || [],
         total: count || 0
       };
     },
-    enabled: !!user?.id
+    staleTime: 30000, // 30 segundos
+    retry: 2
   });
 
   // Buscar setores únicos para filtros

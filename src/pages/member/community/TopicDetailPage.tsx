@@ -17,6 +17,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { Topic, Post } from '@/types/forumTypes';
+import { getInitials } from '@/utils/user';
 
 const TopicDetailPage = () => {
   const { topicId } = useParams<{ topicId: string }>();
@@ -29,6 +30,8 @@ const TopicDetailPage = () => {
     queryKey: ['forum-topic', topicId],
     queryFn: async (): Promise<Topic | null> => {
       if (!topicId) return null;
+      
+      console.log('Carregando tópico:', topicId);
       
       const { data, error } = await supabase
         .from('forum_topics')
@@ -49,13 +52,17 @@ const TopicDetailPage = () => {
         .eq('id', topicId)
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao carregar tópico:', error);
+        throw error;
+      }
       
-      // Incrementar contador de visualizações
+      // Incrementar contador de visualizações apenas se não for o autor
       if (user?.id !== data.user_id) {
         await supabase.rpc('increment_topic_views', { topic_id: topicId });
       }
       
+      console.log('Tópico carregado:', data);
       return data;
     },
     enabled: !!topicId
@@ -66,6 +73,8 @@ const TopicDetailPage = () => {
     queryKey: ['forum-posts', topicId],
     queryFn: async (): Promise<Post[]> => {
       if (!topicId) return [];
+      
+      console.log('Carregando posts do tópico:', topicId);
       
       const { data, error } = await supabase
         .from('forum_posts')
@@ -81,7 +90,12 @@ const TopicDetailPage = () => {
         .eq('topic_id', topicId)
         .order('created_at', { ascending: true });
         
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao carregar posts:', error);
+        throw error;
+      }
+      
+      console.log('Posts carregados:', data?.length || 0);
       return data || [];
     },
     enabled: !!topicId
@@ -192,7 +206,7 @@ const TopicDetailPage = () => {
             <Avatar className="h-12 w-12">
               <AvatarImage src={topic.profiles?.avatar_url || ''} />
               <AvatarFallback>
-                {topic.profiles?.name?.charAt(0) || 'U'}
+                {getInitials(topic.profiles?.name)}
               </AvatarFallback>
             </Avatar>
             
@@ -248,6 +262,10 @@ const TopicDetailPage = () => {
               onMarkAsSolution={() => markAsSolvedMutation.mutate(post.id)}
               isMarkingSolved={markAsSolvedMutation.isPending}
               topicId={topic.id}
+              onPostDeleted={() => {
+                queryClient.invalidateQueries({ queryKey: ['forum-posts', topicId] });
+                queryClient.invalidateQueries({ queryKey: ['forum-topic', topicId] });
+              }}
             />
           ))}
         </div>

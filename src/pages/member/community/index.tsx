@@ -10,20 +10,11 @@ import CategoryTopics from './CategoryTopics';
 import NewTopicPage from './NewTopicPage';
 import TopicDetailPage from './TopicDetailPage';
 
-// Páginas temporárias para sugestões e eventos
+// Página temporária para sugestões
 const SuggestionsPage = () => (
   <div className="container max-w-7xl mx-auto py-6">
     <div className="text-center py-12">
       <h1 className="text-2xl font-bold mb-4">Sugestões da Comunidade</h1>
-      <p className="text-muted-foreground">Em breve...</p>
-    </div>
-  </div>
-);
-
-const EventsPage = () => (
-  <div className="container max-w-7xl mx-auto py-6">
-    <div className="text-center py-12">
-      <h1 className="text-2xl font-bold mb-4">Eventos da Comunidade</h1>
       <p className="text-muted-foreground">Em breve...</p>
     </div>
   </div>
@@ -38,7 +29,6 @@ const CommunityPages = () => {
       <Route path="mensagens" element={<MessagesPage />} />
       <Route path="notificacoes" element={<NotificationsPage />} />
       <Route path="sugestoes" element={<SuggestionsPage />} />
-      <Route path="eventos" element={<EventsPage />} />
       <Route path="categoria/:categorySlug" element={<CategoryTopics />} />
       <Route path="novo-topico" element={<NewTopicPage />} />
       <Route path="novo-topico/:categorySlug" element={<NewTopicPage />} />
