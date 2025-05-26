@@ -50,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Verificação simples de admin baseada apenas no email
+  // Verificação simples de admin baseada no email
   const isAdmin = user?.email === 'rafael@viverdeia.ai' || 
                   user?.email === 'admin@teste.com' ||
                   user?.email?.includes('@viverdeia.ai') ||
@@ -64,29 +64,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAdmin, 
     isFormacao,
     userEmail: user?.email,
-    profileRole: profile?.role 
+    profileRole: profile?.role,
+    isLoading
   });
 
-  // Função para carregar perfil do usuário
-  const loadUserProfile = async (userId: string) => {
+  // Função para carregar perfil com fallback
+  const loadUserProfile = async (userId: string, userEmail: string | undefined) => {
     try {
+      console.log('AuthProvider: Carregando perfil para', userEmail);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Erro ao carregar perfil:', error);
+      if (error) {
+        console.warn('AuthProvider: Erro ao carregar perfil, criando fallback:', error);
+        
+        // Criar perfil de fallback baseado no email
+        const fallbackRole = userEmail?.includes('@viverdeia.ai') || userEmail === 'admin@teste.com' ? 'admin' : 'member';
+        const fallbackProfile: Profile = {
+          id: userId,
+          email: userEmail || null,
+          name: userEmail?.split('@')[0] || 'Usuário',
+          role: fallbackRole,
+          avatar_url: null,
+          created_at: new Date().toISOString()
+        };
+        
+        console.log('AuthProvider: Usando perfil fallback:', fallbackProfile);
+        setProfile(fallbackProfile);
         return;
       }
 
       if (data) {
+        console.log('AuthProvider: Perfil carregado com sucesso:', data);
         setProfile(data);
-        console.log("Perfil carregado:", data);
       }
     } catch (error) {
-      console.error('Erro ao carregar perfil:', error);
+      console.error('AuthProvider: Exception ao carregar perfil:', error);
+      
+      // Fallback mesmo em caso de exception
+      const fallbackRole = userEmail?.includes('@viverdeia.ai') || userEmail === 'admin@teste.com' ? 'admin' : 'member';
+      const fallbackProfile: Profile = {
+        id: userId,
+        email: userEmail || null,
+        name: userEmail?.split('@')[0] || 'Usuário',
+        role: fallbackRole,
+        avatar_url: null,
+        created_at: new Date().toISOString()
+      };
+      
+      setProfile(fallbackProfile);
     }
   };
 
@@ -124,21 +154,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    let mounted = true;
+    
     // Configurar listener para mudanças de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
-      console.log('Evento de autenticação:', event);
+      if (!mounted) return;
+      
+      console.log('AuthProvider: Evento de autenticação:', event);
       
       setSession(newSession);
       setUser(newSession?.user ?? null);
       
       if (newSession?.user) {
-        // Carregar perfil do usuário
-        await loadUserProfile(newSession.user.id);
+        // Usar setTimeout para evitar bloqueio
+        setTimeout(() => {
+          if (mounted) {
+            loadUserProfile(newSession.user.id, newSession.user.email);
+          }
+        }, 0);
       } else {
         setProfile(null);
       }
       
-      setIsLoading(false);
+      // Reduzir tempo de loading para melhor UX
+      setTimeout(() => {
+        if (mounted) setIsLoading(false);
+      }, 100);
     });
 
     // Buscar sessão atual
@@ -146,23 +187,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         
+        if (!mounted) return;
+        
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
         if (currentSession?.user) {
-          await loadUserProfile(currentSession.user.id);
+          await loadUserProfile(currentSession.user.id, currentSession.user.email);
         }
         
         setIsLoading(false);
       } catch (error) {
-        console.error('Erro ao inicializar autenticação:', error);
-        setIsLoading(false);
+        console.error('AuthProvider: Erro ao inicializar autenticação:', error);
+        if (mounted) setIsLoading(false);
       }
     };
 
     initAuth();
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -178,7 +222,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Mostrar loading apenas enquanto não temos resposta definitiva
+  // Reduzir tempo de loading screen
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">

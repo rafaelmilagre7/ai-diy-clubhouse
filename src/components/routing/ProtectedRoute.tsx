@@ -14,7 +14,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requireFormacao = false,
   allowedRoles = [],
   fallbackRoute = "/login",
-  timeoutMs = 3000,
+  timeoutMs = 2000, // Reduzido para 2 segundos
   showTransitions = false
 }) => {
   const { user, profile, isAdmin, isFormacao, isLoading } = useAuth();
@@ -24,13 +24,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const timeoutRef = useRef<number | null>(null);
   const hasToastShown = useRef(false);
 
-  // Debug logs para diagnóstico
   console.log("ProtectedRoute:", {
     path: location.pathname,
     requireAuth,
     requireAdmin,
     requireFormacao,
-    allowedRoles,
     user: !!user,
     isAdmin,
     isFormacao,
@@ -39,9 +37,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     accessChecked
   });
 
-  // Função para verificar acesso baseado em configurações
+  // Função para verificar acesso
   const checkAccess = (): RouteAccessConfig => {
-    // Se não requer autenticação, permite acesso
     if (!requireAuth) {
       return {
         isAuthenticated: true,
@@ -51,7 +48,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       };
     }
 
-    // Verifica se está autenticado
     if (!user) {
       return {
         isAuthenticated: false,
@@ -61,7 +57,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       };
     }
 
-    // Verifica roles específicos
     let hasRequiredRole = true;
 
     if (requireAdmin && !isAdmin) {
@@ -72,7 +67,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       hasRequiredRole = false;
     }
 
-    // Verifica roles customizados
     if (allowedRoles.length > 0 && profile) {
       const userRole = profile.role;
       const hasCustomRole = allowedRoles.includes(userRole) || 
@@ -96,10 +90,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     };
   };
 
-  // Configurar timeout de carregamento
+  // Timeout mais agressivo
   useEffect(() => {
     if (isLoading && !loadingTimeout) {
-      // Limpar qualquer timeout existente
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
@@ -109,7 +102,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         setLoadingTimeout(true);
         
         if (!hasToastShown.current) {
-          toast.error("Tempo limite de carregamento excedido");
+          toast.error("Carregamento demorou mais que o esperado");
           hasToastShown.current = true;
         }
       }, timeoutMs);
@@ -122,17 +115,17 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     };
   }, [isLoading, loadingTimeout, timeoutMs]);
 
-  // Verificar acesso quando o estado estiver pronto
+  // Verificar acesso rapidamente
   useEffect(() => {
     if (!isLoading || loadingTimeout) {
       setAccessChecked(true);
     }
   }, [isLoading, loadingTimeout]);
 
-  // Mostrar loading enquanto verifica autenticação (mas só se o timeout não foi excedido)
+  // Loading mais curto
   if ((isLoading && !loadingTimeout) || !accessChecked) {
     const LoadingComponent = (
-      <LoadingScreen message="Verificando suas permissões..." />
+      <LoadingScreen message="Verificando acesso..." />
     );
 
     return showTransitions ? (
@@ -142,12 +135,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     ) : LoadingComponent;
   }
 
-  // Verificar acesso do usuário
+  // Verificar acesso
   const accessConfig = checkAccess();
 
-  // Se deve redirecionar, fazer o redirecionamento apropriado
   if (accessConfig.shouldRedirect) {
-    // Mensagens específicas baseadas no tipo de proteção
     if (!hasToastShown.current) {
       if (!accessConfig.isAuthenticated) {
         toast.error("Por favor, faça login para acessar esta página");
@@ -161,7 +152,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       hasToastShown.current = true;
     }
 
-    // Preservar a rota atual para redirecionamento após login
     const returnPath = location.pathname !== fallbackRoute ? location.pathname : "/dashboard";
     
     return (
@@ -173,7 +163,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
-  // Usuário tem acesso, renderizar children
+  // Renderizar children
   const ChildrenComponent = <>{children}</>;
 
   return showTransitions ? (
