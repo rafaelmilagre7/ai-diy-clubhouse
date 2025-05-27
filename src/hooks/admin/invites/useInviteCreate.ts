@@ -16,7 +16,6 @@ export function useInviteCreate() {
     retryAllPendingEmails 
   } = useInviteEmailService();
 
-  // Criar novo convite com validação e integração robusta
   const createInvite = useCallback(async (email: string, roleId: string, notes?: string, expiresIn: string = '7 days') => {
     if (!user) {
       toast.error('Usuário não autenticado');
@@ -37,26 +36,6 @@ export function useInviteCreate() {
       
       if (!roleId) {
         throw new Error("Papel não selecionado");
-      }
-      
-      // Verificar se o email já foi convidado recentemente
-      console.log("🔍 Verificando convites existentes...");
-      const { data: existingInvites, error: checkError } = await supabase
-        .from('invites')
-        .select('id, used_at, expires_at')
-        .eq('email', email)
-        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()); // Últimos 30 dias
-      
-      if (checkError) {
-        console.error("Erro ao verificar convites existentes:", checkError);
-      } else if (existingInvites && existingInvites.length > 0) {
-        const activeInvite = existingInvites.find(invite => 
-          !invite.used_at && new Date(invite.expires_at) > new Date()
-        );
-        
-        if (activeInvite) {
-          throw new Error("Este email já possui um convite ativo válido");
-        }
       }
       
       console.log("✅ Verificações passaram, criando convite...");
@@ -114,7 +93,7 @@ export function useInviteCreate() {
       
       console.log("📧 Enviando email de convite...");
       
-      // Enviar email de convite com retry automático
+      // Enviar email de convite
       const sendResult = await sendInviteEmail({
         email,
         inviteUrl,
@@ -130,22 +109,14 @@ export function useInviteCreate() {
       // Determinar mensagem baseada no resultado
       if (sendResult.success) {
         toast.success('Convite criado e enviado com sucesso!', {
-          description: `Um convite para ${email} foi enviado por email.`
-        });
-      } else if (sendResult.willRetry) {
-        toast.warning('Convite criado, tentando enviar email...', {
-          description: 'O sistema está tentando enviar o email automaticamente.',
-          action: {
-            label: 'Tentar Agora',
-            onClick: () => retryAllPendingEmails()
-          }
+          description: `${sendResult.message} para ${email}.`
         });
       } else {
         toast.error('Convite criado, mas falha no envio de email', {
           description: `O convite foi criado mas o email não foi enviado: ${sendResult.error}`,
           action: {
-            label: 'Tentar Reenviar',
-            onClick: () => retryAllPendingEmails()
+            label: 'Ver Detalhes',
+            onClick: () => console.log('Erro:', sendResult.error)
           }
         });
       }
@@ -161,11 +132,7 @@ export function useInviteCreate() {
       setCreateError(err);
       
       // Mensagens de erro mais específicas
-      if (err.message?.includes('já possui um convite ativo')) {
-        toast.error('Email já foi convidado', {
-          description: 'Este email já possui um convite ativo válido.'
-        });
-      } else if (err.message?.includes('Formato de email inválido')) {
+      if (err.message?.includes('Formato de email inválido')) {
         toast.error('Email inválido', {
           description: 'Por favor, verifique o formato do email.'
         });

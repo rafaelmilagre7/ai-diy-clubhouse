@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -22,7 +22,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useInviteCreate } from "@/hooks/admin/invites/useInviteCreate";
+import { useInviteValidation } from "@/hooks/admin/invites/useInviteValidation";
 
 interface CreateInviteDialogProps {
   roles: any[];
@@ -36,13 +38,25 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
   const [expiration, setExpiration] = useState("7 days");
   const [open, setOpen] = useState(false);
   const { createInvite, isCreating } = useInviteCreate();
+  const { validationState, validateInviteData } = useInviteValidation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !roleId) {
-      toast.error("Preencha todos os campos obrigatórios");
+    // Validar dados antes de enviar
+    const validation = validateInviteData(email, roleId);
+    if (!validation.isValid) {
+      toast.error("Dados inválidos", {
+        description: validation.errors.join(', ')
+      });
       return;
+    }
+
+    // Mostrar avisos se houver
+    if (validation.warnings.length > 0) {
+      validation.warnings.forEach(warning => {
+        toast.warning("Atenção", { description: warning });
+      });
     }
     
     const result = await createInvite(email, roleId, notes, expiration);
@@ -72,7 +86,28 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
               Envie um convite para novos membros acessarem a plataforma.
             </DialogDescription>
           </DialogHeader>
+          
           <div className="grid gap-4 py-4">
+            {/* Mostrar erros de validação */}
+            {validationState.errors.length > 0 && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {validationState.errors.join(', ')}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Mostrar avisos de validação */}
+            {validationState.warnings.length > 0 && (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {validationState.warnings.join(', ')}
+                </AlertDescription>
+              </Alert>
+            )}
+
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -84,6 +119,7 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
                 required
               />
             </div>
+            
             <div className="grid gap-2">
               <Label htmlFor="role">Papel</Label>
               <Select value={roleId} onValueChange={setRoleId} required>
@@ -99,6 +135,7 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
                 </SelectContent>
               </Select>
             </div>
+            
             <div className="grid gap-2">
               <Label htmlFor="expiration">Expira em</Label>
               <Select value={expiration} onValueChange={setExpiration}>
@@ -114,6 +151,7 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
                 </SelectContent>
               </Select>
             </div>
+            
             <div className="grid gap-2">
               <Label htmlFor="notes">Observações (opcional)</Label>
               <Textarea
@@ -124,11 +162,12 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
               />
             </div>
           </div>
+          
           <DialogFooter>
             <Button variant="outline" type="button" onClick={() => setOpen(false)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isCreating}>
+            <Button type="submit" disabled={isCreating || !validationState.isValid}>
               {isCreating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

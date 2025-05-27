@@ -31,7 +31,7 @@ export function useInviteEmailService() {
       setIsSending(true);
       setSendError(null);
 
-      console.log("🚀 Enviando convite nativo:", { email, roleName });
+      console.log("🚀 Enviando convite:", { email, roleName });
 
       // Validações
       if (!email?.includes('@')) {
@@ -40,6 +40,25 @@ export function useInviteEmailService() {
 
       if (!inviteUrl) {
         throw new Error('URL do convite não fornecida');
+      }
+
+      // Verificar se o email já foi convidado recentemente
+      const { data: existingInvites } = await supabase
+        .from('invites')
+        .select('id, used_at, expires_at')
+        .eq('email', email)
+        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) // Últimas 24h
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (existingInvites && existingInvites.length > 0) {
+        const recentInvite = existingInvites[0];
+        if (!recentInvite.used_at && new Date(recentInvite.expires_at) > new Date()) {
+          console.warn("⚠️ Email já foi convidado recentemente");
+          toast.warning('Email já foi convidado recentemente', {
+            description: 'Aguarde antes de enviar outro convite para o mesmo email.'
+          });
+        }
       }
 
       // Chamar edge function
@@ -65,11 +84,13 @@ export function useInviteEmailService() {
         throw new Error(data?.message || 'Falha no envio');
       }
 
-      console.log("✅ Email nativo enviado:", data);
+      console.log("✅ Email enviado:", data);
 
       return {
         success: true,
-        message: 'Email enviado com sucesso via Supabase',
+        message: data.method === 'custom_link' 
+          ? 'Convite enviado para usuário existente' 
+          : 'Convite enviado para novo usuário',
         emailId: data.user_id
       };
 
@@ -105,9 +126,9 @@ export function useInviteEmailService() {
     getInviteLink,
     isSending,
     sendError,
-    pendingEmails: 0, // Não precisamos mais de fila complexa
-    retryAllPendingEmails: () => {}, // Função vazia para compatibilidade
-    clearEmailQueue: () => {}, // Função vazia para compatibilidade
-    emailQueue: [] // Array vazio para compatibilidade
+    pendingEmails: 0,
+    retryAllPendingEmails: () => {},
+    clearEmailQueue: () => {},
+    emailQueue: []
   };
 }

@@ -25,14 +25,14 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const data: InviteEmailRequest = await req.json();
     
-    console.log("📧 Enviando convite nativo para:", data.email);
+    console.log("📧 Processando convite para:", data.email);
     
     // Validações robustas
     if (!data.email || !data.roleName) {
-      throw new Error("Dados obrigatórios ausentes");
+      throw new Error("Dados obrigatórios ausentes (email e roleName são obrigatórios)");
     }
 
-    // Criar cliente do Supabase com service role para usar admin API
+    // Criar cliente do Supabase com service role
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -44,31 +44,71 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
 
-    // Usar o método nativo inviteUserByEmail do Supabase
-    const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
-      data.email,
-      {
-        data: {
-          // Metadados que serão disponíveis no template de email
-          role: data.roleName,
-          sender_name: data.senderName || 'Viver de IA',
-          notes: data.notes || '',
-          invite_url: data.inviteUrl,
-          expires_at: data.expiresAt
-        },
-        redirectTo: data.inviteUrl // URL para onde o usuário será redirecionado após aceitar o convite
-      }
-    );
-
-    if (inviteError) {
-      console.error("❌ Erro ao enviar convite nativo:", inviteError);
-      throw new Error(`Erro no envio: ${inviteError.message}`);
+    // Verificar se o usuário já existe
+    const { data: existingUser, error: checkError } = await supabaseAdmin.auth.admin.getUserById(data.email);
+    
+    if (checkError && !checkError.message.includes('User not found')) {
+      console.error("❌ Erro ao verificar usuário existente:", checkError);
+      throw new Error(`Erro ao verificar usuário: ${checkError.message}`);
     }
 
-    console.log("✅ Convite nativo enviado com sucesso:", {
+    let inviteResult;
+    
+    if (existingUser && existingUser.user) {
+      // Usuário já existe - enviar email customizado de convite
+      console.log("👤 Usuário já existe, enviando convite personalizado");
+      
+      // Simular envio de convite personalizado usando o template de recuperação
+      inviteResult = await supabaseAdmin.auth.admin.generateLink({
+        type: 'invite',
+        email: data.email,
+        options: {
+          redirectTo: data.inviteUrl,
+          data: {
+            role: data.roleName,
+            sender_name: data.senderName || 'Viver de IA',
+            notes: data.notes || '',
+            invite_url: data.inviteUrl,
+            expires_at: data.expiresAt,
+            existing_user: true
+          }
+        }
+      });
+      
+      if (inviteResult.error) {
+        console.error("❌ Erro ao gerar link de convite:", inviteResult.error);
+        throw new Error(`Erro ao gerar convite: ${inviteResult.error.message}`);
+      }
+      
+    } else {
+      // Usuário não existe - usar o método nativo inviteUserByEmail
+      console.log("✨ Novo usuário, enviando convite nativo");
+      
+      inviteResult = await supabaseAdmin.auth.admin.inviteUserByEmail(
+        data.email,
+        {
+          data: {
+            role: data.roleName,
+            sender_name: data.senderName || 'Viver de IA',
+            notes: data.notes || '',
+            invite_url: data.inviteUrl,
+            expires_at: data.expiresAt,
+            existing_user: false
+          },
+          redirectTo: data.inviteUrl
+        }
+      );
+
+      if (inviteResult.error) {
+        console.error("❌ Erro ao enviar convite nativo:", inviteResult.error);
+        throw new Error(`Erro no envio: ${inviteResult.error.message}`);
+      }
+    }
+
+    console.log("✅ Convite processado com sucesso:", {
       email: data.email,
       role: data.roleName,
-      user_id: inviteData.user?.id
+      user_id: inviteResult.data?.user?.id || 'existing_user'
     });
 
     // Atualizar estatísticas do convite se o ID foi fornecido
@@ -80,6 +120,8 @@ const handler = async (req: Request): Promise<Response> => {
         
         if (statsError) {
           console.warn("⚠️ Erro ao atualizar estatísticas:", statsError);
+        } else {
+          console.log("📊 Estatísticas atualizadas com sucesso");
         }
       } catch (statsError) {
         console.warn("⚠️ Erro ao atualizar estatísticas:", statsError);
@@ -89,9 +131,10 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Convite enviado com sucesso via Supabase",
-        user_id: inviteData.user?.id,
-        email: data.email
+        message: "Convite enviado com sucesso",
+        user_id: inviteResult.data?.user?.id || 'existing_user',
+        email: data.email,
+        method: existingUser ? 'custom_link' : 'native_invite'
       }),
       {
         status: 200,
@@ -100,13 +143,14 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
   } catch (error: any) {
-    console.error("❌ Erro ao enviar convite nativo:", error);
+    console.error("❌ Erro ao processar convite:", error);
     
     return new Response(
       JSON.stringify({
         success: false,
         message: "Erro ao enviar convite",
-        error: error.message
+        error: error.message,
+        details: "Verifique os logs para mais informações"
       }),
       {
         status: 500,
