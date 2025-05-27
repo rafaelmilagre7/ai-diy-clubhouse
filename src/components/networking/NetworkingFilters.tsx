@@ -28,14 +28,14 @@ export const NetworkingFilters: React.FC<NetworkingFiltersProps> = ({
 
   const clearFilters = () => {
     onFiltersChange({
-      sector: '',
-      companySize: '',
-      location: '',
+      sector: 'all-sectors',
+      companySize: 'all-sizes',
+      location: 'all-locations',
       status: 'all'
     });
   };
 
-  const hasActiveFilters = filters.sector || filters.companySize || filters.location || filters.status !== 'all';
+  const hasActiveFilters = filters.sector !== 'all-sectors' || filters.companySize !== 'all-sizes' || filters.location !== 'all-locations' || filters.status !== 'all';
 
   return (
     <Card className="p-4">
@@ -60,7 +60,7 @@ export const NetworkingFilters: React.FC<NetworkingFiltersProps> = ({
               <SelectValue placeholder="Todos os setores" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos os setores</SelectItem>
+              <SelectItem value="all-sectors">Todos os setores</SelectItem>
               <SelectItem value="tecnologia">Tecnologia</SelectItem>
               <SelectItem value="saude">Saúde</SelectItem>
               <SelectItem value="educacao">Educação</SelectItem>
@@ -80,7 +80,7 @@ export const NetworkingFilters: React.FC<NetworkingFiltersProps> = ({
               <SelectValue placeholder="Todos os tamanhos" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos os tamanhos</SelectItem>
+              <SelectItem value="all-sizes">Todos os tamanhos</SelectItem>
               <SelectItem value="startup">Startup (1-10)</SelectItem>
               <SelectItem value="pequena">Pequena (11-50)</SelectItem>
               <SelectItem value="media">Média (51-200)</SelectItem>
@@ -97,7 +97,7 @@ export const NetworkingFilters: React.FC<NetworkingFiltersProps> = ({
               <SelectValue placeholder="Todas as localizações" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas as localizações</SelectItem>
+              <SelectItem value="all-locations">Todas as localizações</SelectItem>
               <SelectItem value="sp">São Paulo</SelectItem>
               <SelectItem value="rj">Rio de Janeiro</SelectItem>
               <SelectItem value="mg">Minas Gerais</SelectItem>

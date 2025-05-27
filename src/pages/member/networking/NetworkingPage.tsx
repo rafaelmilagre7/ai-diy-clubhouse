@@ -12,9 +12,9 @@ import { Users, Building } from 'lucide-react';
 const NetworkingPage = () => {
   const { hasAccess, accessMessage } = useNetworkingAccess();
   const [filters, setFilters] = useState({
-    sector: '',
-    companySize: '',
-    location: '',
+    sector: 'all-sectors',
+    companySize: 'all-sizes',
+    location: 'all-locations',
     status: 'all'
   });
 
