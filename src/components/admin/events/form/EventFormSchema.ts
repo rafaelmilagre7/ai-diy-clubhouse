@@ -27,13 +27,13 @@ export const eventSchema = z.object({
   cover_image_url: z.string().optional(),
   // Campos para controle de acesso
   role_ids: z.array(z.string()).optional(),
-  // Campos para eventos recorrentes
+  // Campos para eventos recorrentes - todos opcionais e nullable
   is_recurring: z.boolean().default(false),
-  recurrence_pattern: z.string().optional(),
-  recurrence_interval: z.number().min(1).optional(),
-  recurrence_day: z.number().min(0).max(6).optional(),
-  recurrence_count: z.number().optional(),
-  recurrence_end_date: z.string().optional()
+  recurrence_pattern: z.string().nullable().optional(),
+  recurrence_interval: z.number().nullable().optional(),
+  recurrence_day: z.number().min(0).max(6).nullable().optional(),
+  recurrence_count: z.number().nullable().optional(),
+  recurrence_end_date: z.string().nullable().optional()
 }).refine((data) => {
   // Validar que a data de fim é posterior à data de início
   if (data.start_time && data.end_time) {
@@ -43,6 +43,16 @@ export const eventSchema = z.object({
 }, {
   message: "Data e hora de fim devem ser posteriores ao início",
   path: ["end_time"]
+}).transform((data) => {
+  // Transformar valores vazios para null em campos de recorrência
+  return {
+    ...data,
+    recurrence_pattern: data.recurrence_pattern || null,
+    recurrence_interval: data.recurrence_interval || null,
+    recurrence_day: data.recurrence_day || null,
+    recurrence_count: data.recurrence_count || null,
+    recurrence_end_date: data.recurrence_end_date || null,
+  };
 });
 
 export type EventFormData = z.infer<typeof eventSchema>;

@@ -17,6 +17,7 @@ import { EventRecurrence } from "./form/EventRecurrence";
 import { EventRoleAccess } from "./form/EventRoleAccess";
 import { useEventAccessControl } from "@/hooks/useEventAccessControl";
 import type { Event } from "@/types/events";
+import { ZodError } from "zod";
 
 interface EventFormProps {
   event?: Event;
@@ -48,57 +49,64 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
       physical_location: event?.physical_location || "",
       cover_image_url: event?.cover_image_url || "",
       is_recurring: event?.is_recurring || false,
-      recurrence_pattern: event?.recurrence_pattern || "weekly",
-      recurrence_interval: event?.recurrence_interval || 1,
+      recurrence_pattern: event?.recurrence_pattern || null,
+      recurrence_interval: event?.recurrence_interval || null,
       recurrence_day: event?.recurrence_day || null,
       recurrence_count: event?.recurrence_count || null,
       recurrence_end_date: event?.recurrence_end_date || null,
-      role_ids: selectedRoles
+      role_ids: []
     }
   });
 
-  const onSubmit = async (data: EventFormData) => {
+  const onSubmit = async (rawData: EventFormData) => {
     console.log("EventForm - Starting form submission:", {
       isEditing: !!event?.id,
       eventId: event?.id,
-      formData: data,
-      selectedRoles
+      rawFormData: rawData,
+      selectedRoles,
+      formIsValid: form.formState.isValid,
+      formErrors: form.formState.errors
     });
 
     try {
       setIsSubmitting(true);
       
-      // Validar dados obrigatórios
-      if (!data.title.trim()) {
-        console.error("EventForm - Validation error: Title is required");
-        toast.error("Título é obrigatório");
+      // Validar dados com schema para obter dados transformados
+      let validatedData: EventFormData;
+      try {
+        validatedData = eventSchema.parse(rawData);
+        console.log("EventForm - Data validation successful:", validatedData);
+      } catch (zodError) {
+        if (zodError instanceof ZodError) {
+          console.error("EventForm - Validation errors:", zodError.errors);
+          zodError.errors.forEach(error => {
+            toast.error(`Erro de validação: ${error.message} no campo ${error.path.join('.')}`);
+          });
+        } else {
+          console.error("EventForm - Unknown validation error:", zodError);
+          toast.error("Erro de validação dos dados");
+        }
         return;
       }
 
-      if (!data.start_time || !data.end_time) {
-        console.error("EventForm - Validation error: Start and end times are required");
-        toast.error("Data e hora de início e fim são obrigatórias");
-        return;
-      }
-
-      // Preparar dados do evento (sem role_ids que não existe na tabela events)
+      // Preparar dados do evento (remover campos que não existem na tabela)
       const eventData = {
-        title: data.title.trim(),
-        description: data.description?.trim() || null,
-        start_time: data.start_time,
-        end_time: data.end_time,
-        location_link: data.location_link?.trim() || null,
-        physical_location: data.physical_location?.trim() || null,
-        cover_image_url: data.cover_image_url?.trim() || null,
-        is_recurring: data.is_recurring || false,
-        recurrence_pattern: data.recurrence_pattern || null,
-        recurrence_interval: data.recurrence_interval || null,
-        recurrence_day: data.recurrence_day || null,
-        recurrence_count: data.recurrence_count || null,
-        recurrence_end_date: data.recurrence_end_date || null,
+        title: validatedData.title.trim(),
+        description: validatedData.description?.trim() || null,
+        start_time: validatedData.start_time,
+        end_time: validatedData.end_time,
+        location_link: validatedData.location_link || null,
+        physical_location: validatedData.physical_location?.trim() || null,
+        cover_image_url: validatedData.cover_image_url?.trim() || null,
+        is_recurring: validatedData.is_recurring || false,
+        recurrence_pattern: validatedData.recurrence_pattern,
+        recurrence_interval: validatedData.recurrence_interval,
+        recurrence_day: validatedData.recurrence_day,
+        recurrence_count: validatedData.recurrence_count,
+        recurrence_end_date: validatedData.recurrence_end_date,
       };
 
-      console.log("EventForm - Prepared event data:", eventData);
+      console.log("EventForm - Prepared event data for database:", eventData);
 
       let eventId: string;
 
@@ -196,7 +204,7 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
     }
   };
 
-  // Mostrar loading se ainda estiver carregando dados de acesso para edição
+  // Mostrar loading apenas se ainda estiver carregando dados de acesso para edição
   if (event?.id && isLoadingAccess) {
     console.log("EventForm - Loading access control data for event:", event.id);
     return (
@@ -211,12 +219,16 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
     isSubmitting,
     isSavingAccess,
     selectedRoles,
-    formValues: form.getValues()
+    formValues: form.getValues(),
+    formState: form.formState
   });
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit, (errors) => {
+        console.error("EventForm - Form validation errors:", errors);
+        toast.error("Verifique os campos obrigatórios");
+      })} className="space-y-6">
         <Tabs defaultValue="basic" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="basic">Básico</TabsTrigger>
@@ -266,13 +278,6 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
             type="submit" 
             disabled={isSubmitting || isSavingAccess}
             className="bg-viverblue hover:bg-viverblue/90"
-            onClick={() => {
-              console.log("EventForm - Submit button clicked", {
-                formIsValid: form.formState.isValid,
-                formErrors: form.formState.errors,
-                formValues: form.getValues()
-              });
-            }}
           >
             {isSubmitting || isSavingAccess ? (
               <>
