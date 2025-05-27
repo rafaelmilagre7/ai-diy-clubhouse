@@ -72,12 +72,12 @@ function App() {
                   </LoggingProvider>
                 </AuthErrorBoundary>
               </RouteErrorBoundary>
-            </AsyncErrorBoundary>
+            </BrowserRouter>
           </AsyncErrorBoundary>
         </QueryClientProvider>
       </ErrorBoundary>
     </HelmetProvider>
   );
-};
+}
 
 export default App;
