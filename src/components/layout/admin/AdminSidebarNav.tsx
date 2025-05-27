@@ -110,7 +110,6 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
     },
   ];
 
-  // Itens de menu para gerenciamento de papéis e permissões
   const rbacItems = [
     {
       title: "Papéis",
@@ -137,10 +136,8 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
   };
 
   const renderMenuItem = (item: any) => {
-    // Verificação especial para administradores - sempre mostrar as opções de gerenciamento
     const isAdmin = hasPermission('admin.all');
     
-    // Se não tiver permissão específica e não for admin, não renderize
     if (item.permission && !hasPermission(item.permission) && !isAdmin) {
       return null;
     }
@@ -166,15 +163,12 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Área de navegação com scroll */}
-      <ScrollArea className="flex-1 px-3">
+      <ScrollArea className="flex-1 px-3" style={{ height: "calc(100vh - 140px)" }}>
         <div className="py-4 space-y-2">
-          {/* Menu principal */}
           <div className="space-y-1">
             {menuItems.map(item => renderMenuItem(item))}
           </div>
 
-          {/* Seção Comunidade */}
           <Separator className="my-3" />
           
           {sidebarOpen && (
@@ -187,7 +181,6 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
             {communityItems.map(item => renderMenuItem(item))}
           </div>
 
-          {/* Seção Área de Formação */}
           <Separator className="my-3" />
           
           {sidebarOpen && (
@@ -200,7 +193,6 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
             {formacaoItems.map(item => renderMenuItem(item))}
           </div>
 
-          {/* Seção RBAC */}
           <Separator className="my-3" />
           
           {sidebarOpen && (
@@ -215,8 +207,7 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
         </div>
       </ScrollArea>
 
-      {/* Botão "Voltar ao Dashboard" fixo no rodapé */}
-      <div className="px-3 py-4 border-t border-gray-700">
+      <div className="px-3 py-4 border-t border-gray-700 mt-auto">
         <Button
           variant="outline"
           className={cn(
