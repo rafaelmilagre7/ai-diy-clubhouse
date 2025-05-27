@@ -1,5 +1,4 @@
 
-import { useState, useEffect } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,13 +19,6 @@ interface EventRoleCheckboxesProps {
 }
 
 export const EventRoleCheckboxes = ({ selectedRoles, onChange }: EventRoleCheckboxesProps) => {
-  const [selected, setSelected] = useState<string[]>(selectedRoles || []);
-
-  // Sincronizar estado interno com props quando selectedRoles mudar
-  useEffect(() => {
-    setSelected(selectedRoles || []);
-  }, [selectedRoles]);
-
   const { data: roles, isLoading } = useQuery({
     queryKey: ['roles'],
     queryFn: async () => {
@@ -39,19 +31,18 @@ export const EventRoleCheckboxes = ({ selectedRoles, onChange }: EventRoleCheckb
     }
   });
 
-  // Atualizar seleção de papéis quando um checkbox é alterado
+  // Função para atualizar seleção de papéis quando um checkbox é alterado
   const handleCheckedChange = (checked: boolean, roleId: string) => {
     let updatedSelection: string[];
 
     if (checked) {
       // Adicionar à seleção
-      updatedSelection = [...selected, roleId];
+      updatedSelection = [...selectedRoles, roleId];
     } else {
       // Remover da seleção
-      updatedSelection = selected.filter(id => id !== roleId);
+      updatedSelection = selectedRoles.filter(id => id !== roleId);
     }
 
-    setSelected(updatedSelection);
     onChange(updatedSelection);
   };
 
@@ -72,7 +63,7 @@ export const EventRoleCheckboxes = ({ selectedRoles, onChange }: EventRoleCheckb
     return <p className="text-sm text-muted-foreground">Nenhum papel de usuário encontrado</p>;
   }
 
-  const selectedCount = selected.length;
+  const selectedCount = selectedRoles.length;
 
   return (
     <div>
@@ -92,7 +83,7 @@ export const EventRoleCheckboxes = ({ selectedRoles, onChange }: EventRoleCheckb
       <ScrollArea className="h-[220px] rounded-md border border-border/50 p-4 bg-card">
         <div className="space-y-2">
           {roles.map((role) => {
-            const isChecked = selected.includes(role.id);
+            const isChecked = selectedRoles.includes(role.id);
             return (
               <div 
                 key={role.id}
