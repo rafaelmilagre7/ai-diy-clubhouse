@@ -1,4 +1,3 @@
-
 export interface Invite {
   id: string;
   email: string;
@@ -23,6 +22,7 @@ export interface SendInviteResponse {
   message: string;
   error?: string;
   emailId?: string;
-  duration?: string;
-  willRetry?: boolean;
+  strategy?: 'resend_primary' | 'supabase_recovery' | 'supabase_auth';
+  method?: 'resend' | 'recovery_link' | 'auth_invite';
+  suggestion?: string;
 }

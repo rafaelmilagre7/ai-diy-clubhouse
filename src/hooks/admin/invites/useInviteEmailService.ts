@@ -33,7 +33,7 @@ export function useInviteEmailService() {
       setIsSending(true);
       setSendError(null);
 
-      console.log("🚀 Enviando convite via sistema aprimorado:", { email, roleName, forceResend });
+      console.log("🚀 Enviando convite via sistema profissional:", { email, roleName, forceResend });
 
       // Validações básicas
       if (!email?.includes('@')) {
@@ -44,9 +44,9 @@ export function useInviteEmailService() {
         throw new Error('URL do convite não fornecida');
       }
 
-      console.log("📧 Chamando sistema híbrido otimizado (Resend + Supabase)...");
+      console.log("📧 Chamando sistema híbrido com template profissional...");
 
-      // Chamar edge function com sistema otimizado
+      // Chamar edge function com sistema melhorado
       const { data, error } = await supabase.functions.invoke('send-invite-email', {
         body: {
           email,
@@ -73,43 +73,83 @@ export function useInviteEmailService() {
       console.log("✅ Email processado com sucesso:", {
         strategy: data.strategy,
         method: data.method,
-        email: data.email
+        email: data.email,
+        emailId: data.emailId
       });
 
       // Feedback específico baseado na estratégia usada
       let successMessage = 'Convite enviado com sucesso!';
-      if (data.strategy === 'resend_primary') {
-        successMessage = 'Convite enviado via Resend (sistema otimizado)';
-      } else if (data.strategy === 'supabase_recovery') {
-        successMessage = 'Link de recuperação enviado (usuário existente)';
-      } else if (data.strategy === 'supabase_auth') {
-        successMessage = 'Convite enviado via Supabase Auth';
+      let description = '';
+      
+      switch (data.strategy) {
+        case 'resend_primary':
+          successMessage = 'Convite enviado com design profissional!';
+          description = 'Email enviado via Resend com template da Viver de IA';
+          break;
+        case 'supabase_recovery':
+          successMessage = 'Link de recuperação enviado';
+          description = 'Usuário existente - link de acesso enviado';
+          break;
+        case 'supabase_auth':
+          successMessage = 'Convite enviado via Supabase Auth';
+          description = 'Sistema alternativo ativado com sucesso';
+          break;
       }
+
+      // Mostrar toast de sucesso com detalhes
+      toast.success(successMessage, {
+        description,
+        duration: 5000,
+      });
 
       return {
         success: true,
         message: successMessage,
-        emailId: data.email
+        emailId: data.emailId || data.email,
+        strategy: data.strategy,
+        method: data.method
       };
 
     } catch (err: any) {
       console.error("❌ Erro final no envio:", err);
       setSendError(err);
 
-      // Mensagens de erro mais específicas
+      // Mensagens de erro mais específicas e úteis
       let errorMessage = 'Erro ao processar convite';
+      let description = '';
+      
       if (err.message?.includes('Email inválido')) {
         errorMessage = 'Formato de email inválido';
+        description = 'Verifique se o email está correto';
       } else if (err.message?.includes('Todas as estratégias falharam')) {
-        errorMessage = 'Falha completa do sistema - verifique configurações';
+        errorMessage = 'Falha completa do sistema de email';
+        description = 'Verifique as configurações do Resend e tente novamente';
       } else if (err.message?.includes('URL do convite')) {
         errorMessage = 'Erro interno na geração do link';
+        description = 'Tente recriar o convite';
+      } else if (err.message?.includes('Resend falhou')) {
+        errorMessage = 'Erro no sistema principal de email';
+        description = 'Sistema de fallback pode ter sido usado';
       }
+
+      // Toast de erro com ação sugerida
+      toast.error(errorMessage, {
+        description,
+        duration: 8000,
+        action: {
+          label: 'Tentar Novamente',
+          onClick: () => {
+            // Re-trigger do envio seria implementado aqui
+            console.log('Retentativa solicitada pelo usuário');
+          },
+        },
+      });
 
       return {
         success: false,
         message: errorMessage,
-        error: err.message
+        error: err.message,
+        suggestion: description
       };
     } finally {
       setIsSending(false);
@@ -134,6 +174,7 @@ export function useInviteEmailService() {
     getInviteLink,
     isSending,
     sendError,
+    // Compatibilidade com versões antigas
     pendingEmails: 0,
     retryAllPendingEmails: () => {},
     clearEmailQueue: () => {},

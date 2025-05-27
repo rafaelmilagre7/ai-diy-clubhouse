@@ -18,14 +18,31 @@ export function useInviteValidation() {
     const errors: string[] = [];
     const warnings: string[] = [];
 
-    // Validação básica de formato
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    // Validação básica de formato mais robusta
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    
+    if (!email || !email.trim()) {
+      errors.push('Email é obrigatório');
+    } else if (!emailRegex.test(email.trim())) {
       errors.push('Formato de email inválido');
+    } else {
+      // Verificações adicionais para melhor UX
+      const emailLower = email.toLowerCase().trim();
+      
+      // Verificar domínios suspeitos (apenas warning)
+      if (emailLower.includes('temp') || emailLower.includes('10min') || emailLower.includes('throwaway')) {
+        warnings.push('Email temporário detectado - considere usar um email permanente');
+      }
+      
+      // Verificar se tem TLD válido
+      const parts = emailLower.split('@');
+      if (parts.length === 2) {
+        const domain = parts[1];
+        if (!domain.includes('.') || domain.endsWith('.') || domain.startsWith('.')) {
+          errors.push('Domínio do email inválido');
+        }
+      }
     }
-
-    // Removido completamente o aviso sobre emails pessoais
-    // Todos os emails válidos são aceitos sem restrição
 
     const result = {
       isValid: errors.length === 0,
