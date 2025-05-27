@@ -67,9 +67,30 @@ export const useOnboardingValidation = () => {
     return null;
   };
 
+  const getIncompleteSteps = (progress: OnboardingProgress): string[] => {
+    if (!progress) return ["personal_info", "ai_experience", "trail_generation"];
+
+    const incompleteSteps: string[] = [];
+
+    if (!progress.personal_info?.name || !progress.personal_info?.email) {
+      incompleteSteps.push("personal_info");
+    }
+
+    if (!progress.ai_experience?.knowledge_level) {
+      incompleteSteps.push("ai_experience");
+    }
+
+    if (!progress.is_completed) {
+      incompleteSteps.push("trail_generation");
+    }
+
+    return incompleteSteps;
+  };
+
   return {
     validateOnboardingCompletion,
     getCompletionProgress,
-    getNextIncompleteStep
+    getNextIncompleteStep,
+    getIncompleteSteps
   };
 };

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useProgress } from "./useProgress";
 import { toast } from "sonner";
@@ -15,7 +16,7 @@ export const usePersonalInfoStep = () => {
     name: "",
     email: "",
     phone: "",
-    ddi: "+55", // Garantindo que ddi sempre tenha um valor padrão
+    ddi: "+55",
     linkedin: "",
     instagram: "",
     country: "Brasil",
@@ -29,7 +30,6 @@ export const usePersonalInfoStep = () => {
 
   // Função para carregar dados iniciais do banco
   const loadInitialData = useCallback(() => {
-    // Garantir que sempre carrega só do personal_info
     const userName = profile?.name || user?.user_metadata?.name || "";
     const userEmail = profile?.email || user?.email || "";
 
@@ -42,7 +42,7 @@ export const usePersonalInfoStep = () => {
         name: userName || progress.personal_info.name || "",
         email: userEmail || progress.personal_info.email || "",
         phone: progress.personal_info.phone || "",
-        ddi: ddi, // Garantindo que ddi esteja definido
+        ddi: ddi,
         linkedin: progress.personal_info.linkedin || "",
         instagram: progress.personal_info.instagram || "",
         country: progress.personal_info.country || "Brasil",
@@ -55,7 +55,7 @@ export const usePersonalInfoStep = () => {
         ...prev,
         name: userName,
         email: userEmail,
-        ddi: "+55" // Garantindo que ddi sempre tenha um valor padrão
+        ddi: "+55"
       }));
     }
     setInitialDataLoaded(true);
@@ -71,7 +71,7 @@ export const usePersonalInfoStep = () => {
             ...prev,
             name: profile?.name || user?.user_metadata?.name || "",
             email: profile?.email || user?.email || "",
-            ddi: "+55" // Garantindo que ddi sempre tenha um valor padrão
+            ddi: "+55"
           }));
           setInitialDataLoaded(true);
         }
@@ -89,18 +89,14 @@ export const usePersonalInfoStep = () => {
   }, [progress, initialDataLoaded, loadInitialData]);
 
   const handleChange = (field: keyof PersonalInfoData, value: string) => {
-    // Registrar a alteração para debug
     console.log(`Campo alterado: ${field}, Valor: ${value}`);
     
-    // Se for o campo DDI, garantir formatação adequada
     if (field === 'ddi') {
-      // Remover + adicionais e garantir apenas um no início
       value = "+" + value.replace(/\+/g, '').replace(/\D/g, '');
     }
     
     setFormData(prev => ({ ...prev, [field]: value }));
     
-    // Limpar erro do campo quando ele é alterado
     if (errors[field]) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -119,7 +115,6 @@ export const usePersonalInfoStep = () => {
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       
-      // Mostrar toast com os erros
       const errorFields = Object.keys(validationErrors).map(field => 
         field.charAt(0).toUpperCase() + field.slice(1)
       ).join(', ');
@@ -133,35 +128,30 @@ export const usePersonalInfoStep = () => {
 
     setIsSubmitting(true);
     try {
-      // Formatação do DDI antes de salvar
       const dataToSubmit = {
         ...formData,
       };
       
-      // Garantir que o DDI está formatado corretamente
       if (dataToSubmit.ddi) {
         dataToSubmit.ddi = "+" + dataToSubmit.ddi.replace(/\+/g, '').replace(/\D/g, '');
       }
       
       console.log("[DEBUG] Submetendo dados formatados:", dataToSubmit);
       
-      // Garantir que temos um progresso.completed_steps válido
       const currentCompletedSteps = Array.isArray(progress?.completed_steps) 
         ? progress.completed_steps 
         : [];
         
-      // Verificar se "personal" já existe nos completed_steps
-      const newCompletedSteps = currentCompletedSteps.includes("personal")
+      const newCompletedSteps = currentCompletedSteps.includes("personal_info")
         ? currentCompletedSteps
-        : [...currentCompletedSteps, "personal"];
+        : [...currentCompletedSteps, "personal_info"];
       
       await updateProgress({
         personal_info: dataToSubmit,
-        current_step: "professional_data",
+        current_step: "ai_experience",
         completed_steps: newCompletedSteps,
       });
 
-      // Única notificação de sucesso com informação combinada
       toast.success("Dados pessoais salvos com sucesso!", {
         description: "Avançando para a próxima etapa..."
       });
@@ -183,6 +173,7 @@ export const usePersonalInfoStep = () => {
     isSaving,
     lastSaveTime,
     validationAttempted,
+    progress,
     handleChange,
     handleSubmit,
     loadInitialData

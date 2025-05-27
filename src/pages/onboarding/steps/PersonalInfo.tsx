@@ -32,6 +32,9 @@ const PersonalInfo = () => {
       <PersonalInfoStep
         onSubmit={handleSuccess}
         isSubmitting={isSubmitting}
+        formData={formData}
+        errors={errors}
+        onChange={handleChange}
         initialData={formData}
         onPrevious={undefined}
       />

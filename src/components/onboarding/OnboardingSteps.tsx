@@ -1,7 +1,6 @@
 
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { PersonalInfoStep } from "./steps/PersonalInfoStep";
-import { BusinessGoalsStep } from "./steps/BusinessGoalsStep";
 import { BusinessContextStep } from "./steps/BusinessContextStep";
 import { AIExperienceStep } from "./steps/AIExperienceStep";
 import { ExperiencePersonalizationStep } from "./steps/ExperiencePersonalizationStep";
@@ -28,30 +27,18 @@ export const OnboardingSteps = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Unificação dos mapeamentos de caminhos para IDs de etapas
+  // Mapeamento simplificado para o onboarding NOVO (3 etapas)
   const pathToStepComponent = {
     "/onboarding": "personal_info",
     "/onboarding/personal-info": "personal_info",
-    "/onboarding/professional-data": "professional_info", 
-    "/onboarding/business-context": "business_context",
     "/onboarding/ai-experience": "ai_experience",
-    "/onboarding/club-goals": "business_goals",
-    "/onboarding/customization": "experience_personalization",
-    "/onboarding/complementary": "complementary_info",
-    "/onboarding/review": "review",
     "/onboarding/trail-generation": "trail_generation"
   };
 
   // Mapeamento reverso para navegação
   const stepToPath = {
     "personal_info": "/onboarding/personal-info",
-    "professional_info": "/onboarding/professional-data",
-    "business_context": "/onboarding/business-context",
     "ai_experience": "/onboarding/ai-experience",
-    "business_goals": "/onboarding/club-goals",
-    "experience_personalization": "/onboarding/customization",
-    "complementary_info": "/onboarding/complementary",
-    "review": "/onboarding/review",
     "trail_generation": "/onboarding/trail-generation"
   };
 
@@ -67,7 +54,6 @@ export const OnboardingSteps = () => {
     const currentIndex = stepIds.indexOf(currentStepId);
     
     if (currentIndex <= 0) {
-      // Se for a primeira etapa ou não encontrou a etapa atual, vamos para a primeira etapa
       navigate("/onboarding/personal-info");
       return;
     }
@@ -79,23 +65,11 @@ export const OnboardingSteps = () => {
     navigate(previousPath);
   };
 
-  // Atualização dos IDs de componentes para corresponder aos IDs de etapas
+  // Componentes simplificados para o onboarding NOVO
   const stepComponents = {
     personal_info: PersonalInfoStep,
-    professional_info: ProfessionalDataStep,
-    business_context: BusinessContextStep,
     ai_experience: AIExperienceStep,
-    business_goals: BusinessGoalsStep,
-    experience_personalization: ExperiencePersonalizationStep,
-    complementary_info: ComplementaryInfoStep,
-    review: () => (
-      <ReviewStep 
-        progress={progress} 
-        onComplete={completeOnboarding} 
-        isSubmitting={isSubmitting}
-        navigateToStep={(stepId: string) => navigateToStep(stepId)}
-      />
-    ),
+    trail_generation: () => null, // Esta etapa é tratada em TrailGeneration.tsx
   };
 
   const CurrentStepComponent = stepComponents[currentPathStepId as keyof typeof stepComponents] || 
@@ -110,26 +84,11 @@ export const OnboardingSteps = () => {
 
   const getInitialDataForCurrentStep = () => {
     if (!progress) return undefined;
-    if (currentPathStepId === "professional_data" || currentStep.id === "professional_data") {
-      return progress.professional_info;
-    }
-    if (currentPathStepId === "business_context" || currentStep.id === "business_context") {
-      return progress.business_context;
+    if (currentPathStepId === "ai_experience" || currentStep.id === "ai_experience") {
+      return progress.ai_experience;
     }
     const sectionKey = currentStep.section as keyof OnboardingData;
     return progress[sectionKey as keyof typeof progress];
-  };
-
-  const supportsPersonalInfo = (stepId: string) => {
-    return (
-      stepId === "professional_data" || 
-      stepId === "business_context" || 
-      stepId === "ai_exp" || 
-      stepId === "business_goals" || 
-      stepId === "experience_personalization" || 
-      stepId === "complementary_info" || 
-      stepId === "review"
-    );
   };
 
   const getPropsForCurrentStep = () => {
@@ -139,10 +98,11 @@ export const OnboardingSteps = () => {
       isLastStep: currentStepIndex === steps.length - 1,
       onComplete: completeOnboarding,
       initialData: getInitialDataForCurrentStep(),
-      onPrevious: () => navigateToPreviousStep(currentPathStepId || currentStep.id), // Nova prop
+      onPrevious: () => navigateToPreviousStep(currentPathStepId || currentStep.id),
     };
 
-    if (supportsPersonalInfo(currentPathStepId || currentStep.id)) {
+    // Para ai_experience, adicionar personalInfo
+    if (currentPathStepId === "ai_experience" || currentStep.id === "ai_experience") {
       return {
         ...baseProps,
         personalInfo: progress?.personal_info,
