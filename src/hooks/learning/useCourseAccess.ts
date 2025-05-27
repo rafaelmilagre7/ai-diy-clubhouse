@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { LearningCourse } from '@/lib/supabase';
 
@@ -14,11 +14,10 @@ export interface Role {
 
 export const useCourseAccess = () => {
   const [loading, setLoading] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const getCoursesByRole = async (roleId: string): Promise<LearningCourse[]> => {
+  // Função memoizada para buscar cursos por role
+  const getCoursesByRole = useCallback(async (roleId: string): Promise<LearningCourse[]> => {
     try {
-      setLoading(true);
       console.log('🔍 Buscando cursos para role:', roleId);
       
       const { data, error } = await supabase
@@ -34,21 +33,19 @@ export const useCourseAccess = () => {
         throw error;
       }
 
-      console.log('✅ Dados retornados:', data);
+      console.log('✅ Dados retornados para role:', roleId, data?.length || 0);
       return (data || [])
         .map((item: any) => item.learning_courses)
         .filter(Boolean);
     } catch (error) {
       console.error('Erro ao buscar cursos por papel:', error);
       return [];
-    } finally {
-      setLoading(false);
     }
-  };
+  }, []);
 
-  const getRolesByCourse = async (courseId: string): Promise<Role[]> => {
+  // Função memoizada para buscar roles por curso
+  const getRolesByCourse = useCallback(async (courseId: string): Promise<Role[]> => {
     try {
-      setIsLoading(true);
       console.log('🔍 Buscando roles para curso:', courseId);
       
       const { data, error } = await supabase
@@ -64,30 +61,29 @@ export const useCourseAccess = () => {
         throw error;
       }
 
-      console.log('✅ Roles encontradas:', data);
+      console.log('✅ Roles encontradas para curso:', courseId, data?.length || 0);
       return (data || [])
         .map((item: any) => item.user_roles)
         .filter(Boolean);
     } catch (error) {
       console.error('Erro ao buscar papéis por curso:', error);
       return [];
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, []);
 
-  const manageCourseAccess = async (courseId: string, roleId: string, hasAccess: boolean) => {
+  // Função memoizada para gerenciar acesso aos cursos
+  const manageCourseAccess = useCallback(async (courseId: string, roleId: string, hasAccess: boolean) => {
     try {
       console.log('🔧 Gerenciando acesso:', { courseId, roleId, hasAccess });
       
       if (hasAccess) {
-        // Verificar se já existe antes de inserir
+        // Verificar se já existe antes de inserir (evita duplicatas)
         const { data: existing } = await supabase
           .from('course_access_control')
           .select('id')
           .eq('course_id', courseId)
           .eq('role_id', roleId)
-          .single();
+          .maybeSingle();
 
         if (!existing) {
           const { error } = await supabase
@@ -95,7 +91,9 @@ export const useCourseAccess = () => {
             .insert({ course_id: courseId, role_id: roleId });
           
           if (error) throw error;
-          console.log('✅ Acesso concedido');
+          console.log('✅ Acesso concedido para:', courseId, roleId);
+        } else {
+          console.log('ℹ️ Acesso já existia para:', courseId, roleId);
         }
       } else {
         // Remover acesso
@@ -106,15 +104,16 @@ export const useCourseAccess = () => {
           .eq('role_id', roleId);
         
         if (error) throw error;
-        console.log('✅ Acesso removido');
+        console.log('✅ Acesso removido para:', courseId, roleId);
       }
     } catch (error) {
       console.error('Erro ao gerenciar acesso ao curso:', error);
       throw error;
     }
-  };
+  }, []);
 
-  const checkCourseAccess = async (courseId: string, userId: string): Promise<boolean> => {
+  // Função memoizada para verificar acesso a curso
+  const checkCourseAccess = useCallback(async (courseId: string, userId: string): Promise<boolean> => {
     try {
       console.log('🔍 Verificando acesso ao curso:', { courseId, userId });
       
@@ -134,11 +133,10 @@ export const useCourseAccess = () => {
       console.error('Erro ao verificar acesso ao curso:', error);
       return false;
     }
-  };
+  }, []);
 
   return {
     loading,
-    isLoading,
     getCoursesByRole,
     getRolesByCourse,
     manageCourseAccess,

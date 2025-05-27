@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { 
   Dialog, 
   DialogContent, 
@@ -34,113 +34,139 @@ export function RoleCourseAccess({
   const [isSaving, setIsSaving] = useState(false);
   const { getCoursesByRole, manageCourseAccess } = useCourseAccess();
   
-  // Função para carregar todos os cursos
-  const fetchCourses = useCallback(async () => {
-    if (!open) return;
+  // Debounce para toggleCourseSelection
+  const [pendingToggles, setPendingToggles] = useState<Set<string>>(new Set());
+
+  // Função para carregar dados iniciais de forma otimizada
+  const loadInitialData = useCallback(async () => {
+    if (!open || !role?.id) return;
     
     setIsLoading(true);
+    console.log('🔄 Carregando dados iniciais para role:', role.name);
+    
     try {
-      console.log('🔍 Carregando cursos disponíveis...');
-      
-      const { data, error } = await supabase
-        .from('learning_courses')
-        .select('*')
-        .order('title');
-      
-      if (error) {
-        console.error('❌ Erro ao carregar cursos:', error);
-        throw error;
+      // Carregar cursos e cursos do papel em paralelo
+      const [allCoursesResult, roleCoursesResult] = await Promise.all([
+        supabase
+          .from('learning_courses')
+          .select('*')
+          .order('title'),
+        getCoursesByRole(role.id)
+      ]);
+
+      if (allCoursesResult.error) {
+        console.error('❌ Erro ao carregar cursos:', allCoursesResult.error);
+        throw allCoursesResult.error;
       }
-      
-      console.log('✅ Cursos carregados:', data?.length || 0);
-      setCourses(data || []);
+
+      const allCourses = allCoursesResult.data || [];
+      const roleCourses = roleCoursesResult;
+      const roleCoursesIds = roleCourses.map(course => course.id);
+
+      console.log('✅ Dados carregados:', {
+        totalCourses: allCourses.length,
+        roleCoursesCount: roleCoursesIds.length
+      });
+
+      setCourses(allCourses);
+      setSelectedCourses(roleCoursesIds);
     } catch (error) {
-      console.error("Erro ao carregar cursos:", error);
-      toast.error("Erro ao carregar cursos");
+      console.error("❌ Erro ao carregar dados iniciais:", error);
+      toast.error("Erro ao carregar dados");
       setCourses([]);
+      setSelectedCourses([]);
     } finally {
       setIsLoading(false);
     }
-  }, [open]);
+  }, [open, role?.id, role?.name, getCoursesByRole]);
 
-  // Função para carregar cursos do papel
-  const fetchRoleCourses = useCallback(async () => {
-    if (!role?.id || !open) return;
-    
-    try {
-      console.log('🔍 Carregando cursos do papel:', role.name);
-      const roleCourses = await getCoursesByRole(role.id);
-      const courseIds = roleCourses.map(course => course.id);
-      console.log('✅ Cursos encontrados para o papel:', courseIds.length);
-      setSelectedCourses(courseIds);
-    } catch (error) {
-      console.error("Erro ao carregar cursos do papel:", error);
-      setSelectedCourses([]);
-    }
-  }, [role?.id, open, getCoursesByRole]);
-
-  // Carregar dados quando o modal abrir
+  // Carregar dados quando modal abrir ou role mudar
   useEffect(() => {
-    if (open) {
-      fetchCourses();
-    } else {
+    if (open && role?.id) {
+      loadInitialData();
+    } else if (!open) {
       // Limpar estado quando fechar
       setCourses([]);
       setSelectedCourses([]);
+      setPendingToggles(new Set());
     }
-  }, [open, fetchCourses]);
+  }, [open, role?.id, loadInitialData]);
+  
+  // Função otimizada para alternar seleção com debounce
+  const toggleCourseSelection = useCallback((courseId: string) => {
+    // Evitar múltiplos cliques no mesmo curso
+    if (pendingToggles.has(courseId)) {
+      console.log('⚠️ Toggle já está pendente para curso:', courseId);
+      return;
+    }
 
-  // Carregar cursos do papel após carregar a lista de cursos
-  useEffect(() => {
-    if (open && role?.id && courses.length > 0) {
-      fetchRoleCourses();
-    }
-  }, [open, role?.id, courses.length, fetchRoleCourses]);
-  
-  // Alternar a seleção de um curso
-  const toggleCourseSelection = (courseId: string) => {
-    setSelectedCourses(prev => 
-      prev.includes(courseId)
+    setPendingToggles(prev => new Set(prev).add(courseId));
+    
+    setSelectedCourses(prev => {
+      const newSelected = prev.includes(courseId)
         ? prev.filter(id => id !== courseId)
-        : [...prev, courseId]
-    );
-  };
+        : [...prev, courseId];
+      
+      console.log('🔄 Toggle curso:', courseId, 'novo estado:', !prev.includes(courseId));
+      return newSelected;
+    });
+
+    // Remover o debounce após um pequeno delay
+    setTimeout(() => {
+      setPendingToggles(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(courseId);
+        return newSet;
+      });
+    }, 300);
+  }, [pendingToggles]);
   
-  // Salvar as alterações
-  const handleSave = async () => {
+  // Função otimizada para salvar alterações
+  const handleSave = useCallback(async () => {
     if (!role) return;
     
     setIsSaving(true);
+    console.log('💾 Iniciando salvamento para role:', role.name);
     
     try {
-      console.log('💾 Salvando configurações de acesso...');
-      
-      // Buscar os cursos atuais do papel
+      // Buscar cursos atuais do papel
       const currentCourses = await getCoursesByRole(role.id);
       const currentIds = currentCourses.map(course => course.id);
       
-      // Para cada curso, verificar se deve ter acesso ou não
-      for (const course of courses) {
-        const shouldHaveAccess = selectedCourses.includes(course.id);
-        const alreadyHasAccess = currentIds.includes(course.id);
-        
-        // Só atualizar se houve mudança no estado de acesso
-        if (shouldHaveAccess !== alreadyHasAccess) {
-          console.log(`🔧 Atualizando acesso para curso ${course.title}:`, shouldHaveAccess);
-          await manageCourseAccess(course.id, role.id, shouldHaveAccess);
-        }
-      }
+      // Calcular mudanças necessárias
+      const toAdd = selectedCourses.filter(id => !currentIds.includes(id));
+      const toRemove = currentIds.filter(id => !selectedCourses.includes(id));
       
-      console.log('✅ Configurações salvas com sucesso');
-      toast.success(`Configurações de acesso a cursos salvas com sucesso para o papel ${role.name}`);
+      console.log('📋 Mudanças necessárias:', {
+        toAdd: toAdd.length,
+        toRemove: toRemove.length
+      });
+
+      // Aplicar mudanças
+      const promises = [
+        ...toAdd.map(courseId => manageCourseAccess(courseId, role.id, true)),
+        ...toRemove.map(courseId => manageCourseAccess(courseId, role.id, false))
+      ];
+
+      await Promise.all(promises);
+      
+      console.log('✅ Salvamento concluído com sucesso');
+      toast.success(`Configurações de acesso salvas para o papel ${role.name}`);
       onOpenChange(false);
     } catch (error) {
-      console.error("❌ Erro ao salvar configurações de acesso:", error);
+      console.error("❌ Erro ao salvar configurações:", error);
       toast.error("Erro ao salvar configurações de acesso");
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [role, selectedCourses, getCoursesByRole, manageCourseAccess, onOpenChange]);
+
+  // Memoizar informações de estado para evitar re-renders desnecessários
+  const selectionInfo = useMemo(() => ({
+    selectedCount: selectedCourses.length,
+    totalCount: courses.length,
+    hasChanges: true // sempre true pois não temos estado inicial para comparar
+  }), [selectedCourses.length, courses.length]);
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -162,34 +188,41 @@ export function RoleCourseAccess({
             <div className="border p-4 rounded-md bg-muted/20">
               <p className="text-sm text-muted-foreground mb-4">
                 Selecione os cursos que usuários com este papel poderão acessar.
-                Cursos não selecionados não serão visíveis para usuários com este papel.
+                ({selectionInfo.selectedCount} de {selectionInfo.totalCount} selecionados)
               </p>
               
               {courses.length === 0 ? (
                 <p>Nenhum curso encontrado.</p>
               ) : (
-                <div className="space-y-4">
-                  {courses.map((course) => (
-                    <div key={course.id} className="flex items-start space-x-3 p-2 rounded-md hover:bg-muted/50">
-                      <Checkbox 
-                        id={course.id} 
-                        checked={selectedCourses.includes(course.id)}
-                        onCheckedChange={() => toggleCourseSelection(course.id)}
-                        disabled={isSaving}
-                      />
-                      <div className="grid gap-1">
-                        <label 
-                          htmlFor={course.id}
-                          className="font-medium text-sm cursor-pointer"
-                        >
-                          {course.title}
-                        </label>
-                        {course.description && (
-                          <p className="text-xs text-muted-foreground">{course.description}</p>
-                        )}
+                <div className="space-y-3">
+                  {courses.map((course) => {
+                    const isSelected = selectedCourses.includes(course.id);
+                    const isPending = pendingToggles.has(course.id);
+                    
+                    return (
+                      <div key={course.id} className="flex items-start space-x-3 p-3 rounded-md hover:bg-muted/50 transition-colors">
+                        <Checkbox 
+                          id={course.id} 
+                          checked={isSelected}
+                          onCheckedChange={() => toggleCourseSelection(course.id)}
+                          disabled={isSaving || isPending}
+                          className={isPending ? "opacity-50" : ""}
+                        />
+                        <div className="grid gap-1 flex-1">
+                          <label 
+                            htmlFor={course.id}
+                            className="font-medium text-sm cursor-pointer"
+                          >
+                            {course.title}
+                            {isPending && <span className="text-xs text-muted-foreground ml-2">(processando...)</span>}
+                          </label>
+                          {course.description && (
+                            <p className="text-xs text-muted-foreground">{course.description}</p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -204,7 +237,7 @@ export function RoleCourseAccess({
               </Button>
               <Button 
                 onClick={handleSave}
-                disabled={isSaving || courses.length === 0}
+                disabled={isSaving || courses.length === 0 || pendingToggles.size > 0}
               >
                 {isSaving ? (
                   <>
