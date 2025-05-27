@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePermissions } from "@/hooks/auth/usePermissions";
 
 interface AdminSidebarNavProps {
@@ -33,6 +34,11 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
       title: "Dashboard",
       href: "/admin",
       icon: LayoutDashboard,
+    },
+    {
+      title: "Performance",
+      href: "/admin/performance",
+      icon: Gauge,
     },
     {
       title: "Eventos",
@@ -116,7 +122,7 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
       title: "Convites",
       href: "/admin/invites",
       icon: Mail,
-      permission: "users.invite" // Permissão específica para acessar convites
+      permission: "users.invite"
     },
     {
       title: "Log de Auditoria",
@@ -144,7 +150,7 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
         key={item.href}
         variant={isActive(item.href) ? "default" : "ghost"}
         className={cn(
-          "w-full justify-start gap-2",
+          "w-full justify-start gap-2 mb-1",
           !sidebarOpen && "justify-center",
           isActive(item.href) && "bg-viverblue hover:bg-viverblue/90"
         )}
@@ -159,44 +165,58 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
   };
 
   return (
-    <div className="space-y-4 py-4">
-      <div className="px-3 space-y-1">
-        {menuItems.map(item => renderMenuItem(item))}
-
-        {/* Nova seção para Comunidade */}
-        <Separator className="my-4" />
-        
-        {sidebarOpen && (
-          <div className="mb-2 px-2 text-xs font-semibold text-gray-500">
-            COMUNIDADE
+    <div className="flex flex-col h-full">
+      {/* Área de navegação com scroll */}
+      <ScrollArea className="flex-1 px-3">
+        <div className="py-4 space-y-2">
+          {/* Menu principal */}
+          <div className="space-y-1">
+            {menuItems.map(item => renderMenuItem(item))}
           </div>
-        )}
-        
-        {communityItems.map(item => renderMenuItem(item))}
 
-        <Separator className="my-4" />
-        
-        {sidebarOpen && (
-          <div className="mb-2 px-2 text-xs font-semibold text-gray-500">
-            ÁREA DE FORMAÇÃO
+          {/* Seção Comunidade */}
+          <Separator className="my-3" />
+          
+          {sidebarOpen && (
+            <div className="mb-2 px-2 text-xs font-semibold text-gray-500">
+              COMUNIDADE
+            </div>
+          )}
+          
+          <div className="space-y-1">
+            {communityItems.map(item => renderMenuItem(item))}
           </div>
-        )}
-        
-        {formacaoItems.map(item => renderMenuItem(item))}
 
-        {/* Nova seção para RBAC */}
-        <Separator className="my-4" />
-        
-        {sidebarOpen && (
-          <div className="mb-2 px-2 text-xs font-semibold text-gray-500">
-            GERENCIAMENTO DE ACESSO
+          {/* Seção Área de Formação */}
+          <Separator className="my-3" />
+          
+          {sidebarOpen && (
+            <div className="mb-2 px-2 text-xs font-semibold text-gray-500">
+              ÁREA DE FORMAÇÃO
+            </div>
+          )}
+          
+          <div className="space-y-1">
+            {formacaoItems.map(item => renderMenuItem(item))}
           </div>
-        )}
-        
-        {rbacItems.map(item => renderMenuItem(item))}
 
-        <Separator className="my-4" />
+          {/* Seção RBAC */}
+          <Separator className="my-3" />
+          
+          {sidebarOpen && (
+            <div className="mb-2 px-2 text-xs font-semibold text-gray-500">
+              GERENCIAMENTO DE ACESSO
+            </div>
+          )}
+          
+          <div className="space-y-1">
+            {rbacItems.map(item => renderMenuItem(item))}
+          </div>
+        </div>
+      </ScrollArea>
 
+      {/* Botão "Voltar ao Dashboard" fixo no rodapé */}
+      <div className="px-3 py-4 border-t border-gray-700">
         <Button
           variant="outline"
           className={cn(
