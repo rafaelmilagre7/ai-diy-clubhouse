@@ -12,13 +12,11 @@ interface SendInviteEmailParams {
   senderName?: string;
   notes?: string;
   inviteId?: string;
-  retryCount?: number;
 }
 
 export function useInviteEmailService() {
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState<Error | null>(null);
-  const [emailQueue, setEmailQueue] = useState<SendInviteEmailParams[]>([]);
 
   const sendInviteEmail = useCallback(async ({
     email,
@@ -28,13 +26,12 @@ export function useInviteEmailService() {
     senderName,
     notes,
     inviteId,
-    retryCount = 0,
   }: SendInviteEmailParams): Promise<SendInviteResponse> => {
     try {
       setIsSending(true);
       setSendError(null);
 
-      console.log("🚀 Enviando convite:", { email, roleName, retryCount });
+      console.log("🚀 Enviando convite nativo:", { email, roleName });
 
       // Validações
       if (!email?.includes('@')) {
@@ -68,65 +65,17 @@ export function useInviteEmailService() {
         throw new Error(data?.message || 'Falha no envio');
       }
 
-      console.log("✅ Email enviado:", data);
-
-      // Remover da fila se estava em retry
-      if (retryCount > 0) {
-        setEmailQueue(prev => prev.filter(item => 
-          item.email !== email || item.inviteId !== inviteId
-        ));
-      }
-
-      // Atualizar estatísticas do convite
-      if (inviteId) {
-        try {
-          await supabase.rpc('update_invite_send_attempt', {
-            invite_id: inviteId
-          });
-        } catch (statsError) {
-          console.warn("Erro ao atualizar estatísticas:", statsError);
-        }
-      }
+      console.log("✅ Email nativo enviado:", data);
 
       return {
         success: true,
-        message: 'Email enviado com sucesso',
-        emailId: data.emailId
+        message: 'Email enviado com sucesso via Supabase',
+        emailId: data.user_id
       };
 
     } catch (err: any) {
       console.error("❌ Erro no envio:", err);
       setSendError(err);
-
-      // Sistema de retry para erros temporários
-      if (retryCount < 3) {
-        const retryParams = {
-          email, inviteUrl, roleName, expiresAt,
-          senderName, notes, inviteId,
-          retryCount: retryCount + 1
-        };
-
-        // Adicionar à fila
-        setEmailQueue(prev => {
-          const exists = prev.some(item => 
-            item.email === email && item.inviteId === inviteId
-          );
-          return exists ? prev : [...prev, retryParams];
-        });
-
-        // Programar retry
-        const retryDelay = Math.pow(2, retryCount) * 2000; // 2s, 4s, 8s
-        setTimeout(() => {
-          sendInviteEmail(retryParams);
-        }, retryDelay);
-
-        return {
-          success: false,
-          message: `Erro no envio, tentativa ${retryCount + 1}/3 programada`,
-          error: err.message,
-          willRetry: true
-        };
-      }
 
       return {
         success: false,
@@ -151,50 +100,14 @@ export function useInviteEmailService() {
     return baseUrl;
   }, []);
 
-  const clearEmailQueue = useCallback(() => {
-    console.log("🧹 Limpando fila de emails");
-    setEmailQueue([]);
-  }, []);
-
-  const retryAllPendingEmails = useCallback(async () => {
-    const pendingEmails = [...emailQueue];
-    console.log(`🔄 Reenviando ${pendingEmails.length} emails`);
-
-    if (pendingEmails.length === 0) {
-      toast.info("Nenhum email pendente");
-      return;
-    }
-
-    clearEmailQueue();
-    let successCount = 0;
-
-    for (const params of pendingEmails) {
-      try {
-        const result = await sendInviteEmail(params);
-        if (result.success) {
-          successCount++;
-        }
-      } catch (error) {
-        console.error(`Erro ao reenviar para ${params.email}:`, error);
-      }
-      
-      // Pausa entre envios
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
-
-    if (successCount > 0) {
-      toast.success(`${successCount} email(s) reenviado(s)`);
-    }
-  }, [emailQueue, clearEmailQueue, sendInviteEmail]);
-
   return {
     sendInviteEmail,
     getInviteLink,
     isSending,
     sendError,
-    pendingEmails: emailQueue.length,
-    retryAllPendingEmails,
-    clearEmailQueue,
-    emailQueue
+    pendingEmails: 0, // Não precisamos mais de fila complexa
+    retryAllPendingEmails: () => {}, // Função vazia para compatibilidade
+    clearEmailQueue: () => {}, // Função vazia para compatibilidade
+    emailQueue: [] // Array vazio para compatibilidade
   };
 }
