@@ -70,8 +70,8 @@ export const verifyNetworkingAccess = async (userEmail: string): Promise<{ succe
       return { success: false, message: 'Usuário não encontrado', hasAccess: false };
     }
     
-    // Verificar se o role permite acesso ao networking
-    const allowedRoles = ['admin', 'membro_club'];
+    // Verificar se o role permite acesso ao networking (apenas admin por enquanto)
+    const allowedRoles = ['admin'];
     const hasRoleAccess = allowedRoles.includes(userProfile.role || '');
     
     // Verificar permissões específicas se houver role_id

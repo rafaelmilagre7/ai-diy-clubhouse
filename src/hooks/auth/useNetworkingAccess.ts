@@ -9,11 +9,12 @@ export function useNetworkingAccess() {
   // Verificar se tem permissão específica de networking
   const hasNetworkingPermission = hasPermission('networking.access');
   
-  // Verificar se é membro club ou admin (fallback)
-  const isMemberClub = profile?.role === 'membro_club' || profile?.role === 'admin';
+  // Verificar se é admin (que tem acesso total)
+  const isAdmin = profile?.role === 'admin';
   
-  // Acesso liberado se tem permissão específica OU é membro club/admin
-  const hasAccess = hasNetworkingPermission || isMemberClub;
+  // Para agora, considerar que membros regulares com permissão específica têm acesso
+  // Quando implementarmos o sistema de roles expandido (membro_club), será atualizado
+  const hasAccess = hasNetworkingPermission || isAdmin;
   
   const accessMessage = !hasAccess 
     ? 'O Networking Inteligente é exclusivo para membros Club. Faça upgrade para conectar-se com outros empreendedores.'
@@ -22,7 +23,7 @@ export function useNetworkingAccess() {
   return {
     hasAccess,
     accessMessage,
-    isMemberClub,
+    isAdmin,
     hasNetworkingPermission
   };
 }
