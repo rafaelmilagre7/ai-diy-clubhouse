@@ -1,465 +1,160 @@
 
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
-import { Form } from "@/components/ui/form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import type { Event } from "@/types/events";
-import { useQueryClient } from "@tanstack/react-query";
-import { eventSchema, type EventFormData } from "./form/EventFormSchema";
+import { Button } from "@/components/ui/button";
+import { Form } from "@/components/ui/form";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2 } from "lucide-react";
+import { EventFormSchema, type EventFormData } from "./form/EventFormSchema";
 import { EventBasicInfo } from "./form/EventBasicInfo";
 import { EventDateTime } from "./form/EventDateTime";
 import { EventLocation } from "./form/EventLocation";
 import { EventCoverImage } from "./form/EventCoverImage";
 import { EventRecurrence } from "./form/EventRecurrence";
 import { EventRoleAccess } from "./form/EventRoleAccess";
-import { useEffect } from "react";
-import { addDays, addMonths, addWeeks, format } from "date-fns";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BRASIL_TIMEZONE, createUTCDateWithLocalTime, toLocalTime, toUTCTime } from "@/utils/timezoneUtils";
+import type { Event } from "@/types/events";
 
 interface EventFormProps {
   event?: Event;
-  initialData?: EventFormData | null;
   onSuccess: () => void;
-  layout?: "standard" | "tabs";
 }
 
-export const EventForm = ({ event, initialData, onSuccess, layout = "standard" }: EventFormProps) => {
-  const queryClient = useQueryClient();
-  const isEditing = !!event;
-  const useTabs = layout === "tabs";
-
+export const EventForm = ({ event, onSuccess }: EventFormProps) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const form = useForm<EventFormData>({
-    resolver: zodResolver(eventSchema),
-    defaultValues: event || initialData || {
-      title: "",
-      description: "",
-      start_time: "",
-      end_time: "",
-      location_link: "",
-      physical_location: "",
-      cover_image_url: "",
-      is_recurring: false,
-      recurrence_interval: 1,
-      role_ids: []
+    resolver: zodResolver(EventFormSchema),
+    defaultValues: {
+      title: event?.title || "",
+      description: event?.description || "",
+      start_time: event?.start_time || "",
+      end_time: event?.end_time || "",
+      location_link: event?.location_link || "",
+      physical_location: event?.physical_location || "",
+      cover_image_url: event?.cover_image_url || "",
+      is_recurring: event?.is_recurring || false,
+      recurrence_pattern: event?.recurrence_pattern || "weekly",
+      recurrence_interval: event?.recurrence_interval || 1,
+      recurrence_day: event?.recurrence_day || null,
+      recurrence_count: event?.recurrence_count || null,
+      recurrence_end_date: event?.recurrence_end_date || null,
+      role_ids: [] // Will be loaded separately if needed
     }
   });
 
-  // Atualizar o formulário quando recebermos dados iniciais do importador
-  useEffect(() => {
-    if (initialData) {
-      Object.entries(initialData).forEach(([key, value]) => {
-        if (value) {
-          form.setValue(key as any, value);
-        }
-      });
-      
-      // Se tivermos datas em formatos diferentes, precisamos convertê-las
-      if (initialData.start_time && !initialData.start_time.includes('T')) {
-        form.setValue('start_time', `${initialData.start_time}T00:00`);
-      }
-      
-      if (initialData.end_time && !initialData.end_time.includes('T')) {
-        form.setValue('end_time', `${initialData.end_time}T00:00`);
-      }
-    }
-  }, [initialData, form]);
-
-  // Buscar os papéis associados ao evento durante a edição
-  useEffect(() => {
-    if (isEditing && event?.id) {
-      const fetchEventRoles = async () => {
-        const { data, error } = await supabase
-          .from('event_access_control')
-          .select('role_id')
-          .eq('event_id', event.id);
-        
-        if (error) {
-          console.error("Erro ao buscar papéis do evento:", error);
-          return;
-        }
-        
-        // Atualizar o formulário com os papéis encontrados
-        if (data && data.length > 0) {
-          const roleIds = data.map(item => item.role_id);
-          form.setValue('role_ids', roleIds);
-        }
-      };
-      
-      fetchEventRoles();
-    }
-  }, [isEditing, event?.id, form]);
-
-  // Função para gerar instâncias de eventos recorrentes
-  const generateRecurringEvents = async (baseEvent: EventFormData, parentEventId: string) => {
-    const events: any[] = [];
-    
-    // Configurações de tempo
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Normalizar para início do dia
-    
-    // Extrair horas e minutos dos campos de horário
-    const startTimeStr = baseEvent.start_time.includes('T') ? 
-      baseEvent.start_time.split('T')[1] : "00:00";
-    
-    const endTimeStr = baseEvent.end_time.includes('T') ? 
-      baseEvent.end_time.split('T')[1] : "00:00";
-    
-    const [startHour, startMinute] = startTimeStr.split(':').map(Number);
-    const [endHour, endMinute] = endTimeStr.split(':').map(Number);
-    
-    // Definir data de início com base no padrão de recorrência
-    let startDate: Date;
-    
-    switch (baseEvent.recurrence_pattern) {
-      case "daily":
-        // Para eventos diários, começamos hoje
-        startDate = new Date(today);
-        break;
-      
-      case "weekly":
-        // Para eventos semanais, encontramos o próximo dia da semana correspondente
-        const targetDay = baseEvent.recurrence_day || 1; // Segunda-feira como padrão
-        startDate = new Date(today);
-        
-        const currentDay = startDate.getDay(); // 0 = domingo, 1 = segunda, ...
-        const daysToAdd = (targetDay - currentDay + 7) % 7;
-        
-        if (daysToAdd === 0) {
-          // Se hoje for o dia alvo, verificar se já passou do horário configurado
-          const currentHour = new Date().getHours();
-          const currentMinute = new Date().getMinutes();
-          
-          if (currentHour > startHour || (currentHour === startHour && currentMinute > startMinute)) {
-            // Se já passou do horário hoje, vamos para a próxima semana
-            startDate = addDays(startDate, 7);
-          }
-        } else {
-          // Ajustar para o próximo dia da semana correto
-          startDate = addDays(startDate, daysToAdd);
-        }
-        break;
-      
-      case "monthly":
-        // Para eventos mensais, definimos para o mesmo dia no mês atual ou próximo
-        startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        
-        // Se já passou do dia no mês atual, vamos para o próximo mês
-        if (today.getDate() > startDate.getDate() || 
-            (today.getDate() === startDate.getDate() && 
-             (today.getHours() > startHour || 
-              (today.getHours() === startHour && today.getMinutes() > startMinute)))) {
-          startDate = addMonths(startDate, 1);
-        }
-        break;
-      
-      default:
-        startDate = new Date();
-    }
-    
-    // Determinar o número de eventos a criar
-    let count = baseEvent.recurrence_count || 10; // padrão para 10 se não especificado
-    const endDateLimit = baseEvent.recurrence_end_date ? new Date(baseEvent.recurrence_end_date) : null;
-    const interval = baseEvent.recurrence_interval || 1;
-    
-    // Função para adicionar tempo com base no padrão
-    const addTimeByPattern = (date: Date, pattern: string, interval: number) => {
-      switch (pattern) {
-        case 'daily': return addDays(date, interval);
-        case 'weekly': return addWeeks(date, interval);
-        case 'monthly': return addMonths(date, interval);
-        default: return addDays(date, interval);
-      }
-    };
-    
-    // Data inicial para a primeira instância, aplicando os horários definidos
-    let currentStartDate = new Date(startDate);
-    currentStartDate.setHours(startHour, startMinute, 0, 0);
-    
-    // Converter para ISO format no timezone local. É importante que o timezone
-    // seja preservado ao criar as instâncias.
-    const currentStartLocalISODate = format(currentStartDate, "yyyy-MM-dd");
-    
-    // Gerar instâncias
-    for (let i = 0; i < count; i++) {
-      // Verificar se atingimos a data limite
-      if (endDateLimit && currentStartDate > endDateLimit) {
-        break;
-      }
-      
-      // Formatar a data atual para string no formato ISO
-      const currentDateISO = format(currentStartDate, "yyyy-MM-dd");
-      
-      // Criar strings de data e hora formatadas para UTC antes de salvar
-      const startISO = createUTCDateWithLocalTime(
-        currentDateISO, 
-        `${String(startHour).padStart(2, '0')}:${String(startMinute).padStart(2, '0')}`
-      );
-      
-      // Calcular data de fim do evento
-      // Se o horário de término for anterior ao horário de início, 
-      // assume-se que termina no dia seguinte
-      const isNextDay = endHour < startHour || (endHour === startHour && endMinute < startMinute);
-      const endDateISO = isNextDay ? 
-        format(addDays(currentStartDate, 1), "yyyy-MM-dd") : 
-        currentDateISO;
-        
-      const endISO = createUTCDateWithLocalTime(
-        endDateISO,
-        `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`
-      );
-      
-      // Obter o usuário atual de forma assíncrona
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData?.user?.id;
-      
-      // Criar a instância do evento
-      const eventInstance = {
-        title: baseEvent.title,
-        description: baseEvent.description,
-        start_time: startISO,
-        end_time: endISO,
-        location_link: baseEvent.location_link,
-        physical_location: baseEvent.physical_location,
-        cover_image_url: baseEvent.cover_image_url,
-        parent_event_id: parentEventId,
-        created_by: userId
-      };
-      
-      console.log(`Evento recorrente ${i+1} criado:`, {
-        data: currentDateISO,
-        horário_início_local: `${startHour}:${startMinute}`,
-        horário_fim_local: `${endHour}:${endMinute}`,
-        start_time_utc: startISO,
-        end_time_utc: endISO
-      });
-      
-      events.push(eventInstance);
-      
-      // Avançar para a próxima data
-      currentStartDate = addTimeByPattern(currentStartDate, baseEvent.recurrence_pattern || 'weekly', interval);
-    }
-    
-    return events;
-  };
-
-  const handleAccessControl = async (eventId: string, roleIds: string[] = []) => {
-    if (!roleIds || roleIds.length === 0) {
-      return; // Evento sem restrições de acesso
-    }
-
-    // Se estiver editando, remover controles anteriores
-    if (isEditing) {
-      await supabase
-        .from('event_access_control')
-        .delete()
-        .eq('event_id', eventId);
-    }
-
-    // Inserir novos controles de acesso
-    const accessControls = roleIds.map(roleId => ({
-      event_id: eventId,
-      role_id: roleId
-    }));
-
-    const { error } = await supabase
-      .from('event_access_control')
-      .insert(accessControls);
-
-    if (error) {
-      console.error("Erro ao configurar controle de acesso:", error);
-      throw error;
-    }
-  };
-
   const onSubmit = async (data: EventFormData) => {
     try {
-      console.log("Dados do formulário antes de processar:", data);
+      setIsSubmitting(true);
       
-      // Para eventos recorrentes, normalizar as datas
-      if (data.is_recurring) {
-        // Para eventos recorrentes, usamos uma data fictícia apenas para validação
-        // A data real será determinada pela lógica de recorrência
-        const fakeDate = "2023-01-01";
-        
-        // Verificar se já temos os formatos de horário corretos
-        if (!data.start_time.includes('T')) {
-          data.start_time = `${fakeDate}T${data.start_time}`;
-        }
-        
-        if (!data.end_time.includes('T')) {
-          data.end_time = `${fakeDate}T${data.end_time}`;
-        }
-      } else {
-        // Para eventos não recorrentes, converter do horário local para UTC
-        if (data.start_time) {
-          const startLocalDate = new Date(data.start_time);
-          const startUTCDate = toUTCTime(startLocalDate);
-          data.start_time = startUTCDate.toISOString();
-        }
-        
-        if (data.end_time) {
-          const endLocalDate = new Date(data.end_time);
-          const endUTCDate = toUTCTime(endLocalDate);
-          data.end_time = endUTCDate.toISOString();
-        }
-      }
-
-      console.log("Dados do formulário após processar:", {
+      const eventData = {
+        title: data.title,
+        description: data.description,
         start_time: data.start_time,
         end_time: data.end_time,
-        is_recurring: data.is_recurring
-      });
+        location_link: data.location_link,
+        physical_location: data.physical_location,
+        cover_image_url: data.cover_image_url,
+        is_recurring: data.is_recurring,
+        recurrence_pattern: data.recurrence_pattern,
+        recurrence_interval: data.recurrence_interval,
+        recurrence_day: data.recurrence_day,
+        recurrence_count: data.recurrence_count,
+        recurrence_end_date: data.recurrence_end_date,
+      };
 
-      if (isEditing) {
-        // Atualizar evento existente
+      if (event?.id) {
         const { error } = await supabase
-          .from("events")
-          .update({
-            title: data.title,
-            description: data.description,
-            start_time: data.start_time,
-            end_time: data.end_time,
-            location_link: data.location_link,
-            physical_location: data.physical_location,
-            cover_image_url: data.cover_image_url,
-            is_recurring: data.is_recurring,
-            recurrence_pattern: data.is_recurring ? data.recurrence_pattern : null,
-            recurrence_interval: data.is_recurring ? data.recurrence_interval : null,
-            recurrence_day: data.is_recurring && data.recurrence_pattern === 'weekly' ? data.recurrence_day : null,
-            recurrence_count: data.is_recurring ? data.recurrence_count : null,
-            recurrence_end_date: data.is_recurring ? data.recurrence_end_date : null
-          })
-          .eq("id", event.id);
-
+          .from('events')
+          .update(eventData)
+          .eq('id', event.id);
+          
         if (error) throw error;
-
-        // Atualizar controle de acesso
-        await handleAccessControl(event.id, data.role_ids);
-        
         toast.success("Evento atualizado com sucesso!");
       } else {
-        // Criar um novo evento
-        const eventData = {
-          ...data,
-          created_by: (await supabase.auth.getUser()).data.user?.id
-        };
-
-        // Remover campos de recorrência se não for recorrente
-        if (!data.is_recurring) {
-          delete eventData.recurrence_pattern;
-          delete eventData.recurrence_interval;
-          delete eventData.recurrence_day;
-          delete eventData.recurrence_count;
-          delete eventData.recurrence_end_date;
-        }
-
-        // Remover role_ids que será tratado separadamente
-        const { role_ids, ...eventToInsert } = eventData;
-
-        const { data: newEvent, error } = await supabase
-          .from("events")
-          .insert([eventToInsert])
-          .select('id')
-          .single();
-
-        if (error) throw error;
-
-        // Configurar controle de acesso para o novo evento
-        await handleAccessControl(newEvent.id, role_ids);
-
-        // Se for um evento recorrente, criar instâncias adicionais
-        if (data.is_recurring && newEvent.id) {
-          const recurrenceInstances = await generateRecurringEvents(data, newEvent.id);
-          
-          if (recurrenceInstances.length > 0) {
-            const { error: recurrenceError } = await supabase
-              .from("events")
-              .insert(recurrenceInstances);
-            
-            if (recurrenceError) {
-              console.error("Erro ao criar instâncias recorrentes:", recurrenceError);
-              toast.error("Ocorreu um erro ao criar algumas instâncias recorrentes");
-            }
-          }
-        }
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData.user) throw new Error("Usuário não autenticado");
         
+        const { error } = await supabase
+          .from('events')
+          .insert({
+            ...eventData,
+            created_by: userData.user.id
+          });
+          
+        if (error) throw error;
         toast.success("Evento criado com sucesso!");
       }
-
-      queryClient.invalidateQueries({ queryKey: ["events"] });
+      
       onSuccess();
     } catch (error) {
       console.error("Erro ao salvar evento:", error);
-      toast.error("Erro ao salvar evento");
+      toast.error("Erro ao salvar evento. Tente novamente.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const renderStandardLayout = () => (
+  return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <EventBasicInfo form={form} />
-        <EventDateTime form={form} />
-        {form.watch("is_recurring") && <EventRecurrence form={form} />}
-        <EventLocation form={form} />
-        <EventRoleAccess form={form} />
-        <EventCoverImage form={form} />
+        <Tabs defaultValue="basic" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="basic">Básico</TabsTrigger>
+            <TabsTrigger value="datetime">Data/Hora</TabsTrigger>
+            <TabsTrigger value="location">Local</TabsTrigger>
+            <TabsTrigger value="advanced">Avançado</TabsTrigger>
+          </TabsList>
+          
+          <div className="mt-6 min-h-[400px]">
+            <TabsContent value="basic" className="space-y-4">
+              <EventBasicInfo form={form} />
+              <EventCoverImage form={form} />
+            </TabsContent>
+            
+            <TabsContent value="datetime" className="space-y-4">
+              <EventDateTime form={form} />
+              <EventRecurrence form={form} />
+            </TabsContent>
+            
+            <TabsContent value="location" className="space-y-4">
+              <EventLocation form={form} />
+            </TabsContent>
+            
+            <TabsContent value="advanced" className="space-y-4">
+              <EventRoleAccess form={form} />
+            </TabsContent>
+          </div>
+        </Tabs>
         
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={onSuccess}>
+        {/* Botões fixos na parte inferior */}
+        <div className="flex justify-end gap-3 pt-6 border-t bg-background sticky bottom-0 z-10">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onSuccess}
+            disabled={isSubmitting}
+          >
             Cancelar
           </Button>
-          <Button type="submit">
-            {isEditing ? "Atualizar" : "Criar"} Evento
+          <Button 
+            type="submit" 
+            disabled={isSubmitting}
+            className="bg-viverblue hover:bg-viverblue/90"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {event ? "Atualizando..." : "Criando..."}
+              </>
+            ) : (
+              event ? "Atualizar Evento" : "Criar Evento"
+            )}
           </Button>
         </div>
       </form>
     </Form>
   );
-
-  const renderTabsLayout = () => (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        <Tabs defaultValue="informacoes" className="w-full">
-          <TabsList className="w-full justify-start px-6 pt-4 border-b rounded-none">
-            <TabsTrigger value="informacoes">Informações</TabsTrigger>
-            {form.watch("is_recurring") && 
-              <TabsTrigger value="recorrencia">Recorrência</TabsTrigger>
-            }
-            <TabsTrigger value="acesso">Acesso</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="informacoes" className="mt-0 space-y-4">
-            <EventBasicInfo form={form} />
-            <EventDateTime form={form} />
-            <EventLocation form={form} />
-            <EventCoverImage form={form} />
-          </TabsContent>
-
-          {form.watch("is_recurring") && (
-            <TabsContent value="recorrencia" className="mt-0">
-              <EventRecurrence form={form} />
-            </TabsContent>
-          )}
-
-          <TabsContent value="acesso" className="mt-0">
-            <EventRoleAccess form={form} />
-          </TabsContent>
-
-          <div className="flex justify-end gap-2 mt-6 sticky bottom-0">
-            <Button type="button" variant="outline" onClick={onSuccess}>
-              Cancelar
-            </Button>
-            <Button type="submit">
-              {isEditing ? "Atualizar" : "Criar"} Evento
-            </Button>
-          </div>
-        </Tabs>
-      </form>
-    </Form>
-  );
-
-  return useTabs ? renderTabsLayout() : renderStandardLayout();
 };
