@@ -138,6 +138,28 @@ export function useCreateConnection() {
         throw new Error('Conexão já existe');
       }
 
+      // Buscar dados do destinatário para o e-mail
+      const { data: recipientProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('name, email, company_name, current_position')
+        .eq('id', recipientId)
+        .single();
+
+      if (profileError || !recipientProfile) {
+        throw new Error('Erro ao buscar dados do destinatário');
+      }
+
+      // Buscar dados do solicitante
+      const { data: requesterProfile, error: requesterError } = await supabase
+        .from('profiles')
+        .select('name, company_name, current_position')
+        .eq('id', user.id)
+        .single();
+
+      if (requesterError || !requesterProfile) {
+        throw new Error('Erro ao buscar dados do solicitante');
+      }
+
       const { data, error } = await supabase
         .from('network_connections')
         .insert({
@@ -152,7 +174,7 @@ export function useCreateConnection() {
         throw error;
       }
 
-      // Criar notificação
+      // Criar notificação no banco
       await supabase
         .from('notifications')
         .insert({
@@ -166,11 +188,35 @@ export function useCreateConnection() {
           }
         });
 
+      // Enviar e-mail de notificação
+      try {
+        const emailResponse = await supabase.functions.invoke('send-connection-email', {
+          body: {
+            recipientEmail: recipientProfile.email,
+            recipientName: recipientProfile.name || 'Usuário',
+            requesterName: requesterProfile.name || 'Usuário',
+            requesterCompany: requesterProfile.company_name,
+            requesterPosition: requesterProfile.current_position,
+            connectionId: data.id
+          }
+        });
+
+        if (emailResponse.error) {
+          console.error('Erro ao enviar e-mail de conexão:', emailResponse.error);
+          // Não falhar a operação por causa do e-mail
+        } else {
+          console.log('E-mail de conexão enviado com sucesso');
+        }
+      } catch (emailError) {
+        console.error('Erro ao chamar função de e-mail:', emailError);
+        // Não falhar a operação por causa do e-mail
+      }
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['network-connections'] });
-      toast.success('Solicitação de conexão enviada!');
+      toast.success('Solicitação de conexão enviada! O usuário receberá um e-mail de notificação.');
     },
     onError: (error: any) => {
       console.error('Erro ao criar conexão:', error);

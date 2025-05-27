@@ -39,3 +39,6 @@ allowed_mime_types = ["image/jpeg", "image/png", "image/gif", "image/webp", "vid
 
 [functions.generate-networking-matches]
 verify_jwt = true
+
+[functions.send-connection-email]
+verify_jwt = true
