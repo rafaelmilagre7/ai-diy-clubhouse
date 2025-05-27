@@ -4770,6 +4770,12 @@ export type Database = {
         Args: { user_id: string; permission_code: string }
         Returns: boolean
       }
+      validate_onboarding_completion: {
+        Args: {
+          progress_record: Database["public"]["Tables"]["onboarding_progress"]["Row"]
+        }
+        Returns: boolean
+      }
       validateuserrole: {
         Args: { profileid: string; currentrole: string; email: string }
         Returns: string

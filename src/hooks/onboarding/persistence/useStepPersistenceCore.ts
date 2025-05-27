@@ -77,6 +77,8 @@ export function useStepPersistenceCore({
         console.error(`Erro ao salvar dados para serviço específico (${stepId}):`, serviceError);
       }
 
+      // IMPORTANTE: Nunca forçar is_completed = true aqui
+      // O banco agora tem validação rigorosa via trigger
       const result = await updateProgress(updateObj);
       
       if (!result || (result as any).error) {
@@ -158,6 +160,7 @@ export function useStepPersistenceCore({
         return;
       }
       
+      // Tentar marcar como completo - o trigger do banco vai validar
       const result = await updateProgress({
         is_completed: true,
         completed_steps: requiredSteps,
@@ -165,7 +168,13 @@ export function useStepPersistenceCore({
       });
       
       if ((result as any)?.error) {
-        throw new Error((result as any).error.message || "Erro ao completar onboarding");
+        // Se o trigger rejeitou, mostrar mensagem específica
+        const errorMessage = (result as any).error.message;
+        if (errorMessage.includes('dados obrigatórios faltando')) {
+          toast.error("Ainda há dados obrigatórios que precisam ser preenchidos. Verifique todas as etapas.");
+          return;
+        }
+        throw new Error(errorMessage || "Erro ao completar onboarding");
       }
       
       await refreshProgress();
@@ -179,11 +188,15 @@ export function useStepPersistenceCore({
       logError("complete_onboarding_error", { 
         error: error instanceof Error ? error.message : String(error) 
       });
-      toast.error("Erro ao finalizar onboarding. Por favor, tente novamente.");
       
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 1500);
+      if (error.message && error.message.includes('dados obrigatórios faltando')) {
+        toast.error("Ainda há dados obrigatórios que precisam ser preenchidos. Verifique todas as etapas.");
+      } else {
+        toast.error("Erro ao finalizar onboarding. Por favor, tente novamente.");
+      }
+      
+      // Em caso de erro, não redirecionar automaticamente
+      console.log("Erro ao completar onboarding, usuário pode revisar os dados");
     }
   };
 

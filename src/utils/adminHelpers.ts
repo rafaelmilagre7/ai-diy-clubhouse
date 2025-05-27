@@ -116,3 +116,24 @@ export const adminCheckNetworking = async (userEmail: string) => {
   console.log(result.message);
   return result;
 };
+
+// Função para forçar reset completo do cache de progresso
+export const forceRefreshOnboardingCache = async (userEmail: string) => {
+  try {
+    // Simular um refresh completo limpando qualquer cache local
+    if (typeof window !== 'undefined') {
+      // Limpar localStorage relacionado ao onboarding
+      const keysToRemove = Object.keys(localStorage).filter(key => 
+        key.includes('onboarding') || key.includes('progress')
+      );
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      
+      toast.success(`Cache de onboarding limpo para ${userEmail}`);
+    }
+    
+    return { success: true, message: 'Cache limpo com sucesso' };
+  } catch (error) {
+    console.error('Erro ao limpar cache:', error);
+    return { success: false, message: 'Erro ao limpar cache' };
+  }
+};
