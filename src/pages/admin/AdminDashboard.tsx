@@ -4,6 +4,7 @@ import { useAdminDashboardData } from "@/hooks/admin/useAdminDashboardData";
 import { AdminDashboardLayout } from "@/components/admin/dashboard/AdminDashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { logger } from "@/utils/logger";
 
 const AdminDashboard = () => {
   const [timeRange, setTimeRange] = useState('30d');
@@ -19,6 +20,8 @@ const AdminDashboard = () => {
 
     // Fallback para quando os dados não estão disponíveis
     if (loading) {
+      logger.debug('AdminDashboard loading state', { timeRange });
+      
       return (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
@@ -41,6 +44,14 @@ const AdminDashboard = () => {
       );
     }
 
+    logger.info('AdminDashboard data loaded successfully', {
+      timeRange,
+      hasStatsData: !!statsData,
+      engagementDataLength: engagementData?.length || 0,
+      completionDataLength: completionRateData?.length || 0,
+      activitiesCount: recentActivities?.length || 0
+    });
+
     return (
       <AdminDashboardLayout
         timeRange={timeRange}
@@ -53,7 +64,7 @@ const AdminDashboard = () => {
       />
     );
   } catch (error) {
-    console.error("Erro no AdminDashboard:", error);
+    logger.error("Erro crítico no AdminDashboard", error, 'ADMIN_DASHBOARD');
     
     return (
       <div className="space-y-6">
