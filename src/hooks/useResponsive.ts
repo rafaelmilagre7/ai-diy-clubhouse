@@ -22,6 +22,7 @@ export const useResponsive = (config: ResponsiveConfig = {}) => {
   // Usar useRef para evitar memory leaks e closures desnecessárias
   const timeoutRef = useRef<number>();
   const isUnmountedRef = useRef(false);
+  const lastUpdateRef = useRef<number>(0);
   
   // Memoizar estado inicial para evitar cálculos desnecessários
   const initialState = useMemo((): ResponsiveState => ({
@@ -35,6 +36,14 @@ export const useResponsive = (config: ResponsiveConfig = {}) => {
   // Memoizar função de update para evitar re-criação
   const updateDimensions = useCallback(() => {
     if (isUnmountedRef.current || typeof window === 'undefined') return;
+    
+    const now = performance.now();
+    const timeSinceLastUpdate = now - lastUpdateRef.current;
+    
+    // Throttle updates para evitar spam
+    if (timeSinceLastUpdate < 16) return; // ~60fps
+    
+    lastUpdateRef.current = now;
     
     const newWidth = window.innerWidth;
     const newHeight = window.innerHeight;
@@ -81,7 +90,7 @@ export const useResponsive = (config: ResponsiveConfig = {}) => {
     updateDimensions();
     
     // Adicionar listener
-    window.addEventListener('resize', debouncedResize);
+    window.addEventListener('resize', debouncedResize, { passive: true });
     
     // Cleanup robusto
     return () => {
