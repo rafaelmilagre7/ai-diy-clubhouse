@@ -47,14 +47,28 @@ Deno.serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Parse do request
-    const requestBody: InviteEmailRequest = await req.json()
+    // Parse do request com validação robusta
+    let requestBody: InviteEmailRequest
+    try {
+      const rawBody = await req.text()
+      console.log('📄 Raw body recebido:', rawBody.substring(0, 200) + '...')
+      
+      if (!rawBody) {
+        throw new Error('Body vazio recebido')
+      }
+      
+      requestBody = JSON.parse(rawBody)
+    } catch (parseError) {
+      console.error('❌ Erro ao fazer parse do JSON:', parseError)
+      throw new Error(`Erro ao processar dados: ${parseError.message}`)
+    }
+
     const { email, inviteUrl, roleName, expiresAt, senderName, notes, inviteId } = requestBody
 
-    console.log('📧 Dados do convite:', {
+    console.log('📧 Dados do convite validados:', {
       email,
       roleName,
-      inviteUrl: inviteUrl ? 'presente' : 'ausente',
+      hasInviteUrl: !!inviteUrl,
       inviteId,
       senderName
     })
@@ -149,9 +163,9 @@ Deno.serve(async (req) => {
 
     console.log('📤 Enviando email via Resend...')
 
-    // Enviar email via Resend
+    // Enviar email via Resend com configuração robusta
     const emailResponse = await resend.emails.send({
-      from: 'Viver de IA <convites@viverdeia.ai>',
+      from: 'Viver de IA <noreply@resend.dev>',
       to: [email],
       subject: emailSubject,
       html: emailHtml,
@@ -171,16 +185,26 @@ Deno.serve(async (req) => {
       throw new Error(`Falha no envio: ${emailResponse.error.message}`)
     }
 
-    // Atualizar estatísticas do convite no banco
+    // Atualizar estatísticas do convite no banco usando método seguro
     if (inviteId) {
       console.log('📊 Atualizando estatísticas do convite...')
       
       try {
+        // Buscar convite atual
+        const { data: currentInvite } = await supabase
+          .from('invites')
+          .select('send_attempts')
+          .eq('id', inviteId)
+          .single()
+
+        // Atualizar com incremento manual
+        const newAttempts = (currentInvite?.send_attempts || 0) + 1
+        
         const { error: updateError } = await supabase
           .from('invites')
           .update({
             last_sent_at: new Date().toISOString(),
-            send_attempts: supabase.sql`send_attempts + 1`
+            send_attempts: newAttempts
           })
           .eq('id', inviteId)
 
@@ -188,7 +212,7 @@ Deno.serve(async (req) => {
           console.error('⚠️ Erro ao atualizar estatísticas:', updateError)
           // Não falhar o processo por causa disso
         } else {
-          console.log('✅ Estatísticas atualizadas')
+          console.log('✅ Estatísticas atualizadas:', { attempts: newAttempts })
         }
       } catch (statsError) {
         console.error('⚠️ Erro ao atualizar estatísticas:', statsError)
