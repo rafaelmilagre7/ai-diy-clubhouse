@@ -1,65 +1,7 @@
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-
-export interface NetworkConnection {
-  id: string;
-  requester_id: string;
-  recipient_id: string;
-  status: 'pending' | 'accepted' | 'declined';
-  connection_type: string;
-  created_at: string;
-  updated_at: string;
-  // Dados do outro usuário na conexão
-  other_user?: {
-    id: string;
-    name: string;
-    email: string;
-    company_name?: string;
-    current_position?: string;
-    avatar_url?: string;
-  };
-}
-
-export function useNetworkConnections() {
-  return useQuery({
-    queryKey: ['network-connections'],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error('Usuário não autenticado');
-      }
-
-      const { data, error } = await supabase
-        .from('network_connections')
-        .select(`
-          *,
-          requester:profiles!network_connections_requester_id_fkey(
-            id, name, email, company_name, current_position, avatar_url
-          ),
-          recipient:profiles!network_connections_recipient_id_fkey(
-            id, name, email, company_name, current_position, avatar_url
-          )
-        `)
-        .or(`requester_id.eq.${user.id},recipient_id.eq.${user.id}`)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        throw error;
-      }
-
-      // Mapear para incluir other_user baseado na perspectiva do usuário atual
-      return data.map(connection => ({
-        ...connection,
-        other_user: connection.requester_id === user.id 
-          ? connection.recipient 
-          : connection.requester
-      })) as NetworkConnection[];
-    },
-    staleTime: 2 * 60 * 1000, // 2 minutos
-  });
-}
+import { toast } from 'sonner';
 
 export function useCreateConnection() {
   const queryClient = useQueryClient();
@@ -70,6 +12,17 @@ export function useCreateConnection() {
       
       if (!user) {
         throw new Error('Usuário não autenticado');
+      }
+
+      // Verificar se já existe uma conexão
+      const { data: existingConnection } = await supabase
+        .from('network_connections')
+        .select('id')
+        .or(`and(requester_id.eq.${user.id},recipient_id.eq.${recipientId}),and(requester_id.eq.${recipientId},recipient_id.eq.${user.id})`)
+        .single();
+
+      if (existingConnection) {
+        throw new Error('Conexão já existe');
       }
 
       const { data, error } = await supabase
@@ -86,37 +39,33 @@ export function useCreateConnection() {
         throw error;
       }
 
+      // Criar notificação
+      await supabase
+        .from('notifications')
+        .insert({
+          user_id: recipientId,
+          type: 'connection_request',
+          title: 'Nova solicitação de conexão',
+          message: 'Alguém quer se conectar com você no networking',
+          data: {
+            connection_id: data.id,
+            sender_id: user.id
+          }
+        });
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['network-connections'] });
-    }
-  });
-}
-
-export function useUpdateConnectionStatus() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ connectionId, status }: { connectionId: string; status: 'accepted' | 'declined' }) => {
-      const { data, error } = await supabase
-        .from('network_connections')
-        .update({ 
-          status,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', connectionId)
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
+      toast.success('Solicitação de conexão enviada!');
+    },
+    onError: (error: any) => {
+      console.error('Erro ao criar conexão:', error);
+      if (error.message === 'Conexão já existe') {
+        toast.error('Você já se conectou com este usuário');
+      } else {
+        toast.error('Erro ao enviar solicitação. Tente novamente.');
       }
-
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['network-connections'] });
     }
   });
 }
