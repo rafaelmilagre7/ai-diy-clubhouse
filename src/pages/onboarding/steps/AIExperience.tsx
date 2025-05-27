@@ -19,17 +19,19 @@ const AIExperience = () => {
   const handleSuccess = async () => {
     const success = await handleSubmit();
     if (success) {
-      navigate("/onboarding/club-goals");
+      // Navegar direto para a geração da trilha (onboarding novo)
+      navigate("/onboarding/trail-generation");
     }
   };
 
   const handlePrevious = () => {
-    navigate("/onboarding/business-context");
+    navigate("/onboarding/personal-info");
   };
 
   return (
     <OnboardingLayout 
-      currentStep={4} 
+      currentStep={2} 
+      totalSteps={3}
       title="Experiência com IA" 
       onBackClick={handlePrevious}
     >

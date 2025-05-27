@@ -11,46 +11,24 @@ export const useStepNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Mapeamento unificado de caminhos para IDs de etapa
+  // Mapeamento simplificado para o onboarding NOVO
   const pathToStepId = {
     "/onboarding": "personal_info",
     "/onboarding/personal-info": "personal_info",
-    "/onboarding/professional-data": "professional_info",
-    "/onboarding/business-context": "business_context",
     "/onboarding/ai-experience": "ai_experience",
-    "/onboarding/club-goals": "business_goals",
-    "/onboarding/customization": "experience_personalization",
-    "/onboarding/complementary": "complementary_info",
-    "/onboarding/review": "review",
-    "/onboarding/trail-generation": "trail_generation",
-    // Rotas de formação
-    "/onboarding/formacao": "personal_info",
-    "/onboarding/formacao/personal-info": "personal_info",
-    "/onboarding/formacao/ai-experience": "ai_experience",
-    "/onboarding/formacao/goals": "learning_goals",
-    "/onboarding/formacao/preferences": "learning_preferences",
-    "/onboarding/formacao/review": "review"
+    "/onboarding/trail-generation": "trail_generation"
   };
 
   // Mapeamento reverso para navegação
   const stepIdToPath = {
     "personal_info": "/onboarding/personal-info",
-    "professional_info": "/onboarding/professional-data",
-    "business_context": "/onboarding/business-context",
-    "ai_experience": "/onboarding/ai-experience",
-    "business_goals": "/onboarding/club-goals",
-    "experience_personalization": "/onboarding/customization",
-    "complementary_info": "/onboarding/complementary",
-    "review": "/onboarding/review",
-    "trail_generation": "/onboarding/trail-generation",
-    // Formação
-    "learning_goals": "/onboarding/formacao/goals",
-    "learning_preferences": "/onboarding/formacao/preferences"
+    "ai_experience": "/onboarding/ai-experience", 
+    "trail_generation": "/onboarding/trail-generation"
   };
 
   useEffect(() => {
     const loadProgress = async () => {
-      if (isLoading) return; // Evitar múltiplas chamadas durante carregamento
+      if (isLoading) return;
       
       const refreshedProgress = await refreshProgress();
       
@@ -77,7 +55,7 @@ export const useStepNavigation = () => {
           
           if (currentPath !== correctPath) {
             console.log(`[useStepNavigation] Redirecionando de ${currentPath} para ${correctPath}`);
-            navigate(correctPath, { replace: true }); // Usando replace para evitar navegação indesejada de volta
+            navigate(correctPath, { replace: true });
           }
         } else {
           console.warn(`[useStepNavigation] Etapa não encontrada nos passos definidos: ${refreshedProgress.current_step}`);
@@ -93,7 +71,6 @@ export const useStepNavigation = () => {
     loadProgress();
   }, [navigate, refreshProgress, isLoading, location.pathname]);
 
-  // Função de navegação que usa ID do passo
   const navigateToStepById = (stepId: string) => {
     const index = steps.findIndex(step => step.id === stepId);
     
@@ -122,7 +99,6 @@ export const useStepNavigation = () => {
     }
   };
 
-  // Função para verificar se o progresso foi carregado
   const isProgressLoaded = () => {
     return progress !== null && !isLoading;
   };

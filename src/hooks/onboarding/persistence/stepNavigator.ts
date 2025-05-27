@@ -11,33 +11,18 @@ export function navigateAfterStep(
     return;
   }
   
-  // Mapeamento de etapas para rotas
+  // Mapeamento simplificado para o onboarding NOVO
   const stepToRouteMappings = {
     'club': {
-      'personal': '/onboarding/professional-data',
-      'personal_info': '/onboarding/professional-data',
-      'professional_data': '/onboarding/business-context',
-      'professional_info': '/onboarding/business-context',
-      'business_context': '/onboarding/ai-experience',
-      'ai_exp': '/onboarding/club-goals',
-      'ai_experience': '/onboarding/club-goals',
-      'business_goals': '/onboarding/customization',
-      'experience_personalization': '/onboarding/complementary',
-      'complementary': '/onboarding/review',
-      'complementary_info': '/onboarding/review',
-      'review': '/onboarding/trail-generation'
+      'personal_info': '/onboarding/ai-experience',
+      'ai_experience': '/onboarding/trail-generation',
+      'trail_generation': '/onboarding/completed'
     },
     'formacao': {
-      'personal': '/onboarding/professional-data',
-      'personal_info': '/onboarding/professional-data',
-      'professional_data': '/onboarding/ai-experience',
-      'professional_info': '/onboarding/ai-experience',
-      'ai_exp': '/onboarding/formation-goals',
-      'ai_experience': '/onboarding/formation-goals',
-      'formation_goals': '/onboarding/formation-preferences',
-      'formation_preferences': '/onboarding/complementary',
-      'complementary': '/onboarding/review',
-      'complementary_info': '/onboarding/review',
+      'personal_info': '/onboarding/ai-experience',
+      'ai_experience': '/onboarding/formacao/goals',
+      'formation_goals': '/onboarding/formacao/preferences',
+      'formation_preferences': '/onboarding/formacao/review',
       'review': '/learning'
     }
   };
