@@ -25,7 +25,6 @@ export interface BaseSidebarProps {
   profileEmail?: string | null;
   profileAvatar?: string;
   getInitials?: (name: string | null) => string;
-  signOut?: () => Promise<void>;
 }
 
 export interface BaseContentProps {
@@ -121,18 +120,7 @@ const BaseLayout = memo<BaseLayoutProps>(({
     document.body.classList.add('dark');
   }, []);
 
-  // Handlers com logging mínimo
-  const handleSignOut = useCallback(async () => {
-    if (!onSignOut) return;
-    
-    try {
-      await onSignOut();
-      logger.info("Logout realizado com sucesso", { variant });
-    } catch (error) {
-      logger.error("Erro ao fazer logout", error);
-    }
-  }, [onSignOut, variant]);
-
+  // Handler para sidebar toggle
   const handleSidebarToggle = useCallback((open: boolean) => {
     setSidebarOpen(open);
   }, []);
@@ -158,7 +146,6 @@ const BaseLayout = memo<BaseLayoutProps>(({
         profileEmail={profileEmail}
         profileAvatar={profileAvatar}
         getInitials={getInitials}
-        signOut={handleSignOut}
       />
       
       {/* Conteúdo principal */}

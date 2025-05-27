@@ -9,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/contexts/auth";
 import { LogOut, Settings, User } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -18,7 +19,6 @@ interface FormacaoUserMenuProps {
   profileEmail: string | null;
   profileAvatar: string | undefined;
   getInitials: (name: string | null) => string;
-  signOut: () => Promise<void>;
 }
 
 export const FormacaoUserMenu = ({ 
@@ -26,11 +26,12 @@ export const FormacaoUserMenu = ({
   profileName, 
   profileEmail, 
   profileAvatar,
-  getInitials,
-  signOut
+  getInitials 
 }: FormacaoUserMenuProps) => {
+  const { signOut } = useAuth();
+
   return (
-    <div className="mt-auto border-t p-4">
+    <div className="p-4">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button 
@@ -43,7 +44,7 @@ export const FormacaoUserMenu = ({
             </Avatar>
             {sidebarOpen && (
               <div className="flex flex-col items-start text-left">
-                <span className="text-sm font-medium">{profileName || "Formador"}</span>
+                <span className="text-sm font-medium">{profileName || "Usuário"}</span>
                 <span className="text-xs text-muted-foreground">{profileEmail || "Sem email"}</span>
               </div>
             )}
@@ -59,14 +60,14 @@ export const FormacaoUserMenu = ({
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link to="/settings" className="cursor-pointer w-full flex items-center">
+            <Link to="/dashboard" className="cursor-pointer w-full flex items-center">
               <Settings className="mr-2 h-4 w-4" />
-              <span>Configurações</span>
+              <span>Dashboard</span>
             </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem 
-            onClick={signOut}
+            onClick={() => signOut()}
             className="cursor-pointer text-destructive focus:text-destructive"
           >
             <LogOut className="mr-2 h-4 w-4" />

@@ -11,8 +11,7 @@ export const MemberSidebar = ({
   profileName,
   profileEmail,
   profileAvatar,
-  getInitials,
-  signOut
+  getInitials
 }: BaseSidebarProps) => {
   return (
     <aside
@@ -47,7 +46,6 @@ export const MemberSidebar = ({
             profileEmail={profileEmail}
             profileAvatar={profileAvatar}
             getInitials={getInitials || (() => "U")}
-            signOut={signOut || (() => Promise.resolve())}
           />
         </div>
       </div>

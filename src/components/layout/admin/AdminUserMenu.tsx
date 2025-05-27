@@ -31,7 +31,7 @@ export const AdminUserMenu = ({
   const { signOut } = useAuth();
 
   return (
-    <div className="mt-auto border-t p-4">
+    <div className="p-4">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button 
