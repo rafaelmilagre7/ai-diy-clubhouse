@@ -43,7 +43,11 @@ const BaseLayout = memo<BaseLayoutProps>(({
   profileAvatar,
   getInitials
 }) => {
-  const { isMobile } = useResponsive();
+  // Usar hook responsivo otimizado
+  const { isMobile } = useResponsive({ 
+    mobileBreakpoint: 768, 
+    debounceMs: 150 
+  });
   
   // Memoizar o estado inicial da sidebar baseado no localStorage
   const initialSidebarState = useMemo(() => {
