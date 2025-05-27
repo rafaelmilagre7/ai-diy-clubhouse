@@ -1,11 +1,11 @@
 
 import React from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
-import { ProfessionalDataStep } from "@/components/onboarding/steps/ProfessionalDataStep";
+import { ComplementaryInfoStep } from "@/components/onboarding/steps/ComplementaryInfoStep";
 import { useNavigate } from "react-router-dom";
-import { useProfessionalDataStep } from "@/hooks/onboarding/useProfessionalDataStep";
+import { useComplementaryStep } from "@/hooks/onboarding/useComplementaryStep";
 
-const ProfessionalData = () => {
+const Complementary = () => {
   const navigate = useNavigate();
   const {
     formData,
@@ -14,26 +14,26 @@ const ProfessionalData = () => {
     handleChange,
     handleSubmit,
     progress
-  } = useProfessionalDataStep();
+  } = useComplementaryStep();
 
   const handleSuccess = async () => {
     const success = await handleSubmit();
     if (success) {
-      navigate("/onboarding/business-context");
+      navigate("/onboarding/review");
     }
   };
 
   const handlePrevious = () => {
-    navigate("/onboarding/personal-info");
+    navigate("/onboarding/customization");
   };
 
   return (
     <OnboardingLayout 
-      currentStep={2} 
-      title="Dados Profissionais" 
+      currentStep={7} 
+      title="Informações Complementares" 
       onBackClick={handlePrevious}
     >
-      <ProfessionalDataStep
+      <ComplementaryInfoStep
         onSubmit={handleSuccess}
         isSubmitting={isSubmitting}
         initialData={formData}
@@ -44,4 +44,4 @@ const ProfessionalData = () => {
   );
 };
 
-export default ProfessionalData;
+export default Complementary;

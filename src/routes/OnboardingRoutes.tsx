@@ -5,41 +5,48 @@ import NovoOnboarding from '@/pages/onboarding/NovoOnboarding';
 import { OnboardingCompleted } from "@/components/onboarding/OnboardingCompleted";
 import Review from "@/pages/onboarding/Review";
 import TrailGeneration from "@/pages/onboarding/steps/TrailGeneration";
+import PersonalInfo from "@/pages/onboarding/steps/PersonalInfo";
+import ProfessionalData from "@/pages/onboarding/steps/ProfessionalData";
+import BusinessContext from "@/pages/onboarding/steps/BusinessContext";
+import AIExperience from "@/pages/onboarding/steps/AIExperience";
+import ClubGoals from "@/pages/onboarding/steps/ClubGoals";
+import Customization from "@/pages/onboarding/steps/Customization";
+import Complementary from "@/pages/onboarding/steps/Complementary";
 
 export const onboardingRoutes: RouteObject[] = [
-  // Rota principal do onboarding - sempre redireciona para o sistema novo
+  // Rota principal do onboarding - verifica status e redireciona
   {
     path: "/onboarding",
     element: <ProtectedRoutes><NovoOnboarding /></ProtectedRoutes>
   },
-  // Todas as rotas específicas do novo sistema
+  // Rotas específicas do onboarding apontam diretamente para componentes
   {
     path: "/onboarding/personal-info",
-    element: <ProtectedRoutes><NovoOnboarding /></ProtectedRoutes>
+    element: <ProtectedRoutes><PersonalInfo /></ProtectedRoutes>
   },
   {
     path: "/onboarding/professional-data", 
-    element: <ProtectedRoutes><NovoOnboarding /></ProtectedRoutes>
+    element: <ProtectedRoutes><ProfessionalData /></ProtectedRoutes>
   },
   {
     path: "/onboarding/business-context",
-    element: <ProtectedRoutes><NovoOnboarding /></ProtectedRoutes>
+    element: <ProtectedRoutes><BusinessContext /></ProtectedRoutes>
   },
   {
     path: "/onboarding/ai-experience",
-    element: <ProtectedRoutes><NovoOnboarding /></ProtectedRoutes>
+    element: <ProtectedRoutes><AIExperience /></ProtectedRoutes>
   },
   {
     path: "/onboarding/club-goals",
-    element: <ProtectedRoutes><NovoOnboarding /></ProtectedRoutes>
+    element: <ProtectedRoutes><ClubGoals /></ProtectedRoutes>
   },
   {
     path: "/onboarding/customization",
-    element: <ProtectedRoutes><NovoOnboarding /></ProtectedRoutes>
+    element: <ProtectedRoutes><Customization /></ProtectedRoutes>
   },
   {
     path: "/onboarding/complementary",
-    element: <ProtectedRoutes><NovoOnboarding /></ProtectedRoutes>
+    element: <ProtectedRoutes><Complementary /></ProtectedRoutes>
   },
   // Rota para a página de revisão
   {

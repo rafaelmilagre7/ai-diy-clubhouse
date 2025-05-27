@@ -1,11 +1,11 @@
 
 import React from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
-import { ProfessionalDataStep } from "@/components/onboarding/steps/ProfessionalDataStep";
+import { ExperiencePersonalizationStep } from "@/components/onboarding/steps/ExperiencePersonalizationStep";
 import { useNavigate } from "react-router-dom";
-import { useProfessionalDataStep } from "@/hooks/onboarding/useProfessionalDataStep";
+import { useCustomizationStep } from "@/hooks/onboarding/useCustomizationStep";
 
-const ProfessionalData = () => {
+const Customization = () => {
   const navigate = useNavigate();
   const {
     formData,
@@ -14,26 +14,26 @@ const ProfessionalData = () => {
     handleChange,
     handleSubmit,
     progress
-  } = useProfessionalDataStep();
+  } = useCustomizationStep();
 
   const handleSuccess = async () => {
     const success = await handleSubmit();
     if (success) {
-      navigate("/onboarding/business-context");
+      navigate("/onboarding/complementary");
     }
   };
 
   const handlePrevious = () => {
-    navigate("/onboarding/personal-info");
+    navigate("/onboarding/club-goals");
   };
 
   return (
     <OnboardingLayout 
-      currentStep={2} 
-      title="Dados Profissionais" 
+      currentStep={6} 
+      title="Personalização da Experiência" 
       onBackClick={handlePrevious}
     >
-      <ProfessionalDataStep
+      <ExperiencePersonalizationStep
         onSubmit={handleSuccess}
         isSubmitting={isSubmitting}
         initialData={formData}
@@ -44,4 +44,4 @@ const ProfessionalData = () => {
   );
 };
 
-export default ProfessionalData;
+export default Customization;
