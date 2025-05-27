@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
-import { EventFormSchema, type EventFormData } from "./form/EventFormSchema";
+import { eventSchema, type EventFormData } from "./form/EventFormSchema";
 import { EventBasicInfo } from "./form/EventBasicInfo";
 import { EventDateTime } from "./form/EventDateTime";
 import { EventLocation } from "./form/EventLocation";
@@ -26,7 +26,7 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const form = useForm<EventFormData>({
-    resolver: zodResolver(EventFormSchema),
+    resolver: zodResolver(eventSchema),
     defaultValues: {
       title: event?.title || "",
       description: event?.description || "",
@@ -130,7 +130,7 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
         </Tabs>
         
         {/* Botões fixos na parte inferior */}
-        <div className="flex justify-end gap-3 pt-6 border-t bg-background sticky bottom-0 z-10">
+        <div className="flex justify-end gap-3 pt-6 border-t bg-background">
           <Button 
             type="button" 
             variant="outline" 

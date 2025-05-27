@@ -2,19 +2,16 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { EventForm } from "./EventForm";
 import type { Event } from "@/types/events";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { type EventFormData } from "./form/EventFormSchema";
 
 interface EventFormSheetProps {
   event?: Event;
-  initialData?: EventFormData | null;
   onClose: () => void;
 }
 
-export const EventFormSheet = ({ event, initialData, onClose }: EventFormSheetProps) => {
+export const EventFormSheet = ({ event, onClose }: EventFormSheetProps) => {
   const isEditing = !!event;
   
   return (
@@ -31,24 +28,14 @@ export const EventFormSheet = ({ event, initialData, onClose }: EventFormSheetPr
           </Button>
         </div>
 
-        <Tabs defaultValue="informacoes" className="flex flex-col h-full">
-          <TabsList className="w-full justify-start px-6 pt-4 border-b rounded-none">
-            <TabsTrigger value="informacoes">Informações</TabsTrigger>
-            <TabsTrigger value="recorrencia">Recorrência</TabsTrigger>
-            <TabsTrigger value="acesso">Acesso</TabsTrigger>
-          </TabsList>
-          
-          <ScrollArea className="flex-1 h-[calc(100vh-180px)]">
-            <div className="px-6 py-4">
-              <EventForm 
-                event={event}
-                initialData={initialData} 
-                onSuccess={onClose}
-                layout="tabs" 
-              />
-            </div>
-          </ScrollArea>
-        </Tabs>
+        <ScrollArea className="flex-1 h-[calc(100vh-80px)]">
+          <div className="px-6 py-4">
+            <EventForm 
+              event={event}
+              onSuccess={onClose}
+            />
+          </div>
+        </ScrollArea>
       </SheetContent>
     </Sheet>
   );
