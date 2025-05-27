@@ -3,7 +3,16 @@ import { OnboardingProgress } from '@/types/onboarding';
 
 export const useOnboardingValidation = () => {
   const validateOnboardingCompletion = (progress: OnboardingProgress | null): boolean => {
-    if (!progress) return false;
+    if (!progress) {
+      console.log("[Validation] Sem progresso, onboarding incompleto");
+      return false;
+    }
+    
+    console.log("[Validation] Validando completude do onboarding:", {
+      progressId: progress.id,
+      isCompleted: progress.is_completed,
+      completedSteps: progress.completed_steps
+    });
     
     // Verificar se todas as etapas obrigatórias foram completadas
     const requiredSteps = [
@@ -23,34 +32,104 @@ export const useOnboardingValidation = () => {
       completedSteps.includes(step)
     );
     
-    // Verificar se dados essenciais estão preenchidos (mesma lógica do banco)
-    const hasPersonalInfo = progress.personal_info && 
-                           typeof progress.personal_info === 'object' &&
-                           progress.personal_info.name && 
-                           progress.personal_info.email;
+    console.log("[Validation] Verificação de etapas:", {
+      requiredSteps,
+      completedSteps,
+      hasAllRequiredSteps
+    });
+    
+    // Verificar dados essenciais com estrutura normalizada
+    const personalInfo = progress.personal_info;
+    const hasPersonalInfo = personalInfo && 
+                           typeof personalInfo === 'object' &&
+                           personalInfo.name && 
+                           personalInfo.email;
                            
-    const hasProfessionalInfo = progress.professional_info && 
-                               typeof progress.professional_info === 'object' &&
-                               progress.professional_info.company_name;
+    console.log("[Validation] Personal info:", {
+      exists: !!personalInfo,
+      hasName: !!(personalInfo?.name),
+      hasEmail: !!(personalInfo?.email),
+      valid: hasPersonalInfo
+    });
+                           
+    const professionalInfo = progress.professional_info;
+    const hasProfessionalInfo = professionalInfo && 
+                               typeof professionalInfo === 'object' &&
+                               professionalInfo.company_name;
                                
-    const hasBusinessGoals = progress.business_goals && 
-                            typeof progress.business_goals === 'object' &&
-                            progress.business_goals.primary_goal;
+    console.log("[Validation] Professional info:", {
+      exists: !!professionalInfo,
+      hasCompanyName: !!(professionalInfo?.company_name),
+      valid: hasProfessionalInfo
+    });
+                               
+    const businessGoals = progress.business_goals;
+    const hasBusinessGoals = businessGoals && 
+                            typeof businessGoals === 'object' &&
+                            businessGoals.primary_goal;
                             
-    const hasAIExperience = progress.ai_experience && 
-                           typeof progress.ai_experience === 'object' &&
-                           progress.ai_experience.knowledge_level;
+    console.log("[Validation] Business goals:", {
+      exists: !!businessGoals,
+      hasPrimaryGoal: !!(businessGoals?.primary_goal),
+      valid: hasBusinessGoals
+    });
+    
+    // Verificar AI Experience com estrutura possivelmente aninhada
+    let aiExperience = progress.ai_experience;
+    let hasAIExperience = false;
+    
+    if (aiExperience && typeof aiExperience === 'object') {
+      // Verificar se está na estrutura aninhada (ai_experience.ai_experience)
+      if (aiExperience.ai_experience && typeof aiExperience.ai_experience === 'object') {
+        console.log("[Validation] AI Experience estrutura aninhada detectada");
+        aiExperience = aiExperience.ai_experience;
+      }
+      
+      hasAIExperience = !!(aiExperience.knowledge_level);
+    }
+    
+    console.log("[Validation] AI Experience:", {
+      exists: !!progress.ai_experience,
+      structure: typeof progress.ai_experience,
+      hasKnowledgeLevel: hasAIExperience,
+      rawData: progress.ai_experience
+    });
+    
+    // Verificar se is_completed está marcado como true no banco
+    const isMarkedComplete = progress.is_completed === true;
+    
+    console.log("[Validation] Status final:", {
+      hasAllRequiredSteps,
+      hasPersonalInfo,
+      hasProfessionalInfo,
+      hasBusinessGoals,
+      hasAIExperience,
+      isMarkedComplete
+    });
     
     // Onboarding só está completo se TODAS as condições forem atendidas
-    // Incluindo a verificação do banco via is_completed (que agora tem validação robusta)
-    return (
+    const isComplete = (
       hasAllRequiredSteps &&
       hasPersonalInfo &&
       hasProfessionalInfo &&
       hasBusinessGoals &&
       hasAIExperience &&
-      progress.is_completed === true
+      isMarkedComplete
     );
+    
+    console.log("[Validation] Resultado final:", {
+      isComplete,
+      reason: !isComplete ? {
+        missingSteps: !hasAllRequiredSteps,
+        missingPersonal: !hasPersonalInfo,
+        missingProfessional: !hasProfessionalInfo,
+        missingGoals: !hasBusinessGoals,
+        missingAI: !hasAIExperience,
+        notMarkedComplete: !isMarkedComplete
+      } : 'Onboarding completo'
+    });
+    
+    return isComplete;
   };
   
   const getIncompleteSteps = (progress: OnboardingProgress | null): string[] => {
@@ -68,7 +147,15 @@ export const useOnboardingValidation = () => {
     ];
     
     const completedSteps = progress.completed_steps || [];
-    return requiredSteps.filter(step => !completedSteps.includes(step));
+    const incompleteSteps = requiredSteps.filter(step => !completedSteps.includes(step));
+    
+    console.log("[Validation] Etapas incompletas:", {
+      requiredSteps,
+      completedSteps,
+      incompleteSteps
+    });
+    
+    return incompleteSteps;
   };
 
   // Nova função para detectar dados incompletos mesmo que marked as complete
@@ -90,16 +177,46 @@ export const useOnboardingValidation = () => {
       issues.push('Objetivos de negócio não definidos');
     }
     
-    if (!progress.ai_experience || !progress.ai_experience.knowledge_level) {
+    // Verificar AI Experience considerando estrutura aninhada
+    let aiExperience = progress.ai_experience;
+    if (aiExperience && aiExperience.ai_experience) {
+      aiExperience = aiExperience.ai_experience;
+    }
+    
+    if (!aiExperience || !aiExperience.knowledge_level) {
       issues.push('Experiência com IA não informada');
     }
     
+    console.log("[Validation] Problemas detectados:", issues);
+    
     return issues;
+  };
+
+  // Nova função para normalizar dados de AI Experience
+  const normalizeAIExperienceData = (aiExperience: any): any => {
+    if (!aiExperience) return null;
+    
+    // Se já está na estrutura correta, retornar como está
+    if (aiExperience.knowledge_level && !aiExperience.ai_experience) {
+      return aiExperience;
+    }
+    
+    // Se está na estrutura aninhada, extrair os dados
+    if (aiExperience.ai_experience && typeof aiExperience.ai_experience === 'object') {
+      console.log("[Validation] Normalizando estrutura aninhada de AI Experience");
+      return {
+        ...aiExperience.ai_experience,
+        onboarding_type: aiExperience.onboarding_type || 'club'
+      };
+    }
+    
+    return aiExperience;
   };
   
   return {
     validateOnboardingCompletion,
     getIncompleteSteps,
-    detectIncompleteData
+    detectIncompleteData,
+    normalizeAIExperienceData
   };
 };

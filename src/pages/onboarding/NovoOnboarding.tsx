@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MemberLayout from '@/components/layout/MemberLayout';
 import { MoticonAnimation } from '@/components/onboarding/MoticonAnimation';
@@ -7,6 +7,7 @@ import { useProgress } from '@/hooks/onboarding/useProgress';
 import { useOnboardingValidation } from '@/hooks/onboarding/useOnboardingValidation';
 import { useOnboardingSteps } from '@/hooks/onboarding/useOnboardingSteps';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 const NovoOnboarding: React.FC = () => {
   const navigate = useNavigate();
@@ -14,36 +15,64 @@ const NovoOnboarding: React.FC = () => {
   const { validateOnboardingCompletion, getIncompleteSteps } = useOnboardingValidation();
   const { currentStep } = useOnboardingSteps();
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const [hasChecked, setHasChecked] = useState(false);
+  const hasCheckedRef = useRef(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const checkOnboardingStatus = async () => {
       try {
-        if (hasChecked) {
+        // Evitar múltiplas execuções
+        if (hasCheckedRef.current) {
+          console.log("[NovoOnboarding] Verificação já realizada, ignorando");
           return;
         }
 
+        // Timeout de segurança para evitar loop infinito
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+
+        timeoutRef.current = setTimeout(() => {
+          console.error("[NovoOnboarding] Timeout na verificação do onboarding");
+          toast.error("Timeout na verificação. Redirecionando para primeira etapa.");
+          setIsInitialLoad(false);
+          navigate('/onboarding/personal-info');
+        }, 10000); // 10 segundos de timeout
+
+        console.log("[NovoOnboarding] Iniciando verificação do status do onboarding");
+        hasCheckedRef.current = true;
+        
         await refreshProgress();
-        setHasChecked(true);
         
         if (progress) {
-          // Usar validação robusta para verificar se onboarding está realmente completo
+          console.log("[NovoOnboarding] Progresso encontrado:", {
+            isCompleted: progress.is_completed,
+            currentStep: progress.current_step,
+            completedSteps: progress.completed_steps
+          });
+          
+          // Verificação robusta de completude
           const isReallyComplete = validateOnboardingCompletion(progress);
           
-          if (isReallyComplete) {
-            console.log("Onboarding realmente completo, redirecionando para página de conclusão...");
+          console.log("[NovoOnboarding] Resultado da validação:", {
+            isReallyComplete,
+            progressIsCompleted: progress.is_completed
+          });
+          
+          if (isReallyComplete && progress.is_completed) {
+            console.log("[NovoOnboarding] Onboarding realmente completo, redirecionando...");
+            clearTimeout(timeoutRef.current);
             navigate('/onboarding/completed');
             return;
           }
           
-          // Se tem progresso mas não está completo, verificar qual etapa está faltando
+          // Se não está completo, verificar próxima etapa
           const incompleteSteps = getIncompleteSteps(progress);
           
           if (incompleteSteps.length > 0) {
             const nextStep = incompleteSteps[0];
-            console.log(`Onboarding incompleto. Próxima etapa: ${nextStep}`);
+            console.log(`[NovoOnboarding] Próxima etapa incompleta: ${nextStep}`);
             
-            // Mapear próxima etapa para rota
             const stepRoutes = {
               'personal_info': '/onboarding/personal-info',
               'professional_info': '/onboarding/professional-data',
@@ -57,27 +86,64 @@ const NovoOnboarding: React.FC = () => {
             
             const nextRoute = stepRoutes[nextStep as keyof typeof stepRoutes];
             if (nextRoute) {
+              clearTimeout(timeoutRef.current);
               navigate(nextRoute);
+              return;
+            }
+          }
+          
+          // Se current_step existe, ir para ela
+          if (progress.current_step && progress.current_step !== 'completed') {
+            const stepRoutes = {
+              'personal_info': '/onboarding/personal-info',
+              'professional_info': '/onboarding/professional-data',
+              'business_context': '/onboarding/business-context',
+              'ai_experience': '/onboarding/ai-experience',
+              'business_goals': '/onboarding/club-goals',
+              'experience_personalization': '/onboarding/customization',
+              'complementary_info': '/onboarding/complementary',
+              'review': '/onboarding/review'
+            };
+            
+            const currentRoute = stepRoutes[progress.current_step as keyof typeof stepRoutes];
+            if (currentRoute) {
+              console.log(`[NovoOnboarding] Redirecionando para etapa atual: ${progress.current_step}`);
+              clearTimeout(timeoutRef.current);
+              navigate(currentRoute);
               return;
             }
           }
         }
         
-        // Se chegou até aqui, começar pelo primeiro passo
+        // Fallback: começar do início
+        console.log("[NovoOnboarding] Nenhuma condição atendida, começando do início");
+        clearTimeout(timeoutRef.current);
         navigate('/onboarding/personal-info');
-        setIsInitialLoad(false);
+        
       } catch (error) {
-        console.error("Erro ao verificar status do onboarding:", error);
+        console.error("[NovoOnboarding] Erro ao verificar status:", error);
+        clearTimeout(timeoutRef.current);
+        toast.error("Erro ao verificar onboarding. Começando do início.");
+        navigate('/onboarding/personal-info');
+      } finally {
         setIsInitialLoad(false);
       }
     };
 
-    if (!isLoading) {
+    // Só executar se não estiver carregando e não tiver verificado ainda
+    if (!isLoading && !hasCheckedRef.current) {
       checkOnboardingStatus();
     }
-  }, [navigate, progress, isLoading, refreshProgress, hasChecked, validateOnboardingCompletion, getIncompleteSteps]);
 
-  // Mostrar um spinner enquanto verifica o status do onboarding
+    // Cleanup
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [navigate, progress, isLoading, refreshProgress, validateOnboardingCompletion, getIncompleteSteps]);
+
+  // Mostrar spinner enquanto verifica
   if (isInitialLoad || isLoading) {
     return (
       <MemberLayout>
@@ -85,13 +151,14 @@ const NovoOnboarding: React.FC = () => {
           <div className="text-center">
             <Loader2 className="h-12 w-12 animate-spin text-viverblue mx-auto" />
             <p className="mt-4 text-viverblue-light">Verificando seu status de onboarding...</p>
+            <p className="mt-2 text-sm text-gray-400">Se demorar muito, recarregue a página</p>
           </div>
         </div>
       </MemberLayout>
     );
   }
 
-  // Se não está carregando e chegou aqui, mostrar interface do onboarding step-by-step
+  // Se chegou aqui, algo deu errado - mostrar interface padrão
   return (
     <MemberLayout>
       <div className="bg-gradient-to-b from-[#0F111A] to-[#161A2C] min-h-[calc(100vh-80px)]">

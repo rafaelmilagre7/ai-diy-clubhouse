@@ -1,6 +1,7 @@
 
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { migrateUserOnboardingData } from './onboardingDataMigration';
 
 export const resetUserOnboarding = async (userEmail: string): Promise<{ success: boolean; message: string }> => {
   try {
@@ -115,6 +116,36 @@ export const adminCheckNetworking = async (userEmail: string) => {
   const result = await verifyNetworkingAccess(userEmail);
   console.log(result.message);
   return result;
+};
+
+// Nova função para migrar dados de onboarding
+export const adminMigrateOnboarding = async (userEmail: string) => {
+  try {
+    const { data: userProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', userEmail)
+      .single();
+    
+    if (profileError || !userProfile) {
+      toast.error('Usuário não encontrado');
+      return false;
+    }
+    
+    const result = await migrateUserOnboardingData(userProfile.id);
+    
+    if (result.success) {
+      toast.success(`Migração concluída: ${result.message}`);
+    } else {
+      toast.error(`Erro na migração: ${result.message}`);
+    }
+    
+    return result.success;
+  } catch (error) {
+    console.error('Erro na migração:', error);
+    toast.error('Erro interno na migração');
+    return false;
+  }
 };
 
 // Função para forçar reset completo do cache de progresso
