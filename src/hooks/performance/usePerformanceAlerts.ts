@@ -81,13 +81,11 @@ export const usePerformanceAlerts = () => {
 
     const message = rule.message(metrics);
     
-    // Adicionar ao sistema de alertas
+    // Adicionar ao sistema de alertas - removemos metadata do objeto
     addAlert({
       type: 'performance',
       message,
-      severity: rule.severity,
-      id: `${rule.id}_${Date.now()}`,
-      timestamp: Date.now()
+      severity: rule.severity
     });
 
     // Mostrar toast para alertas críticos

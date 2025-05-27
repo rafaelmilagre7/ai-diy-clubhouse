@@ -2,11 +2,11 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useRef } from 'react';
 
 interface PerformanceAlert {
-  id?: string;
+  id: string; // Agora obrigatório para unificar as interfaces
   type: 'performance' | 'memory' | 'network';
   message: string;
   severity: 'low' | 'medium' | 'high';
-  timestamp?: number;
+  timestamp: number;
   metadata?: Record<string, any>;
 }
 
@@ -45,7 +45,7 @@ interface AlertThresholds {
 
 interface PerformanceContextType {
   realTimeStats: RealTimeStats;
-  addAlert: (alert: PerformanceAlert) => void;
+  addAlert: (alert: Omit<PerformanceAlert, 'id' | 'timestamp'>) => void;
   isMonitoring: boolean;
   setIsMonitoring: (monitoring: boolean) => void;
   alerts: PerformanceAlert[];
@@ -84,11 +84,11 @@ export const PerformanceProvider: React.FC<PerformanceProviderProps> = ({
   const [isMonitoring, setIsMonitoring] = useState(true);
   const metricsRef = useRef<PerformanceMetric[]>([]);
 
-  const addAlert = useCallback((alert: PerformanceAlert) => {
-    const newAlert = {
+  const addAlert = useCallback((alert: Omit<PerformanceAlert, 'id' | 'timestamp'>) => {
+    const newAlert: PerformanceAlert = {
       ...alert,
-      id: alert.id || `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: alert.timestamp || Date.now()
+      id: `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      timestamp: Date.now()
     };
     
     setAlerts(prev => [...prev, newAlert]);
