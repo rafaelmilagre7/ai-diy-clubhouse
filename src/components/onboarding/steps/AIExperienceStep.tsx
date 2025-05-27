@@ -1,31 +1,25 @@
 
 import React from "react";
-import { OnboardingStepProps } from "@/types/onboarding";
 import { AIExperienceFormStep } from "./AIExperienceFormStep";
-import { ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { NavigationButtons } from "../NavigationButtons";
 
-export interface AIExperienceStepProps extends Partial<OnboardingStepProps> {
-  onSubmit: (stepId: string, data: any) => Promise<void>;
+export interface AIExperienceStepProps {
+  onSubmit: () => Promise<void>;
   isSubmitting: boolean;
   initialData?: any;
-  isLastStep?: boolean;
-  onComplete?: () => void;
   personalInfo?: any;
+  onPrevious?: () => void;
 }
 
 export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
   onSubmit,
   isSubmitting,
   initialData,
-  isLastStep,
-  onComplete,
-  personalInfo
+  personalInfo,
+  onPrevious
 }) => {
-  // Simplificar o componente para apenas passar as props para o AIExperienceFormStep
-  const handleFormSubmit = (stepId: string, data: any) => {
-    // Repassar para a função onSubmit original
-    return onSubmit(stepId, data);
+  const handleFormSubmit = async (stepId: string, data: any) => {
+    await onSubmit();
   };
 
   return (
@@ -34,8 +28,14 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
         initialData={initialData?.ai_experience || initialData}
         onSubmit={handleFormSubmit}
         isSubmitting={isSubmitting}
-        isLastStep={isLastStep}
-        onComplete={onComplete}
+      />
+      
+      <NavigationButtons
+        onPrevious={onPrevious}
+        isSubmitting={isSubmitting}
+        showPrevious={true}
+        submitText="Gerar Trilha"
+        loadingText="Processando..."
       />
     </div>
   );

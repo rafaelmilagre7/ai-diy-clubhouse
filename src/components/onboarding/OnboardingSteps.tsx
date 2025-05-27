@@ -1,115 +1,125 @@
 
+import { useState } from "react";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { PersonalInfoStep } from "./steps/PersonalInfoStep";
-import { BusinessContextStep } from "./steps/BusinessContextStep";
 import { AIExperienceStep } from "./steps/AIExperienceStep";
-import { ExperiencePersonalizationStep } from "./steps/ExperiencePersonalizationStep";
-import { ComplementaryInfoStep } from "./steps/ComplementaryInfoStep";
-import { ReviewStep } from "./steps/ReviewStep";
+import { TrailMagicExperience } from "./TrailMagicExperience";
 import { Progress } from "@/components/ui/progress";
 import { OnboardingData } from "@/types/onboarding";
-import { ProfessionalDataStep } from "./steps/ProfessionalDataStep";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { usePersonalInfoStep } from "@/hooks/onboarding/usePersonalInfoStep";
+import { useAIExperienceStep } from "@/hooks/onboarding/useAIExperienceStep";
+import MilagrinhoAssistant from "./MilagrinhoAssistant";
+import { useNavigate } from "react-router-dom";
 
 export const OnboardingSteps = () => {
-  const {
-    currentStepIndex,
-    currentStep,
-    steps,
-    isSubmitting,
-    saveStepData,
-    completeOnboarding,
-    progress,
-    navigateToStep
-  } = useOnboardingSteps();
-  
-  const location = useLocation();
+  const [currentStep, setCurrentStep] = useState(0);
   const navigate = useNavigate();
+  const { completeOnboarding, progress } = useOnboardingSteps();
   
-  // Mapeamento simplificado para o onboarding NOVO (3 etapas)
-  const pathToStepComponent = {
-    "/onboarding": "personal_info",
-    "/onboarding/personal-info": "personal_info",
-    "/onboarding/ai-experience": "ai_experience",
-    "/onboarding/trail-generation": "trail_generation"
-  };
+  const personalInfoHook = usePersonalInfoStep();
+  const aiExperienceHook = useAIExperienceStep();
 
-  // Mapeamento reverso para navegação
-  const stepToPath = {
-    "personal_info": "/onboarding/personal-info",
-    "ai_experience": "/onboarding/ai-experience",
-    "trail_generation": "/onboarding/trail-generation"
-  };
-
-  const currentPathStepId = pathToStepComponent[location.pathname as keyof typeof pathToStepComponent] || currentStep.id;
-  
-  useEffect(() => {
-    console.log(`Rota atual: ${location.pathname}, stepId mapeado: ${currentPathStepId}, currentStep.id: ${currentStep.id}`);
-  }, [location.pathname, currentPathStepId, currentStep.id]);
-
-  // Função para navegar para a etapa anterior
-  const navigateToPreviousStep = (currentStepId: string) => {
-    const stepIds = Object.keys(stepToPath);
-    const currentIndex = stepIds.indexOf(currentStepId);
-    
-    if (currentIndex <= 0) {
-      navigate("/onboarding/personal-info");
-      return;
+  const steps = [
+    {
+      id: "personal_info",
+      title: "Informações Pessoais",
+      description: "Vamos começar conhecendo você melhor"
+    },
+    {
+      id: "ai_experience", 
+      title: "Experiência com IA",
+      description: "Conte-nos sobre sua jornada com IA"
+    },
+    {
+      id: "trail_generation",
+      title: "Sua Trilha Personalizada",
+      description: "Criando sua trilha de implementação única"
     }
-    
-    const previousStepId = stepIds[currentIndex - 1];
-    const previousPath = stepToPath[previousStepId as keyof typeof stepToPath];
-    
-    console.log(`[OnboardingSteps] Navegando da etapa ${currentStepId} para etapa anterior ${previousStepId} (${previousPath})`);
-    navigate(previousPath);
-  };
+  ];
 
-  // Componentes simplificados para o onboarding NOVO
-  const stepComponents = {
-    personal_info: PersonalInfoStep,
-    ai_experience: AIExperienceStep,
-    trail_generation: () => null, // Esta etapa é tratada em TrailGeneration.tsx
-  };
+  const progressPercentage = ((currentStep + 1) / steps.length) * 100;
 
-  const CurrentStepComponent = stepComponents[currentPathStepId as keyof typeof stepComponents] || 
-                              stepComponents[currentStep.id as keyof typeof stepComponents];
-  
-  if (!CurrentStepComponent) {
-    console.warn(`Componente não encontrado para etapa: ${currentPathStepId || currentStep.id}`);
-    return null;
-  }
-
-  const progressPercentage = ((currentStepIndex + 1) / steps.length) * 100;
-
-  const getInitialDataForCurrentStep = () => {
-    if (!progress) return undefined;
-    if (currentPathStepId === "ai_experience" || currentStep.id === "ai_experience") {
-      return progress.ai_experience;
+  const handlePersonalInfoSubmit = async () => {
+    const success = await personalInfoHook.handleSubmit();
+    if (success) {
+      setCurrentStep(1);
     }
-    const sectionKey = currentStep.section as keyof OnboardingData;
-    return progress[sectionKey as keyof typeof progress];
   };
 
-  const getPropsForCurrentStep = () => {
-    const baseProps = {
-      onSubmit: saveStepData,
-      isSubmitting: isSubmitting,
-      isLastStep: currentStepIndex === steps.length - 1,
-      onComplete: completeOnboarding,
-      initialData: getInitialDataForCurrentStep(),
-      onPrevious: () => navigateToPreviousStep(currentPathStepId || currentStep.id),
-    };
-
-    // Para ai_experience, adicionar personalInfo
-    if (currentPathStepId === "ai_experience" || currentStep.id === "ai_experience") {
-      return {
-        ...baseProps,
-        personalInfo: progress?.personal_info,
-      };
+  const handleAIExperienceSubmit = async () => {
+    const success = await aiExperienceHook.handleSubmit();
+    if (success) {
+      setCurrentStep(2);
     }
+  };
 
-    return baseProps;
+  const handleTrailComplete = async () => {
+    try {
+      await completeOnboarding();
+      navigate("/onboarding/completed");
+    } catch (error) {
+      console.error("Erro ao finalizar onboarding:", error);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const renderCurrentStep = () => {
+    switch (currentStep) {
+      case 0:
+        return (
+          <div className="animate-fade-in">
+            <MilagrinhoAssistant
+              userName={progress?.personal_info?.name?.split(' ')[0]}
+              message="Para começar, vou precisar de algumas informações pessoais para personalizar sua experiência no VIVER DE IA Club."
+            />
+            <PersonalInfoStep
+              onSubmit={handlePersonalInfoSubmit}
+              isSubmitting={personalInfoHook.isSubmitting}
+              formData={personalInfoHook.formData}
+              errors={personalInfoHook.errors}
+              onChange={personalInfoHook.handleChange}
+              initialData={personalInfoHook.formData}
+              onPrevious={undefined}
+            />
+          </div>
+        );
+      
+      case 1:
+        return (
+          <div className="animate-fade-in">
+            <MilagrinhoAssistant
+              userName={progress?.personal_info?.name?.split(' ')[0]}
+              message="Agora me conte sobre sua experiência com IA para eu poder recomendar as melhores soluções para você!"
+            />
+            <AIExperienceStep
+              onSubmit={handleAIExperienceSubmit}
+              isSubmitting={aiExperienceHook.isSubmitting}
+              initialData={aiExperienceHook.formData}
+              personalInfo={progress?.personal_info}
+              onPrevious={handlePrevious}
+            />
+          </div>
+        );
+      
+      case 2:
+        return (
+          <div className="animate-fade-in">
+            <MilagrinhoAssistant
+              userName={progress?.personal_info?.name?.split(' ')[0]}
+              message="Agora vou criar sua trilha personalizada de implementação de IA! Com base no seu perfil, vou selecionar as melhores soluções para transformar seu negócio."
+            />
+            <TrailMagicExperience onFinish={handleTrailComplete} />
+          </div>
+        );
+      
+      default:
+        return null;
+    }
   };
 
   return (
@@ -117,10 +127,13 @@ export const OnboardingSteps = () => {
       <div className="flex justify-between items-center">
         <div className="space-y-1">
           <h2 className="text-2xl font-semibold text-white">
-            {currentStep.title}
+            {steps[currentStep].title}
           </h2>
           <p className="text-gray-400">
-            Passo {currentStepIndex + 1} de {steps.length}
+            {steps[currentStep].description}
+          </p>
+          <p className="text-sm text-gray-500">
+            Passo {currentStep + 1} de {steps.length}
           </p>
         </div>
       </div>
@@ -129,10 +142,8 @@ export const OnboardingSteps = () => {
         <Progress value={progressPercentage} className="h-2" />
       </div>
 
-      <div className="bg-gray-800 p-6 rounded-lg">
-        <CurrentStepComponent
-          {...getPropsForCurrentStep()}
-        />
+      <div className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700/50 shadow-2xl">
+        {renderCurrentStep()}
       </div>
     </div>
   );
