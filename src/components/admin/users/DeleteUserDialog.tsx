@@ -46,11 +46,29 @@ export const DeleteUserDialog: React.FC<DeleteUserDialogProps> = ({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Excluir usuário</AlertDialogTitle>
-          <AlertDialogDescription>
-            Tem certeza que deseja excluir permanentemente o usuário <strong>{user?.name || user?.email}</strong>?
-            <br /><br />
-            Esta ação não pode ser desfeita e removerá o usuário e todos os seus dados da plataforma.
+          <AlertDialogTitle>Excluir usuário completamente</AlertDialogTitle>
+          <AlertDialogDescription className="space-y-3">
+            <p>
+              Tem certeza que deseja excluir permanentemente o usuário <strong>{user?.name || user?.email}</strong>?
+            </p>
+            
+            <div className="bg-orange-50 dark:bg-orange-950/20 p-3 rounded-md border border-orange-200 dark:border-orange-800">
+              <p className="text-sm text-orange-800 dark:text-orange-200 font-medium">
+                ⚠️ Esta ação é irreversível e irá:
+              </p>
+              <ul className="text-xs text-orange-700 dark:text-orange-300 mt-1 space-y-1">
+                <li>• Remover completamente o usuário do sistema de autenticação</li>
+                <li>• Limpar todos os dados associados (progresso, comentários, notificações)</li>
+                <li>• Permitir que novos convites sejam criados para este email</li>
+                <li>• Registrar a ação nos logs de auditoria</li>
+              </ul>
+            </div>
+            
+            <div className="bg-green-50 dark:bg-green-950/20 p-3 rounded-md border border-green-200 dark:border-green-800">
+              <p className="text-xs text-green-700 dark:text-green-300">
+                ✅ Após a exclusão, você poderá criar um novo convite para <strong>{user?.email}</strong> sem problemas.
+              </p>
+            </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -69,7 +87,7 @@ export const DeleteUserDialog: React.FC<DeleteUserDialogProps> = ({
                 <span>Excluindo...</span>
               </>
             ) : (
-              "Excluir usuário"
+              "Excluir completamente"
             )}
           </AlertDialogAction>
         </AlertDialogFooter>
