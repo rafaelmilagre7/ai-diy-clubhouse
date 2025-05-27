@@ -61,7 +61,7 @@ export const EmailStatusMonitor: React.FC = () => {
           <p className="text-xs text-muted-foreground mt-2">
             ✨ Sistema simplificado e robusto<br />
             🔄 Fallback automático para usuários deletados<br />
-            📧 Compatível com todos os tipos de usuário<br />
+            📧 Aceita qualquer email válido<br />
             🛡️ Sem dependências de métodos deprecados
           </p>
         </CardContent>
@@ -74,7 +74,7 @@ export const EmailStatusMonitor: React.FC = () => {
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium flex items-center gap-2">
           <Shield className="h-4 w-4" />
-          Sistema de Emails Simplificado
+          Sistema de Emails Otimizado
         </CardTitle>
       </CardHeader>
       
@@ -94,8 +94,8 @@ export const EmailStatusMonitor: React.FC = () => {
           <p>✅ <strong>Abordagem simplificada:</strong> Sempre tenta convite padrão primeiro</p>
           <p>✅ <strong>Fallback inteligente:</strong> Detecta e resolve usuários deletados</p>
           <p>✅ <strong>Recuperação automática:</strong> Links de recuperação quando necessário</p>
-          <p>✅ <strong>Reenvios ilimitados:</strong> Sem restrições de tempo ou quantidade</p>
-          <p>✅ <strong>Sem dependências problemáticas:</strong> Remove métodos deprecados</p>
+          <p>✅ <strong>Aceita todos os emails:</strong> Sem restrições desnecessárias</p>
+          <p>✅ <strong>Logs detalhados:</strong> Melhor debugging e monitoramento</p>
         </div>
       </CardContent>
     </Card>

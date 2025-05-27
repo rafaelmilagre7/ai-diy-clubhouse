@@ -42,12 +42,12 @@ export function useInviteEmailService() {
         throw new Error('URL do convite não fornecida');
       }
 
-      console.log("📧 Chamando edge function...");
+      console.log("📧 Chamando edge function otimizada...");
 
       // Chamar edge function com retry automático
       let lastError;
       let attempts = 0;
-      const maxAttempts = 3;
+      const maxAttempts = 2; // Reduzido para 2 tentativas
 
       while (attempts < maxAttempts) {
         attempts++;
@@ -76,8 +76,8 @@ export function useInviteEmailService() {
               error.message?.includes('network') ||
               error.message?.includes('timeout')
             )) {
-              console.log("🔄 Tentando novamente em 2 segundos...");
-              await new Promise(resolve => setTimeout(resolve, 2000));
+              console.log("🔄 Tentando novamente em 1 segundo...");
+              await new Promise(resolve => setTimeout(resolve, 1000));
               continue;
             }
             
@@ -89,7 +89,7 @@ export function useInviteEmailService() {
             throw new Error(data?.message || 'Falha no envio');
           }
 
-          console.log("✅ Email enviado com sucesso:", {
+          console.log("✅ Email processado com sucesso:", {
             strategy: data.strategy,
             method: data.method,
             email: data.email
@@ -97,7 +97,7 @@ export function useInviteEmailService() {
 
           return {
             success: true,
-            message: `Convite enviado com sucesso (${data.strategy || 'padrão'})`,
+            message: `Convite processado com sucesso (${data.strategy || 'padrão'})`,
             emailId: data.user_id
           };
 
@@ -108,7 +108,7 @@ export function useInviteEmailService() {
           }
           
           console.log(`⚠️ Tentativa ${attempts} falhou, tentando novamente...`);
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
 
@@ -120,7 +120,7 @@ export function useInviteEmailService() {
 
       return {
         success: false,
-        message: 'Erro ao enviar email',
+        message: 'Erro ao processar convite',
         error: err.message
       };
     } finally {

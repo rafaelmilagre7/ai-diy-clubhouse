@@ -24,18 +24,8 @@ export function useInviteValidation() {
       errors.push('Formato de email inválido');
     }
 
-    // Verificar domínios suspeitos
-    const suspiciousDomains = ['tempmail', '10minutemail', 'guerrillamail'];
-    const domain = email.split('@')[1]?.toLowerCase();
-    if (domain && suspiciousDomains.some(suspicious => domain.includes(suspicious))) {
-      warnings.push('Este parece ser um email temporário');
-    }
-
-    // Verificar emails corporativos comuns
-    const corporateDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com'];
-    if (domain && corporateDomains.includes(domain)) {
-      warnings.push('Email pessoal detectado - considere usar email corporativo se disponível');
-    }
+    // Removido completamente o aviso sobre emails pessoais
+    // Todos os emails válidos são aceitos sem restrição
 
     const result = {
       isValid: errors.length === 0,
