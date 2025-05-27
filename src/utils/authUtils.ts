@@ -1,4 +1,6 @@
 
+import { APP_CONFIG } from '@/config/app';
+
 /**
  * Utilitários para gerenciamento de estado de autenticação
  * Ajuda a prevenir estados de "limbo" de autenticação
@@ -61,7 +63,7 @@ export const getInitials = (name: string | null): string => {
  */
 export const redirectToDomain = (path: string = '/dashboard'): void => {
   const currentOrigin = window.location.origin;
-  const targetDomain = 'https://app.viverdeia.ai';
+  const targetDomain = APP_CONFIG.DOMAIN; // 🎯 Usar configuração centralizada
   
   // Se já estamos no domínio correto ou em localhost, apenas navegue para o caminho
   if (currentOrigin.includes('localhost') || currentOrigin === targetDomain) {

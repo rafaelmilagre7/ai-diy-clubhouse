@@ -22,6 +22,17 @@ interface SendInviteRequest {
   forceResend?: boolean;
 }
 
+// 🎯 CONFIGURAÇÃO DO DOMÍNIO CORRETO
+const getCorrectDomain = (): string => {
+  // Usar sempre o domínio personalizado para produção
+  return 'https://app.viverdeia.ai';
+};
+
+const generateCorrectInviteUrl = (token: string): string => {
+  const domain = getCorrectDomain();
+  return `${domain}/convite/${encodeURIComponent(token)}`;
+};
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -55,6 +66,17 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`📧 Processando convite para: ${email}`, { forceResend });
 
+    // 🎯 CORREÇÃO: Garantir que o URL use sempre o domínio correto
+    let correctedInviteUrl = inviteUrl;
+    
+    // Extrair token do URL original e recriar com domínio correto
+    const urlParts = inviteUrl.split('/convite/');
+    if (urlParts.length === 2) {
+      const token = urlParts[1];
+      correctedInviteUrl = generateCorrectInviteUrl(token);
+      console.log(`🔄 URL corrigido: ${inviteUrl} → ${correctedInviteUrl}`);
+    }
+
     // Criar cliente Supabase para estatísticas
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -75,10 +97,10 @@ const handler = async (req: Request): Promise<Response> => {
     try {
       console.log("📧 Renderizando template React Email...");
       
-      // Renderizar template React Email
+      // Renderizar template React Email com URL corrigido
       const emailHtml = await renderAsync(
         React.createElement(InviteEmail, {
-          inviteUrl,
+          inviteUrl: correctedInviteUrl, // 🎯 Usar URL corrigido
           roleName,
           expiresAt,
           senderName,
@@ -136,7 +158,8 @@ const handler = async (req: Request): Promise<Response> => {
       console.log("✅ Convite processado com sucesso (resend_primary):", {
         email,
         role: roleName,
-        strategy: 'resend_primary'
+        strategy: 'resend_primary',
+        correctedUrl: correctedInviteUrl
       });
 
       return new Response(
@@ -146,7 +169,8 @@ const handler = async (req: Request): Promise<Response> => {
           email,
           strategy: 'resend_primary',
           method: 'resend',
-          emailId: resendResponse.data?.id
+          emailId: resendResponse.data?.id,
+          finalUrl: correctedInviteUrl // 🎯 Informar URL final usado
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -168,7 +192,7 @@ const handler = async (req: Request): Promise<Response> => {
             type: 'recovery',
             email: email,
             options: {
-              redirectTo: inviteUrl
+              redirectTo: correctedInviteUrl // 🎯 Usar URL corrigido
             }
           });
 
@@ -184,7 +208,8 @@ const handler = async (req: Request): Promise<Response> => {
               message: 'Link de recuperação enviado (usuário existente)',
               email,
               strategy: 'supabase_recovery',
-              method: 'recovery_link'
+              method: 'recovery_link',
+              finalUrl: correctedInviteUrl
             }),
             { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
@@ -192,7 +217,7 @@ const handler = async (req: Request): Promise<Response> => {
           console.log("👤 Usuário novo, enviando via Supabase Auth...");
           
           const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-            redirectTo: inviteUrl,
+            redirectTo: correctedInviteUrl, // 🎯 Usar URL corrigido
             data: {
               role: roleName,
               invited_by: senderName,
@@ -212,7 +237,8 @@ const handler = async (req: Request): Promise<Response> => {
               message: 'Convite enviado via Supabase Auth',
               email,
               strategy: 'supabase_auth',
-              method: 'auth_invite'
+              method: 'auth_invite',
+              finalUrl: correctedInviteUrl
             }),
             { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );

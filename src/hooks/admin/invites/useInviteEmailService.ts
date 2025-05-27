@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { SendInviteResponse } from './types';
+import { APP_CONFIG } from '@/config/app';
 
 interface SendInviteEmailParams {
   email: string;
@@ -163,9 +164,11 @@ export function useInviteEmailService() {
     }
 
     const cleanToken = token.trim();
-    const baseUrl = `${window.location.origin}/convite/${encodeURIComponent(cleanToken)}`;
     
-    console.log("🔗 Link gerado:", baseUrl);
+    // 🎯 CORREÇÃO: Usar o domínio configurado em vez do window.location.origin
+    const baseUrl = APP_CONFIG.getAppUrl(`/convite/${encodeURIComponent(cleanToken)}`);
+    
+    console.log("🔗 Link gerado com domínio correto:", baseUrl);
     return baseUrl;
   }, []);
 
