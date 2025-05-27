@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useRef } from 'react';
 import { usePerformance } from '@/contexts/performance/PerformanceProvider';
 import { useToast } from '@/hooks/use-toast';
@@ -87,12 +86,8 @@ export const usePerformanceAlerts = () => {
       type: 'performance',
       message,
       severity: rule.severity,
-      metadata: {
-        ruleId: rule.id,
-        ruleName: rule.name,
-        metrics,
-        timestamp: Date.now()
-      }
+      id: `${rule.id}_${Date.now()}`,
+      timestamp: Date.now()
     });
 
     // Mostrar toast para alertas críticos
