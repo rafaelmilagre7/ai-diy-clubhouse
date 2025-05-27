@@ -38,14 +38,6 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
         sidebarOpen={sidebarOpen}
       />
 
-      {/* Networking */}
-      <MemberSidebarNavItem
-        to="/networking"
-        icon={Network}
-        label="Networking"
-        sidebarOpen={sidebarOpen}
-      />
-
       {/* Learning / Formação */}
       <MemberSidebarNavItem
         to="/learning"
@@ -75,6 +67,14 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
         to="/events"
         icon={Calendar}
         label="Eventos"
+        sidebarOpen={sidebarOpen}
+      />
+
+      {/* Networking - Novo item adicionado */}
+      <MemberSidebarNavItem
+        to="/networking"
+        icon={Network}
+        label="Networking"
         sidebarOpen={sidebarOpen}
       />
 
