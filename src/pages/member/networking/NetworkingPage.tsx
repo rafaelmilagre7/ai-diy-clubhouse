@@ -1,8 +1,7 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useNetworkingAccess } from '@/hooks/networking/useNetworkingAccess';
 import { NetworkingHeader } from '@/components/networking/NetworkingHeader';
-import { NetworkingFilters } from '@/components/networking/NetworkingFilters';
 import { NetworkingFeed } from '@/components/networking/NetworkingFeed';
 import { NetworkingUpgrade } from '@/components/networking/NetworkingUpgrade';
 import { Card } from '@/components/ui/card';
@@ -11,12 +10,6 @@ import { Users, Building } from 'lucide-react';
 
 const NetworkingPage = () => {
   const { hasAccess, accessMessage } = useNetworkingAccess();
-  const [filters, setFilters] = useState({
-    sector: 'all-sectors',
-    companySize: 'all-sizes',
-    location: 'all-locations',
-    status: 'all'
-  });
 
   if (!hasAccess) {
     return <NetworkingUpgrade message={accessMessage} />;
@@ -39,23 +32,22 @@ const NetworkingPage = () => {
             </TabsTrigger>
           </TabsList>
 
-          <NetworkingFilters 
-            filters={filters} 
-            onFiltersChange={setFilters} 
-          />
-
           <TabsContent value="customers" className="space-y-4">
-            <NetworkingFeed 
-              matchType="customer" 
-              filters={filters}
-            />
+            <div className="mb-4">
+              <p className="text-sm text-muted-foreground">
+                5 matches mensais selecionados pela IA baseados no seu perfil
+              </p>
+            </div>
+            <NetworkingFeed matchType="customer" />
           </TabsContent>
 
           <TabsContent value="suppliers" className="space-y-4">
-            <NetworkingFeed 
-              matchType="supplier" 
-              filters={filters}
-            />
+            <div className="mb-4">
+              <p className="text-sm text-muted-foreground">
+                3 matches mensais de fornecedores especializados
+              </p>
+            </div>
+            <NetworkingFeed matchType="supplier" />
           </TabsContent>
         </Tabs>
       </Card>

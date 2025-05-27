@@ -42,9 +42,16 @@ export function useNetworkMatches(matchType?: 'customer' | 'supplier') {
 
       // Primeiro, tentar gerar matches se não existir nenhum
       try {
-        await supabase.functions.invoke('generate-networking-matches', {
+        console.log('Tentando gerar matches automaticamente...');
+        const { data: generateResult, error: generateError } = await supabase.functions.invoke('generate-networking-matches', {
           body: { target_user_id: user.id, force_regenerate: false }
         });
+        
+        if (generateError) {
+          console.log('Erro ao gerar matches automaticamente:', generateError);
+        } else {
+          console.log('Resultado da geração:', generateResult);
+        }
       } catch (error) {
         console.log('Erro ao gerar matches automaticamente:', error);
         // Continuar mesmo se não conseguir gerar matches
@@ -73,6 +80,7 @@ export function useNetworkMatches(matchType?: 'customer' | 'supplier') {
         throw error;
       }
 
+      console.log('Matches encontrados:', data?.length || 0);
       return (data || []) as NetworkMatch[];
     },
     staleTime: 5 * 60 * 1000, // 5 minutos
@@ -93,22 +101,5 @@ export function useUpdateMatchStatus() {
     if (error) {
       throw error;
     }
-  };
-}
-
-export function useGenerateMatches() {
-  return async (targetUserId?: string, forceRegenerate = false) => {
-    const { data, error } = await supabase.functions.invoke('generate-networking-matches', {
-      body: {
-        target_user_id: targetUserId,
-        force_regenerate: forceRegenerate
-      }
-    });
-
-    if (error) {
-      throw error;
-    }
-
-    return data;
   };
 }
