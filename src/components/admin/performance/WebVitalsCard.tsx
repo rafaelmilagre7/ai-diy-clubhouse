@@ -169,7 +169,7 @@ export const WebVitalsCard: React.FC = () => {
                   />
                   <div className="flex justify-between text-xs text-muted-foreground">
                     <span>Bom: ≤{formatValue(vital.name, vital.threshold.good)}</span>
-                    <span>Ruim: >{formatValue(vital.name, vital.threshold.poor)}</span>
+                    <span>Ruim: &gt;{formatValue(vital.name, vital.threshold.poor)}</span>
                   </div>
                 </div>
               )}
