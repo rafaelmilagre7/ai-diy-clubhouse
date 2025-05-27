@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { TestTube, Mail, UserX, RefreshCw, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useDeleteUser } from '@/hooks/admin/useDeleteUser';
 import { useInviteCreate } from '@/hooks/admin/invites/useInviteCreate';
+import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 interface Role {
