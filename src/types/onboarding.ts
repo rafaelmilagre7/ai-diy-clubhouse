@@ -1,3 +1,4 @@
+
 export interface OnboardingData {
   // 1. Dados Pessoais
   personal_info: {
@@ -45,17 +46,8 @@ export interface OnboardingData {
     live_interest?: number;
     content_formats?: string[];
   };
-  // 5. Experiência com IA
-  ai_experience: {
-    knowledge_level?: string;
-    previous_tools?: string[];
-    has_implemented?: string; // "sim" | "nao" ou "true" | "false"
-    desired_ai_areas?: string[]; // Agora array
-    completed_formation?: boolean;
-    is_member_for_month?: boolean;
-    nps_score?: number;
-    improvement_suggestions?: string;
-  };
+  // 5. Experiência com IA - Agora com suporte a estruturas aninhadas
+  ai_experience: AIExperienceData | NestedAIExperienceData;
   // 6. Personalização da experiência
   experience_personalization: {
     interests?: string[];
@@ -104,6 +96,24 @@ export interface OnboardingData {
   resources_needs?: any;
   team_info?: any;
   implementation_preferences?: any;
+}
+
+// Tipo base para experiência com IA (estrutura normal)
+export interface AIExperienceData {
+  knowledge_level?: string;
+  previous_tools?: string[];
+  has_implemented?: string; // "sim" | "nao" ou "true" | "false"
+  desired_ai_areas?: string[]; // Agora array
+  completed_formation?: boolean;
+  is_member_for_month?: boolean;
+  nps_score?: number;
+  improvement_suggestions?: string;
+}
+
+// Tipo para estrutura aninhada (legacy)
+export interface NestedAIExperienceData extends AIExperienceData {
+  ai_experience?: AIExperienceData;
+  onboarding_type?: 'club' | 'formacao';
 }
 
 export interface PersonalInfoData {

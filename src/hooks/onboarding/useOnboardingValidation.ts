@@ -1,5 +1,5 @@
 
-import { OnboardingProgress } from '@/types/onboarding';
+import { OnboardingProgress, AIExperienceData, NestedAIExperienceData } from '@/types/onboarding';
 
 export const useOnboardingValidation = () => {
   const validateOnboardingCompletion = (progress: OnboardingProgress | null): boolean => {
@@ -79,13 +79,16 @@ export const useOnboardingValidation = () => {
     let hasAIExperience = false;
     
     if (aiExperience && typeof aiExperience === 'object') {
-      // Verificar se está na estrutura aninhada (ai_experience.ai_experience)
-      if (aiExperience.ai_experience && typeof aiExperience.ai_experience === 'object') {
+      // Type guard para verificar se é uma estrutura aninhada
+      const nestedAI = aiExperience as NestedAIExperienceData;
+      if (nestedAI.ai_experience && typeof nestedAI.ai_experience === 'object') {
         console.log("[Validation] AI Experience estrutura aninhada detectada");
-        aiExperience = aiExperience.ai_experience;
+        aiExperience = nestedAI.ai_experience;
       }
       
-      hasAIExperience = !!(aiExperience.knowledge_level);
+      // Agora podemos verificar com segurança
+      const normalizedAI = aiExperience as AIExperienceData;
+      hasAIExperience = !!(normalizedAI.knowledge_level);
     }
     
     console.log("[Validation] AI Experience:", {
@@ -179,11 +182,15 @@ export const useOnboardingValidation = () => {
     
     // Verificar AI Experience considerando estrutura aninhada
     let aiExperience = progress.ai_experience;
-    if (aiExperience && aiExperience.ai_experience) {
-      aiExperience = aiExperience.ai_experience;
+    if (aiExperience && typeof aiExperience === 'object') {
+      const nestedAI = aiExperience as NestedAIExperienceData;
+      if (nestedAI.ai_experience) {
+        aiExperience = nestedAI.ai_experience;
+      }
     }
     
-    if (!aiExperience || !aiExperience.knowledge_level) {
+    const normalizedAI = aiExperience as AIExperienceData;
+    if (!normalizedAI || !normalizedAI.knowledge_level) {
       issues.push('Experiência com IA não informada');
     }
     
@@ -193,24 +200,24 @@ export const useOnboardingValidation = () => {
   };
 
   // Nova função para normalizar dados de AI Experience
-  const normalizeAIExperienceData = (aiExperience: any): any => {
+  const normalizeAIExperienceData = (aiExperience: any): AIExperienceData | null => {
     if (!aiExperience) return null;
     
     // Se já está na estrutura correta, retornar como está
-    if (aiExperience.knowledge_level && !aiExperience.ai_experience) {
-      return aiExperience;
+    if (aiExperience.knowledge_level && !(aiExperience as NestedAIExperienceData).ai_experience) {
+      return aiExperience as AIExperienceData;
     }
     
     // Se está na estrutura aninhada, extrair os dados
-    if (aiExperience.ai_experience && typeof aiExperience.ai_experience === 'object') {
+    const nestedAI = aiExperience as NestedAIExperienceData;
+    if (nestedAI.ai_experience && typeof nestedAI.ai_experience === 'object') {
       console.log("[Validation] Normalizando estrutura aninhada de AI Experience");
       return {
-        ...aiExperience.ai_experience,
-        onboarding_type: aiExperience.onboarding_type || 'club'
+        ...nestedAI.ai_experience,
       };
     }
     
-    return aiExperience;
+    return aiExperience as AIExperienceData;
   };
   
   return {
