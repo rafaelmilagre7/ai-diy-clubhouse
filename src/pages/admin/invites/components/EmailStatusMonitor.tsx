@@ -35,7 +35,7 @@ export const EmailStatusMonitor: React.FC = () => {
           </p>
           
           <p className="text-xs text-muted-foreground mt-1">
-            Sistema com retry automático - tente novamente
+            Sistema com fallback automático - tente novamente
           </p>
         </CardContent>
       </Card>
@@ -59,9 +59,10 @@ export const EmailStatusMonitor: React.FC = () => {
           </div>
           
           <p className="text-xs text-muted-foreground mt-2">
-            ✨ Sistema inteligente detectando tipo de usuário<br />
-            🔄 Retry automático em caso de falha<br />
-            📧 Suporte a usuários novos, existentes e deletados
+            ✨ Sistema simplificado e robusto<br />
+            🔄 Fallback automático para usuários deletados<br />
+            📧 Compatível com todos os tipos de usuário<br />
+            🛡️ Sem dependências de métodos deprecados
           </p>
         </CardContent>
       </Card>
@@ -73,7 +74,7 @@ export const EmailStatusMonitor: React.FC = () => {
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium flex items-center gap-2">
           <Shield className="h-4 w-4" />
-          Sistema de Emails Aprimorado
+          Sistema de Emails Simplificado
         </CardTitle>
       </CardHeader>
       
@@ -85,16 +86,16 @@ export const EmailStatusMonitor: React.FC = () => {
           </div>
           
           <Badge variant="default" className="bg-green-100 text-green-800">
-            Inteligente
+            Robusto
           </Badge>
         </div>
         
         <div className="space-y-1 mt-2 text-xs text-muted-foreground">
-          <p>✅ <strong>Usuários novos:</strong> Convite padrão do Supabase</p>
-          <p>✅ <strong>Usuários existentes:</strong> Email de convite normal</p>
-          <p>✅ <strong>Usuários deletados:</strong> Recriação + link de recuperação</p>
-          <p>✅ <strong>Reenvios ilimitados:</strong> Sem restrições de tempo</p>
-          <p>✅ <strong>Retry automático:</strong> 3 tentativas com backoff</p>
+          <p>✅ <strong>Abordagem simplificada:</strong> Sempre tenta convite padrão primeiro</p>
+          <p>✅ <strong>Fallback inteligente:</strong> Detecta e resolve usuários deletados</p>
+          <p>✅ <strong>Recuperação automática:</strong> Links de recuperação quando necessário</p>
+          <p>✅ <strong>Reenvios ilimitados:</strong> Sem restrições de tempo ou quantidade</p>
+          <p>✅ <strong>Sem dependências problemáticas:</strong> Remove métodos deprecados</p>
         </div>
       </CardContent>
     </Card>

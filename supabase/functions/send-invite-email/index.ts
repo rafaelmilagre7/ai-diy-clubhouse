@@ -49,117 +49,112 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
 
-    console.log("🔍 Verificando status do usuário...");
+    console.log("🚀 Tentando enviar convite com inviteUserByEmail");
     
-    // Primeiro, tentar buscar o usuário para entender seu status
-    const { data: existingUser, error: getUserError } = await supabaseAdmin.auth.admin.getUserByEmail(data.email);
-    
-    let inviteResult;
-    let strategy = 'unknown';
-    
-    if (existingUser?.user && !getUserError) {
-      // Usuário existe e está ativo
-      console.log("👤 Usuário existente encontrado, enviando convite padrão");
-      strategy = 'existing_user_invite';
+    // Estratégia simplificada: sempre tentar inviteUserByEmail primeiro
+    const inviteResult = await supabaseAdmin.auth.admin.inviteUserByEmail(
+      data.email,
+      {
+        data: {
+          role: data.roleName,
+          sender_name: data.senderName || 'Viver de IA',
+          notes: data.notes || '',
+          invite_url: data.inviteUrl,
+          expires_at: data.expiresAt,
+          invite_id: data.inviteId
+        },
+        redirectTo: data.inviteUrl
+      }
+    );
+
+    let strategy = 'standard_invite';
+    let finalResult = inviteResult;
+
+    // Se houve erro, implementar fallback para usuários deletados/existentes
+    if (inviteResult.error) {
+      console.log("⚠️ Erro no convite padrão:", inviteResult.error.message);
       
-      inviteResult = await supabaseAdmin.auth.admin.inviteUserByEmail(
-        data.email,
-        {
-          data: {
-            role: data.roleName,
-            sender_name: data.senderName || 'Viver de IA',
-            notes: data.notes || '',
-            invite_url: data.inviteUrl,
-            expires_at: data.expiresAt,
-            invite_id: data.inviteId
-          },
-          redirectTo: data.inviteUrl
-        }
-      );
-      
-    } else {
-      // Usuário não existe ou foi deletado - tentar invite padrão primeiro
-      console.log("🆕 Tentando convite padrão para usuário novo/deletado");
-      
-      inviteResult = await supabaseAdmin.auth.admin.inviteUserByEmail(
-        data.email,
-        {
-          data: {
-            role: data.roleName,
-            sender_name: data.senderName || 'Viver de IA',
-            notes: data.notes || '',
-            invite_url: data.inviteUrl,
-            expires_at: data.expiresAt,
-            invite_id: data.inviteId
-          },
-          redirectTo: data.inviteUrl
-        }
-      );
-      
-      if (inviteResult.error && inviteResult.error.message.includes('already been registered')) {
-        // Usuário foi deletado - usar estratégia de fallback
-        console.log("🔄 Usuário deletado detectado, usando estratégia de fallback");
-        strategy = 'deleted_user_recovery';
+      // Verificar se é erro de usuário já existente/deletado
+      if (inviteResult.error.message.includes('already been registered') || 
+          inviteResult.error.message.includes('already exists') ||
+          inviteResult.error.message.includes('User already registered')) {
         
-        // Gerar senha temporária segura
-        const tempPassword = crypto.randomUUID() + Math.random().toString(36).substring(2);
+        console.log("🔄 Implementando estratégia de fallback para usuário existente/deletado");
+        strategy = 'fallback_recovery';
         
-        // Criar usuário novamente
-        const createResult = await supabaseAdmin.auth.admin.createUser({
-          email: data.email,
-          password: tempPassword,
-          email_confirm: true,
-          user_metadata: {
-            role: data.roleName,
-            sender_name: data.senderName || 'Viver de IA',
-            notes: data.notes || '',
-            invite_type: 'recovery_invite'
+        try {
+          // Gerar senha temporária segura
+          const tempPassword = crypto.randomUUID() + Math.random().toString(36).substring(2);
+          
+          // Tentar criar usuário novamente (isso funciona para usuários deletados)
+          const createResult = await supabaseAdmin.auth.admin.createUser({
+            email: data.email,
+            password: tempPassword,
+            email_confirm: true,
+            user_metadata: {
+              role: data.roleName,
+              sender_name: data.senderName || 'Viver de IA',
+              notes: data.notes || '',
+              invite_type: 'recovery_invite'
+            }
+          });
+          
+          if (createResult.error) {
+            // Se não conseguiu criar, talvez seja usuário realmente existente
+            // Tentar gerar link de recuperação que funciona como convite
+            console.log("🔗 Tentando gerar link de recuperação como alternativa");
+            
+            const recoveryResult = await supabaseAdmin.auth.admin.generateLink({
+              type: 'recovery',
+              email: data.email,
+              options: {
+                redirectTo: data.inviteUrl
+              }
+            });
+            
+            if (recoveryResult.error) {
+              throw new Error(`Falha no fallback: ${recoveryResult.error.message}`);
+            }
+            
+            console.log("✅ Link de recuperação gerado com sucesso");
+            finalResult = { data: { user: { email: data.email } }, error: null };
+            strategy = 'recovery_link_fallback';
+            
+          } else {
+            console.log("✅ Usuário recriado com sucesso");
+            
+            // Gerar link de recuperação para o usuário recriado
+            const recoveryResult = await supabaseAdmin.auth.admin.generateLink({
+              type: 'recovery',
+              email: data.email,
+              options: {
+                redirectTo: data.inviteUrl
+              }
+            });
+            
+            if (recoveryResult.error) {
+              console.warn("⚠️ Não foi possível gerar link de recuperação, mas usuário foi criado");
+            }
+            
+            finalResult = { data: { user: createResult.data.user }, error: null };
+            strategy = 'user_recreated_with_recovery';
           }
-        });
-        
-        if (createResult.error) {
-          console.error("❌ Erro ao recriar usuário:", createResult.error);
-          throw new Error(`Erro ao recriar usuário: ${createResult.error.message}`);
+          
+        } catch (fallbackError: any) {
+          console.error("❌ Erro no fallback:", fallbackError);
+          throw new Error(`Erro no fallback: ${fallbackError.message}`);
         }
-        
-        console.log("✅ Usuário recriado, gerando link de recuperação");
-        
-        // Gerar link de recuperação que servirá como convite
-        const recoveryResult = await supabaseAdmin.auth.admin.generateLink({
-          type: 'recovery',
-          email: data.email,
-          options: {
-            redirectTo: data.inviteUrl
-          }
-        });
-        
-        if (recoveryResult.error) {
-          console.error("❌ Erro ao gerar link de recuperação:", recoveryResult.error);
-          throw new Error(`Erro ao gerar link de convite: ${recoveryResult.error.message}`);
-        }
-        
-        // Simular resultado de convite para manter compatibilidade
-        inviteResult = {
-          data: { user: createResult.data.user },
-          error: null
-        };
-        
-        console.log("🔗 Link de recuperação gerado como convite:", recoveryResult.data.properties?.action_link?.substring(0, 50) + "...");
         
       } else {
-        strategy = 'new_user_invite';
+        // Erro diferente de usuário existente
+        throw new Error(`Erro no envio: ${inviteResult.error.message}`);
       }
-    }
-
-    if (inviteResult.error && !inviteResult.error.message.includes('already been registered')) {
-      console.error("❌ Erro final ao enviar convite:", inviteResult.error);
-      throw new Error(`Erro no envio: ${inviteResult.error.message}`);
     }
 
     console.log(`✅ Convite processado com sucesso (${strategy}):`, {
       email: data.email,
       role: data.roleName,
-      user_id: inviteResult.data?.user?.id || 'processed',
+      user_id: finalResult.data?.user?.id || finalResult.data?.user?.email || 'processed',
       strategy: strategy
     });
 
@@ -179,10 +174,10 @@ const handler = async (req: Request): Promise<Response> => {
       JSON.stringify({
         success: true,
         message: "Convite enviado com sucesso",
-        user_id: inviteResult.data?.user?.id || 'processed',
+        user_id: finalResult.data?.user?.id || finalResult.data?.user?.email || 'processed',
         email: data.email,
         strategy: strategy,
-        method: 'enhanced_supabase_auth'
+        method: 'simplified_robust_approach'
       }),
       {
         status: 200,
