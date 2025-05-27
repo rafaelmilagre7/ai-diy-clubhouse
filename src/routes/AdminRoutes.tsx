@@ -13,6 +13,7 @@ import AdminOnboarding from '@/pages/admin/AdminOnboarding';
 import AdminSuggestions from '@/pages/admin/AdminSuggestions';
 import AdminEvents from '@/pages/admin/AdminEvents';
 import AdminRoles from '@/pages/admin/AdminRoles';
+import InvitesManagement from '@/pages/admin/invites/InvitesManagement';
 
 // Community moderation
 import CommunityModerationPage from '@/pages/admin/community/CommunityModerationPage';
@@ -33,6 +34,7 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin/suggestions", AdminSuggestions),
   createAdminRoute("/admin/events", AdminEvents),
   createAdminRoute("/admin/roles", AdminRoles),
+  createAdminRoute("/admin/invites", InvitesManagement),
   
   // Community moderation routes
   createAdminRoute("/admin/community", CommunityModerationPage),
