@@ -1,31 +1,38 @@
 
-import { Menu } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { BaseContentProps } from "../BaseLayout";
 
-interface FormacaoContentProps {
-  children: React.ReactNode;
-  sidebarOpen: boolean;
-  setSidebarOpen: (open: boolean) => void;
-}
-
-export const FormacaoContent = ({ children, sidebarOpen, setSidebarOpen }: FormacaoContentProps) => {
+export const FormacaoContent = ({ 
+  sidebarOpen, 
+  setSidebarOpen, 
+  children 
+}: BaseContentProps) => {
   return (
-    <main className={`relative flex-1 transition-all duration-300 ease-in-out ${
-      sidebarOpen ? "md:ml-64" : "md:ml-[70px]"
-    }`}>
-      <div className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-4 md:hidden">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          aria-label="Toggle sidebar"
-        >
-          <Menu className="h-6 w-6" />
-        </Button>
-      </div>
-      <div className="container mx-auto p-4 md:p-6">
+    <div 
+      className={cn(
+        "flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden",
+        sidebarOpen ? "md:ml-64" : "md:ml-[70px]"
+      )}
+    >
+      {/* Header simples para Formação */}
+      <header className="bg-background border-b border-border p-4">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="md:hidden p-2 rounded-md hover:bg-accent"
+            aria-label="Toggle sidebar"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <h1 className="text-xl font-semibold">Área de Formação</h1>
+        </div>
+      </header>
+      
+      <main className="flex-1 overflow-auto p-6">
         {children}
-      </div>
-    </main>
+      </main>
+    </div>
   );
 };

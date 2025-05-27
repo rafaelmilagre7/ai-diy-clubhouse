@@ -1,41 +1,55 @@
 
-import { ReactNode, useState, useEffect } from "react";
-import { Outlet } from "react-router-dom";
+import React from "react";
+import { useAuth } from "@/contexts/auth";
+import BaseLayout from "../BaseLayout";
 import { AdminSidebar } from "./AdminSidebar";
-import { AdminHeader } from "./AdminHeader";
 import { AdminContent } from "./AdminContent";
-import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
-interface AdminLayoutProps {
-  children?: ReactNode;
-}
+/**
+ * AdminLayout usando BaseLayout unificado
+ */
+const AdminLayout = ({ children }: { children: React.ReactNode }) => {
+  const { profile, signOut } = useAuth();
 
-const AdminLayout = ({ children }: AdminLayoutProps) => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  
-  console.log("AdminLayout renderizando com sidebarOpen:", sidebarOpen);
+  // Função para obter iniciais do nome do usuário
+  const getInitials = (name: string | null) => {
+    if (!name) return "A";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
+  };
 
-  // Forçar o sidebar a aparecer inicialmente no desktop
-  useEffect(() => {
-    const isMobile = window.innerWidth < 768;
-    setSidebarOpen(!isMobile);
-  }, []);
+  // Handler para signOut
+  const handleSignOut = async () => {
+    try {
+      const result = await signOut();
+      if (result.success) {
+        toast.success("Logout realizado com sucesso");
+      } else {
+        toast.error("Erro ao fazer logout");
+      }
+    } catch (error) {
+      toast.error("Erro ao fazer logout");
+    }
+  };
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      <AdminSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-      <div 
-        className={cn(
-          "flex-1 flex flex-col transition-all duration-300",
-          sidebarOpen ? "md:ml-64" : "md:ml-20"
-        )}
-      >
-        <AdminHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-        <AdminContent>
-          {children || <Outlet />}
-        </AdminContent>
-      </div>
-    </div>
+    <BaseLayout
+      variant="admin"
+      sidebarComponent={AdminSidebar}
+      contentComponent={AdminContent}
+      onSignOut={handleSignOut}
+      profileName={profile?.name || null}
+      profileEmail={profile?.email || null}
+      profileAvatar={profile?.avatar_url}
+      getInitials={getInitials}
+    >
+      {children}
+    </BaseLayout>
   );
 };
 

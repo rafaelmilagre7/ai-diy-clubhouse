@@ -1,33 +1,24 @@
 
-import { ReactNode } from "react";
-import { Outlet } from "react-router-dom";
 import { cn } from "@/lib/utils";
-
-interface MemberContentProps {
-  sidebarOpen: boolean;
-  setSidebarOpen: (open: boolean) => void;
-  children?: ReactNode;
-}
+import { MemberHeader } from "./MemberHeader";
+import { BaseContentProps } from "../BaseLayout";
 
 export const MemberContent = ({ 
   sidebarOpen, 
   setSidebarOpen, 
   children 
-}: MemberContentProps) => {
+}: BaseContentProps) => {
   return (
-    <main 
+    <div 
       className={cn(
-        "flex-1 bg-[#0F111A] transition-all duration-300 ease-in-out",
-        // Ajusta o margin-left baseado no estado da barra lateral
-        sidebarOpen ? "md:ml-64" : "md:ml-[70px]",
-        // Sem margem em mobile (barra lateral sobrepõe)
-        "ml-0"
+        "flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden",
+        sidebarOpen ? "md:ml-64" : "md:ml-[70px]"
       )}
     >
-      {/* Área de conteúdo */}
-      <div className="container py-6 md:py-8">
-        {children || <Outlet />}
-      </div>
-    </main>
+      <MemberHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <main className="flex-1 overflow-auto">
+        {children}
+      </main>
+    </div>
   );
 };

@@ -1,19 +1,9 @@
 
 import { cn } from "@/lib/utils";
-import { Separator } from "@/components/ui/separator";
 import { MemberUserMenu } from "./MemberUserMenu";
 import { SidebarLogo } from "./navigation/SidebarLogo";
 import { MemberSidebarNav } from "./MemberSidebarNav";
-
-interface MemberSidebarProps {
-  sidebarOpen: boolean;
-  setSidebarOpen: (open: boolean) => void;
-  profileName: string | null;
-  profileEmail: string | null;
-  profileAvatar: string | undefined;
-  getInitials: (name: string | null) => string;
-  signOut: () => Promise<void>;
-}
+import { BaseSidebarProps } from "../BaseLayout";
 
 export const MemberSidebar = ({ 
   sidebarOpen, 
@@ -23,7 +13,7 @@ export const MemberSidebar = ({
   profileAvatar,
   getInitials,
   signOut
-}: MemberSidebarProps) => {
+}: BaseSidebarProps) => {
   return (
     <aside
       className={cn(
@@ -56,8 +46,8 @@ export const MemberSidebar = ({
             profileName={profileName}
             profileEmail={profileEmail}
             profileAvatar={profileAvatar}
-            getInitials={getInitials}
-            signOut={signOut}
+            getInitials={getInitials || (() => "U")}
+            signOut={signOut || (() => Promise.resolve())}
           />
         </div>
       </div>
