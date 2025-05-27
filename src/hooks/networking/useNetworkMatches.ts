@@ -59,15 +59,10 @@ export function useNetworkMatches(matchType?: 'customer' | 'supplier') {
         // Continuar mesmo se não conseguir gerar matches
       }
 
-      // Buscar matches com join para os dados do usuário
+      // Buscar matches primeiro
       let query = supabase
         .from('network_matches')
-        .select(`
-          *,
-          matched_user:profiles!network_matches_matched_user_id_fkey(
-            id, name, email, company_name, current_position, avatar_url
-          )
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -75,28 +70,60 @@ export function useNetworkMatches(matchType?: 'customer' | 'supplier') {
         query = query.eq('match_type', matchType);
       }
 
-      const { data, error } = await query;
+      const { data: matches, error: matchesError } = await query;
 
-      if (error) {
-        console.error('❌ Erro ao buscar matches:', error);
-        throw error;
+      if (matchesError) {
+        console.error('❌ Erro ao buscar matches:', matchesError);
+        throw matchesError;
       }
 
-      console.log(`✅ Matches encontrados: ${data?.length || 0}`, data);
-      
-      // Transformar os dados para incluir matched_user na estrutura esperada
-      const transformedData = (data || []).map(match => ({
-        ...match,
-        matched_user: match.matched_user ? {
-          id: match.matched_user.id,
-          name: match.matched_user.name,
-          email: match.matched_user.email,
-          company_name: match.matched_user.company_name,
-          current_position: match.matched_user.current_position,
-          avatar_url: match.matched_user.avatar_url
-        } : undefined
-      }));
+      console.log(`✅ Matches encontrados: ${matches?.length || 0}`, matches);
 
+      // Se não há matches, retornar array vazio
+      if (!matches || matches.length === 0) {
+        return [];
+      }
+
+      // Buscar dados dos usuários matched separadamente
+      const matchedUserIds = matches.map(match => match.matched_user_id);
+      
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, name, email, company_name, current_position, avatar_url')
+        .in('id', matchedUserIds);
+
+      if (profilesError) {
+        console.error('❌ Erro ao buscar perfis:', profilesError);
+        throw profilesError;
+      }
+
+      console.log('✅ Perfis encontrados:', profiles?.length || 0, profiles);
+
+      // Combinar matches com dados dos usuários
+      const transformedData = matches.map(match => {
+        const matchedUser = profiles?.find(profile => profile.id === match.matched_user_id);
+        
+        return {
+          ...match,
+          matched_user: matchedUser ? {
+            id: matchedUser.id,
+            name: matchedUser.name || 'Usuário',
+            email: matchedUser.email,
+            company_name: matchedUser.company_name,
+            current_position: matchedUser.current_position,
+            avatar_url: matchedUser.avatar_url
+          } : {
+            id: match.matched_user_id,
+            name: 'Usuário',
+            email: 'email@exemplo.com',
+            company_name: 'Empresa',
+            current_position: 'Posição',
+            avatar_url: null
+          }
+        };
+      });
+
+      console.log('✅ Dados transformados:', transformedData);
       return transformedData as NetworkMatch[];
     },
     staleTime: 5 * 60 * 1000, // 5 minutos
