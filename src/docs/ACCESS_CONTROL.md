@@ -17,7 +17,7 @@ O sistema de controle de acesso da plataforma Viver de IA utiliza uma abordagem 
 ### formacao
 - Acesso ao sistema LMS
 - Pode criar e gerenciar cursos
-- Acesso ao networking
+- **NÃO tem acesso ao networking**
 
 ### membro_club
 - Acesso ao networking inteligente
@@ -32,7 +32,8 @@ O sistema de controle de acesso da plataforma Viver de IA utiliza uma abordagem 
 
 ### Networking Inteligente
 - **Permissão**: `networking.access`
-- **Papéis com acesso**: admin, formacao, membro_club
+- **Papéis com acesso**: admin, membro_club
+- **Papéis SEM acesso**: formacao, member
 - **Hook**: `useNetworkingAccess()`
 
 ### Gerenciamento de Cursos
@@ -110,6 +111,7 @@ AND pd.code = 'minha.funcionalidade';
 
 - `rafaelmilagre@hotmail.com` - membro_club (deve ter acesso ao networking)
 - `admin@teste.com` - admin (acesso total)
+- Usuários formacao - acesso a cursos, MAS NÃO ao networking
 - Usuários member - acesso limitado
 
 ## Troubleshooting
@@ -124,3 +126,8 @@ AND pd.code = 'minha.funcionalidade';
 1. Verificar se a permissão existe na tabela `permission_definitions`
 2. Verificar se está atribuída ao papel correto em `role_permissions`
 3. Verificar se a função `user_has_permission` está funcionando
+
+## Regras Importantes
+
+⚠️ **IMPORTANTE**: O papel `formacao` NÃO deve ter acesso ao networking
+✅ **CORRETO**: Apenas `admin` e `membro_club` podem acessar o networking

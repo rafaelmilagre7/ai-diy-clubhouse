@@ -23,9 +23,9 @@ export interface FeatureAccessConfig {
 const FEATURE_CONFIGS: Record<string, FeatureAccessConfig> = {
   networking: {
     permission: 'networking.access',
-    fallbackRoles: ['admin', 'formacao', 'membro_club'],
+    fallbackRoles: ['admin', 'membro_club'],
     description: 'Acesso ao sistema de networking inteligente',
-    upgradeMessage: 'O Networking Inteligente é exclusivo para membros Club. Faça upgrade para conectar-se com outros empreendedores e expandir sua rede de negócios.'
+    upgradeMessage: 'O Networking Inteligente é exclusivo para membros Club. Faça upgrade para membro Club para conectar-se com outros empreendedores e expandir sua rede de negócios.'
   },
   courseManagement: {
     permission: 'courses.manage',
