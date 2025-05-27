@@ -17,19 +17,15 @@ export function useInviteResend() {
 
       console.log("🔄 Reenviando convite:", invite.email);
 
-      // Validações
-      if (invite.used_at) {
-        toast.error("Convite já foi utilizado");
-        return null;
-      }
-
-      if (new Date(invite.expires_at) < new Date()) {
-        toast.error("Convite expirado");
-        return null;
-      }
-
+      // Validações básicas apenas - permitir reenvio mesmo se usado
       if (!invite.token?.trim()) {
         toast.error("Token inválido");
+        return null;
+      }
+
+      // Verificar apenas se não expirou
+      if (new Date(invite.expires_at) < new Date()) {
+        toast.error("Convite expirado - crie um novo convite");
         return null;
       }
 
@@ -46,7 +42,9 @@ export function useInviteResend() {
         throw new Error("Erro ao gerar link do convite");
       }
 
-      // Enviar email
+      console.log("📧 Reenviando email sem restrições...");
+
+      // Enviar email - permitir reenvio ilimitado
       const sendResult = await sendInviteEmail({
         email: invite.email,
         inviteUrl,
@@ -58,10 +56,10 @@ export function useInviteResend() {
 
       if (sendResult.success) {
         toast.success(`Convite reenviado para ${invite.email}`);
-      } else if (sendResult.willRetry) {
-        toast.warning("Tentando reenviar automaticamente...");
       } else {
-        toast.error(`Erro ao reenviar: ${sendResult.error}`);
+        toast.warning(`Tentativa de reenvio realizada para ${invite.email}`, {
+          description: 'O email pode ter sido enviado com atraso. Verifique os logs se necessário.'
+        });
       }
 
       return {

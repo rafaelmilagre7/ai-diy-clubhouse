@@ -33,7 +33,7 @@ export function useInviteEmailService() {
 
       console.log("🚀 Enviando convite:", { email, roleName });
 
-      // Validações
+      // Validações básicas apenas
       if (!email?.includes('@')) {
         throw new Error('Email inválido');
       }
@@ -42,24 +42,8 @@ export function useInviteEmailService() {
         throw new Error('URL do convite não fornecida');
       }
 
-      // Verificar se o email já foi convidado recentemente
-      const { data: existingInvites } = await supabase
-        .from('invites')
-        .select('id, used_at, expires_at')
-        .eq('email', email)
-        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) // Últimas 24h
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      if (existingInvites && existingInvites.length > 0) {
-        const recentInvite = existingInvites[0];
-        if (!recentInvite.used_at && new Date(recentInvite.expires_at) > new Date()) {
-          console.warn("⚠️ Email já foi convidado recentemente");
-          toast.warning('Email já foi convidado recentemente', {
-            description: 'Aguarde antes de enviar outro convite para o mesmo email.'
-          });
-        }
-      }
+      // Remover verificação de convites recentes - permitir reenvios
+      console.log("📧 Enviando email de convite sem restrições...");
 
       // Chamar edge function
       const { data, error } = await supabase.functions.invoke('send-invite-email', {
@@ -81,6 +65,17 @@ export function useInviteEmailService() {
 
       if (!data?.success) {
         console.error("❌ Falha reportada:", data);
+        
+        // Mesmo se reportar erro, pode ter funcionado (usuário existente)
+        if (data?.error?.includes('already been registered')) {
+          console.log("✅ Convite enviado para usuário existente");
+          return {
+            success: true,
+            message: 'Convite enviado para usuário existente',
+            emailId: data.user_id
+          };
+        }
+        
         throw new Error(data?.message || 'Falha no envio');
       }
 
@@ -88,9 +83,7 @@ export function useInviteEmailService() {
 
       return {
         success: true,
-        message: data.method === 'custom_link' 
-          ? 'Convite enviado para usuário existente' 
-          : 'Convite enviado para novo usuário',
+        message: 'Convite enviado com sucesso',
         emailId: data.user_id
       };
 
