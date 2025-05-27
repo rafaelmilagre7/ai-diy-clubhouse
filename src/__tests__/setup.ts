@@ -24,12 +24,19 @@ global.ResizeObserver = class ResizeObserver {
   disconnect() {}
 };
 
-// Mock do IntersectionObserver
+// Mock completo do IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
+  root: Element | null = null;
+  rootMargin: string = '0px';
+  thresholds: ReadonlyArray<number> = [0];
+
   constructor(cb: any) {}
   observe() {}
   unobserve() {}
   disconnect() {}
+  takeRecords(): IntersectionObserverEntry[] {
+    return [];
+  }
 };
 
 // Suprimir avisos do React 18

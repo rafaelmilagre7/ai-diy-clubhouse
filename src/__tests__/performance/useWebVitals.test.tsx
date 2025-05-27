@@ -42,10 +42,22 @@ Object.defineProperty(window, 'performance', {
   }
 });
 
+// Mock correto do document.readyState
+Object.defineProperty(document, 'readyState', {
+  writable: true,
+  configurable: true,
+  value: 'complete'
+});
+
 describe('useWebVitals', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    document.readyState = 'complete';
+    // Resetar o readyState para complete
+    Object.defineProperty(document, 'readyState', {
+      writable: true,
+      configurable: true,
+      value: 'complete'
+    });
   });
 
   test('should initialize without errors', () => {
