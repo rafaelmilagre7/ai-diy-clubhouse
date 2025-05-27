@@ -10,7 +10,9 @@ import {
   UserPlus, 
   Eye,
   Sparkles,
-  TrendingUp
+  TrendingUp,
+  Phone,
+  MessageCircle
 } from 'lucide-react';
 import { NetworkMatch } from '@/hooks/networking/useNetworkMatches';
 import { UserProfileModal } from './UserProfileModal';
@@ -123,6 +125,13 @@ export const NetworkMatchCard: React.FC<NetworkMatchCardProps> = ({
               <div className="flex items-center gap-2 text-sm">
                 <Building className="h-4 w-4 text-muted-foreground" />
                 <span>{match.matched_user.company_name}</span>
+              </div>
+            )}
+
+            {match.matched_user?.whatsapp_number && (
+              <div className="flex items-center gap-2 text-sm">
+                <MessageCircle className="h-4 w-4 text-muted-foreground" />
+                <span>{match.matched_user.whatsapp_number}</span>
               </div>
             )}
 

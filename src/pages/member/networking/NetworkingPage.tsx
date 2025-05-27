@@ -4,6 +4,7 @@ import { useNetworkingAccess } from '@/hooks/networking/useNetworkingAccess';
 import { NetworkingHeader } from '@/components/networking/NetworkingHeader';
 import { NetworkingFeed } from '@/components/networking/NetworkingFeed';
 import { NetworkingUpgrade } from '@/components/networking/NetworkingUpgrade';
+import { ProfileDataSync } from '@/components/networking/ProfileDataSync';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, Building } from 'lucide-react';
@@ -17,6 +18,7 @@ const NetworkingPage = () => {
 
   return (
     <div className="p-6 space-y-6">
+      <ProfileDataSync />
       <NetworkingHeader />
       
       <Card className="p-6">
