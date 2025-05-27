@@ -18,7 +18,6 @@ const LoginForm = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      console.log("Usuário já está logado, redirecionando para dashboard");
       navigate('/dashboard', { replace: true });
     }
   }, [user, navigate]);
@@ -31,7 +30,6 @@ const LoginForm = () => {
       await signIn("", "");
       // Navigation is handled by auth state change listeners
     } catch (error) {
-      console.error("Erro ao fazer login com Google:", error);
       toast.error("Não foi possível fazer login com o Google. Tente novamente.");
     } finally {
       setIsLoading(false);
@@ -61,7 +59,6 @@ const LoginForm = () => {
       
       if (data.user) {
         toast.success("Login bem-sucedido! Redirecionando...");
-        console.log("Login bem-sucedido, redirecionando para dashboard");
         
         // Forçar redirecionamento após autenticação bem-sucedida
         setTimeout(() => {
@@ -69,7 +66,6 @@ const LoginForm = () => {
         }, 500);
       }
     } catch (error: any) {
-      console.error("Erro ao fazer login:", error);
       toast.error(error.message || "Não foi possível fazer login. Verifique suas credenciais.");
     } finally {
       setIsLoading(false);

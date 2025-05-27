@@ -14,8 +14,6 @@ export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) =>
   const location = useLocation();
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const timeoutRef = useRef<number | null>(null);
-
-  console.log("AdminProtectedRoutes state:", { user, isAdmin, isLoading, loadingTimeout });
   
   // Configurar timeout de carregamento
   useEffect(() => {
@@ -26,7 +24,6 @@ export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) =>
       }
       
       timeoutRef.current = window.setTimeout(() => {
-        console.log("AdminProtectedRoutes: Loading timeout exceeded");
         setLoadingTimeout(true);
       }, 5000); // 5 segundos para maior tolerância
     }

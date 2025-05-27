@@ -27,10 +27,9 @@ const Dashboard = () => {
   // Otimização: Adicionar configuração de staleTime mais longa para reduzir requisições
   const { solutions, loading: solutionsLoading, error: solutionsError } = useSolutionsData();
   
-  // Log diagnóstico para Supabase
+  // Tratamento de erro para soluções
   useEffect(() => {
     if (solutionsError) {
-      console.error("Erro ao carregar soluções:", solutionsError);
       setHasError(true);
       setErrorMessage("Não foi possível carregar as soluções. Verifique sua conexão com a internet.");
       toast.error("Erro ao carregar soluções", {
@@ -59,7 +58,6 @@ const Dashboard = () => {
   // Tratamento de erro para progresso
   useEffect(() => {
     if (progressError) {
-      console.error("Erro ao carregar progresso:", progressError);
       setHasError(true);
       setErrorMessage("Não foi possível carregar seu progresso. Por favor, tente novamente mais tarde.");
     }
@@ -68,7 +66,6 @@ const Dashboard = () => {
   // Verificação de autenticação
   useEffect(() => {
     if (!authLoading && !user) {
-      console.error("Usuário não autenticado no Dashboard");
       navigate('/login', { replace: true });
     }
   }, [user, authLoading, navigate]);

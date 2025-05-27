@@ -16,14 +16,6 @@ export const useLayoutAuthentication = () => {
   useEffect(() => {
     isMounted.current = true;
     
-    // Log para debug
-    console.log("useLayoutAuthentication init:", { 
-      user: !!user, 
-      profile: !!profile, 
-      isAdmin, 
-      isLoading 
-    });
-    
     return () => {
       isMounted.current = false;
       if (timeoutRef.current) {
@@ -42,7 +34,6 @@ export const useLayoutAuthentication = () => {
       
       timeoutRef.current = window.setTimeout(() => {
         if (isMounted.current) {
-          console.log("useLayoutAuthentication: Loading timeout exceeded");
           setLoadingTimeout(true);
           // Force isLoading to false to break out of loading state
           setIsLoading(false);
@@ -60,7 +51,6 @@ export const useLayoutAuthentication = () => {
   // Handle timeout and redirect to auth if needed
   useEffect(() => {
     if (loadingTimeout && isLoading && isMounted.current) {
-      console.log("LayoutAuthentication: Loading timeout exceeded, redirecting to /login");
       setIsLoading(false);
       toast("Tempo limite excedido, redirecionando para login");
       navigate('/login', { replace: true });
@@ -74,13 +64,8 @@ export const useLayoutAuthentication = () => {
     }
     
     if (profile.role === 'admin') {
-      console.log("LayoutAuthentication: User is admin, redirecting to /admin");
-      
       toast("Redirecionando para área admin");
-      
       navigate('/admin', { replace: true });
-    } else {
-      console.log("LayoutAuthentication: User is member, staying on member layout");
     }
     
     setRedirectChecked(true);

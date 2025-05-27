@@ -19,14 +19,6 @@ export const ProtectedRoute = ({
   const [accessChecked, setAccessChecked] = useState(false);
   const timeoutRef = useRef<number | null>(null);
   
-  // Depuração e diagnóstico
-  console.log("ProtectedRoute:", {
-    user: !!user,
-    isAdmin,
-    isLoading,
-    accessChecked
-  });
-  
   // Verificar acesso apenas quando o estado de autenticação estiver pronto
   useEffect(() => {
     // Limpar timeout existente
@@ -37,24 +29,18 @@ export const ProtectedRoute = ({
     // Se estiver carregando, configurar timeout
     if (isLoading) {
       timeoutRef.current = window.setTimeout(() => {
-        console.log("ProtectedRoute: Loading timeout exceeded");
-        
         // Redirecionar para login se timeout excedido
         navigate('/login', { replace: true });
       }, 2000); // 2 segundos de timeout
     }
     // Se não estiver carregando, verificar acesso
     else if (!accessChecked) {
-      console.log("ProtectedRoute: Verificando acesso");
-      
       if (!user) {
-        console.log("ProtectedRoute: No user, redirecting to auth");
         navigate('/auth', { replace: true });
         return;
       }
       
       if (requireAdmin && !isAdmin) {
-        console.log("ProtectedRoute: User is not admin, redirecting to dashboard");
         navigate('/dashboard', { replace: true });
         return;
       }

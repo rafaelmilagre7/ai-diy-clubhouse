@@ -17,19 +17,10 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   const hasToastShown = useRef(false);
   const navigationCountRef = useRef<Record<string, number>>({});
   const routeTransitionRef = useRef<string | null>(null);
-
-  console.log("ProtectedRoutes: verificando rota", {
-    path: location.pathname,
-    user: !!user,
-    isLoading, 
-    loadingTimeout,
-    previousRoute: routeTransitionRef.current
-  });
   
   // Rastrear transições de rota para diagnóstico
   useEffect(() => {
     // Registrar transição de rota
-    console.log(`ProtectedRoutes: Transição de rota ${routeTransitionRef.current || 'inicial'} -> ${location.pathname}`);
     routeTransitionRef.current = location.pathname;
     
     // Incrementar contador para este caminho
@@ -38,8 +29,6 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
     
     // Verificar possíveis loops
     if (navigationCountRef.current[location.pathname] > 5) {
-      console.error(`ProtectedRoutes: Possível loop de navegação para ${location.pathname} (${navigationCountRef.current[location.pathname]} navegações)`);
-      
       // Limpar contador após detectar um possível loop
       navigationCountRef.current = {};
     }
@@ -63,7 +52,6 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
       }
       
       timeoutRef.current = window.setTimeout(() => {
-        console.log("ProtectedRoutes: Loading timeout exceeded");
         setLoadingTimeout(true);
       }, 5000); // Mantido em 5 segundos
     }
@@ -84,7 +72,6 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   if (!user) {
     // Salvar a rota atual para redirecionamento após login
     const returnPath = location.pathname !== "/login" ? location.pathname : "/dashboard";
-    console.log(`ProtectedRoutes: Usuário não autenticado, redirecionando para login (retorno: ${returnPath})`);
     
     // Exibir toast apenas uma vez
     if (!hasToastShown.current) {

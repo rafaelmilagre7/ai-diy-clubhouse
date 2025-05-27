@@ -21,16 +21,6 @@ const ProtectedRoute = ({
   const [loadingTimeout, setLoadingTimeout] = React.useState(false);
   const timeoutRef = React.useRef<number | null>(null);
   
-  // Debug logs
-  console.log("ProtectedRoute:", { 
-    user, 
-    isAdmin, 
-    isLoading, 
-    requireAdmin, 
-    requiredRole, 
-    path: location.pathname 
-  });
-  
   // Configurar timeout para não ficar preso em carregamento infinito
   useEffect(() => {
     if (isLoading && !loadingTimeout) {
@@ -39,7 +29,6 @@ const ProtectedRoute = ({
       }
       
       timeoutRef.current = window.setTimeout(() => {
-        console.log("ProtectedRoute: Loading timeout exceeded");
         setLoadingTimeout(true);
         toast("Tempo limite de carregamento excedido, redirecionando para login");
       }, 3000); // 3 segundos de timeout
@@ -59,13 +48,11 @@ const ProtectedRoute = ({
 
   // Se não houver usuário autenticado, redireciona para login
   if (!user) {
-    console.log("ProtectedRoute: No user, redirecting to login");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
   
   // Verificar com base em requiredRole ou requireAdmin
   if ((requiredRole === 'admin' || requireAdmin) && !isAdmin) {
-    console.log("Usuário não é admin, redirecionando para dashboard");
     toast.error("Você não tem permissão para acessar esta área");
     return <Navigate to="/dashboard" replace />;
   }

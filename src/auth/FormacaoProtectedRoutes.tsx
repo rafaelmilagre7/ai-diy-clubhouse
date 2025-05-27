@@ -14,8 +14,6 @@ export const FormacaoProtectedRoutes = ({ children }: FormacaoProtectedRoutesPro
   const location = useLocation();
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const timeoutRef = useRef<number | null>(null);
-
-  console.log("FormacaoProtectedRoutes state:", { user, isAdmin, isFormacao, isLoading, loadingTimeout });
   
   // Configurar timeout de carregamento
   useEffect(() => {
@@ -26,7 +24,6 @@ export const FormacaoProtectedRoutes = ({ children }: FormacaoProtectedRoutesPro
       }
       
       timeoutRef.current = window.setTimeout(() => {
-        console.log("FormacaoProtectedRoutes: Loading timeout exceeded");
         setLoadingTimeout(true);
       }, 5000); // 5 segundos para maior tolerância
     }
