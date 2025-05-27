@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { 
   Dialog, 
   DialogContent, 
@@ -34,40 +34,68 @@ export function RoleCourseAccess({
   const [isSaving, setIsSaving] = useState(false);
   const { getCoursesByRole, manageCourseAccess } = useCourseAccess();
   
-  // Carregar todos os cursos disponíveis
-  useEffect(() => {
-    const fetchCourses = async () => {
-      if (open) {
-        setIsLoading(true);
-        try {
-          // Buscar todos os cursos publicados
-          const { data, error } = await supabase
-            .from('learning_courses')
-            .select('*')
-            .order('title');
-          
-          if (error) throw error;
-          
-          setCourses(data || []);
-          
-          // Se temos um papel selecionado, buscar os cursos que ele já tem acesso
-          if (role?.id) {
-            const roleCourses = await getCoursesByRole(role.id);
-            setSelectedCourses(roleCourses.map(course => course.id));
-          } else {
-            setSelectedCourses([]);
-          }
-        } catch (error) {
-          console.error("Erro ao carregar cursos:", error);
-          toast.error("Erro ao carregar cursos");
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    };
+  // Função para carregar todos os cursos
+  const fetchCourses = useCallback(async () => {
+    if (!open) return;
     
-    fetchCourses();
-  }, [open, role, getCoursesByRole]);
+    setIsLoading(true);
+    try {
+      console.log('🔍 Carregando cursos disponíveis...');
+      
+      const { data, error } = await supabase
+        .from('learning_courses')
+        .select('*')
+        .order('title');
+      
+      if (error) {
+        console.error('❌ Erro ao carregar cursos:', error);
+        throw error;
+      }
+      
+      console.log('✅ Cursos carregados:', data?.length || 0);
+      setCourses(data || []);
+    } catch (error) {
+      console.error("Erro ao carregar cursos:", error);
+      toast.error("Erro ao carregar cursos");
+      setCourses([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [open]);
+
+  // Função para carregar cursos do papel
+  const fetchRoleCourses = useCallback(async () => {
+    if (!role?.id || !open) return;
+    
+    try {
+      console.log('🔍 Carregando cursos do papel:', role.name);
+      const roleCourses = await getCoursesByRole(role.id);
+      const courseIds = roleCourses.map(course => course.id);
+      console.log('✅ Cursos encontrados para o papel:', courseIds.length);
+      setSelectedCourses(courseIds);
+    } catch (error) {
+      console.error("Erro ao carregar cursos do papel:", error);
+      setSelectedCourses([]);
+    }
+  }, [role?.id, open, getCoursesByRole]);
+
+  // Carregar dados quando o modal abrir
+  useEffect(() => {
+    if (open) {
+      fetchCourses();
+    } else {
+      // Limpar estado quando fechar
+      setCourses([]);
+      setSelectedCourses([]);
+    }
+  }, [open, fetchCourses]);
+
+  // Carregar cursos do papel após carregar a lista de cursos
+  useEffect(() => {
+    if (open && role?.id && courses.length > 0) {
+      fetchRoleCourses();
+    }
+  }, [open, role?.id, courses.length, fetchRoleCourses]);
   
   // Alternar a seleção de um curso
   const toggleCourseSelection = (courseId: string) => {
@@ -85,6 +113,8 @@ export function RoleCourseAccess({
     setIsSaving(true);
     
     try {
+      console.log('💾 Salvando configurações de acesso...');
+      
       // Buscar os cursos atuais do papel
       const currentCourses = await getCoursesByRole(role.id);
       const currentIds = currentCourses.map(course => course.id);
@@ -96,14 +126,16 @@ export function RoleCourseAccess({
         
         // Só atualizar se houve mudança no estado de acesso
         if (shouldHaveAccess !== alreadyHasAccess) {
+          console.log(`🔧 Atualizando acesso para curso ${course.title}:`, shouldHaveAccess);
           await manageCourseAccess(course.id, role.id, shouldHaveAccess);
         }
       }
       
+      console.log('✅ Configurações salvas com sucesso');
       toast.success(`Configurações de acesso a cursos salvas com sucesso para o papel ${role.name}`);
       onOpenChange(false);
     } catch (error) {
-      console.error("Erro ao salvar configurações de acesso:", error);
+      console.error("❌ Erro ao salvar configurações de acesso:", error);
       toast.error("Erro ao salvar configurações de acesso");
     } finally {
       setIsSaving(false);
@@ -172,7 +204,7 @@ export function RoleCourseAccess({
               </Button>
               <Button 
                 onClick={handleSave}
-                disabled={isSaving}
+                disabled={isSaving || courses.length === 0}
               >
                 {isSaving ? (
                   <>
