@@ -33,6 +33,7 @@ import NewTopic from '@/pages/member/community/NewTopic';
 
 // Member Networking pages
 import NetworkingPage from '@/pages/member/networking/NetworkingPage';
+import { ConnectionsManager } from '@/components/networking/ConnectionsManager';
 
 // Função helper para criar rotas protegidas com MemberLayout
 const createProtectedRoute = (path: string, Component: React.ComponentType<any>) => ({
@@ -77,5 +78,6 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/comunidade/novo-topico/:categorySlug", NewTopic),
   
   // Networking Routes
-  createProtectedRoute("/networking", NetworkingPage)
+  createProtectedRoute("/networking", NetworkingPage),
+  createProtectedRoute("/networking/connections", () => <ConnectionsManager />)
 ];

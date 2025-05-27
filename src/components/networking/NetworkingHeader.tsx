@@ -1,14 +1,21 @@
 
 import React from 'react';
-import { Network, Sparkles, Calendar } from 'lucide-react';
+import { Network, Sparkles, Calendar, Users } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { NetworkingNotifications } from './NetworkingNotifications';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 export const NetworkingHeader: React.FC = () => {
+  const navigate = useNavigate();
   const currentMonth = new Date().toLocaleDateString('pt-BR', { 
     month: 'long', 
     year: 'numeric' 
   });
+
+  const handleConnectionsClick = () => {
+    navigate('/networking/connections');
+  };
 
   return (
     <div className="space-y-6">
@@ -24,7 +31,17 @@ export const NetworkingHeader: React.FC = () => {
             </p>
           </div>
         </div>
-        <NetworkingNotifications />
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            onClick={handleConnectionsClick}
+            className="gap-2"
+          >
+            <Users className="h-4 w-4" />
+            Minhas Conexões
+          </Button>
+          <NetworkingNotifications />
+        </div>
       </div>
 
       <Card className="bg-gradient-to-r from-viverblue/5 to-purple-500/5 border-viverblue/20">
