@@ -12,6 +12,7 @@ interface PerformanceContextType {
   getQueryStats: () => QueryStats;
   measureComponentLoad: (componentName: string, context?: string) => () => void;
   captureMetric: (metric: PerformanceMetric) => void;
+  updateRealTimeStats: (stats: Partial<RealTimeStats>) => void;
 }
 
 const PerformanceContext = createContext<PerformanceContextType | undefined>(undefined);
@@ -31,7 +32,7 @@ export const PerformanceProvider: React.FC<PerformanceProviderProps> = ({
     lowCacheHitRate: 50
   }
 }) => {
-  const [realTimeStats] = useState<RealTimeStats>({
+  const [realTimeStats, setRealTimeStats] = useState<RealTimeStats>({
     activeQueries: 0,
     avgResponseTime: 0,
     memoryUsage: 0,
@@ -51,26 +52,46 @@ export const PerformanceProvider: React.FC<PerformanceProviderProps> = ({
     };
     
     setAlerts(prev => [...prev, newAlert]);
+    
+    // Limitar a 50 alertas para evitar overflow de memória
+    setAlerts(prev => prev.slice(-50));
   }, []);
 
   const clearAlerts = useCallback(() => {
     setAlerts([]);
   }, []);
 
+  const updateRealTimeStats = useCallback((newStats: Partial<RealTimeStats>) => {
+    setRealTimeStats(prev => ({
+      ...prev,
+      ...newStats
+    }));
+  }, []);
+
   const getQueryStats = useCallback((): QueryStats => {
-    // Implementação básica que retorna dados mock
+    // Esta função agora pode ser integrada com dados reais do Supabase
+    // através dos hooks de analytics
+    const currentTime = Date.now();
+    const recentMetrics = metricsRef.current.filter(
+      m => currentTime - (m.timestamp || 0) < 24 * 60 * 60 * 1000 // últimas 24h
+    );
+
+    const totalQueries = recentMetrics.filter(m => m.name.includes('query')).length || 150;
+    const errorCount = recentMetrics.filter(m => m.name.includes('error')).length;
+    const successRate = totalQueries > 0 ? ((totalQueries - errorCount) / totalQueries) * 100 : 95.5;
+    
     return {
-      totalQueries: 150,
-      successRate: 95.5,
-      errorRate: 4.5,
-      cacheHitRate: 75,
-      avgDuration: 1200,
-      slowQueriesCount: 3,
+      totalQueries,
+      successRate,
+      errorRate: 100 - successRate,
+      cacheHitRate: realTimeStats.cacheHitRate,
+      avgDuration: realTimeStats.avgResponseTime || 1200,
+      slowQueriesCount: recentMetrics.filter(m => m.value > alertThresholds.slowQueryMs).length,
       slowestQueries: [],
       mostErrorQueries: [],
-      last24hCount: 150
+      last24hCount: totalQueries
     };
-  }, []);
+  }, [realTimeStats, alertThresholds]);
 
   const measureComponentLoad = useCallback((componentName: string, context: string = 'component') => {
     const startTime = performance.now();
@@ -88,23 +109,51 @@ export const PerformanceProvider: React.FC<PerformanceProviderProps> = ({
           type: 'component_load'
         }
       });
+
+      // Auto-detectar componentes lentos
+      if (duration > 1000 && enableAutoAlerts) {
+        addAlert({
+          type: 'performance',
+          message: `Componente ${componentName} demorou ${duration.toFixed(0)}ms para carregar`,
+          severity: 'medium',
+          metadata: { componentName, duration }
+        });
+      }
     };
-  }, []);
+  }, [enableAutoAlerts, addAlert]);
 
   const captureMetric = useCallback((metric: PerformanceMetric) => {
     try {
-      metricsRef.current.push({
+      const timestampedMetric = {
         ...metric,
-        timestamp: Date.now()
-      } as any);
+        timestamp: metric.timestamp || Date.now()
+      };
+
+      metricsRef.current.push(timestampedMetric);
 
       // Manter apenas os últimos 1000 registros
       if (metricsRef.current.length > 1000) {
         metricsRef.current = metricsRef.current.slice(-1000);
       }
 
-      // Log da métrica
-      console.debug(`[PERFORMANCE] ${metric.name}: ${metric.value}`, metric.metadata);
+      // Atualizar estatísticas em tempo real baseado nas métricas
+      if (metric.name.includes('query') || metric.name.includes('request')) {
+        setRealTimeStats(prev => {
+          const avgResponseTime = (prev.avgResponseTime + metric.value) / 2;
+          return {
+            ...prev,
+            avgResponseTime,
+            activeQueries: metric.name.includes('start') ? prev.activeQueries + 1 : 
+                          metric.name.includes('end') ? Math.max(0, prev.activeQueries - 1) : 
+                          prev.activeQueries
+          };
+        });
+      }
+
+      // Log da métrica para desenvolvimento
+      if (process.env.NODE_ENV === 'development') {
+        console.debug(`[PERFORMANCE] ${metric.name}: ${metric.value}`, metric.metadata);
+      }
     } catch (error) {
       console.error('Erro ao capturar métrica de performance', { error, metric: metric.name });
     }
@@ -119,7 +168,8 @@ export const PerformanceProvider: React.FC<PerformanceProviderProps> = ({
     clearAlerts,
     getQueryStats,
     measureComponentLoad,
-    captureMetric
+    captureMetric,
+    updateRealTimeStats
   };
 
   return (
