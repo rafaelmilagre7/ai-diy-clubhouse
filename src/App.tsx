@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -48,41 +49,41 @@ function App() {
         resetOnLocationChange={true}
       >
         <QueryClientProvider client={queryClient}>
-          <PerformanceProvider
-            enableAutoAlerts={true}
-            alertThresholds={{
-              slowQueryMs: 3000,
-              highErrorRate: 10,
-              lowCacheHitRate: 50
-            }}
-          >
-            <AsyncErrorBoundary
-              onAsyncError={handleAsyncError}
-              maxRetries={2}
-              autoRetry={true}
-              retryDelay={3000}
+          <LoggingProvider>
+            <PerformanceProvider
+              enableAutoAlerts={true}
+              alertThresholds={{
+                slowQueryMs: 3000,
+                highErrorRate: 10,
+                lowCacheHitRate: 50
+              }}
             >
-              <BrowserRouter>
-                <RouteErrorBoundary
-                  onRouteError={handleRouteError}
-                  fallbackRoute="/dashboard"
-                >
-                  <AuthErrorBoundary
-                    onAuthError={handleAuthError}
-                    redirectToLogin={true}
+              <AsyncErrorBoundary
+                onAsyncError={handleAsyncError}
+                maxRetries={2}
+                autoRetry={true}
+                retryDelay={3000}
+              >
+                <BrowserRouter>
+                  <RouteErrorBoundary
+                    onRouteError={handleRouteError}
+                    fallbackRoute="/dashboard"
                   >
-                    <LoggingProvider>
+                    <AuthErrorBoundary
+                      onAuthError={handleAuthError}
+                      redirectToLogin={true}
+                    >
                       <AuthProvider>
                         <AppRoutes />
                         <Toaster position="top-right" richColors closeButton />
                         <ReactQueryDevtools initialIsOpen={false} />
                       </AuthProvider>
-                    </LoggingProvider>
-                  </AuthErrorBoundary>
-                </RouteErrorBoundary>
-              </BrowserRouter>
-            </AsyncErrorBoundary>
-          </PerformanceProvider>
+                    </AuthErrorBoundary>
+                  </RouteErrorBoundary>
+                </BrowserRouter>
+              </AsyncErrorBoundary>
+            </PerformanceProvider>
+          </LoggingProvider>
         </QueryClientProvider>
       </ErrorBoundary>
     </HelmetProvider>
