@@ -2,6 +2,8 @@
 import React, { useState, useEffect, useCallback, memo, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { useResponsive } from "@/hooks/useResponsive";
+import ErrorBoundary from "@/components/common/ErrorBoundary";
+import AsyncErrorBoundary from "@/components/common/AsyncErrorBoundary";
 
 export type LayoutVariant = 'member' | 'admin' | 'formacao';
 
@@ -152,22 +154,28 @@ const BaseLayout = memo<BaseLayoutProps>(({
   }), [sidebarOpen, handleSidebarToggle, children]);
 
   return (
-    <div className={cn("flex min-h-screen overflow-hidden", backgroundClass)}>
-      {/* Overlay para dispositivos móveis */}
-      {showOverlay && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden transition-opacity duration-300"
-          onClick={handleOverlayClick}
-          aria-label="Fechar menu"
-        />
-      )}
-      
-      {/* Sidebar */}
-      <SidebarComponent {...sidebarProps} />
-      
-      {/* Conteúdo principal */}
-      <ContentComponent {...contentProps} />
-    </div>
+    <ErrorBoundary maxRetries={2} showDetails={false}>
+      <div className={cn("flex min-h-screen overflow-hidden", backgroundClass)}>
+        {/* Overlay para dispositivos móveis */}
+        {showOverlay && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden transition-opacity duration-300"
+            onClick={handleOverlayClick}
+            aria-label="Fechar menu"
+          />
+        )}
+        
+        {/* Sidebar com error boundary */}
+        <AsyncErrorBoundary maxRetries={1} autoRetry={false}>
+          <SidebarComponent {...sidebarProps} />
+        </AsyncErrorBoundary>
+        
+        {/* Conteúdo principal com error boundary */}
+        <AsyncErrorBoundary maxRetries={2} autoRetry={true}>
+          <ContentComponent {...contentProps} />
+        </AsyncErrorBoundary>
+      </div>
+    </ErrorBoundary>
   );
 });
 
