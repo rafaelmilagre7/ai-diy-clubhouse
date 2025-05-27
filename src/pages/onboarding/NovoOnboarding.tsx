@@ -1,7 +1,7 @@
 
 import React from 'react';
 import MemberLayout from '@/components/layout/MemberLayout';
-import { OnboardingSteps } from '@/components/onboarding/OnboardingSteps';
+import { ModernOnboardingFlow } from '@/components/onboarding/modern/ModernOnboardingFlow';
 import { MoticonAnimation } from '@/components/onboarding/MoticonAnimation';
 
 const NovoOnboarding: React.FC = () => {
@@ -22,7 +22,7 @@ const NovoOnboarding: React.FC = () => {
               </p>
             </div>
             
-            <OnboardingSteps />
+            <ModernOnboardingFlow />
           </div>
         </div>
       </div>
