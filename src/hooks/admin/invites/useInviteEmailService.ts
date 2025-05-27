@@ -20,7 +20,7 @@ export function useInviteEmailService() {
   const [sendError, setSendError] = useState<Error | null>(null);
   const [emailQueue, setEmailQueue] = useState<SendInviteEmailParams[]>([]);
 
-  // Função para enviar email de convite com retentativas
+  // Função para enviar email de convite com retentativas robustas
   const sendInviteEmail = useCallback(async ({
     email,
     inviteUrl,
@@ -35,55 +35,106 @@ export function useInviteEmailService() {
       setIsSending(true);
       setSendError(null);
 
-      // Verificar se o URL está correto antes de enviar
-      const urlPattern = new RegExp('^https?://[a-z0-9-]+(\\.[a-z0-9-]+)+([/?].*)?$', 'i');
-      if (!urlPattern.test(inviteUrl)) {
-        console.error("URL inválida gerada para o convite:", inviteUrl);
-        setSendError(new Error('URL inválida gerada'));
-        return {
-          success: false,
-          message: 'Erro ao gerar URL do convite',
-          error: 'URL inválida gerada'
-        };
+      console.log("🚀 Iniciando envio de convite:", {
+        email,
+        inviteUrl: inviteUrl ? 'URL presente' : 'URL ausente',
+        roleName,
+        retryAttempt: retryCount,
+        inviteId
+      });
+
+      // Validações robustas
+      if (!email || !email.includes('@')) {
+        throw new Error('Email inválido fornecido');
+      }
+
+      if (!inviteUrl) {
+        throw new Error('URL do convite não fornecida');
+      }
+
+      // Verificar se a URL está bem formada
+      try {
+        const url = new URL(inviteUrl);
+        if (!url.pathname.includes('/convite/')) {
+          console.warn("URL do convite pode estar mal formada:", inviteUrl);
+        }
+      } catch (urlError) {
+        console.error("URL inválida detectada:", inviteUrl);
+        throw new Error('URL do convite é inválida');
       }
       
-      console.log("Enviando convite por email: ", {
-        email,
-        inviteUrl,
-        roleName,
-        retryAttempt: retryCount
-      });
+      console.log("✅ Validações passaram, chamando edge function...");
       
-      // Adicionar timeout para garantir que a solicitação não fique pendente indefinidamente
-      const timeoutPromise = new Promise<{ error: string }>((_, reject) => 
-        setTimeout(() => reject({ error: 'Tempo limite excedido ao enviar email' }), 30000)
-      );
+      // Configurar timeout mais generoso
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 segundos
       
-      // Chamar a edge function para envio de email
-      const resultPromise = supabase.functions.invoke('send-invite-email', {
-        body: {
-          email,
-          inviteUrl,
-          roleName,
-          expiresAt,
-          senderName,
-          notes,
-          inviteId
-        }
-      });
-      
-      // Usar Promise.race para implementar timeout
-      const { data, error } = await Promise.race([
-        resultPromise,
-        timeoutPromise.then((e) => { throw e; })
-      ]) as { data: any, error: Error | null };
-      
-      if (error) {
-        console.error("Erro ao chamar a edge function:", error);
+      try {
+        // Chamar a edge function para envio de email
+        const { data, error } = await supabase.functions.invoke('send-invite-email', {
+          body: {
+            email,
+            inviteUrl,
+            roleName,
+            expiresAt,
+            senderName,
+            notes,
+            inviteId
+          },
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
         
-        // Verificar se é o caso de adicionar à fila para retentativa
-        if (retryCount < 3) {
-          console.log(`Adicionando email para ${email} à fila de retentativas (tentativa ${retryCount + 1})`);
+        clearTimeout(timeoutId);
+        
+        console.log("📨 Resposta da edge function:", {
+          success: !error && data?.success,
+          hasData: !!data,
+          hasError: !!error,
+          errorMessage: error?.message
+        });
+        
+        if (error) {
+          console.error("❌ Erro da edge function:", error);
+          throw new Error(`Erro da edge function: ${error.message}`);
+        }
+        
+        if (!data?.success) {
+          console.error("❌ Edge function reportou falha:", data);
+          throw new Error(data?.message || data?.error || 'Falha desconhecida no envio');
+        }
+        
+        console.log("✅ Email enviado com sucesso!");
+        
+        // Remover da fila se estava em retry
+        if (retryCount > 0) {
+          setEmailQueue(prev => prev.filter(item => 
+            item.email !== email || item.inviteId !== inviteId
+          ));
+        }
+        
+        return {
+          success: true,
+          message: 'Email enviado com sucesso',
+          emailId: data.emailId,
+          duration: data.duration
+        };
+
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+        
+        console.error("❌ Erro na chamada da edge function:", fetchError);
+        
+        // Verificar se é um erro de timeout ou conexão
+        const isNetworkError = fetchError.name === 'AbortError' || 
+                              fetchError.message?.includes('timeout') ||
+                              fetchError.message?.includes('network') ||
+                              fetchError.message?.includes('fetch');
+        
+        // Sistema de retry robusto
+        if (retryCount < 3 && (isNetworkError || fetchError.status >= 500)) {
+          console.log(`🔄 Programando retry ${retryCount + 1}/3 para ${email}...`);
           
           const retryParams = {
             email,
@@ -96,132 +147,143 @@ export function useInviteEmailService() {
             retryCount: retryCount + 1
           };
           
-          // Adicionar à fila e agendar nova tentativa
-          setEmailQueue(prev => [...prev, retryParams]);
+          // Adicionar à fila para retry
+          setEmailQueue(prev => {
+            // Verificar se já não está na fila
+            const exists = prev.some(item => 
+              item.email === email && item.inviteId === inviteId
+            );
+            
+            if (!exists) {
+              return [...prev, retryParams];
+            }
+            return prev;
+          });
           
-          // Programar retentativa após um intervalo (aumento exponencial)
+          // Programar retry com backoff exponencial
+          const retryDelay = Math.min(Math.pow(2, retryCount) * 3000, 30000); // Max 30s
+          console.log(`⏰ Retry em ${retryDelay}ms`);
+          
           setTimeout(() => {
+            console.log(`🔄 Executando retry ${retryCount + 1} para ${email}`);
             sendInviteEmail(retryParams)
               .then(result => {
                 if (result.success) {
-                  // Remover da fila após sucesso
-                  setEmailQueue(prev => prev.filter(item => 
-                    item.email !== email || item.inviteId !== inviteId
-                  ));
+                  console.log(`✅ Retry bem-sucedido para ${email}`);
+                  toast.success(`Email para ${email} enviado após retry`);
                 }
+              })
+              .catch(retryError => {
+                console.error(`❌ Retry falhou para ${email}:`, retryError);
               });
-          }, Math.pow(2, retryCount) * 5000); // 5s, 10s, 20s
+          }, retryDelay);
+          
+          return {
+            success: false,
+            message: `Erro no envio, tentativa ${retryCount + 1}/3 programada`,
+            error: fetchError.message,
+            willRetry: true
+          };
         }
         
-        setSendError(error);
-        return {
-          success: false,
-          message: 'Erro ao enviar e-mail de convite',
-          error: error.message || 'Falha na conexão com o servidor'
-        };
+        throw fetchError;
       }
       
-      console.log("Resposta da edge function:", data);
-      
-      if (!data.success) {
-        console.error("Edge function reportou erro:", data.error || data.message);
-        setSendError(new Error(data.message || data.error || 'Erro ao enviar e-mail'));
-        
-        return {
-          success: false,
-          message: data.message || 'Erro ao enviar e-mail',
-          error: data.error
-        };
-      }
-      
-      return {
-        success: true,
-        message: 'Email enviado com sucesso',
-        emailId: data.emailId
-      };
     } catch (err: any) {
-      console.error('Erro ao enviar email de convite:', err);
+      console.error('❌ Erro geral no envio de email:', err);
       setSendError(err);
-      
-      // Se for um erro de timeout ou conexão, também adicionar à fila de retentativas
-      if (retryCount < 3 && (err.message?.includes('Tempo limite') || err.message?.includes('conexão'))) {
-        const retryParams = {
-          email,
-          inviteUrl,
-          roleName,
-          expiresAt,
-          senderName,
-          notes,
-          inviteId,
-          retryCount: retryCount + 1
-        };
-        
-        setEmailQueue(prev => [...prev, retryParams]);
-        
-        setTimeout(() => {
-          sendInviteEmail(retryParams);
-        }, Math.pow(2, retryCount) * 5000);
-      }
       
       return {
         success: false,
         message: 'Erro ao enviar email de convite',
-        error: err.message
+        error: err.message || 'Erro desconhecido'
       };
     } finally {
       setIsSending(false);
     }
   }, []);
 
-  // Gerar link de convite - Melhorado para robustez máxima
+  // Gerar link de convite com validação robusta
   const getInviteLink = useCallback((token: string) => {
-    // Verificar se o token existe
     if (!token) {
-      console.error("Erro: Token vazio ao gerar link de convite");
+      console.error("❌ Token vazio fornecido para gerar link");
       return "";
     }
     
-    // Limpar o token de espaços e normalizar
+    // Limpar e validar o token
     const cleanToken = token.trim().replace(/[\s\n\r\t]+/g, '');
     
-    console.log("Gerando link de convite para token:", {
-      original: token,
-      limpo: cleanToken,
-      comprimento: cleanToken.length
-    });
-    
-    // Verificação de integridade do token
-    if (!cleanToken.match(/^[A-Z0-9]+$/i)) {
-      console.warn("Token contém caracteres não alfanuméricos:", token);
+    if (cleanToken.length < 8) {
+      console.error("❌ Token muito curto:", cleanToken.length);
+      return "";
     }
     
-    // Construir URL absoluta com origem da janela atual
+    if (!cleanToken.match(/^[A-Z0-9]+$/i)) {
+      console.warn("⚠️ Token contém caracteres não alfanuméricos:", cleanToken);
+    }
+    
+    // Construir URL absoluta
     const baseUrl = `${window.location.origin}/convite/${encodeURIComponent(cleanToken)}`;
-    console.log("URL do convite gerado:", baseUrl);
+    
+    console.log("🔗 Link gerado:", {
+      token: cleanToken,
+      url: baseUrl,
+      tokenLength: cleanToken.length
+    });
     
     return baseUrl;
   }, []);
 
   // Limpar a fila de emails pendentes
   const clearEmailQueue = useCallback(() => {
+    console.log("🧹 Limpando fila de emails pendentes");
     setEmailQueue([]);
   }, []);
 
   // Tentar reenviar todos os emails pendentes
-  const retryAllPendingEmails = useCallback(() => {
+  const retryAllPendingEmails = useCallback(async () => {
     const pendingEmails = [...emailQueue];
+    console.log(`🔄 Tentando reenviar ${pendingEmails.length} emails pendentes`);
+    
+    if (pendingEmails.length === 0) {
+      toast.info("Nenhum email pendente para reenviar");
+      return;
+    }
+    
     clearEmailQueue();
     
-    pendingEmails.forEach(params => {
-      sendInviteEmail(params)
-        .then(result => {
-          if (result.success) {
-            toast.success(`Email para ${params.email} reenviado com sucesso`);
-          } else {
-            toast.error(`Falha ao reenviar email para ${params.email}`);
-          }
-        });
-    });
+    let successCount = 0;
+    let failureCount = 0;
+    
+    for (const params of pendingEmails) {
+      try {
+        const result = await sendInviteEmail(params);
+        if (result.success) {
+          successCount++;
+          toast.success(`Email para ${params.email} reenviado com sucesso`);
+        } else {
+          failureCount++;
+          toast.error(`Falha ao reenviar email para ${params.email}`);
+        }
+      } catch (error) {
+        failureCount++;
+        console.error(`Erro ao reenviar para ${params.email}:`, error);
+        toast.error(`Erro ao reenviar email para ${params.email}`);
+      }
+      
+      // Pequena pausa entre envios para não sobrecarregar
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    
+    console.log(`📊 Resultado do reenvio: ${successCount} sucessos, ${failureCount} falhas`);
+    
+    if (successCount > 0) {
+      toast.success(`${successCount} email(s) reenviado(s) com sucesso`);
+    }
+    
+    if (failureCount > 0) {
+      toast.error(`${failureCount} email(s) falharam no reenvio`);
+    }
   }, [emailQueue, clearEmailQueue, sendInviteEmail]);
 
   return {
@@ -231,6 +293,7 @@ export function useInviteEmailService() {
     sendError,
     pendingEmails: emailQueue.length,
     retryAllPendingEmails,
-    clearEmailQueue
+    clearEmailQueue,
+    emailQueue // Expor a fila para debugging
   };
 }
