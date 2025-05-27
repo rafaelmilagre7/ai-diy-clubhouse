@@ -10,7 +10,8 @@ import {
   MessageSquare,
   Settings,
   Activity,
-  Database
+  Database,
+  Network
 } from 'lucide-react';
 import { MemberSidebarNavItem } from './MemberSidebarNavItem';
 
@@ -34,6 +35,14 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
         to="/comunidade"
         icon={Users}
         label="Comunidade"
+        sidebarOpen={sidebarOpen}
+      />
+
+      {/* Networking */}
+      <MemberSidebarNavItem
+        to="/networking"
+        icon={Network}
+        label="Networking"
         sidebarOpen={sidebarOpen}
       />
 
