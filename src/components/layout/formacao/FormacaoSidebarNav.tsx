@@ -23,9 +23,6 @@ export const FormacaoSidebarNav = ({ sidebarOpen }: FormacaoSidebarNavProps) => 
   const location = useLocation();
   const { isAdmin } = useAuth();
 
-  // Log para verificar se o componente está sendo renderizado
-  console.log("FormacaoSidebarNav renderizando, sidebarOpen:", sidebarOpen);
-
   const menuItems = [
     {
       title: "Dashboard",

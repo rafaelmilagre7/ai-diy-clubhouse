@@ -8,9 +8,6 @@ interface SidebarLogoProps {
 }
 
 export const SidebarLogo = ({ sidebarOpen, setSidebarOpen }: SidebarLogoProps) => {
-  // Log para verificar quando o componente é renderizado
-  console.log("SidebarLogo renderizando, sidebarOpen:", sidebarOpen);
-  
   return (
     <div className="flex h-16 shrink-0 items-center justify-between px-3">
       <div className="flex items-center">

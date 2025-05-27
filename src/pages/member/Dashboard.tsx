@@ -20,14 +20,6 @@ const Dashboard = () => {
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
-  // Log de diagnóstico - remover após resolução do problema
-  console.log("Dashboard renderizado:", { 
-    user: !!user, 
-    profile: !!profile,
-    authLoading,
-    currentRoute: window.location.pathname
-  });
-  
   // Otimização: Usar useMemo para lembrar o valor da categoria entre renderizações
   const initialCategory = useMemo(() => searchParams.get("category") || "general", [searchParams]);
   const [category, setCategory] = useState<string>(initialCategory);
@@ -44,8 +36,6 @@ const Dashboard = () => {
       toast.error("Erro ao carregar soluções", {
         description: "Tente atualizar a página"
       });
-    } else {
-      console.log("Soluções carregadas:", solutions?.length || 0);
     }
   }, [solutionsError, solutions]);
   

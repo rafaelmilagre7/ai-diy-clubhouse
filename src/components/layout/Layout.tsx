@@ -7,7 +7,6 @@ import { ReactNode } from "react";
  * It delegates authentication checks and layout rendering to LayoutProvider
  */
 const Layout = ({ children }: { children: ReactNode }) => {
-  console.log("Layout principal renderizando");
   return <LayoutProvider>{children}</LayoutProvider>;
 };
 
