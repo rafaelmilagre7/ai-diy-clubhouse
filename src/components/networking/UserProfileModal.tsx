@@ -12,13 +12,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { 
   Building, 
-  MapPin, 
   Star, 
   UserPlus, 
-  X,
   Globe,
-  Users,
-  TrendingUp
+  TrendingUp,
+  Mail,
+  Linkedin,
+  ExternalLink
 } from 'lucide-react';
 import { NetworkMatch } from '@/hooks/networking/useNetworkMatches';
 
@@ -46,12 +46,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Perfil do Usuário</span>
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
-          </DialogTitle>
+          <DialogTitle>Perfil do Usuário</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -81,6 +76,75 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                   {match.compatibility_score}% de compatibilidade
                 </span>
               </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Contact Information */}
+          <div className="space-y-3">
+            <h3 className="font-semibold flex items-center gap-2">
+              <Mail className="h-4 w-4" />
+              Informações de Contato
+            </h3>
+            
+            <div className="bg-muted/30 p-4 rounded-lg space-y-3">
+              {/* Email */}
+              <div className="flex items-center gap-3">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Email</p>
+                  <p className="text-sm text-muted-foreground">{match.matched_user?.email || 'Não informado'}</p>
+                </div>
+                {match.matched_user?.email && (
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={`mailto:${match.matched_user.email}`} className="gap-1">
+                      <ExternalLink className="h-3 w-3" />
+                      Enviar Email
+                    </a>
+                  </Button>
+                )}
+              </div>
+
+              {/* LinkedIn */}
+              <div className="flex items-center gap-3">
+                <Linkedin className="h-4 w-4 text-muted-foreground" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">LinkedIn</p>
+                  <p className="text-sm text-muted-foreground">
+                    {match.matched_user?.linkedin_url || 'Não informado'}
+                  </p>
+                </div>
+                {match.matched_user?.linkedin_url && (
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={match.matched_user.linkedin_url} target="_blank" rel="noopener noreferrer" className="gap-1">
+                      <ExternalLink className="h-3 w-3" />
+                      Ver Perfil
+                    </a>
+                  </Button>
+                )}
+              </div>
+
+              {/* Company Website */}
+              {match.matched_user?.company_name && (
+                <div className="flex items-center gap-3">
+                  <Globe className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Website da Empresa</p>
+                    <p className="text-sm text-muted-foreground">
+                      {match.matched_user.company_website || 'Não informado'}
+                    </p>
+                  </div>
+                  {match.matched_user.company_website && (
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={match.matched_user.company_website} target="_blank" rel="noopener noreferrer" className="gap-1">
+                        <ExternalLink className="h-3 w-3" />
+                        Visitar
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

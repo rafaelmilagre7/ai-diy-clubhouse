@@ -27,6 +27,8 @@ export interface NetworkMatch {
     company_name?: string;
     current_position?: string;
     avatar_url?: string;
+    linkedin_url?: string;
+    company_website?: string;
   };
 }
 
@@ -89,7 +91,7 @@ export function useNetworkMatches(matchType?: 'customer' | 'supplier') {
       
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, name, email, company_name, current_position, avatar_url')
+        .select('id, name, email, company_name, current_position, avatar_url, linkedin_url, company_website')
         .in('id', matchedUserIds);
 
       if (profilesError) {
@@ -111,14 +113,18 @@ export function useNetworkMatches(matchType?: 'customer' | 'supplier') {
             email: matchedUser.email,
             company_name: matchedUser.company_name,
             current_position: matchedUser.current_position,
-            avatar_url: matchedUser.avatar_url
+            avatar_url: matchedUser.avatar_url,
+            linkedin_url: matchedUser.linkedin_url,
+            company_website: matchedUser.company_website
           } : {
             id: match.matched_user_id,
             name: 'Usuário',
             email: 'email@exemplo.com',
             company_name: 'Empresa',
             current_position: 'Posição',
-            avatar_url: null
+            avatar_url: null,
+            linkedin_url: null,
+            company_website: null
           }
         };
       });
