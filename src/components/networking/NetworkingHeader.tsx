@@ -1,81 +1,55 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Network, Sparkles, TrendingUp } from 'lucide-react';
-import { useGenerateMatches } from '@/hooks/networking/useNetworkMatches';
-import { toast } from 'sonner';
+import { Network, Sparkles } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { NetworkingNotifications } from './NetworkingNotifications';
 
-export const NetworkingHeader = () => {
-  const generateMatches = useGenerateMatches();
-
-  const handleGenerateMatches = async () => {
-    try {
-      toast.loading('Gerando novos matches...');
-      await generateMatches(undefined, true);
-      toast.success('Novos matches gerados com sucesso!');
-    } catch (error) {
-      console.error('Erro ao gerar matches:', error);
-      toast.error('Erro ao gerar matches. Tente novamente.');
-    }
-  };
-
+export const NetworkingHeader: React.FC = () => {
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <Network className="h-8 w-8 text-viverblue" />
-            Networking Inteligente
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Conecte-se com potenciais clientes e fornecedores através de IA
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-viverblue/10 rounded-lg">
+            <Network className="h-6 w-6 text-viverblue" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">Networking Inteligente</h1>
+            <p className="text-muted-foreground">
+              Conecte-se com outros membros que podem ajudar seu negócio
+            </p>
+          </div>
         </div>
-        
-        <Button onClick={handleGenerateMatches} className="gap-2">
-          <Sparkles className="h-4 w-4" />
-          Gerar Novos Matches
-        </Button>
+        <NetworkingNotifications />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
+      <Card className="bg-gradient-to-r from-viverblue/5 to-purple-500/5 border-viverblue/20">
+        <CardContent className="p-6">
+          <div className="flex items-start gap-4">
             <div className="p-2 bg-viverblue/10 rounded-lg">
-              <Network className="h-5 w-5 text-viverblue" />
+              <Sparkles className="h-5 w-5 text-viverblue" />
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Matches Inteligentes</p>
-              <p className="font-semibold">Baseados em IA</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-500/10 rounded-lg">
-              <TrendingUp className="h-5 w-5 text-green-500" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Compatibilidade</p>
-              <p className="font-semibold">Alta Precisão</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-500/10 rounded-lg">
-              <Sparkles className="h-5 w-5 text-purple-500" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Análise</p>
-              <p className="font-semibold">Claude Sonnet 4</p>
+            <div className="space-y-2">
+              <h3 className="font-semibold text-lg">Como funciona o Networking IA</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Nossa IA analisa seu perfil, objetivos e necessidades para encontrar as conexões 
+                mais relevantes. Seja para encontrar clientes ideais ou fornecedores especializados, 
+                cada match é calculado com base em compatibilidade real de negócios.
+              </p>
+              <div className="flex flex-wrap gap-2 mt-3">
+                <span className="px-3 py-1 bg-viverblue/10 text-viverblue text-xs rounded-full">
+                  IA Avançada
+                </span>
+                <span className="px-3 py-1 bg-green-500/10 text-green-600 text-xs rounded-full">
+                  Matches Qualificados
+                </span>
+                <span className="px-3 py-1 bg-purple-500/10 text-purple-600 text-xs rounded-full">
+                  Análise Personalizada
+                </span>
+              </div>
             </div>
           </div>
-        </Card>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
