@@ -1,4 +1,3 @@
-
 import { useCallback, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { usePerformanceMonitor } from './usePerformanceMonitor';
@@ -148,7 +147,7 @@ export const useQueryPerformance = () => {
       freshQueries: queries.filter(q => q.state.dataUpdatedAt > Date.now() - 5 * 60 * 1000).length,
       staleQueries: queries.filter(q => q.isStale()).length,
       errorQueries: queries.filter(q => q.state.error).length,
-      loadingQueries: queries.filter(q => q.state.isFetching).length
+      loadingQueries: queries.filter(q => q.state.status === 'pending').length
     };
 
     captureMetric({
