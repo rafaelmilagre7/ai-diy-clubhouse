@@ -1,12 +1,28 @@
 
 import { z } from "zod";
 
+// Schema mais flexível para URLs opcionais
+const optionalUrlSchema = z
+  .string()
+  .optional()
+  .or(z.literal(""))
+  .transform((val) => val === "" ? undefined : val)
+  .refine((val) => {
+    if (!val) return true; // Permitir valores vazios
+    try {
+      new URL(val);
+      return true;
+    } catch {
+      return false;
+    }
+  }, "URL inválida");
+
 export const eventSchema = z.object({
   title: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
   description: z.string().optional(),
-  start_time: z.string(),
-  end_time: z.string(),
-  location_link: z.string().url("Link inválido"),
+  start_time: z.string().min(1, "Data e hora de início são obrigatórias"),
+  end_time: z.string().min(1, "Data e hora de fim são obrigatórias"),
+  location_link: optionalUrlSchema,
   physical_location: z.string().optional(),
   cover_image_url: z.string().optional(),
   // Campos para controle de acesso
@@ -18,6 +34,15 @@ export const eventSchema = z.object({
   recurrence_day: z.number().min(0).max(6).optional(),
   recurrence_count: z.number().optional(),
   recurrence_end_date: z.string().optional()
+}).refine((data) => {
+  // Validar que a data de fim é posterior à data de início
+  if (data.start_time && data.end_time) {
+    return new Date(data.start_time) < new Date(data.end_time);
+  }
+  return true;
+}, {
+  message: "Data e hora de fim devem ser posteriores ao início",
+  path: ["end_time"]
 });
 
 export type EventFormData = z.infer<typeof eventSchema>;

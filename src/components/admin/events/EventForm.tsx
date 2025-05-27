@@ -26,6 +26,8 @@ interface EventFormProps {
 export const EventForm = ({ event, onSuccess }: EventFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  console.log("EventForm - Event data received:", event);
+  
   // Hook para gerenciar controle de acesso
   const {
     selectedRoles,
@@ -51,47 +53,83 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
       recurrence_day: event?.recurrence_day || null,
       recurrence_count: event?.recurrence_count || null,
       recurrence_end_date: event?.recurrence_end_date || null,
-      role_ids: selectedRoles // Usar dados do hook
+      role_ids: selectedRoles
     }
   });
 
   const onSubmit = async (data: EventFormData) => {
+    console.log("EventForm - Starting form submission:", {
+      isEditing: !!event?.id,
+      eventId: event?.id,
+      formData: data,
+      selectedRoles
+    });
+
     try {
       setIsSubmitting(true);
       
+      // Validar dados obrigatórios
+      if (!data.title.trim()) {
+        console.error("EventForm - Validation error: Title is required");
+        toast.error("Título é obrigatório");
+        return;
+      }
+
+      if (!data.start_time || !data.end_time) {
+        console.error("EventForm - Validation error: Start and end times are required");
+        toast.error("Data e hora de início e fim são obrigatórias");
+        return;
+      }
+
+      // Preparar dados do evento (sem role_ids que não existe na tabela events)
       const eventData = {
-        title: data.title,
-        description: data.description,
+        title: data.title.trim(),
+        description: data.description?.trim() || null,
         start_time: data.start_time,
         end_time: data.end_time,
-        location_link: data.location_link,
-        physical_location: data.physical_location,
-        cover_image_url: data.cover_image_url,
-        is_recurring: data.is_recurring,
-        recurrence_pattern: data.recurrence_pattern,
-        recurrence_interval: data.recurrence_interval,
-        recurrence_day: data.recurrence_day,
-        recurrence_count: data.recurrence_count,
-        recurrence_end_date: data.recurrence_end_date,
+        location_link: data.location_link?.trim() || null,
+        physical_location: data.physical_location?.trim() || null,
+        cover_image_url: data.cover_image_url?.trim() || null,
+        is_recurring: data.is_recurring || false,
+        recurrence_pattern: data.recurrence_pattern || null,
+        recurrence_interval: data.recurrence_interval || null,
+        recurrence_day: data.recurrence_day || null,
+        recurrence_count: data.recurrence_count || null,
+        recurrence_end_date: data.recurrence_end_date || null,
       };
+
+      console.log("EventForm - Prepared event data:", eventData);
 
       let eventId: string;
 
       if (event?.id) {
         // Atualizar evento existente
-        const { error } = await supabase
+        console.log("EventForm - Updating existing event:", event.id);
+        
+        const { data: updatedEvent, error } = await supabase
           .from('events')
           .update(eventData)
-          .eq('id', event.id);
+          .eq('id', event.id)
+          .select()
+          .single();
           
-        if (error) throw error;
-        eventId = event.id;
+        if (error) {
+          console.error("EventForm - Error updating event:", error);
+          throw error;
+        }
         
-        console.log("Evento atualizado com sucesso:", eventId);
+        eventId = event.id;
+        console.log("EventForm - Event updated successfully:", updatedEvent);
+        
       } else {
         // Criar novo evento
+        console.log("EventForm - Creating new event");
+        
         const { data: userData } = await supabase.auth.getUser();
-        if (!userData.user) throw new Error("Usuário não autenticado");
+        if (!userData.user) {
+          console.error("EventForm - User not authenticated");
+          throw new Error("Usuário não autenticado");
+        }
         
         const { data: newEvent, error } = await supabase
           .from('events')
@@ -99,31 +137,68 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
             ...eventData,
             created_by: userData.user.id
           })
-          .select('id')
+          .select()
           .single();
           
-        if (error) throw error;
-        eventId = newEvent.id;
+        if (error) {
+          console.error("EventForm - Error creating event:", error);
+          throw error;
+        }
         
-        console.log("Evento criado com sucesso:", eventId);
+        eventId = newEvent.id;
+        console.log("EventForm - Event created successfully:", newEvent);
       }
       
       // Salvar controle de acesso
-      await saveAccessControl(eventId);
+      console.log("EventForm - Saving access control for event:", eventId, "with roles:", selectedRoles);
       
+      try {
+        await saveAccessControl(eventId);
+        console.log("EventForm - Access control saved successfully");
+      } catch (accessError) {
+        console.error("EventForm - Error saving access control:", accessError);
+        // Não falhar completamente se o controle de acesso falhar
+        toast.error("Evento salvo, mas houve erro no controle de acesso");
+      }
+      
+      console.log("EventForm - All operations completed successfully");
       toast.success(event ? "Evento atualizado com sucesso!" : "Evento criado com sucesso!");
+      
+      // Chamar callback de sucesso para fechar modal e atualizar lista
       onSuccess();
       
-    } catch (error) {
-      console.error("Erro ao salvar evento:", error);
-      toast.error("Erro ao salvar evento. Tente novamente.");
+    } catch (error: any) {
+      console.error("EventForm - Error in form submission:", {
+        error,
+        message: error?.message,
+        details: error?.details,
+        hint: error?.hint,
+        code: error?.code
+      });
+      
+      // Mensagens de erro mais específicas
+      let errorMessage = "Erro ao salvar evento. Tente novamente.";
+      
+      if (error?.message?.includes('invalid input syntax')) {
+        errorMessage = "Dados inválidos fornecidos. Verifique os campos preenchidos.";
+      } else if (error?.code === 'PGRST301') {
+        errorMessage = "Erro de validação. Verifique se todos os campos obrigatórios estão preenchidos.";
+      } else if (error?.message?.includes('network')) {
+        errorMessage = "Erro de conexão. Verifique sua internet e tente novamente.";
+      } else if (error?.message) {
+        errorMessage = `Erro: ${error.message}`;
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
+      console.log("EventForm - Form submission completed");
     }
   };
 
   // Mostrar loading se ainda estiver carregando dados de acesso para edição
   if (event?.id && isLoadingAccess) {
+    console.log("EventForm - Loading access control data for event:", event.id);
     return (
       <div className="flex items-center justify-center py-8">
         <Loader2 className="mr-2 h-6 w-6 animate-spin" />
@@ -131,6 +206,13 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
       </div>
     );
   }
+
+  console.log("EventForm - Rendering form with:", {
+    isSubmitting,
+    isSavingAccess,
+    selectedRoles,
+    formValues: form.getValues()
+  });
 
   return (
     <Form {...form}>
@@ -172,7 +254,10 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
           <Button 
             type="button" 
             variant="outline" 
-            onClick={onSuccess}
+            onClick={() => {
+              console.log("EventForm - Cancel button clicked");
+              onSuccess();
+            }}
             disabled={isSubmitting || isSavingAccess}
           >
             Cancelar
@@ -181,6 +266,13 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
             type="submit" 
             disabled={isSubmitting || isSavingAccess}
             className="bg-viverblue hover:bg-viverblue/90"
+            onClick={() => {
+              console.log("EventForm - Submit button clicked", {
+                formIsValid: form.formState.isValid,
+                formErrors: form.formState.errors,
+                formValues: form.getValues()
+              });
+            }}
           >
             {isSubmitting || isSavingAccess ? (
               <>
