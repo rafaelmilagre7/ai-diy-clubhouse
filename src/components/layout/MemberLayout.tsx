@@ -1,19 +1,23 @@
 
-import React from "react";
+import React, { memo, useMemo, useCallback } from "react";
 import { useAuth } from "@/contexts/auth";
 import BaseLayout from "./BaseLayout";
 import { MemberSidebar } from "./member/MemberSidebar";
 import { MemberContent } from "./member/MemberContent";
 import { toast } from "sonner";
 
+interface MemberLayoutProps {
+  children: React.ReactNode;
+}
+
 /**
- * MemberLayout usando BaseLayout unificado
+ * MemberLayout usando BaseLayout unificado com otimizações de performance
  */
-const MemberLayout = ({ children }: { children: React.ReactNode }) => {
+const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
   const { profile, signOut } = useAuth();
 
-  // Função para obter iniciais do nome do usuário
-  const getInitials = (name: string | null) => {
+  // Memoizar função para obter iniciais para evitar recriação
+  const getInitials = useCallback((name: string | null) => {
     if (!name) return "U";
     return name
       .split(" ")
@@ -21,10 +25,10 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
       .join("")
       .toUpperCase()
       .substring(0, 2);
-  };
+  }, []);
 
-  // Handler para signOut
-  const handleSignOut = async () => {
+  // Memoizar handler de signOut para evitar recriação
+  const handleSignOut = useCallback(async () => {
     try {
       const result = await signOut();
       if (result.success) {
@@ -35,7 +39,14 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
     } catch (error) {
       toast.error("Erro ao fazer logout");
     }
-  };
+  }, [signOut]);
+
+  // Memoizar dados do perfil para evitar re-renders desnecessários
+  const profileData = useMemo(() => ({
+    name: profile?.name || null,
+    email: profile?.email || null,
+    avatar: profile?.avatar_url
+  }), [profile?.name, profile?.email, profile?.avatar_url]);
 
   return (
     <BaseLayout
@@ -43,14 +54,16 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
       sidebarComponent={MemberSidebar}
       contentComponent={MemberContent}
       onSignOut={handleSignOut}
-      profileName={profile?.name || null}
-      profileEmail={profile?.email || null}
-      profileAvatar={profile?.avatar_url}
+      profileName={profileData.name}
+      profileEmail={profileData.email}
+      profileAvatar={profileData.avatar}
       getInitials={getInitials}
     >
       {children}
     </BaseLayout>
   );
-};
+});
+
+MemberLayout.displayName = 'MemberLayout';
 
 export default MemberLayout;

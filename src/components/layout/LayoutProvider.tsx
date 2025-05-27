@@ -1,18 +1,17 @@
 
 import { useNavigate, useLocation } from "react-router-dom";
-import { useEffect, useState, useRef, ReactNode } from "react";
+import { useEffect, useState, useRef, ReactNode, memo, useMemo } from "react";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import MemberLayout from "./MemberLayout";
 import FormacaoLayout from "./formacao/FormacaoLayout";
-import { toast } from "sonner";
 import { PageTransitionWithFallback } from "@/components/transitions/PageTransitionWithFallback";
 
 /**
  * LayoutProvider gerencia autenticação e roteamento baseado em papéis
  * antes de renderizar o componente de layout apropriado
  */
-const LayoutProvider = ({ children }: { children: ReactNode }) => {
+const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
   const {
     user,
     profile,
@@ -24,6 +23,21 @@ const LayoutProvider = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
   const [layoutReady, setLayoutReady] = useState(false);
   const timeoutRef = useRef<number | null>(null);
+
+  // Memoizar as verificações de rota para evitar recálculos desnecessários
+  const routeChecks = useMemo(() => ({
+    isLearningRoute: location.pathname.startsWith('/learning'),
+    isPathAdmin: location.pathname.startsWith('/admin'),
+    isPathFormacao: location.pathname.startsWith('/formacao'),
+    isFormacaoRoute: location.pathname.startsWith('/formacao')
+  }), [location.pathname]);
+
+  // Memoizar a mensagem de loading baseada no estado
+  const loadingMessage = useMemo(() => {
+    if (isLoading) return "Preparando seu dashboard...";
+    if (!user) return "Verificando autenticação...";
+    return "Carregando layout...";
+  }, [isLoading, user]);
 
   // Verificar autenticação assim que o estado estiver pronto
   useEffect(() => {
@@ -39,15 +53,12 @@ const LayoutProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
       
-      // Se temos usuário, marcar layout como pronto (mesmo se ainda não tivermos perfil)
-      // Isso evitará tela em branco enquanto espera perfil
+      // Se temos usuário, marcar layout como pronto
       setLayoutReady(true);
       
       // Verificar papel do usuário e rota atual
       if (user && profile) {
-        const isLearningRoute = location.pathname.startsWith('/learning');
-        const isPathAdmin = location.pathname.startsWith('/admin');
-        const isPathFormacao = location.pathname.startsWith('/formacao');
+        const { isLearningRoute, isPathAdmin, isPathFormacao } = routeChecks;
         
         // Redirecionar apenas se estiver na rota errada
         if (isAdmin && !isPathAdmin && !isPathFormacao && !isLearningRoute) {
@@ -61,7 +72,7 @@ const LayoutProvider = ({ children }: { children: ReactNode }) => {
       // Configurar timeout para não ficar preso em carregamento infinito
       timeoutRef.current = window.setTimeout(() => {
         setLayoutReady(true);
-      }, 2000); // 2 segundos de timeout
+      }, 2000);
     }
     
     return () => {
@@ -69,14 +80,12 @@ const LayoutProvider = ({ children }: { children: ReactNode }) => {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [user, profile, isAdmin, isFormacao, isLoading, navigate, location.pathname]);
+  }, [user, profile, isAdmin, isFormacao, isLoading, navigate, routeChecks]);
 
-  // Verificar se estamos em páginas de formação
-  const isFormacaoRoute = location.pathname.startsWith('/formacao');
-  const isLearningRoute = location.pathname.startsWith('/learning');
-
-  // Se o layout está pronto, renderizar com base na rota
+  // Renderizar com base na rota e permissões
   if (layoutReady && user) {
+    const { isFormacaoRoute, isLearningRoute } = routeChecks;
+    
     if (isFormacaoRoute && (isFormacao || isAdmin)) {
       return (
         <PageTransitionWithFallback isVisible={true}>
@@ -95,13 +104,11 @@ const LayoutProvider = ({ children }: { children: ReactNode }) => {
   // Mostrar loading enquanto o layout não está pronto
   return (
     <PageTransitionWithFallback isVisible={true}>
-      <LoadingScreen message={
-        isLoading ? "Preparando seu dashboard..." : 
-        !user ? "Verificando autenticação..." : 
-        "Carregando layout..."
-      } />
+      <LoadingScreen message={loadingMessage} />
     </PageTransitionWithFallback>
   );
-};
+});
+
+LayoutProvider.displayName = 'LayoutProvider';
 
 export default LayoutProvider;

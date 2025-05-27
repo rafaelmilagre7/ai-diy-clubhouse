@@ -1,8 +1,7 @@
 
-import React, { useState, useEffect, useCallback, memo } from "react";
+import React, { useState, useEffect, useCallback, memo, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { useResponsive } from "@/hooks/useResponsive";
-import { logger } from "@/utils/logger";
 
 export type LayoutVariant = 'member' | 'admin' | 'formacao';
 
@@ -46,19 +45,38 @@ const BaseLayout = memo<BaseLayoutProps>(({
 }) => {
   const { isMobile } = useResponsive();
   
-  // Estado da sidebar com persistência
-  const [sidebarOpen, setSidebarOpen] = useState(() => {
+  // Memoizar o estado inicial da sidebar baseado no localStorage
+  const initialSidebarState = useMemo(() => {
     const savedState = localStorage.getItem(`${variant}SidebarOpen`);
     return savedState !== null ? savedState === "true" : !isMobile;
-  });
+  }, [variant, isMobile]);
 
-  // Estado do overlay para mobile
+  const [sidebarOpen, setSidebarOpen] = useState(initialSidebarState);
   const [showOverlay, setShowOverlay] = useState(false);
 
-  // Persistir estado da sidebar
+  // Memoizar o handler de toggle da sidebar para evitar re-criação
+  const handleSidebarToggle = useCallback((open: boolean) => {
+    setSidebarOpen(open);
+  }, []);
+
+  // Memoizar o handler do overlay para evitar re-criação
+  const handleOverlayClick = useCallback(() => {
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  }, [isMobile]);
+
+  // Memoizar a classe de background baseada no variant
+  const backgroundClass = useMemo(() => 
+    variant === 'member' ? 'bg-[#0F111A]' : 'bg-background'
+  , [variant]);
+
+  // Persistir estado da sidebar com memoização da key
+  const storageKey = useMemo(() => `${variant}SidebarOpen`, [variant]);
+  
   useEffect(() => {
-    localStorage.setItem(`${variant}SidebarOpen`, String(sidebarOpen));
-  }, [sidebarOpen, variant]);
+    localStorage.setItem(storageKey, String(sidebarOpen));
+  }, [sidebarOpen, storageKey]);
 
   // Atualizar overlay baseado no estado da sidebar em mobile
   useEffect(() => {
@@ -68,19 +86,11 @@ const BaseLayout = memo<BaseLayoutProps>(({
   // Fechar sidebar automaticamente em mobile quando redimensionar
   useEffect(() => {
     if (isMobile && sidebarOpen) {
-      // Em mobile, manter sidebar fechada por padrão
       setSidebarOpen(false);
     }
   }, [isMobile]);
 
-  // Handler para fechar overlay/sidebar
-  const handleOverlayClick = useCallback(() => {
-    if (isMobile) {
-      setSidebarOpen(false);
-    }
-  }, [isMobile]);
-
-  // Handler para touch/swipe para fechar sidebar
+  // Handler para touch/swipe para fechar sidebar - memoizado
   useEffect(() => {
     if (!showOverlay) return;
 
@@ -120,12 +130,22 @@ const BaseLayout = memo<BaseLayoutProps>(({
     document.body.classList.add('dark');
   }, []);
 
-  // Handler para sidebar toggle
-  const handleSidebarToggle = useCallback((open: boolean) => {
-    setSidebarOpen(open);
-  }, []);
+  // Memoizar as props da sidebar para evitar re-renders desnecessários
+  const sidebarProps = useMemo(() => ({
+    sidebarOpen,
+    setSidebarOpen: handleSidebarToggle,
+    profileName,
+    profileEmail,
+    profileAvatar,
+    getInitials
+  }), [sidebarOpen, handleSidebarToggle, profileName, profileEmail, profileAvatar, getInitials]);
 
-  const backgroundClass = variant === 'member' ? 'bg-[#0F111A]' : 'bg-background';
+  // Memoizar as props do content para evitar re-renders desnecessários
+  const contentProps = useMemo(() => ({
+    sidebarOpen,
+    setSidebarOpen: handleSidebarToggle,
+    children
+  }), [sidebarOpen, handleSidebarToggle, children]);
 
   return (
     <div className={cn("flex min-h-screen overflow-hidden", backgroundClass)}>
@@ -139,22 +159,10 @@ const BaseLayout = memo<BaseLayoutProps>(({
       )}
       
       {/* Sidebar */}
-      <SidebarComponent 
-        sidebarOpen={sidebarOpen} 
-        setSidebarOpen={handleSidebarToggle}
-        profileName={profileName}
-        profileEmail={profileEmail}
-        profileAvatar={profileAvatar}
-        getInitials={getInitials}
-      />
+      <SidebarComponent {...sidebarProps} />
       
       {/* Conteúdo principal */}
-      <ContentComponent 
-        sidebarOpen={sidebarOpen} 
-        setSidebarOpen={handleSidebarToggle}
-      >
-        {children}
-      </ContentComponent>
+      <ContentComponent {...contentProps} />
     </div>
   );
 });
