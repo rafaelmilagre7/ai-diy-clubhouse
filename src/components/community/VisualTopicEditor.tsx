@@ -100,17 +100,22 @@ export function VisualTopicEditor({ content, onChange, placeholder = "Conteúdo.
       const fileName = `${uuidv4()}.${fileExt}`;
       const filePath = `forum_images/${fileName}`;
 
+      console.log("Fazendo upload da imagem:", { fileName, filePath });
+
       const { error: uploadError } = await supabase.storage
         .from('public')
         .upload(filePath, file);
 
       if (uploadError) {
+        console.error("Erro no upload:", uploadError);
         throw uploadError;
       }
 
       const { data } = supabase.storage
         .from('public')
         .getPublicUrl(filePath);
+
+      console.log("URL gerada:", data.publicUrl);
 
       // Inserir a imagem no formato markdown
       const imageMarkdown = `\n![Imagem](${data.publicUrl})\n`;
@@ -147,28 +152,55 @@ export function VisualTopicEditor({ content, onChange, placeholder = "Conteúdo.
 
   // Converter markdown básico para HTML para preview
   const convertMarkdownToHtml = (markdown: string) => {
+    console.log("Convertendo markdown:", markdown);
+    
     let html = markdown
+      // Primeiro processar imagens antes de outros elementos
+      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, src) => {
+        console.log("Processando imagem:", { alt, src, match });
+        return `<img src="${src}" alt="${alt}" class="max-w-full h-auto my-4 rounded shadow-sm block" style="max-height: 400px; object-fit: contain;" onError="console.error('Erro ao carregar imagem:', '${src}')" />`;
+      })
+      // Negrito
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      // Itálico
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      // Código inline
       .replace(/`(.*?)`/g, '<code class="bg-muted px-1 py-0.5 rounded text-sm">$1</code>')
+      // Citações
       .replace(/^> (.+)$/gm, '<blockquote class="border-l-4 border-viverblue pl-4 italic my-2 text-muted-foreground">$1</blockquote>')
-      .replace(/^- (.+)$/gm, '<li class="ml-4">$1</li>')
-      .replace(/^1\. (.+)$/gm, '<li class="ml-4">$1</li>')
+      // Links
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-viverblue underline hover:text-viverblue/80" target="_blank" rel="noopener noreferrer">$1</a>')
-      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="max-w-full h-auto my-4 rounded shadow-sm" />')
+      // Quebras de linha duplas para parágrafos
       .replace(/\n\n/g, '</p><p class="mb-3">')
+      // Quebras de linha simples
       .replace(/\n/g, '<br />');
 
-    // Wrap consecutive <li> elements in <ul>
-    html = html.replace(/(<li[^>]*>.*?<\/li>(?:\s*<br \/>\s*<li[^>]*>.*?<\/li>)*)/g, '<ul class="list-disc list-inside space-y-1 my-3">$1</ul>');
-    html = html.replace(/<br \/>\s*<\/ul>/g, '</ul>');
-    html = html.replace(/<ul[^>]*>\s*<br \/>/g, '<ul class="list-disc list-inside space-y-1 my-3">');
+    // Listas não ordenadas
+    const listMatches = html.match(/^- (.+)$/gm);
+    if (listMatches) {
+      const listItems = listMatches.map(item => 
+        `<li class="ml-4">${item.replace(/^- /, '')}</li>`
+      ).join('');
+      html = html.replace(/^- .+$/gm, '').replace(/(<br \/>\s*){2,}/g, '') + 
+             `<ul class="list-disc list-inside space-y-1 my-3">${listItems}</ul>`;
+    }
 
-    // Wrap content in paragraphs
+    // Listas ordenadas
+    const orderedListMatches = html.match(/^\d+\. (.+)$/gm);
+    if (orderedListMatches) {
+      const orderedListItems = orderedListMatches.map(item => 
+        `<li class="ml-4">${item.replace(/^\d+\. /, '')}</li>`
+      ).join('');
+      html = html.replace(/^\d+\. .+$/gm, '').replace(/(<br \/>\s*){2,}/g, '') + 
+             `<ol class="list-decimal list-inside space-y-1 my-3">${orderedListItems}</ol>`;
+    }
+
+    // Envolver em parágrafo se não começar com tag
     if (html && !html.startsWith('<')) {
       html = '<p class="mb-3">' + html + '</p>';
     }
 
+    console.log("HTML resultante:", html);
     return html;
   };
 
@@ -184,6 +216,31 @@ export function VisualTopicEditor({ content, onChange, placeholder = "Conteúdo.
       <Icon className="h-4 w-4" />
     </Button>
   );
+
+  // Preview com tratamento de erro para imagens
+  const PreviewContent = ({ htmlContent }: { htmlContent: string }) => {
+    if (!htmlContent) {
+      return (
+        <div className="text-muted-foreground italic flex items-center justify-center h-full">
+          Preview aparecerá aqui...
+        </div>
+      );
+    }
+
+    return (
+      <div 
+        className="prose prose-sm max-w-none"
+        dangerouslySetInnerHTML={{ __html: htmlContent }}
+        style={{
+          // Garantir que imagens sejam responsivas
+          wordWrap: 'break-word',
+          overflowWrap: 'break-word'
+        }}
+      />
+    );
+  };
+
+  const processedHtml = convertMarkdownToHtml(content);
 
   return (
     <div className="border rounded-md overflow-hidden">
@@ -235,17 +292,8 @@ export function VisualTopicEditor({ content, onChange, placeholder = "Conteúdo.
                 className="min-h-[300px] max-h-[500px] resize-none border-0 focus:ring-0 rounded-none"
               />
             </div>
-            <div className="p-4 bg-muted/10">
-              {content ? (
-                <div 
-                  className="prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{ __html: convertMarkdownToHtml(content) }}
-                />
-              ) : (
-                <div className="text-muted-foreground italic flex items-center justify-center h-full">
-                  Preview aparecerá aqui...
-                </div>
-              )}
+            <div className="p-4 bg-muted/10 overflow-auto">
+              <PreviewContent htmlContent={processedHtml} />
             </div>
           </div>
         </TabsContent>
@@ -261,16 +309,9 @@ export function VisualTopicEditor({ content, onChange, placeholder = "Conteúdo.
         </TabsContent>
 
         <TabsContent value="preview" className="mt-0">
-          {content ? (
-            <div 
-              className="prose prose-sm max-w-none p-4 min-h-[300px]"
-              dangerouslySetInnerHTML={{ __html: convertMarkdownToHtml(content) }}
-            />
-          ) : (
-            <div className="p-4 text-muted-foreground italic min-h-[300px] flex items-center justify-center">
-              Nenhum conteúdo para visualizar
-            </div>
-          )}
+          <div className="p-4 min-h-[300px] overflow-auto">
+            <PreviewContent htmlContent={processedHtml} />
+          </div>
         </TabsContent>
       </Tabs>
     </div>
