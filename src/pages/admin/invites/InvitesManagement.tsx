@@ -6,9 +6,10 @@ import { useInvitesList } from "@/hooks/admin/invites/useInvitesList";
 import CreateInviteDialog from "./components/CreateInviteDialog";
 import InvitesTab from "./components/InvitesTab";
 import { EmailStatusMonitor } from "./components/EmailStatusMonitor";
+import { InviteTestFlow } from "./components/InviteTestFlow";
 import { TestPlan } from "./components/TestPlan";
 import { Card } from "@/components/ui/card";
-import { Mail, Users, TestTube } from "lucide-react";
+import { Mail, Users, TestTube, Zap } from "lucide-react";
 
 const InvitesManagement = () => {
   const { roles, loading: rolesLoading } = usePermissions();
@@ -40,7 +41,7 @@ const InvitesManagement = () => {
         <div>
           <h1 className="text-3xl font-bold">Gerenciar Convites</h1>
           <p className="text-muted-foreground">
-            Envie convites para novos membros e gerencie convites existentes
+            Sistema completo de convites com fluxo otimizado para testes
           </p>
         </div>
         <CreateInviteDialog roles={roles} onInviteCreated={handleInvitesChange} />
@@ -49,12 +50,19 @@ const InvitesManagement = () => {
       {/* Monitor de Status de Emails */}
       <EmailStatusMonitor />
 
+      {/* Fluxo de Teste Automatizado */}
+      <InviteTestFlow roles={roles} onInviteCreated={handleInvitesChange} />
+
       <Card className="p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="invites" className="flex items-center gap-2">
               <Mail className="h-4 w-4" />
               Convites ({invites.length})
+            </TabsTrigger>
+            <TabsTrigger value="test-flow" className="flex items-center gap-2">
+              <Zap className="h-4 w-4" />
+              Fluxo Rápido
             </TabsTrigger>
             <TabsTrigger value="test-plan" className="flex items-center gap-2">
               <TestTube className="h-4 w-4" />
@@ -72,6 +80,49 @@ const InvitesManagement = () => {
               loading={invitesLoading}
               onInvitesChange={handleInvitesChange}
             />
+          </TabsContent>
+
+          <TabsContent value="test-flow" className="mt-6">
+            <div className="space-y-4">
+              <div className="text-center">
+                <h3 className="text-lg font-semibold">🚀 Fluxo Rápido de Desenvolvimento</h3>
+                <p className="text-muted-foreground text-sm">
+                  Use o componente acima para limpar e reconvidar usuários rapidamente
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card className="p-4">
+                  <div className="text-center">
+                    <div className="text-2xl mb-2">🧹</div>
+                    <h4 className="font-medium">Soft Delete</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Limpa dados mantendo usuário no Auth
+                    </p>
+                  </div>
+                </Card>
+                
+                <Card className="p-4">
+                  <div className="text-center">
+                    <div className="text-2xl mb-2">📧</div>
+                    <h4 className="font-medium">Re-convite</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Detecta limpeza e permite novo convite
+                    </p>
+                  </div>
+                </Card>
+                
+                <Card className="p-4">
+                  <div className="text-center">
+                    <div className="text-2xl mb-2">🎯</div>
+                    <h4 className="font-medium">Sistema Pro</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Template profissional + alta deliverabilidade
+                    </p>
+                  </div>
+                </Card>
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="test-plan" className="mt-6">

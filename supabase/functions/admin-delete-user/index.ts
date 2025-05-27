@@ -13,27 +13,45 @@ interface DeleteUserRequest {
   softDelete?: boolean;
 }
 
+interface DeleteResult {
+  success: boolean;
+  message: string;
+  details: {
+    profileDeleted: boolean;
+    authUserDeleted: boolean;
+    relatedDataCleared: boolean;
+    tablesAffected: string[];
+    errors: any[];
+  };
+  userId: string;
+  userEmail?: string;
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log("🗑️ Iniciando processo de exclusão de usuário");
+    console.log("🗑️ === INICIANDO PROCESSO DE EXCLUSÃO DE USUÁRIO ===");
 
-    // Obter dados da requisição
     const { userId, forceDelete = false, softDelete = false }: DeleteUserRequest = await req.json();
     
     if (!userId) {
+      console.error("❌ ID do usuário não fornecido");
       return new Response(
-        JSON.stringify({ error: 'ID do usuário não fornecido' }),
+        JSON.stringify({ success: false, error: 'ID do usuário não fornecido' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log("🎯 Processando exclusão do usuário:", userId, { forceDelete, softDelete });
+    console.log(`🎯 Processando exclusão para userId: ${userId}`, { 
+      forceDelete, 
+      softDelete,
+      timestamp: new Date().toISOString()
+    });
 
-    // Criar cliente administrativo com service role
+    // Criar cliente administrativo
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -45,21 +63,42 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
 
-    // Buscar dados do usuário antes da exclusão
+    // Buscar dados do usuário ANTES da exclusão
+    console.log("📋 Buscando dados do usuário...");
     const { data: profileData } = await supabaseAdmin
       .from('profiles')
-      .select('email, name')
+      .select('email, name, role')
       .eq('id', userId)
       .single();
 
     const userEmail = profileData?.email || 'email não encontrado';
     const userName = profileData?.name || 'nome não encontrado';
+    const userRole = profileData?.role || 'papel não encontrado';
 
-    console.log("📋 Dados do usuário:", { email: userEmail, name: userName, softDelete });
+    console.log("👤 Dados do usuário:", { 
+      email: userEmail, 
+      name: userName, 
+      role: userRole,
+      softDelete 
+    });
 
-    // Se for soft delete, apenas limpar dados mas manter o usuário
+    const result: DeleteResult = {
+      success: false,
+      message: '',
+      details: {
+        profileDeleted: false,
+        authUserDeleted: false,
+        relatedDataCleared: false,
+        tablesAffected: [],
+        errors: []
+      },
+      userId,
+      userEmail
+    };
+
+    // === SOFT DELETE ===
     if (softDelete) {
-      console.log("🧹 Executando soft delete - limpando dados mas mantendo usuário...");
+      console.log("🧹 === EXECUTANDO SOFT DELETE ===");
       
       const tables = [
         'onboarding_progress',
@@ -76,15 +115,18 @@ const handler = async (req: Request): Promise<Response> => {
         'forum_topics',
         'learning_progress',
         'progress',
-        'user_checklists'
+        'user_checklists',
+        'analytics'
       ];
 
-      const deletionResults = [];
+      let clearedTables = 0;
+      const errors = [];
 
       for (const table of tables) {
         try {
           console.log(`🗑️ Limpando tabela: ${table}`);
           
+          let deleteQuery;
           if (table === 'direct_messages') {
             await supabaseAdmin.from(table).delete().eq('sender_id', userId);
             await supabaseAdmin.from(table).delete().eq('recipient_id', userId);
@@ -95,53 +137,72 @@ const handler = async (req: Request): Promise<Response> => {
             await supabaseAdmin.from(table).delete().eq('created_by', userId);
           } else {
             const { error } = await supabaseAdmin.from(table).delete().eq('user_id', userId);
-            if (error) {
-              console.warn(`⚠️ Erro ao limpar ${table}:`, error);
-              deletionResults.push({ table, status: 'error', error: error.message });
-            } else {
-              deletionResults.push({ table, status: 'success' });
+            if (error && !forceDelete) {
+              throw error;
             }
           }
+          
+          clearedTables++;
+          result.details.tablesAffected.push(table);
+          console.log(`✅ Tabela ${table} limpa com sucesso`);
         } catch (error: any) {
-          console.warn(`⚠️ Erro inesperado ao limpar ${table}:`, error);
-          deletionResults.push({ table, status: 'error', error: error.message });
+          console.warn(`⚠️ Erro ao limpar ${table}:`, error);
+          errors.push({ table, error: error.message });
+          if (!forceDelete) {
+            result.details.errors.push(error);
+          }
         }
       }
 
       // Resetar campos do perfil mas manter o usuário
-      await supabaseAdmin
-        .from('profiles')
-        .update({
-          company_name: null,
-          industry: null,
-          current_position: null,
-          referrals_count: 0,
-          successful_referrals_count: 0,
-          whatsapp_number: null,
-          professional_bio: null,
-          skills: [],
-          linkedin_url: null
-        })
-        .eq('id', userId);
+      console.log("🔄 Resetando campos do perfil...");
+      try {
+        const { error } = await supabaseAdmin
+          .from('profiles')
+          .update({
+            company_name: null,
+            industry: null,
+            current_position: null,
+            referrals_count: 0,
+            successful_referrals_count: 0,
+            whatsapp_number: null,
+            professional_bio: null,
+            skills: [],
+            linkedin_url: null,
+            available_for_networking: true
+          })
+          .eq('id', userId);
 
-      console.log("✅ Soft delete concluído");
+        if (error) throw error;
+        console.log("✅ Perfil resetado com sucesso");
+      } catch (error: any) {
+        console.error("❌ Erro ao resetar perfil:", error);
+        result.details.errors.push(error);
+      }
+
+      result.success = true;
+      result.message = `Soft delete concluído. ${clearedTables} tabelas processadas.`;
+      result.details.relatedDataCleared = true;
+      result.details.profileDeleted = false; // Perfil mantido, apenas resetado
+      result.details.authUserDeleted = false; // Usuário mantido no Auth
+
+      console.log("✅ === SOFT DELETE CONCLUÍDO ===", {
+        tabelas_limpas: clearedTables,
+        erros: errors.length,
+        usuario: userEmail
+      });
 
       return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: `Dados do usuário ${userEmail} foram limpos (soft delete)`,
-          type: 'soft_delete',
-          deletionResults,
-          userId,
-          userEmail
-        }),
+        JSON.stringify(result),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // EXCLUSÃO COMPLETA - Limpeza de dados relacionados
-    console.log("🧹 Iniciando limpeza completa de dados relacionados...");
-
+    // === HARD DELETE ===
+    console.log("💥 === EXECUTANDO HARD DELETE ===");
+    
+    // 1. Limpar dados relacionados
+    console.log("🧹 Limpando dados relacionados...");
     const tables = [
       'analytics',
       'onboarding_progress',
@@ -172,7 +233,8 @@ const handler = async (req: Request): Promise<Response> => {
       'whatsapp_messages'
     ];
 
-    const deletionResults = [];
+    let clearedTables = 0;
+    const errors = [];
 
     for (const table of tables) {
       try {
@@ -193,73 +255,102 @@ const handler = async (req: Request): Promise<Response> => {
           await supabaseAdmin.from(table).delete().eq('referrer_id', userId);
         } else {
           const { error } = await supabaseAdmin.from(table).delete().eq('user_id', userId);
-          if (error) {
-            console.warn(`⚠️ Erro ao limpar ${table}:`, error);
-            deletionResults.push({ table, status: 'error', error: error.message });
-          } else {
-            deletionResults.push({ table, status: 'success' });
+          if (error && !forceDelete) {
+            throw error;
           }
         }
+        
+        clearedTables++;
+        result.details.tablesAffected.push(table);
+        console.log(`✅ Tabela ${table} limpa`);
       } catch (error: any) {
-        console.warn(`⚠️ Erro inesperado ao limpar ${table}:`, error);
-        deletionResults.push({ table, status: 'error', error: error.message });
+        console.warn(`⚠️ Erro ao limpar ${table}:`, error);
+        errors.push({ table, error: error.message });
+        if (!forceDelete) {
+          result.details.errors.push(error);
+        }
       }
     }
 
-    // Remover perfil do usuário
-    console.log("👤 Removendo perfil do usuário...");
-    const { error: profileError } = await supabaseAdmin
-      .from('profiles')
-      .delete()
-      .eq('id', userId);
+    result.details.relatedDataCleared = clearedTables > 0;
 
-    if (profileError && !forceDelete) {
-      console.error("❌ Erro ao remover perfil:", profileError);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Erro ao remover perfil do usuário',
-          details: profileError.message 
-        }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    // 2. Remover perfil
+    console.log("👤 Removendo perfil...");
+    try {
+      const { error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+
+      if (profileError) {
+        console.error("❌ Erro ao remover perfil:", profileError);
+        if (!forceDelete) {
+          throw profileError;
+        }
+        result.details.errors.push(profileError);
+      } else {
+        result.details.profileDeleted = true;
+        console.log("✅ Perfil removido com sucesso");
+      }
+    } catch (error: any) {
+      console.error("❌ Erro crítico ao remover perfil:", error);
+      result.details.errors.push(error);
     }
 
-    // Exclusão definitiva do usuário no Auth
+    // 3. Excluir usuário do Auth
     console.log("🔐 Removendo usuário do sistema de autenticação...");
-    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+    try {
+      const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
-    if (deleteError && !forceDelete) {
-      console.error("❌ Erro ao excluir usuário do Auth:", deleteError);
-      return new Response(
-        JSON.stringify({ 
-          error: `Falha ao excluir usuário do sistema de autenticação: ${deleteError.message}`,
-          partialCleanup: deletionResults
-        }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      if (deleteError) {
+        console.error("❌ Erro ao excluir usuário do Auth:", deleteError);
+        if (!forceDelete) {
+          throw deleteError;
+        }
+        result.details.errors.push(deleteError);
+      } else {
+        result.details.authUserDeleted = true;
+        console.log("✅ Usuário removido do Auth com sucesso");
+      }
+    } catch (error: any) {
+      console.error("❌ Erro crítico ao remover do Auth:", error);
+      result.details.errors.push(error);
     }
 
-    console.log("🎉 Exclusão completa realizada com sucesso!");
+    // Determinar sucesso
+    const hasErrors = result.details.errors.length > 0;
+    const criticalSuccess = result.details.profileDeleted || result.details.authUserDeleted;
+    
+    result.success = forceDelete ? true : (!hasErrors && criticalSuccess);
+    result.message = result.success 
+      ? `Usuário ${userEmail} removido completamente (${clearedTables} tabelas limpas)`
+      : `Falha parcial na remoção. ${result.details.errors.length} erros encontrados.`;
+
+    console.log("🎉 === HARD DELETE CONCLUÍDO ===", {
+      sucesso: result.success,
+      tabelas_limpas: clearedTables,
+      erros: result.details.errors.length,
+      perfil_removido: result.details.profileDeleted,
+      auth_removido: result.details.authUserDeleted,
+      usuario: userEmail
+    });
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: `Usuário ${userEmail} foi completamente removido do sistema`,
-        type: 'complete_delete',
-        deletionResults,
-        userId,
-        userEmail
-      }),
+      JSON.stringify(result),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error: any) {
-    console.error("❌ Erro crítico durante exclusão:", error);
+    console.error("💥 === ERRO CRÍTICO NA EXCLUSÃO ===", error);
     
     return new Response(
       JSON.stringify({ 
+        success: false,
         error: 'Erro interno do servidor durante exclusão',
-        details: error.message
+        details: {
+          message: error.message,
+          stack: error.stack
+        }
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
