@@ -6,8 +6,9 @@ import { useInvitesList } from "@/hooks/admin/invites/useInvitesList";
 import CreateInviteDialog from "./components/CreateInviteDialog";
 import InvitesTab from "./components/InvitesTab";
 import { EmailStatusMonitor } from "./components/EmailStatusMonitor";
+import { TestPlan } from "./components/TestPlan";
 import { Card } from "@/components/ui/card";
-import { Mail, Users } from "lucide-react";
+import { Mail, Users, TestTube } from "lucide-react";
 
 const InvitesManagement = () => {
   const { roles, loading: rolesLoading } = usePermissions();
@@ -50,10 +51,14 @@ const InvitesManagement = () => {
 
       <Card className="p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="invites" className="flex items-center gap-2">
               <Mail className="h-4 w-4" />
               Convites ({invites.length})
+            </TabsTrigger>
+            <TabsTrigger value="test-plan" className="flex items-center gap-2">
+              <TestTube className="h-4 w-4" />
+              Plano de Teste
             </TabsTrigger>
             <TabsTrigger value="statistics" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
@@ -67,6 +72,10 @@ const InvitesManagement = () => {
               loading={invitesLoading}
               onInvitesChange={handleInvitesChange}
             />
+          </TabsContent>
+
+          <TabsContent value="test-plan" className="mt-6">
+            <TestPlan />
           </TabsContent>
 
           <TabsContent value="statistics" className="mt-6">
