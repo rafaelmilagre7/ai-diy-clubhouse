@@ -34,7 +34,7 @@ export const ModulosList: React.FC<ModulosListProps> = ({
             <CardContent>
               <Skeleton className="h-16 w-full" />
             </CardContent>
-            <CardFooter className="flex justify-between border-t p-3 bg-gray-50">
+            <CardFooter className="flex justify-between border-t p-3 bg-gray-50 dark:bg-gray-800">
               <Skeleton className="h-8 w-24" />
               <Skeleton className="h-8 w-24" />
             </CardFooter>
@@ -46,8 +46,8 @@ export const ModulosList: React.FC<ModulosListProps> = ({
 
   if (modulos.length === 0) {
     return (
-      <div className="text-center py-12 border rounded-lg bg-gray-50">
-        <h3 className="text-lg font-semibold mb-2">Nenhum módulo encontrado</h3>
+      <div className="text-center py-12 border rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
+        <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Nenhum módulo encontrado</h3>
         <p className="text-muted-foreground mb-4">Ainda não existem módulos cadastrados para este curso.</p>
       </div>
     );
@@ -64,7 +64,7 @@ export const ModulosList: React.FC<ModulosListProps> = ({
             </CardDescription>
           </CardHeader>
           
-          <CardFooter className="flex justify-between border-t p-3 bg-gray-50">
+          <CardFooter className="flex justify-between border-t p-3 bg-gray-50 dark:bg-gray-800">
             <Link to={`/formacao/modulos/${modulo.id}`}>
               <Button variant="secondary" size="sm">
                 <BookOpen className="h-4 w-4 mr-2" />
