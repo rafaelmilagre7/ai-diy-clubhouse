@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PerformanceProvider, usePerformance } from '@/contexts/performance/PerformanceProvider';
 
@@ -46,37 +46,34 @@ const renderWithProviders = (enableAutoAlerts = true) => {
 
 describe('PerformanceProvider', () => {
   test('should initialize with default values', () => {
-    renderWithProviders();
+    const { getByTestId } = renderWithProviders();
     
-    expect(screen.getByTestId('monitoring-status')).toHaveTextContent('active');
-    expect(screen.getByTestId('active-queries')).toHaveTextContent('0');
-    expect(screen.getByTestId('avg-response')).toHaveTextContent('0');
+    expect(getByTestId('monitoring-status')).toHaveTextContent('active');
+    expect(getByTestId('active-queries')).toHaveTextContent('0');
+    expect(getByTestId('avg-response')).toHaveTextContent('0');
   });
 
   test('should add alerts correctly', async () => {
-    renderWithProviders();
+    const { getByTestId } = renderWithProviders();
     
-    const addButton = screen.getByTestId('add-alert');
+    const addButton = getByTestId('add-alert');
     addButton.click();
     
     // Verifica se o alerta foi adicionado (seria necessário expor alerts no componente de teste)
-    await waitFor(() => {
-      // Este teste seria mais completo com acesso aos alerts
-      expect(true).toBe(true);
-    });
+    expect(true).toBe(true);
   });
 
   test('should not add automatic alerts when disabled', () => {
-    renderWithProviders(false);
+    const { getByTestId } = renderWithProviders(false);
     
-    expect(screen.getByTestId('monitoring-status')).toHaveTextContent('active');
+    expect(getByTestId('monitoring-status')).toHaveTextContent('active');
     // Alertas automáticos não devem ser gerados
   });
 
   test('should handle performance monitoring toggle', async () => {
-    renderWithProviders();
+    const { getByTestId } = renderWithProviders();
     
     // O monitoramento deve estar ativo por padrão
-    expect(screen.getByTestId('monitoring-status')).toHaveTextContent('active');
+    expect(getByTestId('monitoring-status')).toHaveTextContent('active');
   });
 });

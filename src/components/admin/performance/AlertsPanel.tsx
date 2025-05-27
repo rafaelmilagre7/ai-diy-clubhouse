@@ -14,15 +14,7 @@ import {
   Trash2,
   Filter
 } from 'lucide-react';
-
-interface PerformanceAlert {
-  id: string;
-  type: 'performance' | 'error' | 'warning';
-  message: string;
-  severity: 'low' | 'medium' | 'high';
-  timestamp: number;
-  metadata?: Record<string, any>;
-}
+import { PerformanceAlert } from '@/types/performanceTypes';
 
 interface AlertsPanelProps {
   alerts: PerformanceAlert[];
@@ -38,7 +30,7 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({
   warningCount
 }) => {
   const [selectedSeverity, setSelectedSeverity] = useState<'all' | 'high' | 'medium' | 'low'>('all');
-  const [selectedType, setSelectedType] = useState<'all' | 'performance' | 'error' | 'warning'>('all');
+  const [selectedType, setSelectedType] = useState<'all' | 'performance' | 'memory' | 'network' | 'error' | 'warning'>('all');
 
   const filteredAlerts = alerts.filter(alert => {
     if (selectedSeverity !== 'all' && alert.severity !== selectedSeverity) return false;
@@ -69,6 +61,8 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({
       case 'performance': return <Clock className="w-4 h-4" />;
       case 'error': return <X className="w-4 h-4" />;
       case 'warning': return <AlertTriangle className="w-4 h-4" />;
+      case 'memory': return <AlertTriangle className="w-4 h-4" />;
+      case 'network': return <AlertTriangle className="w-4 h-4" />;
       default: return <Info className="w-4 h-4" />;
     }
   };
@@ -172,6 +166,8 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({
                 <TabsTrigger value="performance">Performance</TabsTrigger>
                 <TabsTrigger value="error">Erros</TabsTrigger>
                 <TabsTrigger value="warning">Avisos</TabsTrigger>
+                <TabsTrigger value="memory">Memória</TabsTrigger>
+                <TabsTrigger value="network">Rede</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>

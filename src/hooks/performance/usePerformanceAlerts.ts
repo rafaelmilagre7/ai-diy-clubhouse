@@ -1,7 +1,9 @@
+
 import { useCallback, useEffect, useRef } from 'react';
 import { usePerformance } from '@/contexts/performance/PerformanceProvider';
 import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/utils/logger';
+import { PerformanceAlert } from '@/types/performanceTypes';
 
 interface AlertRule {
   id: string;
@@ -81,7 +83,7 @@ export const usePerformanceAlerts = () => {
 
     const message = rule.message(metrics);
     
-    // Adicionar ao sistema de alertas - removemos metadata do objeto
+    // Adicionar ao sistema de alertas
     addAlert({
       type: 'performance',
       message,
@@ -201,15 +203,85 @@ export const usePerformanceAlerts = () => {
   useEffect(() => {
     const interval = setInterval(checkAllRules, 60000); // A cada minuto
     return () => clearInterval(interval);
-  }, [checkAllRules]);
+  }, []);
 
   return {
-    checkAllRules,
-    checkRule,
-    addCustomRule,
-    disableRule,
-    enableRule,
-    getAlertStats,
+    checkAllRules: useCallback(async () => {
+      try {
+        const queryStats = getQueryStats();
+        
+        for (const rule of defaultRules) {
+          if (!rule.enabled) continue;
+          
+          if (rule.condition(queryStats)) {
+            triggerAlert(rule, queryStats);
+          }
+        }
+      } catch (error) {
+        logger.error('Erro ao verificar regras de alerta', { error });
+      }
+    }, [getQueryStats, triggerAlert]),
+    checkRule: useCallback((ruleId: string) => {
+      const rule = defaultRules.find(r => r.id === ruleId);
+      if (!rule || !rule.enabled) return;
+
+      try {
+        const queryStats = getQueryStats();
+        
+        if (rule.condition(queryStats)) {
+          triggerAlert(rule, queryStats);
+        }
+      } catch (error) {
+        logger.error(`Erro ao verificar regra ${ruleId}`, { error });
+      }
+    }, [getQueryStats, triggerAlert]),
+    addCustomRule: useCallback((rule: Omit<AlertRule, 'id'>) => {
+      const customRule: AlertRule = {
+        ...rule,
+        id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      };
+
+      // Em uma implementação real, isso seria persistido
+      defaultRules.push(customRule);
+      
+      return customRule.id;
+    }, []),
+    disableRule: useCallback((ruleId: string) => {
+      const rule = defaultRules.find(r => r.id === ruleId);
+      if (rule) {
+        rule.enabled = false;
+      }
+    }, []),
+    enableRule: useCallback((ruleId: string) => {
+      const rule = defaultRules.find(r => r.id === ruleId);
+      if (rule) {
+        rule.enabled = true;
+      }
+    }, []),
+    getAlertStats: useCallback(() => {
+      const now = Date.now();
+      const last24h = 24 * 60 * 60 * 1000;
+      
+      const recentAlerts = Object.entries(lastAlertTimeRef.current)
+        .filter(([, timestamp]) => now - timestamp < last24h);
+      
+      const ruleStats = defaultRules.map(rule => ({
+        id: rule.id,
+        name: rule.name,
+        enabled: rule.enabled,
+        lastTriggered: lastAlertTimeRef.current[rule.id] || null,
+        timeSinceLastTrigger: lastAlertTimeRef.current[rule.id] 
+          ? now - lastAlertTimeRef.current[rule.id] 
+          : null
+      }));
+
+      return {
+        totalRules: defaultRules.length,
+        enabledRules: defaultRules.filter(r => r.enabled).length,
+        recentAlertsCount: recentAlerts.length,
+        ruleStats
+      };
+    }, []),
     rules: defaultRules
   };
 };
