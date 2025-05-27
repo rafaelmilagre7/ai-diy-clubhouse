@@ -16,27 +16,30 @@ interface StepExperienciaIANewProps {
 }
 
 const AI_KNOWLEDGE_OPTIONS = [
-  { value: 'iniciante', label: 'Iniciante - Nunca usei IA', icon: '🌱' },
-  { value: 'basico', label: 'Básico - Uso ocasionalmente', icon: '📚' },
-  { value: 'intermediario', label: 'Intermediário - Uso regularmente', icon: '⚡' },
-  { value: 'avancado', label: 'Avançado - Domino várias ferramentas', icon: '🚀' },
-  { value: 'expert', label: 'Expert - Desenvolvo soluções IA', icon: '🎯' }
+  { value: 'iniciante', label: 'Iniciante - Nunca usei IA no trabalho', icon: '🌱' },
+  { value: 'basico', label: 'Básico - Já usei ChatGPT ou similar', icon: '📚' },
+  { value: 'intermediario', label: 'Intermediário - Uso algumas ferramentas', icon: '⚡' },
+  { value: 'avancado', label: 'Avançado - Tenho experiência sólida', icon: '🚀' },
+  { value: 'especialista', label: 'Especialista - Trabalho com IA', icon: '🎯' }
 ];
 
 const USES_AI_OPTIONS = [
-  { value: 'sim', label: 'Sim, uso regularmente', icon: '✅' },
-  { value: 'pouco', label: 'Uso um pouco', icon: '🔄' },
-  { value: 'nao', label: 'Não uso ainda', icon: '❌' }
+  { value: 'nao', label: 'Não uso IA no trabalho', icon: '❌' },
+  { value: 'ocasionalmente', label: 'Uso ocasionalmente', icon: '🔄' },
+  { value: 'semanalmente', label: 'Uso semanalmente', icon: '📅' },
+  { value: 'diariamente', label: 'Uso diariamente', icon: '⭐' },
+  { value: 'constantemente', label: 'Uso constantemente', icon: '🔥' }
 ];
 
 const MAIN_GOAL_OPTIONS = [
-  { value: 'receita', label: 'Aumentar receita', icon: '💰' },
-  { value: 'custos', label: 'Reduzir custos', icon: '📉' },
-  { value: 'tempo', label: 'Economizar tempo', icon: '⏰' },
-  { value: 'produtividade', label: 'Aumentar produtividade', icon: '📊' },
-  { value: 'automatizar', label: 'Automatizar tarefas', icon: '🤖' },
-  { value: 'resultados', label: 'Melhorar resultados', icon: '🎯' },
-  { value: 'aprender', label: 'Aprender sobre IA', icon: '🎓' }
+  { value: 'automatizar-processos', label: 'Automatizar processos', icon: '🤖' },
+  { value: 'melhorar-atendimento', label: 'Melhorar atendimento ao cliente', icon: '💬' },
+  { value: 'aumentar-vendas', label: 'Aumentar vendas', icon: '💰' },
+  { value: 'criar-conteudo', label: 'Criar conteúdo', icon: '📝' },
+  { value: 'analisar-dados', label: 'Analisar dados', icon: '📊' },
+  { value: 'reduzir-custos', label: 'Reduzir custos', icon: '💡' },
+  { value: 'inovar-produtos', label: 'Inovar produtos/serviços', icon: '🚀' },
+  { value: 'outros', label: 'Outros objetivos', icon: '🎯' }
 ];
 
 export const StepExperienciaIANew: React.FC<StepExperienciaIANewProps> = ({
@@ -54,12 +57,12 @@ export const StepExperienciaIANew: React.FC<StepExperienciaIANewProps> = ({
     <>
       <MilagrinhoAssistant
         userName={firstName}
-        message="Perfeito! Agora vamos entender sua experiência com IA. Com base nisso, vou recomendar as melhores soluções para seu perfil e necessidades!"
+        message="Agora quero entender sua experiência com IA para recomendar as soluções mais adequadas ao seu nível!"
       />
       
       <QuickFormStep
-        title="Experiência com IA"
-        description="Me conte sobre seu conhecimento e objetivos com Inteligência Artificial"
+        title="Sua experiência com IA"
+        description="Vamos entender seu nível atual e objetivos com inteligência artificial"
         currentStep={currentStep}
         totalSteps={totalSteps}
         onNext={onNext}
@@ -80,8 +83,8 @@ export const StepExperienciaIANew: React.FC<StepExperienciaIANewProps> = ({
           value={data.uses_ai}
           onChange={(value) => onUpdate('uses_ai', value)}
           options={USES_AI_OPTIONS}
-          placeholder="Selecione uma opção"
-          label="Já usa IA no trabalho?"
+          placeholder="Selecione a frequência"
+          label="Com que frequência você usa IA atualmente?"
           required
         />
 
@@ -89,10 +92,23 @@ export const StepExperienciaIANew: React.FC<StepExperienciaIANewProps> = ({
           value={data.main_goal}
           onChange={(value) => onUpdate('main_goal', value)}
           options={MAIN_GOAL_OPTIONS}
-          placeholder="Qual seu principal objetivo?"
-          label="Principal objetivo com IA"
+          placeholder="Selecione seu principal objetivo"
+          label="Qual seu principal objetivo com IA?"
           required
         />
+
+        <div className="bg-viverblue/10 border border-viverblue/30 rounded-lg p-4 mt-6">
+          <div className="flex items-start space-x-3">
+            <div className="text-2xl">💡</div>
+            <div>
+              <h4 className="text-white font-medium mb-1">Dica do Milagrinho</h4>
+              <p className="text-gray-300 text-sm">
+                Com base nas suas respostas, vou criar uma trilha personalizada com soluções 
+                de IA que se encaixam perfeitamente no seu negócio e nível de experiência!
+              </p>
+            </div>
+          </div>
+        </div>
       </QuickFormStep>
     </>
   );

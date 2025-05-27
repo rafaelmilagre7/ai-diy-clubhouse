@@ -1,12 +1,15 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/auth';
-import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { QuickOnboardingData, QuickOnboardingRecord } from '@/types/quickOnboarding';
+import { QuickOnboardingData } from '@/types/quickOnboarding';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+
+const TOTAL_STEPS = 4; // 3 steps + geração de trilha
 
 const initialData: QuickOnboardingData = {
+  // Etapa 1: Informações Pessoais
   name: '',
   email: '',
   whatsapp: '',
@@ -16,6 +19,8 @@ const initialData: QuickOnboardingData = {
   linkedin_url: '',
   how_found_us: '',
   referred_by: '',
+
+  // Etapa 2: Negócio
   company_name: '',
   role: '',
   company_size: '',
@@ -23,193 +28,169 @@ const initialData: QuickOnboardingData = {
   company_website: '',
   annual_revenue_range: '',
   main_challenge: '',
+
+  // Etapa 3: Experiência com IA
   ai_knowledge_level: '',
   uses_ai: '',
   main_goal: ''
 };
 
 export const useQuickOnboardingNew = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [data, setData] = useState<QuickOnboardingData>(initialData);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [existingRecord, setExistingRecord] = useState<QuickOnboardingRecord | null>(null);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
-  // Carregar dados existentes
-  useEffect(() => {
-    if (!user) return;
-
-    const loadExistingData = async () => {
-      try {
-        const { data: existing, error } = await supabase
-          .from('quick_onboarding')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-
-        if (existing && !error) {
-          setExistingRecord(existing);
-          setData({
-            name: existing.name || '',
-            email: existing.email || '',
-            whatsapp: existing.whatsapp || '',
-            country_code: existing.country_code || '+55',
-            birth_date: existing.birth_date || '',
-            instagram_url: existing.instagram_url || '',
-            linkedin_url: existing.linkedin_url || '',
-            how_found_us: existing.how_found_us || '',
-            referred_by: existing.referred_by || '',
-            company_name: existing.company_name || '',
-            role: existing.role || '',
-            company_size: existing.company_size || '',
-            company_segment: existing.company_segment || '',
-            company_website: existing.company_website || '',
-            annual_revenue_range: existing.annual_revenue_range || '',
-            main_challenge: existing.main_challenge || '',
-            ai_knowledge_level: existing.ai_knowledge_level || '',
-            uses_ai: existing.uses_ai || '',
-            main_goal: existing.main_goal || ''
-          });
-          setCurrentStep(existing.current_step || 1);
-        }
-      } catch (error) {
-        console.error('Erro ao carregar dados existentes:', error);
-      }
-    };
-
-    loadExistingData();
-  }, [user]);
-
+  // Atualizar campo específico
   const updateField = useCallback((field: keyof QuickOnboardingData, value: string) => {
     setData(prev => ({ ...prev, [field]: value }));
   }, []);
 
-  const validateStep = useCallback((step: number): boolean => {
-    switch (step) {
+  // Validar se pode prosseguir
+  const canProceed = useCallback(() => {
+    switch (currentStep) {
       case 1:
-        return !!(data.name && data.email && data.whatsapp && data.how_found_us);
+        return !!(data.name && data.email && data.whatsapp && data.country_code && data.how_found_us &&
+                 (data.how_found_us !== 'indicacao' || data.referred_by));
       case 2:
         return !!(data.company_name && data.role && data.company_size && 
                  data.company_segment && data.annual_revenue_range && data.main_challenge);
       case 3:
         return !!(data.ai_knowledge_level && data.uses_ai && data.main_goal);
       default:
-        return false;
+        return true;
     }
-  }, [data]);
+  }, [currentStep, data]);
 
-  const canProceed = validateStep(currentStep);
-
-  const saveStep = useCallback(async (stepNumber: number) => {
-    if (!user) {
-      toast.error('Usuário não autenticado');
-      return false;
-    }
-
-    try {
-      setIsSubmitting(true);
-
-      const payload = {
-        user_id: user.id,
-        ...data,
-        current_step: stepNumber,
-        updated_at: new Date().toISOString()
-      };
-
-      if (existingRecord) {
-        const { error } = await supabase
-          .from('quick_onboarding')
-          .update(payload)
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-      } else {
-        const { data: newRecord, error } = await supabase
-          .from('quick_onboarding')
-          .insert(payload)
-          .select()
-          .single();
-
-        if (error) throw error;
-        setExistingRecord(newRecord);
-      }
-
-      toast.success('Dados salvos com sucesso!');
-      return true;
-    } catch (error: any) {
-      console.error('Erro ao salvar dados:', error);
-      toast.error(`Erro ao salvar: ${error.message}`);
-      return false;
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [user, data, existingRecord]);
-
-  const nextStep = useCallback(async () => {
-    if (!validateStep(currentStep)) {
-      toast.error('Por favor, preencha todos os campos obrigatórios');
-      return;
-    }
-
-    const saved = await saveStep(currentStep + 1);
-    if (saved && currentStep < 4) {
+  // Próximo passo
+  const nextStep = useCallback(() => {
+    if (canProceed() && currentStep < TOTAL_STEPS) {
       setCurrentStep(prev => prev + 1);
     }
-  }, [currentStep, validateStep, saveStep]);
+  }, [canProceed, currentStep]);
 
+  // Passo anterior
   const previousStep = useCallback(() => {
     if (currentStep > 1) {
       setCurrentStep(prev => prev - 1);
     }
   }, [currentStep]);
 
-  const completeOnboarding = useCallback(async () => {
-    if (!user) {
-      toast.error('Usuário não autenticado');
-      return false;
+  // Salvar dados no Supabase
+  const saveOnboardingData = useCallback(async () => {
+    if (!user?.id) {
+      throw new Error('Usuário não autenticado');
     }
 
     try {
-      setIsSubmitting(true);
-
-      const { error } = await supabase
+      // Primeiro, verificar se já existe um registro
+      const { data: existingRecord } = await supabase
         .from('quick_onboarding')
-        .update({
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      const onboardingData = {
+        user_id: user.id,
+        current_step: 4,
+        is_completed: true,
+        completed_at: new Date().toISOString(),
+        ...data
+      };
+
+      if (existingRecord) {
+        // Atualizar registro existente
+        const { error } = await supabase
+          .from('quick_onboarding')
+          .update(onboardingData)
+          .eq('id', existingRecord.id);
+
+        if (error) throw error;
+      } else {
+        // Criar novo registro
+        const { error } = await supabase
+          .from('quick_onboarding')
+          .insert([onboardingData]);
+
+        if (error) throw error;
+      }
+
+      // Também salvar no formato do onboarding antigo para compatibilidade
+      await supabase
+        .from('onboarding_progress')
+        .upsert({
+          user_id: user.id,
+          personal_info: {
+            name: data.name,
+            email: data.email,
+            whatsapp: data.whatsapp,
+            country_code: data.country_code,
+            birth_date: data.birth_date,
+            instagram_url: data.instagram_url,
+            linkedin_url: data.linkedin_url,
+            how_found_us: data.how_found_us,
+            referred_by: data.referred_by
+          },
+          professional_info: {
+            company_name: data.company_name,
+            role: data.role,
+            company_size: data.company_size,
+            company_segment: data.company_segment,
+            company_website: data.company_website,
+            annual_revenue_range: data.annual_revenue_range,
+            main_challenge: data.main_challenge
+          },
+          ai_experience: {
+            knowledge_level: data.ai_knowledge_level,
+            uses_ai: data.uses_ai,
+            main_goal: data.main_goal
+          },
           is_completed: true,
-          completed_at: new Date().toISOString(),
-          current_step: 4
-        })
-        .eq('user_id', user.id);
+          completed_steps: ['personal_info', 'professional_info', 'ai_experience'],
+          current_step: 'completed'
+        });
 
-      if (error) throw error;
+      console.log('Dados do onboarding salvos com sucesso');
+    } catch (error) {
+      console.error('Erro ao salvar dados do onboarding:', error);
+      throw error;
+    }
+  }, [user?.id, data]);
 
-      toast.success('Onboarding concluído com sucesso! 🎉');
+  // Completar onboarding
+  const completeOnboarding = useCallback(async () => {
+    setIsSubmitting(true);
+    
+    try {
+      await saveOnboardingData();
       
-      // Auto-redirect após 2 segundos
+      toast.success('Onboarding concluído com sucesso!');
+      
+      // Redirecionar após breve delay
       setTimeout(() => {
-        navigate('/onboarding/completed');
-      }, 2000);
-
+        navigate('/dashboard');
+      }, 1500);
+      
       return true;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erro ao completar onboarding:', error);
-      toast.error(`Erro ao finalizar: ${error.message}`);
+      toast.error('Erro ao finalizar onboarding. Tente novamente.');
       return false;
     } finally {
       setIsSubmitting(false);
     }
-  }, [user, navigate]);
+  }, [saveOnboardingData, navigate]);
 
   return {
     currentStep,
+    totalSteps: TOTAL_STEPS,
     data,
     updateField,
     nextStep,
     previousStep,
-    canProceed,
+    canProceed: canProceed(),
     isSubmitting,
-    completeOnboarding,
-    totalSteps: 4
+    completeOnboarding
   };
 };
