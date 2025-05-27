@@ -31,7 +31,7 @@ export function useInviteEmailService() {
       setIsSending(true);
       setSendError(null);
 
-      console.log("🚀 Enviando convite:", { email, roleName });
+      console.log("🚀 Enviando convite robusto:", { email, roleName });
 
       // Validações básicas
       if (!email?.includes('@')) {
@@ -42,85 +42,70 @@ export function useInviteEmailService() {
         throw new Error('URL do convite não fornecida');
       }
 
-      console.log("📧 Chamando edge function otimizada...");
+      console.log("📧 Chamando sistema híbrido (Supabase + Resend)...");
 
-      // Chamar edge function com retry automático
-      let lastError;
-      let attempts = 0;
-      const maxAttempts = 2; // Reduzido para 2 tentativas
-
-      while (attempts < maxAttempts) {
-        attempts++;
-        console.log(`📤 Tentativa ${attempts}/${maxAttempts}`);
-
-        try {
-          const { data, error } = await supabase.functions.invoke('send-invite-email', {
-            body: {
-              email,
-              inviteUrl,
-              roleName,
-              expiresAt,
-              senderName,
-              notes,
-              inviteId
-            }
-          });
-
-          if (error) {
-            console.error(`❌ Erro da edge function (tentativa ${attempts}):`, error);
-            lastError = error;
-            
-            // Se for erro de rede, tentar novamente
-            if (attempts < maxAttempts && (
-              error.message?.includes('fetch') ||
-              error.message?.includes('network') ||
-              error.message?.includes('timeout')
-            )) {
-              console.log("🔄 Tentando novamente em 1 segundo...");
-              await new Promise(resolve => setTimeout(resolve, 1000));
-              continue;
-            }
-            
-            throw new Error(`Erro no envio: ${error.message}`);
-          }
-
-          if (!data?.success) {
-            console.error("❌ Falha reportada:", data);
-            throw new Error(data?.message || 'Falha no envio');
-          }
-
-          console.log("✅ Email processado com sucesso:", {
-            strategy: data.strategy,
-            method: data.method,
-            email: data.email
-          });
-
-          return {
-            success: true,
-            message: `Convite processado com sucesso (${data.strategy || 'padrão'})`,
-            emailId: data.user_id
-          };
-
-        } catch (attemptError: any) {
-          lastError = attemptError;
-          if (attempts >= maxAttempts) {
-            throw attemptError;
-          }
-          
-          console.log(`⚠️ Tentativa ${attempts} falhou, tentando novamente...`);
-          await new Promise(resolve => setTimeout(resolve, 1000));
+      // Chamar edge function com sistema híbrido robusto
+      const { data, error } = await supabase.functions.invoke('send-invite-email', {
+        body: {
+          email,
+          inviteUrl,
+          roleName,
+          expiresAt,
+          senderName,
+          notes,
+          inviteId
         }
+      });
+
+      if (error) {
+        console.error("❌ Erro da edge function:", error);
+        throw new Error(`Erro no sistema de envio: ${error.message}`);
       }
 
-      throw lastError;
+      if (!data?.success) {
+        console.error("❌ Sistema reportou falha:", data);
+        throw new Error(data?.error || data?.message || 'Falha no envio');
+      }
+
+      console.log("✅ Email processado com sucesso:", {
+        strategy: data.strategy,
+        method: data.method,
+        email: data.email
+      });
+
+      // Feedback específico baseado na estratégia usada
+      let successMessage = 'Convite enviado com sucesso!';
+      if (data.strategy === 'resend_fallback') {
+        successMessage = 'Convite enviado via sistema de backup (Resend)';
+      } else if (data.strategy === 'supabase_recovery') {
+        successMessage = 'Link de recuperação enviado (usuário existente)';
+      } else if (data.strategy === 'supabase_auth') {
+        successMessage = 'Convite enviado via Supabase Auth';
+      }
+
+      return {
+        success: true,
+        message: successMessage,
+        emailId: data.email
+      };
 
     } catch (err: any) {
       console.error("❌ Erro final no envio:", err);
       setSendError(err);
 
+      // Mensagens de erro mais específicas
+      let errorMessage = 'Erro ao processar convite';
+      if (err.message?.includes('Email inválido')) {
+        errorMessage = 'Formato de email inválido';
+      } else if (err.message?.includes('Todas as estratégias falharam')) {
+        errorMessage = 'Falha completa do sistema - verifique configurações';
+      } else if (err.message?.includes('URL do convite')) {
+        errorMessage = 'Erro interno na geração do link';
+      }
+
       return {
         success: false,
-        message: 'Erro ao processar convite',
+        message: errorMessage,
         error: err.message
       };
     } finally {

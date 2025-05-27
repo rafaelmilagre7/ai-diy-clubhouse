@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Mail, AlertTriangle, RefreshCw, Shield } from 'lucide-react';
+import { CheckCircle, Mail, AlertTriangle, RefreshCw, Shield, Zap } from 'lucide-react';
 import { useInviteEmailService } from '@/hooks/admin/invites/useInviteEmailService';
 
 export const EmailStatusMonitor: React.FC = () => {
@@ -35,7 +35,7 @@ export const EmailStatusMonitor: React.FC = () => {
           </p>
           
           <p className="text-xs text-muted-foreground mt-1">
-            Sistema com fallback automático - tente novamente
+            Sistema híbrido com múltiplos fallbacks - tente novamente
           </p>
         </CardContent>
       </Card>
@@ -48,7 +48,7 @@ export const EmailStatusMonitor: React.FC = () => {
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <RefreshCw className="h-4 w-4 animate-spin" />
-            Sistema de Emails
+            Sistema Híbrido de Emails
           </CardTitle>
         </CardHeader>
         
@@ -59,10 +59,10 @@ export const EmailStatusMonitor: React.FC = () => {
           </div>
           
           <p className="text-xs text-muted-foreground mt-2">
-            ✨ Sistema simplificado e robusto<br />
-            🔄 Fallback automático para usuários deletados<br />
-            📧 Aceita qualquer email válido<br />
-            🛡️ Sem dependências de métodos deprecados
+            🚀 <strong>Sistema Híbrido:</strong> Supabase Auth + Resend<br />
+            🔄 <strong>Fallback Automático:</strong> Se Supabase falhar, usa Resend<br />
+            📧 <strong>Templates Profissionais:</strong> Emails personalizados<br />
+            🛡️ <strong>Máxima Confiabilidade:</strong> Múltiplas estratégias
           </p>
         </CardContent>
       </Card>
@@ -73,8 +73,8 @@ export const EmailStatusMonitor: React.FC = () => {
     <Card className="border-green-200 bg-green-50/50">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium flex items-center gap-2">
-          <Shield className="h-4 w-4" />
-          Sistema de Emails Otimizado
+          <Zap className="h-4 w-4 text-green-500" />
+          Sistema Híbrido Operacional
         </CardTitle>
       </CardHeader>
       
@@ -82,20 +82,21 @@ export const EmailStatusMonitor: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CheckCircle className="h-4 w-4 text-green-500" />
-            <span className="text-sm font-medium">Sistema operacional</span>
+            <span className="text-sm font-medium">Sistema robusto ativo</span>
           </div>
           
           <Badge variant="default" className="bg-green-100 text-green-800">
-            Robusto
+            Híbrido
           </Badge>
         </div>
         
         <div className="space-y-1 mt-2 text-xs text-muted-foreground">
-          <p>✅ <strong>Abordagem simplificada:</strong> Sempre tenta convite padrão primeiro</p>
-          <p>✅ <strong>Fallback inteligente:</strong> Detecta e resolve usuários deletados</p>
-          <p>✅ <strong>Recuperação automática:</strong> Links de recuperação quando necessário</p>
-          <p>✅ <strong>Aceita todos os emails:</strong> Sem restrições desnecessárias</p>
-          <p>✅ <strong>Logs detalhados:</strong> Melhor debugging e monitoramento</p>
+          <p>✅ <strong>Estratégia Primária:</strong> Supabase Auth nativo</p>
+          <p>✅ <strong>Fallback Automático:</strong> Resend com templates profissionais</p>
+          <p>✅ <strong>Recuperação Inteligente:</strong> Links de recuperação para usuários existentes</p>
+          <p>✅ <strong>Templates Customizados:</strong> Emails branded da Viver de IA</p>
+          <p>✅ <strong>Logs Detalhados:</strong> Monitoramento completo do processo</p>
+          <p>✅ <strong>Máxima Confiabilidade:</strong> Múltiplas estratégias de entrega</p>
         </div>
       </CardContent>
     </Card>
