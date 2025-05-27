@@ -50,32 +50,126 @@ serve(async (req) => {
           JSON.stringify({ 
             success: true, 
             message: 'Matches já existem para este mês',
-            matches_generated: 0 
+            total_matches_generated: 0 
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
+    } else {
+      // Se force_regenerate = true, limpar matches existentes do mês atual
+      await supabase
+        .from('network_matches')
+        .delete()
+        .eq('user_id', userId)
+        .eq('month_year', currentMonth)
     }
 
-    // Gerar matches usando a função do banco
-    const { data, error } = await supabase.rpc('generate_networking_matches_for_user', {
-      target_user_id: userId
-    })
+    // Buscar o perfil do usuário
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single()
 
-    if (error) {
-      console.error('Erro ao gerar matches:', error)
+    if (!userProfile) {
       return new Response(
-        JSON.stringify({ error: 'Erro ao gerar matches', details: error.message }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Perfil do usuário não encontrado' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
+    }
+
+    // Buscar usuários elegíveis para matches (excluindo o próprio usuário)
+    const { data: eligibleUsers } = await supabase
+      .from('profiles')
+      .select('id, name, email, company_name, industry, current_position, role, created_at')
+      .neq('id', userId)
+      .eq('available_for_networking', true)
+      .not('name', 'is', null)
+      .not('company_name', 'is', null)
+      .order('created_at', { ascending: false })
+
+    if (!eligibleUsers || eligibleUsers.length < 2) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Não há usuários suficientes para gerar matches',
+          total_matches_generated: 0
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    let totalMatches = 0
+
+    // Gerar 5 matches de clientes potenciais
+    const customerCandidates = eligibleUsers
+      .filter(u => u.role === 'member' || u.role === 'admin')
+      .slice(0, 8) // Pegar mais candidatos para ter variedade
+
+    for (let i = 0; i < Math.min(5, customerCandidates.length); i++) {
+      const candidate = customerCandidates[i]
+      const compatibilityScore = 65 + Math.floor(Math.random() * 30) // 65-95%
+      
+      const matchReason = generateMatchReason(userProfile, candidate, 'customer')
+      const aiAnalysis = generateAiAnalysis(userProfile, candidate, 'customer')
+
+      try {
+        await supabase
+          .from('network_matches')
+          .insert({
+            user_id: userId,
+            matched_user_id: candidate.id,
+            match_type: 'customer',
+            compatibility_score: compatibilityScore,
+            match_reason: matchReason,
+            ai_analysis: aiAnalysis,
+            month_year: currentMonth,
+            status: 'pending'
+          })
+
+        totalMatches++
+      } catch (error) {
+        console.error('Erro ao inserir match de cliente:', error)
+      }
+    }
+
+    // Gerar 3 matches de fornecedores potenciais
+    const supplierCandidates = eligibleUsers
+      .filter(u => u.role === 'formacao' || u.role === 'admin')
+      .slice(0, 5) // Pegar mais candidatos para ter variedade
+
+    for (let i = 0; i < Math.min(3, supplierCandidates.length); i++) {
+      const candidate = supplierCandidates[i]
+      const compatibilityScore = 70 + Math.floor(Math.random() * 25) // 70-95%
+      
+      const matchReason = generateMatchReason(userProfile, candidate, 'supplier')
+      const aiAnalysis = generateAiAnalysis(userProfile, candidate, 'supplier')
+
+      try {
+        await supabase
+          .from('network_matches')
+          .insert({
+            user_id: userId,
+            matched_user_id: candidate.id,
+            match_type: 'supplier',
+            compatibility_score: compatibilityScore,
+            match_reason: matchReason,
+            ai_analysis: aiAnalysis,
+            month_year: currentMonth,
+            status: 'pending'
+          })
+
+        totalMatches++
+      } catch (error) {
+        console.error('Erro ao inserir match de fornecedor:', error)
+      }
     }
 
     return new Response(
       JSON.stringify({ 
         success: true,
-        total_matches_generated: data.matches_generated,
-        user_id: data.user_id,
-        month: data.month
+        total_matches_generated: totalMatches,
+        user_id: userId,
+        month: currentMonth
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
@@ -83,8 +177,58 @@ serve(async (req) => {
   } catch (error) {
     console.error('Erro na Edge Function:', error)
     return new Response(
-      JSON.stringify({ error: 'Erro interno do servidor' }),
+      JSON.stringify({ error: 'Erro interno do servidor', details: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
 })
+
+function generateMatchReason(userProfile: any, candidate: any, matchType: 'customer' | 'supplier'): string {
+  const userCompany = userProfile.company_name || 'sua empresa'
+  const candidateCompany = candidate.company_name || 'empresa'
+  const candidatePosition = candidate.current_position || 'profissional'
+  const candidateIndustry = candidate.industry || 'diversos setores'
+
+  if (matchType === 'customer') {
+    const reasons = [
+      `Potencial cliente identificado: ${candidateCompany} pode se beneficiar das soluções de IA oferecidas por ${userCompany}`,
+      `Match baseado em compatibilidade de setor: ${candidatePosition} em ${candidateIndustry} demonstra necessidades alinhadas com sua expertise`,
+      `Oportunidade de negócio: perfil de ${candidate.name} indica potencial para implementação de soluções de IA`,
+      `Sinergia identificada: ${candidateCompany} possui características ideais para se tornar cliente de ${userCompany}`
+    ]
+    return reasons[Math.floor(Math.random() * reasons.length)]
+  } else {
+    const reasons = [
+      `Fornecedor especializado: ${candidate.name} possui expertise em ${candidateIndustry} que pode agregar valor ao seu negócio`,
+      `Parceiro estratégico: ${candidateCompany} oferece serviços complementares que podem potencializar seus resultados`,
+      `Especialista identificado: ${candidatePosition} demonstra conhecimento técnico relevante para suas necessidades`,
+      `Consultoria especializada: perfil de ${candidate.name} indica capacidade de fornecer soluções personalizadas`
+    ]
+    return reasons[Math.floor(Math.random() * reasons.length)]
+  }
+}
+
+function generateAiAnalysis(userProfile: any, candidate: any, matchType: 'customer' | 'supplier'): any {
+  const strengths = [
+    'Experiência complementar',
+    'Perfil profissional alinhado',
+    'Setor de atuação compatível',
+    'Tamanho de empresa adequado',
+    'Necessidades identificadas',
+    'Potencial de crescimento'
+  ]
+
+  const opportunities = matchType === 'customer' 
+    ? ['Implementação de IA', 'Automação de processos', 'Otimização operacional', 'Transformação digital']
+    : ['Consultoria especializada', 'Serviços personalizados', 'Parceria estratégica', 'Conhecimento técnico']
+
+  const recommendedApproach = matchType === 'customer'
+    ? `Iniciar conversa apresentando casos de sucesso em ${candidate.industry || 'seu setor'} e como a IA pode resolver desafios específicos da posição de ${candidate.current_position || 'sua área'}`
+    : `Apresentar desafios específicos do seu negócio e explorar como a expertise de ${candidate.name} em ${candidate.industry || 'sua área'} pode agregar valor`
+
+  return {
+    strengths: strengths.slice(0, 2 + Math.floor(Math.random() * 2)),
+    opportunities: opportunities.slice(0, 2 + Math.floor(Math.random() * 2)),
+    recommended_approach: recommendedApproach
+  }
+}

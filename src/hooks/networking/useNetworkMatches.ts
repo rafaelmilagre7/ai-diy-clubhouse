@@ -40,29 +40,31 @@ export function useNetworkMatches(matchType?: 'customer' | 'supplier') {
         throw new Error('Usuário não autenticado');
       }
 
+      console.log('🔍 Buscando matches para usuário:', user.id);
+
       // Primeiro, tentar gerar matches se não existir nenhum
       try {
-        console.log('Tentando gerar matches automaticamente...');
+        console.log('🤖 Tentando gerar matches automaticamente...');
         const { data: generateResult, error: generateError } = await supabase.functions.invoke('generate-networking-matches', {
           body: { target_user_id: user.id, force_regenerate: false }
         });
         
         if (generateError) {
-          console.log('Erro ao gerar matches automaticamente:', generateError);
+          console.log('❌ Erro ao gerar matches automaticamente:', generateError);
         } else {
-          console.log('Resultado da geração:', generateResult);
+          console.log('✅ Resultado da geração:', generateResult);
         }
       } catch (error) {
-        console.log('Erro ao gerar matches automaticamente:', error);
+        console.log('❌ Exceção ao gerar matches automaticamente:', error);
         // Continuar mesmo se não conseguir gerar matches
       }
 
-      // Buscar matches com join manual para os dados do usuário
+      // Buscar matches com join para os dados do usuário
       let query = supabase
         .from('network_matches')
         .select(`
           *,
-          matched_user:profiles!inner(
+          matched_user:profiles!network_matches_matched_user_id_fkey(
             id, name, email, company_name, current_position, avatar_url
           )
         `)
@@ -76,14 +78,29 @@ export function useNetworkMatches(matchType?: 'customer' | 'supplier') {
       const { data, error } = await query;
 
       if (error) {
-        console.error('Erro ao buscar matches:', error);
+        console.error('❌ Erro ao buscar matches:', error);
         throw error;
       }
 
-      console.log('Matches encontrados:', data?.length || 0);
-      return (data || []) as NetworkMatch[];
+      console.log(`✅ Matches encontrados: ${data?.length || 0}`, data);
+      
+      // Transformar os dados para incluir matched_user na estrutura esperada
+      const transformedData = (data || []).map(match => ({
+        ...match,
+        matched_user: match.matched_user ? {
+          id: match.matched_user.id,
+          name: match.matched_user.name,
+          email: match.matched_user.email,
+          company_name: match.matched_user.company_name,
+          current_position: match.matched_user.current_position,
+          avatar_url: match.matched_user.avatar_url
+        } : undefined
+      }));
+
+      return transformedData as NetworkMatch[];
     },
     staleTime: 5 * 60 * 1000, // 5 minutos
+    retry: 2,
   });
 }
 
