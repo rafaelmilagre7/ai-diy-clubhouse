@@ -167,9 +167,9 @@ export const useQuickOnboardingNew = () => {
       
       toast.success('Onboarding concluído com sucesso!');
       
-      // Redirecionar após breve delay
+      // Redirecionar para a nova página de conclusão
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate('/onboarding-new/completed');
       }, 1500);
       
       return true;
