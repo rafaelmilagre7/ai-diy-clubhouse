@@ -16,6 +16,7 @@ interface InviteEmailRequest {
   senderName?: string;
   notes?: string;
   inviteId?: string;
+  forceResend?: boolean;
 }
 
 // Inicializar Resend
@@ -29,7 +30,7 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const data: InviteEmailRequest = await req.json();
     
-    console.log("📧 Processando convite para:", data.email);
+    console.log("📧 Processando convite para:", data.email, { forceResend: data.forceResend });
     
     // Validações básicas
     if (!data.email || !data.roleName) {
@@ -53,70 +54,13 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
 
-    console.log("🚀 Tentando envio via Supabase Auth primeiro");
-    
-    let strategy = 'supabase_auth';
+    let strategy = 'resend_primary';
     let success = false;
     let errorMessage = '';
     
-    // ESTRATÉGIA 1: Tentar Supabase Auth primeiro
-    try {
-      const inviteResult = await supabaseAdmin.auth.admin.inviteUserByEmail(
-        data.email,
-        {
-          data: {
-            role: data.roleName,
-            sender_name: data.senderName || 'Viver de IA',
-            notes: data.notes || '',
-            invite_url: data.inviteUrl,
-            expires_at: data.expiresAt,
-            invite_id: data.inviteId
-          },
-          redirectTo: data.inviteUrl
-        }
-      );
-
-      if (inviteResult.error) {
-        console.log("⚠️ Erro no Supabase Auth:", inviteResult.error.message);
-        
-        // Se é usuário já existente, tentar fallback
-        if (inviteResult.error.message.includes('already been registered') || 
-            inviteResult.error.message.includes('already exists')) {
-          
-          console.log("🔄 Usuário existente - implementando fallback");
-          
-          // Gerar link de recuperação como alternativa
-          const recoveryResult = await supabaseAdmin.auth.admin.generateLink({
-            type: 'recovery',
-            email: data.email,
-            options: {
-              redirectTo: data.inviteUrl
-            }
-          });
-          
-          if (!recoveryResult.error) {
-            console.log("✅ Link de recuperação gerado via Supabase");
-            success = true;
-            strategy = 'supabase_recovery';
-          } else {
-            errorMessage = `Supabase Auth falhou: ${inviteResult.error.message}`;
-          }
-        } else {
-          errorMessage = `Supabase Auth falhou: ${inviteResult.error.message}`;
-        }
-      } else {
-        console.log("✅ Convite enviado via Supabase Auth");
-        success = true;
-        strategy = 'supabase_auth';
-      }
-    } catch (supabaseError: any) {
-      console.error("❌ Erro crítico no Supabase:", supabaseError);
-      errorMessage = `Erro no Supabase: ${supabaseError.message}`;
-    }
-
-    // ESTRATÉGIA 2: Fallback com Resend se Supabase falhar
-    if (!success) {
-      console.log("📨 Implementando fallback com Resend");
+    // NOVA ESTRATÉGIA: Usar Resend como primeira opção
+    if (data.forceResend || true) { // Sempre usar Resend agora
+      console.log("📨 Usando Resend como estratégia primária");
       
       try {
         const emailHtml = `
@@ -126,58 +70,127 @@ const handler = async (req: Request): Promise<Response> => {
             <meta charset="utf-8">
             <title>Convite - Viver de IA</title>
             <style>
-              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
-              .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-              .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
-              .button { display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 20px 0; }
-              .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
-              .info-box { background: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; margin: 20px 0; }
+              body { 
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                line-height: 1.6; 
+                color: #333; 
+                max-width: 600px; 
+                margin: 0 auto; 
+                padding: 20px;
+                background-color: #f8fafc;
+              }
+              .container {
+                background: white;
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+              }
+              .header { 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                color: white; 
+                padding: 40px 30px; 
+                text-align: center; 
+              }
+              .header h1 {
+                margin: 0;
+                font-size: 28px;
+                font-weight: 600;
+              }
+              .content { 
+                padding: 40px 30px; 
+              }
+              .button { 
+                display: inline-block; 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                color: white; 
+                padding: 16px 32px; 
+                text-decoration: none; 
+                border-radius: 8px; 
+                font-weight: 600; 
+                font-size: 16px;
+                margin: 24px 0; 
+                transition: transform 0.2s;
+              }
+              .button:hover {
+                transform: translateY(-2px);
+              }
+              .footer { 
+                text-align: center; 
+                margin-top: 40px; 
+                color: #666; 
+                font-size: 14px; 
+                padding: 20px;
+                background-color: #f8fafc;
+              }
+              .info-box { 
+                background: #e3f2fd; 
+                border-left: 4px solid #2196f3; 
+                padding: 20px; 
+                margin: 24px 0; 
+                border-radius: 0 8px 8px 0;
+              }
+              .features {
+                background: #f0f9ff;
+                padding: 24px;
+                border-radius: 8px;
+                margin: 24px 0;
+              }
+              .features ul {
+                margin: 0;
+                padding-left: 20px;
+              }
+              .features li {
+                margin: 8px 0;
+              }
             </style>
           </head>
           <body>
-            <div class="header">
-              <h1>🎉 Você foi convidado!</h1>
-              <p>Bem-vindo ao Viver de IA</p>
-            </div>
-            
-            <div class="content">
-              <p>Olá!</p>
-              
-              <p><strong>${data.senderName || 'Nossa equipe'}</strong> convidou você para fazer parte da <strong>Viver de IA</strong>, a comunidade de empresários que implementam soluções de IA em seus negócios.</p>
-              
-              <div class="info-box">
-                <p><strong>📋 Detalhes do seu convite:</strong></p>
-                <ul>
-                  <li><strong>Papel:</strong> ${data.roleName}</li>
-                  <li><strong>Válido até:</strong> ${new Date(data.expiresAt).toLocaleDateString('pt-BR')}</li>
-                  ${data.notes ? `<li><strong>Observações:</strong> ${data.notes}</li>` : ''}
-                </ul>
+            <div class="container">
+              <div class="header">
+                <h1>🎉 Você foi convidado!</h1>
+                <p style="margin: 10px 0 0 0; font-size: 18px; opacity: 0.9;">Bem-vindo ao Viver de IA</p>
               </div>
               
-              <p>Clique no botão abaixo para aceitar o convite e criar sua conta:</p>
-              
-              <div style="text-align: center;">
-                <a href="${data.inviteUrl}" class="button">✨ Aceitar Convite</a>
+              <div class="content">
+                <p style="font-size: 18px; margin-bottom: 24px;">Olá!</p>
+                
+                <p><strong>${data.senderName || 'Nossa equipe'}</strong> convidou você para fazer parte da <strong>Viver de IA</strong>, a comunidade de empresários que implementam soluções de IA em seus negócios.</p>
+                
+                <div class="info-box">
+                  <p><strong>📋 Detalhes do seu convite:</strong></p>
+                  <ul style="margin: 12px 0;">
+                    <li><strong>Papel:</strong> ${data.roleName}</li>
+                    <li><strong>Válido até:</strong> ${new Date(data.expiresAt).toLocaleDateString('pt-BR')}</li>
+                    ${data.notes ? `<li><strong>Observações:</strong> ${data.notes}</li>` : ''}
+                  </ul>
+                </div>
+                
+                <p style="margin: 32px 0 24px 0; font-size: 16px;">Clique no botão abaixo para aceitar o convite e criar sua conta:</p>
+                
+                <div style="text-align: center; margin: 32px 0;">
+                  <a href="${data.inviteUrl}" class="button">✨ Aceitar Convite</a>
+                </div>
+                
+                <p style="font-size: 14px; color: #666; text-align: center;"><small>Este link é válido até ${new Date(data.expiresAt).toLocaleDateString('pt-BR')} às ${new Date(data.expiresAt).toLocaleTimeString('pt-BR')}.</small></p>
+                
+                <div class="features">
+                  <p><strong>🚀 O que você encontrará na Viver de IA:</strong></p>
+                  <ul>
+                    <li>Trilhas personalizadas de implementação de IA</li>
+                    <li>Comunidade exclusiva de empresários</li>
+                    <li>Soluções práticas e testadas</li>
+                    <li>Networking com outros empreendedores</li>
+                    <li>Suporte especializado</li>
+                    <li>Ferramentas e benefícios exclusivos</li>
+                  </ul>
+                </div>
               </div>
               
-              <p><small>Este link é válido até ${new Date(data.expiresAt).toLocaleDateString('pt-BR')} às ${new Date(data.expiresAt).toLocaleTimeString('pt-BR')}.</small></p>
-              
-              <hr>
-              
-              <p><strong>🚀 O que você encontrará na Viver de IA:</strong></p>
-              <ul>
-                <li>Trilhas personalizadas de implementação de IA</li>
-                <li>Comunidade exclusiva de empresários</li>
-                <li>Soluções práticas e testadas</li>
-                <li>Networking com outros empreendedores</li>
-                <li>Suporte especializado</li>
-              </ul>
-            </div>
-            
-            <div class="footer">
-              <p>Este convite foi enviado por ${data.senderName || 'Viver de IA'}</p>
-              <p>Se você não esperava este convite, pode ignorar este email.</p>
-              <p><strong>Viver de IA</strong> - Transforme seu negócio com Inteligência Artificial</p>
+              <div class="footer">
+                <p>Este convite foi enviado por <strong>${data.senderName || 'Viver de IA'}</strong></p>
+                <p>Se você não esperava este convite, pode ignorar este email.</p>
+                <p style="margin-top: 20px;"><strong>Viver de IA</strong> - Transforme seu negócio com Inteligência Artificial</p>
+              </div>
             </div>
           </body>
           </html>
@@ -197,6 +210,7 @@ const handler = async (req: Request): Promise<Response> => {
           Viver de IA - Transforme seu negócio com Inteligência Artificial
         `;
 
+        console.log("📧 Enviando via Resend...");
         const emailResult = await resend.emails.send({
           from: 'Viver de IA <convites@viverdeia.ai>',
           to: [data.email],
@@ -215,11 +229,58 @@ const handler = async (req: Request): Promise<Response> => {
 
         console.log("✅ Email enviado via Resend:", emailResult.data?.id);
         success = true;
-        strategy = 'resend_fallback';
+        strategy = 'resend_primary';
         
       } catch (resendError: any) {
         console.error("❌ Erro no Resend:", resendError);
-        errorMessage += ` | Resend também falhou: ${resendError.message}`;
+        errorMessage = `Resend falhou: ${resendError.message}`;
+        
+        // Fallback para Supabase Auth apenas se Resend falhar
+        console.log("🔄 Tentando fallback com Supabase Auth...");
+        
+        try {
+          const inviteResult = await supabaseAdmin.auth.admin.inviteUserByEmail(
+            data.email,
+            {
+              data: {
+                role: data.roleName,
+                sender_name: data.senderName || 'Viver de IA',
+                notes: data.notes || '',
+                invite_url: data.inviteUrl,
+                expires_at: data.expiresAt,
+                invite_id: data.inviteId
+              },
+              redirectTo: data.inviteUrl
+            }
+          );
+
+          if (inviteResult.error) {
+            if (inviteResult.error.message.includes('already been registered')) {
+              console.log("🔄 Usuário existente - gerando link de recuperação");
+              
+              const recoveryResult = await supabaseAdmin.auth.admin.generateLink({
+                type: 'recovery',
+                email: data.email,
+                options: {
+                  redirectTo: data.inviteUrl
+                }
+              });
+              
+              if (!recoveryResult.error) {
+                console.log("✅ Link de recuperação gerado via Supabase");
+                success = true;
+                strategy = 'supabase_recovery';
+              }
+            }
+          } else {
+            console.log("✅ Convite enviado via Supabase Auth");
+            success = true;
+            strategy = 'supabase_auth';
+          }
+        } catch (supabaseError: any) {
+          console.error("❌ Erro no Supabase fallback:", supabaseError);
+          errorMessage += ` | Supabase também falhou: ${supabaseError.message}`;
+        }
       }
     }
 
@@ -248,7 +309,7 @@ const handler = async (req: Request): Promise<Response> => {
           message: "Convite enviado com sucesso",
           email: data.email,
           strategy: strategy,
-          method: 'hybrid_robust_system'
+          method: 'resend_priority_system'
         }),
         {
           status: 200,
@@ -263,7 +324,7 @@ const handler = async (req: Request): Promise<Response> => {
           success: false,
           message: "Falha em todas as estratégias de envio",
           error: errorMessage,
-          details: "Tanto Supabase Auth quanto Resend falharam"
+          details: "Tanto Resend quanto Supabase falharam"
         }),
         {
           status: 500,

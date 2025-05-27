@@ -12,6 +12,7 @@ interface SendInviteEmailParams {
   senderName?: string;
   notes?: string;
   inviteId?: string;
+  forceResend?: boolean;
 }
 
 export function useInviteEmailService() {
@@ -26,12 +27,13 @@ export function useInviteEmailService() {
     senderName,
     notes,
     inviteId,
+    forceResend = true,
   }: SendInviteEmailParams): Promise<SendInviteResponse> => {
     try {
       setIsSending(true);
       setSendError(null);
 
-      console.log("🚀 Enviando convite robusto:", { email, roleName });
+      console.log("🚀 Enviando convite via sistema aprimorado:", { email, roleName, forceResend });
 
       // Validações básicas
       if (!email?.includes('@')) {
@@ -42,9 +44,9 @@ export function useInviteEmailService() {
         throw new Error('URL do convite não fornecida');
       }
 
-      console.log("📧 Chamando sistema híbrido (Supabase + Resend)...");
+      console.log("📧 Chamando sistema híbrido otimizado (Resend + Supabase)...");
 
-      // Chamar edge function com sistema híbrido robusto
+      // Chamar edge function com sistema otimizado
       const { data, error } = await supabase.functions.invoke('send-invite-email', {
         body: {
           email,
@@ -53,7 +55,8 @@ export function useInviteEmailService() {
           expiresAt,
           senderName,
           notes,
-          inviteId
+          inviteId,
+          forceResend
         }
       });
 
@@ -75,8 +78,8 @@ export function useInviteEmailService() {
 
       // Feedback específico baseado na estratégia usada
       let successMessage = 'Convite enviado com sucesso!';
-      if (data.strategy === 'resend_fallback') {
-        successMessage = 'Convite enviado via sistema de backup (Resend)';
+      if (data.strategy === 'resend_primary') {
+        successMessage = 'Convite enviado via Resend (sistema otimizado)';
       } else if (data.strategy === 'supabase_recovery') {
         successMessage = 'Link de recuperação enviado (usuário existente)';
       } else if (data.strategy === 'supabase_auth') {
