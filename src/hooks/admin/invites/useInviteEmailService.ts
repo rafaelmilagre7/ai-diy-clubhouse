@@ -33,7 +33,7 @@ export function useInviteEmailService() {
 
       console.log("🚀 Enviando convite:", { email, roleName });
 
-      // Validações básicas apenas
+      // Validações básicas
       if (!email?.includes('@')) {
         throw new Error('Email inválido');
       }
@@ -42,53 +42,80 @@ export function useInviteEmailService() {
         throw new Error('URL do convite não fornecida');
       }
 
-      // Remover verificação de convites recentes - permitir reenvios
-      console.log("📧 Enviando email de convite sem restrições...");
+      console.log("📧 Chamando edge function...");
 
-      // Chamar edge function
-      const { data, error } = await supabase.functions.invoke('send-invite-email', {
-        body: {
-          email,
-          inviteUrl,
-          roleName,
-          expiresAt,
-          senderName,
-          notes,
-          inviteId
-        }
-      });
+      // Chamar edge function com retry automático
+      let lastError;
+      let attempts = 0;
+      const maxAttempts = 3;
 
-      if (error) {
-        console.error("❌ Erro da edge function:", error);
-        throw new Error(`Erro no envio: ${error.message}`);
-      }
+      while (attempts < maxAttempts) {
+        attempts++;
+        console.log(`📤 Tentativa ${attempts}/${maxAttempts}`);
 
-      if (!data?.success) {
-        console.error("❌ Falha reportada:", data);
-        
-        // Mesmo se reportar erro, pode ter funcionado (usuário existente)
-        if (data?.error?.includes('already been registered')) {
-          console.log("✅ Convite enviado para usuário existente");
+        try {
+          const { data, error } = await supabase.functions.invoke('send-invite-email', {
+            body: {
+              email,
+              inviteUrl,
+              roleName,
+              expiresAt,
+              senderName,
+              notes,
+              inviteId
+            }
+          });
+
+          if (error) {
+            console.error(`❌ Erro da edge function (tentativa ${attempts}):`, error);
+            lastError = error;
+            
+            // Se for erro de rede, tentar novamente
+            if (attempts < maxAttempts && (
+              error.message?.includes('fetch') ||
+              error.message?.includes('network') ||
+              error.message?.includes('timeout')
+            )) {
+              console.log("🔄 Tentando novamente em 2 segundos...");
+              await new Promise(resolve => setTimeout(resolve, 2000));
+              continue;
+            }
+            
+            throw new Error(`Erro no envio: ${error.message}`);
+          }
+
+          if (!data?.success) {
+            console.error("❌ Falha reportada:", data);
+            throw new Error(data?.message || 'Falha no envio');
+          }
+
+          console.log("✅ Email enviado com sucesso:", {
+            strategy: data.strategy,
+            method: data.method,
+            email: data.email
+          });
+
           return {
             success: true,
-            message: 'Convite enviado para usuário existente',
+            message: `Convite enviado com sucesso (${data.strategy || 'padrão'})`,
             emailId: data.user_id
           };
+
+        } catch (attemptError: any) {
+          lastError = attemptError;
+          if (attempts >= maxAttempts) {
+            throw attemptError;
+          }
+          
+          console.log(`⚠️ Tentativa ${attempts} falhou, tentando novamente...`);
+          await new Promise(resolve => setTimeout(resolve, 2000));
         }
-        
-        throw new Error(data?.message || 'Falha no envio');
       }
 
-      console.log("✅ Email enviado:", data);
-
-      return {
-        success: true,
-        message: 'Convite enviado com sucesso',
-        emailId: data.user_id
-      };
+      throw lastError;
 
     } catch (err: any) {
-      console.error("❌ Erro no envio:", err);
+      console.error("❌ Erro final no envio:", err);
       setSendError(err);
 
       return {

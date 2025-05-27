@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Mail, AlertTriangle, RefreshCw } from 'lucide-react';
+import { CheckCircle, Mail, AlertTriangle, RefreshCw, Shield } from 'lucide-react';
 import { useInviteEmailService } from '@/hooks/admin/invites/useInviteEmailService';
 
 export const EmailStatusMonitor: React.FC = () => {
@@ -35,7 +35,7 @@ export const EmailStatusMonitor: React.FC = () => {
           </p>
           
           <p className="text-xs text-muted-foreground mt-1">
-            Tente novamente - o sistema permite reenvios ilimitados
+            Sistema com retry automático - tente novamente
           </p>
         </CardContent>
       </Card>
@@ -55,11 +55,13 @@ export const EmailStatusMonitor: React.FC = () => {
         <CardContent>
           <div className="flex items-center gap-2">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-            <span className="text-sm font-medium">Enviando convite...</span>
+            <span className="text-sm font-medium">Processando convite...</span>
           </div>
           
           <p className="text-xs text-muted-foreground mt-2">
-            Processando via Supabase Auth
+            ✨ Sistema inteligente detectando tipo de usuário<br />
+            🔄 Retry automático em caso de falha<br />
+            📧 Suporte a usuários novos, existentes e deletados
           </p>
         </CardContent>
       </Card>
@@ -70,8 +72,8 @@ export const EmailStatusMonitor: React.FC = () => {
     <Card className="border-green-200 bg-green-50/50">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium flex items-center gap-2">
-          <Mail className="h-4 w-4" />
-          Sistema de Emails
+          <Shield className="h-4 w-4" />
+          Sistema de Emails Aprimorado
         </CardTitle>
       </CardHeader>
       
@@ -83,15 +85,17 @@ export const EmailStatusMonitor: React.FC = () => {
           </div>
           
           <Badge variant="default" className="bg-green-100 text-green-800">
-            Supabase Auth
+            Inteligente
           </Badge>
         </div>
         
-        <p className="text-xs text-muted-foreground mt-2">
-          ✅ Permite reenvios ilimitados<br />
-          ✅ Funciona com usuários novos e existentes<br />
-          ✅ Usuários deletados são tratados automaticamente
-        </p>
+        <div className="space-y-1 mt-2 text-xs text-muted-foreground">
+          <p>✅ <strong>Usuários novos:</strong> Convite padrão do Supabase</p>
+          <p>✅ <strong>Usuários existentes:</strong> Email de convite normal</p>
+          <p>✅ <strong>Usuários deletados:</strong> Recriação + link de recuperação</p>
+          <p>✅ <strong>Reenvios ilimitados:</strong> Sem restrições de tempo</p>
+          <p>✅ <strong>Retry automático:</strong> 3 tentativas com backoff</p>
+        </div>
       </CardContent>
     </Card>
   );

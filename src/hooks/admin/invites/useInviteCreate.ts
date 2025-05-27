@@ -28,7 +28,7 @@ export function useInviteCreate() {
       
       console.log("🚀 Iniciando criação de convite para:", email);
       
-      // Validações básicas apenas
+      // Validações básicas
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
         throw new Error("Formato de email inválido");
@@ -38,9 +38,9 @@ export function useInviteCreate() {
         throw new Error("Papel não selecionado");
       }
       
-      console.log("✅ Verificações passaram, criando convite...");
+      console.log("✅ Validações OK, criando convite no banco...");
       
-      // Usar a função RPC create_invite para criar o convite
+      // Usar a função RPC create_invite
       const { data, error } = await supabase.rpc('create_invite', {
         p_email: email,
         p_role_id: roleId,
@@ -58,19 +58,19 @@ export function useInviteCreate() {
         throw new Error(data.message);
       }
       
-      console.log("✅ Convite criado com sucesso:", {
+      console.log("✅ Convite criado no banco:", {
         inviteId: data.invite_id,
         token: data.token ? 'presente' : 'ausente',
         expiresAt: data.expires_at
       });
       
-      // Validar o token gerado
+      // Validar token
       if (!data.token || typeof data.token !== 'string' || data.token.length < 8) {
-        console.error("❌ Token gerado é inválido:", data.token);
-        throw new Error("Erro interno: token de convite inválido gerado");
+        console.error("❌ Token inválido:", data.token);
+        throw new Error("Erro interno: token de convite inválido");
       }
       
-      // Buscar dados do papel para o email
+      // Buscar dados do papel
       console.log("📋 Buscando dados do papel...");
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
@@ -83,17 +83,15 @@ export function useInviteCreate() {
       }
 
       const roleName = roleData?.name || 'membro';
-      
-      // Gerar link do convite
       const inviteUrl = getInviteLink(data.token);
       
       if (!inviteUrl) {
         throw new Error("Erro ao gerar link do convite");
       }
       
-      console.log("📧 Enviando email de convite...");
+      console.log("📧 Enviando email (sistema aprimorado)...");
       
-      // Enviar email de convite
+      // Enviar email com sistema aprimorado
       const sendResult = await sendInviteEmail({
         email,
         inviteUrl,
@@ -106,15 +104,14 @@ export function useInviteCreate() {
       
       console.log("📨 Resultado do envio:", sendResult);
       
-      // Determinar mensagem baseada no resultado
+      // Feedback baseado no resultado
       if (sendResult.success) {
-        toast.success('Convite criado e enviado com sucesso!', {
-          description: `${sendResult.message} para ${email}.`
+        toast.success('Convite criado e enviado!', {
+          description: `${sendResult.message} para ${email}`
         });
       } else {
-        // Mostrar aviso mas não falhar - convite foi criado
         toast.warning('Convite criado com sucesso', {
-          description: `O convite foi criado, mas pode haver atraso no envio do email. Tente reenviar se necessário.`
+          description: `O convite foi salvo no sistema. ${sendResult.error || 'Tente reenviar se necessário.'}`
         });
       }
       
@@ -125,17 +122,16 @@ export function useInviteCreate() {
       };
       
     } catch (err: any) {
-      console.error('❌ Erro geral ao criar convite:', err);
+      console.error('❌ Erro ao criar convite:', err);
       setCreateError(err);
       
-      // Mensagens de erro mais específicas
       if (err.message?.includes('Formato de email inválido')) {
         toast.error('Email inválido', {
-          description: 'Por favor, verifique o formato do email.'
+          description: 'Verifique o formato do email'
         });
       } else {
         toast.error('Erro ao criar convite', {
-          description: err.message || 'Não foi possível criar o convite.'
+          description: err.message || 'Tente novamente'
         });
       }
       

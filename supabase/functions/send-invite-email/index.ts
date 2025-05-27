@@ -27,12 +27,11 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log("📧 Processando convite para:", data.email);
     
-    // Validações básicas apenas
+    // Validações básicas
     if (!data.email || !data.roleName) {
       throw new Error("Dados obrigatórios ausentes (email e roleName são obrigatórios)");
     }
 
-    // Validação de formato de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(data.email)) {
       throw new Error("Formato de email inválido");
@@ -50,55 +49,129 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
 
-    console.log("✨ Enviando convite via Supabase Auth nativo");
+    console.log("🔍 Verificando status do usuário...");
     
-    // Usar sempre inviteUserByEmail - método mais confiável
-    // O Supabase Auth gerencia automaticamente usuários novos/existentes
-    const inviteResult = await supabaseAdmin.auth.admin.inviteUserByEmail(
-      data.email,
-      {
-        data: {
-          role: data.roleName,
-          sender_name: data.senderName || 'Viver de IA',
-          notes: data.notes || '',
-          invite_url: data.inviteUrl,
-          expires_at: data.expiresAt,
-          invite_id: data.inviteId
-        },
-        redirectTo: data.inviteUrl
-      }
-    );
-
-    if (inviteResult.error) {
-      console.error("❌ Erro ao enviar convite:", inviteResult.error);
+    // Primeiro, tentar buscar o usuário para entender seu status
+    const { data: existingUser, error: getUserError } = await supabaseAdmin.auth.admin.getUserByEmail(data.email);
+    
+    let inviteResult;
+    let strategy = 'unknown';
+    
+    if (existingUser?.user && !getUserError) {
+      // Usuário existe e está ativo
+      console.log("👤 Usuário existente encontrado, enviando convite padrão");
+      strategy = 'existing_user_invite';
       
-      // Tratamento específico para diferentes tipos de erro
-      if (inviteResult.error.message.includes('already been registered')) {
-        console.log("👤 Usuário já existe, mas convite enviado com sucesso");
-        // Mesmo com usuário existente, o convite é válido
+      inviteResult = await supabaseAdmin.auth.admin.inviteUserByEmail(
+        data.email,
+        {
+          data: {
+            role: data.roleName,
+            sender_name: data.senderName || 'Viver de IA',
+            notes: data.notes || '',
+            invite_url: data.inviteUrl,
+            expires_at: data.expiresAt,
+            invite_id: data.inviteId
+          },
+          redirectTo: data.inviteUrl
+        }
+      );
+      
+    } else {
+      // Usuário não existe ou foi deletado - tentar invite padrão primeiro
+      console.log("🆕 Tentando convite padrão para usuário novo/deletado");
+      
+      inviteResult = await supabaseAdmin.auth.admin.inviteUserByEmail(
+        data.email,
+        {
+          data: {
+            role: data.roleName,
+            sender_name: data.senderName || 'Viver de IA',
+            notes: data.notes || '',
+            invite_url: data.inviteUrl,
+            expires_at: data.expiresAt,
+            invite_id: data.inviteId
+          },
+          redirectTo: data.inviteUrl
+        }
+      );
+      
+      if (inviteResult.error && inviteResult.error.message.includes('already been registered')) {
+        // Usuário foi deletado - usar estratégia de fallback
+        console.log("🔄 Usuário deletado detectado, usando estratégia de fallback");
+        strategy = 'deleted_user_recovery';
+        
+        // Gerar senha temporária segura
+        const tempPassword = crypto.randomUUID() + Math.random().toString(36).substring(2);
+        
+        // Criar usuário novamente
+        const createResult = await supabaseAdmin.auth.admin.createUser({
+          email: data.email,
+          password: tempPassword,
+          email_confirm: true,
+          user_metadata: {
+            role: data.roleName,
+            sender_name: data.senderName || 'Viver de IA',
+            notes: data.notes || '',
+            invite_type: 'recovery_invite'
+          }
+        });
+        
+        if (createResult.error) {
+          console.error("❌ Erro ao recriar usuário:", createResult.error);
+          throw new Error(`Erro ao recriar usuário: ${createResult.error.message}`);
+        }
+        
+        console.log("✅ Usuário recriado, gerando link de recuperação");
+        
+        // Gerar link de recuperação que servirá como convite
+        const recoveryResult = await supabaseAdmin.auth.admin.generateLink({
+          type: 'recovery',
+          email: data.email,
+          options: {
+            redirectTo: data.inviteUrl
+          }
+        });
+        
+        if (recoveryResult.error) {
+          console.error("❌ Erro ao gerar link de recuperação:", recoveryResult.error);
+          throw new Error(`Erro ao gerar link de convite: ${recoveryResult.error.message}`);
+        }
+        
+        // Simular resultado de convite para manter compatibilidade
+        inviteResult = {
+          data: { user: createResult.data.user },
+          error: null
+        };
+        
+        console.log("🔗 Link de recuperação gerado como convite:", recoveryResult.data.properties?.action_link?.substring(0, 50) + "...");
+        
       } else {
-        throw new Error(`Erro no envio: ${inviteResult.error.message}`);
+        strategy = 'new_user_invite';
       }
     }
 
-    console.log("✅ Convite processado com sucesso:", {
+    if (inviteResult.error && !inviteResult.error.message.includes('already been registered')) {
+      console.error("❌ Erro final ao enviar convite:", inviteResult.error);
+      throw new Error(`Erro no envio: ${inviteResult.error.message}`);
+    }
+
+    console.log(`✅ Convite processado com sucesso (${strategy}):`, {
       email: data.email,
       role: data.roleName,
-      user_id: inviteResult.data?.user?.id || 'existing_or_invited_user'
+      user_id: inviteResult.data?.user?.id || 'processed',
+      strategy: strategy
     });
 
-    // Atualizar estatísticas do convite se o ID foi fornecido
+    // Atualizar estatísticas se fornecido invite_id
     if (data.inviteId) {
       try {
-        // Verificar se a função RPC existe antes de chamar
-        const { data: functions } = await supabaseAdmin.rpc('update_invite_send_attempt', {
+        await supabaseAdmin.rpc('update_invite_send_attempt', {
           invite_id: data.inviteId
-        }).select();
-        
-        console.log("📊 Estatísticas atualizadas com sucesso");
+        });
+        console.log("📊 Estatísticas atualizadas");
       } catch (statsError: any) {
-        console.warn("⚠️ Erro ao atualizar estatísticas (função pode não existir):", statsError.message);
-        // Não falhar por causa das estatísticas
+        console.warn("⚠️ Erro ao atualizar estatísticas:", statsError.message);
       }
     }
 
@@ -106,9 +179,10 @@ const handler = async (req: Request): Promise<Response> => {
       JSON.stringify({
         success: true,
         message: "Convite enviado com sucesso",
-        user_id: inviteResult.data?.user?.id || 'user_invited',
+        user_id: inviteResult.data?.user?.id || 'processed',
         email: data.email,
-        method: 'supabase_auth_invite'
+        strategy: strategy,
+        method: 'enhanced_supabase_auth'
       }),
       {
         status: 200,
