@@ -15,6 +15,7 @@ import { EventLocation } from "./form/EventLocation";
 import { EventCoverImage } from "./form/EventCoverImage";
 import { EventRecurrence } from "./form/EventRecurrence";
 import { EventRoleAccess } from "./form/EventRoleAccess";
+import { useEventAccessControl } from "@/hooks/useEventAccessControl";
 import type { Event } from "@/types/events";
 
 interface EventFormProps {
@@ -24,6 +25,15 @@ interface EventFormProps {
 
 export const EventForm = ({ event, onSuccess }: EventFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Hook para gerenciar controle de acesso
+  const {
+    selectedRoles,
+    updateSelectedRoles,
+    saveAccessControl,
+    isLoading: isLoadingAccess,
+    isSaving: isSavingAccess
+  } = useEventAccessControl({ eventId: event?.id });
   
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
@@ -41,7 +51,7 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
       recurrence_day: event?.recurrence_day || null,
       recurrence_count: event?.recurrence_count || null,
       recurrence_end_date: event?.recurrence_end_date || null,
-      role_ids: [] // Will be loaded separately if needed
+      role_ids: selectedRoles // Usar dados do hook
     }
   });
 
@@ -65,30 +75,45 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
         recurrence_end_date: data.recurrence_end_date,
       };
 
+      let eventId: string;
+
       if (event?.id) {
+        // Atualizar evento existente
         const { error } = await supabase
           .from('events')
           .update(eventData)
           .eq('id', event.id);
           
         if (error) throw error;
-        toast.success("Evento atualizado com sucesso!");
+        eventId = event.id;
+        
+        console.log("Evento atualizado com sucesso:", eventId);
       } else {
+        // Criar novo evento
         const { data: userData } = await supabase.auth.getUser();
         if (!userData.user) throw new Error("Usuário não autenticado");
         
-        const { error } = await supabase
+        const { data: newEvent, error } = await supabase
           .from('events')
           .insert({
             ...eventData,
             created_by: userData.user.id
-          });
+          })
+          .select('id')
+          .single();
           
         if (error) throw error;
-        toast.success("Evento criado com sucesso!");
+        eventId = newEvent.id;
+        
+        console.log("Evento criado com sucesso:", eventId);
       }
       
+      // Salvar controle de acesso
+      await saveAccessControl(eventId);
+      
+      toast.success(event ? "Evento atualizado com sucesso!" : "Evento criado com sucesso!");
       onSuccess();
+      
     } catch (error) {
       console.error("Erro ao salvar evento:", error);
       toast.error("Erro ao salvar evento. Tente novamente.");
@@ -96,6 +121,16 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
       setIsSubmitting(false);
     }
   };
+
+  // Mostrar loading se ainda estiver carregando dados de acesso para edição
+  if (event?.id && isLoadingAccess) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+        <span>Carregando dados do evento...</span>
+      </div>
+    );
+  }
 
   return (
     <Form {...form}>
@@ -124,7 +159,10 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
             </TabsContent>
             
             <TabsContent value="advanced" className="space-y-4">
-              <EventRoleAccess form={form} />
+              <EventRoleAccess 
+                selectedRoles={selectedRoles}
+                onChange={updateSelectedRoles}
+              />
             </TabsContent>
           </div>
         </Tabs>
@@ -135,16 +173,16 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
             type="button" 
             variant="outline" 
             onClick={onSuccess}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isSavingAccess}
           >
             Cancelar
           </Button>
           <Button 
             type="submit" 
-            disabled={isSubmitting}
+            disabled={isSubmitting || isSavingAccess}
             className="bg-viverblue hover:bg-viverblue/90"
           >
-            {isSubmitting ? (
+            {isSubmitting || isSavingAccess ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {event ? "Atualizando..." : "Criando..."}
