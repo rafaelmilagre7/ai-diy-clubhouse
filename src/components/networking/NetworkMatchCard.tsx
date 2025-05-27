@@ -7,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   Building, 
   Star, 
-  MessageSquare, 
   UserPlus, 
   Eye,
   Sparkles,
@@ -18,6 +17,7 @@ import { UserProfileModal } from './UserProfileModal';
 import { useUpdateMatchStatus } from '@/hooks/networking/useNetworkMatches';
 import { useCreateConnection } from '@/hooks/networking/useNetworkConnections';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface NetworkMatchCardProps {
   match: NetworkMatch;
@@ -31,11 +31,14 @@ export const NetworkMatchCard: React.FC<NetworkMatchCardProps> = ({
   const [showProfileModal, setShowProfileModal] = useState(false);
   const updateMatchStatus = useUpdateMatchStatus();
   const createConnection = useCreateConnection();
+  const queryClient = useQueryClient();
 
   const handleViewProfile = async () => {
     if (!match.is_viewed) {
       try {
         await updateMatchStatus(match.id, 'viewed');
+        // Invalidar queries para atualizar o estado
+        queryClient.invalidateQueries({ queryKey: ['network-matches'] });
       } catch (error) {
         console.error('Erro ao marcar como visualizado:', error);
       }
@@ -47,6 +50,7 @@ export const NetworkMatchCard: React.FC<NetworkMatchCardProps> = ({
     try {
       await createConnection.mutateAsync(match.matched_user_id);
       await updateMatchStatus(match.id, 'contacted');
+      queryClient.invalidateQueries({ queryKey: ['network-matches'] });
       toast.success('Solicitação de conexão enviada!');
     } catch (error) {
       console.error('Erro ao conectar:', error);
@@ -57,6 +61,7 @@ export const NetworkMatchCard: React.FC<NetworkMatchCardProps> = ({
   const handleDismiss = async () => {
     try {
       await updateMatchStatus(match.id, 'dismissed');
+      queryClient.invalidateQueries({ queryKey: ['network-matches'] });
       toast.success('Match dispensado');
     } catch (error) {
       console.error('Erro ao dispensar match:', error);
@@ -170,6 +175,15 @@ export const NetworkMatchCard: React.FC<NetworkMatchCardProps> = ({
               >
                 <UserPlus className="h-3 w-3" />
                 Conectar
+              </Button>
+            ) : match.status === 'contacted' ? (
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                disabled
+                className="flex-1 gap-1"
+              >
+                Conectado
               </Button>
             ) : (
               <Button 

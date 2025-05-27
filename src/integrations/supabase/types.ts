@@ -1900,39 +1900,48 @@ export type Database = {
       }
       network_matches: {
         Row: {
+          ai_analysis: Json | null
           compatibility_score: number
           created_at: string
           id: string
           is_viewed: boolean
           match_reason: string | null
           match_strengths: Json | null
+          match_type: string
           matched_user_id: string
+          month_year: string
           status: string
           suggested_topics: Json | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          ai_analysis?: Json | null
           compatibility_score: number
           created_at?: string
           id?: string
           is_viewed?: boolean
           match_reason?: string | null
           match_strengths?: Json | null
+          match_type?: string
           matched_user_id: string
+          month_year?: string
           status?: string
           suggested_topics?: Json | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          ai_analysis?: Json | null
           compatibility_score?: number
           created_at?: string
           id?: string
           is_viewed?: boolean
           match_reason?: string | null
           match_strengths?: Json | null
+          match_type?: string
           matched_user_id?: string
+          month_year?: string
           status?: string
           suggested_topics?: Json | null
           updated_at?: string
@@ -4604,6 +4613,10 @@ export type Database = {
       generate_invite_token: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      generate_networking_matches_for_user: {
+        Args: { target_user_id: string }
+        Returns: Json
       }
       generate_referral_token: {
         Args: Record<PropertyKey, never>

@@ -40,11 +40,22 @@ export function useNetworkMatches(matchType?: 'customer' | 'supplier') {
         throw new Error('Usuário não autenticado');
       }
 
+      // Primeiro, tentar gerar matches se não existir nenhum
+      try {
+        await supabase.functions.invoke('generate-networking-matches', {
+          body: { target_user_id: user.id, force_regenerate: false }
+        });
+      } catch (error) {
+        console.log('Erro ao gerar matches automaticamente:', error);
+        // Continuar mesmo se não conseguir gerar matches
+      }
+
+      // Buscar matches com join manual para os dados do usuário
       let query = supabase
         .from('network_matches')
         .select(`
           *,
-          matched_user:profiles!network_matches_matched_user_id_fkey(
+          matched_user:profiles!inner(
             id, name, email, company_name, current_position, avatar_url
           )
         `)
@@ -62,7 +73,7 @@ export function useNetworkMatches(matchType?: 'customer' | 'supplier') {
         throw error;
       }
 
-      return data as NetworkMatch[];
+      return (data || []) as NetworkMatch[];
     },
     staleTime: 5 * 60 * 1000, // 5 minutos
   });
