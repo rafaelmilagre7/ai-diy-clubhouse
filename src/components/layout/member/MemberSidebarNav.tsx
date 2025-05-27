@@ -16,7 +16,8 @@ import {
   Calendar,
   GraduationCap,
   Wrench,
-  MessagesSquare
+  MessagesSquare,
+  Network
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -28,7 +29,7 @@ interface SidebarNavProps {
 
 export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
   const location = useLocation();
-  const { isAdmin, isFormacao } = useAuth();
+  const { isAdmin, isFormacao, profile } = useAuth();
 
   const menuItems = [
     {
@@ -86,6 +87,12 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
       title: "Eventos",
       href: "/events",
       icon: Calendar,
+    },
+    {
+      title: "Networking",
+      href: "/networking",
+      icon: Network,
+      adminOnly: true // Apenas para admin e formação
     }
   ];
 
@@ -93,6 +100,11 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
     <div className="space-y-2 py-4">
       <div className="px-3 space-y-1">
         {menuItems.map((item) => {
+          // Se for adminOnly, mostrar apenas para admin e formação
+          if (item.adminOnly && (!profile || (profile.role !== 'admin' && profile.role !== 'formacao'))) {
+            return null;
+          }
+
           const active = isActiveRoute(location.pathname, item.href);
           
           return (
