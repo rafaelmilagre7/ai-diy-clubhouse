@@ -7,9 +7,38 @@ import Review from "@/pages/onboarding/Review";
 import TrailGeneration from "@/pages/onboarding/steps/TrailGeneration";
 
 export const onboardingRoutes: RouteObject[] = [
-  // Rota para o onboarding
+  // Rota principal do onboarding - sempre redireciona para o sistema novo
   {
     path: "/onboarding",
+    element: <ProtectedRoutes><NovoOnboarding /></ProtectedRoutes>
+  },
+  // Todas as rotas específicas do novo sistema
+  {
+    path: "/onboarding/personal-info",
+    element: <ProtectedRoutes><NovoOnboarding /></ProtectedRoutes>
+  },
+  {
+    path: "/onboarding/professional-data", 
+    element: <ProtectedRoutes><NovoOnboarding /></ProtectedRoutes>
+  },
+  {
+    path: "/onboarding/business-context",
+    element: <ProtectedRoutes><NovoOnboarding /></ProtectedRoutes>
+  },
+  {
+    path: "/onboarding/ai-experience",
+    element: <ProtectedRoutes><NovoOnboarding /></ProtectedRoutes>
+  },
+  {
+    path: "/onboarding/club-goals",
+    element: <ProtectedRoutes><NovoOnboarding /></ProtectedRoutes>
+  },
+  {
+    path: "/onboarding/customization",
+    element: <ProtectedRoutes><NovoOnboarding /></ProtectedRoutes>
+  },
+  {
+    path: "/onboarding/complementary",
     element: <ProtectedRoutes><NovoOnboarding /></ProtectedRoutes>
   },
   // Rota para a página de revisão

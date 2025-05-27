@@ -1,17 +1,18 @@
 
 import React, { useEffect, useState } from 'react';
-import { OnboardingForm } from '@/components/onboarding/OnboardingForm';
 import { useNavigate } from 'react-router-dom';
 import MemberLayout from '@/components/layout/MemberLayout';
 import { MoticonAnimation } from '@/components/onboarding/MoticonAnimation';
 import { useProgress } from '@/hooks/onboarding/useProgress';
 import { useOnboardingValidation } from '@/hooks/onboarding/useOnboardingValidation';
+import { useOnboardingSteps } from '@/hooks/onboarding/useOnboardingSteps';
 import { Loader2 } from 'lucide-react';
 
 const NovoOnboarding: React.FC = () => {
   const navigate = useNavigate();
   const { progress, isLoading, refreshProgress } = useProgress();
   const { validateOnboardingCompletion, getIncompleteSteps } = useOnboardingValidation();
+  const { currentStep } = useOnboardingSteps();
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [hasChecked, setHasChecked] = useState(false);
 
@@ -62,7 +63,8 @@ const NovoOnboarding: React.FC = () => {
           }
         }
         
-        // Se chegou até aqui, o usuário pode iniciar o onboarding
+        // Se chegou até aqui, começar pelo primeiro passo
+        navigate('/onboarding/personal-info');
         setIsInitialLoad(false);
       } catch (error) {
         console.error("Erro ao verificar status do onboarding:", error);
@@ -74,10 +76,6 @@ const NovoOnboarding: React.FC = () => {
       checkOnboardingStatus();
     }
   }, [navigate, progress, isLoading, refreshProgress, hasChecked, validateOnboardingCompletion, getIncompleteSteps]);
-
-  const handleSuccess = () => {
-    navigate('/dashboard');
-  };
 
   // Mostrar um spinner enquanto verifica o status do onboarding
   if (isInitialLoad || isLoading) {
@@ -93,6 +91,7 @@ const NovoOnboarding: React.FC = () => {
     );
   }
 
+  // Se não está carregando e chegou aqui, mostrar interface do onboarding step-by-step
   return (
     <MemberLayout>
       <div className="bg-gradient-to-b from-[#0F111A] to-[#161A2C] min-h-[calc(100vh-80px)]">
@@ -106,12 +105,21 @@ const NovoOnboarding: React.FC = () => {
                 Bem-vindo ao VIVER DE IA
               </h1>
               <p className="text-xl text-viverblue-light max-w-2xl mx-auto">
-                Preencha este formulário para personalizarmos sua experiência na plataforma.
+                Estamos preparando sua experiência personalizada na plataforma.
               </p>
             </div>
             
             <div className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-xl shadow-xl p-8">
-              <OnboardingForm onSuccess={handleSuccess} />
+              {currentStep && (
+                <div className="text-center">
+                  <h2 className="text-2xl font-semibold text-white mb-4">
+                    {currentStep.title}
+                  </h2>
+                  <p className="text-viverblue-light">
+                    Continue preenchendo suas informações para personalizar sua experiência.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
