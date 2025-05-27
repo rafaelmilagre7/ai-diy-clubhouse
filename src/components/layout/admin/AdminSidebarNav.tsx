@@ -13,7 +13,8 @@ import {
   GraduationCap,
   Shield,
   FileText,
-  Mail
+  Mail,
+  User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -207,7 +208,21 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
         </div>
       </ScrollArea>
 
-      <div className="px-3 py-4 border-t border-gray-700 mt-auto">
+      <div className="px-3 py-4 border-t border-gray-700 mt-auto space-y-2">
+        <Button
+          variant="outline"
+          className={cn(
+            "w-full justify-start gap-2",
+            !sidebarOpen && "justify-center"
+          )}
+          asChild
+        >
+          <Link to="/dashboard">
+            <User className="h-4 w-4" />
+            {sidebarOpen && <span>Painel do Membro</span>}
+          </Link>
+        </Button>
+        
         <Button
           variant="outline"
           className={cn(
