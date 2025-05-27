@@ -1,115 +1,113 @@
 
 import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { 
   LayoutDashboard, 
   Users, 
-  BookOpen, 
   Lightbulb, 
-  Wrench, 
-  Calendar,
-  MessageSquare,
+  BookOpen, 
   Settings,
-  Activity,
-  Database,
-  Network
+  User,
+  MessageSquare,
+  Route,
+  GraduationCap,
+  Calendar
 } from 'lucide-react';
-import { MemberSidebarNavItem } from './MemberSidebarNavItem';
+import { useNetworkingAccess } from '@/hooks/networking/useNetworkingAccess';
+import { useAuth } from '@/contexts/auth';
 
 interface MemberSidebarNavItemsProps {
   sidebarOpen: boolean;
 }
 
 export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ sidebarOpen }) => {
+  const location = useLocation();
+  const { hasAccess: hasNetworkingAccess } = useNetworkingAccess();
+  const { profile } = useAuth();
+
+  const menuItems = [
+    {
+      title: "Dashboard",
+      href: "/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      title: "Trilha de Implementação",
+      href: "/implementation-trail",
+      icon: Route,
+    },
+    {
+      title: "Soluções",
+      href: "/solutions",
+      icon: Lightbulb,
+    },
+    {
+      title: "Ferramentas",
+      href: "/tools",
+      icon: Settings,
+    },
+    {
+      title: "Comunidade",
+      href: "/comunidade",
+      icon: MessageSquare,
+    }
+  ];
+
+  // Adicionar networking apenas se o usuário tem acesso
+  if (hasNetworkingAccess) {
+    menuItems.splice(4, 0, {
+      title: "Networking",
+      href: "/networking",
+      icon: Users,
+    });
+  }
+
+  // Adicionar área de formação se o usuário tem acesso
+  if (profile?.role === 'formacao' || profile?.role === 'admin') {
+    menuItems.push({
+      title: "Área de Formação",
+      href: "/formacao",
+      icon: GraduationCap,
+    });
+  }
+
+  // Adicionar eventos se for admin
+  if (profile?.role === 'admin') {
+    menuItems.push({
+      title: "Eventos",
+      href: "/events",
+      icon: Calendar,
+    });
+  }
+
+  const isActive = (href: string) => {
+    if (href === '/dashboard') {
+      return location.pathname === href;
+    }
+    return location.pathname.startsWith(href);
+  };
+
   return (
     <>
-      {/* Dashboard */}
-      <MemberSidebarNavItem
-        to="/dashboard"
-        icon={LayoutDashboard}
-        label="Dashboard"
-        sidebarOpen={sidebarOpen}
-      />
-
-      {/* Comunidade */}
-      <MemberSidebarNavItem
-        to="/comunidade"
-        icon={Users}
-        label="Comunidade"
-        sidebarOpen={sidebarOpen}
-      />
-
-      {/* Learning / Formação */}
-      <MemberSidebarNavItem
-        to="/learning"
-        icon={BookOpen}
-        label="Aprendizado"
-        sidebarOpen={sidebarOpen}
-      />
-
-      {/* Solutions */}
-      <MemberSidebarNavItem
-        to="/solutions"
-        icon={Lightbulb}
-        label="Soluções"
-        sidebarOpen={sidebarOpen}
-      />
-
-      {/* Tools */}
-      <MemberSidebarNavItem
-        to="/tools"
-        icon={Wrench}
-        label="Ferramentas"
-        sidebarOpen={sidebarOpen}
-      />
-
-      {/* Events */}
-      <MemberSidebarNavItem
-        to="/events"
-        icon={Calendar}
-        label="Eventos"
-        sidebarOpen={sidebarOpen}
-      />
-
-      {/* Networking - Novo item adicionado */}
-      <MemberSidebarNavItem
-        to="/networking"
-        icon={Network}
-        label="Networking"
-        sidebarOpen={sidebarOpen}
-      />
-
-      {/* Messages */}
-      <MemberSidebarNavItem
-        to="/messages"
-        icon={MessageSquare}
-        label="Mensagens"
-        sidebarOpen={sidebarOpen}
-      />
-
-      {/* Implementation Trail */}
-      <MemberSidebarNavItem
-        to="/implementation-trail"
-        icon={Activity}
-        label="Trilha de Implementação"
-        sidebarOpen={sidebarOpen}
-      />
-
-      {/* Diagnostics - Admin only */}
-      <MemberSidebarNavItem
-        to="/admin/diagnostics"
-        icon={Database}
-        label="Diagnóstico Supabase"
-        sidebarOpen={sidebarOpen}
-        adminOnly={true}
-      />
-
-      {/* Settings */}
-      <MemberSidebarNavItem
-        to="/settings"
-        icon={Settings}
-        label="Configurações"
-        sidebarOpen={sidebarOpen}
-      />
+      {menuItems.map((item) => (
+        <Button
+          key={item.href}
+          variant={isActive(item.href) ? "default" : "ghost"}
+          className={cn(
+            "w-full justify-start gap-2 mb-1",
+            !sidebarOpen && "justify-center px-2",
+            isActive(item.href) && "bg-viverblue hover:bg-viverblue/90"
+          )}
+          asChild
+        >
+          <Link to={item.href}>
+            <item.icon className="h-4 w-4" />
+            {sidebarOpen && <span>{item.title}</span>}
+          </Link>
+        </Button>
+      ))}
     </>
   );
 };

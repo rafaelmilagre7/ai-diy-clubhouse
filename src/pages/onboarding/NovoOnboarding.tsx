@@ -5,44 +5,67 @@ import { useNavigate } from 'react-router-dom';
 import MemberLayout from '@/components/layout/MemberLayout';
 import { MoticonAnimation } from '@/components/onboarding/MoticonAnimation';
 import { useProgress } from '@/hooks/onboarding/useProgress';
+import { useOnboardingValidation } from '@/hooks/onboarding/useOnboardingValidation';
 import { Loader2 } from 'lucide-react';
 
 const NovoOnboarding: React.FC = () => {
   const navigate = useNavigate();
   const { progress, isLoading, refreshProgress } = useProgress();
+  const { validateOnboardingCompletion, getIncompleteSteps } = useOnboardingValidation();
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [hasChecked, setHasChecked] = useState(false);
 
-  // Verificar status do onboarding e redirecionar se necessário
   useEffect(() => {
     const checkOnboardingStatus = async () => {
       try {
         if (hasChecked) {
-          return; // Evita verificações múltiplas
+          return;
         }
 
-        // Forçar refresh dos dados para garantir informações atualizadas
         await refreshProgress();
         setHasChecked(true);
         
-        if (progress?.is_completed) {
-          console.log("Onboarding já está completo, redirecionando para página de revisão...");
-          navigate('/onboarding/completed');
-          return;
-        } 
-        
-        if (progress?.current_step && progress.completed_steps?.length > 0) {
-          // Se já iniciou mas não completou, continuar de onde parou
-          console.log("Onboarding em andamento, redirecionando para etapa atual...");
-          navigate(`/onboarding/${progress.current_step}`);
-          return;
+        if (progress) {
+          // Usar validação robusta para verificar se onboarding está realmente completo
+          const isReallyComplete = validateOnboardingCompletion(progress);
+          
+          if (isReallyComplete) {
+            console.log("Onboarding realmente completo, redirecionando para página de conclusão...");
+            navigate('/onboarding/completed');
+            return;
+          }
+          
+          // Se tem progresso mas não está completo, verificar qual etapa está faltando
+          const incompleteSteps = getIncompleteSteps(progress);
+          
+          if (incompleteSteps.length > 0) {
+            const nextStep = incompleteSteps[0];
+            console.log(`Onboarding incompleto. Próxima etapa: ${nextStep}`);
+            
+            // Mapear próxima etapa para rota
+            const stepRoutes = {
+              'personal_info': '/onboarding/personal-info',
+              'professional_info': '/onboarding/professional-data',
+              'business_context': '/onboarding/business-context',
+              'ai_experience': '/onboarding/ai-experience',
+              'business_goals': '/onboarding/club-goals',
+              'experience_personalization': '/onboarding/customization',
+              'complementary_info': '/onboarding/complementary',
+              'review': '/onboarding/review'
+            };
+            
+            const nextRoute = stepRoutes[nextStep as keyof typeof stepRoutes];
+            if (nextRoute) {
+              navigate(nextRoute);
+              return;
+            }
+          }
         }
         
-        // Se chegou até aqui, o usuário pode iniciar o onboarding normalmente
+        // Se chegou até aqui, o usuário pode iniciar o onboarding
         setIsInitialLoad(false);
       } catch (error) {
         console.error("Erro ao verificar status do onboarding:", error);
-        // Mesmo com erro, permitir que o usuário tente preencher
         setIsInitialLoad(false);
       }
     };
@@ -50,7 +73,7 @@ const NovoOnboarding: React.FC = () => {
     if (!isLoading) {
       checkOnboardingStatus();
     }
-  }, [navigate, progress, isLoading, refreshProgress, hasChecked]);
+  }, [navigate, progress, isLoading, refreshProgress, hasChecked, validateOnboardingCompletion, getIncompleteSteps]);
 
   const handleSuccess = () => {
     navigate('/dashboard');

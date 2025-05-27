@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProgress } from "@/hooks/onboarding/useProgress";
+import { useOnboardingValidation } from "@/hooks/onboarding/useOnboardingValidation";
 import { ImplementationTrailCreator } from "@/components/implementation-trail/ImplementationTrailCreator";
 import { OnboardingIncompleteState } from "@/components/implementation-trail/OnboardingIncompleteState";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -13,24 +14,21 @@ import { FadeTransition } from "@/components/transitions/FadeTransition";
 
 const ImplementationTrailPage = () => {
   const navigate = useNavigate();
-  const { progress, isLoading, refreshProgress, updateProgress } = useProgress();
+  const { progress, isLoading, refreshProgress } = useProgress();
+  const { validateOnboardingCompletion, getIncompleteSteps } = useOnboardingValidation();
   const [isOnboardingComplete, setIsOnboardingComplete] = useState<boolean | null>(null);
   const [showRefreshButton, setShowRefreshButton] = useState(false);
-  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
-    // Carregar os dados do progresso com sistema de retry
     const loadProgressData = async () => {
       try {
         await refreshProgress();
         
-        // Aguardar um breve momento para dar tempo ao estado de ser atualizado
         setTimeout(() => {
           if (!isLoading && progress === null) {
             setShowRefreshButton(true);
             
-            // Tentar recarregar automaticamente até 2 vezes
             if (retryCount < 2) {
               console.log(`Tentativa automática de recarregar dados: ${retryCount + 1}`);
               setRetryCount(prev => prev + 1);
@@ -41,11 +39,10 @@ const ImplementationTrailPage = () => {
       } catch (error) {
         console.error("Erro ao atualizar dados de progresso:", error);
         
-        // Tentar recarregar automaticamente até 2 vezes
         if (retryCount < 2) {
           console.log(`Tentativa automática após erro: ${retryCount + 1}`);
           setRetryCount(prev => prev + 1);
-          setTimeout(() => refreshProgress(), 2000); // Esperar 2 segundos antes de tentar novamente
+          setTimeout(() => refreshProgress(), 2000);
         } else {
           setShowRefreshButton(true);
         }
@@ -57,24 +54,30 @@ const ImplementationTrailPage = () => {
 
   useEffect(() => {
     if (!isLoading && progress) {
-      setIsOnboardingComplete(progress.is_completed || false);
+      // Usar validação robusta para verificar se onboarding está realmente completo
+      const isComplete = validateOnboardingCompletion(progress);
+      setIsOnboardingComplete(isComplete);
+      
+      if (!isComplete) {
+        const incompleteSteps = getIncompleteSteps(progress);
+        console.log("Onboarding incompleto. Etapas faltantes:", incompleteSteps);
+      }
     }
-  }, [progress, isLoading]);
+  }, [progress, isLoading, validateOnboardingCompletion, getIncompleteSteps]);
 
-  // Função para recarregar dados após tentativas falhas
   const handleRefresh = async () => {
     try {
       setShowRefreshButton(false);
       toast.info("Recarregando seus dados...");
       await refreshProgress();
       
-      // Verificar novamente após recarregar
       setTimeout(() => {
         if (!progress) {
           setShowRefreshButton(true);
           toast.error("Ainda não foi possível carregar seus dados. Tente novamente mais tarde.");
         } else {
-          setIsOnboardingComplete(progress.is_completed || false);
+          const isComplete = validateOnboardingCompletion(progress);
+          setIsOnboardingComplete(isComplete);
         }
       }, 1500);
     } catch (error) {
@@ -84,35 +87,7 @@ const ImplementationTrailPage = () => {
     }
   };
 
-  // Função para concluir o onboarding caso o usuário esteja na página da trilha
-  // mas o onboarding não esteja marcado como concluído
-  const handleCompleteOnboarding = async () => {
-    if (!progress || isUpdatingStatus) return;
-    
-    try {
-      setIsUpdatingStatus(true);
-      console.log("Atualizando status do onboarding para completo...");
-      
-      // Atualiza o status do onboarding para completo
-      await updateProgress({
-        is_completed: true
-      });
-      
-      // Atualizar dados locais
-      await refreshProgress();
-      
-      setIsOnboardingComplete(true);
-      toast.success("Onboarding marcado como concluído");
-      
-    } catch (error) {
-      console.error("Erro ao atualizar status do onboarding:", error);
-      toast.error("Erro ao atualizar seu progresso. Tente novamente mais tarde.");
-    } finally {
-      setIsUpdatingStatus(false);
-    }
-  };
-
-  // Enquanto os dados estão carregando, exibir tela de carregamento com animação
+  // Enquanto os dados estão carregando, exibir tela de carregamento
   if (isLoading) {
     return (
       <PageTransition>
@@ -176,8 +151,6 @@ const ImplementationTrailPage = () => {
               <FadeTransition>
                 <OnboardingIncompleteState 
                   onNavigateToOnboarding={() => navigate("/onboarding")} 
-                  onForceComplete={handleCompleteOnboarding}
-                  isForceCompleting={isUpdatingStatus}
                 />
               </FadeTransition>
             </CardContent>
