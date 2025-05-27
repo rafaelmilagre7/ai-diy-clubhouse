@@ -14,11 +14,10 @@ import {
   Building, 
   Star, 
   UserPlus, 
-  Globe,
   TrendingUp,
   Mail,
-  Linkedin,
-  ExternalLink
+  ExternalLink,
+  MessageCircle
 } from 'lucide-react';
 import { NetworkMatch } from '@/hooks/networking/useNetworkMatches';
 
@@ -106,43 +105,25 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 )}
               </div>
 
-              {/* LinkedIn */}
-              <div className="flex items-center gap-3">
-                <Linkedin className="h-4 w-4 text-muted-foreground" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">LinkedIn</p>
-                  <p className="text-sm text-muted-foreground">
-                    {match.matched_user?.linkedin_url || 'Não informado'}
-                  </p>
-                </div>
-                {match.matched_user?.linkedin_url && (
+              {/* WhatsApp */}
+              {match.matched_user?.whatsapp_number && (
+                <div className="flex items-center gap-3">
+                  <MessageCircle className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">WhatsApp</p>
+                    <p className="text-sm text-muted-foreground">{match.matched_user.whatsapp_number}</p>
+                  </div>
                   <Button variant="outline" size="sm" asChild>
-                    <a href={match.matched_user.linkedin_url} target="_blank" rel="noopener noreferrer" className="gap-1">
+                    <a 
+                      href={`https://wa.me/${match.matched_user.whatsapp_number.replace(/\D/g, '')}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="gap-1"
+                    >
                       <ExternalLink className="h-3 w-3" />
-                      Ver Perfil
+                      Conversar
                     </a>
                   </Button>
-                )}
-              </div>
-
-              {/* Company Website */}
-              {match.matched_user?.company_name && (
-                <div className="flex items-center gap-3">
-                  <Globe className="h-4 w-4 text-muted-foreground" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Website da Empresa</p>
-                    <p className="text-sm text-muted-foreground">
-                      {match.matched_user.company_website || 'Não informado'}
-                    </p>
-                  </div>
-                  {match.matched_user.company_website && (
-                    <Button variant="outline" size="sm" asChild>
-                      <a href={match.matched_user.company_website} target="_blank" rel="noopener noreferrer" className="gap-1">
-                        <ExternalLink className="h-3 w-3" />
-                        Visitar
-                      </a>
-                    </Button>
-                  )}
                 </div>
               )}
             </div>
