@@ -1,19 +1,10 @@
 
 import React, { useState, useEffect } from "react";
 import { CompanyInputs } from "./business/CompanyInputs";
-import { OnboardingData } from "@/types/onboarding";
+import { OnboardingData, OnboardingStepProps } from "@/types/onboarding";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { useForm, FieldErrors } from "react-hook-form";
-
-interface BusinessGoalsStepProps {
-  onSubmit: (stepId: string, data: Partial<OnboardingData>) => void;
-  isSubmitting: boolean;
-  isLastStep: boolean;
-  onComplete: () => void;
-  initialData?: any;
-  personalInfo?: OnboardingData["personal_info"];
-}
 
 type FormValues = {
   company_name: string;
@@ -24,12 +15,15 @@ type FormValues = {
   annual_revenue: string;
 };
 
-export const BusinessGoalsStep = ({
+export const BusinessGoalsStep: React.FC<OnboardingStepProps> = ({
   onSubmit,
   isSubmitting,
-  initialData,
+  isLastStep,
   onComplete,
-}: BusinessGoalsStepProps) => {
+  initialData,
+  personalInfo,
+  onPrevious
+}) => {
   const { control, handleSubmit, formState: { errors } } = useForm<FormValues>({
     defaultValues: {
       company_name: initialData?.company_name || initialData?.professional_info?.company_name || "",
@@ -48,7 +42,7 @@ export const BusinessGoalsStep = ({
     }
   }, [initialData]);
 
-  const onFormSubmit = (data: FormValues) => {
+  const onFormSubmit = async (data: FormValues) => {
     const professionalData: Partial<OnboardingData> = {
       professional_info: {
         company_name: data.company_name,
@@ -61,7 +55,7 @@ export const BusinessGoalsStep = ({
     };
     
     console.log("Enviando dados profissionais:", professionalData);
-    onSubmit("goals", professionalData);
+    await onSubmit("goals", professionalData);
   };
 
   return (
@@ -77,10 +71,21 @@ export const BusinessGoalsStep = ({
             errors={errors}
           />
           
-          <div className="flex justify-end mt-8">
+          <div className="flex justify-between mt-8">
+            {onPrevious && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onPrevious}
+                disabled={isSubmitting}
+              >
+                Voltar
+              </Button>
+            )}
+            
             <Button
               type="submit"
-              className="bg-[#0ABAB5] hover:bg-[#099388] text-white px-5 py-2"
+              className="bg-[#0ABAB5] hover:bg-[#099388] text-white px-5 py-2 ml-auto"
               disabled={isSubmitting}
             >
               {isSubmitting ? (

@@ -1,4 +1,3 @@
-
 export interface OnboardingData {
   // 1. Dados Pessoais
   personal_info: {
@@ -184,8 +183,8 @@ export interface OnboardingStepProps {
   isLastStep?: boolean;
   onComplete?: () => void;
   initialData?: any;
-  personalInfo?: OnboardingData['personal_info'];
-  onPrevious?: () => void; // Adicionada a propriedade onPrevious como opcional
+  personalInfo?: OnboardingData['personal_info']; // Adicionando personalInfo como opcional
+  onPrevious?: () => void; // Adicionando onPrevious como opcional
 }
 
 export interface OnboardingStep {
