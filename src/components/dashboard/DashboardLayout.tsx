@@ -1,5 +1,5 @@
 
-import { FC, memo } from "react";
+import { FC, memo, useMemo } from "react";
 import { ActiveSolutions } from "./ActiveSolutions";
 import { CompletedSolutions } from "./CompletedSolutions";
 import { RecommendedSolutions } from "./RecommendedSolutions";
@@ -9,7 +9,6 @@ import { ModernDashboardHeader } from "./ModernDashboardHeader";
 import { KpiGrid } from "./KpiGrid";
 import { useAuth } from "@/contexts/auth";
 import { SolutionsGridLoader } from "./SolutionsGridLoader";
-import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardConnectionErrorState } from "./states/DashboardConnectionErrorState";
 
 interface DashboardLayoutProps {
@@ -22,7 +21,7 @@ interface DashboardLayoutProps {
   isLoading?: boolean;
 }
 
-// Otimização: Usar memo para evitar re-renderizações desnecessárias
+// Otimização: Memoizar o componente completo para evitar re-renderizações desnecessárias
 export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
   active,
   completed,
@@ -32,26 +31,34 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
   onSolutionClick,
   isLoading = false
 }) => {
-  // Log de diagnóstico para ajudar a depurar o problema
-  console.log("DashboardLayout renderizado:", { 
-    active: active?.length || 0,
-    completed: completed?.length || 0,
-    recommended: recommended?.length || 0,
-    isLoading,
-    hasData: !!(active?.length || completed?.length || recommended?.length)
-  });
+  const { profile } = useAuth();
 
-  const hasNoSolutions = !isLoading && 
+  // Memoizar o cálculo do nome do usuário
+  const userName = useMemo(() => 
+    profile?.name?.split(" ")[0] || "Membro"
+  , [profile?.name]);
+
+  // Memoizar o estado de "sem soluções" para evitar recálculos
+  const hasNoSolutions = useMemo(() => 
+    !isLoading && 
     (!active || active.length === 0) && 
     (!completed || completed.length === 0) && 
-    (!recommended || recommended.length === 0);
+    (!recommended || recommended.length === 0)
+  , [isLoading, active, completed, recommended]);
 
-  const { profile } = useAuth();
-  const userName = profile?.name?.split(" ")[0] || "Membro";
+  // Memoizar a validação de dados para evitar recálculos
+  const hasValidData = useMemo(() => 
+    Array.isArray(active) && Array.isArray(completed) && Array.isArray(recommended)
+  , [active, completed, recommended]);
 
-  // Verificar se tem dados válidos
-  const hasValidData = Array.isArray(active) && Array.isArray(completed) && Array.isArray(recommended);
-  
+  // Memoizar os totais para o KPI Grid
+  const kpiTotals = useMemo(() => ({
+    completed: completed?.length || 0,
+    inProgress: active?.length || 0,
+    total: (active?.length || 0) + (completed?.length || 0) + (recommended?.length || 0)
+  }), [active?.length, completed?.length, recommended?.length]);
+
+  // Early return para dados inválidos
   if (!hasValidData && !isLoading) {
     return <DashboardConnectionErrorState />;
   }
@@ -63,9 +70,9 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
 
       {/* CARDS DE PROGRESSO (KPI) */}
       <KpiGrid 
-        completed={completed?.length || 0} 
-        inProgress={active?.length || 0}
-        total={(active?.length || 0) + (completed?.length || 0) + (recommended?.length || 0)}
+        completed={kpiTotals.completed} 
+        inProgress={kpiTotals.inProgress}
+        total={kpiTotals.total}
         isLoading={isLoading}
       />
 
@@ -108,5 +115,7 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
     </div>
   );
 });
+
+DashboardLayout.displayName = 'DashboardLayout';
 
 export default DashboardLayout;
