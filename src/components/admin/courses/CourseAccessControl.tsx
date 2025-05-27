@@ -28,7 +28,7 @@ export function CourseAccessControl({
   course
 }: CourseAccessControlProps) {
   const { roles, loading: loadingRoles } = usePermissions();
-  const { getRolesByCourse, manageCourseAccess, isLoading } = useCourseAccess();
+  const { getRolesByCourse, manageCourseAccess, loading } = useCourseAccess();
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   
@@ -91,7 +91,7 @@ export function CourseAccessControl({
           </DialogDescription>
         </DialogHeader>
         
-        {(loadingRoles || isLoading) ? (
+        {(loadingRoles || loading) ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <span className="ml-2">Carregando configurações de acesso...</span>
