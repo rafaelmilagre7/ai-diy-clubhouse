@@ -1,15 +1,16 @@
 
 import React from 'react';
-import { QuickFormStep } from '../QuickFormStep';
-import { WhatsAppInput } from '../WhatsAppInput';
-import { DropdownModerno } from '../DropdownModerno';
-import { CountrySelector } from '../CountrySelector';
-import { DateInput } from '../DateInput';
-import { SocialLinksInput } from '../SocialLinksInput';
-import { ConditionalReferralInput } from '../ConditionalReferralInput';
 import { Input } from '@/components/ui/input';
-import MilagrinhoAssistant from '../../MilagrinhoAssistant';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { ArrowRight } from 'lucide-react';
 import { QuickOnboardingData } from '@/types/quickOnboarding';
+import { ConditionalReferralInput } from '../ConditionalReferralInput';
+import { DateInput } from '../DateInput';
+import { WhatsAppInput } from '../WhatsAppInput';
+import { SocialLinksInput } from '../SocialLinksInput';
+import { CountrySelector } from '../CountrySelector';
+import { AutoSaveFeedback } from '../AutoSaveFeedback';
 
 interface StepQuemEVoceNewProps {
   data: QuickOnboardingData;
@@ -21,13 +22,14 @@ interface StepQuemEVoceNewProps {
 }
 
 const HOW_FOUND_OPTIONS = [
-  { value: 'google', label: 'Pesquisa no Google', icon: '🔍' },
-  { value: 'instagram', label: 'Instagram', icon: '📱' },
-  { value: 'linkedin', label: 'LinkedIn', icon: '💼' },
-  { value: 'youtube', label: 'YouTube', icon: '📺' },
-  { value: 'eventos', label: 'Eventos', icon: '🎫' },
-  { value: 'indicacao', label: 'Indicação de alguém', icon: '👥' },
-  { value: 'outros', label: 'Outros', icon: '💭' }
+  { value: 'google', label: 'Google' },
+  { value: 'youtube', label: 'YouTube' },
+  { value: 'instagram', label: 'Instagram' },
+  { value: 'linkedin', label: 'LinkedIn' },
+  { value: 'indicacao', label: 'Indicação de alguém' },
+  { value: 'evento', label: 'Evento' },
+  { value: 'podcast', label: 'Podcast' },
+  { value: 'outro', label: 'Outro' }
 ];
 
 export const StepQuemEVoceNew: React.FC<StepQuemEVoceNewProps> = ({
@@ -38,24 +40,24 @@ export const StepQuemEVoceNew: React.FC<StepQuemEVoceNewProps> = ({
   currentStep,
   totalSteps
 }) => {
-  const firstName = data.name.split(' ')[0];
-
   return (
-    <>
-      <MilagrinhoAssistant
-        userName={firstName || undefined}
-        message="Olá! Eu sou o Milagrinho, seu assistente de IA. Vamos começar conhecendo você melhor para criar uma experiência personalizada no VIVER DE IA Club!"
-      />
-      
-      <QuickFormStep
-        title="Quem é você?"
-        description="Vamos começar com suas informações básicas"
-        currentStep={currentStep}
-        totalSteps={totalSteps}
-        onNext={onNext}
-        canProceed={canProceed}
-        showBack={false}
-      >
+    <div className="max-w-3xl mx-auto">
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-bold text-white mb-2">
+          Quem é você? 👋
+        </h2>
+        <p className="text-gray-400">
+          Vamos começar conhecendo você melhor
+        </p>
+        <div className="flex items-center justify-center mt-4">
+          <AutoSaveFeedback 
+            lastSaveTime={Date.now()}
+            hasUnsavedChanges={!data.name || !data.email}
+          />
+        </div>
+      </div>
+
+      <div className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700/50 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <label className="block text-sm font-medium text-white">
@@ -65,14 +67,14 @@ export const StepQuemEVoceNew: React.FC<StepQuemEVoceNewProps> = ({
               type="text"
               value={data.name}
               onChange={(e) => onUpdate('name', e.target.value)}
-              placeholder="Seu nome"
+              placeholder="Seu nome completo"
               className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50"
             />
           </div>
 
           <div className="space-y-2">
             <label className="block text-sm font-medium text-white">
-              Email <span className="text-red-400">*</span>
+              E-mail <span className="text-red-400">*</span>
             </label>
             <Input
               type="email"
@@ -90,11 +92,10 @@ export const StepQuemEVoceNew: React.FC<StepQuemEVoceNewProps> = ({
             onChange={(value) => onUpdate('country_code', value)}
             required
           />
-
+          
           <WhatsAppInput
             value={data.whatsapp}
             onChange={(value) => onUpdate('whatsapp', value)}
-            placeholder="(11) 99999-9999"
             required
           />
         </div>
@@ -111,21 +112,49 @@ export const StepQuemEVoceNew: React.FC<StepQuemEVoceNewProps> = ({
           onLinkedinChange={(value) => onUpdate('linkedin_url', value)}
         />
 
-        <DropdownModerno
-          value={data.how_found_us}
-          onChange={(value) => onUpdate('how_found_us', value)}
-          options={HOW_FOUND_OPTIONS}
-          placeholder="Selecione uma opção"
-          label="Como conheceu o VIVER DE IA?"
-          required
-        />
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-white">
+            Como conheceu o VIVER DE IA? <span className="text-red-400">*</span>
+          </label>
+          <Select value={data.how_found_us} onValueChange={(value) => onUpdate('how_found_us', value)}>
+            <SelectTrigger className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50">
+              <SelectValue placeholder="Selecione como nos conheceu" />
+            </SelectTrigger>
+            <SelectContent className="bg-gray-800 border-gray-600">
+              {HOW_FOUND_OPTIONS.map((option) => (
+                <SelectItem 
+                  key={option.value} 
+                  value={option.value}
+                  className="text-white hover:bg-gray-700"
+                >
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         <ConditionalReferralInput
           howFoundUs={data.how_found_us}
           referredBy={data.referred_by || ''}
           onReferredByChange={(value) => onUpdate('referred_by', value)}
         />
-      </QuickFormStep>
-    </>
+
+        <div className="flex justify-between items-center pt-6 border-t border-gray-700">
+          <div className="text-sm text-gray-400">
+            Etapa {currentStep} de {totalSteps}
+          </div>
+          
+          <Button
+            onClick={onNext}
+            disabled={!canProceed}
+            className="bg-viverblue hover:bg-viverblue-dark transition-colors flex items-center gap-2"
+          >
+            <span>Continuar</span>
+            <ArrowRight size={16} />
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };

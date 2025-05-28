@@ -1,71 +1,64 @@
-import { useMemo } from 'react';
+
 import { QuickOnboardingData } from '@/types/quickOnboarding';
 
 export interface ValidationResult {
   isValid: boolean;
   errors: Record<string, string>;
-  warnings: Record<string, string>;
 }
 
 export class OnboardingValidator {
-  private static emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  private static phoneRegex = /^\(\d{2}\)\s\d{4,5}-\d{4}$/;
-  private static urlRegex = /^https?:\/\/.+\..+/;
-
-  static validateStep1(data: Partial<QuickOnboardingData>): ValidationResult {
+  // Validação da Etapa 1: Informações Pessoais
+  static validateStep1(data: QuickOnboardingData): ValidationResult {
     const errors: Record<string, string> = {};
-    const warnings: Record<string, string> = {};
 
-    // Validações obrigatórias
+    // Campos obrigatórios
     if (!data.name?.trim()) {
       errors.name = 'Nome é obrigatório';
-    } else if (data.name.length < 2) {
-      errors.name = 'Nome deve ter pelo menos 2 caracteres';
     }
 
     if (!data.email?.trim()) {
       errors.email = 'E-mail é obrigatório';
-    } else if (!this.emailRegex.test(data.email)) {
-      errors.email = 'E-mail deve ter um formato válido';
+    } else if (!this.isValidEmail(data.email)) {
+      errors.email = 'E-mail inválido';
     }
 
     if (!data.whatsapp?.trim()) {
       errors.whatsapp = 'WhatsApp é obrigatório';
-    } else if (!this.phoneRegex.test(data.whatsapp)) {
-      errors.whatsapp = 'WhatsApp deve estar no formato (11) 99999-9999';
+    } else if (!this.isValidPhone(data.whatsapp)) {
+      errors.whatsapp = 'WhatsApp inválido';
     }
 
-    if (!data.country_code) {
+    if (!data.country_code?.trim()) {
       errors.country_code = 'País é obrigatório';
     }
 
-    if (!data.how_found_us) {
-      errors.how_found_us = 'Como nos conheceu é obrigatório';
+    if (!data.how_found_us?.trim()) {
+      errors.how_found_us = 'Como conheceu o VIVER DE IA é obrigatório';
     }
 
+    // Se escolheu indicação, precisa informar quem indicou
     if (data.how_found_us === 'indicacao' && !data.referred_by?.trim()) {
       errors.referred_by = 'Nome de quem indicou é obrigatório';
     }
 
-    // Validações opcionais com warnings
-    if (data.instagram_url && !this.urlRegex.test(data.instagram_url)) {
-      warnings.instagram_url = 'URL do Instagram parece inválida';
+    // Validação de URLs opcionais
+    if (data.instagram_url && !this.isValidUrl(data.instagram_url)) {
+      errors.instagram_url = 'URL do Instagram inválida';
     }
 
-    if (data.linkedin_url && !this.urlRegex.test(data.linkedin_url)) {
-      warnings.linkedin_url = 'URL do LinkedIn parece inválida';
+    if (data.linkedin_url && !this.isValidUrl(data.linkedin_url)) {
+      errors.linkedin_url = 'URL do LinkedIn inválida';
     }
 
     return {
       isValid: Object.keys(errors).length === 0,
-      errors,
-      warnings
+      errors
     };
   }
 
-  static validateStep2(data: Partial<QuickOnboardingData>): ValidationResult {
+  // Validação da Etapa 2: Negócio
+  static validateStep2(data: QuickOnboardingData): ValidationResult {
     const errors: Record<string, string> = {};
-    const warnings: Record<string, string> = {};
 
     if (!data.company_name?.trim()) {
       errors.company_name = 'Nome da empresa é obrigatório';
@@ -75,56 +68,56 @@ export class OnboardingValidator {
       errors.role = 'Cargo é obrigatório';
     }
 
-    if (!data.company_size) {
+    if (!data.company_size?.trim()) {
       errors.company_size = 'Tamanho da empresa é obrigatório';
     }
 
-    if (!data.company_segment) {
+    if (!data.company_segment?.trim()) {
       errors.company_segment = 'Segmento da empresa é obrigatório';
     }
 
-    if (!data.annual_revenue_range) {
-      errors.annual_revenue_range = 'Faturamento anual é obrigatório';
+    if (!data.annual_revenue_range?.trim()) {
+      errors.annual_revenue_range = 'Faixa de faturamento anual é obrigatória';
     }
 
     if (!data.main_challenge?.trim()) {
       errors.main_challenge = 'Principal desafio é obrigatório';
     }
 
-    if (data.company_website && !this.urlRegex.test(data.company_website)) {
-      warnings.company_website = 'URL do site parece inválida';
+    // Validação de URL opcional
+    if (data.company_website && !this.isValidUrl(data.company_website)) {
+      errors.company_website = 'Website da empresa inválido';
     }
 
     return {
       isValid: Object.keys(errors).length === 0,
-      errors,
-      warnings
+      errors
     };
   }
 
-  static validateStep3(data: Partial<QuickOnboardingData>): ValidationResult {
+  // Validação da Etapa 3: Experiência com IA
+  static validateStep3(data: QuickOnboardingData): ValidationResult {
     const errors: Record<string, string> = {};
-    const warnings: Record<string, string> = {};
 
-    if (!data.ai_knowledge_level) {
+    if (!data.ai_knowledge_level?.trim()) {
       errors.ai_knowledge_level = 'Nível de conhecimento em IA é obrigatório';
     }
 
-    if (!data.uses_ai) {
-      errors.uses_ai = 'Frequência de uso de IA é obrigatória';
+    if (!data.uses_ai?.trim()) {
+      errors.uses_ai = 'Uso atual de IA é obrigatório';
     }
 
-    if (!data.main_goal) {
-      errors.main_goal = 'Principal objetivo com IA é obrigatório';
+    if (!data.main_goal?.trim()) {
+      errors.main_goal = 'Principal objetivo é obrigatório';
     }
 
     return {
       isValid: Object.keys(errors).length === 0,
-      errors,
-      warnings
+      errors
     };
   }
 
+  // Validação completa de todos os dados
   static validateAllSteps(data: QuickOnboardingData): ValidationResult {
     const step1 = this.validateStep1(data);
     const step2 = this.validateStep2(data);
@@ -132,27 +125,34 @@ export class OnboardingValidator {
 
     return {
       isValid: step1.isValid && step2.isValid && step3.isValid,
-      errors: { ...step1.errors, ...step2.errors, ...step3.errors },
-      warnings: { ...step1.warnings, ...step2.warnings, ...step3.warnings }
+      errors: {
+        ...step1.errors,
+        ...step2.errors,
+        ...step3.errors
+      }
     };
   }
-}
 
-// Hook para validação reativa
-export const useOnboardingValidation = (
-  data: Partial<QuickOnboardingData>,
-  currentStep: number
-) => {
-  return useMemo(() => {
-    switch (currentStep) {
-      case 1:
-        return OnboardingValidator.validateStep1(data);
-      case 2:
-        return OnboardingValidator.validateStep2(data);
-      case 3:
-        return OnboardingValidator.validateStep3(data);
-      default:
-        return { isValid: true, errors: {}, warnings: {} };
+  // Utilitários de validação
+  private static isValidEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  private static isValidPhone(phone: string): boolean {
+    // Remove formatação e verifica se tem pelo menos 10 dígitos
+    const numbersOnly = phone.replace(/\D/g, '');
+    return numbersOnly.length >= 10 && numbersOnly.length <= 15;
+  }
+
+  private static isValidUrl(url: string): boolean {
+    try {
+      // Se não tem protocolo, adiciona https://
+      const urlToTest = url.startsWith('http') ? url : `https://${url}`;
+      new URL(urlToTest);
+      return true;
+    } catch {
+      return false;
     }
-  }, [data, currentStep]);
-};
+  }
+}
