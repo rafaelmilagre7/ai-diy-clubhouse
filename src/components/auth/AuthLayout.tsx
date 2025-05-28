@@ -68,7 +68,7 @@ const AuthLayout = () => {
                   Acesse sua conta
                 </CardTitle>
                 <CardDescription className="text-white/80 text-center text-base font-medium">
-                  Entre para acessar suas soluções de IA
+                  Entre para acessar suas soluções de IA exclusivas
                 </CardDescription>
               </CardHeader>
               
@@ -87,30 +87,30 @@ const AuthLayout = () => {
           >
             <div className="bg-black/20 backdrop-blur-sm rounded-xl p-4 border border-white/10">
               <p className="text-base font-semibold text-white mb-2">
-                🎯 Acesso exclusivo para membros do VIVER DE IA Club
+                🔐 Acesso exclusivo para membros convidados
               </p>
               
               <p className="text-white/80 mb-3">
                 Não possui uma conta?{" "}
                 <span className="font-semibold text-viverblue">
-                  O cadastro é feito apenas por convite
+                  O acesso é restrito apenas por convite
                 </span>
               </p>
               
               <p className="text-white/70 text-sm">
-                Se você recebeu um convite, acesse o link enviado por email para ativar sua conta
+                Se você recebeu um convite, use o email e senha fornecidos para acessar a plataforma
               </p>
             </div>
             
             <div className="flex items-center justify-center gap-2 text-white/60">
-              <span>Dúvidas ou mais informações?</span>
+              <span>Interessado em participar?</span>
               <a
                 href="https://milagredigital.com/club/"
                 className="font-semibold text-viverblue hover:text-viverblue-light underline decoration-viverblue/50 hover:decoration-viverblue transition-all duration-200"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Conheça o Club →
+                Saiba mais sobre o Club →
               </a>
             </div>
           </motion.div>
