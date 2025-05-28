@@ -60,13 +60,13 @@ export const useQuickOnboardingOptimized = () => {
     switch (currentStep) {
       case 1:
         // Etapa 1: Validar apenas informações pessoais básicas
-        return !!(data.name && data.email);
+        return !!(data.name && data.email && data.how_found_us);
       case 2:
-        // Etapa 2: Validar apenas informações do negócio (CORRIGIDO)
-        return !!(data.company_name && data.role);
+        // Etapa 2: Validar apenas informações do negócio
+        return !!(data.company_name && data.role && data.company_size && data.main_challenge);
       case 3:
         // Etapa 3: Validar experiência com IA
-        return !!(data.ai_knowledge_level && data.uses_ai && data.main_goal);
+        return !!(data.uses_ai && data.main_goal);
       default:
         return false;
     }
