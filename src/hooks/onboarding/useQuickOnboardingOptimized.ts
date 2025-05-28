@@ -33,6 +33,7 @@ const initialData: QuickOnboardingData = {
 export const useQuickOnboardingOptimized = () => {
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
+  const [isCompleting, setIsCompleting] = useState(false);
   const { 
     data, 
     setData, 
@@ -79,7 +80,6 @@ export const useQuickOnboardingOptimized = () => {
   }, [currentStep]);
 
   const isDataComplete = useCallback(() => {
-    // Validação simples e direta de todos os campos obrigatórios
     const step1Complete = !!(
       data.name && 
       data.email && 
@@ -114,69 +114,107 @@ export const useQuickOnboardingOptimized = () => {
   }, [data]);
 
   const completeOnboarding = useCallback(async () => {
-    if (!user) {
-      toast.error('Usuário não autenticado');
+    if (!user || isCompleting) {
+      console.log('⚠️ Usuário não autenticado ou já finalizando');
       return false;
     }
 
     console.log('🎯 Iniciando finalização do onboarding...');
-
-    // Primeiro, garantir que estamos na etapa 4
-    if (currentStep !== 4) {
-      console.log(`⚠️ Ajustando currentStep de ${currentStep} para 4`);
-      setCurrentStep(4);
-    }
-
-    // Validar se todos os dados estão completos
-    if (!isDataComplete()) {
-      console.error('❌ Dados incompletos para finalizar onboarding');
-      toast.error('Complete todas as etapas antes de finalizar');
-      return false;
-    }
+    setIsCompleting(true);
 
     try {
-      console.log('💾 Finalizando onboarding com dados completos...');
+      // Validar se todos os dados estão completos
+      if (!isDataComplete()) {
+        console.error('❌ Dados incompletos para finalizar onboarding');
+        toast.error('Complete todas as etapas antes de finalizar');
+        setIsCompleting(false);
+        return false;
+      }
 
-      // Atualizar quick_onboarding como completo
-      const { error: quickError } = await supabase
+      console.log('💾 Salvando dados finais do onboarding...');
+
+      // Primeiro, salvar/atualizar os dados do quick_onboarding
+      const savePayload = {
+        user_id: user.id,
+        name: data.name,
+        email: data.email,
+        whatsapp: data.whatsapp,
+        country_code: data.country_code,
+        birth_date: data.birth_date || null,
+        instagram_url: data.instagram_url,
+        linkedin_url: data.linkedin_url,
+        how_found_us: data.how_found_us,
+        referred_by: data.referred_by,
+        company_name: data.company_name,
+        role: data.role,
+        company_size: data.company_size,
+        company_segment: data.company_segment,
+        company_website: data.company_website,
+        annual_revenue_range: data.annual_revenue_range,
+        main_challenge: data.main_challenge,
+        ai_knowledge_level: data.ai_knowledge_level,
+        uses_ai: data.uses_ai,
+        main_goal: data.main_goal,
+        current_step: 4,
+        is_completed: true,
+        updated_at: new Date().toISOString()
+      };
+
+      // Verificar se já existe um registro
+      const { data: existing } = await supabase
         .from('quick_onboarding')
-        .update({ 
-          is_completed: true,
-          current_step: 4,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id);
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
 
-      if (quickError) {
-        console.error('❌ Erro ao atualizar quick_onboarding:', quickError);
-        throw quickError;
+      let result;
+      if (existing) {
+        result = await supabase
+          .from('quick_onboarding')
+          .update(savePayload)
+          .eq('user_id', user.id);
+      } else {
+        result = await supabase
+          .from('quick_onboarding')
+          .insert([savePayload]);
       }
 
-      // Atualizar onboarding_progress (se existir)
-      const { error: progressError } = await supabase
-        .from('onboarding_progress')
-        .update({ 
-          is_completed: true,
-          current_step: 'completed',
-          completed_steps: ['personal_info', 'professional_info', 'ai_experience'],
+      if (result.error) {
+        console.error('❌ Erro ao salvar dados finais:', result.error);
+        throw result.error;
+      }
+
+      // Atualizar profile básico com dados principais
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          name: data.name,
+          company_name: data.company_name,
+          industry: data.company_segment,
           updated_at: new Date().toISOString()
         })
-        .eq('user_id', user.id);
+        .eq('id', user.id);
 
-      // Não falhar se onboarding_progress não existir
-      if (progressError && progressError.code !== 'PGRST116') {
-        console.warn('⚠️ Erro ao atualizar onboarding_progress (não crítico):', progressError);
+      if (profileError) {
+        console.warn('⚠️ Erro ao atualizar profile (não crítico):', profileError);
       }
+
+      // Atualizar o currentStep para 4 (tela de finalização)
+      setCurrentStep(4);
 
       console.log('✅ Onboarding finalizado com sucesso!');
-      toast.success('Onboarding concluído com sucesso!');
+      toast.success('Onboarding concluído! Trilha de implementação e networking liberados!');
+      
+      setIsCompleting(false);
       return true;
+
     } catch (error) {
       console.error('❌ Erro ao completar onboarding:', error);
       toast.error('Erro ao finalizar onboarding. Tente novamente.');
+      setIsCompleting(false);
       return false;
     }
-  }, [user, isDataComplete, currentStep]);
+  }, [user, data, isDataComplete, isCompleting]);
 
   return {
     currentStep,
@@ -192,6 +230,7 @@ export const useQuickOnboardingOptimized = () => {
     isSaving,
     lastSaveTime,
     completeOnboarding,
-    isDataComplete: isDataComplete()
+    isDataComplete: isDataComplete(),
+    isCompleting
   };
 };

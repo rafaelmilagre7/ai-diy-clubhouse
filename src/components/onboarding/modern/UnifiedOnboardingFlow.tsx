@@ -22,15 +22,22 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     totalSteps,
     isSaving,
     lastSaveTime,
-    completeOnboarding
+    completeOnboarding,
+    isCompleting
   } = useQuickOnboardingOptimized();
 
   const handleFinish = async () => {
+    console.log('🎯 Finalizando onboarding e redirecionando...');
     const success = await completeOnboarding();
     if (success) {
-      console.log('Onboarding finalizado com dados:', data);
+      console.log('✅ Onboarding concluído, redirecionando para página de sucesso');
       navigate('/onboarding-new/completed');
     }
+  };
+
+  const handleMagicFinish = () => {
+    console.log('✨ Experiência mágica finalizada, redirecionando...');
+    navigate('/onboarding-new/completed');
   };
 
   // Mostrar loading enquanto carrega dados existentes
@@ -105,7 +112,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6 }}
           >
-            <EnhancedTrailMagicExperience onFinish={handleFinish} />
+            <EnhancedTrailMagicExperience onFinish={handleMagicFinish} />
           </motion.div>
         );
       
@@ -116,6 +123,14 @@ export const UnifiedOnboardingFlow: React.FC = () => {
 
   return (
     <div className="relative">
+      {isCompleting && (
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-gray-800 rounded-lg p-6 space-y-4">
+            <Loader2 className="h-8 w-8 text-viverblue animate-spin mx-auto" />
+            <p className="text-white text-center">Finalizando onboarding...</p>
+          </div>
+        </div>
+      )}
       {renderCurrentStep()}
     </div>
   );

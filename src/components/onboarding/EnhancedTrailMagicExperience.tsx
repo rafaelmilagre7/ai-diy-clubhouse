@@ -12,7 +12,6 @@ export const EnhancedTrailMagicExperience: React.FC<EnhancedTrailMagicExperience
 }) => {
   const [currentPhase, setCurrentPhase] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [hasFinished, setHasFinished] = useState(false);
 
   const phases = [
     {
@@ -24,11 +23,12 @@ export const EnhancedTrailMagicExperience: React.FC<EnhancedTrailMagicExperience
       emoji: "🚀"
     },
     {
-      text: "Finalizando sua experiência personalizada...",
+      text: "Liberando trilha de implementação e networking...",
       emoji: "✨"
     }
   ];
 
+  // Controlar progresso automaticamente
   useEffect(() => {
     const timer = setInterval(() => {
       setProgress(prev => {
@@ -38,11 +38,12 @@ export const EnhancedTrailMagicExperience: React.FC<EnhancedTrailMagicExperience
         }
         return prev + 2;
       });
-    }, 80);
+    }, 60);
 
     return () => clearInterval(timer);
   }, []);
 
+  // Atualizar fase baseado no progresso
   useEffect(() => {
     const phaseProgress = Math.floor(progress / 33.33);
     if (phaseProgress < phases.length && phaseProgress !== currentPhase) {
@@ -50,34 +51,36 @@ export const EnhancedTrailMagicExperience: React.FC<EnhancedTrailMagicExperience
     }
   }, [progress, currentPhase, phases.length]);
 
+  // Finalizar quando chegar a 100%
   useEffect(() => {
-    if (progress >= 100 && !hasFinished) {
-      console.log('🎉 Animação concluída - iniciando finalização');
-      setHasFinished(true);
+    if (progress >= 100) {
+      console.log('🎉 Animação concluída - mostrando confetes');
       
+      // Mostrar confetes
       confetti({
-        particleCount: 100,
+        particleCount: 150,
         spread: 70,
         origin: { y: 0.6 }
       });
 
+      // Mais confetes após 500ms
+      setTimeout(() => {
+        confetti({
+          particleCount: 100,
+          spread: 60,
+          origin: { y: 0.4 }
+        });
+      }, 500);
+
+      // Chamar onFinish após 2 segundos para mostrar a animação completa
       const finishTimer = setTimeout(() => {
-        console.log('🎯 Chamando onFinish()');
+        console.log('🎯 Finalizando experiência mágica');
         onFinish();
-      }, 1500);
+      }, 2000);
 
-      // Timeout de segurança
-      const safetyTimer = setTimeout(() => {
-        console.log('⚠️ Timeout de segurança ativado - forçando onFinish()');
-        onFinish();
-      }, 5000);
-
-      return () => {
-        clearTimeout(finishTimer);
-        clearTimeout(safetyTimer);
-      };
+      return () => clearTimeout(finishTimer);
     }
-  }, [progress, hasFinished, onFinish]);
+  }, [progress, onFinish]);
 
   return (
     <div className="max-w-2xl mx-auto space-y-8 py-12">
@@ -87,6 +90,7 @@ export const EnhancedTrailMagicExperience: React.FC<EnhancedTrailMagicExperience
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
+        {/* Ícone animado da fase */}
         <motion.div
           className="text-6xl mb-4"
           animate={{ 
@@ -101,6 +105,7 @@ export const EnhancedTrailMagicExperience: React.FC<EnhancedTrailMagicExperience
           {phases[currentPhase]?.emoji}
         </motion.div>
 
+        {/* Texto da fase */}
         <motion.h2
           className="text-2xl font-bold text-white mb-6"
           key={currentPhase}
@@ -111,7 +116,8 @@ export const EnhancedTrailMagicExperience: React.FC<EnhancedTrailMagicExperience
           {phases[currentPhase]?.text}
         </motion.h2>
 
-        <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+        {/* Barra de progresso */}
+        <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden">
           <motion.div
             className="h-full bg-gradient-to-r from-viverblue to-viverblue-light rounded-full"
             initial={{ width: "0%" }}
@@ -120,25 +126,35 @@ export const EnhancedTrailMagicExperience: React.FC<EnhancedTrailMagicExperience
           />
         </div>
 
+        {/* Porcentagem */}
         <motion.p
-          className="text-viverblue-light font-semibold text-lg"
+          className="text-viverblue-light font-semibold text-xl"
           animate={{ scale: progress >= 100 ? [1, 1.2, 1] : 1 }}
           transition={{ duration: 0.5 }}
         >
           {Math.round(progress)}%
         </motion.p>
 
+        {/* Mensagem de conclusão */}
         {progress >= 100 && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             className="space-y-4 mt-8"
           >
-            <div className="text-3xl font-bold text-viverblue">
+            <div className="text-4xl font-bold text-viverblue">
               🎉 Pronto!
             </div>
+            <div className="space-y-2">
+              <p className="text-green-400 font-semibold">
+                ✅ Trilha de Implementação Liberada
+              </p>
+              <p className="text-blue-400 font-semibold">
+                🤝 Networking Inteligente Ativado
+              </p>
+            </div>
             <p className="text-gray-300">
-              Redirecionando para sua experiência personalizada...
+              Redirecionando para sua página de sucesso...
             </p>
           </motion.div>
         )}
