@@ -2,6 +2,7 @@
 import { useState, useCallback } from 'react';
 import { QuickOnboardingData } from '@/types/quickOnboarding';
 import { useQuickOnboardingDataLoader } from './useQuickOnboardingDataLoader';
+import { useQuickOnboardingAutoSave } from './useQuickOnboardingAutoSave';
 
 const initialData: QuickOnboardingData = {
   // Etapa 1: Informações Pessoais
@@ -45,6 +46,9 @@ export const useQuickOnboardingOptimized = () => {
     loadError 
   } = useQuickOnboardingDataLoader();
 
+  // Adicionar auto-save
+  const { isSaving, lastSaveTime } = useQuickOnboardingAutoSave(data);
+
   const updateField = useCallback((field: keyof QuickOnboardingData, value: any) => {
     setData(prev => ({
       ...prev,
@@ -55,11 +59,14 @@ export const useQuickOnboardingOptimized = () => {
   const canProceed = useCallback(() => {
     switch (currentStep) {
       case 1:
+        // Etapa 1: Validar apenas informações pessoais básicas
         return !!(data.name && data.email);
       case 2:
-        return !!(data.company_name && data.main_goal);
+        // Etapa 2: Validar apenas informações do negócio (CORRIGIDO)
+        return !!(data.company_name && data.role);
       case 3:
-        return !!(data.ai_knowledge_level && data.uses_ai);
+        // Etapa 3: Validar experiência com IA
+        return !!(data.ai_knowledge_level && data.uses_ai && data.main_goal);
       default:
         return false;
     }
@@ -85,6 +92,9 @@ export const useQuickOnboardingOptimized = () => {
     isLoading,
     hasExistingData,
     loadError,
-    totalSteps: 4
+    totalSteps: 4,
+    // Adicionar estado de salvamento
+    isSaving,
+    lastSaveTime
   };
 };

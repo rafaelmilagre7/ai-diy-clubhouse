@@ -17,7 +17,9 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     isLoading,
     hasExistingData,
     loadError,
-    totalSteps
+    totalSteps,
+    isSaving,
+    lastSaveTime
   } = useQuickOnboardingOptimized();
 
   const { navigateToStep } = useOnboardingNavigation();
@@ -74,6 +76,8 @@ export const UnifiedOnboardingFlow: React.FC = () => {
               canProceed={canProceed}
               currentStep={currentStep}
               totalSteps={totalSteps}
+              isSaving={isSaving}
+              lastSaveTime={lastSaveTime}
             />
           </div>
         );
