@@ -25,11 +25,6 @@ export interface QuickOnboardingData {
   ai_knowledge_level: string;
   uses_ai: string;
   main_goal: string;
-
-  // Campos adicionais para compatibilidade
-  desired_ai_areas: string[];
-  has_implemented: string;
-  previous_tools: string[];
 }
 
 // Adapter para converter OnboardingState para QuickOnboardingData
@@ -53,9 +48,6 @@ export const adaptOnboardingStateToQuickData = (state: any): QuickOnboardingData
     main_challenge: state.main_challenge || '',
     ai_knowledge_level: state.ai_knowledge_level || '',
     uses_ai: state.uses_ai || '',
-    main_goal: state.main_goal || '',
-    desired_ai_areas: state.desired_ai_areas || [],
-    has_implemented: state.has_implemented || '',
-    previous_tools: state.previous_tools || []
+    main_goal: state.main_goal || ''
   };
 };

@@ -13,8 +13,8 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
   const lastDataRef = useRef<string>('');
 
   useEffect(() => {
-    // Só salvar se o usuário estiver logado e houver dados básicos
-    if (!user || !data.name) return;
+    // Só salvar se o usuário estiver logado e houver dados básicos mínimos
+    if (!user || !data.name?.trim() || !data.email?.trim()) return;
 
     // Verificar se os dados mudaram
     const currentDataString = JSON.stringify(data);
@@ -27,7 +27,7 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
       clearTimeout(saveTimeoutRef.current);
     }
 
-    // Salvar após 2 segundos de inatividade (debounce)
+    // Salvar após 3 segundos de inatividade (debounce aumentado)
     saveTimeoutRef.current = setTimeout(async () => {
       try {
         setIsSaving(true);
@@ -39,30 +39,28 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
           .eq('user_id', user.id)
           .single();
 
+        // Preparar dados para salvar (apenas campos que existem na tabela)
         const quickOnboardingData = {
           user_id: user.id,
-          name: data.name,
-          email: data.email,
-          whatsapp: data.whatsapp,
-          country_code: data.country_code,
+          name: data.name?.trim() || '',
+          email: data.email?.trim() || '',
+          whatsapp: data.whatsapp?.trim() || '',
+          country_code: data.country_code?.trim() || '',
           birth_date: data.birth_date || null,
-          instagram_url: data.instagram_url || null,
-          linkedin_url: data.linkedin_url || null,
-          how_found_us: data.how_found_us,
-          referred_by: data.referred_by || null,
-          company_name: data.company_name,
-          role: data.role,
-          company_size: data.company_size,
-          company_segment: data.company_segment,
-          company_website: data.company_website || null,
-          annual_revenue_range: data.annual_revenue_range,
-          main_challenge: data.main_challenge,
-          ai_knowledge_level: data.ai_knowledge_level,
-          uses_ai: data.uses_ai,
-          main_goal: data.main_goal,
-          desired_ai_areas: data.desired_ai_areas,
-          has_implemented: data.has_implemented,
-          previous_tools: data.previous_tools,
+          instagram_url: data.instagram_url?.trim() || null,
+          linkedin_url: data.linkedin_url?.trim() || null,
+          how_found_us: data.how_found_us?.trim() || '',
+          referred_by: data.referred_by?.trim() || null,
+          company_name: data.company_name?.trim() || '',
+          role: data.role?.trim() || '',
+          company_size: data.company_size?.trim() || '',
+          company_segment: data.company_segment?.trim() || '',
+          company_website: data.company_website?.trim() || null,
+          annual_revenue_range: data.annual_revenue_range?.trim() || '',
+          main_challenge: data.main_challenge?.trim() || '',
+          ai_knowledge_level: data.ai_knowledge_level?.trim() || '',
+          uses_ai: data.uses_ai?.trim() || '',
+          main_goal: data.main_goal?.trim() || '',
           updated_at: new Date().toISOString()
         };
 
@@ -73,7 +71,10 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
             .update(quickOnboardingData)
             .eq('id', existingData.id);
 
-          if (updateError) throw updateError;
+          if (updateError) {
+            console.error('Erro ao atualizar dados:', updateError);
+            throw updateError;
+          }
         } else {
           // Criar novo registro
           const { error: insertError } = await supabase
@@ -84,7 +85,10 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
               is_completed: false
             }]);
 
-          if (insertError) throw insertError;
+          if (insertError) {
+            console.error('Erro ao inserir dados:', insertError);
+            throw insertError;
+          }
         }
 
         // Também salvar/atualizar na tabela onboarding_progress para compatibilidade
@@ -95,11 +99,15 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
         
       } catch (error: any) {
         console.error('❌ Erro ao salvar dados automaticamente:', error);
-        toast.error('Erro ao salvar dados. Tente novamente.');
+        
+        // Não mostrar toast para todos os erros, apenas para erros críticos
+        if (error?.code !== 'PGRST116') { // Não mostrar para erro de "não encontrado"
+          toast.error('Erro ao salvar dados. Suas informações serão salvas quando você prosseguir.');
+        }
       } finally {
         setIsSaving(false);
       }
-    }, 2000);
+    }, 3000); // Aumentado para 3 segundos
 
     return () => {
       if (saveTimeoutRef.current) {
@@ -120,38 +128,38 @@ const saveToOnboardingProgress = async (data: QuickOnboardingData, userId: strin
     const progressData = {
       user_id: userId,
       personal_info: {
-        name: data.name,
-        email: data.email,
-        phone: data.whatsapp,
-        ddi: data.country_code,
-        linkedin: data.linkedin_url,
-        instagram: data.instagram_url
+        name: data.name || '',
+        email: data.email || '',
+        phone: data.whatsapp || '',
+        ddi: data.country_code || '',
+        linkedin: data.linkedin_url || '',
+        instagram: data.instagram_url || ''
       },
       professional_info: {
-        company_name: data.company_name,
-        current_position: data.role,
-        company_size: data.company_size,
-        company_sector: data.company_segment,
-        company_website: data.company_website,
-        annual_revenue: data.annual_revenue_range
+        company_name: data.company_name || '',
+        current_position: data.role || '',
+        company_size: data.company_size || '',
+        company_sector: data.company_segment || '',
+        company_website: data.company_website || '',
+        annual_revenue: data.annual_revenue_range || ''
       },
       ai_experience: {
-        knowledge_level: data.ai_knowledge_level,
-        previous_tools: data.previous_tools,
-        desired_ai_areas: data.desired_ai_areas,
-        has_implemented: data.has_implemented,
-        uses_ai: data.uses_ai
+        knowledge_level: data.ai_knowledge_level || '',
+        previous_tools: [], // Array vazio para compatibilidade
+        desired_ai_areas: [], // Array vazio para compatibilidade
+        has_implemented: data.uses_ai || '',
+        uses_ai: data.uses_ai || ''
       },
       business_goals: {
-        primary_goal: data.main_goal,
+        primary_goal: data.main_goal || '',
         expected_outcomes: []
       },
       business_context: {
         business_challenges: data.main_challenge ? [data.main_challenge] : []
       },
       complementary_info: {
-        how_found_us: data.how_found_us,
-        referred_by: data.referred_by
+        how_found_us: data.how_found_us || '',
+        referred_by: data.referred_by || ''
       },
       experience_personalization: {},
       current_step: determineCurrentStep(data),
@@ -177,7 +185,7 @@ const saveToOnboardingProgress = async (data: QuickOnboardingData, userId: strin
         .insert([progressData]);
     }
   } catch (error) {
-    console.error('Erro ao salvar no onboarding_progress:', error);
+    console.error('Erro ao salvar no onboarding_progress (não crítico):', error);
   }
 };
 
