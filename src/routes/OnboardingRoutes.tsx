@@ -3,8 +3,8 @@ import { RouteObject } from "react-router-dom";
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import NovoOnboarding from '@/pages/onboarding/NovoOnboarding';
 import NovoOnboardingNew from '@/pages/onboarding/NovoOnboardingNew';
+import OnboardingCompletedNewPage from '@/pages/onboarding/OnboardingCompletedNew';
 import { OnboardingCompleted } from "@/components/onboarding/OnboardingCompleted";
-import { OnboardingCompletedNew } from "@/components/onboarding/OnboardingCompletedNew";
 
 export const onboardingRoutes: RouteObject[] = [
   // Rota principal do onboarding - experiência one-page
@@ -25,6 +25,6 @@ export const onboardingRoutes: RouteObject[] = [
   // Nova rota para a página de sucesso do onboarding novo
   {
     path: "/onboarding-new/completed",
-    element: <ProtectedRoutes><OnboardingCompletedNew /></ProtectedRoutes>
+    element: <ProtectedRoutes><OnboardingCompletedNewPage /></ProtectedRoutes>
   }
 ];
