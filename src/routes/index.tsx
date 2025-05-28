@@ -1,5 +1,130 @@
+import React, { Suspense } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/auth';
+import LoadingScreen from '@/components/common/LoadingScreen';
+import { SmartRedirectHandler } from '@/components/routing/SmartRedirectHandler';
+import { FeatureAccessGuard } from '@/components/auth/FeatureAccessGuard';
+import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
+import { AdminProtectedRoutes } from '@/auth/AdminProtectedRoutes';
+import { FormacaoProtectedRoutes } from '@/auth/FormacaoProtectedRoutes';
+import RootRedirect from '@/components/routing/RootRedirect';
+import LoginPage from '@/pages/auth/LoginPage';
+import DashboardPage from '@/pages/app/DashboardPage';
+import ImplementationTrailPage from '@/pages/app/ImplementationTrailPage';
+import { NetworkingRoutes } from './NetworkingRoutes';
+import { CommunityRoutes } from './CommunityRoutes';
+import { SolutionsRoutes } from './SolutionsRoutes';
+import { LearningRoutes } from './LearningRoutes';
+import { ToolsRoutes } from './ToolsRoutes';
+import { BenefitsRoutes } from './BenefitsRoutes';
+import { OnboardingRoutes } from './OnboardingRoutes';
+import { AdminRoutes } from './AdminRoutes';
+import { FormacaoRoutes } from './FormacaoRoutes';
+import { ProfileRoutes } from './ProfileRoutes';
 
-// Este arquivo apenas exporta o componente AppRoutes
-import AppRoutes from '../components/routing/AppRoutes';
+export const AppRoutes = () => {
+  return (
+    <SmartRedirectHandler>
+      <Suspense fallback={<LoadingScreen />}>
+        <Routes>
+          {/* Rotas públicas */}
+          <Route path="/" element={<RootRedirect />} />
+          <Route path="/login" element={<LoginPage />} />
 
-export { AppRoutes };
+          {/* Rotas protegidas com guards de acesso */}
+          <Route path="/dashboard" element={
+            <ProtectedRoutes>
+              <DashboardPage />
+            </ProtectedRoutes>
+          } />
+
+          <Route path="/implementation-trail" element={
+            <ProtectedRoutes>
+              <FeatureAccessGuard feature="implementation_trail">
+                <ImplementationTrailPage />
+              </FeatureAccessGuard>
+            </ProtectedRoutes>
+          } />
+
+          <Route path="/networking/*" element={
+            <ProtectedRoutes>
+              <FeatureAccessGuard feature="networking">
+                <NetworkingRoutes />
+              </FeatureAccessGuard>
+            </ProtectedRoutes>
+          } />
+
+          <Route path="/comunidade/*" element={
+            <ProtectedRoutes>
+              <FeatureAccessGuard feature="community">
+                <CommunityRoutes />
+              </FeatureAccessGuard>
+            </ProtectedRoutes>
+          } />
+
+          <Route path="/solutions/*" element={
+            <ProtectedRoutes>
+              <FeatureAccessGuard feature="solutions">
+                <SolutionsRoutes />
+              </FeatureAccessGuard>
+            </ProtectedRoutes>
+          } />
+
+          <Route path="/learning/*" element={
+            <ProtectedRoutes>
+              <FeatureAccessGuard feature="learning">
+                <LearningRoutes />
+              </FeatureAccessGuard>
+            </ProtectedRoutes>
+          } />
+
+          <Route path="/tools/*" element={
+            <ProtectedRoutes>
+              <FeatureAccessGuard feature="tools">
+                <ToolsRoutes />
+              </FeatureAccessGuard>
+            </ProtectedRoutes>
+          } />
+
+          <Route path="/benefits/*" element={
+            <ProtectedRoutes>
+              <FeatureAccessGuard feature="benefits">
+                <BenefitsRoutes />
+              </FeatureAccessGuard>
+            </ProtectedRoutes>
+          } />
+
+          {/* Onboarding */}
+          <Route path="/onboarding-new/*" element={
+            <ProtectedRoutes>
+              <OnboardingRoutes />
+            </ProtectedRoutes>
+          } />
+
+          {/* Rotas administrativas */}
+          <Route path="/admin/*" element={
+            <AdminProtectedRoutes>
+              <AdminRoutes />
+            </AdminProtectedRoutes>
+          } />
+
+          <Route path="/formacao/*" element={
+            <FormacaoProtectedRoutes>
+              <FormacaoRoutes />
+            </FormacaoProtectedRoutes>
+          } />
+
+          {/* Profile sempre acessível para usuários autenticados */}
+          <Route path="/profile/*" element={
+            <ProtectedRoutes>
+              <ProfileRoutes />
+            </ProtectedRoutes>
+          } />
+
+          {/* 404 */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </Suspense>
+    </SmartRedirectHandler>
+  );
+};
