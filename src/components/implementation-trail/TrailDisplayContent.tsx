@@ -7,6 +7,7 @@ import { ImplementationTrail } from "@/types/implementation-trail";
 import { TrailSolutionsList } from "./TrailSolutionsList";
 import { TrailLessonsList } from "./TrailLessonsList";
 import { useTrailEnrichment } from "@/hooks/implementation/useTrailEnrichment";
+import { useTrailSolutionsEnrichment } from "@/hooks/implementation/useTrailSolutionsEnrichment";
 
 interface TrailDisplayContentProps {
   trail: ImplementationTrail;
@@ -18,13 +19,7 @@ export const TrailDisplayContent: React.FC<TrailDisplayContentProps> = ({
   onRegenerate
 }) => {
   const { enrichedLessons, isLoading: lessonsLoading } = useTrailEnrichment(trail);
-
-  // Extrair e preparar soluções da trilha
-  const allSolutions = [
-    ...trail.priority1.map(s => ({ ...s, priority: 1 })),
-    ...trail.priority2.map(s => ({ ...s, priority: 2 })),
-    ...trail.priority3.map(s => ({ ...s, priority: 3 }))
-  ];
+  const { enrichedSolutions, isLoading: solutionsLoading } = useTrailSolutionsEnrichment(trail);
 
   return (
     <div className="space-y-8">
@@ -59,10 +54,17 @@ export const TrailDisplayContent: React.FC<TrailDisplayContentProps> = ({
           </Button>
         </div>
         
-        <TrailSolutionsList solutions={allSolutions} />
+        {solutionsLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue"></div>
+            <span className="ml-3 text-neutral-400">Carregando soluções...</span>
+          </div>
+        ) : (
+          <TrailSolutionsList solutions={enrichedSolutions} />
+        )}
       </div>
 
-      {/* Aulas Recomendadas - Design Netflix */}
+      {/* Aulas Recomendadas */}
       {enrichedLessons && enrichedLessons.length > 0 && (
         <div className="space-y-6">
           <div className="flex items-center gap-2">
