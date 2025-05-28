@@ -36,9 +36,9 @@ export const EnhancedTrailMagicExperience: React.FC<EnhancedTrailMagicExperience
           clearInterval(timer);
           return 100;
         }
-        return prev + 2; // Aumentei a velocidade
+        return prev + 2;
       });
-    }, 80); // Reduzi o intervalo
+    }, 80);
 
     return () => clearInterval(timer);
   }, []);
@@ -50,26 +50,32 @@ export const EnhancedTrailMagicExperience: React.FC<EnhancedTrailMagicExperience
     }
   }, [progress, currentPhase, phases.length]);
 
-  // Efeito para finalizar quando progress chegar a 100%
   useEffect(() => {
     if (progress >= 100 && !hasFinished) {
       console.log('🎉 Animação concluída - iniciando finalização');
       setHasFinished(true);
       
-      // Dispara confetes
       confetti({
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 }
       });
 
-      // Chamar onFinish após um breve delay para mostrar os confetes
       const finishTimer = setTimeout(() => {
         console.log('🎯 Chamando onFinish()');
         onFinish();
       }, 1500);
 
-      return () => clearTimeout(finishTimer);
+      // Timeout de segurança
+      const safetyTimer = setTimeout(() => {
+        console.log('⚠️ Timeout de segurança ativado - forçando onFinish()');
+        onFinish();
+      }, 5000);
+
+      return () => {
+        clearTimeout(finishTimer);
+        clearTimeout(safetyTimer);
+      };
     }
   }, [progress, hasFinished, onFinish]);
 
@@ -81,7 +87,6 @@ export const EnhancedTrailMagicExperience: React.FC<EnhancedTrailMagicExperience
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        {/* Ícone da fase atual com animação */}
         <motion.div
           className="text-6xl mb-4"
           animate={{ 
@@ -96,7 +101,6 @@ export const EnhancedTrailMagicExperience: React.FC<EnhancedTrailMagicExperience
           {phases[currentPhase]?.emoji}
         </motion.div>
 
-        {/* Texto da fase atual */}
         <motion.h2
           className="text-2xl font-bold text-white mb-6"
           key={currentPhase}
@@ -107,7 +111,6 @@ export const EnhancedTrailMagicExperience: React.FC<EnhancedTrailMagicExperience
           {phases[currentPhase]?.text}
         </motion.h2>
 
-        {/* Barra de progresso */}
         <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
           <motion.div
             className="h-full bg-gradient-to-r from-viverblue to-viverblue-light rounded-full"
@@ -117,7 +120,6 @@ export const EnhancedTrailMagicExperience: React.FC<EnhancedTrailMagicExperience
           />
         </div>
 
-        {/* Porcentagem */}
         <motion.p
           className="text-viverblue-light font-semibold text-lg"
           animate={{ scale: progress >= 100 ? [1, 1.2, 1] : 1 }}
@@ -126,7 +128,6 @@ export const EnhancedTrailMagicExperience: React.FC<EnhancedTrailMagicExperience
           {Math.round(progress)}%
         </motion.p>
 
-        {/* Mensagem de conclusão */}
         {progress >= 100 && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
@@ -141,7 +142,7 @@ export const EnhancedTrailMagicExperience: React.FC<EnhancedTrailMagicExperience
             </p>
           </motion.div>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 };
