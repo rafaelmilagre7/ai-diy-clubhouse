@@ -21,7 +21,7 @@ export const ActionCards: React.FC<ActionCardsProps> = ({
       description: 'Acesse sua trilha personalizada e comece a implementar soluções de IA',
       buttonText: 'Ver Trilha',
       onClick: onGoToTrail,
-      variant: 'primary' as const,
+      variant: 'default' as const,
       gradient: 'from-viverblue to-blue-600'
     },
     {
@@ -71,7 +71,7 @@ export const ActionCards: React.FC<ActionCardsProps> = ({
               <Button
                 onClick={action.onClick}
                 variant={action.variant}
-                className={`w-full ${action.variant === 'primary' ? 'bg-viverblue hover:bg-viverblue-dark' : ''}`}
+                className={`w-full ${action.variant === 'default' ? 'bg-viverblue hover:bg-viverblue-dark' : ''}`}
               >
                 {action.buttonText}
                 <ArrowRight className="ml-2 h-4 w-4" />
