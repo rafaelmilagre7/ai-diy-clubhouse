@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { CheckCircle, Trophy, Target, Users, ArrowRight } from 'lucide-react';
+import { CheckCircle, Trophy, Target, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { usePostOnboarding } from '@/hooks/onboarding/usePostOnboarding';
@@ -11,11 +11,9 @@ import { usePostOnboarding } from '@/hooks/onboarding/usePostOnboarding';
 export const OnboardingCompletedNew: React.FC = () => {
   const navigate = useNavigate();
   const {
-    isFirstAccess,
     hasCompletedTrail,
     goToImplementationTrail,
     goToDashboard,
-    startWelcomeTour,
     checkTrailStatus
   } = usePostOnboarding();
 
@@ -168,23 +166,11 @@ export const OnboardingCompletedNew: React.FC = () => {
           >
             <Button
               onClick={goToImplementationTrail}
-              disabled={!hasCompletedTrail}
               className="bg-viverblue hover:bg-viverblue-dark text-white px-8 py-3 text-lg"
             >
               Ver Trilha de Implementação
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            
-            {isFirstAccess && (
-              <Button
-                onClick={startWelcomeTour}
-                variant="outline"
-                className="border-viverblue text-viverblue hover:bg-viverblue hover:text-white px-8 py-3 text-lg"
-              >
-                Fazer Tour do Dashboard
-                <Users className="ml-2 h-5 w-5" />
-              </Button>
-            )}
             
             <Button
               onClick={goToDashboard}
