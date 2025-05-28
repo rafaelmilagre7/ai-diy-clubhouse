@@ -83,112 +83,202 @@ class Logger {
     this.config = { ...this.config, ...newConfig };
   }
 
-  // Método compatível com assinatura antiga (message: string, data?: any)
-  debug(message: string, data?: any) {
-    const component = this.getComponentFromStack();
+  // Método compatível com ambas as assinaturas: (message, data?) e (component, message, data?)
+  debug(componentOrMessage: string, messageOrData?: any, data?: any) {
+    let component: string;
+    let message: string;
+    let logData: any;
+
+    if (arguments.length >= 3) {
+      // Assinatura antiga: (component, message, data)
+      component = componentOrMessage;
+      message = messageOrData;
+      logData = data;
+    } else {
+      // Assinatura nova: (message, data?)
+      component = this.getComponentFromStack();
+      message = componentOrMessage;
+      logData = messageOrData;
+    }
+
     const entry: LogEntry = {
       timestamp: this.formatTimestamp(),
       level: 'debug',
       component,
       message,
-      data,
+      data: logData,
       userId: this.getUserId()
     };
 
     this.addLog(entry);
     
     if (this.shouldLog('debug') && this.config.enableConsole) {
-      console.debug(`🐛 [${component}] ${message}`, data || '');
+      console.debug(`🐛 [${component}] ${message}`, logData || '');
     }
   }
 
-  info(message: string, data?: any) {
-    const component = this.getComponentFromStack();
+  info(componentOrMessage: string, messageOrData?: any, data?: any) {
+    let component: string;
+    let message: string;
+    let logData: any;
+
+    if (arguments.length >= 3) {
+      // Assinatura antiga: (component, message, data)
+      component = componentOrMessage;
+      message = messageOrData;
+      logData = data;
+    } else {
+      // Assinatura nova: (message, data?)
+      component = this.getComponentFromStack();
+      message = componentOrMessage;
+      logData = messageOrData;
+    }
+
     const entry: LogEntry = {
       timestamp: this.formatTimestamp(),
       level: 'info',
       component,
       message,
-      data,
+      data: logData,
       userId: this.getUserId()
     };
 
     this.addLog(entry);
     
     if (this.shouldLog('info') && this.config.enableConsole) {
-      console.log(`ℹ️ [${component}] ${message}`, data || '');
+      console.log(`ℹ️ [${component}] ${message}`, logData || '');
     }
   }
 
-  warn(message: string, data?: any) {
-    const component = this.getComponentFromStack();
+  warn(componentOrMessage: string, messageOrData?: any, data?: any) {
+    let component: string;
+    let message: string;
+    let logData: any;
+
+    if (arguments.length >= 3) {
+      // Assinatura antiga: (component, message, data)
+      component = componentOrMessage;
+      message = messageOrData;
+      logData = data;
+    } else {
+      // Assinatura nova: (message, data?)
+      component = this.getComponentFromStack();
+      message = componentOrMessage;
+      logData = messageOrData;
+    }
+
     const entry: LogEntry = {
       timestamp: this.formatTimestamp(),
       level: 'warn',
       component,
       message,
-      data,
+      data: logData,
       userId: this.getUserId()
     };
 
     this.addLog(entry);
     
     if (this.shouldLog('warn') && this.config.enableConsole) {
-      console.warn(`⚠️ [${component}] ${message}`, data || '');
+      console.warn(`⚠️ [${component}] ${message}`, logData || '');
     }
   }
 
-  error(message: string, data?: any) {
-    const component = this.getComponentFromStack();
+  error(componentOrMessage: string, messageOrData?: any, data?: any) {
+    let component: string;
+    let message: string;
+    let logData: any;
+
+    if (arguments.length >= 3) {
+      // Assinatura antiga: (component, message, data)
+      component = componentOrMessage;
+      message = messageOrData;
+      logData = data;
+    } else {
+      // Assinatura nova: (message, data?)
+      component = this.getComponentFromStack();
+      message = componentOrMessage;
+      logData = messageOrData;
+    }
+
     const entry: LogEntry = {
       timestamp: this.formatTimestamp(),
       level: 'error',
       component,
       message,
-      data,
+      data: logData,
       userId: this.getUserId()
     };
 
     this.addLog(entry);
     
     if (this.shouldLog('error') && this.config.enableConsole) {
-      console.error(`❌ [${component}] ${message}`, data || '');
+      console.error(`❌ [${component}] ${message}`, logData || '');
     }
   }
 
-  critical(message: string, data?: any) {
-    const component = this.getComponentFromStack();
+  critical(componentOrMessage: string, messageOrData?: any, data?: any) {
+    let component: string;
+    let message: string;
+    let logData: any;
+
+    if (arguments.length >= 3) {
+      // Assinatura antiga: (component, message, data)
+      component = componentOrMessage;
+      message = messageOrData;
+      logData = data;
+    } else {
+      // Assinatura nova: (message, data?)
+      component = this.getComponentFromStack();
+      message = componentOrMessage;
+      logData = messageOrData;
+    }
+
     const entry: LogEntry = {
       timestamp: this.formatTimestamp(),
       level: 'critical',
       component,
       message,
-      data,
+      data: logData,
       userId: this.getUserId()
     };
 
     this.addLog(entry);
     
     if (this.config.enableConsole) {
-      console.error(`🚨 [CRITICAL] [${component}] ${message}`, data || '');
+      console.error(`🚨 [CRITICAL] [${component}] ${message}`, logData || '');
     }
   }
 
-  performance(message: string, data?: any) {
-    const component = this.getComponentFromStack();
+  performance(componentOrMessage: string, messageOrData?: any, data?: any) {
+    let component: string;
+    let message: string;
+    let logData: any;
+
+    if (arguments.length >= 3) {
+      // Assinatura antiga: (component, message, data)
+      component = componentOrMessage;
+      message = messageOrData;
+      logData = data;
+    } else {
+      // Assinatura nova: (message, data?)
+      component = this.getComponentFromStack();
+      message = componentOrMessage;
+      logData = messageOrData;
+    }
+
     const entry: LogEntry = {
       timestamp: this.formatTimestamp(),
       level: 'performance',
       component,
       message,
-      data,
+      data: logData,
       userId: this.getUserId()
     };
 
     this.addLog(entry);
     
     if (this.shouldLog('performance') && this.config.enableConsole) {
-      console.debug(`⚡ [PERFORMANCE] [${component}] ${message}`, data || '');
+      console.debug(`⚡ [PERFORMANCE] [${component}] ${message}`, logData || '');
     }
   }
 
