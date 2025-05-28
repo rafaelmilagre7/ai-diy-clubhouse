@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -71,7 +70,7 @@ export const useImplementationTrail = () => {
     }
   }, [user?.id]);
 
-  // Função para gerar nova trilha
+  // Função para gerar nova trilha usando edge function inteligente
   const generateImplementationTrail = useCallback(async (onboardingData: any = null) => {
     if (!user?.id) {
       toast.error('Usuário não autenticado');
@@ -81,64 +80,11 @@ export const useImplementationTrail = () => {
     try {
       setRegenerating(true);
       setError(null);
-      console.log('🚀 Iniciando geração da trilha para usuário:', user.id);
+      console.log('🚀 Iniciando geração inteligente da trilha para usuário:', user.id);
 
-      // Buscar dados do quick_onboarding se não fornecidos
-      let userData = onboardingData;
-      if (!userData) {
-        console.log('📝 Buscando dados do quick_onboarding...');
-        
-        const { data: quickData, error: quickError } = await supabase
-          .from('quick_onboarding')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-
-        if (quickError) {
-          console.error('❌ Erro ao buscar quick_onboarding:', quickError);
-          throw new Error('Não foi possível encontrar seus dados de onboarding');
-        }
-
-        if (!quickData) {
-          throw new Error('Complete o onboarding antes de gerar a trilha');
-        }
-
-        console.log('✅ Dados do quick_onboarding encontrados:', quickData);
-
-        // Validar dados essenciais
-        if (!quickData.company_name || !quickData.ai_knowledge_level) {
-          throw new Error('Complete seu perfil antes de gerar a trilha');
-        }
-
-        // Estruturar dados para envio
-        userData = {
-          personal_info: {
-            name: quickData.name,
-            email: quickData.email
-          },
-          professional_info: {
-            company_name: quickData.company_name,
-            role: quickData.role,
-            company_size: quickData.company_size,
-            company_segment: quickData.company_segment,
-            annual_revenue_range: quickData.annual_revenue_range
-          },
-          ai_experience: {
-            knowledge_level: quickData.ai_knowledge_level,
-            uses_ai: quickData.uses_ai,
-            main_goal: quickData.main_goal
-          }
-        };
-      }
-
-      console.log('📤 Enviando dados para edge function:', userData);
-
-      // Chamar edge function
-      const { data, error: functionError } = await supabase.functions.invoke('generate-implementation-trail', {
-        body: { 
-          user_id: user.id,
-          onboarding_data: userData 
-        }
+      // Usar a nova edge function inteligente
+      const { data, error: functionError } = await supabase.functions.invoke('generate-smart-trail', {
+        body: { user_id: user.id }
       });
 
       if (functionError) {
@@ -152,10 +98,10 @@ export const useImplementationTrail = () => {
       }
 
       if (data?.trail_data) {
-        console.log('✅ Trilha gerada com sucesso:', data.trail_data);
+        console.log('✅ Trilha inteligente gerada com sucesso:', data.trail_data);
         const sanitizedTrail = sanitizeTrailData(data.trail_data);
         setTrail(sanitizedTrail);
-        toast.success('Trilha de implementação gerada com sucesso!');
+        toast.success('Trilha personalizada gerada com sucesso!');
       } else {
         throw new Error('Trilha gerada, mas dados inválidos');
       }
