@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuickOnboardingValidation } from "@/hooks/onboarding/useQuickOnboardingValidation";
+import { useSimpleOnboardingValidation } from "@/hooks/onboarding/useSimpleOnboardingValidation";
 import { ImplementationTrailCreator } from "@/components/implementation-trail/ImplementationTrailCreator";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,9 +12,9 @@ import { FadeTransition } from "@/components/transitions/FadeTransition";
 
 const ImplementationTrailPage = () => {
   const navigate = useNavigate();
-  const { validateOnboardingCompletion } = useQuickOnboardingValidation();
-  const [isOnboardingComplete, setIsOnboardingComplete] = useState<boolean | null>(null);
+  const { validateOnboardingCompletion, isOnboardingComplete } = useSimpleOnboardingValidation();
   const [isLoading, setIsLoading] = useState(true);
+  const [validationComplete, setValidationComplete] = useState(false);
 
   const checkOnboardingStatus = async () => {
     try {
@@ -24,11 +24,11 @@ const ImplementationTrailPage = () => {
       const isComplete = await validateOnboardingCompletion();
       console.log('📋 Status do onboarding:', isComplete);
       
-      setIsOnboardingComplete(isComplete);
+      setValidationComplete(isComplete);
     } catch (error) {
       console.error("❌ Erro ao verificar status do onboarding:", error);
       toast.error("Erro ao verificar seus dados. Tente novamente.");
-      setIsOnboardingComplete(false);
+      setValidationComplete(false);
     } finally {
       setIsLoading(false);
     }
@@ -65,7 +65,7 @@ const ImplementationTrailPage = () => {
   }
 
   // Onboarding incompleto
-  if (isOnboardingComplete === false) {
+  if (!validationComplete) {
     return (
       <PageTransition>
         <div className="container py-8">

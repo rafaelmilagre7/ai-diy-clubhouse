@@ -11,7 +11,7 @@ interface OnboardingProtectedRouteProps {
 
 export const OnboardingProtectedRoute: React.FC<OnboardingProtectedRouteProps> = ({
   children,
-  fallbackPath = '/onboarding'
+  fallbackPath = '/onboarding-new'
 }) => {
   const { isOnboardingComplete, isLoading } = useOnboardingGuard(false);
 

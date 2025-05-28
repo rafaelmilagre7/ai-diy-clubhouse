@@ -3,16 +3,8 @@ import React, { Suspense, lazy } from 'react';
 import { QuickOnboardingData } from '@/types/quickOnboarding';
 import { Loader2 } from 'lucide-react';
 import { AutoSaveFeedback } from '../AutoSaveFeedback';
-import { 
-  adaptQuickDataToStepQuemEVoce,
-  adaptQuickDataToStepSeuNegocio,
-  adaptQuickDataToStepExperienciaIA,
-  adaptStepQuemEVoceToQuickData,
-  adaptStepSeuNegocioToQuickData,
-  adaptStepExperienciaIAToQuickData
-} from './dataAdapter';
 
-// Lazy load dos componentes das etapas - USANDO AS VERSÕES NOVAS
+// Lazy load dos componentes das etapas
 const StepQuemEVoceNew = lazy(() => import('./StepQuemEVoceNew').then(module => ({ default: module.StepQuemEVoceNew })));
 const StepSeuNegocioNew = lazy(() => import('./StepSeuNegocioNew').then(module => ({ default: module.StepSeuNegocioNew })));
 const StepExperienciaIANew = lazy(() => import('./StepExperienciaIANew').then(module => ({ default: module.StepExperienciaIANew })));
@@ -48,34 +40,6 @@ export const LazyStepLoader: React.FC<LazyStepLoaderProps> = ({
       <p className="text-gray-300">Carregando etapa...</p>
     </div>
   );
-
-  // Função para atualizar dados adaptando de volta para QuickOnboardingData
-  const handleStepUpdate = (stepNumber: number) => (field: string, value: any) => {
-    // Criar um objeto temporário com o campo atualizado
-    const tempStepData = { [field]: value };
-    
-    let updatedData: Partial<QuickOnboardingData> = {};
-    
-    switch (stepNumber) {
-      case 1:
-        const step1Data = { ...adaptQuickDataToStepQuemEVoce(data), ...tempStepData };
-        updatedData = adaptStepQuemEVoceToQuickData(step1Data);
-        break;
-      case 2:
-        const step2Data = { ...adaptQuickDataToStepSeuNegocio(data), ...tempStepData };
-        updatedData = adaptStepSeuNegocioToQuickData(step2Data);
-        break;
-      case 3:
-        const step3Data = { ...adaptQuickDataToStepExperienciaIA(data), ...tempStepData };
-        updatedData = adaptStepExperienciaIAToQuickData(step3Data);
-        break;
-    }
-    
-    // Atualizar cada campo individualmente
-    Object.entries(updatedData).forEach(([key, val]) => {
-      onUpdate(key as keyof QuickOnboardingData, val);
-    });
-  };
 
   const renderStep = () => {
     switch (step) {

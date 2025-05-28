@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuickOnboardingValidation } from '@/hooks/onboarding/useQuickOnboardingValidation';
+import { useSimpleOnboardingValidation } from '@/hooks/onboarding/useSimpleOnboardingValidation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, AlertCircle } from 'lucide-react';
@@ -18,7 +18,7 @@ export const OnboardingValidator: React.FC<OnboardingValidatorProps> = ({
   redirectTo = '/onboarding-new'
 }) => {
   const navigate = useNavigate();
-  const { validateOnboardingCompletion } = useQuickOnboardingValidation();
+  const { validateOnboardingCompletion, isOnboardingComplete, hasValidData } = useSimpleOnboardingValidation();
   const [isValidating, setIsValidating] = useState(true);
   const [isValid, setIsValid] = useState(false);
 
