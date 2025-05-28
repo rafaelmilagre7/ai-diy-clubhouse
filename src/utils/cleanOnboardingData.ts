@@ -22,7 +22,7 @@ export const cleanUserOnboardingData = async (userEmail: string) => {
     const userId = userProfile.id;
     console.log(`👤 ID do usuário encontrado: ${userId}`);
     
-    // Usar a função RPC para limpar os dados
+    // Usar a função RPC atualizada para limpar os dados
     const { data, error } = await supabase.rpc('limpar_dados_onboarding', {
       user_id_param: userId
     });
