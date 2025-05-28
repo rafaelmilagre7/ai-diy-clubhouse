@@ -35,10 +35,10 @@ describe('Logger', () => {
       writable: true
     });
     
-    logger.debug('TestComponent', 'Test debug message', { test: true });
+    logger.debug('Test debug message', { test: true });
     
     expect(console.debug).toHaveBeenCalledWith(
-      expect.stringContaining('🐛 [TestComponent] Test debug message'),
+      expect.stringContaining('🐛 [Unknown] Test debug message'),
       { test: true }
     );
   });
@@ -50,22 +50,22 @@ describe('Logger', () => {
       writable: true
     });
     
-    logger.debug('TestComponent', 'Test debug message');
+    logger.debug('Test debug message');
     
     expect(console.debug).not.toHaveBeenCalled();
   });
 
   test('should always log critical messages', () => {
-    logger.critical('TestComponent', 'Critical error', { error: 'test' });
+    logger.critical('Critical error', { error: 'test' });
     
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('🚨 [CRITICAL] [TestComponent] Critical error'),
+      expect.stringContaining('🚨 [CRITICAL] [Unknown] Critical error'),
       { error: 'test' }
     );
   });
 
   test('should store logs in buffer', () => {
-    logger.info('TestComponent', 'Test message');
+    logger.info('Test message');
     
     const buffer = logger.getBuffer();
     expect(buffer).toHaveLength(1);
@@ -73,11 +73,11 @@ describe('Logger', () => {
     expect(buffer[0].level).toBe('info');
   });
 
-  test('should use context-specific methods', () => {
-    logger.performance('TestComponent', 'Performance metric', { duration: 100 });
+  test('should use performance logging', () => {
+    logger.performance('Performance metric', { duration: 100 });
     
     expect(console.debug).toHaveBeenCalledWith(
-      expect.stringContaining('⚡ [PERFORMANCE] [TestComponent] Performance metric'),
+      expect.stringContaining('⚡ [PERFORMANCE] [Unknown] Performance metric'),
       { duration: 100 }
     );
   });
@@ -86,9 +86,9 @@ describe('Logger', () => {
     // Configurar buffer pequeno para teste
     logger.setConfig({ maxBufferSize: 2 });
     
-    logger.info('TestComponent', 'Message 1');
-    logger.info('TestComponent', 'Message 2');
-    logger.info('TestComponent', 'Message 3'); // Deve remover a primeira
+    logger.info('Message 1');
+    logger.info('Message 2');
+    logger.info('Message 3'); // Deve remover a primeira
     
     const buffer = logger.getBuffer();
     expect(buffer).toHaveLength(2);
@@ -99,7 +99,7 @@ describe('Logger', () => {
   test('should safely handle user ID extraction', () => {
     localStorageMock.getItem.mockReturnValue('{"user":{"id":"test-user-123"}}');
     
-    logger.info('TestComponent', 'Test with user');
+    logger.info('Test with user');
     
     const buffer = logger.getBuffer();
     expect(buffer[0].userId).toBe('test-user-123');
@@ -109,7 +109,7 @@ describe('Logger', () => {
     localStorageMock.getItem.mockReturnValue('invalid-json');
     
     expect(() => {
-      logger.info('TestComponent', 'Test with invalid storage');
+      logger.info('Test with invalid storage');
     }).not.toThrow();
     
     const buffer = logger.getBuffer();
@@ -117,7 +117,7 @@ describe('Logger', () => {
   });
 
   test('should clear buffer when requested', () => {
-    logger.info('TestComponent', 'Test message');
+    logger.info('Test message');
     expect(logger.getBuffer()).toHaveLength(1);
     
     logger.clearBuffer();
@@ -125,9 +125,9 @@ describe('Logger', () => {
   });
 
   test('should filter logs by level', () => {
-    logger.info('TestComponent', 'Info message');
-    logger.error('TestComponent', 'Error message');
-    logger.warn('TestComponent', 'Warning message');
+    logger.info('Info message');
+    logger.error('Error message');
+    logger.warn('Warning message');
     
     const errorLogs = logger.getLogs('error');
     expect(errorLogs).toHaveLength(1);
@@ -135,12 +135,32 @@ describe('Logger', () => {
   });
 
   test('should filter logs by component', () => {
-    logger.info('Component1', 'Message 1');
-    logger.info('Component2', 'Message 2');
-    logger.info('Component1', 'Message 3');
+    logger.info('Message 1');
+    logger.info('Message 2');
+    logger.info('Message 3');
     
-    const component1Logs = logger.getLogs(undefined, 'Component1');
-    expect(component1Logs).toHaveLength(2);
-    expect(component1Logs.every(log => log.component === 'Component1')).toBe(true);
+    const unknownLogs = logger.getLogs(undefined, 'Unknown');
+    expect(unknownLogs).toHaveLength(3);
+    expect(unknownLogs.every(log => log.component === 'Unknown')).toBe(true);
+  });
+
+  test('should export logs as JSON', () => {
+    logger.info('Test message');
+    const exported = logger.exportLogs();
+    
+    expect(() => JSON.parse(exported)).not.toThrow();
+    const parsed = JSON.parse(exported);
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0].message).toBe('Test message');
+  });
+
+  test('should get recent errors', () => {
+    logger.error('Error 1');
+    logger.info('Info message');
+    logger.critical('Critical error');
+    
+    const recentErrors = logger.getRecentErrors();
+    expect(recentErrors).toHaveLength(2);
+    expect(recentErrors.every(log => log.level === 'error' || log.level === 'critical')).toBe(true);
   });
 });

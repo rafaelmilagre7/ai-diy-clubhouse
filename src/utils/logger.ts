@@ -42,6 +42,27 @@ class Logger {
     return undefined;
   }
 
+  private getComponentFromStack(): string {
+    try {
+      const stack = new Error().stack;
+      if (stack) {
+        const lines = stack.split('\n');
+        // Procurar por linha que contenha src/ mas não seja o logger
+        for (const line of lines) {
+          if (line.includes('src/') && !line.includes('logger.ts')) {
+            const match = line.match(/\/src\/(.+?)\.tsx?/);
+            if (match) {
+              return match[1].split('/').pop() || 'Unknown';
+            }
+          }
+        }
+      }
+    } catch {
+      // Ignore errors
+    }
+    return 'Unknown';
+  }
+
   private addLog(entry: LogEntry) {
     this.logs.push(entry);
     
@@ -62,14 +83,16 @@ class Logger {
     this.config = { ...this.config, ...newConfig };
   }
 
-  debug(component: string, message: string, data?: any, userId?: string) {
+  // Método compatível com assinatura antiga (message: string, data?: any)
+  debug(message: string, data?: any) {
+    const component = this.getComponentFromStack();
     const entry: LogEntry = {
       timestamp: this.formatTimestamp(),
       level: 'debug',
       component,
       message,
       data,
-      userId: userId || this.getUserId()
+      userId: this.getUserId()
     };
 
     this.addLog(entry);
@@ -79,14 +102,15 @@ class Logger {
     }
   }
 
-  info(component: string, message: string, data?: any, userId?: string) {
+  info(message: string, data?: any) {
+    const component = this.getComponentFromStack();
     const entry: LogEntry = {
       timestamp: this.formatTimestamp(),
       level: 'info',
       component,
       message,
       data,
-      userId: userId || this.getUserId()
+      userId: this.getUserId()
     };
 
     this.addLog(entry);
@@ -96,14 +120,15 @@ class Logger {
     }
   }
 
-  warn(component: string, message: string, data?: any, userId?: string) {
+  warn(message: string, data?: any) {
+    const component = this.getComponentFromStack();
     const entry: LogEntry = {
       timestamp: this.formatTimestamp(),
       level: 'warn',
       component,
       message,
       data,
-      userId: userId || this.getUserId()
+      userId: this.getUserId()
     };
 
     this.addLog(entry);
@@ -113,14 +138,15 @@ class Logger {
     }
   }
 
-  error(component: string, message: string, data?: any, userId?: string) {
+  error(message: string, data?: any) {
+    const component = this.getComponentFromStack();
     const entry: LogEntry = {
       timestamp: this.formatTimestamp(),
       level: 'error',
       component,
       message,
       data,
-      userId: userId || this.getUserId()
+      userId: this.getUserId()
     };
 
     this.addLog(entry);
@@ -130,14 +156,15 @@ class Logger {
     }
   }
 
-  critical(component: string, message: string, data?: any, userId?: string) {
+  critical(message: string, data?: any) {
+    const component = this.getComponentFromStack();
     const entry: LogEntry = {
       timestamp: this.formatTimestamp(),
       level: 'critical',
       component,
       message,
       data,
-      userId: userId || this.getUserId()
+      userId: this.getUserId()
     };
 
     this.addLog(entry);
@@ -147,14 +174,15 @@ class Logger {
     }
   }
 
-  performance(component: string, message: string, data?: any, userId?: string) {
+  performance(message: string, data?: any) {
+    const component = this.getComponentFromStack();
     const entry: LogEntry = {
       timestamp: this.formatTimestamp(),
       level: 'performance',
       component,
       message,
       data,
-      userId: userId || this.getUserId()
+      userId: this.getUserId()
     };
 
     this.addLog(entry);
