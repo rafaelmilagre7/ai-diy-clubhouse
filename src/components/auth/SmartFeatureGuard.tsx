@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useSmartFeatureAccess } from '@/hooks/auth/useSmartFeatureAccess';
-import { SmartFeatureBlock } from './SmartFeatureBlock';
+import { ModernFeatureBlock } from './ModernFeatureBlock';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
 interface SmartFeatureGuardProps {
@@ -21,9 +21,11 @@ export const SmartFeatureGuard: React.FC<SmartFeatureGuardProps> = ({
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <LoadingSpinner size="lg" />
-        <p className="ml-4 text-gray-400">Verificando permissões...</p>
+      <div className="min-h-screen bg-gradient-to-br from-[#0F111A] via-[#151823] to-[#1a1d2e] flex justify-center items-center">
+        <div className="text-center space-y-4">
+          <LoadingSpinner size="lg" />
+          <p className="text-gray-400">Verificando permissões...</p>
+        </div>
       </div>
     );
   }
@@ -34,7 +36,7 @@ export const SmartFeatureGuard: React.FC<SmartFeatureGuardProps> = ({
     }
     
     return (
-      <SmartFeatureBlock 
+      <ModernFeatureBlock 
         feature={feature}
         blockReason={accessData?.blockReason || 'insufficient_role'}
         hasRoleAccess={accessData?.hasRoleAccess || false}

@@ -3,6 +3,7 @@ import React, { Suspense, lazy } from 'react';
 import { QuickOnboardingData } from '@/types/quickOnboarding';
 import { Loader2 } from 'lucide-react';
 import { AutoSaveFeedback } from '../AutoSaveFeedback';
+import { EnhancedOnboardingStep } from '../EnhancedOnboardingStep';
 
 // Lazy load dos componentes das etapas
 const StepQuemEVoceNew = lazy(() => import('./StepQuemEVoceNew').then(module => ({ default: module.StepQuemEVoceNew })));
@@ -41,7 +42,34 @@ export const LazyStepLoader: React.FC<LazyStepLoaderProps> = ({
     </div>
   );
 
-  const renderStep = () => {
+  const getStepConfig = () => {
+    switch (step) {
+      case 1:
+        return {
+          title: 'Quem é você?',
+          subtitle: 'Vamos começar conhecendo você melhor'
+        };
+      case 2:
+        return {
+          title: 'Sobre seu negócio',
+          subtitle: 'Conte-nos sobre sua empresa e mercado'
+        };
+      case 3:
+        return {
+          title: 'Experiência com IA',
+          subtitle: 'Qual sua relação atual com inteligência artificial?'
+        };
+      default:
+        return {
+          title: 'Configuração',
+          subtitle: 'Configurando sua experiência'
+        };
+    }
+  };
+
+  const stepConfig = getStepConfig();
+
+  const renderStepContent = () => {
     switch (step) {
       case 1:
         return (
@@ -87,9 +115,18 @@ export const LazyStepLoader: React.FC<LazyStepLoaderProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <EnhancedOnboardingStep
+      title={stepConfig.title}
+      subtitle={stepConfig.subtitle}
+      currentStep={currentStep}
+      totalSteps={totalSteps}
+      canProceed={canProceed}
+      onNext={onNext}
+      onPrevious={currentStep > 1 ? onPrevious : undefined}
+      isLoading={isSaving}
+    >
       {/* Feedback de auto-save */}
-      <div className="flex justify-end">
+      <div className="flex justify-end mb-6">
         <AutoSaveFeedback 
           isSaving={isSaving} 
           lastSaveTime={lastSaveTime}
@@ -100,8 +137,8 @@ export const LazyStepLoader: React.FC<LazyStepLoaderProps> = ({
 
       {/* Conteúdo da etapa */}
       <Suspense fallback={<LoadingFallback />}>
-        {renderStep()}
+        {renderStepContent()}
       </Suspense>
-    </div>
+    </EnhancedOnboardingStep>
   );
 };
