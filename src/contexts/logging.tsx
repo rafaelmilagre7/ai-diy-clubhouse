@@ -15,6 +15,8 @@ interface LoggingContextType {
 
 // Redireciona para a implementação principal em hooks/useLogging
 export const useLogging = (): LoggingContextType => {
+  console.log('🔧 Context useLogging: Redirecionando para hook principal');
+  
   // Usa a implementação de useLogging do hooks/useLogging.tsx
   const loggingHook = useLoggingHook();
   
@@ -39,5 +41,6 @@ export const useLogging = (): LoggingContextType => {
 
 // Implementação do provider redirecionada para o hooks/useLogging.tsx
 export const LoggingProvider = ({ children }: { children: ReactNode }) => {
+  console.log('🔧 Context LoggingProvider: Redirecionando para provider principal');
   return <OriginalLoggingProvider>{children}</OriginalLoggingProvider>;
 };
