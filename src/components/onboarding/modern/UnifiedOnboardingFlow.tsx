@@ -4,7 +4,6 @@ import { useQuickOnboardingOptimized } from '@/hooks/onboarding/useQuickOnboardi
 import { useOnboardingNavigation } from '@/hooks/onboarding/useOnboardingNavigation';
 import { LazyStepLoader } from './steps/LazyStepLoader';
 import { EnhancedTrailMagicExperience } from '../EnhancedTrailMagicExperience';
-import MilagrinhoAssistant from '../MilagrinhoAssistant';
 import { Loader2 } from 'lucide-react';
 
 export const UnifiedOnboardingFlow: React.FC = () => {
@@ -24,8 +23,9 @@ export const UnifiedOnboardingFlow: React.FC = () => {
   const { navigateToStep } = useOnboardingNavigation();
 
   const handleFinish = async () => {
-    // TODO: Implementar lógica de finalização
     console.log('Onboarding finalizado com dados:', data);
+    // Redirecionar para a página de conclusão do onboarding
+    navigateToStep('completed');
   };
 
   // Mostrar loading enquanto carrega dados existentes
@@ -81,10 +81,6 @@ export const UnifiedOnboardingFlow: React.FC = () => {
       case 4:
         return (
           <div className="animate-fade-in">
-            <MilagrinhoAssistant
-              userName={data.name.split(' ')[0]}
-              message="Excelente! Agora vou criar sua trilha personalizada de implementação de IA com base no seu perfil. Este é o momento mágico! ✨"
-            />
             <EnhancedTrailMagicExperience onFinish={handleFinish} />
           </div>
         );
