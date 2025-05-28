@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useOnboardingUnified } from '@/hooks/onboarding/useOnboardingUnified';
+import { useQuickOnboardingOptimized } from '@/hooks/onboarding/useQuickOnboardingOptimized';
 import { useOnboardingNavigation } from '@/hooks/onboarding/useOnboardingNavigation';
 import { LazyStepLoader } from './steps/LazyStepLoader';
 import { EnhancedTrailMagicExperience } from '../EnhancedTrailMagicExperience';
@@ -15,19 +15,17 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     nextStep,
     previousStep,
     canProceed,
-    isSubmitting,
-    completeOnboarding,
-    totalSteps,
     isLoading,
     hasExistingData,
-    loadError
-  } = useOnboardingUnified();
+    loadError,
+    totalSteps
+  } = useQuickOnboardingOptimized();
 
   const { navigateToStep } = useOnboardingNavigation();
 
   const handleFinish = async () => {
-    const success = await completeOnboarding();
-    // Auto-redirect já está implementado no hook
+    // TODO: Implementar lógica de finalização
+    console.log('Onboarding finalizado com dados:', data);
   };
 
   // Mostrar loading enquanto carrega dados existentes
@@ -53,9 +51,6 @@ export const UnifiedOnboardingFlow: React.FC = () => {
   // Mostrar indicador se dados foram carregados
   const showDataLoadedMessage = hasExistingData && currentStep === 1;
 
-  // Garantir que canProceed seja sempre boolean
-  const canProceedBoolean = typeof canProceed === 'function' ? canProceed() : Boolean(canProceed);
-
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
@@ -76,7 +71,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
               onUpdate={updateField}
               onNext={nextStep}
               onPrevious={previousStep}
-              canProceed={canProceedBoolean}
+              canProceed={canProceed}
               currentStep={currentStep}
               totalSteps={totalSteps}
             />
