@@ -15,33 +15,20 @@ const ImplementationTrailPage = () => {
   const { validateOnboardingCompletion } = useQuickOnboardingValidation();
   const [isOnboardingComplete, setIsOnboardingComplete] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [retryCount, setRetryCount] = useState(0);
 
   const checkOnboardingStatus = async () => {
     try {
       setIsLoading(true);
-      console.log('Verificando status do onboarding...');
+      console.log('🔍 Verificando status do onboarding...');
       
       const isComplete = await validateOnboardingCompletion();
-      console.log('Status do onboarding:', isComplete);
+      console.log('📋 Status do onboarding:', isComplete);
       
       setIsOnboardingComplete(isComplete);
-      
-      if (!isComplete && retryCount < 2) {
-        console.log('Onboarding incompleto, tentando novamente em 1 segundo...');
-        setTimeout(() => {
-          setRetryCount(prev => prev + 1);
-        }, 1000);
-      }
     } catch (error) {
-      console.error("Erro ao verificar status do onboarding:", error);
-      if (retryCount < 2) {
-        setTimeout(() => {
-          setRetryCount(prev => prev + 1);
-        }, 2000);
-      } else {
-        toast.error("Erro ao verificar seus dados. Tente novamente.");
-      }
+      console.error("❌ Erro ao verificar status do onboarding:", error);
+      toast.error("Erro ao verificar seus dados. Tente novamente.");
+      setIsOnboardingComplete(false);
     } finally {
       setIsLoading(false);
     }
@@ -49,10 +36,9 @@ const ImplementationTrailPage = () => {
 
   useEffect(() => {
     checkOnboardingStatus();
-  }, [retryCount]);
+  }, []);
 
   const handleRefresh = () => {
-    setRetryCount(0);
     checkOnboardingStatus();
   };
 

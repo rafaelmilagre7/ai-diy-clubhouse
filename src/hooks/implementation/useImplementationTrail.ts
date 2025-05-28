@@ -14,15 +14,22 @@ export const useImplementationTrail = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Carregar trilha existente
+  // Função para carregar trilha existente
   const loadTrail = useCallback(async (forceReload = false) => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.log('Usuário não definido, não carregando trilha');
+      return;
+    }
 
     try {
-      setRefreshing(true);
+      if (forceReload) {
+        setRefreshing(true);
+      } else {
+        setIsLoading(true);
+      }
+      
       setError(null);
-
-      console.log('Carregando trilha para usuário:', user.id);
+      console.log('🔄 Carregando trilha para usuário:', user.id);
 
       const { data, error: trailError } = await supabase
         .from('implementation_trails')
@@ -30,30 +37,41 @@ export const useImplementationTrail = () => {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
-      if (trailError && trailError.code !== 'PGRST116') {
-        console.error('Erro ao carregar trilha:', trailError);
+      if (trailError) {
+        console.error('❌ Erro ao carregar trilha:', trailError);
         throw trailError;
       }
 
+      console.log('📊 Dados da trilha retornados:', data);
+
       if (data?.trail_data) {
-        console.log('Trilha encontrada:', data);
+        console.log('✅ Trilha encontrada, sanitizando dados...');
         const sanitizedTrail = sanitizeTrailData(data.trail_data);
-        setTrail(sanitizedTrail);
+        
+        if (sanitizedTrail) {
+          console.log('✅ Trilha sanitizada com sucesso:', sanitizedTrail);
+          setTrail(sanitizedTrail);
+        } else {
+          console.log('⚠️ Falha ao sanitizar trilha');
+          setTrail(null);
+        }
       } else {
-        console.log('Nenhuma trilha encontrada');
+        console.log('ℹ️ Nenhuma trilha encontrada para o usuário');
         setTrail(null);
       }
     } catch (error) {
-      console.error('Erro ao carregar trilha:', error);
+      console.error('❌ Erro ao carregar trilha:', error);
       setError('Erro ao carregar trilha de implementação');
+      setTrail(null);
     } finally {
+      setIsLoading(false);
       setRefreshing(false);
     }
   }, [user?.id]);
 
-  // Gerar nova trilha
+  // Função para gerar nova trilha
   const generateImplementationTrail = useCallback(async (onboardingData: any = null) => {
     if (!user?.id) {
       toast.error('Usuário não autenticado');
@@ -62,15 +80,13 @@ export const useImplementationTrail = () => {
 
     try {
       setRegenerating(true);
-      setIsLoading(true);
       setError(null);
+      console.log('🚀 Iniciando geração da trilha para usuário:', user.id);
 
-      console.log('Iniciando geração da trilha para usuário:', user.id);
-
-      // Se não temos dados de onboarding, buscar do quick_onboarding
+      // Buscar dados do quick_onboarding se não fornecidos
       let userData = onboardingData;
       if (!userData) {
-        console.log('Buscando dados do quick_onboarding...');
+        console.log('📝 Buscando dados do quick_onboarding...');
         
         const { data: quickData, error: quickError } = await supabase
           .from('quick_onboarding')
@@ -79,7 +95,7 @@ export const useImplementationTrail = () => {
           .single();
 
         if (quickError) {
-          console.error('Erro ao buscar quick_onboarding:', quickError);
+          console.error('❌ Erro ao buscar quick_onboarding:', quickError);
           throw new Error('Não foi possível encontrar seus dados de onboarding');
         }
 
@@ -87,13 +103,14 @@ export const useImplementationTrail = () => {
           throw new Error('Complete o onboarding antes de gerar a trilha');
         }
 
-        console.log('Dados encontrados:', quickData);
+        console.log('✅ Dados do quick_onboarding encontrados:', quickData);
 
         // Validar dados essenciais
         if (!quickData.company_name || !quickData.ai_knowledge_level) {
           throw new Error('Complete seu perfil antes de gerar a trilha');
         }
 
+        // Estruturar dados para envio
         userData = {
           personal_info: {
             name: quickData.name,
@@ -114,9 +131,9 @@ export const useImplementationTrail = () => {
         };
       }
 
-      console.log('Dados estruturados para envio:', userData);
+      console.log('📤 Enviando dados para edge function:', userData);
 
-      // Chamar edge function para gerar trilha
+      // Chamar edge function
       const { data, error: functionError } = await supabase.functions.invoke('generate-implementation-trail', {
         body: { 
           user_id: user.id,
@@ -125,17 +142,17 @@ export const useImplementationTrail = () => {
       });
 
       if (functionError) {
-        console.error('Erro da edge function:', functionError);
+        console.error('❌ Erro da edge function:', functionError);
         throw new Error(`Erro ao gerar trilha: ${functionError.message}`);
       }
 
       if (!data?.success) {
-        console.error('Edge function retornou erro:', data);
+        console.error('❌ Edge function retornou erro:', data);
         throw new Error(data?.error || 'Erro desconhecido ao gerar trilha');
       }
 
       if (data?.trail_data) {
-        console.log('Trilha gerada com sucesso:', data.trail_data);
+        console.log('✅ Trilha gerada com sucesso:', data.trail_data);
         const sanitizedTrail = sanitizeTrailData(data.trail_data);
         setTrail(sanitizedTrail);
         toast.success('Trilha de implementação gerada com sucesso!');
@@ -144,26 +161,38 @@ export const useImplementationTrail = () => {
       }
 
     } catch (error) {
-      console.error('Erro ao gerar trilha:', error);
+      console.error('❌ Erro ao gerar trilha:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro ao gerar trilha de implementação';
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
       setRegenerating(false);
-      setIsLoading(false);
     }
   }, [user?.id]);
 
-  // Carregar trilha ao montar o componente
+  // Carregar trilha ao inicializar
   useEffect(() => {
-    loadTrail();
-  }, [loadTrail]);
+    if (user?.id) {
+      console.log('🏁 Componente montado, carregando trilha...');
+      loadTrail();
+    }
+  }, [user?.id, loadTrail]);
 
+  // Determinar se há conteúdo válido
   const hasContent = trail && (
     (trail.priority1 && trail.priority1.length > 0) ||
     (trail.priority2 && trail.priority2.length > 0) ||
     (trail.priority3 && trail.priority3.length > 0)
   );
+
+  console.log('🎯 Hook state:', {
+    hasContent: !!hasContent,
+    trail: trail ? 'presente' : 'ausente',
+    isLoading,
+    regenerating,
+    refreshing,
+    error
+  });
 
   return {
     trail,
