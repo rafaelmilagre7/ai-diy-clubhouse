@@ -36,7 +36,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
   // Mostrar loading enquanto carrega dados existentes
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0F111A] via-[#151823] to-[#1a1d2e] flex flex-col items-center justify-center space-y-6">
+      <div className="flex flex-col items-center justify-center py-12 space-y-6">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -59,7 +59,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
   // Mostrar erro se houver problema no carregamento
   if (loadError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0F111A] via-[#151823] to-[#1a1d2e] flex items-center justify-center">
+      <div className="flex items-center justify-center py-12">
         <motion.div 
           className="text-center py-12 space-y-4 max-w-md"
           initial={{ opacity: 0, y: 20 }}
@@ -119,7 +119,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
       {/* Indicador de dados carregados */}
       {hasExistingData && currentStep === 1 && (
         <motion.div 
-          className="fixed top-4 right-4 z-50"
+          className="absolute top-0 right-0 z-10"
           initial={{ opacity: 0, x: 100 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.5, duration: 0.4 }}

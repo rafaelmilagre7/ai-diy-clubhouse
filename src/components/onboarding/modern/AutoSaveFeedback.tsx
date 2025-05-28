@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Loader, CheckCircle, Wifi, WifiOff } from 'lucide-react';
+import { Loader, CheckCircle } from 'lucide-react';
 
 interface AutoSaveFeedbackProps {
   isSaving?: boolean;
@@ -10,44 +10,31 @@ interface AutoSaveFeedbackProps {
 }
 
 export const AutoSaveFeedback: React.FC<AutoSaveFeedbackProps> = ({ 
-  isSaving = false, 
-  lastSaveTime = null,
+  isSaving, 
+  lastSaveTime,
   hasUnsavedChanges = false,
   isOnline = true
 }) => {
-  // Se não há informações relevantes, não mostrar nada
-  if (!lastSaveTime && !isSaving && !hasUnsavedChanges) return null;
+  if (!lastSaveTime && !isSaving) return null;
 
   return (
-    <div className="flex items-center gap-2 text-sm">
-      {!isOnline && (
-        <div className="flex items-center gap-1 text-red-400">
-          <WifiOff className="h-3 w-3" />
-          <span>Offline</span>
-        </div>
-      )}
-      
+    <div className="flex items-center gap-2 text-sm text-gray-400">
       {isSaving ? (
-        <div className="flex items-center gap-1 text-blue-400">
+        <>
           <Loader className="h-3 w-3 animate-spin" />
-          <span>Salvando...</span>
-        </div>
+          <span>Salvando alterações...</span>
+        </>
       ) : lastSaveTime ? (
-        <div className="flex items-center gap-1 text-green-400">
-          <CheckCircle className="h-3 w-3" />
+        <>
+          <CheckCircle className="h-3 w-3 text-green-500" />
           <span>
-            Salvo às{' '}
+            Alterações salvas às{' '}
             {new Date(lastSaveTime).toLocaleTimeString('pt-BR', {
               hour: '2-digit',
               minute: '2-digit'
             })}
           </span>
-        </div>
-      ) : hasUnsavedChanges ? (
-        <div className="flex items-center gap-1 text-yellow-400">
-          <Wifi className="h-3 w-3" />
-          <span>Não salvo</span>
-        </div>
+        </>
       ) : null}
     </div>
   );

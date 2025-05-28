@@ -126,12 +126,10 @@ export const LazyStepLoader: React.FC<LazyStepLoaderProps> = ({
       isLoading={isSaving}
     >
       {/* Feedback de auto-save */}
-      <div className="flex justify-end mb-6">
+      <div className="flex justify-end mb-4">
         <AutoSaveFeedback 
           isSaving={isSaving} 
           lastSaveTime={lastSaveTime}
-          hasUnsavedChanges={false}
-          isOnline={navigator.onLine}
         />
       </div>
 
