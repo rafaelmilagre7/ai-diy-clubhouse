@@ -1,17 +1,14 @@
 
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { CheckCircle, Trophy, Target, ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Trophy, Sparkles } from 'lucide-react';
 import { usePostOnboarding } from '@/hooks/onboarding/usePostOnboarding';
+import { ProgressStats } from './completion/ProgressStats';
+import { ActionCards } from './completion/ActionCards';
 
 export const OnboardingCompletedNew: React.FC = () => {
-  const navigate = useNavigate();
   const {
-    hasCompletedTrail,
     goToImplementationTrail,
     goToDashboard,
     checkTrailStatus
@@ -33,167 +30,94 @@ export const OnboardingCompletedNew: React.FC = () => {
     return () => clearTimeout(timer);
   }, [checkTrailStatus]);
 
-  const achievements = [
-    {
-      icon: CheckCircle,
-      title: 'Perfil Completo',
-      description: 'Suas informações foram registradas com sucesso'
-    },
-    {
-      icon: Target,
-      title: 'Objetivos Definidos',
-      description: 'Seus objetivos com IA foram mapeados'
-    },
-    {
-      icon: Trophy,
-      title: 'Trilha Pronta!',
-      description: 'Sua trilha personalizada foi gerada'
-    }
-  ];
-
-  const nextSteps = [
-    {
-      title: 'Explore sua trilha personalizada',
-      description: 'Veja as soluções de IA recomendadas para seu negócio'
-    },
-    {
-      title: 'Monitore seu progresso',
-      description: 'Acompanhe sua evolução no dashboard'
-    },
-    {
-      title: 'Conecte-se com a comunidade',
-      description: 'Participe do fórum e networking'
-    }
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0F111A] to-[#161A2C] py-8">
-      <div className="container mx-auto px-4 max-w-4xl">
+    <div className="max-w-6xl mx-auto space-y-8">
+      {/* Hero Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="text-center space-y-6"
+      >
+        {/* Trophy Icon com animação */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center space-y-8"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+          className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-r from-viverblue to-blue-600 mb-6 relative"
         >
-          {/* Header */}
-          <div className="space-y-4">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
-              className="inline-flex items-center justify-center w-20 h-20 bg-viverblue rounded-full mb-4"
-            >
-              <Trophy className="w-10 h-10 text-white" />
-            </motion.div>
-            
-            <h1 className="text-4xl font-bold text-white mb-2">
-              🎉 Parabéns!
-            </h1>
-            <p className="text-xl text-gray-300">
-              Seu onboarding foi concluído com sucesso!
-            </p>
-            <p className="text-viverblue-light">
-              Agora você faz parte da comunidade VIVER DE IA
-            </p>
-          </div>
-
-          {/* Conquistas */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {achievements.map((achievement, index) => (
-              <motion.div
-                key={achievement.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 + index * 0.1 }}
-              >
-                <Card className="bg-gray-800/50 border-gray-700 text-center p-6">
-                  <CardContent className="space-y-3">
-                    <div className="inline-flex items-center justify-center w-12 h-12 bg-viverblue/20 rounded-full">
-                      <achievement.icon className="w-6 h-6 text-viverblue" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-white">
-                      {achievement.title}
-                    </h3>
-                    <p className="text-sm text-gray-400">
-                      {achievement.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Próximos Passos */}
+          <Trophy className="w-12 h-12 text-white" />
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="space-y-6"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            className="absolute -top-2 -right-2"
           >
-            <h2 className="text-2xl font-bold text-white">
-              Próximos Passos
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {nextSteps.map((step, index) => (
-                <div
-                  key={index}
-                  className="bg-gray-800/30 rounded-lg p-4 text-left"
-                >
-                  <div className="flex items-start space-x-3">
-                    <div className="flex-shrink-0 w-8 h-8 bg-viverblue rounded-full flex items-center justify-center text-white font-bold text-sm">
-                      {index + 1}
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-white mb-1">
-                        {step.title}
-                      </h4>
-                      <p className="text-sm text-gray-400">
-                        {step.description}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Botões de Ação */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center pt-8"
-          >
-            <Button
-              onClick={goToImplementationTrail}
-              className="bg-viverblue hover:bg-viverblue-dark text-white px-8 py-3 text-lg"
-            >
-              Ver Trilha de Implementação
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            
-            <Button
-              onClick={goToDashboard}
-              variant="outline"
-              className="border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white px-8 py-3 text-lg"
-            >
-              Ir para Dashboard
-            </Button>
-          </motion.div>
-
-          {/* Status da Trilha */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.2 }}
-            className="mt-8 p-4 bg-green-500/10 rounded-lg border border-green-500/20"
-          >
-            <p className="text-green-400 font-medium">
-              ✨ Trilha Pronta! Sua jornada personalizada de IA foi criada com base no seu perfil.
-            </p>
+            <Sparkles className="w-6 h-6 text-yellow-400" />
           </motion.div>
         </motion.div>
-      </div>
+        
+        {/* Título principal */}
+        <div className="space-y-4">
+          <motion.h1
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white via-viverblue-light to-viverblue bg-clip-text text-transparent"
+          >
+            🎉 Parabéns!
+          </motion.h1>
+          
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="text-xl text-gray-300 max-w-2xl mx-auto"
+          >
+            Seu onboarding foi concluído com sucesso! Agora você faz parte da comunidade 
+            <span className="text-viverblue font-semibold"> VIVER DE IA</span>
+          </motion.p>
+        </div>
+      </motion.div>
+
+      {/* Estatísticas de Progresso */}
+      <ProgressStats />
+
+      {/* Cards de Ação */}
+      <ActionCards 
+        onGoToTrail={goToImplementationTrail}
+        onGoToDashboard={goToDashboard}
+      />
+
+      {/* Status da Trilha */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.2 }}
+        className="glassmorphism border-green-500/20 rounded-xl p-6 text-center"
+      >
+        <div className="flex items-center justify-center space-x-3">
+          <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+          <p className="text-green-400 font-medium">
+            ✨ Trilha Personalizada Pronta! Sua jornada de IA foi criada com base no seu perfil.
+          </p>
+        </div>
+      </motion.div>
+
+      {/* Mensagem de Boas-vindas */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1.4 }}
+        className="text-center space-y-4 pt-8 border-t border-gray-700/30"
+      >
+        <h3 className="text-2xl font-semibold text-white">
+          Bem-vindo à Transformação Digital com IA! 🚀
+        </h3>
+        <p className="text-gray-400 max-w-3xl mx-auto">
+          Você agora tem acesso a uma trilha personalizada, comunidade ativa, ferramentas exclusivas 
+          e todo o suporte necessário para implementar IA no seu negócio com sucesso.
+        </p>
+      </motion.div>
     </div>
   );
 };
