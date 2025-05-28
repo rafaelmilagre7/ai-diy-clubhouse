@@ -62,18 +62,18 @@ export const usePostOnboarding = () => {
         .from('implementation_trails')
         .select('status, trail_data')
         .eq('user_id', user.id)
-        .eq('status', 'completed')
         .single();
 
-      setHasCompletedTrail(!!trailData);
+      setHasCompletedTrail(!!trailData?.trail_data);
     } catch (error) {
       console.log('Nenhuma trilha encontrada ainda');
       setHasCompletedTrail(false);
     }
   }, [user?.id]);
 
-  // Navegar para trilha de implementação
+  // Navegar para trilha de implementação (corrigido)
   const goToImplementationTrail = useCallback(() => {
+    // Navegar diretamente sem verificações complexas
     navigate('/implementation-trail');
   }, [navigate]);
 
