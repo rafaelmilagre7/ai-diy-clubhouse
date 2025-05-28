@@ -1,6 +1,7 @@
 
 import React, { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
+import { adaptOnboardingStateToQuickData } from '@/types/quickOnboarding';
 
 const StepQuemEVoceNew = React.lazy(() => 
   import('./StepQuemEVoceNew').then(module => ({ default: module.StepQuemEVoceNew }))
@@ -22,15 +23,62 @@ const StepLoader = () => (
 
 interface LazyStepProps {
   step: number;
-  [key: string]: any;
+  data: any;
+  onUpdate: (field: string, value: any) => void;
+  onNext: () => void;
+  onPrevious?: () => void;
+  canProceed: boolean;
+  currentStep: number;
+  totalSteps: number;
 }
 
-export const LazyStepLoader: React.FC<LazyStepProps> = ({ step, ...props }) => {
+export const LazyStepLoader: React.FC<LazyStepProps> = ({ 
+  step, 
+  data, 
+  onUpdate, 
+  onNext, 
+  onPrevious, 
+  canProceed, 
+  currentStep, 
+  totalSteps 
+}) => {
+  // Adaptar dados para o formato correto
+  const adaptedData = adaptOnboardingStateToQuickData(data);
+
   return (
     <Suspense fallback={<StepLoader />}>
-      {step === 1 && <StepQuemEVoceNew {...props} />}
-      {step === 2 && <StepSeuNegocioNew {...props} />}
-      {step === 3 && <StepExperienciaIANew {...props} />}
+      {step === 1 && (
+        <StepQuemEVoceNew 
+          data={adaptedData}
+          onUpdate={onUpdate}
+          onNext={onNext}
+          canProceed={canProceed}
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+        />
+      )}
+      {step === 2 && onPrevious && (
+        <StepSeuNegocioNew 
+          data={adaptedData}
+          onUpdate={onUpdate}
+          onNext={onNext}
+          onPrevious={onPrevious}
+          canProceed={canProceed}
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+        />
+      )}
+      {step === 3 && onPrevious && (
+        <StepExperienciaIANew 
+          data={adaptedData}
+          onUpdate={onUpdate}
+          onNext={onNext}
+          onPrevious={onPrevious}
+          canProceed={canProceed}
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+        />
+      )}
     </Suspense>
   );
 };

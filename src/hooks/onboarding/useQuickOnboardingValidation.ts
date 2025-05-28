@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { useOnboardingUnified } from './useOnboardingUnified';
 
 export const useQuickOnboardingValidation = () => {
-  const { isOnboardingComplete, progress, data } = useOnboardingUnified();
+  const { data, hasExistingData } = useOnboardingUnified();
 
   const validateOnboardingCompletion = useCallback(async (): Promise<boolean> => {
     console.log('🔍 Validando conclusão do onboarding...');
@@ -22,21 +22,21 @@ export const useQuickOnboardingValidation = () => {
       return true;
     }
 
-    // Verificar dados do onboarding completo
-    if (isOnboardingComplete) {
-      console.log('✅ Onboarding completo encontrado');
+    // Verificar dados existentes
+    if (hasExistingData) {
+      console.log('✅ Dados existentes encontrados');
       return true;
     }
 
     console.log('❌ Onboarding não está completo');
-    console.log('Dados disponíveis:', { data, progress });
+    console.log('Dados disponíveis:', { data, hasExistingData });
     
     return false;
-  }, [isOnboardingComplete, progress, data]);
+  }, [data, hasExistingData]);
 
   return {
     validateOnboardingCompletion,
-    isOnboardingComplete,
-    hasValidData: isOnboardingComplete
+    isOnboardingComplete: hasExistingData,
+    hasValidData: hasExistingData
   };
 };
