@@ -28,12 +28,7 @@ const initialData: QuickOnboardingData = {
   // Etapa 3: Experiência com IA
   ai_knowledge_level: '',
   uses_ai: '',
-  main_goal: '',
-
-  // Campos adicionais para compatibilidade
-  desired_ai_areas: [],
-  has_implemented: '',
-  previous_tools: []
+  main_goal: ''
 };
 
 export const useQuickOnboardingDataLoader = () => {
@@ -81,10 +76,7 @@ export const useQuickOnboardingDataLoader = () => {
             main_challenge: quickData.main_challenge || '',
             ai_knowledge_level: quickData.ai_knowledge_level || '',
             uses_ai: quickData.uses_ai || '',
-            main_goal: quickData.main_goal || '',
-            desired_ai_areas: quickData.desired_ai_areas || [],
-            has_implemented: quickData.has_implemented || '',
-            previous_tools: quickData.previous_tools || []
+            main_goal: quickData.main_goal || ''
           });
           setHasExistingData(true);
         } else {

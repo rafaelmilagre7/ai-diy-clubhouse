@@ -31,12 +31,7 @@ const initialData: QuickOnboardingData = {
   // Etapa 3: Experiência com IA
   ai_knowledge_level: '',
   uses_ai: '',
-  main_goal: '',
-
-  // Campos adicionais para compatibilidade
-  desired_ai_areas: [],
-  has_implemented: '',
-  previous_tools: []
+  main_goal: ''
 };
 
 export const useQuickOnboardingOptimized = () => {
