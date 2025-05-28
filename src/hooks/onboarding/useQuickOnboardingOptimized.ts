@@ -59,14 +59,17 @@ export const useQuickOnboardingOptimized = () => {
   const canProceed = useCallback(() => {
     switch (currentStep) {
       case 1:
-        // Etapa 1: Validar apenas informações pessoais básicas
-        return !!(data.name && data.email && data.how_found_us);
+        // Etapa 1: Validar campos obrigatórios incluindo indicação condicional
+        const hasRequiredPersonalInfo = !!(data.name && data.email && data.whatsapp && data.how_found_us);
+        const hasReferralIfNeeded = data.how_found_us !== 'indicacao' || !!data.referred_by;
+        return hasRequiredPersonalInfo && hasReferralIfNeeded;
       case 2:
-        // Etapa 2: Validar apenas informações do negócio
-        return !!(data.company_name && data.role && data.company_size && data.main_challenge);
+        // Etapa 2: Validar informações completas do negócio
+        return !!(data.company_name && data.role && data.company_size && 
+                  data.company_segment && data.annual_revenue_range && data.main_challenge);
       case 3:
-        // Etapa 3: Validar experiência com IA
-        return !!(data.uses_ai && data.main_goal);
+        // Etapa 3: Validar experiência completa com IA
+        return !!(data.ai_knowledge_level && data.uses_ai && data.main_goal);
       default:
         return false;
     }

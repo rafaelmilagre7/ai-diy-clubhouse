@@ -12,10 +12,10 @@ import {
   adaptStepExperienciaIAToQuickData
 } from './dataAdapter';
 
-// Lazy load dos componentes das etapas
-const StepQuemEVoce = lazy(() => import('./StepQuemEVoce').then(module => ({ default: module.StepQuemEVoce })));
-const StepSeuNegocio = lazy(() => import('./StepSeuNegocio').then(module => ({ default: module.StepSeuNegocio })));
-const StepExperienciaIA = lazy(() => import('./StepExperienciaIA').then(module => ({ default: module.StepExperienciaIA })));
+// Lazy load dos componentes das etapas - USANDO AS VERSÕES NOVAS
+const StepQuemEVoceNew = lazy(() => import('./StepQuemEVoceNew').then(module => ({ default: module.StepQuemEVoceNew })));
+const StepSeuNegocioNew = lazy(() => import('./StepSeuNegocioNew').then(module => ({ default: module.StepSeuNegocioNew })));
+const StepExperienciaIANew = lazy(() => import('./StepExperienciaIANew').then(module => ({ default: module.StepExperienciaIANew })));
 
 interface LazyStepLoaderProps {
   step: number;
@@ -81,9 +81,9 @@ export const LazyStepLoader: React.FC<LazyStepLoaderProps> = ({
     switch (step) {
       case 1:
         return (
-          <StepQuemEVoce
-            data={adaptQuickDataToStepQuemEVoce(data)}
-            onUpdate={handleStepUpdate(1)}
+          <StepQuemEVoceNew
+            data={data}
+            onUpdate={onUpdate}
             onNext={onNext}
             canProceed={canProceed}
             currentStep={currentStep}
@@ -93,9 +93,9 @@ export const LazyStepLoader: React.FC<LazyStepLoaderProps> = ({
       
       case 2:
         return (
-          <StepSeuNegocio
-            data={adaptQuickDataToStepSeuNegocio(data)}
-            onUpdate={handleStepUpdate(2)}
+          <StepSeuNegocioNew
+            data={data}
+            onUpdate={onUpdate}
             onNext={onNext}
             onPrevious={onPrevious}
             canProceed={canProceed}
@@ -106,9 +106,9 @@ export const LazyStepLoader: React.FC<LazyStepLoaderProps> = ({
       
       case 3:
         return (
-          <StepExperienciaIA
-            data={adaptQuickDataToStepExperienciaIA(data)}
-            onUpdate={handleStepUpdate(3)}
+          <StepExperienciaIANew
+            data={data}
+            onUpdate={onUpdate}
             onNext={onNext}
             onPrevious={onPrevious}
             canProceed={canProceed}

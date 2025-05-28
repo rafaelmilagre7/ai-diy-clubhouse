@@ -64,7 +64,7 @@ export const useQuickOnboardingDataLoader = () => {
         console.log('Dados encontrados no quick_onboarding:', quickData);
         
         const loadedData: QuickOnboardingData = {
-          // Etapa 1
+          // Etapa 1 - Dados pessoais completos
           name: quickData.name || '',
           email: quickData.email || '',
           whatsapp: quickData.whatsapp || '',
@@ -75,7 +75,7 @@ export const useQuickOnboardingDataLoader = () => {
           how_found_us: quickData.how_found_us || '',
           referred_by: quickData.referred_by || '',
 
-          // Etapa 2
+          // Etapa 2 - Dados do negócio completos
           company_name: quickData.company_name || '',
           role: quickData.role || '',
           company_size: quickData.company_size || '',
@@ -84,12 +84,12 @@ export const useQuickOnboardingDataLoader = () => {
           annual_revenue_range: quickData.annual_revenue_range || '',
           main_challenge: quickData.main_challenge || '',
 
-          // Etapa 3
+          // Etapa 3 - Experiência com IA completa
           ai_knowledge_level: quickData.ai_knowledge_level || '',
           uses_ai: quickData.uses_ai || '',
           main_goal: quickData.main_goal || '',
 
-          // Campos adicionais para compatibilidade
+          // Campos adicionais
           desired_ai_areas: quickData.desired_ai_areas || [],
           has_implemented: quickData.has_implemented || '',
           previous_tools: quickData.previous_tools || []
@@ -116,6 +116,7 @@ export const useQuickOnboardingDataLoader = () => {
         const personalInfo = progressData.personal_info || {};
         const professionalInfo = progressData.professional_info || {};
         const aiExperience = progressData.ai_experience || {};
+        const complementaryInfo = progressData.complementary_info || {};
 
         const loadedData: QuickOnboardingData = {
           // Etapa 1 - do personal_info
@@ -126,16 +127,16 @@ export const useQuickOnboardingDataLoader = () => {
           birth_date: '',
           instagram_url: personalInfo.instagram || '',
           linkedin_url: personalInfo.linkedin || '',
-          how_found_us: progressData.how_found_us || '',
-          referred_by: progressData.referred_by || '',
+          how_found_us: complementaryInfo.how_found_us || '',
+          referred_by: complementaryInfo.referred_by || '',
 
           // Etapa 2 - do professional_info
-          company_name: professionalInfo.company_name || progressData.company_name || '',
+          company_name: professionalInfo.company_name || '',
           role: professionalInfo.current_position || '',
-          company_size: professionalInfo.company_size || progressData.company_size || '',
-          company_segment: professionalInfo.company_sector || progressData.company_sector || '',
-          company_website: professionalInfo.company_website || progressData.company_website || '',
-          annual_revenue_range: professionalInfo.annual_revenue || progressData.annual_revenue || '',
+          company_size: professionalInfo.company_size || '',
+          company_segment: professionalInfo.company_sector || '',
+          company_website: professionalInfo.company_website || '',
+          annual_revenue_range: professionalInfo.annual_revenue || '',
           main_challenge: '',
 
           // Etapa 3 - do ai_experience
