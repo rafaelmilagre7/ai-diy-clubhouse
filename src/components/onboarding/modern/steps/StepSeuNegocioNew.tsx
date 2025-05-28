@@ -27,6 +27,7 @@ const COMPANY_SIZE_OPTIONS = [
 ];
 
 const COMPANY_SEGMENT_OPTIONS = [
+  { value: 'inteligencia-artificial', label: 'Inteligência Artificial', icon: '🤖' },
   { value: 'tecnologia', label: 'Tecnologia', icon: '💻' },
   { value: 'ecommerce', label: 'E-commerce', icon: '🛒' },
   { value: 'servicos', label: 'Serviços', icon: '🔧' },
@@ -35,15 +36,19 @@ const COMPANY_SEGMENT_OPTIONS = [
   { value: 'saude', label: 'Saúde', icon: '🏥' },
   { value: 'marketing', label: 'Marketing', icon: '📢' },
   { value: 'financeiro', label: 'Financeiro', icon: '💰' },
+  { value: 'industria', label: 'Indústria', icon: '🏭' },
+  { value: 'agronegocio', label: 'Agronegócio', icon: '🌱' },
+  { value: 'construcao', label: 'Construção', icon: '🏗️' },
   { value: 'outros', label: 'Outros', icon: '🔄' }
 ];
 
 const REVENUE_RANGE_OPTIONS = [
-  { value: '0-10k', label: 'Até R$ 10.000/mês', icon: '📈' },
-  { value: '10k-50k', label: 'R$ 10.000 - R$ 50.000/mês', icon: '💼' },
-  { value: '50k-100k', label: 'R$ 50.000 - R$ 100.000/mês', icon: '🚀' },
-  { value: '100k-500k', label: 'R$ 100.000 - R$ 500.000/mês', icon: '💎' },
-  { value: '500k+', label: 'Mais de R$ 500.000/mês', icon: '👑' },
+  { value: '0-50k', label: 'Até R$ 50.000/ano', icon: '📈' },
+  { value: '50k-200k', label: 'R$ 50.000 - R$ 200.000/ano', icon: '💼' },
+  { value: '200k-500k', label: 'R$ 200.000 - R$ 500.000/ano', icon: '🚀' },
+  { value: '500k-1m', label: 'R$ 500.000 - R$ 1.000.000/ano', icon: '💎' },
+  { value: '1m-5m', label: 'R$ 1.000.000 - R$ 5.000.000/ano', icon: '👑' },
+  { value: '5m+', label: 'Mais de R$ 5.000.000/ano', icon: '🏆' },
   { value: 'preferir-nao-informar', label: 'Prefiro não informar', icon: '🤐' }
 ];
 
@@ -125,7 +130,7 @@ export const StepSeuNegocioNew: React.FC<StepSeuNegocioNewProps> = ({
 
         <div className="space-y-2">
           <label className="block text-sm font-medium text-white">
-            Website da empresa (opcional)
+            Website da empresa <span className="text-gray-400 text-sm font-normal">(opcional)</span>
           </label>
           <Input
             type="url"
@@ -141,7 +146,7 @@ export const StepSeuNegocioNew: React.FC<StepSeuNegocioNewProps> = ({
           onChange={(value) => onUpdate('annual_revenue_range', value)}
           options={REVENUE_RANGE_OPTIONS}
           placeholder="Selecione a faixa de faturamento"
-          label="Faturamento mensal aproximado"
+          label="Faturamento anual aproximado"
           required
         />
 

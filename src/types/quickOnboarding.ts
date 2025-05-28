@@ -25,13 +25,3 @@ export interface QuickOnboardingData {
   uses_ai: string;
   main_goal: string;
 }
-
-export interface QuickOnboardingRecord extends QuickOnboardingData {
-  id: string;
-  user_id: string;
-  current_step: number;
-  is_completed: boolean;
-  completed_at?: string;
-  created_at: string;
-  updated_at: string;
-}

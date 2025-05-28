@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Input } from '@/components/ui/input';
-import { Users } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ConditionalReferralInputProps {
   howFoundUs: string;
@@ -14,27 +14,30 @@ export const ConditionalReferralInput: React.FC<ConditionalReferralInputProps> =
   referredBy,
   onReferredByChange
 }) => {
-  if (howFoundUs !== 'indicacao') {
-    return null;
-  }
+  const showReferralInput = howFoundUs === 'indicacao';
 
   return (
-    <div className="space-y-2 animate-fade-in">
-      <label className="block text-sm font-medium text-white">
-        Quem te indicou? <span className="text-red-400">*</span>
-      </label>
-      <div className="relative">
-        <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-          <Users className="w-4 h-4 text-viverblue" />
-        </div>
-        <Input
-          type="text"
-          value={referredBy}
-          onChange={(e) => onReferredByChange(e.target.value)}
-          placeholder="Nome da pessoa que te indicou"
-          className="pl-10 h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50 placeholder-gray-500"
-        />
-      </div>
-    </div>
+    <AnimatePresence>
+      {showReferralInput && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{ duration: 0.3, ease: 'easeInOut' }}
+          className="space-y-2"
+        >
+          <label className="block text-sm font-medium text-white">
+            Quem te indicou? <span className="text-red-400">*</span>
+          </label>
+          <Input
+            type="text"
+            value={referredBy}
+            onChange={(e) => onReferredByChange(e.target.value)}
+            placeholder="Nome de quem te indicou"
+            className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50"
+          />
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };

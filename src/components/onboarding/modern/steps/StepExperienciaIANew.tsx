@@ -16,30 +16,30 @@ interface StepExperienciaIANewProps {
 }
 
 const AI_KNOWLEDGE_OPTIONS = [
-  { value: 'iniciante', label: 'Iniciante - Nunca usei IA no trabalho', icon: '🌱' },
-  { value: 'basico', label: 'Básico - Já usei ChatGPT ou similar', icon: '📚' },
-  { value: 'intermediario', label: 'Intermediário - Uso algumas ferramentas', icon: '⚡' },
-  { value: 'avancado', label: 'Avançado - Tenho experiência sólida', icon: '🚀' },
-  { value: 'especialista', label: 'Especialista - Trabalho com IA', icon: '🎯' }
+  { value: 'iniciante', label: 'Iniciante - Pouco ou nenhum conhecimento', icon: '🌱' },
+  { value: 'basico', label: 'Básico - Já usei algumas ferramentas', icon: '📚' },
+  { value: 'intermediario', label: 'Intermediário - Uso regularmente', icon: '⚡' },
+  { value: 'avancado', label: 'Avançado - Implemento soluções', icon: '🚀' },
+  { value: 'especialista', label: 'Especialista - Desenvolvo IA', icon: '🧠' }
 ];
 
 const USES_AI_OPTIONS = [
-  { value: 'nao', label: 'Não uso IA no trabalho', icon: '❌' },
-  { value: 'ocasionalmente', label: 'Uso ocasionalmente', icon: '🔄' },
-  { value: 'semanalmente', label: 'Uso semanalmente', icon: '📅' },
-  { value: 'diariamente', label: 'Uso diariamente', icon: '⭐' },
-  { value: 'constantemente', label: 'Uso constantemente', icon: '🔥' }
+  { value: 'nunca', label: 'Nunca usei IA no trabalho', icon: '❌' },
+  { value: 'raramente', label: 'Raramente (menos de 1x/semana)', icon: '🔸' },
+  { value: 'ocasionalmente', label: 'Ocasionalmente (1-3x/semana)', icon: '🔹' },
+  { value: 'frequentemente', label: 'Frequentemente (4-6x/semana)', icon: '⭐' },
+  { value: 'diariamente', label: 'Diariamente', icon: '🔥' }
 ];
 
 const MAIN_GOAL_OPTIONS = [
+  { value: 'reduzir-custos', label: 'Reduzir custos operacionais', icon: '💰' },
+  { value: 'aumentar-receita', label: 'Aumentar receita', icon: '📈' },
   { value: 'automatizar-processos', label: 'Automatizar processos', icon: '🤖' },
-  { value: 'melhorar-atendimento', label: 'Melhorar atendimento ao cliente', icon: '💬' },
-  { value: 'aumentar-vendas', label: 'Aumentar vendas', icon: '💰' },
-  { value: 'criar-conteudo', label: 'Criar conteúdo', icon: '📝' },
-  { value: 'analisar-dados', label: 'Analisar dados', icon: '📊' },
-  { value: 'reduzir-custos', label: 'Reduzir custos', icon: '💡' },
-  { value: 'inovar-produtos', label: 'Inovar produtos/serviços', icon: '🚀' },
-  { value: 'outros', label: 'Outros objetivos', icon: '🎯' }
+  { value: 'melhorar-produtividade', label: 'Melhorar produtividade', icon: '⚡' },
+  { value: 'inovar-produtos', label: 'Inovar produtos/serviços', icon: '💡' },
+  { value: 'melhorar-experiencia', label: 'Melhorar experiência do cliente', icon: '😊' },
+  { value: 'tomar-decisoes', label: 'Tomar decisões baseadas em dados', icon: '📊' },
+  { value: 'competitividade', label: 'Manter competitividade', icon: '🎯' }
 ];
 
 export const StepExperienciaIANew: React.FC<StepExperienciaIANewProps> = ({
@@ -57,12 +57,12 @@ export const StepExperienciaIANew: React.FC<StepExperienciaIANewProps> = ({
     <>
       <MilagrinhoAssistant
         userName={firstName}
-        message="Agora quero entender sua experiência com IA para recomendar as soluções mais adequadas ao seu nível!"
+        message="Agora me conte sobre sua experiência com IA para eu criar a trilha perfeita para você!"
       />
       
       <QuickFormStep
         title="Sua experiência com IA"
-        description="Vamos entender seu nível atual e objetivos com inteligência artificial"
+        description="Conte-nos sobre seu nível de conhecimento e objetivos com inteligência artificial"
         currentStep={currentStep}
         totalSteps={totalSteps}
         onNext={onNext}
@@ -84,7 +84,7 @@ export const StepExperienciaIANew: React.FC<StepExperienciaIANewProps> = ({
           onChange={(value) => onUpdate('uses_ai', value)}
           options={USES_AI_OPTIONS}
           placeholder="Selecione a frequência"
-          label="Com que frequência você usa IA atualmente?"
+          label="Com que frequência você usa IA no trabalho?"
           required
         />
 
@@ -96,19 +96,6 @@ export const StepExperienciaIANew: React.FC<StepExperienciaIANewProps> = ({
           label="Qual seu principal objetivo com IA?"
           required
         />
-
-        <div className="bg-viverblue/10 border border-viverblue/30 rounded-lg p-4 mt-6">
-          <div className="flex items-start space-x-3">
-            <div className="text-2xl">💡</div>
-            <div>
-              <h4 className="text-white font-medium mb-1">Dica do Milagrinho</h4>
-              <p className="text-gray-300 text-sm">
-                Com base nas suas respostas, vou criar uma trilha personalizada com soluções 
-                de IA que se encaixam perfeitamente no seu negócio e nível de experiência!
-              </p>
-            </div>
-          </div>
-        </div>
       </QuickFormStep>
     </>
   );

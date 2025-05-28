@@ -95,6 +95,7 @@ export const StepQuemEVoceNew: React.FC<StepQuemEVoceNewProps> = ({
             value={data.whatsapp}
             onChange={(value) => onUpdate('whatsapp', value)}
             placeholder="(11) 99999-9999"
+            required
           />
         </div>
 
