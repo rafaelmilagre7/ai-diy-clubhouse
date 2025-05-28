@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ChevronDown } from 'lucide-react';
 
 interface DropdownOption {
   value: string;
@@ -34,7 +33,6 @@ export const DropdownModerno: React.FC<DropdownModernoProps> = ({
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50">
           <SelectValue placeholder={placeholder} />
-          <ChevronDown className="h-4 w-4 opacity-50" />
         </SelectTrigger>
         <SelectContent className="bg-gray-800 border-gray-600">
           {options.map((option) => (
