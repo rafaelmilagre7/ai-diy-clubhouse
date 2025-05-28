@@ -125,8 +125,8 @@ export const LazyStepLoader: React.FC<LazyStepLoaderProps> = ({
       onPrevious={currentStep > 1 ? onPrevious : undefined}
       isLoading={isSaving}
     >
-      {/* Feedback de auto-save */}
-      <div className="flex justify-end mb-4">
+      {/* Feedback de auto-save discreto no canto superior direito */}
+      <div className="absolute top-4 right-4 z-10">
         <AutoSaveFeedback 
           isSaving={isSaving} 
           lastSaveTime={lastSaveTime}

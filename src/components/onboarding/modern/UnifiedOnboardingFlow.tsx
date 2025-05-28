@@ -116,22 +116,6 @@ export const UnifiedOnboardingFlow: React.FC = () => {
 
   return (
     <div className="relative">
-      {/* Indicador de dados carregados */}
-      {hasExistingData && currentStep === 1 && (
-        <motion.div 
-          className="absolute top-0 right-0 z-10"
-          initial={{ opacity: 0, x: 100 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5, duration: 0.4 }}
-        >
-          <div className="bg-green-500/20 border border-green-500/30 rounded-lg px-4 py-2 backdrop-blur-sm">
-            <p className="text-green-400 text-sm flex items-center gap-2">
-              ✅ Dados anteriores carregados
-            </p>
-          </div>
-        </motion.div>
-      )}
-
       {renderCurrentStep()}
     </div>
   );
