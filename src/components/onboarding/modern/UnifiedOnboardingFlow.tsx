@@ -95,7 +95,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
   };
 
   return (
-    <div className="py-4">
+    <div className="space-y-6">
       {renderCurrentStep()}
     </div>
   );
