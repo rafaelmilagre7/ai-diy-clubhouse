@@ -1,6 +1,5 @@
-
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import React, { useState } from "react";
+import { UserProfile } from "@/lib/supabase";
 import {
   Table,
   TableBody,
@@ -9,18 +8,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { UserProfile } from "@/lib/supabase";
-import { Edit2, MoreHorizontal, Key, Trash2, RefreshCw } from "lucide-react";
-import { useState, useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { MoreHorizontal, Edit, Trash2, Key, RotateCcw } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { Badge } from "@/components/ui/badge";
+import { UserResetDialog } from "./UserResetDialog";
 
 interface UsersTableProps {
   users: UserProfile[];
@@ -31,10 +30,11 @@ interface UsersTableProps {
   onEditRole: (user: UserProfile) => void;
   onDeleteUser: (user: UserProfile) => void;
   onResetPassword: (user: UserProfile) => void;
-  onRefresh?: () => void;
+  onResetUser: (user: UserProfile) => void;
+  onRefresh: () => void;
 }
 
-export const UsersTable = ({
+export const UsersTable: React.FC<UsersTableProps> = ({
   users,
   loading,
   canEditRoles,
@@ -43,259 +43,123 @@ export const UsersTable = ({
   onEditRole,
   onDeleteUser,
   onResetPassword,
+  onResetUser,
   onRefresh,
-}: UsersTableProps) => {
-  const [sortConfig, setSortConfig] = useState<{
-    key: keyof UserProfile | "roleDisplay";
-    direction: "asc" | "desc";
-  }>({ key: "created_at", direction: "desc" });
+}) => {
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
 
-  const sortedUsers = useMemo(() => {
-    if (loading) return [];
-    
-    const sortableUsers = [...users];
-    
-    sortableUsers.sort((a, b) => {
-      // Ordenação especial para o campo de papel/role
-      if (sortConfig.key === "roleDisplay") {
-        const roleA = a.user_roles?.name || a.role || "member";
-        const roleB = b.user_roles?.name || b.role || "member";
-        
-        if (sortConfig.direction === "asc") {
-          return roleA.localeCompare(roleB);
-        } else {
-          return roleB.localeCompare(roleA);
-        }
-      }
-      
-      // Ordenação padrão para outros campos
-      const aValue = a[sortConfig.key as keyof UserProfile];
-      const bValue = b[sortConfig.key as keyof UserProfile];
-      
-      if (!aValue && !bValue) return 0;
-      if (!aValue) return 1;
-      if (!bValue) return -1;
-      
-      if (typeof aValue === "string" && typeof bValue === "string") {
-        return sortConfig.direction === "asc"
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
-      }
-      
-      // Para datas
-      if (
-        sortConfig.key === "created_at" &&
-        typeof aValue === "string" &&
-        typeof bValue === "string"
-      ) {
-        return sortConfig.direction === "asc"
-          ? new Date(aValue).getTime() - new Date(bValue).getTime()
-          : new Date(bValue).getTime() - new Date(aValue).getTime();
-      }
-      
-      return 0;
-    });
-    
-    return sortableUsers;
-  }, [users, sortConfig, loading]);
-
-  const requestSort = (key: keyof UserProfile | "roleDisplay") => {
-    setSortConfig((prevConfig) => ({
-      key,
-      direction:
-        prevConfig.key === key && prevConfig.direction === "asc"
-          ? "desc"
-          : "asc",
-    }));
+  const handleResetUser = (user: UserProfile) => {
+    setSelectedUser(user);
+    setResetDialogOpen(true);
   };
 
-  const getInitials = (name: string | null | undefined) => {
-    if (!name) return "U";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .substring(0, 2);
-  };
-
-  const formatDate = (dateString: string | null | undefined) => {
-    if (!dateString) return "-";
-    try {
-      return format(new Date(dateString), "dd/MM/yyyy", { locale: ptBR });
-    } catch (e) {
-      return "-";
-    }
-  };
-
-  // Renderiza o papel do usuário com melhor contraste
-  const renderUserRole = (user: UserProfile) => {
-    // Primeiro tenta pegar do novo sistema
-    const roleName = user.user_roles?.name || user.role || "membro";
-    
-    // Com base no papel, selecionar estilo e conteúdo do badge
-    switch (roleName.toLowerCase()) {
-      case 'admin':
-        return (
-          <Badge className="badge-dark-info badge-high-contrast">
-            Admin
-          </Badge>
-        );
-      case 'formacao':
-        return (
-          <Badge className="badge-dark-success badge-high-contrast">
-            Formação
-          </Badge>
-        );
-      default:
-        return (
-          <Badge className="badge-dark-neutral badge-high-contrast">
-            Membro
-          </Badge>
-        );
-    }
+  const handleResetSuccess = () => {
+    onRefresh();
   };
 
   if (loading) {
     return (
-      <div className="flex flex-col justify-center items-center p-8 space-y-4">
-        <div className="animate-spin w-8 h-8 border-4 border-viverblue border-t-transparent rounded-full"></div>
-        <div className="text-white">Carregando usuários...</div>
+      <div className="text-center py-8">
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue"></div>
+        <p className="mt-2 text-muted-foreground">Carregando usuários...</p>
       </div>
     );
   }
 
   return (
-    <div className="relative overflow-x-auto">
-      <div className="flex justify-end mb-4">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={onRefresh} 
-          className="flex items-center"
-          disabled={loading}
-        >
-          <RefreshCw className="h-4 w-4 mr-1" />
-          Atualizar
-        </Button>
-      </div>
-      <Table className="border-collapse">
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-12">Avatar</TableHead>
-            <TableHead
-              className="cursor-pointer hover:text-viverblue transition-colors"
-              onClick={() => requestSort("name")}
-            >
-              Nome
-              {sortConfig.key === "name" && (
-                <span>{sortConfig.direction === "asc" ? " ↑" : " ↓"}</span>
-              )}
-            </TableHead>
-            <TableHead
-              className="cursor-pointer hover:text-viverblue transition-colors"
-              onClick={() => requestSort("email")}
-            >
-              Email
-              {sortConfig.key === "email" && (
-                <span>{sortConfig.direction === "asc" ? " ↑" : " ↓"}</span>
-              )}
-            </TableHead>
-            <TableHead
-              className="cursor-pointer hover:text-viverblue transition-colors"
-              onClick={() => requestSort("roleDisplay")}
-            >
-              Função
-              {sortConfig.key === "roleDisplay" && (
-                <span>{sortConfig.direction === "asc" ? " ↑" : " ↓"}</span>
-              )}
-            </TableHead>
-            <TableHead
-              className="cursor-pointer hover:text-viverblue transition-colors"
-              onClick={() => requestSort("created_at")}
-            >
-              Criado em
-              {sortConfig.key === "created_at" && (
-                <span>{sortConfig.direction === "asc" ? " ↑" : " ↓"}</span>
-              )}
-            </TableHead>
-            <TableHead className="w-12">Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {sortedUsers.length === 0 ? (
+    <>
+      <div className="border rounded-lg">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={6} className="h-24 text-center">
-                <div className="empty-state">
-                  <div className="empty-state-title">Nenhum usuário encontrado</div>
-                  <p className="empty-state-description">
-                    Não há usuários cadastrados ou que correspondam aos filtros aplicados.
-                  </p>
-                </div>
-              </TableCell>
+              <TableHead>Usuário</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Papel</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Criado em</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
             </TableRow>
-          ) : (
-            sortedUsers.map((user) => (
+          </TableHeader>
+          <TableBody>
+            {users.map((user) => (
               <TableRow key={user.id}>
                 <TableCell>
-                  <Avatar>
-                    <AvatarImage
-                      src={user.avatar_url || undefined}
-                      alt={user.name || "Avatar"}
-                    />
-                    <AvatarFallback className="bg-viverblue/10 text-viverblue">
-                      {getInitials(user.name || user.email)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="flex items-center space-x-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user.avatar_url || undefined} />
+                      <AvatarFallback>
+                        {user.name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="font-medium">{user.name || 'Sem nome'}</span>
+                  </div>
                 </TableCell>
-                <TableCell className="font-medium">{user.name || "-"}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>{renderUserRole(user)}</TableCell>
-                <TableCell className="text-sm">{formatDate(user.created_at)}</TableCell>
                 <TableCell>
-                  {(canEditRoles || canDeleteUsers || canResetPasswords) ? (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-neutral-800">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Abrir menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-44 bg-[#1A1E2E] border border-white/10 text-white">
-                        {canEditRoles && (
-                          <DropdownMenuItem onClick={() => onEditRole(user)} className="cursor-pointer text-white hover:bg-neutral-700">
-                            <Edit2 className="mr-2 h-4 w-4" />
-                            Alterar Função
-                          </DropdownMenuItem>
-                        )}
-                        
-                        {canResetPasswords && (
-                          <DropdownMenuItem onClick={() => onResetPassword(user)} className="cursor-pointer text-white hover:bg-neutral-700">
-                            <Key className="mr-2 h-4 w-4" />
-                            Redefinir Senha
-                          </DropdownMenuItem>
-                        )}
-                        
-                        {canDeleteUsers && (
+                  <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                    {user.role}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant="outline" className="text-green-600">
+                    Ativo
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  {user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : 'N/A'}
+                </TableCell>
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {canEditRoles && (
+                        <DropdownMenuItem onClick={() => onEditRole(user)}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Editar Papel
+                        </DropdownMenuItem>
+                      )}
+                      {canResetPasswords && (
+                        <DropdownMenuItem onClick={() => onResetPassword(user)}>
+                          <Key className="mr-2 h-4 w-4" />
+                          Redefinir Senha
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem onClick={() => handleResetUser(user)}>
+                        <RotateCcw className="mr-2 h-4 w-4" />
+                        Reset Completo
+                      </DropdownMenuItem>
+                      {canDeleteUsers && (
+                        <>
+                          <DropdownMenuSeparator />
                           <DropdownMenuItem 
                             onClick={() => onDeleteUser(user)}
-                            className="text-red-400 hover:text-red-300 focus:text-red-300 cursor-pointer hover:bg-neutral-700"
+                            className="text-red-600"
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
-                            Excluir Usuário
+                            Excluir
                           </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  ) : (
-                    <span className="text-neutral-500">-</span>
-                  )}
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </div>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <UserResetDialog
+        open={resetDialogOpen}
+        onOpenChange={setResetDialogOpen}
+        user={selectedUser}
+        onSuccess={handleResetSuccess}
+      />
+    </>
   );
 };
