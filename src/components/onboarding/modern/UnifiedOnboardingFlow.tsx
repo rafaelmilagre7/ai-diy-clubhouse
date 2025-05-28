@@ -2,9 +2,7 @@
 import React from 'react';
 import { useOnboardingUnified } from '@/hooks/onboarding/useOnboardingUnified';
 import { useOnboardingNavigation } from '@/hooks/onboarding/useOnboardingNavigation';
-import { StepQuemEVoceNew } from './steps/StepQuemEVoceNew';
-import { StepSeuNegocioNew } from './steps/StepSeuNegocioNew';
-import { StepExperienciaIANew } from './steps/StepExperienciaIANew';
+import { LazyStepLoader } from './steps/LazyStepLoader';
 import { EnhancedTrailMagicExperience } from '../EnhancedTrailMagicExperience';
 import MilagrinhoAssistant from '../MilagrinhoAssistant';
 import { Loader2 } from 'lucide-react';
@@ -58,6 +56,8 @@ export const UnifiedOnboardingFlow: React.FC = () => {
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
+      case 2:
+      case 3:
         return (
           <div className="space-y-4">
             {showDataLoadedMessage && (
@@ -67,41 +67,17 @@ export const UnifiedOnboardingFlow: React.FC = () => {
                 </p>
               </div>
             )}
-            <StepQuemEVoceNew
+            <LazyStepLoader
+              step={currentStep}
               data={data}
               onUpdate={updateField}
               onNext={nextStep}
+              onPrevious={previousStep}
               canProceed={canProceed}
               currentStep={currentStep}
               totalSteps={totalSteps}
             />
           </div>
-        );
-      
-      case 2:
-        return (
-          <StepSeuNegocioNew
-            data={data}
-            onUpdate={updateField}
-            onNext={nextStep}
-            onPrevious={previousStep}
-            canProceed={canProceed}
-            currentStep={currentStep}
-            totalSteps={totalSteps}
-          />
-        );
-      
-      case 3:
-        return (
-          <StepExperienciaIANew
-            data={data}
-            onUpdate={updateField}
-            onNext={nextStep}
-            onPrevious={previousStep}
-            canProceed={canProceed}
-            currentStep={currentStep}
-            totalSteps={totalSteps}
-          />
         );
       
       case 4:
