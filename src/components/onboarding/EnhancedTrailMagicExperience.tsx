@@ -33,16 +33,6 @@ export const EnhancedTrailMagicExperience: React.FC<EnhancedTrailMagicExperience
       setProgress(prev => {
         if (prev >= 100) {
           clearInterval(timer);
-          // Após completar, aguarda 1 segundo e redireciona automaticamente
-          setTimeout(() => {
-            // Dispara confetes antes de redirecionar
-            confetti({
-              particleCount: 100,
-              spread: 70,
-              origin: { y: 0.6 }
-            });
-            onFinish();
-          }, 1000);
           return 100;
         }
         return prev + 1.5;
@@ -50,7 +40,7 @@ export const EnhancedTrailMagicExperience: React.FC<EnhancedTrailMagicExperience
     }, 100);
 
     return () => clearInterval(timer);
-  }, [onFinish]);
+  }, []);
 
   useEffect(() => {
     const phaseProgress = Math.floor(progress / 33.33);
@@ -58,6 +48,37 @@ export const EnhancedTrailMagicExperience: React.FC<EnhancedTrailMagicExperience
       setCurrentPhase(phaseProgress);
     }
   }, [progress, currentPhase, phases.length]);
+
+  // Timeout de segurança e finalização automática
+  useEffect(() => {
+    if (progress >= 100) {
+      console.log('🎉 Animação finalizada, redirecionando...');
+      
+      // Dispara confetes
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+
+      // Timeout de segurança para garantir que onFinish seja chamado
+      const finishTimeout = setTimeout(() => {
+        console.log('⏰ Timeout de segurança - chamando onFinish()');
+        onFinish();
+      }, 2000);
+
+      // Primeira tentativa após 1 segundo
+      const firstAttempt = setTimeout(() => {
+        console.log('🎯 Primeira tentativa - chamando onFinish()');
+        onFinish();
+      }, 1000);
+
+      return () => {
+        clearTimeout(finishTimeout);
+        clearTimeout(firstAttempt);
+      };
+    }
+  }, [progress, onFinish]);
 
   return (
     <div className="max-w-2xl mx-auto space-y-8 py-12">

@@ -45,8 +45,8 @@ export const useQuickOnboardingOptimized = () => {
     loadError 
   } = useQuickOnboardingDataLoader();
 
-  // Adicionar auto-save
-  const { isSaving, lastSaveTime } = useQuickOnboardingAutoSave(data);
+  // Passar currentStep para o auto-save
+  const { isSaving, lastSaveTime } = useQuickOnboardingAutoSave(data, currentStep);
 
   const updateField = useCallback((field: keyof QuickOnboardingData, value: any) => {
     setData(prev => ({
@@ -76,21 +76,51 @@ export const useQuickOnboardingOptimized = () => {
 
   const nextStep = useCallback(() => {
     if (canProceed()) {
+      console.log(`🔄 Avançando para etapa ${currentStep + 1}`);
       setCurrentStep(prev => prev + 1);
     }
-  }, [canProceed]);
+  }, [canProceed, currentStep]);
 
   const previousStep = useCallback(() => {
+    console.log(`🔄 Voltando para etapa ${currentStep - 1}`);
     setCurrentStep(prev => Math.max(1, prev - 1));
-  }, []);
+  }, [currentStep]);
+
+  // Validação completa independente do currentStep
+  const isDataComplete = useCallback(() => {
+    return !!(
+      // Etapa 1
+      data.name && data.email && data.whatsapp && data.how_found_us &&
+      (data.how_found_us !== 'indicacao' || data.referred_by) &&
+      // Etapa 2
+      data.company_name && data.role && data.company_size && 
+      data.company_segment && data.annual_revenue_range && data.main_challenge &&
+      // Etapa 3
+      data.ai_knowledge_level && data.uses_ai && data.main_goal
+    );
+  }, [data]);
 
   const completeOnboarding = useCallback(async () => {
-    if (!user || !canProceed()) {
+    if (!user) {
+      toast.error('Usuário não autenticado');
+      return false;
+    }
+
+    // Validar se todos os dados estão completos
+    if (!isDataComplete()) {
+      console.error('❌ Dados incompletos para finalizar onboarding:', {
+        step1: !!(data.name && data.email && data.whatsapp && data.how_found_us),
+        step2: !!(data.company_name && data.role && data.company_size && data.company_segment && data.annual_revenue_range && data.main_challenge),
+        step3: !!(data.ai_knowledge_level && data.uses_ai && data.main_goal),
+        data
+      });
       toast.error('Complete todas as etapas antes de finalizar');
       return false;
     }
 
     try {
+      console.log('🎯 Finalizando onboarding com dados completos');
+
       // Marcar como completo na tabela quick_onboarding
       const { error: quickError } = await supabase
         .from('quick_onboarding')
@@ -100,7 +130,10 @@ export const useQuickOnboardingOptimized = () => {
         })
         .eq('user_id', user.id);
 
-      if (quickError) throw quickError;
+      if (quickError) {
+        console.error('❌ Erro ao atualizar quick_onboarding:', quickError);
+        throw quickError;
+      }
 
       // Marcar como completo na tabela onboarding_progress também
       const { error: progressError } = await supabase
@@ -113,16 +146,20 @@ export const useQuickOnboardingOptimized = () => {
         })
         .eq('user_id', user.id);
 
-      if (progressError) throw progressError;
+      if (progressError) {
+        console.error('❌ Erro ao atualizar onboarding_progress:', progressError);
+        throw progressError;
+      }
 
+      console.log('✅ Onboarding finalizado com sucesso!');
       toast.success('Onboarding concluído com sucesso!');
       return true;
     } catch (error) {
-      console.error('Erro ao completar onboarding:', error);
+      console.error('❌ Erro ao completar onboarding:', error);
       toast.error('Erro ao finalizar onboarding. Tente novamente.');
       return false;
     }
-  }, [user, canProceed]);
+  }, [user, isDataComplete, data]);
 
   return {
     currentStep,
@@ -138,6 +175,8 @@ export const useQuickOnboardingOptimized = () => {
     // Adicionar estado de salvamento
     isSaving,
     lastSaveTime,
-    completeOnboarding
+    completeOnboarding,
+    // Expor função de validação completa para debug
+    isDataComplete: isDataComplete()
   };
 };

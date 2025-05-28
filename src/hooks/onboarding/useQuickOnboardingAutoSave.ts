@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
 
-export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
+export const useQuickOnboardingAutoSave = (data: QuickOnboardingData, currentStep?: number) => {
   const { user } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaveTime, setLastSaveTime] = useState<number | null>(null);
@@ -16,8 +16,8 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
     // Só salvar se o usuário estiver logado e houver dados básicos mínimos
     if (!user || !data.name?.trim() || !data.email?.trim()) return;
 
-    // Verificar se os dados mudaram
-    const currentDataString = JSON.stringify(data);
+    // Incluir currentStep no hash para detectar mudanças
+    const currentDataString = JSON.stringify({ ...data, currentStep });
     if (currentDataString === lastDataRef.current) return;
     
     lastDataRef.current = currentDataString;
@@ -27,10 +27,12 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
       clearTimeout(saveTimeoutRef.current);
     }
 
-    // Salvar após 3 segundos de inatividade (debounce aumentado)
+    // Salvar após 2 segundos de inatividade (reduzido para melhor UX)
     saveTimeoutRef.current = setTimeout(async () => {
       try {
         setIsSaving(true);
+        
+        console.log('💾 Salvando dados do onboarding...', { currentStep, hasData: !!data.name });
         
         // Verificar se já existe um registro na tabela quick_onboarding
         const { data: existingData, error: fetchError } = await supabase
@@ -39,7 +41,7 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
           .eq('user_id', user.id)
           .single();
 
-        // Preparar dados para salvar (apenas campos que existem na tabela)
+        // Preparar dados para salvar (incluindo currentStep se fornecido)
         const quickOnboardingData = {
           user_id: user.id,
           name: data.name?.trim() || '',
@@ -72,7 +74,7 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
             .eq('id', existingData.id);
 
           if (updateError) {
-            console.error('Erro ao atualizar dados:', updateError);
+            console.error('❌ Erro ao atualizar dados:', updateError);
             throw updateError;
           }
         } else {
@@ -86,13 +88,13 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
             }]);
 
           if (insertError) {
-            console.error('Erro ao inserir dados:', insertError);
+            console.error('❌ Erro ao inserir dados:', insertError);
             throw insertError;
           }
         }
 
-        // Também salvar/atualizar na tabela onboarding_progress para compatibilidade
-        await saveToOnboardingProgress(data, user.id);
+        // Salvar/atualizar na tabela onboarding_progress para compatibilidade
+        await saveToOnboardingProgress(data, user.id, currentStep);
 
         setLastSaveTime(Date.now());
         console.log('✅ Dados do onboarding salvos automaticamente');
@@ -107,14 +109,14 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
       } finally {
         setIsSaving(false);
       }
-    }, 3000); // Aumentado para 3 segundos
+    }, 2000); // Reduzido para 2 segundos
 
     return () => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [data, user]);
+  }, [data, user, currentStep]);
 
   return {
     isSaving,
@@ -123,7 +125,7 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
 };
 
 // Função auxiliar para manter compatibilidade com onboarding_progress
-const saveToOnboardingProgress = async (data: QuickOnboardingData, userId: string) => {
+const saveToOnboardingProgress = async (data: QuickOnboardingData, userId: string, currentStep?: number) => {
   try {
     const progressData = {
       user_id: userId,
@@ -162,7 +164,7 @@ const saveToOnboardingProgress = async (data: QuickOnboardingData, userId: strin
         referred_by: data.referred_by || ''
       },
       experience_personalization: {},
-      current_step: determineCurrentStep(data),
+      current_step: determineCurrentStep(data, currentStep),
       completed_steps: getCompletedSteps(data),
       is_completed: isOnboardingCompleted(data),
       updated_at: new Date().toISOString()
@@ -189,7 +191,19 @@ const saveToOnboardingProgress = async (data: QuickOnboardingData, userId: strin
   }
 };
 
-const determineCurrentStep = (data: QuickOnboardingData): string => {
+const determineCurrentStep = (data: QuickOnboardingData, providedStep?: number): string => {
+  // Se foi fornecido um step específico, usar a lógica baseada nele
+  if (providedStep) {
+    switch (providedStep) {
+      case 1: return 'personal_info';
+      case 2: return 'professional_info';
+      case 3: return 'ai_experience';
+      case 4: return 'completed';
+      default: return 'personal_info';
+    }
+  }
+
+  // Lógica automática baseada nos dados preenchidos
   if (!data.name || !data.email || !data.whatsapp || !data.how_found_us) {
     return 'personal_info';
   }
