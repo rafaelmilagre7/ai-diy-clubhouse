@@ -56,6 +56,10 @@ export const useTrailEnrichment = (trail: ImplementationTrail | null) => {
         const enriched: TrailLessonEnriched[] = lessons.map(lesson => {
           const trailLesson = trail.recommended_lessons!.find(tl => tl.lessonId === lesson.id);
           
+          // Acessar o primeiro elemento dos arrays retornados pelo Supabase
+          const moduleData = Array.isArray(lesson.learning_modules) ? lesson.learning_modules[0] : lesson.learning_modules;
+          const courseData = Array.isArray(moduleData?.learning_courses) ? moduleData.learning_courses[0] : moduleData?.learning_courses;
+          
           return {
             id: lesson.id,
             title: lesson.title,
@@ -65,15 +69,15 @@ export const useTrailEnrichment = (trail: ImplementationTrail | null) => {
             difficulty_level: lesson.difficulty_level,
             lessonId: lesson.id,
             moduleId: lesson.module_id,
-            courseId: lesson.learning_modules.learning_courses.id,
+            courseId: courseData?.id,
             justification: trailLesson?.justification,
             priority: trailLesson?.priority || 1,
             module: {
-              id: lesson.learning_modules.id,
-              title: lesson.learning_modules.title,
+              id: moduleData?.id || '',
+              title: moduleData?.title || '',
               course: {
-                id: lesson.learning_modules.learning_courses.id,
-                title: lesson.learning_modules.learning_courses.title
+                id: courseData?.id || '',
+                title: courseData?.title || ''
               }
             }
           };
