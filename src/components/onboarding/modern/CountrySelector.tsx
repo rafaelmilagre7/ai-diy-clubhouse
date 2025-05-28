@@ -8,23 +8,16 @@ interface CountrySelectorProps {
   required?: boolean;
 }
 
-const COUNTRIES = [
-  { code: '+55', name: 'Brasil', flag: '🇧🇷' },
-  { code: '+1', name: 'Estados Unidos', flag: '🇺🇸' },
-  { code: '+1', name: 'Canadá', flag: '🇨🇦' },
-  { code: '+351', name: 'Portugal', flag: '🇵🇹' },
-  { code: '+34', name: 'Espanha', flag: '🇪🇸' },
-  { code: '+33', name: 'França', flag: '🇫🇷' },
-  { code: '+49', name: 'Alemanha', flag: '🇩🇪' },
-  { code: '+44', name: 'Reino Unido', flag: '🇬🇧' },
-  { code: '+39', name: 'Itália', flag: '🇮🇹' },
-  { code: '+54', name: 'Argentina', flag: '🇦🇷' },
-  { code: '+52', name: 'México', flag: '🇲🇽' },
-  { code: '+56', name: 'Chile', flag: '🇨🇱' },
-  { code: '+57', name: 'Colômbia', flag: '🇨🇴' },
-  { code: '+58', name: 'Venezuela', flag: '🇻🇪' },
-  { code: '+593', name: 'Equador', flag: '🇪🇨' },
-  { code: '+598', name: 'Uruguai', flag: '🇺🇾' }
+const COUNTRY_OPTIONS = [
+  { value: '+55', label: '🇧🇷 Brasil (+55)', country: 'Brasil' },
+  { value: '+1', label: '🇺🇸 Estados Unidos (+1)', country: 'Estados Unidos' },
+  { value: '+54', label: '🇦🇷 Argentina (+54)', country: 'Argentina' },
+  { value: '+56', label: '🇨🇱 Chile (+56)', country: 'Chile' },
+  { value: '+57', label: '🇨🇴 Colômbia (+57)', country: 'Colômbia' },
+  { value: '+351', label: '🇵🇹 Portugal (+351)', country: 'Portugal' },
+  { value: '+34', label: '🇪🇸 Espanha (+34)', country: 'Espanha' },
+  { value: '+33', label: '🇫🇷 França (+33)', country: 'França' },
+  { value: '+49', label: '🇩🇪 Alemanha (+49)', country: 'Alemanha' },
 ];
 
 export const CountrySelector: React.FC<CountrySelectorProps> = ({
@@ -39,28 +32,16 @@ export const CountrySelector: React.FC<CountrySelectorProps> = ({
       </label>
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50">
-          <SelectValue placeholder="Selecione seu país">
-            {value && (
-              <div className="flex items-center gap-2">
-                <span>{COUNTRIES.find(c => c.code === value)?.flag}</span>
-                <span>{COUNTRIES.find(c => c.code === value)?.name}</span>
-                <span className="text-gray-400">({value})</span>
-              </div>
-            )}
-          </SelectValue>
+          <SelectValue placeholder="Selecione seu país" />
         </SelectTrigger>
         <SelectContent className="bg-gray-800 border-gray-600">
-          {COUNTRIES.map((country) => (
+          {COUNTRY_OPTIONS.map((option) => (
             <SelectItem 
-              key={`${country.code}-${country.name}`} 
-              value={country.code}
+              key={option.value} 
+              value={option.value}
               className="text-white hover:bg-gray-700"
             >
-              <div className="flex items-center gap-2">
-                <span>{country.flag}</span>
-                <span>{country.name}</span>
-                <span className="text-gray-400">({country.code})</span>
-              </div>
+              {option.label}
             </SelectItem>
           ))}
         </SelectContent>
