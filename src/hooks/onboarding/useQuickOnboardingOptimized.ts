@@ -3,6 +3,9 @@ import { useState, useCallback } from 'react';
 import { QuickOnboardingData } from '@/types/quickOnboarding';
 import { useQuickOnboardingDataLoader } from './useQuickOnboardingDataLoader';
 import { useQuickOnboardingAutoSave } from './useQuickOnboardingAutoSave';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/auth';
+import { toast } from 'sonner';
 
 const initialData: QuickOnboardingData = {
   // Etapa 1: Informações Pessoais
@@ -37,6 +40,7 @@ const initialData: QuickOnboardingData = {
 };
 
 export const useQuickOnboardingOptimized = () => {
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const { 
     data, 
@@ -85,6 +89,46 @@ export const useQuickOnboardingOptimized = () => {
     setCurrentStep(prev => Math.max(1, prev - 1));
   }, []);
 
+  const completeOnboarding = useCallback(async () => {
+    if (!user || !canProceed()) {
+      toast.error('Complete todas as etapas antes de finalizar');
+      return false;
+    }
+
+    try {
+      // Marcar como completo na tabela quick_onboarding
+      const { error: quickError } = await supabase
+        .from('quick_onboarding')
+        .update({ 
+          is_completed: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id);
+
+      if (quickError) throw quickError;
+
+      // Marcar como completo na tabela onboarding_progress também
+      const { error: progressError } = await supabase
+        .from('onboarding_progress')
+        .update({ 
+          is_completed: true,
+          current_step: 'completed',
+          completed_steps: ['personal_info', 'professional_info', 'ai_experience'],
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id);
+
+      if (progressError) throw progressError;
+
+      toast.success('Onboarding concluído com sucesso!');
+      return true;
+    } catch (error) {
+      console.error('Erro ao completar onboarding:', error);
+      toast.error('Erro ao finalizar onboarding. Tente novamente.');
+      return false;
+    }
+  }, [user, canProceed]);
+
   return {
     currentStep,
     data,
@@ -98,6 +142,7 @@ export const useQuickOnboardingOptimized = () => {
     totalSteps: 4,
     // Adicionar estado de salvamento
     isSaving,
-    lastSaveTime
+    lastSaveTime,
+    completeOnboarding
   };
 };
