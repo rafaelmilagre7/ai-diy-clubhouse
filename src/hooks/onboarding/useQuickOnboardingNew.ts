@@ -5,8 +5,9 @@ import { toast } from 'sonner';
 import { QuickOnboardingData } from '@/types/quickOnboarding';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth';
+import { OnboardingValidator } from '@/utils/onboardingValidation';
 
-const TOTAL_STEPS = 4; // 3 steps + geração de trilha
+const TOTAL_STEPS = 4;
 
 const initialData: QuickOnboardingData = {
   // Etapa 1: Informações Pessoais
@@ -39,52 +40,82 @@ export const useQuickOnboardingNew = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [data, setData] = useState<QuickOnboardingData>(initialData);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Atualizar campo específico
+  // Atualizar campo específico com validação
   const updateField = useCallback((field: keyof QuickOnboardingData, value: string) => {
-    setData(prev => ({ ...prev, [field]: value }));
-  }, []);
+    setData(prev => {
+      const newData = { ...prev, [field]: value };
+      
+      // Validação em tempo real
+      const validation = currentStep === 1 
+        ? OnboardingValidator.validateStep1(newData)
+        : currentStep === 2
+        ? OnboardingValidator.validateStep2(newData)
+        : OnboardingValidator.validateStep3(newData);
+      
+      setValidationErrors(validation.errors);
+      
+      return newData;
+    });
+  }, [currentStep]);
 
   // Validar se pode prosseguir
   const canProceed = useCallback(() => {
-    switch (currentStep) {
-      case 1:
-        return !!(data.name && data.email && data.whatsapp && data.country_code && data.how_found_us &&
-                 (data.how_found_us !== 'indicacao' || data.referred_by));
-      case 2:
-        return !!(data.company_name && data.role && data.company_size && 
-                 data.company_segment && data.annual_revenue_range && data.main_challenge);
-      case 3:
-        return !!(data.ai_knowledge_level && data.uses_ai && data.main_goal);
-      default:
-        return true;
-    }
+    const validation = currentStep === 1 
+      ? OnboardingValidator.validateStep1(data)
+      : currentStep === 2
+      ? OnboardingValidator.validateStep2(data)
+      : OnboardingValidator.validateStep3(data);
+    
+    return validation.isValid;
   }, [currentStep, data]);
 
-  // Próximo passo
+  // Próximo passo com validação aprimorada
   const nextStep = useCallback(() => {
-    if (canProceed() && currentStep < TOTAL_STEPS) {
-      setCurrentStep(prev => prev + 1);
+    const validation = currentStep === 1 
+      ? OnboardingValidator.validateStep1(data)
+      : currentStep === 2
+      ? OnboardingValidator.validateStep2(data)
+      : OnboardingValidator.validateStep3(data);
+
+    if (!validation.isValid) {
+      setValidationErrors(validation.errors);
+      toast.error('Por favor, corrija os erros antes de prosseguir');
+      return;
     }
-  }, [canProceed, currentStep]);
+
+    if (currentStep < TOTAL_STEPS) {
+      setCurrentStep(prev => prev + 1);
+      setValidationErrors({});
+    }
+  }, [currentStep, data]);
 
   // Passo anterior
   const previousStep = useCallback(() => {
     if (currentStep > 1) {
       setCurrentStep(prev => prev - 1);
+      setValidationErrors({});
     }
   }, [currentStep]);
 
-  // Salvar dados no Supabase
+  // Salvar dados no Supabase com validação final
   const saveOnboardingData = useCallback(async () => {
     if (!user?.id) {
       throw new Error('Usuário não autenticado');
     }
 
+    // Validação final de todos os dados
+    const finalValidation = OnboardingValidator.validateAllSteps(data);
+    if (!finalValidation.isValid) {
+      setValidationErrors(finalValidation.errors);
+      throw new Error('Dados inválidos para salvamento');
+    }
+
     try {
-      // Primeiro, verificar se já existe um registro
+      // Verificar se já existe um registro
       const { data: existingRecord } = await supabase
         .from('quick_onboarding')
         .select('id')
@@ -175,7 +206,11 @@ export const useQuickOnboardingNew = () => {
       return true;
     } catch (error) {
       console.error('Erro ao completar onboarding:', error);
-      toast.error('Erro ao finalizar onboarding. Tente novamente.');
+      if (error instanceof Error && error.message.includes('Dados inválidos')) {
+        toast.error('Por favor, verifique todos os dados antes de finalizar.');
+      } else {
+        toast.error('Erro ao finalizar onboarding. Tente novamente.');
+      }
       return false;
     } finally {
       setIsSubmitting(false);
@@ -191,6 +226,8 @@ export const useQuickOnboardingNew = () => {
     previousStep,
     canProceed: canProceed(),
     isSubmitting,
-    completeOnboarding
+    completeOnboarding,
+    validationErrors,
+    clearErrors: () => setValidationErrors({})
   };
 };
