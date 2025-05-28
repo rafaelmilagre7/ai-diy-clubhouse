@@ -20,11 +20,15 @@ const ImplementationTrailPage = () => {
   const checkOnboardingStatus = async () => {
     try {
       setIsLoading(true);
+      console.log('Verificando status do onboarding...');
+      
       const isComplete = await validateOnboardingCompletion();
+      console.log('Status do onboarding:', isComplete);
+      
       setIsOnboardingComplete(isComplete);
       
       if (!isComplete && retryCount < 2) {
-        // Tentar novamente após um delay
+        console.log('Onboarding incompleto, tentando novamente em 1 segundo...');
         setTimeout(() => {
           setRetryCount(prev => prev + 1);
         }, 1000);

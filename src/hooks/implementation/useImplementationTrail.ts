@@ -22,6 +22,8 @@ export const useImplementationTrail = () => {
       setRefreshing(true);
       setError(null);
 
+      console.log('Carregando trilha para usuário:', user.id);
+
       const { data, error: trailError } = await supabase
         .from('implementation_trails')
         .select('*')
@@ -31,13 +33,16 @@ export const useImplementationTrail = () => {
         .single();
 
       if (trailError && trailError.code !== 'PGRST116') {
+        console.error('Erro ao carregar trilha:', trailError);
         throw trailError;
       }
 
       if (data?.trail_data) {
+        console.log('Trilha encontrada:', data);
         const sanitizedTrail = sanitizeTrailData(data.trail_data);
         setTrail(sanitizedTrail);
       } else {
+        console.log('Nenhuma trilha encontrada');
         setTrail(null);
       }
     } catch (error) {
@@ -50,43 +55,66 @@ export const useImplementationTrail = () => {
 
   // Gerar nova trilha
   const generateImplementationTrail = useCallback(async (onboardingData: any = null) => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      toast.error('Usuário não autenticado');
+      return;
+    }
 
     try {
       setRegenerating(true);
       setIsLoading(true);
       setError(null);
 
+      console.log('Iniciando geração da trilha para usuário:', user.id);
+
       // Se não temos dados de onboarding, buscar do quick_onboarding
       let userData = onboardingData;
       if (!userData) {
-        const { data: quickData } = await supabase
+        console.log('Buscando dados do quick_onboarding...');
+        
+        const { data: quickData, error: quickError } = await supabase
           .from('quick_onboarding')
           .select('*')
           .eq('user_id', user.id)
           .single();
 
-        if (quickData) {
-          userData = {
-            personal_info: {
-              name: quickData.name,
-              email: quickData.email
-            },
-            professional_info: {
-              company_name: quickData.company_name,
-              role: quickData.role,
-              company_size: quickData.company_size,
-              company_segment: quickData.company_segment,
-              annual_revenue_range: quickData.annual_revenue_range
-            },
-            ai_experience: {
-              knowledge_level: quickData.ai_knowledge_level,
-              uses_ai: quickData.uses_ai,
-              main_goal: quickData.main_goal
-            }
-          };
+        if (quickError) {
+          console.error('Erro ao buscar quick_onboarding:', quickError);
+          throw new Error('Não foi possível encontrar seus dados de onboarding');
         }
+
+        if (!quickData) {
+          throw new Error('Complete o onboarding antes de gerar a trilha');
+        }
+
+        console.log('Dados encontrados:', quickData);
+
+        // Validar dados essenciais
+        if (!quickData.company_name || !quickData.ai_knowledge_level) {
+          throw new Error('Complete seu perfil antes de gerar a trilha');
+        }
+
+        userData = {
+          personal_info: {
+            name: quickData.name,
+            email: quickData.email
+          },
+          professional_info: {
+            company_name: quickData.company_name,
+            role: quickData.role,
+            company_size: quickData.company_size,
+            company_segment: quickData.company_segment,
+            annual_revenue_range: quickData.annual_revenue_range
+          },
+          ai_experience: {
+            knowledge_level: quickData.ai_knowledge_level,
+            uses_ai: quickData.uses_ai,
+            main_goal: quickData.main_goal
+          }
+        };
       }
+
+      console.log('Dados estruturados para envio:', userData);
 
       // Chamar edge function para gerar trilha
       const { data, error: functionError } = await supabase.functions.invoke('generate-implementation-trail', {
@@ -96,17 +124,30 @@ export const useImplementationTrail = () => {
         }
       });
 
-      if (functionError) throw functionError;
+      if (functionError) {
+        console.error('Erro da edge function:', functionError);
+        throw new Error(`Erro ao gerar trilha: ${functionError.message}`);
+      }
+
+      if (!data?.success) {
+        console.error('Edge function retornou erro:', data);
+        throw new Error(data?.error || 'Erro desconhecido ao gerar trilha');
+      }
 
       if (data?.trail_data) {
+        console.log('Trilha gerada com sucesso:', data.trail_data);
         const sanitizedTrail = sanitizeTrailData(data.trail_data);
         setTrail(sanitizedTrail);
         toast.success('Trilha de implementação gerada com sucesso!');
+      } else {
+        throw new Error('Trilha gerada, mas dados inválidos');
       }
+
     } catch (error) {
       console.error('Erro ao gerar trilha:', error);
-      setError('Erro ao gerar trilha de implementação');
-      toast.error('Erro ao gerar trilha de implementação');
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao gerar trilha de implementação';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setRegenerating(false);
       setIsLoading(false);
