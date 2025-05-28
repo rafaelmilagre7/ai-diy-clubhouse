@@ -4427,6 +4427,10 @@ export type Database = {
       }
     }
     Functions: {
+      admin_reset_user: {
+        Args: { user_email: string }
+        Returns: Json
+      }
       can_access_benefit: {
         Args: { user_id: string; tool_id: string }
         Returns: boolean
@@ -4630,6 +4634,10 @@ export type Database = {
       quick_check_permission: {
         Args: { user_id: string; permission_code: string }
         Returns: boolean
+      }
+      reset_user_complete: {
+        Args: { target_user_id: string }
+        Returns: Json
       }
       reset_user_onboarding: {
         Args: { user_id_param: string }
