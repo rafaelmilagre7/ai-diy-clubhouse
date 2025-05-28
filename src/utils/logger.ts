@@ -2,164 +2,127 @@
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 interface LogEntry {
+  timestamp: string;
   level: LogLevel;
+  component: string;
   message: string;
   data?: any;
-  timestamp: string;
-  context?: string;
   userId?: string;
 }
 
-interface LoggerConfig {
-  enabledLevels: LogLevel[];
-  enableConsole: boolean;
-  enableRemote: boolean;
-  maxBufferSize: number;
-}
-
 class Logger {
-  private isDevelopment = import.meta.env.DEV;
-  private config: LoggerConfig;
-  private buffer: LogEntry[] = [];
+  private isDevelopment = process.env.NODE_ENV === 'development';
+  private logs: LogEntry[] = [];
+  private maxLogs = 1000;
 
-  constructor() {
-    this.config = {
-      enabledLevels: this.isDevelopment 
-        ? ['debug', 'info', 'warn', 'error']
-        : ['warn', 'error'],
-      enableConsole: true,
-      enableRemote: !this.isDevelopment,
-      maxBufferSize: 100
-    };
+  private formatTimestamp(): string {
+    return new Date().toISOString();
   }
 
-  private formatMessage(level: LogLevel, message: string, data?: any, context?: string): LogEntry {
-    return {
-      level,
-      message,
-      data,
-      context,
-      timestamp: new Date().toISOString(),
-      userId: this.getCurrentUserId()
-    };
-  }
-
-  private getCurrentUserId(): string | undefined {
-    // Safely get user ID without causing circular dependencies
-    try {
-      const authData = localStorage.getItem('supabase.auth.token');
-      if (authData) {
-        const parsed = JSON.parse(authData);
-        return parsed?.user?.id;
-      }
-    } catch {
-      // Silently fail if unable to get user ID
+  private addLog(entry: LogEntry) {
+    this.logs.push(entry);
+    
+    // Manter apenas os últimos logs
+    if (this.logs.length > this.maxLogs) {
+      this.logs = this.logs.slice(-this.maxLogs);
     }
-    return undefined;
   }
 
   private shouldLog(level: LogLevel): boolean {
-    return this.config.enabledLevels.includes(level);
+    if (this.isDevelopment) return true;
+    
+    // Em produção, apenas warn e error
+    return level === 'warn' || level === 'error';
   }
 
-  private addToBuffer(entry: LogEntry): void {
-    this.buffer.push(entry);
-    if (this.buffer.length > this.config.maxBufferSize) {
-      this.buffer.shift();
+  debug(component: string, message: string, data?: any, userId?: string) {
+    const entry: LogEntry = {
+      timestamp: this.formatTimestamp(),
+      level: 'debug',
+      component,
+      message,
+      data,
+      userId
+    };
+
+    this.addLog(entry);
+    
+    if (this.shouldLog('debug')) {
+      console.log(`🐛 [${component}] ${message}`, data || '');
     }
   }
 
-  private consoleLog(entry: LogEntry): void {
-    if (!this.config.enableConsole) return;
+  info(component: string, message: string, data?: any, userId?: string) {
+    const entry: LogEntry = {
+      timestamp: this.formatTimestamp(),
+      level: 'info',
+      component,
+      message,
+      data,
+      userId
+    };
 
-    const prefix = `[${entry.timestamp}] ${entry.level.toUpperCase()}${entry.context ? ` [${entry.context}]` : ''}`;
-    const message = `${prefix}: ${entry.message}`;
-
-    switch (entry.level) {
-      case 'debug':
-        console.debug(message, entry.data || '');
-        break;
-      case 'info':
-        console.info(message, entry.data || '');
-        break;
-      case 'warn':
-        console.warn(message, entry.data || '');
-        break;
-      case 'error':
-        console.error(message, entry.data || '');
-        break;
+    this.addLog(entry);
+    
+    if (this.shouldLog('info')) {
+      console.log(`ℹ️ [${component}] ${message}`, data || '');
     }
   }
 
-  debug(message: string, data?: any, context?: string): void {
-    if (!this.shouldLog('debug')) return;
+  warn(component: string, message: string, data?: any, userId?: string) {
+    const entry: LogEntry = {
+      timestamp: this.formatTimestamp(),
+      level: 'warn',
+      component,
+      message,
+      data,
+      userId
+    };
+
+    this.addLog(entry);
     
-    const entry = this.formatMessage('debug', message, data, context);
-    this.addToBuffer(entry);
-    this.consoleLog(entry);
+    if (this.shouldLog('warn')) {
+      console.warn(`⚠️ [${component}] ${message}`, data || '');
+    }
   }
 
-  info(message: string, data?: any, context?: string): void {
-    if (!this.shouldLog('info')) return;
+  error(component: string, message: string, data?: any, userId?: string) {
+    const entry: LogEntry = {
+      timestamp: this.formatTimestamp(),
+      level: 'error',
+      component,
+      message,
+      data,
+      userId
+    };
+
+    this.addLog(entry);
     
-    const entry = this.formatMessage('info', message, data, context);
-    this.addToBuffer(entry);
-    this.consoleLog(entry);
+    if (this.shouldLog('error')) {
+      console.error(`❌ [${component}] ${message}`, data || '');
+    }
   }
 
-  warn(message: string, data?: any, context?: string): void {
-    if (!this.shouldLog('warn')) return;
-    
-    const entry = this.formatMessage('warn', message, data, context);
-    this.addToBuffer(entry);
-    this.consoleLog(entry);
+  // Método para debugging
+  getLogs(level?: LogLevel, component?: string): LogEntry[] {
+    return this.logs.filter(log => {
+      if (level && log.level !== level) return false;
+      if (component && log.component !== component) return false;
+      return true;
+    });
   }
 
-  error(message: string, error?: any, context?: string): void {
-    if (!this.shouldLog('error')) return;
-    
-    const entry = this.formatMessage('error', message, error, context);
-    this.addToBuffer(entry);
-    this.consoleLog(entry);
+  // Método para análise de problemas
+  getRecentErrors(minutes: number = 10): LogEntry[] {
+    const cutoff = new Date(Date.now() - minutes * 60 * 1000).toISOString();
+    return this.logs.filter(log => 
+      log.level === 'error' && log.timestamp >= cutoff
+    );
   }
 
-  // Métodos específicos para contextos
-  performance(message: string, data?: any): void {
-    this.debug(message, data, 'PERFORMANCE');
-  }
-
-  query(message: string, data?: any): void {
-    this.debug(message, data, 'QUERY');
-  }
-
-  auth(message: string, data?: any): void {
-    this.info(message, data, 'AUTH');
-  }
-
-  api(message: string, data?: any): void {
-    this.info(message, data, 'API');
-  }
-
-  // Métodos de configuração
-  setConfig(config: Partial<LoggerConfig>): void {
-    this.config = { ...this.config, ...config };
-  }
-
-  getBuffer(): LogEntry[] {
-    return [...this.buffer];
-  }
-
-  clearBuffer(): void {
-    this.buffer = [];
-  }
-
-  // Método para logs de produção críticos
-  critical(message: string, data?: any, context?: string): void {
-    const entry = this.formatMessage('error', `CRITICAL: ${message}`, data, context);
-    this.addToBuffer(entry);
-    
-    // Sempre loga críticos, independente da configuração
-    console.error(`[CRITICAL] ${entry.timestamp}: ${message}`, data || '');
+  // Exportar logs para debug
+  exportLogs(): string {
+    return JSON.stringify(this.logs, null, 2);
   }
 }
 

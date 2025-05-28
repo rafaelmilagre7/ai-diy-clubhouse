@@ -5,6 +5,8 @@ import { useOnboardingFlow } from '@/hooks/auth/useOnboardingFlow';
 import { useAuthDataIntegrity } from '@/hooks/auth/useAuthDataIntegrity';
 import { useLocation } from 'react-router-dom';
 import LoadingScreen from '@/components/common/LoadingScreen';
+import { AuthErrorFallback } from '@/components/auth/AuthErrorFallback';
+import { logger } from '@/utils/logger';
 
 interface SmartRedirectHandlerProps {
   children: React.ReactNode;
@@ -14,17 +16,38 @@ export const SmartRedirectHandler: React.FC<SmartRedirectHandlerProps> = ({ chil
   const { user, profile, isLoading: authLoading } = useAuth();
   const location = useLocation();
   const { status: onboardingStatus, isLoading: onboardingLoading, redirectToOnboarding } = useOnboardingFlow();
-  const { checkAndFixData, isChecking } = useAuthDataIntegrity();
+  const { checkAndFixData, isChecking, hasIntegrityIssues } = useAuthDataIntegrity();
 
   const isOnboardingRoute = location.pathname.startsWith('/onboarding');
   const isLoginRoute = location.pathname === '/login';
   const isPublicRoute = isLoginRoute || location.pathname === '/';
 
+  // Log da navegação atual
   useEffect(() => {
-    // Se usuário autenticado não está em rota pública e onboarding não está completo
+    logger.debug('SmartRedirectHandler', 'Navegação detectada', {
+      pathname: location.pathname,
+      isPublicRoute,
+      isOnboardingRoute,
+      userId: user?.id
+    });
+  }, [location.pathname, isPublicRoute, isOnboardingRoute, user?.id]);
+
+  // Verificar integridade dos dados apenas uma vez após login
+  useEffect(() => {
+    if (user && profile && !isChecking && !hasIntegrityIssues) {
+      logger.info('SmartRedirectHandler', 'Iniciando verificação de integridade dos dados');
+      checkAndFixData();
+    }
+  }, [user?.id, profile?.id, isChecking, hasIntegrityIssues, checkAndFixData]);
+
+  // Redirecionar para onboarding se necessário
+  useEffect(() => {
     if (user && !isPublicRoute && !isOnboardingRoute && !authLoading && !onboardingLoading) {
       if (!onboardingStatus.isCompleted && onboardingStatus.needsRedirect) {
-        console.log('🔄 Usuário precisa completar onboarding, redirecionando...');
+        logger.info('SmartRedirectHandler', 'Redirecionando para onboarding', {
+          userId: user.id,
+          currentPath: location.pathname
+        });
         redirectToOnboarding();
       }
     }
@@ -36,19 +59,24 @@ export const SmartRedirectHandler: React.FC<SmartRedirectHandlerProps> = ({ chil
     onboardingLoading,
     onboardingStatus.isCompleted,
     onboardingStatus.needsRedirect,
-    redirectToOnboarding
+    redirectToOnboarding,
+    location.pathname
   ]);
-
-  // Verificar integridade dos dados apenas uma vez após login
-  useEffect(() => {
-    if (user && profile && !isChecking) {
-      checkAndFixData();
-    }
-  }, [user?.id, profile?.id]); // Só executar quando IDs mudarem
 
   // Mostrar loading enquanto verifica dados
   if ((authLoading || onboardingLoading || isChecking) && !isPublicRoute) {
     return <LoadingScreen message="Verificando configurações da conta..." />;
+  }
+
+  // Mostrar erro se houver problemas de integridade não resolvidos
+  if (hasIntegrityIssues && !isPublicRoute) {
+    return (
+      <AuthErrorFallback
+        error="Problemas detectados na configuração da conta"
+        onRetry={checkAndFixData}
+        isRetrying={isChecking}
+      />
+    );
   }
 
   return <>{children}</>;

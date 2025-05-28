@@ -2,6 +2,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
+import { useAccessCache } from './useAccessCache';
+import { useRetryWithBackoff } from './useRetryWithBackoff';
+import { logger } from '@/utils/logger';
 
 interface FeatureAccessResult {
   has_access: boolean;
@@ -17,6 +20,12 @@ export const useSmartFeatureAccess = (feature: string) => {
   const [accessData, setAccessData] = useState<FeatureAccessResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const cache = useAccessCache({ ttl: 5 * 60 * 1000 }); // 5 minutos
+  const { executeWithRetry } = useRetryWithBackoff({
+    maxAttempts: 3,
+    initialDelay: 1000
+  });
 
   const checkAccess = useCallback(async () => {
     if (!user?.id || authLoading) {
@@ -24,43 +33,79 @@ export const useSmartFeatureAccess = (feature: string) => {
       return;
     }
 
+    const cacheKey = `access-${user.id}-${feature}`;
+    
+    // Verificar cache primeiro
+    const cachedResult = cache.get(cacheKey);
+    if (cachedResult) {
+      setAccessData(cachedResult);
+      setIsLoading(false);
+      setError(null);
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
 
-      console.log(`🔍 Verificando acesso para feature: ${feature}, usuário: ${user.id}`);
-
-      // Usar a nova função SQL para verificar acesso
-      const { data, error: rpcError } = await supabase.rpc('user_can_access_feature', {
-        p_user_id: user.id,
-        p_feature: feature
+      logger.info('useSmartFeatureAccess', `Verificando acesso para feature: ${feature}`, {
+        userId: user.id,
+        feature
       });
 
-      if (rpcError) {
-        console.error('❌ Erro na função RPC:', rpcError);
-        throw rpcError;
-      }
+      const result = await executeWithRetry(async () => {
+        const { data, error: rpcError } = await supabase.rpc('user_can_access_feature', {
+          p_user_id: user.id,
+          p_feature: feature
+        });
 
-      console.log(`✅ Resultado da verificação de acesso:`, data);
-      setAccessData(data);
+        if (rpcError) {
+          logger.error('useSmartFeatureAccess', 'Erro na função RPC', {
+            error: rpcError.message,
+            userId: user.id,
+            feature
+          });
+          throw rpcError;
+        }
+
+        return data;
+      }, `verificação de acesso para ${feature}`);
+
+      logger.info('useSmartFeatureAccess', 'Verificação de acesso concluída', {
+        result,
+        userId: user.id,
+        feature
+      });
+
+      setAccessData(result);
+      cache.set(cacheKey, result);
 
     } catch (err: any) {
-      console.error('❌ Erro ao verificar acesso:', err);
-      setError(err.message || 'Erro ao verificar permissões');
+      const errorMessage = err.message || 'Erro ao verificar permissões';
+      
+      logger.error('useSmartFeatureAccess', 'Falha na verificação de acesso', {
+        error: errorMessage,
+        userId: user.id,
+        feature
+      });
+      
+      setError(errorMessage);
       
       // Fallback: usuário não autenticado = sem acesso
-      setAccessData({
+      const fallbackData: FeatureAccessResult = {
         has_access: false,
         has_role_access: false,
         onboarding_complete: false,
         user_role: null,
         feature,
         block_reason: 'insufficient_role'
-      });
+      };
+      
+      setAccessData(fallbackData);
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id, feature, authLoading]);
+  }, [user?.id, feature, authLoading, cache, executeWithRetry]);
 
   // Verificar acesso quando usuário ou feature mudarem
   useEffect(() => {

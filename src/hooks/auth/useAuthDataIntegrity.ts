@@ -1,8 +1,10 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { useRetryWithBackoff } from './useRetryWithBackoff';
+import { logger } from '@/utils/logger';
 
 interface DataIntegrityResult {
   user_id: string;
@@ -18,59 +20,90 @@ export const useAuthDataIntegrity = () => {
   const { user, profile, setProfile } = useAuth();
   const [isChecking, setIsChecking] = useState(false);
   const [lastCheck, setLastCheck] = useState<DataIntegrityResult | null>(null);
+  
+  const { executeWithRetry } = useRetryWithBackoff({
+    maxAttempts: 2,
+    initialDelay: 500
+  });
 
   const checkAndFixData = useCallback(async () => {
-    if (!user?.id) return null;
+    if (!user?.id) {
+      logger.warn('useAuthDataIntegrity', 'Tentativa de verificação sem usuário autenticado');
+      return null;
+    }
 
     try {
       setIsChecking(true);
-      console.log('🔍 Verificando integridade dos dados do usuário...');
-
-      const { data, error } = await supabase.rpc('check_and_fix_onboarding_data', {
-        user_id_param: user.id
+      
+      logger.info('useAuthDataIntegrity', 'Iniciando verificação de integridade', {
+        userId: user.id
       });
 
-      if (error) {
-        console.error('❌ Erro ao verificar integridade:', error);
-        throw error;
-      }
+      const result = await executeWithRetry(async () => {
+        const { data, error } = await supabase.rpc('check_and_fix_onboarding_data', {
+          user_id_param: user.id
+        });
 
-      console.log('✅ Resultado da verificação:', data);
-      setLastCheck(data);
+        if (error) {
+          logger.error('useAuthDataIntegrity', 'Erro ao verificar integridade', {
+            error: error.message,
+            userId: user.id
+          });
+          throw error;
+        }
+
+        return data;
+      }, 'verificação de integridade dos dados');
+
+      logger.info('useAuthDataIntegrity', 'Verificação concluída com sucesso', {
+        result,
+        userId: user.id
+      });
+
+      setLastCheck(result);
 
       // Se o perfil foi criado, atualizar o contexto de auth
-      if (data.profile_created && !profile) {
-        console.log('📝 Perfil criado automaticamente, atualizando contexto...');
+      if (result.profile_created && !profile) {
+        logger.info('useAuthDataIntegrity', 'Perfil criado automaticamente, atualizando contexto');
         
-        // Buscar o perfil recém-criado
-        const { data: newProfile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
+        try {
+          const { data: newProfile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
 
-        if (!profileError && newProfile) {
-          setProfile(newProfile);
-          toast.success('Perfil configurado automaticamente');
+          if (!profileError && newProfile) {
+            setProfile(newProfile);
+            toast.success('Perfil configurado automaticamente');
+            
+            logger.info('useAuthDataIntegrity', 'Contexto de perfil atualizado', {
+              profileId: newProfile.id
+            });
+          }
+        } catch (profileErr: any) {
+          logger.error('useAuthDataIntegrity', 'Erro ao buscar perfil recém-criado', {
+            error: profileErr.message,
+            userId: user.id
+          });
         }
       }
 
-      return data;
+      return result;
     } catch (error: any) {
-      console.error('❌ Erro na verificação de integridade:', error);
+      const errorMessage = error.message || 'Erro ao verificar dados do usuário';
+      
+      logger.error('useAuthDataIntegrity', 'Falha na verificação de integridade', {
+        error: errorMessage,
+        userId: user.id
+      });
+      
       toast.error('Erro ao verificar dados do usuário');
       return null;
     } finally {
       setIsChecking(false);
     }
-  }, [user?.id, profile, setProfile]);
-
-  // Executar verificação quando o usuário for carregado
-  useEffect(() => {
-    if (user?.id && !lastCheck) {
-      checkAndFixData();
-    }
-  }, [user?.id, lastCheck, checkAndFixData]);
+  }, [user?.id, profile, setProfile, executeWithRetry]);
 
   return {
     checkAndFixData,
