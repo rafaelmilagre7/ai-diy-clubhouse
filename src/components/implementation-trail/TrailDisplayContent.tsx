@@ -19,6 +19,13 @@ export const TrailDisplayContent: React.FC<TrailDisplayContentProps> = ({
 }) => {
   const { enrichedLessons, isLoading: lessonsLoading } = useTrailEnrichment(trail);
 
+  // Extrair e preparar soluções da trilha
+  const allSolutions = [
+    ...trail.priority1.map(s => ({ ...s, priority: 1 })),
+    ...trail.priority2.map(s => ({ ...s, priority: 2 })),
+    ...trail.priority3.map(s => ({ ...s, priority: 3 }))
+  ];
+
   return (
     <div className="space-y-8">
       {/* Header da Trilha */}
@@ -52,10 +59,10 @@ export const TrailDisplayContent: React.FC<TrailDisplayContentProps> = ({
           </Button>
         </div>
         
-        <TrailSolutionsList trail={trail} />
+        <TrailSolutionsList solutions={allSolutions} />
       </div>
 
-      {/* Aulas Recomendadas - Novo Design Netflix */}
+      {/* Aulas Recomendadas - Design Netflix */}
       {enrichedLessons && enrichedLessons.length > 0 && (
         <div className="space-y-6">
           <div className="flex items-center gap-2">

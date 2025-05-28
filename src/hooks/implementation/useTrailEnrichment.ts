@@ -22,7 +22,7 @@ export const useTrailEnrichment = (trail: ImplementationTrail | null) => {
         const lessonIds = trail.recommended_lessons.map(lesson => lesson.lessonId);
 
         const { data: lessons, error: lessonsError } = await supabase
-          .from('lms_lessons')
+          .from('learning_lessons')
           .select(`
             id,
             title,
@@ -30,10 +30,11 @@ export const useTrailEnrichment = (trail: ImplementationTrail | null) => {
             cover_image_url,
             estimated_time_minutes,
             difficulty_level,
-            module:lms_modules!inner(
+            module_id,
+            learning_modules!inner(
               id,
               title,
-              course:lms_courses!inner(
+              learning_courses!inner(
                 id,
                 title
               )
@@ -56,13 +57,25 @@ export const useTrailEnrichment = (trail: ImplementationTrail | null) => {
           const trailLesson = trail.recommended_lessons!.find(tl => tl.lessonId === lesson.id);
           
           return {
-            ...lesson,
+            id: lesson.id,
+            title: lesson.title,
+            description: lesson.description,
+            cover_image_url: lesson.cover_image_url,
+            estimated_time_minutes: lesson.estimated_time_minutes || 0,
+            difficulty_level: lesson.difficulty_level,
             lessonId: lesson.id,
-            moduleId: lesson.module.id,
-            courseId: lesson.module.course.id,
+            moduleId: lesson.module_id,
+            courseId: lesson.learning_modules.learning_courses.id,
             justification: trailLesson?.justification,
             priority: trailLesson?.priority || 1,
-            estimated_time_minutes: lesson.estimated_time_minutes || 0
+            module: {
+              id: lesson.learning_modules.id,
+              title: lesson.learning_modules.title,
+              course: {
+                id: lesson.learning_modules.learning_courses.id,
+                title: lesson.learning_modules.learning_courses.title
+              }
+            }
           };
         });
 
