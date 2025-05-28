@@ -1,4 +1,5 @@
 
+import React, { useMemo } from 'react';
 import { QuickOnboardingData } from '@/types/quickOnboarding';
 
 export interface ValidationResult {
