@@ -1,6 +1,6 @@
 
 import { supabase } from "@/lib/supabase";
-import { ImplementationTrail } from "./useImplementationTrail";
+import { ImplementationTrail } from "@/types/implementation-trail";
 
 /**
  * Função isolada para salvar/atualizar a trilha de implementação no banco.

@@ -1,302 +1,188 @@
 
-import React, { useState, useEffect } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
+import React from "react";
 import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
-import { TrailSolutionsList } from "./TrailSolutionsList";
-import { TrailLessonsList } from "./TrailLessonsList";
-import { supabase } from "@/lib/supabase";
-import { useProgress } from "@/hooks/onboarding/useProgress";
-import { Loader2, RefreshCw } from "lucide-react";
-import { toast } from "sonner";
+import { useTrailGuidedExperience } from "@/hooks/implementation/useTrailGuidedExperience";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2, RefreshCw, Sparkles, ArrowRight } from "lucide-react";
+import { TrailMagicExperience } from "@/components/onboarding/TrailMagicExperience";
 
-/**
- * Componente principal para exibir e gerenciar a trilha de implementação do usuário.
- */
-export const ImplementationTrailCreator = () => {
-  const { trail, isLoading, hasContent, regenerating, refreshing, error, refreshTrail, generateImplementationTrail } = useImplementationTrail();
-  const { progress } = useProgress();
-  const [solutions, setSolutions] = useState<any[]>([]);
-  const [lessons, setLessons] = useState<any[]>([]);
-  const [loadingSolutions, setLoadingSolutions] = useState(true);
-  const [loadingLessons, setLoadingLessons] = useState(true);
-  const [activeTab, setActiveTab] = useState("soluções");
+export const ImplementationTrailCreator: React.FC = () => {
+  const { trail, isLoading, regenerating, refreshing, error, hasContent, generateImplementationTrail } = useImplementationTrail();
+  const {
+    started,
+    showMagicExperience,
+    currentStepIdx,
+    solutionsList,
+    currentSolution,
+    handleStartGeneration,
+    handleMagicFinish
+  } = useTrailGuidedExperience();
 
-  // Carregar dados das soluções quando a trilha for carregada
-  useEffect(() => {
-    const fetchSolutionsForTrail = async () => {
-      if (!trail) {
-        setSolutions([]);
-        setLoadingSolutions(false);
-        return;
-      }
-
-      try {
-        setLoadingSolutions(true);
-        const solutionIds = [
-          ...trail.priority1.map(r => r.solutionId),
-          ...trail.priority2.map(r => r.solutionId),
-          ...trail.priority3.map(r => r.solutionId)
-        ].filter(Boolean); // Filtrar valores nulos/undefined
-
-        if (solutionIds.length === 0) {
-          setSolutions([]);
-          setLoadingSolutions(false);
-          return;
-        }
-
-        const { data, error } = await supabase
-          .from("solutions")
-          .select("*")
-          .in("id", solutionIds);
-
-        if (error) throw error;
-
-        // Mapear soluções
-        const mappedSolutions: any[] = [];
-
-        trail.priority1.forEach(rec => {
-          const solution = data?.find(s => s.id === rec.solutionId);
-          if (solution) {
-            mappedSolutions.push({
-              ...solution,
-              priority: 1,
-              justification: rec.justification,
-              solutionId: rec.solutionId
-            });
-          }
-        });
-
-        trail.priority2.forEach(rec => {
-          const solution = data?.find(s => s.id === rec.solutionId);
-          if (solution) {
-            mappedSolutions.push({
-              ...solution,
-              priority: 2,
-              justification: rec.justification,
-              solutionId: rec.solutionId
-            });
-          }
-        });
-
-        trail.priority3.forEach(rec => {
-          const solution = data?.find(s => s.id === rec.solutionId);
-          if (solution) {
-            mappedSolutions.push({
-              ...solution,
-              priority: 3,
-              justification: rec.justification,
-              solutionId: rec.solutionId
-            });
-          }
-        });
-
-        setSolutions(mappedSolutions);
-      } catch (error) {
-        console.error("Erro ao buscar soluções para a trilha:", error);
-        toast.error("Erro ao carregar soluções recomendadas");
-      } finally {
-        setLoadingSolutions(false);
-      }
-    };
-
-    fetchSolutionsForTrail();
-  }, [trail]);
-
-  // Buscar lições quando a trilha for carregada
-  useEffect(() => {
-    const fetchLessonsForTrail = async () => {
-      if (!trail || !trail.recommended_lessons || trail.recommended_lessons.length === 0) {
-        setLessons([]);
-        setLoadingLessons(false);
-        return;
-      }
-
-      try {
-        setLoadingLessons(true);
-        const lessonIds = trail.recommended_lessons.map(l => l.lessonId).filter(Boolean);
-
-        if (lessonIds.length === 0) {
-          setLessons([]);
-          setLoadingLessons(false);
-          return;
-        }
-
-        // Buscar dados das lições
-        const { data: lessonsData, error: lessonsError } = await supabase
-          .from("learning_lessons")
-          .select(`
-            id,
-            title,
-            description,
-            difficulty_level,
-            estimated_time_minutes,
-            cover_image_url,
-            module_id,
-            learning_modules:learning_modules!inner (
-              id, 
-              title, 
-              course_id,
-              learning_courses:learning_courses!inner (
-                id, 
-                title
-              )
-            )
-          `)
-          .in("id", lessonIds);
-
-        if (lessonsError) throw lessonsError;
-
-        // Mapear lições com prioridade e justificativa
-        const enrichedLessons = lessonsData.map(lesson => {
-          const recommendationData = trail.recommended_lessons?.find(l => l.lessonId === lesson.id);
-          
-          // Acessar dados do módulo e curso com segurança
-          let moduleData = null;
-          let courseData = null;
-          
-          // Verificamos se learning_modules existe e é um array
-          if (lesson.learning_modules && Array.isArray(lesson.learning_modules) && lesson.learning_modules.length > 0) {
-            moduleData = lesson.learning_modules[0]; // Pegamos o primeiro módulo
-            
-            // Verificamos se o módulo tem learning_courses e é um array
-            if (moduleData.learning_courses && Array.isArray(moduleData.learning_courses) && moduleData.learning_courses.length > 0) {
-              courseData = moduleData.learning_courses[0]; // Pegamos o primeiro curso
-            }
-          }
-          
-          return {
-            ...lesson,
-            priority: recommendationData?.priority || 2,
-            justification: recommendationData?.justification || "Recomendado com base no seu perfil",
-            module: {
-              id: moduleData?.id || '',
-              title: moduleData?.title || 'Módulo sem nome',
-              course: {
-                id: courseData?.id || '',
-                title: courseData?.title || 'Curso sem nome'
-              }
-            }
-          };
-        });
-
-        // Ordenar por prioridade
-        enrichedLessons.sort((a, b) => (a.priority || 2) - (b.priority || 2));
-
-        setLessons(enrichedLessons);
-      } catch (error) {
-        console.error("Erro ao buscar aulas para a trilha:", error);
-        toast.error("Erro ao carregar aulas recomendadas");
-      } finally {
-        setLoadingLessons(false);
-      }
-    };
-
-    fetchLessonsForTrail();
-  }, [trail]);
-
-  // Gerar ou regenerar a trilha
-  const handleGenerateTrail = async () => {
-    try {
-      toast.info("Gerando sua trilha personalizada...");
-      await generateImplementationTrail(progress);
-      toast.success("Trilha gerada com sucesso!");
-    } catch (error) {
-      console.error("Erro ao gerar trilha:", error);
-      toast.error("Erro ao gerar sua trilha");
-    }
-  };
-
-  // Atualizar a trilha
-  const handleRefreshTrail = async () => {
-    try {
-      toast.info("Atualizando sua trilha...");
-      await refreshTrail(true);
-      toast.success("Trilha atualizada com sucesso!");
-    } catch (error) {
-      console.error("Erro ao atualizar trilha:", error);
-      toast.error("Erro ao atualizar sua trilha");
-    }
-  };
-
-  // Conteúdo durante carregamento
-  if (isLoading || loadingSolutions || regenerating) {
+  // Estado de carregamento principal
+  if (isLoading || regenerating || refreshing) {
     return (
-      <div className="flex flex-col items-center py-8">
-        <Loader2 className="h-8 w-8 text-[#0ABAB5] animate-spin mb-4" />
-        <p className="text-neutral-300">
-          {regenerating 
-            ? "Gerando sua trilha personalizada..." 
-            : "Carregando recomendações..."}
-        </p>
-      </div>
-    );
-  }
-
-  // Conteúdo quando não há trilha
-  if (!hasContent || solutions.length === 0) {
-    return (
-      <div className="flex flex-col items-center py-8">
-        <div className="bg-neutral-800/20 p-6 rounded-lg border border-neutral-700/50 text-center max-w-md mx-auto">
-          <h3 className="text-lg font-medium text-white mb-4">Nenhuma trilha encontrada</h3>
-          <p className="text-neutral-400 mb-6">
-            Vamos gerar uma trilha personalizada baseada em seu perfil e objetivos de negócio.
+      <Card className="w-full">
+        <CardContent className="pt-6 flex flex-col items-center justify-center min-h-[400px]">
+          <Loader2 className="h-12 w-12 text-viverblue animate-spin mb-4" />
+          <h3 className="text-xl font-semibold text-white mb-2">
+            {regenerating ? "Gerando sua trilha personalizada..." : "Carregando trilha..."}
+          </h3>
+          <p className="text-neutral-400 text-center max-w-md">
+            {regenerating 
+              ? "Estamos analisando seu perfil e criando recomendações personalizadas para seu negócio."
+              : "Aguarde enquanto carregamos sua trilha de implementação."
+            }
           </p>
-          <Button 
-            onClick={handleGenerateTrail}
-            disabled={regenerating}
-            className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
-          >
-            {regenerating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Gerar minha trilha personalizada
-          </Button>
-        </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Mostrar experiência mágica durante geração
+  if (showMagicExperience) {
+    return (
+      <div className="w-full">
+        <TrailMagicExperience onFinish={handleMagicFinish} />
       </div>
     );
   }
 
-  // Conteúdo principal - Trail tabs
-  return (
-    <div className="w-full">
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-medium text-white">Sua trilha personalizada</h3>
-        <Button 
-          onClick={handleRefreshTrail}
-          variant="outline" 
-          disabled={refreshing || regenerating}
-          className="flex items-center"
-        >
-          {(refreshing || regenerating) ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
+  // Estado de erro
+  if (error) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="text-red-400">Erro ao Carregar Trilha</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-neutral-300 mb-4">{error}</p>
+          <Button 
+            onClick={() => generateImplementationTrail()}
+            className="bg-viverblue hover:bg-viverblue/90"
+          >
             <RefreshCw className="mr-2 h-4 w-4" />
-          )}
-          Atualizar trilha
-        </Button>
-      </div>
+            Tentar Novamente
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-2 w-full max-w-md">
-          <TabsTrigger value="soluções">Soluções Recomendadas</TabsTrigger>
-          <TabsTrigger value="aprendizado">Material de Aprendizado</TabsTrigger>
-        </TabsList>
-        <TabsContent value="soluções" className="space-y-4">
-          <TrailSolutionsList solutions={solutions} />
-        </TabsContent>
-        <TabsContent value="aprendizado" className="space-y-4">
-          {loadingLessons ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-6 w-6 text-[#0ABAB5] animate-spin" />
+  // Estado inicial - sem trilha
+  if (!hasContent) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-viverblue" />
+            Gerar Trilha de Implementação
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <div className="mb-6">
+              <div className="w-20 h-20 bg-viverblue/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Sparkles className="h-10 w-10 text-viverblue" />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">
+                Crie sua trilha personalizada
+              </h3>
+              <p className="text-neutral-400 max-w-md mx-auto">
+                Com base no seu perfil e objetivos, vamos criar uma trilha de implementação de IA 
+                personalizada para acelerar o crescimento do seu negócio.
+              </p>
             </div>
-          ) : lessons.length > 0 ? (
-            <TrailLessonsList lessons={lessons} />
-          ) : (
-            <div className="text-center py-8 bg-neutral-800/20 rounded-lg border border-neutral-700/50">
-              <p className="text-neutral-400">Nenhuma aula recomendada encontrada na sua trilha.</p>
+            
+            <Button 
+              onClick={() => handleStartGeneration(true)}
+              className="bg-viverblue hover:bg-viverblue/90 text-white px-8 py-3 text-lg"
+              size="lg"
+            >
+              <Sparkles className="mr-2 h-5 w-5" />
+              Gerar Minha Trilha
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Estado com trilha - mostrar experiência guiada ou conteúdo da trilha
+  if (started && solutionsList.length > 0) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Sua Trilha de Implementação</CardTitle>
+          <p className="text-neutral-400">
+            {solutionsList.length} soluções personalizadas para seu negócio
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {currentSolution && (
+              <div className="bg-[#151823]/80 rounded-lg p-6 border border-neutral-700/50">
+                <h4 className="text-xl font-semibold text-white mb-2">
+                  {currentSolution.title}
+                </h4>
+                <p className="text-neutral-300 mb-4">
+                  {currentSolution.description}
+                </p>
+                <p className="text-viverblue text-sm">
+                  {currentSolution.justification}
+                </p>
+              </div>
+            )}
+            
+            <div className="text-center">
+              <p className="text-neutral-400 mb-4">
+                Solução {currentStepIdx + 1} de {solutionsList.length}
+              </p>
+              <Button 
+                onClick={() => generateImplementationTrail()}
+                variant="outline"
+                className="border-viverblue text-viverblue hover:bg-viverblue/10"
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Regenerar Trilha
+              </Button>
             </div>
-          )}
-        </TabsContent>
-      </Tabs>
-    </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Fallback - mostrar conteúdo básico da trilha
+  return (
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>Trilha de Implementação Carregada</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="text-center py-8">
+          <p className="text-neutral-300 mb-4">
+            Sua trilha foi carregada com sucesso!
+          </p>
+          <div className="flex gap-4 justify-center">
+            <Button 
+              onClick={() => handleStartGeneration(false)}
+              className="bg-viverblue hover:bg-viverblue/90"
+            >
+              Ver Trilha Detalhada
+            </Button>
+            <Button 
+              onClick={() => generateImplementationTrail()}
+              variant="outline"
+              className="border-viverblue text-viverblue hover:bg-viverblue/10"
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Regenerar
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };

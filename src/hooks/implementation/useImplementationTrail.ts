@@ -10,6 +10,8 @@ export const useImplementationTrail = () => {
   const { user } = useAuth();
   const [trail, setTrail] = useState<ImplementationTrail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Carregar trilha existente
@@ -17,7 +19,7 @@ export const useImplementationTrail = () => {
     if (!user?.id) return;
 
     try {
-      setIsLoading(true);
+      setRefreshing(true);
       setError(null);
 
       const { data, error: trailError } = await supabase
@@ -42,7 +44,7 @@ export const useImplementationTrail = () => {
       console.error('Erro ao carregar trilha:', error);
       setError('Erro ao carregar trilha de implementação');
     } finally {
-      setIsLoading(false);
+      setRefreshing(false);
     }
   }, [user?.id]);
 
@@ -51,6 +53,7 @@ export const useImplementationTrail = () => {
     if (!user?.id) return;
 
     try {
+      setRegenerating(true);
       setIsLoading(true);
       setError(null);
 
@@ -105,6 +108,7 @@ export const useImplementationTrail = () => {
       setError('Erro ao gerar trilha de implementação');
       toast.error('Erro ao gerar trilha de implementação');
     } finally {
+      setRegenerating(false);
       setIsLoading(false);
     }
   }, [user?.id]);
@@ -123,6 +127,8 @@ export const useImplementationTrail = () => {
   return {
     trail,
     isLoading,
+    regenerating,
+    refreshing,
     error,
     hasContent: !!hasContent,
     refreshTrail: loadTrail,
