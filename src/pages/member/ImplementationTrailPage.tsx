@@ -1,6 +1,6 @@
 
 import React from "react";
-import { OnboardingValidator } from "@/components/onboarding/OnboardingValidator";
+import { SmartFeatureGuard } from "@/components/auth/SmartFeatureGuard";
 import { ImplementationTrailCreator } from "@/components/implementation-trail/ImplementationTrailCreator";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { PageTransition } from "@/components/transitions/PageTransition";
@@ -10,12 +10,12 @@ const ImplementationTrailPage = () => {
   return (
     <PageTransition>
       <div className="container py-8">
-        <OnboardingValidator requireOnboarding={true} redirectTo="/onboarding-new">
+        <SmartFeatureGuard feature="implementation_trail">
           <Card>
             <CardHeader>
-              <CardTitle>Trilha de Implementação</CardTitle>
+              <CardTitle>Trilha de Implementação Personalizada</CardTitle>
               <CardDescription>
-                Sua trilha personalizada com base no seu perfil e objetivos de negócio
+                Sua jornada de IA personalizada com base no seu perfil de onboarding e objetivos de negócio
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -24,7 +24,7 @@ const ImplementationTrailPage = () => {
               </FadeTransition>
             </CardContent>
           </Card>
-        </OnboardingValidator>
+        </SmartFeatureGuard>
       </div>
     </PageTransition>
   );

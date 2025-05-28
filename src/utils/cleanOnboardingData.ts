@@ -23,8 +23,8 @@ export const cleanUserOnboardingData = async (userEmail: string) => {
     console.log(`👤 ID do usuário encontrado: ${userId}`);
     
     // Usar a função RPC atualizada para limpar os dados
-    const { data, error } = await supabase.rpc('limpar_dados_onboarding', {
-      user_id_param: userId
+    const { data, error } = await supabase.rpc('clean_user_onboarding_data', {
+      p_user_id: userId
     });
     
     if (error) {
@@ -35,10 +35,10 @@ export const cleanUserOnboardingData = async (userEmail: string) => {
     
     console.log('✅ Dados limpos com sucesso:', data);
     toast.success('Dados de onboarding limpos com sucesso!', {
-      description: data
+      description: data?.message || 'Operação concluída'
     });
     
-    return { success: true, message: data };
+    return { success: true, message: data?.message || 'Dados limpos com sucesso' };
     
   } catch (error: any) {
     console.error('❌ Erro inesperado:', error);
