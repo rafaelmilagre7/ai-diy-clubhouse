@@ -34,6 +34,11 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       icon: LayoutDashboard,
     },
     {
+      title: "Onboarding",
+      href: "/onboarding-new",
+      icon: BookOpen,
+    },
+    {
       title: "Trilha de Implementação",
       href: "/implementation-trail",
       icon: Route,
@@ -57,7 +62,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
 
   // Adicionar networking apenas se o usuário tem acesso
   if (hasNetworkingAccess) {
-    menuItems.splice(4, 0, {
+    menuItems.splice(5, 0, {
       title: "Networking",
       href: "/networking",
       icon: Users,

@@ -84,10 +84,8 @@ export const ModernOnboardingFlowNew: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0F111A] to-[#161A2C] py-8">
-      <div className="container mx-auto px-4">
-        {renderCurrentStep()}
-      </div>
+    <div className="py-4">
+      {renderCurrentStep()}
     </div>
   );
 };
