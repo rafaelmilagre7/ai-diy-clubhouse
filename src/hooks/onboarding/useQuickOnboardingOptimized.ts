@@ -18,8 +18,6 @@ const initialData: QuickOnboardingData = {
   linkedin_url: '',
   how_found_us: '',
   referred_by: '',
-
-  // Etapa 2: Negócio
   company_name: '',
   role: '',
   company_size: '',
@@ -27,8 +25,6 @@ const initialData: QuickOnboardingData = {
   company_website: '',
   annual_revenue_range: '',
   main_challenge: '',
-
-  // Etapa 3: Experiência com IA
   ai_knowledge_level: '',
   uses_ai: '',
   main_goal: ''
@@ -45,7 +41,6 @@ export const useQuickOnboardingOptimized = () => {
     loadError 
   } = useQuickOnboardingDataLoader();
 
-  // Passar currentStep para o auto-save
   const { isSaving, lastSaveTime } = useQuickOnboardingAutoSave(data, currentStep);
 
   const updateField = useCallback((field: keyof QuickOnboardingData, value: any) => {
@@ -58,16 +53,13 @@ export const useQuickOnboardingOptimized = () => {
   const canProceed = useCallback(() => {
     switch (currentStep) {
       case 1:
-        // Etapa 1: Validar campos obrigatórios incluindo indicação condicional
         const hasRequiredPersonalInfo = !!(data.name && data.email && data.whatsapp && data.how_found_us);
         const hasReferralIfNeeded = data.how_found_us !== 'indicacao' || !!data.referred_by;
         return hasRequiredPersonalInfo && hasReferralIfNeeded;
       case 2:
-        // Etapa 2: Validar informações completas do negócio
         return !!(data.company_name && data.role && data.company_size && 
                   data.company_segment && data.annual_revenue_range && data.main_challenge);
       case 3:
-        // Etapa 3: Validar experiência completa com IA
         return !!(data.ai_knowledge_level && data.uses_ai && data.main_goal);
       default:
         return false;
@@ -76,28 +68,49 @@ export const useQuickOnboardingOptimized = () => {
 
   const nextStep = useCallback(() => {
     if (canProceed()) {
-      console.log(`🔄 Avançando para etapa ${currentStep + 1}`);
+      console.log(`🔄 Avançando da etapa ${currentStep} para ${currentStep + 1}`);
       setCurrentStep(prev => prev + 1);
     }
   }, [canProceed, currentStep]);
 
   const previousStep = useCallback(() => {
-    console.log(`🔄 Voltando para etapa ${currentStep - 1}`);
+    console.log(`🔄 Voltando da etapa ${currentStep} para ${currentStep - 1}`);
     setCurrentStep(prev => Math.max(1, prev - 1));
   }, [currentStep]);
 
-  // Validação completa independente do currentStep
   const isDataComplete = useCallback(() => {
-    return !!(
-      // Etapa 1
-      data.name && data.email && data.whatsapp && data.how_found_us &&
-      (data.how_found_us !== 'indicacao' || data.referred_by) &&
-      // Etapa 2
-      data.company_name && data.role && data.company_size && 
-      data.company_segment && data.annual_revenue_range && data.main_challenge &&
-      // Etapa 3
-      data.ai_knowledge_level && data.uses_ai && data.main_goal
+    // Validação simples e direta de todos os campos obrigatórios
+    const step1Complete = !!(
+      data.name && 
+      data.email && 
+      data.whatsapp && 
+      data.how_found_us &&
+      (data.how_found_us !== 'indicacao' || data.referred_by)
     );
+
+    const step2Complete = !!(
+      data.company_name && 
+      data.role && 
+      data.company_size && 
+      data.company_segment && 
+      data.annual_revenue_range && 
+      data.main_challenge
+    );
+
+    const step3Complete = !!(
+      data.ai_knowledge_level && 
+      data.uses_ai && 
+      data.main_goal
+    );
+
+    console.log('📊 Validação de dados:', {
+      step1Complete,
+      step2Complete,
+      step3Complete,
+      allComplete: step1Complete && step2Complete && step3Complete
+    });
+
+    return step1Complete && step2Complete && step3Complete;
   }, [data]);
 
   const completeOnboarding = useCallback(async () => {
@@ -106,26 +119,30 @@ export const useQuickOnboardingOptimized = () => {
       return false;
     }
 
+    console.log('🎯 Iniciando finalização do onboarding...');
+
+    // Primeiro, garantir que estamos na etapa 4
+    if (currentStep !== 4) {
+      console.log(`⚠️ Ajustando currentStep de ${currentStep} para 4`);
+      setCurrentStep(4);
+    }
+
     // Validar se todos os dados estão completos
     if (!isDataComplete()) {
-      console.error('❌ Dados incompletos para finalizar onboarding:', {
-        step1: !!(data.name && data.email && data.whatsapp && data.how_found_us),
-        step2: !!(data.company_name && data.role && data.company_size && data.company_segment && data.annual_revenue_range && data.main_challenge),
-        step3: !!(data.ai_knowledge_level && data.uses_ai && data.main_goal),
-        data
-      });
+      console.error('❌ Dados incompletos para finalizar onboarding');
       toast.error('Complete todas as etapas antes de finalizar');
       return false;
     }
 
     try {
-      console.log('🎯 Finalizando onboarding com dados completos');
+      console.log('💾 Finalizando onboarding com dados completos...');
 
-      // Marcar como completo na tabela quick_onboarding
+      // Atualizar quick_onboarding como completo
       const { error: quickError } = await supabase
         .from('quick_onboarding')
         .update({ 
           is_completed: true,
+          current_step: 4,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', user.id);
@@ -135,7 +152,7 @@ export const useQuickOnboardingOptimized = () => {
         throw quickError;
       }
 
-      // Marcar como completo na tabela onboarding_progress também
+      // Atualizar onboarding_progress (se existir)
       const { error: progressError } = await supabase
         .from('onboarding_progress')
         .update({ 
@@ -146,9 +163,9 @@ export const useQuickOnboardingOptimized = () => {
         })
         .eq('user_id', user.id);
 
-      if (progressError) {
-        console.error('❌ Erro ao atualizar onboarding_progress:', progressError);
-        throw progressError;
+      // Não falhar se onboarding_progress não existir
+      if (progressError && progressError.code !== 'PGRST116') {
+        console.warn('⚠️ Erro ao atualizar onboarding_progress (não crítico):', progressError);
       }
 
       console.log('✅ Onboarding finalizado com sucesso!');
@@ -159,7 +176,7 @@ export const useQuickOnboardingOptimized = () => {
       toast.error('Erro ao finalizar onboarding. Tente novamente.');
       return false;
     }
-  }, [user, isDataComplete, data]);
+  }, [user, isDataComplete, currentStep]);
 
   return {
     currentStep,
@@ -172,11 +189,9 @@ export const useQuickOnboardingOptimized = () => {
     hasExistingData,
     loadError,
     totalSteps: 4,
-    // Adicionar estado de salvamento
     isSaving,
     lastSaveTime,
     completeOnboarding,
-    // Expor função de validação completa para debug
     isDataComplete: isDataComplete()
   };
 };

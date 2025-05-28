@@ -12,6 +12,7 @@ export const EnhancedTrailMagicExperience: React.FC<EnhancedTrailMagicExperience
 }) => {
   const [currentPhase, setCurrentPhase] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [hasFinished, setHasFinished] = useState(false);
 
   const phases = [
     {
@@ -35,9 +36,9 @@ export const EnhancedTrailMagicExperience: React.FC<EnhancedTrailMagicExperience
           clearInterval(timer);
           return 100;
         }
-        return prev + 1.5;
+        return prev + 2; // Aumentei a velocidade
       });
-    }, 100);
+    }, 80); // Reduzi o intervalo
 
     return () => clearInterval(timer);
   }, []);
@@ -49,10 +50,11 @@ export const EnhancedTrailMagicExperience: React.FC<EnhancedTrailMagicExperience
     }
   }, [progress, currentPhase, phases.length]);
 
-  // Timeout de segurança e finalização automática
+  // Efeito para finalizar quando progress chegar a 100%
   useEffect(() => {
-    if (progress >= 100) {
-      console.log('🎉 Animação finalizada, redirecionando...');
+    if (progress >= 100 && !hasFinished) {
+      console.log('🎉 Animação concluída - iniciando finalização');
+      setHasFinished(true);
       
       // Dispara confetes
       confetti({
@@ -61,24 +63,15 @@ export const EnhancedTrailMagicExperience: React.FC<EnhancedTrailMagicExperience
         origin: { y: 0.6 }
       });
 
-      // Timeout de segurança para garantir que onFinish seja chamado
-      const finishTimeout = setTimeout(() => {
-        console.log('⏰ Timeout de segurança - chamando onFinish()');
+      // Chamar onFinish após um breve delay para mostrar os confetes
+      const finishTimer = setTimeout(() => {
+        console.log('🎯 Chamando onFinish()');
         onFinish();
-      }, 2000);
+      }, 1500);
 
-      // Primeira tentativa após 1 segundo
-      const firstAttempt = setTimeout(() => {
-        console.log('🎯 Primeira tentativa - chamando onFinish()');
-        onFinish();
-      }, 1000);
-
-      return () => {
-        clearTimeout(finishTimeout);
-        clearTimeout(firstAttempt);
-      };
+      return () => clearTimeout(finishTimer);
     }
-  }, [progress, onFinish]);
+  }, [progress, hasFinished, onFinish]);
 
   return (
     <div className="max-w-2xl mx-auto space-y-8 py-12">
@@ -134,7 +127,7 @@ export const EnhancedTrailMagicExperience: React.FC<EnhancedTrailMagicExperience
         </motion.p>
 
         {/* Mensagem de conclusão */}
-        {progress === 100 && (
+        {progress >= 100 && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -148,7 +141,7 @@ export const EnhancedTrailMagicExperience: React.FC<EnhancedTrailMagicExperience
             </p>
           </motion.div>
         )}
-      </motion.div>
+      </div>
     </div>
   );
 };
