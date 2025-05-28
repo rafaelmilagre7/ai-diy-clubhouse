@@ -17,7 +17,13 @@ export const SmartFeatureGuard: React.FC<SmartFeatureGuardProps> = ({
   showPreview = true,
   fallback
 }) => {
-  const { data: accessData, isLoading } = useSmartFeatureAccess(feature);
+  const { 
+    hasAccess, 
+    hasRoleAccess, 
+    onboardingComplete, 
+    blockReason, 
+    isLoading 
+  } = useSmartFeatureAccess(feature);
 
   if (isLoading) {
     return (
@@ -30,7 +36,7 @@ export const SmartFeatureGuard: React.FC<SmartFeatureGuardProps> = ({
     );
   }
 
-  if (!accessData?.hasAccess) {
+  if (!hasAccess) {
     if (fallback) {
       return <>{fallback}</>;
     }
@@ -38,9 +44,9 @@ export const SmartFeatureGuard: React.FC<SmartFeatureGuardProps> = ({
     return (
       <ModernFeatureBlock 
         feature={feature}
-        blockReason={accessData?.blockReason || 'insufficient_role'}
-        hasRoleAccess={accessData?.hasRoleAccess || false}
-        onboardingComplete={accessData?.onboardingComplete || false}
+        blockReason={blockReason}
+        hasRoleAccess={hasRoleAccess}
+        onboardingComplete={onboardingComplete}
         showPreview={showPreview}
       />
     );
