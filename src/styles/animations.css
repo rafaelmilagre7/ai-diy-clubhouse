@@ -24,3 +24,50 @@
 .animate-float {
   animation: float 4s ease-in-out infinite;
 }
+
+/* Netflix-style hover animations */
+@keyframes netflix-scale {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes netflix-glow {
+  0% {
+    box-shadow: 0 4px 20px rgba(10, 186, 181, 0.1);
+  }
+  100% {
+    box-shadow: 0 8px 40px rgba(10, 186, 181, 0.3);
+  }
+}
+
+.netflix-card-hover {
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.netflix-card-hover:hover {
+  animation: netflix-scale 0.3s ease-out forwards, netflix-glow 0.3s ease-out forwards;
+  z-index: 10;
+}
+
+/* Scroll customizado para área horizontal */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(10, 186, 181, 0.6);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(10, 186, 181, 0.8);
+}
