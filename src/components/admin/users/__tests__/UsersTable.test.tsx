@@ -1,5 +1,5 @@
 
-import { render } from '@testing-library/react';
+import { render, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { UsersTable } from '../UsersTable';
 import { UserProfile } from '@/lib/supabase';
@@ -57,7 +57,7 @@ describe('UsersTable', () => {
     // O botão de ações está dentro de um dropdown, precisamos simular o comportamento
     const actionsButton = container.querySelector('[data-testid="user-actions-button"]');
     if (actionsButton) {
-      actionsButton.click();
+      fireEvent.click(actionsButton);
       // Aqui normalmente testariamos o clique no item do dropdown
     }
     
