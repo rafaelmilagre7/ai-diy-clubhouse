@@ -52,7 +52,7 @@ describe('UsersTable', () => {
   });
 
   it('calls onEditRole when edit button is clicked', () => {
-    const { getByTestId } = render(<UsersTable {...mockProps} />);
+    const { container } = render(<UsersTable {...mockProps} />);
     
     // O botão de ações está dentro de um dropdown, precisamos simular o comportamento
     const actionsButton = container.querySelector('[data-testid="user-actions-button"]');
