@@ -53,6 +53,9 @@ export const UnifiedOnboardingFlow: React.FC = () => {
   // Mostrar indicador se dados foram carregados
   const showDataLoadedMessage = hasExistingData && currentStep === 1;
 
+  // Garantir que canProceed seja sempre boolean
+  const canProceedBoolean = typeof canProceed === 'function' ? canProceed() : Boolean(canProceed);
+
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
@@ -73,7 +76,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
               onUpdate={updateField}
               onNext={nextStep}
               onPrevious={previousStep}
-              canProceed={canProceed}
+              canProceed={canProceedBoolean}
               currentStep={currentStep}
               totalSteps={totalSteps}
             />
