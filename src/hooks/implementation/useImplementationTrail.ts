@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,6 +31,7 @@ export const useImplementationTrail = () => {
       setError(null);
       console.log('🔄 Carregando trilha para usuário:', user.id);
 
+      // Buscar trilha sem filtro por status para evitar problemas
       const { data, error: trailError } = await supabase
         .from('implementation_trails')
         .select('*')
@@ -82,13 +84,22 @@ export const useImplementationTrail = () => {
       setError(null);
       console.log('🚀 Iniciando geração inteligente da trilha para usuário:', user.id);
 
-      // Usar a nova edge function inteligente
+      // Usar a edge function inteligente com melhor tratamento de erro
       const { data, error: functionError } = await supabase.functions.invoke('generate-smart-trail', {
         body: { user_id: user.id }
       });
 
       if (functionError) {
         console.error('❌ Erro da edge function:', functionError);
+        
+        // Tratar erro específico de duplicação
+        if (functionError.message?.includes('duplicate key')) {
+          console.log('🔄 Trilha já existe, tentando recarregar...');
+          await loadTrail(true);
+          toast.success('Trilha carregada com sucesso!');
+          return;
+        }
+        
         throw new Error(`Erro ao gerar trilha: ${functionError.message}`);
       }
 
@@ -110,11 +121,19 @@ export const useImplementationTrail = () => {
       console.error('❌ Erro ao gerar trilha:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro ao gerar trilha de implementação';
       setError(errorMessage);
-      toast.error(errorMessage);
+      
+      // Se for erro de duplicação, tentar carregar trilha existente
+      if (errorMessage.includes('duplicate') || errorMessage.includes('already exists')) {
+        console.log('🔄 Tentando carregar trilha existente após erro de duplicação...');
+        await loadTrail(true);
+        toast.success('Trilha existente carregada!');
+      } else {
+        toast.error(errorMessage);
+      }
     } finally {
       setRegenerating(false);
     }
-  }, [user?.id]);
+  }, [user?.id, loadTrail]);
 
   // Carregar trilha ao inicializar
   useEffect(() => {
