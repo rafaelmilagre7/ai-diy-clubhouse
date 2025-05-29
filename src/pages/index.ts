@@ -1,6 +1,9 @@
 
-// Auth - removidas as exportações duplicadas que foram consolidadas
-// As páginas de auth agora usam AuthLayout diretamente nas rotas
+// Auth
+export { default as Login } from './Auth';
+export { default as Register } from './Auth';
+export { default as ForgotPassword } from './Auth';
+export { default as ResetPassword } from './Auth';
 
 // Admin
 export { default as AdminDashboard } from './admin/AdminDashboard';

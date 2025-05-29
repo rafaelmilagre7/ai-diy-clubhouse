@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import EmailPasswordForm from "./login/EmailPasswordForm";
 import { motion } from "framer-motion";
-import { cleanupAuthState } from "@/utils/authUtils";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
@@ -19,7 +18,6 @@ const LoginForm = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      console.log("Usuário já logado, redirecionando para dashboard");
       navigate('/dashboard', { replace: true });
     }
   }, [user, navigate]);
@@ -30,7 +28,13 @@ const LoginForm = () => {
     if (!email || !password) {
       const errorMessage = "Por favor, preencha todos os campos.";
       setError(errorMessage);
-      toast.error(errorMessage);
+      toast.error(errorMessage, {
+        style: {
+          background: 'rgba(239, 68, 68, 0.1)',
+          border: '1px solid rgba(239, 68, 68, 0.3)',
+          color: 'white'
+        }
+      });
       return;
     }
     
@@ -38,58 +42,55 @@ const LoginForm = () => {
       setIsLoading(true);
       setError(null);
       
-      console.log("Iniciando processo de login para:", email);
+      // Show immediate feedback toast
+      toast.info("Entrando...", {
+        style: {
+          background: 'rgba(0, 234, 217, 0.1)',
+          border: '1px solid rgba(0, 234, 217, 0.3)',
+          color: 'white'
+        }
+      });
       
-      // Limpar estado anterior
-      cleanupAuthState();
-      
-      // Mostrar feedback imediato
-      toast.info("Verificando credenciais...");
-      
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
         password,
       });
       
-      console.log("Resposta do Supabase:", { 
-        user: data.user?.id, 
-        session: !!data.session,
-        error: signInError?.message 
-      });
+      if (error) throw error;
       
-      if (signInError) {
-        console.error("Erro de autenticação:", signInError);
-        throw signInError;
-      }
-      
-      if (data.user && data.session) {
-        console.log("Login bem-sucedido!");
-        toast.success("Login realizado com sucesso!");
+      if (data.user) {
+        toast.success("Login bem-sucedido! Redirecionando...", {
+          style: {
+            background: 'rgba(34, 197, 94, 0.1)',
+            border: '1px solid rgba(34, 197, 94, 0.3)',
+            color: 'white'
+          }
+        });
         
-        // Aguardar um pouco para o contexto de auth atualizar
+        // Forçar redirecionamento após autenticação bem-sucedida
         setTimeout(() => {
           navigate('/dashboard', { replace: true });
         }, 500);
-      } else {
-        throw new Error("Dados de sessão inválidos");
       }
     } catch (error: any) {
-      console.error("Erro durante o login:", error);
-      
       let errorMessage = "Não foi possível fazer login. Verifique suas credenciais.";
       
-      if (error.message?.includes("Invalid login credentials")) {
-        errorMessage = "Email ou senha incorretos. Verifique suas credenciais e tente novamente.";
-      } else if (error.message?.includes("Email not confirmed")) {
+      if (error.message.includes("Invalid login credentials")) {
+        errorMessage = "Email ou senha incorretos. Verifique suas credenciais.";
+      } else if (error.message.includes("Email not confirmed")) {
         errorMessage = "Por favor, confirme seu email antes de fazer login.";
-      } else if (error.message?.includes("Too many requests")) {
-        errorMessage = "Muitas tentativas de login. Aguarde alguns minutos e tente novamente.";
-      } else if (error.message?.includes("signup is disabled")) {
-        errorMessage = "O cadastro está desabilitado. Entre em contato com o suporte.";
+      } else if (error.message.includes("Too many requests")) {
+        errorMessage = "Muitas tentativas de login. Tente novamente em alguns minutos.";
       }
       
       setError(errorMessage);
-      toast.error(errorMessage);
+      toast.error(errorMessage, {
+        style: {
+          background: 'rgba(239, 68, 68, 0.1)',
+          border: '1px solid rgba(239, 68, 68, 0.3)',
+          color: 'white'
+        }
+      });
     } finally {
       setIsLoading(false);
     }
@@ -111,20 +112,6 @@ const LoginForm = () => {
         isLoading={isLoading}
         error={error}
       />
-
-      {/* Debug Info - apenas em desenvolvimento */}
-      {process.env.NODE_ENV === 'development' && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mt-6 p-3 bg-gray-800/50 rounded-lg text-xs text-gray-400"
-        >
-          <p className="mb-2 font-semibold">Credenciais de teste:</p>
-          <p>• Membro: user@teste.com / 123456</p>
-          <p>• Admin: admin@teste.com / 123456</p>
-        </motion.div>
-      )}
     </motion.div>
   );
 };
