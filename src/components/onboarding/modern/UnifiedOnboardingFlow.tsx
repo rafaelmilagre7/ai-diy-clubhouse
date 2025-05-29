@@ -4,8 +4,9 @@ import { useQuickOnboardingOptimized } from '@/hooks/onboarding/useQuickOnboardi
 import { useNavigate } from 'react-router-dom';
 import { LazyStepLoader } from './steps/LazyStepLoader';
 import { EnhancedTrailMagicExperience } from '../EnhancedTrailMagicExperience';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 
 export const UnifiedOnboardingFlow: React.FC = () => {
   const navigate = useNavigate();
@@ -56,7 +57,9 @@ export const UnifiedOnboardingFlow: React.FC = () => {
           </div>
           <div className="space-y-2">
             <h2 className="text-xl font-semibold text-white">Preparando sua experiência</h2>
-            <p className="text-gray-300">Carregando seus dados...</p>
+            <p className="text-gray-300">
+              {hasExistingData ? 'Carregando seus dados salvos...' : 'Inicializando onboarding...'}
+            </p>
           </div>
         </motion.div>
       </div>
@@ -74,11 +77,20 @@ export const UnifiedOnboardingFlow: React.FC = () => {
           transition={{ duration: 0.5 }}
         >
           <div className="bg-red-500/10 border border-red-500/20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-            <span className="text-red-400 text-2xl">⚠️</span>
+            <AlertTriangle className="text-red-400 h-8 w-8" />
           </div>
           <h3 className="text-lg font-semibold text-white">Oops! Algo deu errado</h3>
-          <p className="text-red-400">{loadError}</p>
-          <p className="text-gray-300 text-sm">Você pode continuar com dados em branco.</p>
+          <p className="text-red-400 text-sm">{loadError}</p>
+          <p className="text-gray-300 text-xs">
+            Você pode continuar, mas seus dados podem não ser salvos automaticamente.
+          </p>
+          <Button 
+            onClick={() => window.location.reload()} 
+            variant="outline"
+            className="mt-4"
+          >
+            Tentar Novamente
+          </Button>
         </motion.div>
       </div>
     );
@@ -117,21 +129,43 @@ export const UnifiedOnboardingFlow: React.FC = () => {
         );
       
       default:
-        return null;
+        return (
+          <div className="text-center py-12">
+            <p className="text-gray-400">Etapa não encontrada</p>
+            <Button onClick={() => navigate('/dashboard')} className="mt-4">
+              Ir para Dashboard
+            </Button>
+          </div>
+        );
     }
   };
 
   return (
     <div className="relative">
+      {/* Overlay de carregamento durante conclusão */}
       {isCompleting && (
-        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-gray-800 rounded-lg p-6 space-y-4">
+        <motion.div 
+          className="absolute inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="bg-gray-800 rounded-lg p-6 space-y-4 border border-gray-700">
             <Loader2 className="h-8 w-8 text-viverblue animate-spin mx-auto" />
-            <p className="text-white text-center">Finalizando onboarding...</p>
+            <p className="text-white text-center font-medium">Finalizando onboarding...</p>
+            <p className="text-gray-400 text-center text-sm">Preparando sua experiência personalizada</p>
           </div>
-        </div>
+        </motion.div>
       )}
-      {renderCurrentStep()}
+
+      {/* Conteúdo principal */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4 }}
+      >
+        {renderCurrentStep()}
+      </motion.div>
     </div>
   );
 };
