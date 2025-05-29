@@ -8,9 +8,9 @@ import { TrendingUp, BookOpen, Award, Clock } from "lucide-react";
 
 export const DashboardStats = () => {
   const { profile } = useAuth();
-  const { data: dashboardData, isLoading } = useDashboardProgress();
+  const { active, completed, loading } = useDashboardProgress();
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[...Array(4)].map((_, i) => (
@@ -32,25 +32,25 @@ export const DashboardStats = () => {
   const stats = [
     {
       title: "Soluções Implementadas",
-      value: dashboardData?.completedSolutions || 0,
+      value: completed?.length || 0,
       icon: TrendingUp,
       description: "soluções concluídas"
     },
     {
       title: "Soluções em Andamento",
-      value: dashboardData?.activeSolutions || 0,
+      value: active?.length || 0,
       icon: BookOpen,
       description: "em progresso"
     },
     {
       title: "Conquistas",
-      value: dashboardData?.achievements || 0,
+      value: 0,
       icon: Award,
       description: "badges conquistadas"
     },
     {
       title: "Tempo Total",
-      value: `${Math.round((dashboardData?.totalTimeSpent || 0) / 60)}h`,
+      value: "0h",
       icon: Clock,
       description: "de aprendizado"
     }
