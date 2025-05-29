@@ -3,16 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-
-interface QuickOnboardingData {
-  name: string;
-  email: string;
-  company_name: string;
-  company_segment: string;
-  primary_goal: string;
-  ai_knowledge_level: string;
-  current_step: number;
-}
+import { QuickOnboardingData } from '@/types/quickOnboarding';
 
 export const useQuickOnboardingOptimized = () => {
   const { user } = useAuth();
@@ -20,11 +11,23 @@ export const useQuickOnboardingOptimized = () => {
   const [data, setData] = useState<QuickOnboardingData>({
     name: '',
     email: user?.email || '',
+    whatsapp: '',
+    country_code: '+55',
+    birth_date: '',
+    instagram_url: '',
+    linkedin_url: '',
+    how_found_us: '',
+    referred_by: '',
     company_name: '',
+    role: '',
+    company_size: '',
     company_segment: '',
-    primary_goal: '',
+    company_website: '',
+    annual_revenue_range: '',
+    main_challenge: '',
     ai_knowledge_level: '',
-    current_step: 1
+    uses_ai: '',
+    main_goal: ''
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -60,11 +63,23 @@ export const useQuickOnboardingOptimized = () => {
         setData({
           name: existingData.name || '',
           email: existingData.email || user.email || '',
+          whatsapp: existingData.whatsapp || '',
+          country_code: existingData.country_code || '+55',
+          birth_date: existingData.birth_date || '',
+          instagram_url: existingData.instagram_url || '',
+          linkedin_url: existingData.linkedin_url || '',
+          how_found_us: existingData.how_found_us || '',
+          referred_by: existingData.referred_by || '',
           company_name: existingData.company_name || '',
+          role: existingData.role || '',
+          company_size: existingData.company_size || '',
           company_segment: existingData.company_segment || '',
-          primary_goal: existingData.primary_goal || '',
+          company_website: existingData.company_website || '',
+          annual_revenue_range: existingData.annual_revenue_range || '',
+          main_challenge: existingData.main_challenge || '',
           ai_knowledge_level: existingData.ai_knowledge_level || '',
-          current_step: existingData.current_step || 1
+          uses_ai: existingData.uses_ai || '',
+          main_goal: existingData.main_goal || ''
         });
         setCurrentStep(existingData.current_step || 1);
         setHasExistingData(true);
@@ -98,10 +113,23 @@ export const useQuickOnboardingOptimized = () => {
         user_id: user.id,
         name: data.name,
         email: data.email,
+        whatsapp: data.whatsapp,
+        country_code: data.country_code,
+        birth_date: data.birth_date,
+        instagram_url: data.instagram_url,
+        linkedin_url: data.linkedin_url,
+        how_found_us: data.how_found_us,
+        referred_by: data.referred_by,
         company_name: data.company_name,
+        role: data.role,
+        company_size: data.company_size,
         company_segment: data.company_segment,
-        primary_goal: data.primary_goal,
+        company_website: data.company_website,
+        annual_revenue_range: data.annual_revenue_range,
+        main_challenge: data.main_challenge,
         ai_knowledge_level: data.ai_knowledge_level,
+        uses_ai: data.uses_ai,
+        main_goal: data.main_goal,
         current_step: currentStep,
         is_completed: false,
         updated_at: new Date().toISOString()
@@ -127,7 +155,6 @@ export const useQuickOnboardingOptimized = () => {
     if (currentStep < totalSteps) {
       const nextStepNumber = currentStep + 1;
       setCurrentStep(nextStepNumber);
-      setData(prev => ({ ...prev, current_step: nextStepNumber }));
       
       // Auto-save ao avançar
       await autoSave();
@@ -139,7 +166,6 @@ export const useQuickOnboardingOptimized = () => {
     if (currentStep > 1) {
       const prevStepNumber = currentStep - 1;
       setCurrentStep(prevStepNumber);
-      setData(prev => ({ ...prev, current_step: prevStepNumber }));
     }
   }, [currentStep]);
 
@@ -151,9 +177,9 @@ export const useQuickOnboardingOptimized = () => {
       case 2:
         return data.company_name.trim() !== '' && data.company_segment.trim() !== '';
       case 3:
-        return data.primary_goal.trim() !== '';
-      case 4:
         return data.ai_knowledge_level.trim() !== '';
+      case 4:
+        return data.main_goal.trim() !== '';
       default:
         return false;
     }
@@ -174,10 +200,23 @@ export const useQuickOnboardingOptimized = () => {
           user_id: user.id,
           name: data.name,
           email: data.email,
+          whatsapp: data.whatsapp,
+          country_code: data.country_code,
+          birth_date: data.birth_date,
+          instagram_url: data.instagram_url,
+          linkedin_url: data.linkedin_url,
+          how_found_us: data.how_found_us,
+          referred_by: data.referred_by,
           company_name: data.company_name,
+          role: data.role,
+          company_size: data.company_size,
           company_segment: data.company_segment,
-          primary_goal: data.primary_goal,
+          company_website: data.company_website,
+          annual_revenue_range: data.annual_revenue_range,
+          main_challenge: data.main_challenge,
           ai_knowledge_level: data.ai_knowledge_level,
+          uses_ai: data.uses_ai,
+          main_goal: data.main_goal,
           current_step: totalSteps,
           is_completed: true,
           updated_at: new Date().toISOString()
@@ -202,7 +241,7 @@ export const useQuickOnboardingOptimized = () => {
             company_sector: data.company_segment
           },
           business_goals: {
-            primary_goal: data.primary_goal
+            primary_goal: data.main_goal
           },
           ai_experience: {
             knowledge_level: data.ai_knowledge_level

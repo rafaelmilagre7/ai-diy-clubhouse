@@ -20,7 +20,7 @@ interface LazyStepLoaderProps {
   currentStep: number;
   totalSteps: number;
   isSaving?: boolean;
-  lastSaveTime?: number | null;
+  lastSaveTime?: Date | null;
 }
 
 export const LazyStepLoader: React.FC<LazyStepLoaderProps> = ({
