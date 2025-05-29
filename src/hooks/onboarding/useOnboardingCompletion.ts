@@ -19,9 +19,10 @@ export const useOnboardingCompletion = () => {
 
   const checkOnboardingStatus = async () => {
     if (!user?.id) {
-      setData({ isCompleted: false, source: 'no_user' });
+      const result = { isCompleted: false, source: 'no_user' };
+      setData(result);
       setIsLoading(false);
-      return { isCompleted: false, source: 'no_user' };
+      return result;
     }
 
     try {
