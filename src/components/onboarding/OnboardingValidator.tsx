@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSimpleOnboardingValidation } from '@/hooks/onboarding/useSimpleOnboardingValidation';
+import { useOnboardingCompletion } from '@/hooks/onboarding/useOnboardingCompletion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, AlertCircle } from 'lucide-react';
@@ -18,16 +18,16 @@ export const OnboardingValidator: React.FC<OnboardingValidatorProps> = ({
   redirectTo = '/onboarding-new'
 }) => {
   const navigate = useNavigate();
-  const { isOnboardingComplete, hasValidData } = useSimpleOnboardingValidation();
+  const { data: completionData, isLoading } = useOnboardingCompletion();
   const [validationChecked, setValidationChecked] = useState(false);
 
   useEffect(() => {
-    if (hasValidData) {
+    if (!isLoading) {
       setValidationChecked(true);
     }
-  }, [hasValidData]);
+  }, [isLoading]);
 
-  if (!hasValidData || !validationChecked) {
+  if (isLoading || !validationChecked) {
     return (
       <Card className="w-full max-w-md mx-auto mt-8">
         <CardContent className="pt-6 flex flex-col items-center space-y-4">
@@ -37,6 +37,8 @@ export const OnboardingValidator: React.FC<OnboardingValidatorProps> = ({
       </Card>
     );
   }
+
+  const isOnboardingComplete = completionData?.isCompleted || false;
 
   if (!isOnboardingComplete && requireOnboarding) {
     return (

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useSimpleOnboardingValidation } from '@/hooks/onboarding/useSimpleOnboardingValidation';
+import { useOnboardingCompletion } from '@/hooks/onboarding/useOnboardingCompletion';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
 interface OnboardingProtectedRouteProps {
@@ -13,9 +13,9 @@ export const OnboardingProtectedRoute: React.FC<OnboardingProtectedRouteProps> =
   children,
   fallbackPath = '/onboarding-new'
 }) => {
-  const { isOnboardingComplete, hasValidData } = useSimpleOnboardingValidation();
+  const { data: completionData, isLoading } = useOnboardingCompletion();
 
-  if (!hasValidData) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <LoadingSpinner size="lg" />
@@ -24,8 +24,11 @@ export const OnboardingProtectedRoute: React.FC<OnboardingProtectedRouteProps> =
     );
   }
 
+  const isOnboardingComplete = completionData?.isCompleted || false;
+
   if (!isOnboardingComplete) {
     console.log("[OnboardingProtectedRoute] Onboarding incompleto, redirecionando para", fallbackPath);
+    console.log("[OnboardingProtectedRoute] Dados:", completionData);
     return <Navigate to={fallbackPath} replace />;
   }
 
