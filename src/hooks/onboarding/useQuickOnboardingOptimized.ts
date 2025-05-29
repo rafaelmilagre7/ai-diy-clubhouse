@@ -49,7 +49,11 @@ export const useQuickOnboardingOptimized = () => {
   // Carregamento inicial otimizado
   useEffect(() => {
     const loadExistingData = async () => {
+      console.log('🔄 useQuickOnboardingOptimized: Iniciando loadExistingData');
+      console.log('👤 User disponível:', { id: user?.id, email: user?.email });
+      
       if (!user?.id) {
+        console.log('❌ Usuário não encontrado, finalizando loading');
         setIsLoading(false);
         return;
       }
@@ -63,9 +67,15 @@ export const useQuickOnboardingOptimized = () => {
           .eq('user_id', user.id)
           .maybeSingle();
 
-        if (!mountedRef.current) return;
+        console.log('📊 Resultado da query:', { existingData, error });
+
+        if (!mountedRef.current) {
+          console.log('⚠️ Componente foi desmontado, abortando');
+          return;
+        }
 
         if (error && error.code !== 'PGRST116') {
+          console.error('❌ Erro na query:', error);
           throw error;
         }
 
@@ -75,12 +85,16 @@ export const useQuickOnboardingOptimized = () => {
           
           // Converter dados do banco para o formato do componente
           const adaptedData = adaptDatabaseToQuickData(existingData);
+          console.log('🔄 Dados adaptados:', adaptedData);
+          
           setData(prev => ({ ...prev, ...adaptedData, email: user.email || adaptedData.email }));
           
           // Se já está completo, ir para etapa final
           if (existingData.is_completed) {
+            console.log('✅ Onboarding já completo, indo para etapa 4');
             setCurrentStep(4);
           } else {
+            console.log('📍 Definindo step atual:', existingData.current_step || 1);
             setCurrentStep(existingData.current_step || 1);
           }
         } else {
@@ -92,9 +106,11 @@ export const useQuickOnboardingOptimized = () => {
         console.error('❌ Erro ao carregar dados:', error);
         if (mountedRef.current) {
           setLoadError('Erro ao carregar dados do onboarding');
+          toast.error('Erro ao carregar dados. Você pode continuar mesmo assim.');
         }
       } finally {
         if (mountedRef.current) {
+          console.log('✅ Finalizando loading');
           setIsLoading(false);
         }
       }
@@ -105,13 +121,18 @@ export const useQuickOnboardingOptimized = () => {
 
   // Auto-save otimizado com debounce
   const saveData = useCallback(async (dataToSave: QuickOnboardingData, stepToSave: number) => {
-    if (!user?.id || !mountedRef.current) return;
+    if (!user?.id || !mountedRef.current) {
+      console.log('⚠️ saveData abortado - user ou componente indisponível');
+      return;
+    }
 
     try {
+      console.log('💾 Salvando dados:', { dataToSave, stepToSave });
       setIsSaving(true);
       
       // Converter dados para formato do banco
       const databasePayload = adaptQuickDataToDatabase(dataToSave);
+      console.log('🔄 Payload do banco:', databasePayload);
       
       const savePayload = {
         user_id: user.id,
@@ -125,7 +146,10 @@ export const useQuickOnboardingOptimized = () => {
         .from('quick_onboarding')
         .upsert(savePayload);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro no upsert:', error);
+        throw error;
+      }
       
       if (mountedRef.current) {
         setLastSaveTime(new Date());
@@ -145,13 +169,18 @@ export const useQuickOnboardingOptimized = () => {
 
   // Auto-save com debounce
   useEffect(() => {
-    if (!hasExistingData && isLoading) return;
+    if (!hasExistingData && isLoading) {
+      console.log('⏸️ Auto-save pausado - ainda carregando dados iniciais');
+      return;
+    }
 
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
 
+    console.log('⏰ Agendando auto-save para 2 segundos');
     saveTimeoutRef.current = window.setTimeout(() => {
+      console.log('💾 Executando auto-save');
       saveData(data, currentStep);
     }, 2000); // 2 segundos de debounce
 
@@ -163,16 +192,19 @@ export const useQuickOnboardingOptimized = () => {
   }, [data, currentStep, hasExistingData, isLoading, saveData]);
 
   const updateField = useCallback((field: keyof QuickOnboardingData, value: any) => {
+    console.log('📝 Atualizando campo:', { field, value });
     setData(prev => ({ ...prev, [field]: value }));
   }, []);
 
   const nextStep = useCallback(() => {
+    console.log('➡️ Próximo step:', { current: currentStep, total: totalSteps });
     if (currentStep < totalSteps) {
       setCurrentStep(prev => prev + 1);
     }
   }, [currentStep, totalSteps]);
 
   const previousStep = useCallback(() => {
+    console.log('⬅️ Step anterior:', { current: currentStep });
     if (currentStep > 1) {
       setCurrentStep(prev => prev - 1);
     }
@@ -180,20 +212,31 @@ export const useQuickOnboardingOptimized = () => {
 
   // Validação para poder prosseguir
   const canProceed = useCallback(() => {
+    let result = false;
+    
     switch (currentStep) {
       case 1:
-        return !!(data.name && data.email && data.whatsapp && data.how_found_us);
+        result = !!(data.name && data.email && data.whatsapp && data.how_found_us);
+        break;
       case 2:
-        return !!(data.company_name && data.company_segment);
+        result = !!(data.company_name && data.company_segment);
+        break;
       case 3:
-        return !!(data.uses_ai && data.main_goal && data.ai_knowledge_level);
+        result = !!(data.uses_ai && data.main_goal && data.ai_knowledge_level);
+        break;
       default:
-        return true;
+        result = true;
     }
+    
+    console.log('✅ canProceed:', { step: currentStep, result, data });
+    return result;
   }, [currentStep, data]);
 
   const completeOnboarding = useCallback(async () => {
-    if (!user?.id) return false;
+    if (!user?.id) {
+      console.log('❌ completeOnboarding - usuário não encontrado');
+      return false;
+    }
 
     try {
       setIsCompleting(true);
@@ -214,7 +257,10 @@ export const useQuickOnboardingOptimized = () => {
           updated_at: new Date().toISOString()
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao completar:', error);
+        throw error;
+      }
 
       console.log('✅ Onboarding concluído com sucesso');
       toast.success('Onboarding concluído com sucesso!');
@@ -229,7 +275,7 @@ export const useQuickOnboardingOptimized = () => {
     }
   }, [user?.id, user?.email, data]);
 
-  return {
+  const hookResult = {
     currentStep,
     data,
     updateField,
@@ -245,4 +291,7 @@ export const useQuickOnboardingOptimized = () => {
     completeOnboarding,
     isCompleting
   };
+
+  console.log('🎯 useQuickOnboardingOptimized retornando:', hookResult);
+  return hookResult;
 };

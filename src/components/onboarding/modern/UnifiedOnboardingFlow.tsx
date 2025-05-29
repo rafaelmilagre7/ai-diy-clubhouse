@@ -10,6 +10,10 @@ import { Button } from '@/components/ui/button';
 
 export const UnifiedOnboardingFlow: React.FC = () => {
   const navigate = useNavigate();
+  const hookResult = useQuickOnboardingOptimized();
+  
+  console.log('🎯 UnifiedOnboardingFlow renderizado com hook result:', hookResult);
+  
   const {
     currentStep,
     data,
@@ -25,7 +29,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     lastSaveTime,
     completeOnboarding,
     isCompleting
-  } = useQuickOnboardingOptimized();
+  } = hookResult;
 
   const handleFinish = async () => {
     console.log('🎯 Finalizando onboarding e redirecionando...');
@@ -41,8 +45,18 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     navigate('/onboarding-new/completed');
   };
 
+  console.log('📊 Estado atual do componente:', {
+    isLoading,
+    loadError,
+    currentStep,
+    hasExistingData,
+    dataKeys: Object.keys(data),
+    canProceed
+  });
+
   // Mostrar loading enquanto carrega dados existentes
   if (isLoading) {
+    console.log('⏳ Mostrando tela de loading');
     return (
       <div className="flex flex-col items-center justify-center py-12 space-y-6">
         <motion.div
@@ -68,6 +82,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
 
   // Mostrar erro se houver problema no carregamento
   if (loadError) {
+    console.log('❌ Mostrando tela de erro:', loadError);
     return (
       <div className="flex items-center justify-center py-12">
         <motion.div 
@@ -97,6 +112,8 @@ export const UnifiedOnboardingFlow: React.FC = () => {
   }
 
   const renderCurrentStep = () => {
+    console.log('🎯 Renderizando step atual:', currentStep);
+    
     switch (currentStep) {
       case 1:
       case 2:
@@ -129,9 +146,10 @@ export const UnifiedOnboardingFlow: React.FC = () => {
         );
       
       default:
+        console.log('⚠️ Step não reconhecido:', currentStep);
         return (
           <div className="text-center py-12">
-            <p className="text-gray-400">Etapa não encontrada</p>
+            <p className="text-gray-400">Etapa não encontrada: {currentStep}</p>
             <Button onClick={() => navigate('/dashboard')} className="mt-4">
               Ir para Dashboard
             </Button>

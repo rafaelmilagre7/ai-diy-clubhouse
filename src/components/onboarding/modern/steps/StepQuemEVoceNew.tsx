@@ -5,12 +5,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { QuickOnboardingData } from '@/types/quickOnboarding';
-import { ConditionalReferralInput } from '../ConditionalReferralInput';
-import { DateInput } from '../DateInput';
-import { WhatsAppInput } from '../WhatsAppInput';
-import { SocialLinksInput } from '../SocialLinksInput';
-import { CountrySelector } from '../CountrySelector';
-import { AutoSaveFeedback } from '../AutoSaveFeedback';
 
 interface StepQuemEVoceNewProps {
   data: QuickOnboardingData;
@@ -40,6 +34,8 @@ export const StepQuemEVoceNew: React.FC<StepQuemEVoceNewProps> = ({
   currentStep,
   totalSteps
 }) => {
+  console.log('🎯 StepQuemEVoceNew renderizado:', { data, canProceed, currentStep });
+
   return (
     <div className="max-w-3xl mx-auto">
       <div className="text-center mb-8">
@@ -49,12 +45,6 @@ export const StepQuemEVoceNew: React.FC<StepQuemEVoceNewProps> = ({
         <p className="text-gray-400">
           Vamos começar conhecendo você melhor
         </p>
-        <div className="flex items-center justify-center mt-4">
-          <AutoSaveFeedback 
-            lastSaveTime={Date.now()}
-            hasUnsavedChanges={!data.name || !data.email}
-          />
-        </div>
       </div>
 
       <div className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700/50 space-y-6">
@@ -65,7 +55,7 @@ export const StepQuemEVoceNew: React.FC<StepQuemEVoceNewProps> = ({
             </label>
             <Input
               type="text"
-              value={data.name}
+              value={data.name || ''}
               onChange={(e) => onUpdate('name', e.target.value)}
               placeholder="Seu nome completo"
               className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50"
@@ -78,7 +68,7 @@ export const StepQuemEVoceNew: React.FC<StepQuemEVoceNewProps> = ({
             </label>
             <Input
               type="email"
-              value={data.email}
+              value={data.email || ''}
               onChange={(e) => onUpdate('email', e.target.value)}
               placeholder="seu@email.com"
               className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50"
@@ -87,58 +77,41 @@ export const StepQuemEVoceNew: React.FC<StepQuemEVoceNewProps> = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <CountrySelector
-            value={data.country_code}
-            onChange={(value) => onUpdate('country_code', value)}
-            required
-          />
-          
-          <WhatsAppInput
-            value={data.whatsapp}
-            onChange={(value) => onUpdate('whatsapp', value)}
-            required
-          />
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-white">
+              WhatsApp <span className="text-red-400">*</span>
+            </label>
+            <Input
+              type="tel"
+              value={data.whatsapp || ''}
+              onChange={(e) => onUpdate('whatsapp', e.target.value)}
+              placeholder="(11) 99999-9999"
+              className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-white">
+              Como conheceu o VIVER DE IA? <span className="text-red-400">*</span>
+            </label>
+            <Select value={data.how_found_us || ''} onValueChange={(value) => onUpdate('how_found_us', value)}>
+              <SelectTrigger className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50">
+                <SelectValue placeholder="Selecione como nos conheceu" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 border-gray-600">
+                {HOW_FOUND_OPTIONS.map((option) => (
+                  <SelectItem 
+                    key={option.value} 
+                    value={option.value}
+                    className="text-white hover:bg-gray-700"
+                  >
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-
-        <DateInput
-          value={data.birth_date || ''}
-          onChange={(value) => onUpdate('birth_date', value)}
-        />
-
-        <SocialLinksInput
-          instagramValue={data.instagram_url || ''}
-          linkedinValue={data.linkedin_url || ''}
-          onInstagramChange={(value) => onUpdate('instagram_url', value)}
-          onLinkedinChange={(value) => onUpdate('linkedin_url', value)}
-        />
-
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-white">
-            Como conheceu o VIVER DE IA? <span className="text-red-400">*</span>
-          </label>
-          <Select value={data.how_found_us} onValueChange={(value) => onUpdate('how_found_us', value)}>
-            <SelectTrigger className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50">
-              <SelectValue placeholder="Selecione como nos conheceu" />
-            </SelectTrigger>
-            <SelectContent className="bg-gray-800 border-gray-600">
-              {HOW_FOUND_OPTIONS.map((option) => (
-                <SelectItem 
-                  key={option.value} 
-                  value={option.value}
-                  className="text-white hover:bg-gray-700"
-                >
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <ConditionalReferralInput
-          howFoundUs={data.how_found_us}
-          referredBy={data.referred_by || ''}
-          onReferredByChange={(value) => onUpdate('referred_by', value)}
-        />
 
         <div className="flex justify-between items-center pt-6 border-t border-gray-700">
           <div className="text-sm text-gray-400">
