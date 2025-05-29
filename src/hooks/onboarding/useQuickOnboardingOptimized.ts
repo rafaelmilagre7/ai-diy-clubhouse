@@ -12,12 +12,17 @@ export const useQuickOnboardingOptimized = () => {
     name: '',
     email: '',
     whatsapp: '',
-    howFoundUs: '',
-    company: '',
-    sector: '',
-    aiKnowledge: 5,
-    usesAI: '',
-    mainGoal: ''
+    country_code: '+55',
+    how_found_us: '',
+    company_name: '',
+    role: '',
+    company_size: '',
+    company_segment: '',
+    annual_revenue_range: '',
+    main_challenge: '',
+    ai_knowledge_level: '',
+    uses_ai: '',
+    main_goal: ''
   });
   
   const [isLoading, setIsLoading] = useState(true);
@@ -177,11 +182,11 @@ export const useQuickOnboardingOptimized = () => {
   const canProceed = useCallback(() => {
     switch (currentStep) {
       case 1:
-        return !!(data.name && data.email && data.whatsapp && data.howFoundUs);
+        return !!(data.name && data.email && data.whatsapp && data.how_found_us);
       case 2:
-        return !!(data.company && data.sector);
+        return !!(data.company_name && data.company_segment);
       case 3:
-        return !!(data.usesAI && data.mainGoal && data.aiKnowledge !== undefined);
+        return !!(data.uses_ai && data.main_goal && data.ai_knowledge_level);
       default:
         return true;
     }
