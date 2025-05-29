@@ -5,6 +5,24 @@ export interface QuickOnboardingData {
   name: string;
   email: string;
   whatsapp: string;
+  howFoundUs: string;
+  
+  // Dados do negócio
+  company: string;
+  sector: string;
+  
+  // Experiência com IA
+  aiKnowledge: number;
+  usesAI: string;
+  mainGoal: string;
+}
+
+// Tipo para dados expandidos que incluem campos do banco
+export interface ExpandedQuickOnboardingData {
+  // Dados pessoais
+  name: string;
+  email: string;
+  whatsapp: string;
   country_code: string;
   birth_date?: string;
   instagram_url?: string;
@@ -27,27 +45,33 @@ export interface QuickOnboardingData {
   main_goal: string;
 }
 
-// Adapter para converter OnboardingState para QuickOnboardingData
-export const adaptOnboardingStateToQuickData = (state: any): QuickOnboardingData => {
+// Adapter para converter QuickOnboardingData para formato do banco
+export const adaptQuickDataToDatabase = (data: QuickOnboardingData) => {
   return {
-    name: state.name || '',
-    email: state.email || '',
-    whatsapp: state.whatsapp || '',
-    country_code: state.country_code || '',
-    birth_date: state.birth_date || '',
-    instagram_url: state.instagram_url || '',
-    linkedin_url: state.linkedin_url || '',
-    how_found_us: state.how_found_us || '',
-    referred_by: state.referred_by || '',
-    company_name: state.company_name || '',
-    role: state.role || '',
-    company_size: state.company_size || '',
-    company_segment: state.company_segment || '',
-    company_website: state.company_website || '',
-    annual_revenue_range: state.annual_revenue_range || '',
-    main_challenge: state.main_challenge || '',
-    ai_knowledge_level: state.ai_knowledge_level || '',
-    uses_ai: state.uses_ai || '',
-    main_goal: state.main_goal || ''
+    name: data.name,
+    email: data.email,
+    whatsapp: data.whatsapp,
+    how_found_us: data.howFoundUs,
+    company_name: data.company,
+    company_segment: data.sector,
+    ai_knowledge: data.aiKnowledge,
+    uses_ai: data.usesAI,
+    main_goal: data.mainGoal,
+    country_code: '+55' // Default para Brasil
+  };
+};
+
+// Adapter para converter dados do banco para QuickOnboardingData
+export const adaptDatabaseToQuickData = (dbData: any): QuickOnboardingData => {
+  return {
+    name: dbData.name || '',
+    email: dbData.email || '',
+    whatsapp: dbData.whatsapp || '',
+    howFoundUs: dbData.how_found_us || '',
+    company: dbData.company_name || '',
+    sector: dbData.company_segment || '',
+    aiKnowledge: dbData.ai_knowledge || 5,
+    usesAI: dbData.uses_ai || '',
+    mainGoal: dbData.main_goal || ''
   };
 };

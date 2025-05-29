@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
-import { QuickOnboardingData } from '@/types/quickOnboarding';
+import { QuickOnboardingData, adaptQuickDataToDatabase, adaptDatabaseToQuickData } from '@/types/quickOnboarding';
 import { toast } from 'sonner';
 
 export const useQuickOnboardingOptimized = () => {
@@ -68,18 +68,9 @@ export const useQuickOnboardingOptimized = () => {
           console.log('✅ Dados existentes encontrados:', existingData);
           setHasExistingData(true);
           
-          // Preencher dados existentes
-          setData({
-            name: existingData.name || '',
-            email: existingData.email || user.email || '',
-            whatsapp: existingData.whatsapp || '',
-            howFoundUs: existingData.how_found_us || '',
-            company: existingData.company || '',
-            sector: existingData.sector || '',
-            aiKnowledge: existingData.ai_knowledge || 5,
-            usesAI: existingData.uses_ai || '',
-            mainGoal: existingData.main_goal || ''
-          });
+          // Converter dados do banco para o formato do componente
+          const adaptedData = adaptDatabaseToQuickData(existingData);
+          setData(prev => ({ ...prev, ...adaptedData, email: user.email || adaptedData.email }));
           
           // Se já está completo, ir para etapa final
           if (existingData.is_completed) {
@@ -114,17 +105,13 @@ export const useQuickOnboardingOptimized = () => {
     try {
       setIsSaving(true);
       
+      // Converter dados para formato do banco
+      const databasePayload = adaptQuickDataToDatabase(dataToSave);
+      
       const savePayload = {
         user_id: user.id,
-        name: dataToSave.name,
+        ...databasePayload,
         email: dataToSave.email || user.email,
-        whatsapp: dataToSave.whatsapp,
-        how_found_us: dataToSave.howFoundUs,
-        company: dataToSave.company,
-        sector: dataToSave.sector,
-        ai_knowledge: dataToSave.aiKnowledge,
-        uses_ai: dataToSave.usesAI,
-        main_goal: dataToSave.mainGoal,
         current_step: stepToSave,
         updated_at: new Date().toISOString()
       };
@@ -207,19 +194,15 @@ export const useQuickOnboardingOptimized = () => {
       setIsCompleting(true);
       console.log('🎯 Finalizando onboarding...');
 
+      // Converter dados para formato do banco
+      const databasePayload = adaptQuickDataToDatabase(data);
+
       const { error } = await supabase
         .from('quick_onboarding')
         .upsert({
           user_id: user.id,
-          name: data.name,
+          ...databasePayload,
           email: data.email || user.email,
-          whatsapp: data.whatsapp,
-          how_found_us: data.howFoundUs,
-          company: data.company,
-          sector: data.sector,
-          ai_knowledge: data.aiKnowledge,
-          uses_ai: data.usesAI,
-          main_goal: data.mainGoal,
           current_step: 4,
           is_completed: true,
           completed_at: new Date().toISOString(),
