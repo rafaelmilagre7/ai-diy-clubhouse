@@ -1,9 +1,9 @@
+
 import React, { Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/auth';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { SmartRedirectHandler } from '@/components/routing/SmartRedirectHandler';
-import { FeatureAccessGuard } from '@/components/auth/FeatureAccessGuard';
+import { SmartFeatureGuard } from '@/components/auth/SmartFeatureGuard';
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import { AdminProtectedRoutes } from '@/auth/AdminProtectedRoutes';
 import { FormacaoProtectedRoutes } from '@/auth/FormacaoProtectedRoutes';
@@ -40,57 +40,51 @@ export const AppRoutes = () => {
 
           <Route path="/implementation-trail" element={
             <ProtectedRoutes>
-              <FeatureAccessGuard feature="implementation_trail">
+              <SmartFeatureGuard feature="implementation_trail">
                 <ImplementationTrailPage />
-              </FeatureAccessGuard>
+              </SmartFeatureGuard>
             </ProtectedRoutes>
           } />
 
           <Route path="/networking/*" element={
             <ProtectedRoutes>
-              <FeatureAccessGuard feature="networking">
+              <SmartFeatureGuard feature="networking">
                 <NetworkingRoutes />
-              </FeatureAccessGuard>
+              </SmartFeatureGuard>
             </ProtectedRoutes>
           } />
 
           <Route path="/comunidade/*" element={
             <ProtectedRoutes>
-              <FeatureAccessGuard feature="community">
+              <SmartFeatureGuard feature="community">
                 <CommunityRoutes />
-              </FeatureAccessGuard>
+              </SmartFeatureGuard>
             </ProtectedRoutes>
           } />
 
           <Route path="/solutions/*" element={
             <ProtectedRoutes>
-              <FeatureAccessGuard feature="solutions">
-                <SolutionsRoutes />
-              </FeatureAccessGuard>
+              <SolutionsRoutes />
             </ProtectedRoutes>
           } />
 
           <Route path="/learning/*" element={
             <ProtectedRoutes>
-              <FeatureAccessGuard feature="learning">
+              <SmartFeatureGuard feature="learning">
                 <LearningRoutes />
-              </FeatureAccessGuard>
+              </SmartFeatureGuard>
             </ProtectedRoutes>
           } />
 
           <Route path="/tools/*" element={
             <ProtectedRoutes>
-              <FeatureAccessGuard feature="tools">
-                <ToolsRoutes />
-              </FeatureAccessGuard>
+              <ToolsRoutes />
             </ProtectedRoutes>
           } />
 
           <Route path="/benefits/*" element={
             <ProtectedRoutes>
-              <FeatureAccessGuard feature="benefits">
-                <BenefitsRoutes />
-              </FeatureAccessGuard>
+              <BenefitsRoutes />
             </ProtectedRoutes>
           } />
 

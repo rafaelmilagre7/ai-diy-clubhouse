@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from "@/contexts/auth";
+import { useSimpleOnboardingValidation } from '@/hooks/onboarding/useSimpleOnboardingValidation';
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "sonner";
 
@@ -9,21 +10,24 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
   requireAdmin?: boolean;
   requiredRole?: string;
+  requireOnboarding?: boolean;
 }
 
 const ProtectedRoute = ({ 
   children, 
   requireAdmin = false,
-  requiredRole
+  requiredRole,
+  requireOnboarding = true
 }: ProtectedRouteProps) => {
-  const { user, isAdmin, isLoading } = useAuth();
+  const { user, isAdmin, isLoading: authLoading } = useAuth();
+  const { isOnboardingComplete, isLoading: onboardingLoading } = useSimpleOnboardingValidation();
   const location = useLocation();
   const [loadingTimeout, setLoadingTimeout] = React.useState(false);
   const timeoutRef = React.useRef<number | null>(null);
   
   // Configurar timeout para não ficar preso em carregamento infinito
   useEffect(() => {
-    if (isLoading && !loadingTimeout) {
+    if ((authLoading || onboardingLoading) && !loadingTimeout) {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
@@ -39,10 +43,10 @@ const ProtectedRoute = ({
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [isLoading, loadingTimeout]);
+  }, [authLoading, onboardingLoading, loadingTimeout]);
 
   // Se estiver carregando, mostra tela de loading (mas só se o timeout não foi excedido)
-  if (isLoading && !loadingTimeout) {
+  if ((authLoading || onboardingLoading) && !loadingTimeout) {
     return <LoadingScreen message="Verificando sua autenticação..." />;
   }
 
@@ -55,6 +59,11 @@ const ProtectedRoute = ({
   if ((requiredRole === 'admin' || requireAdmin) && !isAdmin) {
     toast.error("Você não tem permissão para acessar esta área");
     return <Navigate to="/dashboard" replace />;
+  }
+
+  // Verificar onboarding se necessário
+  if (requireOnboarding && !isOnboardingComplete && !location.pathname.startsWith('/onboarding')) {
+    return <Navigate to="/onboarding-new" replace />;
   }
 
   // Usuário está autenticado, renderiza os filhos

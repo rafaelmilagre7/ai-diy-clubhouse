@@ -2,6 +2,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useRef, ReactNode, memo, useMemo } from "react";
 import { useAuth } from "@/contexts/auth";
+import { useSimpleOnboardingValidation } from "@/hooks/onboarding/useSimpleOnboardingValidation";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import MemberLayout from "./MemberLayout";
 import FormacaoLayout from "./formacao/FormacaoLayout";
@@ -17,8 +18,9 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
     profile,
     isAdmin,
     isFormacao,
-    isLoading,
+    isLoading: authLoading,
   } = useAuth();
+  const { isOnboardingComplete, isLoading: onboardingLoading } = useSimpleOnboardingValidation();
   const navigate = useNavigate();
   const location = useLocation();
   const [layoutReady, setLayoutReady] = useState(false);
@@ -29,15 +31,17 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
     isLearningRoute: location.pathname.startsWith('/learning'),
     isPathAdmin: location.pathname.startsWith('/admin'),
     isPathFormacao: location.pathname.startsWith('/formacao'),
-    isFormacaoRoute: location.pathname.startsWith('/formacao')
+    isFormacaoRoute: location.pathname.startsWith('/formacao'),
+    isOnboardingRoute: location.pathname.startsWith('/onboarding')
   }), [location.pathname]);
 
   // Memoizar a mensagem de loading baseada no estado
   const loadingMessage = useMemo(() => {
-    if (isLoading) return "Preparando seu dashboard...";
+    if (authLoading) return "Preparando seu dashboard...";
+    if (onboardingLoading) return "Verificando onboarding...";
     if (!user) return "Verificando autenticação...";
     return "Carregando layout...";
-  }, [isLoading, user]);
+  }, [authLoading, onboardingLoading, user]);
 
   // Verificar autenticação assim que o estado estiver pronto
   useEffect(() => {
@@ -47,9 +51,15 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
     }
     
     // Se não estiver carregando, verificar autenticação
-    if (!isLoading) {
+    if (!authLoading && !onboardingLoading) {
       if (!user) {
         navigate('/login', { replace: true });
+        return;
+      }
+      
+      // Verificar se precisa redirecionar para onboarding
+      if (!routeChecks.isOnboardingRoute && !isOnboardingComplete) {
+        navigate('/onboarding-new', { replace: true });
         return;
       }
       
@@ -80,7 +90,7 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [user, profile, isAdmin, isFormacao, isLoading, navigate, routeChecks]);
+  }, [user, profile, isAdmin, isFormacao, authLoading, onboardingLoading, isOnboardingComplete, navigate, routeChecks]);
 
   // Renderizar com base na rota e permissões
   if (layoutReady && user) {
