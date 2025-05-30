@@ -89,18 +89,18 @@ export const StepExperienciaIANew: React.FC<OnboardingStepProps> = ({
 
         <div className="space-y-4">
           <label className="block text-sm font-medium text-white">
-            Você já usa IA no seu negócio? <span className="text-red-400">*</span>
+            Você já implementou IA no seu negócio? <span className="text-red-400">*</span>
           </label>
-          <Select value={data.uses_ai || ''} onValueChange={(value) => onUpdate('uses_ai', value)}>
+          <Select value={data.has_implemented || ''} onValueChange={(value) => onUpdate('has_implemented', value)}>
             <SelectTrigger className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50">
               <SelectValue placeholder="Selecione uma opção" />
             </SelectTrigger>
             <SelectContent className="bg-gray-800 border-gray-600">
               <SelectItem value="sim" className="text-white hover:bg-gray-700">
-                Sim, já uso IA no meu negócio
+                Sim, já implementei IA no meu negócio
               </SelectItem>
               <SelectItem value="nao" className="text-white hover:bg-gray-700">
-                Não, ainda não uso IA
+                Não, ainda não implementei IA
               </SelectItem>
               <SelectItem value="testando" className="text-white hover:bg-gray-700">
                 Estou testando algumas ferramentas
