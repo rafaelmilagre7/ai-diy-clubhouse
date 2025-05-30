@@ -17,37 +17,33 @@ export const SocialLinksInput: React.FC<SocialLinksInputProps> = ({
   onLinkedinChange
 }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-white">
-          Instagram <span className="text-gray-400 text-sm font-normal">(opcional)</span>
+        <label className="block text-sm font-medium text-white flex items-center gap-2">
+          <Instagram size={16} />
+          Instagram
         </label>
-        <div className="relative">
-          <Instagram className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <Input
-            type="url"
-            value={instagramValue}
-            onChange={(e) => onInstagramChange(e.target.value)}
-            placeholder="instagram.com/seu.perfil"
-            className="h-12 pl-10 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50"
-          />
-        </div>
+        <Input
+          type="url"
+          value={instagramValue}
+          onChange={(e) => onInstagramChange(e.target.value)}
+          placeholder="https://instagram.com/seu-perfil"
+          className="h-12 bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:ring-viverblue/50"
+        />
       </div>
 
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-white">
-          LinkedIn <span className="text-gray-400 text-sm font-normal">(opcional)</span>
+        <label className="block text-sm font-medium text-white flex items-center gap-2">
+          <Linkedin size={16} />
+          LinkedIn
         </label>
-        <div className="relative">
-          <Linkedin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <Input
-            type="url"
-            value={linkedinValue}
-            onChange={(e) => onLinkedinChange(e.target.value)}
-            placeholder="linkedin.com/in/seu-perfil"
-            className="h-12 pl-10 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50"
-          />
-        </div>
+        <Input
+          type="url"
+          value={linkedinValue}
+          onChange={(e) => onLinkedinChange(e.target.value)}
+          placeholder="https://linkedin.com/in/seu-perfil"
+          className="h-12 bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:ring-viverblue/50"
+        />
       </div>
     </div>
   );

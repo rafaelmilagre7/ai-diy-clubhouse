@@ -1,4 +1,3 @@
-
 import { useMemo, useCallback } from 'react';
 import { QuickOnboardingData } from '@/types/quickOnboarding';
 
@@ -97,49 +96,49 @@ export const useRealtimeValidation = (data: QuickOnboardingData, currentStep: nu
     
     switch (step) {
       case 1: // Quem é você
-        fieldValidations.name = validateRequired(data.name, 'Nome');
-        fieldValidations.email = validateEmail(data.email);
-        fieldValidations.whatsapp = validatePhone(data.whatsapp);
-        fieldValidations.country_code = validateRequired(data.country_code, 'País');
+        fieldValidations.name = validateRequired(data.name || '', 'Nome');
+        fieldValidations.email = validateEmail(data.email || '');
+        fieldValidations.whatsapp = validatePhone(data.whatsapp || '');
+        fieldValidations.country_code = validateRequired(data.country_code || '', 'País');
         break;
         
       case 2: // Localização e redes
-        fieldValidations.country = validateRequired(data.country, 'País');
-        fieldValidations.state = validateRequired(data.state, 'Estado');
-        fieldValidations.city = validateRequired(data.city, 'Cidade');
-        fieldValidations.timezone = validateRequired(data.timezone, 'Fuso horário');
+        fieldValidations.country = validateRequired(data.country || '', 'País');
+        fieldValidations.state = validateRequired(data.state || '', 'Estado');
+        fieldValidations.city = validateRequired(data.city || '', 'Cidade');
+        fieldValidations.timezone = validateRequired(data.timezone || '', 'Fuso horário');
         fieldValidations.instagram_url = validateUrl(data.instagram_url || '', 'Instagram', false);
         fieldValidations.linkedin_url = validateUrl(data.linkedin_url || '', 'LinkedIn', false);
         break;
         
       case 3: // Como nos conheceu
-        fieldValidations.how_found_us = validateRequired(data.how_found_us, 'Como nos conheceu');
+        fieldValidations.how_found_us = validateRequired(data.how_found_us || '', 'Como nos conheceu');
         if (data.how_found_us === 'indicacao') {
           fieldValidations.referred_by = validateRequired(data.referred_by || '', 'Nome de quem indicou');
         }
         break;
         
       case 4: // Seu negócio
-        fieldValidations.company_name = validateRequired(data.company_name, 'Nome da empresa');
-        fieldValidations.role = validateRequired(data.role, 'Seu cargo');
-        fieldValidations.company_size = validateRequired(data.company_size, 'Tamanho da empresa');
-        fieldValidations.company_segment = validateRequired(data.company_segment, 'Segmento da empresa');
-        fieldValidations.annual_revenue_range = validateRequired(data.annual_revenue_range, 'Faturamento anual');
+        fieldValidations.company_name = validateRequired(data.company_name || '', 'Nome da empresa');
+        fieldValidations.role = validateRequired(data.role || '', 'Seu cargo');
+        fieldValidations.company_size = validateRequired(data.company_size || '', 'Tamanho da empresa');
+        fieldValidations.company_segment = validateRequired(data.company_segment || '', 'Segmento da empresa');
         fieldValidations.company_website = validateUrl(data.company_website || '', 'Website da empresa', false);
         break;
         
       case 5: // Contexto do negócio
-        fieldValidations.business_model = validateRequired(data.business_model, 'Modelo de negócio');
-        fieldValidations.business_challenges = validateRequired(data.business_challenges, 'Desafios do negócio');
+        fieldValidations.business_model = validateRequired(data.business_model || '', 'Modelo de negócio');
+        fieldValidations.business_challenges = validateRequired(data.business_challenges || [], 'Desafios do negócio');
         break;
         
       case 6: // Objetivos e metas
-        fieldValidations.primary_goal = validateRequired(data.primary_goal, 'Principal objetivo');
+        fieldValidations.primary_goal = validateRequired(data.primary_goal || '', 'Principal objetivo');
+        fieldValidations.expected_outcome_30days = validateRequired(data.expected_outcome_30days || '', 'Expectativa 30 dias');
         break;
         
       case 7: // Experiência com IA
-        fieldValidations.ai_knowledge_level = validateRequired(data.ai_knowledge_level, 'Nível de conhecimento em IA');
-        fieldValidations.has_implemented = validateRequired(data.has_implemented, 'Implementação de IA');
+        fieldValidations.ai_knowledge_level = validateRequired(data.ai_knowledge_level || '', 'Nível de conhecimento em IA');
+        fieldValidations.has_implemented = validateRequired(data.has_implemented || '', 'Implementação de IA');
         break;
         
       case 8: // Personalização da experiência

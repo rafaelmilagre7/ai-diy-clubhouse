@@ -1,11 +1,11 @@
 
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RealtimeFieldValidation } from './RealtimeFieldValidation';
 
 interface DropdownOption {
   value: string;
   label: string;
-  icon?: string;
 }
 
 interface DropdownModernoProps {
@@ -15,6 +15,7 @@ interface DropdownModernoProps {
   placeholder: string;
   label: string;
   required?: boolean;
+  validation?: any;
 }
 
 export const DropdownModerno: React.FC<DropdownModernoProps> = ({
@@ -23,7 +24,8 @@ export const DropdownModerno: React.FC<DropdownModernoProps> = ({
   options,
   placeholder,
   label,
-  required = false
+  required = false,
+  validation
 }) => {
   return (
     <div className="space-y-2">
@@ -36,15 +38,17 @@ export const DropdownModerno: React.FC<DropdownModernoProps> = ({
         </SelectTrigger>
         <SelectContent className="bg-gray-800 border-gray-600">
           {options.map((option) => (
-            <SelectItem key={option.value} value={option.value} className="text-white hover:bg-gray-700">
-              <div className="flex items-center space-x-2">
-                {option.icon && <span>{option.icon}</span>}
-                <span>{option.label}</span>
-              </div>
+            <SelectItem 
+              key={option.value} 
+              value={option.value}
+              className="text-white hover:bg-gray-700"
+            >
+              {option.label}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
+      {validation && <RealtimeFieldValidation validation={validation} />}
     </div>
   );
 };
