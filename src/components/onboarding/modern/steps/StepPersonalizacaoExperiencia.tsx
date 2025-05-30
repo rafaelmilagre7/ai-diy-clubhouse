@@ -1,27 +1,26 @@
 
 import React from 'react';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowLeft } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
 import { OnboardingStepProps } from '@/types/quickOnboarding';
+import { SliderInput } from '../SliderInput';
 
 const INTERESTS_OPTIONS = [
   'Automação de processos',
-  'Chatbots e atendimento',
-  'Análise de dados e BI',
-  'Marketing digital',
+  'Marketing com IA',
+  'Análise de dados',
+  'Atendimento ao cliente',
+  'Criação de conteúdo',
   'Vendas e CRM',
   'Recursos humanos',
   'Finanças e contabilidade',
-  'Operações e logística',
-  'Inovação e P&D',
-  'Gestão estratégica'
+  'Logística e operações',
+  'Inovação e P&D'
 ];
 
 const TIME_PREFERENCE_OPTIONS = [
   'Manhã (6h - 12h)',
-  'Tarde (12h - 18h)',
+  'Tarde (12h - 18h)', 
   'Noite (18h - 22h)',
   'Madrugada (22h - 6h)'
 ];
@@ -36,220 +35,190 @@ const AVAILABLE_DAYS_OPTIONS = [
   'Domingo'
 ];
 
-const SKILLS_TO_SHARE_OPTIONS = [
-  'Gestão e liderança',
-  'Marketing digital',
-  'Vendas e negociação',
-  'Tecnologia e desenvolvimento',
-  'Análise de dados',
-  'Finanças e investimentos',
-  'Recursos humanos',
-  'Operações e processos',
-  'Empreendedorismo',
-  'Comunicação e apresentação'
-];
-
-const MENTORSHIP_TOPICS_OPTIONS = [
-  'Primeiros passos com IA',
-  'Implementação de chatbots',
-  'Automação de processos',
-  'Análise de dados',
-  'Estratégia de IA',
-  'ROI em tecnologia',
-  'Transformação digital',
-  'Gestão de mudanças',
-  'Capacitação de equipes',
-  'Cases de sucesso'
-];
-
 export const StepPersonalizacaoExperiencia: React.FC<OnboardingStepProps> = ({
   data,
   onUpdate,
   onNext,
-  onPrevious,
   canProceed,
   currentStep,
   totalSteps
 }) => {
-  const handleInterestsChange = (interest: string, checked: boolean) => {
-    const currentInterests = Array.isArray(data.interests) ? data.interests : [];
-    if (checked) {
-      onUpdate('interests', [...currentInterests, interest]);
-    } else {
+  const handleInterestToggle = (interest: string) => {
+    const currentInterests = data.interests || [];
+    const isSelected = currentInterests.includes(interest);
+    
+    if (isSelected) {
       onUpdate('interests', currentInterests.filter(i => i !== interest));
+    } else {
+      onUpdate('interests', [...currentInterests, interest]);
     }
   };
 
-  const handleTimePreferenceChange = (time: string, checked: boolean) => {
-    const currentTimes = Array.isArray(data.time_preference) ? data.time_preference : [];
-    if (checked) {
-      onUpdate('time_preference', [...currentTimes, time]);
-    } else {
+  const handleTimeToggle = (time: string) => {
+    const currentTimes = data.time_preference || [];
+    const isSelected = currentTimes.includes(time);
+    
+    if (isSelected) {
       onUpdate('time_preference', currentTimes.filter(t => t !== time));
+    } else {
+      onUpdate('time_preference', [...currentTimes, time]);
     }
   };
 
-  const handleAvailableDaysChange = (day: string, checked: boolean) => {
-    const currentDays = Array.isArray(data.available_days) ? data.available_days : [];
-    if (checked) {
-      onUpdate('available_days', [...currentDays, day]);
-    } else {
+  const handleDayToggle = (day: string) => {
+    const currentDays = data.available_days || [];
+    const isSelected = currentDays.includes(day);
+    
+    if (isSelected) {
       onUpdate('available_days', currentDays.filter(d => d !== day));
-    }
-  };
-
-  const handleSkillsChange = (skill: string, checked: boolean) => {
-    const currentSkills = Array.isArray(data.skills_to_share) ? data.skills_to_share : [];
-    if (checked) {
-      onUpdate('skills_to_share', [...currentSkills, skill]);
     } else {
-      onUpdate('skills_to_share', currentSkills.filter(s => s !== skill));
-    }
-  };
-
-  const handleMentorshipChange = (topic: string, checked: boolean) => {
-    const currentTopics = Array.isArray(data.mentorship_topics) ? data.mentorship_topics : [];
-    if (checked) {
-      onUpdate('mentorship_topics', [...currentTopics, topic]);
-    } else {
-      onUpdate('mentorship_topics', currentTopics.filter(t => t !== topic));
+      onUpdate('available_days', [...currentDays, day]);
     }
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-2xl mx-auto">
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-white mb-2">
-          Personalização da experiência ✨
+        <h2 className="text-3xl font-bold text-white mb-2 flex items-center justify-center gap-2">
+          <Sparkles className="h-8 w-8 text-viverblue" />
+          Personalização da experiência
         </h2>
         <p className="text-gray-400">
-          Vamos personalizar sua experiência na comunidade
+          Últimos ajustes para personalizar sua jornada na comunidade
         </p>
       </div>
 
-      <div className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700/50 space-y-8">
-        <div className="space-y-4">
+      <div className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700/50 space-y-6">
+        <div className="space-y-3">
           <label className="block text-sm font-medium text-white">
-            Principais interesses (selecione até 5)
+            Áreas de maior interesse <span className="text-gray-400 text-sm font-normal">(opcional)</span>
           </label>
+          <p className="text-xs text-gray-400 mb-3">
+            Selecione as áreas que mais despertam seu interesse
+          </p>
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {INTERESTS_OPTIONS.map((interest) => (
-              <label key={interest} className="flex items-center gap-2 text-white cursor-pointer">
-                <Checkbox
-                  checked={Array.isArray(data.interests) && data.interests.includes(interest)}
-                  onCheckedChange={(checked) => handleInterestsChange(interest, checked as boolean)}
-                  className="border-gray-600 data-[state=checked]:bg-viverblue data-[state=checked]:border-viverblue"
-                />
-                <span className="text-sm">{interest}</span>
-              </label>
-            ))}
+            {INTERESTS_OPTIONS.map((interest) => {
+              const isSelected = (data.interests || []).includes(interest);
+              return (
+                <button
+                  key={interest}
+                  type="button"
+                  onClick={() => handleInterestToggle(interest)}
+                  className={`
+                    p-3 rounded-lg border text-left text-sm transition-all
+                    ${isSelected 
+                      ? 'bg-viverblue/20 border-viverblue text-viverblue-light' 
+                      : 'bg-gray-800/50 border-gray-600 text-gray-300 hover:border-gray-500'
+                    }
+                  `}
+                >
+                  <div className="flex items-center justify-between">
+                    <span>{interest}</span>
+                    {isSelected && (
+                      <span className="text-viverblue">✓</span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           <label className="block text-sm font-medium text-white">
-            Horários preferenciais para conteúdo/eventos
+            Horários preferenciais <span className="text-gray-400 text-sm font-normal">(opcional)</span>
           </label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {TIME_PREFERENCE_OPTIONS.map((time) => (
-              <label key={time} className="flex items-center gap-2 text-white cursor-pointer">
-                <Checkbox
-                  checked={Array.isArray(data.time_preference) && data.time_preference.includes(time)}
-                  onCheckedChange={(checked) => handleTimePreferenceChange(time, checked as boolean)}
-                  className="border-gray-600 data-[state=checked]:bg-viverblue data-[state=checked]:border-viverblue"
-                />
-                <span className="text-sm">{time}</span>
-              </label>
-            ))}
+          <p className="text-xs text-gray-400 mb-3">
+            Quando você costuma estudar ou implementar melhorias?
+          </p>
+          
+          <div className="grid grid-cols-2 gap-3">
+            {TIME_PREFERENCE_OPTIONS.map((time) => {
+              const isSelected = (data.time_preference || []).includes(time);
+              return (
+                <button
+                  key={time}
+                  type="button"
+                  onClick={() => handleTimeToggle(time)}
+                  className={`
+                    p-3 rounded-lg border text-center text-sm transition-all
+                    ${isSelected 
+                      ? 'bg-viverblue/20 border-viverblue text-viverblue-light' 
+                      : 'bg-gray-800/50 border-gray-600 text-gray-300 hover:border-gray-500'
+                    }
+                  `}
+                >
+                  {time}
+                  {isSelected && (
+                    <div className="text-viverblue mt-1">✓</div>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           <label className="block text-sm font-medium text-white">
-            Dias da semana disponíveis
+            Dias disponíveis <span className="text-gray-400 text-sm font-normal">(opcional)</span>
           </label>
+          <p className="text-xs text-gray-400 mb-3">
+            Em quais dias você tem mais disponibilidade para se dedicar?
+          </p>
+          
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {AVAILABLE_DAYS_OPTIONS.map((day) => (
-              <label key={day} className="flex items-center gap-2 text-white cursor-pointer">
-                <Checkbox
-                  checked={Array.isArray(data.available_days) && data.available_days.includes(day)}
-                  onCheckedChange={(checked) => handleAvailableDaysChange(day, checked as boolean)}
-                  className="border-gray-600 data-[state=checked]:bg-viverblue data-[state=checked]:border-viverblue"
-                />
-                <span className="text-sm">{day}</span>
-              </label>
-            ))}
+            {AVAILABLE_DAYS_OPTIONS.map((day) => {
+              const isSelected = (data.available_days || []).includes(day);
+              return (
+                <button
+                  key={day}
+                  type="button"
+                  onClick={() => handleDayToggle(day)}
+                  className={`
+                    p-3 rounded-lg border text-center text-sm transition-all
+                    ${isSelected 
+                      ? 'bg-viverblue/20 border-viverblue text-viverblue-light' 
+                      : 'bg-gray-800/50 border-gray-600 text-gray-300 hover:border-gray-500'
+                    }
+                  `}
+                >
+                  {day.slice(0, 3)}
+                  {isSelected && (
+                    <div className="text-viverblue mt-1">✓</div>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <div className="space-y-4">
-          <label className="block text-sm font-medium text-white">
-            Interesse em networking (1 = Baixo, 10 = Alto)
-          </label>
-          <div className="px-4">
-            <Slider
-              value={[data.networking_availability || 5]}
-              onValueChange={(value) => onUpdate('networking_availability', value[0])}
-              max={10}
-              min={1}
-              step={1}
-              className="w-full"
-            />
-            <div className="flex justify-between text-xs text-gray-400 mt-2">
-              <span>Baixo interesse</span>
-              <span className="text-viverblue font-medium">
-                {data.networking_availability || 5}/10
-              </span>
-              <span>Alto interesse</span>
+        <SliderInput
+          value={data.networking_availability || 5}
+          onChange={(value) => onUpdate('networking_availability', value)}
+          label="Interesse em networking (0-10)"
+          min={0}
+          max={10}
+          step={1}
+        />
+
+        <div className="bg-gradient-to-r from-viverblue/10 to-purple-500/10 border border-viverblue/20 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <Sparkles className="h-5 w-5 text-viverblue mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-viverblue-light mb-1">
+                Quase lá! 🎉
+              </p>
+              <p className="text-xs text-gray-300">
+                Com essas informações vamos personalizar sua experiência na comunidade, 
+                sugerir conteúdos relevantes e conectar você com pessoas do seu interesse!
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="space-y-4">
-          <label className="block text-sm font-medium text-white">
-            Habilidades que pode compartilhar com a comunidade
-          </label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {SKILLS_TO_SHARE_OPTIONS.map((skill) => (
-              <label key={skill} className="flex items-center gap-2 text-white cursor-pointer">
-                <Checkbox
-                  checked={Array.isArray(data.skills_to_share) && data.skills_to_share.includes(skill)}
-                  onCheckedChange={(checked) => handleSkillsChange(skill, checked as boolean)}
-                  className="border-gray-600 data-[state=checked]:bg-viverblue data-[state=checked]:border-viverblue"
-                />
-                <span className="text-sm">{skill}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <label className="block text-sm font-medium text-white">
-            Tópicos em que gostaria de receber mentoria
-          </label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {MENTORSHIP_TOPICS_OPTIONS.map((topic) => (
-              <label key={topic} className="flex items-center gap-2 text-white cursor-pointer">
-                <Checkbox
-                  checked={Array.isArray(data.mentorship_topics) && data.mentorship_topics.includes(topic)}
-                  onCheckedChange={(checked) => handleMentorshipChange(topic, checked as boolean)}
-                  className="border-gray-600 data-[state=checked]:bg-viverblue data-[state=checked]:border-viverblue"
-                />
-                <span className="text-sm">{topic}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
         <div className="flex justify-between items-center pt-6 border-t border-gray-700">
-          <Button
-            onClick={onPrevious}
-            variant="ghost"
-            className="text-gray-400 hover:text-white flex items-center gap-2"
-          >
-            <ArrowLeft size={16} />
-            <span>Anterior</span>
-          </Button>
+          <div></div>
           
           <div className="text-sm text-gray-400">
             Etapa {currentStep} de {totalSteps}
@@ -257,10 +226,9 @@ export const StepPersonalizacaoExperiencia: React.FC<OnboardingStepProps> = ({
           
           <Button
             onClick={onNext}
-            disabled={!canProceed}
-            className="bg-viverblue hover:bg-viverblue-dark transition-colors flex items-center gap-2"
+            className="bg-gradient-to-r from-viverblue to-purple-600 hover:from-viverblue-dark hover:to-purple-700 transition-all flex items-center gap-2"
           >
-            <span>Continuar</span>
+            <span>Finalizar Onboarding</span>
             <ArrowRight size={16} />
           </Button>
         </div>

@@ -1,148 +1,143 @@
 
 import React from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowLeft } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { OnboardingStepProps } from '@/types/quickOnboarding';
+import { RealtimeFieldValidation } from '../RealtimeFieldValidation';
+import { useRealtimeValidation } from '@/hooks/onboarding/useRealtimeValidation';
+import { DropdownModerno } from '../DropdownModerno';
 
 const PRIMARY_GOAL_OPTIONS = [
-  { value: 'automatizar_processos', label: 'Automatizar processos operacionais' },
-  { value: 'melhorar_atendimento', label: 'Melhorar atendimento ao cliente' },
-  { value: 'aumentar_vendas', label: 'Aumentar vendas e conversões' },
-  { value: 'reduzir_custos', label: 'Reduzir custos operacionais' },
-  { value: 'analisar_dados', label: 'Melhorar análise de dados' },
-  { value: 'otimizar_marketing', label: 'Otimizar estratégias de marketing' },
-  { value: 'inovar_produtos', label: 'Inovar produtos/serviços' },
-  { value: 'escalar_negocio', label: 'Escalar o negócio rapidamente' }
+  { value: 'automatizar_processos', label: '🤖 Automatizar processos operacionais' },
+  { value: 'melhorar_atendimento', label: '🎯 Melhorar atendimento ao cliente' },
+  { value: 'otimizar_vendas', label: '💰 Otimizar processo de vendas' },
+  { value: 'analisar_dados', label: '📊 Melhorar análise de dados' },
+  { value: 'reduzir_custos', label: '💸 Reduzir custos operacionais' },
+  { value: 'aumentar_produtividade', label: '⚡ Aumentar produtividade da equipe' },
+  { value: 'personalizar_experiencia', label: '🎨 Personalizar experiência do usuário' },
+  { value: 'inovar_produtos', label: '🚀 Inovar produtos/serviços' },
+  { value: 'competir_mercado', label: '🏆 Manter competitividade no mercado' },
+  { value: 'outro', label: '🤔 Outro objetivo' }
 ];
 
 const EXPECTED_OUTCOMES_OPTIONS = [
-  'Aumento de 20-30% na produtividade',
-  'Redução de 40-50% no tempo de processos manuais',
-  'Melhoria de 25-35% na satisfação do cliente',
-  'Aumento de 15-25% nas vendas',
-  'Redução de 30-40% nos custos operacionais',
-  'Maior precisão na tomada de decisões',
-  'Automatização de tarefas repetitivas',
-  'Criação de vantagem competitiva'
+  'Redução de tempo em tarefas repetitivas',
+  'Aumento na satisfação do cliente',
+  'Melhoria na qualidade das decisões',
+  'Crescimento na receita',
+  'Redução de erros humanos',
+  'Melhor insights sobre dados',
+  'Processos mais eficientes',
+  'Diferenciação no mercado',
+  'Escalabilidade do negócio',
+  'ROI positivo em até 6 meses'
 ];
 
-const CONTENT_FORMATS_OPTIONS = [
-  'Vídeos tutoriais práticos',
-  'Guias escritos passo a passo',
-  'Templates e ferramentas prontas',
-  'Aulas ao vivo e Q&A',
-  'Casos de sucesso reais',
-  'Comunidade para networking'
+const OUTCOME_30DAYS_OPTIONS = [
+  { value: 'processo_mapeado', label: '📋 Ter processo de IA mapeado' },
+  { value: 'equipe_capacitada', label: '👥 Equipe capacitada em IA' },
+  { value: 'ferramenta_implementada', label: '🛠️ Primeira ferramenta implementada' },
+  { value: 'piloto_funcionando', label: '🧪 Projeto piloto funcionando' },
+  { value: 'estrategia_definida', label: '🎯 Estratégia de IA definida' },
+  { value: 'roi_calculado', label: '📈 ROI dos projetos calculado' }
 ];
 
 export const StepObjetivosMetas: React.FC<OnboardingStepProps> = ({
   data,
   onUpdate,
   onNext,
-  onPrevious,
   canProceed,
   currentStep,
   totalSteps
 }) => {
-  const handleExpectedOutcomesChange = (outcome: string, checked: boolean) => {
-    const currentOutcomes = Array.isArray(data.expected_outcomes) ? data.expected_outcomes : [];
-    if (checked) {
-      onUpdate('expected_outcomes', [...currentOutcomes, outcome]);
-    } else {
-      onUpdate('expected_outcomes', currentOutcomes.filter(o => o !== outcome));
-    }
-  };
+  const { getFieldValidation } = useRealtimeValidation(data, currentStep);
 
-  const handleContentFormatsChange = (format: string, checked: boolean) => {
-    const currentFormats = Array.isArray(data.content_formats) ? data.content_formats : [];
-    if (checked) {
-      onUpdate('content_formats', [...currentFormats, format]);
+  const handleOutcomeToggle = (outcome: string) => {
+    const currentOutcomes = data.expected_outcomes || [];
+    const isSelected = currentOutcomes.includes(outcome);
+    
+    if (isSelected) {
+      onUpdate('expected_outcomes', currentOutcomes.filter(o => o !== outcome));
     } else {
-      onUpdate('content_formats', currentFormats.filter(f => f !== format));
+      onUpdate('expected_outcomes', [...currentOutcomes, outcome]);
     }
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-2xl mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-white mb-2">
-          Objetivos e Metas 🚀
+          Objetivos e metas 🎯
         </h2>
         <p className="text-gray-400">
-          Vamos definir seus objetivos para personalizar sua jornada
+          Vamos definir seus objetivos com IA
         </p>
       </div>
 
-      <div className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700/50 space-y-8">
-        <div className="space-y-4">
+      <div className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700/50 space-y-6">
+        <DropdownModerno
+          value={data.primary_goal || ''}
+          onChange={(value) => onUpdate('primary_goal', value)}
+          options={PRIMARY_GOAL_OPTIONS}
+          placeholder="Selecione seu principal objetivo"
+          label="Qual seu principal objetivo com IA?"
+          required
+        />
+
+        <div className="space-y-3">
           <label className="block text-sm font-medium text-white">
-            Qual seu principal objetivo com IA? <span className="text-red-400">*</span>
+            Resultados esperados <span className="text-gray-400 text-sm font-normal">(opcional)</span>
           </label>
-          <Select value={data.primary_goal || ''} onValueChange={(value) => onUpdate('primary_goal', value)}>
-            <SelectTrigger className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50">
-              <SelectValue placeholder="Selecione seu objetivo principal" />
-            </SelectTrigger>
-            <SelectContent className="bg-gray-800 border-gray-600">
-              {PRIMARY_GOAL_OPTIONS.map((option) => (
-                <SelectItem 
-                  key={option.value} 
-                  value={option.value}
-                  className="text-white hover:bg-gray-700"
+          <p className="text-xs text-gray-400 mb-3">
+            Selecione os resultados que espera alcançar (múltipla escolha)
+          </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {EXPECTED_OUTCOMES_OPTIONS.map((outcome) => {
+              const isSelected = (data.expected_outcomes || []).includes(outcome);
+              return (
+                <button
+                  key={outcome}
+                  type="button"
+                  onClick={() => handleOutcomeToggle(outcome)}
+                  className={`
+                    p-3 rounded-lg border text-left text-sm transition-all
+                    ${isSelected 
+                      ? 'bg-viverblue/20 border-viverblue text-viverblue-light' 
+                      : 'bg-gray-800/50 border-gray-600 text-gray-300 hover:border-gray-500'
+                    }
+                  `}
                 >
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-4">
-          <label className="block text-sm font-medium text-white">
-            Que resultados você espera alcançar?
-          </label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {EXPECTED_OUTCOMES_OPTIONS.map((outcome) => (
-              <label key={outcome} className="flex items-center gap-2 text-white cursor-pointer">
-                <Checkbox
-                  checked={Array.isArray(data.expected_outcomes) && data.expected_outcomes.includes(outcome)}
-                  onCheckedChange={(checked) => handleExpectedOutcomesChange(outcome, checked as boolean)}
-                  className="border-gray-600 data-[state=checked]:bg-viverblue data-[state=checked]:border-viverblue"
-                />
-                <span className="text-sm">{outcome}</span>
-              </label>
-            ))}
+                  <div className="flex items-center justify-between">
+                    <span>{outcome}</span>
+                    {isSelected && (
+                      <span className="text-viverblue">✓</span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <div className="space-y-4">
-          <label className="block text-sm font-medium text-white">
-            Quais formatos de conteúdo você prefere?
-          </label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {CONTENT_FORMATS_OPTIONS.map((format) => (
-              <label key={format} className="flex items-center gap-2 text-white cursor-pointer">
-                <Checkbox
-                  checked={Array.isArray(data.content_formats) && data.content_formats.includes(format)}
-                  onCheckedChange={(checked) => handleContentFormatsChange(format, checked as boolean)}
-                  className="border-gray-600 data-[state=checked]:bg-viverblue data-[state=checked]:border-viverblue"
-                />
-                <span className="text-sm">{format}</span>
-              </label>
-            ))}
-          </div>
+        <DropdownModerno
+          value={data.expected_outcome_30days || ''}
+          onChange={(value) => onUpdate('expected_outcome_30days', value)}
+          options={OUTCOME_30DAYS_OPTIONS}
+          placeholder="Selecione sua expectativa"
+          label="O que espera alcançar nos próximos 30 dias?"
+          required
+        />
+
+        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+          <p className="text-sm text-green-400">
+            🎯 <strong>Dica:</strong> Objetivos claros e mensuráveis nos ajudam a criar 
+            uma trilha de implementação mais assertiva e direcionada para seu negócio!
+          </p>
         </div>
 
         <div className="flex justify-between items-center pt-6 border-t border-gray-700">
-          <Button
-            onClick={onPrevious}
-            variant="ghost"
-            className="text-gray-400 hover:text-white flex items-center gap-2"
-          >
-            <ArrowLeft size={16} />
-            <span>Anterior</span>
-          </Button>
+          <div></div>
           
           <div className="text-sm text-gray-400">
             Etapa {currentStep} de {totalSteps}

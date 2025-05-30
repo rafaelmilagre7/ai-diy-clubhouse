@@ -1,33 +1,39 @@
 
 import React from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowLeft } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { OnboardingStepProps } from '@/types/quickOnboarding';
+import { RealtimeFieldValidation } from '../RealtimeFieldValidation';
+import { useRealtimeValidation } from '@/hooks/onboarding/useRealtimeValidation';
+import { DropdownModerno } from '../DropdownModerno';
+import { ConditionalReferralInput } from '../ConditionalReferralInput';
 
 const HOW_FOUND_OPTIONS = [
-  { value: 'google', label: 'Google' },
-  { value: 'youtube', label: 'YouTube' },
-  { value: 'instagram', label: 'Instagram' },
-  { value: 'linkedin', label: 'LinkedIn' },
-  { value: 'indicacao', label: 'Indicação de alguém' },
-  { value: 'evento', label: 'Evento' },
-  { value: 'podcast', label: 'Podcast' },
-  { value: 'outro', label: 'Outro' }
+  { value: 'google', label: '🔍 Google / Busca online' },
+  { value: 'youtube', label: '📺 YouTube' },
+  { value: 'instagram', label: '📸 Instagram' },
+  { value: 'linkedin', label: '💼 LinkedIn' },
+  { value: 'facebook', label: '📘 Facebook' },
+  { value: 'indicacao', label: '👥 Indicação de amigo/colega' },
+  { value: 'evento', label: '🎯 Evento/Palestra' },
+  { value: 'podcast', label: '🎧 Podcast' },
+  { value: 'blog', label: '📝 Blog/Artigo' },
+  { value: 'anuncio', label: '📢 Anúncio pago' },
+  { value: 'outro', label: '🤔 Outro' }
 ];
 
 export const StepComoNosConheceu: React.FC<OnboardingStepProps> = ({
   data,
   onUpdate,
   onNext,
-  onPrevious,
   canProceed,
   currentStep,
   totalSteps
 }) => {
+  const { getFieldValidation } = useRealtimeValidation(data, currentStep);
+
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-2xl mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-white mb-2">
           Como nos conheceu? 🤝
@@ -38,52 +44,30 @@ export const StepComoNosConheceu: React.FC<OnboardingStepProps> = ({
       </div>
 
       <div className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700/50 space-y-6">
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-white">
-            Como conheceu o VIVER DE IA? <span className="text-red-400">*</span>
-          </label>
-          <Select value={data.how_found_us || ''} onValueChange={(value) => onUpdate('how_found_us', value)}>
-            <SelectTrigger className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50">
-              <SelectValue placeholder="Selecione como nos conheceu" />
-            </SelectTrigger>
-            <SelectContent className="bg-gray-800 border-gray-600">
-              {HOW_FOUND_OPTIONS.map((option) => (
-                <SelectItem 
-                  key={option.value} 
-                  value={option.value}
-                  className="text-white hover:bg-gray-700"
-                >
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <DropdownModerno
+          value={data.how_found_us || ''}
+          onChange={(value) => onUpdate('how_found_us', value)}
+          options={HOW_FOUND_OPTIONS}
+          placeholder="Selecione como nos conheceu"
+          label="Como você conheceu a Viver de IA?"
+          required
+        />
+
+        <ConditionalReferralInput
+          howFoundUs={data.how_found_us || ''}
+          referredBy={data.referred_by || ''}
+          onReferredByChange={(value) => onUpdate('referred_by', value)}
+        />
+
+        <div className="bg-viverblue/10 border border-viverblue/20 rounded-lg p-4">
+          <p className="text-sm text-viverblue-light">
+            💡 <strong>Curiosidade:</strong> Essas informações nos ajudam a entender quais canais 
+            são mais efetivos e melhorar nossa presença onde você mais precisa!
+          </p>
         </div>
 
-        {data.how_found_us === 'indicacao' && (
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-white">
-              Quem te indicou?
-            </label>
-            <Input
-              type="text"
-              value={data.referred_by || ''}
-              onChange={(e) => onUpdate('referred_by', e.target.value)}
-              placeholder="Nome da pessoa que te indicou"
-              className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50"
-            />
-          </div>
-        )}
-
         <div className="flex justify-between items-center pt-6 border-t border-gray-700">
-          <Button
-            onClick={onPrevious}
-            variant="ghost"
-            className="text-gray-400 hover:text-white flex items-center gap-2"
-          >
-            <ArrowLeft size={16} />
-            <span>Anterior</span>
-          </Button>
+          <div></div>
           
           <div className="text-sm text-gray-400">
             Etapa {currentStep} de {totalSteps}

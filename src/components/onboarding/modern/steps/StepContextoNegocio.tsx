@@ -1,201 +1,130 @@
 
 import React from 'react';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowLeft } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { OnboardingStepProps } from '@/types/quickOnboarding';
+import { RealtimeFieldValidation } from '../RealtimeFieldValidation';
+import { useRealtimeValidation } from '@/hooks/onboarding/useRealtimeValidation';
+import { DropdownModerno } from '../DropdownModerno';
+import { Textarea } from '@/components/ui/textarea';
 
-const BUSINESS_CHALLENGES_OPTIONS = [
-  'Falta de processos automatizados',
-  'Dificuldade em escalar o negócio',
-  'Problemas de produtividade da equipe',
-  'Atendimento ao cliente ineficiente',
-  'Análise de dados manual e demorada',
-  'Marketing sem personalização',
-  'Gestão de leads desorganizada',
-  'Operações repetitivas que consomem tempo'
+const BUSINESS_MODEL_OPTIONS = [
+  { value: 'b2b', label: '🏢 B2B (Business to Business)' },
+  { value: 'b2c', label: '👤 B2C (Business to Consumer)' },
+  { value: 'b2b2c', label: '🔄 B2B2C (Híbrido)' },
+  { value: 'marketplace', label: '🛒 Marketplace' },
+  { value: 'saas', label: '☁️ SaaS (Software as a Service)' },
+  { value: 'ecommerce', label: '🛍️ E-commerce' },
+  { value: 'consultoria', label: '🎯 Consultoria/Serviços' },
+  { value: 'outro', label: '🤔 Outro' }
 ];
 
-const SHORT_TERM_GOALS_OPTIONS = [
+const CHALLENGES_OPTIONS = [
   'Automatizar processos manuais',
   'Melhorar atendimento ao cliente',
-  'Aumentar conversão de vendas',
-  'Otimizar marketing digital',
+  'Otimizar análise de dados',
+  'Personalizar experiência do usuário',
   'Reduzir custos operacionais',
-  'Acelerar tomada de decisões'
-];
-
-const MEDIUM_TERM_GOALS_OPTIONS = [
-  'Escalar o negócio com IA',
-  'Criar vantagem competitiva',
-  'Expandir para novos mercados',
-  'Desenvolver novos produtos/serviços',
-  'Construir equipe mais produtiva',
-  'Tornar-se referência no setor'
-];
-
-const IMPORTANT_KPIS_OPTIONS = [
-  'Receita/Faturamento',
-  'Margem de lucro',
-  'Satisfação do cliente (NPS)',
-  'Tempo de resposta ao cliente',
-  'Taxa de conversão',
-  'Produtividade da equipe',
-  'Custo de aquisição de clientes (CAC)',
-  'Lifetime Value (LTV)'
+  'Aumentar produtividade da equipe',
+  'Melhorar tomada de decisões',
+  'Automatizar marketing/vendas',
+  'Detectar fraudes/anomalias',
+  'Otimizar logística/supply chain'
 ];
 
 export const StepContextoNegocio: React.FC<OnboardingStepProps> = ({
   data,
   onUpdate,
   onNext,
-  onPrevious,
   canProceed,
   currentStep,
   totalSteps
 }) => {
-  const handleChallengesChange = (challenge: string, checked: boolean) => {
-    const currentChallenges = Array.isArray(data.business_challenges) ? data.business_challenges : [];
-    if (checked) {
-      onUpdate('business_challenges', [...currentChallenges, challenge]);
-    } else {
+  const { getFieldValidation } = useRealtimeValidation(data, currentStep);
+
+  const handleChallengeToggle = (challenge: string) => {
+    const currentChallenges = data.business_challenges || [];
+    const isSelected = currentChallenges.includes(challenge);
+    
+    if (isSelected) {
       onUpdate('business_challenges', currentChallenges.filter(c => c !== challenge));
-    }
-  };
-
-  const handleShortTermGoalsChange = (goal: string, checked: boolean) => {
-    const currentGoals = Array.isArray(data.short_term_goals) ? data.short_term_goals : [];
-    if (checked) {
-      onUpdate('short_term_goals', [...currentGoals, goal]);
     } else {
-      onUpdate('short_term_goals', currentGoals.filter(g => g !== goal));
-    }
-  };
-
-  const handleMediumTermGoalsChange = (goal: string, checked: boolean) => {
-    const currentGoals = Array.isArray(data.medium_term_goals) ? data.medium_term_goals : [];
-    if (checked) {
-      onUpdate('medium_term_goals', [...currentGoals, goal]);
-    } else {
-      onUpdate('medium_term_goals', currentGoals.filter(g => g !== goal));
-    }
-  };
-
-  const handleKPIsChange = (kpi: string, checked: boolean) => {
-    const currentKPIs = Array.isArray(data.important_kpis) ? data.important_kpis : [];
-    if (checked) {
-      onUpdate('important_kpis', [...currentKPIs, kpi]);
-    } else {
-      onUpdate('important_kpis', currentKPIs.filter(k => k !== kpi));
+      onUpdate('business_challenges', [...currentChallenges, challenge]);
     }
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-2xl mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-white mb-2">
-          Contexto do seu negócio 🎯
+          Contexto do negócio 💼
         </h2>
         <p className="text-gray-400">
-          Vamos entender melhor os desafios e objetivos da sua empresa
+          Vamos entender melhor seu modelo e desafios
         </p>
       </div>
 
-      <div className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700/50 space-y-8">
-        <div className="space-y-4">
+      <div className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700/50 space-y-6">
+        <DropdownModerno
+          value={data.business_model || ''}
+          onChange={(value) => onUpdate('business_model', value)}
+          options={BUSINESS_MODEL_OPTIONS}
+          placeholder="Selecione seu modelo de negócio"
+          label="Modelo de negócio"
+          required
+        />
+
+        <div className="space-y-3">
           <label className="block text-sm font-medium text-white">
-            Quais são os principais desafios do seu negócio?
+            Principais desafios do negócio <span className="text-red-400">*</span>
           </label>
+          <p className="text-xs text-gray-400 mb-3">
+            Selecione os principais desafios que sua empresa enfrenta (múltipla escolha)
+          </p>
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {BUSINESS_CHALLENGES_OPTIONS.map((challenge) => (
-              <label key={challenge} className="flex items-center gap-2 text-white cursor-pointer">
-                <Checkbox
-                  checked={Array.isArray(data.business_challenges) && data.business_challenges.includes(challenge)}
-                  onCheckedChange={(checked) => handleChallengesChange(challenge, checked as boolean)}
-                  className="border-gray-600 data-[state=checked]:bg-viverblue data-[state=checked]:border-viverblue"
-                />
-                <span className="text-sm">{challenge}</span>
-              </label>
-            ))}
+            {CHALLENGES_OPTIONS.map((challenge) => {
+              const isSelected = (data.business_challenges || []).includes(challenge);
+              return (
+                <button
+                  key={challenge}
+                  type="button"
+                  onClick={() => handleChallengeToggle(challenge)}
+                  className={`
+                    p-3 rounded-lg border text-left text-sm transition-all
+                    ${isSelected 
+                      ? 'bg-viverblue/20 border-viverblue text-viverblue-light' 
+                      : 'bg-gray-800/50 border-gray-600 text-gray-300 hover:border-gray-500'
+                    }
+                  `}
+                >
+                  <div className="flex items-center justify-between">
+                    <span>{challenge}</span>
+                    {isSelected && (
+                      <span className="text-viverblue">✓</span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
           </div>
+          <RealtimeFieldValidation validation={getFieldValidation('business_challenges')} />
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-2">
           <label className="block text-sm font-medium text-white">
-            Objetivos de curto prazo (3-6 meses)
-          </label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {SHORT_TERM_GOALS_OPTIONS.map((goal) => (
-              <label key={goal} className="flex items-center gap-2 text-white cursor-pointer">
-                <Checkbox
-                  checked={Array.isArray(data.short_term_goals) && data.short_term_goals.includes(goal)}
-                  onCheckedChange={(checked) => handleShortTermGoalsChange(goal, checked as boolean)}
-                  className="border-gray-600 data-[state=checked]:bg-viverblue data-[state=checked]:border-viverblue"
-                />
-                <span className="text-sm">{goal}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <label className="block text-sm font-medium text-white">
-            Objetivos de médio prazo (6-18 meses)
-          </label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {MEDIUM_TERM_GOALS_OPTIONS.map((goal) => (
-              <label key={goal} className="flex items-center gap-2 text-white cursor-pointer">
-                <Checkbox
-                  checked={Array.isArray(data.medium_term_goals) && data.medium_term_goals.includes(goal)}
-                  onCheckedChange={(checked) => handleMediumTermGoalsChange(goal, checked as boolean)}
-                  className="border-gray-600 data-[state=checked]:bg-viverblue data-[state=checked]:border-viverblue"
-                />
-                <span className="text-sm">{goal}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <label className="block text-sm font-medium text-white">
-            Quais KPIs são mais importantes para você?
-          </label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {IMPORTANT_KPIS_OPTIONS.map((kpi) => (
-              <label key={kpi} className="flex items-center gap-2 text-white cursor-pointer">
-                <Checkbox
-                  checked={Array.isArray(data.important_kpis) && data.important_kpis.includes(kpi)}
-                  onCheckedChange={(checked) => handleKPIsChange(kpi, checked as boolean)}
-                  className="border-gray-600 data-[state=checked]:bg-viverblue data-[state=checked]:border-viverblue"
-                />
-                <span className="text-sm">{kpi}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <label className="block text-sm font-medium text-white">
-            Contexto adicional (opcional)
+            Contexto adicional <span className="text-gray-400 text-sm font-normal">(opcional)</span>
           </label>
           <Textarea
             value={data.additional_context || ''}
             onChange={(e) => onUpdate('additional_context', e.target.value)}
-            placeholder="Compartilhe qualquer informação adicional que possa nos ajudar a personalizar melhor sua experiência..."
-            className="h-24 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50"
+            placeholder="Compartilhe qualquer informação adicional que considere relevante sobre seu negócio, mercado ou situação atual..."
+            className="min-h-[100px] bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:ring-viverblue/50"
           />
         </div>
 
         <div className="flex justify-between items-center pt-6 border-t border-gray-700">
-          <Button
-            onClick={onPrevious}
-            variant="ghost"
-            className="text-gray-400 hover:text-white flex items-center gap-2"
-          >
-            <ArrowLeft size={16} />
-            <span>Anterior</span>
-          </Button>
+          <div></div>
           
           <div className="text-sm text-gray-400">
             Etapa {currentStep} de {totalSteps}
