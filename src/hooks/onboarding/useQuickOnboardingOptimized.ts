@@ -1,16 +1,13 @@
-
-import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@/contexts/auth';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { QuickOnboardingData } from '@/types/quickOnboarding';
 import { supabase } from '@/lib/supabase';
-import { QuickOnboardingData, adaptDatabaseToQuickData, adaptQuickDataToDatabase } from '@/types/quickOnboarding';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 
 export const useQuickOnboardingOptimized = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   
-  const [currentStep, setCurrentStep] = useState(1);
+  // Estado inicial com todas as propriedades obrigatórias
   const [data, setData] = useState<QuickOnboardingData>({
     name: '',
     email: '',
@@ -18,250 +15,259 @@ export const useQuickOnboardingOptimized = () => {
     country_code: '+55',
     how_found_us: '',
     company_name: '',
+    role: '', // Adicionado
     company_size: '',
     company_segment: '',
+    annual_revenue_range: '', // Adicionado
+    main_challenge: '', // Adicionado
     ai_knowledge_level: '',
     uses_ai: '',
     main_goal: ''
   });
-  
+
+  const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [hasExistingData, setHasExistingData] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);
-  
+  const saveTimeoutRef = useRef<NodeJS.Timeout>();
   const totalSteps = 4;
 
-  // Função para criar registro inicial vazio
-  const createInitialRecord = useCallback(async (userId: string) => {
-    try {
-      console.log('🔧 Criando registro inicial de onboarding para usuário:', userId);
-      
-      const { data: insertData, error } = await supabase
-        .from('quick_onboarding')
-        .insert({
-          user_id: userId,
-          email: user?.email || '',
-          name: user?.user_metadata?.name || user?.user_metadata?.full_name || '',
-          current_step: 1,
-          is_completed: false
-        })
-        .select()
-        .single();
-      
-      if (error) {
-        throw error;
-      }
-      
-      console.log('✅ Registro inicial criado:', insertData);
-      return insertData;
-    } catch (error) {
-      console.error('❌ Erro ao criar registro inicial:', error);
-      throw error;
-    }
-  }, [user]);
-
-  // Função para carregar dados existentes
   const loadExistingData = useCallback(async () => {
     if (!user?.id) {
-      console.log('⚠️ Usuário não encontrado, não carregando dados');
+      console.log('❌ Usuário não encontrado, não é possível carregar dados');
       setIsLoading(false);
       return;
     }
 
     try {
-      console.log('📥 Carregando dados existentes de onboarding para:', user.id);
-      setLoadError(null);
+      console.log('🔄 Carregando dados existentes para usuário:', user.id);
       
       const { data: existingData, error } = await supabase
         .from('quick_onboarding')
         .select('*')
         .eq('user_id', user.id)
-        .maybeSingle();
-      
-      if (error) {
-        console.error('❌ Erro ao carregar dados:', error);
-        throw error;
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('❌ Erro ao carregar dados de onboarding:', error);
+        throw new Error(`Erro ao carregar dados: ${error.message}`);
       }
-      
+
       if (existingData) {
         console.log('✅ Dados existentes encontrados:', existingData);
-        
-        const adaptedData = adaptDatabaseToQuickData(existingData);
-        setData(adaptedData);
+        setData({
+          name: existingData.name || '',
+          email: existingData.email || user.email || '',
+          whatsapp: existingData.whatsapp || '',
+          country_code: existingData.country_code || '+55',
+          how_found_us: existingData.how_found_us || '',
+          company_name: existingData.company_name || '',
+          role: existingData.role || '',
+          company_size: existingData.company_size || '',
+          company_segment: existingData.company_segment || '',
+          annual_revenue_range: existingData.annual_revenue_range || '',
+          main_challenge: existingData.main_challenge || '',
+          ai_knowledge_level: existingData.ai_knowledge_level || '',
+          uses_ai: existingData.uses_ai || '',
+          main_goal: existingData.main_goal || ''
+        });
         setCurrentStep(existingData.current_step || 1);
         setHasExistingData(true);
-        
-        console.log('📊 Dados adaptados:', {
-          currentStep: existingData.current_step,
-          isCompleted: existingData.is_completed,
-          dataKeys: Object.keys(adaptedData)
-        });
       } else {
-        console.log('ℹ️ Nenhum dado existente encontrado, criando registro inicial...');
+        console.log('🆕 Nenhum dado existente encontrado, criando registro inicial...');
         
-        // Criar registro inicial se não existir
-        const newRecord = await createInitialRecord(user.id);
-        const adaptedData = adaptDatabaseToQuickData(newRecord);
-        
-        setData(adaptedData);
+        // Criar registro inicial automaticamente
+        const initialData = {
+          user_id: user.id,
+          name: user.user_metadata?.name || user.user_metadata?.full_name || '',
+          email: user.email || '',
+          whatsapp: '',
+          country_code: '+55',
+          how_found_us: '',
+          company_name: '',
+          role: '',
+          company_size: '',
+          company_segment: '',
+          annual_revenue_range: '',
+          main_challenge: '',
+          ai_knowledge_level: '',
+          uses_ai: '',
+          main_goal: '',
+          current_step: 1,
+          is_completed: false
+        };
+
+        const { error: insertError } = await supabase
+          .from('quick_onboarding')
+          .insert(initialData);
+
+        if (insertError) {
+          console.error('❌ Erro ao criar registro inicial:', insertError);
+          throw new Error(`Erro ao criar registro inicial: ${insertError.message}`);
+        }
+
+        console.log('✅ Registro inicial criado com sucesso');
+        setData({
+          name: initialData.name,
+          email: initialData.email,
+          whatsapp: initialData.whatsapp,
+          country_code: initialData.country_code,
+          how_found_us: initialData.how_found_us,
+          company_name: initialData.company_name,
+          role: initialData.role,
+          company_size: initialData.company_size,
+          company_segment: initialData.company_segment,
+          annual_revenue_range: initialData.annual_revenue_range,
+          main_challenge: initialData.main_challenge,
+          ai_knowledge_level: initialData.ai_knowledge_level,
+          uses_ai: initialData.uses_ai,
+          main_goal: initialData.main_goal
+        });
         setCurrentStep(1);
         setHasExistingData(false);
-        
-        console.log('🆕 Novo registro criado e carregado');
       }
+
     } catch (error: any) {
-      console.error('❌ Erro ao carregar dados de onboarding:', error);
-      setLoadError(error.message || 'Erro ao carregar dados do onboarding');
+      console.error('❌ Erro no carregamento de dados:', error);
+      setLoadError(error.message || 'Erro desconhecido ao carregar dados');
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id, createInitialRecord]);
+  }, [user]);
 
-  // Auto-save
-  const autoSave = useCallback(async (updatedData: QuickOnboardingData, step: number) => {
-    if (!user?.id || isCompleting) return;
+  const autoSave = useCallback(async (currentData: QuickOnboardingData, step: number) => {
+    if (!user?.id) return;
 
     try {
       setIsSaving(true);
-      
-      const dbData = adaptQuickDataToDatabase(updatedData);
-      
+      console.log('💾 Auto-salvando dados do step:', step);
+
+      const updateData = {
+        ...currentData,
+        current_step: step,
+        updated_at: new Date().toISOString()
+      };
+
       const { error } = await supabase
         .from('quick_onboarding')
         .upsert({
           user_id: user.id,
-          ...dbData,
-          current_step: step,
-          updated_at: new Date().toISOString()
+          ...updateData
         });
-      
-      if (error) throw error;
-      
+
+      if (error) {
+        console.error('❌ Erro no auto-save:', error);
+        toast.error('Erro ao salvar dados automaticamente');
+        return;
+      }
+
+      console.log('✅ Auto-save realizado com sucesso');
       setLastSaveTime(new Date());
-      console.log('💾 Auto-save realizado com sucesso');
     } catch (error) {
       console.error('❌ Erro no auto-save:', error);
-      toast.error('Erro ao salvar automaticamente');
     } finally {
       setIsSaving(false);
     }
-  }, [user?.id, isCompleting]);
+  }, [user?.id]);
 
-  // Atualizar campo
-  const updateField = useCallback((field: keyof QuickOnboardingData, value: any) => {
+  const updateField = useCallback((field: keyof QuickOnboardingData, value: string) => {
     console.log(`📝 Atualizando campo ${field}:`, value);
     
     setData(prev => {
       const newData = { ...prev, [field]: value };
       
-      // Auto-save com debounce
-      setTimeout(() => autoSave(newData, currentStep), 1000);
+      // Trigger auto-save after a delay
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+      
+      saveTimeoutRef.current = setTimeout(() => {
+        autoSave(newData, currentStep);
+      }, 1000);
       
       return newData;
     });
   }, [currentStep, autoSave]);
 
-  // Verificar se pode prosseguir
   const canProceed = useCallback(() => {
-    console.log('🔍 Verificando se pode prosseguir para step:', currentStep);
-    
     switch (currentStep) {
       case 1:
-        const step1Valid = !!(data.name && data.email && data.whatsapp && data.how_found_us);
-        console.log('Step 1 válido:', step1Valid, {
-          name: !!data.name,
-          email: !!data.email,
-          whatsapp: !!data.whatsapp,
-          how_found_us: !!data.how_found_us
-        });
-        return step1Valid;
-      
+        return !!(data.name && data.email && data.whatsapp && data.how_found_us);
       case 2:
-        const step2Valid = !!(data.company_name && data.company_size && data.company_segment);
-        console.log('Step 2 válido:', step2Valid, {
-          company_name: !!data.company_name,
-          company_size: !!data.company_size,
-          company_segment: !!data.company_segment
-        });
-        return step2Valid;
-      
+        return !!(data.company_name && data.role && data.company_size && data.company_segment);
       case 3:
-        const step3Valid = !!(data.ai_knowledge_level && data.uses_ai && data.main_goal);
-        console.log('Step 3 válido:', step3Valid, {
-          ai_knowledge_level: !!data.ai_knowledge_level,
-          uses_ai: !!data.uses_ai,
-          main_goal: !!data.main_goal
-        });
-        return step3Valid;
-      
+        return !!(data.ai_knowledge_level && data.uses_ai && data.main_goal);
       default:
-        return false;
+        return true;
     }
   }, [currentStep, data]);
 
-  // Próximo step
-  const nextStep = useCallback(async () => {
-    if (!canProceed()) {
-      toast.error('Por favor, preencha todos os campos obrigatórios');
-      return;
+  const nextStep = useCallback(() => {
+    if (currentStep < totalSteps && canProceed()) {
+      const newStep = currentStep + 1;
+      setCurrentStep(newStep);
+      autoSave(data, newStep);
+      console.log('➡️ Avançando para step:', newStep);
     }
+  }, [currentStep, totalSteps, canProceed, data, autoSave]);
 
-    const nextStepNum = Math.min(currentStep + 1, totalSteps);
-    console.log(`➡️ Avançando para step ${nextStepNum}`);
-    
-    setCurrentStep(nextStepNum);
-    await autoSave(data, nextStepNum);
-  }, [currentStep, canProceed, data, autoSave, totalSteps]);
-
-  // Step anterior
   const previousStep = useCallback(() => {
-    const prevStepNum = Math.max(currentStep - 1, 1);
-    console.log(`⬅️ Voltando para step ${prevStepNum}`);
-    setCurrentStep(prevStepNum);
-  }, [currentStep]);
+    if (currentStep > 1) {
+      const newStep = currentStep - 1;
+      setCurrentStep(newStep);
+      autoSave(data, newStep);
+      console.log('⬅️ Voltando para step:', newStep);
+    }
+  }, [currentStep, data, autoSave]);
 
-  // Completar onboarding
-  const completeOnboarding = useCallback(async () => {
+  const completeOnboarding = useCallback(async (): Promise<boolean> => {
     if (!user?.id) return false;
 
     try {
       setIsCompleting(true);
-      console.log('🏁 Completando onboarding...');
-      
-      const dbData = adaptQuickDataToDatabase(data);
-      
+      console.log('🎯 Finalizando onboarding...');
+
       const { error } = await supabase
         .from('quick_onboarding')
-        .upsert({
-          user_id: user.id,
-          ...dbData,
-          current_step: 4,
+        .update({
           is_completed: true,
+          completed_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
-        });
-      
-      if (error) throw error;
-      
-      console.log('✅ Onboarding completado com sucesso');
+        })
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('❌ Erro ao finalizar onboarding:', error);
+        toast.error('Erro ao finalizar onboarding');
+        return false;
+      }
+
+      console.log('✅ Onboarding finalizado com sucesso');
       toast.success('Onboarding concluído com sucesso!');
-      
       return true;
     } catch (error) {
-      console.error('❌ Erro ao completar onboarding:', error);
+      console.error('❌ Erro ao finalizar onboarding:', error);
       toast.error('Erro ao finalizar onboarding');
       return false;
     } finally {
       setIsCompleting(false);
     }
-  }, [user?.id, data]);
+  }, [user?.id]);
 
-  // Carregar dados na inicialização
   useEffect(() => {
     loadExistingData();
   }, [loadExistingData]);
+
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return {
     currentStep,
