@@ -4671,6 +4671,10 @@ export type Database = {
         Args: { user_email: string }
         Returns: Json
       }
+      backup_all_onboarding_data: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       can_access_benefit: {
         Args: { user_id: string; tool_id: string }
         Returns: boolean
@@ -4824,6 +4828,10 @@ export type Database = {
         Args: { topic_id: string }
         Returns: undefined
       }
+      initialize_onboarding_for_all_users: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -4882,6 +4890,10 @@ export type Database = {
       quick_check_permission: {
         Args: { user_id: string; permission_code: string }
         Returns: boolean
+      }
+      reset_all_onboarding_data: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       reset_user_complete: {
         Args: { target_user_id: string }
