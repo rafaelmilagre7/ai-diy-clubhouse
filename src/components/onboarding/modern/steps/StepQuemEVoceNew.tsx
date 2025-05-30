@@ -4,16 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
-import { QuickOnboardingData } from '@/types/quickOnboarding';
-
-interface StepQuemEVoceNewProps {
-  data: QuickOnboardingData;
-  onUpdate: (field: keyof QuickOnboardingData, value: string) => void;
-  onNext: () => void;
-  canProceed: boolean;
-  currentStep: number;
-  totalSteps: number;
-}
+import { OnboardingStepProps } from '@/types/quickOnboarding';
 
 const HOW_FOUND_OPTIONS = [
   { value: 'google', label: 'Google' },
@@ -26,7 +17,7 @@ const HOW_FOUND_OPTIONS = [
   { value: 'outro', label: 'Outro' }
 ];
 
-export const StepQuemEVoceNew: React.FC<StepQuemEVoceNewProps> = ({
+export const StepQuemEVoceNew: React.FC<OnboardingStepProps> = ({
   data,
   onUpdate,
   onNext,
@@ -34,8 +25,6 @@ export const StepQuemEVoceNew: React.FC<StepQuemEVoceNewProps> = ({
   currentStep,
   totalSteps
 }) => {
-  console.log('🎯 StepQuemEVoceNew renderizado:', { data, canProceed, currentStep });
-
   return (
     <div className="max-w-3xl mx-auto">
       <div className="text-center mb-8">

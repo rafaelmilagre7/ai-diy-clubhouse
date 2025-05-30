@@ -2,20 +2,9 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
-import { QuickOnboardingData } from '@/types/quickOnboarding';
-
-interface StepSeuNegocioNewProps {
-  data: QuickOnboardingData;
-  onUpdate: (field: keyof QuickOnboardingData, value: string) => void;
-  onNext: () => void;
-  onPrevious: () => void;
-  canProceed: boolean;
-  currentStep: number;
-  totalSteps: number;
-}
+import { OnboardingStepProps } from '@/types/quickOnboarding';
 
 const COMPANY_SIZE_OPTIONS = [
   { value: 'solo', label: 'Apenas eu (Solo)' },
@@ -39,17 +28,7 @@ const COMPANY_SEGMENT_OPTIONS = [
   { value: 'outros', label: 'Outros' }
 ];
 
-const REVENUE_RANGE_OPTIONS = [
-  { value: '0-50k', label: 'Até R$ 50.000/ano' },
-  { value: '50k-200k', label: 'R$ 50.000 - R$ 200.000/ano' },
-  { value: '200k-500k', label: 'R$ 200.000 - R$ 500.000/ano' },
-  { value: '500k-1m', label: 'R$ 500.000 - R$ 1.000.000/ano' },
-  { value: '1m-5m', label: 'R$ 1.000.000 - R$ 5.000.000/ano' },
-  { value: '5m+', label: 'Mais de R$ 5.000.000/ano' },
-  { value: 'preferir-nao-informar', label: 'Prefiro não informar' }
-];
-
-export const StepSeuNegocioNew: React.FC<StepSeuNegocioNewProps> = ({
+export const StepSeuNegocioNew: React.FC<OnboardingStepProps> = ({
   data,
   onUpdate,
   onNext,
@@ -58,8 +37,6 @@ export const StepSeuNegocioNew: React.FC<StepSeuNegocioNewProps> = ({
   currentStep,
   totalSteps
 }) => {
-  console.log('🏢 StepSeuNegocioNew renderizado:', { data, canProceed, currentStep });
-
   return (
     <div className="max-w-3xl mx-auto">
       <div className="text-center mb-8">
@@ -88,6 +65,21 @@ export const StepSeuNegocioNew: React.FC<StepSeuNegocioNewProps> = ({
 
           <div className="space-y-2">
             <label className="block text-sm font-medium text-white">
+              Seu cargo <span className="text-red-400">*</span>
+            </label>
+            <Input
+              type="text"
+              value={data.role || ''}
+              onChange={(e) => onUpdate('role', e.target.value)}
+              placeholder="Seu cargo na empresa"
+              className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-white">
               Tamanho da empresa <span className="text-red-400">*</span>
             </label>
             <Select value={data.company_size || ''} onValueChange={(value) => onUpdate('company_size', value)}>
@@ -107,28 +99,28 @@ export const StepSeuNegocioNew: React.FC<StepSeuNegocioNewProps> = ({
               </SelectContent>
             </Select>
           </div>
-        </div>
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-white">
-            Segmento da empresa <span className="text-red-400">*</span>
-          </label>
-          <Select value={data.company_segment || ''} onValueChange={(value) => onUpdate('company_segment', value)}>
-            <SelectTrigger className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50">
-              <SelectValue placeholder="Selecione o segmento" />
-            </SelectTrigger>
-            <SelectContent className="bg-gray-800 border-gray-600">
-              {COMPANY_SEGMENT_OPTIONS.map((option) => (
-                <SelectItem 
-                  key={option.value} 
-                  value={option.value}
-                  className="text-white hover:bg-gray-700"
-                >
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-white">
+              Segmento da empresa <span className="text-red-400">*</span>
+            </label>
+            <Select value={data.company_segment || ''} onValueChange={(value) => onUpdate('company_segment', value)}>
+              <SelectTrigger className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50">
+                <SelectValue placeholder="Selecione o segmento" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 border-gray-600">
+                {COMPANY_SEGMENT_OPTIONS.map((option) => (
+                  <SelectItem 
+                    key={option.value} 
+                    value={option.value}
+                    className="text-white hover:bg-gray-700"
+                  >
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="flex justify-between items-center pt-6 border-t border-gray-700">

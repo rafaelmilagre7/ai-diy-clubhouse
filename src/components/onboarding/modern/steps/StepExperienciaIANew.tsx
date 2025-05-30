@@ -3,17 +3,7 @@ import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
-import { QuickOnboardingData } from '@/types/quickOnboarding';
-
-interface StepExperienciaIANewProps {
-  data: QuickOnboardingData;
-  onUpdate: (field: keyof QuickOnboardingData, value: string) => void;
-  onNext: () => void;
-  onPrevious: () => void;
-  canProceed: boolean;
-  currentStep: number;
-  totalSteps: number;
-}
+import { OnboardingStepProps } from '@/types/quickOnboarding';
 
 const AI_KNOWLEDGE_OPTIONS = [
   { value: 'iniciante', label: 'Iniciante - Pouco ou nenhum conhecimento' },
@@ -42,7 +32,7 @@ const MAIN_GOAL_OPTIONS = [
   { value: 'competitividade', label: 'Manter competitividade' }
 ];
 
-export const StepExperienciaIANew: React.FC<StepExperienciaIANewProps> = ({
+export const StepExperienciaIANew: React.FC<OnboardingStepProps> = ({
   data,
   onUpdate,
   onNext,
@@ -51,8 +41,6 @@ export const StepExperienciaIANew: React.FC<StepExperienciaIANewProps> = ({
   currentStep,
   totalSteps
 }) => {
-  console.log('🤖 StepExperienciaIANew renderizado:', { data, canProceed, currentStep });
-
   return (
     <div className="max-w-3xl mx-auto">
       <div className="text-center mb-8">

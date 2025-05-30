@@ -1093,6 +1093,42 @@ export type Database = {
         }
         Relationships: []
       }
+      implementation_trails_backup_complete_2025: {
+        Row: {
+          backup_timestamp: string | null
+          created_at: string | null
+          error_message: string | null
+          generation_attempts: number | null
+          id: string | null
+          status: string | null
+          trail_data: Json | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          backup_timestamp?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          generation_attempts?: number | null
+          id?: string | null
+          status?: string | null
+          trail_data?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          backup_timestamp?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          generation_attempts?: number | null
+          id?: string | null
+          status?: string | null
+          trail_data?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       invites: {
         Row: {
           created_at: string
@@ -2507,6 +2543,96 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_backup_complete_2025: {
+        Row: {
+          ai_knowledge_level: string | null
+          annual_revenue_range: string | null
+          backup_timestamp: string | null
+          birth_date: string | null
+          company_name: string | null
+          company_segment: string | null
+          company_size: string | null
+          company_website: string | null
+          completed_at: string | null
+          country_code: string | null
+          created_at: string | null
+          current_step: number | null
+          email: string | null
+          how_found_us: string | null
+          id: string | null
+          instagram_url: string | null
+          is_completed: boolean | null
+          linkedin_url: string | null
+          main_challenge: string | null
+          main_goal: string | null
+          name: string | null
+          referred_by: string | null
+          role: string | null
+          updated_at: string | null
+          user_id: string | null
+          uses_ai: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          ai_knowledge_level?: string | null
+          annual_revenue_range?: string | null
+          backup_timestamp?: string | null
+          birth_date?: string | null
+          company_name?: string | null
+          company_segment?: string | null
+          company_size?: string | null
+          company_website?: string | null
+          completed_at?: string | null
+          country_code?: string | null
+          created_at?: string | null
+          current_step?: number | null
+          email?: string | null
+          how_found_us?: string | null
+          id?: string | null
+          instagram_url?: string | null
+          is_completed?: boolean | null
+          linkedin_url?: string | null
+          main_challenge?: string | null
+          main_goal?: string | null
+          name?: string | null
+          referred_by?: string | null
+          role?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          uses_ai?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          ai_knowledge_level?: string | null
+          annual_revenue_range?: string | null
+          backup_timestamp?: string | null
+          birth_date?: string | null
+          company_name?: string | null
+          company_segment?: string | null
+          company_size?: string | null
+          company_website?: string | null
+          completed_at?: string | null
+          country_code?: string | null
+          created_at?: string | null
+          current_step?: number | null
+          email?: string | null
+          how_found_us?: string | null
+          id?: string | null
+          instagram_url?: string | null
+          is_completed?: boolean | null
+          linkedin_url?: string | null
+          main_challenge?: string | null
+          main_goal?: string | null
+          name?: string | null
+          referred_by?: string | null
+          role?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          uses_ai?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       onboarding_history: {
         Row: {
           created_at: string | null
@@ -2825,6 +2951,162 @@ export type Database = {
           training_needs?: string[] | null
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      onboarding_progress_backup_complete_2025: {
+        Row: {
+          ai_experience: Json | null
+          ai_knowledge_level: string | null
+          annual_revenue: string | null
+          backup_timestamp: string | null
+          budget_range: string | null
+          business_context: Json | null
+          business_data: Json | null
+          business_goals: Json | null
+          company_data: Json | null
+          company_name: string | null
+          company_sector: string | null
+          company_size: string | null
+          company_website: string | null
+          complementary_info: Json | null
+          completed_steps: string[] | null
+          created_at: string | null
+          current_position: string | null
+          current_step: string | null
+          debug_logs: Json | null
+          decision_makers: string[] | null
+          experience_personalization: Json | null
+          formation_data: Json | null
+          goals: string[] | null
+          id: string | null
+          implementation_preferences: Json | null
+          implementation_speed: string | null
+          industry_focus: Json | null
+          is_completed: boolean | null
+          last_error: string | null
+          last_sync_at: string | null
+          metadata: Json | null
+          onboarding_type: string | null
+          personal_info: Json | null
+          priority_areas: string[] | null
+          professional_data: Json | null
+          professional_info: Json | null
+          resources_needs: Json | null
+          support_level: string | null
+          sync_status: string | null
+          target_market: string | null
+          team_info: Json | null
+          team_size: string | null
+          tech_stack: string[] | null
+          technical_expertise: string | null
+          trail_generated_at: string | null
+          trail_solutions: Json | null
+          training_needs: string[] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          ai_experience?: Json | null
+          ai_knowledge_level?: string | null
+          annual_revenue?: string | null
+          backup_timestamp?: string | null
+          budget_range?: string | null
+          business_context?: Json | null
+          business_data?: Json | null
+          business_goals?: Json | null
+          company_data?: Json | null
+          company_name?: string | null
+          company_sector?: string | null
+          company_size?: string | null
+          company_website?: string | null
+          complementary_info?: Json | null
+          completed_steps?: string[] | null
+          created_at?: string | null
+          current_position?: string | null
+          current_step?: string | null
+          debug_logs?: Json | null
+          decision_makers?: string[] | null
+          experience_personalization?: Json | null
+          formation_data?: Json | null
+          goals?: string[] | null
+          id?: string | null
+          implementation_preferences?: Json | null
+          implementation_speed?: string | null
+          industry_focus?: Json | null
+          is_completed?: boolean | null
+          last_error?: string | null
+          last_sync_at?: string | null
+          metadata?: Json | null
+          onboarding_type?: string | null
+          personal_info?: Json | null
+          priority_areas?: string[] | null
+          professional_data?: Json | null
+          professional_info?: Json | null
+          resources_needs?: Json | null
+          support_level?: string | null
+          sync_status?: string | null
+          target_market?: string | null
+          team_info?: Json | null
+          team_size?: string | null
+          tech_stack?: string[] | null
+          technical_expertise?: string | null
+          trail_generated_at?: string | null
+          trail_solutions?: Json | null
+          training_needs?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          ai_experience?: Json | null
+          ai_knowledge_level?: string | null
+          annual_revenue?: string | null
+          backup_timestamp?: string | null
+          budget_range?: string | null
+          business_context?: Json | null
+          business_data?: Json | null
+          business_goals?: Json | null
+          company_data?: Json | null
+          company_name?: string | null
+          company_sector?: string | null
+          company_size?: string | null
+          company_website?: string | null
+          complementary_info?: Json | null
+          completed_steps?: string[] | null
+          created_at?: string | null
+          current_position?: string | null
+          current_step?: string | null
+          debug_logs?: Json | null
+          decision_makers?: string[] | null
+          experience_personalization?: Json | null
+          formation_data?: Json | null
+          goals?: string[] | null
+          id?: string | null
+          implementation_preferences?: Json | null
+          implementation_speed?: string | null
+          industry_focus?: Json | null
+          is_completed?: boolean | null
+          last_error?: string | null
+          last_sync_at?: string | null
+          metadata?: Json | null
+          onboarding_type?: string | null
+          personal_info?: Json | null
+          priority_areas?: string[] | null
+          professional_data?: Json | null
+          professional_info?: Json | null
+          resources_needs?: Json | null
+          support_level?: string | null
+          sync_status?: string | null
+          target_market?: string | null
+          team_info?: Json | null
+          team_size?: string | null
+          tech_stack?: string[] | null
+          technical_expertise?: string | null
+          trail_generated_at?: string | null
+          trail_solutions?: Json | null
+          training_needs?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
