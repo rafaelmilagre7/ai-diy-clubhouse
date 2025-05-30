@@ -6,7 +6,10 @@ import { StepQuemEVoceNew } from './steps/StepQuemEVoceNew';
 import { StepLocalizacaoRedes } from './steps/StepLocalizacaoRedes';
 import { StepComoNosConheceu } from './steps/StepComoNosConheceu';
 import { StepSeuNegocioNew } from './steps/StepSeuNegocioNew';
+import { StepContextoNegocio } from './steps/StepContextoNegocio';
+import { StepObjetivosMetas } from './steps/StepObjetivosMetas';
 import { StepExperienciaIANew } from './steps/StepExperienciaIANew';
+import { StepPersonalizacaoExperiencia } from './steps/StepPersonalizacaoExperiencia';
 import { EnhancedTrailMagicExperience } from '../EnhancedTrailMagicExperience';
 import { Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -105,9 +108,48 @@ export const SimpleOnboardingFlow: React.FC = () => {
           />
         );
       
+      case 5:
+        return (
+          <StepContextoNegocio
+            data={data}
+            onUpdate={updateField}
+            onNext={nextStep}
+            onPrevious={previousStep}
+            canProceed={canProceed}
+            currentStep={currentStep}
+            totalSteps={totalSteps}
+          />
+        );
+      
+      case 6:
+        return (
+          <StepObjetivosMetas
+            data={data}
+            onUpdate={updateField}
+            onNext={nextStep}
+            onPrevious={previousStep}
+            canProceed={canProceed}
+            currentStep={currentStep}
+            totalSteps={totalSteps}
+          />
+        );
+      
       case 7:
         return (
           <StepExperienciaIANew
+            data={data}
+            onUpdate={updateField}
+            onNext={nextStep}
+            onPrevious={previousStep}
+            canProceed={canProceed}
+            currentStep={currentStep}
+            totalSteps={totalSteps}
+          />
+        );
+      
+      case 8:
+        return (
+          <StepPersonalizacaoExperiencia
             data={data}
             onUpdate={updateField}
             onNext={handleFinish}
