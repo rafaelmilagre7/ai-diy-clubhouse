@@ -30,7 +30,7 @@ export interface QuickOnboardingData {
   
   // Etapa 5: Contexto do Negócio
   business_model: string;
-  main_challenge: string;
+  // Removido main_challenge que causava conflito
   business_challenges: string[];
   short_term_goals: string[];
   medium_term_goals: string[];
@@ -38,7 +38,7 @@ export interface QuickOnboardingData {
   additional_context?: string;
   
   // Etapa 6: Objetivos e Metas
-  main_goal: string;
+  // Unificado primary_goal (removido main_goal duplicado)
   primary_goal: string;
   expected_outcomes: string[];
   expected_outcome_30days: string;
@@ -49,7 +49,7 @@ export interface QuickOnboardingData {
   
   // Etapa 7: Experiência com IA
   ai_knowledge_level: string;
-  uses_ai: string;
+  // Removido uses_ai que causava conflito
   previous_tools: string[];
   has_implemented: string;
   desired_ai_areas: string[];

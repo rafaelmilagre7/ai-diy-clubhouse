@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { OnboardingStepProps } from '@/types/quickOnboarding';
+import { StepValidationFeedback } from './StepValidationFeedback';
 
 export const StepQuemEVoceNew: React.FC<OnboardingStepProps> = ({
   data,
@@ -80,11 +81,13 @@ export const StepQuemEVoceNew: React.FC<OnboardingStepProps> = ({
           </div>
         </div>
 
-        <div className="flex justify-between items-center pt-6 border-t border-gray-700">
-          <div className="text-sm text-gray-400">
-            Etapa {currentStep} de {totalSteps}
-          </div>
-          
+        <StepValidationFeedback
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+          canProceed={canProceed}
+        />
+        
+        <div className="flex justify-end pt-4">
           <Button
             onClick={onNext}
             disabled={!canProceed}

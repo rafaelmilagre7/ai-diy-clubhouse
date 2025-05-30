@@ -83,9 +83,30 @@ export function mapQuickToProgress(quickData: QuickOnboardingData): Partial<Onbo
 }
 
 /**
+ * Helper para extrair valor seguro de um objeto aninhado
+ */
+function safeGet(obj: any, key: string, defaultValue: any = undefined) {
+  try {
+    return obj && typeof obj === 'object' ? (obj[key] ?? defaultValue) : defaultValue;
+  } catch {
+    return defaultValue;
+  }
+}
+
+/**
+ * Helper para garantir que arrays sejam sempre arrays
+ */
+function ensureArray(value: any): any[] {
+  if (Array.isArray(value)) return value;
+  return [];
+}
+
+/**
  * Mapeia dados do OnboardingProgress para QuickOnboardingData
  */
 export function mapProgressToQuick(progressData: OnboardingProgress): Partial<QuickOnboardingData> {
+  console.log('🔄 Mapeando dados do progresso para Quick format:', progressData);
+  
   const personal = progressData.personal_info || {};
   const professional = progressData.professional_info || {};
   const businessContext = progressData.business_context || {};
@@ -94,71 +115,74 @@ export function mapProgressToQuick(progressData: OnboardingProgress): Partial<Qu
   const expPersonalization = progressData.experience_personalization || {};
   const complementary = progressData.complementary_info || {};
 
-  return {
+  const mappedData = {
     // Informações pessoais
-    name: personal.name || '',
-    email: personal.email || '',
-    whatsapp: personal.phone || '',
-    country_code: personal.ddi || '+55',
-    linkedin_url: personal.linkedin,
-    instagram_url: personal.instagram,
-    country: personal.country || '',
-    state: personal.state || '',
-    city: personal.city || '',
-    timezone: personal.timezone || '',
-    role: personal.role || '',
+    name: safeGet(personal, 'name', ''),
+    email: safeGet(personal, 'email', ''),
+    whatsapp: safeGet(personal, 'phone', ''),
+    country_code: safeGet(personal, 'ddi', '+55'),
+    linkedin_url: safeGet(personal, 'linkedin', ''),
+    instagram_url: safeGet(personal, 'instagram', ''),
+    country: safeGet(personal, 'country', ''),
+    state: safeGet(personal, 'state', ''),
+    city: safeGet(personal, 'city', ''),
+    timezone: safeGet(personal, 'timezone', ''),
+    role: safeGet(personal, 'role', ''),
     
     // Informações profissionais
-    company_name: professional.company_name || '',
-    company_size: professional.company_size || '',
-    company_segment: professional.company_sector || '',
-    company_website: professional.company_website,
-    current_position: professional.current_position || '',
-    annual_revenue_range: professional.annual_revenue || '',
+    company_name: safeGet(professional, 'company_name', ''),
+    company_size: safeGet(professional, 'company_size', ''),
+    company_segment: safeGet(professional, 'company_sector', ''),
+    company_website: safeGet(professional, 'company_website', ''),
+    current_position: safeGet(professional, 'current_position', ''),
+    annual_revenue_range: safeGet(professional, 'annual_revenue', ''),
     
     // Contexto do negócio
-    business_model: businessContext.business_model || '',
-    business_challenges: businessContext.business_challenges || [],
-    short_term_goals: businessContext.short_term_goals || [],
-    medium_term_goals: businessContext.medium_term_goals || [],
-    important_kpis: businessContext.important_kpis || [],
-    additional_context: businessContext.additional_context,
+    business_model: safeGet(businessContext, 'business_model', ''),
+    business_challenges: ensureArray(safeGet(businessContext, 'business_challenges', [])),
+    short_term_goals: ensureArray(safeGet(businessContext, 'short_term_goals', [])),
+    medium_term_goals: ensureArray(safeGet(businessContext, 'medium_term_goals', [])),
+    important_kpis: ensureArray(safeGet(businessContext, 'important_kpis', [])),
+    additional_context: safeGet(businessContext, 'additional_context', ''),
     
     // Objetivos e metas
-    primary_goal: businessGoals.primary_goal || '',
-    expected_outcomes: businessGoals.expected_outcomes || [],
-    expected_outcome_30days: businessGoals.expected_outcome_30days,
-    priority_solution_type: businessGoals.priority_solution_type || '',
-    how_implement: businessGoals.how_implement || '',
-    week_availability: businessGoals.week_availability || '',
-    live_interest: businessGoals.live_interest,
-    content_formats: businessGoals.content_formats || [],
+    primary_goal: safeGet(businessGoals, 'primary_goal', ''),
+    expected_outcomes: ensureArray(safeGet(businessGoals, 'expected_outcomes', [])),
+    expected_outcome_30days: safeGet(businessGoals, 'expected_outcome_30days', ''),
+    priority_solution_type: safeGet(businessGoals, 'priority_solution_type', ''),
+    how_implement: safeGet(businessGoals, 'how_implement', ''),
+    week_availability: safeGet(businessGoals, 'week_availability', ''),
+    live_interest: safeGet(businessGoals, 'live_interest', 0),
+    content_formats: ensureArray(safeGet(businessGoals, 'content_formats', [])),
     
     // Experiência com IA
-    ai_knowledge_level: (aiExp as any).knowledge_level || '',
-    previous_tools: (aiExp as any).previous_tools || [],
-    has_implemented: (aiExp as any).has_implemented || '',
-    desired_ai_areas: (aiExp as any).desired_ai_areas || [],
-    completed_formation: (aiExp as any).completed_formation,
-    is_member_for_month: (aiExp as any).is_member_for_month,
-    nps_score: (aiExp as any).nps_score,
-    improvement_suggestions: (aiExp as any).improvement_suggestions,
+    ai_knowledge_level: safeGet(aiExp, 'knowledge_level', ''),
+    previous_tools: ensureArray(safeGet(aiExp, 'previous_tools', [])),
+    has_implemented: safeGet(aiExp, 'has_implemented', ''),
+    desired_ai_areas: ensureArray(safeGet(aiExp, 'desired_ai_areas', [])),
+    completed_formation: safeGet(aiExp, 'completed_formation', false),
+    is_member_for_month: safeGet(aiExp, 'is_member_for_month', false),
+    nps_score: safeGet(aiExp, 'nps_score', 0),
+    improvement_suggestions: safeGet(aiExp, 'improvement_suggestions', ''),
     
     // Personalização da experiência
-    interests: expPersonalization.interests || [],
-    time_preference: expPersonalization.time_preference || [],
-    available_days: expPersonalization.available_days || [],
-    networking_availability: expPersonalization.networking_availability,
-    skills_to_share: expPersonalization.skills_to_share || [],
-    mentorship_topics: expPersonalization.mentorship_topics || [],
+    interests: ensureArray(safeGet(expPersonalization, 'interests', [])),
+    time_preference: ensureArray(safeGet(expPersonalization, 'time_preference', [])),
+    available_days: ensureArray(safeGet(expPersonalization, 'available_days', [])),
+    networking_availability: safeGet(expPersonalization, 'networking_availability', 0),
+    skills_to_share: ensureArray(safeGet(expPersonalization, 'skills_to_share', [])),
+    mentorship_topics: ensureArray(safeGet(expPersonalization, 'mentorship_topics', [])),
     
     // Informações complementares
-    how_found_us: complementary.how_found_us || '',
-    referred_by: complementary.referred_by,
-    authorize_case_usage: complementary.authorize_case_usage,
-    interested_in_interview: complementary.interested_in_interview,
-    priority_topics: complementary.priority_topics || []
+    how_found_us: safeGet(complementary, 'how_found_us', ''),
+    referred_by: safeGet(complementary, 'referred_by', ''),
+    authorize_case_usage: safeGet(complementary, 'authorize_case_usage', false),
+    interested_in_interview: safeGet(complementary, 'interested_in_interview', false),
+    priority_topics: ensureArray(safeGet(complementary, 'priority_topics', []))
   };
+  
+  console.log('✅ Dados mapeados com sucesso:', mappedData);
+  return mappedData;
 }
 
 /**
