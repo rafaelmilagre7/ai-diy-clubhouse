@@ -71,23 +71,23 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/benefits", Benefits),
   createProtectedRoute("/events", Events),
   
-  // Learning/LMS Routes
-  createProtectedRoute("/learning", LearningPage, "learning"),
-  createProtectedRoute("/learning/course/:id", CourseDetails, "learning"),
-  createProtectedRoute("/learning/course/:courseId/lesson/:lessonId", LessonView, "learning"),
+  // Learning/LMS Routes - sem guard de feature
+  createProtectedRoute("/learning", LearningPage),
+  createProtectedRoute("/learning/course/:id", CourseDetails),
+  createProtectedRoute("/learning/course/:courseId/lesson/:lessonId", LessonView),
   
   // Sugestões Routes
   createProtectedRoute("/suggestions", Suggestions),
   createProtectedRoute("/suggestions/:id", SuggestionDetails),
   createProtectedRoute("/suggestions/new", NewSuggestion),
   
-  // Comunidade Routes
-  createProtectedRoute("/comunidade", CommunityHome, "community"),
-  createProtectedRoute("/comunidade/topico/:topicId", TopicView, "community"),
-  createProtectedRoute("/comunidade/categoria/:slug", CategoryView, "community"),
-  createProtectedRoute("/comunidade/novo-topico/:categorySlug", NewTopic, "community"),
+  // Comunidade Routes - sem guard de feature
+  createProtectedRoute("/comunidade", CommunityHome),
+  createProtectedRoute("/comunidade/topico/:topicId", TopicView),
+  createProtectedRoute("/comunidade/categoria/:slug", CategoryView),
+  createProtectedRoute("/comunidade/novo-topico/:categorySlug", NewTopic),
   
-  // Networking Routes
+  // Networking Routes - mantém guard de feature
   createProtectedRoute("/networking", NetworkingPage, "networking"),
   createProtectedRoute("/networking/connections", () => <ConnectionsManager />, "networking")
 ];
