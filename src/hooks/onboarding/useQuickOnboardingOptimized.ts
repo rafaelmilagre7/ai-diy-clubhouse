@@ -1,199 +1,156 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { QuickOnboardingData } from '@/types/quickOnboarding';
+
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
+import { QuickOnboardingData } from '@/types/quickOnboarding';
 import { toast } from 'sonner';
+
+const initialData: QuickOnboardingData = {
+  name: '',
+  email: '',
+  whatsapp: '',
+  country_code: '+55',
+  how_found_us: '',
+  company_name: '',
+  role: '',
+  company_size: '',
+  company_segment: '',
+  annual_revenue_range: '',
+  main_challenge: '',
+  ai_knowledge_level: '',
+  uses_ai: '',
+  main_goal: ''
+};
 
 export const useQuickOnboardingOptimized = () => {
   const { user } = useAuth();
-  
-  // Estado inicial com todas as propriedades obrigatórias
-  const [data, setData] = useState<QuickOnboardingData>({
-    name: '',
-    email: '',
-    whatsapp: '',
-    country_code: '+55',
-    how_found_us: '',
-    company_name: '',
-    role: '', // Adicionado
-    company_size: '',
-    company_segment: '',
-    annual_revenue_range: '', // Adicionado
-    main_challenge: '', // Adicionado
-    ai_knowledge_level: '',
-    uses_ai: '',
-    main_goal: ''
-  });
-
+  const [data, setData] = useState<QuickOnboardingData>(initialData);
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasExistingData, setHasExistingData] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
-  const [isCompleting, setIsCompleting] = useState(false);
-  const saveTimeoutRef = useRef<NodeJS.Timeout>();
-  const totalSteps = 4;
 
-  const loadExistingData = useCallback(async () => {
-    if (!user?.id) {
-      console.log('❌ Usuário não encontrado, não é possível carregar dados');
-      setIsLoading(false);
-      return;
-    }
+  // Load existing data or create initial record
+  useEffect(() => {
+    const loadOrCreateOnboarding = async () => {
+      if (!user?.id) return;
 
-    try {
-      console.log('🔄 Carregando dados existentes para usuário:', user.id);
-      
-      const { data: existingData, error } = await supabase
-        .from('quick_onboarding')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('❌ Erro ao carregar dados de onboarding:', error);
-        throw new Error(`Erro ao carregar dados: ${error.message}`);
-      }
-
-      if (existingData) {
-        console.log('✅ Dados existentes encontrados:', existingData);
-        setData({
-          name: existingData.name || '',
-          email: existingData.email || user.email || '',
-          whatsapp: existingData.whatsapp || '',
-          country_code: existingData.country_code || '+55',
-          how_found_us: existingData.how_found_us || '',
-          company_name: existingData.company_name || '',
-          role: existingData.role || '',
-          company_size: existingData.company_size || '',
-          company_segment: existingData.company_segment || '',
-          annual_revenue_range: existingData.annual_revenue_range || '',
-          main_challenge: existingData.main_challenge || '',
-          ai_knowledge_level: existingData.ai_knowledge_level || '',
-          uses_ai: existingData.uses_ai || '',
-          main_goal: existingData.main_goal || ''
-        });
-        setCurrentStep(existingData.current_step || 1);
-        setHasExistingData(true);
-      } else {
-        console.log('🆕 Nenhum dado existente encontrado, criando registro inicial...');
+      try {
+        setIsLoading(true);
         
-        // Criar registro inicial automaticamente
-        const initialData = {
-          user_id: user.id,
-          name: user.user_metadata?.name || user.user_metadata?.full_name || '',
-          email: user.email || '',
-          whatsapp: '',
-          country_code: '+55',
-          how_found_us: '',
-          company_name: '',
-          role: '',
-          company_size: '',
-          company_segment: '',
-          annual_revenue_range: '',
-          main_challenge: '',
-          ai_knowledge_level: '',
-          uses_ai: '',
-          main_goal: '',
-          current_step: 1,
-          is_completed: false
-        };
-
-        const { error: insertError } = await supabase
+        // Try to fetch existing data
+        const { data: existingData, error } = await supabase
           .from('quick_onboarding')
-          .insert(initialData);
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
 
-        if (insertError) {
-          console.error('❌ Erro ao criar registro inicial:', insertError);
-          throw new Error(`Erro ao criar registro inicial: ${insertError.message}`);
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error fetching onboarding data:', error);
+          toast.error('Erro ao carregar dados do onboarding');
+          return;
         }
 
-        console.log('✅ Registro inicial criado com sucesso');
-        setData({
-          name: initialData.name,
-          email: initialData.email,
-          whatsapp: initialData.whatsapp,
-          country_code: initialData.country_code,
-          how_found_us: initialData.how_found_us,
-          company_name: initialData.company_name,
-          role: initialData.role,
-          company_size: initialData.company_size,
-          company_segment: initialData.company_segment,
-          annual_revenue_range: initialData.annual_revenue_range,
-          main_challenge: initialData.main_challenge,
-          ai_knowledge_level: initialData.ai_knowledge_level,
-          uses_ai: initialData.uses_ai,
-          main_goal: initialData.main_goal
-        });
-        setCurrentStep(1);
-        setHasExistingData(false);
-      }
+        if (existingData) {
+          // Load existing data
+          setData({
+            name: existingData.name || '',
+            email: existingData.email || '',
+            whatsapp: existingData.whatsapp || '',
+            country_code: existingData.country_code || '+55',
+            how_found_us: existingData.how_found_us || '',
+            company_name: existingData.company_name || '',
+            role: existingData.role || '',
+            company_size: existingData.company_size || '',
+            company_segment: existingData.company_segment || '',
+            annual_revenue_range: existingData.annual_revenue_range || '',
+            main_challenge: existingData.main_challenge || '',
+            ai_knowledge_level: existingData.ai_knowledge_level || '',
+            uses_ai: existingData.uses_ai || '',
+            main_goal: existingData.main_goal || ''
+          });
+          setCurrentStep(existingData.current_step || 1);
+        } else {
+          // Create initial record
+          const { error: insertError } = await supabase
+            .from('quick_onboarding')
+            .insert({
+              user_id: user.id,
+              email: user.email || '',
+              current_step: 1,
+              is_completed: false,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
 
-    } catch (error: any) {
-      console.error('❌ Erro no carregamento de dados:', error);
-      setLoadError(error.message || 'Erro desconhecido ao carregar dados');
-    } finally {
-      setIsLoading(false);
-    }
+          if (insertError) {
+            console.error('Error creating initial onboarding record:', insertError);
+            toast.error('Erro ao inicializar onboarding');
+          } else {
+            // Update data with user info
+            setData(prev => ({
+              ...prev,
+              email: user.email || '',
+              name: user.user_metadata?.name || ''
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Unexpected error in loadOrCreateOnboarding:', error);
+        toast.error('Erro inesperado ao carregar onboarding');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadOrCreateOnboarding();
   }, [user]);
 
-  const autoSave = useCallback(async (currentData: QuickOnboardingData, step: number) => {
+  // Auto-save functionality
+  const saveData = async (updatedData: QuickOnboardingData, step: number) => {
     if (!user?.id) return;
 
     try {
       setIsSaving(true);
-      console.log('💾 Auto-salvando dados do step:', step);
-
-      const updateData = {
-        ...currentData,
-        current_step: step,
-        updated_at: new Date().toISOString()
-      };
-
+      
       const { error } = await supabase
         .from('quick_onboarding')
         .upsert({
           user_id: user.id,
-          ...updateData
+          ...updatedData,
+          current_step: step,
+          updated_at: new Date().toISOString()
         });
 
       if (error) {
-        console.error('❌ Erro no auto-save:', error);
-        toast.error('Erro ao salvar dados automaticamente');
-        return;
+        console.error('Error saving onboarding data:', error);
+        toast.error('Erro ao salvar dados');
+        return false;
       }
 
-      console.log('✅ Auto-save realizado com sucesso');
       setLastSaveTime(new Date());
+      return true;
     } catch (error) {
-      console.error('❌ Erro no auto-save:', error);
+      console.error('Unexpected error saving data:', error);
+      toast.error('Erro inesperado ao salvar');
+      return false;
     } finally {
       setIsSaving(false);
     }
-  }, [user?.id]);
+  };
 
-  const updateField = useCallback((field: keyof QuickOnboardingData, value: string) => {
-    console.log(`📝 Atualizando campo ${field}:`, value);
+  const updateField = (field: keyof QuickOnboardingData, value: string) => {
+    const updatedData = { ...data, [field]: value };
+    setData(updatedData);
     
-    setData(prev => {
-      const newData = { ...prev, [field]: value };
-      
-      // Trigger auto-save after a delay
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-      
-      saveTimeoutRef.current = setTimeout(() => {
-        autoSave(newData, currentStep);
-      }, 1000);
-      
-      return newData;
-    });
-  }, [currentStep, autoSave]);
+    // Auto-save with debounce
+    setTimeout(() => {
+      saveData(updatedData, currentStep);
+    }, 1000);
+  };
 
-  const canProceed = useCallback(() => {
-    switch (currentStep) {
+  const validateStep = (step: number): boolean => {
+    switch (step) {
       case 1:
         return !!(data.name && data.email && data.whatsapp && data.how_found_us);
       case 2:
@@ -201,35 +158,35 @@ export const useQuickOnboardingOptimized = () => {
       case 3:
         return !!(data.ai_knowledge_level && data.uses_ai && data.main_goal);
       default:
-        return true;
+        return false;
     }
-  }, [currentStep, data]);
+  };
 
-  const nextStep = useCallback(() => {
-    if (currentStep < totalSteps && canProceed()) {
-      const newStep = currentStep + 1;
-      setCurrentStep(newStep);
-      autoSave(data, newStep);
-      console.log('➡️ Avançando para step:', newStep);
+  const nextStep = async () => {
+    if (!validateStep(currentStep)) {
+      toast.error('Por favor, preencha todos os campos obrigatórios');
+      return;
     }
-  }, [currentStep, totalSteps, canProceed, data, autoSave]);
 
-  const previousStep = useCallback(() => {
+    const newStep = currentStep + 1;
+    setCurrentStep(newStep);
+    await saveData(data, newStep);
+  };
+
+  const previousStep = () => {
     if (currentStep > 1) {
       const newStep = currentStep - 1;
       setCurrentStep(newStep);
-      autoSave(data, newStep);
-      console.log('⬅️ Voltando para step:', newStep);
+      saveData(data, newStep);
     }
-  }, [currentStep, data, autoSave]);
+  };
 
-  const completeOnboarding = useCallback(async (): Promise<boolean> => {
+  const completeOnboarding = async () => {
     if (!user?.id) return false;
 
     try {
-      setIsCompleting(true);
-      console.log('🎯 Finalizando onboarding...');
-
+      setIsSaving(true);
+      
       const { error } = await supabase
         .from('quick_onboarding')
         .update({
@@ -240,49 +197,33 @@ export const useQuickOnboardingOptimized = () => {
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('❌ Erro ao finalizar onboarding:', error);
+        console.error('Error completing onboarding:', error);
         toast.error('Erro ao finalizar onboarding');
         return false;
       }
 
-      console.log('✅ Onboarding finalizado com sucesso');
-      toast.success('Onboarding concluído com sucesso!');
+      toast.success('Onboarding concluído com sucesso! 🎉');
       return true;
     } catch (error) {
-      console.error('❌ Erro ao finalizar onboarding:', error);
-      toast.error('Erro ao finalizar onboarding');
+      console.error('Unexpected error completing onboarding:', error);
+      toast.error('Erro inesperado ao finalizar');
       return false;
     } finally {
-      setIsCompleting(false);
+      setIsSaving(false);
     }
-  }, [user?.id]);
-
-  useEffect(() => {
-    loadExistingData();
-  }, [loadExistingData]);
-
-  useEffect(() => {
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-    };
-  }, []);
+  };
 
   return {
-    currentStep,
     data,
+    currentStep,
+    isLoading,
+    isSaving,
+    lastSaveTime,
     updateField,
     nextStep,
     previousStep,
-    canProceed: canProceed(),
-    isLoading,
-    hasExistingData,
-    loadError,
-    totalSteps,
-    isSaving,
-    lastSaveTime,
     completeOnboarding,
-    isCompleting
+    canProceed: validateStep(currentStep),
+    totalSteps: 3
   };
 };
