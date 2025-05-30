@@ -6,20 +6,77 @@ import { QuickOnboardingData } from '@/types/quickOnboarding';
 import { toast } from 'sonner';
 
 const initialData: QuickOnboardingData = {
+  // Etapa 1: Informações Pessoais Básicas
   name: '',
   email: '',
   whatsapp: '',
   country_code: '+55',
+  birth_date: '',
+  
+  // Etapa 2: Localização e Redes Sociais
+  country: '',
+  state: '',
+  city: '',
+  timezone: '',
+  instagram_url: '',
+  linkedin_url: '',
+  
+  // Etapa 3: Como nos conheceu
   how_found_us: '',
+  referred_by: '',
+  
+  // Etapa 4: Informações Profissionais
   company_name: '',
   role: '',
   company_size: '',
   company_segment: '',
+  company_website: '',
   annual_revenue_range: '',
+  current_position: '',
+  
+  // Etapa 5: Contexto do Negócio
+  business_model: '',
   main_challenge: '',
+  business_challenges: [],
+  short_term_goals: [],
+  medium_term_goals: [],
+  important_kpis: [],
+  additional_context: '',
+  
+  // Etapa 6: Objetivos e Metas
+  main_goal: '',
+  primary_goal: '',
+  expected_outcomes: [],
+  expected_outcome_30days: '',
+  priority_solution_type: '',
+  how_implement: '',
+  week_availability: '',
+  content_formats: [],
+  
+  // Etapa 7: Experiência com IA
   ai_knowledge_level: '',
   uses_ai: '',
-  main_goal: ''
+  previous_tools: [],
+  has_implemented: '',
+  desired_ai_areas: [],
+  completed_formation: false,
+  is_member_for_month: false,
+  nps_score: 0,
+  improvement_suggestions: '',
+  
+  // Etapa 8: Personalização da Experiência
+  interests: [],
+  time_preference: [],
+  available_days: [],
+  networking_availability: 0,
+  skills_to_share: [],
+  mentorship_topics: [],
+  
+  // Campos de controle
+  live_interest: 0,
+  authorize_case_usage: false,
+  interested_in_interview: false,
+  priority_topics: []
 };
 
 export const useQuickOnboardingOptimized = () => {
@@ -56,23 +113,80 @@ export const useQuickOnboardingOptimized = () => {
         }
 
         if (existingData) {
-          // Load existing data
+          // Load existing data with all fields
           setHasExistingData(true);
           setData({
+            // Etapa 1: Informações Pessoais Básicas
             name: existingData.name || '',
             email: existingData.email || '',
             whatsapp: existingData.whatsapp || '',
             country_code: existingData.country_code || '+55',
+            birth_date: existingData.birth_date || '',
+            
+            // Etapa 2: Localização e Redes Sociais
+            country: existingData.country || '',
+            state: existingData.state || '',
+            city: existingData.city || '',
+            timezone: existingData.timezone || '',
+            instagram_url: existingData.instagram_url || '',
+            linkedin_url: existingData.linkedin_url || '',
+            
+            // Etapa 3: Como nos conheceu
             how_found_us: existingData.how_found_us || '',
+            referred_by: existingData.referred_by || '',
+            
+            // Etapa 4: Informações Profissionais
             company_name: existingData.company_name || '',
             role: existingData.role || '',
             company_size: existingData.company_size || '',
             company_segment: existingData.company_segment || '',
+            company_website: existingData.company_website || '',
             annual_revenue_range: existingData.annual_revenue_range || '',
+            current_position: existingData.current_position || '',
+            
+            // Etapa 5: Contexto do Negócio
+            business_model: existingData.business_model || '',
             main_challenge: existingData.main_challenge || '',
+            business_challenges: existingData.business_challenges || [],
+            short_term_goals: existingData.short_term_goals || [],
+            medium_term_goals: existingData.medium_term_goals || [],
+            important_kpis: existingData.important_kpis || [],
+            additional_context: existingData.additional_context || '',
+            
+            // Etapa 6: Objetivos e Metas
+            main_goal: existingData.main_goal || '',
+            primary_goal: existingData.primary_goal || '',
+            expected_outcomes: existingData.expected_outcomes || [],
+            expected_outcome_30days: existingData.expected_outcome_30days || '',
+            priority_solution_type: existingData.priority_solution_type || '',
+            how_implement: existingData.how_implement || '',
+            week_availability: existingData.week_availability || '',
+            content_formats: existingData.content_formats || [],
+            
+            // Etapa 7: Experiência com IA
             ai_knowledge_level: existingData.ai_knowledge_level || '',
             uses_ai: existingData.uses_ai || '',
-            main_goal: existingData.main_goal || ''
+            previous_tools: existingData.previous_tools || [],
+            has_implemented: existingData.has_implemented || '',
+            desired_ai_areas: existingData.desired_ai_areas || [],
+            completed_formation: existingData.completed_formation || false,
+            is_member_for_month: existingData.is_member_for_month || false,
+            nps_score: existingData.nps_score || 0,
+            improvement_suggestions: existingData.improvement_suggestions || '',
+            
+            // Etapa 8: Personalização da Experiência
+            interests: existingData.interests || [],
+            time_preference: existingData.time_preference || [],
+            available_days: existingData.available_days || [],
+            networking_availability: existingData.networking_availability || 0,
+            skills_to_share: existingData.skills_to_share || [],
+            mentorship_topics: existingData.mentorship_topics || [],
+            
+            // Campos de controle
+            live_interest: existingData.live_interest || 0,
+            authorize_case_usage: existingData.authorize_case_usage || false,
+            interested_in_interview: existingData.interested_in_interview || false,
+            priority_topics: existingData.priority_topics || []
           });
           setCurrentStep(existingData.current_step || 1);
         } else {
@@ -145,7 +259,7 @@ export const useQuickOnboardingOptimized = () => {
     }
   };
 
-  const updateField = (field: keyof QuickOnboardingData, value: string) => {
+  const updateField = (field: keyof QuickOnboardingData, value: string | string[] | number | boolean) => {
     const updatedData = { ...data, [field]: value };
     setData(updatedData);
     
@@ -158,13 +272,17 @@ export const useQuickOnboardingOptimized = () => {
   const validateStep = (step: number): boolean => {
     switch (step) {
       case 1:
-        return !!(data.name && data.email && data.whatsapp && data.how_found_us);
+        return !!(data.name && data.email && data.whatsapp);
       case 2:
-        return !!(data.company_name && data.role && data.company_size && data.company_segment);
+        return !!(data.country && data.state && data.city);
       case 3:
-        return !!(data.ai_knowledge_level && data.uses_ai && data.main_goal);
+        return !!(data.how_found_us);
+      case 4:
+        return !!(data.company_name && data.role && data.company_size && data.company_segment);
+      case 7:
+        return !!(data.ai_knowledge_level && data.uses_ai);
       default:
-        return false;
+        return true;
     }
   };
 
@@ -233,6 +351,6 @@ export const useQuickOnboardingOptimized = () => {
     previousStep,
     completeOnboarding,
     canProceed: validateStep(currentStep),
-    totalSteps: 3
+    totalSteps: 8
   };
 };
