@@ -54,25 +54,22 @@ export const AppRoutes = () => {
             </ProtectedRoutes>
           } />
 
+          {/* Learning e Comunidade - apenas autenticação básica, sem verificação de onboarding */}
           <Route path="/comunidade/*" element={
             <ProtectedRoutes>
-              <SmartFeatureGuard feature="community">
-                <CommunityRoutes />
-              </SmartFeatureGuard>
+              <CommunityRoutes />
+            </ProtectedRoutes>
+          } />
+
+          <Route path="/learning/*" element={
+            <ProtectedRoutes>
+              <LearningRoutes />
             </ProtectedRoutes>
           } />
 
           <Route path="/solutions/*" element={
             <ProtectedRoutes>
               <SolutionsRoutes />
-            </ProtectedRoutes>
-          } />
-
-          <Route path="/learning/*" element={
-            <ProtectedRoutes>
-              <SmartFeatureGuard feature="learning">
-                <LearningRoutes />
-              </SmartFeatureGuard>
             </ProtectedRoutes>
           } />
 
