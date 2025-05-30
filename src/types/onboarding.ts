@@ -13,6 +13,7 @@ export interface OnboardingData {
     state?: string;
     city?: string;
     timezone?: string;
+    birth_date?: string; // Adicionado campo birth_date
   };
   // 2. Dados Profissionais 
   professional_info: {
