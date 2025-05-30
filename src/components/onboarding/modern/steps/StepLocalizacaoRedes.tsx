@@ -1,126 +1,104 @@
 
 import React from 'react';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { OnboardingStepProps } from '@/types/quickOnboarding';
-import { RealtimeFieldValidation } from '../RealtimeFieldValidation';
-import { useRealtimeValidation } from '@/hooks/onboarding/useRealtimeValidation';
-import { CountrySelector } from '../CountrySelector';
-import { SocialLinksInput } from '../SocialLinksInput';
 import { DropdownModerno } from '../DropdownModerno';
-import { TimezoneInput } from '../../steps/inputs/TimezoneInput';
+import { SocialLinksInput } from '../SocialLinksInput';
 
-const STATE_OPTIONS = [
-  { value: 'AC', label: 'Acre' },
-  { value: 'AL', label: 'Alagoas' },
-  { value: 'AP', label: 'Amapá' },
-  { value: 'AM', label: 'Amazonas' },
-  { value: 'BA', label: 'Bahia' },
-  { value: 'CE', label: 'Ceará' },
-  { value: 'DF', label: 'Distrito Federal' },
-  { value: 'ES', label: 'Espírito Santo' },
-  { value: 'GO', label: 'Goiás' },
-  { value: 'MA', label: 'Maranhão' },
-  { value: 'MT', label: 'Mato Grosso' },
-  { value: 'MS', label: 'Mato Grosso do Sul' },
-  { value: 'MG', label: 'Minas Gerais' },
-  { value: 'PA', label: 'Pará' },
-  { value: 'PB', label: 'Paraíba' },
-  { value: 'PR', label: 'Paraná' },
-  { value: 'PE', label: 'Pernambuco' },
-  { value: 'PI', label: 'Piauí' },
-  { value: 'RJ', label: 'Rio de Janeiro' },
-  { value: 'RN', label: 'Rio Grande do Norte' },
-  { value: 'RS', label: 'Rio Grande do Sul' },
-  { value: 'RO', label: 'Rondônia' },
-  { value: 'RR', label: 'Roraima' },
-  { value: 'SC', label: 'Santa Catarina' },
+const COUNTRY_OPTIONS = [
+  { value: 'BR', label: '🇧🇷 Brasil' },
+  { value: 'US', label: '🇺🇸 Estados Unidos' },
+  { value: 'PT', label: '🇵🇹 Portugal' },
+  { value: 'ES', label: '🇪🇸 Espanha' }
+];
+
+const BRAZIL_STATES = [
   { value: 'SP', label: 'São Paulo' },
-  { value: 'SE', label: 'Sergipe' },
-  { value: 'TO', label: 'Tocantins' }
+  { value: 'RJ', label: 'Rio de Janeiro' },
+  { value: 'MG', label: 'Minas Gerais' },
+  { value: 'RS', label: 'Rio Grande do Sul' },
+  { value: 'PR', label: 'Paraná' },
+  { value: 'SC', label: 'Santa Catarina' }
 ];
 
 const TIMEZONE_OPTIONS = [
-  { value: 'America/Sao_Paulo', label: 'Brasília (GMT-3)' },
-  { value: 'America/Manaus', label: 'Manaus (GMT-4)' },
-  { value: 'America/Rio_Branco', label: 'Acre (GMT-5)' }
+  { value: 'America/Sao_Paulo', label: 'Brasília (UTC-3)' },
+  { value: 'America/New_York', label: 'Nova York (UTC-5)' },
+  { value: 'Europe/Lisbon', label: 'Lisboa (UTC+0)' }
 ];
 
 export const StepLocalizacaoRedes: React.FC<OnboardingStepProps> = ({
   data,
   onUpdate,
   onNext,
+  onPrevious,
   canProceed,
   currentStep,
   totalSteps
 }) => {
-  const { getFieldValidation } = useRealtimeValidation(data, currentStep);
-
   return (
     <div className="max-w-2xl mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-white mb-2">
-          Onde você está? 🌍
+          Localização e redes sociais 🌎
         </h2>
         <p className="text-gray-400">
-          Vamos entender sua localização e redes sociais
+          Nos ajude a entender onde você está e como se conectar
         </p>
       </div>
 
       <div className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700/50 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-white">
-              País <span className="text-red-400">*</span>
-            </label>
-            <Input
-              type="text"
-              value={data.country || ''}
-              onChange={(e) => onUpdate('country', e.target.value)}
-              placeholder="Brasil"
-              className="h-12 bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:ring-viverblue/50"
-            />
-            <RealtimeFieldValidation validation={getFieldValidation('country')} />
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <DropdownModerno
+            value={data.country || ''}
+            onChange={(value) => onUpdate('country', value)}
+            options={COUNTRY_OPTIONS}
+            placeholder="Selecione o país"
+            label="País"
+            required
+          />
 
           <DropdownModerno
             value={data.state || ''}
             onChange={(value) => onUpdate('state', value)}
-            options={STATE_OPTIONS}
-            placeholder="Selecione seu estado"
+            options={BRAZIL_STATES}
+            placeholder="Selecione o estado"
             label="Estado"
             required
           />
         </div>
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-white">
-            Cidade <span className="text-red-400">*</span>
-          </label>
-          <Input
-            type="text"
-            value={data.city || ''}
-            onChange={(e) => onUpdate('city', e.target.value)}
-            placeholder="Sua cidade"
-            className="h-12 bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:ring-viverblue/50"
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-white">
+              Cidade <span className="text-red-400">*</span>
+            </label>
+            <Input
+              type="text"
+              value={data.city || ''}
+              onChange={(e) => onUpdate('city', e.target.value)}
+              placeholder="Sua cidade"
+              className="h-12 bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:ring-viverblue/50"
+            />
+          </div>
+
+          <DropdownModerno
+            value={data.timezone || ''}
+            onChange={(value) => onUpdate('timezone', value)}
+            options={TIMEZONE_OPTIONS}
+            placeholder="Selecione o fuso horário"
+            label="Fuso horário"
+            required
           />
-          <RealtimeFieldValidation validation={getFieldValidation('city')} />
         </div>
 
-        <DropdownModerno
-          value={data.timezone || ''}
-          onChange={(value) => onUpdate('timezone', value)}
-          options={TIMEZONE_OPTIONS}
-          placeholder="Selecione seu fuso horário"
-          label="Fuso Horário"
-          required
-        />
-
-        <div className="pt-4">
-          <h3 className="text-lg font-semibold text-white mb-4">
-            Redes Sociais <span className="text-gray-400 text-sm font-normal">(opcional)</span>
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium text-white">
+            Redes sociais <span className="text-gray-400 text-sm font-normal">(opcional)</span>
           </h3>
+          
           <SocialLinksInput
             instagramValue={data.instagram_url || ''}
             linkedinValue={data.linkedin_url || ''}
@@ -129,8 +107,22 @@ export const StepLocalizacaoRedes: React.FC<OnboardingStepProps> = ({
           />
         </div>
 
+        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+          <p className="text-sm text-blue-400">
+            📍 <strong>Localização:</strong> Usamos essas informações para conectar 
+            você com outros membros da sua região e personalizar horários de eventos.
+          </p>
+        </div>
+
         <div className="flex justify-between items-center pt-6 border-t border-gray-700">
-          <div></div>
+          <Button
+            onClick={onPrevious}
+            variant="outline"
+            className="border-gray-600 text-gray-300 hover:bg-gray-700 flex items-center gap-2"
+          >
+            <ArrowLeft size={16} />
+            <span>Voltar</span>
+          </Button>
           
           <div className="text-sm text-gray-400">
             Etapa {currentStep} de {totalSteps}

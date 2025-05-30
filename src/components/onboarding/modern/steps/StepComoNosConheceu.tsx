@@ -1,37 +1,32 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { OnboardingStepProps } from '@/types/quickOnboarding';
-import { RealtimeFieldValidation } from '../RealtimeFieldValidation';
-import { useRealtimeValidation } from '@/hooks/onboarding/useRealtimeValidation';
 import { DropdownModerno } from '../DropdownModerno';
 import { ConditionalReferralInput } from '../ConditionalReferralInput';
 
 const HOW_FOUND_OPTIONS = [
-  { value: 'google', label: '🔍 Google / Busca online' },
+  { value: 'google', label: '🔍 Busca no Google' },
   { value: 'youtube', label: '📺 YouTube' },
   { value: 'instagram', label: '📸 Instagram' },
   { value: 'linkedin', label: '💼 LinkedIn' },
-  { value: 'facebook', label: '📘 Facebook' },
   { value: 'indicacao', label: '👥 Indicação de amigo/colega' },
-  { value: 'evento', label: '🎯 Evento/Palestra' },
   { value: 'podcast', label: '🎧 Podcast' },
-  { value: 'blog', label: '📝 Blog/Artigo' },
-  { value: 'anuncio', label: '📢 Anúncio pago' },
-  { value: 'outro', label: '🤔 Outro' }
+  { value: 'evento', label: '🎤 Evento/Palestra' },
+  { value: 'artigo', label: '📰 Artigo/Blog' },
+  { value: 'outro', label: '🔗 Outro' }
 ];
 
 export const StepComoNosConheceu: React.FC<OnboardingStepProps> = ({
   data,
   onUpdate,
   onNext,
+  onPrevious,
   canProceed,
   currentStep,
   totalSteps
 }) => {
-  const { getFieldValidation } = useRealtimeValidation(data, currentStep);
-
   return (
     <div className="max-w-2xl mx-auto">
       <div className="text-center mb-8">
@@ -39,7 +34,7 @@ export const StepComoNosConheceu: React.FC<OnboardingStepProps> = ({
           Como nos conheceu? 🤝
         </h2>
         <p className="text-gray-400">
-          Queremos entender como você chegou até nós
+          Nos ajude a entender como você chegou até nós
         </p>
       </div>
 
@@ -48,7 +43,7 @@ export const StepComoNosConheceu: React.FC<OnboardingStepProps> = ({
           value={data.how_found_us || ''}
           onChange={(value) => onUpdate('how_found_us', value)}
           options={HOW_FOUND_OPTIONS}
-          placeholder="Selecione como nos conheceu"
+          placeholder="Selecione como conheceu a Viver de IA"
           label="Como você conheceu a Viver de IA?"
           required
         />
@@ -59,15 +54,22 @@ export const StepComoNosConheceu: React.FC<OnboardingStepProps> = ({
           onReferredByChange={(value) => onUpdate('referred_by', value)}
         />
 
-        <div className="bg-viverblue/10 border border-viverblue/20 rounded-lg p-4">
-          <p className="text-sm text-viverblue-light">
-            💡 <strong>Curiosidade:</strong> Essas informações nos ajudam a entender quais canais 
-            são mais efetivos e melhorar nossa presença onde você mais precisa!
+        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+          <p className="text-sm text-green-400">
+            📊 <strong>Por que perguntamos:</strong> Essas informações nos ajudam a 
+            entender quais canais funcionam melhor e como melhorar nossa comunicação.
           </p>
         </div>
 
         <div className="flex justify-between items-center pt-6 border-t border-gray-700">
-          <div></div>
+          <Button
+            onClick={onPrevious}
+            variant="outline"
+            className="border-gray-600 text-gray-300 hover:bg-gray-700 flex items-center gap-2"
+          >
+            <ArrowLeft size={16} />
+            <span>Voltar</span>
+          </Button>
           
           <div className="text-sm text-gray-400">
             Etapa {currentStep} de {totalSteps}
