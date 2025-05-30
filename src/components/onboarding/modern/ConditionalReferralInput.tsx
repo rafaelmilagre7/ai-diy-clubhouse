@@ -3,17 +3,17 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 
 interface ConditionalReferralInputProps {
-  howFoundUs: string;
-  referredBy: string;
-  onReferredByChange: (value: string) => void;
+  show: boolean;
+  value: string;
+  onChange: (value: string) => void;
 }
 
 export const ConditionalReferralInput: React.FC<ConditionalReferralInputProps> = ({
-  howFoundUs,
-  referredBy,
-  onReferredByChange
+  show,
+  value,
+  onChange
 }) => {
-  if (howFoundUs !== 'indicacao') return null;
+  if (!show) return null;
 
   return (
     <div className="space-y-2">
@@ -22,9 +22,9 @@ export const ConditionalReferralInput: React.FC<ConditionalReferralInputProps> =
       </label>
       <Input
         type="text"
-        value={referredBy}
-        onChange={(e) => onReferredByChange(e.target.value)}
-        placeholder="Nome de quem te indicou"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Nome da pessoa que te indicou"
         className="h-12 bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:ring-viverblue/50"
       />
     </div>
