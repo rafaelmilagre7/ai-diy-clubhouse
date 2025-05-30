@@ -3,8 +3,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { QuickOnboardingData } from '@/types/quickOnboarding';
 import { useOnboardingProgress } from './useOnboardingProgress';
-import { mapQuickToProgress, mapProgressToQuick } from '@/utils/onboarding/dataMappers';
+import { mapProgressToQuick } from '@/utils/onboarding/dataMappers';
 import { validateStepData } from '@/utils/onboarding/dataMappers';
+import { useManualSave } from './useManualSave';
 import { toast } from 'sonner';
 
 const createEmptyData = (): QuickOnboardingData => ({
@@ -80,11 +81,11 @@ const createEmptyData = (): QuickOnboardingData => ({
 
 export const useSimpleOnboarding = () => {
   const { user } = useAuth();
-  const { loadProgress, saveProgress, completeOnboarding } = useOnboardingProgress();
+  const { loadProgress, completeOnboarding } = useOnboardingProgress();
+  const { saveManually, isSaving: isSavingManually, loadFromLocalStorage } = useManualSave();
   
   const [data, setData] = useState<QuickOnboardingData>(createEmptyData());
   const [currentStep, setCurrentStep] = useState(1);
-  const [isSaving, setIsSaving] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -97,73 +98,61 @@ export const useSimpleOnboarding = () => {
       
       try {
         console.log('🔄 Carregando dados salvos do onboarding...');
+        
+        // Primeiro tentar carregar do servidor
         const progressData = await loadProgress();
         
         if (progressData) {
-          console.log('📊 Dados encontrados, convertendo para formato Quick:', progressData);
+          console.log('📊 Dados encontrados no servidor:', progressData);
           const quickData = mapProgressToQuick(progressData);
-          
-          // Merge com dados vazios para garantir que todos os campos existem
           const mergedData = { ...createEmptyData(), ...quickData };
           setData(mergedData);
           
-          // Determinar step baseado nos dados salvos
           const savedStep = parseInt(progressData.current_step || '1');
           if (savedStep >= 1 && savedStep <= totalSteps) {
             setCurrentStep(savedStep);
           }
           
-          console.log('✅ Dados carregados e aplicados');
+          console.log('✅ Dados do servidor carregados');
         } else {
-          console.log('📝 Nenhum progresso salvo encontrado, iniciando novo onboarding');
+          // Se não há dados no servidor, tentar backup local
+          const backupData = loadFromLocalStorage();
+          if (backupData) {
+            console.log('📦 Recuperando dados do backup local');
+            const mergedData = { ...createEmptyData(), ...backupData.data };
+            setData(mergedData);
+            setCurrentStep(backupData.step);
+            toast.info('Dados recuperados do backup local');
+          } else {
+            console.log('📝 Iniciando novo onboarding');
+          }
         }
       } catch (error) {
         console.error('❌ Erro ao carregar dados salvos:', error);
-        toast.error('Erro ao carregar dados salvos');
+        
+        // Em caso de erro, tentar backup local
+        const backupData = loadFromLocalStorage();
+        if (backupData) {
+          console.log('📦 Usando backup local devido a erro');
+          const mergedData = { ...createEmptyData(), ...backupData.data };
+          setData(mergedData);
+          setCurrentStep(backupData.step);
+          toast.info('Dados recuperados do backup local');
+        }
       } finally {
         setIsLoading(false);
       }
     };
     
     loadSavedData();
-  }, [user?.id]);
-
-  // Auto-save quando dados mudam (com debounce)
-  useEffect(() => {
-    if (!user?.id || isLoading) return;
-    
-    const timeoutId = setTimeout(async () => {
-      if (data.name || data.email) { // Só salva se tem dados mínimos
-        await autoSave();
-      }
-    }, 2000); // Debounce de 2 segundos
-    
-    return () => clearTimeout(timeoutId);
-  }, [data, currentStep, user?.id, isLoading]);
-
-  const autoSave = async () => {
-    if (!user?.id || isSaving) return;
-    
-    try {
-      setIsSaving(true);
-      const progressData = mapQuickToProgress(data);
-      progressData.current_step = currentStep.toString();
-      
-      await saveProgress(progressData);
-      console.log('💾 Auto-save realizado com sucesso');
-    } catch (error) {
-      console.error('❌ Erro no auto-save:', error);
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  }, [user?.id, loadProgress, loadFromLocalStorage]);
 
   const updateField = useCallback((field: keyof QuickOnboardingData, value: string | string[] | number | boolean) => {
     console.log(`📝 Atualizando campo ${field}:`, value);
     setData(prev => ({ ...prev, [field]: value }));
   }, []);
 
-  // Validação mais flexível e robusta
+  // Validação
   const canProceed = useCallback(() => {
     try {
       return validateStepData(data, currentStep);
@@ -173,21 +162,28 @@ export const useSimpleOnboarding = () => {
     }
   }, [data, currentStep]);
 
+  // Avançar step com save manual
   const nextStep = useCallback(async () => {
     if (!canProceed()) {
       toast.error('Por favor, preencha todos os campos obrigatórios');
       return;
     }
 
-    console.log(`➡️ Avançando do step ${currentStep} para ${currentStep + 1}`);
+    console.log(`➡️ Salvando e avançando do step ${currentStep} para ${currentStep + 1}`);
     
     // Salvar progresso antes de avançar
-    await autoSave();
+    const saveSuccess = await saveManually(data, currentStep);
     
-    if (currentStep < totalSteps) {
+    if (saveSuccess && currentStep < totalSteps) {
       setCurrentStep(prev => prev + 1);
+    } else if (!saveSuccess) {
+      // Mesmo com falha no save, permitir navegação (dados estão no backup local)
+      console.log('⚠️ Save falhou, mas permitindo navegação com backup local');
+      if (currentStep < totalSteps) {
+        setCurrentStep(prev => prev + 1);
+      }
     }
-  }, [currentStep, totalSteps, canProceed, autoSave]);
+  }, [currentStep, totalSteps, canProceed, saveManually, data]);
 
   const previousStep = useCallback(() => {
     if (currentStep > 1) {
@@ -201,26 +197,21 @@ export const useSimpleOnboarding = () => {
     
     try {
       setIsCompleting(true);
-      console.log('🎯 Iniciando conclusão do onboarding...');
+      console.log('🎯 Finalizando onboarding...');
       
       // Salvar dados finais
-      const progressData = mapQuickToProgress(data);
-      progressData.current_step = 'completed';
-      progressData.is_completed = true;
+      const saveSuccess = await saveManually(data, currentStep);
       
-      const saveSuccess = await saveProgress(progressData);
-      if (!saveSuccess) {
-        throw new Error('Falha ao salvar dados finais');
+      if (saveSuccess) {
+        // Marcar como completo
+        const completeSuccess = await completeOnboarding();
+        if (completeSuccess) {
+          console.log('✅ Onboarding concluído com sucesso!');
+          return true;
+        }
       }
       
-      // Marcar como completo
-      const completeSuccess = await completeOnboarding();
-      if (!completeSuccess) {
-        throw new Error('Falha ao marcar onboarding como completo');
-      }
-      
-      console.log('✅ Onboarding concluído com sucesso!');
-      return true;
+      throw new Error('Falha ao finalizar onboarding');
     } catch (error) {
       console.error('❌ Erro ao completar onboarding:', error);
       toast.error('Erro ao finalizar onboarding. Tente novamente.');
@@ -228,7 +219,7 @@ export const useSimpleOnboarding = () => {
     } finally {
       setIsCompleting(false);
     }
-  }, [user?.id, data, saveProgress, completeOnboarding]);
+  }, [user?.id, data, currentStep, saveManually, completeOnboarding]);
 
   return {
     data,
@@ -239,7 +230,7 @@ export const useSimpleOnboarding = () => {
     completeOnboarding: handleCompleteOnboarding,
     canProceed: canProceed(),
     totalSteps,
-    isSaving,
+    isSaving: isSavingManually,
     isCompleting,
     isLoading
   };
