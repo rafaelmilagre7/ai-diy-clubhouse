@@ -28,6 +28,9 @@ export const useQuickOnboardingOptimized = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [hasExistingData, setHasExistingData] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
 
   // Load existing data or create initial record
@@ -37,6 +40,7 @@ export const useQuickOnboardingOptimized = () => {
 
       try {
         setIsLoading(true);
+        setLoadError(null);
         
         // Try to fetch existing data
         const { data: existingData, error } = await supabase
@@ -47,12 +51,13 @@ export const useQuickOnboardingOptimized = () => {
 
         if (error && error.code !== 'PGRST116') {
           console.error('Error fetching onboarding data:', error);
-          toast.error('Erro ao carregar dados do onboarding');
+          setLoadError('Erro ao carregar dados do onboarding');
           return;
         }
 
         if (existingData) {
           // Load existing data
+          setHasExistingData(true);
           setData({
             name: existingData.name || '',
             email: existingData.email || '',
@@ -72,6 +77,7 @@ export const useQuickOnboardingOptimized = () => {
           setCurrentStep(existingData.current_step || 1);
         } else {
           // Create initial record
+          setHasExistingData(false);
           const { error: insertError } = await supabase
             .from('quick_onboarding')
             .insert({
@@ -85,7 +91,7 @@ export const useQuickOnboardingOptimized = () => {
 
           if (insertError) {
             console.error('Error creating initial onboarding record:', insertError);
-            toast.error('Erro ao inicializar onboarding');
+            setLoadError('Erro ao inicializar onboarding');
           } else {
             // Update data with user info
             setData(prev => ({
@@ -97,7 +103,7 @@ export const useQuickOnboardingOptimized = () => {
         }
       } catch (error) {
         console.error('Unexpected error in loadOrCreateOnboarding:', error);
-        toast.error('Erro inesperado ao carregar onboarding');
+        setLoadError('Erro inesperado ao carregar onboarding');
       } finally {
         setIsLoading(false);
       }
@@ -185,7 +191,7 @@ export const useQuickOnboardingOptimized = () => {
     if (!user?.id) return false;
 
     try {
-      setIsSaving(true);
+      setIsCompleting(true);
       
       const { error } = await supabase
         .from('quick_onboarding')
@@ -209,7 +215,7 @@ export const useQuickOnboardingOptimized = () => {
       toast.error('Erro inesperado ao finalizar');
       return false;
     } finally {
-      setIsSaving(false);
+      setIsCompleting(false);
     }
   };
 
@@ -218,6 +224,9 @@ export const useQuickOnboardingOptimized = () => {
     currentStep,
     isLoading,
     isSaving,
+    isCompleting,
+    hasExistingData,
+    loadError,
     lastSaveTime,
     updateField,
     nextStep,
