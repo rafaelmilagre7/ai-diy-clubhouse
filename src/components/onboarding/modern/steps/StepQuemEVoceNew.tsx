@@ -1,21 +1,9 @@
 
 import React from 'react';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { OnboardingStepProps } from '@/types/quickOnboarding';
-
-const HOW_FOUND_OPTIONS = [
-  { value: 'google', label: 'Google' },
-  { value: 'youtube', label: 'YouTube' },
-  { value: 'instagram', label: 'Instagram' },
-  { value: 'linkedin', label: 'LinkedIn' },
-  { value: 'indicacao', label: 'Indicação de alguém' },
-  { value: 'evento', label: 'Evento' },
-  { value: 'podcast', label: 'Podcast' },
-  { value: 'outro', label: 'Outro' }
-];
 
 export const StepQuemEVoceNew: React.FC<OnboardingStepProps> = ({
   data,
@@ -29,7 +17,7 @@ export const StepQuemEVoceNew: React.FC<OnboardingStepProps> = ({
     <div className="max-w-3xl mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-white mb-2">
-          Quem é você? 👋
+          Informações Pessoais 👋
         </h2>
         <p className="text-gray-400">
           Vamos começar conhecendo você melhor
@@ -81,24 +69,14 @@ export const StepQuemEVoceNew: React.FC<OnboardingStepProps> = ({
 
           <div className="space-y-2">
             <label className="block text-sm font-medium text-white">
-              Como conheceu o VIVER DE IA? <span className="text-red-400">*</span>
+              Data de Nascimento
             </label>
-            <Select value={data.how_found_us || ''} onValueChange={(value) => onUpdate('how_found_us', value)}>
-              <SelectTrigger className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50">
-                <SelectValue placeholder="Selecione como nos conheceu" />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-600">
-                {HOW_FOUND_OPTIONS.map((option) => (
-                  <SelectItem 
-                    key={option.value} 
-                    value={option.value}
-                    className="text-white hover:bg-gray-700"
-                  >
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Input
+              type="date"
+              value={data.birth_date || ''}
+              onChange={(e) => onUpdate('birth_date', e.target.value)}
+              className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50"
+            />
           </div>
         </div>
 

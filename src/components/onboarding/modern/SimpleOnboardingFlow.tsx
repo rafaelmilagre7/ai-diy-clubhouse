@@ -3,6 +3,8 @@ import React from 'react';
 import { useSimpleOnboarding } from '@/hooks/onboarding/useSimpleOnboarding';
 import { useNavigate } from 'react-router-dom';
 import { StepQuemEVoceNew } from './steps/StepQuemEVoceNew';
+import { StepLocalizacaoRedes } from './steps/StepLocalizacaoRedes';
+import { StepComoNosConheceu } from './steps/StepComoNosConheceu';
 import { StepSeuNegocioNew } from './steps/StepSeuNegocioNew';
 import { StepExperienciaIANew } from './steps/StepExperienciaIANew';
 import { EnhancedTrailMagicExperience } from '../EnhancedTrailMagicExperience';
@@ -21,7 +23,8 @@ export const SimpleOnboardingFlow: React.FC = () => {
     canProceed,
     totalSteps,
     isSaving,
-    isCompleting
+    isCompleting,
+    isLoading
   } = useSimpleOnboarding();
 
   const handleFinish = async () => {
@@ -37,6 +40,17 @@ export const SimpleOnboardingFlow: React.FC = () => {
     console.log('✨ Experiência mágica finalizada, redirecionando...');
     navigate('/onboarding-new/completed');
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 text-viverblue animate-spin mx-auto mb-4" />
+          <p className="text-white">Carregando seus dados...</p>
+        </div>
+      </div>
+    );
+  }
 
   const renderCurrentStep = () => {
     switch (currentStep) {
@@ -54,7 +68,7 @@ export const SimpleOnboardingFlow: React.FC = () => {
       
       case 2:
         return (
-          <StepSeuNegocioNew
+          <StepLocalizacaoRedes
             data={data}
             onUpdate={updateField}
             onNext={nextStep}
@@ -67,6 +81,32 @@ export const SimpleOnboardingFlow: React.FC = () => {
       
       case 3:
         return (
+          <StepComoNosConheceu
+            data={data}
+            onUpdate={updateField}
+            onNext={nextStep}
+            onPrevious={previousStep}
+            canProceed={canProceed}
+            currentStep={currentStep}
+            totalSteps={totalSteps}
+          />
+        );
+      
+      case 4:
+        return (
+          <StepSeuNegocioNew
+            data={data}
+            onUpdate={updateField}
+            onNext={nextStep}
+            onPrevious={previousStep}
+            canProceed={canProceed}
+            currentStep={currentStep}
+            totalSteps={totalSteps}
+          />
+        );
+      
+      case 7:
+        return (
           <StepExperienciaIANew
             data={data}
             onUpdate={updateField}
@@ -78,7 +118,7 @@ export const SimpleOnboardingFlow: React.FC = () => {
           />
         );
       
-      case 4:
+      case 9:
         return (
           <motion.div 
             className="animate-fade-in"
@@ -102,7 +142,7 @@ export const SimpleOnboardingFlow: React.FC = () => {
   return (
     <div className="relative">
       {/* Overlay de carregamento durante conclusão */}
-      {isCompleting && (
+      {(isCompleting || isSaving) && (
         <motion.div 
           className="absolute inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
           initial={{ opacity: 0 }}
@@ -111,8 +151,12 @@ export const SimpleOnboardingFlow: React.FC = () => {
         >
           <div className="bg-gray-800 rounded-lg p-6 space-y-4 border border-gray-700">
             <Loader2 className="h-8 w-8 text-viverblue animate-spin mx-auto" />
-            <p className="text-white text-center font-medium">Finalizando onboarding...</p>
-            <p className="text-gray-400 text-center text-sm">Preparando sua experiência personalizada</p>
+            <p className="text-white text-center font-medium">
+              {isCompleting ? 'Finalizando onboarding...' : 'Salvando dados...'}
+            </p>
+            <p className="text-gray-400 text-center text-sm">
+              {isCompleting ? 'Preparando sua experiência personalizada' : 'Aguarde um momento'}
+            </p>
           </div>
         </motion.div>
       )}

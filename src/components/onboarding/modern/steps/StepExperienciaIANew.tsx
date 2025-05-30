@@ -1,35 +1,29 @@
 
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { OnboardingStepProps } from '@/types/quickOnboarding';
 
 const AI_KNOWLEDGE_OPTIONS = [
-  { value: 'iniciante', label: 'Iniciante - Pouco ou nenhum conhecimento' },
-  { value: 'basico', label: 'Básico - Já usei algumas ferramentas' },
+  { value: 'iniciante', label: 'Iniciante - Estou começando agora' },
+  { value: 'basico', label: 'Básico - Já experimentei algumas ferramentas' },
   { value: 'intermediario', label: 'Intermediário - Uso regularmente' },
-  { value: 'avancado', label: 'Avançado - Implemento soluções' },
-  { value: 'especialista', label: 'Especialista - Desenvolvo IA' }
+  { value: 'avancado', label: 'Avançado - Uso frequentemente e conheço bem' },
+  { value: 'especialista', label: 'Especialista - Trabalho profissionalmente com IA' }
 ];
 
-const USES_AI_OPTIONS = [
-  { value: 'nunca', label: 'Nunca usei IA no trabalho' },
-  { value: 'raramente', label: 'Raramente (menos de 1x/semana)' },
-  { value: 'ocasionalmente', label: 'Ocasionalmente (1-3x/semana)' },
-  { value: 'frequentemente', label: 'Frequentemente (4-6x/semana)' },
-  { value: 'diariamente', label: 'Diariamente' }
+const AI_TOOLS_OPTIONS = [
+  'ChatGPT', 'Gemini (Google)', 'Midjourney', 'Typebot', 'Make.com',
+  'Zapier', 'Claude', 'Microsoft Copilot', 'OpenAI API',
+  'ManyChat', 'N8N', 'NicoChat', 'Nenhuma ferramenta'
 ];
 
-const MAIN_GOAL_OPTIONS = [
-  { value: 'reduzir-custos', label: 'Reduzir custos operacionais' },
-  { value: 'aumentar-receita', label: 'Aumentar receita' },
-  { value: 'automatizar-processos', label: 'Automatizar processos' },
-  { value: 'melhorar-produtividade', label: 'Melhorar produtividade' },
-  { value: 'inovar-produtos', label: 'Inovar produtos/serviços' },
-  { value: 'melhorar-experiencia', label: 'Melhorar experiência do cliente' },
-  { value: 'tomar-decisoes', label: 'Tomar decisões baseadas em dados' },
-  { value: 'competitividade', label: 'Manter competitividade' }
+const AI_AREAS_OPTIONS = [
+  'Atendimento ao cliente', 'Automação de processos', 'Marketing e vendas',
+  'Análise de dados', 'Criação de conteúdo', 'Recursos humanos',
+  'Desenvolvimento de produtos', 'Operações internas'
 ];
 
 export const StepExperienciaIANew: React.FC<OnboardingStepProps> = ({
@@ -41,19 +35,37 @@ export const StepExperienciaIANew: React.FC<OnboardingStepProps> = ({
   currentStep,
   totalSteps
 }) => {
+  const handleToolsChange = (tool: string, checked: boolean) => {
+    const currentTools = Array.isArray(data.previous_tools) ? data.previous_tools : [];
+    if (checked) {
+      onUpdate('previous_tools', [...currentTools, tool]);
+    } else {
+      onUpdate('previous_tools', currentTools.filter(t => t !== tool));
+    }
+  };
+
+  const handleAreasChange = (area: string, checked: boolean) => {
+    const currentAreas = Array.isArray(data.desired_ai_areas) ? data.desired_ai_areas : [];
+    if (checked) {
+      onUpdate('desired_ai_areas', [...currentAreas, area]);
+    } else {
+      onUpdate('desired_ai_areas', currentAreas.filter(a => a !== area));
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-white mb-2">
-          Experiência com IA 🤖
+          Sua experiência com IA 🤖
         </h2>
         <p className="text-gray-400">
-          Conte-nos sobre seu nível de conhecimento e objetivos com inteligência artificial
+          Vamos entender seu nível atual com inteligência artificial
         </p>
       </div>
 
-      <div className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700/50 space-y-6">
-        <div className="space-y-2">
+      <div className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700/50 space-y-8">
+        <div className="space-y-4">
           <label className="block text-sm font-medium text-white">
             Qual seu nível de conhecimento em IA? <span className="text-red-400">*</span>
           </label>
@@ -75,48 +87,62 @@ export const StepExperienciaIANew: React.FC<OnboardingStepProps> = ({
           </Select>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-4">
           <label className="block text-sm font-medium text-white">
-            Com que frequência você usa IA no trabalho? <span className="text-red-400">*</span>
+            Você já usa IA no seu negócio? <span className="text-red-400">*</span>
           </label>
           <Select value={data.uses_ai || ''} onValueChange={(value) => onUpdate('uses_ai', value)}>
             <SelectTrigger className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50">
-              <SelectValue placeholder="Selecione a frequência" />
+              <SelectValue placeholder="Selecione uma opção" />
             </SelectTrigger>
             <SelectContent className="bg-gray-800 border-gray-600">
-              {USES_AI_OPTIONS.map((option) => (
-                <SelectItem 
-                  key={option.value} 
-                  value={option.value}
-                  className="text-white hover:bg-gray-700"
-                >
-                  {option.label}
-                </SelectItem>
-              ))}
+              <SelectItem value="sim" className="text-white hover:bg-gray-700">
+                Sim, já uso IA no meu negócio
+              </SelectItem>
+              <SelectItem value="nao" className="text-white hover:bg-gray-700">
+                Não, ainda não uso IA
+              </SelectItem>
+              <SelectItem value="testando" className="text-white hover:bg-gray-700">
+                Estou testando algumas ferramentas
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-4">
           <label className="block text-sm font-medium text-white">
-            Qual seu principal objetivo com IA? <span className="text-red-400">*</span>
+            Quais ferramentas de IA você já utilizou?
           </label>
-          <Select value={data.main_goal || ''} onValueChange={(value) => onUpdate('main_goal', value)}>
-            <SelectTrigger className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50">
-              <SelectValue placeholder="Selecione seu principal objetivo" />
-            </SelectTrigger>
-            <SelectContent className="bg-gray-800 border-gray-600">
-              {MAIN_GOAL_OPTIONS.map((option) => (
-                <SelectItem 
-                  key={option.value} 
-                  value={option.value}
-                  className="text-white hover:bg-gray-700"
-                >
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {AI_TOOLS_OPTIONS.map((tool) => (
+              <label key={tool} className="flex items-center gap-2 text-white cursor-pointer">
+                <Checkbox
+                  checked={Array.isArray(data.previous_tools) && data.previous_tools.includes(tool)}
+                  onCheckedChange={(checked) => handleToolsChange(tool, checked as boolean)}
+                  className="border-gray-600 data-[state=checked]:bg-viverblue data-[state=checked]:border-viverblue"
+                />
+                <span className="text-sm">{tool}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-white">
+            Em quais áreas você gostaria de implementar IA?
+          </label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {AI_AREAS_OPTIONS.map((area) => (
+              <label key={area} className="flex items-center gap-2 text-white cursor-pointer">
+                <Checkbox
+                  checked={Array.isArray(data.desired_ai_areas) && data.desired_ai_areas.includes(area)}
+                  onCheckedChange={(checked) => handleAreasChange(area, checked as boolean)}
+                  className="border-gray-600 data-[state=checked]:bg-viverblue data-[state=checked]:border-viverblue"
+                />
+                <span className="text-sm">{area}</span>
+              </label>
+            ))}
+          </div>
         </div>
 
         <div className="flex justify-between items-center pt-6 border-t border-gray-700">
@@ -138,7 +164,7 @@ export const StepExperienciaIANew: React.FC<OnboardingStepProps> = ({
             disabled={!canProceed}
             className="bg-viverblue hover:bg-viverblue-dark transition-colors flex items-center gap-2"
           >
-            <span>Finalizar Dados</span>
+            <span>Finalizar</span>
             <ArrowRight size={16} />
           </Button>
         </div>

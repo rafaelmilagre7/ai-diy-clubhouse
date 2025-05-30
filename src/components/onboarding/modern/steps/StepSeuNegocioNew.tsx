@@ -28,6 +28,16 @@ const COMPANY_SEGMENT_OPTIONS = [
   { value: 'outros', label: 'Outros' }
 ];
 
+const REVENUE_OPTIONS = [
+  { value: 'ate-100k', label: 'Até R$ 100.000' },
+  { value: '100k-500k', label: 'R$ 100.000 - R$ 500.000' },
+  { value: '500k-1m', label: 'R$ 500.000 - R$ 1.000.000' },
+  { value: '1m-5m', label: 'R$ 1.000.000 - R$ 5.000.000' },
+  { value: '5m-10m', label: 'R$ 5.000.000 - R$ 10.000.000' },
+  { value: '10m+', label: 'Acima de R$ 10.000.000' },
+  { value: 'nao-informar', label: 'Prefiro não informar' }
+];
+
 export const StepSeuNegocioNew: React.FC<OnboardingStepProps> = ({
   data,
   onUpdate,
@@ -110,6 +120,43 @@ export const StepSeuNegocioNew: React.FC<OnboardingStepProps> = ({
               </SelectTrigger>
               <SelectContent className="bg-gray-800 border-gray-600">
                 {COMPANY_SEGMENT_OPTIONS.map((option) => (
+                  <SelectItem 
+                    key={option.value} 
+                    value={option.value}
+                    className="text-white hover:bg-gray-700"
+                  >
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-white">
+              Website da empresa
+            </label>
+            <Input
+              type="url"
+              value={data.company_website || ''}
+              onChange={(e) => onUpdate('company_website', e.target.value)}
+              placeholder="https://www.empresa.com"
+              className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-white">
+              Faturamento anual
+            </label>
+            <Select value={data.annual_revenue_range || ''} onValueChange={(value) => onUpdate('annual_revenue_range', value)}>
+              <SelectTrigger className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50">
+                <SelectValue placeholder="Selecione o faturamento" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 border-gray-600">
+                {REVENUE_OPTIONS.map((option) => (
                   <SelectItem 
                     key={option.value} 
                     value={option.value}
