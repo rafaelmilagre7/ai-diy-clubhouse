@@ -12,8 +12,8 @@ export const mapQuickToProgress = (data: QuickOnboardingData): OnboardingProgres
     personal_info: {
       name: data.name || '',
       email: data.email || '',
-      phone: data.phone || '',
-      ddi: data.ddi || '+55',
+      phone: data.whatsapp || '', // Map whatsapp to phone
+      ddi: data.country_code || '+55', // Map country_code to ddi
       linkedin: data.linkedin_url || '',
       instagram: data.instagram_url || '',
       country: data.country || '',
@@ -38,7 +38,7 @@ export const mapQuickToProgress = (data: QuickOnboardingData): OnboardingProgres
     business_goals: {
       primary_goal: data.primary_goal || '',
       expected_outcomes: data.expected_outcomes || [],
-      timeline: data.timeline || '',
+      timeline: '', // Not available in QuickOnboardingData
       priority_solution_type: data.priority_solution_type || '',
       how_implement: data.how_implement || '',
       week_availability: data.week_availability || '',
@@ -47,8 +47,8 @@ export const mapQuickToProgress = (data: QuickOnboardingData): OnboardingProgres
     },
     ai_experience: {
       knowledge_level: data.ai_knowledge_level || '',
-      previous_tools: data.previous_ai_tools || [],
-      has_implemented: data.has_implemented_ai || '',
+      previous_tools: data.previous_tools || [], // Correct property name
+      has_implemented: data.has_implemented || '', // Correct property name
       desired_ai_areas: data.desired_ai_areas || []
     },
     experience_personalization: {
@@ -62,8 +62,8 @@ export const mapQuickToProgress = (data: QuickOnboardingData): OnboardingProgres
     complementary_info: {
       how_found_us: data.how_found_us || '',
       referred_by: data.referred_by || '',
-      authorize_case_usage: data.authorize_case_usage === 'true' || data.authorize_case_usage === true,
-      interested_in_interview: data.interested_in_interview === 'true' || data.interested_in_interview === true,
+      authorize_case_usage: typeof data.authorize_case_usage === 'boolean' ? data.authorize_case_usage : false,
+      interested_in_interview: typeof data.interested_in_interview === 'boolean' ? data.interested_in_interview : false,
       priority_topics: data.priority_topics || []
     },
     
@@ -86,15 +86,21 @@ export const mapProgressToQuick = (progress: OnboardingProgress): QuickOnboardin
     // Campos pessoais
     name: progress.personal_info?.name || '',
     email: progress.personal_info?.email || '',
-    phone: progress.personal_info?.phone || '',
-    ddi: progress.personal_info?.ddi || '+55',
-    linkedin_url: progress.personal_info?.linkedin || '',
-    instagram_url: progress.personal_info?.instagram || '',
+    whatsapp: progress.personal_info?.phone || '', // Map phone to whatsapp
+    country_code: progress.personal_info?.ddi || '+55', // Map ddi to country_code
+    birth_date: progress.personal_info?.birth_date || '',
+
+    // Localização
     country: progress.personal_info?.country || '',
     state: progress.personal_info?.state || '',
     city: progress.personal_info?.city || '',
     timezone: progress.personal_info?.timezone || '',
-    birth_date: progress.personal_info?.birth_date || '',
+    instagram_url: progress.personal_info?.instagram || '',
+    linkedin_url: progress.personal_info?.linkedin || '',
+
+    // Como nos conheceu
+    how_found_us: progress.complementary_info?.how_found_us || '',
+    referred_by: progress.complementary_info?.referred_by || '',
 
     // Campos profissionais
     company_name: progress.professional_info?.company_name || '',
@@ -103,30 +109,33 @@ export const mapProgressToQuick = (progress: OnboardingProgress): QuickOnboardin
     company_segment: progress.professional_info?.company_sector || '',
     company_website: progress.professional_info?.company_website || '',
     annual_revenue_range: progress.professional_info?.annual_revenue || '',
+    current_position: progress.professional_info?.current_position || '',
 
     // Contexto do negócio
     business_model: progress.business_context?.business_model || '',
     business_challenges: progress.business_context?.business_challenges || [],
+    short_term_goals: [], // Not mapped in current structure
+    medium_term_goals: [], // Not mapped in current structure
+    important_kpis: [], // Not mapped in current structure
     additional_context: progress.business_context?.additional_context || '',
 
     // Objetivos
     primary_goal: progress.business_goals?.primary_goal || '',
     expected_outcomes: progress.business_goals?.expected_outcomes || [],
-    timeline: progress.business_goals?.timeline || '',
+    expected_outcome_30days: '', // Not mapped in current structure
     priority_solution_type: progress.business_goals?.priority_solution_type || '',
     how_implement: progress.business_goals?.how_implement || '',
     week_availability: progress.business_goals?.week_availability || '',
-    live_interest: progress.business_goals?.live_interest || 0,
     content_formats: progress.business_goals?.content_formats || [],
 
     // Experiência com IA
     ai_knowledge_level: typeof progress.ai_experience === 'object' && progress.ai_experience !== null 
       ? progress.ai_experience.knowledge_level || ''
       : '',
-    previous_ai_tools: typeof progress.ai_experience === 'object' && progress.ai_experience !== null
+    previous_tools: typeof progress.ai_experience === 'object' && progress.ai_experience !== null
       ? progress.ai_experience.previous_tools || []
       : [],
-    has_implemented_ai: typeof progress.ai_experience === 'object' && progress.ai_experience !== null
+    has_implemented: typeof progress.ai_experience === 'object' && progress.ai_experience !== null
       ? progress.ai_experience.has_implemented || ''
       : '',
     desired_ai_areas: typeof progress.ai_experience === 'object' && progress.ai_experience !== null
@@ -142,11 +151,12 @@ export const mapProgressToQuick = (progress: OnboardingProgress): QuickOnboardin
     mentorship_topics: progress.experience_personalization?.mentorship_topics || [],
 
     // Complementares
-    how_found_us: progress.complementary_info?.how_found_us || '',
-    referred_by: progress.complementary_info?.referred_by || '',
     authorize_case_usage: progress.complementary_info?.authorize_case_usage || false,
     interested_in_interview: progress.complementary_info?.interested_in_interview || false,
-    priority_topics: progress.complementary_info?.priority_topics || []
+    priority_topics: progress.complementary_info?.priority_topics || [],
+
+    // Campos de controle
+    live_interest: progress.business_goals?.live_interest || 0
   };
 };
 
@@ -155,7 +165,7 @@ export const validateStepData = (data: QuickOnboardingData, step: number): boole
     case 1: // Dados pessoais
       return !!(data.name && data.name.trim().length > 0);
     case 2: // Contato
-      return !!(data.email && data.phone);
+      return !!(data.email && data.whatsapp); // Use whatsapp instead of phone
     case 3: // Localização
       return !!(data.country && data.state && data.city);
     case 4: // Negócio
