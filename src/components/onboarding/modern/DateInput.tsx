@@ -21,7 +21,6 @@ export const DateInput: React.FC<DateInputProps> = ({
     <div className="space-y-2">
       <label className="block text-sm font-medium text-white">
         Data de nascimento {required && <span className="text-red-400">*</span>}
-        <span className="text-gray-400 text-sm font-normal ml-1">(opcional)</span>
       </label>
       <Input
         type="date"

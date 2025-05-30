@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { ArrowRight } from 'lucide-react';
 import { OnboardingStepProps } from '@/types/quickOnboarding';
 import { DropdownModerno } from '../DropdownModerno';
-import { ConditionalReferralInput } from '../ConditionalReferralInput';
+import { DateInput } from '../DateInput';
 
 const COUNTRY_CODE_OPTIONS = [
   { value: '+55', label: '🇧🇷 Brasil (+55)' },
@@ -13,16 +13,6 @@ const COUNTRY_CODE_OPTIONS = [
   { value: '+351', label: '🇵🇹 Portugal (+351)' },
   { value: '+34', label: '🇪🇸 Espanha (+34)' },
   { value: '+33', label: '🇫🇷 França (+33)' }
-];
-
-const HOW_FOUND_OPTIONS = [
-  { value: 'google', label: '🔍 Google' },
-  { value: 'youtube', label: '📺 YouTube' },
-  { value: 'instagram', label: '📸 Instagram' },
-  { value: 'linkedin', label: '💼 LinkedIn' },
-  { value: 'indicacao', label: '👥 Indicação' },
-  { value: 'podcast', label: '🎧 Podcast' },
-  { value: 'outro', label: '🔗 Outro' }
 ];
 
 export const StepQuemEVoceNew: React.FC<OnboardingStepProps> = ({
@@ -97,19 +87,10 @@ export const StepQuemEVoceNew: React.FC<OnboardingStepProps> = ({
           </div>
         </div>
 
-        <DropdownModerno
-          value={data.how_found_us || ''}
-          onChange={(value) => onUpdate('how_found_us', value)}
-          options={HOW_FOUND_OPTIONS}
-          placeholder="Selecione como conheceu"
-          label="Como conheceu o VIVER DE IA?"
+        <DateInput
+          value={data.birth_date || ''}
+          onChange={(value) => onUpdate('birth_date', value)}
           required
-        />
-
-        <ConditionalReferralInput
-          howFoundUs={data.how_found_us || ''}
-          referredBy={data.referred_by || ''}
-          onReferredByChange={(value) => onUpdate('referred_by', value)}
         />
 
         <div className="bg-viverblue/10 border border-viverblue/20 rounded-lg p-4">

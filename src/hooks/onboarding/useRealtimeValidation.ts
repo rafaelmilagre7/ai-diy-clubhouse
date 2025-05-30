@@ -53,17 +53,13 @@ export const useRealtimeValidation = (data: QuickOnboardingData, currentStep: nu
     // Validações por etapa
     const getStepFields = (step: number): Record<string, FieldValidation> => {
       switch (step) {
-        case 1: // Etapa 1 - Quem é você
+        case 1: // Etapa 1 - Informações Pessoais (reorganizada)
           return {
             name: validateField(data.name, true),
             email: validateField(data.email, true, validateEmail),
             whatsapp: validateField(data.whatsapp, true, validatePhone),
             country_code: validateField(data.country_code, true),
-            how_found_us: validateField(data.how_found_us, true),
-            referred_by: validateField(
-              data.referred_by, 
-              data.how_found_us === 'indicacao'
-            )
+            birth_date: validateField(data.birth_date, true)
           };
 
         case 2: // Etapa 2 - Localização e redes
@@ -76,7 +72,7 @@ export const useRealtimeValidation = (data: QuickOnboardingData, currentStep: nu
             linkedin_url: validateField(data.linkedin_url, false)
           };
 
-        case 3: // Etapa 3 - Como nos conheceu (já validado na etapa 1)
+        case 3: // Etapa 3 - Como nos conheceu (reorganizada)
           return {
             how_found_us: validateField(data.how_found_us, true),
             referred_by: validateField(
