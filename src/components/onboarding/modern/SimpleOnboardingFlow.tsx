@@ -13,19 +13,18 @@ import { StepExperienciaIA } from './steps/StepExperienciaIA';
 import { StepPersonalizacaoExperiencia } from './steps/StepPersonalizacaoExperiencia';
 import { useIntelligentAutoSave } from '@/hooks/onboarding/useIntelligentAutoSave';
 import { useRealtimeValidation } from '@/hooks/onboarding/useRealtimeValidation';
-import { useOnboardingDebug } from '@/hooks/onboarding/useOnboardingDebug';
 import { useOnboardingProgress } from '@/hooks/onboarding/useOnboardingProgress';
 import { EnhancedAutoSaveFeedback } from './EnhancedAutoSaveFeedback';
-import { mapQuickToProgress } from '@/utils/onboarding/dataMappers';
+import { validateStepData } from '@/utils/onboarding/dataMappers';
 
 const TOTAL_STEPS = 8;
 
-const initialData: QuickOnboardingData = {
+const createEmptyData = (): QuickOnboardingData => ({
   // Step 1: Informações pessoais
   name: '',
   email: '',
   whatsapp: '',
-  country_code: '',
+  country_code: '+55',
   birth_date: '',
   
   // Step 2: Localização e redes
@@ -89,17 +88,18 @@ const initialData: QuickOnboardingData = {
   authorize_case_usage: false,
   interested_in_interview: false,
   priority_topics: []
-};
+});
 
 export const SimpleOnboardingFlow: React.FC = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
-  const [data, setData] = useState<QuickOnboardingData>(initialData);
+  const [data, setData] = useState<QuickOnboardingData>(createEmptyData());
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   
-  const { completeOnboarding } = useOnboardingProgress();
+  const { loadProgress, completeOnboarding } = useOnboardingProgress();
   
-  // Hooks inteligentes
+  // Hooks inteligentes com configuração mais conservadora
   const { currentStepValidation } = useRealtimeValidation(data, currentStep);
   const { 
     isSaving, 
@@ -107,59 +107,122 @@ export const SimpleOnboardingFlow: React.FC = () => {
     hasUnsavedChanges, 
     saveError, 
     saveImmediately,
-    retryCount 
-  } = useIntelligentAutoSave(data, currentStep);
-  
-  const { addDebugEvent, isDebugMode } = useOnboardingDebug(data, currentStep);
+    retryCount,
+    loadFromLocalStorage
+  } = useIntelligentAutoSave(data, currentStep, {
+    debounceMs: 5000, // Mais conservador - 5 segundos
+    maxRetries: 1,
+    enableLocalBackup: true
+  });
+
+  // Carregar dados salvos ao inicializar
+  useEffect(() => {
+    const initializeData = async () => {
+      console.log('🚀 Inicializando onboarding...');
+      
+      try {
+        // Primeiro tentar carregar do servidor
+        const progressData = await loadProgress();
+        
+        if (progressData && progressData.personal_info?.name) {
+          console.log('📊 Carregando dados do servidor...');
+          
+          // Mapear dados do servidor para o formato Quick
+          const loadedData: QuickOnboardingData = {
+            ...createEmptyData(),
+            name: progressData.personal_info?.name || '',
+            email: progressData.personal_info?.email || '',
+            whatsapp: progressData.personal_info?.phone || '',
+            country_code: progressData.personal_info?.ddi || '+55',
+            // ... outros campos mapeados conforme necessário
+          };
+          
+          setData(loadedData);
+          
+          // Determinar step baseado nos dados salvos
+          const savedStep = parseInt(progressData.current_step || '1');
+          if (savedStep >= 1 && savedStep <= TOTAL_STEPS) {
+            setCurrentStep(savedStep);
+          }
+        } else {
+          // Tentar carregar backup local
+          const localBackup = loadFromLocalStorage();
+          if (localBackup) {
+            console.log('📦 Carregando backup local...');
+            setData({ ...createEmptyData(), ...localBackup.data });
+            setCurrentStep(localBackup.step);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Erro ao carregar dados:', error);
+        toast.error('Erro ao carregar dados salvos');
+      } finally {
+        setIsInitialized(true);
+      }
+    };
+    
+    initializeData();
+  }, [loadProgress, loadFromLocalStorage]);
 
   // Atualizar campo específico
   const updateField = useCallback((field: keyof QuickOnboardingData, value: any) => {
+    console.log(`📝 Atualizando campo ${field}:`, value);
     setData(prev => {
       const newData = { ...prev, [field]: value };
-      addDebugEvent('user_action', `Campo ${field} atualizado`, { field, value, step: currentStep });
+      console.log('📊 Novos dados:', { [field]: value });
       return newData;
     });
-  }, [addDebugEvent, currentStep]);
+  }, []);
 
   // Verificar se pode prosseguir
-  const canProceed = currentStepValidation.isValid;
+  const canProceed = useCallback(() => {
+    try {
+      return validateStepData(data, currentStep);
+    } catch (error) {
+      console.error(`❌ Erro na validação do step ${currentStep}:`, error);
+      return false;
+    }
+  }, [data, currentStep]);
 
   // Navegar para próximo step
   const handleNext = useCallback(async () => {
-    if (!canProceed) {
+    const isValid = canProceed();
+    console.log(`🔍 Validação step ${currentStep}:`, isValid);
+    
+    if (!isValid) {
       toast.error('Por favor, preencha todos os campos obrigatórios');
-      addDebugEvent('validation', 'Tentativa de avançar com dados inválidos', currentStepValidation.errors);
       return;
     }
 
-    addDebugEvent('navigation', `Avançando do step ${currentStep} para ${currentStep + 1}`);
+    console.log(`➡️ Avançando do step ${currentStep} para ${currentStep + 1}`);
 
-    // Salvar antes de avançar
-    const saveSuccess = await saveImmediately();
-    if (!saveSuccess) {
-      toast.error('Erro ao salvar. Tente novamente.');
-      return;
+    // Salvar antes de avançar (apenas se dados válidos)
+    if (data.name && data.name.trim().length > 0) {
+      const saveSuccess = await saveImmediately();
+      if (!saveSuccess) {
+        console.log('⚠️ Falha no save, mas continuando...');
+        // Não bloquear navegação por falha no save
+      }
     }
 
     if (currentStep < TOTAL_STEPS) {
       setCurrentStep(prev => prev + 1);
-      toast.success('Progresso salvo!');
     } else {
       // Último step - finalizar onboarding
       await handleComplete();
     }
-  }, [canProceed, currentStep, saveImmediately, addDebugEvent, currentStepValidation.errors]);
+  }, [canProceed, currentStep, saveImmediately, data.name]);
 
   // Finalizar onboarding
   const handleComplete = useCallback(async () => {
     setIsSubmitting(true);
-    addDebugEvent('user_action', 'Iniciando finalização do onboarding');
+    console.log('🎯 Iniciando finalização do onboarding');
 
     try {
       // Salvar dados finais
       const saveSuccess = await saveImmediately();
       if (!saveSuccess) {
-        throw new Error('Falha ao salvar dados finais');
+        console.log('⚠️ Falha no save final, mas continuando...');
       }
 
       // Marcar como completo
@@ -168,26 +231,25 @@ export const SimpleOnboardingFlow: React.FC = () => {
         throw new Error('Falha ao marcar onboarding como completo');
       }
 
-      addDebugEvent('user_action', 'Onboarding finalizado com sucesso');
+      console.log('✅ Onboarding finalizado com sucesso');
       toast.success('Onboarding concluído com sucesso! 🎉');
       
       // Redirecionar para página de sucesso
       navigate('/onboarding-new/completed');
     } catch (error) {
-      console.error('Erro ao finalizar onboarding:', error);
-      addDebugEvent('error', 'Erro ao finalizar onboarding', error);
+      console.error('❌ Erro ao finalizar onboarding:', error);
       toast.error('Erro ao finalizar. Tente novamente.');
     } finally {
       setIsSubmitting(false);
     }
-  }, [saveImmediately, completeOnboarding, navigate, addDebugEvent]);
+  }, [saveImmediately, completeOnboarding, navigate]);
 
   // Props compartilhadas entre steps
   const stepProps = {
     data,
     onUpdate: updateField,
     onNext: handleNext,
-    canProceed,
+    canProceed: canProceed(),
     currentStep,
     totalSteps: TOTAL_STEPS
   };
@@ -195,26 +257,29 @@ export const SimpleOnboardingFlow: React.FC = () => {
   // Renderizar step atual
   const renderCurrentStep = () => {
     switch (currentStep) {
-      case 1:
-        return <StepQuemEVoceNew {...stepProps} />;
-      case 2:
-        return <StepLocalizacaoRedes {...stepProps} />;
-      case 3:
-        return <StepComoNosConheceu {...stepProps} />;
-      case 4:
-        return <StepSeuNegocio {...stepProps} />;
-      case 5:
-        return <StepContextoNegocio {...stepProps} />;
-      case 6:
-        return <StepObjetivosMetas {...stepProps} />;
-      case 7:
-        return <StepExperienciaIA {...stepProps} />;
-      case 8:
-        return <StepPersonalizacaoExperiencia {...stepProps} />;
-      default:
-        return <StepQuemEVoceNew {...stepProps} />;
+      case 1: return <StepQuemEVoceNew {...stepProps} />;
+      case 2: return <StepLocalizacaoRedes {...stepProps} />;
+      case 3: return <StepComoNosConheceu {...stepProps} />;
+      case 4: return <StepSeuNegocio {...stepProps} />;
+      case 5: return <StepContextoNegocio {...stepProps} />;
+      case 6: return <StepObjetivosMetas {...stepProps} />;
+      case 7: return <StepExperienciaIA {...stepProps} />;
+      case 8: return <StepPersonalizacaoExperiencia {...stepProps} />;
+      default: return <StepQuemEVoceNew {...stepProps} />;
     }
   };
+
+  // Mostrar loading até inicializar
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue mx-auto mb-4"></div>
+          <p>Carregando onboarding...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-8">
@@ -230,13 +295,14 @@ export const SimpleOnboardingFlow: React.FC = () => {
           />
         </div>
 
-        {/* Debug info (apenas em modo debug) */}
-        {isDebugMode && (
-          <div className="fixed bottom-4 left-4 bg-black/80 text-white text-xs p-2 rounded">
+        {/* Debug info em desenvolvimento */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="fixed bottom-4 left-4 bg-black/80 text-white text-xs p-2 rounded max-w-xs">
             <div>Step: {currentStep}/{TOTAL_STEPS}</div>
-            <div>Valid: {canProceed ? '✅' : '❌'}</div>
+            <div>Valid: {canProceed() ? '✅' : '❌'}</div>
             <div>Saving: {isSaving ? '💾' : '✅'}</div>
-            <div>Progress: {currentStepValidation.completionPercentage}%</div>
+            <div>Name: {data.name || 'vazio'}</div>
+            <div>Email: {data.email || 'vazio'}</div>
           </div>
         )}
 
