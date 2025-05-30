@@ -12,19 +12,25 @@ export const useOnboardingCleanup = () => {
     try {
       console.log('🧹 Iniciando limpeza de dados antigos de onboarding...');
 
-      // Verificar se existem dados nas tabelas antigas
-      const { data: oldProgress } = await supabase
-        .from('onboarding_progress')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (oldProgress) {
-        console.log('🗑️ Removendo dados antigos da tabela onboarding_progress...');
-        await supabase
+      // Verificar se existem dados nas tabelas antigas com verificação de erro
+      try {
+        const { data: oldProgress, error: progressError } = await supabase
           .from('onboarding_progress')
-          .delete()
-          .eq('user_id', user.id);
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (progressError && progressError.code !== 'PGRST116') {
+          console.warn('⚠️ Erro ao verificar onboarding_progress:', progressError);
+        } else if (oldProgress) {
+          console.log('🗑️ Removendo dados antigos da tabela onboarding_progress...');
+          await supabase
+            .from('onboarding_progress')
+            .delete()
+            .eq('user_id', user.id);
+        }
+      } catch (error) {
+        console.warn('⚠️ Erro na limpeza de onboarding_progress:', error);
       }
 
       console.log('✅ Limpeza concluída');
@@ -39,11 +45,16 @@ export const useOnboardingCleanup = () => {
     try {
       console.log('🔍 Validando integridade do onboarding...');
 
-      const { data: quickOnboarding } = await supabase
+      const { data: quickOnboarding, error: quickError } = await supabase
         .from('quick_onboarding')
         .select('is_completed, current_step')
         .eq('user_id', user.id)
         .maybeSingle();
+
+      if (quickError && quickError.code !== 'PGRST116') {
+        console.warn('⚠️ Erro ao validar quick_onboarding:', quickError);
+        return false;
+      }
 
       if (!quickOnboarding) {
         console.log('⚠️ Nenhum registro de onboarding encontrado');
@@ -73,9 +84,14 @@ export const useOnboardingCleanup = () => {
           current_step: 1,
           is_completed: false,
           updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id'
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao reiniciar:', error);
+        throw error;
+      }
 
       console.log('✅ Progresso reiniciado');
       return true;
