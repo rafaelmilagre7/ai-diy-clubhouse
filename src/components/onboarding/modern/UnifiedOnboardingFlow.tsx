@@ -2,15 +2,15 @@
 import React from 'react';
 import { useSimpleOnboarding } from '@/hooks/onboarding/useSimpleOnboarding';
 import { QuickFormStep } from './QuickFormStep';
-import { LoadingScreen } from '@/components/common/LoadingScreen';
-import { Step1Personal } from './steps/Step1Personal';
-import { Step2Location } from './steps/Step2Location';
-import { Step3Discovery } from './steps/Step3Discovery';
-import { Step4Professional } from './steps/Step4Professional';
-import { Step5BusinessContext } from './steps/Step5BusinessContext';
-import { Step6BusinessGoals } from './steps/Step6BusinessGoals';
-import { Step7AIExperience } from './steps/Step7AIExperience';
-import { Step8Personalization } from './steps/Step8Personalization';
+import LoadingScreen from '@/components/common/LoadingScreen';
+import { StepQuemEVoceNew } from './steps/StepQuemEVoceNew';
+import { StepLocalizacaoRedes } from './steps/StepLocalizacaoRedes';
+import { StepComoNosConheceu } from './steps/StepComoNosConheceu';
+import { StepSeuNegocio } from './steps/StepSeuNegocio';
+import { StepContextoNegocio } from './steps/StepContextoNegocio';
+import { StepObjetivosMetas } from './steps/StepObjetivosMetas';
+import { StepExperienciaIA } from './steps/StepExperienciaIA';
+import { StepPersonalizacao } from './steps/StepPersonalizacao';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -52,63 +52,32 @@ export const UnifiedOnboardingFlow: React.FC = () => {
   };
 
   const getStepContent = () => {
+    const stepProps = {
+      data,
+      onUpdate: updateField,
+      onNext: handleNext,
+      canProceed,
+      currentStep,
+      totalSteps
+    };
+
     switch (currentStep) {
       case 1:
-        return (
-          <Step1Personal
-            data={data}
-            updateField={updateField}
-          />
-        );
+        return <StepQuemEVoceNew {...stepProps} />;
       case 2:
-        return (
-          <Step2Location
-            data={data}
-            updateField={updateField}
-          />
-        );
+        return <StepLocalizacaoRedes {...stepProps} />;
       case 3:
-        return (
-          <Step3Discovery
-            data={data}
-            updateField={updateField}
-          />
-        );
+        return <StepComoNosConheceu {...stepProps} />;
       case 4:
-        return (
-          <Step4Professional
-            data={data}
-            updateField={updateField}
-          />
-        );
+        return <StepSeuNegocio {...stepProps} />;
       case 5:
-        return (
-          <Step5BusinessContext
-            data={data}
-            updateField={updateField}
-          />
-        );
+        return <StepContextoNegocio {...stepProps} />;
       case 6:
-        return (
-          <Step6BusinessGoals
-            data={data}
-            updateField={updateField}
-          />
-        );
+        return <StepObjetivosMetas {...stepProps} />;
       case 7:
-        return (
-          <Step7AIExperience
-            data={data}
-            updateField={updateField}
-          />
-        );
+        return <StepExperienciaIA {...stepProps} />;
       case 8:
-        return (
-          <Step8Personalization
-            data={data}
-            updateField={updateField}
-          />
-        );
+        return <StepPersonalizacao {...stepProps} />;
       default:
         return null;
     }
