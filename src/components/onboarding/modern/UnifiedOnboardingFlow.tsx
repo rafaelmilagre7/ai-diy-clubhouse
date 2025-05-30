@@ -9,17 +9,17 @@ export const UnifiedOnboardingFlow: React.FC = () => {
   const { user } = useAuth();
   const { runFullMigration } = useOnboardingMigration();
 
-  // Executar migração automaticamente na primeira carga
+  // Executar migração automaticamente na primeira carga (silenciosamente)
   useEffect(() => {
     if (user?.id) {
       console.log('🔄 Verificando necessidade de migração de dados...');
       
-      // Executar migração em background
+      // Executar migração em background sem toast desnecessário
       runFullMigration().then(result => {
         if (result.success) {
-          console.log('✅ Migração automática concluída:', result.message);
+          console.log('✅ Verificação de migração concluída:', result.message);
         } else {
-          console.warn('⚠️ Migração automática falhou:', result.message);
+          console.warn('⚠️ Verificação de migração com problemas:', result.message);
         }
       });
     }

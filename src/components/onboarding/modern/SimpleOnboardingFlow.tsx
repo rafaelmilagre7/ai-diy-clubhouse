@@ -123,12 +123,14 @@ export const SimpleOnboardingFlow: React.FC = () => {
         canProceed={canProceed && !isSaving && !isCompleting}
         showBack={currentStep > 1}
       >
-        {/* Mostrar indicador de salvamento */}
+        {/* Indicador discreto de salvamento apenas quando necessário */}
         {(isSaving || isCompleting) && (
           <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
             <div className="flex items-center gap-2 text-blue-400">
               <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-              <span>{isCompleting ? 'Finalizando onboarding...' : 'Salvando progresso...'}</span>
+              <span className="text-sm">
+                {isCompleting ? 'Finalizando onboarding...' : 'Salvando progresso...'}
+              </span>
             </div>
           </div>
         )}
