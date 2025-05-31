@@ -1,53 +1,46 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
-import { useNavigate } from 'react-router-dom';
 import { QuickOnboardingData } from '@/types/quickOnboarding';
-import { mapQuickToProgress, validateStepData } from '@/utils/onboarding/dataMappers';
-import { useOnboardingProgress } from './useOnboardingProgress';
-import { useDebounce } from '@/hooks/common/useDebounce';
+import { useQuickOnboarding } from './useQuickOnboarding';
+import { useRealtimeValidation } from './useRealtimeValidation';
+import { useIntelligentAutoSave } from './useIntelligentAutoSave';
+import { mapQuickToProgress } from '@/utils/onboarding/dataMappers';
 import { toast } from 'sonner';
 
 export const useSimpleOnboarding = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const { saveProgress, loadProgress, completeOnboarding: markComplete, isLoading, isSaving } = useOnboardingProgress();
-  
-  const [data, setData] = useState<QuickOnboardingData>({
-    // Etapa 1 - Informações Pessoais
+  const { data: savedData, loadData, completeOnboarding: completeQuick } = useQuickOnboarding();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [isCompleting, setIsCompleting] = useState(false);
+
+  // Dados do formulário com valores padrão seguros
+  const [formData, setFormData] = useState<QuickOnboardingData>({
     name: '',
-    email: user?.email || '',
+    email: '',
     whatsapp: '',
     country_code: '+55',
-    
-    // Etapa 2 - Localização e Redes (removendo timezone)
-    country: 'Brasil',
+    birth_date: '',
+    country: '',
     state: '',
     city: '',
     instagram_url: '',
     linkedin_url: '',
-    
-    // Etapa 3 - Como nos conheceu
     how_found_us: '',
     referred_by: '',
-    
-    // Etapa 4 - Seu negócio
     company_name: '',
     role: '',
     company_size: '',
     company_segment: '',
     company_website: '',
     annual_revenue_range: '',
-    
-    // Etapa 5 - Contexto do negócio
+    current_position: '',
     business_model: '',
     business_challenges: [],
     short_term_goals: [],
     medium_term_goals: [],
     important_kpis: [],
     additional_context: '',
-    
-    // Etapa 6 - Objetivos e metas
     primary_goal: '',
     expected_outcomes: [],
     expected_outcome_30days: '',
@@ -55,9 +48,7 @@ export const useSimpleOnboarding = () => {
     how_implement: '',
     week_availability: '',
     content_formats: [],
-    
-    // Etapa 7 - Experiência com IA
-    ai_knowledge_level: '',
+    ai_knowledge_level: 'iniciante',
     previous_tools: [],
     has_implemented: '',
     desired_ai_areas: [],
@@ -65,241 +56,160 @@ export const useSimpleOnboarding = () => {
     is_member_for_month: false,
     nps_score: 0,
     improvement_suggestions: '',
-    
-    // Etapa 8 - Personalização
     interests: [],
     time_preference: [],
     available_days: [],
     networking_availability: 5,
     skills_to_share: [],
     mentorship_topics: [],
-    
-    // Campos de controle
-    live_interest: 5,
+    live_interest: 0,
     authorize_case_usage: false,
     interested_in_interview: false,
-    priority_topics: []
+    priority_topics: [],
+    currentStep: 1
   });
 
-  const [currentStep, setCurrentStep] = useState(1);
-  const [isCompleting, setIsCompleting] = useState(false);
+  // Validação em tempo real
+  const validation = useRealtimeValidation(formData, currentStep);
+  
+  // Auto-save inteligente com debounce maior
+  const { isSaving, saveImmediately } = useIntelligentAutoSave(
+    formData, 
+    currentStep,
+    { 
+      debounceMs: 4000, // 4 segundos para dar tempo ao usuário
+      maxRetries: 1,
+      enableLocalBackup: true 
+    }
+  );
+
   const totalSteps = 8;
 
-  // Auto-save com debounce para evitar muitas chamadas
-  const debouncedSave = useDebounce(async (dataToSave: QuickOnboardingData, step: number) => {
-    if (!user?.id) return;
-    
-    try {
-      console.log(`🔄 Auto-salvando step ${step}...`);
-      
-      // Mapear dados para o formato correto
-      const progressData = mapQuickToProgress(dataToSave);
-      
-      // Adicionar step atual e controle
-      const saveData = {
-        ...progressData,
-        current_step: `step_${step}`,
-        is_completed: false,
-        updated_at: new Date().toISOString()
-      };
-
-      await saveProgress(saveData);
-      console.log(`✅ Auto-save do step ${step} concluído`);
-    } catch (error) {
-      console.error('❌ Erro no auto-save:', error);
-      // Não mostrar toast de erro para auto-save silencioso
-    }
-  }, 1500); // Debounce de 1.5 segundos
-
-  // Carregar dados salvos ao inicializar
+  // Carregar dados salvos na inicialização
   useEffect(() => {
-    const loadSavedData = async () => {
-      if (!user?.id) return;
-      
-      try {
-        const progress = await loadProgress();
-        if (progress) {
-          // Converter de volta para QuickOnboardingData se necessário
-          const personalInfo = progress.personal_info || {};
-          const professionalInfo = progress.professional_info || {};
-          const businessContext = progress.business_context || {};
-          const businessGoals = progress.business_goals || {};
-          const aiExperience = progress.ai_experience || {};
-          const personalization = progress.experience_personalization || {};
-          const complementary = progress.complementary_info || {};
-
-          setData(prev => ({
-            ...prev,
-            // Informações pessoais
-            name: personalInfo.name || prev.name,
-            email: personalInfo.email || prev.email,
-            whatsapp: personalInfo.whatsapp || prev.whatsapp,
-            country_code: personalInfo.country_code || prev.country_code,
-            
-            // Localização
-            country: complementary.country || prev.country,
-            state: complementary.state || prev.state,
-            city: complementary.city || prev.city,
-            instagram_url: complementary.instagram_url || prev.instagram_url,
-            linkedin_url: complementary.linkedin_url || prev.linkedin_url,
-            
-            // Como conheceu
-            how_found_us: complementary.how_found_us || prev.how_found_us,
-            referred_by: complementary.referred_by || prev.referred_by,
-            
-            // Negócio
-            company_name: professionalInfo.company_name || prev.company_name,
-            role: professionalInfo.role || prev.role,
-            company_size: professionalInfo.company_size || prev.company_size,
-            company_segment: professionalInfo.company_segment || prev.company_segment,
-            company_website: professionalInfo.company_website || prev.company_website,
-            annual_revenue_range: professionalInfo.annual_revenue_range || prev.annual_revenue_range,
-            
-            // Contexto
-            business_model: businessContext.business_model || prev.business_model,
-            business_challenges: businessContext.business_challenges || prev.business_challenges,
-            short_term_goals: businessContext.short_term_goals || prev.short_term_goals,
-            medium_term_goals: businessContext.medium_term_goals || prev.medium_term_goals,
-            important_kpis: businessContext.important_kpis || prev.important_kpis,
-            additional_context: businessContext.additional_context || prev.additional_context,
-            
-            // Objetivos
-            primary_goal: businessGoals.primary_goal || prev.primary_goal,
-            expected_outcomes: businessGoals.expected_outcomes || prev.expected_outcomes,
-            expected_outcome_30days: businessGoals.expected_outcome_30days || prev.expected_outcome_30days,
-            priority_solution_type: businessGoals.priority_solution_type || prev.priority_solution_type,
-            how_implement: businessGoals.how_implement || prev.how_implement,
-            week_availability: businessGoals.week_availability || prev.week_availability,
-            content_formats: businessGoals.content_formats || prev.content_formats,
-            
-            // IA
-            ai_knowledge_level: aiExperience.ai_knowledge_level || prev.ai_knowledge_level,
-            previous_tools: aiExperience.previous_tools || prev.previous_tools,
-            has_implemented: aiExperience.has_implemented || prev.has_implemented,
-            desired_ai_areas: aiExperience.desired_ai_areas || prev.desired_ai_areas,
-            completed_formation: aiExperience.completed_formation || prev.completed_formation,
-            is_member_for_month: aiExperience.is_member_for_month || prev.is_member_for_month,
-            nps_score: aiExperience.nps_score || prev.nps_score,
-            improvement_suggestions: aiExperience.improvement_suggestions || prev.improvement_suggestions,
-            
-            // Personalização
-            interests: personalization.interests || prev.interests,
-            time_preference: personalization.time_preference || prev.time_preference,
-            available_days: personalization.available_days || prev.available_days,
-            networking_availability: personalization.networking_availability || prev.networking_availability,
-            skills_to_share: personalization.skills_to_share || prev.skills_to_share,
-            mentorship_topics: personalization.mentorship_topics || prev.mentorship_topics,
-            authorize_case_usage: personalization.authorize_case_usage || prev.authorize_case_usage,
-            interested_in_interview: personalization.interested_in_interview || prev.interested_in_interview,
-            priority_topics: personalization.priority_topics || prev.priority_topics
-          }));
-
-          // Determinar step atual baseado no progresso
-          const currentStepFromProgress = progress.current_step;
-          if (currentStepFromProgress && currentStepFromProgress.startsWith('step_')) {
-            const stepNumber = parseInt(currentStepFromProgress.replace('step_', ''));
-            if (stepNumber >= 1 && stepNumber <= totalSteps) {
-              setCurrentStep(stepNumber);
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Erro ao carregar dados salvos:', error);
-      }
-    };
-
-    loadSavedData();
-  }, [user?.id, loadProgress]);
-
-  const updateField = useCallback((field: keyof QuickOnboardingData, value: any) => {
-    setData(prev => {
-      const newData = { ...prev, [field]: value };
-      
-      // Trigger auto-save com debounce
-      debouncedSave(newData, currentStep);
-      
-      return newData;
-    });
-  }, [currentStep, debouncedSave]);
-
-  const nextStep = useCallback(async () => {
-    if (currentStep < totalSteps) {
-      const nextStepNumber = currentStep + 1;
-      setCurrentStep(nextStepNumber);
-      
-      // Salvar progresso imediatamente ao avançar step
-      try {
-        const progressData = mapQuickToProgress(data);
-        await saveProgress({
-          ...progressData,
-          current_step: `step_${nextStepNumber}`,
-          is_completed: false
-        });
-        console.log(`✅ Progresso salvo ao avançar para step ${nextStepNumber}`);
-      } catch (error) {
-        console.error('Erro ao salvar progresso:', error);
-        toast.error('Erro ao salvar progresso');
-      }
+    if (user?.id) {
+      loadData();
     }
-  }, [currentStep, totalSteps, data, saveProgress]);
+  }, [user?.id, loadData]);
 
+  // Aplicar dados carregados
+  useEffect(() => {
+    if (savedData) {
+      console.log('📥 Aplicando dados salvos:', savedData);
+      setFormData(savedData);
+      setCurrentStep(savedData.currentStep as number || 1);
+    }
+  }, [savedData]);
+
+  // Atualizar campo individual
+  const updateField = useCallback((field: keyof QuickOnboardingData, value: string | string[] | number | boolean) => {
+    console.log('📝 Atualizando campo:', field, '=', value);
+    
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      console.log('📊 Estado atualizado:', updated);
+      return updated;
+    });
+  }, []);
+
+  // Validar se pode prosseguir na etapa atual
+  const canProceed = validation.canProceed;
+
+  // Avançar para próxima etapa
+  const nextStep = useCallback(async () => {
+    if (!canProceed) {
+      console.log('⚠️ Não pode prosseguir - validação falhou');
+      toast.error('Por favor, preencha todos os campos obrigatórios');
+      return;
+    }
+
+    try {
+      console.log('➡️ Avançando para próxima etapa...');
+      
+      // Salvar dados imediatamente antes de avançar
+      const saveSuccess = await saveImmediately();
+      
+      if (!saveSuccess) {
+        console.warn('⚠️ Falha ao salvar, mas continuando...');
+        // Não bloquear o avanço por falha de save
+      }
+
+      if (currentStep < totalSteps) {
+        const nextStepNumber = currentStep + 1;
+        setCurrentStep(nextStepNumber);
+        
+        // Atualizar currentStep nos dados também
+        setFormData(prev => ({ ...prev, currentStep: nextStepNumber }));
+        
+        console.log('✅ Avançou para etapa:', nextStepNumber);
+        toast.success(`Etapa ${currentStep} concluída!`);
+      }
+    } catch (error) {
+      console.error('❌ Erro ao avançar etapa:', error);
+      toast.error('Erro ao avançar. Tente novamente.');
+    }
+  }, [canProceed, currentStep, totalSteps, saveImmediately]);
+
+  // Voltar para etapa anterior
   const previousStep = useCallback(() => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+      const prevStepNumber = currentStep - 1;
+      setCurrentStep(prevStepNumber);
+      setFormData(prev => ({ ...prev, currentStep: prevStepNumber }));
+      console.log('⬅️ Voltou para etapa:', prevStepNumber);
     }
   }, [currentStep]);
 
+  // Completar onboarding
   const completeOnboarding = useCallback(async (): Promise<boolean> => {
-    setIsCompleting(true);
-    
-    try {
-      console.log('🎯 Finalizando onboarding...');
-      
-      // Mapear dados finais
-      const finalProgressData = mapQuickToProgress(data);
-      
-      // Salvar dados finais
-      await saveProgress({
-        ...finalProgressData,
-        current_step: 'completed',
-        is_completed: true,
-        completed_at: new Date().toISOString()
-      });
+    if (!canProceed) {
+      toast.error('Por favor, preencha todos os campos obrigatórios');
+      return false;
+    }
 
-      // Marcar como completo
-      const success = await markComplete();
+    try {
+      setIsCompleting(true);
+      console.log('🏁 Completando onboarding final...');
+
+      // Validar dados críticos antes de completar
+      if (!formData.name || !formData.email || !formData.company_name) {
+        throw new Error('Dados críticos faltando');
+      }
+
+      const success = await completeQuick(formData);
       
       if (success) {
-        console.log('✅ Onboarding finalizado com sucesso');
-        toast.success('Onboarding concluído com sucesso!');
+        console.log('✅ Onboarding completado com sucesso!');
         return true;
       } else {
-        throw new Error('Falha ao marcar onboarding como completo');
+        throw new Error('Falha na conclusão');
       }
     } catch (error) {
-      console.error('❌ Erro ao finalizar onboarding:', error);
-      toast.error('Erro ao finalizar onboarding');
+      console.error('❌ Erro ao completar onboarding:', error);
+      toast.error('Erro ao finalizar onboarding. Tente novamente.');
       return false;
     } finally {
       setIsCompleting(false);
     }
-  }, [data, saveProgress, markComplete]);
-
-  const canProceed = useCallback(() => {
-    return validateStepData(currentStep, data);
-  }, [currentStep, data]);
+  }, [canProceed, formData, completeQuick]);
 
   return {
-    data,
+    data: formData,
     currentStep,
-    totalSteps,
     updateField,
     nextStep,
     previousStep,
     completeOnboarding,
-    canProceed: canProceed(),
-    isLoading,
+    canProceed,
+    totalSteps,
     isSaving,
-    isCompleting
+    isCompleting,
+    isLoading: false,
+    // Estatísticas da validação para debug
+    validation: {
+      requiredFields: validation.currentStepValidation.requiredFieldsCount,
+      completedFields: validation.currentStepValidation.completedFieldsCount,
+      missingFields: validation.currentStepValidation.missingFields
+    }
   };
 };

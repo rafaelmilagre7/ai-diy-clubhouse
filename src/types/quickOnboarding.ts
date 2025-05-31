@@ -7,7 +7,7 @@ export interface QuickOnboardingData {
   country_code: string;
   birth_date?: string;
   
-  // Etapa 2 - Localização e Redes (timezone removido)
+  // Etapa 2 - Localização e Redes
   country: string;
   state: string;
   city: string;
@@ -22,9 +22,9 @@ export interface QuickOnboardingData {
   company_name: string;
   role: string;
   company_size: string;
-  company_segment: string;
+  company_segment: string; // Mantém company_segment aqui
   company_website?: string;
-  annual_revenue_range: string;
+  annual_revenue_range: string; // Mantém annual_revenue_range aqui
   current_position?: string;
   
   // Etapa 5 - Contexto do negócio
