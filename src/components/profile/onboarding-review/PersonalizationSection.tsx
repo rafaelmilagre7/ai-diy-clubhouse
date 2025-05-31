@@ -27,13 +27,13 @@ export const PersonalizationSection: React.FC<PersonalizationSectionProps> = ({ 
         <ArrayField label="Dias Disponíveis" items={data.available_days} />
         <DataField 
           label="Disponibilidade para Networking" 
-          value={data.networking_availability?.toString()} 
+          value={data.networking_availability} 
         />
         <ArrayField label="Habilidades para Compartilhar" items={data.skills_to_share} />
         <ArrayField label="Tópicos de Mentoria" items={data.mentorship_topics} />
         <DataField 
           label="Interesse em Lives" 
-          value={data.live_interest?.toString()} 
+          value={data.live_interest} 
         />
         <DataField 
           label="Autoriza Uso do Caso" 

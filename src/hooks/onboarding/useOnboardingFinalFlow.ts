@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { OnboardingFinalData } from '@/types/onboardingFinal';
 import { useCompleteOnboarding } from './useCompleteOnboarding';
@@ -64,10 +65,10 @@ const initialData: OnboardingFinalData = {
     interests: [],
     time_preference: [],
     available_days: [],
-    networking_availability: 0,
+    networking_availability: '0',
     skills_to_share: [],
     mentorship_topics: [],
-    live_interest: 0,
+    live_interest: '0',
     authorize_case_usage: false,
     interested_in_interview: false,
     priority_topics: [],
@@ -135,7 +136,7 @@ export const useOnboardingFinalFlow = () => {
       case 5: // Business Context
         return !!(
           data.business_context.business_model &&
-          data.business_context.business_challenges.length > 0
+          data.business_context.business_challenges?.length > 0
         );
       
       case 6: // Goals Info

@@ -2,6 +2,8 @@
 export interface OnboardingPersonalInfo {
   name: string;
   email: string;
+  whatsapp?: string;
+  country_code?: string;
   phone?: string;
   birth_date?: string;
   gender?: string;
@@ -52,27 +54,38 @@ export interface OnboardingGoalsInfo {
 
 export interface OnboardingAIExperience {
   ai_knowledge_level?: string;
+  previous_tools?: string[];
+  has_implemented?: string;
+  desired_ai_areas?: string[];
+  completed_formation?: boolean;
+  is_member_for_month?: boolean;
+  nps_score?: number;
+  improvement_suggestions?: string;
   implemented_solutions?: string[];
   desired_solutions?: string[];
   previous_attempts?: string;
   ai_tools?: string[];
-  nps_score?: number;
   suggestions?: string;
 }
 
 export interface OnboardingPersonalization {
   interests?: string[];
+  time_preference?: string[];
   available_days?: string[];
-  time_preference?: string;
+  networking_availability?: string;
   skills_to_share?: string[];
   mentorship_topics?: string[];
-  networking_availability?: string;
+  live_interest?: string;
+  authorize_case_usage?: boolean;
+  interested_in_interview?: boolean;
+  priority_topics?: string[];
+  content_formats?: string[];
 }
 
 export interface OnboardingFinalData {
-  id: string;
-  user_id: string;
-  is_completed: boolean;
+  id?: string;
+  user_id?: string;
+  is_completed?: boolean;
   completed_at?: string;
   personal_info: OnboardingPersonalInfo;
   location_info: OnboardingLocationInfo;
@@ -82,6 +95,21 @@ export interface OnboardingFinalData {
   goals_info: OnboardingGoalsInfo;
   ai_experience: OnboardingAIExperience;
   personalization: OnboardingPersonalization;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface OnboardingStepComponentProps {
+  data: OnboardingFinalData;
+  onUpdate: (section: keyof OnboardingFinalData, updates: any) => void;
+  onNext: () => void;
+  onPrevious?: () => void;
+  canProceed: boolean;
+}
+
+export interface CompleteOnboardingResponse {
+  success: boolean;
+  error?: string;
+  wasAlreadyCompleted?: boolean;
+  data?: any;
 }
