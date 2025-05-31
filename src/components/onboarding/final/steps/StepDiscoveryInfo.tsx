@@ -1,94 +1,131 @@
 
 import React from 'react';
-import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowLeft } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowRight, ArrowLeft, Users } from 'lucide-react';
 import { OnboardingStepComponentProps } from '@/types/onboardingFinal';
-
-const DISCOVERY_OPTIONS = [
-  'Pesquisa no Google',
-  'YouTube',
-  'Instagram',
-  'LinkedIn',
-  'Facebook',
-  'Indicação de amigo/conhecido',
-  'Podcast',
-  'Blog/Site',
-  'Evento online',
-  'Evento presencial',
-  'Publicidade paga',
-  'Outros'
-];
 
 export const StepDiscoveryInfo: React.FC<OnboardingStepComponentProps> = ({
   data,
   onUpdate,
   onNext,
   onPrevious,
-  canProceed
+  canProceed,
+  currentStep,
+  totalSteps
 }) => {
-  const { discovery_info } = data;
+  const discoveryOptions = [
+    'Google/Pesquisa',
+    'YouTube',
+    'Instagram',
+    'LinkedIn',
+    'Facebook',
+    'Indicação de amigo/colega',
+    'G4 Educação',
+    'MeetHub',
+    'Evento/Palestra',
+    'Podcast',
+    'Blog/Artigo',
+    'Outro'
+  ];
 
-  const handleUpdate = (field: string, value: string) => {
-    onUpdate('discovery_info', {
-      ...discovery_info,
-      [field]: value
-    });
+  const isFormValid = () => {
+    return data.discovery_info.how_found_us;
   };
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-white">
-          Como você conheceu a Viver de IA? <span className="text-red-400">*</span>
-        </label>
-        <select
-          value={discovery_info.how_found_us || ''}
-          onChange={(e) => handleUpdate('how_found_us', e.target.value)}
-          className="h-12 w-full px-3 bg-gray-800/50 border border-gray-600 text-white rounded-md focus:ring-viverblue/50"
-        >
-          <option value="">Selecione como nos conheceu</option>
-          {DISCOVERY_OPTIONS.map(option => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
+      <div className="text-center mb-8">
+        <h2 className="text-2xl font-bold text-white mb-2">
+          Como você conheceu o Viver de IA?
+        </h2>
+        <p className="text-gray-300">
+          Queremos entender como chegou até nós para melhorarmos ainda mais.
+        </p>
       </div>
 
-      {discovery_info.how_found_us === 'Indicação de amigo/conhecido' && (
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-white">
-            Quem te indicou?
-          </label>
-          <Input
-            type="text"
-            value={discovery_info.referred_by || ''}
-            onChange={(e) => handleUpdate('referred_by', e.target.value)}
-            placeholder="Nome da pessoa que te indicou"
-            className="h-12 bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:ring-viverblue/50"
-          />
-        </div>
-      )}
+      <Card className="bg-gray-800/50 border-gray-700">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-white">
+            <Users className="h-5 w-5 text-viverblue" />
+            Como nos encontrou
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="how_found_us" className="text-white">Como você conheceu o Viver de IA? *</Label>
+            <Select 
+              value={data.discovery_info.how_found_us || ''} 
+              onValueChange={(value) => onUpdate('discovery_info', {
+                ...data.discovery_info,
+                how_found_us: value
+              })}
+            >
+              <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                <SelectValue placeholder="Selecione como nos conheceu" />
+              </SelectTrigger>
+              <SelectContent>
+                {discoveryOptions.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-      <div className="flex justify-between items-center pt-6 border-t border-gray-700">
+          {(data.discovery_info.how_found_us === 'Indicação de amigo/colega' || 
+            data.discovery_info.how_found_us === 'Outro') && (
+            <div>
+              <Label htmlFor="referred_by" className="text-white">
+                {data.discovery_info.how_found_us === 'Indicação de amigo/colega' 
+                  ? 'Quem te indicou?' 
+                  : 'Por favor, especifique:'}
+              </Label>
+              <Input
+                id="referred_by"
+                value={data.discovery_info.referred_by || ''}
+                onChange={(e) => onUpdate('discovery_info', {
+                  ...data.discovery_info,
+                  referred_by: e.target.value
+                })}
+                placeholder={
+                  data.discovery_info.how_found_us === 'Indicação de amigo/colega'
+                    ? "Nome da pessoa que te indicou"
+                    : "Especifique como nos conheceu"
+                }
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <div className="flex justify-between">
         <Button
           onClick={onPrevious}
-          variant="ghost"
-          className="text-gray-400 hover:text-white flex items-center gap-2"
+          variant="outline"
+          className="border-gray-600 text-gray-300 hover:bg-gray-700"
         >
-          <ArrowLeft size={16} />
-          <span>Anterior</span>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Voltar
         </Button>
         
         <Button
           onClick={onNext}
-          disabled={!canProceed}
-          className="bg-viverblue hover:bg-viverblue-dark transition-colors flex items-center gap-2 px-8"
+          disabled={!isFormValid()}
+          className="bg-viverblue hover:bg-viverblue/90"
         >
-          <span>Continuar</span>
-          <ArrowRight size={16} />
+          Próxima Etapa
+          <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
+      </div>
+
+      <div className="text-center text-sm text-gray-400">
+        Etapa {currentStep} de {totalSteps}
       </div>
     </div>
   );

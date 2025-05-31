@@ -82,13 +82,14 @@ export const SmartRedirectHandler: React.FC<SmartRedirectHandlerProps> = ({ chil
         return;
       }
 
-      // Só redirecionar se a rota requer onboarding E não é uma rota protegida
+      // Só redirecionar se a rota requer onboarding, onboarding não está completo E não é uma rota protegida
       if (requiresOnboarding && !isOnboardingComplete && !isProtectedRoute) {
         console.log('🔄 SmartRedirectHandler: Redirecionando para onboarding - rota requer onboarding', {
           userId: user.id,
           currentPath: location.pathname,
           requiresOnboarding,
-          isProtectedRoute
+          isProtectedRoute,
+          isOnboardingComplete
         });
         navigate('/onboarding-new', { replace: true });
       }

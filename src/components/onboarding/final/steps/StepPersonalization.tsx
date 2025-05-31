@@ -1,7 +1,11 @@
 
 import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Check } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowLeft, Settings, CheckCircle } from 'lucide-react';
 import { OnboardingStepComponentProps } from '@/types/onboardingFinal';
 
 export const StepPersonalization: React.FC<OnboardingStepComponentProps> = ({
@@ -9,103 +13,246 @@ export const StepPersonalization: React.FC<OnboardingStepComponentProps> = ({
   onUpdate,
   onNext,
   onPrevious,
-  canProceed
+  canProceed,
+  currentStep,
+  totalSteps
 }) => {
-  const { personalization } = data;
+  const interestOptions = [
+    'Automação de Processos',
+    'ChatBots e Assistentes Virtuais',
+    'Análise de Dados com IA',
+    'Marketing com IA',
+    'Vendas com IA',
+    'Atendimento ao Cliente',
+    'Recursos Humanos',
+    'Financeiro e Contabilidade',
+    'Produtividade Pessoal',
+    'Criação de Conteúdo'
+  ];
 
-  const handleUpdate = (field: string, value: any) => {
+  const availableDaysOptions = [
+    'Segunda-feira',
+    'Terça-feira',
+    'Quarta-feira',
+    'Quinta-feira',
+    'Sexta-feira',
+    'Sábado',
+    'Domingo'
+  ];
+
+  const timePreferenceOptions = [
+    'Manhã (8h-12h)',
+    'Tarde (12h-18h)', 
+    'Noite (18h-22h)'
+  ];
+
+  const handleInterestChange = (interest: string, checked: boolean) => {
+    const currentInterests = data.personalization.interests || [];
+    let updatedInterests;
+    
+    if (checked) {
+      updatedInterests = [...currentInterests, interest];
+    } else {
+      updatedInterests = currentInterests.filter(item => item !== interest);
+    }
+    
     onUpdate('personalization', {
-      ...personalization,
-      [field]: value
+      ...data.personalization,
+      interests: updatedInterests
     });
   };
 
-  const handleToggle = (field: string, currentValue: boolean) => {
-    handleUpdate(field, !currentValue);
+  const handleDayChange = (day: string, checked: boolean) => {
+    const currentDays = data.personalization.available_days || [];
+    let updatedDays;
+    
+    if (checked) {
+      updatedDays = [...currentDays, day];
+    } else {
+      updatedDays = currentDays.filter(item => item !== day);
+    }
+    
+    onUpdate('personalization', {
+      ...data.personalization,
+      available_days: updatedDays
+    });
+  };
+
+  const handleTimePreferenceChange = (time: string, checked: boolean) => {
+    const currentTimes = data.personalization.time_preference || [];
+    let updatedTimes;
+    
+    if (checked) {
+      updatedTimes = [...currentTimes, time];
+    } else {
+      updatedTimes = currentTimes.filter(item => item !== time);
+    }
+    
+    onUpdate('personalization', {
+      ...data.personalization,
+      time_preference: updatedTimes
+    });
   };
 
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
-        <h3 className="text-xl font-semibold text-white mb-2">
-          Últimos detalhes para personalizar sua experiência
-        </h3>
-        <p className="text-gray-400">
-          Essas informações são opcionais, mas nos ajudam a criar uma experiência mais personalizada
+        <h2 className="text-2xl font-bold text-white mb-2">
+          Última etapa!
+        </h2>
+        <p className="text-gray-300">
+          Vamos personalizar sua experiência no Viver de IA Club.
         </p>
       </div>
 
-      <div className="space-y-4">
-        <div className="p-4 bg-gray-800/30 rounded-lg border border-gray-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="font-medium text-white">Autorizar uso do seu caso</h4>
-              <p className="text-sm text-gray-400">
-                Podemos usar seu caso (anonimizado) como exemplo para outros membros?
-              </p>
+      <Card className="bg-gray-800/50 border-gray-700">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-white">
+            <Settings className="h-5 w-5 text-viverblue" />
+            Seus Interesses
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label className="text-white mb-3 block">Que áreas de IA mais te interessam?</Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {interestOptions.map((interest) => (
+                <div key={interest} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={interest}
+                    checked={(data.personalization.interests || []).includes(interest)}
+                    onCheckedChange={(checked) => handleInterestChange(interest, checked as boolean)}
+                  />
+                  <Label htmlFor={interest} className="text-gray-300 text-sm cursor-pointer">
+                    {interest}
+                  </Label>
+                </div>
+              ))}
             </div>
-            <button
-              type="button"
-              onClick={() => handleToggle('authorize_case_usage', personalization.authorize_case_usage || false)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                personalization.authorize_case_usage 
-                  ? 'bg-viverblue' 
-                  : 'bg-gray-600'
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  personalization.authorize_case_usage ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
           </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        <div className="p-4 bg-gray-800/30 rounded-lg border border-gray-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="font-medium text-white">Interesse em entrevista</h4>
-              <p className="text-sm text-gray-400">
-                Gostaria de participar de entrevistas para melhorarmos a plataforma?
-              </p>
+      <Card className="bg-gray-800/50 border-gray-700">
+        <CardHeader>
+          <CardTitle className="text-white">Disponibilidade para Networking</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label className="text-white mb-3 block">Dias disponíveis para conexões:</Label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {availableDaysOptions.map((day) => (
+                <div key={day} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={day}
+                    checked={(data.personalization.available_days || []).includes(day)}
+                    onCheckedChange={(checked) => handleDayChange(day, checked as boolean)}
+                  />
+                  <Label htmlFor={day} className="text-gray-300 text-sm cursor-pointer">
+                    {day}
+                  </Label>
+                </div>
+              ))}
             </div>
-            <button
-              type="button"
-              onClick={() => handleToggle('interested_in_interview', personalization.interested_in_interview || false)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                personalization.interested_in_interview 
-                  ? 'bg-viverblue' 
-                  : 'bg-gray-600'
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  personalization.interested_in_interview ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
           </div>
-        </div>
-      </div>
 
-      <div className="flex justify-between items-center pt-6 border-t border-gray-700">
+          <div>
+            <Label className="text-white mb-3 block">Horários preferenciais:</Label>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {timePreferenceOptions.map((time) => (
+                <div key={time} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={time}
+                    checked={(data.personalization.time_preference || []).includes(time)}
+                    onCheckedChange={(checked) => handleTimePreferenceChange(time, checked as boolean)}
+                  />
+                  <Label htmlFor={time} className="text-gray-300 text-sm cursor-pointer">
+                    {time}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="networking_availability" className="text-white">Disponibilidade geral para networking:</Label>
+            <Select 
+              value={data.personalization.networking_availability || ''} 
+              onValueChange={(value) => onUpdate('personalization', {
+                ...data.personalization,
+                networking_availability: value
+              })}
+            >
+              <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                <SelectValue placeholder="Selecione sua disponibilidade" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Muito disponível">Muito disponível</SelectItem>
+                <SelectItem value="Disponível">Disponível</SelectItem>
+                <SelectItem value="Pouco disponível">Pouco disponível</SelectItem>
+                <SelectItem value="Não disponível no momento">Não disponível no momento</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-gray-800/50 border-gray-700">
+        <CardHeader>
+          <CardTitle className="text-white">Autorização e Participação</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="authorize_case_usage"
+              checked={data.personalization.authorize_case_usage || false}
+              onCheckedChange={(checked) => onUpdate('personalization', {
+                ...data.personalization,
+                authorize_case_usage: checked as boolean
+              })}
+            />
+            <Label htmlFor="authorize_case_usage" className="text-gray-300 cursor-pointer">
+              Autorizo ser apresentado como um case de sucesso ao implementar soluções do Viver de IA Club
+            </Label>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="interested_in_interview"
+              checked={data.personalization.interested_in_interview || false}
+              onCheckedChange={(checked) => onUpdate('personalization', {
+                ...data.personalization,
+                interested_in_interview: checked as boolean
+              })}
+            />
+            <Label htmlFor="interested_in_interview" className="text-gray-300 cursor-pointer">
+              Tenho interesse em participar de entrevistas ou depoimentos
+            </Label>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="flex justify-between">
         <Button
           onClick={onPrevious}
-          variant="ghost"
-          className="text-gray-400 hover:text-white flex items-center gap-2"
+          variant="outline"
+          className="border-gray-600 text-gray-300 hover:bg-gray-700"
         >
-          <ArrowLeft size={16} />
-          <span>Anterior</span>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Voltar
         </Button>
         
         <Button
           onClick={onNext}
-          className="bg-green-600 hover:bg-green-700 transition-colors flex items-center gap-2 px-8"
+          className="bg-viverblue hover:bg-viverblue/90"
         >
-          <Check size={16} />
-          <span>Finalizar Onboarding</span>
+          <CheckCircle className="mr-2 h-4 w-4" />
+          Finalizar Onboarding
         </Button>
+      </div>
+
+      <div className="text-center text-sm text-gray-400">
+        Etapa {currentStep} de {totalSteps}
       </div>
     </div>
   );

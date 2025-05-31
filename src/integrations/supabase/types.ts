@@ -2703,6 +2703,7 @@ export type Database = {
           business_info: Json
           completed_at: string | null
           completed_steps: number[]
+          completion_message: string | null
           created_at: string
           current_step: number
           discovery_info: Json
@@ -2710,6 +2711,7 @@ export type Database = {
           id: string
           is_completed: boolean
           location_info: Json
+          message_generated: boolean | null
           personal_info: Json
           personalization: Json
           updated_at: string
@@ -2721,6 +2723,7 @@ export type Database = {
           business_info?: Json
           completed_at?: string | null
           completed_steps?: number[]
+          completion_message?: string | null
           created_at?: string
           current_step?: number
           discovery_info?: Json
@@ -2728,6 +2731,7 @@ export type Database = {
           id?: string
           is_completed?: boolean
           location_info?: Json
+          message_generated?: boolean | null
           personal_info?: Json
           personalization?: Json
           updated_at?: string
@@ -2739,6 +2743,7 @@ export type Database = {
           business_info?: Json
           completed_at?: string | null
           completed_steps?: number[]
+          completion_message?: string | null
           created_at?: string
           current_step?: number
           discovery_info?: Json
@@ -2746,6 +2751,7 @@ export type Database = {
           id?: string
           is_completed?: boolean
           location_info?: Json
+          message_generated?: boolean | null
           personal_info?: Json
           personalization?: Json
           updated_at?: string
@@ -5315,6 +5321,10 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Json
       }
+      complete_onboarding_and_unlock_features: {
+        Args: { p_user_id: string; p_onboarding_data: Json }
+        Returns: Json
+      }
       complete_onboarding_secure: {
         Args: {
           p_user_id: string
@@ -5378,6 +5388,10 @@ export type Database = {
       }
       generate_networking_matches_for_user: {
         Args: { target_user_id: string }
+        Returns: Json
+      }
+      generate_personalized_completion_message: {
+        Args: { onboarding_data: Json }
         Returns: Json
       }
       generate_referral_token: {
