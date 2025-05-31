@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { useOnboardingFinalData } from '@/hooks/onboarding/useOnboardingFinalData';
+import { useUnifiedOnboardingValidation } from '@/hooks/onboarding/useUnifiedOnboardingValidation';
 import { OnboardingSection } from '@/components/profile/onboarding-review/OnboardingSection';
 import { PersonalInfoSection } from '@/components/profile/onboarding-review/PersonalInfoSection';
 import { LocationInfoSection } from '@/components/profile/onboarding-review/LocationInfoSection';
@@ -19,16 +20,43 @@ import { PersonalizationSection } from '@/components/profile/onboarding-review/P
 
 const OnboardingReview: React.FC = () => {
   const { data: onboardingData, isLoading, error } = useOnboardingFinalData();
+  const { isOnboardingComplete } = useUnifiedOnboardingValidation();
 
   console.log('🔍 OnboardingReview: Carregando página de review', {
     isLoading,
     error,
-    hasData: !!onboardingData
+    hasData: !!onboardingData,
+    isOnboardingComplete
   });
 
   if (isLoading) {
     console.log('🔄 OnboardingReview: Carregando dados...');
     return <LoadingScreen message="Carregando dados do onboarding..." />;
+  }
+
+  // Se o onboarding não está completo, redirecionar para completar
+  if (!isOnboardingComplete) {
+    console.log('⚠️ OnboardingReview: Onboarding não completo, redirecionando...');
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <Card className="max-w-md mx-auto text-center">
+          <CardContent className="pt-6">
+            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-white mb-2">
+              Onboarding não concluído
+            </h2>
+            <p className="text-gray-300 mb-4">
+              Você precisa completar o onboarding antes de acessar o review.
+            </p>
+            <Link to="/onboarding-new">
+              <Button variant="default">
+                Completar Onboarding
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   if (error || !onboardingData) {

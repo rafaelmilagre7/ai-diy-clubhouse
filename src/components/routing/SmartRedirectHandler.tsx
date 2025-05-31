@@ -1,10 +1,9 @@
 
 import React, { useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
-import { useSimpleOnboardingValidation } from '@/hooks/onboarding/useSimpleOnboardingValidation';
+import { useUnifiedOnboardingValidation } from '@/hooks/onboarding/useUnifiedOnboardingValidation';
 import { useLocation, useNavigate } from 'react-router-dom';
 import LoadingScreen from '@/components/common/LoadingScreen';
-import { AuthErrorFallback } from '@/components/auth/AuthErrorFallback';
 import { logger } from '@/utils/logger';
 
 interface SmartRedirectHandlerProps {
@@ -31,11 +30,12 @@ export const SmartRedirectHandler: React.FC<SmartRedirectHandlerProps> = ({ chil
   const { user, profile, isLoading: authLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const { isOnboardingComplete, isLoading: onboardingLoading } = useSimpleOnboardingValidation();
+  const { isOnboardingComplete, isLoading: onboardingLoading } = useUnifiedOnboardingValidation();
 
   const isOnboardingRoute = location.pathname.startsWith('/onboarding');
   const isLoginRoute = location.pathname === '/login';
   const isPublicRoute = isLoginRoute || location.pathname === '/';
+  const isProfileRoute = location.pathname.startsWith('/profile');
   
   // Verificar se a rota atual requer onboarding completo
   const requiresOnboarding = ONBOARDING_REQUIRED_ROUTES.some(route => 
@@ -51,6 +51,7 @@ export const SmartRedirectHandler: React.FC<SmartRedirectHandlerProps> = ({ chil
     pathname: location.pathname,
     isPublicRoute,
     isOnboardingRoute,
+    isProfileRoute,
     requiresOnboarding,
     isProtectedRoute,
     isOnboardingComplete,
@@ -63,15 +64,24 @@ export const SmartRedirectHandler: React.FC<SmartRedirectHandlerProps> = ({ chil
       pathname: location.pathname,
       isPublicRoute,
       isOnboardingRoute,
+      isProfileRoute,
       requiresOnboarding,
       isProtectedRoute,
       userId: user?.id
     });
-  }, [location.pathname, isPublicRoute, isOnboardingRoute, requiresOnboarding, isProtectedRoute, user?.id]);
+  }, [location.pathname, isPublicRoute, isOnboardingRoute, isProfileRoute, requiresOnboarding, isProtectedRoute, user?.id]);
 
   // Redirecionar para onboarding apenas se a rota atual requer onboarding E não é uma rota protegida
   useEffect(() => {
     if (user && !isPublicRoute && !isOnboardingRoute && !authLoading && !onboardingLoading) {
+      // NÃO redirecionar se for uma rota de perfil
+      if (isProfileRoute) {
+        console.log('🔍 SmartRedirectHandler: Rota de perfil detectada - não redirecionando', {
+          pathname: location.pathname
+        });
+        return;
+      }
+
       // Só redirecionar se a rota requer onboarding E não é uma rota protegida
       if (requiresOnboarding && !isOnboardingComplete && !isProtectedRoute) {
         console.log('🔄 SmartRedirectHandler: Redirecionando para onboarding - rota requer onboarding', {
@@ -86,7 +96,8 @@ export const SmartRedirectHandler: React.FC<SmartRedirectHandlerProps> = ({ chil
   }, [
     user, 
     isPublicRoute, 
-    isOnboardingRoute, 
+    isOnboardingRoute,
+    isProfileRoute,
     requiresOnboarding,
     isProtectedRoute,
     authLoading, 

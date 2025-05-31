@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useOnboardingCompletionCheck } from '@/hooks/onboarding/useOnboardingCompletionCheck';
+import { useUnifiedOnboardingValidation } from '@/hooks/onboarding/useUnifiedOnboardingValidation';
 import LoadingScreen from '@/components/common/LoadingScreen';
 
 interface OnboardingCompletionGuardProps {
@@ -9,7 +9,7 @@ interface OnboardingCompletionGuardProps {
 }
 
 export const OnboardingCompletionGuard: React.FC<OnboardingCompletionGuardProps> = ({ children }) => {
-  const { data: completionStatus, isLoading, error } = useOnboardingCompletionCheck();
+  const { isOnboardingComplete, isLoading, error } = useUnifiedOnboardingValidation();
 
   if (isLoading) {
     return <LoadingScreen message="Verificando status do onboarding..." />;
@@ -21,10 +21,10 @@ export const OnboardingCompletionGuard: React.FC<OnboardingCompletionGuardProps>
     return <>{children}</>;
   }
 
-  // Se o onboarding já foi completado, redirecionar para o dashboard
-  if (completionStatus?.isCompleted) {
-    console.log('🔄 Onboarding já completado, redirecionando para dashboard');
-    return <Navigate to="/dashboard" replace />;
+  // Se o onboarding já foi completado, redirecionar para o review (não para dashboard)
+  if (isOnboardingComplete) {
+    console.log('🔄 Onboarding já completado, redirecionando para review');
+    return <Navigate to="/profile/onboarding-review" replace />;
   }
 
   // Se não foi completado, permitir acesso ao fluxo de onboarding

@@ -17,7 +17,7 @@ import {
   FileText
 } from 'lucide-react';
 import { useNetworkingAccess } from '@/hooks/networking/useNetworkingAccess';
-import { useOnboardingCompletionCheck } from '@/hooks/onboarding/useOnboardingCompletionCheck';
+import { useUnifiedOnboardingValidation } from '@/hooks/onboarding/useUnifiedOnboardingValidation';
 import { useAuth } from '@/contexts/auth';
 
 interface MemberSidebarNavItemsProps {
@@ -28,10 +28,12 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
   const location = useLocation();
   const { hasAccess: hasNetworkingAccess } = useNetworkingAccess();
   const { profile } = useAuth();
-  const { data: onboardingStatus, isLoading: onboardingLoading } = useOnboardingCompletionCheck();
+  const { isOnboardingComplete, isLoading: onboardingLoading } = useUnifiedOnboardingValidation();
 
-  console.log('🔍 MemberSidebarNavItems: onboardingStatus:', onboardingStatus);
-  console.log('🔍 MemberSidebarNavItems: isLoading:', onboardingLoading);
+  console.log('🔍 MemberSidebarNavItems: Status do onboarding:', {
+    isOnboardingComplete,
+    isLoading: onboardingLoading
+  });
 
   // Determinar o item do onboarding baseado no status
   const getOnboardingItem = () => {
@@ -45,7 +47,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
     }
 
     // Se o onboarding foi completado, mostrar o link para review
-    if (onboardingStatus?.isCompleted) {
+    if (isOnboardingComplete) {
       console.log('✅ MemberSidebarNavItems: Onboarding completo, mostrando review');
       return {
         title: "Review do Onboarding",
@@ -64,7 +66,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
   };
 
   const onboardingItem = getOnboardingItem();
-  console.log('🔍 MemberSidebarNavItems: onboardingItem final:', onboardingItem);
+  console.log('🔍 MemberSidebarNavItems: Item final do onboarding:', onboardingItem);
 
   const menuItems = [
     {
