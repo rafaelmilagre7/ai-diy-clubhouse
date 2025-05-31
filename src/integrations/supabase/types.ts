@@ -2633,6 +2633,63 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_final: {
+        Row: {
+          ai_experience: Json
+          business_context: Json
+          business_info: Json
+          completed_at: string | null
+          completed_steps: number[]
+          created_at: string
+          current_step: number
+          discovery_info: Json
+          goals_info: Json
+          id: string
+          is_completed: boolean
+          location_info: Json
+          personal_info: Json
+          personalization: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_experience?: Json
+          business_context?: Json
+          business_info?: Json
+          completed_at?: string | null
+          completed_steps?: number[]
+          created_at?: string
+          current_step?: number
+          discovery_info?: Json
+          goals_info?: Json
+          id?: string
+          is_completed?: boolean
+          location_info?: Json
+          personal_info?: Json
+          personalization?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_experience?: Json
+          business_context?: Json
+          business_info?: Json
+          completed_at?: string | null
+          completed_steps?: number[]
+          created_at?: string
+          current_step?: number
+          discovery_info?: Json
+          goals_info?: Json
+          id?: string
+          is_completed?: boolean
+          location_info?: Json
+          personal_info?: Json
+          personalization?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       onboarding_history: {
         Row: {
           created_at: string | null
