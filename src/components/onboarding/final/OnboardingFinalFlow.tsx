@@ -62,12 +62,15 @@ export const OnboardingFinalFlow: React.FC = () => {
   };
 
   const getStepContent = () => {
+    // Chamamos a função canProceed() para obter o valor boolean
+    const canProceedValue = canProceed();
+    
     const stepProps = {
       data,
       onUpdate: updateSection,
       onNext: handleNext,
       onPrevious: currentStep > 1 ? handlePrevious : undefined,
-      canProceed,
+      canProceed: canProceedValue,
       currentStep,
       totalSteps,
       validationErrors
