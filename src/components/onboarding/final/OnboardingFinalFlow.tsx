@@ -11,6 +11,7 @@ import { StepBusinessContext } from './steps/StepBusinessContext';
 import { StepGoalsInfo } from './steps/StepGoalsInfo';
 import { StepAIExperience } from './steps/StepAIExperience';
 import { StepPersonalization } from './steps/StepPersonalization';
+import { SecurityIndicator } from './security/SecurityIndicator';
 import { useNavigate } from 'react-router-dom';
 
 export const OnboardingFinalFlow: React.FC = () => {
@@ -108,12 +109,20 @@ export const OnboardingFinalFlow: React.FC = () => {
       totalSteps={totalSteps}
       onBackClick={currentStep > 1 ? handlePrevious : undefined}
     >
+      {/* Indicador de Segurança */}
+      <div className="mb-6">
+        <SecurityIndicator showDetails={currentStep === 1} />
+      </div>
+
       {/* Feedback de submissão */}
       {isSubmitting && (
         <div className="mb-6 p-4 bg-viverblue/10 border border-viverblue/20 rounded-lg">
           <div className="flex items-center justify-center gap-3 text-viverblue">
             <div className="w-5 h-5 border-2 border-viverblue border-t-transparent rounded-full animate-spin"></div>
-            <span className="font-medium">Finalizando seu onboarding...</span>
+            <span className="font-medium">Finalizando com proteções avançadas...</span>
+          </div>
+          <div className="mt-2 text-center text-sm text-gray-400">
+            🛡️ Verificando integridade • 💾 Criando backup • 🔍 Validando dados
           </div>
         </div>
       )}

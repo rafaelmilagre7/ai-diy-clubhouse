@@ -2261,6 +2261,42 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_audit_logs: {
+        Row: {
+          action_type: string
+          created_at: string
+          data_snapshot: Json | null
+          error_details: string | null
+          id: string
+          ip_address: string | null
+          step_name: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          data_snapshot?: Json | null
+          error_details?: string | null
+          id?: string
+          ip_address?: string | null
+          step_name?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          data_snapshot?: Json | null
+          error_details?: string | null
+          id?: string
+          ip_address?: string | null
+          step_name?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       onboarding_backup: {
         Row: {
           ai_experience: Json | null
@@ -2633,6 +2669,33 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_backups: {
+        Row: {
+          backup_type: string
+          created_at: string
+          id: string
+          onboarding_data: Json
+          profiles_data: Json | null
+          user_id: string
+        }
+        Insert: {
+          backup_type?: string
+          created_at?: string
+          id?: string
+          onboarding_data: Json
+          profiles_data?: Json | null
+          user_id: string
+        }
+        Update: {
+          backup_type?: string
+          created_at?: string
+          id?: string
+          onboarding_data?: Json
+          profiles_data?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       onboarding_final: {
         Row: {
           ai_experience: Json
@@ -2731,6 +2794,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      onboarding_integrity_checks: {
+        Row: {
+          auto_corrected: boolean | null
+          check_type: string
+          created_at: string
+          id: string
+          issues_found: Json | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          auto_corrected?: boolean | null
+          check_type: string
+          created_at?: string
+          id?: string
+          issues_found?: Json | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          auto_corrected?: boolean | null
+          check_type?: string
+          created_at?: string
+          id?: string
+          issues_found?: Json | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       onboarding_personal_info: {
         Row: {
@@ -3164,6 +3257,36 @@ export type Database = {
           training_needs?: string[] | null
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      onboarding_rate_limits: {
+        Row: {
+          attempt_count: number
+          blocked_until: string | null
+          created_at: string
+          id: string
+          is_blocked: boolean
+          last_attempt_at: string
+          user_id: string
+        }
+        Insert: {
+          attempt_count?: number
+          blocked_until?: string | null
+          created_at?: string
+          id?: string
+          is_blocked?: boolean
+          last_attempt_at?: string
+          user_id: string
+        }
+        Update: {
+          attempt_count?: number
+          blocked_until?: string | null
+          created_at?: string
+          id?: string
+          is_blocked?: boolean
+          last_attempt_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -5172,6 +5295,14 @@ export type Database = {
         Args: { progress_id: string }
         Returns: Json
       }
+      check_onboarding_integrity: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
+      check_onboarding_rate_limit: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
       check_referral: {
         Args: { p_token: string }
         Returns: Json
@@ -5184,6 +5315,15 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Json
       }
+      complete_onboarding_secure: {
+        Args: {
+          p_user_id: string
+          p_onboarding_data: Json
+          p_ip_address?: string
+          p_user_agent?: string
+        }
+        Returns: Json
+      }
       create_invite: {
         Args: {
           p_email: string
@@ -5192,6 +5332,10 @@ export type Database = {
           p_notes?: string
         }
         Returns: Json
+      }
+      create_onboarding_backup: {
+        Args: { p_user_id: string; p_backup_type?: string }
+        Returns: string
       }
       create_referral: {
         Args: {
