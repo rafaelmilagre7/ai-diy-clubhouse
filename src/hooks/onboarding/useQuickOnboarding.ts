@@ -14,7 +14,6 @@ const getInitialData = (): QuickOnboardingData => ({
   country: '',
   state: '',
   city: '',
-  timezone: '',
   instagram_url: '',
   linkedin_url: '',
   how_found_us: '',

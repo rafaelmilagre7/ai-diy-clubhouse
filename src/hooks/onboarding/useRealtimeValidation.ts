@@ -67,7 +67,6 @@ export const useRealtimeValidation = (data: QuickOnboardingData, currentStep: nu
             country: validateField(data.country, true),
             state: validateField(data.state, true),
             city: validateField(data.city, true),
-            timezone: validateField(data.timezone, true),
             instagram_url: validateField(data.instagram_url, false),
             linkedin_url: validateField(data.linkedin_url, false)
           };
