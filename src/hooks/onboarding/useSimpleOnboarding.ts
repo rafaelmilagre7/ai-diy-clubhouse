@@ -70,8 +70,8 @@ export const useSimpleOnboarding = () => {
   const {
     data: savedData,
     completeOnboarding: completeOnboardingData,
-    isLoading,
-    error
+    isLoading: quickOnboardingLoading,
+    error: quickOnboardingError
   } = useQuickOnboarding();
 
   // Auto-save inteligente com configuração menos agressiva
@@ -100,7 +100,7 @@ export const useSimpleOnboarding = () => {
       };
       
       setData(mergedData);
-      // Corrigido: usar currentStep do banco se existir, senão usar 1
+      // Usar currentStep do banco se existir, senão usar 1
       if (savedData.currentStep) {
         setCurrentStep(parseInt(savedData.currentStep.toString()));
       }
@@ -200,7 +200,7 @@ export const useSimpleOnboarding = () => {
     canProceed: canProceed(), // Chama a função para retornar boolean
     isSaving,
     isCompleting,
-    isLoading,
-    error
+    isLoading: quickOnboardingLoading,
+    error: quickOnboardingError
   };
 };
