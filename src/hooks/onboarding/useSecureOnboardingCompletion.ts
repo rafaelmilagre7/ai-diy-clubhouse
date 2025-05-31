@@ -17,6 +17,7 @@ interface SecureCompletionResult {
   backupId?: string;
   integrityCheck?: any;
   transactionId?: string;
+  completedAt?: string;
 }
 
 export const useSecureOnboardingCompletion = () => {
@@ -62,7 +63,7 @@ export const useSecureOnboardingCompletion = () => {
       console.log('🔍 Verificando integridade dos dados...');
       const integrityCheck = await checkIntegrity(user.id);
 
-      // 4. Usar a função segura do banco de dados
+      // 4. Usar a função segura do banco de dados (corrigida)
       console.log('💾 Salvando onboarding com proteções avançadas...');
       
       const { data: result, error } = await supabase.rpc('complete_onboarding_secure', {

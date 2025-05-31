@@ -21,9 +21,9 @@ export const useOnboardingCompletionCheck = () => {
         // Verificar primeiro na tabela onboarding_final
         const { data: finalData, error: finalError } = await supabase
           .from('onboarding_final')
-          .select('status, completed_at')
+          .select('is_completed, completed_at')
           .eq('user_id', user.id)
-          .eq('status', 'completed')
+          .eq('is_completed', true)
           .maybeSingle();
 
         if (finalData && !finalError) {
@@ -36,17 +36,19 @@ export const useOnboardingCompletionCheck = () => {
           };
         }
 
-        // Verificar no perfil do usuário
+        // Verificar no perfil do usuário se existe campo onboarding_completed
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('onboarding_completed')
+          .select('*')
           .eq('id', user.id)
           .maybeSingle();
 
         if (profileData && !profileError) {
           console.log('✅ Dados do perfil encontrados:', profileData);
+          // Verificar se o campo onboarding_completed existe
+          const hasOnboardingCompleted = 'onboarding_completed' in profileData;
           return {
-            isCompleted: profileData.onboarding_completed || false,
+            isCompleted: hasOnboardingCompleted ? (profileData.onboarding_completed || false) : false,
             hasData: true,
             source: 'profiles'
           };
