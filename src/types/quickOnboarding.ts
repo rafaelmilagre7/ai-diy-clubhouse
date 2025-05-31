@@ -68,6 +68,9 @@ export interface QuickOnboardingData {
   authorize_case_usage?: boolean;
   interested_in_interview?: boolean;
   priority_topics?: string[];
+  
+  // Campos internos para controle
+  currentStep?: string | number;
 }
 
 export interface OnboardingStepProps {

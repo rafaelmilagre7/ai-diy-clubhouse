@@ -10,8 +10,9 @@ const TOTAL_STEPS = 8;
 const getInitialData = (): QuickOnboardingData => ({
   name: '',
   email: '',
-  phone: '',
-  ddi: '+55',
+  whatsapp: '',
+  country_code: '+55',
+  birth_date: '',
   country: '',
   state: '',
   city: '',
@@ -26,22 +27,38 @@ const getInitialData = (): QuickOnboardingData => ({
   company_segment: '',
   company_website: '',
   annual_revenue_range: '',
+  current_position: '',
   business_model: '',
+  business_challenges: [],
+  short_term_goals: [],
+  medium_term_goals: [],
+  important_kpis: [],
+  additional_context: '',
   primary_goal: '',
+  expected_outcomes: [],
   expected_outcome_30days: '',
+  priority_solution_type: '',
+  how_implement: '',
   week_availability: '',
-  ai_knowledge_level: 1,
-  has_implemented_ai: '',
-  previous_tools: '',
-  priority_areas: '',
-  content_formats: '',
-  available_days: '',
-  time_preference: '',
-  interests: '',
+  content_formats: [],
+  ai_knowledge_level: '1',
+  previous_tools: [],
+  has_implemented: '',
+  desired_ai_areas: [],
+  completed_formation: false,
+  is_member_for_month: false,
+  nps_score: 0,
+  improvement_suggestions: '',
+  interests: [],
+  time_preference: [],
+  available_days: [],
   networking_availability: 5,
-  skills_to_share: '',
-  mentorship_topics: '',
-  improvement_suggestions: ''
+  skills_to_share: [],
+  mentorship_topics: [],
+  live_interest: 0,
+  authorize_case_usage: false,
+  interested_in_interview: false,
+  priority_topics: []
 });
 
 export const useSimpleOnboarding = () => {
@@ -80,11 +97,14 @@ export const useSimpleOnboarding = () => {
         // Garantir que campos obrigatórios tenham valores válidos
         name: savedData.name || '',
         email: savedData.email || user?.email || '',
-        ddi: savedData.ddi || '+55'
+        country_code: savedData.country_code || '+55'
       };
       
       setData(mergedData);
-      setCurrentStep(parseInt(savedData.current_step || '1'));
+      // Corrigido: usar currentStep do banco se existir, senão usar 1
+      if (savedData.currentStep) {
+        setCurrentStep(parseInt(savedData.currentStep.toString()));
+      }
     } else if (user?.email) {
       // Se não há dados salvos, inicializar com email do usuário
       setData(prev => ({
@@ -162,9 +182,9 @@ export const useSimpleOnboarding = () => {
       case 6: // Objetivos
         return data.primary_goal && data.expected_outcome_30days;
       case 7: // Experiência com IA
-        return data.ai_knowledge_level > 0 && data.has_implemented_ai;
+        return data.ai_knowledge_level && data.ai_knowledge_level !== '0' && data.has_implemented;
       case 8: // Personalização
-        return data.content_formats && data.available_days;
+        return data.content_formats && data.content_formats.length > 0 && data.available_days && data.available_days.length > 0;
       default:
         return false;
     }
