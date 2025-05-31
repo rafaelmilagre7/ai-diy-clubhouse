@@ -1,31 +1,33 @@
 
 import React from 'react';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { OnboardingStepComponentProps } from '@/types/onboardingFinal';
 
 const BUSINESS_MODELS = [
-  'B2B (Business to Business)',
-  'B2C (Business to Consumer)',
-  'B2B2C (Business to Business to Consumer)',
-  'Marketplace',
-  'SaaS (Software as a Service)',
+  'B2B (Empresa para Empresa)',
+  'B2C (Empresa para Consumidor)',
+  'B2B2C (Híbrido)',
   'E-commerce',
-  'Serviços/Consultoria',
-  'Outro'
+  'SaaS (Software como Serviço)',
+  'Marketplace',
+  'Consultoria/Serviços',
+  'Produto físico',
+  'Outros'
 ];
 
 const CHALLENGES = [
-  'Automatizar processos',
-  'Reduzir custos operacionais',
-  'Melhorar atendimento ao cliente',
-  'Aumentar vendas',
-  'Otimizar marketing',
+  'Automação de processos',
+  'Atendimento ao cliente',
+  'Geração de leads',
   'Análise de dados',
-  'Gestão de equipe',
-  'Outros'
+  'Produtividade da equipe',
+  'Redução de custos',
+  'Personalização de experiência',
+  'Tomada de decisões',
+  'Gestão de inventário',
+  'Marketing digital'
 ];
 
 export const StepBusinessContext: React.FC<OnboardingStepComponentProps> = ({
@@ -37,18 +39,32 @@ export const StepBusinessContext: React.FC<OnboardingStepComponentProps> = ({
 }) => {
   const { business_context } = data;
 
-  const handleUpdate = (field: string, value: string | string[]) => {
+  const handleModelChange = (value: string) => {
     onUpdate('business_context', {
-      [field]: value
+      ...business_context,
+      business_model: value
     });
   };
 
   const handleChallengeToggle = (challenge: string) => {
-    const current = business_context.business_challenges || [];
-    const updated = current.includes(challenge)
-      ? current.filter(c => c !== challenge)
-      : [...current, challenge];
-    handleUpdate('business_challenges', updated);
+    const currentChallenges = business_context.business_challenges || [];
+    const isSelected = currentChallenges.includes(challenge);
+    
+    const newChallenges = isSelected
+      ? currentChallenges.filter(c => c !== challenge)
+      : [...currentChallenges, challenge];
+    
+    onUpdate('business_context', {
+      ...business_context,
+      business_challenges: newChallenges
+    });
+  };
+
+  const handleContextChange = (value: string) => {
+    onUpdate('business_context', {
+      ...business_context,
+      additional_context: value
+    });
   };
 
   return (
@@ -59,7 +75,7 @@ export const StepBusinessContext: React.FC<OnboardingStepComponentProps> = ({
         </label>
         <select
           value={business_context.business_model || ''}
-          onChange={(e) => handleUpdate('business_model', e.target.value)}
+          onChange={(e) => handleModelChange(e.target.value)}
           className="h-12 w-full px-3 bg-gray-800/50 border border-gray-600 text-white rounded-md focus:ring-viverblue/50"
         >
           <option value="">Selecione seu modelo de negócio</option>
@@ -71,36 +87,51 @@ export const StepBusinessContext: React.FC<OnboardingStepComponentProps> = ({
         </select>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         <label className="block text-sm font-medium text-white">
-          Principais desafios <span className="text-red-400">*</span>
+          Principais desafios do negócio <span className="text-red-400">*</span>
+          <span className="text-gray-400 text-xs block mt-1">Selecione até 5 opções</span>
         </label>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {CHALLENGES.map(challenge => (
-            <button
-              key={challenge}
-              type="button"
-              onClick={() => handleChallengeToggle(challenge)}
-              className={`p-3 text-sm rounded-lg border transition-all ${
-                (business_context.business_challenges || []).includes(challenge)
-                  ? 'bg-viverblue/20 border-viverblue text-viverblue'
-                  : 'bg-gray-800/50 border-gray-600 text-gray-300 hover:border-gray-500'
-              }`}
-            >
-              {challenge}
-            </button>
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {CHALLENGES.map(challenge => {
+            const isSelected = (business_context.business_challenges || []).includes(challenge);
+            const selectedCount = (business_context.business_challenges || []).length;
+            const canSelect = selectedCount < 5 || isSelected;
+            
+            return (
+              <button
+                key={challenge}
+                type="button"
+                onClick={() => canSelect && handleChallengeToggle(challenge)}
+                disabled={!canSelect}
+                className={`p-3 text-left rounded-lg border transition-all text-sm ${
+                  isSelected
+                    ? 'bg-viverblue/20 border-viverblue text-viverblue'
+                    : canSelect
+                    ? 'bg-gray-800/50 border-gray-600 text-gray-300 hover:border-gray-500'
+                    : 'bg-gray-800/30 border-gray-700 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                {challenge}
+              </button>
+            );
+          })}
         </div>
+        {(business_context.business_challenges || []).length > 0 && (
+          <p className="text-xs text-gray-400">
+            {(business_context.business_challenges || []).length}/5 selecionados
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">
         <label className="block text-sm font-medium text-white">
-          Contexto adicional (opcional)
+          Contexto adicional
         </label>
         <Textarea
           value={business_context.additional_context || ''}
-          onChange={(e) => handleUpdate('additional_context', e.target.value)}
-          placeholder="Conte-nos mais sobre sua empresa e objetivos..."
+          onChange={(e) => handleContextChange(e.target.value)}
+          placeholder="Conte-nos mais sobre seu negócio, mercado, clientes ou qualquer contexto que julgue importante..."
           className="min-h-[100px] bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:ring-viverblue/50"
         />
       </div>

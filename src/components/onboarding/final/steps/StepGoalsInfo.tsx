@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
@@ -14,6 +13,8 @@ const GOALS = [
   'Melhorar experiência do cliente',
   'Escalar negócio',
   'Inovar produtos/serviços',
+  'Ganhar vantagem competitiva',
+  'Tomar decisões baseadas em dados',
   'Outros'
 ];
 
@@ -28,6 +29,7 @@ export const StepGoalsInfo: React.FC<OnboardingStepComponentProps> = ({
 
   const handleUpdate = (field: string, value: string) => {
     onUpdate('goals_info', {
+      ...goals_info,
       [field]: value
     });
   };

@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { OnboardingStepComponentProps } from '@/types/onboardingFinal';
 
@@ -28,8 +27,9 @@ export const StepAIExperience: React.FC<OnboardingStepComponentProps> = ({
 }) => {
   const { ai_experience } = data;
 
-  const handleUpdate = (field: string, value: string | number) => {
+  const handleUpdate = (field: string, value: string) => {
     onUpdate('ai_experience', {
+      ...ai_experience,
       [field]: value
     });
   };
