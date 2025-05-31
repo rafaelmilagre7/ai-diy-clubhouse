@@ -12,14 +12,40 @@ export const useCompleteOnboarding = () => {
   const completeOnboarding = async (data: OnboardingFinalData) => {
     if (!user) {
       toast.error('Usuário não autenticado');
-      return { success: false };
+      return { success: false, error: 'Usuário não autenticado' };
     }
 
     setIsSubmitting(true);
 
     try {
-      console.log('Iniciando finalização do onboarding para usuário:', user.id);
-      console.log('Dados recebidos:', data);
+      console.log('🔄 Iniciando finalização do onboarding para usuário:', user.id);
+
+      // VERIFICAÇÃO DE DUPLICAÇÃO - Verificar se já existe onboarding completo
+      const { data: existingData, error: checkError } = await supabase
+        .from('onboarding_final')
+        .select('id, status, completed_at')
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+        .maybeSingle();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error('❌ Erro ao verificar onboarding existente:', checkError);
+        throw new Error(`Erro na verificação: ${checkError.message}`);
+      }
+
+      if (existingData) {
+        console.log('⚠️ Onboarding já existe e está completo:', existingData);
+        toast.warning('Onboarding já foi completado anteriormente', {
+          description: 'Redirecionando para o dashboard...'
+        });
+        return { 
+          success: true, 
+          data: existingData, 
+          wasAlreadyCompleted: true 
+        };
+      }
+
+      console.log('✅ Verificação passou - prosseguindo com salvamento');
 
       // Preparar dados para inserção no banco
       const onboardingData = {
@@ -78,27 +104,41 @@ export const useCompleteOnboarding = () => {
           nps_score: 0,
           improvement_suggestions: ''
         },
+        personalization: data.personalization || {
+          interests: [],
+          time_preference: [],
+          available_days: [],
+          networking_availability: 0,
+          skills_to_share: [],
+          mentorship_topics: [],
+          live_interest: 0,
+          authorize_case_usage: false,
+          interested_in_interview: false,
+          priority_topics: [],
+          content_formats: []
+        },
         completed_at: new Date().toISOString(),
         status: 'completed'
       };
 
-      console.log('Dados preparados para inserção:', onboardingData);
+      console.log('💾 Salvando dados do onboarding...');
 
-      // Inserir dados no banco de dados
+      // Inserir dados no banco de dados usando upsert para evitar conflitos
       const { data: insertedData, error } = await supabase
         .from('onboarding_final')
         .upsert(onboardingData, {
-          onConflict: 'user_id'
+          onConflict: 'user_id',
+          ignoreDuplicates: false
         })
         .select()
         .single();
 
       if (error) {
-        console.error('Erro ao salvar onboarding:', error);
+        console.error('❌ Erro ao salvar onboarding:', error);
         throw error;
       }
 
-      console.log('Onboarding salvo com sucesso:', insertedData);
+      console.log('✅ Onboarding salvo com sucesso:', insertedData);
 
       // Atualizar perfil do usuário
       const { error: profileError } = await supabase
@@ -111,19 +151,34 @@ export const useCompleteOnboarding = () => {
         .eq('id', user.id);
 
       if (profileError) {
-        console.error('Erro ao atualizar perfil:', profileError);
-        throw profileError;
+        console.error('❌ Erro ao atualizar perfil:', profileError);
+        // Não fazer throw aqui para não bloquear o fluxo principal
+        console.log('⚠️ Continuando mesmo com erro no perfil...');
+      } else {
+        console.log('✅ Perfil atualizado com sucesso');
       }
 
-      console.log('Perfil atualizado com sucesso');
+      toast.success('Onboarding finalizado com sucesso!', {
+        description: 'Bem-vindo à plataforma!'
+      });
 
-      toast.success('Onboarding finalizado com sucesso!');
       return { success: true, data: insertedData };
 
-    } catch (error) {
-      console.error('Erro durante finalização do onboarding:', error);
-      toast.error('Erro ao finalizar onboarding. Tente novamente.');
-      return { success: false, error };
+    } catch (error: any) {
+      console.error('❌ Erro durante finalização do onboarding:', error);
+      
+      // Mensagens de erro mais específicas
+      if (error.message?.includes('duplicate key')) {
+        toast.error('Onboarding já foi completado', {
+          description: 'Redirecionando para o dashboard...'
+        });
+      } else {
+        toast.error('Erro ao finalizar onboarding', {
+          description: 'Tente novamente ou entre em contato com o suporte.'
+        });
+      }
+      
+      return { success: false, error: error.message || 'Erro desconhecido' };
     } finally {
       setIsSubmitting(false);
     }

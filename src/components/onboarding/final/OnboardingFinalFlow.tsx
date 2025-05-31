@@ -35,9 +35,14 @@ export const OnboardingFinalFlow: React.FC = () => {
   const handleNext = async () => {
     if (currentStep === totalSteps) {
       // Última etapa - finalizar onboarding
-      const success = await completeOnboarding();
-      if (success) {
-        navigate('/onboarding-new/final/completed');
+      const result = await completeOnboarding();
+      if (result.success) {
+        // Se já estava completado, redirecionar para dashboard
+        if (result.wasAlreadyCompleted) {
+          navigate('/dashboard');
+        } else {
+          navigate('/onboarding-new/final/completed');
+        }
       }
     } else {
       // Próxima etapa
