@@ -1,14 +1,16 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { useOnboardingProgress } from './useOnboardingProgress';
 import { useAuth } from '@/contexts/auth';
-import { OnboardingData } from '@/types/onboarding';
+import { OnboardingData, OnboardingProgress } from '@/types/onboarding';
 import { toast } from 'sonner';
 
 export function useUnifiedOnboardingFlow() {
   const { user } = useAuth();
-  const { progress, updateProgress, isLoading } = useOnboardingProgress();
+  const { loadProgress, saveProgress, isLoading } = useOnboardingProgress();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [progress, setProgress] = useState<OnboardingProgress | null>(null);
 
   // Definir os steps do fluxo unificado
   const steps = [
@@ -19,19 +21,29 @@ export function useUnifiedOnboardingFlow() {
 
   const currentStep = steps[currentStepIndex];
 
-  // Inicializar step atual baseado no progresso
+  // Carregar progresso inicial
   useEffect(() => {
-    if (progress && !isLoading) {
-      const completedSteps = progress.completed_steps || [];
-      const nextStepIndex = steps.findIndex(step => !completedSteps.includes(step.id));
-      
-      if (nextStepIndex !== -1) {
-        setCurrentStepIndex(nextStepIndex);
-      } else if (progress.is_completed) {
-        setCurrentStepIndex(steps.length); // Onboarding completo
+    const fetchInitialProgress = async () => {
+      if (user?.id) {
+        const progressData = await loadProgress();
+        if (progressData) {
+          setProgress(progressData);
+          
+          // Determinar step atual baseado no progresso
+          const completedSteps = progressData.completed_steps || [];
+          const nextStepIndex = steps.findIndex(step => !completedSteps.includes(step.id));
+          
+          if (nextStepIndex !== -1) {
+            setCurrentStepIndex(nextStepIndex);
+          } else if (progressData.is_completed) {
+            setCurrentStepIndex(steps.length); // Onboarding completo
+          }
+        }
       }
-    }
-  }, [progress, isLoading]);
+    };
+
+    fetchInitialProgress();
+  }, [user?.id, loadProgress]);
 
   const handleStepSubmit = useCallback(async (stepId: string, data: Partial<OnboardingData>) => {
     if (!user?.id) {
@@ -42,25 +54,38 @@ export function useUnifiedOnboardingFlow() {
     setIsSubmitting(true);
     
     try {
-      // Preparar dados sem onboarding_type
-      const updateData: Partial<OnboardingData> = {
-        ...data
+      console.log('Submetendo step:', stepId, 'com dados:', data);
+      
+      // Preparar dados de atualização
+      const updateData: Partial<OnboardingProgress> = {
+        ...data,
+        completed_steps: progress?.completed_steps?.includes(stepId) 
+          ? progress.completed_steps 
+          : [...(progress?.completed_steps || []), stepId],
+        current_step: stepId,
+        updated_at: new Date().toISOString()
       };
 
-      console.log('Submetendo step:', stepId, 'com dados:', updateData);
+      // Salvar progresso
+      const success = await saveProgress(updateData);
       
-      // Atualizar progresso
-      await updateProgress(updateData, stepId);
-      
-      // Avançar para próximo step
-      const nextStepIndex = currentStepIndex + 1;
-      
-      if (nextStepIndex < steps.length) {
-        setCurrentStepIndex(nextStepIndex);
-        toast.success('Dados salvos com sucesso!');
-      } else {
-        // Onboarding completo
-        toast.success('Onboarding concluído com sucesso!');
+      if (success) {
+        // Recarregar progresso atualizado
+        const updatedProgress = await loadProgress();
+        if (updatedProgress) {
+          setProgress(updatedProgress);
+        }
+        
+        // Avançar para próximo step
+        const nextStepIndex = currentStepIndex + 1;
+        
+        if (nextStepIndex < steps.length) {
+          setCurrentStepIndex(nextStepIndex);
+          toast.success('Dados salvos com sucesso!');
+        } else {
+          // Onboarding completo
+          toast.success('Onboarding concluído com sucesso!');
+        }
       }
       
     } catch (error) {
@@ -69,7 +94,7 @@ export function useUnifiedOnboardingFlow() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [user?.id, currentStepIndex, updateProgress]);
+  }, [user?.id, currentStepIndex, progress, saveProgress, loadProgress]);
 
   const handlePrevious = useCallback(() => {
     if (currentStepIndex > 0) {
@@ -95,7 +120,6 @@ export function useUnifiedOnboardingFlow() {
     handleNext,
     isLastStep: currentStepIndex === steps.length - 1,
     isCompleted: progress?.is_completed || false,
-    // Remover referência a onboarding_type
     initialData: {
       personal_info: progress?.personal_info || {},
       ai_experience: progress?.ai_experience || {},
