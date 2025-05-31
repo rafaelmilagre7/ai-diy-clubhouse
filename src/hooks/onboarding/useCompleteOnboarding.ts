@@ -1,243 +1,233 @@
 
-import { useState, useCallback, useEffect } from 'react';
-import { useAuth } from '@/contexts/auth';
-import { supabase } from '@/lib/supabase';
+import { useState, useEffect } from 'react';
 import { OnboardingFinalData, OnboardingFinalState } from '@/types/onboardingFinal';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
 
 const STORAGE_KEY = 'onboarding_final_data';
+const TOTAL_STEPS = 8;
 
-const getInitialData = (): OnboardingFinalData => ({
+// Estado inicial
+const initialData: OnboardingFinalData = {
   personal_info: {
     name: '',
     email: '',
     whatsapp: '',
-    country_code: '+55',
-    birth_date: ''
+    country_code: '+55'
   },
   location_info: {
     country: '',
     state: '',
-    city: '',
-    instagram_url: '',
-    linkedin_url: ''
+    city: ''
   },
   discovery_info: {
-    how_found_us: '',
-    referred_by: ''
+    how_found_us: ''
   },
   business_info: {
     company_name: '',
     role: '',
     company_size: '',
     company_sector: '',
-    company_website: '',
-    annual_revenue: '',
-    current_position: ''
+    annual_revenue: ''
   },
   business_context: {
     business_model: '',
-    business_challenges: [],
-    short_term_goals: [],
-    medium_term_goals: [],
-    important_kpis: [],
-    additional_context: ''
+    business_challenges: []
   },
   goals_info: {
     primary_goal: '',
-    expected_outcomes: [],
-    expected_outcome_30days: '',
-    priority_solution_type: '',
-    how_implement: '',
-    week_availability: '',
-    content_formats: []
+    expected_outcome_30days: ''
   },
   ai_experience: {
-    ai_knowledge_level: 'iniciante',
-    previous_tools: [],
-    has_implemented: '',
-    desired_ai_areas: [],
-    completed_formation: false,
-    is_member_for_month: false,
-    nps_score: 0,
-    improvement_suggestions: ''
+    ai_knowledge_level: '',
+    has_implemented: ''
   },
   personalization: {
     interests: [],
-    time_preference: [],
-    available_days: [],
-    networking_availability: 5,
-    skills_to_share: [],
-    mentorship_topics: [],
-    live_interest: 0,
-    authorize_case_usage: false,
-    interested_in_interview: false,
-    priority_topics: []
+    content_formats: []
   }
-});
+};
 
 export const useCompleteOnboarding = () => {
   const { user } = useAuth();
-  const [state, setState] = useState<OnboardingFinalState>({
-    ...getInitialData(),
-    current_step: 1,
-    completed_steps: [],
-    is_completed: false
-  });
+  const [data, setData] = useState<OnboardingFinalData>(initialData);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const totalSteps = 8;
-
   // Carregar dados do localStorage na inicialização
   useEffect(() => {
-    const loadStoredData = () => {
+    const savedData = localStorage.getItem(STORAGE_KEY);
+    if (savedData) {
       try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-          const parsedData = JSON.parse(stored);
-          setState(prevState => ({
-            ...prevState,
-            ...parsedData
-          }));
-        }
+        const parsed = JSON.parse(savedData);
+        setData(parsed.data || initialData);
+        setCurrentStep(parsed.current_step || 1);
+        setCompletedSteps(parsed.completed_steps || []);
       } catch (error) {
-        console.warn('Erro ao carregar dados do localStorage:', error);
-      } finally {
-        setIsLoading(false);
+        console.error('Erro ao carregar dados do localStorage:', error);
       }
-    };
-
-    loadStoredData();
+    }
+    setIsLoading(false);
   }, []);
 
   // Salvar no localStorage sempre que os dados mudarem
   useEffect(() => {
     if (!isLoading) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      } catch (error) {
-        console.warn('Erro ao salvar no localStorage:', error);
-      }
+      const stateToSave = {
+        data,
+        current_step: currentStep,
+        completed_steps: completedSteps,
+        is_completed: false
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
     }
-  }, [state, isLoading]);
+  }, [data, currentStep, completedSteps, isLoading]);
 
-  // Atualizar seção específica
-  const updateSection = useCallback((section: keyof OnboardingFinalData, updates: any) => {
-    setState(prevState => ({
-      ...prevState,
+  const updateSection = (section: keyof OnboardingFinalData, updates: any) => {
+    setData(prev => ({
+      ...prev,
       [section]: {
-        ...prevState[section],
+        ...prev[section],
         ...updates
       }
     }));
-  }, []);
+  };
 
-  // Validar se pode prosseguir na etapa atual
-  const canProceed = useCallback((step: number): boolean => {
-    switch (step) {
-      case 1: // Informações Pessoais
-        const { name, email, whatsapp } = state.personal_info;
-        return !!(name?.trim() && email?.trim() && whatsapp?.trim());
-      
-      case 2: // Localização
-        const { country, state: userState, city } = state.location_info;
-        return !!(country?.trim() && userState?.trim() && city?.trim());
-      
-      case 3: // Como nos conheceu
-        const { how_found_us } = state.discovery_info;
-        return !!(how_found_us?.trim());
-      
-      case 4: // Negócio
-        const { company_name, role, company_size, company_sector, annual_revenue } = state.business_info;
-        return !!(company_name?.trim() && role?.trim() && company_size && company_sector && annual_revenue);
-      
-      case 5: // Contexto do Negócio
-        const { business_model, business_challenges } = state.business_context;
-        return !!(business_model?.trim() && business_challenges?.length > 0);
-      
-      case 6: // Objetivos
-        const { primary_goal, expected_outcome_30days } = state.goals_info;
-        return !!(primary_goal?.trim() && expected_outcome_30days?.trim());
-      
-      case 7: // IA Experience
-        const { ai_knowledge_level, has_implemented } = state.ai_experience;
-        return !!(ai_knowledge_level && has_implemented?.trim());
-      
-      case 8: // Personalização
-        const { available_days, content_formats } = state.personalization;
-        return !!(available_days?.length > 0 && content_formats?.length > 0);
-      
+  const nextStep = () => {
+    if (currentStep < TOTAL_STEPS) {
+      setCompletedSteps(prev => [...new Set([...prev, currentStep])]);
+      setCurrentStep(prev => prev + 1);
+    }
+  };
+
+  const previousStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(prev => prev - 1);
+    }
+  };
+
+  // Validação para verificar se pode prosseguir
+  const canProceed = () => {
+    switch (currentStep) {
+      case 1:
+        return data.personal_info.name && data.personal_info.email && data.personal_info.whatsapp;
+      case 2:
+        return data.location_info.country && data.location_info.state && data.location_info.city;
+      case 3:
+        return data.discovery_info.how_found_us;
+      case 4:
+        return data.business_info.company_name && data.business_info.role && 
+               data.business_info.company_size && data.business_info.company_sector && 
+               data.business_info.annual_revenue;
+      case 5:
+        return data.business_context.business_model && data.business_context.business_challenges.length > 0;
+      case 6:
+        return data.goals_info.primary_goal && data.goals_info.expected_outcome_30days;
+      case 7:
+        return data.ai_experience.ai_knowledge_level && data.ai_experience.has_implemented;
+      case 8:
+        return true; // Última etapa é opcional
       default:
         return false;
     }
-  }, [state]);
+  };
 
-  // Avançar para próximo step
-  const nextStep = useCallback(() => {
-    if (!canProceed(state.current_step)) {
-      toast.error('Por favor, preencha todos os campos obrigatórios');
-      return;
-    }
-
-    if (state.current_step < totalSteps) {
-      setState(prevState => ({
-        ...prevState,
-        current_step: prevState.current_step + 1,
-        completed_steps: [...new Set([...prevState.completed_steps, prevState.current_step])]
-      }));
-    }
-  }, [state.current_step, canProceed, totalSteps]);
-
-  // Voltar para step anterior
-  const previousStep = useCallback(() => {
-    if (state.current_step > 1) {
-      setState(prevState => ({
-        ...prevState,
-        current_step: prevState.current_step - 1
-      }));
-    }
-  }, [state.current_step]);
-
-  // Finalizar onboarding completo
-  const completeOnboarding = useCallback(async (): Promise<boolean> => {
-    if (!user?.id) {
+  const completeOnboarding = async () => {
+    if (!user) {
       toast.error('Usuário não autenticado');
       return false;
     }
 
-    if (!canProceed(8)) {
-      toast.error('Por favor, complete todos os campos obrigatórios');
-      return false;
-    }
-
     setIsSubmitting(true);
-    
+
     try {
-      console.log('🏁 Enviando dados completos do onboarding...', state);
+      // Preparar dados para o banco
+      const onboardingData = {
+        user_id: user.id,
+        
+        // Informações pessoais
+        name: data.personal_info.name,
+        email: data.personal_info.email,
+        phone: data.personal_info.whatsapp,
+        ddi: data.personal_info.country_code,
+        
+        // Localização
+        country: data.location_info.country,
+        state: data.location_info.state,
+        city: data.location_info.city,
+        instagram: data.location_info.instagram_url,
+        linkedin: data.location_info.linkedin_url,
+        
+        // Como nos conheceu
+        how_found_us: data.discovery_info.how_found_us,
+        referred_by: data.discovery_info.referred_by,
+        
+        // Informações do negócio
+        company_name: data.business_info.company_name,
+        current_position: data.business_info.role,
+        company_size: data.business_info.company_size,
+        company_sector: data.business_info.company_sector,
+        company_website: data.business_info.company_website,
+        annual_revenue: data.business_info.annual_revenue,
+        
+        // Contexto do negócio
+        business_model: data.business_context.business_model,
+        business_challenges: data.business_context.business_challenges,
+        short_term_goals: data.business_context.short_term_goals,
+        medium_term_goals: data.business_context.medium_term_goals,
+        important_kpis: data.business_context.important_kpis,
+        additional_context: data.business_context.additional_context,
+        
+        // Objetivos
+        primary_goal: data.goals_info.primary_goal,
+        expected_outcomes: data.goals_info.expected_outcomes,
+        expected_outcome_30days: data.goals_info.expected_outcome_30days,
+        priority_solution_type: data.goals_info.priority_solution_type,
+        how_implement: data.goals_info.how_implement,
+        week_availability: data.goals_info.week_availability,
+        content_formats: data.goals_info.content_formats,
+        
+        // Experiência com IA
+        knowledge_level: data.ai_experience.ai_knowledge_level,
+        previous_tools: data.ai_experience.previous_tools,
+        has_implemented: data.ai_experience.has_implemented,
+        desired_ai_areas: data.ai_experience.desired_ai_areas,
+        completed_formation: data.ai_experience.completed_formation,
+        is_member_for_month: data.ai_experience.is_member_for_month,
+        nps_score: data.ai_experience.nps_score,
+        improvement_suggestions: data.ai_experience.improvement_suggestions,
+        
+        // Personalização
+        interests: data.personalization.interests,
+        time_preference: data.personalization.time_preference,
+        available_days: data.personalization.available_days,
+        networking_availability: data.personalization.networking_availability,
+        skills_to_share: data.personalization.skills_to_share,
+        mentorship_topics: data.personalization.mentorship_topics,
+        live_interest: data.personalization.live_interest,
+        authorize_case_usage: data.personalization.authorize_case_usage,
+        interested_in_interview: data.personalization.interested_in_interview,
+        priority_topics: data.personalization.priority_topics,
+        
+        // Metadados
+        is_completed: true,
+        completed_steps: Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1),
+        current_step: 'completed'
+      };
+
+      console.log('Enviando dados do onboarding:', onboardingData);
 
       const { error } = await supabase
-        .from('onboarding_final')
-        .upsert({
-          user_id: user.id,
-          personal_info: state.personal_info,
-          location_info: state.location_info,
-          discovery_info: state.discovery_info,
-          business_info: state.business_info,
-          business_context: state.business_context,
-          goals_info: state.goals_info,
-          ai_experience: state.ai_experience,
-          personalization: state.personalization,
-          is_completed: true,
-          current_step: 8,
-          completed_steps: [1, 2, 3, 4, 5, 6, 7, 8],
-          completed_at: new Date().toISOString()
-        }, {
+        .from('onboarding')
+        .upsert(onboardingData, {
           onConflict: 'user_id'
         });
 
       if (error) {
-        console.error('❌ Erro ao salvar onboarding:', error);
+        console.error('Erro ao salvar onboarding:', error);
         toast.error('Erro ao finalizar onboarding');
         return false;
       }
@@ -245,27 +235,28 @@ export const useCompleteOnboarding = () => {
       // Limpar localStorage após sucesso
       localStorage.removeItem(STORAGE_KEY);
       
-      console.log('✅ Onboarding finalizado com sucesso!');
-      toast.success('Onboarding completado com sucesso! 🎉');
+      toast.success('Onboarding finalizado com sucesso!');
       return true;
+
     } catch (error) {
-      console.error('❌ Erro inesperado:', error);
-      toast.error('Erro inesperado ao finalizar');
+      console.error('Erro ao completar onboarding:', error);
+      toast.error('Erro ao finalizar onboarding');
       return false;
     } finally {
       setIsSubmitting(false);
     }
-  }, [user?.id, state, canProceed]);
+  };
 
   return {
-    data: state,
+    data,
     updateSection,
     nextStep,
     previousStep,
     completeOnboarding,
-    canProceed: canProceed(state.current_step),
-    currentStep: state.current_step,
-    totalSteps,
+    canProceed: canProceed(),
+    currentStep,
+    totalSteps: TOTAL_STEPS,
+    completedSteps,
     isSubmitting,
     isLoading
   };

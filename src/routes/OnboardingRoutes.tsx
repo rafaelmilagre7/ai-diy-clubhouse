@@ -1,8 +1,6 @@
 
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import NovoOnboardingNew from '@/pages/onboarding/NovoOnboardingNew';
-import OnboardingCompletedNewPage from '@/pages/onboarding/OnboardingCompletedNew';
 import { OnboardingFinalFlow } from '@/components/onboarding/final/OnboardingFinalFlow';
 import OnboardingFinalCompleted from '@/pages/onboarding/OnboardingFinalCompleted';
 
@@ -20,19 +18,19 @@ export const OnboardingRoutes = () => {
         element={<OnboardingFinalCompleted />} 
       />
       
-      {/* Rota principal do onboarding antigo (mantido para compatibilidade) */}
+      {/* Redirecionar rota principal para o novo sistema */}
       <Route 
         index 
-        element={<NovoOnboardingNew />} 
+        element={<Navigate to="/onboarding-new/final" replace />} 
       />
       
-      {/* Rota para a página de sucesso antiga */}
+      {/* Redirecionar página de sucesso antiga para a nova */}
       <Route 
         path="completed" 
-        element={<OnboardingCompletedNewPage />} 
+        element={<Navigate to="/onboarding-new/final/completed" replace />} 
       />
       
-      {/* Redirect de rotas antigas */}
+      {/* Redirect de todas as outras rotas antigas para o novo sistema */}
       <Route 
         path="*" 
         element={<Navigate to="/onboarding-new/final" replace />} 
