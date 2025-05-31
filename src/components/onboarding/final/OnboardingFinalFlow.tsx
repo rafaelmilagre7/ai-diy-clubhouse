@@ -13,6 +13,7 @@ import { StepAIExperience } from './steps/StepAIExperience';
 import { StepPersonalization } from './steps/StepPersonalization';
 import { SecurityIndicator } from './security/SecurityIndicator';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 export const OnboardingFinalFlow: React.FC = () => {
   const navigate = useNavigate();
@@ -26,7 +27,8 @@ export const OnboardingFinalFlow: React.FC = () => {
     currentStep,
     totalSteps,
     isSubmitting,
-    isLoading
+    isLoading,
+    validationErrors
   } = useOnboardingFinalFlow();
 
   if (isLoading) {
@@ -40,10 +42,14 @@ export const OnboardingFinalFlow: React.FC = () => {
       if (result.success) {
         // Se já estava completado, redirecionar para dashboard
         if (result.wasAlreadyCompleted) {
+          toast.success('Onboarding já estava completo!');
           navigate('/dashboard');
         } else {
+          toast.success('Onboarding finalizado com sucesso!');
           navigate('/onboarding-new/final/completed');
         }
+      } else {
+        toast.error('Erro ao finalizar onboarding: ' + result.error);
       }
     } else {
       // Próxima etapa
@@ -63,7 +69,8 @@ export const OnboardingFinalFlow: React.FC = () => {
       onPrevious: currentStep > 1 ? handlePrevious : undefined,
       canProceed,
       currentStep,
-      totalSteps
+      totalSteps,
+      validationErrors
     };
 
     switch (currentStep) {

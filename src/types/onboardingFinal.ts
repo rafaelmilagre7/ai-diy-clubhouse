@@ -107,6 +107,7 @@ export interface OnboardingStepComponentProps {
   canProceed: boolean;
   currentStep: number;
   totalSteps: number;
+  validationErrors?: Record<string, string>;
 }
 
 export interface CompleteOnboardingResponse {

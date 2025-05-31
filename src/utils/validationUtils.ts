@@ -48,18 +48,22 @@ export const validateBrazilianWhatsApp = (phone: string): boolean => {
 // Formatar WhatsApp para exibição
 export const formatWhatsApp = (phone: string): string => {
   const cleaned = phone.replace(/\D/g, '');
-  if (cleaned.length === 11) {
+  if (cleaned.length === 0) return '';
+  if (cleaned.length <= 2) return `(${cleaned}`;
+  if (cleaned.length <= 7) return `(${cleaned.substring(0, 2)}) ${cleaned.substring(2)}`;
+  if (cleaned.length <= 11) {
     return `(${cleaned.substring(0, 2)}) ${cleaned.substring(2, 7)}-${cleaned.substring(7)}`;
   }
-  return phone;
+  // Limitar a 11 dígitos
+  return `(${cleaned.substring(0, 2)}) ${cleaned.substring(2, 7)}-${cleaned.substring(7, 11)}`;
 };
 
-// Limpar WhatsApp para salvamento
+// Limpar WhatsApp para salvamento (manter apenas números)
 export const cleanWhatsApp = (phone: string): string => {
   return phone.replace(/\D/g, '');
 };
 
-// Validação de telefone brasileiro
+// Validação de telefone brasileiro (mais flexível)
 export const validateBrazilianPhone = (phone: string): boolean => {
   const cleaned = phone.replace(/\D/g, '');
   // Aceita tanto celular (11 dígitos) quanto fixo (10 dígitos)
@@ -96,4 +100,20 @@ export const formatSocialUrl = (url: string, platform: 'linkedin' | 'instagram')
   
   // Adiciona https://
   return `https://${cleanUrl}`;
+};
+
+// Validação de idade mínima
+export const validateMinimumAge = (birthDate: string, minimumAge: number = 18): boolean => {
+  if (!birthDate) return false;
+  
+  const today = new Date();
+  const birth = new Date(birthDate);
+  const age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    return age - 1 >= minimumAge;
+  }
+  
+  return age >= minimumAge;
 };

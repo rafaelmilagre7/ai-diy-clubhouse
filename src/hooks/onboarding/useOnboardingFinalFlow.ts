@@ -1,7 +1,9 @@
+
 import { useState, useCallback } from 'react';
 import { OnboardingFinalData, CompleteOnboardingResponse } from '@/types/onboardingFinal';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
+import { validateBrazilianWhatsApp, cleanWhatsApp } from '@/utils/validationUtils';
 
 const TOTAL_STEPS = 8;
 
@@ -77,25 +79,58 @@ const initialData: OnboardingFinalData = {
   }
 };
 
+// Função para validar idade mínima
+const validateMinimumAge = (birthDate: string): boolean => {
+  if (!birthDate) return false;
+  
+  const today = new Date();
+  const birth = new Date(birthDate);
+  const age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    return age - 1 >= 18;
+  }
+  
+  return age >= 18;
+};
+
 export const useOnboardingFinalFlow = () => {
   const { user } = useAuth();
   const [data, setData] = useState<OnboardingFinalData>(initialData);
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   // Atualizar seção específica dos dados
   const updateSection = useCallback((section: keyof OnboardingFinalData, updates: any) => {
-    setData(prevData => ({
-      ...prevData,
-      [section]: updates
-    }));
+    console.log(`🔄 Atualizando seção ${section} com:`, updates);
+    
+    setData(prevData => {
+      const newData = {
+        ...prevData,
+        [section]: updates
+      };
+      console.log(`✅ Dados atualizados para ${section}:`, newData[section]);
+      return newData;
+    });
+    
+    // Limpar erros de validação quando o usuário atualizar os dados
+    setValidationErrors(prev => {
+      const newErrors = { ...prev };
+      Object.keys(updates).forEach(key => {
+        delete newErrors[key];
+      });
+      return newErrors;
+    });
   }, []);
 
   // Navegar para próxima etapa
   const nextStep = useCallback(() => {
     if (currentStep < TOTAL_STEPS) {
       setCurrentStep(prev => prev + 1);
+      setValidationErrors({}); // Limpar erros ao mudar de etapa
     }
   }, [currentStep]);
 
@@ -103,65 +138,124 @@ export const useOnboardingFinalFlow = () => {
   const previousStep = useCallback(() => {
     if (currentStep > 1) {
       setCurrentStep(prev => prev - 1);
+      setValidationErrors({}); // Limpar erros ao mudar de etapa
     }
   }, [currentStep]);
 
   // Validar se pode prosseguir para próxima etapa
   const canProceed = useCallback(() => {
+    const errors: Record<string, string> = {};
+
     switch (currentStep) {
       case 1: // Personal Info
-        return !!(
-          data.personal_info.name &&
-          data.personal_info.email &&
-          data.personal_info.whatsapp &&
-          data.personal_info.birth_date &&
-          data.personal_info.gender &&
-          (data.personal_info.gender === 'masculino' || data.personal_info.gender === 'feminino')
-        );
+        if (!data.personal_info.name?.trim()) {
+          errors.name = 'Nome é obrigatório';
+        }
+        
+        if (!data.personal_info.email?.trim()) {
+          errors.email = 'E-mail é obrigatório';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.personal_info.email)) {
+          errors.email = 'E-mail deve ter um formato válido';
+        }
+        
+        if (!data.personal_info.whatsapp?.trim()) {
+          errors.whatsapp = 'WhatsApp é obrigatório';
+        } else {
+          const cleanedWhatsApp = cleanWhatsApp(data.personal_info.whatsapp);
+          if (!validateBrazilianWhatsApp(cleanedWhatsApp)) {
+            errors.whatsapp = 'WhatsApp deve ter formato válido (11 dígitos, começando com 9)';
+          }
+        }
+        
+        if (!data.personal_info.birth_date) {
+          errors.birth_date = 'Data de nascimento é obrigatória';
+        } else if (!validateMinimumAge(data.personal_info.birth_date)) {
+          errors.birth_date = 'Você deve ter pelo menos 18 anos';
+        }
+        
+        if (!data.personal_info.gender || data.personal_info.gender === '') {
+          errors.gender = 'Gênero é obrigatório';
+        }
+        break;
       
       case 2: // Location Info
-        return !!(
-          data.location_info.country &&
-          data.location_info.state &&
-          data.location_info.city
-        );
+        if (!data.location_info.country?.trim()) {
+          errors.country = 'País é obrigatório';
+        }
+        if (!data.location_info.state?.trim()) {
+          errors.state = 'Estado é obrigatório';
+        }
+        if (!data.location_info.city?.trim()) {
+          errors.city = 'Cidade é obrigatória';
+        }
+        break;
       
       case 3: // Discovery Info
-        return !!data.discovery_info.how_found_us;
+        if (!data.discovery_info.how_found_us) {
+          errors.how_found_us = 'Como nos conheceu é obrigatório';
+        }
+        break;
       
       case 4: // Business Info
-        return !!(
-          data.business_info.company_name &&
-          data.business_info.role &&
-          data.business_info.company_size &&
-          data.business_info.company_sector &&
-          data.business_info.annual_revenue
-        );
+        if (!data.business_info.company_name?.trim()) {
+          errors.company_name = 'Nome da empresa é obrigatório';
+        }
+        if (!data.business_info.role?.trim()) {
+          errors.role = 'Cargo é obrigatório';
+        }
+        if (!data.business_info.company_size) {
+          errors.company_size = 'Tamanho da empresa é obrigatório';
+        }
+        if (!data.business_info.company_sector) {
+          errors.company_sector = 'Setor da empresa é obrigatório';
+        }
+        if (!data.business_info.annual_revenue) {
+          errors.annual_revenue = 'Faturamento anual é obrigatório';
+        }
+        break;
       
       case 5: // Business Context
-        return !!(
-          data.business_context.business_model &&
-          data.business_context.business_challenges?.length > 0
-        );
+        if (!data.business_context.business_model) {
+          errors.business_model = 'Modelo de negócio é obrigatório';
+        }
+        if (!data.business_context.business_challenges?.length) {
+          errors.business_challenges = 'Pelo menos um desafio deve ser selecionado';
+        }
+        break;
       
       case 6: // Goals Info
-        return !!(
-          data.goals_info.primary_goal &&
-          data.goals_info.expected_outcome_30days
-        );
+        if (!data.goals_info.primary_goal) {
+          errors.primary_goal = 'Objetivo principal é obrigatório';
+        }
+        if (!data.goals_info.expected_outcome_30days?.trim()) {
+          errors.expected_outcome_30days = 'Resultado esperado em 30 dias é obrigatório';
+        }
+        break;
       
       case 7: // AI Experience
-        return !!(
-          data.ai_experience.ai_knowledge_level &&
-          data.ai_experience.has_implemented
-        );
+        if (!data.ai_experience.ai_knowledge_level) {
+          errors.ai_knowledge_level = 'Nível de conhecimento em IA é obrigatório';
+        }
+        if (!data.ai_experience.has_implemented) {
+          errors.has_implemented = 'Experiência prévia com IA é obrigatória';
+        }
+        break;
       
       case 8: // Personalization
-        return true; // Sem validações obrigatórias
-      
-      default:
-        return false;
+        // Sem validações obrigatórias na última etapa
+        break;
     }
+
+    setValidationErrors(errors);
+    
+    const hasErrors = Object.keys(errors).length > 0;
+    console.log(`🔍 Validação etapa ${currentStep}:`, {
+      hasErrors,
+      errors,
+      canProceed: !hasErrors
+    });
+    
+    return !hasErrors;
   }, [currentStep, data]);
 
   // Finalizar onboarding
@@ -172,7 +266,25 @@ export const useOnboardingFinalFlow = () => {
 
     try {
       setIsSubmitting(true);
-      console.log('🎯 Finalizando onboarding...', data);
+      console.log('🎯 Finalizando onboarding com dados limpos...', data);
+
+      // Limpar e formatar dados antes de salvar
+      const cleanedData = {
+        ...data,
+        personal_info: {
+          ...data.personal_info,
+          whatsapp: data.personal_info.whatsapp ? cleanWhatsApp(data.personal_info.whatsapp) : '',
+          name: data.personal_info.name?.trim() || '',
+          email: data.personal_info.email?.trim() || '',
+          // Garantir que gender nunca seja string vazia
+          gender: data.personal_info.gender === '' ? undefined : data.personal_info.gender
+        },
+        business_info: {
+          ...data.business_info,
+          company_name: data.business_info.company_name?.trim() || '',
+          role: data.business_info.role?.trim() || ''
+        }
+      };
 
       // Verificar se já está completo
       const { data: existingData } = await supabase
@@ -198,14 +310,14 @@ export const useOnboardingFinalFlow = () => {
           user_id: user.id,
           is_completed: true,
           completed_at: new Date().toISOString(),
-          personal_info: data.personal_info,
-          location_info: data.location_info,
-          discovery_info: data.discovery_info,
-          business_info: data.business_info,
-          business_context: data.business_context,
-          goals_info: data.goals_info,
-          ai_experience: data.ai_experience,
-          personalization: data.personalization,
+          personal_info: cleanedData.personal_info,
+          location_info: cleanedData.location_info,
+          discovery_info: cleanedData.discovery_info,
+          business_info: cleanedData.business_info,
+          business_context: cleanedData.business_context,
+          goals_info: cleanedData.goals_info,
+          ai_experience: cleanedData.ai_experience,
+          personalization: cleanedData.personalization,
           updated_at: new Date().toISOString()
         })
         .select()
@@ -214,19 +326,6 @@ export const useOnboardingFinalFlow = () => {
       if (saveError) {
         console.error('❌ Erro ao salvar onboarding final:', saveError);
         return { success: false, error: saveError.message };
-      }
-
-      // Chamar função para desbloquear funcionalidades
-      const { data: unlockResult, error: unlockError } = await supabase
-        .rpc('complete_onboarding_and_unlock_features', {
-          p_user_id: user.id,
-          p_onboarding_data: data
-        });
-
-      if (unlockError) {
-        console.error('❌ Erro ao desbloquear funcionalidades:', unlockError);
-      } else {
-        console.log('✅ Funcionalidades desbloqueadas:', unlockResult);
       }
 
       console.log('✅ Onboarding finalizado com sucesso:', savedData);
@@ -258,6 +357,7 @@ export const useOnboardingFinalFlow = () => {
     currentStep,
     totalSteps: TOTAL_STEPS,
     isSubmitting,
-    isLoading
+    isLoading,
+    validationErrors
   };
 };
