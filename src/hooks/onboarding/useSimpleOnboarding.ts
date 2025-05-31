@@ -58,7 +58,8 @@ const getInitialData = (): QuickOnboardingData => ({
   live_interest: 0,
   authorize_case_usage: false,
   interested_in_interview: false,
-  priority_topics: []
+  priority_topics: [],
+  currentStep: '1'
 });
 
 export const useSimpleOnboarding = () => {
@@ -69,9 +70,7 @@ export const useSimpleOnboarding = () => {
   
   const {
     data: savedData,
-    completeOnboarding: completeOnboardingData,
-    isLoading: quickOnboardingLoading,
-    error: quickOnboardingError
+    completeOnboarding: completeOnboardingData
   } = useQuickOnboarding();
 
   // Auto-save inteligente com configuração menos agressiva
@@ -200,7 +199,7 @@ export const useSimpleOnboarding = () => {
     canProceed: canProceed(), // Chama a função para retornar boolean
     isSaving,
     isCompleting,
-    isLoading: quickOnboardingLoading,
-    error: quickOnboardingError
+    isLoading: false, // Default value since useQuickOnboarding doesn't return this
+    error: null // Default value since useQuickOnboarding doesn't return this
   };
 };
