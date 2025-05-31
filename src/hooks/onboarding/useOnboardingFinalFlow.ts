@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 import { OnboardingFinalData, CompleteOnboardingResponse } from '@/types/onboardingFinal';
 import { validateBrazilianWhatsApp, validateMinimumAge, cleanWhatsApp } from '@/utils/validationUtils';
 
@@ -9,85 +10,21 @@ export const useOnboardingFinalFlow = () => {
   const [data, setData] = useState<OnboardingFinalData>({
     personal_info: {
       name: '',
-      email: '',
-      whatsapp: '',
-      country_code: '+55',
-      phone: '',
-      birth_date: '',
-      gender: '',
-      timezone: ''
+      email: ''
     },
-    location_info: {
-      country: '',
-      state: '',
-      city: '',
-      instagram_url: '',
-      linkedin_url: ''
-    },
-    discovery_info: {
-      how_found_us: '',
-      referred_by: ''
-    },
-    business_info: {
-      company_name: '',
-      role: '',
-      company_size: '',
-      company_sector: '',
-      company_website: '',
-      annual_revenue: '',
-      current_position: ''
-    },
-    business_context: {
-      business_model: '',
-      business_challenges: [],
-      short_term_goals: [],
-      medium_term_goals: [],
-      important_kpis: [],
-      additional_context: ''
-    },
-    goals_info: {
-      primary_goal: '',
-      expected_outcomes: [],
-      expected_outcome_30days: '',
-      priority_solution_type: '',
-      how_implement: '',
-      week_availability: '',
-      content_formats: []
-    },
-    ai_experience: {
-      ai_knowledge_level: '',
-      previous_tools: [],
-      has_implemented: '',
-      desired_ai_areas: [],
-      completed_formation: false,
-      is_member_for_month: false,
-      nps_score: 0,
-      improvement_suggestions: '',
-      implemented_solutions: [],
-      desired_solutions: [],
-      previous_attempts: '',
-      ai_tools: [],
-      suggestions: ''
-    },
-    personalization: {
-      interests: [],
-      time_preference: [],
-      available_days: [],
-      networking_availability: '',
-      skills_to_share: [],
-      mentorship_topics: [],
-      live_interest: '',
-      authorize_case_usage: false,
-      interested_in_interview: false,
-      priority_topics: [],
-      content_formats: []
-    }
+    location_info: {},
+    discovery_info: {},
+    business_info: {},
+    business_context: {},
+    goals_info: {},
+    ai_experience: {},
+    personalization: {}
   });
 
   const [currentStep, setCurrentStep] = useState(1);
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const totalSteps = 8;
 
@@ -117,6 +54,12 @@ export const useOnboardingFinalFlow = () => {
       console.error('❌ Erro ao carregar dados do onboarding:', error);
     } finally {
       setIsLoading(false);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (user?.id) {
+      loadExistingData();
     }
   }, [user?.id]);
 
@@ -204,20 +147,27 @@ export const useOnboardingFinalFlow = () => {
   }, [validateCurrentStep]);
 
   const updateSection = useCallback((section: keyof OnboardingFinalData, updates: any) => {
-    console.log(`🔄 Atualizando seção ${section}:`, updates);
+    console.log('🔄 Atualizando seção:', section, 'com dados:', updates);
     
-    // Aplicar limpeza e formatação específica para dados pessoais
-    if (section === 'personal_info' && updates.whatsapp) {
-      updates.whatsapp = cleanWhatsApp(updates.whatsapp);
-    }
-    
-    setData(prev => ({
-      ...prev,
+    setData(prevData => ({
+      ...prevData,
       [section]: {
-        ...prev[section],
+        ...(prevData[section] || {}),
         ...updates
       }
     }));
+
+    // Limpar erros de validação da seção atualizada
+    setValidationErrors(prev => {
+      const newErrors = { ...prev };
+      Object.keys(updates).forEach(key => {
+        const errorKey = `${section}.${key}`;
+        if (newErrors[errorKey]) {
+          delete newErrors[errorKey];
+        }
+      });
+      return newErrors;
+    });
   }, []);
 
   const nextStep = useCallback(() => {
@@ -279,10 +229,6 @@ export const useOnboardingFinalFlow = () => {
       setIsSubmitting(false);
     }
   }, [user?.id, data, validateCurrentStep]);
-
-  useEffect(() => {
-    loadExistingData();
-  }, [loadExistingData]);
 
   return {
     data,
