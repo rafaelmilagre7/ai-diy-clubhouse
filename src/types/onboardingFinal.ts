@@ -80,6 +80,7 @@ export interface OnboardingFinalData {
     authorize_case_usage?: boolean;
     interested_in_interview?: boolean;
     priority_topics?: string[];
+    content_formats?: string[];
   };
 }
 
