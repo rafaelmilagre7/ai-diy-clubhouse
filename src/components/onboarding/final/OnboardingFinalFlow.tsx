@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { useCompleteOnboarding } from '@/hooks/onboarding/useCompleteOnboarding';
-import { OnboardingFinalLayout } from './OnboardingFinalLayout';
+import { OnboardingLayout } from '../OnboardingLayout';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { StepPersonalInfo } from './steps/StepPersonalInfo';
 import { StepLocationInfo } from './steps/StepLocationInfo';
@@ -54,7 +55,7 @@ export const OnboardingFinalFlow: React.FC = () => {
       onUpdate: updateSection,
       onNext: handleNext,
       onPrevious: currentStep > 1 ? handlePrevious : undefined,
-      canProceed, // Agora é um boolean
+      canProceed,
       currentStep,
       totalSteps
     };
@@ -95,29 +96,27 @@ export const OnboardingFinalFlow: React.FC = () => {
     return titles[currentStep as keyof typeof titles] || '';
   };
 
-  const getStepDescription = () => {
-    const descriptions = {
-      1: 'Vamos começar com suas informações básicas',
-      2: 'Nos ajude a entender onde você está localizado',
-      3: 'Como você descobriu a Viver de IA?',
-      4: 'Conte-nos sobre sua empresa e posição',
-      5: 'Ajude-nos a entender seu contexto de negócio',
-      6: 'Quais são seus principais objetivos?',
-      7: 'Qual é sua experiência atual com IA?',
-      8: 'Vamos personalizar sua experiência'
-    };
-    return descriptions[currentStep as keyof typeof descriptions] || '';
-  };
-
   return (
-    <OnboardingFinalLayout
+    <OnboardingLayout
       title={getStepTitle()}
-      description={getStepDescription()}
       currentStep={currentStep}
       totalSteps={totalSteps}
-      isSubmitting={isSubmitting}
+      onBackClick={currentStep > 1 ? handlePrevious : undefined}
     >
-      {getStepContent()}
-    </OnboardingFinalLayout>
+      {/* Feedback de submissão */}
+      {isSubmitting && (
+        <div className="mb-6 p-4 bg-viverblue/10 border border-viverblue/20 rounded-lg">
+          <div className="flex items-center justify-center gap-3 text-viverblue">
+            <div className="w-5 h-5 border-2 border-viverblue border-t-transparent rounded-full animate-spin"></div>
+            <span className="font-medium">Finalizando seu onboarding...</span>
+          </div>
+        </div>
+      )}
+
+      {/* Content */}
+      <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700/50 p-8">
+        {getStepContent()}
+      </div>
+    </OnboardingLayout>
   );
 };
