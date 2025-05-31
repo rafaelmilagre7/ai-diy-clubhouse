@@ -70,7 +70,9 @@ export const useSimpleOnboarding = () => {
   
   const {
     data: savedData,
-    completeOnboarding: completeOnboardingData
+    completeOnboarding: completeOnboardingData,
+    isLoading,
+    error
   } = useQuickOnboarding();
 
   // Auto-save inteligente com configuração menos agressiva
@@ -199,7 +201,7 @@ export const useSimpleOnboarding = () => {
     canProceed: canProceed(), // Chama a função para retornar boolean
     isSaving,
     isCompleting,
-    isLoading: false, // Default value since useQuickOnboarding doesn't return this
-    error: null // Default value since useQuickOnboarding doesn't return this
+    isLoading: isLoading || false,
+    error: error || null
   };
 };
