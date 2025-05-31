@@ -30,9 +30,13 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
   const { profile } = useAuth();
   const { data: onboardingStatus, isLoading: onboardingLoading } = useOnboardingCompletionCheck();
 
+  console.log('🔍 MemberSidebarNavItems: onboardingStatus:', onboardingStatus);
+  console.log('🔍 MemberSidebarNavItems: isLoading:', onboardingLoading);
+
   // Determinar o item do onboarding baseado no status
   const getOnboardingItem = () => {
     if (onboardingLoading) {
+      console.log('🔄 MemberSidebarNavItems: Carregando status do onboarding...');
       return {
         title: "Carregando...",
         href: "/onboarding-new",
@@ -40,7 +44,9 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       };
     }
 
+    // Se o onboarding foi completado, mostrar o link para review
     if (onboardingStatus?.isCompleted) {
+      console.log('✅ MemberSidebarNavItems: Onboarding completo, mostrando review');
       return {
         title: "Review do Onboarding",
         href: "/profile/onboarding-review",
@@ -48,6 +54,8 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       };
     }
 
+    // Se não foi completado, mostrar onboarding normal
+    console.log('⚠️ MemberSidebarNavItems: Onboarding não completo, mostrando onboarding');
     return {
       title: "Onboarding",
       href: "/onboarding-new",
@@ -56,6 +64,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
   };
 
   const onboardingItem = getOnboardingItem();
+  console.log('🔍 MemberSidebarNavItems: onboardingItem final:', onboardingItem);
 
   const menuItems = [
     {
@@ -122,23 +131,26 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
 
   return (
     <>
-      {menuItems.map((item) => (
-        <Button
-          key={item.href}
-          variant={isActive(item.href) ? "default" : "ghost"}
-          className={cn(
-            "w-full justify-start gap-2 mb-1",
-            !sidebarOpen && "justify-center px-2",
-            isActive(item.href) && "bg-viverblue hover:bg-viverblue/90"
-          )}
-          asChild
-        >
-          <Link to={item.href}>
-            <item.icon className="h-4 w-4" />
-            {sidebarOpen && <span>{item.title}</span>}
-          </Link>
-        </Button>
-      ))}
+      {menuItems.map((item) => {
+        console.log(`🔍 MemberSidebarNavItems: Renderizando item ${item.title} com href ${item.href}`);
+        return (
+          <Button
+            key={item.href}
+            variant={isActive(item.href) ? "default" : "ghost"}
+            className={cn(
+              "w-full justify-start gap-2 mb-1",
+              !sidebarOpen && "justify-center px-2",
+              isActive(item.href) && "bg-viverblue hover:bg-viverblue/90"
+            )}
+            asChild
+          >
+            <Link to={item.href}>
+              <item.icon className="h-4 w-4" />
+              {sidebarOpen && <span>{item.title}</span>}
+            </Link>
+          </Button>
+        );
+      })}
     </>
   );
 };

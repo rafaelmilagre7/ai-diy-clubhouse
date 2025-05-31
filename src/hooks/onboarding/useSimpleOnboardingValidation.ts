@@ -1,78 +1,89 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/auth';
 
 export const useSimpleOnboardingValidation = () => {
   const { user } = useAuth();
 
-  const { data: completionData, isLoading } = useQuery({
-    queryKey: ['onboarding-validation', user?.id],
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['simple-onboarding-validation', user?.id],
     queryFn: async () => {
-      if (!user?.id) return { isCompleted: false, source: 'no_user' };
+      if (!user?.id) {
+        console.log('🔍 useSimpleOnboardingValidation: Nenhum usuário encontrado');
+        return {
+          isOnboardingComplete: false,
+          hasValidData: false,
+          source: 'no_user'
+        };
+      }
 
       try {
-        // Primeiro verificar na tabela quick_onboarding
-        const { data: quickData, error: quickError } = await supabase
-          .from('quick_onboarding')
-          .select('is_completed')
+        console.log('🔍 useSimpleOnboardingValidation: Verificando onboarding para usuário:', user.id);
+        
+        // Verificar primeiro na tabela onboarding_final
+        const { data: finalData, error: finalError } = await supabase
+          .from('onboarding_final')
+          .select('is_completed, completed_at')
           .eq('user_id', user.id)
+          .eq('is_completed', true)
           .maybeSingle();
 
-        if (quickData && !quickError) {
-          console.log('✅ Dados encontrados na quick_onboarding:', quickData);
+        if (finalData && !finalError) {
+          console.log('✅ useSimpleOnboardingValidation: Onboarding final encontrado como completo');
           return {
-            isCompleted: quickData.is_completed || false,
-            source: 'quick_onboarding'
+            isOnboardingComplete: true,
+            hasValidData: true,
+            source: 'onboarding_final'
           };
         }
 
-        // Fallback para onboarding_progress
-        const { data: progressData, error: progressError } = await supabase
-          .from('onboarding_progress')
-          .select('is_completed')
-          .eq('user_id', user.id)
+        console.log('🔍 useSimpleOnboardingValidation: Verificando na tabela profiles...');
+        
+        // Verificar no perfil se tem onboarding_completed
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('onboarding_completed')
+          .eq('id', user.id)
           .maybeSingle();
 
-        if (progressData && !progressError) {
-          console.log('✅ Dados encontrados na onboarding_progress:', progressData);
+        if (profileData && !profileError) {
+          const isCompleted = profileData.onboarding_completed || false;
+          console.log('🔍 useSimpleOnboardingValidation: onboarding_completed no perfil:', isCompleted);
+          
           return {
-            isCompleted: progressData.is_completed || false,
-            source: 'onboarding_progress'
+            isOnboardingComplete: isCompleted,
+            hasValidData: true,
+            source: 'profiles'
           };
         }
 
-        // Se não encontrou dados em nenhuma tabela, consideramos incompleto
-        console.log('⚠️ Nenhum dado de onboarding encontrado - considerando incompleto');
+        console.log('⚠️ useSimpleOnboardingValidation: Nenhum dado de onboarding encontrado');
         return {
-          isCompleted: false,
+          isOnboardingComplete: false,
+          hasValidData: false,
           source: 'none'
         };
       } catch (error) {
-        console.error('❌ Erro ao verificar onboarding:', error);
+        console.error('❌ useSimpleOnboardingValidation: Erro ao verificar onboarding:', error);
         return {
-          isCompleted: false,
-          source: 'error'
+          isOnboardingComplete: false,
+          hasValidData: false,
+          source: 'error',
+          error
         };
       }
     },
     enabled: !!user?.id,
     staleTime: 30 * 1000, // 30 segundos
-    refetchOnWindowFocus: true,
+    retry: 2
   });
 
-  const validateOnboardingCompletion = async (): Promise<boolean> => {
-    if (isLoading) return false;
-    const result = completionData?.isCompleted || false;
-    console.log('🔍 Validação de onboarding:', result, 'fonte:', completionData?.source);
-    return result;
-  };
-
   return {
-    validateOnboardingCompletion,
-    isOnboardingComplete: completionData?.isCompleted || false,
-    hasValidData: !isLoading,
+    isOnboardingComplete: data?.isOnboardingComplete || false,
+    hasValidData: data?.hasValidData || false,
+    source: data?.source,
     isLoading,
-    source: completionData?.source
+    error
   };
 };

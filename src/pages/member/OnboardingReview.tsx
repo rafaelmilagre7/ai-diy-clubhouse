@@ -20,11 +20,19 @@ import { PersonalizationSection } from '@/components/profile/onboarding-review/P
 const OnboardingReview: React.FC = () => {
   const { data: onboardingData, isLoading, error } = useOnboardingFinalData();
 
+  console.log('🔍 OnboardingReview: Carregando página de review', {
+    isLoading,
+    error,
+    hasData: !!onboardingData
+  });
+
   if (isLoading) {
+    console.log('🔄 OnboardingReview: Carregando dados...');
     return <LoadingScreen message="Carregando dados do onboarding..." />;
   }
 
   if (error || !onboardingData) {
+    console.error('❌ OnboardingReview: Erro ou dados não encontrados:', error);
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <Card className="max-w-md mx-auto text-center">
@@ -47,6 +55,8 @@ const OnboardingReview: React.FC = () => {
       </div>
     );
   }
+
+  console.log('✅ OnboardingReview: Renderizando página com dados:', onboardingData);
 
   return (
     <div className="min-h-screen bg-gray-900 p-4">

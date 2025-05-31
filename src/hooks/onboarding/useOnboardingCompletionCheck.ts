@@ -10,6 +10,7 @@ export const useOnboardingCompletionCheck = () => {
     queryKey: ['onboarding-completion-check', user?.id],
     queryFn: async () => {
       if (!user?.id) {
+        console.log('🔍 useOnboardingCompletionCheck: Nenhum usuário encontrado');
         return {
           isCompleted: false,
           hasData: false,
@@ -18,24 +19,29 @@ export const useOnboardingCompletionCheck = () => {
       }
 
       try {
+        console.log('🔍 useOnboardingCompletionCheck: Verificando onboarding para usuário:', user.id);
+        
         // Verificar primeiro na tabela onboarding_final
         const { data: finalData, error: finalError } = await supabase
           .from('onboarding_final')
-          .select('is_completed, completed_at')
+          .select('is_completed, completed_at, id')
           .eq('user_id', user.id)
           .eq('is_completed', true)
           .maybeSingle();
 
         if (finalData && !finalError) {
-          console.log('✅ Onboarding final encontrado como completo:', finalData);
+          console.log('✅ useOnboardingCompletionCheck: Onboarding final encontrado como completo:', finalData);
           return {
             isCompleted: true,
             hasData: true,
             source: 'onboarding_final',
-            completedAt: finalData.completed_at
+            completedAt: finalData.completed_at,
+            onboardingId: finalData.id
           };
         }
 
+        console.log('🔍 useOnboardingCompletionCheck: Verificando na tabela profiles...');
+        
         // Verificar no perfil do usuário se existe campo onboarding_completed
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
@@ -44,25 +50,29 @@ export const useOnboardingCompletionCheck = () => {
           .maybeSingle();
 
         if (profileData && !profileError) {
-          console.log('✅ Dados do perfil encontrados:', profileData);
+          console.log('✅ useOnboardingCompletionCheck: Dados do perfil encontrados:', profileData);
           // Verificar se o campo onboarding_completed existe
           const hasOnboardingCompleted = 'onboarding_completed' in profileData;
+          const isCompleted = hasOnboardingCompleted ? (profileData.onboarding_completed || false) : false;
+          
+          console.log('🔍 useOnboardingCompletionCheck: onboarding_completed no perfil:', isCompleted);
+          
           return {
-            isCompleted: hasOnboardingCompleted ? (profileData.onboarding_completed || false) : false,
+            isCompleted,
             hasData: true,
             source: 'profiles'
           };
         }
 
         // Se não encontrou dados em nenhuma tabela
-        console.log('⚠️ Nenhum dado de onboarding encontrado');
+        console.log('⚠️ useOnboardingCompletionCheck: Nenhum dado de onboarding encontrado');
         return {
           isCompleted: false,
           hasData: false,
           source: 'none'
         };
       } catch (error) {
-        console.error('❌ Erro ao verificar conclusão do onboarding:', error);
+        console.error('❌ useOnboardingCompletionCheck: Erro ao verificar conclusão do onboarding:', error);
         return {
           isCompleted: false,
           hasData: false,

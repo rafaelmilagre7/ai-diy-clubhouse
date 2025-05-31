@@ -17,6 +17,16 @@ const ONBOARDING_REQUIRED_ROUTES = [
   '/implementation-trail'
 ];
 
+// Rotas que NUNCA devem ser redirecionadas (mesmo se onboarding incompleto)
+const PROTECTED_ROUTES = [
+  '/profile',
+  '/comunidade',
+  '/learning',
+  '/dashboard',
+  '/solutions',
+  '/tools'
+];
+
 export const SmartRedirectHandler: React.FC<SmartRedirectHandlerProps> = ({ children }) => {
   const { user, profile, isLoading: authLoading } = useAuth();
   const location = useLocation();
@@ -32,6 +42,21 @@ export const SmartRedirectHandler: React.FC<SmartRedirectHandlerProps> = ({ chil
     location.pathname.startsWith(route)
   );
 
+  // Verificar se é uma rota protegida que NUNCA deve ser redirecionada
+  const isProtectedRoute = PROTECTED_ROUTES.some(route => 
+    location.pathname.startsWith(route)
+  );
+
+  console.log('🔍 SmartRedirectHandler: Analisando navegação', {
+    pathname: location.pathname,
+    isPublicRoute,
+    isOnboardingRoute,
+    requiresOnboarding,
+    isProtectedRoute,
+    isOnboardingComplete,
+    userId: user?.id
+  });
+
   // Log da navegação atual
   useEffect(() => {
     logger.debug('SmartRedirectHandler', 'Navegação detectada', {
@@ -39,18 +64,21 @@ export const SmartRedirectHandler: React.FC<SmartRedirectHandlerProps> = ({ chil
       isPublicRoute,
       isOnboardingRoute,
       requiresOnboarding,
+      isProtectedRoute,
       userId: user?.id
     });
-  }, [location.pathname, isPublicRoute, isOnboardingRoute, requiresOnboarding, user?.id]);
+  }, [location.pathname, isPublicRoute, isOnboardingRoute, requiresOnboarding, isProtectedRoute, user?.id]);
 
-  // Redirecionar para onboarding apenas se a rota atual requer onboarding
+  // Redirecionar para onboarding apenas se a rota atual requer onboarding E não é uma rota protegida
   useEffect(() => {
     if (user && !isPublicRoute && !isOnboardingRoute && !authLoading && !onboardingLoading) {
-      if (requiresOnboarding && !isOnboardingComplete) {
-        logger.info('SmartRedirectHandler', 'Redirecionando para onboarding - rota requer onboarding', {
+      // Só redirecionar se a rota requer onboarding E não é uma rota protegida
+      if (requiresOnboarding && !isOnboardingComplete && !isProtectedRoute) {
+        console.log('🔄 SmartRedirectHandler: Redirecionando para onboarding - rota requer onboarding', {
           userId: user.id,
           currentPath: location.pathname,
-          requiresOnboarding
+          requiresOnboarding,
+          isProtectedRoute
         });
         navigate('/onboarding-new', { replace: true });
       }
@@ -60,6 +88,7 @@ export const SmartRedirectHandler: React.FC<SmartRedirectHandlerProps> = ({ chil
     isPublicRoute, 
     isOnboardingRoute, 
     requiresOnboarding,
+    isProtectedRoute,
     authLoading, 
     onboardingLoading,
     isOnboardingComplete,
