@@ -3,14 +3,13 @@ import { RouteObject } from "react-router-dom";
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import { SmartFeatureGuard } from '@/components/auth/SmartFeatureGuard';
 import MemberLayout from '@/components/layout/MemberLayout';
+import ProfileRoutes from './ProfileRoutes';
 
 // Member pages
 import Dashboard from '@/pages/member/Dashboard';
 import Solutions from '@/pages/member/Solutions';
 import Tools from '@/pages/member/Tools';
 import ToolDetails from '@/pages/member/ToolDetails';
-import Profile from '@/pages/member/Profile';
-import EditProfile from '@/pages/member/EditProfile';
 import SolutionDetails from '@/pages/member/SolutionDetails';
 import SolutionImplementation from '@/pages/member/SolutionImplementation';
 import ImplementationCompleted from '@/pages/member/ImplementationCompleted';
@@ -61,8 +60,6 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/solutions", Solutions),
   createProtectedRoute("/tools", Tools),
   createProtectedRoute("/tools/:id", ToolDetails),
-  createProtectedRoute("/profile", Profile),
-  createProtectedRoute("/profile/edit", EditProfile),
   createProtectedRoute("/solution/:id", SolutionDetails),
   createProtectedRoute("/implement/:id/:moduleIdx", SolutionImplementation),
   createProtectedRoute("/implementation/:id", SolutionImplementation),
@@ -70,6 +67,18 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/implementation/completed/:id", ImplementationCompleted),
   createProtectedRoute("/benefits", Benefits),
   createProtectedRoute("/events", Events),
+  
+  // Profile Routes - integração das rotas do perfil
+  {
+    path: "/profile/*",
+    element: (
+      <ProtectedRoutes>
+        <MemberLayout>
+          <ProfileRoutes />
+        </MemberLayout>
+      </ProtectedRoutes>
+    )
+  },
   
   // Learning/LMS Routes - sem guard de feature
   createProtectedRoute("/learning", LearningPage),

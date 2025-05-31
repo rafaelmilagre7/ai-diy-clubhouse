@@ -13,9 +13,11 @@ import {
   MessageSquare,
   Route,
   GraduationCap,
-  Calendar
+  Calendar,
+  FileText
 } from 'lucide-react';
 import { useNetworkingAccess } from '@/hooks/networking/useNetworkingAccess';
+import { useOnboardingCompletionCheck } from '@/hooks/onboarding/useOnboardingCompletionCheck';
 import { useAuth } from '@/contexts/auth';
 
 interface MemberSidebarNavItemsProps {
@@ -26,6 +28,34 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
   const location = useLocation();
   const { hasAccess: hasNetworkingAccess } = useNetworkingAccess();
   const { profile } = useAuth();
+  const { data: onboardingStatus, isLoading: onboardingLoading } = useOnboardingCompletionCheck();
+
+  // Determinar o item do onboarding baseado no status
+  const getOnboardingItem = () => {
+    if (onboardingLoading) {
+      return {
+        title: "Carregando...",
+        href: "/onboarding-new",
+        icon: BookOpen,
+      };
+    }
+
+    if (onboardingStatus?.isCompleted) {
+      return {
+        title: "Review do Onboarding",
+        href: "/profile/onboarding-review",
+        icon: FileText,
+      };
+    }
+
+    return {
+      title: "Onboarding",
+      href: "/onboarding-new",
+      icon: BookOpen,
+    };
+  };
+
+  const onboardingItem = getOnboardingItem();
 
   const menuItems = [
     {
@@ -33,11 +63,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       href: "/dashboard",
       icon: LayoutDashboard,
     },
-    {
-      title: "Onboarding",
-      href: "/onboarding-new",
-      icon: BookOpen,
-    },
+    onboardingItem,
     {
       title: "Trilha de Implementação",
       href: "/implementation-trail",

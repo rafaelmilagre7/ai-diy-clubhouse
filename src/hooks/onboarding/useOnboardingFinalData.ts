@@ -10,37 +10,26 @@ export const useOnboardingFinalData = () => {
   return useQuery({
     queryKey: ['onboarding-final-data', user?.id],
     queryFn: async (): Promise<OnboardingFinalData | null> => {
-      if (!user?.id) return null;
+      if (!user?.id) {
+        throw new Error('User not authenticated');
+      }
 
-      console.log('🔍 Buscando dados do onboarding final para usuário:', user.id);
-
-      // Buscar dados na tabela onboarding_final
-      const { data: finalData, error: finalError } = await supabase
+      const { data, error } = await supabase
         .from('onboarding_final')
         .select('*')
         .eq('user_id', user.id)
         .eq('is_completed', true)
         .single();
 
-      if (finalData && !finalError) {
-        console.log('✅ Dados do onboarding final encontrados:', finalData);
-        return {
-          personal_info: finalData.personal_info || {},
-          location_info: finalData.location_info || {},
-          discovery_info: finalData.discovery_info || {},
-          business_info: finalData.business_info || {},
-          business_context: finalData.business_context || {},
-          goals_info: finalData.goals_info || {},
-          ai_experience: finalData.ai_experience || {},
-          personalization: finalData.personalization || {}
-        };
+      if (error) {
+        console.error('Error fetching onboarding final data:', error);
+        return null;
       }
 
-      console.log('⚠️ Nenhum dado de onboarding final encontrado');
-      return null;
+      return data;
     },
     enabled: !!user?.id,
     staleTime: 5 * 60 * 1000, // 5 minutos
-    retry: 1
+    retry: 2
   });
 };
