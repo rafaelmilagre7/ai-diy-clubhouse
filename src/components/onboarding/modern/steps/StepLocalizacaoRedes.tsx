@@ -72,19 +72,6 @@ export const StepLocalizacaoRedes: React.FC<OnboardingStepProps> = ({
           </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-white">
-            Fuso horário
-          </label>
-          <Input
-            type="text"
-            value={data.timezone || ''}
-            onChange={(e) => onUpdate('timezone', e.target.value)}
-            placeholder="Ex: America/Sao_Paulo"
-            className="h-12 bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:ring-viverblue/50"
-          />
-        </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="block text-sm font-medium text-white">

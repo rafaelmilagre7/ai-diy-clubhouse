@@ -7,11 +7,10 @@ export interface QuickOnboardingData {
   country_code: string;
   birth_date?: string;
   
-  // Etapa 2 - Localização e Redes
+  // Etapa 2 - Localização e Redes (timezone removido)
   country: string;
   state: string;
   city: string;
-  timezone: string;
   instagram_url?: string;
   linkedin_url?: string;
   

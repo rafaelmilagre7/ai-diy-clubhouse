@@ -47,19 +47,34 @@ export const useOnboardingProgress = () => {
       setIsSaving(true);
       console.log('💾 Salvando progresso...', progressData);
 
-      const dataToSave = {
+      // Validar e limpar dados antes de enviar
+      const cleanedData = {
         user_id: user.id,
         updated_at: new Date().toISOString(),
         ...progressData
       };
 
+      // Remover campos undefined que podem causar problemas
+      Object.keys(cleanedData).forEach(key => {
+        if (cleanedData[key as keyof typeof cleanedData] === undefined) {
+          delete cleanedData[key as keyof typeof cleanedData];
+        }
+      });
+
       const { error } = await supabase
         .from('onboarding_progress')
-        .upsert(dataToSave);
+        .upsert(cleanedData, {
+          onConflict: 'user_id'
+        });
 
       if (error) {
         console.error('❌ Erro ao salvar progresso:', error);
-        toast.error('Erro ao salvar progresso');
+        console.error('❌ Dados que causaram erro:', cleanedData);
+        
+        // Não mostrar toast para auto-save, apenas para saves manuais
+        if (!progressData.current_step?.startsWith('step_')) {
+          toast.error('Erro ao salvar progresso');
+        }
         return false;
       }
 
@@ -67,7 +82,11 @@ export const useOnboardingProgress = () => {
       return true;
     } catch (error) {
       console.error('❌ Erro inesperado ao salvar progresso:', error);
-      toast.error('Erro inesperado ao salvar');
+      
+      // Não mostrar toast para auto-save
+      if (!progressData.current_step?.startsWith('step_')) {
+        toast.error('Erro inesperado ao salvar');
+      }
       return false;
     } finally {
       setIsSaving(false);

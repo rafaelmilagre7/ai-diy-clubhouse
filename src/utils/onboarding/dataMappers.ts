@@ -66,7 +66,6 @@ export const mapQuickToProgress = (quickData: QuickOnboardingData): Partial<Onbo
       country: quickData.country,
       state: quickData.state,
       city: quickData.city,
-      timezone: quickData.timezone,
       instagram_url: quickData.instagram_url,
       linkedin_url: quickData.linkedin_url
     },
