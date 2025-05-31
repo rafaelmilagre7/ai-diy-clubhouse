@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { OnboardingFinalData, CompleteOnboardingResponse } from '@/types/onboardingFinal';
 import { useAuth } from '@/contexts/auth';
@@ -13,7 +12,8 @@ const initialData: OnboardingFinalData = {
     email: '',
     whatsapp: '',
     country_code: '+55',
-    birth_date: ''
+    birth_date: '',
+    gender: ''
   },
   location_info: {
     country: '',
@@ -113,7 +113,10 @@ export const useOnboardingFinalFlow = () => {
         return !!(
           data.personal_info.name &&
           data.personal_info.email &&
-          data.personal_info.whatsapp
+          data.personal_info.whatsapp &&
+          data.personal_info.birth_date &&
+          data.personal_info.gender &&
+          (data.personal_info.gender === 'masculino' || data.personal_info.gender === 'feminino')
         );
       
       case 2: // Location Info

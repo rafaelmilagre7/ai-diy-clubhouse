@@ -1,4 +1,3 @@
-
 export interface OnboardingPersonalInfo {
   name: string;
   email: string;
@@ -6,7 +5,7 @@ export interface OnboardingPersonalInfo {
   country_code?: string;
   phone?: string;
   birth_date?: string;
-  gender?: string;
+  gender?: 'masculino' | 'feminino';
   timezone?: string;
 }
 
