@@ -69,7 +69,6 @@ export const useSimpleOnboarding = () => {
   
   const {
     data: savedData,
-    saveOnboarding,
     completeOnboarding: completeOnboardingData,
     isLoading,
     error
@@ -166,25 +165,25 @@ export const useSimpleOnboarding = () => {
     }
   }, [data, completeOnboardingData]);
 
-  // Validação de step
-  const canProceed = useCallback(() => {
+  // Validação de step - retorna boolean diretamente
+  const canProceed = useCallback((): boolean => {
     switch (currentStep) {
       case 1: // Informações pessoais
-        return data.name && data.name.length >= 2;
+        return !!(data.name && data.name.length >= 2);
       case 2: // Localização
-        return data.country && data.state && data.city;
+        return !!(data.country && data.state && data.city);
       case 3: // Como conheceu
-        return data.how_found_us && (data.how_found_us !== 'indicacao' || data.referred_by);
+        return !!(data.how_found_us && (data.how_found_us !== 'indicacao' || data.referred_by));
       case 4: // Negócio
-        return data.company_name && data.role && data.company_size && data.company_segment;
+        return !!(data.company_name && data.role && data.company_size && data.company_segment);
       case 5: // Contexto do negócio
-        return data.business_model;
+        return !!data.business_model;
       case 6: // Objetivos
-        return data.primary_goal && data.expected_outcome_30days;
+        return !!(data.primary_goal && data.expected_outcome_30days);
       case 7: // Experiência com IA
-        return data.ai_knowledge_level && data.ai_knowledge_level !== '0' && data.has_implemented;
+        return !!(data.ai_knowledge_level && data.ai_knowledge_level !== '0' && data.has_implemented);
       case 8: // Personalização
-        return data.content_formats && data.content_formats.length > 0 && data.available_days && data.available_days.length > 0;
+        return !!(data.content_formats && data.content_formats.length > 0 && data.available_days && data.available_days.length > 0);
       default:
         return false;
     }
@@ -198,7 +197,7 @@ export const useSimpleOnboarding = () => {
     nextStep,
     previousStep,
     completeOnboarding,
-    canProceed: canProceed(),
+    canProceed: canProceed(), // Chama a função para retornar boolean
     isSaving,
     isCompleting,
     isLoading,
