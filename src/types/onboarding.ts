@@ -8,6 +8,14 @@ export interface OnboardingData {
     whatsapp?: string;
     country_code?: string;
     birth_date?: string;
+    phone?: string;
+    ddi?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    linkedin?: string;
+    instagram?: string;
+    timezone?: string;
   };
   
   // Informações profissionais
@@ -47,6 +55,7 @@ export interface OnboardingData {
   // Experiência com IA
   ai_experience?: {
     ai_knowledge_level?: string;
+    knowledge_level?: string; // compatibilidade
     previous_tools?: string[];
     has_implemented?: string;
     desired_ai_areas?: string[];
@@ -123,6 +132,52 @@ export interface OnboardingProgress {
 // Interface para os steps do onboarding
 export interface OnboardingStepData {
   stepId: string;
+  title: string;
+  description?: string;
+  isRequired: boolean;
+  data: Partial<OnboardingData>;
+}
+
+// Props para steps do onboarding
+export interface OnboardingStepProps {
+  onSubmit: (stepId: string, data: Partial<OnboardingData>) => void;
+  isSubmitting: boolean;
+  initialData?: OnboardingData;
+  isLastStep?: boolean;
+  onComplete?: () => void;
+}
+
+// Tipos para informações pessoais
+export interface PersonalInfoData {
+  name?: string;
+  email?: string;
+  whatsapp?: string;
+  country_code?: string;
+  birth_date?: string;
+  phone?: string;
+  ddi?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  linkedin?: string;
+  instagram?: string;
+  timezone?: string;
+}
+
+// Tipos para dados profissionais
+export interface ProfessionalDataInput {
+  company_name?: string;
+  role?: string;
+  company_size?: string;
+  company_segment?: string;
+  company_website?: string;
+  annual_revenue_range?: string;
+  current_position?: string;
+}
+
+// Tipo para steps do onboarding (compatibilidade)
+export interface OnboardingStep {
+  id: string;
   title: string;
   description?: string;
   isRequired: boolean;

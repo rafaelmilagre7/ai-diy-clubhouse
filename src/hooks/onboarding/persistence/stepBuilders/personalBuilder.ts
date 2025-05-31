@@ -1,45 +1,41 @@
 
 import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
-import { buildBaseUpdate } from "./baseBuilder";
 
 /**
  * Builder específico para dados pessoais
- * Processa e normaliza os dados para facilitar interpretação por IA
  */
-export function buildPersonalUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
-  // Processar dados antes de enviar ao builder
-  const processedData = { ...data };
+export function buildPersonalInfoUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
+  const updateObj: Record<string, any> = {};
   
-  if (processedData.personal_info?.ddi) {
-    // Garantir que o DDI tenha um formato válido
-    processedData.personal_info.ddi = processedData.personal_info.ddi.replace(/^(?!\+)/, '+');
+  console.log("Construindo objeto de atualização para Personal Info:", data);
+  
+  if (!data || !progress) {
+    console.warn("Dados ou progresso não fornecidos para Personal Info Builder");
+    return updateObj;
   }
   
-  // Normalizar URLs de redes sociais
-  if (processedData.personal_info?.linkedin) {
-    const linkedin = processedData.personal_info.linkedin;
-    if (!linkedin.match(/^https?:\/\//)) {
-      processedData.personal_info.linkedin = `https://linkedin.com/in/${linkedin.replace(/^(https?:\/\/)?(www\.)?(linkedin\.com\/in\/)?/, '')}`;
-    }
+  try {
+    // Verificar se os dados vêm no formato aninhado ou direto
+    const personalData = data.personal_info || {};
+    
+    // Garantir que o objeto personal_info existe
+    updateObj.personal_info = {
+      ...(typeof progress.personal_info === 'object' ? progress.personal_info || {} : {}),
+      ...personalData,
+      _last_updated: new Date().toISOString()
+    };
+    
+    // Remover valores undefined que podem causar erro no Supabase
+    Object.keys(updateObj.personal_info).forEach(key => {
+      if (updateObj.personal_info[key] === undefined) {
+        delete updateObj.personal_info[key];
+      }
+    });
+    
+    console.log("Objeto de atualização gerado:", updateObj);
+    return updateObj;
+  } catch (error) {
+    console.error("Erro ao construir objeto de atualização de Personal Info:", error);
+    return updateObj;
   }
-  
-  if (processedData.personal_info?.instagram) {
-    const instagram = processedData.personal_info.instagram;
-    if (!instagram.match(/^https?:\/\//)) {
-      processedData.personal_info.instagram = `https://instagram.com/${instagram.replace(/^(https?:\/\/)?(www\.)?(instagram\.com\/)?/, '')}`;
-    }
-  }
-  
-  // Adicionar metadados semânticos para facilitar interpretação por IA
-  const semanticMetadata = {
-    data_type: "personal_info",
-    data_context: "personal_identity",
-    data_version: "1.0",
-    timestamp: new Date().toISOString()
-  };
-  
-  // Usar o builder base para construir o objeto de atualização
-  return buildBaseUpdate("personal_info", processedData, progress, {
-    metadata: semanticMetadata
-  });
 }

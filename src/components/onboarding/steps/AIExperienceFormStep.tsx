@@ -40,10 +40,10 @@ export const AIExperienceFormStep: React.FC<AIExperienceFormStepProps> = ({
 }) => {
   const { control, handleSubmit } = useForm({
     defaultValues: {
-      knowledge_level: initialData?.knowledge_level || "",
+      ai_knowledge_level: initialData?.ai_knowledge_level || initialData?.knowledge_level || "",
       previous_tools: initialData?.previous_tools || [],
       has_implemented: initialData?.has_implemented || "",
-      desired_ai_areas: initialData?.desired_ai_areas || [], // agora array!
+      desired_ai_areas: initialData?.desired_ai_areas || [],
       completed_formation: initialData?.completed_formation || false,
       is_member_for_month: initialData?.is_member_for_month || false,
       nps_score: initialData?.nps_score || 5,
@@ -57,7 +57,8 @@ export const AIExperienceFormStep: React.FC<AIExperienceFormStepProps> = ({
         onSubmit("ai_exp", {
           ai_experience: {
             ...data,
-            // garantir compatibilidade com campo array
+            // garantir compatibilidade com ambos os campos
+            knowledge_level: data.ai_knowledge_level,
             desired_ai_areas: data.desired_ai_areas || [],
           }
         })
@@ -101,7 +102,7 @@ export const AIExperienceFormStep: React.FC<AIExperienceFormStepProps> = ({
         />
       </div>
 
-      {/* Pergunta: Em quais áreas você deseja implementar soluções de IA no seu negócio? (agora múltipla escolha) */}
+      {/* Pergunta: Em quais áreas você deseja implementar soluções de IA no seu negócio? */}
       <div className="space-y-4 bg-[#151823] p-6 rounded-lg border border-neutral-700">
         <h3 className="text-lg font-medium text-white">
           Em quais áreas você deseja implementar soluções de IA no seu negócio?
@@ -147,7 +148,7 @@ export const AIExperienceFormStep: React.FC<AIExperienceFormStepProps> = ({
       {/* Perguntas sobre formação e tempo de clube */}
       <AIFormationQuestions control={control} />
 
-      {/* NPS Field - pergunta atualizada */}
+      {/* NPS Field */}
       <AINPSField control={control} />
 
       {/* Sugestões de melhorias */}
