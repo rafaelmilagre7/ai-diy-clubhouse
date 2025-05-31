@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useCompleteOnboarding } from '@/hooks/onboarding/useCompleteOnboarding';
 import { OnboardingFinalLayout } from './OnboardingFinalLayout';
@@ -37,7 +36,7 @@ export const OnboardingFinalFlow: React.FC = () => {
       // Última etapa - finalizar onboarding
       const success = await completeOnboarding();
       if (success) {
-        navigate('/onboarding-final/completed');
+        navigate('/onboarding-new/final/completed');
       }
     } else {
       // Próxima etapa
@@ -55,7 +54,7 @@ export const OnboardingFinalFlow: React.FC = () => {
       onUpdate: updateSection,
       onNext: handleNext,
       onPrevious: currentStep > 1 ? handlePrevious : undefined,
-      canProceed,
+      canProceed, // Agora é um boolean
       currentStep,
       totalSteps
     };
