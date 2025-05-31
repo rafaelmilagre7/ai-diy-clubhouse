@@ -105,6 +105,8 @@ export interface OnboardingStepComponentProps {
   onNext: () => void;
   onPrevious?: () => void;
   canProceed: boolean;
+  currentStep: number;
+  totalSteps: number;
 }
 
 export interface CompleteOnboardingResponse {

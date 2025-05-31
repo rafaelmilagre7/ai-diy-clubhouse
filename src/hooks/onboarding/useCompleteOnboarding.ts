@@ -1,66 +1,77 @@
 
 import { useState } from 'react';
-import { toast } from 'sonner';
-import { OnboardingFinalData, CompleteOnboardingResponse } from '@/types/onboardingFinal';
 import { useAuth } from '@/contexts/auth';
-import { useSecureOnboardingCompletion } from './useSecureOnboardingCompletion';
+import { supabase } from '@/lib/supabase';
+import { CompleteOnboardingResponse, OnboardingFinalData } from '@/types/onboardingFinal';
 
 export const useCompleteOnboarding = () => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
-  const { completeOnboardingSecure } = useSecureOnboardingCompletion();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const completeOnboarding = async (data: OnboardingFinalData): Promise<CompleteOnboardingResponse> => {
-    if (!user) {
-      toast.error('Usuário não autenticado');
-      return { 
-        success: false, 
-        error: 'Usuário não autenticado',
-        wasAlreadyCompleted: false
-      };
+    if (!user?.id) {
+      return { success: false, error: 'Usuário não encontrado' };
     }
 
-    setIsSubmitting(true);
-
     try {
-      console.log('🔄 Iniciando finalização do onboarding com proteções avançadas');
-      
-      // Usar o sistema de finalização segura
-      const result = await completeOnboardingSecure(data);
-      
-      if (!result.success) {
-        // Erros específicos já são tratados no hook seguro
-        return {
-          success: false,
-          error: result.error,
-          wasAlreadyCompleted: result.wasAlreadyCompleted || false
+      setIsSubmitting(true);
+      console.log('🎯 Completando onboarding...', data);
+
+      // Verificar se já está completo
+      const { data: existingData } = await supabase
+        .from('onboarding_final')
+        .select('is_completed')
+        .eq('user_id', user.id)
+        .eq('is_completed', true)
+        .maybeSingle();
+
+      if (existingData?.is_completed) {
+        console.log('✅ Onboarding já estava completo');
+        return { 
+          success: true, 
+          wasAlreadyCompleted: true,
+          data: existingData 
         };
       }
 
-      // Sucesso
-      if (result.wasAlreadyCompleted) {
-        toast.info('Onboarding já estava completo', {
-          description: 'Redirecionando para o dashboard...'
-        });
-      } else {
-        toast.success('Onboarding finalizado com sucesso!', {
-          description: 'Bem-vindo à plataforma! 🎉'
-        });
+      // Salvar dados finais
+      const { data: savedData, error: saveError } = await supabase
+        .from('onboarding_final')
+        .upsert({
+          user_id: user.id,
+          is_completed: true,
+          completed_at: new Date().toISOString(),
+          personal_info: data.personal_info,
+          location_info: data.location_info,
+          discovery_info: data.discovery_info,
+          business_info: data.business_info,
+          business_context: data.business_context,
+          goals_info: data.goals_info,
+          ai_experience: data.ai_experience,
+          personalization: data.personalization,
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (saveError) {
+        console.error('❌ Erro ao salvar onboarding final:', saveError);
+        return { success: false, error: saveError.message };
       }
 
-      return result;
-
-    } catch (error: any) {
-      console.error('❌ Erro inesperado na finalização do onboarding:', error);
-      
-      toast.error('Erro inesperado', {
-        description: 'Por favor, tente novamente.'
-      });
+      console.log('✅ Onboarding finalizado com sucesso:', savedData);
       
       return { 
-        success: false, 
-        error: error.message || 'Erro inesperado',
+        success: true, 
+        data: savedData,
         wasAlreadyCompleted: false
+      };
+
+    } catch (error: any) {
+      console.error('❌ Erro inesperado ao finalizar onboarding:', error);
+      return { 
+        success: false, 
+        error: error.message || 'Erro inesperado ao finalizar onboarding' 
       };
     } finally {
       setIsSubmitting(false);

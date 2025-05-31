@@ -1,6 +1,8 @@
+
 import { useState, useCallback } from 'react';
-import { OnboardingFinalData } from '@/types/onboardingFinal';
-import { useCompleteOnboarding } from './useCompleteOnboarding';
+import { OnboardingFinalData, CompleteOnboardingResponse } from '@/types/onboardingFinal';
+import { useAuth } from '@/contexts/auth';
+import { supabase } from '@/lib/supabase';
 
 const TOTAL_STEPS = 8;
 
@@ -76,10 +78,11 @@ const initialData: OnboardingFinalData = {
 };
 
 export const useOnboardingFinalFlow = () => {
+  const { user } = useAuth();
   const [data, setData] = useState<OnboardingFinalData>(initialData);
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const { completeOnboarding, isSubmitting } = useCompleteOnboarding();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Atualizar seção específica dos dados
   const updateSection = useCallback((section: keyof OnboardingFinalData, updates: any) => {
@@ -247,7 +250,7 @@ export const useOnboardingFinalFlow = () => {
     updateSection,
     nextStep,
     previousStep,
-    completeOnboarding: completeOnboarding,
+    completeOnboarding,
     canProceed: canProceed(),
     currentStep,
     totalSteps: TOTAL_STEPS,

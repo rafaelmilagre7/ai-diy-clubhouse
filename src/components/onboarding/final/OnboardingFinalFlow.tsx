@@ -39,7 +39,7 @@ export const OnboardingFinalFlow: React.FC = () => {
       const result = await completeOnboarding();
       if (result.success) {
         // Se já estava completado, redirecionar para dashboard
-        if (result.success && 'wasAlreadyCompleted' in result && result.wasAlreadyCompleted) {
+        if (result.wasAlreadyCompleted) {
           navigate('/dashboard');
         } else {
           navigate('/onboarding-new/final/completed');

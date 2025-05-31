@@ -58,3 +58,42 @@ export const formatWhatsApp = (phone: string): string => {
 export const cleanWhatsApp = (phone: string): string => {
   return phone.replace(/\D/g, '');
 };
+
+// Validação de telefone brasileiro
+export const validateBrazilianPhone = (phone: string): boolean => {
+  const cleaned = phone.replace(/\D/g, '');
+  // Aceita tanto celular (11 dígitos) quanto fixo (10 dígitos)
+  return cleaned.length === 10 || cleaned.length === 11;
+};
+
+// Validação de URL do LinkedIn
+export const validateLinkedInUrl = (url: string): boolean => {
+  if (!url) return true; // Campo opcional
+  const linkedInPattern = /^(https?:\/\/)?(www\.)?linkedin\.com\/(in|company)\/[a-zA-Z0-9-_]+\/?$/;
+  return linkedInPattern.test(url);
+};
+
+// Validação de URL do Instagram
+export const validateInstagramUrl = (url: string): boolean => {
+  if (!url) return true; // Campo opcional
+  const instagramPattern = /^(https?:\/\/)?(www\.)?instagram\.com\/[a-zA-Z0-9._]+\/?$/;
+  return instagramPattern.test(url);
+};
+
+// Formatar URLs de redes sociais
+export const formatSocialUrl = (url: string, platform: 'linkedin' | 'instagram'): string => {
+  if (!url) return '';
+  
+  // Remove protocolos e www se existirem
+  let cleanUrl = url.replace(/^(https?:\/\/)?(www\.)?/, '');
+  
+  // Se não contém o domínio, adiciona
+  if (platform === 'linkedin' && !cleanUrl.includes('linkedin.com')) {
+    cleanUrl = `linkedin.com/in/${cleanUrl}`;
+  } else if (platform === 'instagram' && !cleanUrl.includes('instagram.com')) {
+    cleanUrl = `instagram.com/${cleanUrl}`;
+  }
+  
+  // Adiciona https://
+  return `https://${cleanUrl}`;
+};
