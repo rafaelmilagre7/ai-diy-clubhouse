@@ -1,22 +1,19 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { OnboardingStepProps } from '@/types/quickOnboarding';
 import { DropdownModerno } from '../DropdownModerno';
-import { ConditionalReferralInput } from '../ConditionalReferralInput';
 
 const HOW_FOUND_OPTIONS = [
-  { value: 'google', label: '🔍 Busca no Google' },
+  { value: 'google', label: '🔍 Google/Pesquisa' },
   { value: 'youtube', label: '📺 YouTube' },
-  { value: 'instagram', label: '📸 Instagram' },
   { value: 'linkedin', label: '💼 LinkedIn' },
-  { value: 'facebook', label: '👥 Facebook' },
-  { value: 'indicacao', label: '👨‍💼 Indicação de alguém' },
-  { value: 'podcast', label: '🎧 Podcast' },
+  { value: 'instagram', label: '📸 Instagram' },
+  { value: 'indicacao', label: '👥 Indicação de alguém' },
   { value: 'evento', label: '🎯 Evento/Palestra' },
-  { value: 'outro', label: '🔗 Outro' }
+  { value: 'outro', label: '🔄 Outro' }
 ];
 
 export const StepComoNosConheceu: React.FC<OnboardingStepProps> = ({
@@ -28,7 +25,7 @@ export const StepComoNosConheceu: React.FC<OnboardingStepProps> = ({
   currentStep,
   totalSteps
 }) => {
-  const showReferralInput = data.how_found_us === 'indicacao';
+  const showReferredBy = data.how_found_us === 'indicacao';
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -37,7 +34,7 @@ export const StepComoNosConheceu: React.FC<OnboardingStepProps> = ({
           Como nos conheceu? 🤝
         </h2>
         <p className="text-gray-400">
-          Queremos saber como você chegou até nós
+          Queremos entender como chegou até nós
         </p>
       </div>
 
@@ -46,21 +43,30 @@ export const StepComoNosConheceu: React.FC<OnboardingStepProps> = ({
           value={data.how_found_us || ''}
           onChange={(value) => onUpdate('how_found_us', value)}
           options={HOW_FOUND_OPTIONS}
-          placeholder="Selecione como nos conheceu"
-          label="Como você conheceu a Viver de IA?"
+          placeholder="Como conheceu a Viver de IA?"
+          label="Como nos conheceu?"
           required
         />
 
-        <ConditionalReferralInput
-          show={showReferralInput}
-          value={data.referred_by || ''}
-          onChange={(value) => onUpdate('referred_by', value)}
-        />
+        {showReferredBy && (
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-white">
+              Quem te indicou? <span className="text-red-400">*</span>
+            </label>
+            <Input
+              type="text"
+              value={data.referred_by || ''}
+              onChange={(e) => onUpdate('referred_by', e.target.value)}
+              placeholder="Nome da pessoa que te indicou"
+              className="h-12 bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:ring-viverblue/50"
+            />
+          </div>
+        )}
 
-        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
-          <p className="text-sm text-green-400">
-            📊 <strong>Feedback:</strong> Essas informações nos ajudam a entender 
-            quais canais são mais efetivos e melhorar nossa comunicação.
+        <div className="bg-viverblue/10 border border-viverblue/20 rounded-lg p-4">
+          <p className="text-sm text-viverblue-light">
+            💡 <strong>Dica:</strong> Essa informação nos ajuda a entender melhor 
+            nossos canais de comunicação e criar conteúdo mais direcionado.
           </p>
         </div>
 
@@ -71,7 +77,7 @@ export const StepComoNosConheceu: React.FC<OnboardingStepProps> = ({
             className="text-gray-400 hover:text-white flex items-center gap-2"
           >
             <ArrowLeft size={16} />
-            <span>Voltar</span>
+            <span>Anterior</span>
           </Button>
           
           <div className="text-sm text-gray-400">

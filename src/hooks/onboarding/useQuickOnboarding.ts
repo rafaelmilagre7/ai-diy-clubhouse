@@ -39,7 +39,7 @@ const getInitialData = (): QuickOnboardingData => ({
   how_implement: '',
   week_availability: '',
   content_formats: [],
-  ai_knowledge_level: '1',
+  ai_knowledge_level: 'iniciante',
   previous_tools: [],
   has_implemented: '',
   desired_ai_areas: [],
@@ -57,7 +57,7 @@ const getInitialData = (): QuickOnboardingData => ({
   authorize_case_usage: false,
   interested_in_interview: false,
   priority_topics: [],
-  currentStep: '1'
+  currentStep: 1
 });
 
 export const useQuickOnboarding = () => {
@@ -112,7 +112,6 @@ export const useQuickOnboarding = () => {
     try {
       console.log('🏁 Completando onboarding...', onboardingData);
 
-      // Marcar como completo
       const dataToSave = {
         ...onboardingData,
         user_id: user.id,
@@ -142,13 +141,6 @@ export const useQuickOnboarding = () => {
       return false;
     }
   }, [user?.id]);
-
-  // Carregar dados na inicialização
-  useState(() => {
-    if (user?.id && !data) {
-      loadData();
-    }
-  });
 
   return {
     data,

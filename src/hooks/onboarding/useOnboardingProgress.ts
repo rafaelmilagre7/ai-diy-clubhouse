@@ -107,34 +107,10 @@ export const useOnboardingProgress = () => {
     }
   }, [user?.id]);
 
-  // Verificar se onboarding está completo
-  const isOnboardingComplete = useCallback(async (): Promise<boolean> => {
-    if (!user?.id) return false;
-
-    try {
-      const { data, error } = await supabase
-        .from('onboarding_progress')
-        .select('is_completed')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('❌ Erro ao verificar status:', error);
-        return false;
-      }
-
-      return data?.is_completed || false;
-    } catch (error) {
-      console.error('❌ Erro inesperado ao verificar status:', error);
-      return false;
-    }
-  }, [user?.id]);
-
   return {
     loadProgress,
     saveProgress,
     completeOnboarding,
-    isOnboardingComplete,
     isLoading,
     isSaving
   };

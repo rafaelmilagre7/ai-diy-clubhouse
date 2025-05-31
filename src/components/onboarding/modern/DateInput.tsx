@@ -13,10 +13,6 @@ export const DateInput: React.FC<DateInputProps> = ({
   onChange,
   required = false
 }) => {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(e.target.value);
-  };
-
   return (
     <div className="space-y-2">
       <label className="block text-sm font-medium text-white">
@@ -25,8 +21,8 @@ export const DateInput: React.FC<DateInputProps> = ({
       <Input
         type="date"
         value={value}
-        onChange={handleChange}
-        className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50"
+        onChange={(e) => onChange(e.target.value)}
+        className="h-12 bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:ring-viverblue/50"
       />
     </div>
   );

@@ -2,8 +2,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { QuickOnboardingData } from '@/types/quickOnboarding';
-import { useQuickOnboarding } from './useQuickOnboarding';
-import { useIntelligentAutoSave } from './useIntelligentAutoSave';
+import { useOnboardingProgress } from './useOnboardingProgress';
+import { mapQuickToProgress, validateStepData } from '@/utils/onboarding/dataMappers';
+import { toast } from 'sonner';
 
 const TOTAL_STEPS = 8;
 
@@ -41,7 +42,7 @@ const getInitialData = (): QuickOnboardingData => ({
   how_implement: '',
   week_availability: '',
   content_formats: [],
-  ai_knowledge_level: '1',
+  ai_knowledge_level: 'iniciante',
   previous_tools: [],
   has_implemented: '',
   desired_ai_areas: [],
@@ -59,7 +60,7 @@ const getInitialData = (): QuickOnboardingData => ({
   authorize_case_usage: false,
   interested_in_interview: false,
   priority_topics: [],
-  currentStep: '1'
+  currentStep: 1
 });
 
 export const useSimpleOnboarding = () => {
@@ -69,50 +70,38 @@ export const useSimpleOnboarding = () => {
   const [isCompleting, setIsCompleting] = useState(false);
   
   const {
-    data: savedData,
-    completeOnboarding: completeOnboardingData,
+    saveProgress,
     isLoading,
-    error
-  } = useQuickOnboarding();
+    isSaving
+  } = useOnboardingProgress();
 
-  // Auto-save inteligente com configuração menos agressiva
-  const { 
-    isSaving, 
-    saveImmediately 
-  } = useIntelligentAutoSave(data, currentStep, {
-    debounceMs: 5000, // Aumentado para 5 segundos
-    maxRetries: 1, // Reduzido tentativas
-    enableLocalBackup: true
-  });
-
-  // Carregar dados salvos
+  // Auto-save simples com debounce
   useEffect(() => {
-    if (savedData && Object.keys(savedData).length > 0) {
-      console.log('📥 Carregando dados salvos:', savedData);
-      
-      // Mesclar dados salvos com dados iniciais, priorizando dados salvos
-      const mergedData = {
-        ...getInitialData(),
-        ...savedData,
-        // Garantir que campos obrigatórios tenham valores válidos
-        name: savedData.name || '',
-        email: savedData.email || user?.email || '',
-        country_code: savedData.country_code || '+55'
-      };
-      
-      setData(mergedData);
-      // Usar currentStep do banco se existir, senão usar 1
-      if (savedData.currentStep) {
-        setCurrentStep(parseInt(savedData.currentStep.toString()));
+    if (!user?.id || !data.name) return;
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        console.log('💾 Auto-salvando progresso...');
+        const progressData = mapQuickToProgress(data);
+        progressData.current_step = currentStep.toString();
+        await saveProgress(progressData);
+      } catch (error) {
+        console.error('❌ Erro no auto-save:', error);
       }
-    } else if (user?.email) {
-      // Se não há dados salvos, inicializar com email do usuário
+    }, 3000);
+
+    return () => clearTimeout(timeoutId);
+  }, [data, currentStep, user?.id, saveProgress]);
+
+  // Inicializar com email do usuário
+  useEffect(() => {
+    if (user?.email && !data.email) {
       setData(prev => ({
         ...prev,
         email: user.email || ''
       }));
     }
-  }, [savedData, user?.email]);
+  }, [user?.email, data.email]);
 
   const updateField = useCallback((field: keyof QuickOnboardingData, value: any) => {
     console.log(`📝 Atualizando campo ${field}:`, value);
@@ -125,18 +114,9 @@ export const useSimpleOnboarding = () => {
   const nextStep = useCallback(async () => {
     if (currentStep < TOTAL_STEPS) {
       console.log(`➡️ Avançando para etapa ${currentStep + 1}`);
-      
-      // Salvar dados antes de avançar
-      try {
-        await saveImmediately();
-        setCurrentStep(prev => prev + 1);
-      } catch (error) {
-        console.error('❌ Erro ao salvar antes de avançar:', error);
-        // Continuar mesmo com erro de save (dados ficam no localStorage)
-        setCurrentStep(prev => prev + 1);
-      }
+      setCurrentStep(prev => prev + 1);
     }
-  }, [currentStep, saveImmediately]);
+  }, [currentStep]);
 
   const previousStep = useCallback(() => {
     if (currentStep > 1) {
@@ -150,9 +130,15 @@ export const useSimpleOnboarding = () => {
     try {
       console.log('🏁 Completando onboarding...');
       
-      const success = await completeOnboardingData(data);
+      const progressData = mapQuickToProgress(data);
+      progressData.is_completed = true;
+      progressData.completed_at = new Date().toISOString();
+      progressData.current_step = 'completed';
+      
+      const success = await saveProgress(progressData);
       if (success) {
         console.log('✅ Onboarding completado com sucesso');
+        toast.success('Onboarding completado com sucesso! 🎉');
         return true;
       } else {
         console.error('❌ Falha ao completar onboarding');
@@ -164,30 +150,11 @@ export const useSimpleOnboarding = () => {
     } finally {
       setIsCompleting(false);
     }
-  }, [data, completeOnboardingData]);
+  }, [data, saveProgress]);
 
-  // Validação de step - retorna boolean diretamente
+  // Validação de step
   const canProceed = useCallback((): boolean => {
-    switch (currentStep) {
-      case 1: // Informações pessoais
-        return !!(data.name && data.name.length >= 2);
-      case 2: // Localização
-        return !!(data.country && data.state && data.city);
-      case 3: // Como conheceu
-        return !!(data.how_found_us && (data.how_found_us !== 'indicacao' || data.referred_by));
-      case 4: // Negócio
-        return !!(data.company_name && data.role && data.company_size && data.company_segment);
-      case 5: // Contexto do negócio
-        return !!data.business_model;
-      case 6: // Objetivos
-        return !!(data.primary_goal && data.expected_outcome_30days);
-      case 7: // Experiência com IA
-        return !!(data.ai_knowledge_level && data.ai_knowledge_level !== '0' && data.has_implemented);
-      case 8: // Personalização
-        return !!(data.content_formats && data.content_formats.length > 0 && data.available_days && data.available_days.length > 0);
-      default:
-        return false;
-    }
+    return validateStepData(currentStep, data);
   }, [currentStep, data]);
 
   return {
@@ -198,10 +165,10 @@ export const useSimpleOnboarding = () => {
     nextStep,
     previousStep,
     completeOnboarding,
-    canProceed: canProceed(), // Chama a função para retornar boolean
+    canProceed: canProceed(),
     isSaving,
     isCompleting,
     isLoading: isLoading || false,
-    error: error || null
+    error: null
   };
 };

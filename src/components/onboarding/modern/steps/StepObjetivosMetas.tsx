@@ -1,28 +1,32 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { OnboardingStepProps } from '@/types/quickOnboarding';
 import { DropdownModerno } from '../DropdownModerno';
 
 const PRIMARY_GOAL_OPTIONS = [
-  { value: 'automatizar-processos', label: '🤖 Automatizar processos e reduzir trabalho manual' },
-  { value: 'melhorar-atendimento', label: '💬 Melhorar atendimento e experiência do cliente' },
-  { value: 'aumentar-receita', label: '💰 Aumentar receita e vendas' },
-  { value: 'reduzir-custos', label: '📉 Reduzir custos operacionais' },
-  { value: 'inovar-produtos', label: '🚀 Inovar produtos e serviços' },
-  { value: 'melhorar-marketing', label: '📢 Otimizar marketing e geração de leads' },
-  { value: 'analise-dados', label: '📊 Melhorar análise e tomada de decisão' },
-  { value: 'competitive-advantage', label: '🎯 Obter vantagem competitiva' }
+  { value: 'reducao_custos', label: '💰 Redução de custos operacionais' },
+  { value: 'aumento_receita', label: '📈 Aumento de receita' },
+  { value: 'melhoria_processos', label: '⚙️ Melhoria de processos' },
+  { value: 'atendimento_cliente', label: '🎯 Melhorar atendimento ao cliente' },
+  { value: 'automacao', label: '🤖 Automação de tarefas' },
+  { value: 'analise_dados', label: '📊 Análise de dados' },
+  { value: 'inovacao', label: '💡 Inovação e diferenciação' },
+  { value: 'expansao', label: '🚀 Expansão do negócio' }
 ];
 
-const WEEK_AVAILABILITY_OPTIONS = [
-  { value: '1-2h', label: '⏱️ 1-2 horas por semana' },
-  { value: '3-5h', label: '⏰ 3-5 horas por semana' },
-  { value: '6-10h', label: '🕐 6-10 horas por semana' },
-  { value: '10h+', label: '⏳ Mais de 10 horas por semana' },
-  { value: 'flexivel', label: '🔄 Flexível conforme necessário' }
+const CONTENT_FORMATS_OPTIONS = [
+  'Vídeos curtos',
+  'Webinars',
+  'Artigos detalhados',
+  'Infográficos',
+  'Podcasts',
+  'Cases práticos',
+  'Templates prontos',
+  'Workshops ao vivo'
 ];
 
 export const StepObjetivosMetas: React.FC<OnboardingStepProps> = ({
@@ -34,14 +38,23 @@ export const StepObjetivosMetas: React.FC<OnboardingStepProps> = ({
   currentStep,
   totalSteps
 }) => {
+  const handleContentFormatChange = (format: string, checked: boolean) => {
+    const currentFormats = Array.isArray(data.content_formats) ? data.content_formats : [];
+    if (checked) {
+      onUpdate('content_formats', [...currentFormats, format]);
+    } else {
+      onUpdate('content_formats', currentFormats.filter(f => f !== format));
+    }
+  };
+
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-3xl mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-white mb-2">
-          Objetivos e metas 🎯
+          Seus objetivos e metas 🎯
         </h2>
         <p className="text-gray-400">
-          Vamos definir seus objetivos e como você pretende alcançá-los
+          Vamos alinhar suas expectativas e objetivos
         </p>
       </div>
 
@@ -51,7 +64,7 @@ export const StepObjetivosMetas: React.FC<OnboardingStepProps> = ({
           onChange={(value) => onUpdate('primary_goal', value)}
           options={PRIMARY_GOAL_OPTIONS}
           placeholder="Selecione seu objetivo principal"
-          label="Principal objetivo com IA"
+          label="Objetivo principal com IA"
           required
         />
 
@@ -63,40 +76,33 @@ export const StepObjetivosMetas: React.FC<OnboardingStepProps> = ({
             type="text"
             value={data.expected_outcome_30days || ''}
             onChange={(e) => onUpdate('expected_outcome_30days', e.target.value)}
-            placeholder="Ex: Implementar chatbot, automatizar processo específico..."
+            placeholder="Ex: Implementar um chatbot para atendimento básico"
             className="h-12 bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:ring-viverblue/50"
           />
         </div>
 
-        <DropdownModerno
-          value={data.week_availability || ''}
-          onChange={(value) => onUpdate('week_availability', value)}
-          options={WEEK_AVAILABILITY_OPTIONS}
-          placeholder="Disponibilidade semanal"
-          label="Quanto tempo pode dedicar por semana?"
-        />
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 text-center">
-            <h4 className="font-semibold text-green-400 mb-2">🎯 Objetivo</h4>
-            <p className="text-sm text-gray-300">Definir meta clara e específica</p>
-          </div>
-          
-          <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 text-center">
-            <h4 className="font-semibold text-blue-400 mb-2">📅 Prazo</h4>
-            <p className="text-sm text-gray-300">Estabelecer cronograma realista</p>
-          </div>
-          
-          <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-4 text-center">
-            <h4 className="font-semibold text-purple-400 mb-2">⚡ Ação</h4>
-            <p className="text-sm text-gray-300">Começar implementação prática</p>
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-white">
+            Formatos de conteúdo preferidos <span className="text-red-400">*</span>
+          </label>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {CONTENT_FORMATS_OPTIONS.map((format) => (
+              <label key={format} className="flex items-center gap-2 text-white cursor-pointer">
+                <Checkbox
+                  checked={Array.isArray(data.content_formats) && data.content_formats.includes(format)}
+                  onCheckedChange={(checked) => handleContentFormatChange(format, checked as boolean)}
+                  className="border-gray-600 data-[state=checked]:bg-viverblue data-[state=checked]:border-viverblue"
+                />
+                <span className="text-sm">{format}</span>
+              </label>
+            ))}
           </div>
         </div>
 
         <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-4">
-          <p className="text-sm text-orange-400">
-            🚀 <strong>Sucesso:</strong> Com objetivos claros e dedicação adequada, 
-            você estará no caminho certo para transformar seu negócio com IA.
+          <p className="text-sm text-orange-300">
+            ⚡ <strong>Importante:</strong> Definir objetivos claros nos ajuda a 
+            personalizar sua trilha de implementação de IA.
           </p>
         </div>
 
@@ -107,7 +113,7 @@ export const StepObjetivosMetas: React.FC<OnboardingStepProps> = ({
             className="text-gray-400 hover:text-white flex items-center gap-2"
           >
             <ArrowLeft size={16} />
-            <span>Voltar</span>
+            <span>Anterior</span>
           </Button>
           
           <div className="text-sm text-gray-400">

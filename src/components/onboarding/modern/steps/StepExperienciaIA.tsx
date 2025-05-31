@@ -1,47 +1,29 @@
 
 import React from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { OnboardingStepProps } from '@/types/quickOnboarding';
-import { DropdownModerno } from '../DropdownModerno';
 
-const AI_KNOWLEDGE_LEVELS = [
-  { value: 'iniciante', label: '🌱 Iniciante - Pouco ou nenhum conhecimento' },
-  { value: 'basico', label: '📚 Básico - Conheço alguns conceitos' },
-  { value: 'intermediario', label: '🔧 Intermediário - Já usei algumas ferramentas' },
-  { value: 'avancado', label: '⚡ Avançado - Implemento soluções regularmente' },
-  { value: 'especialista', label: '🎯 Especialista - Desenvolvo IA no negócio' }
+const AI_KNOWLEDGE_OPTIONS = [
+  { value: 'iniciante', label: 'Iniciante - Estou começando agora' },
+  { value: 'basico', label: 'Básico - Já experimentei algumas ferramentas' },
+  { value: 'intermediario', label: 'Intermediário - Uso regularmente' },
+  { value: 'avancado', label: 'Avançado - Uso frequentemente e conheço bem' },
+  { value: 'especialista', label: 'Especialista - Trabalho profissionalmente com IA' }
 ];
 
-const HAS_IMPLEMENTED_OPTIONS = [
-  { value: 'sim', label: 'Sim, já implementei' },
-  { value: 'nao', label: 'Não, ainda não implementei' },
-  { value: 'testando', label: 'Estou testando algumas ferramentas' }
+const AI_TOOLS_OPTIONS = [
+  'ChatGPT', 'Gemini (Google)', 'Midjourney', 'Typebot', 'Make.com',
+  'Zapier', 'Claude', 'Microsoft Copilot', 'OpenAI API',
+  'ManyChat', 'N8N', 'NicoChat', 'Nenhuma ferramenta'
 ];
 
-const AI_TOOLS = [
-  { value: 'chatgpt', label: 'ChatGPT' },
-  { value: 'claude', label: 'Claude' },
-  { value: 'gemini', label: 'Google Gemini' },
-  { value: 'midjourney', label: 'Midjourney' },
-  { value: 'copilot', label: 'GitHub Copilot' },
-  { value: 'zapier', label: 'Zapier AI' },
-  { value: 'notion', label: 'Notion AI' },
-  { value: 'canva', label: 'Canva AI' },
-  { value: 'outras', label: 'Outras ferramentas' }
-];
-
-const DESIRED_AI_AREAS = [
-  { value: 'chatbots', label: 'Chatbots e Atendimento' },
-  { value: 'automacao', label: 'Automação de Processos' },
-  { value: 'marketing', label: 'Marketing e Vendas' },
-  { value: 'analise-dados', label: 'Análise de Dados' },
-  { value: 'conteudo', label: 'Criação de Conteúdo' },
-  { value: 'design', label: 'Design e Criação Visual' },
-  { value: 'programacao', label: 'Programação e Desenvolvimento' },
-  { value: 'rh', label: 'Recursos Humanos' },
-  { value: 'financeiro', label: 'Financeiro e Contabilidade' }
+const AI_AREAS_OPTIONS = [
+  'Atendimento ao cliente', 'Automação de processos', 'Marketing e vendas',
+  'Análise de dados', 'Criação de conteúdo', 'Recursos humanos',
+  'Desenvolvimento de produtos', 'Operações internas'
 ];
 
 export const StepExperienciaIA: React.FC<OnboardingStepProps> = ({
@@ -53,102 +35,114 @@ export const StepExperienciaIA: React.FC<OnboardingStepProps> = ({
   currentStep,
   totalSteps
 }) => {
-  const selectedTools = Array.isArray(data.previous_tools) ? data.previous_tools : [];
-  const selectedAreas = Array.isArray(data.desired_ai_areas) ? data.desired_ai_areas : [];
-
-  const toggleTool = (tool: string) => {
-    const updated = selectedTools.includes(tool)
-      ? selectedTools.filter(t => t !== tool)
-      : [...selectedTools, tool];
-    onUpdate('previous_tools', updated);
+  const handleToolsChange = (tool: string, checked: boolean) => {
+    const currentTools = Array.isArray(data.previous_tools) ? data.previous_tools : [];
+    if (checked) {
+      onUpdate('previous_tools', [...currentTools, tool]);
+    } else {
+      onUpdate('previous_tools', currentTools.filter(t => t !== tool));
+    }
   };
 
-  const toggleArea = (area: string) => {
-    const updated = selectedAreas.includes(area)
-      ? selectedAreas.filter(a => a !== area)
-      : [...selectedAreas, area];
-    onUpdate('desired_ai_areas', updated);
+  const handleAreasChange = (area: string, checked: boolean) => {
+    const currentAreas = Array.isArray(data.desired_ai_areas) ? data.desired_ai_areas : [];
+    if (checked) {
+      onUpdate('desired_ai_areas', [...currentAreas, area]);
+    } else {
+      onUpdate('desired_ai_areas', currentAreas.filter(a => a !== area));
+    }
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-3xl mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-white mb-2">
-          Experiência com IA 🤖
+          Sua experiência com IA 🤖
         </h2>
         <p className="text-gray-400">
-          Conte-nos sobre seu conhecimento e experiência com inteligência artificial
+          Vamos entender seu nível atual com inteligência artificial
         </p>
       </div>
 
-      <div className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700/50 space-y-6">
-        <DropdownModerno
-          value={data.ai_knowledge_level || ''}
-          onChange={(value) => onUpdate('ai_knowledge_level', value)}
-          options={AI_KNOWLEDGE_LEVELS}
-          placeholder="Selecione seu nível"
-          label="Qual seu nível de conhecimento em IA?"
-          required
-        />
-
-        <DropdownModerno
-          value={data.has_implemented || ''}
-          onChange={(value) => onUpdate('has_implemented', value)}
-          options={HAS_IMPLEMENTED_OPTIONS}
-          placeholder="Selecione uma opção"
-          label="Já implementou IA no seu negócio?"
-          required
-        />
+      <div className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700/50 space-y-8">
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-white">
+            Qual seu nível de conhecimento em IA? <span className="text-red-400">*</span>
+          </label>
+          <Select value={data.ai_knowledge_level || ''} onValueChange={(value) => onUpdate('ai_knowledge_level', value)}>
+            <SelectTrigger className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50">
+              <SelectValue placeholder="Selecione seu nível" />
+            </SelectTrigger>
+            <SelectContent className="bg-gray-800 border-gray-600">
+              {AI_KNOWLEDGE_OPTIONS.map((option) => (
+                <SelectItem 
+                  key={option.value} 
+                  value={option.value}
+                  className="text-white hover:bg-gray-700"
+                >
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         <div className="space-y-4">
           <label className="block text-sm font-medium text-white">
-            Ferramentas de IA que já utilizou (opcional)
+            Você já implementou IA no seu negócio? <span className="text-red-400">*</span>
           </label>
-          
+          <Select value={data.has_implemented || ''} onValueChange={(value) => onUpdate('has_implemented', value)}>
+            <SelectTrigger className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50">
+              <SelectValue placeholder="Selecione uma opção" />
+            </SelectTrigger>
+            <SelectContent className="bg-gray-800 border-gray-600">
+              <SelectItem value="sim" className="text-white hover:bg-gray-700">
+                Sim, já implementei IA no meu negócio
+              </SelectItem>
+              <SelectItem value="nao" className="text-white hover:bg-gray-700">
+                Não, ainda não implementei IA
+              </SelectItem>
+              <SelectItem value="testando" className="text-white hover:bg-gray-700">
+                Estou testando algumas ferramentas
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-white">
+            Quais ferramentas de IA você já utilizou?
+          </label>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {AI_TOOLS.map((tool) => (
-              <div
-                key={tool.value}
-                onClick={() => toggleTool(tool.value)}
-                className={`p-3 rounded-lg border cursor-pointer transition-all text-center ${
-                  selectedTools.includes(tool.value)
-                    ? 'border-viverblue bg-viverblue/10 text-viverblue'
-                    : 'border-gray-600 bg-gray-800/30 text-gray-300 hover:border-gray-500'
-                }`}
-              >
-                <span className="text-sm">{tool.label}</span>
-              </div>
+            {AI_TOOLS_OPTIONS.map((tool) => (
+              <label key={tool} className="flex items-center gap-2 text-white cursor-pointer">
+                <Checkbox
+                  checked={Array.isArray(data.previous_tools) && data.previous_tools.includes(tool)}
+                  onCheckedChange={(checked) => handleToolsChange(tool, checked as boolean)}
+                  className="border-gray-600 data-[state=checked]:bg-viverblue data-[state=checked]:border-viverblue"
+                />
+                <span className="text-sm">{tool}</span>
+              </label>
             ))}
           </div>
         </div>
 
         <div className="space-y-4">
           <label className="block text-sm font-medium text-white">
-            Áreas de IA que tem interesse (opcional)
+            Em quais áreas você gostaria de implementar IA?
           </label>
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {DESIRED_AI_AREAS.map((area) => (
-              <div
-                key={area.value}
-                onClick={() => toggleArea(area.value)}
-                className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                  selectedAreas.includes(area.value)
-                    ? 'border-viverblue bg-viverblue/10 text-viverblue'
-                    : 'border-gray-600 bg-gray-800/30 text-gray-300 hover:border-gray-500'
-                }`}
-              >
-                <span className="text-sm">{area.label}</span>
-              </div>
+            {AI_AREAS_OPTIONS.map((area) => (
+              <label key={area} className="flex items-center gap-2 text-white cursor-pointer">
+                <Checkbox
+                  checked={Array.isArray(data.desired_ai_areas) && data.desired_ai_areas.includes(area)}
+                  onCheckedChange={(checked) => handleAreasChange(area, checked as boolean)}
+                  className="border-gray-600 data-[state=checked]:bg-viverblue data-[state=checked]:border-viverblue"
+                />
+                <span className="text-sm">{area}</span>
+              </label>
             ))}
           </div>
-        </div>
-
-        <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-4">
-          <p className="text-sm text-cyan-400">
-            🧠 <strong>Personalização:</strong> Com base na sua experiência, vamos personalizar 
-            o conteúdo e recomendações para seu nível de conhecimento.
-          </p>
         </div>
 
         <div className="flex justify-between items-center pt-6 border-t border-gray-700">
@@ -158,7 +152,7 @@ export const StepExperienciaIA: React.FC<OnboardingStepProps> = ({
             className="text-gray-400 hover:text-white flex items-center gap-2"
           >
             <ArrowLeft size={16} />
-            <span>Voltar</span>
+            <span>Anterior</span>
           </Button>
           
           <div className="text-sm text-gray-400">

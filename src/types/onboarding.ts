@@ -1,32 +1,28 @@
+
+// Tipos base para o sistema de onboarding moderno
 export interface OnboardingData {
-  // 1. Dados Pessoais
-  personal_info: {
+  // Informações pessoais
+  personal_info?: {
     name?: string;
+    email?: string;
+    whatsapp?: string;
+    country_code?: string;
+    birth_date?: string;
+  };
+  
+  // Informações profissionais
+  professional_info?: {
+    company_name?: string;
     role?: string;
     company_size?: string;
-    email?: string;
-    phone?: string;
-    ddi?: string;
-    linkedin?: string;
-    instagram?: string;
-    country?: string;
-    state?: string;
-    city?: string;
-    timezone?: string;
-    birth_date?: string; 
-  };
-  // 2. Dados Profissionais 
-  professional_info: {
-    company_name?: string;
-    company_size?: string;
-    company_sector?: string;
+    company_segment?: string;
     company_website?: string;
+    annual_revenue_range?: string;
     current_position?: string;
-    annual_revenue?: string;
-    metadata?: Record<string, any>;
   };
-  // 3. Contexto do negócio
-  business_context: {
+  
+  // Contexto do negócio
+  business_context?: {
     business_model?: string;
     business_challenges?: string[];
     short_term_goals?: string[];
@@ -34,191 +30,101 @@ export interface OnboardingData {
     important_kpis?: string[];
     additional_context?: string;
   };
-  // 4. Objetivos de negócio / metas
-  business_goals: {
+  
+  // Objetivos de negócio
+  business_goals?: {
     primary_goal?: string;
     expected_outcomes?: string[];
-    expected_outcome_30days?: string; // Campo individual para verificação
-    timeline?: string;
+    expected_outcome_30days?: string;
     priority_solution_type?: string;
     how_implement?: string;
     week_availability?: string;
-    live_interest?: number;
     content_formats?: string[];
+    timeline?: string;
+    live_interest?: number;
   };
-  // 5. Experiência com IA - Agora com suporte a estruturas aninhadas
-  ai_experience: AIExperienceData | NestedAIExperienceData;
-  // 6. Personalização da experiência
-  experience_personalization: {
+  
+  // Experiência com IA
+  ai_experience?: {
+    ai_knowledge_level?: string;
+    previous_tools?: string[];
+    has_implemented?: string;
+    desired_ai_areas?: string[];
+    completed_formation?: boolean;
+    is_member_for_month?: boolean;
+    nps_score?: number;
+    improvement_suggestions?: string;
+  };
+  
+  // Personalização da experiência
+  experience_personalization?: {
     interests?: string[];
     time_preference?: string[];
     available_days?: string[];
+    days_available?: string[];
+    preferred_times?: string[];
     networking_availability?: number;
+    networking_level?: number;
     skills_to_share?: string[];
+    shareable_skills?: string[];
     mentorship_topics?: string[];
-  };
-  // 7. Complementares
-  complementary_info: {
-    how_found_us?: string;
-    referred_by?: string;
     authorize_case_usage?: boolean;
     interested_in_interview?: boolean;
     priority_topics?: string[];
   };
   
-  // Campos para Formação
-  formation_data?: {
-    current_occupation?: string;
-    interests?: string[];
-    learning_goals?: string[];
-    preferred_learning_style?: string[];
-    availability_hours_per_week?: number;
-    previous_courses?: string[];
-    expectations?: string;
-    how_heard_about?: string;
-    custom_goal?: string; // Adicionado campo
-    preferred_content_format?: string[]; // Adicionado campo
-    preferred_study_time?: string; // Adicionado campo
+  // Informações complementares
+  complementary_info?: {
+    how_found_us?: string;
+    referred_by?: string;
+    country?: string;
+    state?: string;
+    city?: string;
+    timezone?: string;
+    instagram_url?: string;
+    linkedin_url?: string;
   };
   
-  // Campo para identificar o tipo de onboarding
-  onboarding_type?: 'club' | 'formacao';
-  
-  // Campos diretos para compatibilidade com as verificações do builder
-  how_found_us?: string;
-  referred_by?: string;
-  authorize_case_usage?: boolean;
-  interested_in_interview?: boolean;
-  priority_topics?: string[];
-
-  // Campos adicionais necessários para compatibilidade
-  industry_focus?: any;
-  resources_needs?: any;
-  team_info?: any;
-  implementation_preferences?: any;
-  
-  // Campos de controle do onboarding
-  current_step?: string;
-  is_completed?: boolean;
-}
-
-// Tipo base para experiência com IA (estrutura normal)
-export interface AIExperienceData {
-  knowledge_level?: string;
-  previous_tools?: string[];
-  has_implemented?: string; // "sim" | "nao" ou "true" | "false"
-  desired_ai_areas?: string[]; // Agora array
-  completed_formation?: boolean;
-  is_member_for_month?: boolean;
-  nps_score?: number;
-  improvement_suggestions?: string;
-}
-
-// Tipo para estrutura aninhada (legacy)
-export interface NestedAIExperienceData extends AIExperienceData {
-  ai_experience?: AIExperienceData;
-  onboarding_type?: 'club' | 'formacao';
-}
-
-export interface PersonalInfoData {
-  name: string;
-  email: string;
-  phone: string;
-  ddi: string; // Alterado de opcional para obrigatório
-  linkedin: string;
-  instagram: string;
-  country: string;
-  state: string;
-  city: string;
-  timezone: string;
+  // Dados de formação (se aplicável)
+  formation_data?: {
+    [key: string]: any;
+  };
 }
 
 export interface OnboardingProgress {
   id: string;
   user_id: string;
   current_step: string;
-  completed_steps: string[];
   is_completed: boolean;
-  personal_info: OnboardingData['personal_info'];
-  professional_info: OnboardingData['professional_info'];
-  business_context?: OnboardingData['business_context'];
-  business_goals: OnboardingData['business_goals'];
-  ai_experience: OnboardingData['ai_experience'];
-  experience_personalization: OnboardingData['experience_personalization'];
-  complementary_info: OnboardingData['complementary_info'];
-  formation_data?: OnboardingData['formation_data'];
-  onboarding_type?: 'club' | 'formacao';
-  industry_focus?: OnboardingData['industry_focus'];
-  resources_needs?: OnboardingData['resources_needs'];
-  team_info?: OnboardingData['team_info'];
-  implementation_preferences?: OnboardingData['implementation_preferences'];
-  
-  // Campos legacy que precisam ser mantidos para compatibilidade
-  business_data?: any;
+  completed_steps: string[];
+  personal_info?: any;
+  professional_info?: any;
+  business_context?: any;
+  business_goals?: any;
+  ai_experience?: any;
+  experience_personalization?: any;
+  complementary_info?: any;
+  formation_data?: any;
   company_name?: string;
   company_size?: string;
   company_sector?: string;
   company_website?: string;
   current_position?: string;
   annual_revenue?: string;
-  
-  // Adicionando campo de status de sincronização
   sync_status?: string;
   last_sync_at?: string;
-  last_error?: string;
-
-  // Adicionando campo para logs de debug
-  debug_logs?: Array<{
-    event: string;
-    timestamp: string;
-    data: any;
-  }>;
-
-  // Propriedades para trilhas futuras
-  trail_solutions?: any[];
-  trail_generated_at?: string;
-  created_at?: string;
-  updated_at?: string;
+  metadata?: any;
+  debug_logs?: any[];
+  created_at: string;
+  updated_at: string;
+  completed_at?: string;
 }
 
-// Atualizando o tipo de OnboardingStepProps para incluir consistência entre os nomes de campos
-export interface OnboardingStepProps {
-  onSubmit: (stepId: string, data: any) => Promise<void>;
-  isSubmitting: boolean;
-  isLastStep?: boolean;
-  onComplete?: () => void;
-  initialData?: any;
-  personalInfo?: OnboardingData['personal_info']; // Adicionando personalInfo como opcional
-  onPrevious?: () => void; // Adicionando onPrevious como opcional
-}
-
-export interface OnboardingStep {
-  id: string;
+// Interface para os steps do onboarding
+export interface OnboardingStepData {
+  stepId: string;
   title: string;
-  section: string;
-  path: string;
+  description?: string;
+  isRequired: boolean;
+  data: Partial<OnboardingData>;
 }
-
-// Tipo para ProfessionalDataInput que usa o mesmo nome de campo 'professional_info'
-export type ProfessionalDataInput = {
-  company_name?: string;
-  company_size?: string;
-  company_sector?: string;
-  company_website?: string;
-  current_position?: string;
-  annual_revenue?: string;
-};
-
-// Definição das etapas do onboarding de formação
-export interface FormationOnboardingStep extends OnboardingStep {
-  forFormation: boolean; // indica se a etapa é específica para formação
-}
-
-// Definição das etapas do onboarding completo, incluindo etapas específicas para formação
-export type CompleteOnboardingStep = OnboardingStep & { 
-  forFormation?: boolean;
-  forClub?: boolean;
-};
-
-// Adicionando referência aos tipos da trilha para integração
-import { ImplementationTrail } from './implementation-trail';
