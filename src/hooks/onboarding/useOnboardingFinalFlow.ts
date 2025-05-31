@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { OnboardingFinalData } from '@/types/onboardingFinal';
 import { useCompleteOnboarding } from './useCompleteOnboarding';
@@ -162,7 +161,7 @@ export const useOnboardingFinalFlow = () => {
   // Finalizar onboarding
   const handleCompleteOnboarding = useCallback(async () => {
     const result = await completeOnboarding(data);
-    return result.success;
+    return result; // ← Retorna o objeto completo, não apenas result.success
   }, [data, completeOnboarding]);
 
   return {
