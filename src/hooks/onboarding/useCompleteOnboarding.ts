@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { OnboardingFinalData } from '@/types/onboardingFinal';
+import { OnboardingFinalData, CompleteOnboardingResponse } from '@/types/onboardingFinal';
 import { useAuth } from '@/contexts/auth';
 import { useSecureOnboardingCompletion } from './useSecureOnboardingCompletion';
 
@@ -10,10 +10,14 @@ export const useCompleteOnboarding = () => {
   const { user } = useAuth();
   const { completeOnboardingSecure } = useSecureOnboardingCompletion();
 
-  const completeOnboarding = async (data: OnboardingFinalData) => {
+  const completeOnboarding = async (data: OnboardingFinalData): Promise<CompleteOnboardingResponse> => {
     if (!user) {
       toast.error('Usuário não autenticado');
-      return { success: false, error: 'Usuário não autenticado' };
+      return { 
+        success: false, 
+        error: 'Usuário não autenticado',
+        wasAlreadyCompleted: false
+      };
     }
 
     setIsSubmitting(true);
@@ -26,7 +30,11 @@ export const useCompleteOnboarding = () => {
       
       if (!result.success) {
         // Erros específicos já são tratados no hook seguro
-        return result;
+        return {
+          success: false,
+          error: result.error,
+          wasAlreadyCompleted: result.wasAlreadyCompleted || false
+        };
       }
 
       // Sucesso
@@ -49,7 +57,11 @@ export const useCompleteOnboarding = () => {
         description: 'Por favor, tente novamente.'
       });
       
-      return { success: false, error: error.message || 'Erro inesperado' };
+      return { 
+        success: false, 
+        error: error.message || 'Erro inesperado',
+        wasAlreadyCompleted: false
+      };
     } finally {
       setIsSubmitting(false);
     }

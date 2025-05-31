@@ -100,4 +100,7 @@ export interface CompleteOnboardingResponse {
   data?: any;
   error?: string;
   wasAlreadyCompleted?: boolean;
+  backupId?: string;
+  integrityCheck?: any;
+  transactionId?: string;
 }
