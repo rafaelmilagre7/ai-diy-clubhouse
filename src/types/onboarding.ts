@@ -145,9 +145,10 @@ export interface OnboardingStepProps {
   initialData?: OnboardingData;
   isLastStep?: boolean;
   onComplete?: () => void;
+  onPrevious?: () => void; // Adicionando propriedade faltante
 }
 
-// Tipos para informações pessoais
+// Tipos para informações pessoais (corrigindo propriedades opcionais)
 export interface PersonalInfoData {
   name?: string;
   email?: string;
@@ -164,22 +165,35 @@ export interface PersonalInfoData {
   timezone?: string;
 }
 
-// Tipos para dados profissionais
+// Tipos para dados profissionais (adicionando propriedades faltantes)
 export interface ProfessionalDataInput {
   company_name?: string;
   role?: string;
   company_size?: string;
   company_segment?: string;
+  company_sector?: string; // Adicionando propriedade faltante
   company_website?: string;
   annual_revenue_range?: string;
+  annual_revenue?: string; // Adicionando propriedade faltante
   current_position?: string;
 }
 
-// Tipo para steps do onboarding (compatibilidade)
+// Tipo para steps do onboarding (adicionando propriedade section)
 export interface OnboardingStep {
   id: string;
   title: string;
   description?: string;
   isRequired: boolean;
   data: Partial<OnboardingData>;
+  section?: string; // Adicionando propriedade faltante
+}
+
+// Tipo para steps completos do onboarding (adicionando tipo faltante)
+export interface CompleteOnboardingStep {
+  id: string;
+  title: string;
+  section: string;
+  path: string;
+  forClub?: boolean;
+  forFormation?: boolean;
 }

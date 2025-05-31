@@ -31,10 +31,24 @@ export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
     ...validation.errors
   };
 
+  // Converter PersonalInfoData opcional para o formato esperado pelos inputs
+  const formDataForInputs = {
+    name: formData.name || "",
+    email: formData.email || "",
+    phone: formData.phone || "",
+    ddi: formData.ddi || "",
+    linkedin: formData.linkedin || "",
+    instagram: formData.instagram || "",
+    country: formData.country || "",
+    state: formData.state || "",
+    city: formData.city || "",
+    timezone: formData.timezone || ""
+  };
+
   return (
     <div className="space-y-6">
       <PersonalInfoInputs
-        formData={formData}
+        formData={formDataForInputs}
         onChange={onChange}
         disabled={isSubmitting}
         errors={combinedErrors}
