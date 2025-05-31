@@ -1,36 +1,8 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Check } from 'lucide-react';
 import { OnboardingStepComponentProps } from '@/types/onboardingFinal';
-
-const CONTENT_FORMATS = [
-  'Vídeos curtos (até 5 min)',
-  'Vídeos longos (mais de 15 min)',
-  'Artigos e textos',
-  'Podcasts',
-  'Infográficos',
-  'Webinars ao vivo',
-  'Cursos estruturados',
-  'Cases práticos'
-];
-
-const AVAILABLE_DAYS = [
-  'Segunda-feira',
-  'Terça-feira',
-  'Quarta-feira',
-  'Quinta-feira',
-  'Sexta-feira',
-  'Sábado',
-  'Domingo'
-];
-
-const TIME_PREFERENCES = [
-  'Manhã (6h-12h)',
-  'Tarde (12h-18h)',
-  'Noite (18h-22h)',
-  'Madrugada (22h-6h)'
-];
 
 export const StepPersonalization: React.FC<OnboardingStepComponentProps> = ({
   data,
@@ -41,172 +13,79 @@ export const StepPersonalization: React.FC<OnboardingStepComponentProps> = ({
 }) => {
   const { personalization } = data;
 
-  const handleFormatToggle = (format: string) => {
-    const currentFormats = personalization.content_formats || [];
-    const isSelected = currentFormats.includes(format);
-    
-    const newFormats = isSelected
-      ? currentFormats.filter(f => f !== format)
-      : [...currentFormats, format];
-    
+  const handleUpdate = (field: string, value: any) => {
     onUpdate('personalization', {
       ...personalization,
-      content_formats: newFormats
+      [field]: value
     });
   };
 
-  const handleDayToggle = (day: string) => {
-    const currentDays = personalization.available_days || [];
-    const isSelected = currentDays.includes(day);
-    
-    const newDays = isSelected
-      ? currentDays.filter(d => d !== day)
-      : [...currentDays, day];
-    
-    onUpdate('personalization', {
-      ...personalization,
-      available_days: newDays
-    });
-  };
-
-  const handleTimeToggle = (time: string) => {
-    const currentTimes = personalization.time_preference || [];
-    const isSelected = currentTimes.includes(time);
-    
-    const newTimes = isSelected
-      ? currentTimes.filter(t => t !== time)
-      : [...currentTimes, time];
-    
-    onUpdate('personalization', {
-      ...personalization,
-      time_preference: newTimes
-    });
-  };
-
-  const handleAuthorizationChange = (value: boolean) => {
-    onUpdate('personalization', {
-      ...personalization,
-      authorize_case_usage: value
-    });
+  const handleToggle = (field: string, currentValue: boolean) => {
+    handleUpdate(field, !currentValue);
   };
 
   return (
     <div className="space-y-6">
-      <div className="space-y-3">
-        <label className="block text-sm font-medium text-white">
-          Formatos de conteúdo preferidos <span className="text-red-400">*</span>
-          <span className="text-gray-400 text-xs block mt-1">Selecione pelo menos 2 opções</span>
-        </label>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {CONTENT_FORMATS.map(format => {
-            const isSelected = (personalization.content_formats || []).includes(format);
-            
-            return (
-              <button
-                key={format}
-                type="button"
-                onClick={() => handleFormatToggle(format)}
-                className={`p-3 text-left rounded-lg border transition-all text-sm ${
-                  isSelected
-                    ? 'bg-viverblue/20 border-viverblue text-viverblue'
-                    : 'bg-gray-800/50 border-gray-600 text-gray-300 hover:border-gray-500'
-                }`}
-              >
-                {format}
-              </button>
-            );
-          })}
-        </div>
+      <div className="text-center mb-8">
+        <h3 className="text-xl font-semibold text-white mb-2">
+          Últimos detalhes para personalizar sua experiência
+        </h3>
+        <p className="text-gray-400">
+          Essas informações são opcionais, mas nos ajudam a criar uma experiência mais personalizada
+        </p>
       </div>
 
-      <div className="space-y-3">
-        <label className="block text-sm font-medium text-white">
-          Dias da semana disponíveis <span className="text-red-400">*</span>
-          <span className="text-gray-400 text-xs block mt-1">Selecione pelo menos 2 dias</span>
-        </label>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {AVAILABLE_DAYS.map(day => {
-            const isSelected = (personalization.available_days || []).includes(day);
-            
-            return (
-              <button
-                key={day}
-                type="button"
-                onClick={() => handleDayToggle(day)}
-                className={`p-3 text-center rounded-lg border transition-all text-sm ${
-                  isSelected
-                    ? 'bg-viverblue/20 border-viverblue text-viverblue'
-                    : 'bg-gray-800/50 border-gray-600 text-gray-300 hover:border-gray-500'
-                }`}
-              >
-                {day.substring(0, 3)}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        <label className="block text-sm font-medium text-white">
-          Horários preferidos <span className="text-red-400">*</span>
-          <span className="text-gray-400 text-xs block mt-1">Selecione pelo menos 1 período</span>
-        </label>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {TIME_PREFERENCES.map(time => {
-            const isSelected = (personalization.time_preference || []).includes(time);
-            
-            return (
-              <button
-                key={time}
-                type="button"
-                onClick={() => handleTimeToggle(time)}
-                className={`p-3 text-center rounded-lg border transition-all text-sm ${
-                  isSelected
-                    ? 'bg-viverblue/20 border-viverblue text-viverblue'
-                    : 'bg-gray-800/50 border-gray-600 text-gray-300 hover:border-gray-500'
-                }`}
-              >
-                {time}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        <label className="block text-sm font-medium text-white">
-          Autorização para uso de caso
-        </label>
-        <div className="space-y-3">
-          <button
-            type="button"
-            onClick={() => handleAuthorizationChange(true)}
-            className={`w-full p-4 text-left rounded-lg border transition-all ${
-              personalization.authorize_case_usage === true
-                ? 'bg-viverblue/20 border-viverblue text-viverblue'
-                : 'bg-gray-800/50 border-gray-600 text-gray-300 hover:border-gray-500'
-            }`}
-          >
-            <div className="font-medium">Sim, autorizo</div>
-            <div className="text-sm text-gray-400 mt-1">
-              Permito que meu caso de sucesso seja usado como exemplo (dados anonimizados)
+      <div className="space-y-4">
+        <div className="p-4 bg-gray-800/30 rounded-lg border border-gray-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-medium text-white">Autorizar uso do seu caso</h4>
+              <p className="text-sm text-gray-400">
+                Podemos usar seu caso (anonimizado) como exemplo para outros membros?
+              </p>
             </div>
-          </button>
-          
-          <button
-            type="button"
-            onClick={() => handleAuthorizationChange(false)}
-            className={`w-full p-4 text-left rounded-lg border transition-all ${
-              personalization.authorize_case_usage === false
-                ? 'bg-viverblue/20 border-viverblue text-viverblue'
-                : 'bg-gray-800/50 border-gray-600 text-gray-300 hover:border-gray-500'
-            }`}
-          >
-            <div className="font-medium">Não autorizo</div>
-            <div className="text-sm text-gray-400 mt-1">
-              Prefiro manter meus dados privados
+            <button
+              type="button"
+              onClick={() => handleToggle('authorize_case_usage', personalization.authorize_case_usage || false)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                personalization.authorize_case_usage 
+                  ? 'bg-viverblue' 
+                  : 'bg-gray-600'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  personalization.authorize_case_usage ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+
+        <div className="p-4 bg-gray-800/30 rounded-lg border border-gray-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-medium text-white">Interesse em entrevista</h4>
+              <p className="text-sm text-gray-400">
+                Gostaria de participar de entrevistas para melhorarmos a plataforma?
+              </p>
             </div>
-          </button>
+            <button
+              type="button"
+              onClick={() => handleToggle('interested_in_interview', personalization.interested_in_interview || false)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                personalization.interested_in_interview 
+                  ? 'bg-viverblue' 
+                  : 'bg-gray-600'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  personalization.interested_in_interview ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -222,11 +101,10 @@ export const StepPersonalization: React.FC<OnboardingStepComponentProps> = ({
         
         <Button
           onClick={onNext}
-          disabled={!canProceed}
-          className="bg-viverblue hover:bg-viverblue-dark transition-colors flex items-center gap-2 px-8"
+          className="bg-green-600 hover:bg-green-700 transition-colors flex items-center gap-2 px-8"
         >
-          <span>Finalizar</span>
-          <ArrowRight size={16} />
+          <Check size={16} />
+          <span>Finalizar Onboarding</span>
         </Button>
       </div>
     </div>

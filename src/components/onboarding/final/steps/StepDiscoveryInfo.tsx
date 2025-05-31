@@ -6,14 +6,18 @@ import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { OnboardingStepComponentProps } from '@/types/onboardingFinal';
 
 const DISCOVERY_OPTIONS = [
-  { value: 'google', label: 'Google / Busca' },
-  { value: 'youtube', label: 'YouTube' },
-  { value: 'instagram', label: 'Instagram' },
-  { value: 'linkedin', label: 'LinkedIn' },
-  { value: 'indicacao', label: 'Indicação de amigo/colega' },
-  { value: 'podcast', label: 'Podcast' },
-  { value: 'evento', label: 'Evento/Palestra' },
-  { value: 'outro', label: 'Outro' }
+  'Pesquisa no Google',
+  'YouTube',
+  'Instagram',
+  'LinkedIn',
+  'Facebook',
+  'Indicação de amigo/conhecido',
+  'Podcast',
+  'Blog/Site',
+  'Evento online',
+  'Evento presencial',
+  'Publicidade paga',
+  'Outros'
 ];
 
 export const StepDiscoveryInfo: React.FC<OnboardingStepComponentProps> = ({
@@ -27,6 +31,7 @@ export const StepDiscoveryInfo: React.FC<OnboardingStepComponentProps> = ({
 
   const handleUpdate = (field: string, value: string) => {
     onUpdate('discovery_info', {
+      ...discovery_info,
       [field]: value
     });
   };
@@ -42,19 +47,19 @@ export const StepDiscoveryInfo: React.FC<OnboardingStepComponentProps> = ({
           onChange={(e) => handleUpdate('how_found_us', e.target.value)}
           className="h-12 w-full px-3 bg-gray-800/50 border border-gray-600 text-white rounded-md focus:ring-viverblue/50"
         >
-          <option value="">Selecione uma opção</option>
+          <option value="">Selecione como nos conheceu</option>
           {DISCOVERY_OPTIONS.map(option => (
-            <option key={option.value} value={option.value}>
-              {option.label}
+            <option key={option} value={option}>
+              {option}
             </option>
           ))}
         </select>
       </div>
 
-      {discovery_info.how_found_us === 'indicacao' && (
+      {discovery_info.how_found_us === 'Indicação de amigo/conhecido' && (
         <div className="space-y-2">
           <label className="block text-sm font-medium text-white">
-            Quem te indicou? <span className="text-red-400">*</span>
+            Quem te indicou?
           </label>
           <Input
             type="text"

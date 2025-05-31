@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useCompleteOnboarding } from '@/hooks/onboarding/useCompleteOnboarding';
+import { useOnboardingFinalFlow } from '@/hooks/onboarding/useOnboardingFinalFlow';
 import { OnboardingLayout } from '../OnboardingLayout';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { StepPersonalInfo } from './steps/StepPersonalInfo';
@@ -26,7 +26,7 @@ export const OnboardingFinalFlow: React.FC = () => {
     totalSteps,
     isSubmitting,
     isLoading
-  } = useCompleteOnboarding();
+  } = useOnboardingFinalFlow();
 
   if (isLoading) {
     return <LoadingScreen message="Carregando onboarding..." />;
