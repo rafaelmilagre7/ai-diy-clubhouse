@@ -1,279 +1,184 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
 import { OnboardingFinalData, CompleteOnboardingResponse } from '@/types/onboardingFinal';
-import { validateBrazilianWhatsApp, validateLinkedInUrl, validateInstagramUrl, validateMinimumAge } from '@/utils/validationUtils';
+import { toast } from 'sonner';
 
 export const useOnboardingFinalFlow = () => {
   const { user } = useAuth();
+  const [data, setData] = useState<OnboardingFinalData>({
+    personal_info: {},
+    location_info: {},
+    discovery_info: {},
+    business_info: {},
+    business_context: {},
+    goals_info: {},
+    ai_experience: {},
+    personalization: {}
+  });
+  
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   
   const totalSteps = 8;
+  
+  // Use ref to avoid recreating functions unnecessarily
+  const validationRef = useRef<Record<string, string>>({});
 
-  // Estado inicial dos dados
-  const [data, setData] = useState<OnboardingFinalData>({
-    personal_info: {
-      name: '',
-      email: '',
-      whatsapp: '',
-      country_code: '+55',
-      phone: '',
-      birth_date: '',
-      gender: '',
-      timezone: ''
-    },
-    location_info: {
-      country: '',
-      state: '',
-      city: '',
-      instagram_url: '',
-      linkedin_url: ''
-    },
-    discovery_info: {
-      how_found_us: '',
-      referred_by: ''
-    },
-    business_info: {
-      company_name: '',
-      role: '',
-      company_size: '',
-      company_sector: '',
-      company_website: '',
-      annual_revenue: '',
-      current_position: ''
-    },
-    business_context: {
-      business_model: '',
-      business_challenges: [],
-      short_term_goals: [],
-      medium_term_goals: [],
-      important_kpis: [],
-      additional_context: ''
-    },
-    goals_info: {
-      primary_goal: '',
-      expected_outcomes: [],
-      expected_outcome_30days: '',
-      priority_solution_type: '',
-      how_implement: '',
-      week_availability: '',
-      content_formats: []
-    },
-    ai_experience: {
-      ai_knowledge_level: '',
-      previous_tools: [],
-      has_implemented: '',
-      desired_ai_areas: [],
-      completed_formation: false,
-      is_member_for_month: false,
-      nps_score: 0,
-      improvement_suggestions: '',
-      implemented_solutions: [],
-      desired_solutions: [],
-      previous_attempts: '',
-      ai_tools: [],
-      suggestions: ''
-    },
-    personalization: {
-      interests: [],
-      time_preference: [],
-      available_days: [],
-      networking_availability: '',
-      skills_to_share: [],
-      mentorship_topics: [],
-      live_interest: '',
-      authorize_case_usage: false,
-      interested_in_interview: false,
-      priority_topics: [],
-      content_formats: []
-    }
-  });
-
-  // Carregar dados existentes
+  // Load initial data
   useEffect(() => {
-    const loadExistingData = async () => {
+    const loadInitialData = async () => {
       if (!user?.id) return;
-
+      
       try {
-        console.log('🔍 Carregando dados existentes do onboarding...');
+        setIsLoading(true);
+        console.log('🔄 Carregando dados do onboarding...');
         
         const { data: existingData, error } = await supabase
           .from('onboarding_final')
           .select('*')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (error && error.code !== 'PGRST116') {
           console.error('❌ Erro ao carregar dados:', error);
-          return;
-        }
-
-        if (existingData) {
-          console.log('📊 Dados existentes encontrados:', existingData);
+        } else if (existingData) {
+          console.log('✅ Dados carregados:', existingData);
           setData(existingData);
-          setCurrentStep(existingData.current_step || 1);
         }
       } catch (error) {
-        console.error('❌ Erro ao carregar dados do onboarding:', error);
+        console.error('❌ Erro inesperado:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadExistingData();
+    loadInitialData();
   }, [user?.id]);
 
-  // Validação por step
-  const validateCurrentStep = useCallback(() => {
-    const errors: Record<string, string> = {};
+  // Validation function - memoized to prevent recreations
+  const validateCurrentStep = useMemo(() => {
+    const validateStep = (step: number, stepData: OnboardingFinalData): Record<string, string> => {
+      const errors: Record<string, string> = {};
+      
+      switch (step) {
+        case 1: // Personal Info
+          if (!stepData.personal_info?.name?.trim()) {
+            errors.name = 'Nome é obrigatório';
+          }
+          if (!stepData.personal_info?.email?.trim()) {
+            errors.email = 'Email é obrigatório';
+          }
+          break;
+        case 2: // Location Info - optional fields
+          break;
+        case 3: // Discovery Info - optional fields
+          break;
+        case 4: // Business Info - optional fields
+          break;
+        case 5: // Business Context - optional fields
+          break;
+        case 6: // Goals Info - optional fields
+          break;
+        case 7: // AI Experience - optional fields
+          break;
+        case 8: // Personalization - optional fields
+          break;
+      }
+      
+      return errors;
+    };
+    
+    return validateStep;
+  }, []); // No dependencies to prevent recreations
 
-    switch (currentStep) {
-      case 1: // Personal Info
-        if (!data.personal_info.name?.trim()) {
-          errors.name = 'Nome é obrigatório';
-        }
-        if (!data.personal_info.email?.trim()) {
-          errors.email = 'Email é obrigatório';
-        }
-        if (data.personal_info.whatsapp && !validateBrazilianWhatsApp(data.personal_info.whatsapp)) {
-          errors.whatsapp = 'WhatsApp deve ter formato válido (11) 99999-9999';
-        }
-        if (data.personal_info.birth_date && !validateMinimumAge(data.personal_info.birth_date, 18)) {
-          errors.birth_date = 'Idade mínima de 18 anos';
-        }
-        break;
-
-      case 2: // Location Info
-        if (data.location_info.linkedin_url && !validateLinkedInUrl(data.location_info.linkedin_url)) {
-          errors.linkedin_url = 'URL do LinkedIn inválida';
-        }
-        if (data.location_info.instagram_url && !validateInstagramUrl(data.location_info.instagram_url)) {
-          errors.instagram_url = 'URL do Instagram inválida';
-        }
-        break;
-
-      case 4: // Business Info
-        if (!data.business_info.company_name?.trim()) {
-          errors.company_name = 'Nome da empresa é obrigatório';
-        }
-        if (!data.business_info.role?.trim()) {
-          errors.role = 'Cargo é obrigatório';
-        }
-        break;
-
-      case 6: // Goals Info
-        if (!data.goals_info.primary_goal?.trim()) {
-          errors.primary_goal = 'Objetivo principal é obrigatório';
-        }
-        break;
-
-      case 7: // AI Experience
-        if (!data.ai_experience.ai_knowledge_level?.trim()) {
-          errors.ai_knowledge_level = 'Nível de conhecimento em IA é obrigatório';
-        }
-        break;
-    }
-
+  // Update validation errors when step or data changes
+  useEffect(() => {
+    const errors = validateCurrentStep(currentStep, data);
+    validationRef.current = errors;
     setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  }, [currentStep, data]);
+  }, [currentStep, data, validateCurrentStep]);
 
-  // Função para verificar se pode prosseguir
-  const canProceed = useCallback(() => {
-    return validateCurrentStep();
-  }, [validateCurrentStep]);
+  // Can proceed function - stable with useMemo
+  const canProceed = useMemo(() => {
+    return Object.keys(validationRef.current).length === 0;
+  }, [validationErrors]); // Only depends on validationErrors state
 
-  // Atualizar seção dos dados
+  // Update section function - stable with useCallback
   const updateSection = useCallback((section: keyof OnboardingFinalData, updates: any) => {
-    setData(prev => ({
-      ...prev,
+    console.log(`📝 Atualizando ${section}:`, updates);
+    
+    setData(prevData => ({
+      ...prevData,
       [section]: {
-        ...(prev[section] as Record<string, any> || {}),
+        ...(prevData[section] as object || {}),
         ...updates
       }
     }));
+  }, []); // No dependencies needed - uses functional update
+
+  // Navigation functions - stable with useCallback
+  const nextStep = useCallback(() => {
+    setCurrentStep(prev => Math.min(prev + 1, totalSteps));
+  }, [totalSteps]);
+
+  const previousStep = useCallback(() => {
+    setCurrentStep(prev => Math.max(prev - 1, 1));
   }, []);
 
-  // Próximo step
-  const nextStep = useCallback(() => {
-    if (currentStep < totalSteps && canProceed()) {
-      setCurrentStep(prev => prev + 1);
-    }
-  }, [currentStep, totalSteps, canProceed]);
-
-  // Step anterior
-  const previousStep = useCallback(() => {
-    if (currentStep > 1) {
-      setCurrentStep(prev => prev - 1);
-    }
-  }, [currentStep]);
-
-  // Finalizar onboarding
+  // Complete onboarding function
   const completeOnboarding = useCallback(async (): Promise<CompleteOnboardingResponse> => {
     if (!user?.id) {
       return { success: false, error: 'Usuário não autenticado' };
     }
 
-    setIsSubmitting(true);
-    
     try {
-      console.log('🚀 Finalizando onboarding...');
-      
-      // Verificar se já existe um registro
+      setIsSubmitting(true);
+      console.log('🎯 Finalizando onboarding...');
+
+      // Check if already completed
       const { data: existingData } = await supabase
         .from('onboarding_final')
         .select('is_completed')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (existingData?.is_completed) {
         console.log('✅ Onboarding já estava completo');
         return { success: true, wasAlreadyCompleted: true };
       }
 
-      // Preparar dados para salvamento
+      // Prepare final data
       const finalData = {
         user_id: user.id,
-        personal_info: data.personal_info as Record<string, any> || {},
-        location_info: data.location_info as Record<string, any> || {},
-        discovery_info: data.discovery_info as Record<string, any> || {},
-        business_info: data.business_info as Record<string, any> || {},
-        business_context: data.business_context as Record<string, any> || {},
-        goals_info: data.goals_info as Record<string, any> || {},
-        ai_experience: data.ai_experience as Record<string, any> || {},
-        personalization: data.personalization as Record<string, any> || {},
+        ...data,
         is_completed: true,
-        current_step: totalSteps,
-        completed_steps: Array.from({ length: totalSteps }, (_, i) => i + 1),
         completed_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
 
-      console.log('💾 Salvando dados finais:', finalData);
-
-      const { error: upsertError } = await supabase
+      const { error } = await supabase
         .from('onboarding_final')
-        .upsert(finalData);
+        .upsert(finalData, { onConflict: 'user_id' });
 
-      if (upsertError) {
-        console.error('❌ Erro ao salvar:', upsertError);
-        throw upsertError;
+      if (error) {
+        console.error('❌ Erro ao salvar:', error);
+        return { success: false, error: error.message };
       }
 
       console.log('✅ Onboarding finalizado com sucesso!');
       return { success: true };
 
-    } catch (error: any) {
-      console.error('❌ Erro ao finalizar onboarding:', error);
-      return { success: false, error: error.message };
+    } catch (error) {
+      console.error('❌ Erro inesperado:', error);
+      return { success: false, error: 'Erro inesperado ao finalizar onboarding' };
     } finally {
       setIsSubmitting(false);
     }
-  }, [user?.id, data, totalSteps]);
+  }, [user?.id, data]);
 
   return {
     data,
@@ -281,7 +186,7 @@ export const useOnboardingFinalFlow = () => {
     nextStep,
     previousStep,
     completeOnboarding,
-    canProceed,
+    canProceed: () => canProceed, // Return function to maintain API compatibility
     currentStep,
     totalSteps,
     isSubmitting,
