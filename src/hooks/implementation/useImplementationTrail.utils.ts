@@ -1,38 +1,46 @@
 
 import { ImplementationTrail } from '@/types/implementation-trail';
 
-/**
- * Sanitiza e valida os dados da trilha de implementação
- */
-export const sanitizeTrailData = (trailData: any): ImplementationTrail | null => {
-  if (!trailData || typeof trailData !== 'object') {
-    return null;
-  }
-
+export const sanitizeTrailData = (rawData: any): ImplementationTrail | null => {
   try {
-    // Garantir que as propriedades obrigatórias existem
-    const sanitized: ImplementationTrail = {
-      priority1: Array.isArray(trailData.priority1) ? trailData.priority1 : [],
-      priority2: Array.isArray(trailData.priority2) ? trailData.priority2 : [],
-      priority3: Array.isArray(trailData.priority3) ? trailData.priority3 : [],
-      recommended_courses: Array.isArray(trailData.recommended_courses) ? trailData.recommended_courses : [],
-      recommended_lessons: Array.isArray(trailData.recommended_lessons) ? trailData.recommended_lessons : []
+    if (!rawData || typeof rawData !== 'object') {
+      console.warn('Dados da trilha inválidos:', rawData);
+      return null;
+    }
+
+    // Garantir que as prioridades existem e são arrays
+    const priority1 = Array.isArray(rawData.priority1) ? rawData.priority1 : [];
+    const priority2 = Array.isArray(rawData.priority2) ? rawData.priority2 : [];
+    const priority3 = Array.isArray(rawData.priority3) ? rawData.priority3 : [];
+    
+    // Garantir que recommended_courses existe e é array
+    const recommended_courses = Array.isArray(rawData.recommended_courses) ? rawData.recommended_courses : [];
+    
+    // Garantir que recommended_lessons existe e é array
+    const recommended_lessons = Array.isArray(rawData.recommended_lessons) ? rawData.recommended_lessons : [];
+
+    const sanitizedTrail: ImplementationTrail = {
+      priority1: priority1.filter(item => item && item.solutionId),
+      priority2: priority2.filter(item => item && item.solutionId),
+      priority3: priority3.filter(item => item && item.solutionId),
+      recommended_courses,
+      recommended_lessons
     };
 
-    // Validar estrutura dos itens de prioridade
-    ['priority1', 'priority2', 'priority3'].forEach((key) => {
-      const items = (sanitized as any)[key];
-      (sanitized as any)[key] = items.filter((item: any) => 
-        item && 
-        typeof item === 'object' && 
-        typeof item.solutionId === 'string' && 
-        item.solutionId.trim() !== ''
-      );
-    });
-
-    return sanitized;
+    console.log('✅ Trilha sanitizada:', sanitizedTrail);
+    return sanitizedTrail;
   } catch (error) {
-    console.error('Erro ao sanitizar dados da trilha:', error);
+    console.error('❌ Erro ao sanitizar dados da trilha:', error);
     return null;
   }
+};
+
+export const validateTrailData = (trail: ImplementationTrail): boolean => {
+  if (!trail) return false;
+  
+  const hasValidPriority1 = Array.isArray(trail.priority1) && trail.priority1.length > 0;
+  const hasValidPriority2 = Array.isArray(trail.priority2) && trail.priority2.length > 0;
+  const hasValidPriority3 = Array.isArray(trail.priority3) && trail.priority3.length > 0;
+  
+  return hasValidPriority1 || hasValidPriority2 || hasValidPriority3;
 };

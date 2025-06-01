@@ -13,265 +13,239 @@ serve(async (req) => {
   }
 
   try {
-    const { user_id } = await req.json()
-    console.log('🚀 Iniciando geração inteligente da trilha')
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
 
+    const { user_id } = await req.json()
+    
     if (!user_id) {
       throw new Error('user_id é obrigatório')
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    console.log('🚀 Gerando trilha para usuário:', user_id)
 
-    // Buscar perfil do usuário
-    console.log('📊 Buscando perfil do usuário...')
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user_id)
-      .single()
-
-    const { data: quickOnboarding } = await supabase
-      .from('quick_onboarding')
+    // Buscar dados do onboarding do usuário
+    const { data: onboardingData, error: onboardingError } = await supabaseClient
+      .from('onboarding_progress')
       .select('*')
       .eq('user_id', user_id)
-      .single()
+      .eq('is_completed', true)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
 
-    const userProfile = {
-      company_name: quickOnboarding?.company_name || profile?.company_name,
-      company_size: quickOnboarding?.company_size || '1-5',
-      company_segment: quickOnboarding?.company_segment || 'geral',
-      ai_knowledge_level: quickOnboarding?.ai_knowledge_level || 'iniciante',
-      main_goal: quickOnboarding?.main_goal || 'aumentar-receita',
-      role: profile?.role || 'member',
-      annual_revenue_range: quickOnboarding?.annual_revenue_range || '0-100k'
+    if (onboardingError) {
+      console.error('❌ Erro ao buscar onboarding:', onboardingError)
+      throw onboardingError
     }
 
-    console.log('👤 Perfil do usuário:', userProfile)
+    if (!onboardingData) {
+      // Tentar buscar no quick_onboarding como fallback
+      const { data: quickOnboarding, error: quickError } = await supabaseClient
+        .from('quick_onboarding')
+        .select('*')
+        .eq('user_id', user_id)
+        .eq('is_completed', true)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
 
-    // Buscar soluções disponíveis
-    console.log('🔍 Buscando soluções disponíveis...')
-    const { data: solutions, error: solutionsError } = await supabase
-      .from('solutions')
-      .select('id, title, description, category, difficulty, tags')
-      .eq('published', true)
+      if (quickError || !quickOnboarding) {
+        throw new Error('Onboarding não encontrado ou não concluído')
+      }
 
-    if (solutionsError) {
-      console.error('❌ Erro ao buscar soluções:', solutionsError)
-      throw new Error('Erro ao buscar soluções')
-    }
-
-    // Buscar aulas disponíveis
-    console.log('📚 Buscando aulas disponíveis...')
-    const { data: lessons, error: lessonsError } = await supabase
-      .from('learning_lessons')
-      .select(`
-        id, title, description, estimated_time_minutes, difficulty_level, cover_image_url,
-        learning_modules!inner(
-          id, title,
-          learning_courses!inner(id, title, published)
-        )
-      `)
-      .eq('published', true)
-      .eq('learning_modules.learning_courses.published', true)
-
-    if (lessonsError) {
-      console.error('❌ Erro ao buscar aulas:', lessonsError)
-      throw new Error('Erro ao buscar aulas')
-    }
-
-    console.log(`✅ Encontradas ${solutions?.length || 0} soluções e ${lessons?.length || 0} aulas`)
-
-    // Gerar trilha inteligente
-    const trail = generateSmartTrail(userProfile, solutions || [], lessons || [])
-    
-    console.log('🎯 Trilha gerada:', {
-      priority1_count: trail.priority1?.length || 0,
-      priority2_count: trail.priority2?.length || 0,
-      priority3_count: trail.priority3?.length || 0,
-      lessons_count: trail.recommended_lessons?.length || 0
-    })
-
-    // Salvar ou atualizar trilha usando upsert
-    console.log('💾 Salvando trilha com upsert...')
-    const { error: upsertError } = await supabase
-      .from('implementation_trails')
-      .upsert({
+      // Converter quick_onboarding para formato esperado
+      const convertedData = {
         user_id,
-        trail_data: trail,
-        status: 'completed',
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'user_id',
-        ignoreDuplicates: false
-      })
-
-    if (upsertError) {
-      console.error('❌ Erro ao salvar trilha:', upsertError)
-      throw new Error(`Erro ao salvar trilha: ${upsertError.message}`)
+        professional_info: {
+          company_name: quickOnboarding.company_name,
+          company_segment: quickOnboarding.company_segment,
+          role: quickOnboarding.role
+        },
+        business_goals: {
+          ai_knowledge_level: quickOnboarding.ai_knowledge_level
+        },
+        ai_experience: {
+          knowledge_level: quickOnboarding.ai_knowledge_level
+        }
+      }
+      
+      return await generateTrailFromData(supabaseClient, user_id, convertedData)
     }
 
-    console.log('✅ Trilha salva com sucesso')
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        trail_data: trail,
-        message: 'Trilha gerada com sucesso'
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    return await generateTrailFromData(supabaseClient, user_id, onboardingData)
 
   } catch (error) {
-    console.error('❌ Erro na geração da trilha:', error)
+    console.error('❌ Erro na edge function:', error)
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message || 'Erro interno do servidor'
+      JSON.stringify({ 
+        success: false, 
+        error: error.message || 'Erro interno do servidor' 
       }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
-        status: 500 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     )
   }
 })
 
-function generateSmartTrail(userProfile: any, solutions: any[], lessons: any[]) {
-  // Filtrar soluções por relevância
-  const relevantSolutions = solutions.filter(solution => {
-    // Lógica de filtragem baseada no perfil
-    if (userProfile.ai_knowledge_level === 'iniciante' && solution.difficulty === 'advanced') {
-      return false
+async function generateTrailFromData(supabaseClient: any, user_id: string, onboardingData: any) {
+  console.log('📊 Dados do onboarding:', onboardingData)
+
+  // Buscar todas as soluções disponíveis
+  const { data: solutions, error: solutionsError } = await supabaseClient
+    .from('solutions')
+    .select('*')
+    .eq('published', true)
+
+  if (solutionsError) {
+    throw solutionsError
+  }
+
+  if (!solutions || solutions.length === 0) {
+    throw new Error('Nenhuma solução disponível')
+  }
+
+  console.log('📋 Soluções encontradas:', solutions.length)
+
+  // Analisar dados do usuário para personalização
+  const companySize = onboardingData.professional_info?.company_size || onboardingData.company_size || 'pequena'
+  const companySegment = onboardingData.professional_info?.company_segment || onboardingData.company_segment || 'geral'
+  const aiKnowledge = onboardingData.ai_experience?.knowledge_level || onboardingData.ai_knowledge_level || 'iniciante'
+  
+  // Algoritmo de recomendação baseado no perfil
+  const scoredSolutions = solutions.map(solution => {
+    let score = 0
+    
+    // Pontuação baseada na categoria
+    if (solution.category === 'Receita' && companySize !== 'grande') score += 3
+    if (solution.category === 'Operacional') score += 2
+    if (solution.category === 'Estratégia' && companySize === 'grande') score += 3
+    
+    // Pontuação baseada na dificuldade vs conhecimento
+    if (solution.difficulty === 'beginner' && aiKnowledge === 'iniciante') score += 3
+    if (solution.difficulty === 'intermediate' && aiKnowledge === 'intermediario') score += 3
+    if (solution.difficulty === 'advanced' && aiKnowledge === 'avancado') score += 3
+    
+    // Pontuação baseada em tags relevantes
+    if (solution.tags) {
+      if (solution.tags.includes('automacao') && companySegment.includes('servico')) score += 2
+      if (solution.tags.includes('vendas') && companySegment.includes('comercio')) score += 2
+      if (solution.tags.includes('marketing')) score += 1
     }
-    if (userProfile.ai_knowledge_level === 'especialista' && solution.difficulty === 'easy') {
-      return false
+    
+    // Adicionar aleatoriedade para variedade
+    score += Math.random() * 2
+    
+    return {
+      ...solution,
+      score,
+      justification: generateJustification(solution, onboardingData)
     }
-    return true
   })
 
-  // Ordenar por relevância
-  const sortedSolutions = relevantSolutions.sort((a, b) => {
-    return calculateRelevanceScore(b, userProfile) - calculateRelevanceScore(a, userProfile)
-  })
+  // Ordenar por pontuação e dividir em prioridades
+  const sortedSolutions = scoredSolutions.sort((a, b) => b.score - a.score)
+  
+  const priority1 = sortedSolutions.slice(0, 3).map(s => ({
+    solutionId: s.id,
+    justification: s.justification
+  }))
+  
+  const priority2 = sortedSolutions.slice(3, 6).map(s => ({
+    solutionId: s.id,
+    justification: s.justification
+  }))
+  
+  const priority3 = sortedSolutions.slice(6, 9).map(s => ({
+    solutionId: s.id,
+    justification: s.justification
+  }))
 
-  // Filtrar e ordenar aulas por relevância
-  const relevantLessons = lessons.filter(lesson => {
-    if (userProfile.ai_knowledge_level === 'iniciante' && lesson.difficulty_level === 'advanced') {
-      return false
+  // Buscar cursos recomendados baseados no nível de conhecimento
+  const { data: courses } = await supabaseClient
+    .from('learning_courses')
+    .select('id, title')
+    .eq('published', true)
+    .limit(3)
+
+  const recommendedCourses = courses?.map(course => ({
+    courseId: course.id,
+    justification: `Curso recomendado para fortalecer seus conhecimentos em IA`,
+    priority: 1
+  })) || []
+
+  const trailData = {
+    priority1,
+    priority2,
+    priority3,
+    recommended_courses: recommendedCourses
+  }
+
+  console.log('✅ Trilha gerada:', trailData)
+
+  // Verificar se já existe uma trilha para este usuário
+  const { data: existingTrail } = await supabaseClient
+    .from('implementation_trails')
+    .select('id')
+    .eq('user_id', user_id)
+    .maybeSingle()
+
+  if (existingTrail) {
+    // Atualizar trilha existente
+    const { error: updateError } = await supabaseClient
+      .from('implementation_trails')
+      .update({
+        trail_data: trailData,
+        status: 'completed',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', existingTrail.id)
+
+    if (updateError) {
+      throw updateError
     }
-    if (userProfile.ai_knowledge_level === 'especialista' && lesson.difficulty_level === 'beginner') {
-      return false
+  } else {
+    // Criar nova trilha
+    const { error: insertError } = await supabaseClient
+      .from('implementation_trails')
+      .insert({
+        user_id,
+        trail_data: trailData,
+        status: 'completed'
+      })
+
+    if (insertError) {
+      throw insertError
     }
-    return true
-  })
-
-  const sortedLessons = relevantLessons.sort((a, b) => {
-    return calculateLessonRelevanceScore(b, userProfile) - calculateLessonRelevanceScore(a, userProfile)
-  })
-
-  // Construir trilha
-  const trail = {
-    priority1: sortedSolutions.slice(0, 3).map(s => ({
-      solutionId: s.id,
-      justification: generateSolutionJustification(s, userProfile, 1),
-      priority: 1
-    })),
-    priority2: sortedSolutions.slice(3, 5).map(s => ({
-      solutionId: s.id,
-      justification: generateSolutionJustification(s, userProfile, 2),
-      priority: 2
-    })),
-    priority3: sortedSolutions.slice(5, 7).map(s => ({
-      solutionId: s.id,
-      justification: generateSolutionJustification(s, userProfile, 3),
-      priority: 3
-    })),
-    recommended_lessons: sortedLessons.slice(0, 5).map((lesson, index) => ({
-      lessonId: lesson.id,
-      moduleId: lesson.learning_modules.id,
-      courseId: lesson.learning_modules.learning_courses.id,
-      justification: generateLessonJustification(lesson, userProfile),
-      priority: index < 2 ? 1 : 2,
-      title: lesson.title,
-      moduleTitle: lesson.learning_modules.title,
-      courseTitle: lesson.learning_modules.learning_courses.title
-    }))
   }
 
-  return trail
+  return new Response(
+    JSON.stringify({ 
+      success: true, 
+      trail_data: trailData,
+      message: 'Trilha personalizada gerada com sucesso!' 
+    }),
+    { 
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+    }
+  )
 }
 
-function calculateRelevanceScore(solution: any, userProfile: any): number {
-  let score = 0
-
-  // Pontuação por nível de conhecimento
-  if (userProfile.ai_knowledge_level === 'iniciante' && solution.difficulty === 'easy') score += 3
-  if (userProfile.ai_knowledge_level === 'intermediario' && solution.difficulty === 'medium') score += 3
-  if (userProfile.ai_knowledge_level === 'especialista' && solution.difficulty === 'advanced') score += 3
-
-  // Pontuação por objetivo principal
-  if (userProfile.main_goal === 'aumentar-receita' && solution.category === 'Receita') score += 2
-  if (userProfile.main_goal === 'reduzir-custos' && solution.category === 'Operacional') score += 2
-  if (userProfile.main_goal === 'melhorar-processos' && solution.category === 'Operacional') score += 2
-
-  // Pontuação por tamanho da empresa
-  if (userProfile.company_size === '1-5' && solution.difficulty === 'easy') score += 1
-  if (userProfile.company_size === '20+' && solution.difficulty === 'advanced') score += 1
-
-  return score
-}
-
-function calculateLessonRelevanceScore(lesson: any, userProfile: any): number {
-  let score = 0
-
-  // Pontuação por nível de dificuldade
-  if (userProfile.ai_knowledge_level === 'iniciante' && lesson.difficulty_level === 'beginner') score += 3
-  if (userProfile.ai_knowledge_level === 'intermediario' && lesson.difficulty_level === 'intermediate') score += 3
-  if (userProfile.ai_knowledge_level === 'especialista' && lesson.difficulty_level === 'advanced') score += 3
-
-  // Pontuação por tempo estimado (preferir aulas mais curtas para iniciantes)
-  if (userProfile.ai_knowledge_level === 'iniciante' && lesson.estimated_time_minutes <= 30) score += 1
-  if (userProfile.ai_knowledge_level === 'especialista' && lesson.estimated_time_minutes > 30) score += 1
-
-  return score
-}
-
-function generateSolutionJustification(solution: any, userProfile: any, priority: number): string {
-  const reasons = []
-
-  if (priority === 1) {
-    reasons.push(`Ideal para ${userProfile.company_name || 'sua empresa'}`)
-  }
-
-  if (userProfile.ai_knowledge_level === 'iniciante' && solution.difficulty === 'easy') {
-    reasons.push('perfeita para quem está começando')
-  } else if (userProfile.ai_knowledge_level === 'especialista' && solution.difficulty === 'advanced') {
-    reasons.push('adequada para seu nível avançado')
-  }
-
-  if (userProfile.main_goal === 'aumentar-receita' && solution.category === 'Receita') {
-    reasons.push('focada em gerar receita')
-  }
-
-  return reasons.length > 0 ? reasons.join(', ') : `Recomendada para otimizar ${userProfile.main_goal}`
-}
-
-function generateLessonJustification(lesson: any, userProfile: any): string {
-  const reasons = []
-
-  if (userProfile.ai_knowledge_level === 'iniciante') {
-    reasons.push('ideal para construir uma base sólida')
-  } else if (userProfile.ai_knowledge_level === 'especialista') {
-    reasons.push('aprofunda conhecimentos avançados')
-  }
-
-  if (lesson.estimated_time_minutes <= 20) {
-    reasons.push('aula rápida e prática')
-  } else if (lesson.estimated_time_minutes > 45) {
-    reasons.push('conteúdo aprofundado e completo')
-  }
-
-  return reasons.length > 0 ? reasons.join(', ') : 'complementa perfeitamente suas soluções prioritárias'
+function generateJustification(solution: any, onboardingData: any): string {
+  const companyName = onboardingData.professional_info?.company_name || onboardingData.company_name || 'sua empresa'
+  const segment = onboardingData.professional_info?.company_segment || onboardingData.company_segment || 'seu setor'
+  
+  const justifications = [
+    `Esta solução é ideal para ${companyName} porque pode otimizar processos em ${segment}`,
+    `Baseado no seu perfil, esta implementação gerará resultados rápidos para ${companyName}`,
+    `Solução recomendada para empresas como ${companyName} que buscam eficiência operacional`,
+    `Esta ferramenta se alinha perfeitamente com os objetivos de crescimento de ${companyName}`,
+    `Implementação estratégica que pode revolucionar os processos de ${companyName}`
+  ]
+  
+  return justifications[Math.floor(Math.random() * justifications.length)]
 }
