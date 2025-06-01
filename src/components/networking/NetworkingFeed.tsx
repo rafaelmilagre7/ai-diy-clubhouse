@@ -1,7 +1,10 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useNetworkMatches } from '@/hooks/networking/useNetworkMatches';
+import { useNetworkingAccessGuard } from '@/hooks/networking/useNetworkingAccessGuard';
 import { NetworkMatchCard } from './NetworkMatchCard';
+import { NetworkingBlockedState } from './NetworkingBlockedState';
 import { Card } from '@/components/ui/card';
 import { Loader2, Users, RefreshCw, CheckCircle, PieChart, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,9 +19,15 @@ interface NetworkingFeedProps {
 export const NetworkingFeed: React.FC<NetworkingFeedProps> = ({
   matchType
 }) => {
+  const navigate = useNavigate();
+  const { hasAccess, isLoading: accessLoading, needsOnboarding } = useNetworkingAccessGuard();
   const { data: matches, isLoading, error, refetch } = useNetworkMatches(matchType);
   const generateMatches = useGenerateMatches();
   const queryClient = useQueryClient();
+
+  const handleNavigateToOnboarding = () => {
+    navigate('/onboarding-new');
+  };
 
   const handleRegenerateMatches = async () => {
     try {
@@ -42,6 +51,21 @@ export const NetworkingFeed: React.FC<NetworkingFeedProps> = ({
       toast.error('Erro ao regenerar matches. Tente novamente.');
     }
   };
+
+  // Se ainda está carregando verificação de acesso
+  if (accessLoading) {
+    return (
+      <Card className="p-8 text-center">
+        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-viverblue" />
+        <p className="text-muted-foreground">Verificando acesso...</p>
+      </Card>
+    );
+  }
+
+  // Se não tem acesso (onboarding incompleto)
+  if (!hasAccess && needsOnboarding) {
+    return <NetworkingBlockedState onNavigateToOnboarding={handleNavigateToOnboarding} />;
+  }
 
   const expectedCount = matchType === 'customer' ? 5 : 3;
 
