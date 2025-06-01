@@ -84,6 +84,25 @@ export const useImplementationTrail = () => {
       setError(null);
       console.log('🚀 Iniciando geração inteligente da trilha para usuário:', user.id);
 
+      // Verificar se o usuário tem dados de onboarding
+      const { data: onboardingData, error: onboardingError } = await supabase
+        .from('quick_onboarding')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (onboardingError) {
+        console.error('❌ Erro ao verificar onboarding:', onboardingError);
+        throw new Error('Erro ao verificar dados de onboarding');
+      }
+
+      if (!onboardingData || !onboardingData.is_completed) {
+        console.log('⚠️ Onboarding não completado, redirecionando...');
+        toast.error('Complete seu onboarding para gerar uma trilha personalizada');
+        setError('Onboarding não completado');
+        return;
+      }
+
       // Usar a edge function inteligente
       const { data, error: functionError } = await supabase.functions.invoke('generate-smart-trail', {
         body: { user_id: user.id }
