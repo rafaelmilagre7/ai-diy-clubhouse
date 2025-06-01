@@ -2699,61 +2699,91 @@ export type Database = {
       onboarding_final: {
         Row: {
           ai_experience: Json
+          ai_knowledge_level: string | null
+          annual_revenue: string | null
           business_context: Json
+          business_goals: Json | null
           business_info: Json
+          company_name: string | null
+          company_sector: string | null
+          company_size: string | null
+          complementary_info: Json | null
           completed_at: string | null
           completed_steps: number[]
           completion_message: string | null
           created_at: string
           current_step: number
           discovery_info: Json
+          experience_personalization: Json | null
           goals_info: Json
           id: string
           is_completed: boolean
           location_info: Json
+          main_goal: string | null
           message_generated: boolean | null
           personal_info: Json
           personalization: Json
+          professional_info: Json | null
           updated_at: string
           user_id: string
         }
         Insert: {
           ai_experience?: Json
+          ai_knowledge_level?: string | null
+          annual_revenue?: string | null
           business_context?: Json
+          business_goals?: Json | null
           business_info?: Json
+          company_name?: string | null
+          company_sector?: string | null
+          company_size?: string | null
+          complementary_info?: Json | null
           completed_at?: string | null
           completed_steps?: number[]
           completion_message?: string | null
           created_at?: string
           current_step?: number
           discovery_info?: Json
+          experience_personalization?: Json | null
           goals_info?: Json
           id?: string
           is_completed?: boolean
           location_info?: Json
+          main_goal?: string | null
           message_generated?: boolean | null
           personal_info?: Json
           personalization?: Json
+          professional_info?: Json | null
           updated_at?: string
           user_id: string
         }
         Update: {
           ai_experience?: Json
+          ai_knowledge_level?: string | null
+          annual_revenue?: string | null
           business_context?: Json
+          business_goals?: Json | null
           business_info?: Json
+          company_name?: string | null
+          company_sector?: string | null
+          company_size?: string | null
+          complementary_info?: Json | null
           completed_at?: string | null
           completed_steps?: number[]
           completion_message?: string | null
           created_at?: string
           current_step?: number
           discovery_info?: Json
+          experience_personalization?: Json | null
           goals_info?: Json
           id?: string
           is_completed?: boolean
           location_info?: Json
+          main_goal?: string | null
           message_generated?: boolean | null
           personal_info?: Json
           personalization?: Json
+          professional_info?: Json | null
           updated_at?: string
           user_id?: string
         }

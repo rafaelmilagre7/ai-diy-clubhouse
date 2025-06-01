@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { ImplementationTrail, TrailSolutionEnriched } from '@/types/implementation-trail';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 
 export const useTrailSolutionsEnrichment = (trail: ImplementationTrail | null) => {
   const [enrichedSolutions, setEnrichedSolutions] = useState<TrailSolutionEnriched[]>([]);
@@ -28,6 +28,7 @@ export const useTrailSolutionsEnrichment = (trail: ImplementationTrail | null) =
 
         if (allSolutionIds.length === 0) {
           setEnrichedSolutions([]);
+          setIsLoading(false);
           return;
         }
 
@@ -45,7 +46,7 @@ export const useTrailSolutionsEnrichment = (trail: ImplementationTrail | null) =
         // Enriquecer com dados da trilha
         const enriched: TrailSolutionEnriched[] = [];
 
-        // Processar prioridade 1
+        // Processar priority1
         trail.priority1.forEach(trailSolution => {
           const solution = solutionsData?.find(s => s.id === trailSolution.solutionId);
           if (solution) {
@@ -57,7 +58,7 @@ export const useTrailSolutionsEnrichment = (trail: ImplementationTrail | null) =
           }
         });
 
-        // Processar prioridade 2
+        // Processar priority2
         trail.priority2.forEach(trailSolution => {
           const solution = solutionsData?.find(s => s.id === trailSolution.solutionId);
           if (solution) {
@@ -69,7 +70,7 @@ export const useTrailSolutionsEnrichment = (trail: ImplementationTrail | null) =
           }
         });
 
-        // Processar prioridade 3
+        // Processar priority3
         trail.priority3.forEach(trailSolution => {
           const solution = solutionsData?.find(s => s.id === trailSolution.solutionId);
           if (solution) {
