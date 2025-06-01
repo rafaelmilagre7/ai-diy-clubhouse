@@ -55,8 +55,42 @@ export const useSimpleOnboardingValidation = () => {
           };
         }
 
-        // Se não encontrou dados, onboarding deve ser iniciado
-        console.log('⚠️ useSimpleOnboardingValidation: Nenhum dado encontrado - onboarding deve ser iniciado');
+        // Se não encontrou dados, criar registro inicial
+        console.log('⚠️ useSimpleOnboardingValidation: Nenhum dado encontrado - criando registro inicial');
+        
+        // Buscar dados básicos do usuário
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('name, email, company_name, role')
+          .eq('id', user.id)
+          .single();
+
+        // Criar registro inicial no quick_onboarding
+        await supabase
+          .from('quick_onboarding')
+          .insert({
+            user_id: user.id,
+            is_completed: false,
+            current_step: 1,
+            name: profileData?.name || '',
+            email: profileData?.email || '',
+            whatsapp: '',
+            country_code: '+55',
+            how_found_us: '',
+            company_name: profileData?.company_name || '',
+            role: profileData?.role || 'member',
+            company_size: '',
+            company_segment: '',
+            annual_revenue_range: '',
+            main_challenge: '',
+            ai_knowledge_level: 'iniciante',
+            expected_outcome_30days: '',
+            primary_goal: '',
+            business_model: '',
+            uses_ai: false,
+            main_goal: ''
+          });
+
         return {
           isOnboardingComplete: false,
           hasValidData: true

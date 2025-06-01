@@ -64,12 +64,61 @@ export const useUnifiedOnboardingValidation = () => {
           };
         }
 
-        // Se não encontrou dados em nenhuma tabela
-        console.log('⚠️ useUnifiedOnboardingValidation: Nenhum dado de onboarding encontrado - usuário deve começar do zero');
+        // Se não encontrou dados em nenhuma tabela, criar um registro inicial
+        console.log('⚠️ useUnifiedOnboardingValidation: Nenhum dado de onboarding encontrado - criando registro inicial');
+        
+        // Buscar dados básicos do usuário
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('name, email, company_name, role')
+          .eq('id', user.id)
+          .single();
+
+        // Criar registro inicial no quick_onboarding
+        const { data: newRecord, error: insertError } = await supabase
+          .from('quick_onboarding')
+          .insert({
+            user_id: user.id,
+            is_completed: false,
+            current_step: 1,
+            name: profileData?.name || '',
+            email: profileData?.email || '',
+            whatsapp: '',
+            country_code: '+55',
+            how_found_us: '',
+            company_name: profileData?.company_name || '',
+            role: profileData?.role || 'member',
+            company_size: '',
+            company_segment: '',
+            annual_revenue_range: '',
+            main_challenge: '',
+            ai_knowledge_level: 'iniciante',
+            expected_outcome_30days: '',
+            primary_goal: '',
+            business_model: '',
+            uses_ai: false,
+            main_goal: ''
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error('❌ Erro ao criar registro inicial:', insertError);
+          return {
+            isOnboardingComplete: false,
+            hasValidData: false,
+            source: 'error',
+            error: insertError
+          };
+        }
+
+        console.log('✅ Registro inicial criado com sucesso:', newRecord);
         return {
           isOnboardingComplete: false,
           hasValidData: true,
-          source: 'none'
+          source: 'quick_onboarding_new',
+          currentStep: 1,
+          onboardingId: newRecord.id
         };
       } catch (error) {
         console.error('❌ useUnifiedOnboardingValidation: Erro ao verificar conclusão do onboarding:', error);
