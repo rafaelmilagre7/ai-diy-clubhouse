@@ -17,11 +17,13 @@ import {
   GraduationCap,
   Wrench,
   MessagesSquare,
-  Network
+  Network,
+  Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { isActiveRoute } from "@/components/community/utils/routingUtils";
+import { useUnifiedOnboardingValidation } from "@/hooks/onboarding/useUnifiedOnboardingValidation";
 
 interface SidebarNavProps {
   sidebarOpen: boolean;
@@ -30,6 +32,14 @@ interface SidebarNavProps {
 export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
   const location = useLocation();
   const { isAdmin, isFormacao, profile } = useAuth();
+  const { isOnboardingComplete, isLoading: onboardingLoading } = useUnifiedOnboardingValidation();
+
+  console.log('🔍 MemberSidebarNav: Status do networking e onboarding:', {
+    isOnboardingComplete,
+    onboardingLoading,
+    isAdmin,
+    userRole: profile?.role
+  });
 
   const menuItems = [
     {
@@ -87,24 +97,31 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
       title: "Eventos",
       href: "/events",
       icon: Calendar,
-    },
-    {
-      title: "Networking",
-      href: "/networking",
-      icon: Network,
-      adminOnly: true // Apenas para admin e formação
     }
   ];
+
+  // Adicionar networking se o usuário completou o onboarding OU é admin
+  const hasNetworkingAccess = isAdmin || isOnboardingComplete;
+  if (hasNetworkingAccess && !onboardingLoading) {
+    console.log('✅ MemberSidebarNav: Adicionando networking ao menu');
+    menuItems.splice(5, 0, {
+      title: "Networking",
+      href: "/networking",
+      icon: Users,
+    });
+  } else {
+    console.log('❌ MemberSidebarNav: Networking não disponível', {
+      hasNetworkingAccess,
+      onboardingLoading,
+      isAdmin,
+      isOnboardingComplete
+    });
+  }
 
   return (
     <div className="space-y-2 py-4">
       <div className="px-3 space-y-1">
         {menuItems.map((item) => {
-          // Se for adminOnly, mostrar apenas para admin e formação
-          if (item.adminOnly && (!profile || (profile.role !== 'admin' && profile.role !== 'formacao'))) {
-            return null;
-          }
-
           const active = isActiveRoute(location.pathname, item.href);
           
           return (
