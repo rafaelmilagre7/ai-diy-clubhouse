@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 
@@ -49,57 +48,37 @@ export function useNetworkMatches(matchType?: 'customer' | 'supplier') {
 
       console.log('🔍 Buscando matches para usuário:', user.id);
 
-      // Verificar se o usuário tem acesso ao networking (onboarding completo ou admin)
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
+      // Verificar se o onboarding está completo (SEM exceção para admin)
+      const { data: onboardingData } = await supabase
+        .from('onboarding_final')
+        .select('is_completed')
+        .eq('user_id', user.id)
+        .eq('is_completed', true)
+        .maybeSingle();
 
-      const isAdmin = profileData?.role === 'admin';
-
-      // Se não é admin, verificar se onboarding está completo
-      if (!isAdmin) {
-        const { data: onboardingData } = await supabase
-          .from('onboarding_final')
+      if (!onboardingData) {
+        // Verificar fallback no quick_onboarding
+        const { data: quickOnboardingData } = await supabase
+          .from('quick_onboarding')
           .select('is_completed')
           .eq('user_id', user.id)
-          .eq('is_completed', true)
           .maybeSingle();
 
-        if (!onboardingData) {
-          // Verificar fallback no quick_onboarding
-          const { data: quickOnboardingData } = await supabase
-            .from('quick_onboarding')
-            .select('is_completed')
-            .eq('user_id', user.id)
-            .maybeSingle();
-
-          if (!quickOnboardingData?.is_completed) {
-            console.log('🚫 Networking bloqueado: onboarding incompleto');
-            return [];
-          }
+        if (!quickOnboardingData?.is_completed) {
+          console.log('🚫 Networking bloqueado: onboarding incompleto');
+          
+          // LIMPAR matches existentes se onboarding incompleto
+          console.log('🧹 Limpando matches existentes...');
+          await supabase
+            .from('network_matches')
+            .delete()
+            .eq('user_id', user.id);
+          
+          return [];
         }
       }
 
-      // Primeiro, tentar gerar matches se não existir nenhum
-      try {
-        console.log('🤖 Tentando gerar matches automaticamente...');
-        const { data: generateResult, error: generateError } = await supabase.functions.invoke('generate-networking-matches', {
-          body: { target_user_id: user.id, force_regenerate: false }
-        });
-        
-        if (generateError) {
-          console.log('❌ Erro ao gerar matches automaticamente:', generateError);
-        } else {
-          console.log('✅ Resultado da geração:', generateResult);
-        }
-      } catch (error) {
-        console.log('❌ Exceção ao gerar matches automaticamente:', error);
-        // Continuar mesmo se não conseguir gerar matches
-      }
-
-      // Buscar matches primeiro
+      // Buscar matches existentes
       let query = supabase
         .from('network_matches')
         .select('*')

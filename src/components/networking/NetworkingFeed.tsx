@@ -62,7 +62,7 @@ export const NetworkingFeed: React.FC<NetworkingFeedProps> = ({
     );
   }
 
-  // Se não tem acesso (onboarding incompleto)
+  // Se não tem acesso (onboarding incompleto) - PARA TODOS OS USUÁRIOS
   if (!hasAccess && needsOnboarding) {
     return <NetworkingBlockedState onNavigateToOnboarding={handleNavigateToOnboarding} />;
   }

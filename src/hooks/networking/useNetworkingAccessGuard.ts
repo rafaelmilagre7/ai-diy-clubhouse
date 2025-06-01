@@ -6,17 +6,13 @@ export const useNetworkingAccessGuard = () => {
   const { profile } = useAuth();
   const { data: onboardingData, isLoading } = useOnboardingCompletion();
 
-  // Verificar se é admin (sempre tem acesso)
-  const isAdmin = profile?.role === 'admin';
-  
-  // Verificar se o onboarding está completo
+  // Verificar se o onboarding está completo (SEM exceção para admin)
   const isOnboardingComplete = onboardingData?.isCompleted || false;
   
-  // Determinar se tem acesso
-  const hasAccess = isAdmin || isOnboardingComplete;
+  // Determinar se tem acesso (TODOS precisam completar onboarding)
+  const hasAccess = isOnboardingComplete;
 
   console.log('🔍 useNetworkingAccessGuard:', {
-    isAdmin,
     isOnboardingComplete,
     hasAccess,
     userRole: profile?.role,
@@ -25,9 +21,9 @@ export const useNetworkingAccessGuard = () => {
 
   return {
     hasAccess,
-    isAdmin,
+    isAdmin: profile?.role === 'admin',
     isOnboardingComplete,
     isLoading,
-    needsOnboarding: !hasAccess && !isAdmin
+    needsOnboarding: !hasAccess
   };
 };
