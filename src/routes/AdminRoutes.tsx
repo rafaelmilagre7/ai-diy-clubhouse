@@ -1,3 +1,4 @@
+
 import { RouteObject } from "react-router-dom";
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import AdminLayout from '@/components/layout/AdminLayout';
@@ -15,6 +16,7 @@ import AdminRoles from '@/pages/admin/AdminRoles';
 import InvitesManagement from '@/pages/admin/invites/InvitesManagement';
 import CommunityModerationPage from '@/pages/admin/community/CommunityModerationPage';
 import PerformanceDashboard from '@/components/admin/performance/PerformanceDashboard';
+import AdminNetworkingPage from '@/pages/admin/networking/AdminNetworkingPage';
 
 // Função helper para criar rotas protegidas com AdminLayout
 const createAdminRoute = (path: string, Component: React.ComponentType<any>) => ({
@@ -35,4 +37,5 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin/roles", AdminRoles),
   createAdminRoute("/admin/invites", InvitesManagement),
   createAdminRoute("/admin/community", CommunityModerationPage),
+  createAdminRoute("/admin/networking", AdminNetworkingPage),
 ];

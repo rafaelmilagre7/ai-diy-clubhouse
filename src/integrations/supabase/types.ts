@@ -5912,6 +5912,10 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Json
       }
+      clear_all_networking_data: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       complete_onboarding_and_unlock_features: {
         Args: { p_user_id: string; p_onboarding_data: Json }
         Returns: Json
