@@ -10,6 +10,7 @@ export const useImplementationTrail = () => {
   const { user, profile } = useAuth();
   const [trail, setTrail] = useState<ImplementationTrail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Criar hash do perfil para cache
@@ -62,7 +63,7 @@ export const useImplementationTrail = () => {
       throw new Error('Usuário não autenticado');
     }
 
-    setIsLoading(true);
+    setIsRegenerating(true);
     setError(null);
 
     try {
@@ -99,7 +100,7 @@ export const useImplementationTrail = () => {
       toast.error(`Erro ao gerar trilha: ${errorMessage}`);
       throw err;
     } finally {
-      setIsLoading(false);
+      setIsRegenerating(false);
     }
   }, [user?.id, saveToCache]);
 
@@ -131,6 +132,7 @@ export const useImplementationTrail = () => {
   return {
     trail,
     isLoading,
+    regenerating: isRegenerating,
     error,
     hasContent,
     generateImplementationTrail,
