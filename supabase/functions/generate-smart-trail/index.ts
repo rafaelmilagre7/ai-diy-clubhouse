@@ -7,344 +7,353 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-interface OnboardingData {
-  personal_info?: any;
-  location_info?: any;
-  business_info?: any;
-  business_context?: any;
-  goals_info?: any;
-  ai_experience?: any;
-  company_name?: string;
-  company_size?: string;
-  company_sector?: string;
-  annual_revenue?: string;
-  main_goal?: string;
-  ai_knowledge_level?: string;
-}
-
-interface Solution {
-  id: string;
-  title: string;
-  category: string;
-  difficulty: string;
-  tags?: string[];
-}
-
-interface TrailSolution {
-  solutionId: string;
-  justification: string;
-  priority?: number;
-}
-
-interface ImplementationTrail {
-  priority1: TrailSolution[];
-  priority2: TrailSolution[];
-  priority3: TrailSolution[];
-  recommended_courses?: any[];
-  recommended_lessons?: any[];
-}
-
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log('🚀 Iniciando geração inteligente da trilha');
-    
     const { user_id } = await req.json();
-    console.log('👤 User ID:', user_id);
 
-    if (!user_id) {
-      throw new Error('user_id é obrigatório');
-    }
+    console.log('🤖 Gerando trilha inteligente com IA para usuário:', user_id);
 
-    // Inicializar cliente Supabase
+    // Initialize clients
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+    
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    console.log('📊 Buscando perfil do usuário...');
+    // 1. Buscar perfil completo do usuário
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select(`
+        *,
+        user_roles(*)
+      `)
+      .eq('id', user_id)
+      .single();
 
-    // Buscar dados de onboarding na tabela onboarding_final primeiro
-    console.log('🔍 Buscando onboarding_final...');
-    const { data: onboardingFinal, error: onboardingFinalError } = await supabase
+    if (profileError || !profile) {
+      throw new Error('Perfil do usuário não encontrado');
+    }
+
+    // 2. Buscar dados de onboarding mais recentes
+    const { data: onboardingData } = await supabase
       .from('onboarding_final')
       .select('*')
       .eq('user_id', user_id)
       .eq('is_completed', true)
-      .single();
+      .order('completed_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    let onboardingData: OnboardingData | null = null;
+    // Fallback para quick_onboarding se não houver onboarding_final
+    const { data: quickOnboarding } = await supabase
+      .from('quick_onboarding')
+      .select('*')
+      .eq('user_id', user_id)
+      .eq('is_completed', true)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    if (onboardingFinal && !onboardingFinalError) {
-      console.log('✅ onboarding_final encontrado:', JSON.stringify(onboardingFinal, null, 2));
-      
-      // Extrair dados da estrutura aninhada do onboarding_final
-      onboardingData = {
-        personal_info: onboardingFinal.personal_info || {},
-        location_info: onboardingFinal.location_info || {},
-        business_info: onboardingFinal.business_info || {},
-        business_context: onboardingFinal.business_context || {},
-        goals_info: onboardingFinal.goals_info || {},
-        ai_experience: onboardingFinal.ai_experience || {},
-        // Dados diretos da tabela (se existirem)
-        company_name: onboardingFinal.company_name || onboardingFinal.business_info?.company_name,
-        company_size: onboardingFinal.company_size || onboardingFinal.business_info?.company_size,
-        company_sector: onboardingFinal.company_sector || onboardingFinal.business_info?.company_sector,
-        annual_revenue: onboardingFinal.annual_revenue || onboardingFinal.business_info?.annual_revenue,
-        main_goal: onboardingFinal.main_goal || onboardingFinal.goals_info?.primary_goal,
-        ai_knowledge_level: onboardingFinal.ai_knowledge_level || onboardingFinal.ai_experience?.ai_knowledge_level
-      };
-    } else {
-      console.log('⚠️ onboarding_final não encontrado, tentando quick_onboarding...');
-      
-      // Fallback para quick_onboarding
-      const { data: quickOnboarding, error: quickError } = await supabase
-        .from('quick_onboarding')
-        .select('*')
-        .eq('user_id', user_id)
-        .eq('is_completed', true)
-        .single();
-
-      if (quickOnboarding && !quickError) {
-        console.log('✅ quick_onboarding encontrado');
-        onboardingData = {
-          company_name: quickOnboarding.company_name,
-          company_size: quickOnboarding.company_size,
-          company_sector: quickOnboarding.company_segment,
-          main_goal: quickOnboarding.main_goal,
-          ai_knowledge_level: quickOnboarding.ai_knowledge_level
-        };
-      } else {
-        console.log('⚠️ quick_onboarding não encontrado, tentando onboarding legacy...');
-        
-        // Fallback final para onboarding legacy
-        const { data: legacyOnboarding, error: legacyError } = await supabase
-          .from('onboarding')
-          .select('*')
-          .eq('user_id', user_id)
-          .eq('is_completed', true)
-          .single();
-
-        if (legacyOnboarding && !legacyError) {
-          console.log('✅ onboarding legacy encontrado');
-          onboardingData = {
-            company_name: legacyOnboarding.company_name,
-            company_size: legacyOnboarding.company_size,
-            company_sector: legacyOnboarding.company_sector,
-            annual_revenue: legacyOnboarding.annual_revenue,
-            main_goal: legacyOnboarding.primary_goal,
-            ai_knowledge_level: legacyOnboarding.knowledge_level
-          };
-        }
-      }
+    const userData = onboardingData || quickOnboarding;
+    
+    if (!userData) {
+      throw new Error('Dados de onboarding não encontrados ou incompletos');
     }
 
-    if (!onboardingData) {
-      console.log('❌ Nenhum onboarding completo encontrado para o usuário');
-      throw new Error('Onboarding não encontrado ou não concluído');
-    }
+    console.log('📊 Dados do usuário coletados:', {
+      role: profile.user_roles?.name || profile.role,
+      company: userData.company_name,
+      segment: userData.company_segment,
+      experience: userData.ai_knowledge_level
+    });
 
-    console.log('📈 Dados de onboarding processados:', JSON.stringify(onboardingData, null, 2));
-
-    // Buscar soluções disponíveis
-    console.log('🔍 Buscando soluções disponíveis...');
+    // 3. Buscar soluções publicadas
     const { data: solutions, error: solutionsError } = await supabase
       .from('solutions')
-      .select('id, title, category, difficulty, tags')
-      .eq('published', true);
+      .select('*')
+      .eq('published', true)
+      .order('created_at', { ascending: false });
 
-    if (solutionsError || !solutions) {
-      console.log('❌ Erro ao buscar soluções:', solutionsError);
-      throw new Error('Erro ao buscar soluções disponíveis');
+    if (solutionsError || !solutions || solutions.length === 0) {
+      throw new Error('Nenhuma solução publicada encontrada');
     }
 
-    console.log(`✅ ${solutions.length} soluções encontradas`);
+    // 4. Buscar aulas disponíveis baseado no papel do usuário
+    let availableLessons = [];
+    const userRole = profile.user_roles?.name || profile.role;
+    
+    // Verificar quais cursos o usuário pode acessar
+    const { data: accessibleCourses } = await supabase.rpc('can_access_course', {
+      user_id: user_id,
+      course_id: null // Função será chamada para cada curso
+    });
 
-    // Algoritmo de recomendação inteligente
-    function scoreAndRecommendSolutions(onboarding: OnboardingData, solutions: Solution[]): ImplementationTrail {
-      console.log('🤖 Iniciando algoritmo de recomendação...');
+    // Buscar aulas de cursos publicados
+    const { data: lessons } = await supabase
+      .from('learning_lessons')
+      .select(`
+        *,
+        learning_modules(
+          id,
+          title,
+          learning_courses(
+            id,
+            title,
+            published
+          )
+        )
+      `)
+      .eq('published', true)
+      .eq('learning_modules.learning_courses.published', true);
+
+    availableLessons = lessons || [];
+    console.log('📚 Aulas disponíveis encontradas:', availableLessons.length);
+
+    // 5. Usar IA para gerar recomendações personalizadas
+    let aiGeneratedTrail = null;
+    
+    if (openaiApiKey) {
+      console.log('🧠 Usando IA para gerar recomendações...');
       
-      const recommendations: Array<{ solution: Solution; score: number; justification: string }> = [];
+      const userProfile = {
+        name: userData.name || profile.name,
+        company_name: userData.company_name,
+        company_segment: userData.company_segment,
+        company_size: userData.company_size,
+        role: userData.role || userRole,
+        ai_knowledge_level: userData.ai_knowledge_level,
+        main_goal: userData.main_goal || userData.primary_goal,
+        main_challenge: userData.main_challenge,
+        expected_outcome_30days: userData.expected_outcome_30days,
+        business_model: userData.business_model,
+        annual_revenue_range: userData.annual_revenue_range,
+        uses_ai: userData.uses_ai
+      };
 
-      for (const solution of solutions) {
-        let score = 0;
-        let justification = '';
-        const reasons: string[] = [];
+      const prompt = `
+Você é um especialista em IA para negócios brasileiros. Analise o perfil abaixo e crie uma trilha de implementação PERSONALIZADA.
 
-        // Pontuação baseada na categoria e objetivo principal
-        const goal = onboarding.main_goal || onboarding.goals_info?.primary_goal;
-        if (goal) {
-          if (goal.includes('receita') || goal.includes('vendas')) {
-            if (solution.category === 'Receita') {
-              score += 40;
-              reasons.push('alinhada com objetivo de aumentar receita');
+PERFIL DO USUÁRIO:
+- Nome: ${userProfile.name}
+- Empresa: ${userProfile.company_name}
+- Segmento: ${userProfile.company_segment}
+- Porte: ${userProfile.company_size}
+- Papel: ${userProfile.role}
+- Conhecimento IA: ${userProfile.ai_knowledge_level}
+- Objetivo Principal: ${userProfile.main_goal}
+- Desafio: ${userProfile.main_challenge}
+- Expectativa 30 dias: ${userProfile.expected_outcome_30days}
+- Modelo de Negócio: ${userProfile.business_model}
+- Faturamento: ${userProfile.annual_revenue_range}
+- Já usa IA: ${userProfile.uses_ai}
+
+SOLUÇÕES DISPONÍVEIS:
+${solutions.map(s => `- ID: ${s.id} | Título: ${s.title} | Categoria: ${s.category} | Dificuldade: ${s.difficulty} | Descrição: ${s.description.substring(0, 100)}...`).join('\n')}
+
+AULAS DISPONÍVEIS:
+${availableLessons.map(l => `- ID: ${l.id} | Título: ${l.title} | Curso: ${l.learning_modules?.learning_courses?.title} | Duração: ${l.estimated_time_minutes}min`).join('\n')}
+
+TAREFA:
+1. Selecione as 3 MELHORES soluções para prioridade 1 (alta)
+2. Selecione 2-3 soluções para prioridade 2 (média)
+3. Selecione 1-2 soluções para prioridade 3 (complementar)
+4. Para cada solução, crie uma justificativa ESPECÍFICA de 100-120 caracteres explicando por que é ideal para ESTE perfil
+5. Selecione 3-5 aulas que complementem as soluções escolhidas
+6. Para cada aula, explique como ela apoia a implementação
+
+RESPONDA APENAS EM JSON VÁLIDO (sem comentários):
+{
+  "priority1": [
+    {"solutionId": "uuid", "justification": "justificativa específica de 100-120 chars"}
+  ],
+  "priority2": [
+    {"solutionId": "uuid", "justification": "justificativa específica de 100-120 chars"}
+  ],
+  "priority3": [
+    {"solutionId": "uuid", "justification": "justificativa específica de 100-120 chars"}
+  ],
+  "recommended_lessons": [
+    {"lessonId": "uuid", "moduleId": "uuid", "courseId": "uuid", "justification": "como apoia a implementação", "priority": 1}
+  ]
+}
+`;
+
+      try {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openaiApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [
+              { role: 'system', content: 'Você é um consultor especialista em implementação de IA para empresas brasileiras. Seja preciso, analítico e específico. Responda APENAS com JSON válido.' },
+              { role: 'user', content: prompt }
+            ],
+            max_tokens: 2000,
+            temperature: 0.3,
+            response_format: { type: "json_object" }
+          }),
+        });
+
+        if (response.ok) {
+          const aiResponse = await response.json();
+          const content = aiResponse.choices[0]?.message?.content;
+          
+          if (content) {
+            try {
+              aiGeneratedTrail = JSON.parse(content);
+              console.log('✅ IA gerou trilha personalizada:', aiGeneratedTrail);
+            } catch (parseError) {
+              console.error('❌ Erro ao parsear resposta da IA:', parseError);
             }
           }
-          if (goal.includes('operacional') || goal.includes('processo')) {
-            if (solution.category === 'Operacional') {
-              score += 40;
-              reasons.push('otimiza processos operacionais');
-            }
-          }
-          if (goal.includes('estratégia') || goal.includes('planejamento')) {
-            if (solution.category === 'Estratégia') {
-              score += 40;
-              reasons.push('apoia planejamento estratégico');
-            }
-          }
+        } else {
+          console.error('❌ Erro na chamada OpenAI:', response.status);
         }
-
-        // Pontuação baseada na experiência em IA
-        const aiLevel = onboarding.ai_knowledge_level || onboarding.ai_experience?.ai_knowledge_level;
-        if (aiLevel) {
-          if (aiLevel === 'beginner' || aiLevel === 'iniciante') {
-            if (solution.difficulty === 'beginner') {
-              score += 30;
-              reasons.push('adequada para nível iniciante');
-            }
-          } else if (aiLevel === 'intermediate' || aiLevel === 'intermediário') {
-            if (solution.difficulty === 'intermediate') {
-              score += 30;
-              reasons.push('ideal para nível intermediário');
-            }
-          } else if (aiLevel === 'advanced' || aiLevel === 'avançado') {
-            if (solution.difficulty === 'advanced') {
-              score += 30;
-              reasons.push('desafia conhecimento avançado');
-            }
-          }
-        }
-
-        // Pontuação baseada no setor da empresa
-        const sector = onboarding.company_sector || onboarding.business_info?.company_sector;
-        if (sector && solution.tags) {
-          const sectorLower = sector.toLowerCase();
-          const matchingTags = solution.tags.filter(tag => 
-            sectorLower.includes(tag.toLowerCase()) || 
-            tag.toLowerCase().includes(sectorLower)
-          );
-          if (matchingTags.length > 0) {
-            score += 20;
-            reasons.push(`relevante para setor ${sector}`);
-          }
-        }
-
-        // Pontuação baseada no tamanho da empresa
-        const companySize = onboarding.company_size || onboarding.business_info?.company_size;
-        if (companySize) {
-          if (companySize.includes('pequena') || companySize.includes('startup')) {
-            if (solution.tags?.some(tag => tag.toLowerCase().includes('startup') || tag.toLowerCase().includes('pequena'))) {
-              score += 15;
-              reasons.push('adequada para empresas pequenas');
-            }
-          } else if (companySize.includes('média') || companySize.includes('medium')) {
-            if (solution.tags?.some(tag => tag.toLowerCase().includes('média') || tag.toLowerCase().includes('escala'))) {
-              score += 15;
-              reasons.push('ideal para empresas em crescimento');
-            }
-          }
-        }
-
-        // Pontuação base por categoria (diversificação)
-        if (solution.category === 'Receita') score += 10;
-        if (solution.category === 'Operacional') score += 8;
-        if (solution.category === 'Estratégia') score += 6;
-
-        justification = reasons.length > 0 ? reasons.join(', ') : 'Solução recomendada baseada no seu perfil';
-
-        recommendations.push({ solution, score, justification });
+      } catch (aiError) {
+        console.error('❌ Erro na IA:', aiError);
       }
+    }
 
-      // Ordenar por pontuação
-      recommendations.sort((a, b) => b.score - a.score);
-
-      console.log('📊 Top 10 recomendações:');
-      recommendations.slice(0, 10).forEach((rec, idx) => {
-        console.log(`${idx + 1}. ${rec.solution.title} (Score: ${rec.score}) - ${rec.justification}`);
+    // 6. Fallback para algoritmo determinístico se IA falhar
+    if (!aiGeneratedTrail) {
+      console.log('🔄 Usando algoritmo fallback...');
+      
+      // Algoritmo baseado no perfil
+      const isBeginnerAI = userData.ai_knowledge_level === 'iniciante';
+      const isSmallCompany = userData.company_size === 'micro' || userData.company_size === 'pequena';
+      const focusRevenue = userData.main_goal?.includes('receita') || userData.main_goal?.includes('vendas');
+      const focusOperational = userData.main_goal?.includes('operacional') || userData.main_goal?.includes('processo');
+      
+      let prioritizedSolutions = solutions.slice();
+      
+      // Lógica de priorização baseada no perfil
+      prioritizedSolutions.sort((a, b) => {
+        let scoreA = 0, scoreB = 0;
+        
+        // Priorizar por dificuldade para iniciantes
+        if (isBeginnerAI) {
+          if (a.difficulty === 'Iniciante') scoreA += 3;
+          if (b.difficulty === 'Iniciante') scoreB += 3;
+        }
+        
+        // Priorizar por categoria baseada no objetivo
+        if (focusRevenue) {
+          if (a.category === 'Receita') scoreA += 2;
+          if (b.category === 'Receita') scoreB += 2;
+        }
+        
+        if (focusOperational) {
+          if (a.category === 'Operacional') scoreA += 2;
+          if (b.category === 'Operacional') scoreB += 2;
+        }
+        
+        return scoreB - scoreA;
       });
-
-      // Dividir em prioridades
-      const priority1: TrailSolution[] = recommendations.slice(0, 3).map(rec => ({
-        solutionId: rec.solution.id,
-        justification: rec.justification,
-        priority: 1
-      }));
-
-      const priority2: TrailSolution[] = recommendations.slice(3, 6).map(rec => ({
-        solutionId: rec.solution.id,
-        justification: rec.justification,
-        priority: 2
-      }));
-
-      const priority3: TrailSolution[] = recommendations.slice(6, 9).map(rec => ({
-        solutionId: rec.solution.id,
-        justification: rec.justification,
-        priority: 3
-      }));
-
-      return {
-        priority1,
-        priority2,
-        priority3,
-        recommended_courses: [],
-        recommended_lessons: []
+      
+      aiGeneratedTrail = {
+        priority1: prioritizedSolutions.slice(0, 3).map(s => ({
+          solutionId: s.id,
+          justification: `Ideal para ${userData.company_segment || 'seu negócio'} com foco em ${userData.main_goal || 'crescimento'}`
+        })),
+        priority2: prioritizedSolutions.slice(3, 6).map(s => ({
+          solutionId: s.id,
+          justification: `Complementa sua estratégia de IA para ${userData.company_size || 'empresa'}`
+        })),
+        priority3: prioritizedSolutions.slice(6, 8).map(s => ({
+          solutionId: s.id,
+          justification: `Recurso adicional para otimizar resultados`
+        })),
+        recommended_lessons: availableLessons.slice(0, 3).map((lesson, index) => ({
+          lessonId: lesson.id,
+          moduleId: lesson.learning_modules?.id,
+          courseId: lesson.learning_modules?.learning_courses?.id,
+          justification: 'Aula complementar para implementação',
+          priority: index + 1
+        }))
       };
     }
 
-    // Gerar recomendações
-    const trail = scoreAndRecommendSolutions(onboardingData, solutions);
-    console.log('✅ Trilha gerada com sucesso:', JSON.stringify(trail, null, 2));
-
-    // Salvar trilha no banco usando upsert
-    console.log('💾 Salvando trilha no banco...');
-    const { data: savedTrail, error: saveError } = await supabase
+    // 7. Salvar trilha no banco
+    const { data: existingTrail } = await supabase
       .from('implementation_trails')
-      .upsert({
-        user_id: user_id,
-        trail_data: trail,
-        status: 'completed',
-        generation_attempts: 1
-      }, { 
-        onConflict: 'user_id'
-      })
-      .select()
+      .select('id')
+      .eq('user_id', user_id)
       .single();
 
-    if (saveError) {
-      console.log('❌ Erro ao salvar trilha:', saveError);
-      throw new Error(`Erro ao salvar trilha: ${saveError.message}`);
+    if (existingTrail) {
+      // Atualizar trilha existente
+      const { error: updateError } = await supabase
+        .from('implementation_trails')
+        .update({
+          trail_data: aiGeneratedTrail,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user_id);
+
+      if (updateError) {
+        console.error('❌ Erro ao atualizar trilha:', updateError);
+        throw updateError;
+      }
+    } else {
+      // Criar nova trilha
+      const { error: insertError } = await supabase
+        .from('implementation_trails')
+        .insert({
+          user_id: user_id,
+          trail_data: aiGeneratedTrail,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+
+      if (insertError) {
+        console.error('❌ Erro ao criar trilha:', insertError);
+        throw insertError;
+      }
     }
 
-    console.log('✅ Trilha salva com sucesso:', savedTrail?.id);
+    console.log('✅ Trilha inteligente gerada e salva com sucesso!');
 
     return new Response(
       JSON.stringify({
         success: true,
-        trail_data: trail,
-        message: 'Trilha personalizada gerada com sucesso!'
+        trail_data: aiGeneratedTrail,
+        user_profile: {
+          name: userData.name || profile.name,
+          company: userData.company_name,
+          role: userRole,
+          ai_level: userData.ai_knowledge_level
+        },
+        stats: {
+          solutions_analyzed: solutions.length,
+          lessons_available: availableLessons.length,
+          ai_powered: !!openaiApiKey,
+          recommendations: {
+            priority1: aiGeneratedTrail.priority1?.length || 0,
+            priority2: aiGeneratedTrail.priority2?.length || 0,
+            priority3: aiGeneratedTrail.priority3?.length || 0,
+            lessons: aiGeneratedTrail.recommended_lessons?.length || 0
+          }
+        }
       }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.log('❌ Erro na edge function:', error);
-    
+    console.error('❌ Erro na geração da trilha:', error);
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
-        details: 'Verifique os logs para mais detalhes'
+        error: error.message || 'Erro interno do servidor',
+        details: error.stack
       }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
 });
