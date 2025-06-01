@@ -6,11 +6,10 @@ import { useImplementationTrail } from "@/hooks/implementation/useImplementation
 import { useTrailEnrichment } from "@/hooks/implementation/useTrailEnrichment";
 import { useTrailSolutionsEnrichment } from "@/hooks/implementation/useTrailSolutionsEnrichment";
 import { useOnboardingCompletion } from "@/hooks/onboarding/useOnboardingCompletion";
-import { TrailCardLoader } from "./TrailCardLoader";
-import { TrailEmptyState } from "./TrailEmptyState";
-import { OnboardingIncompleteTrailState } from "./OnboardingIncompleteTrailState";
-import { TrailCardHeader } from "./TrailCardHeader";
-import { TrailAIContent } from "./TrailAIContent";
+import { MinimalTrailLoader } from "./MinimalTrailLoader";
+import { MinimalTrailEmptyState } from "./MinimalTrailEmptyState";
+import { MinimalOnboardingIncompleteState } from "./MinimalOnboardingIncompleteState";
+import { MinimalTrailContent } from "./MinimalTrailContent";
 
 export const ImplementationTrail = () => {
   const navigate = useNavigate();
@@ -44,38 +43,34 @@ export const ImplementationTrail = () => {
 
   // Se ainda está carregando dados do onboarding ou trilha inicial
   if (isLoading || onboardingLoading) {
-    return <TrailCardLoader />;
+    return <MinimalTrailLoader />;
   }
 
   // Se onboarding não foi completado, mostrar estado específico
   const isOnboardingComplete = onboardingData?.isCompleted || false;
   if (!isOnboardingComplete) {
-    return <OnboardingIncompleteTrailState onNavigateToOnboarding={handleNavigateToOnboarding} />;
+    return <MinimalOnboardingIncompleteState onNavigateToOnboarding={handleNavigateToOnboarding} />;
   }
 
   // Se onboarding completo mas não tem trilha, mostrar estado vazio
   if (!hasContent) {
-    return <TrailEmptyState onRegenerate={handleRegenerateTrail} />;
+    return <MinimalTrailEmptyState onRegenerate={handleRegenerateTrail} />;
   }
 
   // Se tem trilha, mostrar conteúdo normal
   const isLoadingContent = lessonsLoading || solutionsLoading;
 
   return (
-    <Card className="w-full">
-      <TrailCardHeader 
-        onUpdate={handleRegenerateTrail} 
-        onViewAll={handleViewFullTrail}
-        hasAIContent={true}
-      />
-      <CardContent>
-        <TrailAIContent
+    <Card className="w-full border-neutral-700/30 bg-neutral-800/20">
+      <CardContent className="p-4">
+        <MinimalTrailContent
           enrichedSolutions={enrichedSolutions}
           enrichedLessons={enrichedLessons}
           isLoading={isLoadingContent}
           onSolutionClick={handleSolutionClick}
           onLessonClick={handleLessonClick}
           onViewAll={handleViewFullTrail}
+          onRegenerate={handleRegenerateTrail}
         />
       </CardContent>
     </Card>
