@@ -47,6 +47,9 @@ export const SmartRedirectHandler: React.FC<SmartRedirectHandlerProps> = ({ chil
     location.pathname.startsWith(route)
   );
 
+  // Verificar se é admin (admins sempre têm acesso)
+  const isAdmin = profile?.role === 'admin';
+
   console.log('🔍 SmartRedirectHandler: Analisando navegação', {
     pathname: location.pathname,
     isPublicRoute,
@@ -55,6 +58,7 @@ export const SmartRedirectHandler: React.FC<SmartRedirectHandlerProps> = ({ chil
     requiresOnboarding,
     isProtectedRoute,
     isOnboardingComplete,
+    isAdmin,
     userId: user?.id
   });
 
@@ -67,9 +71,11 @@ export const SmartRedirectHandler: React.FC<SmartRedirectHandlerProps> = ({ chil
       isProfileRoute,
       requiresOnboarding,
       isProtectedRoute,
+      isOnboardingComplete,
+      isAdmin,
       userId: user?.id
     });
-  }, [location.pathname, isPublicRoute, isOnboardingRoute, isProfileRoute, requiresOnboarding, isProtectedRoute, user?.id]);
+  }, [location.pathname, isPublicRoute, isOnboardingRoute, isProfileRoute, requiresOnboarding, isProtectedRoute, isOnboardingComplete, isAdmin, user?.id]);
 
   // Redirecionar para onboarding apenas se a rota atual requer onboarding E não é uma rota protegida
   useEffect(() => {
@@ -82,14 +88,15 @@ export const SmartRedirectHandler: React.FC<SmartRedirectHandlerProps> = ({ chil
         return;
       }
 
-      // Só redirecionar se a rota requer onboarding, onboarding não está completo E não é uma rota protegida
-      if (requiresOnboarding && !isOnboardingComplete && !isProtectedRoute) {
+      // Só redirecionar se a rota requer onboarding, onboarding não está completo, não é admin E não é uma rota protegida
+      if (requiresOnboarding && !isOnboardingComplete && !isAdmin && !isProtectedRoute) {
         console.log('🔄 SmartRedirectHandler: Redirecionando para onboarding - rota requer onboarding', {
           userId: user.id,
           currentPath: location.pathname,
           requiresOnboarding,
           isProtectedRoute,
-          isOnboardingComplete
+          isOnboardingComplete,
+          isAdmin
         });
         navigate('/onboarding-new', { replace: true });
       }
@@ -104,6 +111,7 @@ export const SmartRedirectHandler: React.FC<SmartRedirectHandlerProps> = ({ chil
     authLoading, 
     onboardingLoading,
     isOnboardingComplete,
+    isAdmin,
     navigate,
     location.pathname
   ]);

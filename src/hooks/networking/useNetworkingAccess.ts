@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/auth';
 
 export const useNetworkingAccess = () => {
   const { profile } = useAuth();
-  const { isOnboardingComplete } = useUnifiedOnboardingValidation();
+  const { isOnboardingComplete, isLoading } = useUnifiedOnboardingValidation();
 
   // Verificar se é admin (sempre tem acesso)
   const isAdmin = profile?.role === 'admin';
@@ -16,13 +16,15 @@ export const useNetworkingAccess = () => {
     isAdmin,
     isOnboardingComplete,
     hasAccess,
-    userRole: profile?.role
+    userRole: profile?.role,
+    isLoading
   });
 
   return {
     hasAccess,
     isAdmin,
     isOnboardingComplete,
-    reason: !hasAccess ? 'Onboarding não concluído' : null
+    isLoading,
+    reason: !hasAccess ? 'Complete o onboarding para acessar o networking' : null
   };
 };
