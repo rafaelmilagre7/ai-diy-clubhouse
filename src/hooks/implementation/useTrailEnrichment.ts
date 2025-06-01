@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { ImplementationTrail, TrailLessonEnriched } from '@/types/implementation-trail';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useTrailEnrichment = (trail: ImplementationTrail | null) => {
   const [enrichedLessons, setEnrichedLessons] = useState<TrailLessonEnriched[]>([]);
@@ -19,78 +19,48 @@ export const useTrailEnrichment = (trail: ImplementationTrail | null) => {
         setIsLoading(true);
         setError(null);
 
-        const lessonIds = trail.recommended_lessons.map(lesson => lesson.lessonId);
+        const lessonIds = trail.recommended_lessons.map(l => l.lessonId);
 
-        const { data: lessons, error: lessonsError } = await supabase
+        // Buscar detalhes das aulas com módulos e cursos
+        const { data: lessonsData, error: lessonsError } = await supabase
           .from('learning_lessons')
           .select(`
-            id,
-            title,
-            description,
-            cover_image_url,
-            estimated_time_minutes,
-            difficulty_level,
-            module_id,
-            learning_modules!inner(
+            *,
+            module:learning_modules!inner(
               id,
               title,
-              learning_courses!inner(
+              course:learning_courses!inner(
                 id,
                 title
               )
             )
           `)
-          .in('id', lessonIds);
+          .in('id', lessonIds)
+          .eq('published', true);
 
         if (lessonsError) {
-          console.error('Erro ao buscar aulas:', lessonsError);
           throw lessonsError;
         }
 
-        if (!lessons) {
-          setEnrichedLessons([]);
-          return;
-        }
-
-        // Enriquecer as aulas com dados da trilha
-        const enriched: TrailLessonEnriched[] = lessons.map(lesson => {
-          const trailLesson = trail.recommended_lessons!.find(tl => tl.lessonId === lesson.id);
-          
-          // Acessar o primeiro elemento dos arrays retornados pelo Supabase
-          const moduleData = Array.isArray(lesson.learning_modules) ? lesson.learning_modules[0] : lesson.learning_modules;
-          const courseData = Array.isArray(moduleData?.learning_courses) ? moduleData.learning_courses[0] : moduleData?.learning_courses;
-          
-          return {
-            id: lesson.id,
-            title: lesson.title,
-            description: lesson.description,
-            cover_image_url: lesson.cover_image_url,
-            estimated_time_minutes: lesson.estimated_time_minutes || 0,
-            difficulty_level: lesson.difficulty_level,
-            lessonId: lesson.id,
-            moduleId: lesson.module_id,
-            courseId: courseData?.id,
-            justification: trailLesson?.justification,
-            priority: trailLesson?.priority || 1,
-            module: {
-              id: moduleData?.id || '',
-              title: moduleData?.title || '',
-              course: {
-                id: courseData?.id || '',
-                title: courseData?.title || ''
-              }
+        // Enriquecer com dados da trilha
+        const enriched: TrailLessonEnriched[] = trail.recommended_lessons
+          .map(trailLesson => {
+            const lesson = lessonsData?.find(l => l.id === trailLesson.lessonId);
+            if (lesson && lesson.module) {
+              return {
+                ...trailLesson,
+                ...lesson,
+                module: lesson.module
+              };
             }
-          };
-        });
-
-        // Ordenar por prioridade
-        enriched.sort((a, b) => (a.priority || 1) - (b.priority || 1));
+            return null;
+          })
+          .filter(Boolean) as TrailLessonEnriched[];
 
         setEnrichedLessons(enriched);
       } catch (err) {
         console.error('Erro ao enriquecer aulas da trilha:', err);
-        setError('Erro ao carregar aulas recomendadas');
-        setEnrichedLessons([]);
+        setError(err instanceof Error ? err.message : 'Erro desconhecido');
       } finally {
         setIsLoading(false);
       }

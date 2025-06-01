@@ -31,7 +31,7 @@ export const useImplementationTrail = () => {
       setError(null);
       console.log('🔄 Carregando trilha para usuário:', user.id);
 
-      // Buscar trilha sem filtro por status para evitar problemas
+      // Buscar trilha mais recente
       const { data, error: trailError } = await supabase
         .from('implementation_trails')
         .select('*')
@@ -73,7 +73,7 @@ export const useImplementationTrail = () => {
   }, [user?.id]);
 
   // Função para gerar nova trilha usando edge function inteligente
-  const generateImplementationTrail = useCallback(async (onboardingData: any = null) => {
+  const generateImplementationTrail = useCallback(async () => {
     if (!user?.id) {
       toast.error('Usuário não autenticado');
       return;
@@ -84,7 +84,7 @@ export const useImplementationTrail = () => {
       setError(null);
       console.log('🚀 Iniciando geração inteligente da trilha para usuário:', user.id);
 
-      // Usar a edge function inteligente com melhor tratamento de erro
+      // Usar a edge function inteligente
       const { data, error: functionError } = await supabase.functions.invoke('generate-smart-trail', {
         body: { user_id: user.id }
       });
@@ -93,7 +93,7 @@ export const useImplementationTrail = () => {
         console.error('❌ Erro da edge function:', functionError);
         
         // Tratar erro específico de duplicação
-        if (functionError.message?.includes('duplicate key')) {
+        if (functionError.message?.includes('duplicate key') || functionError.message?.includes('unique constraint')) {
           console.log('🔄 Trilha já existe, tentando recarregar...');
           await loadTrail(true);
           toast.success('Trilha carregada com sucesso!');

@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
 import { ImplementationTrail, TrailSolutionEnriched } from '@/types/implementation-trail';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useTrailSolutionsEnrichment = (trail: ImplementationTrail | null) => {
   const [enrichedSolutions, setEnrichedSolutions] = useState<TrailSolutionEnriched[]>([]);
@@ -19,81 +19,72 @@ export const useTrailSolutionsEnrichment = (trail: ImplementationTrail | null) =
         setIsLoading(true);
         setError(null);
 
-        // Extrair todos os IDs de soluções das 3 prioridades
-        const allSolutions = [
-          ...trail.priority1.map(s => ({ ...s, priority: 1 })),
-          ...trail.priority2.map(s => ({ ...s, priority: 2 })),
-          ...trail.priority3.map(s => ({ ...s, priority: 3 }))
+        // Coletar todos os IDs de soluções
+        const allSolutionIds = [
+          ...trail.priority1.map(s => s.solutionId),
+          ...trail.priority2.map(s => s.solutionId),
+          ...trail.priority3.map(s => s.solutionId)
         ];
 
-        if (allSolutions.length === 0) {
+        if (allSolutionIds.length === 0) {
           setEnrichedSolutions([]);
-          setIsLoading(false);
           return;
         }
 
-        const solutionIds = allSolutions.map(s => s.solutionId);
-
-        // Buscar dados completos das soluções
+        // Buscar detalhes das soluções
         const { data: solutionsData, error: solutionsError } = await supabase
           .from('solutions')
-          .select(`
-            id,
-            title,
-            description,
-            category,
-            difficulty,
-            thumbnail_url,
-            tags,
-            published
-          `)
-          .in('id', solutionIds)
+          .select('*')
+          .in('id', allSolutionIds)
           .eq('published', true);
 
         if (solutionsError) {
-          console.error('Erro ao buscar soluções:', solutionsError);
           throw solutionsError;
         }
 
-        if (!solutionsData || solutionsData.length === 0) {
-          console.warn('Nenhuma solução encontrada para os IDs fornecidos');
-          setEnrichedSolutions([]);
-          setIsLoading(false);
-          return;
-        }
+        // Enriquecer com dados da trilha
+        const enriched: TrailSolutionEnriched[] = [];
 
-        // Enriquecer soluções com dados da trilha
-        const enriched: TrailSolutionEnriched[] = allSolutions
-          .map(trailSolution => {
-            const solutionData = solutionsData.find(s => s.id === trailSolution.solutionId);
-            
-            if (!solutionData) {
-              console.warn(`Solução não encontrada para ID: ${trailSolution.solutionId}`);
-              return null;
-            }
-
-            return {
+        // Processar prioridade 1
+        trail.priority1.forEach(trailSolution => {
+          const solution = solutionsData?.find(s => s.id === trailSolution.solutionId);
+          if (solution) {
+            enriched.push({
               ...trailSolution,
-              id: solutionData.id,
-              title: solutionData.title || 'Solução sem título',
-              description: solutionData.description || 'Descrição não disponível',
-              category: solutionData.category || 'Sem categoria',
-              difficulty: solutionData.difficulty || 'medium',
-              thumbnail_url: solutionData.thumbnail_url,
-              tags: solutionData.tags || [],
-              solution: solutionData
-            };
-          })
-          .filter(Boolean) as TrailSolutionEnriched[];
+              ...solution,
+              priority: 1
+            });
+          }
+        });
 
-        // Ordenar por prioridade
-        enriched.sort((a, b) => (a.priority || 1) - (b.priority || 1));
+        // Processar prioridade 2
+        trail.priority2.forEach(trailSolution => {
+          const solution = solutionsData?.find(s => s.id === trailSolution.solutionId);
+          if (solution) {
+            enriched.push({
+              ...trailSolution,
+              ...solution,
+              priority: 2
+            });
+          }
+        });
+
+        // Processar prioridade 3
+        trail.priority3.forEach(trailSolution => {
+          const solution = solutionsData?.find(s => s.id === trailSolution.solutionId);
+          if (solution) {
+            enriched.push({
+              ...trailSolution,
+              ...solution,
+              priority: 3
+            });
+          }
+        });
 
         setEnrichedSolutions(enriched);
       } catch (err) {
         console.error('Erro ao enriquecer soluções da trilha:', err);
-        setError('Erro ao carregar soluções recomendadas');
-        setEnrichedSolutions([]);
+        setError(err instanceof Error ? err.message : 'Erro desconhecido');
       } finally {
         setIsLoading(false);
       }
