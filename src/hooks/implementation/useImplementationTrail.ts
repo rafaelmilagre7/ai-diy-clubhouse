@@ -1,23 +1,48 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ImplementationTrail } from '@/types/implementation-trail';
 import { sanitizeTrailData } from './useImplementationTrail.utils';
+import { useTrailCache } from './useTrailCache';
 
 export const useImplementationTrail = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [trail, setTrail] = useState<ImplementationTrail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Criar hash do perfil para invalidação de cache
+  const profileHash = useMemo(() => {
+    if (!profile) return '';
+    return btoa(JSON.stringify({
+      role: profile.role,
+      company: profile.company,
+      industry: profile.industry,
+      position: profile.position
+    }));
+  }, [profile]);
+
+  // Hook de cache
+  const { cachedTrail, saveToCache, invalidateCache, isCacheValid } = useTrailCache(
+    user?.id || '', 
+    profileHash
+  );
+
   // Função para carregar trilha existente
   const loadTrail = useCallback(async (forceReload = false) => {
     if (!user?.id) {
       console.log('❌ Usuário não definido, não carregando trilha');
+      return;
+    }
+
+    // Usar cache se válido e não forçando reload
+    if (!forceReload && isCacheValid && cachedTrail) {
+      console.log('⚡ Usando trilha do cache');
+      setTrail(cachedTrail);
       return;
     }
 
@@ -54,6 +79,7 @@ export const useImplementationTrail = () => {
         if (sanitizedTrail) {
           console.log('✅ Trilha sanitizada com sucesso:', sanitizedTrail);
           setTrail(sanitizedTrail);
+          saveToCache(sanitizedTrail); // Salvar no cache
         } else {
           console.log('⚠️ Falha ao sanitizar trilha');
           setTrail(null);
@@ -70,7 +96,7 @@ export const useImplementationTrail = () => {
       setIsLoading(false);
       setRefreshing(false);
     }
-  }, [user?.id]);
+  }, [user?.id, isCacheValid, cachedTrail, saveToCache]);
 
   // Função para gerar nova trilha usando edge function inteligente
   const generateImplementationTrail = useCallback(async () => {
@@ -82,6 +108,8 @@ export const useImplementationTrail = () => {
     try {
       setRegenerating(true);
       setError(null);
+      invalidateCache(); // Limpar cache antes de gerar nova trilha
+      
       console.log('🚀 Iniciando geração inteligente da trilha para usuário:', user.id);
 
       // Verificar se o usuário tem dados de onboarding
@@ -125,6 +153,7 @@ export const useImplementationTrail = () => {
         const sanitizedTrail = sanitizeTrailData(data.trail_data);
         if (sanitizedTrail) {
           setTrail(sanitizedTrail);
+          saveToCache(sanitizedTrail); // Salvar nova trilha no cache
           toast.success('Trilha personalizada gerada com IA!', {
             description: 'Suas recomendações foram atualizadas com base no seu perfil'
           });
@@ -155,7 +184,7 @@ export const useImplementationTrail = () => {
     } finally {
       setRegenerating(false);
     }
-  }, [user?.id, loadTrail, trail]);
+  }, [user?.id, loadTrail, trail, invalidateCache, saveToCache]);
 
   // Carregar trilha ao inicializar
   useEffect(() => {
@@ -179,7 +208,8 @@ export const useImplementationTrail = () => {
     isLoading,
     regenerating,
     refreshing,
-    error
+    error,
+    cacheValid: isCacheValid
   });
 
   return {
