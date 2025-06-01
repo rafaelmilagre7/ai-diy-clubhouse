@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/contexts/auth";
-import { AppRoutes } from "@/routes/AppRoutes";
+import { AppRoutes } from "@/routes";
 import "./App.css";
 
 // Importar a limpeza global (executa automaticamente)
