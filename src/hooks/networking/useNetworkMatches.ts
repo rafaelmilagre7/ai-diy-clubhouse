@@ -18,6 +18,7 @@ export interface NetworkMatch {
   ai_analysis: {
     opportunities?: string[];
     recommendedApproach?: string;
+    strengths?: string[];
   };
   month_year: string;
   status: 'pending' | 'viewed' | 'contacted' | 'dismissed';
