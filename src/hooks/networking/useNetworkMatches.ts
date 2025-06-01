@@ -9,10 +9,15 @@ export interface NetworkMatch {
   match_type: 'customer' | 'supplier';
   compatibility_score: number;
   match_reason: string;
+  match_strengths?: {
+    factor: string;
+    strength: number;
+    description: string;
+  }[];
+  suggested_topics?: string[];
   ai_analysis: {
-    strengths?: string[];
     opportunities?: string[];
-    recommended_approach?: string;
+    recommendedApproach?: string;
   };
   month_year: string;
   status: 'pending' | 'viewed' | 'contacted' | 'dismissed';
@@ -65,7 +70,8 @@ export function useNetworkMatches(matchType?: 'customer' | 'supplier') {
         .from('network_matches')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .eq('status', 'pending')
+        .order('compatibility_score', { ascending: false });
 
       if (matchType) {
         query = query.eq('match_type', matchType);
@@ -130,7 +136,7 @@ export function useNetworkMatches(matchType?: 'customer' | 'supplier') {
       return transformedData as NetworkMatch[];
     },
     staleTime: 5 * 60 * 1000, // 5 minutos
-    retry: 2,
+    retry: 1,
   });
 }
 

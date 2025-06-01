@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Sparkles, BookOpen, Target, ArrowRight } from "lucide-react";
+import { Sparkles, BookOpen, Target, ArrowRight, Zap } from "lucide-react";
 import { TrailSolutionEnriched, TrailLessonEnriched } from "@/types/implementation-trail";
 
 interface TrailAIContentProps {
@@ -37,7 +37,7 @@ export const TrailAIContent: React.FC<TrailAIContentProps> = ({
       {/* AI Header */}
       <div className="text-center p-4 bg-viverblue/10 border border-viverblue/20 rounded-lg">
         <div className="flex items-center justify-center gap-2 mb-2">
-          <Sparkles className="h-5 w-5 text-viverblue" />
+          <Zap className="h-5 w-5 text-viverblue" />
           <h3 className="font-semibold text-viverblue">Recomendações Personalizadas</h3>
         </div>
         <p className="text-sm text-neutral-400">
