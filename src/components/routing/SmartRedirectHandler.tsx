@@ -30,7 +30,7 @@ export const SmartRedirectHandler: React.FC<SmartRedirectHandlerProps> = ({ chil
   const { user, profile, isLoading: authLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const { isOnboardingComplete, isLoading: onboardingLoading } = useUnifiedOnboardingValidation();
+  const { isOnboardingComplete, isLoading: onboardingLoading, invalidateOnboardingCache } = useUnifiedOnboardingValidation();
 
   const isOnboardingRoute = location.pathname.startsWith('/onboarding');
   const isLoginRoute = location.pathname === '/login';
@@ -61,6 +61,14 @@ export const SmartRedirectHandler: React.FC<SmartRedirectHandlerProps> = ({ chil
     isAdmin,
     userId: user?.id
   });
+
+  // Invalidar cache quando o usuário navega entre páginas
+  useEffect(() => {
+    if (user?.id && !isPublicRoute) {
+      console.log('🔄 SmartRedirectHandler: Invalidando cache ao navegar para:', location.pathname);
+      invalidateOnboardingCache();
+    }
+  }, [location.pathname, user?.id, isPublicRoute, invalidateOnboardingCache]);
 
   // Log da navegação atual
   useEffect(() => {
