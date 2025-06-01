@@ -1,29 +1,34 @@
 
 import { useAuth } from '@/contexts/auth';
-import { usePermissions } from '@/hooks/auth/usePermissions';
+import { useUnifiedOnboardingValidation } from '@/hooks/onboarding/useUnifiedOnboardingValidation';
 
 export function useNetworkingAccess() {
   const { profile } = useAuth();
-  const { hasPermission } = usePermissions();
-  
-  // Verificar se tem permissão específica de networking
-  const hasNetworkingPermission = hasPermission('networking.access');
+  const { isOnboardingComplete, isLoading } = useUnifiedOnboardingValidation();
   
   // Verificar se é admin (que tem acesso total)
   const isAdmin = profile?.role === 'admin';
   
-  // Para agora, considerar que membros regulares com permissão específica têm acesso
-  // Quando implementarmos o sistema de roles expandido (membro_club), será atualizado
-  const hasAccess = hasNetworkingPermission || isAdmin;
+  // Verificar se o onboarding está completo
+  const hasAccess = isAdmin || isOnboardingComplete;
+  
+  console.log('🔍 useNetworkingAccess (auth):', {
+    isAdmin,
+    isOnboardingComplete,
+    hasAccess,
+    userRole: profile?.role,
+    isLoading
+  });
   
   const accessMessage = !hasAccess 
-    ? 'O Networking Inteligente é exclusivo para membros Club. Faça upgrade para conectar-se com outros empreendedores.'
+    ? 'Complete o onboarding para acessar o Networking Inteligente'
     : '';
 
   return {
     hasAccess,
     accessMessage,
     isAdmin,
-    hasNetworkingPermission
+    hasNetworkingPermission: hasAccess,
+    isLoading
   };
 }

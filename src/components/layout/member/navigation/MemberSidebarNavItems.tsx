@@ -26,13 +26,16 @@ interface MemberSidebarNavItemsProps {
 
 export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ sidebarOpen }) => {
   const location = useLocation();
-  const { hasAccess: hasNetworkingAccess } = useNetworkingAccess();
+  const { hasAccess: hasNetworkingAccess, isLoading: networkingLoading } = useNetworkingAccess();
   const { profile } = useAuth();
   const { isOnboardingComplete, isLoading: onboardingLoading } = useUnifiedOnboardingValidation();
 
-  console.log('🔍 MemberSidebarNavItems: Status do onboarding:', {
+  console.log('🔍 MemberSidebarNavItems: Status do networking:', {
+    hasNetworkingAccess,
+    networkingLoading,
     isOnboardingComplete,
-    isLoading: onboardingLoading
+    onboardingLoading,
+    userRole: profile?.role
   });
 
   // Determinar o item do onboarding baseado no status
@@ -97,12 +100,18 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
     }
   ];
 
-  // Adicionar networking apenas se o usuário tem acesso
-  if (hasNetworkingAccess) {
+  // Adicionar networking se o usuário tem acesso
+  if (hasNetworkingAccess && !networkingLoading) {
+    console.log('✅ MemberSidebarNavItems: Adicionando networking ao menu');
     menuItems.splice(5, 0, {
       title: "Networking",
       href: "/networking",
       icon: Users,
+    });
+  } else {
+    console.log('❌ MemberSidebarNavItems: Networking não disponível', {
+      hasNetworkingAccess,
+      networkingLoading
     });
   }
 

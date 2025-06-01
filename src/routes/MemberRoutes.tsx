@@ -96,7 +96,7 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/comunidade/categoria/:slug", CategoryView),
   createProtectedRoute("/comunidade/novo-topico/:categorySlug", NewTopic),
   
-  // Networking Routes - mantém guard de feature
+  // Networking Routes - com guard de feature
   createProtectedRoute("/networking", NetworkingPage, "networking"),
   createProtectedRoute("/networking/connections", () => <ConnectionsManager />, "networking")
 ];
