@@ -1,96 +1,20 @@
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
-import { supabase } from "@/lib/supabase";
+import { useTrailEnrichment } from "@/hooks/implementation/useTrailEnrichment";
+import { useTrailSolutionsEnrichment } from "@/hooks/implementation/useTrailSolutionsEnrichment";
 import { TrailCardLoader } from "./TrailCardLoader";
 import { TrailEmptyState } from "./TrailEmptyState";
-import { TrailCardList } from "./TrailCardList";
 import { TrailCardHeader } from "./TrailCardHeader";
+import { TrailAIContent } from "./TrailAIContent";
 
 export const ImplementationTrail = () => {
   const navigate = useNavigate();
   const { trail, isLoading, hasContent, refreshTrail, generateImplementationTrail } = useImplementationTrail();
-  const [solutions, setSolutions] = useState<any[]>([]);
-  const [loadingSolutions, setLoadingSolutions] = useState(true);
-
-  useEffect(() => {
-    const fetchSolutionsForTrail = async () => {
-      if (!trail) {
-        setLoadingSolutions(false);
-        return;
-      }
-
-      try {
-        setLoadingSolutions(true);
-        const solutionIds = [
-          ...trail.priority1.map(r => r.solutionId),
-          ...trail.priority2.map(r => r.solutionId),
-          ...trail.priority3.map(r => r.solutionId)
-        ];
-
-        if (solutionIds.length === 0) {
-          setSolutions([]);
-          setLoadingSolutions(false);
-          return;
-        }
-
-        const { data, error } = await supabase
-          .from("solutions")
-          .select("*")
-          .in("id", solutionIds);
-
-        if (error) throw error;
-
-        const mappedSolutions: any[] = [];
-
-        trail.priority1.forEach(rec => {
-          const solution = data?.find(s => s.id === rec.solutionId);
-          if (solution) {
-            mappedSolutions.push({
-              ...solution,
-              priority: 1,
-              justification: rec.justification,
-              solutionId: rec.solutionId
-            });
-          }
-        });
-
-        trail.priority2.forEach(rec => {
-          const solution = data?.find(s => s.id === rec.solutionId);
-          if (solution) {
-            mappedSolutions.push({
-              ...solution,
-              priority: 2,
-              justification: rec.justification,
-              solutionId: rec.solutionId
-            });
-          }
-        });
-
-        trail.priority3.forEach(rec => {
-          const solution = data?.find(s => s.id === rec.solutionId);
-          if (solution) {
-            mappedSolutions.push({
-              ...solution,
-              priority: 3,
-              justification: rec.justification,
-              solutionId: rec.solutionId
-            });
-          }
-        });
-
-        setSolutions(mappedSolutions);
-      } catch (error) {
-        console.error("Erro ao buscar soluções para a trilha:", error);
-      } finally {
-        setLoadingSolutions(false);
-      }
-    };
-
-    fetchSolutionsForTrail();
-  }, [trail]);
+  const { enrichedLessons, isLoading: lessonsLoading } = useTrailEnrichment(trail);
+  const { enrichedSolutions, isLoading: solutionsLoading } = useTrailSolutionsEnrichment(trail);
 
   const handleRegenerateTrail = async () => {
     await generateImplementationTrail();
@@ -100,22 +24,39 @@ export const ImplementationTrail = () => {
     navigate(`/solution/${id}`);
   };
 
-  if (isLoading || loadingSolutions) {
+  const handleLessonClick = (courseId: string, lessonId: string) => {
+    navigate(`/learning/course/${courseId}/lesson/${lessonId}`);
+  };
+
+  const handleViewFullTrail = () => {
+    navigate('/implementation-trail');
+  };
+
+  if (isLoading) {
     return <TrailCardLoader />;
   }
 
-  if (!hasContent || solutions.length === 0) {
+  if (!hasContent) {
     return <TrailEmptyState onRegenerate={handleRegenerateTrail} />;
   }
 
+  const isLoadingContent = lessonsLoading || solutionsLoading;
+
   return (
     <Card className="w-full">
-      <TrailCardHeader onUpdate={handleRegenerateTrail} />
+      <TrailCardHeader 
+        onUpdate={handleRegenerateTrail} 
+        onViewAll={handleViewFullTrail}
+        hasAIContent={true}
+      />
       <CardContent>
-        <TrailCardList
-          solutions={solutions}
+        <TrailAIContent
+          enrichedSolutions={enrichedSolutions}
+          enrichedLessons={enrichedLessons}
+          isLoading={isLoadingContent}
           onSolutionClick={handleSolutionClick}
-          onSeeAll={() => navigate('/solutions')}
+          onLessonClick={handleLessonClick}
+          onViewAll={handleViewFullTrail}
         />
       </CardContent>
     </Card>

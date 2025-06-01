@@ -21,6 +21,8 @@ export const TrailDisplayContent: React.FC<TrailDisplayContentProps> = ({
   const { enrichedLessons, isLoading: lessonsLoading } = useTrailEnrichment(trail);
   const { enrichedSolutions, isLoading: solutionsLoading } = useTrailSolutionsEnrichment(trail);
 
+  const totalRecommendations = enrichedSolutions.length + enrichedLessons.length;
+
   return (
     <div className="space-y-8">
       {/* Header da Trilha */}
@@ -31,46 +33,49 @@ export const TrailDisplayContent: React.FC<TrailDisplayContentProps> = ({
             Sua Trilha Personalizada VIVER DE IA
           </CardTitle>
           <p className="text-neutral-400">
-            Soluções e aulas selecionadas especialmente para o seu perfil e objetivos
+            {totalRecommendations} recomendações personalizadas geradas com IA baseadas no seu perfil
           </p>
+          <div className="flex justify-center mt-4">
+            <Button
+              onClick={onRegenerate}
+              variant="outline"
+              className="border-viverblue/40 text-viverblue hover:bg-viverblue/10"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Regenerar com IA
+            </Button>
+          </div>
         </CardHeader>
       </Card>
 
       {/* Soluções Recomendadas */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-viverblue" />
-            Soluções para Implementar
-          </h2>
-          <Button
-            onClick={onRegenerate}
-            variant="outline"
-            size="sm"
-            className="border-viverblue/40 text-viverblue hover:bg-viverblue/10"
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Regenerar Trilha
-          </Button>
-        </div>
-        
-        {solutionsLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue"></div>
-            <span className="ml-3 text-neutral-400">Carregando soluções...</span>
-          </div>
-        ) : (
-          <TrailSolutionsList solutions={enrichedSolutions} />
-        )}
-      </div>
-
-      {/* Aulas Recomendadas */}
-      {enrichedLessons && enrichedLessons.length > 0 && (
+      {enrichedSolutions.length > 0 && (
         <div className="space-y-6">
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-semibold text-white flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-viverblue" />
-              Aulas Recomendadas
+              Soluções para Implementar ({enrichedSolutions.length})
+            </h2>
+          </div>
+          
+          {solutionsLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue"></div>
+              <span className="ml-3 text-neutral-400">Carregando soluções...</span>
+            </div>
+          ) : (
+            <TrailSolutionsList solutions={enrichedSolutions} />
+          )}
+        </div>
+      )}
+
+      {/* Aulas Recomendadas */}
+      {enrichedLessons.length > 0 && (
+        <div className="space-y-6">
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-viverblue" />
+              Aulas Recomendadas ({enrichedLessons.length})
             </h2>
           </div>
           
@@ -90,10 +95,10 @@ export const TrailDisplayContent: React.FC<TrailDisplayContentProps> = ({
         <CardContent className="pt-6">
           <div className="text-center space-y-2">
             <p className="text-sm text-neutral-400">
-              💡 Esta trilha foi gerada com base no seu perfil e objetivos definidos no onboarding
+              🤖 Esta trilha foi gerada com Inteligência Artificial baseada no seu perfil completo de onboarding
             </p>
             <p className="text-xs text-neutral-500">
-              Você pode regenerar sua trilha a qualquer momento para obter novas recomendações
+              As recomendações são personalizadas para seus objetivos, nível de experiência e contexto de negócio
             </p>
           </div>
         </CardContent>

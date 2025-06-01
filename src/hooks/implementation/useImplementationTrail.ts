@@ -125,7 +125,9 @@ export const useImplementationTrail = () => {
         const sanitizedTrail = sanitizeTrailData(data.trail_data);
         if (sanitizedTrail) {
           setTrail(sanitizedTrail);
-          toast.success('Trilha personalizada gerada com sucesso!');
+          toast.success('Trilha personalizada gerada com IA!', {
+            description: 'Suas recomendações foram atualizadas com base no seu perfil'
+          });
         } else {
           throw new Error('Trilha gerada, mas dados inválidos');
         }
@@ -167,7 +169,8 @@ export const useImplementationTrail = () => {
   const hasContent = trail && (
     (trail.priority1 && trail.priority1.length > 0) ||
     (trail.priority2 && trail.priority2.length > 0) ||
-    (trail.priority3 && trail.priority3.length > 0)
+    (trail.priority3 && trail.priority3.length > 0) ||
+    (trail.recommended_lessons && trail.recommended_lessons.length > 0)
   );
 
   console.log('🎯 Hook state:', {
