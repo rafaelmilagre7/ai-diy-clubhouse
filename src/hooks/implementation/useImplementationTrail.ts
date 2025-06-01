@@ -17,7 +17,7 @@ export const useImplementationTrail = () => {
   // Função para carregar trilha existente
   const loadTrail = useCallback(async (forceReload = false) => {
     if (!user?.id) {
-      console.log('Usuário não definido, não carregando trilha');
+      console.log('❌ Usuário não definido, não carregando trilha');
       return;
     }
 
@@ -89,17 +89,10 @@ export const useImplementationTrail = () => {
         body: { user_id: user.id }
       });
 
+      console.log('📤 Resposta da edge function:', { data, error: functionError });
+
       if (functionError) {
         console.error('❌ Erro da edge function:', functionError);
-        
-        // Tratar erro específico de duplicação
-        if (functionError.message?.includes('duplicate key') || functionError.message?.includes('unique constraint')) {
-          console.log('🔄 Trilha já existe, tentando recarregar...');
-          await loadTrail(true);
-          toast.success('Trilha carregada com sucesso!');
-          return;
-        }
-        
         throw new Error(`Erro ao gerar trilha: ${functionError.message}`);
       }
 
@@ -111,10 +104,14 @@ export const useImplementationTrail = () => {
       if (data?.trail_data) {
         console.log('✅ Trilha inteligente gerada com sucesso:', data.trail_data);
         const sanitizedTrail = sanitizeTrailData(data.trail_data);
-        setTrail(sanitizedTrail);
-        toast.success('Trilha personalizada gerada com sucesso!');
+        if (sanitizedTrail) {
+          setTrail(sanitizedTrail);
+          toast.success('Trilha personalizada gerada com sucesso!');
+        } else {
+          throw new Error('Trilha gerada, mas dados inválidos');
+        }
       } else {
-        throw new Error('Trilha gerada, mas dados inválidos');
+        throw new Error('Trilha gerada, mas dados não retornados');
       }
 
     } catch (error) {
@@ -122,18 +119,22 @@ export const useImplementationTrail = () => {
       const errorMessage = error instanceof Error ? error.message : 'Erro ao gerar trilha de implementação';
       setError(errorMessage);
       
-      // Se for erro de duplicação, tentar carregar trilha existente
-      if (errorMessage.includes('duplicate') || errorMessage.includes('already exists')) {
-        console.log('🔄 Tentando carregar trilha existente após erro de duplicação...');
+      // Se for erro relacionado a dados faltantes, tentar carregar trilha existente
+      if (errorMessage.includes('onboarding') || errorMessage.includes('não encontrado')) {
+        console.log('🔄 Tentando carregar trilha existente após erro...');
         await loadTrail(true);
-        toast.success('Trilha existente carregada!');
+        if (trail) {
+          toast.success('Trilha existente carregada!');
+        } else {
+          toast.error('Complete seu onboarding para gerar uma trilha personalizada');
+        }
       } else {
         toast.error(errorMessage);
       }
     } finally {
       setRegenerating(false);
     }
-  }, [user?.id, loadTrail]);
+  }, [user?.id, loadTrail, trail]);
 
   // Carregar trilha ao inicializar
   useEffect(() => {
