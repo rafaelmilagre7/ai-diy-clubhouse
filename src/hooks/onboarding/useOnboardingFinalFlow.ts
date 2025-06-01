@@ -8,7 +8,10 @@ import { toast } from 'sonner';
 export const useOnboardingFinalFlow = () => {
   const { user } = useAuth();
   const [data, setData] = useState<OnboardingFinalData>({
-    personal_info: {},
+    personal_info: {
+      name: '',
+      email: ''
+    },
     location_info: {},
     discovery_info: {},
     business_info: {},
@@ -25,8 +28,8 @@ export const useOnboardingFinalFlow = () => {
   
   const totalSteps = 8;
   
-  // Use ref to avoid recreating functions unnecessarily
-  const validationRef = useRef<Record<string, string>>({});
+  // Use refs to store stable values
+  const validationErrorsRef = useRef<Record<string, string>>({});
 
   // Load initial data
   useEffect(() => {
@@ -47,7 +50,25 @@ export const useOnboardingFinalFlow = () => {
           console.error('❌ Erro ao carregar dados:', error);
         } else if (existingData) {
           console.log('✅ Dados carregados:', existingData);
-          setData(existingData);
+          // Garantir que name e email tenham valores padrão se não existirem
+          const processedData = {
+            ...existingData,
+            personal_info: {
+              name: existingData.personal_info?.name || user?.user_metadata?.name || '',
+              email: existingData.personal_info?.email || user?.email || '',
+              ...existingData.personal_info
+            }
+          };
+          setData(processedData);
+        } else {
+          // Se não há dados existentes, inicializar com dados do usuário
+          setData(prev => ({
+            ...prev,
+            personal_info: {
+              name: user?.user_metadata?.name || '',
+              email: user?.email || ''
+            }
+          }));
         }
       } catch (error) {
         console.error('❌ Erro inesperado:', error);
@@ -57,55 +78,51 @@ export const useOnboardingFinalFlow = () => {
     };
 
     loadInitialData();
-  }, [user?.id]);
+  }, [user?.id, user?.user_metadata?.name, user?.email]);
 
-  // Validation function - memoized to prevent recreations
-  const validateCurrentStep = useMemo(() => {
-    const validateStep = (step: number, stepData: OnboardingFinalData): Record<string, string> => {
-      const errors: Record<string, string> = {};
-      
-      switch (step) {
-        case 1: // Personal Info
-          if (!stepData.personal_info?.name?.trim()) {
-            errors.name = 'Nome é obrigatório';
-          }
-          if (!stepData.personal_info?.email?.trim()) {
-            errors.email = 'Email é obrigatório';
-          }
-          break;
-        case 2: // Location Info - optional fields
-          break;
-        case 3: // Discovery Info - optional fields
-          break;
-        case 4: // Business Info - optional fields
-          break;
-        case 5: // Business Context - optional fields
-          break;
-        case 6: // Goals Info - optional fields
-          break;
-        case 7: // AI Experience - optional fields
-          break;
-        case 8: // Personalization - optional fields
-          break;
-      }
-      
-      return errors;
-    };
+  // Validation function - memoized and stable
+  const validateCurrentStep = useCallback((step: number, stepData: OnboardingFinalData): Record<string, string> => {
+    const errors: Record<string, string> = {};
     
-    return validateStep;
-  }, []); // No dependencies to prevent recreations
+    switch (step) {
+      case 1: // Personal Info
+        if (!stepData.personal_info?.name?.trim()) {
+          errors.name = 'Nome é obrigatório';
+        }
+        if (!stepData.personal_info?.email?.trim()) {
+          errors.email = 'Email é obrigatório';
+        }
+        break;
+      case 2: // Location Info - optional fields
+        break;
+      case 3: // Discovery Info - optional fields
+        break;
+      case 4: // Business Info - optional fields
+        break;
+      case 5: // Business Context - optional fields
+        break;
+      case 6: // Goals Info - optional fields
+        break;
+      case 7: // AI Experience - optional fields
+        break;
+      case 8: // Personalization - optional fields
+        break;
+    }
+    
+    return errors;
+  }, []);
 
   // Update validation errors when step or data changes
   useEffect(() => {
     const errors = validateCurrentStep(currentStep, data);
-    validationRef.current = errors;
+    validationErrorsRef.current = errors;
     setValidationErrors(errors);
   }, [currentStep, data, validateCurrentStep]);
 
-  // Can proceed function - stable with useMemo
+  // Can proceed - memoized based on validation errors
   const canProceed = useMemo(() => {
-    return Object.keys(validationRef.current).length === 0;
-  }, [validationErrors]); // Only depends on validationErrors state
+    return Object.keys(validationErrors).length === 0;
+  }, [validationErrors]);
 
   // Update section function - stable with useCallback
   const updateSection = useCallback((section: keyof OnboardingFinalData, updates: any) => {
@@ -118,7 +135,7 @@ export const useOnboardingFinalFlow = () => {
         ...updates
       }
     }));
-  }, []); // No dependencies needed - uses functional update
+  }, []);
 
   // Navigation functions - stable with useCallback
   const nextStep = useCallback(() => {
@@ -186,7 +203,7 @@ export const useOnboardingFinalFlow = () => {
     nextStep,
     previousStep,
     completeOnboarding,
-    canProceed: () => canProceed, // Return function to maintain API compatibility
+    canProceed,
     currentStep,
     totalSteps,
     isSubmitting,
