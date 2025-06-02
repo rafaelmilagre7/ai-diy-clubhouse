@@ -5,7 +5,7 @@ import { SmartFeatureGuard } from '@/components/auth/SmartFeatureGuard';
 
 // Lazy load learning pages
 const LearningPage = React.lazy(() => import('@/pages/member/learning/LearningPage'));
-const CourseView = React.lazy(() => import('@/pages/member/learning/CourseView'));
+const CourseDetails = React.lazy(() => import('@/pages/member/learning/CourseDetails'));
 const LessonView = React.lazy(() => import('@/pages/member/learning/LessonView'));
 
 export const LearningRoutes = () => {
@@ -13,8 +13,8 @@ export const LearningRoutes = () => {
     <SmartFeatureGuard feature="learning">
       <Routes>
         <Route index element={<LearningPage />} />
-        <Route path="curso/:courseId" element={<CourseView />} />
-        <Route path="curso/:courseId/aula/:lessonId" element={<LessonView />} />
+        <Route path="course/:id" element={<CourseDetails />} />
+        <Route path="course/:courseId/lesson/:lessonId" element={<LessonView />} />
       </Routes>
     </SmartFeatureGuard>
   );
