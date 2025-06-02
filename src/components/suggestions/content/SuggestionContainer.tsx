@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { StatusBadge } from '../ui/StatusBadge';
 import SuggestionVoting from '../SuggestionVoting';
-import { SuggestionComments } from '../SuggestionComments';
+import SuggestionComments from '../SuggestionComments';
 import { formatRelativeDate } from '@/utils/suggestionUtils';
 
 interface SuggestionContainerProps {
