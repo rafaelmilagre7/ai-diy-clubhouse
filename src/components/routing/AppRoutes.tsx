@@ -1,4 +1,3 @@
-
 import { Routes, Route } from 'react-router-dom';
 import { authRoutes } from '../../routes/AuthRoutes';
 import { adminRoutes } from '../../routes/AdminRoutes';
@@ -9,6 +8,8 @@ import { CommunityRedirects } from './CommunityRedirects';
 import { SmartRoutePreloader } from './SmartRoutePreloader';
 import NotFound from '@/pages/NotFound';
 import InvitePage from '@/pages/InvitePage';
+import SuggestionDetails from '@/pages/member/SuggestionDetails';
+import SuggestionsPage from '@/pages/member/SuggestionsPage';
 
 const AppRoutes = () => {
   return (
@@ -30,6 +31,8 @@ const AppRoutes = () => {
         {memberRoutes.map((route) => (
           <Route key={route.path} path={route.path} element={route.element} />
         ))}
+        <Route path="/suggestions" element={<SuggestionsPage />} />
+        <Route path="/suggestions/:id" element={<SuggestionDetails />} />
         
         {/* Admin Routes */}
         {adminRoutes.map((route) => (

@@ -1,7 +1,6 @@
 
 import React from 'react';
 import SuggestionContainer from './content/SuggestionContainer';
-import { UserVote } from '@/types/suggestionTypes';
 
 interface SuggestionContentProps {
   suggestion: {
@@ -17,6 +16,7 @@ interface SuggestionContentProps {
     user_id?: string;
     user_name?: string;
     user_avatar?: string;
+    user_vote_type?: 'upvote' | 'downvote' | null;
   };
   comment: string;
   comments: any[];
@@ -26,7 +26,6 @@ interface SuggestionContentProps {
   onSubmitComment: (e: React.FormEvent) => void;
   onVote: (voteType: 'upvote' | 'downvote') => Promise<void>;
   isOwner?: boolean;
-  userVote?: UserVote | null;
   voteLoading?: boolean;
 }
 
@@ -40,7 +39,6 @@ const SuggestionContent = ({
   onSubmitComment,
   onVote,
   isOwner = false,
-  userVote,
   voteLoading = false
 }: SuggestionContentProps) => {
   return (
@@ -54,7 +52,6 @@ const SuggestionContent = ({
       onSubmitComment={onSubmitComment}
       onVote={onVote}
       isOwner={isOwner}
-      userVote={userVote}
       voteLoading={voteLoading}
     />
   );
