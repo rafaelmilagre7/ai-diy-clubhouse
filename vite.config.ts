@@ -41,10 +41,12 @@ export default defineConfig(({ mode }) => ({
         },
         // Nomeação consistente para melhor cache
         chunkFileNames: (chunkInfo) => {
-          const facadeModuleId = chunkInfo.facadeModuleId 
-            ? chunkInfo.facadeModuleId.split('/').pop().replace(/\.[^/.]+$/, '') 
-            : 'chunk';
-          return `assets/${facadeModuleId}-[hash].js`;
+          const facadeModuleId = chunkInfo.facadeModuleId;
+          if (facadeModuleId) {
+            const fileName = facadeModuleId.split('/').pop()?.replace(/\.[^/.]+$/, '') || 'chunk';
+            return `assets/${fileName}-[hash].js`;
+          }
+          return 'assets/chunk-[hash].js';
         },
         assetFileNames: 'assets/[name]-[hash].[ext]',
       },
@@ -74,9 +76,5 @@ export default defineConfig(({ mode }) => ({
       'lucide-react',
     ],
     exclude: ['@vite/client', '@vite/env'],
-  },
-  // CSS code splitting
-  css: {
-    codeSplit: true,
   },
 }));

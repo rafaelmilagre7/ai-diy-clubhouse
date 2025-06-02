@@ -162,7 +162,7 @@ export const useAdvancedPrefetch = () => {
     }
 
     // Verificar se há muito uso de CPU
-    if (window.performance && window.performance.memory) {
+    if (window.performance && (window.performance as any).memory) {
       const memory = (window.performance as any).memory;
       const memoryUsage = memory.usedJSHeapSize / memory.totalJSHeapSize;
       

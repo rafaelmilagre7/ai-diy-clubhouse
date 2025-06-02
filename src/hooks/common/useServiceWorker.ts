@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { useLogging } from '@/contexts/logging';
 
 export const useServiceWorker = () => {
-  const { log, logError } = useLogging();
+  const { log, error } = useLogging();
 
   useEffect(() => {
     if ('serviceWorker' in navigator && import.meta.env.PROD) {
@@ -48,8 +48,8 @@ export const useServiceWorker = () => {
         }
       }, 30 * 60 * 1000); // 30 minutos
 
-    } catch (error) {
-      logError('Erro ao registrar Service Worker', error);
+    } catch (err) {
+      error('Erro ao registrar Service Worker', { error: err });
     }
   };
 
@@ -60,8 +60,8 @@ export const useServiceWorker = () => {
         await registration.update();
         log('Service Worker atualizado', {});
       }
-    } catch (error) {
-      logError('Erro ao atualizar Service Worker', error);
+    } catch (err) {
+      error('Erro ao atualizar Service Worker', { error: err });
     }
   };
 

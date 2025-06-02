@@ -6,7 +6,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/auth';
 import { LoggingProvider } from '@/contexts/logging';
-import { PerformanceProvider } from '@/contexts/performance';
+import { PerformanceProvider } from '@/contexts/performance/PerformanceProvider';
 import AppRoutes from '@/components/routing/AppRoutes';
 import { useServiceWorker } from '@/hooks/common/useServiceWorker';
 import { useBundleAnalyzer } from '@/utils/bundleAnalyzer';
