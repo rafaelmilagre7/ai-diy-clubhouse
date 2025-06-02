@@ -8,7 +8,7 @@ import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import { AdminProtectedRoutes } from '@/auth/AdminProtectedRoutes';
 import { FormacaoProtectedRoutes } from '@/auth/FormacaoProtectedRoutes';
 import RootRedirect from '@/components/routing/RootRedirect';
-import LoginPage from '@/pages/auth/LoginPage';
+import ModernLogin from '@/pages/auth/ModernLogin';
 import DashboardPage from '@/pages/app/DashboardPage';
 import ImplementationTrailPage from '@/pages/app/ImplementationTrailPage';
 import InvitePage from '@/pages/InvitePage';
@@ -39,7 +39,7 @@ export const AppRoutes = () => {
           <Route path="/convite" element={<InvitePage />} />
 
           {/* Auth Routes */}
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/login" element={<ModernLogin />} />
           <Route path="/auth/*" element={<AuthRoutes />} />
 
           {/* Rotas protegidas com guards de acesso */}
