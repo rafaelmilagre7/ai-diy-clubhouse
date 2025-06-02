@@ -78,13 +78,18 @@ const Dashboard = () => {
     }
   }, [user, authLoading, navigate]);
   
-  // Tratamento de erros
+  // Tratamento de erros - agora incluindo progressError
   useEffect(() => {
     if (solutionsError || progressError) {
       setHasError(true);
-      setErrorMessage(
-        solutionsError ? "Erro ao carregar soluções" : "Erro ao carregar progresso"
-      );
+      if (solutionsError) {
+        setErrorMessage("Erro ao carregar soluções");
+      } else if (progressError) {
+        setErrorMessage("Erro ao carregar progresso");
+        toast.error("Erro ao carregar progresso", {
+          description: "Algumas funcionalidades podem não estar disponíveis"
+        });
+      }
       console.error('Dashboard: Erro detectado', { solutionsError, progressError });
     }
   }, [solutionsError, progressError]);

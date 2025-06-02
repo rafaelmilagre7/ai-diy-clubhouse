@@ -4,7 +4,6 @@ import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { Solution } from "@/lib/supabase";
 import { useQuery } from '@tanstack/react-query';
-import { toast } from "sonner";
 
 export const useDashboardProgress = (solutions: Solution[] = []) => {
   const { user } = useAuth();
@@ -47,12 +46,6 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
     retry: 2,
     refetchOnWindowFocus: false,
     enabled: !!user, // Só executa se tem usuário
-    onError: (err: any) => {
-      console.error("useDashboardProgress: Erro no hook:", err);
-      toast.error("Erro ao carregar progresso", {
-        description: "Algumas funcionalidades podem não estar disponíveis"
-      });
-    }
   });
 
   // Processar dados com fallbacks robustos
