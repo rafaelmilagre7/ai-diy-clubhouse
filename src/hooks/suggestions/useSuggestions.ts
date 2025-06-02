@@ -19,8 +19,18 @@ export const useSuggestions = () => {
       console.log('Buscando sugestões com filtro:', filter, 'e busca:', searchQuery);
       
       let query = supabase
-        .from('suggestions_with_votes')
-        .select('*');
+        .from('suggestions')
+        .select(`
+          *,
+          profiles:user_id (
+            name,
+            avatar_url
+          ),
+          suggestion_votes!left (
+            vote_type,
+            user_id
+          )
+        `);
 
       // Aplicar filtro de busca se existir
       if (searchQuery.trim()) {
@@ -53,7 +63,22 @@ export const useSuggestions = () => {
       }
 
       console.log('Sugestões carregadas:', data?.length);
-      return data as Suggestion[];
+      
+      // Processar os dados para incluir informações de voto do usuário
+      const processedData = data?.map(suggestion => {
+        const userVote = suggestion.suggestion_votes?.find(
+          vote => vote.user_id === (supabase.auth.getUser().then(u => u.data.user?.id))
+        );
+        
+        return {
+          ...suggestion,
+          user_name: suggestion.profiles?.name,
+          user_avatar: suggestion.profiles?.avatar_url,
+          user_vote_type: userVote?.vote_type || null
+        };
+      }) || [];
+
+      return processedData as Suggestion[];
     },
     staleTime: 1000 * 60 * 2, // 2 minutos
   });

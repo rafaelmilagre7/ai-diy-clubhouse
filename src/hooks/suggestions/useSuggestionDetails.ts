@@ -24,8 +24,19 @@ export const useSuggestionDetails = () => {
       console.log('Buscando detalhes da sugestão:', id);
       
       const { data, error } = await supabase
-        .from('suggestions_with_votes')
-        .select('*')
+        .from('suggestions')
+        .select(`
+          *,
+          profiles:user_id (
+            name,
+            avatar_url
+          ),
+          suggestion_votes!left (
+            vote_type,
+            user_id,
+            id
+          )
+        `)
         .eq('id', id)
         .single();
       
@@ -35,7 +46,20 @@ export const useSuggestionDetails = () => {
         return;
       }
       
-      setSuggestion(data as Suggestion);
+      // Processar os dados para incluir informações de voto do usuário
+      const userVote = data.suggestion_votes?.find(
+        vote => vote.user_id === user?.id
+      );
+      
+      const processedSuggestion = {
+        ...data,
+        user_name: data.profiles?.name,
+        user_avatar: data.profiles?.avatar_url,
+        user_vote_type: userVote?.vote_type || null,
+        user_vote_id: userVote?.id
+      };
+      
+      setSuggestion(processedSuggestion as Suggestion);
     } catch (err: any) {
       console.error('Erro inesperado ao buscar sugestão:', err);
       setError(err);
