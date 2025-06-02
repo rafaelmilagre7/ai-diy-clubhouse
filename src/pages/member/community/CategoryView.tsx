@@ -1,99 +1,36 @@
 
-import { useParams, Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { ForumLayout } from "@/components/community/ForumLayout";
-import { TopicList } from "@/components/community/TopicList";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, PlusCircle, AlertCircle } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-import { ForumCategory } from "@/types/forumTypes";
+import { useParams } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { MessageSquare } from 'lucide-react';
 
 const CategoryView = () => {
-  const { slug } = useParams<{ slug: string }>();
-
-  const { data: category, isLoading, error } = useQuery({
-    queryKey: ['forumCategory', slug],
-    queryFn: async () => {
-      if (!slug) throw new Error('Nenhum slug fornecido');
-      
-      const { data, error } = await supabase
-        .from('forum_categories')
-        .select('*')
-        .eq('slug', slug)
-        .single();
-      
-      if (error) throw error;
-      return data as ForumCategory;
-    },
-    enabled: !!slug,
-    retry: 1
-  });
-
-  if (isLoading) {
-    return (
-      <div className="container px-4 py-6 mx-auto max-w-7xl">
-        <div className="animate-pulse">
-          <div className="h-8 bg-muted rounded-md w-1/4 mb-4"></div>
-          <div className="h-4 bg-muted rounded-md w-1/2 mb-8"></div>
-          <div className="h-[400px] bg-card shadow-sm rounded-lg"></div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !category) {
-    return (
-      <div className="container px-4 py-6 mx-auto max-w-7xl">
-        <div className="text-center py-10">
-          <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground" />
-          <h1 className="text-2xl font-bold mt-4">Categoria não encontrada</h1>
-          <p className="text-muted-foreground mt-2 mb-6">A categoria que você está procurando não existe ou foi removida.</p>
-          <Button asChild>
-            <Link to="/comunidade">Voltar para a Comunidade</Link>
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  const { slug } = useParams();
 
   return (
-    <div className="container px-4 py-6 mx-auto max-w-7xl">
-      <div className="flex items-center gap-2 mb-4">
-        <Button variant="ghost" size="sm" asChild className="p-0">
-          <Link to="/comunidade" className="flex items-center">
-            <ChevronLeft className="h-4 w-4" />
-            <span>Voltar para a comunidade</span>
-          </Link>
-        </Button>
-      </div>
-      
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">{category.name}</h1>
-          {category.description && (
-            <p className="text-muted-foreground mt-1">{category.description}</p>
-          )}
+    <div className="container py-8 px-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="p-2 rounded-full bg-viverblue/10">
+            <MessageSquare className="w-6 h-6 text-viverblue" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold mb-1">Categoria: {slug}</h1>
+            <p className="text-muted-foreground">
+              Tópicos da categoria {slug}.
+            </p>
+          </div>
         </div>
         
-        <Button asChild className="hidden sm:flex gap-2">
-          <Link to={`/comunidade/novo-topico/${category.slug}`}>
-            <PlusCircle className="h-4 w-4" />
-            <span>Novo tópico</span>
-          </Link>
-        </Button>
-      </div>
-      
-      <ForumLayout>
-        {category && <TopicList categoryId={category.id} categorySlug={category.slug} />}
-      </ForumLayout>
-      
-      <div className="mt-6 sm:hidden">
-        <Button asChild className="w-full">
-          <Link to={`/comunidade/novo-topico/${category.slug}`}>
-            <PlusCircle className="h-4 w-4 mr-2" />
-            <span>Novo tópico</span>
-          </Link>
-        </Button>
+        <Card>
+          <CardHeader>
+            <CardTitle>Tópicos da Categoria</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">
+              Lista de tópicos desta categoria será exibida aqui.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

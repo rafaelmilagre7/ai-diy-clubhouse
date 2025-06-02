@@ -6,24 +6,20 @@ import MemberLayout from '@/components/layout/MemberLayout';
 // Dashboard
 import Dashboard from '@/pages/member/Dashboard';
 
-// Suggestions - Sistema Completo
-import Suggestions from '@/pages/member/Suggestions';
-import NewSuggestion from '@/pages/member/NewSuggestion';
-import SuggestionDetails from '@/pages/member/SuggestionDetails';
-
-// Solutions
-import Solutions from '@/pages/member/Solutions';
-import SolutionDetails from '@/pages/member/SolutionDetails';
-
-// Tools
-import Tools from '@/pages/member/Tools';
-
 // Events
 import Events from '@/pages/member/Events';
 
 // Profile
 import Profile from '@/pages/member/Profile';
 import EditProfile from '@/pages/member/EditProfile';
+
+// Implementation Trail
+import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
+
+// Suggestions - Sistema Completo
+import Suggestions from '@/pages/member/Suggestions';
+import NewSuggestion from '@/pages/member/NewSuggestion';
+import SuggestionDetails from '@/pages/member/SuggestionDetails';
 
 export const MemberRoutes = () => {
   return (
@@ -32,17 +28,13 @@ export const MemberRoutes = () => {
         {/* Dashboard */}
         <Route path="/dashboard" element={<Dashboard />} />
         
+        {/* Implementation Trail */}
+        <Route path="/implementation-trail" element={<ImplementationTrailPage />} />
+        
         {/* Suggestions - Sistema Completo */}
         <Route path="/suggestions" element={<Suggestions />} />
         <Route path="/suggestions/new" element={<NewSuggestion />} />
         <Route path="/suggestions/:id" element={<SuggestionDetails />} />
-
-        {/* Solutions */}
-        <Route path="/solutions" element={<Solutions />} />
-        <Route path="/solutions/:id" element={<SolutionDetails />} />
-
-        {/* Tools */}
-        <Route path="/tools" element={<Tools />} />
 
         {/* Events */}
         <Route path="/events" element={<Events />} />
