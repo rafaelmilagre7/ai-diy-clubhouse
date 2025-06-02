@@ -2,7 +2,7 @@
 import React from "react";
 import { CourseCard } from "./CourseCard";
 import { CoursesSkeleton } from "./CoursesSkeleton";
-import { EmptyCoursesState } from "./EmptyCoursesState";
+import { EmptyCoursesState } from "./states/EmptyCoursesState";
 import { LearningProgress } from "@/lib/supabase";
 import { LearningCourseWithLessons } from "@/lib/supabase/types/learning";
 
