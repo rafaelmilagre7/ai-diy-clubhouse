@@ -6,6 +6,7 @@ import { memberRoutes } from '../../routes/MemberRoutes';
 import { OnboardingRoutes } from '../../routes/OnboardingRoutes';
 import { formacaoRoutes } from '../../routes/FormacaoRoutes';
 import { CommunityRedirects } from './CommunityRedirects';
+import { SmartRoutePreloader } from './SmartRoutePreloader';
 import NotFound from '@/pages/NotFound';
 import InvitePage from '@/pages/InvitePage';
 
@@ -13,6 +14,7 @@ const AppRoutes = () => {
   return (
     <>
       <CommunityRedirects />
+      <SmartRoutePreloader />
       
       <Routes>
         {/* Convite Routes */}

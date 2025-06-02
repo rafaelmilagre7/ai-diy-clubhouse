@@ -5,7 +5,7 @@ import { SmartFeatureGuard } from '@/components/auth/SmartFeatureGuard';
 import MemberLayout from '@/components/layout/MemberLayout';
 import ProfileRoutes from './ProfileRoutes';
 
-// Member pages - usando versões otimizadas
+// Páginas críticas - carregamento imediato
 import OptimizedDashboard from '@/pages/member/OptimizedDashboard';
 import Solutions from '@/pages/member/Solutions';
 import Tools from '@/pages/member/Tools';
@@ -13,26 +13,26 @@ import ToolDetails from '@/pages/member/ToolDetails';
 import SolutionDetails from '@/pages/member/SolutionDetails';
 import SolutionImplementation from '@/pages/member/SolutionImplementation';
 import ImplementationCompleted from '@/pages/member/ImplementationCompleted';
-import Benefits from '@/pages/member/Benefits';
-import Suggestions from '@/pages/member/Suggestions';
-import SuggestionDetails from '@/pages/member/SuggestionDetails';
-import NewSuggestion from '@/pages/member/NewSuggestion';
-import Events from '@/pages/member/Events';
 import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
 
-// Member Learning pages
-import LearningPage from '@/pages/member/learning/LearningPage';
-import CourseDetails from '@/pages/member/learning/CourseDetails';
-import LessonView from '@/pages/member/learning/LessonView';
+// Páginas com lazy loading
+import {
+  LazyEventsWithSuspense,
+  LazyBenefitsWithSuspense,
+  LazySuggestionsWithSuspense,
+  LazySuggestionDetailsWithSuspense,
+  LazyNewSuggestionWithSuspense,
+  LazyLearningPageWithSuspense,
+  LazyCourseDetailsWithSuspense,
+  LazyLessonViewWithSuspense,
+  LazyCommunityHomeWithSuspense,
+  LazyTopicViewWithSuspense,
+  LazyCategoryViewWithSuspense,
+  LazyNewTopicWithSuspense,
+  LazyNetworkingPageWithSuspense
+} from '@/components/routing/LazyRoutes';
 
-// Member Community pages
-import CommunityHome from '@/pages/member/community/CommunityHome';
-import TopicView from '@/pages/member/community/TopicView';
-import CategoryView from '@/pages/member/community/CategoryView';
-import NewTopic from '@/pages/member/community/NewTopic';
-
-// Member Networking pages
-import NetworkingPage from '@/pages/member/networking/NetworkingPage';
+// Networking components com lazy loading
 import { ConnectionsManager } from '@/components/networking/ConnectionsManager';
 
 // Função helper para criar rotas protegidas com MemberLayout
@@ -54,6 +54,7 @@ const createProtectedRoute = (path: string, Component: React.ComponentType<any>,
 });
 
 export const memberRoutes: RouteObject[] = [
+  // Rotas críticas - carregamento imediato
   createProtectedRoute("/", OptimizedDashboard),
   createProtectedRoute("/dashboard", OptimizedDashboard),
   createProtectedRoute("/implementation-trail", ImplementationTrailPage, "implementation_trail"),
@@ -65,8 +66,10 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/implementation/:id", SolutionImplementation),
   createProtectedRoute("/implementation/:id/:moduleIdx", SolutionImplementation),
   createProtectedRoute("/implementation/completed/:id", ImplementationCompleted),
-  createProtectedRoute("/benefits", Benefits),
-  createProtectedRoute("/events", Events),
+  
+  // Rotas com lazy loading
+  createProtectedRoute("/benefits", LazyBenefitsWithSuspense),
+  createProtectedRoute("/events", LazyEventsWithSuspense),
   
   // Profile Routes - integração das rotas do perfil
   {
@@ -80,23 +83,23 @@ export const memberRoutes: RouteObject[] = [
     )
   },
   
-  // Learning/LMS Routes - sem guard de feature
-  createProtectedRoute("/learning", LearningPage),
-  createProtectedRoute("/learning/course/:id", CourseDetails),
-  createProtectedRoute("/learning/course/:courseId/lesson/:lessonId", LessonView),
+  // Learning/LMS Routes - com lazy loading
+  createProtectedRoute("/learning", LazyLearningPageWithSuspense),
+  createProtectedRoute("/learning/course/:id", LazyCourseDetailsWithSuspense),
+  createProtectedRoute("/learning/course/:courseId/lesson/:lessonId", LazyLessonViewWithSuspense),
   
-  // Sugestões Routes
-  createProtectedRoute("/suggestions", Suggestions),
-  createProtectedRoute("/suggestions/:id", SuggestionDetails),
-  createProtectedRoute("/suggestions/new", NewSuggestion),
+  // Sugestões Routes - com lazy loading
+  createProtectedRoute("/suggestions", LazySuggestionsWithSuspense),
+  createProtectedRoute("/suggestions/:id", LazySuggestionDetailsWithSuspense),
+  createProtectedRoute("/suggestions/new", LazyNewSuggestionWithSuspense),
   
-  // Comunidade Routes - sem guard de feature
-  createProtectedRoute("/comunidade", CommunityHome),
-  createProtectedRoute("/comunidade/topico/:topicId", TopicView),
-  createProtectedRoute("/comunidade/categoria/:slug", CategoryView),
-  createProtectedRoute("/comunidade/novo-topico/:categorySlug", NewTopic),
+  // Comunidade Routes - com lazy loading
+  createProtectedRoute("/comunidade", LazyCommunityHomeWithSuspense),
+  createProtectedRoute("/comunidade/topico/:topicId", LazyTopicViewWithSuspense),
+  createProtectedRoute("/comunidade/categoria/:slug", LazyCategoryViewWithSuspense),
+  createProtectedRoute("/comunidade/novo-topico/:categorySlug", LazyNewTopicWithSuspense),
   
-  // Networking Routes - com guard de feature otimizada
-  createProtectedRoute("/networking", NetworkingPage, "networking"),
+  // Networking Routes - com lazy loading e guard de feature
+  createProtectedRoute("/networking", LazyNetworkingPageWithSuspense, "networking"),
   createProtectedRoute("/networking/connections", () => <ConnectionsManager />, "networking")
 ];
