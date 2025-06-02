@@ -47,10 +47,9 @@ export const CommentsSection = ({ solutionId, moduleId }: CommentsSectionProps) 
       moduleId,
       commentsCount: comments.length,
       loadingState: isLoading ? 'carregando' : 'concluído',
-      refreshTrigger
+      refreshTrigger,
+      hasOptimistic: comments.some(c => (c as any).isOptimistic)
     });
-    
-    // Adicionamos o refreshTrigger na dependência para relogar quando for atualizado
   }, [solutionId, moduleId, comments.length, isLoading, refreshTrigger, log]);
 
   // Adaptar as funções para passar diretamente o objeto de comentário
@@ -68,12 +67,22 @@ export const CommentsSection = ({ solutionId, moduleId }: CommentsSectionProps) 
     repairCommentsIntegrity();
   };
 
+  // Mostrar indicador de comentários sendo enviados
+  const optimisticCount = comments.filter(c => (c as any).isOptimistic).length;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <MessageSquare className="h-5 w-5 text-viverblue" />
-          <h2 className="text-xl font-semibold text-textPrimary">Comentários</h2>
+          <h2 className="text-xl font-semibold text-textPrimary">
+            Comentários
+            {optimisticCount > 0 && (
+              <span className="ml-2 text-xs bg-viverblue/10 text-viverblue px-2 py-1 rounded-full">
+                {optimisticCount} enviando...
+              </span>
+            )}
+          </h2>
         </div>
         
         <Button
@@ -81,8 +90,9 @@ export const CommentsSection = ({ solutionId, moduleId }: CommentsSectionProps) 
           size="sm"
           onClick={handleRefreshComments}
           className="flex items-center gap-1 text-xs"
+          disabled={isSubmitting}
         >
-          <RefreshCw className="h-3.5 w-3.5 mr-1" />
+          <RefreshCw className={`h-3.5 w-3.5 mr-1 ${isSubmitting ? 'animate-spin' : ''}`} />
           Atualizar
         </Button>
       </div>

@@ -14,84 +14,92 @@ export const useRealtimeComments = (
   const { log, logError } = useLogging();
   
   useEffect(() => {
-    if (!isEnabled || !solutionId || !moduleId) {
+    if (!isEnabled || !solutionId) {
       return;
     }
     
     log('Iniciando escuta de comentários em tempo real', { solutionId, moduleId });
     
-    // Criamos um único canal com múltiplos filtros para melhor performance
+    // Canal único e otimizado para todas as operações
     const channel = supabase
-      .channel(`comments-${solutionId}-${moduleId}`)
+      .channel(`comments-realtime-${solutionId}`)
       .on('postgres_changes', { 
-        event: 'INSERT', 
+        event: '*', 
         schema: 'public', 
         table: 'tool_comments',
         filter: `tool_id=eq.${solutionId}`
       }, (payload) => {
-        log('Novo comentário detectado', { payload });
-        invalidateComments();
-      })
-      .on('postgres_changes', { 
-        event: 'UPDATE', 
-        schema: 'public', 
-        table: 'tool_comments',
-        filter: `tool_id=eq.${solutionId}`
-      }, (payload) => {
-        log('Comentário atualizado', { payload });
-        invalidateComments();
-      })
-      .on('postgres_changes', { 
-        event: 'DELETE', 
-        schema: 'public', 
-        table: 'tool_comments',
-        filter: `tool_id=eq.${solutionId}`
-      }, (payload) => {
-        log('Comentário removido', { payload });
-        invalidateComments();
+        log('Mudança detectada nos comentários', { 
+          event: payload.eventType, 
+          solutionId,
+          recordId: payload.new?.id || payload.old?.id 
+        });
+        
+        // Invalidar todas as variações de chaves para garantir atualização
+        invalidateAllCommentQueries();
+        
+        // Feedback visual sutil
+        if (payload.eventType === 'INSERT') {
+          // Não mostrar toast para comentários próprios (já tem feedback otimista)
+          console.log('Novo comentário adicionado por outro usuário');
+        }
       })
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'tool_comment_likes'
-      }, () => {
-        log('Curtida modificada, invalidando queries', { solutionId, moduleId });
-        invalidateComments();
+      }, (payload) => {
+        log('Curtida modificada, atualizando comentários', { solutionId, payload });
+        invalidateAllCommentQueries();
       })
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
-          log('Canal de realtime conectado com sucesso', { solutionId, moduleId });
+          log('Canal de realtime conectado com sucesso', { solutionId });
         } else if (status === 'CHANNEL_ERROR') {
-          logError('Erro ao conectar canal de realtime', { status, solutionId, moduleId });
+          logError('Erro ao conectar canal de realtime', { status, solutionId });
           
-          toast.error("Atualizações em tempo real indisponíveis", {
-            description: "Os comentários precisarão ser atualizados manualmente.",
+          // Implementar fallback: refresh automático a cada 10 segundos
+          const fallbackInterval = setInterval(() => {
+            log('Fallback: atualizando comentários automaticamente', { solutionId });
+            invalidateAllCommentQueries();
+          }, 10000);
+          
+          // Limpar interval após 2 minutos
+          setTimeout(() => {
+            clearInterval(fallbackInterval);
+          }, 120000);
+          
+          toast.error("Atualizações em tempo real limitadas", {
+            description: "Os comentários serão atualizados automaticamente a cada 10 segundos.",
             duration: 5000,
-            id: "realtime-error" // Previne múltiplos toasts do mesmo tipo
+            id: "realtime-fallback"
           });
         }
       });
     
-    const invalidateComments = () => {
-      // Invalidar tanto a chave antiga quanto a nova para garantir compatibilidade
+    const invalidateAllCommentQueries = () => {
+      // Invalidar com chave padronizada
+      queryClient.invalidateQueries({ 
+        queryKey: ['comments', solutionId] 
+      });
+      
+      // Invalidar chaves legadas para compatibilidade
       queryClient.invalidateQueries({ 
         queryKey: ['solution-comments', solutionId, moduleId] 
       });
-      
-      // Invalidar também a chave usada em useCommentsData
       queryClient.invalidateQueries({ 
         queryKey: ['solution-comments', solutionId, 'all'] 
       });
-      
-      // E a chave antiga para garantir compatibilidade
       queryClient.invalidateQueries({ 
         queryKey: ['tool-comments', solutionId] 
       });
+      
+      log('Todas as queries de comentários invalidadas', { solutionId });
     };
     
     // Cancelar inscrição ao desmontar
     return () => {
-      log('Cancelando escuta de comentários', { solutionId, moduleId });
+      log('Cancelando escuta de comentários', { solutionId });
       supabase.removeChannel(channel);
     };
   }, [solutionId, moduleId, queryClient, isEnabled, log, logError]);
