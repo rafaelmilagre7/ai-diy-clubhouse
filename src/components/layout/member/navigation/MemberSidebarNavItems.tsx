@@ -26,62 +26,48 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
   const { isAdmin } = useOptimizedAuth();
   const { hasAccess: hasNetworkingAccess, isLoading: networkingLoading } = useOptimizedNetworkingAccess();
 
-  // Memoizar verificação de rota ativa
-  const isActiveRoute = useMemo(() => (path: string) => {
-    return location.pathname === path || 
-           (path === '/dashboard' && location.pathname === '/');
-  }, [location.pathname]);
-
   // Memoizar itens de navegação
   const navigationItems = useMemo(() => {
     const baseItems = [
       {
         to: '/dashboard',
         icon: Home,
-        label: 'Dashboard',
-        isActive: isActiveRoute('/dashboard') || isActiveRoute('/')
+        label: 'Dashboard'
       },
       {
         to: '/implementation-trail',
         icon: Route,
-        label: 'Trilha de IA',
-        isActive: isActiveRoute('/implementation-trail')
+        label: 'Trilha de IA'
       },
       {
         to: '/solutions',
         icon: Lightbulb,
-        label: 'Soluções',
-        isActive: isActiveRoute('/solutions')
+        label: 'Soluções'
       },
       {
         to: '/tools',
         icon: Wrench,
-        label: 'Ferramentas',
-        isActive: isActiveRoute('/tools')
+        label: 'Ferramentas'
       },
       {
         to: '/benefits',
         icon: Gift,
-        label: 'Benefícios',
-        isActive: isActiveRoute('/benefits')
+        label: 'Benefícios'
       },
       {
         to: '/events',
         icon: Calendar,
-        label: 'Eventos',
-        isActive: isActiveRoute('/events')
+        label: 'Eventos'
       },
       {
         to: '/learning',
         icon: BookOpen,
-        label: 'Aprendizado',
-        isActive: isActiveRoute('/learning')
+        label: 'Aprendizado'
       },
       {
         to: '/comunidade',
         icon: MessageSquare,
-        label: 'Comunidade',
-        isActive: location.pathname.startsWith('/comunidade')
+        label: 'Comunidade'
       }
     ];
 
@@ -90,13 +76,12 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       baseItems.push({
         to: '/networking',
         icon: Users,
-        label: 'Networking',
-        isActive: isActiveRoute('/networking')
+        label: 'Networking'
       });
     }
 
     return baseItems;
-  }, [isActiveRoute, hasNetworkingAccess, isAdmin, location.pathname]);
+  }, [hasNetworkingAccess, isAdmin]);
 
   return (
     <>
@@ -106,7 +91,6 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
           to={item.to}
           icon={item.icon}
           label={item.label}
-          isActive={item.isActive}
           sidebarOpen={sidebarOpen}
         />
       ))}

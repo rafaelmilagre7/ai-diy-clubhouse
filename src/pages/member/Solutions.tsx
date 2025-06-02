@@ -15,6 +15,10 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 
 const Solutions = () => {
+  // Estados locais para busca e categoria
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState('all');
+
   // Definir título da página
   useDocumentTitle('Soluções | VIVER DE IA Club');
   
@@ -27,12 +31,11 @@ const Solutions = () => {
   const { 
     filteredSolutions, 
     loading, 
-    searchQuery, 
-    setSearchQuery,
-    activeCategory,
-    setActiveCategory,
     canViewSolutions
-  } = useSolutionsData();
+  } = useSolutionsData({
+    initialCategory: activeCategory,
+    searchQuery: searchQuery
+  });
 
   // Log data for debugging
   log("Solutions page loaded", { 
