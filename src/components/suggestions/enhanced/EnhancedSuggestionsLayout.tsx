@@ -1,21 +1,25 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useNavigate } from 'react-router-dom';
 import { useEnhancedSuggestions } from '@/hooks/suggestions/useEnhancedSuggestions';
-import { EnhancedSuggestionsHeader } from './EnhancedSuggestionsHeader';
 import { EnhancedSuggestionFilters } from './EnhancedSuggestionFilters';
-import { EnhancedSuggestionCard } from './EnhancedSuggestionCard';
+import { SuggestionItem } from '../ui/SuggestionItem';
+import { SuggestionsStats } from '../ui/SuggestionsStats';
 import { SuggestionsPerformanceWrapper } from '../performance/SuggestionsPerformanceWrapper';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card } from '@/components/ui/card';
-import { toast } from 'sonner';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, RefreshCw, Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 const EnhancedSuggestionsLayout = () => {
+  const navigate = useNavigate();
+  
   const {
     suggestions,
     isLoading,
+    error,
+    stats,
     filter,
     setFilter,
     searchQuery,
@@ -25,27 +29,56 @@ const EnhancedSuggestionsLayout = () => {
     selectedStatus,
     setSelectedStatus,
     refetch,
-    error,
-    isFetching,
-    stats
+    isFetching
   } = useEnhancedSuggestions();
 
-  const handleRetry = React.useCallback(() => {
-    toast.info("Recarregando sugestões...");
-    refetch();
-  }, [refetch]);
+  const handleCreateSuggestion = () => {
+    navigate('/suggestions/new');
+  };
 
-  if (isLoading) {
+  if (error) {
     return (
-      <SuggestionsPerformanceWrapper>
-        <div className="container py-8 space-y-8">
-          <EnhancedSuggestionsHeader 
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            filter={filter}
-            onFilterChange={setFilter}
-          />
+      <div className="container py-8">
+        <Alert variant="destructive" className="mb-6">
+          <AlertDescription>
+            Erro ao carregar sugestões: {error.message}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => refetch()} 
+              className="ml-4"
+            >
+              Tentar novamente
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  return (
+    <SuggestionsPerformanceWrapper>
+      <div className="container py-8 space-y-8">
+        {/* Header */}
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Sugestões</h1>
+            <p className="text-muted-foreground">
+              Compartilhe ideias e vote nas melhores sugestões da comunidade
+            </p>
+          </div>
           
+          <Button onClick={handleCreateSuggestion} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Nova Sugestão
+          </Button>
+        </div>
+
+        {/* Stats Overview */}
+        <SuggestionsStats stats={stats} />
+
+        {/* Filtros Avançados */}
+        <Card className="p-6">
           <EnhancedSuggestionFilters
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
@@ -56,105 +89,58 @@ const EnhancedSuggestionsLayout = () => {
             selectedStatus={selectedStatus}
             onStatusChange={setSelectedStatus}
           />
-          
+        </Card>
+
+        {/* Loading State */}
+        {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i} className="animate-pulse">
-                <div className="p-6 space-y-4">
-                  <Skeleton className="h-6 w-4/5 mb-3" />
-                  <Skeleton className="h-4 w-2/5" />
-                  <Skeleton className="h-20 w-full" />
-                  <div className="flex justify-between pt-3">
-                    <Skeleton className="h-4 w-16" />
-                    <Skeleton className="h-4 w-12" />
-                  </div>
+              <Card key={i} className="p-6 space-y-4">
+                <Skeleton className="h-6 w-4/5" />
+                <Skeleton className="h-4 w-2/5" />
+                <Skeleton className="h-20 w-full" />
+                <div className="flex justify-between pt-3">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-12" />
                 </div>
               </Card>
             ))}
           </div>
-        </div>
-      </SuggestionsPerformanceWrapper>
-    );
-  }
-
-  return (
-    <SuggestionsPerformanceWrapper>
-      <div className="container py-8 space-y-8">
-        <EnhancedSuggestionsHeader 
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          filter={filter}
-          onFilterChange={setFilter}
-        />
-        
-        <EnhancedSuggestionFilters
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          filter={filter}
-          onFilterChange={setFilter}
-          selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
-          selectedStatus={selectedStatus}
-          onStatusChange={setSelectedStatus}
-        />
-        
-        {error ? (
-          <Alert variant="destructive" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Erro ao carregar sugestões</AlertTitle>
-            <AlertDescription className="flex flex-col gap-3">
-              <p>Não foi possível carregar as sugestões. Por favor, tente novamente.</p>
-              <Button variant="outline" size="sm" onClick={handleRetry} className="gap-2 w-fit">
-                <RefreshCw size={14} />
-                Tentar novamente
-              </Button>
-            </AlertDescription>
-          </Alert>
         ) : (
-          <div>
-            {/* Estatísticas */}
-            {stats.total > 0 && (
-              <div className="mb-6 p-4 bg-muted/30 rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  Mostrando {suggestions.length} de {stats.total} sugestões
-                  {Object.keys(stats.byStatus).length > 0 && (
-                    <span className="ml-2">
-                      • {Object.entries(stats.byStatus).map(([status, count]) => `${count} ${status}`).join(', ')}
-                    </span>
-                  )}
-                </p>
-              </div>
-            )}
-
+          <>
+            {/* Lista de Sugestões */}
             {suggestions.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="max-w-md mx-auto">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
-                    <Plus className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2">Nenhuma sugestão encontrada</h3>
-                  <p className="text-muted-foreground mb-4">
-                    {searchQuery || selectedCategory || selectedStatus
+              <Card className="p-12 text-center">
+                <div className="space-y-4">
+                  <div className="text-6xl">💡</div>
+                  <h3 className="text-lg font-medium">Nenhuma sugestão encontrada</h3>
+                  <p className="text-muted-foreground">
+                    {searchQuery || selectedCategory || selectedStatus 
                       ? 'Tente ajustar os filtros para encontrar sugestões.'
-                      : 'Seja o primeiro a compartilhar uma ideia!'}
+                      : 'Seja o primeiro a criar uma sugestão!'
+                    }
                   </p>
-                  <Button onClick={() => window.location.href = '/suggestions/new'} className="gap-2">
+                  <Button onClick={handleCreateSuggestion} className="gap-2">
                     <Plus className="h-4 w-4" />
-                    Criar Primeira Sugestão
+                    Criar primeira sugestão
                   </Button>
                 </div>
-              </div>
+              </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {suggestions.map((suggestion) => (
-                  <EnhancedSuggestionCard 
-                    key={suggestion.id} 
+                  <SuggestionItem
+                    key={suggestion.id}
                     suggestion={suggestion}
+                    onVote={() => {
+                      // Votação será implementada via hook useVoting
+                      refetch();
+                    }}
                   />
                 ))}
               </div>
             )}
-            
+
             {/* Indicador de carregamento durante refetch */}
             {isFetching && !isLoading && (
               <div className="text-center py-6">
@@ -166,7 +152,7 @@ const EnhancedSuggestionsLayout = () => {
                 </div>
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </SuggestionsPerformanceWrapper>
