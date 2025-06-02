@@ -7,7 +7,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/auth';
 import { LoggingProvider } from '@/contexts/logging';
 import { PerformanceProvider } from '@/contexts/performance/PerformanceProvider';
-import AppRoutes from '@/components/routing/AppRoutes';
+import { AppRoutes } from '@/routes/index';
 import { useServiceWorker } from '@/hooks/common/useServiceWorker';
 import { useBundleAnalyzer } from '@/utils/bundleAnalyzer';
 import { initializeBrandAssetsBucket } from '@/utils/storage/initStorage';

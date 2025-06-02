@@ -14,31 +14,29 @@ import Suggestions from '@/pages/member/Suggestions';
 import NewSuggestion from '@/pages/member/NewSuggestion';
 import SuggestionDetails from '@/pages/member/SuggestionDetails';
 
-// Solutions
-import Solutions from '@/pages/member/Solutions';
-import SolutionDetails from '@/pages/member/SolutionDetails';
-
 // Learning
 import LearningPage from '@/pages/member/learning/LearningPage';
+import CourseDetails from '@/pages/member/learning/CourseDetails';
+import LessonView from '@/pages/member/learning/LessonView';
 
 // Networking
 import NetworkingPage from '@/pages/member/networking/NetworkingPage';
 
-// Benefits
-import Benefits from '@/pages/member/Benefits';
+// Community
+import CommunityHome from '@/pages/member/community/CommunityHome';
 
-// Tools
+// Solutions
+import Solutions from '@/pages/member/Solutions';
+import SolutionDetails from '@/pages/member/SolutionDetails';
+
+// Tools, Benefits, Events
 import Tools from '@/pages/member/Tools';
-
-// Events
+import Benefits from '@/pages/member/Benefits';
 import Events from '@/pages/member/Events';
 
 // Profile
 import Profile from '@/pages/member/Profile';
 import EditProfile from '@/pages/member/EditProfile';
-
-// Community
-import CommunityHome from '@/pages/member/community/CommunityHome';
 
 export const MemberRoutes = () => {
   return (
@@ -50,32 +48,34 @@ export const MemberRoutes = () => {
         {/* Implementation Trail */}
         <Route path="/implementation-trail" element={<ImplementationTrailPage />} />
         
-        {/* Learning/Courses */}
+        {/* Learning/Courses - Rotas aninhadas */}
         <Route path="/learning" element={<LearningPage />} />
+        <Route path="/learning/course/:id" element={<CourseDetails />} />
+        <Route path="/learning/course/:courseId/lesson/:lessonId" element={<LessonView />} />
         
         {/* Networking */}
         <Route path="/networking" element={<NetworkingPage />} />
         
+        {/* Community */}
+        <Route path="/comunidade" element={<CommunityHome />} />
+        
+        {/* Solutions */}
+        <Route path="/solutions" element={<Solutions />} />
+        <Route path="/solutions/:id" element={<SolutionDetails />} />
+        
+        {/* Tools */}
+        <Route path="/tools" element={<Tools />} />
+        
         {/* Benefits */}
         <Route path="/benefits" element={<Benefits />} />
         
-        {/* Community */}
-        <Route path="/comunidade" element={<CommunityHome />} />
+        {/* Events */}
+        <Route path="/events" element={<Events />} />
         
         {/* Suggestions - Sistema Completo */}
         <Route path="/suggestions" element={<Suggestions />} />
         <Route path="/suggestions/new" element={<NewSuggestion />} />
         <Route path="/suggestions/:id" element={<SuggestionDetails />} />
-
-        {/* Solutions */}
-        <Route path="/solutions" element={<Solutions />} />
-        <Route path="/solutions/:id" element={<SolutionDetails />} />
-
-        {/* Tools */}
-        <Route path="/tools" element={<Tools />} />
-
-        {/* Events */}
-        <Route path="/events" element={<Events />} />
 
         {/* Profile */}
         <Route path="/profile" element={<Profile />} />
