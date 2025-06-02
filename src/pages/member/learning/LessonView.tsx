@@ -9,6 +9,7 @@ import { LessonHeader } from "@/components/learning/member/LessonHeader";
 import { useLessonData } from "@/hooks/learning/useLessonData";
 import { useLessonNavigation } from "@/hooks/learning/useLessonNavigation";
 import { useLessonProgress } from "@/hooks/learning/useLessonProgress";
+import { useCourseDetails } from "@/hooks/learning/useCourseDetails";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { sortLessonsByNumber } from "@/components/learning/member/course-modules/CourseModulesHelpers";
@@ -29,6 +30,9 @@ const LessonView = () => {
     lessonId, 
     courseId 
   });
+  
+  // Buscar dados completos do curso para a celebração
+  const { course, userProgress } = useCourseDetails(courseId);
   
   // Garantir que temos arrays válidos
   const safeResources = Array.isArray(resources) ? resources : [];
@@ -151,6 +155,8 @@ const LessonView = () => {
             courseId={courseId}
             allLessons={safeModuleLessons}
             onNextLesson={navigateToNext}
+            userProgress={userProgress}
+            course={course}
           />
         </div>
       </div>

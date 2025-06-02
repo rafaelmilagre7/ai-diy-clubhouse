@@ -8,10 +8,12 @@ import { LessonAssistantChat } from "../assistant/LessonAssistantChat";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LessonCompletionModal } from "../completion/LessonCompletionModal";
+import { CourseCompletionCelebrationModal } from "../completion/CourseCompletionCelebrationModal";
 import { LessonDescription } from "./LessonDescription";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useCourseCompletion } from "@/hooks/learning/useCourseCompletion";
 
 interface LessonContentProps {
   lesson: LearningLesson;
@@ -25,6 +27,8 @@ interface LessonContentProps {
   courseId?: string;
   allLessons?: any[];
   onNextLesson?: () => void;
+  userProgress?: any[];
+  course?: any;
 }
 
 export const LessonContent: React.FC<LessonContentProps> = ({ 
@@ -38,10 +42,27 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   nextLesson,
   courseId,
   allLessons = [],
-  onNextLesson
+  onNextLesson,
+  userProgress = [],
+  course
 }) => {
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('assistant');
+  
+  // Hook para detectar conclusão do curso
+  const {
+    courseStats,
+    isCourseCompleted,
+    shouldShowCelebration,
+    generateCertificate,
+    resetCelebration
+  } = useCourseCompletion({
+    courseId,
+    currentLessonId: lesson?.id,
+    allLessons,
+    userProgress,
+    isCurrentLessonCompleted: isCompleted
+  });
   
   // Verificar se temos um objeto lesson válido
   if (!lesson) {
@@ -85,6 +106,14 @@ export const LessonContent: React.FC<LessonContentProps> = ({
 
   // Função para navegar diretamente para a próxima aula
   const handleDirectNextLesson = () => {
+    if (onNextLesson) {
+      onNextLesson();
+    }
+  };
+
+  // Função para continuar aprendendo após celebração
+  const handleContinueLearning = () => {
+    resetCelebration();
     if (onNextLesson) {
       onNextLesson();
     }
@@ -196,6 +225,18 @@ export const LessonContent: React.FC<LessonContentProps> = ({
         onNext={onNextLesson}
         nextLesson={nextLesson}
       />
+      
+      {/* Modal de celebração de conclusão do curso */}
+      {course && courseStats && (
+        <CourseCompletionCelebrationModal
+          isOpen={shouldShowCelebration}
+          setIsOpen={resetCelebration}
+          course={course}
+          courseStats={courseStats}
+          onGenerateCertificate={generateCertificate}
+          onContinueLearning={handleContinueLearning}
+        />
+      )}
     </div>
   );
 };
