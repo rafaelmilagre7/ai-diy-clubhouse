@@ -25,15 +25,9 @@ interface SuggestionContainerProps {
     user_vote_type?: 'upvote' | 'downvote' | null;
     is_pinned?: boolean;
     category_name?: string;
+    category_color?: string;
   };
-  comment: string;
-  comments: any[];
-  isSubmitting: boolean;
-  commentsLoading: boolean;
-  onCommentChange: (value: string) => void;
-  onSubmitComment: (e: React.FormEvent) => void;
   onVote: (voteType: 'upvote' | 'downvote') => Promise<void>;
-  isOwner?: boolean;
   voteLoading?: boolean;
 }
 
@@ -54,7 +48,7 @@ const SuggestionContainer: React.FC<SuggestionContainerProps> = ({
             </div>
             
             {suggestion.is_pinned && (
-              <Badge variant="secondary">Fixado</Badge>
+              <Badge variant="secondary">📌 Fixado</Badge>
             )}
           </div>
 
@@ -76,11 +70,19 @@ const SuggestionContainer: React.FC<SuggestionContainerProps> = ({
 
         <CardContent className="space-y-4">
           <div className="prose max-w-none">
-            <p className="whitespace-pre-line">{suggestion.description}</p>
+            <p className="whitespace-pre-line text-foreground">
+              {suggestion.description}
+            </p>
           </div>
 
           {(suggestion.category?.name || suggestion.category_name) && (
-            <Badge variant="outline">
+            <Badge 
+              variant="outline"
+              style={suggestion.category_color ? { 
+                borderColor: suggestion.category_color,
+                color: suggestion.category_color 
+              } : undefined}
+            >
               {suggestion.category?.name || suggestion.category_name}
             </Badge>
           )}

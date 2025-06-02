@@ -13,24 +13,39 @@ export const useSuggestionDetails = () => {
   const fetchSuggestion = async () => {
     if (!id) throw new Error('ID da sugestão não fornecido');
 
-    const { data, error } = await supabase
+    // Buscar a sugestão com dados do autor
+    const { data: suggestion, error: suggestionError } = await supabase
       .from('suggestions')
       .select(`
         *,
         profiles:user_id(name, avatar_url),
-        user_vote:suggestion_votes!inner(vote_type)
+        suggestion_categories:category_id(name, color)
       `)
       .eq('id', id)
-      .eq('suggestion_votes.user_id', user?.id || '')
       .single();
 
-    if (error) throw error;
+    if (suggestionError) throw suggestionError;
+
+    // Buscar voto do usuário atual se estiver logado
+    let userVote = null;
+    if (user) {
+      const { data: voteData } = await supabase
+        .from('suggestion_votes')
+        .select('vote_type')
+        .eq('suggestion_id', id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      userVote = voteData?.vote_type || null;
+    }
     
     return {
-      ...data,
-      user_name: data.profiles?.name,
-      user_avatar: data.profiles?.avatar_url,
-      user_vote_type: data.user_vote?.[0]?.vote_type || null
+      ...suggestion,
+      user_name: suggestion.profiles?.name,
+      user_avatar: suggestion.profiles?.avatar_url,
+      user_vote_type: userVote,
+      category_name: suggestion.suggestion_categories?.name,
+      category_color: suggestion.suggestion_categories?.color
     };
   };
 
@@ -48,6 +63,8 @@ export const useSuggestionDetails = () => {
   const handleVote = async (voteType: 'upvote' | 'downvote') => {
     if (!id) return;
     await voteMutation.mutateAsync({ suggestionId: id, voteType });
+    // Refetch para atualizar os dados após votar
+    refetch();
   };
 
   return {
