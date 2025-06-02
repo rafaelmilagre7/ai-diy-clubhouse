@@ -12,7 +12,6 @@ interface OnboardingLayoutProps {
   totalSteps?: number;
   backUrl?: string;
   onBackClick?: () => void;
-  isFormacao?: boolean;
   hideProgress?: boolean;
 }
 
@@ -20,27 +19,19 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
   children,
   title,
   currentStep,
-  totalSteps,
+  totalSteps = 8,
   backUrl,
   onBackClick,
-  isFormacao = false,
   hideProgress = false
 }) => {
   const navigate = useNavigate();
 
-  // Função padronizada para navegação
   const handleBack = () => {
     if (onBackClick) {
-      // Se tiver callback específico, usar ele
-      console.log("[OnboardingLayout] Navegando de volta via callback");
       onBackClick();
     } else if (backUrl) {
-      // Se tiver URL específica, usar ela
-      console.log(`[OnboardingLayout] Navegando de volta para ${backUrl}`);
       navigate(backUrl);
     } else {
-      // Fallback para comportamento padrão
-      console.log("[OnboardingLayout] Navegação padrão para trás");
       navigate(-1);
     }
   };
@@ -60,7 +51,7 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
             <div className="mt-6">
               <ProgressBar 
                 currentStep={currentStep} 
-                totalSteps={totalSteps || 8} 
+                totalSteps={totalSteps} 
               />
             </div>
           )}
