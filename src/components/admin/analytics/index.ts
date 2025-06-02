@@ -1,2 +1,2 @@
 
-export { AccessAnalyticsDashboard } from './AccessAnalyticsDashboard';
+export { default as AccessAnalyticsDashboard } from './AccessAnalyticsDashboard';
