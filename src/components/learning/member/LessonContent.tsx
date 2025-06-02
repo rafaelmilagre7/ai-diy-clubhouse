@@ -66,6 +66,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
 
   // Hook para detectar conclusão do curso
   const {
+    courseStats,
     shouldShowCelebration,
     resetCelebration
   } = useCourseCompletion({
@@ -120,8 +121,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
       onNPSCompleted={handleNPSCompleted}
       onCelebrationClose={handleCelebrationCloseWithReset}
       course={course}
-      userProgress={userProgress}
-      allLessons={allLessons}
+      courseStats={courseStats}
     />
   );
 };

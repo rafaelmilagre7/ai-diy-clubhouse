@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { LessonContentTabs } from "./LessonContentTabs";
 import { LessonActionButtons } from "./LessonActionButtons";
 import { LessonModalsManager } from "./LessonModalsManager";
-import { LearningLesson, LearningLessonVideo, LearningResource, LearningCourse, LearningProgress } from "@/lib/supabase";
+import { LearningLesson, LearningLessonVideo, LearningResource, LearningCourse } from "@/lib/supabase";
 
 interface LessonContentLayoutProps {
   lesson: LearningLesson;
@@ -26,8 +26,7 @@ interface LessonContentLayoutProps {
   onNPSCompleted: () => void;
   onCelebrationClose: () => void;
   course?: LearningCourse | null;
-  userProgress?: LearningProgress[];
-  allLessons?: LearningLesson[];
+  courseStats?: any;
 }
 
 export const LessonContentLayout: React.FC<LessonContentLayoutProps> = ({
@@ -50,8 +49,7 @@ export const LessonContentLayout: React.FC<LessonContentLayoutProps> = ({
   onNPSCompleted,
   onCelebrationClose,
   course,
-  userProgress,
-  allLessons
+  courseStats
 }) => {
   return (
     <>
@@ -89,8 +87,7 @@ export const LessonContentLayout: React.FC<LessonContentLayoutProps> = ({
         onNPSCompleted={onNPSCompleted}
         onCelebrationClose={onCelebrationClose}
         course={course}
-        userProgress={userProgress}
-        allLessons={allLessons}
+        courseStats={courseStats}
       />
     </>
   );

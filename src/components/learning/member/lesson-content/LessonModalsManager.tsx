@@ -2,7 +2,7 @@
 import React from "react";
 import { LessonCompletionModal } from "../../completion/LessonCompletionModal";
 import { CourseCompletionCelebrationModal } from "../../completion/CourseCompletionCelebrationModal";
-import { LearningLesson, LearningCourse, LearningProgress } from "@/lib/supabase";
+import { LearningLesson, LearningCourse } from "@/lib/supabase";
 
 interface LessonModalsManagerProps {
   lesson: LearningLesson;
@@ -15,8 +15,7 @@ interface LessonModalsManagerProps {
   onNPSCompleted: () => void;
   onCelebrationClose: () => void;
   course?: LearningCourse | null;
-  userProgress?: LearningProgress[];
-  allLessons?: LearningLesson[];
+  courseStats?: any;
 }
 
 export const LessonModalsManager: React.FC<LessonModalsManagerProps> = ({
@@ -30,8 +29,7 @@ export const LessonModalsManager: React.FC<LessonModalsManagerProps> = ({
   onNPSCompleted,
   onCelebrationClose,
   course,
-  userProgress,
-  allLessons
+  courseStats
 }) => {
   return (
     <>
@@ -45,10 +43,9 @@ export const LessonModalsManager: React.FC<LessonModalsManagerProps> = ({
 
       <CourseCompletionCelebrationModal
         isOpen={showCelebrationModal}
-        onClose={onCelebrationClose}
+        setIsOpen={setShowCelebrationModal}
         course={course}
-        userProgress={userProgress || []}
-        allLessons={allLessons || []}
+        courseStats={courseStats}
       />
     </>
   );
