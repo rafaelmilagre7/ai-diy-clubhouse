@@ -85,7 +85,7 @@ export const LessonResources: React.FC<LessonResourcesProps> = ({ resources }) =
               
               <div className="flex-1 min-w-0">
                 <h4 className="font-medium text-sm truncate">
-                  {resource.name || resource.title || 'Recurso sem nome'}
+                  {resource.name || 'Recurso sem nome'}
                 </h4>
                 {resource.description && (
                   <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
