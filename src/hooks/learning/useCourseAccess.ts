@@ -72,15 +72,14 @@ export const useCourseAccess = () => {
 
       console.log("Dados recebidos de getRolesByCourse:", data);
 
-      // Verificar estrutura dos dados e processar corretamente
-      return data?.map(item => {
-        // Verificar se user_roles é um objeto ou array
+      // Usar type assertion e processar os dados corretamente
+      return data?.map((item: any) => {
         const roleData = item.user_roles;
-        if (roleData && typeof roleData === 'object' && !Array.isArray(roleData)) {
+        if (roleData?.id && roleData?.name) {
           return {
             id: roleData.id,
             name: roleData.name,
-            description: roleData.description
+            description: roleData.description || ''
           };
         }
         return null;
@@ -108,15 +107,14 @@ export const useCourseAccess = () => {
 
       console.log("Dados recebidos de getCoursesByRole:", data);
 
-      // Verificar estrutura dos dados e processar corretamente
-      return data?.map(item => {
-        // Verificar se learning_courses é um objeto ou array
+      // Usar type assertion e processar os dados corretamente
+      return data?.map((item: any) => {
         const courseData = item.learning_courses;
-        if (courseData && typeof courseData === 'object' && !Array.isArray(courseData)) {
+        if (courseData?.id && courseData?.title) {
           return {
             id: courseData.id,
             title: courseData.title,
-            description: courseData.description
+            description: courseData.description || ''
           };
         }
         return null;
