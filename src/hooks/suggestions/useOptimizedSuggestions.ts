@@ -69,7 +69,7 @@ export const useOptimizedSuggestions = (
           updated_at,
           is_pinned,
           is_hidden,
-          profiles!inner (
+          profiles:user_id (
             name,
             avatar_url
           ),
@@ -116,19 +116,24 @@ export const useOptimizedSuggestions = (
 
       console.log('✅ Sugestões carregadas:', data?.length);
       
-      // Processar dados com validação de tipos
-      const processedData: Suggestion[] = (data as RawSuggestionData[])?.map(suggestion => {
+      // Processar dados com validação robusta
+      const processedData: Suggestion[] = data?.map((suggestion: any) => {
+        // Garantir que profiles seja um objeto único, não array
+        const profileData = Array.isArray(suggestion.profiles) 
+          ? suggestion.profiles[0] 
+          : suggestion.profiles;
+          
         const userVote = suggestion.suggestion_votes?.find(
-          vote => vote.user_id === user?.id
+          (vote: any) => vote.user_id === user?.id
         );
         
         return {
           ...suggestion,
-          user_name: suggestion.profiles?.name || 'Usuário',
-          user_avatar: suggestion.profiles?.avatar_url || '',
+          user_name: profileData?.name || 'Usuário',
+          user_avatar: profileData?.avatar_url || '',
           user_vote_type: userVote?.vote_type || null,
-          profiles: suggestion.profiles
-        };
+          profiles: profileData
+        } as Suggestion;
       }) || [];
 
       return processedData;
