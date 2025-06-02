@@ -3,8 +3,10 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Suggestion, SuggestionFilter } from '@/types/suggestionTypes';
+import { useAuth } from '@/contexts/auth';
 
 export const useSuggestions = () => {
+  const { user } = useAuth();
   const [filter, setFilter] = useState<SuggestionFilter>('popular');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -14,7 +16,7 @@ export const useSuggestions = () => {
     error,
     refetch
   } = useQuery({
-    queryKey: ['suggestions', filter, searchQuery],
+    queryKey: ['suggestions', filter, searchQuery, user?.id],
     queryFn: async () => {
       console.log('Buscando sugestões com filtro:', filter, 'e busca:', searchQuery);
       
@@ -67,7 +69,7 @@ export const useSuggestions = () => {
       // Processar os dados para incluir informações de voto do usuário
       const processedData = data?.map(suggestion => {
         const userVote = suggestion.suggestion_votes?.find(
-          vote => vote.user_id === (supabase.auth.getUser().then(u => u.data.user?.id))
+          vote => vote.user_id === user?.id
         );
         
         return {
