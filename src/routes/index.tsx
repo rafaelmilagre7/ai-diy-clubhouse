@@ -11,6 +11,10 @@ import RootRedirect from '@/components/routing/RootRedirect';
 import LoginPage from '@/pages/auth/LoginPage';
 import DashboardPage from '@/pages/app/DashboardPage';
 import ImplementationTrailPage from '@/pages/app/ImplementationTrailPage';
+import InvitePage from '@/pages/InvitePage';
+
+// Rotas Unificadas
+import { AuthRoutes } from './AuthRoutes';
 import { NetworkingRoutes } from './NetworkingRoutes';
 import { CommunityRoutes } from './CommunityRoutes';
 import { SolutionsRoutes } from './SolutionsRoutes';
@@ -29,7 +33,14 @@ export const AppRoutes = () => {
         <Routes>
           {/* Rotas públicas */}
           <Route path="/" element={<RootRedirect />} />
+          
+          {/* Convite Routes */}
+          <Route path="/convite/:token" element={<InvitePage />} />
+          <Route path="/convite" element={<InvitePage />} />
+
+          {/* Auth Routes */}
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/auth/*" element={<AuthRoutes />} />
 
           {/* Rotas protegidas com guards de acesso */}
           <Route path="/dashboard" element={
