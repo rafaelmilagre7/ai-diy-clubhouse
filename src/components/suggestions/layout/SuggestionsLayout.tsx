@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { useSuggestions } from '@/hooks/suggestions/useSuggestions';
 import { SuggestionFilter } from '@/types/suggestionTypes';
 import { SuggestionsHeader } from './SuggestionsHeader';
 import { SuggestionsContent } from './SuggestionsContent';
 import SuggestionsDebugPanel from '../debug/SuggestionsDebugPanel';
+import SuggestionsTestPanel from '../debug/SuggestionsTestPanel';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
@@ -85,7 +85,10 @@ const SuggestionsLayout = () => {
         onFilterChange={handleFilterChange}
       />
       
-      {/* Debug Panel Temporário */}
+      {/* Painel de Testes Abrangente */}
+      <SuggestionsTestPanel />
+      
+      {/* Debug Panel Básico */}
       <SuggestionsDebugPanel />
       
       {error ? (
