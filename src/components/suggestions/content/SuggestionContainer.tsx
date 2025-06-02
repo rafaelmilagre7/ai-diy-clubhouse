@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import { UserVote } from '@/types/suggestionTypes';
 import SuggestionTitle from './SuggestionTitle';
 import SuggestionDescription from './SuggestionDescription';
 import SuggestionVoting from '../SuggestionVoting';
@@ -21,6 +20,7 @@ interface SuggestionContainerProps {
     user_id?: string;
     user_name?: string;
     user_avatar?: string;
+    user_vote_type?: 'upvote' | 'downvote' | null;
   };
   comment: string;
   comments: any[];
@@ -30,7 +30,6 @@ interface SuggestionContainerProps {
   onSubmitComment: (e: React.FormEvent) => void;
   onVote: (voteType: 'upvote' | 'downvote') => Promise<void>;
   isOwner?: boolean;
-  userVote?: UserVote | null;
   voteLoading?: boolean;
 }
 
@@ -44,10 +43,8 @@ const SuggestionContainer = ({
   onSubmitComment,
   onVote,
   isOwner = false,
-  userVote,
   voteLoading = false
 }: SuggestionContainerProps) => {
-  const voteBalance = suggestion.upvotes - suggestion.downvotes;
   const categoryName = suggestion.category?.name || '';
 
   return (
@@ -68,10 +65,8 @@ const SuggestionContainer = ({
 
         <SuggestionVoting
           suggestion={suggestion}
-          userVote={userVote}
           voteLoading={voteLoading}
           onVote={onVote}
-          voteBalance={voteBalance}
         />
 
         <CommentsSection

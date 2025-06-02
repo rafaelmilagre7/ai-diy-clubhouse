@@ -2,43 +2,64 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
-import { UserVote } from '@/types/suggestionTypes';
+import { cn } from '@/lib/utils';
 
 interface VoteControlsProps {
-  userVote?: UserVote | null;
+  userVoteType?: 'upvote' | 'downvote' | null;
   voteLoading?: boolean;
   onVote: (voteType: 'upvote' | 'downvote') => Promise<void>;
 }
 
-const VoteControls = ({ userVote, voteLoading = false, onVote }: VoteControlsProps) => {
+const VoteControls = ({ userVoteType, voteLoading = false, onVote }: VoteControlsProps) => {
+  const handleVote = async (voteType: 'upvote' | 'downvote') => {
+    if (voteLoading) return;
+    await onVote(voteType);
+  };
+
   return (
     <div className="flex gap-2">
       <Button
         variant="outline"
         size="sm"
-        className={`flex items-center gap-1 ${
-          userVote?.vote_type === 'upvote' ? 'bg-green-50 text-green-600 border-green-200 hover:bg-green-100' : ''
-        }`}
+        className={cn(
+          "flex items-center gap-1.5 transition-all duration-200 hover:scale-[1.02]",
+          userVoteType === 'upvote' 
+            ? 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100' 
+            : 'hover:bg-green-50 hover:text-green-700 hover:border-green-300'
+        )}
         disabled={voteLoading}
-        onClick={() => onVote('upvote')}
-        aria-label="Apoiar"
+        onClick={() => handleVote('upvote')}
+        aria-label="Apoiar sugestão"
       >
-        <ThumbsUp size={16} />
-        <span>Apoiar</span>
+        <ThumbsUp 
+          className={cn(
+            "h-4 w-4 transition-transform duration-200",
+            userVoteType === 'upvote' ? "scale-110" : ""
+          )} 
+        />
+        <span className="font-medium">Apoiar</span>
       </Button>
       
       <Button
         variant="outline"
         size="sm"
-        className={`flex items-center gap-1 ${
-          userVote?.vote_type === 'downvote' ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100' : ''
-        }`}
+        className={cn(
+          "flex items-center gap-1.5 transition-all duration-200 hover:scale-[1.02]",
+          userVoteType === 'downvote' 
+            ? 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100' 
+            : 'hover:bg-red-50 hover:text-red-700 hover:border-red-300'
+        )}
         disabled={voteLoading}
-        onClick={() => onVote('downvote')}
-        aria-label="Não apoiar"
+        onClick={() => handleVote('downvote')}
+        aria-label="Não apoiar sugestão"
       >
-        <ThumbsDown size={16} />
-        <span>Não apoiar</span>
+        <ThumbsDown 
+          className={cn(
+            "h-4 w-4 transition-transform duration-200",
+            userVoteType === 'downvote' ? "scale-110" : ""
+          )} 
+        />
+        <span className="font-medium">Não apoiar</span>
       </Button>
     </div>
   );

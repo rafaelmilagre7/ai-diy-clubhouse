@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Suggestion, SuggestionFilter } from '@/types/suggestionTypes';
@@ -16,57 +16,46 @@ export const useSuggestions = () => {
   } = useQuery({
     queryKey: ['suggestions', filter, searchQuery],
     queryFn: async () => {
-      console.log('Buscando sugestões...', { filter, searchQuery });
+      console.log('Buscando sugestões com filtro:', filter, 'e busca:', searchQuery);
       
-      try {
-        // Usamos a view suggestions_with_profiles que já conecta os dados de perfil
-        let query = supabase
-          .from('suggestions_with_profiles')
-          .select('*')
-          .eq('is_hidden', false); // Apenas sugestões não ocultas
+      let query = supabase
+        .from('suggestions_with_votes')
+        .select('*');
 
-        // Filtragem por status específico
-        if (filter === 'in_development') {
-          query = query.eq('status', 'in_development');
-        } else if (filter === 'completed') {
-          query = query.eq('status', 'completed');
-        }
+      // Aplicar filtro de busca se existir
+      if (searchQuery.trim()) {
+        query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+      }
 
-        // Filtragem por termo de busca
-        if (searchQuery) {
-          query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
-        }
-
-        // Ordenação
-        if (filter === 'popular') {
+      // Aplicar filtros específicos
+      switch (filter) {
+        case 'popular':
           query = query.order('upvotes', { ascending: false });
-        } else if (filter === 'recent') {
+          break;
+        case 'recent':
           query = query.order('created_at', { ascending: false });
-        } else if (filter === 'in_development' || filter === 'completed') {
-          // Para filtros de status, ordenar por data de atualização
-          query = query.order('updated_at', { ascending: false });
-        } else {
-          // Filtro 'all' - ordenar por data de criação
+          break;
+        case 'in_development':
+          query = query.eq('status', 'in_development').order('created_at', { ascending: false });
+          break;
+        case 'completed':
+          query = query.eq('status', 'completed').order('updated_at', { ascending: false });
+          break;
+        default:
           query = query.order('created_at', { ascending: false });
-        }
+      }
 
-        const { data, error } = await query;
-
-        if (error) {
-          console.error('Erro ao buscar sugestões:', error);
-          throw error;
-        }
-
-        console.log('Sugestões encontradas:', data?.length, data);
-        return data || [];
-      } catch (error) {
-        console.error('Erro na consulta de sugestões:', error);
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error('Erro ao buscar sugestões:', error);
         throw error;
       }
+
+      console.log('Sugestões carregadas:', data?.length);
+      return data as Suggestion[];
     },
-    refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 1, // 1 minuto
-    refetchOnMount: true,
+    staleTime: 1000 * 60 * 5, // 5 minutos
   });
 
   return {

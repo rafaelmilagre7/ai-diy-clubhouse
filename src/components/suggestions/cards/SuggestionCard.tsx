@@ -28,13 +28,13 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
   
   return (
     <Card 
-      className="h-full cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.02] group animate-fade-in"
+      className="h-full cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.01] group animate-fade-in"
       onClick={handleCardClick}
     >
       <CardHeader className="pb-3">
         <div className="flex justify-between items-start gap-3">
           <div className="space-y-2 flex-1">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <StatusBadge status={suggestion.status} size="sm" />
               {isHotSuggestion && (
                 <div className="flex items-center gap-1 text-orange-600 text-xs font-medium">
@@ -48,7 +48,7 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
                 </div>
               )}
             </div>
-            <h3 className="font-semibold text-lg line-clamp-2 group-hover:text-primary transition-colors">
+            <h3 className="font-semibold text-lg line-clamp-2 group-hover:text-primary transition-colors text-left">
               {suggestion.title}
             </h3>
           </div>
@@ -56,11 +56,11 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
       </CardHeader>
       
       <CardContent className="pb-3">
-        <p className="text-muted-foreground line-clamp-3 text-sm leading-relaxed">
+        <p className="text-muted-foreground line-clamp-3 text-sm leading-relaxed text-left">
           {suggestion.description}
         </p>
         
-        <div className="mt-3 text-xs text-muted-foreground">
+        <div className="mt-3 text-xs text-muted-foreground text-left">
           {formatRelativeDate(suggestion.created_at)}
           {suggestion.user_name && ` • por ${suggestion.user_name}`}
         </div>
@@ -74,7 +74,7 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
               <span className="font-medium">{suggestion.upvotes}</span>
             </div>
             
-            <div className="flex items-center gap-1 hover:text-red-600 transition-colors">
+            <div className="flex items-center gap-1 hover:text-red-500 transition-colors">
               <ThumbsDown className="h-4 w-4" />
               <span className="font-medium">{suggestion.downvotes}</span>
             </div>
@@ -86,15 +86,15 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
           </div>
         </div>
         
-        {popularity > 0 && (
-          <div className="mt-2 w-full">
+        {popularity > 0 && suggestion.upvotes + suggestion.downvotes > 2 && (
+          <div className="mt-3 w-full">
             <div className="flex justify-between text-xs text-muted-foreground mb-1">
-              <span>Aprovação</span>
+              <span>Taxa de aprovação</span>
               <span>{popularity}%</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-1">
+            <div className="w-full bg-gray-200 rounded-full h-1.5">
               <div 
-                className="bg-gradient-to-r from-green-400 to-green-600 h-1 rounded-full transition-all duration-300"
+                className="bg-gradient-to-r from-green-400 to-green-600 h-1.5 rounded-full transition-all duration-300"
                 style={{ width: `${popularity}%` }}
               />
             </div>

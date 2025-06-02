@@ -16,6 +16,8 @@ export interface Suggestion {
   category_id?: string;
   user_name?: string;
   user_avatar?: string;
+  user_vote_type?: 'upvote' | 'downvote' | null;
+  user_vote_id?: string;
   profiles?: {
     name: string;
     avatar_url: string;

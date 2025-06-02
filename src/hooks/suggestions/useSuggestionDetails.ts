@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import { Suggestion, UserVote, VoteType } from '@/types/suggestionTypes';
+import { Suggestion, VoteType } from '@/types/suggestionTypes';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
 
@@ -12,7 +12,6 @@ export const useSuggestionDetails = () => {
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [userVote, setUserVote] = useState<UserVote | null>(null);
   const [voteLoading, setVoteLoading] = useState(false);
 
   const fetchSuggestion = async () => {
@@ -23,7 +22,7 @@ export const useSuggestionDetails = () => {
       console.log('Buscando detalhes da sugestão:', id);
       
       const { data, error } = await supabase
-        .from('suggestions_with_profiles')
+        .from('suggestions_with_votes')
         .select('*')
         .eq('id', id)
         .single();
@@ -35,22 +34,6 @@ export const useSuggestionDetails = () => {
       }
       
       setSuggestion(data as Suggestion);
-      
-      // Buscar o voto do usuário atual, se estiver autenticado
-      if (user) {
-        const { data: voteData, error: voteError } = await supabase
-          .from('suggestion_votes')
-          .select('id, vote_type')
-          .eq('suggestion_id', id)
-          .eq('user_id', user.id)
-          .single();
-        
-        if (!voteError && voteData) {
-          setUserVote(voteData as UserVote);
-        } else {
-          setUserVote(null);
-        }
-      }
     } catch (err: any) {
       console.error('Erro inesperado ao buscar sugestão:', err);
       setError(err);
@@ -68,8 +51,10 @@ export const useSuggestionDetails = () => {
     try {
       setVoteLoading(true);
       
+      const currentVoteType = suggestion.user_vote_type;
+      
       // Se o usuário já votou do mesmo tipo, remover o voto
-      if (userVote?.vote_type === voteType) {
+      if (currentVoteType === voteType) {
         const { error } = await supabase
           .from('suggestion_votes')
           .delete()
@@ -78,73 +63,52 @@ export const useSuggestionDetails = () => {
         
         if (error) throw error;
         
-        setUserVote(null);
-        
-        // Atualizar contagem de votos na sugestão
+        // Atualizar estado local
         setSuggestion(prev => {
           if (!prev) return null;
           return {
             ...prev,
+            user_vote_type: null,
+            user_vote_id: undefined,
             [voteType === 'upvote' ? 'upvotes' : 'downvotes']: 
-              (prev[voteType === 'upvote' ? 'upvotes' : 'downvotes'] || 0) - 1
+              Math.max(0, (prev[voteType === 'upvote' ? 'upvotes' : 'downvotes'] || 0) - 1)
           };
         });
         
         toast.success('Voto removido');
       } else {
-        // Se o usuário já votou, mas de outro tipo, atualizar o voto
-        if (userVote) {
-          const { data, error } = await supabase
-            .from('suggestion_votes')
-            .update({ vote_type: voteType })
-            .eq('suggestion_id', suggestion.id)
-            .eq('user_id', user.id)
-            .select('id, vote_type')
-            .single();
-          
-          if (error) throw error;
-          
-          // Atualizar contagem de votos na sugestão (remover voto antigo, adicionar novo)
-          setSuggestion(prev => {
-            if (!prev) return null;
-            return {
-              ...prev,
-              [userVote.vote_type === 'upvote' ? 'upvotes' : 'downvotes']: 
-                (prev[userVote.vote_type === 'upvote' ? 'upvotes' : 'downvotes'] || 0) - 1,
-              [voteType === 'upvote' ? 'upvotes' : 'downvotes']: 
-                (prev[voteType === 'upvote' ? 'upvotes' : 'downvotes'] || 0) + 1
-            };
+        // Upsert do voto
+        const { error } = await supabase
+          .from('suggestion_votes')
+          .upsert({
+            suggestion_id: suggestion.id,
+            user_id: user.id,
+            vote_type: voteType
           });
-          
-          setUserVote(data as UserVote);
-        } else {
-          // Se o usuário ainda não votou, inserir novo voto
-          const { data, error } = await supabase
-            .from('suggestion_votes')
-            .insert({
-              suggestion_id: suggestion.id,
-              user_id: user.id,
-              vote_type: voteType
-            })
-            .select('id, vote_type')
-            .single();
-          
-          if (error) throw error;
-          
-          // Atualizar contagem de votos na sugestão
-          setSuggestion(prev => {
-            if (!prev) return null;
-            return {
-              ...prev,
-              [voteType === 'upvote' ? 'upvotes' : 'downvotes']: 
-                (prev[voteType === 'upvote' ? 'upvotes' : 'downvotes'] || 0) + 1
-            };
-          });
-          
-          setUserVote(data as UserVote);
-        }
         
-        toast.success(`Você ${voteType === 'upvote' ? 'gostou' : 'não gostou'} desta sugestão`);
+        if (error) throw error;
+        
+        // Atualizar estado local
+        setSuggestion(prev => {
+          if (!prev) return null;
+          
+          let newSuggestion = { ...prev };
+          
+          // Se mudou o tipo de voto, decrementar o anterior
+          if (currentVoteType) {
+            const oldKey = currentVoteType === 'upvote' ? 'upvotes' : 'downvotes';
+            newSuggestion[oldKey] = Math.max(0, (prev[oldKey] || 0) - 1);
+          }
+          
+          // Incrementar o novo voto
+          const newKey = voteType === 'upvote' ? 'upvotes' : 'downvotes';
+          newSuggestion[newKey] = (prev[newKey] || 0) + 1;
+          newSuggestion.user_vote_type = voteType;
+          
+          return newSuggestion;
+        });
+        
+        toast.success(`Você ${voteType === 'upvote' ? 'apoiou' : 'não apoiou'} esta sugestão`);
       }
     } catch (err: any) {
       console.error('Erro ao votar:', err);
@@ -164,7 +128,6 @@ export const useSuggestionDetails = () => {
     suggestion,
     isLoading,
     error,
-    userVote,
     voteLoading,
     handleVote,
     refetch

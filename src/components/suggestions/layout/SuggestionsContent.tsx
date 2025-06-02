@@ -67,7 +67,7 @@ export const SuggestionsContent: React.FC<SuggestionsContentProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-card/50 rounded-lg border">
         <div className="flex items-center gap-3">
           <FilterIcon className="h-5 w-5 text-primary" />
-          <div>
+          <div className="text-left">
             <h2 className="font-semibold text-lg">
               {filterLabel}
             </h2>
@@ -111,7 +111,7 @@ export const SuggestionsContent: React.FC<SuggestionsContentProps> = ({
 
       {/* Indicador de final da lista */}
       {suggestions.length > 6 && (
-        <div className="text-center py-4">
+        <div className="text-left py-4">
           <p className="text-sm text-muted-foreground">
             Mostrando {suggestions.length} {suggestions.length === 1 ? 'sugestão' : 'sugestões'}
           </p>

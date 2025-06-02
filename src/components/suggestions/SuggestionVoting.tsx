@@ -2,7 +2,6 @@
 import React from 'react';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
-import { UserVote } from '@/types/suggestionTypes';
 import VoteControls from './voting/VoteControls';
 import VoteDisplay from './voting/VoteDisplay';
 import VoteStatus from './voting/VoteStatus';
@@ -12,18 +11,16 @@ interface SuggestionVotingProps {
     id: string;
     upvotes: number;
     downvotes: number;
+    user_vote_type?: 'upvote' | 'downvote' | null;
   };
-  userVote?: UserVote | null;
   voteLoading?: boolean;
   onVote: (voteType: 'upvote' | 'downvote') => Promise<void>;
-  voteBalance: number;
 }
 
 const SuggestionVoting = ({
-  userVote,
+  suggestion,
   voteLoading = false,
-  onVote,
-  voteBalance
+  onVote
 }: SuggestionVotingProps) => {
   const { user } = useAuth();
 
@@ -36,16 +33,26 @@ const SuggestionVoting = ({
   };
 
   return (
-    <div className="flex items-center gap-4 border p-3 rounded-lg">
-      <div className="flex gap-2 items-center">
-        <VoteControls
-          userVote={userVote}
-          voteLoading={voteLoading}
-          onVote={handleVote}
+    <div className="border rounded-lg p-4 bg-card">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <VoteDisplay 
+          upvotes={suggestion.upvotes} 
+          downvotes={suggestion.downvotes}
+          showTrend={true}
         />
-        <VoteDisplay voteBalance={voteBalance} />
+        
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <VoteControls
+            userVoteType={suggestion.user_vote_type}
+            voteLoading={voteLoading}
+            onVote={handleVote}
+          />
+        </div>
       </div>
-      <VoteStatus userVote={userVote} />
+      
+      <div className="mt-3 pt-3 border-t">
+        <VoteStatus userVoteType={suggestion.user_vote_type} />
+      </div>
     </div>
   );
 };

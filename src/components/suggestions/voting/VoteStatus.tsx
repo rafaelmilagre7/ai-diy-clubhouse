@@ -1,22 +1,26 @@
 
 import React from 'react';
-import { UserVote } from '@/types/suggestionTypes';
 
 interface VoteStatusProps {
-  userVote?: UserVote | null;
+  userVoteType?: 'upvote' | 'downvote' | null;
+  className?: string;
 }
 
-const VoteStatus = ({ userVote }: VoteStatusProps) => {
+const VoteStatus = ({ userVoteType, className = "" }: VoteStatusProps) => {
+  if (!userVoteType) {
+    return (
+      <div className={`text-sm text-muted-foreground ${className}`}>
+        Vote para mostrar seu apoio
+      </div>
+    );
+  }
+
   return (
-    <div className="text-sm text-muted-foreground flex-1 ml-2">
-      {userVote ? (
-        userVote.vote_type === 'upvote' ? (
-          <span className="font-medium text-green-600">Você apoiou esta sugestão</span>
-        ) : (
-          <span className="font-medium text-red-600">Você não apoiou esta sugestão</span>
-        )
+    <div className={`text-sm font-medium ${className}`}>
+      {userVoteType === 'upvote' ? (
+        <span className="text-green-600">✓ Você apoiou esta sugestão</span>
       ) : (
-        <span>Vote para mostrar seu apoio</span>
+        <span className="text-red-600">✗ Você não apoiou esta sugestão</span>
       )}
     </div>
   );
