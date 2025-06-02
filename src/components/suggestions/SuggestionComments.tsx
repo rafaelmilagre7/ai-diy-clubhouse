@@ -23,7 +23,7 @@ interface SuggestionComment {
   profiles: {
     name: string;
     avatar_url: string;
-  } | null;
+  }[] | null;
 }
 
 export const SuggestionComments: React.FC<SuggestionCommentsProps> = ({ 
@@ -143,16 +143,16 @@ export const SuggestionComments: React.FC<SuggestionCommentsProps> = ({
             comments.map((comment: SuggestionComment) => (
               <div key={comment.id} className="flex gap-3 p-4 border rounded-lg">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={comment.profiles?.avatar_url} />
+                  <AvatarImage src={comment.profiles?.[0]?.avatar_url} />
                   <AvatarFallback>
-                    {comment.profiles?.name?.charAt(0) || 'U'}
+                    {comment.profiles?.[0]?.name?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>
                 
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-medium text-sm">
-                      {comment.profiles?.name || 'Usuário'}
+                      {comment.profiles?.[0]?.name || 'Usuário'}
                     </span>
                     <span className="text-xs text-muted-foreground">
                       {formatRelativeDate(comment.created_at)}
