@@ -1,34 +1,57 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { getStatusColor, getStatusLabel } from '@/utils/suggestionUtils';
+import { CheckCircle, Clock, Wrench, XCircle, Eye } from 'lucide-react';
 
 interface StatusBadgeProps {
   status: string;
-  size?: 'sm' | 'default' | 'lg';
+  className?: string;
 }
 
-export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'default' }) => {
-  const color = getStatusColor(status);
-  const label = getStatusLabel(status);
+const statusConfig = {
+  new: {
+    label: 'Nova',
+    icon: Eye,
+    variant: 'secondary' as const,
+    className: 'bg-blue-100 text-blue-800 border-blue-200'
+  },
+  under_review: {
+    label: 'Em Análise',
+    icon: Clock,
+    variant: 'outline' as const,
+    className: 'bg-yellow-100 text-yellow-800 border-yellow-200'
+  },
+  in_development: {
+    label: 'Em Desenvolvimento',
+    icon: Wrench,
+    variant: 'outline' as const,
+    className: 'bg-orange-100 text-orange-800 border-orange-200'
+  },
+  completed: {
+    label: 'Concluída',
+    icon: CheckCircle,
+    variant: 'outline' as const,
+    className: 'bg-green-100 text-green-800 border-green-200'
+  },
+  declined: {
+    label: 'Rejeitada',
+    icon: XCircle,
+    variant: 'outline' as const,
+    className: 'bg-red-100 text-red-800 border-red-200'
+  }
+};
 
-  const sizeClasses = {
-    sm: 'text-xs px-2 py-0.5',
-    default: 'text-sm px-2 py-1',
-    lg: 'text-base px-3 py-1.5'
-  };
+export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className }) => {
+  const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.new;
+  const Icon = config.icon;
 
   return (
     <Badge 
-      variant="outline" 
-      className={`${sizeClasses[size]} border-2`}
-      style={{ 
-        borderColor: color, 
-        color: color,
-        backgroundColor: `${color}10`
-      }}
+      variant={config.variant}
+      className={`gap-1 font-medium ${config.className} ${className || ''}`}
     >
-      {label}
+      <Icon className="h-3 w-3" />
+      {config.label}
     </Badge>
   );
 };

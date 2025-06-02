@@ -1,7 +1,6 @@
 
 import React from 'react';
-import { useAuth } from '@/contexts/auth';
-import { toast } from 'sonner';
+import { Card, CardContent } from '@/components/ui/card';
 import { VoteControls } from './voting/VoteControls';
 import { VoteDisplay } from './voting/VoteDisplay';
 import { VoteStatus } from './voting/VoteStatus';
@@ -17,43 +16,50 @@ interface SuggestionVotingProps {
   onVote: (voteType: 'upvote' | 'downvote') => Promise<void>;
 }
 
-const SuggestionVoting = ({
+const SuggestionVoting: React.FC<SuggestionVotingProps> = ({
   suggestion,
   voteLoading = false,
   onVote
-}: SuggestionVotingProps) => {
-  const { user } = useAuth();
-
-  const handleVote = async (voteType: 'upvote' | 'downvote') => {
-    if (!user) {
-      toast.error("Você precisa estar logado para votar.");
-      return;
-    }
-    await onVote(voteType);
-  };
-
+}) => {
   return (
-    <div className="border rounded-lg p-4 bg-card">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <VoteDisplay 
-          upvotes={suggestion.upvotes} 
-          downvotes={suggestion.downvotes}
-          showTrend={true}
-        />
-        
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <VoteControls
-            userVoteType={suggestion.user_vote_type}
-            voteLoading={voteLoading}
-            onVote={handleVote}
-          />
+    <Card className="bg-card border-border">
+      <CardContent className="pt-6">
+        <div className="space-y-6">
+          {/* Título */}
+          <div className="text-center">
+            <h3 className="text-lg font-semibold text-foreground mb-2">
+              O que você achou desta sugestão?
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Seu voto ajuda a comunidade a identificar as melhores ideias
+            </p>
+          </div>
+
+          {/* Display dos votos */}
+          <div className="flex justify-center">
+            <VoteDisplay 
+              upvotes={suggestion.upvotes}
+              downvotes={suggestion.downvotes}
+              showTrend={true}
+            />
+          </div>
+
+          {/* Controles de votação */}
+          <div className="flex justify-center">
+            <VoteControls
+              userVoteType={suggestion.user_vote_type}
+              voteLoading={voteLoading}
+              onVote={onVote}
+            />
+          </div>
+
+          {/* Status do voto */}
+          <div className="text-center">
+            <VoteStatus userVoteType={suggestion.user_vote_type} />
+          </div>
         </div>
-      </div>
-      
-      <div className="mt-3 pt-3 border-t">
-        <VoteStatus userVoteType={suggestion.user_vote_type} />
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

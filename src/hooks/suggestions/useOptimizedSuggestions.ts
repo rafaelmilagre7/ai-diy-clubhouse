@@ -1,141 +1,119 @@
 
-import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { Suggestion, SuggestionFilter } from '@/types/suggestionTypes';
 import { useAuth } from '@/contexts/auth';
+import { SuggestionFilter, Suggestion } from '@/types/suggestionTypes';
+import { useMemo } from 'react';
 
-export const useOptimizedSuggestions = (
-  filter: SuggestionFilter = 'popular',
-  searchQuery: string = ''
-) => {
+export const useOptimizedSuggestions = (filter: SuggestionFilter, searchQuery: string = '') => {
   const { user } = useAuth();
 
-  // Memoizar a query key para evitar re-renders desnecessários
-  const queryKey = useMemo(() => [
-    'suggestions-optimized',
-    filter,
-    searchQuery.trim(),
-    user?.id
-  ], [filter, searchQuery, user?.id]);
-
-  // Query otimizada com cache inteligente
-  const {
-    data: suggestions = [],
-    isLoading,
-    error,
-    refetch,
-    isFetching
-  } = useQuery({
-    queryKey,
+  const { data, isLoading, error, isFetching } = useQuery({
+    queryKey: ['suggestions', filter, searchQuery, user?.id],
     queryFn: async () => {
-      console.log('🔄 Buscando sugestões otimizadas:', { filter, searchQuery: searchQuery.trim() });
-      
+      console.log('Buscando sugestões:', { filter, searchQuery });
+
       let query = supabase
         .from('suggestions')
         .select(`
-          id,
-          title,
-          description,
-          user_id,
-          status,
-          upvotes,
-          downvotes,
-          comment_count,
-          created_at,
-          updated_at,
-          is_pinned,
-          is_hidden,
-          profiles!suggestions_user_id_fkey (
-            name,
-            avatar_url
-          ),
-          suggestion_votes!left (
-            vote_type,
-            user_id
-          )
-        `)
-        .eq('is_hidden', false)
-        .limit(20); // Limitar para performance
+          *,
+          profiles:user_id(name, avatar_url),
+          suggestion_categories:category_id(name, color)
+        `);
 
-      // Aplicar filtro de busca se existir
-      if (searchQuery.trim()) {
-        query = query.or(`title.ilike.%${searchQuery.trim()}%,description.ilike.%${searchQuery.trim()}%`);
-      }
-
-      // Aplicar ordenação baseada no filtro
+      // Aplicar filtros de status
       switch (filter) {
         case 'popular':
-          query = query.order('upvotes', { ascending: false })
-                      .order('created_at', { ascending: false });
+          query = query.order('upvotes', { ascending: false });
           break;
         case 'recent':
           query = query.order('created_at', { ascending: false });
           break;
         case 'in_development':
-          query = query.eq('status', 'in_development')
-                      .order('updated_at', { ascending: false });
+          query = query.eq('status', 'in_development');
           break;
         case 'completed':
-          query = query.eq('status', 'completed')
-                      .order('updated_at', { ascending: false });
+          query = query.eq('status', 'completed');
           break;
-        default:
+        default: // 'all'
           query = query.order('created_at', { ascending: false });
       }
 
-      const { data, error } = await query;
-      
+      // Aplicar busca se houver
+      if (searchQuery.trim()) {
+        query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+      }
+
+      const { data: suggestions, error } = await query.limit(50);
+
       if (error) {
-        console.error('❌ Erro ao buscar sugestões:', error);
+        console.error('Erro ao buscar sugestões:', error);
         throw error;
       }
 
-      console.log('✅ Sugestões carregadas:', data?.length);
-      
-      // Processar dados com validação robusta
-      const processedData: Suggestion[] = data?.map((suggestion: any) => {
-        // Com a relação criada, profiles será um objeto único
-        const profileData = suggestion.profiles;
-          
-        const userVote = suggestion.suggestion_votes?.find(
-          (vote: any) => vote.user_id === user?.id
-        );
-        
-        return {
-          ...suggestion,
-          user_name: profileData?.name || 'Usuário',
-          user_avatar: profileData?.avatar_url || '',
-          user_vote_type: userVote?.vote_type || null,
-          profiles: profileData
-        } as Suggestion;
-      }) || [];
+      // Buscar votos do usuário se logado
+      let userVotes: Record<string, string> = {};
+      if (user && suggestions?.length) {
+        const { data: votes } = await supabase
+          .from('suggestion_votes')
+          .select('suggestion_id, vote_type')
+          .eq('user_id', user.id)
+          .in('suggestion_id', suggestions.map(s => s.id));
 
-      return processedData;
+        userVotes = (votes || []).reduce((acc, vote) => {
+          acc[vote.suggestion_id] = vote.vote_type;
+          return acc;
+        }, {} as Record<string, string>);
+      }
+
+      // Combinar dados
+      const enrichedSuggestions = (suggestions || []).map(suggestion => ({
+        ...suggestion,
+        user_name: suggestion.profiles?.name,
+        user_avatar: suggestion.profiles?.avatar_url,
+        user_vote_type: userVotes[suggestion.id] as 'upvote' | 'downvote' | null,
+        category_name: suggestion.suggestion_categories?.name,
+        category_color: suggestion.suggestion_categories?.color
+      }));
+
+      console.log('Sugestões encontradas:', enrichedSuggestions.length);
+      return enrichedSuggestions;
     },
-    staleTime: 1000 * 60 * 3, // 3 minutos - cache mais agressivo
-    gcTime: 1000 * 60 * 10, // 10 minutos na memória
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    retry: 2,
+    staleTime: 1000 * 60 * 5, // 5 minutos
+    refetchOnWindowFocus: false
   });
 
-  // Memoizar estatísticas para evitar recálculos
+  // Calcular estatísticas
   const stats = useMemo(() => {
-    const total = suggestions.length;
-    const byStatus = suggestions.reduce((acc, suggestion) => {
-      acc[suggestion.status] = (acc[suggestion.status] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    if (!data) return { total: 0, byStatus: { popular: 0, recent: 0, in_development: 0, completed: 0, all: 0 } };
 
-    return { total, byStatus };
-  }, [suggestions]);
+    const total = data.length;
+    const popular = data.filter(s => s.upvotes > 5).length;
+    const recent = data.filter(s => {
+      const createdAt = new Date(s.created_at);
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      return createdAt > sevenDaysAgo;
+    }).length;
+    const in_development = data.filter(s => s.status === 'in_development').length;
+    const completed = data.filter(s => s.status === 'completed').length;
+
+    return {
+      total,
+      byStatus: {
+        all: total,
+        popular,
+        recent,
+        in_development,
+        completed
+      }
+    };
+  }, [data]);
 
   return {
-    suggestions,
+    suggestions: data || [],
     isLoading,
     error,
-    refetch,
     isFetching,
     stats
   };
