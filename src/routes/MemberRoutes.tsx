@@ -5,8 +5,8 @@ import { SmartFeatureGuard } from '@/components/auth/SmartFeatureGuard';
 import MemberLayout from '@/components/layout/MemberLayout';
 import ProfileRoutes from './ProfileRoutes';
 
-// Member pages
-import Dashboard from '@/pages/member/Dashboard';
+// Member pages - usando versões otimizadas
+import OptimizedDashboard from '@/pages/member/OptimizedDashboard';
 import Solutions from '@/pages/member/Solutions';
 import Tools from '@/pages/member/Tools';
 import ToolDetails from '@/pages/member/ToolDetails';
@@ -54,8 +54,8 @@ const createProtectedRoute = (path: string, Component: React.ComponentType<any>,
 });
 
 export const memberRoutes: RouteObject[] = [
-  createProtectedRoute("/", Dashboard),
-  createProtectedRoute("/dashboard", Dashboard),
+  createProtectedRoute("/", OptimizedDashboard),
+  createProtectedRoute("/dashboard", OptimizedDashboard),
   createProtectedRoute("/implementation-trail", ImplementationTrailPage, "implementation_trail"),
   createProtectedRoute("/solutions", Solutions),
   createProtectedRoute("/tools", Tools),
@@ -96,7 +96,7 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/comunidade/categoria/:slug", CategoryView),
   createProtectedRoute("/comunidade/novo-topico/:categorySlug", NewTopic),
   
-  // Networking Routes - com guard de feature
+  // Networking Routes - com guard de feature otimizada
   createProtectedRoute("/networking", NetworkingPage, "networking"),
   createProtectedRoute("/networking/connections", () => <ConnectionsManager />, "networking")
 ];

@@ -1,9 +1,10 @@
+
 import { RouteObject } from "react-router-dom";
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import AdminLayout from '@/components/layout/admin/AdminLayout';
 
-// Admin pages
-import AdminDashboard from '@/pages/admin/AdminDashboard';
+// Admin pages - usando versões otimizadas
+import OptimizedAdminDashboard from '@/pages/admin/OptimizedAdminDashboard';
 import AdminUsers from '@/pages/admin/AdminUsers';
 import AdminTools from '@/pages/admin/AdminTools';
 import AdminSolutions from '@/pages/admin/AdminSolutions';
@@ -24,7 +25,7 @@ const createAdminRoute = (path: string, Component: React.ComponentType<any>) => 
 });
 
 export const adminRoutes: RouteObject[] = [
-  createAdminRoute("/admin", AdminDashboard),
+  createAdminRoute("/admin", OptimizedAdminDashboard),
   createAdminRoute("/admin/users", AdminUsers),
   createAdminRoute("/admin/tools", AdminTools),
   createAdminRoute("/admin/solutions", AdminSolutions),

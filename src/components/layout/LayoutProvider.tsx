@@ -1,7 +1,7 @@
 
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useRef, ReactNode, memo, useMemo } from "react";
-import { useAuth } from "@/contexts/auth";
+import { useOptimizedAuth } from "@/hooks/auth/useOptimizedAuth";
 import { useUnifiedOnboardingValidation } from "@/hooks/onboarding/useUnifiedOnboardingValidation";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import MemberLayout from "./MemberLayout";
@@ -15,7 +15,7 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
     isAdmin,
     isFormacao,
     isLoading: authLoading,
-  } = useAuth();
+  } = useOptimizedAuth();
   const { isOnboardingComplete, isLoading: onboardingLoading } = useUnifiedOnboardingValidation();
   const navigate = useNavigate();
   const location = useLocation();
