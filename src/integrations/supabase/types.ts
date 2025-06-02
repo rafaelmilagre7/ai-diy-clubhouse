@@ -5021,24 +5021,30 @@ export type Database = {
       }
       suggestion_categories: {
         Row: {
+          color: string | null
           created_at: string
           description: string | null
           id: string
           name: string
+          slug: string | null
           updated_at: string
         }
         Insert: {
+          color?: string | null
           created_at?: string
           description?: string | null
           id?: string
           name: string
+          slug?: string | null
           updated_at?: string
         }
         Update: {
+          color?: string | null
           created_at?: string
           description?: string | null
           id?: string
           name?: string
+          slug?: string | null
           updated_at?: string
         }
         Relationships: []

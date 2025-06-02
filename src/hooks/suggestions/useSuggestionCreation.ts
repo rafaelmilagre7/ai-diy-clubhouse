@@ -1,5 +1,5 @@
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 
@@ -11,12 +11,15 @@ interface SuggestionData {
 
 export const useSuggestionCreation = () => {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
 
   const submitSuggestion = async (data: SuggestionData) => {
-    if (!user) throw new Error('Usuário não autenticado');
+    if (!user) {
+      throw new Error('Usuário não autenticado');
+    }
 
-    const { error } = await supabase
+    console.log('Criando sugestão:', data);
+
+    const { data: suggestion, error } = await supabase
       .from('suggestions')
       .insert({
         title: data.title,
@@ -24,20 +27,26 @@ export const useSuggestionCreation = () => {
         category_id: data.category_id,
         user_id: user.id,
         status: 'new'
-      });
+      })
+      .select()
+      .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Erro ao criar sugestão:', error);
+      throw error;
+    }
+
+    console.log('Sugestão criada:', suggestion);
+    return suggestion;
   };
 
   const mutation = useMutation({
     mutationFn: submitSuggestion,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['suggestions'] });
-    }
   });
 
   return {
     submitSuggestion: mutation.mutateAsync,
-    isSubmitting: mutation.isPending
+    isSubmitting: mutation.isPending,
+    error: mutation.error
   };
 };

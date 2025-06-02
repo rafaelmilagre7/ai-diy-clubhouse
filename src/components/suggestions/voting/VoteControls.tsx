@@ -2,11 +2,13 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
+import { useAuth } from '@/contexts/auth';
+import { toast } from 'sonner';
 
 interface VoteControlsProps {
   userVoteType?: 'upvote' | 'downvote' | null;
   voteLoading?: boolean;
-  onVote: (voteType: 'upvote' | 'downvote') => void;
+  onVote: (voteType: 'upvote' | 'downvote') => Promise<void>;
 }
 
 export const VoteControls: React.FC<VoteControlsProps> = ({
@@ -14,28 +16,38 @@ export const VoteControls: React.FC<VoteControlsProps> = ({
   voteLoading = false,
   onVote
 }) => {
+  const { user } = useAuth();
+
+  const handleVote = async (voteType: 'upvote' | 'downvote') => {
+    if (!user) {
+      toast.error("Você precisa estar logado para votar.");
+      return;
+    }
+    await onVote(voteType);
+  };
+
   return (
     <div className="flex items-center gap-2">
       <Button
         variant={userVoteType === 'upvote' ? 'default' : 'outline'}
         size="sm"
-        onClick={() => onVote('upvote')}
+        className="gap-2"
+        onClick={() => handleVote('upvote')}
         disabled={voteLoading}
-        className="gap-1"
       >
-        <ThumbsUp className="h-3 w-3" />
-        {userVoteType === 'upvote' ? 'Votado' : 'Votar'}
+        <ThumbsUp className="h-4 w-4" />
+        Útil
       </Button>
 
       <Button
         variant={userVoteType === 'downvote' ? 'destructive' : 'outline'}
         size="sm"
-        onClick={() => onVote('downvote')}
+        className="gap-2"
+        onClick={() => handleVote('downvote')}
         disabled={voteLoading}
-        className="gap-1"
       >
-        <ThumbsDown className="h-3 w-3" />
-        {userVoteType === 'downvote' ? 'Votado' : 'Contra'}
+        <ThumbsDown className="h-4 w-4" />
+        Não útil
       </Button>
     </div>
   );

@@ -10,24 +10,24 @@ interface VoteStatusProps {
 export const VoteStatus: React.FC<VoteStatusProps> = ({ userVoteType }) => {
   if (!userVoteType) {
     return (
-      <p className="text-sm text-muted-foreground">
-        Você ainda não votou nesta sugestão.
-      </p>
+      <div className="text-sm text-muted-foreground">
+        Vote para ajudar a comunidade a identificar as melhores sugestões
+      </div>
     );
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 text-sm">
       {userVoteType === 'upvote' ? (
-        <Badge variant="default" className="gap-1">
-          <CheckCircle className="h-3 w-3" />
-          Você votou a favor
-        </Badge>
+        <>
+          <CheckCircle className="h-4 w-4 text-green-500" />
+          <span className="text-green-600">Você achou esta sugestão útil</span>
+        </>
       ) : (
-        <Badge variant="destructive" className="gap-1">
-          <XCircle className="h-3 w-3" />
-          Você votou contra
-        </Badge>
+        <>
+          <XCircle className="h-4 w-4 text-red-500" />
+          <span className="text-red-600">Você achou esta sugestão não útil</span>
+        </>
       )}
     </div>
   );
