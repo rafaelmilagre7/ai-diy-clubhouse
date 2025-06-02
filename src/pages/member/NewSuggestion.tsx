@@ -39,7 +39,14 @@ const NewSuggestion = () => {
 
   const onSubmit = async (values: SuggestionFormData) => {
     try {
-      await submitSuggestion(values);
+      // Garantir que todos os campos obrigatórios estão preenchidos
+      const suggestionData = {
+        title: values.title,
+        description: values.description,
+        category_id: values.category_id
+      };
+      
+      await submitSuggestion(suggestionData);
       toast.success('Sugestão criada com sucesso!');
       navigate('/suggestions');
     } catch (error: any) {

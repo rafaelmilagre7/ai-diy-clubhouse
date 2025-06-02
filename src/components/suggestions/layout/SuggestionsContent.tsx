@@ -2,7 +2,6 @@
 import React from 'react';
 import { SuggestionCard } from '../cards/SuggestionCard';
 import { SuggestionsEmptyState } from '../states/SuggestionsEmptyState';
-import { getStatusLabel, getStatusColor } from '@/utils/suggestionUtils';
 import { Suggestion, SuggestionFilter } from '@/types/suggestionTypes';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, Clock, Settings, CheckCircle, List, BarChart3 } from 'lucide-react';
@@ -55,6 +54,40 @@ const getFilterDescription = (filter: SuggestionFilter, count: number) => {
       return `${count} ${count === 1 ? 'sugestão implementada' : 'sugestões implementadas'}`;
     default:
       return `${count} ${count === 1 ? 'sugestão' : 'sugestões'} encontradas`;
+  }
+};
+
+const getStatusLabel = (status: string) => {
+  switch (status) {
+    case 'new':
+      return 'Nova';
+    case 'under_review':
+      return 'Em Análise';
+    case 'in_development':
+      return 'Em Desenvolvimento';
+    case 'completed':
+      return 'Implementada';
+    case 'declined':
+      return 'Recusada';
+    default:
+      return status;
+  }
+};
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'new':
+      return 'bg-blue-100 text-blue-800';
+    case 'under_review':
+      return 'bg-yellow-100 text-yellow-800';
+    case 'in_development':
+      return 'bg-purple-100 text-purple-800';
+    case 'completed':
+      return 'bg-green-100 text-green-800';
+    case 'declined':
+      return 'bg-red-100 text-red-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
   }
 };
 
@@ -124,11 +157,7 @@ export const SuggestionsContent: React.FC<SuggestionsContentProps> = ({
               animationFillMode: 'both'
             }}
           >
-            <SuggestionCard
-              suggestion={suggestion}
-              getStatusLabel={getStatusLabel}
-              getStatusColor={getStatusColor}
-            />
+            <SuggestionCard suggestion={suggestion} />
           </div>
         ))}
       </div>

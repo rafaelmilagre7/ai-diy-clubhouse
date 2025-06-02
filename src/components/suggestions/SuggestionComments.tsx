@@ -15,7 +15,7 @@ interface SuggestionCommentsProps {
   suggestionId: string;
 }
 
-interface Comment {
+interface SuggestionComment {
   id: string;
   content: string;
   created_at: string;
@@ -50,7 +50,7 @@ export const SuggestionComments: React.FC<SuggestionCommentsProps> = ({
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      return data || [];
+      return data as SuggestionComment[] || [];
     }
   });
 
@@ -140,7 +140,7 @@ export const SuggestionComments: React.FC<SuggestionCommentsProps> = ({
               </p>
             </div>
           ) : (
-            comments.map((comment: Comment) => (
+            comments.map((comment: SuggestionComment) => (
               <div key={comment.id} className="flex gap-3 p-4 border rounded-lg">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={comment.profiles?.avatar_url} />
