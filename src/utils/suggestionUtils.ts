@@ -33,3 +33,53 @@ export const formatDateTime = (dateString: string): string => {
     return 'Data inválida';
   }
 };
+
+export const getStatusLabel = (status: string): string => {
+  switch (status) {
+    case 'new':
+      return 'Nova';
+    case 'under_review':
+      return 'Em Análise';
+    case 'in_development':
+      return 'Em Desenvolvimento';
+    case 'completed':
+      return 'Implementada';
+    case 'declined':
+      return 'Recusada';
+    default:
+      return status;
+  }
+};
+
+export const getStatusColor = (status: string): string => {
+  switch (status) {
+    case 'new':
+      return '#3b82f6'; // blue-500
+    case 'under_review':
+      return '#f59e0b'; // amber-500
+    case 'in_development':
+      return '#8b5cf6'; // violet-500
+    case 'completed':
+      return '#10b981'; // emerald-500
+    case 'declined':
+      return '#ef4444'; // red-500
+    default:
+      return '#6b7280'; // gray-500
+  }
+};
+
+export const truncateText = (text: string, maxLength: number): string => {
+  if (text.length <= maxLength) {
+    return text;
+  }
+  
+  // Encontrar o último espaço antes do limite para não cortar palavras
+  const truncated = text.substring(0, maxLength);
+  const lastSpaceIndex = truncated.lastIndexOf(' ');
+  
+  if (lastSpaceIndex > 0) {
+    return truncated.substring(0, lastSpaceIndex) + '...';
+  }
+  
+  return truncated + '...';
+};
