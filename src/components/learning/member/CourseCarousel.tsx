@@ -77,7 +77,7 @@ export const CourseCarousel: React.FC<CourseCarouselProps> = ({
                 className="pl-4 md:basis-1/3 lg:basis-1/4 xl:basis-1/5"
               >
                 <CourseCard 
-                  id={course.id}
+                  courseId={course.id}
                   title={course.title}
                   description={course.description || ""}
                   imageUrl={course.cover_image_url}

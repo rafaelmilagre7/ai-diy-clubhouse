@@ -2,15 +2,13 @@
 import { Routes, Route } from 'react-router-dom';
 import { authRoutes } from '../../routes/AuthRoutes';
 import { adminRoutes } from '../../routes/AdminRoutes';
-import { MemberRoutes } from '../../routes/MemberRoutes';
+import { memberRoutes } from '../../routes/MemberRoutes';
 import { OnboardingRoutes } from '../../routes/OnboardingRoutes';
 import { formacaoRoutes } from '../../routes/FormacaoRoutes';
 import { CommunityRedirects } from './CommunityRedirects';
 import { SmartRoutePreloader } from './SmartRoutePreloader';
 import NotFound from '@/pages/NotFound';
 import InvitePage from '@/pages/InvitePage';
-import SuggestionDetails from '@/pages/member/SuggestionDetails';
-import Suggestions from '@/pages/member/Suggestions';
 
 const AppRoutes = () => {
   return (
@@ -29,7 +27,9 @@ const AppRoutes = () => {
         ))}
         
         {/* Member Routes */}
-        <Route path="/*" element={<MemberRoutes />} />
+        {memberRoutes.map((route) => (
+          <Route key={route.path} path={route.path} element={route.element} />
+        ))}
         
         {/* Admin Routes */}
         {adminRoutes.map((route) => (

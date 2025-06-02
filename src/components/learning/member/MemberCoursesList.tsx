@@ -91,7 +91,7 @@ export const MemberCoursesList: React.FC<MemberCoursesListProps> = ({
           {coursesWithProgress.map((course) => (
             <CourseCard
               key={course.id}
-              id={course.id}
+              courseId={course.id}
               title={course.title}
               description={course.description || ''}
               imageUrl={course.cover_image_url}

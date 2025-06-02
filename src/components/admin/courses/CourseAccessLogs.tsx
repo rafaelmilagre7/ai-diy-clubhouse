@@ -1,54 +1,33 @@
 
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { supabase } from "@/lib/supabase";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { Shield, Clock, User, AlertCircle, CheckCircle, Search, Download } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { supabase } from '@/lib/supabase';
+import { Search, RefreshCw, Filter, Download } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface AccessLog {
   id: string;
   user_id: string;
   event_type: string;
-  event_data: {
-    course_id: string;
-    lesson_id?: string;
-    attempt_type: string;
-    success: boolean;
-    user_role: string;
-    error_message?: string;
-    timestamp: string;
-    user_agent?: string;
-  };
+  event_data: any;
   created_at: string;
-  profiles?: {
+  profiles: {
     name: string;
     email: string;
   };
 }
 
-interface CourseAccessLogsProps {
-  courseId?: string;
-}
-
-export const CourseAccessLogs: React.FC<CourseAccessLogsProps> = ({ courseId }) => {
+export const CourseAccessLogs: React.FC = () => {
   const [logs, setLogs] = useState<AccessLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState<string>("all");
-  const [filterSuccess, setFilterSuccess] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [eventTypeFilter, setEventTypeFilter] = useState('all');
 
-  useEffect(() => {
-    loadLogs();
-  }, [courseId]);
-
-  const loadLogs = async () => {
+  const fetchLogs = async () => {
     try {
       setLoading(true);
       
@@ -60,158 +39,145 @@ export const CourseAccessLogs: React.FC<CourseAccessLogsProps> = ({ courseId }) 
           event_type,
           event_data,
           created_at,
-          profiles:user_id (
+          profiles!inner(
             name,
             email
           )
         `)
-        .like('event_type', 'learning_%')
+        .or('event_type.ilike.%learning_%,event_type.ilike.%course_%')
         .order('created_at', { ascending: false })
         .limit(100);
 
-      if (courseId) {
-        query = query.eq('event_data->>course_id', courseId);
+      if (eventTypeFilter !== 'all') {
+        query = query.eq('event_type', eventTypeFilter);
       }
 
       const { data, error } = await query;
 
       if (error) {
-        console.error('Erro ao carregar logs:', error);
+        console.error('Erro ao buscar logs:', error);
+        toast.error('Erro ao carregar logs de acesso');
         return;
       }
 
-      setLogs(data || []);
+      // Processar os dados para garantir que profiles seja um objeto, não array
+      const processedData = data?.map(log => ({
+        ...log,
+        profiles: Array.isArray(log.profiles) ? log.profiles[0] : log.profiles
+      })) || [];
+
+      setLogs(processedData);
     } catch (error) {
-      console.error('Erro ao carregar logs:', error);
+      console.error('Erro ao buscar logs:', error);
+      toast.error('Erro ao carregar logs de acesso');
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredLogs = logs.filter(log => {
-    const matchesSearch = !searchTerm || 
-      log.profiles?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.event_data.error_message?.toLowerCase().includes(searchTerm.toLowerCase());
+  useEffect(() => {
+    fetchLogs();
+  }, [eventTypeFilter]);
 
-    const matchesType = filterType === "all" || log.event_data.attempt_type === filterType;
-    
-    const matchesSuccess = filterSuccess === "all" || 
-      (filterSuccess === "success" && log.event_data.success) ||
-      (filterSuccess === "denied" && !log.event_data.success);
+  const filteredLogs = logs.filter(log =>
+    log.profiles?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    log.profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    log.event_data?.course_id?.includes(searchTerm) ||
+    log.event_data?.lesson_id?.includes(searchTerm)
+  );
 
-    return matchesSearch && matchesType && matchesSuccess;
-  });
-
-  const exportLogs = () => {
-    const csvContent = [
-      ['Data', 'Usuário', 'Email', 'Tipo', 'Sucesso', 'Papel', 'Erro'].join(','),
-      ...filteredLogs.map(log => [
-        format(new Date(log.created_at), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR }),
-        log.profiles?.name || 'N/A',
-        log.profiles?.email || 'N/A',
-        log.event_data.attempt_type,
-        log.event_data.success ? 'Sim' : 'Não',
-        log.event_data.user_role || 'N/A',
-        log.event_data.error_message || ''
-      ].map(field => `"${field}"`).join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `access-logs-${courseId || 'all'}-${format(new Date(), 'yyyy-MM-dd')}.csv`;
-    link.click();
+  const getEventBadgeVariant = (eventType: string) => {
+    if (eventType.includes('success') || eventType.includes('completed')) return 'default';
+    if (eventType.includes('denied') || eventType.includes('error')) return 'destructive';
+    if (eventType.includes('attempt')) return 'secondary';
+    return 'outline';
   };
 
-  if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Logs de Acesso
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {[1,2,3,4,5].map(i => (
-            <Skeleton key={i} className="h-12 w-full" />
-          ))}
-        </CardContent>
-      </Card>
-    );
-  }
+  const formatEventData = (eventData: any) => {
+    if (!eventData) return '-';
+    
+    const important = [];
+    if (eventData.course_id) important.push(`Curso: ${eventData.course_id.slice(-8)}`);
+    if (eventData.lesson_id) important.push(`Aula: ${eventData.lesson_id.slice(-8)}`);
+    if (eventData.success !== undefined) important.push(`Sucesso: ${eventData.success ? 'Sim' : 'Não'}`);
+    if (eventData.error_message) important.push(`Erro: ${eventData.error_message.slice(0, 30)}...`);
+    
+    return important.join(' | ') || JSON.stringify(eventData).slice(0, 50) + '...';
+  };
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Shield className="h-5 w-5" />
-          Logs de Acesso
-          <Badge variant="secondary" className="ml-auto">
-            {filteredLogs.length} registros
-          </Badge>
+          <Filter className="h-5 w-5" />
+          Logs de Acesso aos Cursos
         </CardTitle>
+        <CardDescription>
+          Monitoramento de tentativas de acesso a cursos e aulas do sistema de aprendizado
+        </CardDescription>
       </CardHeader>
       
       <CardContent className="space-y-4">
-        {/* Filtros */}
+        {/* Controles */}
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
-            <Input
-              placeholder="Buscar por usuário ou erro..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full"
-            />
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por usuário, curso ou aula..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
           </div>
           
-          <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Tipo de acesso" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os tipos</SelectItem>
-              <SelectItem value="course_access">Acesso a curso</SelectItem>
-              <SelectItem value="lesson_access">Acesso a aula</SelectItem>
-              <SelectItem value="resource_access">Acesso a recurso</SelectItem>
-            </SelectContent>
-          </Select>
+          <select
+            value={eventTypeFilter}
+            onChange={(e) => setEventTypeFilter(e.target.value)}
+            className="px-3 py-2 border rounded-md"
+          >
+            <option value="all">Todos os Eventos</option>
+            <option value="learning_course_access">Acesso a Cursos</option>
+            <option value="learning_lesson_access">Acesso a Aulas</option>
+            <option value="learning_resource_access">Acesso a Recursos</option>
+          </select>
           
-          <Select value={filterSuccess} onValueChange={setFilterSuccess}>
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="success">Sucesso</SelectItem>
-              <SelectItem value="denied">Negado</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Button variant="outline" onClick={exportLogs} className="gap-2">
-            <Download className="h-4 w-4" />
-            Exportar
+          <Button 
+            onClick={fetchLogs}
+            disabled={loading}
+            variant="outline"
+            size="sm"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
 
-        {/* Tabela de logs */}
+        {/* Tabela de Logs */}
         <div className="border rounded-lg">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Data/Hora</TableHead>
                 <TableHead>Usuário</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Papel</TableHead>
+                <TableHead>Evento</TableHead>
                 <TableHead>Detalhes</TableHead>
+                <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredLogs.length === 0 ? (
+              {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={5} className="text-center py-8">
+                    <div className="flex items-center justify-center">
+                      <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                      Carregando logs...
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : filteredLogs.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                     Nenhum log encontrado
                   </TableCell>
                 </TableRow>
@@ -219,62 +185,31 @@ export const CourseAccessLogs: React.FC<CourseAccessLogsProps> = ({ courseId }) 
                 filteredLogs.map((log) => (
                   <TableRow key={log.id}>
                     <TableCell className="font-mono text-sm">
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-3 w-3 text-muted-foreground" />
-                        {format(new Date(log.created_at), 'dd/MM HH:mm', { locale: ptBR })}
+                      {new Date(log.created_at).toLocaleString('pt-BR')}
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{log.profiles?.name || 'Nome não disponível'}</div>
+                        <div className="text-sm text-muted-foreground">{log.profiles?.email || 'Email não disponível'}</div>
                       </div>
                     </TableCell>
-                    
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <User className="h-3 w-3 text-muted-foreground" />
-                        <div>
-                          <div className="font-medium text-sm">
-                            {log.profiles?.name || 'N/A'}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {log.profiles?.email}
-                          </div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    
-                    <TableCell>
-                      <Badge variant="outline" className="text-xs">
-                        {log.event_data.attempt_type?.replace('_', ' ') || 'N/A'}
+                      <Badge variant={getEventBadgeVariant(log.event_type)}>
+                        {log.event_type.replace('learning_', '').replace('_', ' ')}
                       </Badge>
                     </TableCell>
-                    
-                    <TableCell>
-                      {log.event_data.success ? (
-                        <Badge variant="default" className="gap-1 bg-green-100 text-green-800">
-                          <CheckCircle className="h-3 w-3" />
-                          Permitido
-                        </Badge>
-                      ) : (
-                        <Badge variant="destructive" className="gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          Negado
-                        </Badge>
-                      )}
-                    </TableCell>
-                    
-                    <TableCell>
-                      <Badge variant="secondary" className="text-xs">
-                        {log.event_data.user_role || 'N/A'}
-                      </Badge>
-                    </TableCell>
-                    
                     <TableCell className="max-w-xs">
-                      {log.event_data.error_message && (
-                        <div className="text-xs text-red-600 dark:text-red-400">
-                          {log.event_data.error_message}
-                        </div>
-                      )}
-                      {log.event_data.lesson_id && (
-                        <div className="text-xs text-muted-foreground">
-                          Aula: {log.event_data.lesson_id.slice(0, 8)}...
-                        </div>
+                      <div className="text-sm text-muted-foreground truncate">
+                        {formatEventData(log.event_data)}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {log.event_data?.success === true ? (
+                        <Badge variant="default">Sucesso</Badge>
+                      ) : log.event_data?.success === false ? (
+                        <Badge variant="destructive">Falha</Badge>
+                      ) : (
+                        <Badge variant="secondary">Info</Badge>
                       )}
                     </TableCell>
                   </TableRow>
@@ -283,6 +218,12 @@ export const CourseAccessLogs: React.FC<CourseAccessLogsProps> = ({ courseId }) 
             </TableBody>
           </Table>
         </div>
+
+        {filteredLogs.length > 0 && (
+          <div className="text-sm text-muted-foreground">
+            Mostrando {filteredLogs.length} de {logs.length} logs
+          </div>
+        )}
       </CardContent>
     </Card>
   );
