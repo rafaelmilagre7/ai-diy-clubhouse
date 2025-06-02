@@ -1,4 +1,5 @@
 
+
 export interface Comment {
   id: string;
   tool_id: string;
@@ -11,7 +12,7 @@ export interface Comment {
   user_has_liked?: boolean;
   // Informações do perfil do usuário que fez o comentário
   profiles?: {
-    id: string;
+    id?: string; // Tornando opcional para compatibilidade
     name: string;
     avatar_url?: string;
     role?: string;
@@ -26,3 +27,4 @@ export interface CommentFormData {
   parent_id?: string;
   images?: File[];
 }
+

@@ -34,12 +34,23 @@ export const validateComments = (
   
   // Verifica integridade dos comentários
   const validatedComments = safeComments.map(comment => {
+    // Criar perfil válido com fallback para dados ausentes
+    const validatedProfile = comment.profiles ? {
+      id: comment.profiles.id || comment.user_id, // Usar user_id como fallback
+      name: comment.profiles.name || 'Usuário',
+      avatar_url: comment.profiles.avatar_url,
+      role: comment.profiles.role
+    } : {
+      id: comment.user_id, // Sempre usar user_id como ID do perfil
+      name: 'Usuário',
+      avatar_url: undefined,
+      role: undefined
+    };
+
     // Valores padrão para campos potencialmente ausentes
     const validatedComment: Comment = {
       ...comment,
-      profiles: comment.profiles || {
-        name: 'Usuário',
-      },
+      profiles: validatedProfile,
       replies: ensureArray(comment.replies),
       likes_count: comment.likes_count || 0,
       user_has_liked: !!comment.user_has_liked,
@@ -50,8 +61,16 @@ export const validateComments = (
     if (validatedComment.replies && validatedComment.replies.length > 0) {
       validatedComment.replies = validatedComment.replies.map(reply => ({
         ...reply,
-        profiles: reply.profiles || {
+        profiles: reply.profiles ? {
+          id: reply.profiles.id || reply.user_id,
+          name: reply.profiles.name || 'Usuário',
+          avatar_url: reply.profiles.avatar_url,
+          role: reply.profiles.role
+        } : {
+          id: reply.user_id,
           name: 'Usuário',
+          avatar_url: undefined,
+          role: undefined
         },
         likes_count: reply.likes_count || 0,
         user_has_liked: !!reply.user_has_liked
@@ -118,3 +137,4 @@ export const useCommentQueryKeys = () => {
     getAllCommentQueryKeys
   };
 };
+
