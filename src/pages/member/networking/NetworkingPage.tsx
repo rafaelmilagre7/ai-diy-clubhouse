@@ -5,14 +5,14 @@ import { NetworkingHeader } from '@/components/networking/NetworkingHeader';
 import { NetworkingFeed } from '@/components/networking/NetworkingFeed';
 import { NetworkingBlockedState } from '@/components/networking/NetworkingBlockedState';
 import { ProfileDataSync } from '@/components/networking/ProfileDataSync';
-import { useNetworkingAccessGuard } from '@/hooks/networking/useNetworkingAccessGuard';
+import { useNetworkingAccess } from '@/hooks/networking/useNetworkingAccess';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, Building, Loader2 } from 'lucide-react';
 
 const NetworkingPage = () => {
   const navigate = useNavigate();
-  const { hasAccess, isLoading: accessLoading, needsOnboarding } = useNetworkingAccessGuard();
+  const { hasAccess, isLoading: accessLoading, needsOnboarding } = useNetworkingAccess();
 
   const handleNavigateToOnboarding = () => {
     navigate('/onboarding-new');

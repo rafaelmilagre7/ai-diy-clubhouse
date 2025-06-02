@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNetworkMatches } from '@/hooks/networking/useNetworkMatches';
-import { useNetworkingAccessGuard } from '@/hooks/networking/useNetworkingAccessGuard';
+import { useNetworkingAccess } from '@/hooks/networking/useNetworkingAccess';
 import { NetworkMatchCard } from './NetworkMatchCard';
 import { NetworkingBlockedState } from './NetworkingBlockedState';
 import { Card } from '@/components/ui/card';
@@ -20,7 +20,7 @@ export const NetworkingFeed: React.FC<NetworkingFeedProps> = ({
   matchType
 }) => {
   const navigate = useNavigate();
-  const { hasAccess, isLoading: accessLoading, needsOnboarding } = useNetworkingAccessGuard();
+  const { hasAccess, isLoading: accessLoading, needsOnboarding } = useNetworkingAccess();
   const { data: matches, isLoading, error, refetch } = useNetworkMatches(matchType);
   const generateMatches = useGenerateMatches();
   const queryClient = useQueryClient();

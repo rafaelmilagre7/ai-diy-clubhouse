@@ -22,12 +22,8 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const [lastError, setLastError] = useState<any>(null);
   
-  // Funções de logging independentes de auth
+  // Funções de logging otimizadas
   const log = useCallback((action: string, data: LogData = {}) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[Log] ${action}:`, data);
-    }
-    
     // Armazenar logs críticos apenas se tivermos um user_id
     if (data.critical && data.user_id) {
       storeLog(action, data, "info", data.user_id);
@@ -35,10 +31,6 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
   }, []);
   
   const logWarning = useCallback((action: string, data: LogData = {}) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn(`[Warning] ${action}:`, data);
-    }
-    
     // Armazenar avisos apenas se tivermos um user_id
     if (data.user_id) {
       storeLog(action, data, "warning", data.user_id);
@@ -55,7 +47,6 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
   }, [toast]);
   
   const logError = useCallback((action: string, error: any) => {
-    console.error(`[Error] ${action}:`, error);
     setLastError(error);
     
     // Verificar se o erro deve mostrar um toast (padrão é mostrar)
@@ -138,22 +129,10 @@ export const useLogging = (): LoggingContextType => {
   
   // Fallback gracioso se o provider não estiver disponível
   if (context === undefined) {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('⚠️ useLogging: Provider não encontrado, usando fallback');
-    }
-    
     // Retornar implementação básica de fallback
     return {
-      log: (action: string, data?: LogData) => {
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`[Fallback Log] ${action}:`, data);
-        }
-      },
-      logWarning: (action: string, data?: LogData) => {
-        if (process.env.NODE_ENV === 'development') {
-          console.warn(`[Fallback Warning] ${action}:`, data);
-        }
-      },
+      log: () => {},
+      logWarning: () => {},
       logError: (action: string, error: any) => {
         console.error(`[Fallback Error] ${action}:`, error);
         return error;
