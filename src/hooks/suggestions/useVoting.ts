@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
-import { toast } from 'sonner';
+import { enhancedToast } from '@/components/suggestions/notifications/EnhancedToastProvider';
 
 export const useVoting = () => {
   const [voteLoading, setVoteLoading] = useState(false);
@@ -59,18 +59,24 @@ export const useVoting = () => {
           }
         }
         
-        return { success: true };
+        return { success: true, voteType };
       } finally {
         setVoteLoading(false);
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['suggestions'] });
-      toast.success("Seu voto foi registrado!");
+      queryClient.invalidateQueries({ queryKey: ['suggestion'] });
+      
+      // Use enhanced toast with animation
+      enhancedToast.voting(data.voteType);
     },
     onError: (error: any) => {
       console.error('Erro ao votar:', error);
-      toast.error(`Erro ao votar: ${error.message}`);
+      enhancedToast.error(
+        "Erro ao votar", 
+        error.message || "Não foi possível registrar seu voto. Tente novamente."
+      );
     }
   });
 
