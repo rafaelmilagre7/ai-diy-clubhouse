@@ -8,7 +8,7 @@ import { useMemo } from 'react';
 export const useOptimizedSuggestions = (filter: SuggestionFilter, searchQuery: string = '') => {
   const { user } = useAuth();
 
-  const { data, isLoading, error, isFetching } = useQuery({
+  const { data, isLoading, error, isFetching, refetch } = useQuery({
     queryKey: ['suggestions', filter, searchQuery, user?.id],
     queryFn: async () => {
       console.log('Buscando sugestões:', { filter, searchQuery });
@@ -115,6 +115,7 @@ export const useOptimizedSuggestions = (filter: SuggestionFilter, searchQuery: s
     isLoading,
     error,
     isFetching,
+    refetch,
     stats
   };
 };

@@ -6,6 +6,7 @@ import { CheckCircle, Clock, Wrench, XCircle, Eye } from 'lucide-react';
 interface StatusBadgeProps {
   status: string;
   className?: string;
+  size?: 'default' | 'sm' | 'lg';
 }
 
 const statusConfig = {
@@ -41,16 +42,27 @@ const statusConfig = {
   }
 };
 
-export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className }) => {
+const sizeClasses = {
+  default: 'gap-1 font-medium',
+  sm: 'gap-1 font-medium text-xs px-2 py-1',
+  lg: 'gap-2 font-semibold text-sm px-3 py-1.5'
+};
+
+export const StatusBadge: React.FC<StatusBadgeProps> = ({ 
+  status, 
+  className, 
+  size = 'default' 
+}) => {
   const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.new;
   const Icon = config.icon;
+  const sizeClass = sizeClasses[size];
 
   return (
     <Badge 
       variant={config.variant}
-      className={`gap-1 font-medium ${config.className} ${className || ''}`}
+      className={`${sizeClass} ${config.className} ${className || ''}`}
     >
-      <Icon className="h-3 w-3" />
+      <Icon className={size === 'sm' ? 'h-2.5 w-2.5' : size === 'lg' ? 'h-4 w-4' : 'h-3 w-3'} />
       {config.label}
     </Badge>
   );

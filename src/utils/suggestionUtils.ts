@@ -34,3 +34,25 @@ export const getVoteTrend = (upvotes: number, downvotes: number): 'positive' | '
   if (percentage <= 30) return 'negative';
   return 'neutral';
 };
+
+export const getStatusLabel = (status: string): string => {
+  const statusLabels: Record<string, string> = {
+    new: 'Nova',
+    under_review: 'Em Análise',
+    in_development: 'Em Desenvolvimento',
+    completed: 'Concluída',
+    declined: 'Rejeitada'
+  };
+  return statusLabels[status] || 'Nova';
+};
+
+export const getStatusColor = (status: string): string => {
+  const statusColors: Record<string, string> = {
+    new: 'bg-blue-100 text-blue-800 border-blue-200',
+    under_review: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    in_development: 'bg-orange-100 text-orange-800 border-orange-200',
+    completed: 'bg-green-100 text-green-800 border-green-200',
+    declined: 'bg-red-100 text-red-800 border-red-200'
+  };
+  return statusColors[status] || 'bg-blue-100 text-blue-800 border-blue-200';
+};
