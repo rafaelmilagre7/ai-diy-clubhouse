@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LessonCompletionModal } from "../completion/LessonCompletionModal";
 import { LessonDescription } from "./LessonDescription";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle } from "lucide-react";
+import { AlertCircle, CheckCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface LessonContentProps {
@@ -83,6 +83,13 @@ export const LessonContent: React.FC<LessonContentProps> = ({
     }
   };
 
+  // Função para navegar diretamente para a próxima aula
+  const handleDirectNextLesson = () => {
+    if (onNextLesson) {
+      onNextLesson();
+    }
+  };
+
   // Verificação mais robusta para a descrição da aula
   const hasDescription = lesson && 
                         lesson.description && 
@@ -95,6 +102,14 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   const hasResources = safeResources.length > 0;
   const hasAiAssistant = lesson.ai_assistant_enabled;
   
+  // Determinar texto do botão de próxima aula
+  const getNextButtonText = () => {
+    if (nextLesson) {
+      return "Próxima Aula";
+    }
+    return "Finalizar Curso";
+  };
+  
   return (
     <div className="space-y-6">
       {/* Player de vídeo como elemento principal */}
@@ -105,17 +120,35 @@ export const LessonContent: React.FC<LessonContentProps> = ({
             onProgress={(videoId, progress) => handleVideoProgress(videoId, progress)}
           />
           
-          {/* Botão de Concluir Aula logo abaixo do vídeo */}
-          <div className="mt-4 flex justify-end">
-            <Button 
-              onClick={handleCompleteLesson}
-              size="sm"
-              variant={isCompleted ? "outline" : "default"}
-              className="gap-2"
-            >
-              <CheckCircle className="h-4 w-4" />
-              {isCompleted ? "Aula Concluída" : "Marcar como Concluída"}
-            </Button>
+          {/* Botões de ação logo abaixo do vídeo */}
+          <div className="mt-4 flex flex-col sm:flex-row gap-3 sm:justify-between sm:items-center">
+            {/* Botão de Concluir Aula */}
+            <div className="order-2 sm:order-1">
+              <Button 
+                onClick={handleCompleteLesson}
+                size="sm"
+                variant={isCompleted ? "outline" : "default"}
+                className="w-full sm:w-auto gap-2"
+              >
+                <CheckCircle className="h-4 w-4" />
+                {isCompleted ? "Aula Concluída" : "Marcar como Concluída"}
+              </Button>
+            </div>
+            
+            {/* Botão de Próxima Aula */}
+            <div className="order-1 sm:order-2">
+              <Button 
+                onClick={handleDirectNextLesson}
+                size="sm"
+                variant="outline"
+                className="w-full sm:w-auto gap-2 border-viverblue text-viverblue hover:bg-viverblue hover:text-white"
+                disabled={!onNextLesson}
+                title={nextLesson?.title || "Voltar para a página do curso"}
+              >
+                {getNextButtonText()}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       )}
@@ -166,4 +199,3 @@ export const LessonContent: React.FC<LessonContentProps> = ({
     </div>
   );
 };
-
