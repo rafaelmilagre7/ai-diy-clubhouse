@@ -13,6 +13,7 @@ import AdminOnboarding from '@/pages/admin/AdminOnboarding';
 import AdminSuggestions from '@/pages/admin/AdminSuggestions';
 import AdminEvents from '@/pages/admin/AdminEvents';
 import AdminRoles from '@/pages/admin/AdminRoles';
+import AdminAccessLogs from '@/pages/admin/AdminAccessLogs';
 import InvitesManagement from '@/pages/admin/invites/InvitesManagement';
 import CommunityModerationPage from '@/pages/admin/community/CommunityModerationPage';
 import PerformanceDashboard from '@/components/admin/performance/PerformanceDashboard';
@@ -35,6 +36,7 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin/suggestions", AdminSuggestions),
   createAdminRoute("/admin/events", AdminEvents),
   createAdminRoute("/admin/roles", AdminRoles),
+  createAdminRoute("/admin/access-logs", AdminAccessLogs),
   createAdminRoute("/admin/invites", InvitesManagement),
   createAdminRoute("/admin/community", CommunityModerationPage),
   createAdminRoute("/admin/networking", AdminNetworkingPage),
