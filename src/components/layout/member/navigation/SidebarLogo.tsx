@@ -17,28 +17,24 @@ export const SidebarLogo = ({ sidebarOpen, setSidebarOpen }: SidebarLogoProps) =
             <img
               src={BRAND_ASSETS.horizontalLogo}
               alt="VIVER DE IA Club"
-              className="h-8 w-auto transition-opacity duration-300"
-              width={150}
-              height={32}
+              className="h-8 w-auto transition-opacity duration-300 object-contain"
               loading="eager"
               onError={(e) => {
-                // Fallback para logo anterior se a imagem falhar
                 e.currentTarget.src = "https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif";
               }}
             />
           ) : (
-            <img
-              src={BRAND_ASSETS.squareIcon}
-              alt="VIVER DE IA"
-              className="h-8 w-8 transition-opacity duration-300"
-              width={32}
-              height={32}
-              loading="eager"
-              onError={(e) => {
-                // Fallback para logo anterior se a imagem falhar
-                e.currentTarget.src = "https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif";
-              }}
-            />
+            <div className="w-8 h-8 flex items-center justify-center">
+              <img
+                src={BRAND_ASSETS.squareIcon}
+                alt="VIVER DE IA"
+                className="w-full h-full transition-opacity duration-300 object-contain object-center"
+                loading="eager"
+                onError={(e) => {
+                  e.currentTarget.src = "https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif";
+                }}
+              />
+            </div>
           )}
         </div>
       </div>
