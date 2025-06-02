@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { formatRelativeDate } from '@/utils/suggestionUtils';
 import { StatusBadge } from '../ui/StatusBadge';
-import VoteDisplay from '../voting/VoteDisplay';
-import { VoteAnimation } from '../animations/VoteAnimation';
+import { VoteDisplay } from '../voting/VoteDisplay';
+import { VoteControls } from '../voting/VoteControls';
 import { useVoting } from '@/hooks/suggestions/useVoting';
 import { Eye, MessageCircle, TrendingUp, ArrowRight } from 'lucide-react';
 import { Suggestion } from '@/types/suggestionTypes';
@@ -27,8 +27,7 @@ export const EnhancedSuggestionCard: React.FC<EnhancedSuggestionCardProps> = Rea
     navigate(`/suggestions/${suggestion.id}`);
   }, [navigate, suggestion.id]);
 
-  const handleVote = React.useCallback(async (voteType: 'upvote' | 'downvote', e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleVote = React.useCallback(async (voteType: 'upvote' | 'downvote') => {
     await voteMutation.mutateAsync({ 
       suggestionId: suggestion.id, 
       voteType 
@@ -79,7 +78,6 @@ export const EnhancedSuggestionCard: React.FC<EnhancedSuggestionCardProps> = Rea
             upvotes={suggestion.upvotes}
             downvotes={suggestion.downvotes}
             showTrend={isHighPriority}
-            compact={true}
           />
           
           {engagementLevel === 'high' && (
@@ -91,18 +89,11 @@ export const EnhancedSuggestionCard: React.FC<EnhancedSuggestionCardProps> = Rea
         </div>
 
         {/* Botões de voto */}
-        <div className="flex items-center gap-2">
-          <VoteAnimation
-            type="upvote"
-            isActive={suggestion.user_vote_type === 'upvote'}
-            onClick={(e) => handleVote('upvote', e)}
-            disabled={voteLoading}
-          />
-          <VoteAnimation
-            type="downvote"
-            isActive={suggestion.user_vote_type === 'downvote'}
-            onClick={(e) => handleVote('downvote', e)}
-            disabled={voteLoading}
+        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          <VoteControls
+            userVoteType={suggestion.user_vote_type}
+            voteLoading={voteLoading}
+            onVote={handleVote}
           />
         </div>
       </CardContent>

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { StatusBadge } from '../ui/StatusBadge';
-import { SuggestionVoting } from '../SuggestionVoting';
+import SuggestionVoting from '../SuggestionVoting';
 import { SuggestionComments } from '../SuggestionComments';
 import { formatRelativeDate } from '@/utils/suggestionUtils';
 
@@ -23,6 +23,8 @@ interface SuggestionContainerProps {
     user_name?: string;
     user_avatar?: string;
     user_vote_type?: 'upvote' | 'downvote' | null;
+    is_pinned?: boolean;
+    category_name?: string;
   };
   comment: string;
   comments: any[];
@@ -77,9 +79,9 @@ const SuggestionContainer: React.FC<SuggestionContainerProps> = ({
             <p className="whitespace-pre-line">{suggestion.description}</p>
           </div>
 
-          {suggestion.category_name && (
+          {(suggestion.category?.name || suggestion.category_name) && (
             <Badge variant="outline">
-              {suggestion.category_name}
+              {suggestion.category?.name || suggestion.category_name}
             </Badge>
           )}
         </CardContent>

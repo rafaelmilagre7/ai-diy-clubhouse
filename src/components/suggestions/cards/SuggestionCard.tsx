@@ -7,53 +7,35 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { formatRelativeDate } from '@/utils/suggestionUtils';
 import { StatusBadge } from '../ui/StatusBadge';
-import VoteDisplay from '../voting/VoteDisplay';
-import { Eye, MessageCircle, TrendingUp, ArrowRight } from 'lucide-react';
+import { VoteDisplay } from '../voting/VoteDisplay';
+import { MessageCircle, ArrowRight } from 'lucide-react';
 import { Suggestion } from '@/types/suggestionTypes';
 
 interface SuggestionCardProps {
   suggestion: Suggestion;
-  getStatusLabel: (status: string) => string;
-  getStatusColor: (status: string) => string;
 }
 
-export const SuggestionCard: React.FC<SuggestionCardProps> = React.memo(({
-  suggestion,
-  getStatusLabel,
-  getStatusColor
-}) => {
+export const SuggestionCard: React.FC<SuggestionCardProps> = ({ suggestion }) => {
   const navigate = useNavigate();
 
-  const handleCardClick = React.useCallback(() => {
+  const handleCardClick = () => {
     navigate(`/suggestions/${suggestion.id}`);
-  }, [navigate, suggestion.id]);
+  };
 
-  const authorInitials = React.useMemo(() => {
-    return suggestion.user_name
-      ? suggestion.user_name.split(' ').map(n => n[0]).join('').toUpperCase()
-      : 'U';
-  }, [suggestion.user_name]);
-
-  const isHighPriority = React.useMemo(() => {
-    return suggestion.upvotes > 10 || suggestion.is_pinned;
-  }, [suggestion.upvotes, suggestion.is_pinned]);
-
-  const totalVotes = suggestion.upvotes + suggestion.downvotes;
-  const engagementLevel = totalVotes > 20 ? 'high' : totalVotes > 5 ? 'medium' : 'low';
+  const authorInitials = suggestion.user_name
+    ? suggestion.user_name.split(' ').map(n => n[0]).join('').toUpperCase()
+    : 'U';
 
   return (
     <Card 
-      className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer border-0 bg-gradient-to-br from-card via-card to-card/95"
+      className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer"
       onClick={handleCardClick}
     >
-      {/* Gradient border effect */}
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg"></div>
-      
-      <CardHeader className="pb-4 relative">
+      <CardHeader className="pb-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0 space-y-2">
             {suggestion.is_pinned && (
-              <Badge variant="secondary" className="w-fit bg-yellow-100 text-yellow-800 text-xs font-medium">
+              <Badge variant="secondary" className="w-fit">
                 📌 Fixada
               </Badge>
             )}
@@ -61,35 +43,25 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = React.memo(({
               {suggestion.title}
             </h3>
           </div>
-          <StatusBadge status={suggestion.status} size="sm" />
+          <StatusBadge status={suggestion.status} />
         </div>
       </CardHeader>
 
       <CardContent className="pb-4">
-        <p className="text-muted-foreground line-clamp-3 mb-6 leading-relaxed">
+        <p className="text-muted-foreground line-clamp-3 mb-4 leading-relaxed">
           {suggestion.description}
         </p>
 
-        <div className="flex items-center justify-between">
-          <VoteDisplay
-            upvotes={suggestion.upvotes}
-            downvotes={suggestion.downvotes}
-            showTrend={isHighPriority}
-            compact={true}
-          />
-          
-          {engagementLevel === 'high' && (
-            <Badge variant="secondary" className="bg-primary/10 text-primary text-xs">
-              <TrendingUp className="w-3 h-3 mr-1" />
-              Popular
-            </Badge>
-          )}
-        </div>
+        <VoteDisplay
+          upvotes={suggestion.upvotes}
+          downvotes={suggestion.downvotes}
+          showTrend={true}
+        />
       </CardContent>
 
       <CardFooter className="pt-4 border-t bg-muted/30 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Avatar className="h-7 w-7 ring-2 ring-background">
+          <Avatar className="h-7 w-7">
             <AvatarImage src={suggestion.user_avatar} />
             <AvatarFallback className="text-xs font-medium">{authorInitials}</AvatarFallback>
           </Avatar>
@@ -111,7 +83,7 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = React.memo(({
           <Button 
             variant="ghost" 
             size="sm" 
-            className="gap-2 text-muted-foreground hover:text-primary group-hover:bg-primary/10"
+            className="gap-2 text-muted-foreground hover:text-primary"
           >
             Ver detalhes
             <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
@@ -120,6 +92,6 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = React.memo(({
       </CardFooter>
     </Card>
   );
-});
+};
 
-SuggestionCard.displayName = 'SuggestionCard';
+export default SuggestionCard;
