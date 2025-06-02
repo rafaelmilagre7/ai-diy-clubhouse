@@ -25,19 +25,44 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         // Divisão manual de chunks para melhor cache
-        manualChunks: {
+        manualChunks: (id: string) => {
           // Vendor chunks
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-toast'],
-          'query-vendor': ['@tanstack/react-query'],
-          'supabase-vendor': ['@supabase/supabase-js'],
-          'chart-vendor': ['recharts'],
-          'form-vendor': ['react-hook-form', '@hookform/resolvers', 'yup'],
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+              return 'react-vendor';
+            }
+            if (id.includes('@radix-ui') || id.includes('ui')) {
+              return 'ui-vendor';
+            }
+            if (id.includes('@tanstack/react-query')) {
+              return 'query-vendor';
+            }
+            if (id.includes('@supabase/supabase-js')) {
+              return 'supabase-vendor';
+            }
+            if (id.includes('recharts')) {
+              return 'chart-vendor';
+            }
+            if (id.includes('react-hook-form') || id.includes('@hookform') || id.includes('yup')) {
+              return 'form-vendor';
+            }
+          }
+          
           // Feature chunks
-          'admin': [/src\/components\/admin/, /src\/pages\/admin/],
-          'learning': [/src\/components\/learning/, /src\/pages\/member\/learning/],
-          'community': [/src\/components\/community/, /src\/pages\/member\/community/],
-          'networking': [/src\/components\/networking/, /src\/pages\/member\/networking/],
+          if (id.includes('src/components/admin') || id.includes('src/pages/admin')) {
+            return 'admin';
+          }
+          if (id.includes('src/components/learning') || id.includes('src/pages/member/learning')) {
+            return 'learning';
+          }
+          if (id.includes('src/components/community') || id.includes('src/pages/member/community')) {
+            return 'community';
+          }
+          if (id.includes('src/components/networking') || id.includes('src/pages/member/networking')) {
+            return 'networking';
+          }
+          
+          return undefined;
         },
         // Nomeação consistente para melhor cache
         chunkFileNames: (chunkInfo) => {

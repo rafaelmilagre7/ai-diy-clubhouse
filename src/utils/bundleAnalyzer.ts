@@ -70,8 +70,8 @@ export const useBundleAnalyzer = () => {
         }
       });
 
-      // Tempo de carregamento
-      const loadTime = navigation.loadEventEnd - navigation.navigationStart;
+      // Tempo de carregamento - usar fetchStart como fallback para navigationStart
+      const loadTime = navigation.loadEventEnd - (navigation.fetchStart || 0);
       if (loadTime > 3000) {
         recommendations.push('Tempo de carregamento lento (>3s). Otimize recursos críticos.');
       }
