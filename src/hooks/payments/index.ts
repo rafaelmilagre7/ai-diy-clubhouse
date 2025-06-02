@@ -1,0 +1,2 @@
+
+export { usePaymentAccess } from './usePaymentAccess';

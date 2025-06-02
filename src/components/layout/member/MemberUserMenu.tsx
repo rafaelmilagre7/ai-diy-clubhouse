@@ -1,6 +1,9 @@
 
+import React from "react";
+import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,8 +13,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/auth";
-import { LogOut, User } from "lucide-react";
-import { Link } from "react-router-dom";
+import { LogOut, Settings, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface MemberUserMenuProps {
   sidebarOpen: boolean;
@@ -21,54 +24,88 @@ interface MemberUserMenuProps {
   getInitials: (name: string | null) => string;
 }
 
-export const MemberUserMenu = ({ 
-  sidebarOpen, 
-  profileName, 
-  profileEmail, 
+export const MemberUserMenu: React.FC<MemberUserMenuProps> = ({
+  sidebarOpen,
+  profileName,
+  profileEmail,
   profileAvatar,
-  getInitials 
-}: MemberUserMenuProps) => {
+  getInitials
+}) => {
   const { signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/login");
+  };
 
   return (
-    <div className="p-4">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button 
-            variant="ghost" 
-            className={`w-full flex items-center gap-3 px-2 text-white hover:bg-white/10 ${!sidebarOpen ? "justify-center" : "justify-start"}`}
-          >
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={profileAvatar} alt={profileName || "Usuário"} />
-              <AvatarFallback className="bg-viverblue text-white">{getInitials(profileName)}</AvatarFallback>
-            </Avatar>
-            {sidebarOpen && (
-              <div className="flex flex-col items-start text-left">
-                <span className="text-sm font-medium text-white">{profileName || "Usuário"}</span>
-                <span className="text-xs text-white/70">{profileEmail || "Sem email"}</span>
+    <div className="px-3 py-4">
+      <div className="flex items-center gap-3">
+        {/* Notification Center */}
+        <NotificationCenter />
+        
+        {/* User Menu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className={cn(
+                "h-auto p-2 flex items-center gap-3 w-full justify-start hover:bg-white/10",
+                !sidebarOpen && "justify-center"
+              )}
+            >
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={profileAvatar} />
+                <AvatarFallback className="bg-viverblue text-white text-sm">
+                  {getInitials(profileName)}
+                </AvatarFallback>
+              </Avatar>
+              
+              {sidebarOpen && (
+                <div className="flex flex-col items-start min-w-0 flex-1">
+                  <span className="text-sm font-medium text-white truncate max-w-full">
+                    {profileName || "Usuário"}
+                  </span>
+                  <span className="text-xs text-white/70 truncate max-w-full">
+                    {profileEmail}
+                  </span>
+                </div>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          
+          <DropdownMenuContent className="w-56" align="end" forceMount>
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium leading-none">{profileName}</p>
+                <p className="text-xs leading-none text-muted-foreground">
+                  {profileEmail}
+                </p>
               </div>
-            )}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem asChild>
-            <Link to="/profile" className="cursor-pointer w-full flex items-center">
+            </DropdownMenuLabel>
+            
+            <DropdownMenuSeparator />
+            
+            <DropdownMenuItem onClick={() => navigate("/profile")}>
               <User className="mr-2 h-4 w-4" />
               <span>Perfil</span>
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem 
-            onClick={() => signOut()}
-            className="cursor-pointer text-destructive focus:text-destructive"
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            <span>Sair</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            </DropdownMenuItem>
+            
+            <DropdownMenuItem onClick={() => navigate("/settings")}>
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Configurações</span>
+            </DropdownMenuItem>
+            
+            <DropdownMenuSeparator />
+            
+            <DropdownMenuItem onClick={handleSignOut}>
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Sair</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 };
