@@ -81,21 +81,16 @@ export const useToolComments = (toolId: string) => {
     
     // 2. Tentar enviar para o servidor
     try {
-      const success = await originalSubmitComment();
+      await originalSubmitComment();
       
-      if (success) {
-        // 3. Confirmar comentário otimista (será substituído pelos dados do servidor)
-        setTimeout(() => {
-          confirmOptimisticComment(optimisticComment.id, optimisticComment as Comment);
-        }, 500);
-        
-        // Limpar formulário
-        setComment('');
-        setReplyTo(null);
-      } else {
-        // 4. Remover comentário otimista se falhou
-        removeOptimisticComment(optimisticComment.id);
-      }
+      // 3. Confirmar comentário otimista (será substituído pelos dados do servidor)
+      setTimeout(() => {
+        confirmOptimisticComment(optimisticComment.id, optimisticComment as Comment);
+      }, 500);
+      
+      // Limpar formulário
+      setComment('');
+      setReplyTo(null);
     } catch (error) {
       log('Erro ao enviar comentário', { error, toolId });
       removeOptimisticComment(optimisticComment.id);

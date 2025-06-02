@@ -29,10 +29,16 @@ export const useRealtimeComments = (
         table: 'tool_comments',
         filter: `tool_id=eq.${solutionId}`
       }, (payload) => {
+        const recordId = (payload.new && typeof payload.new === 'object' && 'id' in payload.new) 
+          ? (payload.new as any).id 
+          : (payload.old && typeof payload.old === 'object' && 'id' in payload.old) 
+            ? (payload.old as any).id 
+            : 'unknown';
+            
         log('Mudança detectada nos comentários', { 
           event: payload.eventType, 
           solutionId,
-          recordId: payload.new?.id || payload.old?.id 
+          recordId
         });
         
         // Invalidar todas as variações de chaves para garantir atualização

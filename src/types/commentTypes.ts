@@ -11,6 +11,7 @@ export interface Comment {
   user_has_liked?: boolean;
   // Informações do perfil do usuário que fez o comentário
   profiles?: {
+    id: string;
     name: string;
     avatar_url?: string;
     role?: string;
