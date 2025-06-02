@@ -10,6 +10,7 @@ import { PerformanceProvider } from '@/contexts/performance/PerformanceProvider'
 import AppRoutes from '@/components/routing/AppRoutes';
 import { useServiceWorker } from '@/hooks/common/useServiceWorker';
 import { useBundleAnalyzer } from '@/utils/bundleAnalyzer';
+import { initializeBrandAssetsBucket } from '@/utils/storage/initStorage';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import './App.css';
 
@@ -41,6 +42,9 @@ const AppContent: React.FC = () => {
   const { analyzePerformance } = useBundleAnalyzer();
 
   useEffect(() => {
+    // Inicializar storage bucket para brand assets
+    initializeBrandAssetsBucket();
+    
     // Analisar performance após carregamento
     const timer = setTimeout(() => {
       if (import.meta.env.DEV) {
