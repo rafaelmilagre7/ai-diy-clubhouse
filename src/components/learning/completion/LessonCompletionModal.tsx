@@ -46,30 +46,33 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <div className="flex items-center gap-2 text-primary">
-            <CheckCircle2 className="h-6 w-6" />
-            <DialogTitle>Aula concluída!</DialogTitle>
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="space-y-4">
+          <div className="flex items-center gap-3 text-primary justify-center">
+            <CheckCircle2 className="h-8 w-8 text-green-500" />
+            <DialogTitle className="text-2xl">🎉 Parabéns! Aula concluída!</DialogTitle>
           </div>
-          <DialogDescription>
-            Parabéns por concluir a aula "{lesson.title}".
+          <DialogDescription className="text-center text-base">
+            Você acabou de concluir a aula "<strong>{lesson.title}</strong>".
+            <br />
+            Sua opinião é fundamental para continuarmos melhorando nossa plataforma.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="py-4">
+        <div className="py-6">
           <LessonNPSForm
             lessonId={lesson.id}
             onCompleted={handleNPSCompleted}
           />
         </div>
 
-        <DialogFooter className="sm:justify-between">
+        <DialogFooter className="sm:justify-between pt-4 border-t border-white/10">
           <Button
             variant="ghost"
             onClick={() => setIsOpen(false)}
+            className="text-neutral-400 hover:text-white"
           >
-            Fechar
+            Pular avaliação
           </Button>
           {onNext && (
             <Button 
@@ -80,7 +83,7 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
                 setIsOpen(false);
                 onNext();
               }} 
-              className="gap-2"
+              className="gap-2 bg-viverblue hover:bg-viverblue-dark"
             >
               {getNextLessonText()}
               <ArrowRight className="h-4 w-4" />
