@@ -70,7 +70,12 @@ export const useCourseAccess = () => {
 
       if (error) throw error;
 
-      return data?.map(item => item.user_roles).filter(Boolean) || [];
+      // Retornar array simples de roles, não array de arrays
+      return data?.map(item => ({
+        id: item.user_roles.id,
+        name: item.user_roles.name,
+        description: item.user_roles.description
+      })).filter(Boolean) || [];
     } catch (error) {
       console.error("Erro ao buscar roles do curso:", error);
       return [];
@@ -92,7 +97,12 @@ export const useCourseAccess = () => {
 
       if (error) throw error;
 
-      return data?.map(item => item.learning_courses).filter(Boolean) || [];
+      // Retornar array simples de cursos, não array de arrays
+      return data?.map(item => ({
+        id: item.learning_courses.id,
+        title: item.learning_courses.title,
+        description: item.learning_courses.description
+      })).filter(Boolean) || [];
     } catch (error) {
       console.error("Erro ao buscar cursos do role:", error);
       return [];
