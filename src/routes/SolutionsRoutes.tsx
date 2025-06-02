@@ -1,8 +1,10 @@
 
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import Solutions from '@/pages/member/Solutions';
-import SolutionDetails from '@/pages/member/SolutionDetails';
+
+// Lazy load solutions pages
+const Solutions = React.lazy(() => import('@/pages/member/Solutions'));
+const SolutionDetails = React.lazy(() => import('@/pages/member/SolutionDetails'));
 
 export const SolutionsRoutes = () => {
   return (

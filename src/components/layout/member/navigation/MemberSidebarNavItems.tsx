@@ -1,20 +1,18 @@
 
-import React, { useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
+import React from 'react';
 import { MemberSidebarNavItem } from './MemberSidebarNavItem';
-import { useOptimizedAuth } from '@/hooks/auth/useOptimizedAuth';
-import { useOptimizedNetworkingAccess } from '@/hooks/networking/useOptimizedNetworkingAccess';
-import { 
-  Home, 
-  Lightbulb, 
-  Wrench, 
-  Star, 
-  Calendar, 
-  BookOpen, 
-  Users, 
-  MessageSquare,
+import {
+  LayoutDashboard,
+  Lightbulb,
   Route,
-  Gift
+  Wrench,
+  Gift,
+  MessageSquare,
+  GraduationCap,
+  Users,
+  Calendar,
+  User,
+  Shield
 } from 'lucide-react';
 
 interface MemberSidebarNavItemsProps {
@@ -22,78 +20,81 @@ interface MemberSidebarNavItemsProps {
 }
 
 export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ sidebarOpen }) => {
-  const location = useLocation();
-  const { isAdmin } = useOptimizedAuth();
-  const { hasAccess: hasNetworkingAccess, isLoading: networkingLoading } = useOptimizedNetworkingAccess();
-
-  // Memoizar itens de navegação
-  const navigationItems = useMemo(() => {
-    const baseItems = [
-      {
-        to: '/dashboard',
-        icon: Home,
-        label: 'Dashboard'
-      },
-      {
-        to: '/implementation-trail',
-        icon: Route,
-        label: 'Trilha de IA'
-      },
-      {
-        to: '/solutions',
-        icon: Lightbulb,
-        label: 'Soluções'
-      },
-      {
-        to: '/tools',
-        icon: Wrench,
-        label: 'Ferramentas'
-      },
-      {
-        to: '/benefits',
-        icon: Gift,
-        label: 'Benefícios'
-      },
-      {
-        to: '/events',
-        icon: Calendar,
-        label: 'Eventos'
-      },
-      {
-        to: '/learning',
-        icon: BookOpen,
-        label: 'Aprendizado'
-      },
-      {
-        to: '/comunidade',
-        icon: MessageSquare,
-        label: 'Comunidade'
-      }
-    ];
-
-    // Adicionar networking apenas se tiver acesso ou for admin
-    if (hasNetworkingAccess || isAdmin) {
-      baseItems.push({
-        to: '/networking',
-        icon: Users,
-        label: 'Networking'
-      });
-    }
-
-    return baseItems;
-  }, [hasNetworkingAccess, isAdmin]);
-
   return (
     <>
-      {navigationItems.map((item) => (
-        <MemberSidebarNavItem
-          key={item.to}
-          to={item.to}
-          icon={item.icon}
-          label={item.label}
-          sidebarOpen={sidebarOpen}
-        />
-      ))}
+      <MemberSidebarNavItem
+        to="/dashboard"
+        icon={LayoutDashboard}
+        label="Dashboard"
+        sidebarOpen={sidebarOpen}
+      />
+      <MemberSidebarNavItem
+        to="/solutions"
+        icon={Lightbulb}
+        label="Soluções"
+        sidebarOpen={sidebarOpen}
+      />
+      <MemberSidebarNavItem
+        to="/implementation-trail"
+        icon={Route}
+        label="Trilha de Implementação"
+        sidebarOpen={sidebarOpen}
+      />
+      <MemberSidebarNavItem
+        to="/tools"
+        icon={Wrench}
+        label="Ferramentas"
+        sidebarOpen={sidebarOpen}
+      />
+      <MemberSidebarNavItem
+        to="/benefits"
+        icon={Gift}
+        label="Benefícios"
+        sidebarOpen={sidebarOpen}
+      />
+      <MemberSidebarNavItem
+        to="/comunidade"
+        icon={MessageSquare}
+        label="Comunidade"
+        sidebarOpen={sidebarOpen}
+      />
+      <MemberSidebarNavItem
+        to="/learning"
+        icon={GraduationCap}
+        label="Aprendizado"
+        sidebarOpen={sidebarOpen}
+      />
+      <MemberSidebarNavItem
+        to="/networking"
+        icon={Users}
+        label="Networking"
+        sidebarOpen={sidebarOpen}
+      />
+      <MemberSidebarNavItem
+        to="/events"
+        icon={Calendar}
+        label="Eventos"
+        sidebarOpen={sidebarOpen}
+      />
+      <MemberSidebarNavItem
+        to="/suggestions"
+        icon={Lightbulb}
+        label="Sugestões"
+        sidebarOpen={sidebarOpen}
+      />
+      <MemberSidebarNavItem
+        to="/profile"
+        icon={User}
+        label="Perfil"
+        sidebarOpen={sidebarOpen}
+      />
+      <MemberSidebarNavItem
+        to="/admin"
+        icon={Shield}
+        label="Admin"
+        sidebarOpen={sidebarOpen}
+        adminOnly={true}
+      />
     </>
   );
 };
