@@ -14,6 +14,8 @@ export interface Suggestion {
   is_hidden: boolean;
   image_url?: string;
   category_id?: string;
+  category_name?: string;
+  category_color?: string;
   user_name?: string;
   user_avatar?: string;
   user_vote_type?: 'upvote' | 'downvote' | null;
@@ -21,6 +23,10 @@ export interface Suggestion {
   profiles?: {
     name: string;
     avatar_url: string;
+  } | null;
+  suggestion_categories?: {
+    name: string;
+    color?: string;
   } | null;
   replies?: Suggestion[];
 }
