@@ -7,7 +7,7 @@ export const formatRelativeDate = (dateString: string): string => {
     const date = new Date(dateString);
     return formatDistanceToNow(date, { 
       addSuffix: true,
-      locale: ptBR
+      locale: ptBR 
     });
   } catch (error) {
     console.error('Erro ao formatar data:', error);
@@ -15,43 +15,54 @@ export const formatRelativeDate = (dateString: string): string => {
   }
 };
 
+export const getStatusColor = (status: string): string => {
+  const statusColors: Record<string, string> = {
+    'new': '#6B7280', // gray
+    'under_review': '#F59E0B', // amber
+    'in_development': '#3B82F6', // blue
+    'completed': '#10B981', // emerald
+    'declined': '#EF4444' // red
+  };
+  
+  return statusColors[status] || statusColors['new'];
+};
+
 export const getStatusLabel = (status: string): string => {
   const statusLabels: Record<string, string> = {
     'new': 'Nova',
     'under_review': 'Em Análise',
-    'in_development': 'Desenvolvimento',
-    'completed': 'Implementada',
+    'in_development': 'Em Desenvolvimento',
+    'completed': 'Concluída',
     'declined': 'Recusada'
   };
   
   return statusLabels[status] || 'Desconhecido';
 };
 
-export const getStatusColor = (status: string): string => {
-  const statusColors: Record<string, string> = {
-    'new': 'bg-blue-100 text-blue-800',
-    'under_review': 'bg-yellow-100 text-yellow-800',
-    'in_development': 'bg-orange-100 text-orange-800',
-    'completed': 'bg-green-100 text-green-800',
-    'declined': 'bg-red-100 text-red-800'
-  };
-  
-  return statusColors[status] || 'bg-gray-100 text-gray-800';
+export const truncateText = (text: string, maxLength: number): string => {
+  if (text.length <= maxLength) return text;
+  return text.slice(0, maxLength).trim() + '...';
 };
 
-export const getVotePercentage = (upvotes: number, downvotes: number): number => {
-  const total = upvotes + downvotes;
-  if (total === 0) return 0;
-  return Math.round((upvotes / total) * 100);
-};
-
-export const getSuggestionPriority = (suggestion: any): 'high' | 'medium' | 'low' => {
-  const totalVotes = suggestion.upvotes + suggestion.downvotes;
-  const voteRatio = totalVotes > 0 ? suggestion.upvotes / totalVotes : 0;
+export const calculateEngagementLevel = (upvotes: number, downvotes: number, commentCount: number): 'low' | 'medium' | 'high' => {
+  const totalVotes = upvotes + downvotes;
+  const engagementScore = totalVotes + (commentCount * 2); // Comentários valem mais
   
-  if (suggestion.is_pinned) return 'high';
-  if (totalVotes >= 20 && voteRatio >= 0.7) return 'high';
-  if (totalVotes >= 10 && voteRatio >= 0.6) return 'medium';
-  
+  if (engagementScore >= 20) return 'high';
+  if (engagementScore >= 5) return 'medium';
   return 'low';
+};
+
+export const generateShareUrl = (suggestionId: string): string => {
+  return `${window.location.origin}/suggestions/${suggestionId}`;
+};
+
+export const copyToClipboard = async (text: string): Promise<boolean> => {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (error) {
+    console.error('Erro ao copiar para clipboard:', error);
+    return false;
+  }
 };

@@ -1,105 +1,100 @@
 
-import { RouteObject } from "react-router-dom";
-import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
-import { SmartFeatureGuard } from '@/components/auth/SmartFeatureGuard';
-import MemberLayout from '@/components/layout/MemberLayout';
-import ProfileRoutes from './ProfileRoutes';
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { MemberLayout } from '@/components/layout/member/MemberLayout';
 
-// Páginas críticas - carregamento imediato
-import OptimizedDashboard from '@/pages/member/OptimizedDashboard';
-import Solutions from '@/pages/member/Solutions';
-import Tools from '@/pages/member/Tools';
-import ToolDetails from '@/pages/member/ToolDetails';
-import SolutionDetails from '@/pages/member/SolutionDetails';
-import SolutionImplementation from '@/pages/member/SolutionImplementation';
-import ImplementationCompleted from '@/pages/member/ImplementationCompleted';
-import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
-import SuggestionDetails from '@/pages/member/SuggestionDetails';
+// Dashboard
+import Dashboard from '@/pages/member/Dashboard';
+
+// Learning
+import MemberLearning from '@/pages/member/MemberLearning';
+import MemberCourseDetails from '@/pages/member/MemberCourseDetails';
+import MemberLessonView from '@/pages/member/MemberLessonView';
+import MemberCertificates from '@/pages/member/MemberCertificates';
+
+// Suggestions - Sistema Completo
+import Suggestions from '@/pages/member/Suggestions';
 import NewSuggestion from '@/pages/member/NewSuggestion';
+import SuggestionDetails from '@/pages/member/SuggestionDetails';
 
-// Páginas com lazy loading
-import {
-  LazyEventsWithSuspense,
-  LazyBenefitsWithSuspense,
-  LazySuggestionsWithSuspense,
-  LazyLearningPageWithSuspense,
-  LazyCourseDetailsWithSuspense,
-  LazyLessonViewWithSuspense,
-  LazyCommunityHomeWithSuspense,
-  LazyTopicViewWithSuspense,
-  LazyCategoryViewWithSuspense,
-  LazyNewTopicWithSuspense,
-  LazyNetworkingPageWithSuspense
-} from '@/components/routing/LazyRoutes';
+// Solutions
+import Solutions from '@/pages/member/Solutions';
+import SolutionDetails from '@/pages/member/SolutionDetails';
 
-// Networking components com lazy loading
-import { ConnectionsManager } from '@/components/networking/ConnectionsManager';
+// Implementation
+import ImplementationDetails from '@/pages/member/ImplementationDetails';
+import ImplementationTrail from '@/pages/member/ImplementationTrail';
 
-// Função helper para criar rotas protegidas com MemberLayout
-const createProtectedRoute = (path: string, Component: React.ComponentType<any>, featureGuard?: string) => ({
-  path,
-  element: (
-    <ProtectedRoutes>
-      <MemberLayout>
-        {featureGuard ? (
-          <SmartFeatureGuard feature={featureGuard}>
-            <Component />
-          </SmartFeatureGuard>
-        ) : (
-          <Component />
-        )}
-      </MemberLayout>
-    </ProtectedRoutes>
-  )
-});
+// Tools
+import Tools from '@/pages/member/Tools';
 
-export const memberRoutes: RouteObject[] = [
-  // Rotas críticas - carregamento imediato
-  createProtectedRoute("/", OptimizedDashboard),
-  createProtectedRoute("/dashboard", OptimizedDashboard),
-  createProtectedRoute("/implementation-trail", ImplementationTrailPage, "implementation_trail"),
-  createProtectedRoute("/solutions", Solutions),
-  createProtectedRoute("/tools", Tools),
-  createProtectedRoute("/tools/:id", ToolDetails),
-  createProtectedRoute("/solution/:id", SolutionDetails),
-  createProtectedRoute("/implement/:id/:moduleIdx", SolutionImplementation),
-  createProtectedRoute("/implementation/:id", SolutionImplementation),
-  createProtectedRoute("/implementation/:id/:moduleIdx", SolutionImplementation),
-  createProtectedRoute("/implementation/completed/:id", ImplementationCompleted),
-  
-  // Sugestões Routes - carregamento imediato para melhor performance
-  createProtectedRoute("/suggestions", LazySuggestionsWithSuspense),
-  createProtectedRoute("/suggestions/:id", SuggestionDetails),
-  createProtectedRoute("/suggestions/new", NewSuggestion),
-  
-  // Rotas com lazy loading
-  createProtectedRoute("/benefits", LazyBenefitsWithSuspense),
-  createProtectedRoute("/events", LazyEventsWithSuspense),
-  
-  // Profile Routes - integração das rotas do perfil
-  {
-    path: "/profile/*",
-    element: (
-      <ProtectedRoutes>
-        <MemberLayout>
-          <ProfileRoutes />
-        </MemberLayout>
-      </ProtectedRoutes>
-    )
-  },
-  
-  // Learning/LMS Routes - com lazy loading
-  createProtectedRoute("/learning", LazyLearningPageWithSuspense),
-  createProtectedRoute("/learning/course/:id", LazyCourseDetailsWithSuspense),
-  createProtectedRoute("/learning/course/:courseId/lesson/:lessonId", LazyLessonViewWithSuspense),
-  
-  // Comunidade Routes - com lazy loading
-  createProtectedRoute("/comunidade", LazyCommunityHomeWithSuspense),
-  createProtectedRoute("/comunidade/topico/:topicId", LazyTopicViewWithSuspense),
-  createProtectedRoute("/comunidade/categoria/:slug", LazyCategoryViewWithSuspense),
-  createProtectedRoute("/comunidade/novo-topico/:categorySlug", LazyNewTopicWithSuspense),
-  
-  // Networking Routes - com lazy loading e guard de feature
-  createProtectedRoute("/networking", LazyNetworkingPageWithSuspense, "networking"),
-  createProtectedRoute("/networking/connections", () => <ConnectionsManager />, "networking")
-];
+// Community
+import Community from '@/pages/member/Community';
+import CategoryView from '@/pages/member/CategoryView';
+import TopicView from '@/pages/member/TopicView';
+import NewTopic from '@/pages/member/NewTopic';
+
+// Networking
+import Networking from '@/pages/member/Networking';
+
+// Events
+import Events from '@/pages/member/Events';
+
+// Profile
+import Profile from '@/pages/member/Profile';
+import EditProfile from '@/pages/member/EditProfile';
+
+export const MemberRoutes = () => {
+  return (
+    <MemberLayout>
+      <Routes>
+        {/* Dashboard */}
+        <Route path="/dashboard" element={<Dashboard />} />
+        
+        {/* Learning */}
+        <Route path="/learning" element={<MemberLearning />} />
+        <Route path="/learning/course/:courseId" element={<MemberCourseDetails />} />
+        <Route path="/learning/lesson/:lessonId" element={<MemberLessonView />} />
+        <Route path="/learning/certificates" element={<MemberCertificates />} />
+
+        {/* Suggestions - Sistema Completo */}
+        <Route path="/suggestions" element={<Suggestions />} />
+        <Route path="/suggestions/new" element={<NewSuggestion />} />
+        <Route path="/suggestions/:id" element={<SuggestionDetails />} />
+
+        {/* Solutions */}
+        <Route path="/solutions" element={<Solutions />} />
+        <Route path="/solutions/:id" element={<SolutionDetails />} />
+
+        {/* Implementation */}
+        <Route path="/implementation/:id" element={<ImplementationDetails />} />
+        <Route path="/implementation-trail" element={<ImplementationTrail />} />
+
+        {/* Tools */}
+        <Route path="/tools" element={<Tools />} />
+
+        {/* Community */}
+        <Route path="/comunidade" element={<Community />} />
+        <Route path="/comunidade/categoria/:categorySlug" element={<CategoryView />} />
+        <Route path="/comunidade/topico/:topicId" element={<TopicView />} />
+        <Route path="/comunidade/novo-topico/:categorySlug" element={<NewTopic />} />
+
+        {/* Networking */}
+        <Route path="/networking" element={<Networking />} />
+
+        {/* Events */}
+        <Route path="/events" element={<Events />} />
+
+        {/* Profile */}
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/profile/edit" element={<EditProfile />} />
+
+        {/* Redirect root to dashboard */}
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        
+        {/* Catch all - redirect to dashboard */}
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+    </MemberLayout>
+  );
+};

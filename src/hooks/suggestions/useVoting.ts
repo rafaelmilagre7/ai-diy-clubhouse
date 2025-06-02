@@ -66,6 +66,8 @@ export const useVoting = () => {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['suggestions'] });
+      queryClient.invalidateQueries({ queryKey: ['suggestions-enhanced'] });
+      queryClient.invalidateQueries({ queryKey: ['suggestions-optimized'] });
       queryClient.invalidateQueries({ queryKey: ['suggestion'] });
       
       // Use enhanced toast with animation

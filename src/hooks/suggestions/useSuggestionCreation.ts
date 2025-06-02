@@ -74,6 +74,7 @@ export const useSuggestionCreation = () => {
     onSuccess: () => {
       // Invalidar todas as queries relacionadas a sugestões para garantir refresh
       queryClient.invalidateQueries({ queryKey: ['suggestions'] });
+      queryClient.invalidateQueries({ queryKey: ['suggestions-optimized'] });
     },
     onError: (error: any) => {
       console.error('Erro ao criar sugestão:', error);

@@ -1,15 +1,15 @@
 
 import React from 'react';
-import { useSuggestions } from '@/hooks/suggestions/useSuggestions';
-import { SuggestionFilter } from '@/types/suggestionTypes';
+import { useEnhancedSuggestions } from '@/hooks/suggestions/useEnhancedSuggestions';
 import { EnhancedSuggestionsHeader } from './EnhancedSuggestionsHeader';
+import { EnhancedSuggestionFilters } from './EnhancedSuggestionFilters';
 import { EnhancedSuggestionCard } from './EnhancedSuggestionCard';
 import { SuggestionsPerformanceWrapper } from '../performance/SuggestionsPerformanceWrapper';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { AlertCircle, RefreshCw, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const EnhancedSuggestionsLayout = () => {
@@ -20,24 +20,20 @@ const EnhancedSuggestionsLayout = () => {
     setFilter,
     searchQuery,
     setSearchQuery,
+    selectedCategory,
+    setSelectedCategory,
+    selectedStatus,
+    setSelectedStatus,
     refetch,
     error,
     isFetching,
     stats
-  } = useSuggestions();
+  } = useEnhancedSuggestions();
 
   const handleRetry = React.useCallback(() => {
     toast.info("Recarregando sugestões...");
     refetch();
   }, [refetch]);
-
-  const handleFilterChange = React.useCallback((value: SuggestionFilter) => {
-    setFilter(value);
-  }, [setFilter]);
-
-  const handleSearchChange = React.useCallback((value: string) => {
-    setSearchQuery(value);
-  }, [setSearchQuery]);
 
   if (isLoading) {
     return (
@@ -45,10 +41,22 @@ const EnhancedSuggestionsLayout = () => {
         <div className="container py-8 space-y-8">
           <EnhancedSuggestionsHeader 
             searchQuery={searchQuery}
-            onSearchChange={handleSearchChange}
+            onSearchChange={setSearchQuery}
             filter={filter}
-            onFilterChange={handleFilterChange}
+            onFilterChange={setFilter}
           />
+          
+          <EnhancedSuggestionFilters
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            filter={filter}
+            onFilterChange={setFilter}
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+            selectedStatus={selectedStatus}
+            onStatusChange={setSelectedStatus}
+          />
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <Card key={i} className="animate-pulse">
@@ -74,9 +82,20 @@ const EnhancedSuggestionsLayout = () => {
       <div className="container py-8 space-y-8">
         <EnhancedSuggestionsHeader 
           searchQuery={searchQuery}
-          onSearchChange={handleSearchChange}
+          onSearchChange={setSearchQuery}
           filter={filter}
-          onFilterChange={handleFilterChange}
+          onFilterChange={setFilter}
+        />
+        
+        <EnhancedSuggestionFilters
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          filter={filter}
+          onFilterChange={setFilter}
+          selectedCategory={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+          selectedStatus={selectedStatus}
+          onStatusChange={setSelectedStatus}
         />
         
         {error ? (
@@ -93,9 +112,37 @@ const EnhancedSuggestionsLayout = () => {
           </Alert>
         ) : (
           <div>
+            {/* Estatísticas */}
+            {stats.total > 0 && (
+              <div className="mb-6 p-4 bg-muted/30 rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  Mostrando {suggestions.length} de {stats.total} sugestões
+                  {Object.keys(stats.byStatus).length > 0 && (
+                    <span className="ml-2">
+                      • {Object.entries(stats.byStatus).map(([status, count]) => `${count} ${status}`).join(', ')}
+                    </span>
+                  )}
+                </p>
+              </div>
+            )}
+
             {suggestions.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">Nenhuma sugestão encontrada.</p>
+              <div className="text-center py-16">
+                <div className="max-w-md mx-auto">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
+                    <Plus className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">Nenhuma sugestão encontrada</h3>
+                  <p className="text-muted-foreground mb-4">
+                    {searchQuery || selectedCategory || selectedStatus
+                      ? 'Tente ajustar os filtros para encontrar sugestões.'
+                      : 'Seja o primeiro a compartilhar uma ideia!'}
+                  </p>
+                  <Button onClick={() => window.location.href = '/suggestions/new'} className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    Criar Primeira Sugestão
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
