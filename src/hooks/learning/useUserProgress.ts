@@ -30,7 +30,7 @@ export const useUserProgress = () => {
     },
     enabled: !!user?.id,
     staleTime: 5 * 60 * 1000, // 5 minutos
-    cacheTime: 10 * 60 * 1000 // 10 minutos
+    gcTime: 10 * 60 * 1000 // 10 minutos (substituído cacheTime)
   });
 
   return {
