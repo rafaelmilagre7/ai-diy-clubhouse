@@ -8,13 +8,9 @@ import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import { AdminProtectedRoutes } from '@/auth/AdminProtectedRoutes';
 import { FormacaoProtectedRoutes } from '@/auth/FormacaoProtectedRoutes';
 import RootRedirect from '@/components/routing/RootRedirect';
-import ModernLogin from '@/pages/auth/ModernLogin';
+import LoginPage from '@/pages/auth/LoginPage';
 import DashboardPage from '@/pages/app/DashboardPage';
 import ImplementationTrailPage from '@/pages/app/ImplementationTrailPage';
-import InvitePage from '@/pages/InvitePage';
-
-// Rotas Unificadas
-import { AuthRoutes } from './AuthRoutes';
 import { NetworkingRoutes } from './NetworkingRoutes';
 import { CommunityRoutes } from './CommunityRoutes';
 import { SolutionsRoutes } from './SolutionsRoutes';
@@ -33,23 +29,15 @@ export const AppRoutes = () => {
         <Routes>
           {/* Rotas públicas */}
           <Route path="/" element={<RootRedirect />} />
-          
-          {/* Convite Routes - sempre públicos */}
-          <Route path="/convite/:token" element={<InvitePage />} />
-          <Route path="/convite" element={<InvitePage />} />
+          <Route path="/login" element={<LoginPage />} />
 
-          {/* Auth Routes - login principal e rotas auxiliares */}
-          <Route path="/login" element={<ModernLogin />} />
-          <Route path="/auth/*" element={<AuthRoutes />} />
-
-          {/* Dashboard - página principal após login */}
+          {/* Rotas protegidas com guards de acesso */}
           <Route path="/dashboard" element={
             <ProtectedRoutes>
               <DashboardPage />
             </ProtectedRoutes>
           } />
 
-          {/* Trilha de implementação com guard de acesso */}
           <Route path="/implementation-trail" element={
             <ProtectedRoutes>
               <SmartFeatureGuard feature="implementation_trail">
@@ -58,7 +46,6 @@ export const AppRoutes = () => {
             </ProtectedRoutes>
           } />
 
-          {/* Networking com guard específico */}
           <Route path="/networking/*" element={
             <ProtectedRoutes>
               <SmartFeatureGuard feature="networking">
@@ -67,7 +54,7 @@ export const AppRoutes = () => {
             </ProtectedRoutes>
           } />
 
-          {/* Rotas básicas da comunidade - acesso padrão */}
+          {/* Learning e Comunidade - apenas autenticação básica, sem verificação de onboarding */}
           <Route path="/comunidade/*" element={
             <ProtectedRoutes>
               <CommunityRoutes />
@@ -98,21 +85,20 @@ export const AppRoutes = () => {
             </ProtectedRoutes>
           } />
 
-          {/* Onboarding - sempre acessível para usuários logados */}
+          {/* Onboarding */}
           <Route path="/onboarding-new/*" element={
             <ProtectedRoutes>
               <OnboardingRoutes />
             </ProtectedRoutes>
           } />
 
-          {/* Rotas administrativas com proteção específica */}
+          {/* Rotas administrativas */}
           <Route path="/admin/*" element={
             <AdminProtectedRoutes>
               <AdminRoutes />
             </AdminProtectedRoutes>
           } />
 
-          {/* Rotas de formação com proteção específica */}
           <Route path="/formacao/*" element={
             <FormacaoProtectedRoutes>
               <FormacaoRoutes />
@@ -126,7 +112,7 @@ export const AppRoutes = () => {
             </ProtectedRoutes>
           } />
 
-          {/* 404 - redirecionar para dashboard como fallback */}
+          {/* 404 */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Suspense>

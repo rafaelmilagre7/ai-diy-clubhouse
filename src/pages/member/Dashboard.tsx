@@ -1,11 +1,10 @@
 
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useOptimizedSolutionsData } from "@/hooks/data/useOptimizedSolutionsData";
-import { useDashboardProgress } from "@/hooks/dashboard/useDashboardProgress";
+import { useSolutionsData } from "@/hooks/useSolutionsData";
+import { useDashboardProgress } from "@/hooks/useDashboardProgress";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { DashboardEmergencyMode } from "@/components/dashboard/DashboardEmergencyMode";
 import { Solution } from "@/lib/supabase";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -17,153 +16,96 @@ const Dashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, profile, isLoading: authLoading } = useAuth();
   
-  console.log('Dashboard: Renderizando', { 
-    hasUser: !!user, 
-    hasProfile: !!profile,
-    authLoading 
-  });
-  
-  // Estado para controle de erros e emergência
+  // Estado para controle de erros
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [emergencyMode, setEmergencyMode] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
   
-  // Categoria inicial
-  const initialCategory = useMemo(() => 
-    searchParams.get("category") || "general", 
-    [searchParams]
-  );
+  // Otimização: Usar useMemo para lembrar o valor da categoria entre renderizações
+  const initialCategory = useMemo(() => searchParams.get("category") || "general", [searchParams]);
   const [category, setCategory] = useState<string>(initialCategory);
   
-  // Hook de soluções - com fallbacks
-  const { 
-    solutions, 
-    loading: solutionsLoading, 
-    error: solutionsError,
-    hasData: hasSolutionsData
-  } = useOptimizedSolutionsData();
+  // Otimização: Adicionar configuração de staleTime mais longa para reduzir requisições
+  const { solutions, loading: solutionsLoading, error: solutionsError } = useSolutionsData();
   
-  console.log('Dashboard: Solutions data', {
-    solutionsCount: solutions?.length || 0,
-    solutionsLoading,
-    solutionsError,
-    hasSolutionsData
-  });
+  // Tratamento de erro para soluções
+  useEffect(() => {
+    if (solutionsError) {
+      setHasError(true);
+      setErrorMessage("Não foi possível carregar as soluções. Verifique sua conexão com a internet.");
+      toast.error("Erro ao carregar soluções", {
+        description: "Tente atualizar a página"
+      });
+    }
+  }, [solutionsError, solutions]);
   
-  // Filtrar soluções por categoria
+  // Otimização: Usar useMemo para o array de soluções para evitar recálculos desnecessários
   const filteredSolutions = useMemo(() => {
-    if (!Array.isArray(solutions) || solutions.length === 0) return [];
+    if (!solutions || solutions.length === 0) return [];
     return category !== "general" 
-      ? solutions.filter(s => s && s.category === category)
+      ? solutions.filter(s => s.category === category)
       : solutions;
   }, [solutions, category]);
   
-  // Hook de progresso
+  // Usar as soluções filtradas para obter o progresso
   const { 
     active, 
     completed, 
     recommended, 
     loading: progressLoading,
-    error: progressError,
-    hasData: hasProgressData
+    error: progressError
   } = useDashboardProgress(filteredSolutions);
   
-  console.log('Dashboard: Progress data', {
-    active: active?.length || 0,
-    completed: completed?.length || 0,
-    recommended: recommended?.length || 0,
-    progressLoading,
-    hasProgressData
-  });
+  // Tratamento de erro para progresso
+  useEffect(() => {
+    if (progressError) {
+      setHasError(true);
+      setErrorMessage("Não foi possível carregar seu progresso. Por favor, tente novamente mais tarde.");
+    }
+  }, [progressError]);
   
   // Verificação de autenticação
   useEffect(() => {
     if (!authLoading && !user) {
-      console.log('Dashboard: Usuário não autenticado, redirecionando para login');
       navigate('/login', { replace: true });
     }
   }, [user, authLoading, navigate]);
   
-  // Tratamento de erros com modo de emergência
-  useEffect(() => {
-    if (solutionsError || progressError) {
-      console.error('Dashboard: Erro detectado', { solutionsError, progressError });
-      
-      setHasError(true);
-      if (solutionsError) {
-        setErrorMessage("Erro ao carregar soluções");
-      } else if (progressError) {
-        setErrorMessage("Erro ao carregar progresso");
-        toast.error("Erro ao carregar progresso", {
-          description: "Algumas funcionalidades podem não estar disponíveis"
-        });
-      }
-      
-      // Ativar modo de emergência após múltiplas tentativas
-      if (retryCount >= 2) {
-        console.warn('Dashboard: Ativando modo de emergência após', retryCount, 'tentativas');
-        setEmergencyMode(true);
-      }
-    }
-  }, [solutionsError, progressError, retryCount]);
-  
-  // Handlers memoizados
+  // Função para lidar com a mudança de categoria - memoizada para evitar recriação
   const handleCategoryChange = useCallback((newCategory: string) => {
     setCategory(newCategory);
     setSearchParams({ category: newCategory });
   }, [setSearchParams]);
 
+  // Função para navegar para a página de detalhes da solução - memoizada
   const handleSolutionClick = useCallback((solution: Solution) => {
-    navigate(`/solutions/${solution.id}`);
+    navigate(`/solution/${solution.id}`);
   }, [navigate]);
   
-  const handleRetry = useCallback(() => {
-    console.log('Dashboard: Tentativa de retry', retryCount + 1);
+  // Função para atualizar a página em caso de erro
+  const handleRetry = () => {
     setHasError(false);
     setErrorMessage(null);
-    setRetryCount(prev => prev + 1);
-    
-    // Se já tentou várias vezes, recarregar a página
-    if (retryCount >= 2) {
-      window.location.reload();
-    }
-  }, [retryCount]);
-
-  const handleEmergencyRetry = useCallback(() => {
-    setEmergencyMode(false);
-    setHasError(false);
-    setErrorMessage(null);
-    setRetryCount(0);
     window.location.reload();
-  }, []);
+  };
 
-  // Toast de boas-vindas
+  // Controle para exibir toast apenas na primeira visita usando localStorage
   useEffect(() => {
     const isFirstVisit = localStorage.getItem("firstDashboardVisit") !== "false";
     
-    if (isFirstVisit && !authLoading && user && !hasError) {
+    if (isFirstVisit) {
+      // Atrasar ligeiramente o toast para evitar conflito com renderização inicial
       const timeoutId = setTimeout(() => {
         toast("Bem-vindo ao seu dashboard personalizado!");
         localStorage.setItem("firstDashboardVisit", "false");
       }, 1500);
       
+      // Limpeza do timeout quando o componente é desmontado
       return () => clearTimeout(timeoutId);
     }
-  }, [authLoading, user, hasError]);
+  }, []);
   
-  // MODO DE EMERGÊNCIA - Mostrar interface mínima funcional
-  if (emergencyMode) {
-    return (
-      <DashboardEmergencyMode
-        error={errorMessage || "Falha crítica no carregamento"}
-        onRetry={handleEmergencyRetry}
-      />
-    );
-  }
-  
-  // Estado de erro recuperável
-  if (hasError && retryCount < 2) {
+  // Se houver erro, mostrar mensagem de erro com opção de tentar novamente
+  if (hasError) {
     return (
       <div className="container py-8 flex flex-col items-center justify-center min-h-[60vh]">
         <Alert variant="destructive" className="mb-4 max-w-md">
@@ -177,30 +119,25 @@ const Dashboard = () => {
           onClick={handleRetry} 
           className="mt-4 flex items-center gap-2"
         >
-          <RefreshCw className="h-4 w-4" /> Tentar novamente ({retryCount + 1}/3)
+          <RefreshCw className="h-4 w-4" /> Tentar novamente
         </Button>
+        <p className="mt-8 text-sm text-muted-foreground max-w-md text-center">
+          Se o problema persistir, tente sair e entrar novamente na plataforma, ou entre em contato com o suporte.
+        </p>
       </div>
     );
   }
 
-  // Estado de loading
-  const isLoading = solutionsLoading || progressLoading || authLoading;
-  
-  console.log('Dashboard: Renderizando DashboardLayout', {
-    isLoading,
-    hasData: (active?.length || 0) + (completed?.length || 0) + (recommended?.length || 0) > 0,
-    totalSolutions: solutions?.length || 0
-  });
-
+  // Renderizar o layout diretamente, sem usar um componente de carregamento bloqueante
   return (
     <DashboardLayout
-      active={active || []}
-      completed={completed || []}
-      recommended={recommended || []}
+      active={active}
+      completed={completed}
+      recommended={recommended}
       category={category}
       onCategoryChange={handleCategoryChange}
       onSolutionClick={handleSolutionClick}
-      isLoading={isLoading}
+      isLoading={solutionsLoading || progressLoading || authLoading}
     />
   );
 };

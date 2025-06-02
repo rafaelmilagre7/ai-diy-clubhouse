@@ -37,7 +37,7 @@ const SuggestionComments: React.FC<SuggestionCommentsProps> = ({ suggestionId })
   } = useCommentForm('suggestion', suggestionId);
 
   // Buscar comentários
-  const { data: comments = [], isLoading } = useQuery({
+  const { data: comments = [], isLoading, refetch } = useQuery({
     queryKey: ['suggestion-comments', suggestionId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -76,6 +76,11 @@ const SuggestionComments: React.FC<SuggestionCommentsProps> = ({ suggestionId })
     enabled: !!suggestionId
   });
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    await handleSubmitComment(e);
+    refetch(); // Recarregar comentários após envio
+  };
+
   if (isLoading) {
     return (
       <Card className="bg-card border-border">
@@ -112,7 +117,7 @@ const SuggestionComments: React.FC<SuggestionCommentsProps> = ({ suggestionId })
       <CardContent className="space-y-6">
         {/* Formulário de novo comentário */}
         {user && (
-          <form onSubmit={handleSubmitComment} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <Textarea
               placeholder="Adicione seu comentário..."
               value={comment}

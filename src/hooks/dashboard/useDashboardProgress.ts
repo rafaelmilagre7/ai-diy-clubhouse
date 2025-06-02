@@ -1,121 +1,99 @@
-
-import { useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { Solution } from "@/lib/supabase";
 import { useQuery } from '@tanstack/react-query';
+import { toast } from "sonner";
 
 export const useDashboardProgress = (solutions: Solution[] = []) => {
   const { user } = useAuth();
   
-  console.log("useDashboardProgress: Iniciando", { 
-    hasUser: !!user, 
-    solutionsCount: solutions?.length || 0
-  });
+  // Função para buscar o progresso - separada para facilitar cache
+  const fetchProgress = useCallback(async () => {
+    if (!user) {
+      console.log("useDashboardProgress: Usuário não autenticado");
+      throw new Error("Usuário não autenticado");
+    }
+    
+    console.log("useDashboardProgress: Buscando progresso para o usuário", user.id);
+    
+    try {
+      const { data, error } = await supabase
+        .from("progress")
+        .select("*")
+        .eq("user_id", user.id);
+        
+      if (error) {
+        console.error("useDashboardProgress: Erro ao buscar progresso:", error);
+        throw error;
+      }
+      
+      console.log("useDashboardProgress: Progresso carregado com sucesso, itens:", data?.length || 0);
+      return data;
+    } catch (error) {
+      console.error("useDashboardProgress: Exception ao buscar progresso:", error);
+      throw error;
+    }
+  }, [user]);
   
-  // Buscar progresso com configuração ultra-resiliente
+  // Usar React Query para cache e controle de estado
   const { 
     data: progressData,
     isLoading,
     error
   } = useQuery({
-    queryKey: ['user-progress', user?.id],
-    queryFn: async () => {
-      if (!user) {
-        console.log("useDashboardProgress: Usuário não autenticado");
-        return [];
+    queryKey: ['progress', user?.id],
+    queryFn: fetchProgress,
+    staleTime: 5 * 60 * 1000, // 5 minutos de cache
+    enabled: !!user && solutions.length > 0,
+    refetchOnWindowFocus: false, // Desativar refetch ao focar a janela
+    refetchInterval: false, // Desativar refetch automático baseado em intervalo
+    retry: 2, // Tentar 2 vezes antes de desistir
+    meta: {
+      onError: (err: any) => {
+        console.error("Erro durante o carregamento do progresso:", err);
+        toast.error("Erro ao carregar seu progresso", {
+          description: "Algumas funcionalidades podem não estar disponíveis"
+        });
       }
-      
-      console.log("useDashboardProgress: Buscando progresso para", user.id);
-      
-      try {
-        const { data, error } = await supabase
-          .from("progress")
-          .select("*")
-          .eq("user_id", user.id);
-          
-        if (error) {
-          console.error("useDashboardProgress: Erro ao buscar progresso:", error);
-          // Retornar array vazio em vez de throw para não quebrar a UI
-          return [];
-        }
-        
-        console.log("useDashboardProgress: Progresso carregado:", data?.length || 0);
-        return Array.isArray(data) ? data : [];
-      } catch (err) {
-        console.error("useDashboardProgress: Erro capturado:", err);
-        return [];
-      }
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    gcTime: 10 * 60 * 1000, // 10 minutos
-    retry: (failureCount, error: any) => {
-      // Só tentar 1 vez para não travar
-      if (failureCount >= 1) return false;
-      return true;
-    },
-    refetchOnWindowFocus: false,
-    enabled: !!user, // Só executa se tem usuário
+    }
   });
 
-  // Processar dados com fallbacks ultra-robustos
+  // Usar useMemo para processar os dados apenas quando necessário
   const { active, completed, recommended } = useMemo(() => {
-    console.log("useDashboardProgress: Processando dados", {
-      solutionsLength: solutions?.length || 0,
-      progressDataLength: progressData?.length || 0
-    });
-
-    // Fallbacks defensivos
-    const safeSolutions = Array.isArray(solutions) ? solutions : [];
-    const safeProgressData = Array.isArray(progressData) ? progressData : [];
-
-    // Se não há soluções válidas, retornar estrutura vazia
-    if (safeSolutions.length === 0) {
-      console.log("useDashboardProgress: Sem soluções válidas disponíveis");
+    if (!solutions || solutions.length === 0 || !progressData) {
+      console.log("useDashboardProgress: Sem dados para processar");
       return { active: [], completed: [], recommended: [] };
-    }
-
-    // Se não há dados de progresso, todas são recomendadas
-    if (safeProgressData.length === 0) {
-      console.log("useDashboardProgress: Sem progresso, todas são recomendadas");
-      return {
-        active: [],
-        completed: [],
-        recommended: safeSolutions.slice(0, 6) // Limitar para performance
-      };
     }
 
     try {
       // Soluções ativas (em progresso)
-      const activeSolutions = safeSolutions.filter(solution => 
-        solution && safeProgressData.some(
+      const activeSolutions = solutions.filter(solution => 
+        progressData.some(
           progress => 
-            progress && 
             progress.solution_id === solution.id && 
             !progress.is_completed
         )
       );
 
       // Soluções completas
-      const completedSolutions = safeSolutions.filter(solution => 
-        solution && safeProgressData.some(
+      const completedSolutions = solutions.filter(solution => 
+        progressData.some(
           progress => 
-            progress &&
             progress.solution_id === solution.id && 
             progress.is_completed
         )
       );
 
       // Soluções recomendadas (não iniciadas)
-      const recommendedSolutions = safeSolutions.filter(solution => 
-        solution &&
-        !activeSolutions.some(active => active && active.id === solution.id) && 
-        !completedSolutions.some(completed => completed && completed.id === solution.id)
-      ).slice(0, 6); // Limitar para performance
+      const recommendedSolutions = solutions.filter(solution => 
+        !activeSolutions.some(active => active.id === solution.id) && 
+        !completedSolutions.some(completed => completed.id === solution.id)
+      );
 
-      console.log("useDashboardProgress: Processamento concluído", {
-        active: activeSolutions.length,
-        completed: completedSolutions.length,
+      console.log("useDashboardProgress: Dados processados com sucesso", {
+        active: activeSolutions.length, 
+        completed: completedSolutions.length, 
         recommended: recommendedSolutions.length
       });
 
@@ -126,20 +104,15 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
       };
     } catch (err) {
       console.error("useDashboardProgress: Erro ao processar dados:", err);
-      return { 
-        active: [], 
-        completed: [], 
-        recommended: safeSolutions.slice(0, 6) 
-      };
+      return { active: [], completed: [], recommended: [] };
     }
   }, [solutions, progressData]);
 
   return {
-    active: Array.isArray(active) ? active : [],
-    completed: Array.isArray(completed) ? completed : [],
-    recommended: Array.isArray(recommended) ? recommended : [],
+    active,
+    completed,
+    recommended,
     loading: isLoading,
-    error,
-    hasData: (active?.length || 0) + (completed?.length || 0) + (recommended?.length || 0) > 0
+    error
   };
 };

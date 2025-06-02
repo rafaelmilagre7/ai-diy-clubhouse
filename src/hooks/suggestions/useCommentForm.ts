@@ -39,8 +39,8 @@ export const useCommentForm = (type: string, id?: string) => {
       setComment('');
       toast.success('Comentário enviado com sucesso');
       
-      // Usar a mesma chave de query que o componente SuggestionComments
-      queryClient.invalidateQueries({ queryKey: ['suggestion-comments', id] });
+      // Recarregar comentários
+      queryClient.invalidateQueries({ queryKey: ['comments', type, id] });
       
       // Também invalidar dados da sugestão para atualizar contadores
       queryClient.invalidateQueries({ queryKey: ['suggestions'] });
