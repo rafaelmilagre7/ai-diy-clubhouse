@@ -1,11 +1,15 @@
 
 import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import { ThumbsUp, ThumbsDown, MessageSquare, TrendingUp } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { Suggestion } from '@/types/suggestionTypes';
+import { formatRelativeDate } from '@/utils/suggestionUtils';
 import { StatusBadge } from '../ui/StatusBadge';
-import { formatRelativeDate, calculatePopularity } from '@/utils/suggestionUtils';
+import VoteDisplay from '../voting/VoteDisplay';
+import { Eye, MessageCircle, TrendingUp } from 'lucide-react';
+import { Suggestion } from '@/types/suggestionTypes';
 
 interface SuggestionCardProps {
   suggestion: Suggestion;
@@ -13,94 +17,89 @@ interface SuggestionCardProps {
   getStatusColor: (status: string) => string;
 }
 
-export const SuggestionCard: React.FC<SuggestionCardProps> = ({
+export const SuggestionCard: React.FC<SuggestionCardProps> = React.memo(({
   suggestion,
   getStatusLabel,
   getStatusColor
 }) => {
   const navigate = useNavigate();
-  const popularity = calculatePopularity(suggestion.upvotes, suggestion.downvotes);
-  const isHotSuggestion = suggestion.upvotes > 10 && popularity > 80;
-  
-  const handleCardClick = () => {
+
+  const handleCardClick = React.useCallback(() => {
     navigate(`/suggestions/${suggestion.id}`);
-  };
-  
+  }, [navigate, suggestion.id]);
+
+  const authorInitials = React.useMemo(() => {
+    return suggestion.user_name
+      ? suggestion.user_name.split(' ').map(n => n[0]).join('').toUpperCase()
+      : 'U';
+  }, [suggestion.user_name]);
+
+  const isHighPriority = React.useMemo(() => {
+    return suggestion.upvotes > 10 || suggestion.is_pinned;
+  }, [suggestion.upvotes, suggestion.is_pinned]);
+
   return (
-    <Card 
-      className="h-full cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.01] group animate-fade-in"
-      onClick={handleCardClick}
-    >
+    <Card className="hover-lift cursor-pointer group animate-fade-in transition-all duration-200">
       <CardHeader className="pb-3">
-        <div className="flex justify-between items-start gap-3">
-          <div className="space-y-2 flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <StatusBadge status={suggestion.status} size="sm" />
-              {isHotSuggestion && (
-                <div className="flex items-center gap-1 text-orange-600 text-xs font-medium">
-                  <TrendingUp className="h-3 w-3" />
-                  <span>Popular</span>
-                </div>
-              )}
-              {suggestion.is_pinned && (
-                <div className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full font-medium">
-                  Fixada
-                </div>
-              )}
-            </div>
-            <h3 className="font-semibold text-lg line-clamp-2 group-hover:text-primary transition-colors text-left">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-base line-clamp-2 group-hover:text-primary transition-colors">
               {suggestion.title}
             </h3>
+            {suggestion.is_pinned && (
+              <Badge variant="secondary" className="mt-2 text-xs bg-yellow-100 text-yellow-800">
+                📌 Fixada
+              </Badge>
+            )}
           </div>
+          <StatusBadge status={suggestion.status} size="sm" />
         </div>
       </CardHeader>
-      
+
       <CardContent className="pb-3">
-        <p className="text-muted-foreground line-clamp-3 text-sm leading-relaxed text-left">
+        <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
           {suggestion.description}
         </p>
-        
-        <div className="mt-3 text-xs text-muted-foreground text-left">
-          {formatRelativeDate(suggestion.created_at)}
-          {suggestion.user_name && ` • por ${suggestion.user_name}`}
-        </div>
+
+        <VoteDisplay
+          upvotes={suggestion.upvotes}
+          downvotes={suggestion.downvotes}
+          showTrend={isHighPriority}
+        />
       </CardContent>
-      
-      <CardFooter className="pt-3 border-t border-border/50">
-        <div className="flex justify-between items-center w-full text-sm text-muted-foreground">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1 hover:text-green-600 transition-colors">
-              <ThumbsUp className="h-4 w-4" />
-              <span className="font-medium">{suggestion.upvotes}</span>
-            </div>
-            
-            <div className="flex items-center gap-1 hover:text-red-500 transition-colors">
-              <ThumbsDown className="h-4 w-4" />
-              <span className="font-medium">{suggestion.downvotes}</span>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-1 hover:text-blue-600 transition-colors">
-            <MessageSquare className="h-4 w-4" />
-            <span className="font-medium">{suggestion.comment_count || 0}</span>
+
+      <CardFooter className="pt-3 border-t flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Avatar className="h-6 w-6">
+            <AvatarImage src={suggestion.user_avatar} />
+            <AvatarFallback className="text-xs">{authorInitials}</AvatarFallback>
+          </Avatar>
+          <div className="text-xs text-muted-foreground">
+            <span className="font-medium">{suggestion.user_name || 'Usuário'}</span>
+            <span className="mx-1">•</span>
+            <span>{formatRelativeDate(suggestion.created_at)}</span>
           </div>
         </div>
-        
-        {popularity > 0 && suggestion.upvotes + suggestion.downvotes > 2 && (
-          <div className="mt-3 w-full">
-            <div className="flex justify-between text-xs text-muted-foreground mb-1">
-              <span>Taxa de aprovação</span>
-              <span>{popularity}%</span>
+
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          {suggestion.comment_count > 0 && (
+            <div className="flex items-center gap-1">
+              <MessageCircle className="h-3 w-3" />
+              <span>{suggestion.comment_count}</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-1.5">
-              <div 
-                className="bg-gradient-to-r from-green-400 to-green-600 h-1.5 rounded-full transition-all duration-300"
-                style={{ width: `${popularity}%` }}
-              />
-            </div>
-          </div>
-        )}
+          )}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleCardClick}
+            className="h-auto p-1 text-xs hover:text-primary"
+          >
+            Ver detalhes
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );
-};
+});
+
+SuggestionCard.displayName = 'SuggestionCard';
