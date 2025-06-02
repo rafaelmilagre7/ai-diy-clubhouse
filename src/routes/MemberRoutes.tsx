@@ -32,7 +32,7 @@ import ToolDetails from '@/pages/member/ToolDetails';
 // Benefits - Import direto para melhor performance
 import Benefits from '@/pages/member/Benefits';
 
-// Learning - Import direto para melhor performance
+// Learning - Import direto para melhor performance - CORRIGIDO
 import LearningPage from '@/pages/member/learning/LearningPage';
 import CourseDetails from '@/pages/member/learning/CourseDetails';
 import LessonView from '@/pages/member/learning/LessonView';
@@ -62,7 +62,7 @@ export const MemberRoutes = () => {
         {/* Benefits Routes - Direto sem lazy loading */}
         <Route path="/benefits" element={<Benefits />} />
         
-        {/* Learning Routes - Direto sem lazy loading */}
+        {/* Learning Routes - Direto sem lazy loading - GARANTINDO USO CORRETO */}
         <Route path="/learning" element={<LearningPage />} />
         <Route path="/learning/course/:id" element={<CourseDetails />} />
         <Route path="/learning/course/:courseId/lesson/:lessonId" element={<LessonView />} />
