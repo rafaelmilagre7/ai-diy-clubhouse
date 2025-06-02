@@ -1,202 +1,145 @@
 
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 import { formatRelativeDate } from '@/utils/suggestionUtils';
 import { StatusBadge } from '../ui/StatusBadge';
-import { GlassmorphismCard } from '../animations/GlassmorphismCard';
+import VoteDisplay from '../voting/VoteDisplay';
 import { VoteAnimation } from '../animations/VoteAnimation';
 import { useVoting } from '@/hooks/suggestions/useVoting';
+import { Eye, MessageCircle, TrendingUp, ArrowRight } from 'lucide-react';
 import { Suggestion } from '@/types/suggestionTypes';
-import { 
-  Eye, 
-  MessageCircle, 
-  TrendingUp, 
-  ArrowRight, 
-  Bookmark,
-  Share2,
-  MoreHorizontal,
-  Zap
-} from 'lucide-react';
 
 interface EnhancedSuggestionCardProps {
   suggestion: Suggestion;
-  index: number;
 }
 
-export const EnhancedSuggestionCard: React.FC<EnhancedSuggestionCardProps> = ({
-  suggestion,
-  index
+export const EnhancedSuggestionCard: React.FC<EnhancedSuggestionCardProps> = React.memo(({
+  suggestion
 }) => {
   const navigate = useNavigate();
   const { voteLoading, voteMutation } = useVoting();
-  const [isBookmarked, setIsBookmarked] = useState(false);
 
-  const handleCardClick = () => {
+  const handleCardClick = React.useCallback(() => {
     navigate(`/suggestions/${suggestion.id}`);
-  };
+  }, [navigate, suggestion.id]);
 
-  const handleVote = async (voteType: 'upvote' | 'downvote') => {
+  const handleVote = React.useCallback(async (voteType: 'upvote' | 'downvote', e: React.MouseEvent) => {
+    e.stopPropagation();
     await voteMutation.mutateAsync({ 
       suggestionId: suggestion.id, 
       voteType 
     });
-  };
+  }, [voteMutation, suggestion.id]);
 
-  const authorInitials = suggestion.user_name
-    ? suggestion.user_name.split(' ').map(n => n[0]).join('').toUpperCase()
-    : 'U';
+  const authorInitials = React.useMemo(() => {
+    return suggestion.user_name
+      ? suggestion.user_name.split(' ').map(n => n[0]).join('').toUpperCase()
+      : 'U';
+  }, [suggestion.user_name]);
 
-  const isHighPriority = suggestion.upvotes > 10 || suggestion.is_pinned;
+  const isHighPriority = React.useMemo(() => {
+    return suggestion.upvotes > 10 || suggestion.is_pinned;
+  }, [suggestion.upvotes, suggestion.is_pinned]);
+
   const totalVotes = suggestion.upvotes + suggestion.downvotes;
   const engagementLevel = totalVotes > 20 ? 'high' : totalVotes > 5 ? 'medium' : 'low';
 
-  const gradientType = isHighPriority ? 'purple' : engagementLevel === 'high' ? 'green' : 'blue';
-
   return (
-    <GlassmorphismCard
-      delay={index * 0.1}
-      gradient={gradientType}
-      className="group cursor-pointer"
+    <Card 
+      className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer bg-white dark:bg-card"
+      onClick={handleCardClick}
     >
-      <div className="p-6 space-y-4">
-        {/* Header */}
-        <div className="flex items-start justify-between">
-          <div className="flex-1 space-y-2">
+      <CardHeader className="pb-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0 space-y-2">
             {suggestion.is_pinned && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="w-fit"
-              >
-                <Badge className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-xs font-bold px-2 py-1">
-                  📌 Fixada
-                </Badge>
-              </motion.div>
-            )}
-            
-            <motion.h3 
-              className="font-bold text-xl leading-tight line-clamp-2 group-hover:text-primary transition-colors duration-300"
-              onClick={handleCardClick}
-            >
-              {suggestion.title}
-            </motion.h3>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <StatusBadge status={suggestion.status} size="sm" />
-            
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsBookmarked(!isBookmarked);
-              }}
-              className="p-2 rounded-lg hover:bg-white/20 transition-colors"
-            >
-              <Bookmark 
-                className={`h-4 w-4 ${isBookmarked ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400'}`}
-              />
-            </motion.button>
-          </div>
-        </div>
-
-        {/* Content */}
-        <motion.p 
-          className="text-gray-600 line-clamp-3 leading-relaxed"
-          onClick={handleCardClick}
-        >
-          {suggestion.description}
-        </motion.p>
-
-        {/* Engagement Metrics */}
-        <div className="flex items-center justify-between py-3 border-t border-white/20">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3">
-              <VoteAnimation
-                type="upvote"
-                isActive={suggestion.user_vote_type === 'upvote'}
-                onClick={() => handleVote('upvote')}
-                disabled={voteLoading}
-              />
-              <div className="text-center">
-                <div className="text-sm font-bold text-green-600">{suggestion.upvotes}</div>
-                <div className="text-xs text-gray-500">apoios</div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <VoteAnimation
-                type="downvote"
-                isActive={suggestion.user_vote_type === 'downvote'}
-                onClick={() => handleVote('downvote')}
-                disabled={voteLoading}
-              />
-              <div className="text-center">
-                <div className="text-sm font-bold text-red-600">{suggestion.downvotes}</div>
-                <div className="text-xs text-gray-500">contra</div>
-              </div>
-            </div>
-          </div>
-
-          {engagementLevel === 'high' && (
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="flex items-center gap-1"
-            >
-              <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs">
-                <Zap className="w-3 h-3 mr-1" />
-                Popular
+              <Badge variant="secondary" className="w-fit bg-yellow-100 text-yellow-800 text-xs font-medium">
+                📌 Fixada
               </Badge>
-            </motion.div>
+            )}
+            <h3 className="font-semibold text-lg leading-tight line-clamp-2 group-hover:text-primary transition-colors text-foreground">
+              {suggestion.title}
+            </h3>
+          </div>
+          <StatusBadge status={suggestion.status} size="sm" />
+        </div>
+      </CardHeader>
+
+      <CardContent className="pb-4">
+        <p className="text-muted-foreground line-clamp-3 mb-6 leading-relaxed">
+          {suggestion.description}
+        </p>
+
+        <div className="flex items-center justify-between mb-4">
+          <VoteDisplay
+            upvotes={suggestion.upvotes}
+            downvotes={suggestion.downvotes}
+            showTrend={isHighPriority}
+            compact={true}
+          />
+          
+          {engagementLevel === 'high' && (
+            <Badge variant="secondary" className="bg-primary/10 text-primary text-xs">
+              <TrendingUp className="w-3 h-3 mr-1" />
+              Popular
+            </Badge>
           )}
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between pt-4 border-t border-white/20">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-8 w-8 ring-2 ring-white/30">
-              <AvatarImage src={suggestion.user_avatar} />
-              <AvatarFallback className="text-xs font-medium bg-gradient-to-br from-blue-400 to-purple-400 text-white">
-                {authorInitials}
-              </AvatarFallback>
-            </Avatar>
-            <div className="text-sm">
-              <div className="font-medium text-gray-800">{suggestion.user_name || 'Usuário'}</div>
-              <div className="text-xs text-gray-500">{formatRelativeDate(suggestion.created_at)}</div>
-            </div>
-          </div>
+        {/* Botões de voto */}
+        <div className="flex items-center gap-2">
+          <VoteAnimation
+            type="upvote"
+            isActive={suggestion.user_vote_type === 'upvote'}
+            onClick={(e) => handleVote('upvote', e)}
+            disabled={voteLoading}
+          />
+          <VoteAnimation
+            type="downvote"
+            isActive={suggestion.user_vote_type === 'downvote'}
+            onClick={(e) => handleVote('downvote', e)}
+            disabled={voteLoading}
+          />
+        </div>
+      </CardContent>
 
-          <div className="flex items-center gap-3">
-            {suggestion.comment_count > 0 && (
-              <div className="flex items-center gap-1 text-gray-500">
-                <MessageCircle className="h-4 w-4" />
-                <span className="text-sm font-medium">{suggestion.comment_count}</span>
-              </div>
-            )}
-
-            <motion.div
-              whileHover={{ x: 5 }}
-              className="flex items-center gap-2"
-            >
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="gap-2 text-gray-600 hover:text-primary hover:bg-white/20"
-                onClick={handleCardClick}
-              >
-                <span className="text-sm">Ver mais</span>
-                <ArrowRight className="h-3 w-3" />
-              </Button>
-            </motion.div>
+      <CardFooter className="pt-4 border-t bg-muted/30 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Avatar className="h-7 w-7">
+            <AvatarImage src={suggestion.user_avatar} />
+            <AvatarFallback className="text-xs font-medium">{authorInitials}</AvatarFallback>
+          </Avatar>
+          <div className="text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">{suggestion.user_name || 'Usuário'}</span>
+            <span className="mx-2">•</span>
+            <span>{formatRelativeDate(suggestion.created_at)}</span>
           </div>
         </div>
-      </div>
-    </GlassmorphismCard>
+
+        <div className="flex items-center gap-4">
+          {suggestion.comment_count > 0 && (
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <MessageCircle className="h-4 w-4" />
+              <span className="text-sm font-medium">{suggestion.comment_count}</span>
+            </div>
+          )}
+          
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="gap-2 text-muted-foreground hover:text-primary"
+          >
+            Ver detalhes
+            <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
+          </Button>
+        </div>
+      </CardFooter>
+    </Card>
   );
-};
+});
+
+EnhancedSuggestionCard.displayName = 'EnhancedSuggestionCard';
