@@ -1,25 +1,27 @@
 
 import { renderHook, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 import { useCourseAccess } from '@/hooks/learning/useCourseAccess';
 import { useAdvancedRules } from '@/hooks/learning/useAdvancedRules';
 import { usePaymentAccess } from '@/hooks/payments/usePaymentAccess';
 
 // Mock do Supabase
-vi.mock('@/lib/supabase', () => ({
-  supabase: {
-    from: vi.fn(() => ({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          single: vi.fn(() => Promise.resolve({ data: null, error: null }))
-        }))
+const mockSupabase = {
+  from: jest.fn(() => ({
+    select: jest.fn(() => ({
+      eq: jest.fn(() => ({
+        single: jest.fn(() => Promise.resolve({ data: null, error: null }))
       }))
     }))
-  }
+  }))
+};
+
+jest.mock('@/lib/supabase', () => ({
+  supabase: mockSupabase
 }));
 
 // Mock do contexto de auth
-vi.mock('@/contexts/auth', () => ({
+jest.mock('@/contexts/auth', () => ({
   useAuth: () => ({
     user: { id: 'test-user-id', email: 'test@example.com' },
     profile: { role: 'member' }
@@ -28,7 +30,7 @@ vi.mock('@/contexts/auth', () => ({
 
 describe('Course Access System', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('useCourseAccess', () => {
