@@ -2,9 +2,9 @@
 import React from 'react';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
-import VoteControls from './voting/VoteControls';
-import VoteDisplay from './voting/VoteDisplay';
-import VoteStatus from './voting/VoteStatus';
+import { VoteControls } from './voting/VoteControls';
+import { VoteDisplay } from './voting/VoteDisplay';
+import { VoteStatus } from './voting/VoteStatus';
 
 interface SuggestionVotingProps {
   suggestion: {
