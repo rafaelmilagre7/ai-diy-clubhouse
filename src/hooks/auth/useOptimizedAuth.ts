@@ -24,9 +24,8 @@ export const useOptimizedAuth = () => {
   // Memoizar métodos para evitar re-criação
   const authMethods = useMemo(() => ({
     signOut: auth.signOut,
-    updateProfile: auth.updateProfile,
-    refreshProfile: auth.refreshProfile
-  }), [auth.signOut, auth.updateProfile, auth.refreshProfile]);
+    setProfile: auth.setProfile
+  }), [auth.signOut, auth.setProfile]);
 
   return {
     ...authState,
