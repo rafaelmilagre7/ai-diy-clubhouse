@@ -105,7 +105,17 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
         toast.success("Lição concluída com sucesso!");
       }
       
+      // CORREÇÃO: Invalidar cache de forma mais abrangente para evitar aulas desaparecendo
       queryClient.invalidateQueries({ queryKey: ["learning-completed-lessons"] });
+      queryClient.invalidateQueries({ queryKey: ["learning-progress"] });
+      queryClient.invalidateQueries({ queryKey: ["learning-course-lessons"] });
+      queryClient.invalidateQueries({ queryKey: ["learning-modules"] });
+      
+      console.log("Progresso atualizado e cache invalidado:", {
+        lessonId,
+        newProgress,
+        timestamp: new Date().toISOString()
+      });
     },
     onError: (error: any) => {
       console.error("Erro ao salvar progresso:", error);

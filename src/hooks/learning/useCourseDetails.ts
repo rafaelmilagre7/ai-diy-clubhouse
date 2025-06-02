@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -21,7 +22,7 @@ export function useCourseDetails(courseId?: string) {
   } = useQuery({
     queryKey: ["learning-course-access", user?.id, courseId],
     queryFn: async () => {
-      if (!courseId || !user?.id) return true; // Se não tiver curso ou usuário, não tem como verificar
+      if (!courseId || !user?.id) return true;
       const result = await checkCourseAccess(courseId, user.id);
       return result;
     },
@@ -72,6 +73,7 @@ export function useCourseDetails(courseId?: string) {
         return [];
       }
       
+      console.log(`Módulos carregados para curso ${courseId}:`, data?.length || 0);
       return data;
     },
     enabled: !!course && (hasAccess === true) && !accessDenied
@@ -99,31 +101,48 @@ export function useCourseDetails(courseId?: string) {
       }
       
       // Ordenar aulas por número no título
-      return sortLessonsByNumber(data || []);
+      const sortedLessons = sortLessonsByNumber(data || []);
+      console.log(`Aulas carregadas para curso ${courseId}:`, sortedLessons.length);
+      return sortedLessons;
     },
     enabled: !!modules?.length && (hasAccess === true) && !accessDenied
   });
   
-  // Buscar progresso do usuário para este curso
+  // Buscar progresso do usuário - CORRIGIDO para filtrar apenas aulas do curso atual
   const { data: userProgress } = useQuery({
-    queryKey: ["learning-progress", courseId],
+    queryKey: ["learning-progress", courseId, user?.id],
     queryFn: async () => {
       const { data: userData, error: userError } = await supabase.auth.getUser();
       if (userError) throw new Error("Erro ao obter usuário");
       
+      if (!allLessons?.length) {
+        console.log("Nenhuma aula encontrada para buscar progresso");
+        return [];
+      }
+      
+      // Buscar apenas progresso das aulas deste curso específico
+      const lessonIds = allLessons.map(lesson => lesson.id);
+      
       const { data, error } = await supabase
         .from("learning_progress")
         .select("*")
-        .eq("user_id", userData.user?.id || "");
+        .eq("user_id", userData.user?.id || "")
+        .in("lesson_id", lessonIds); // FILTRO ADICIONADO: apenas aulas deste curso
         
       if (error) {
         console.error("Erro ao carregar progresso:", error);
         return [];
       }
       
+      console.log(`Progresso carregado para curso ${courseId}:`, {
+        totalAulas: lessonIds.length,
+        progressoEncontrado: data?.length || 0,
+        aulasComProgresso: data?.map(p => p.lesson_id) || []
+      });
+      
       return data;
     },
-    enabled: !!course && (hasAccess === true) && !accessDenied
+    enabled: !!course && !!allLessons?.length && (hasAccess === true) && !accessDenied
   });
 
   // Verificar erro do curso e redirecionar se necessário

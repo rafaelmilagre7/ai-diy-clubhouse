@@ -44,9 +44,28 @@ export const ModuleLessons = ({
     );
   }
   
-  // Log para depuração
-  console.log(`Renderizando ${lessons.length} aulas do módulo ${moduleId}:`, 
-    lessons.map(l => ({id: l.id, title: l.title})));
+  // Log detalhado para depuração do problema de aulas desaparecendo
+  console.log(`=== DEPURAÇÃO MÓDULO ${moduleId} ===`, {
+    totalAulas: lessons.length,
+    aulasEncontradas: lessons.map(l => ({
+      id: l.id, 
+      title: l.title,
+      published: l.published
+    })),
+    progressoDisponivel: userProgress.length,
+    progressoPorAula: lessons.map(lesson => {
+      const completed = isLessonCompleted(lesson.id);
+      const inProgress = isLessonInProgress(lesson.id);
+      const progress = getLessonProgress(lesson.id);
+      return {
+        lessonId: lesson.id,
+        lessonTitle: lesson.title,
+        completed,
+        inProgress,
+        progress
+      };
+    })
+  });
   
   return (
     <div>
@@ -93,6 +112,15 @@ export const ModuleLessons = ({
           const completed = isLessonCompleted(lesson.id);
           const inProgress = isLessonInProgress(lesson.id);
           const progress = getLessonProgress(lesson.id);
+          
+          // Log individual para cada aula sendo renderizada
+          console.log(`Renderizando aula ${lesson.title}:`, {
+            id: lesson.id,
+            completed,
+            inProgress,
+            progress,
+            visible: true // Sempre verdadeiro - aulas nunca devem desaparecer
+          });
           
           return (
             <LessonListItem
