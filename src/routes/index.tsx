@@ -34,21 +34,22 @@ export const AppRoutes = () => {
           {/* Rotas públicas */}
           <Route path="/" element={<RootRedirect />} />
           
-          {/* Convite Routes */}
+          {/* Convite Routes - sempre públicos */}
           <Route path="/convite/:token" element={<InvitePage />} />
           <Route path="/convite" element={<InvitePage />} />
 
-          {/* Auth Routes */}
+          {/* Auth Routes - login principal e rotas auxiliares */}
           <Route path="/login" element={<ModernLogin />} />
           <Route path="/auth/*" element={<AuthRoutes />} />
 
-          {/* Rotas protegidas com guards de acesso */}
+          {/* Dashboard - página principal após login */}
           <Route path="/dashboard" element={
             <ProtectedRoutes>
               <DashboardPage />
             </ProtectedRoutes>
           } />
 
+          {/* Trilha de implementação com guard de acesso */}
           <Route path="/implementation-trail" element={
             <ProtectedRoutes>
               <SmartFeatureGuard feature="implementation_trail">
@@ -57,6 +58,7 @@ export const AppRoutes = () => {
             </ProtectedRoutes>
           } />
 
+          {/* Networking com guard específico */}
           <Route path="/networking/*" element={
             <ProtectedRoutes>
               <SmartFeatureGuard feature="networking">
@@ -65,7 +67,7 @@ export const AppRoutes = () => {
             </ProtectedRoutes>
           } />
 
-          {/* Learning e Comunidade - apenas autenticação básica */}
+          {/* Rotas básicas da comunidade - acesso padrão */}
           <Route path="/comunidade/*" element={
             <ProtectedRoutes>
               <CommunityRoutes />
@@ -96,20 +98,21 @@ export const AppRoutes = () => {
             </ProtectedRoutes>
           } />
 
-          {/* Onboarding */}
+          {/* Onboarding - sempre acessível para usuários logados */}
           <Route path="/onboarding-new/*" element={
             <ProtectedRoutes>
               <OnboardingRoutes />
             </ProtectedRoutes>
           } />
 
-          {/* Rotas administrativas */}
+          {/* Rotas administrativas com proteção específica */}
           <Route path="/admin/*" element={
             <AdminProtectedRoutes>
               <AdminRoutes />
             </AdminProtectedRoutes>
           } />
 
+          {/* Rotas de formação com proteção específica */}
           <Route path="/formacao/*" element={
             <FormacaoProtectedRoutes>
               <FormacaoRoutes />
@@ -123,7 +126,7 @@ export const AppRoutes = () => {
             </ProtectedRoutes>
           } />
 
-          {/* 404 */}
+          {/* 404 - redirecionar para dashboard como fallback */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Suspense>
