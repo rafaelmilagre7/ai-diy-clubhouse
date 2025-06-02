@@ -1,153 +1,106 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { 
-  ThumbsUp, 
-  ThumbsDown, 
-  MessageCircle, 
-  Eye, 
-  Pin,
-  TrendingUp,
-  Clock,
-  User
-} from 'lucide-react';
-import { StatusBadge } from '../ui/StatusBadge';
-import { formatRelativeDate } from '@/utils/suggestionUtils';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { ThumbsUp, ThumbsDown, MessageSquare, TrendingUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Suggestion } from '@/types/suggestionTypes';
+import { StatusBadge } from '../ui/StatusBadge';
+import { formatRelativeDate, calculatePopularity } from '@/utils/suggestionUtils';
 
 interface SuggestionCardProps {
   suggestion: Suggestion;
+  getStatusLabel: (status: string) => string;
+  getStatusColor: (status: string) => string;
 }
 
-export const SuggestionCard: React.FC<SuggestionCardProps> = ({ suggestion }) => {
-  const netVotes = suggestion.upvotes - suggestion.downvotes;
-  const totalVotes = suggestion.upvotes + suggestion.downvotes;
-  const upvotePercentage = totalVotes > 0 ? (suggestion.upvotes / totalVotes) * 100 : 0;
-
+export const SuggestionCard: React.FC<SuggestionCardProps> = ({
+  suggestion,
+  getStatusLabel,
+  getStatusColor
+}) => {
+  const navigate = useNavigate();
+  const popularity = calculatePopularity(suggestion.upvotes, suggestion.downvotes);
+  const isHotSuggestion = suggestion.upvotes > 10 && popularity > 80;
+  
+  const handleCardClick = () => {
+    navigate(`/suggestions/${suggestion.id}`);
+  };
+  
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-card border-border">
-      <CardHeader className="space-y-4">
-        {/* Cabeçalho com status e pin */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <StatusBadge status={suggestion.status} />
-            {suggestion.is_pinned && (
-              <Badge variant="secondary" className="gap-1">
-                <Pin className="h-3 w-3" />
-                Fixado
-              </Badge>
-            )}
-          </div>
-          
-          {/* Indicador de tendência */}
-          {upvotePercentage >= 75 && totalVotes >= 5 && (
-            <div className="flex items-center gap-1 text-green-600">
-              <TrendingUp className="h-3 w-3" />
-              <span className="text-xs font-medium">Popular</span>
+    <Card 
+      className="h-full cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.02] group animate-fade-in"
+      onClick={handleCardClick}
+    >
+      <CardHeader className="pb-3">
+        <div className="flex justify-between items-start gap-3">
+          <div className="space-y-2 flex-1">
+            <div className="flex items-center gap-2">
+              <StatusBadge status={suggestion.status} size="sm" />
+              {isHotSuggestion && (
+                <div className="flex items-center gap-1 text-orange-600 text-xs font-medium">
+                  <TrendingUp className="h-3 w-3" />
+                  <span>Popular</span>
+                </div>
+              )}
+              {suggestion.is_pinned && (
+                <div className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full font-medium">
+                  Fixada
+                </div>
+              )}
             </div>
-          )}
-        </div>
-
-        {/* Título */}
-        <div>
-          <Link to={`/suggestions/${suggestion.id}`}>
-            <h3 className="font-semibold text-lg leading-tight text-foreground group-hover:text-primary transition-colors line-clamp-2">
+            <h3 className="font-semibold text-lg line-clamp-2 group-hover:text-primary transition-colors">
               {suggestion.title}
             </h3>
-          </Link>
-        </div>
-
-        {/* Autor e data */}
-        <div className="flex items-center gap-3">
-          <Avatar className="h-8 w-8 ring-2 ring-border">
-            <AvatarImage src={suggestion.user_avatar || suggestion.profiles?.avatar_url} />
-            <AvatarFallback className="bg-muted">
-              {suggestion.user_name?.charAt(0) || suggestion.profiles?.name?.charAt(0) || <User className="h-4 w-4" />}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-sm text-foreground truncate">
-              {suggestion.user_name || suggestion.profiles?.name || 'Usuário'}
-            </p>
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Clock className="h-3 w-3" />
-              {formatRelativeDate(suggestion.created_at)}
-            </div>
           </div>
         </div>
       </CardHeader>
-
-      <CardContent className="space-y-4">
-        {/* Descrição */}
-        <p className="text-muted-foreground text-sm leading-relaxed line-clamp-3">
+      
+      <CardContent className="pb-3">
+        <p className="text-muted-foreground line-clamp-3 text-sm leading-relaxed">
           {suggestion.description}
         </p>
-
-        {/* Categoria */}
-        {(suggestion.category_name || suggestion.suggestion_categories?.name) && (
-          <Badge 
-            variant="outline" 
-            className="w-fit"
-            style={suggestion.category_color || suggestion.suggestion_categories?.color ? {
-              borderColor: suggestion.category_color || suggestion.suggestion_categories?.color,
-              color: suggestion.category_color || suggestion.suggestion_categories?.color
-            } : undefined}
-          >
-            {suggestion.category_name || suggestion.suggestion_categories?.name}
-          </Badge>
-        )}
-
-        {/* Métricas */}
-        <div className="flex items-center justify-between pt-4 border-t border-border">
-          {/* Votação */}
+        
+        <div className="mt-3 text-xs text-muted-foreground">
+          {formatRelativeDate(suggestion.created_at)}
+          {suggestion.user_name && ` • por ${suggestion.user_name}`}
+        </div>
+      </CardContent>
+      
+      <CardFooter className="pt-3 border-t border-border/50">
+        <div className="flex justify-between items-center w-full text-sm text-muted-foreground">
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className={`flex items-center gap-1 ${netVotes > 0 ? 'text-green-600' : netVotes < 0 ? 'text-red-600' : 'text-muted-foreground'}`}>
-                <ThumbsUp className="h-4 w-4" />
-                <span className="font-semibold text-sm">{suggestion.upvotes}</span>
-              </div>
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <ThumbsDown className="h-4 w-4" />
-                <span className="text-sm">{suggestion.downvotes}</span>
-              </div>
+            <div className="flex items-center gap-1 hover:text-green-600 transition-colors">
+              <ThumbsUp className="h-4 w-4" />
+              <span className="font-medium">{suggestion.upvotes}</span>
             </div>
-
-            {/* Comentários */}
-            <div className="flex items-center gap-1 text-muted-foreground">
-              <MessageCircle className="h-4 w-4" />
-              <span className="text-sm">{suggestion.comment_count || 0}</span>
+            
+            <div className="flex items-center gap-1 hover:text-red-600 transition-colors">
+              <ThumbsDown className="h-4 w-4" />
+              <span className="font-medium">{suggestion.downvotes}</span>
             </div>
           </div>
-
-          {/* Botão de ação */}
-          <Button variant="ghost" size="sm" asChild className="opacity-0 group-hover:opacity-100 transition-opacity">
-            <Link to={`/suggestions/${suggestion.id}`}>
-              <Eye className="h-4 w-4 mr-1" />
-              Ver detalhes
-            </Link>
-          </Button>
+          
+          <div className="flex items-center gap-1 hover:text-blue-600 transition-colors">
+            <MessageSquare className="h-4 w-4" />
+            <span className="font-medium">{suggestion.comment_count || 0}</span>
+          </div>
         </div>
-
-        {/* Barra de aprovação */}
-        {totalVotes > 0 && (
-          <div className="space-y-1">
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{Math.round(upvotePercentage)}% de aprovação</span>
-              <span>{totalVotes} votos</span>
+        
+        {popularity > 0 && (
+          <div className="mt-2 w-full">
+            <div className="flex justify-between text-xs text-muted-foreground mb-1">
+              <span>Aprovação</span>
+              <span>{popularity}%</span>
             </div>
-            <div className="w-full bg-muted rounded-full h-1.5">
+            <div className="w-full bg-gray-200 rounded-full h-1">
               <div 
-                className="bg-gradient-to-r from-green-500 to-green-600 h-1.5 rounded-full transition-all duration-300"
-                style={{ width: `${upvotePercentage}%` }}
+                className="bg-gradient-to-r from-green-400 to-green-600 h-1 rounded-full transition-all duration-300"
+                style={{ width: `${popularity}%` }}
               />
             </div>
           </div>
         )}
-      </CardContent>
+      </CardFooter>
     </Card>
   );
 };

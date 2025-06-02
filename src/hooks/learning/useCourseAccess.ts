@@ -1,169 +1,145 @@
 
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
+import { useState, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
+import { LearningCourse } from '@/lib/supabase';
+
+export interface Role {
+  id: string;
+  name: string;
+  description?: string;
+  is_system: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 export const useCourseAccess = () => {
   const [loading, setLoading] = useState(false);
 
-  const checkCourseAccess = async (courseId: string, userId: string): Promise<boolean> => {
+  // Função memoizada para buscar cursos por role
+  const getCoursesByRole = useCallback(async (roleId: string): Promise<LearningCourse[]> => {
     try {
-      // Primeiro, verificar se o usuário tem perfil
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", userId)
-        .single();
-
-      if (!profile) {
-        console.log("Perfil não encontrado para o usuário");
-        return false;
-      }
-
-      // Verificar se há controle de acesso para este curso
-      const { data: accessControl } = await supabase
-        .from("course_access_control")
-        .select("role_id")
-        .eq("course_id", courseId);
-
-      // Se não há controle de acesso definido, permitir acesso
-      if (!accessControl || accessControl.length === 0) {
-        console.log("Nenhum controle de acesso definido, permitindo acesso");
-        return true;
-      }
-
-      // Verificar se o role do usuário está na lista de roles permitidos
-      const allowedRoleIds = accessControl.map(ac => ac.role_id);
+      console.log('🔍 Buscando cursos para role:', roleId);
       
-      // Buscar o role_id do usuário
-      const { data: userRole } = await supabase
-        .from("user_roles")
-        .select("id")
-        .eq("name", profile.role)
-        .single();
-
-      if (!userRole) {
-        console.log("Role do usuário não encontrado");
-        return false;
-      }
-
-      const hasAccess = allowedRoleIds.includes(userRole.id);
-      console.log(`Verificação de acesso: ${hasAccess ? "PERMITIDO" : "NEGADO"}`);
-      
-      return hasAccess;
-    } catch (error) {
-      console.error("Erro ao verificar acesso ao curso:", error);
-      return true; // Em caso de erro, permitir acesso
-    }
-  };
-
-  const getRolesByCourse = async (courseId: string) => {
-    try {
-      setLoading(true);
       const { data, error } = await supabase
-        .from("course_access_control")
-        .select(`
-          role_id,
-          user_roles(id, name, description)
-        `)
-        .eq("course_id", courseId);
-
-      if (error) throw error;
-
-      console.log("Dados recebidos de getRolesByCourse:", data);
-
-      // Usar type assertion e processar os dados corretamente
-      return data?.map((item: any) => {
-        const roleData = item.user_roles;
-        if (roleData?.id && roleData?.name) {
-          return {
-            id: roleData.id,
-            name: roleData.name,
-            description: roleData.description || ''
-          };
-        }
-        return null;
-      }).filter(Boolean) || [];
-    } catch (error) {
-      console.error("Erro ao buscar roles do curso:", error);
-      return [];
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getCoursesByRole = async (roleId: string) => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("course_access_control")
+        .from('course_access_control')
         .select(`
           course_id,
-          learning_courses(id, title, description)
+          learning_courses (*)
         `)
-        .eq("role_id", roleId);
+        .eq('role_id', roleId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao buscar cursos por papel:', error);
+        throw error;
+      }
 
-      console.log("Dados recebidos de getCoursesByRole:", data);
-
-      // Usar type assertion e processar os dados corretamente
-      return data?.map((item: any) => {
-        const courseData = item.learning_courses;
-        if (courseData?.id && courseData?.title) {
-          return {
-            id: courseData.id,
-            title: courseData.title,
-            description: courseData.description || ''
-          };
-        }
-        return null;
-      }).filter(Boolean) || [];
+      console.log('✅ Dados retornados para role:', roleId, data?.length || 0);
+      return (data || [])
+        .map((item: any) => item.learning_courses)
+        .filter(Boolean);
     } catch (error) {
-      console.error("Erro ao buscar cursos do role:", error);
+      console.error('Erro ao buscar cursos por papel:', error);
       return [];
-    } finally {
-      setLoading(false);
     }
-  };
+  }, []);
 
-  const manageCourseAccess = async (courseId: string, roleId: string, hasAccess: boolean) => {
+  // Função memoizada para buscar roles por curso
+  const getRolesByCourse = useCallback(async (courseId: string): Promise<Role[]> => {
     try {
-      setLoading(true);
+      console.log('🔍 Buscando roles para curso:', courseId);
+      
+      const { data, error } = await supabase
+        .from('course_access_control')
+        .select(`
+          role_id,
+          user_roles (*)
+        `)
+        .eq('course_id', courseId);
+
+      if (error) {
+        console.error('❌ Erro ao buscar papéis por curso:', error);
+        throw error;
+      }
+
+      console.log('✅ Roles encontradas para curso:', courseId, data?.length || 0);
+      return (data || [])
+        .map((item: any) => item.user_roles)
+        .filter(Boolean);
+    } catch (error) {
+      console.error('Erro ao buscar papéis por curso:', error);
+      return [];
+    }
+  }, []);
+
+  // Função memoizada para gerenciar acesso aos cursos
+  const manageCourseAccess = useCallback(async (courseId: string, roleId: string, hasAccess: boolean) => {
+    try {
+      console.log('🔧 Gerenciando acesso:', { courseId, roleId, hasAccess });
       
       if (hasAccess) {
-        // Adicionar acesso
-        const { error } = await supabase
-          .from("course_access_control")
-          .insert({ course_id: courseId, role_id: roleId })
-          .select();
-        
-        if (error && error.code !== '23505') { // Ignora erro de duplicata
-          throw error;
+        // Verificar se já existe antes de inserir (evita duplicatas)
+        const { data: existing } = await supabase
+          .from('course_access_control')
+          .select('id')
+          .eq('course_id', courseId)
+          .eq('role_id', roleId)
+          .maybeSingle();
+
+        if (!existing) {
+          const { error } = await supabase
+            .from('course_access_control')
+            .insert({ course_id: courseId, role_id: roleId });
+          
+          if (error) throw error;
+          console.log('✅ Acesso concedido para:', courseId, roleId);
+        } else {
+          console.log('ℹ️ Acesso já existia para:', courseId, roleId);
         }
       } else {
         // Remover acesso
         const { error } = await supabase
-          .from("course_access_control")
+          .from('course_access_control')
           .delete()
-          .eq("course_id", courseId)
-          .eq("role_id", roleId);
+          .eq('course_id', courseId)
+          .eq('role_id', roleId);
         
         if (error) throw error;
+        console.log('✅ Acesso removido para:', courseId, roleId);
       }
     } catch (error) {
-      console.error("Erro ao gerenciar acesso ao curso:", error);
+      console.error('Erro ao gerenciar acesso ao curso:', error);
       throw error;
-    } finally {
-      setLoading(false);
     }
-  };
+  }, []);
 
-  return { 
-    checkCourseAccess, 
-    getRolesByCourse, 
-    getCoursesByRole, 
-    manageCourseAccess, 
-    loading 
+  // Função memoizada para verificar acesso a curso
+  const checkCourseAccess = useCallback(async (courseId: string, userId: string): Promise<boolean> => {
+    try {
+      console.log('🔍 Verificando acesso ao curso:', { courseId, userId });
+      
+      const { data, error } = await supabase.rpc('can_access_course', {
+        user_id: userId,
+        course_id: courseId
+      });
+
+      if (error) {
+        console.error('❌ Erro ao verificar acesso:', error);
+        throw error;
+      }
+      
+      console.log('✅ Resultado da verificação:', data);
+      return data === true;
+    } catch (error) {
+      console.error('Erro ao verificar acesso ao curso:', error);
+      return false;
+    }
+  }, []);
+
+  return {
+    loading,
+    getCoursesByRole,
+    getRolesByCourse,
+    manageCourseAccess,
+    checkCourseAccess
   };
 };

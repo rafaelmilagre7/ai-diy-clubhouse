@@ -1,11 +1,11 @@
+
 import React from 'react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { StatusBadge } from '../ui/StatusBadge';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { UserVote } from '@/types/suggestionTypes';
+import SuggestionTitle from './SuggestionTitle';
+import SuggestionDescription from './SuggestionDescription';
 import SuggestionVoting from '../SuggestionVoting';
-import SuggestionComments from '../SuggestionComments';
-import { formatRelativeDate } from '@/utils/suggestionUtils';
+import CommentsSection from './CommentsSection';
 
 interface SuggestionContainerProps {
   suggestion: {
@@ -21,83 +21,69 @@ interface SuggestionContainerProps {
     user_id?: string;
     user_name?: string;
     user_avatar?: string;
-    user_vote_type?: 'upvote' | 'downvote' | null;
-    is_pinned?: boolean;
-    category_name?: string;
-    category_color?: string;
   };
+  comment: string;
+  comments: any[];
+  isSubmitting: boolean;
+  commentsLoading: boolean;
+  onCommentChange: (value: string) => void;
+  onSubmitComment: (e: React.FormEvent) => void;
   onVote: (voteType: 'upvote' | 'downvote') => Promise<void>;
+  isOwner?: boolean;
+  userVote?: UserVote | null;
   voteLoading?: boolean;
 }
 
-const SuggestionContainer: React.FC<SuggestionContainerProps> = ({
+const SuggestionContainer = ({
   suggestion,
+  comment,
+  comments,
+  isSubmitting,
+  commentsLoading,
+  onCommentChange,
+  onSubmitComment,
   onVote,
+  isOwner = false,
+  userVote,
   voteLoading = false
-}) => {
+}: SuggestionContainerProps) => {
+  const voteBalance = suggestion.upvotes - suggestion.downvotes;
+  const categoryName = suggestion.category?.name || '';
+
   return (
-    <div className="space-y-6">
-      {/* Cabeçalho da sugestão */}
-      <Card>
-        <CardHeader className="space-y-4">
-          <div className="flex items-start justify-between">
-            <div className="space-y-2">
-              <h1 className="text-2xl font-bold">{suggestion.title}</h1>
-              <StatusBadge status={suggestion.status} />
-            </div>
-            
-            {suggestion.is_pinned && (
-              <Badge variant="secondary">📌 Fixado</Badge>
-            )}
-          </div>
+    <Card>
+      <CardHeader>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <SuggestionTitle
+            title={suggestion.title}
+            category={{ name: categoryName }}
+            createdAt={suggestion.created_at}
+            isOwner={isOwner}
+          />
+        </div>
+      </CardHeader>
+      
+      <CardContent className="space-y-6">
+        <SuggestionDescription description={suggestion.description} />
 
-          <div className="flex items-center gap-3">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={suggestion.user_avatar} />
-              <AvatarFallback>
-                {suggestion.user_name?.charAt(0) || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="font-medium">{suggestion.user_name || 'Usuário'}</p>
-              <p className="text-sm text-muted-foreground">
-                {formatRelativeDate(suggestion.created_at)}
-              </p>
-            </div>
-          </div>
-        </CardHeader>
+        <SuggestionVoting
+          suggestion={suggestion}
+          userVote={userVote}
+          voteLoading={voteLoading}
+          onVote={onVote}
+          voteBalance={voteBalance}
+        />
 
-        <CardContent className="space-y-4">
-          <div className="prose max-w-none">
-            <p className="whitespace-pre-line text-foreground">
-              {suggestion.description}
-            </p>
-          </div>
-
-          {(suggestion.category?.name || suggestion.category_name) && (
-            <Badge 
-              variant="outline"
-              style={suggestion.category_color ? { 
-                borderColor: suggestion.category_color,
-                color: suggestion.category_color 
-              } : undefined}
-            >
-              {suggestion.category?.name || suggestion.category_name}
-            </Badge>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Sistema de votação */}
-      <SuggestionVoting
-        suggestion={suggestion}
-        voteLoading={voteLoading}
-        onVote={onVote}
-      />
-
-      {/* Comentários */}
-      <SuggestionComments suggestionId={suggestion.id} />
-    </div>
+        <CommentsSection
+          comment={comment}
+          comments={comments}
+          isSubmitting={isSubmitting}
+          commentsLoading={commentsLoading}
+          onCommentChange={onCommentChange}
+          onSubmitComment={onSubmitComment}
+        />
+      </CardContent>
+    </Card>
   );
 };
 

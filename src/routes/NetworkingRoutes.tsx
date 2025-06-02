@@ -2,10 +2,8 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { SmartFeatureGuard } from '@/components/auth/SmartFeatureGuard';
-
-// Lazy load networking pages
-const NetworkingPage = React.lazy(() => import('@/pages/member/networking/NetworkingPage'));
-const ConnectionsManager = React.lazy(() => import('@/components/networking/ConnectionsManager'));
+import NetworkingPage from '@/pages/member/networking/NetworkingPage';
+import { ConnectionsManager } from '@/components/networking/ConnectionsManager';
 
 export const NetworkingRoutes = () => {
   return (

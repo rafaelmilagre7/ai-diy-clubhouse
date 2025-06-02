@@ -2,53 +2,46 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
-import { useAuth } from '@/contexts/auth';
-import { toast } from 'sonner';
+import { UserVote } from '@/types/suggestionTypes';
 
 interface VoteControlsProps {
-  userVoteType?: 'upvote' | 'downvote' | null;
+  userVote?: UserVote | null;
   voteLoading?: boolean;
   onVote: (voteType: 'upvote' | 'downvote') => Promise<void>;
 }
 
-export const VoteControls: React.FC<VoteControlsProps> = ({
-  userVoteType,
-  voteLoading = false,
-  onVote
-}) => {
-  const { user } = useAuth();
-
-  const handleVote = async (voteType: 'upvote' | 'downvote') => {
-    if (!user) {
-      toast.error("Você precisa estar logado para votar.");
-      return;
-    }
-    await onVote(voteType);
-  };
-
+const VoteControls = ({ userVote, voteLoading = false, onVote }: VoteControlsProps) => {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex gap-2">
       <Button
-        variant={userVoteType === 'upvote' ? 'default' : 'outline'}
+        variant="outline"
         size="sm"
-        className="gap-2"
-        onClick={() => handleVote('upvote')}
+        className={`flex items-center gap-1 ${
+          userVote?.vote_type === 'upvote' ? 'bg-green-50 text-green-600 border-green-200 hover:bg-green-100' : ''
+        }`}
         disabled={voteLoading}
+        onClick={() => onVote('upvote')}
+        aria-label="Apoiar"
       >
-        <ThumbsUp className="h-4 w-4" />
-        Útil
+        <ThumbsUp size={16} />
+        <span>Apoiar</span>
       </Button>
-
+      
       <Button
-        variant={userVoteType === 'downvote' ? 'destructive' : 'outline'}
+        variant="outline"
         size="sm"
-        className="gap-2"
-        onClick={() => handleVote('downvote')}
+        className={`flex items-center gap-1 ${
+          userVote?.vote_type === 'downvote' ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100' : ''
+        }`}
         disabled={voteLoading}
+        onClick={() => onVote('downvote')}
+        aria-label="Não apoiar"
       >
-        <ThumbsDown className="h-4 w-4" />
-        Não útil
+        <ThumbsDown size={16} />
+        <span>Não apoiar</span>
       </Button>
     </div>
   );
 };
+
+export default VoteControls;

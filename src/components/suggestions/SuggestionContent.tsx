@@ -1,29 +1,60 @@
 
 import React from 'react';
 import SuggestionContainer from './content/SuggestionContainer';
+import { UserVote } from '@/types/suggestionTypes';
 
 interface SuggestionContentProps {
-  suggestion: any;
+  suggestion: {
+    id: string;
+    title: string;
+    description: string;
+    status: string;
+    created_at: string;
+    category?: { name: string };
+    category_id?: string;
+    upvotes: number;
+    downvotes: number;
+    user_id?: string;
+    user_name?: string;
+    user_avatar?: string;
+  };
+  comment: string;
+  comments: any[];
+  isSubmitting: boolean;
+  commentsLoading: boolean;
+  onCommentChange: (value: string) => void;
+  onSubmitComment: (e: React.FormEvent) => void;
   onVote: (voteType: 'upvote' | 'downvote') => Promise<void>;
+  isOwner?: boolean;
+  userVote?: UserVote | null;
   voteLoading?: boolean;
-  // Props legadas mantidas para compatibilidade mas não utilizadas
-  comment?: string;
-  comments?: any[];
-  isSubmitting?: boolean;
-  commentsLoading?: boolean;
-  onCommentChange?: (value: string) => void;
-  onSubmitComment?: (e: React.FormEvent) => void;
 }
 
-const SuggestionContent: React.FC<SuggestionContentProps> = ({
+const SuggestionContent = ({
   suggestion,
+  comment,
+  comments,
+  isSubmitting,
+  commentsLoading,
+  onCommentChange,
+  onSubmitComment,
   onVote,
+  isOwner = false,
+  userVote,
   voteLoading = false
-}) => {
+}: SuggestionContentProps) => {
   return (
     <SuggestionContainer
       suggestion={suggestion}
+      comment={comment}
+      comments={comments}
+      isSubmitting={isSubmitting}
+      commentsLoading={commentsLoading}
+      onCommentChange={onCommentChange}
+      onSubmitComment={onSubmitComment}
       onVote={onVote}
+      isOwner={isOwner}
+      userVote={userVote}
       voteLoading={voteLoading}
     />
   );

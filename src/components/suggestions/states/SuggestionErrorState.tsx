@@ -1,58 +1,47 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import SuggestionHeader from '../SuggestionHeader';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, ArrowLeft, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 
 interface SuggestionErrorStateProps {
-  errorMessage?: string;
   onRetry?: () => void;
+  errorMessage?: string;
 }
 
-const SuggestionErrorState = ({ 
-  errorMessage = "Não foi possível carregar a sugestão",
-  onRetry 
-}: SuggestionErrorStateProps) => {
+const SuggestionErrorState = ({ onRetry, errorMessage }: SuggestionErrorStateProps) => {
   const navigate = useNavigate();
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      {/* Breadcrumb */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => navigate('/suggestions')}
-        className="gap-2"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Voltar para Sugestões
-      </Button>
-
-      {/* Error Card */}
+    <div className="container py-6">
+      <SuggestionHeader />
       <Card>
-        <CardContent className="p-8">
-          <Alert variant="destructive" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Erro ao carregar sugestão</AlertTitle>
-            <AlertDescription className="mt-2">
-              {errorMessage}
-            </AlertDescription>
-          </Alert>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {onRetry && (
-              <Button onClick={onRetry} variant="outline" className="gap-2">
-                <RefreshCw className="h-4 w-4" />
-                Tentar novamente
-              </Button>
-            )}
-            <Button onClick={() => navigate('/suggestions')} className="gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Voltar para lista
+        <CardHeader>
+          <CardTitle>Sugestão não encontrada</CardTitle>
+          <CardDescription>
+            {errorMessage || "A sugestão que você está procurando não existe ou foi removida."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex gap-4">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/suggestions')}
+          >
+            Voltar para todas as sugestões
+          </Button>
+          
+          {onRetry && (
+            <Button 
+              variant="secondary" 
+              onClick={onRetry}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw size={16} />
+              Tentar novamente
             </Button>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>

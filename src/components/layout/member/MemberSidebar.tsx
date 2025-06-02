@@ -2,7 +2,7 @@
 import { cn } from "@/lib/utils";
 import { MemberUserMenu } from "./MemberUserMenu";
 import { SidebarLogo } from "./navigation/SidebarLogo";
-import { MemberSidebarNav } from "./navigation/MemberSidebarNav";
+import { MemberSidebarNav } from "./MemberSidebarNav";
 import { BaseSidebarProps } from "../BaseLayout";
 
 export const MemberSidebar = ({ 

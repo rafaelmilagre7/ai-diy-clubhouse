@@ -5021,30 +5021,24 @@ export type Database = {
       }
       suggestion_categories: {
         Row: {
-          color: string | null
           created_at: string
           description: string | null
           id: string
           name: string
-          slug: string | null
           updated_at: string
         }
         Insert: {
-          color?: string | null
           created_at?: string
           description?: string | null
           id?: string
           name: string
-          slug?: string | null
           updated_at?: string
         }
         Update: {
-          color?: string | null
           created_at?: string
           description?: string | null
           id?: string
           name?: string
-          slug?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -5300,20 +5294,6 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "suggestion_categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "suggestions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "suggestions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
             referencedColumns: ["id"]
           },
         ]
@@ -5854,20 +5834,6 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "suggestion_categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "suggestions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "suggestions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users_with_roles"
             referencedColumns: ["id"]
           },
         ]

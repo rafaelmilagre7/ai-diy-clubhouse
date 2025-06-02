@@ -1,2 +1,0 @@
-
-export { PaymentRequired } from './PaymentRequired';

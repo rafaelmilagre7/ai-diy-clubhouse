@@ -1,9 +1,9 @@
 
 import React from 'react';
-import EnhancedSuggestionsLayout from '@/components/suggestions/enhanced/EnhancedSuggestionsLayout';
+import SuggestionsLayout from '@/components/suggestions/layout/SuggestionsLayout';
 
 const SuggestionsPage = () => {
-  return <EnhancedSuggestionsLayout />;
+  return <SuggestionsLayout />;
 };
 
 export default SuggestionsPage;

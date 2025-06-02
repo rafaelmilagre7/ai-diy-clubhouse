@@ -1,21 +1,17 @@
 
-import React from 'react';
-import { GraduationCap } from 'lucide-react';
+import React from "react";
+import { GraduationCap } from "lucide-react";
 
 export const MemberLearningHeader = () => {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-      <div className="flex items-center gap-3">
-        <div className="p-2 rounded-full bg-viverblue/10">
-          <GraduationCap className="w-6 h-6 text-viverblue" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold mb-1">Aprendizado</h1>
-          <p className="text-muted-foreground">
-            Acelere seu conhecimento com nossos cursos práticos
-          </p>
-        </div>
+    <div className="flex flex-col space-y-3">
+      <div className="flex items-center space-x-2">
+        <GraduationCap className="h-6 w-6 text-primary" />
+        <h1 className="text-2xl font-bold tracking-tight">Cursos</h1>
       </div>
+      <p className="text-muted-foreground">
+        Explore nossos cursos e aprimore seus conhecimentos em implementação de IA
+      </p>
     </div>
   );
 };

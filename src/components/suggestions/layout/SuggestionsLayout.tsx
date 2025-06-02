@@ -4,7 +4,6 @@ import { useSuggestions } from '@/hooks/suggestions/useSuggestions';
 import { SuggestionFilter } from '@/types/suggestionTypes';
 import { SuggestionsHeader } from './SuggestionsHeader';
 import { SuggestionsContent } from './SuggestionsContent';
-import { SuggestionsPerformanceWrapper } from '../performance/SuggestionsPerformanceWrapper';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
@@ -21,99 +20,90 @@ const SuggestionsLayout = () => {
     searchQuery,
     setSearchQuery,
     refetch,
-    error,
-    isFetching,
-    stats
+    error
   } = useSuggestions();
 
-  const handleRetry = React.useCallback(() => {
-    toast.info("Recarregando sugestões...");
-    refetch();
+  // Tentativa automática de busca de dados quando o componente monta
+  React.useEffect(() => {
+    console.log("Componente SuggestionsLayout montado, buscando sugestões...");
+    refetch().catch(error => {
+      console.error("Erro ao buscar sugestões:", error);
+    });
   }, [refetch]);
 
-  const handleFilterChange = React.useCallback((value: SuggestionFilter) => {
-    setFilter(value);
-  }, [setFilter]);
+  const handleRetry = () => {
+    toast.info("Tentando buscar sugestões novamente...");
+    refetch();
+  };
 
-  const handleSearchChange = React.useCallback((value: string) => {
-    setSearchQuery(value);
-  }, [setSearchQuery]);
+  const handleFilterChange = (value: SuggestionFilter) => {
+    setFilter(value);
+  };
+
+  React.useEffect(() => {
+    console.log("Quantidade de sugestões carregadas:", suggestions?.length || 0);
+    if (suggestions && suggestions.length > 0) {
+      console.log("Primeira sugestão:", suggestions[0]);
+    }
+  }, [suggestions]);
 
   if (isLoading) {
     return (
-      <SuggestionsPerformanceWrapper>
-        <div className="container py-8 space-y-8">
-          <SuggestionsHeader 
-            searchQuery={searchQuery}
-            onSearchChange={handleSearchChange}
-            filter={filter}
-            onFilterChange={handleFilterChange}
-          />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i} className="animate-pulse hover-lift">
-                <div className="p-6 space-y-4">
-                  <Skeleton className="h-6 w-4/5 mb-3 shimmer" />
-                  <Skeleton className="h-4 w-2/5 shimmer" />
-                  <Skeleton className="h-20 w-full shimmer" />
-                  <div className="flex justify-between pt-3">
-                    <Skeleton className="h-4 w-16 shimmer" />
-                    <Skeleton className="h-4 w-12 shimmer" />
-                  </div>
+      <div className="container py-6 space-y-6">
+        <SuggestionsHeader 
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          filter={filter}
+          onFilterChange={handleFilterChange}
+        />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Card key={i} className="animate-pulse">
+              <div className="p-4 space-y-3">
+                <Skeleton className="h-6 w-4/5 mb-2" />
+                <Skeleton className="h-4 w-2/5" />
+                <Skeleton className="h-20 w-full" />
+                <div className="flex justify-between pt-2">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-12" />
                 </div>
-              </Card>
-            ))}
-          </div>
+              </div>
+            </Card>
+          ))}
         </div>
-      </SuggestionsPerformanceWrapper>
+      </div>
     );
   }
 
   return (
-    <SuggestionsPerformanceWrapper>
-      <div className="container py-8 space-y-8">
-        <SuggestionsHeader 
+    <div className="container py-6 space-y-6">
+      <SuggestionsHeader 
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        filter={filter}
+        onFilterChange={handleFilterChange}
+      />
+      
+      {error ? (
+        <Alert variant="destructive" className="mb-4 animate-fade-in">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erro ao carregar sugestões</AlertTitle>
+          <AlertDescription className="flex flex-col gap-2">
+            <p>Não foi possível carregar as sugestões. Por favor, tente novamente.</p>
+            <Button variant="outline" size="sm" onClick={handleRetry} className="gap-2 w-fit">
+              <RefreshCw size={14} />
+              Tentar novamente
+            </Button>
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <SuggestionsContent 
+          suggestions={suggestions} 
           searchQuery={searchQuery}
-          onSearchChange={handleSearchChange}
           filter={filter}
-          onFilterChange={handleFilterChange}
         />
-        
-        {error ? (
-          <Alert variant="destructive" className="mb-6 animate-fade-in">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Erro ao carregar sugestões</AlertTitle>
-            <AlertDescription className="flex flex-col gap-3">
-              <p>Não foi possível carregar as sugestões. Por favor, tente novamente.</p>
-              <Button variant="outline" size="sm" onClick={handleRetry} className="gap-2 w-fit">
-                <RefreshCw size={14} />
-                Tentar novamente
-              </Button>
-            </AlertDescription>
-          </Alert>
-        ) : (
-          <div className="animate-slide-up">
-            <SuggestionsContent 
-              suggestions={suggestions} 
-              searchQuery={searchQuery}
-              filter={filter}
-            />
-            
-            {/* Indicador de carregamento durante refetch */}
-            {isFetching && !isLoading && (
-              <div className="text-center py-6">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-muted rounded-full">
-                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                  <p className="text-sm text-muted-foreground">
-                    Atualizando sugestões...
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </SuggestionsPerformanceWrapper>
+      )}
+    </div>
   );
 };
 

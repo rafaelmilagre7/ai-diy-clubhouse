@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, Filter, ShieldAlert } from 'lucide-react';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { Solution } from '@/lib/supabase';
+import { useToolsData } from '@/hooks/useToolsData';
 import { useLogging } from '@/contexts/logging';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
@@ -24,6 +25,9 @@ const Solutions = () => {
   // Logger para depuração
   const { log } = useLogging();
   
+  // Garantir que as ferramentas estejam corretamente configuradas, mas ignorar erros
+  const { isLoading: toolsDataLoading } = useToolsData();
+  
   const { 
     filteredSolutions, 
     loading, 
@@ -37,7 +41,7 @@ const Solutions = () => {
   log("Solutions page loaded", { 
     solutionsCount: filteredSolutions?.length || 0, 
     activeCategory,
-    isLoading: loading,
+    isLoading: loading || toolsDataLoading,
     canViewSolutions
   });
 
@@ -77,6 +81,7 @@ const Solutions = () => {
   }
 
   // Se estiver carregando as soluções, mostrar tela de carregamento
+  // Mas não bloquear se apenas as ferramentas estiverem carregando
   if (loading) {
     return <LoadingScreen message="Carregando soluções..." />;
   }

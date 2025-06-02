@@ -1,2 +1,0 @@
-
-export { AccessPerformanceWrapper } from './AccessPerformanceWrapper';
