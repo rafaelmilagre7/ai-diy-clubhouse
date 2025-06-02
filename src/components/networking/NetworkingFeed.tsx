@@ -35,7 +35,6 @@ export const NetworkingFeed: React.FC<NetworkingFeedProps> = ({
         duration: 3000,
       });
       
-      console.log('🔄 Regenerando matches...');
       await generateMatches.mutateAsync({
         forceRegenerate: true
       });
@@ -47,7 +46,6 @@ export const NetworkingFeed: React.FC<NetworkingFeedProps> = ({
         toast.success('Matches regenerados com IA!');
       }, 1000);
     } catch (error) {
-      console.error('❌ Erro ao regenerar matches:', error);
       toast.error('Erro ao regenerar matches. Tente novamente.');
     }
   };
@@ -82,7 +80,6 @@ export const NetworkingFeed: React.FC<NetworkingFeedProps> = ({
   }
 
   if (error) {
-    console.error('❌ Erro no componente NetworkingFeed:', error);
     return (
       <Card className="p-8 text-center">
         <div className="text-red-500 mb-4">

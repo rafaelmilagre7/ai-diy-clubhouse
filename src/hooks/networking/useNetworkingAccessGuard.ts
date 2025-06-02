@@ -12,13 +12,6 @@ export const useNetworkingAccessGuard = () => {
   // Determinar se tem acesso (TODOS precisam completar onboarding)
   const hasAccess = isOnboardingComplete;
 
-  console.log('🔍 useNetworkingAccessGuard:', {
-    isOnboardingComplete,
-    hasAccess,
-    userRole: profile?.role,
-    isLoading
-  });
-
   return {
     hasAccess,
     isAdmin: profile?.role === 'admin',

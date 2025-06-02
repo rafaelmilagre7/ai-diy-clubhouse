@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 
@@ -46,8 +47,6 @@ export function useNetworkMatches(matchType?: 'customer' | 'supplier') {
         throw new Error('Usuário não autenticado');
       }
 
-      console.log('🔍 Buscando matches para usuário:', user.id);
-
       // Verificar se o onboarding está completo (SEM exceção para admin)
       const { data: onboardingData } = await supabase
         .from('onboarding_final')
@@ -65,10 +64,7 @@ export function useNetworkMatches(matchType?: 'customer' | 'supplier') {
           .maybeSingle();
 
         if (!quickOnboardingData?.is_completed) {
-          console.log('🚫 Networking bloqueado: onboarding incompleto');
-          
           // LIMPAR matches existentes se onboarding incompleto
-          console.log('🧹 Limpando matches existentes...');
           await supabase
             .from('network_matches')
             .delete()
@@ -93,11 +89,8 @@ export function useNetworkMatches(matchType?: 'customer' | 'supplier') {
       const { data: matches, error: matchesError } = await query;
 
       if (matchesError) {
-        console.error('❌ Erro ao buscar matches:', matchesError);
         throw matchesError;
       }
-
-      console.log(`✅ Matches encontrados: ${matches?.length || 0}`, matches);
 
       // Se não há matches, retornar array vazio
       if (!matches || matches.length === 0) {
@@ -113,11 +106,8 @@ export function useNetworkMatches(matchType?: 'customer' | 'supplier') {
         .in('id', matchedUserIds);
 
       if (profilesError) {
-        console.error('❌ Erro ao buscar perfis:', profilesError);
         throw profilesError;
       }
-
-      console.log('✅ Perfis encontrados:', profiles?.length || 0, profiles);
 
       // Combinar matches com dados dos usuários
       const transformedData = matches.map(match => {
@@ -145,7 +135,6 @@ export function useNetworkMatches(matchType?: 'customer' | 'supplier') {
         };
       });
 
-      console.log('✅ Dados transformados:', transformedData);
       return transformedData as NetworkMatch[];
     },
     staleTime: 5 * 60 * 1000, // 5 minutos

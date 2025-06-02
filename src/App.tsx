@@ -7,8 +7,7 @@ import { AuthProvider } from "@/contexts/auth";
 import { AppRoutes } from "@/routes";
 import "./App.css";
 
-// Importar a limpeza global (executa automaticamente)
-import '@/utils/executeGlobalCleanup';
+// Removido a importação automática da limpeza global que causava problemas
 
 const queryClient = new QueryClient({
   defaultOptions: {

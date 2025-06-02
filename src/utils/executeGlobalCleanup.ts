@@ -2,8 +2,8 @@
 import { clearAllNetworkingData } from './adminNetworkingReset';
 
 /**
- * Executa a limpeza global do networking imediatamente
- * Para garantir que a plataforma esteja 100% limpa
+ * Executa a limpeza global do networking sob demanda
+ * IMPORTANTE: Esta função não executa mais automaticamente
  */
 export async function executeGlobalNetworkingCleanup() {
   console.log('🚀 Executando limpeza global do networking...');
@@ -16,16 +16,6 @@ export async function executeGlobalNetworkingCleanup() {
       console.log('📊 Dados removidos:', result.clearedData);
       console.log('💾 Backup criado em:', result.backup_timestamp);
       console.log('🎯 Plataforma 100% preparada e limpa!');
-      
-      // Exibir resumo final
-      console.log('\n🔥 RESUMO DA LIMPEZA:');
-      console.log('▫️ Todos os matches de networking removidos');
-      console.log('▫️ Todas as conexões entre usuários removidas');
-      console.log('▫️ Todas as preferências de networking removidas');
-      console.log('▫️ Todas as notificações de conexão removidas');
-      console.log('▫️ Sistema bloqueado até onboarding completo');
-      console.log('▫️ Geração futura apenas para usuários qualificados');
-      
     } else {
       console.error('❌ Falha na limpeza global:', result.message);
     }
@@ -42,10 +32,9 @@ export async function executeGlobalNetworkingCleanup() {
   }
 }
 
-// Executar automaticamente quando o módulo for carregado
+// REMOVIDO: Execução automática que causava problemas
+// Função disponível apenas para uso administrativo manual
 if (typeof window !== 'undefined') {
-  // Aguardar um pouco para garantir que tudo esteja carregado
-  setTimeout(() => {
-    executeGlobalNetworkingCleanup();
-  }, 2000);
+  (window as any).executeGlobalNetworkingCleanup = executeGlobalNetworkingCleanup;
+  console.log('🔧 Função disponível no console: window.executeGlobalNetworkingCleanup()');
 }
