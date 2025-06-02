@@ -57,19 +57,19 @@ export const CommentItem = ({ comment, onReply, onLike, onDelete }: CommentItemP
 
   return (
     <Card className="bg-[#151823] border-white/10 shadow-sm hover:shadow-md hover:border-white/20 transition-all duration-300">
-      <div className="p-4 space-y-4">
-        <div className="flex gap-4">
-          <Avatar className="h-10 w-10 ring-2 ring-viverblue/10">
+      <div className="p-4 space-y-3">
+        <div className="flex gap-3 items-start">
+          <Avatar className="h-10 w-10 ring-2 ring-viverblue/10 flex-shrink-0">
             <AvatarImage src={profileAvatarUrl} alt={profileName} />
             <AvatarFallback className="bg-viverblue/5 text-viverblue">
               {getInitials(profileName)}
             </AvatarFallback>
           </Avatar>
           
-          <div className="flex-1 space-y-2">
+          <div className="flex-1 min-w-0 space-y-2">
             <div className="flex justify-between items-start">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
+              <div className="space-y-1 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-semibold text-textPrimary">{profileName}</span>
                   {profileRole === 'admin' && (
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-viverblue/10 text-viverblue">
@@ -86,14 +86,14 @@ export const CommentItem = ({ comment, onReply, onLike, onDelete }: CommentItemP
                   variant="ghost" 
                   size="sm" 
                   onClick={() => onDelete(comment)}
-                  className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                  className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-900/20 flex-shrink-0"
                 >
                   <Trash className="h-4 w-4" />
                 </Button>
               )}
             </div>
             
-            <div className="text-textPrimary leading-relaxed">
+            <div className="text-textPrimary leading-relaxed text-left break-words whitespace-pre-wrap">
               {comment.content}
             </div>
             
@@ -122,7 +122,7 @@ export const CommentItem = ({ comment, onReply, onLike, onDelete }: CommentItemP
             </div>
             
             {comment.replies && comment.replies.length > 0 && (
-              <div className="space-y-4 mt-4 pl-6 border-l-2 border-viverblue/10">
+              <div className="space-y-3 mt-4 pl-4 border-l-2 border-viverblue/10">
                 {comment.replies.map(reply => {
                   // Log para diagnóstico de respostas
                   log('Dados de resposta:', { 
