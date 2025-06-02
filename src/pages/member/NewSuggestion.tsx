@@ -1,41 +1,45 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useNavigate, Link } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useForm } from 'react-hook-form';
-import { ArrowLeft, Send } from 'lucide-react';
-import { useSuggestionCreation } from '@/hooks/suggestions/useSuggestionCreation';
 import { useCategories } from '@/hooks/suggestions/useCategories';
+import { useSuggestionCreation } from '@/hooks/suggestions/useSuggestionCreation';
 import { toast } from 'sonner';
 
-interface SuggestionFormData {
-  title: string;
-  description: string;
-  category_id: string;
-}
+const suggestionSchema = yup.object({
+  title: yup.string().required('Título é obrigatório').min(10, 'Título deve ter pelo menos 10 caracteres'),
+  description: yup.string().required('Descrição é obrigatória').min(20, 'Descrição deve ter pelo menos 20 caracteres'),
+  category_id: yup.string().required('Categoria é obrigatória')
+});
+
+type SuggestionFormData = yup.InferType<typeof suggestionSchema>;
 
 const NewSuggestion = () => {
   const navigate = useNavigate();
-  const { submitSuggestion, isSubmitting } = useSuggestionCreation();
   const { categories, isLoading: categoriesLoading } = useCategories();
+  const { isSubmitting, submitSuggestion } = useSuggestionCreation();
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors }
-  } = useForm<SuggestionFormData>();
+  const form = useForm<SuggestionFormData>({
+    resolver: yupResolver(suggestionSchema),
+    defaultValues: {
+      title: '',
+      description: '',
+      category_id: ''
+    }
+  });
 
-  const selectedCategory = watch('category_id');
-
-  const onSubmit = async (data: SuggestionFormData) => {
+  const onSubmit = async (values: SuggestionFormData) => {
     try {
-      await submitSuggestion(data);
+      await submitSuggestion(values);
       toast.success('Sugestão criada com sucesso!');
       navigate('/suggestions');
     } catch (error: any) {
@@ -44,132 +48,104 @@ const NewSuggestion = () => {
   };
 
   return (
-    <div className="container py-8 max-w-4xl">
+    <div className="container py-8 max-w-2xl">
       <div className="mb-6">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate('/suggestions')}
-          className="gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Voltar para Sugestões
+        <Button variant="ghost" asChild>
+          <Link to="/suggestions" className="gap-2">
+            <ChevronLeft className="h-4 w-4" />
+            Voltar para sugestões
+          </Link>
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Nova Sugestão</CardTitle>
+          <CardTitle>Nova Sugestão</CardTitle>
           <p className="text-muted-foreground">
-            Compartilhe suas ideias para melhorar a plataforma
+            Compartilhe sua ideia para melhorar nossa plataforma
           </p>
         </CardHeader>
-        
+
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div className="space-y-2">
-              <label htmlFor="title" className="text-sm font-medium">
-                Título da Sugestão *
-              </label>
-              <Input
-                id="title"
-                placeholder="Ex: Adicionar filtro avançado na lista de soluções"
-                {...register('title', { 
-                  required: 'O título é obrigatório',
-                  minLength: { value: 10, message: 'Título deve ter pelo menos 10 caracteres' }
-                })}
-                className={errors.title ? 'border-red-500' : ''}
-              />
-              {errors.title && (
-                <p className="text-sm text-red-500">{errors.title.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="category" className="text-sm font-medium">
-                Categoria *
-              </label>
-              <Select 
-                value={selectedCategory} 
-                onValueChange={(value) => setValue('category_id', value)}
-                disabled={categoriesLoading}
-              >
-                <SelectTrigger className={errors.category_id ? 'border-red-500' : ''}>
-                  <SelectValue placeholder="Selecione uma categoria" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.category_id && (
-                <p className="text-sm text-red-500">Selecione uma categoria</p>
-              )}
-              <input
-                type="hidden"
-                {...register('category_id', { required: 'Selecione uma categoria' })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="description" className="text-sm font-medium">
-                Descrição Detalhada *
-              </label>
-              <Textarea
-                id="description"
-                placeholder="Descreva sua sugestão em detalhes. Explique o problema que resolve, como funcionaria e os benefícios..."
-                rows={6}
-                {...register('description', { 
-                  required: 'A descrição é obrigatória',
-                  minLength: { value: 50, message: 'Descrição deve ter pelo menos 50 caracteres' }
-                })}
-                className={errors.description ? 'border-red-500' : ''}
-              />
-              {errors.description && (
-                <p className="text-sm text-red-500">{errors.description.message}</p>
-              )}
-            </div>
-
-            <div className="bg-muted/50 p-4 rounded-lg">
-              <h3 className="font-medium mb-2">Dicas para uma boa sugestão:</h3>
-              <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• Seja específico sobre o problema que sua sugestão resolve</li>
-                <li>• Explique como a funcionalidade deveria funcionar</li>
-                <li>• Mencione os benefícios para outros usuários</li>
-                <li>• Use linguagem clara e objetiva</li>
-              </ul>
-            </div>
-
-            <div className="flex gap-3 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate('/suggestions')}
-                disabled={isSubmitting}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="gap-2"
-              >
-                {isSubmitting ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Enviando...
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4" />
-                    Enviar Sugestão
-                  </>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Título</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Descreva sua sugestão em poucas palavras"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
-              </Button>
-            </div>
-          </form>
+              />
+
+              <FormField
+                control={form.control}
+                name="category_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Categoria</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione uma categoria" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {categoriesLoading ? (
+                          <SelectItem value="loading" disabled>
+                            Carregando categorias...
+                          </SelectItem>
+                        ) : (
+                          categories.map((category) => (
+                            <SelectItem key={category.id} value={category.id}>
+                              {category.name}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Descrição</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Detalhe sua sugestão. Explique o problema que ela resolve e como funcionaria..."
+                        rows={6}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex gap-3 pt-4">
+                <Button type="submit" disabled={isSubmitting} className="flex-1">
+                  {isSubmitting ? 'Criando...' : 'Criar Sugestão'}
+                </Button>
+                
+                <Button type="button" variant="outline" asChild>
+                  <Link to="/suggestions">Cancelar</Link>
+                </Button>
+              </div>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>

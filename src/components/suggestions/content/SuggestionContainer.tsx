@@ -1,12 +1,12 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { StatusBadge } from '../ui/StatusBadge';
-import SuggestionVoting from '../SuggestionVoting';
-import CommentsSection from './CommentsSection';
+import { SuggestionVoting } from '../SuggestionVoting';
+import { SuggestionComments } from '../SuggestionComments';
 import { formatRelativeDate } from '@/utils/suggestionUtils';
-import { Calendar, User, Eye } from 'lucide-react';
 
 interface SuggestionContainerProps {
   suggestion: {
@@ -15,8 +15,11 @@ interface SuggestionContainerProps {
     description: string;
     status: string;
     created_at: string;
+    category?: { name: string };
+    category_id?: string;
     upvotes: number;
     downvotes: number;
+    user_id?: string;
     user_name?: string;
     user_avatar?: string;
     user_vote_type?: 'upvote' | 'downvote' | null;
@@ -32,88 +35,65 @@ interface SuggestionContainerProps {
   voteLoading?: boolean;
 }
 
-const SuggestionContainer = ({
+const SuggestionContainer: React.FC<SuggestionContainerProps> = ({
   suggestion,
-  comment,
-  comments,
-  isSubmitting,
-  commentsLoading,
-  onCommentChange,
-  onSubmitComment,
   onVote,
-  isOwner = false,
   voteLoading = false
-}: SuggestionContainerProps) => {
-  const authorInitials = suggestion.user_name
-    ? suggestion.user_name.split(' ').map(n => n[0]).join('').toUpperCase()
-    : 'U';
-
+}) => {
   return (
     <div className="space-y-6">
-      {/* Main Content Card */}
-      <Card className="overflow-hidden">
-        <CardHeader className="pb-4">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3">
-                <StatusBadge status={suggestion.status} />
-                {isOwner && (
-                  <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full">
-                    Sua sugestão
-                  </span>
-                )}
-              </div>
-              <h1 className="text-2xl font-bold leading-tight mb-4">
-                {suggestion.title}
-              </h1>
+      {/* Cabeçalho da sugestão */}
+      <Card>
+        <CardHeader className="space-y-4">
+          <div className="flex items-start justify-between">
+            <div className="space-y-2">
+              <h1 className="text-2xl font-bold">{suggestion.title}</h1>
+              <StatusBadge status={suggestion.status} />
             </div>
+            
+            {suggestion.is_pinned && (
+              <Badge variant="secondary">Fixado</Badge>
+            )}
           </div>
 
-          {/* Author Info */}
-          <div className="flex items-center gap-3 pt-3 border-t">
-            <Avatar className="h-10 w-10 ring-2 ring-background">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-8 w-8">
               <AvatarImage src={suggestion.user_avatar} />
-              <AvatarFallback className="text-sm font-medium">{authorInitials}</AvatarFallback>
+              <AvatarFallback>
+                {suggestion.user_name?.charAt(0) || 'U'}
+              </AvatarFallback>
             </Avatar>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 text-sm">
-                <User className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium">{suggestion.user_name || 'Usuário'}</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Calendar className="h-3 w-3" />
-                <span>{formatRelativeDate(suggestion.created_at)}</span>
-              </div>
+            <div>
+              <p className="font-medium">{suggestion.user_name || 'Usuário'}</p>
+              <p className="text-sm text-muted-foreground">
+                {formatRelativeDate(suggestion.created_at)}
+              </p>
             </div>
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-6">
-          {/* Description */}
-          <div className="prose prose-sm max-w-none">
-            <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
-              {suggestion.description}
-            </p>
+        <CardContent className="space-y-4">
+          <div className="prose max-w-none">
+            <p className="whitespace-pre-line">{suggestion.description}</p>
           </div>
 
-          {/* Voting Section */}
-          <SuggestionVoting
-            suggestion={suggestion}
-            voteLoading={voteLoading}
-            onVote={onVote}
-          />
+          {suggestion.category_name && (
+            <Badge variant="outline">
+              {suggestion.category_name}
+            </Badge>
+          )}
         </CardContent>
       </Card>
 
-      {/* Comments Section */}
-      <CommentsSection
-        comment={comment}
-        comments={comments}
-        isSubmitting={isSubmitting}
-        commentsLoading={commentsLoading}
-        onCommentChange={onCommentChange}
-        onSubmitComment={onSubmitComment}
+      {/* Sistema de votação */}
+      <SuggestionVoting
+        suggestion={suggestion}
+        voteLoading={voteLoading}
+        onVote={onVote}
       />
+
+      {/* Comentários */}
+      <SuggestionComments suggestionId={suggestion.id} />
     </div>
   );
 };
