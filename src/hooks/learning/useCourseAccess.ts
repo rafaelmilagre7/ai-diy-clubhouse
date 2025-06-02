@@ -64,18 +64,27 @@ export const useCourseAccess = () => {
         .from("course_access_control")
         .select(`
           role_id,
-          user_roles!inner(id, name, description)
+          user_roles(id, name, description)
         `)
         .eq("course_id", courseId);
 
       if (error) throw error;
 
-      // Retornar array simples de roles, não array de arrays
-      return data?.map(item => ({
-        id: item.user_roles.id,
-        name: item.user_roles.name,
-        description: item.user_roles.description
-      })).filter(Boolean) || [];
+      console.log("Dados recebidos de getRolesByCourse:", data);
+
+      // Verificar estrutura dos dados e processar corretamente
+      return data?.map(item => {
+        // Verificar se user_roles é um objeto ou array
+        const roleData = item.user_roles;
+        if (roleData && typeof roleData === 'object' && !Array.isArray(roleData)) {
+          return {
+            id: roleData.id,
+            name: roleData.name,
+            description: roleData.description
+          };
+        }
+        return null;
+      }).filter(Boolean) || [];
     } catch (error) {
       console.error("Erro ao buscar roles do curso:", error);
       return [];
@@ -91,18 +100,27 @@ export const useCourseAccess = () => {
         .from("course_access_control")
         .select(`
           course_id,
-          learning_courses!inner(id, title, description)
+          learning_courses(id, title, description)
         `)
         .eq("role_id", roleId);
 
       if (error) throw error;
 
-      // Retornar array simples de cursos, não array de arrays
-      return data?.map(item => ({
-        id: item.learning_courses.id,
-        title: item.learning_courses.title,
-        description: item.learning_courses.description
-      })).filter(Boolean) || [];
+      console.log("Dados recebidos de getCoursesByRole:", data);
+
+      // Verificar estrutura dos dados e processar corretamente
+      return data?.map(item => {
+        // Verificar se learning_courses é um objeto ou array
+        const courseData = item.learning_courses;
+        if (courseData && typeof courseData === 'object' && !Array.isArray(courseData)) {
+          return {
+            id: courseData.id,
+            title: courseData.title,
+            description: courseData.description
+          };
+        }
+        return null;
+      }).filter(Boolean) || [];
     } catch (error) {
       console.error("Erro ao buscar cursos do role:", error);
       return [];
