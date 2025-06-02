@@ -55,7 +55,7 @@ export const useSuggestions = () => {
       console.log('Sugestões carregadas:', data?.length);
       return data as Suggestion[];
     },
-    staleTime: 1000 * 60 * 5, // 5 minutos
+    staleTime: 1000 * 60 * 2, // 2 minutos
   });
 
   return {

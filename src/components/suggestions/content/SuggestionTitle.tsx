@@ -1,43 +1,51 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Calendar } from 'lucide-react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { CardTitle, CardDescription } from '@/components/ui/card';
+import { getStatusLabel, getStatusColor, formatRelativeDate } from '@/utils/suggestionUtils';
 
 interface SuggestionTitleProps {
   title: string;
   category?: { name: string };
   createdAt: string;
   isOwner?: boolean;
+  status?: string;
 }
 
 const SuggestionTitle = ({ 
   title, 
   category, 
   createdAt, 
-  isOwner 
+  isOwner = false,
+  status = 'new'
 }: SuggestionTitleProps) => {
-  const formattedDate = format(new Date(createdAt), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
-
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-      <div>
-        <CardTitle className="text-2xl">{title}</CardTitle>
-        <CardDescription>
-          {category?.name && (
-            <Badge variant="outline" className="mr-2">{category.name}</Badge>
-          )}
-          <span className="flex items-center gap-1 text-sm text-muted-foreground">
-            <Calendar size={14} />
-            {formattedDate}
-          </span>
-          {isOwner && (
-            <Badge variant="secondary" className="ml-2">Sua sugestão</Badge>
-          )}
-        </CardDescription>
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        {category?.name && (
+          <Badge variant="secondary" className="text-xs">
+            {category.name}
+          </Badge>
+        )}
+        <Badge 
+          variant="secondary" 
+          className={`text-xs ${getStatusColor(status)}`}
+        >
+          {getStatusLabel(status)}
+        </Badge>
+        {isOwner && (
+          <Badge variant="outline" className="text-xs border-viverblue text-viverblue">
+            Sua sugestão
+          </Badge>
+        )}
       </div>
+      
+      <h1 className="text-2xl font-bold text-textPrimary leading-tight">
+        {title}
+      </h1>
+      
+      <p className="text-sm text-textSecondary">
+        Criada {formatRelativeDate(createdAt)}
+      </p>
     </div>
   );
 };

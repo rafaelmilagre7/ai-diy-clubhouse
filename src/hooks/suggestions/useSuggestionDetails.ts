@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { Suggestion, VoteType } from '@/types/suggestionTypes';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const useSuggestionDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -13,6 +14,7 @@ export const useSuggestionDetails = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [voteLoading, setVoteLoading] = useState(false);
+  const queryClient = useQueryClient();
 
   const fetchSuggestion = async () => {
     if (!id) return;
@@ -110,6 +112,10 @@ export const useSuggestionDetails = () => {
         
         toast.success(`Você ${voteType === 'upvote' ? 'apoiou' : 'não apoiou'} esta sugestão`);
       }
+      
+      // Invalidar cache para manter consistência
+      queryClient.invalidateQueries({ queryKey: ['suggestions'] });
+      
     } catch (err: any) {
       console.error('Erro ao votar:', err);
       toast.error('Erro ao registrar seu voto');

@@ -7,6 +7,7 @@ import { useCommentForm } from '@/hooks/suggestions/useCommentForm';
 import SuggestionContent from '@/components/suggestions/SuggestionContent';
 import SuggestionLoadingState from '@/components/suggestions/states/SuggestionLoadingState';
 import SuggestionErrorState from '@/components/suggestions/states/SuggestionErrorState';
+import SuggestionHeader from '@/components/suggestions/SuggestionHeader';
 import { useAuth } from '@/contexts/auth';
 
 const SuggestionDetails = () => {
@@ -24,7 +25,8 @@ const SuggestionDetails = () => {
 
   const {
     comments,
-    isLoading: commentsLoading
+    isLoading: commentsLoading,
+    refetch: refetchComments
   } = useCommentsData('suggestion', id);
 
   const {
@@ -46,6 +48,7 @@ const SuggestionDetails = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
+      <SuggestionHeader />
       <SuggestionContent
         suggestion={suggestion}
         comment={comment}

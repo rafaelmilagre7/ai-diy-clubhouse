@@ -3,11 +3,13 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const useCommentForm = (type: string, id?: string) => {
   const { user } = useAuth();
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const queryClient = useQueryClient();
 
   const handleCommentChange = (value: string) => {
     setComment(value);
@@ -36,6 +38,14 @@ export const useCommentForm = (type: string, id?: string) => {
       
       setComment('');
       toast.success('Comentário enviado com sucesso');
+      
+      // Recarregar comentários
+      queryClient.invalidateQueries({ queryKey: ['comments', type, id] });
+      
+      // Também invalidar dados da sugestão para atualizar contadores
+      queryClient.invalidateQueries({ queryKey: ['suggestions'] });
+      queryClient.invalidateQueries({ queryKey: ['suggestion', id] });
+      
     } catch (err: any) {
       console.error('Erro ao enviar comentário:', err);
       toast.error('Erro ao enviar comentário');

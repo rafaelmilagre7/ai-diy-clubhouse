@@ -1,47 +1,41 @@
 
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import SuggestionHeader from '../SuggestionHeader';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
-import { RefreshCw } from 'lucide-react';
+import { AlertCircle, RefreshCw } from 'lucide-react';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 interface SuggestionErrorStateProps {
-  onRetry?: () => void;
   errorMessage?: string;
+  onRetry?: () => void;
 }
 
-const SuggestionErrorState = ({ onRetry, errorMessage }: SuggestionErrorStateProps) => {
-  const navigate = useNavigate();
-
+const SuggestionErrorState = ({ errorMessage, onRetry }: SuggestionErrorStateProps) => {
   return (
-    <div className="container py-6">
-      <SuggestionHeader />
+    <div className="max-w-4xl mx-auto p-6">
       <Card>
-        <CardHeader>
-          <CardTitle>Sugestão não encontrada</CardTitle>
-          <CardDescription>
-            {errorMessage || "A sugestão que você está procurando não existe ou foi removida."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex gap-4">
-          <Button 
-            variant="outline" 
-            onClick={() => navigate('/suggestions')}
-          >
-            Voltar para todas as sugestões
-          </Button>
-          
-          {onRetry && (
-            <Button 
-              variant="secondary" 
-              onClick={onRetry}
-              className="flex items-center gap-2"
-            >
-              <RefreshCw size={16} />
-              Tentar novamente
-            </Button>
-          )}
+        <CardContent className="p-8">
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Erro ao carregar sugestão</AlertTitle>
+            <AlertDescription className="mt-2">
+              {errorMessage || 'Não foi possível carregar os detalhes da sugestão.'}
+              
+              {onRetry && (
+                <div className="mt-4">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={onRetry}
+                    className="gap-2"
+                  >
+                    <RefreshCw size={14} />
+                    Tentar novamente
+                  </Button>
+                </div>
+              )}
+            </AlertDescription>
+          </Alert>
         </CardContent>
       </Card>
     </div>
