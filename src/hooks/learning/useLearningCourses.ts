@@ -1,7 +1,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { LearningCourse, LearningLesson, LearningModule } from "@/lib/supabase/types";
+import { LearningLesson, LearningModule } from "@/lib/supabase/types";
+import { LearningCourseWithLessons } from "@/lib/supabase/types/learning";
 import { useAuth } from "@/contexts/auth";
 
 export const useLearningCourses = () => {
@@ -13,7 +14,7 @@ export const useLearningCourses = () => {
     error
   } = useQuery({
     queryKey: ["learning-courses", user?.id],
-    queryFn: async () => {
+    queryFn: async (): Promise<LearningCourseWithLessons[]> => {
       // Buscar todos os cursos publicados com módulos e aulas
       const { data, error } = await supabase
         .from("learning_courses")
@@ -57,13 +58,13 @@ export const useLearningCourses = () => {
       const restrictedIds = new Set(restrictedCourses?.map(rc => rc.course_id) || []);
       
       // Processar cursos com dados de módulos e aulas
-      const processedCourses = data.map(course => {
+      const processedCourses: LearningCourseWithLessons[] = data.map(course => {
         // Calcular contagem de módulos
         const moduleCount = course.modules?.length || 0;
         
         // Calcular contagem total de aulas em todos os módulos
         let lessonCount = 0;
-        let lessons = [];
+        let lessons: LearningLesson[] = [];
         
         if (course.modules) {
           course.modules.forEach(module => {

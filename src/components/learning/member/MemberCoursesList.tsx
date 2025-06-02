@@ -2,17 +2,18 @@
 import React from "react";
 import { CourseCard } from "./CourseCard";
 import { CoursesSkeleton } from "./CoursesSkeleton";
-import { EmptyCoursesState } from "./states/EmptyCoursesState";
-import { LearningCourse, LearningProgress } from "@/lib/supabase";
+import { EmptyCoursesState } from "./EmptyCoursesState";
+import { LearningProgress } from "@/lib/supabase";
+import { LearningCourseWithLessons } from "@/lib/supabase/types/learning";
 
 interface MemberCoursesListProps {
-  courses: LearningCourse[];
+  courses: LearningCourseWithLessons[];
   userProgress: LearningProgress[];
   isLoading?: boolean;
 }
 
 // Função para calcular o progresso do curso
-const calculateCourseProgress = (course: LearningCourse, userProgress: LearningProgress[]): number => {
+const calculateCourseProgress = (course: LearningCourseWithLessons, userProgress: LearningProgress[]): number => {
   // Se o curso não tem aulas, consideramos 0%
   if (!course.all_lessons || course.all_lessons.length === 0) {
     return 0;
@@ -40,7 +41,7 @@ export const MemberCoursesList: React.FC<MemberCoursesListProps> = ({
   }
 
   if (!courses || courses.length === 0) {
-    return <EmptyCoursesState />;
+    return <EmptyCoursesState activeTab="all" />;
   }
 
   return (
