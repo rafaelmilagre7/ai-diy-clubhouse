@@ -2,7 +2,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { authRoutes } from '../../routes/AuthRoutes';
 import { adminRoutes } from '../../routes/AdminRoutes';
-import { memberRoutes } from '../../routes/MemberRoutes';
+import { MemberRoutes } from '../../routes/MemberRoutes';
 import { OnboardingRoutes } from '../../routes/OnboardingRoutes';
 import { formacaoRoutes } from '../../routes/FormacaoRoutes';
 import { CommunityRedirects } from './CommunityRedirects';
@@ -29,11 +29,7 @@ const AppRoutes = () => {
         ))}
         
         {/* Member Routes */}
-        {memberRoutes.map((route) => (
-          <Route key={route.path} path={route.path} element={route.element} />
-        ))}
-        <Route path="/suggestions" element={<Suggestions />} />
-        <Route path="/suggestions/:id" element={<SuggestionDetails />} />
+        <Route path="/*" element={<MemberRoutes />} />
         
         {/* Admin Routes */}
         {adminRoutes.map((route) => (
