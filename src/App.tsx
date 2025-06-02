@@ -1,35 +1,76 @@
 
-import { BrowserRouter } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { Toaster } from "@/components/ui/sonner";
-import { AuthProvider } from "@/contexts/auth";
-import { AppRoutes } from "@/routes";
-import "./App.css";
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { Toaster } from '@/components/ui/toaster';
+import { AuthProvider } from '@/contexts/auth';
+import { LoggingProvider } from '@/contexts/logging';
+import { PerformanceProvider } from '@/contexts/performance';
+import AppRoutes from '@/components/routing/AppRoutes';
+import { useServiceWorker } from '@/hooks/common/useServiceWorker';
+import { useBundleAnalyzer } from '@/utils/bundleAnalyzer';
+import ErrorBoundary from '@/components/common/ErrorBoundary';
+import './App.css';
 
-// Removido a importação automática da limpeza global que causava problemas
-
+// Configuração otimizada do React Query
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 5 * 60 * 1000, // 5 minutos
+      gcTime: 10 * 60 * 1000, // 10 minutos (novo nome para cacheTime)
+      retry: (failureCount, error: any) => {
+        // Não tentar novamente para erros 4xx
+        if (error?.status >= 400 && error?.status < 500) {
+          return false;
+        }
+        return failureCount < 2;
+      },
+      refetchOnWindowFocus: false,
+      refetchOnMount: true,
+    },
+    mutations: {
       retry: 1,
     },
   },
 });
 
+// Componente interno que usa os hooks
+const AppContent: React.FC = () => {
+  useServiceWorker();
+  const { analyzePerformance } = useBundleAnalyzer();
+
+  useEffect(() => {
+    // Analisar performance após carregamento
+    const timer = setTimeout(() => {
+      if (import.meta.env.DEV) {
+        analyzePerformance();
+      }
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [analyzePerformance]);
+
+  return <AppRoutes />;
+};
+
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <TooltipProvider>
-            <AppRoutes />
-            <Toaster />
-          </TooltipProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <PerformanceProvider>
+        <LoggingProvider>
+          <QueryClientProvider client={queryClient}>
+            <AuthProvider>
+              <Router>
+                <AppContent />
+                <Toaster />
+                {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+              </Router>
+            </AuthProvider>
+          </QueryClientProvider>
+        </LoggingProvider>
+      </PerformanceProvider>
+    </ErrorBoundary>
   );
 }
 

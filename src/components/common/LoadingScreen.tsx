@@ -26,7 +26,7 @@ const LoadingScreen = memo<LoadingScreenProps>(({
   skeletonVariant = "page"
 }) => {
   // Fallback inteligente com skeleton loader
-  const SmartFallback = () => (
+  const SmartFallback = memo(() => (
     <div className="min-h-screen bg-background p-6">
       {variant === "skeleton" ? (
         <SmartSkeletonLoader variant={skeletonVariant} />
@@ -39,7 +39,9 @@ const LoadingScreen = memo<LoadingScreenProps>(({
         />
       )}
     </div>
-  );
+  ));
+
+  SmartFallback.displayName = 'SmartFallback';
 
   // Se não quiser usar a versão otimizada, usar a simples
   if (!useOptimized) {
