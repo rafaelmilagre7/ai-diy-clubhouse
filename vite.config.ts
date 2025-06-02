@@ -76,15 +76,15 @@ export default defineConfig(({ mode }) => ({
         assetFileNames: 'assets/[name]-[hash].[ext]',
       },
     },
-    // Compressão e minificação
-    minify: 'terser',
-    terserOptions: {
+    // Aplicar minificação apenas em produção
+    minify: mode === 'production' ? 'terser' : false,
+    terserOptions: mode === 'production' ? {
       compress: {
-        drop_console: mode === 'production',
-        drop_debugger: mode === 'production',
-        pure_funcs: mode === 'production' ? ['console.log', 'console.warn'] : [],
+        drop_console: true,
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.warn'],
       },
-    },
+    } : undefined,
     // Tamanho do chunk
     chunkSizeWarningLimit: 1000,
     // Source maps apenas em desenvolvimento
