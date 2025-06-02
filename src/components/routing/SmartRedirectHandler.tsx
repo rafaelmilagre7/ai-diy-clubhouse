@@ -4,7 +4,6 @@ import { useAuth } from '@/contexts/auth';
 import { useUnifiedOnboardingValidation } from '@/hooks/onboarding/useUnifiedOnboardingValidation';
 import { useLocation, useNavigate } from 'react-router-dom';
 import LoadingScreen from '@/components/common/LoadingScreen';
-import { logger } from '@/utils/logger';
 
 interface SmartRedirectHandlerProps {
   children: React.ReactNode;
@@ -16,7 +15,7 @@ const ONBOARDING_REQUIRED_ROUTES = [
   '/implementation-trail'
 ];
 
-// Rotas que NUNCA devem ser redirecionadas (mesmo se onboarding incompleto)
+// Rotas que NUNCA devem ser redirecionadas
 const PROTECTED_ROUTES = [
   '/profile',
   '/comunidade',
@@ -30,51 +29,22 @@ export const SmartRedirectHandler: React.FC<SmartRedirectHandlerProps> = ({ chil
   const { user, profile, isLoading: authLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const { isOnboardingComplete, isLoading: onboardingLoading, invalidateOnboardingCache } = useUnifiedOnboardingValidation();
+  const { isOnboardingComplete, isLoading: onboardingLoading } = useUnifiedOnboardingValidation();
 
   const isOnboardingRoute = location.pathname.startsWith('/onboarding');
-  const isLoginRoute = location.pathname === '/login';
-  const isPublicRoute = isLoginRoute || location.pathname === '/';
+  const isPublicRoute = location.pathname === '/login' || location.pathname === '/';
   const isProfileRoute = location.pathname.startsWith('/profile');
   
-  // Verificar se a rota atual requer onboarding completo
   const requiresOnboarding = ONBOARDING_REQUIRED_ROUTES.some(route => 
     location.pathname.startsWith(route)
   );
 
-  // Verificar se é uma rota protegida que NUNCA deve ser redirecionada
   const isProtectedRoute = PROTECTED_ROUTES.some(route => 
     location.pathname.startsWith(route)
   );
 
-  // Verificar se é admin (admins sempre têm acesso)
   const isAdmin = profile?.role === 'admin';
 
-  // Invalidar cache quando o usuário navega entre páginas
-  useEffect(() => {
-    if (user?.id && !isPublicRoute) {
-      invalidateOnboardingCache();
-    }
-  }, [location.pathname, user?.id, isPublicRoute, invalidateOnboardingCache]);
-
-  // Log da navegação atual - apenas em desenvolvimento
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      logger.debug('SmartRedirectHandler', 'Navegação detectada', {
-        pathname: location.pathname,
-        isPublicRoute,
-        isOnboardingRoute,
-        isProfileRoute,
-        requiresOnboarding,
-        isProtectedRoute,
-        isOnboardingComplete,
-        isAdmin,
-        userId: user?.id
-      });
-    }
-  }, [location.pathname, isPublicRoute, isOnboardingRoute, isProfileRoute, requiresOnboarding, isProtectedRoute, isOnboardingComplete, isAdmin, user?.id]);
-
-  // Redirecionar para onboarding apenas se a rota atual requer onboarding E não é uma rota protegida
   useEffect(() => {
     if (user && !isPublicRoute && !isOnboardingRoute && !authLoading && !onboardingLoading) {
       // NÃO redirecionar se for uma rota de perfil

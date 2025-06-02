@@ -4,7 +4,6 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { PageTransitionWithFallback } from "@/components/transitions/PageTransitionWithFallback";
-import { toast } from "sonner";
 
 const RootRedirect = () => {
   const { user, profile, isAdmin, isLoading } = useAuth();
@@ -12,9 +11,8 @@ const RootRedirect = () => {
   const [timeoutExceeded, setTimeoutExceeded] = useState(false);
   const [redirectTarget, setRedirectTarget] = useState<string | null>(null);
   
-  // Determinar para onde redirecionar com base no estado da autenticação
+  // Determinar para onde redirecionar
   useEffect(() => {
-    // Não fazer nada enquanto carrega
     if (isLoading && !timeoutExceeded) return;
     
     if (!user) {
@@ -28,10 +26,9 @@ const RootRedirect = () => {
     }
   }, [user, profile, isAdmin, isLoading, timeoutExceeded]);
   
-  // Realizar o redirecionamento quando o alvo for definido
+  // Realizar o redirecionamento
   useEffect(() => {
     if (redirectTarget) {
-      // Pequeno delay para garantir que a UI reaja antes do redirecionamento
       const redirectTimer = setTimeout(() => {
         navigate(redirectTarget, { replace: true });
       }, 100);
@@ -40,19 +37,18 @@ const RootRedirect = () => {
     }
   }, [redirectTarget, navigate]);
   
-  // Handle timing out the loading state
+  // Timeout para evitar loading infinito
   useEffect(() => {
     if (isLoading && !timeoutExceeded) {
       const timeout = setTimeout(() => {
         setTimeoutExceeded(true);
-        toast("Tempo de carregamento excedido, redirecionando para tela de login");
-      }, 3000); // 3 segundos de timeout
+      }, 3000);
       
       return () => clearTimeout(timeout);
     }
   }, [isLoading, timeoutExceeded]);
   
-  // Mostrar tela de carregamento enquanto decide para onde redirecionar
+  // Mostrar loading ou fallback
   if ((isLoading && !timeoutExceeded) || (!redirectTarget && !timeoutExceeded)) {
     return (
       <PageTransitionWithFallback
@@ -64,12 +60,11 @@ const RootRedirect = () => {
     );
   }
   
-  // Fallback redirect se algo deu errado
+  // Fallback redirect
   if (timeoutExceeded || !redirectTarget) {
     return <Navigate to="/login" replace />;
   }
   
-  // Retornar null porque o useEffect cuida do redirecionamento
   return null;
 };
 

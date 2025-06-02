@@ -2,16 +2,12 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useRef, ReactNode, memo, useMemo } from "react";
 import { useAuth } from "@/contexts/auth";
-import { useSimpleOnboardingValidation } from "@/hooks/onboarding/useSimpleOnboardingValidation";
+import { useUnifiedOnboardingValidation } from "@/hooks/onboarding/useUnifiedOnboardingValidation";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import MemberLayout from "./MemberLayout";
 import FormacaoLayout from "./formacao/FormacaoLayout";
 import { PageTransitionWithFallback } from "@/components/transitions/PageTransitionWithFallback";
 
-/**
- * LayoutProvider gerencia autenticação e roteamento baseado em papéis
- * antes de renderizar o componente de layout apropriado
- */
 const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
   const {
     user,
@@ -20,13 +16,13 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
     isFormacao,
     isLoading: authLoading,
   } = useAuth();
-  const { isOnboardingComplete, isLoading: onboardingLoading } = useSimpleOnboardingValidation();
+  const { isOnboardingComplete, isLoading: onboardingLoading } = useUnifiedOnboardingValidation();
   const navigate = useNavigate();
   const location = useLocation();
   const [layoutReady, setLayoutReady] = useState(false);
   const timeoutRef = useRef<number | null>(null);
 
-  // Memoizar as verificações de rota para evitar recálculos desnecessários
+  // Memoizar verificações de rota
   const routeChecks = useMemo(() => ({
     isLearningRoute: location.pathname.startsWith('/learning'),
     isPathAdmin: location.pathname.startsWith('/admin'),
@@ -35,7 +31,7 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
     isOnboardingRoute: location.pathname.startsWith('/onboarding')
   }), [location.pathname]);
 
-  // Memoizar a mensagem de loading baseada no estado
+  // Memoizar mensagem de loading
   const loadingMessage = useMemo(() => {
     if (authLoading) return "Preparando seu dashboard...";
     if (onboardingLoading) return "Verificando onboarding...";
@@ -43,34 +39,29 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
     return "Carregando layout...";
   }, [authLoading, onboardingLoading, user]);
 
-  // Verificar autenticação assim que o estado estiver pronto
+  // Verificar autenticação
   useEffect(() => {
-    // Limpar qualquer timeout existente
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
     
-    // Se não estiver carregando, verificar autenticação
     if (!authLoading && !onboardingLoading) {
       if (!user) {
         navigate('/login', { replace: true });
         return;
       }
       
-      // Verificar se precisa redirecionar para onboarding
       if (!routeChecks.isOnboardingRoute && !isOnboardingComplete) {
         navigate('/onboarding-new', { replace: true });
         return;
       }
       
-      // Se temos usuário, marcar layout como pronto
       setLayoutReady(true);
       
-      // Verificar papel do usuário e rota atual
+      // Verificar redirecionamento por role
       if (user && profile) {
         const { isLearningRoute, isPathAdmin, isPathFormacao } = routeChecks;
         
-        // Redirecionar apenas se estiver na rota errada
         if (isAdmin && !isPathAdmin && !isPathFormacao && !isLearningRoute) {
           navigate('/admin', { replace: true });
         } 
@@ -79,7 +70,6 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
         }
       }
     } else {
-      // Configurar timeout para não ficar preso em carregamento infinito
       timeoutRef.current = window.setTimeout(() => {
         setLayoutReady(true);
       }, 2000);
@@ -92,7 +82,7 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
     };
   }, [user, profile, isAdmin, isFormacao, authLoading, onboardingLoading, isOnboardingComplete, navigate, routeChecks]);
 
-  // Renderizar com base na rota e permissões
+  // Renderizar layout baseado na rota
   if (layoutReady && user) {
     const { isFormacaoRoute, isLearningRoute } = routeChecks;
     
@@ -111,7 +101,6 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
     }
   }
 
-  // Mostrar loading enquanto o layout não está pronto
   return (
     <PageTransitionWithFallback isVisible={true}>
       <LoadingScreen message={loadingMessage} />
