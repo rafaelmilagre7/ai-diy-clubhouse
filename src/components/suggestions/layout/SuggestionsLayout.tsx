@@ -4,6 +4,7 @@ import { useSuggestions } from '@/hooks/suggestions/useSuggestions';
 import { SuggestionFilter } from '@/types/suggestionTypes';
 import { SuggestionsHeader } from './SuggestionsHeader';
 import { SuggestionsContent } from './SuggestionsContent';
+import SuggestionsDebugPanel from '../debug/SuggestionsDebugPanel';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
@@ -83,6 +84,9 @@ const SuggestionsLayout = () => {
         filter={filter}
         onFilterChange={handleFilterChange}
       />
+      
+      {/* Debug Panel Temporário */}
+      <SuggestionsDebugPanel />
       
       {error ? (
         <Alert variant="destructive" className="mb-4 animate-fade-in">
