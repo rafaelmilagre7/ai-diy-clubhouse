@@ -21,12 +21,24 @@ import Suggestions from '@/pages/member/Suggestions';
 import NewSuggestion from '@/pages/member/NewSuggestion';
 import SuggestionDetails from '@/pages/member/SuggestionDetails';
 
-// Lazy load route modules
-const SolutionsRoutes = React.lazy(() => import('./SolutionsRoutes'));
-const ToolsRoutes = React.lazy(() => import('./ToolsRoutes'));
-const BenefitsRoutes = React.lazy(() => import('./BenefitsRoutes'));
+// Solutions - Import direto para melhor performance
+import Solutions from '@/pages/member/Solutions';
+import SolutionDetails from '@/pages/member/SolutionDetails';
+
+// Tools - Import direto para melhor performance
+import Tools from '@/pages/member/Tools';
+import ToolDetails from '@/pages/member/ToolDetails';
+
+// Benefits - Import direto para melhor performance
+import Benefits from '@/pages/member/Benefits';
+
+// Learning - Import direto para melhor performance
+import LearningPage from '@/pages/member/learning/LearningPage';
+import CourseDetails from '@/pages/member/learning/CourseDetails';
+import LessonView from '@/pages/member/learning/LessonView';
+
+// Lazy load apenas rotas pesadas
 const CommunityRoutes = React.lazy(() => import('./CommunityRoutes'));
-const LearningRoutes = React.lazy(() => import('./LearningRoutes'));
 const NetworkingRoutes = React.lazy(() => import('./NetworkingRoutes'));
 
 export const MemberRoutes = () => {
@@ -39,42 +51,30 @@ export const MemberRoutes = () => {
         {/* Implementation Trail */}
         <Route path="/implementation-trail" element={<ImplementationTrailPage />} />
         
-        {/* Solutions Routes */}
-        <Route path="/solutions/*" element={
-          <React.Suspense fallback={<div className="p-6">Carregando soluções...</div>}>
-            <SolutionsRoutes />
-          </React.Suspense>
-        } />
+        {/* Solutions Routes - Direto sem lazy loading */}
+        <Route path="/solutions" element={<Solutions />} />
+        <Route path="/solutions/:id" element={<SolutionDetails />} />
         
-        {/* Tools Routes */}
-        <Route path="/tools/*" element={
-          <React.Suspense fallback={<div className="p-6">Carregando ferramentas...</div>}>
-            <ToolsRoutes />
-          </React.Suspense>
-        } />
+        {/* Tools Routes - Direto sem lazy loading */}
+        <Route path="/tools" element={<Tools />} />
+        <Route path="/tools/:id" element={<ToolDetails />} />
         
-        {/* Benefits Routes */}
-        <Route path="/benefits/*" element={
-          <React.Suspense fallback={<div className="p-6">Carregando benefícios...</div>}>
-            <BenefitsRoutes />
-          </React.Suspense>
-        } />
+        {/* Benefits Routes - Direto sem lazy loading */}
+        <Route path="/benefits" element={<Benefits />} />
         
-        {/* Community Routes */}
+        {/* Learning Routes - Direto sem lazy loading */}
+        <Route path="/learning" element={<LearningPage />} />
+        <Route path="/learning/course/:id" element={<CourseDetails />} />
+        <Route path="/learning/course/:courseId/lesson/:lessonId" element={<LessonView />} />
+        
+        {/* Community Routes - Mantém lazy loading (pesado) */}
         <Route path="/comunidade/*" element={
           <React.Suspense fallback={<div className="p-6">Carregando comunidade...</div>}>
             <CommunityRoutes />
           </React.Suspense>
         } />
         
-        {/* Learning Routes */}
-        <Route path="/learning/*" element={
-          <React.Suspense fallback={<div className="p-6">Carregando aprendizado...</div>}>
-            <LearningRoutes />
-          </React.Suspense>
-        } />
-        
-        {/* Networking Routes */}
+        {/* Networking Routes - Mantém lazy loading */}
         <Route path="/networking/*" element={
           <React.Suspense fallback={<div className="p-6">Carregando networking...</div>}>
             <NetworkingRoutes />
