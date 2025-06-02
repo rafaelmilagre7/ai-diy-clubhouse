@@ -27,7 +27,7 @@ export const useSuggestionDetails = () => {
         .from('suggestions')
         .select(`
           *,
-          profiles:user_id (
+          profiles!suggestions_user_id_fkey (
             name,
             avatar_url
           ),

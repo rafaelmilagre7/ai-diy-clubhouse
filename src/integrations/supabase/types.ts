@@ -5296,6 +5296,20 @@ export type Database = {
             referencedRelation: "suggestion_categories"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "suggestions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "suggestions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users_with_roles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       tool_comment_likes: {
@@ -5834,6 +5848,20 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "suggestion_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "suggestions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "suggestions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users_with_roles"
             referencedColumns: ["id"]
           },
         ]

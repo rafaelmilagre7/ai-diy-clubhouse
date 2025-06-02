@@ -5,29 +5,6 @@ import { supabase } from '@/lib/supabase';
 import { Suggestion, SuggestionFilter } from '@/types/suggestionTypes';
 import { useAuth } from '@/contexts/auth';
 
-interface RawSuggestionData {
-  id: string;
-  title: string;
-  description: string;
-  user_id: string;
-  status: string;
-  upvotes: number;
-  downvotes: number;
-  comment_count: number;
-  created_at: string;
-  updated_at: string;
-  is_pinned: boolean;
-  is_hidden: boolean;
-  profiles: {
-    name: string;
-    avatar_url: string;
-  } | null;
-  suggestion_votes: Array<{
-    vote_type: 'upvote' | 'downvote';
-    user_id: string;
-  }>;
-}
-
 export const useOptimizedSuggestions = (
   filter: SuggestionFilter = 'popular',
   searchQuery: string = ''
@@ -69,7 +46,7 @@ export const useOptimizedSuggestions = (
           updated_at,
           is_pinned,
           is_hidden,
-          profiles:user_id (
+          profiles!suggestions_user_id_fkey (
             name,
             avatar_url
           ),
@@ -118,10 +95,8 @@ export const useOptimizedSuggestions = (
       
       // Processar dados com validação robusta
       const processedData: Suggestion[] = data?.map((suggestion: any) => {
-        // Garantir que profiles seja um objeto único, não array
-        const profileData = Array.isArray(suggestion.profiles) 
-          ? suggestion.profiles[0] 
-          : suggestion.profiles;
+        // Com a relação criada, profiles será um objeto único
+        const profileData = suggestion.profiles;
           
         const userVote = suggestion.suggestion_votes?.find(
           (vote: any) => vote.user_id === user?.id
