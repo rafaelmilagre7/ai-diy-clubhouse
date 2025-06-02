@@ -1,7 +1,6 @@
-
 import { RouteObject } from "react-router-dom";
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
-import AdminLayout from '@/components/layout/AdminLayout';
+import AdminLayout from '@/components/layout/admin/AdminLayout';
 
 // Admin pages
 import AdminDashboard from '@/pages/admin/AdminDashboard';
