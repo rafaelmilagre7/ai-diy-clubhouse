@@ -14,14 +14,14 @@ import SolutionDetails from '@/pages/member/SolutionDetails';
 import SolutionImplementation from '@/pages/member/SolutionImplementation';
 import ImplementationCompleted from '@/pages/member/ImplementationCompleted';
 import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
+import SuggestionDetails from '@/pages/member/SuggestionDetails';
+import NewSuggestion from '@/pages/member/NewSuggestion';
 
 // Páginas com lazy loading
 import {
   LazyEventsWithSuspense,
   LazyBenefitsWithSuspense,
   LazySuggestionsWithSuspense,
-  LazySuggestionDetailsWithSuspense,
-  LazyNewSuggestionWithSuspense,
   LazyLearningPageWithSuspense,
   LazyCourseDetailsWithSuspense,
   LazyLessonViewWithSuspense,
@@ -67,6 +67,11 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/implementation/:id/:moduleIdx", SolutionImplementation),
   createProtectedRoute("/implementation/completed/:id", ImplementationCompleted),
   
+  // Sugestões Routes - carregamento imediato para melhor performance
+  createProtectedRoute("/suggestions", LazySuggestionsWithSuspense),
+  createProtectedRoute("/suggestions/:id", SuggestionDetails),
+  createProtectedRoute("/suggestions/new", NewSuggestion),
+  
   // Rotas com lazy loading
   createProtectedRoute("/benefits", LazyBenefitsWithSuspense),
   createProtectedRoute("/events", LazyEventsWithSuspense),
@@ -87,11 +92,6 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/learning", LazyLearningPageWithSuspense),
   createProtectedRoute("/learning/course/:id", LazyCourseDetailsWithSuspense),
   createProtectedRoute("/learning/course/:courseId/lesson/:lessonId", LazyLessonViewWithSuspense),
-  
-  // Sugestões Routes - com lazy loading
-  createProtectedRoute("/suggestions", LazySuggestionsWithSuspense),
-  createProtectedRoute("/suggestions/:id", LazySuggestionDetailsWithSuspense),
-  createProtectedRoute("/suggestions/new", LazyNewSuggestionWithSuspense),
   
   // Comunidade Routes - com lazy loading
   createProtectedRoute("/comunidade", LazyCommunityHomeWithSuspense),

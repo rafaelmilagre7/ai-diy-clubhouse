@@ -1,158 +1,54 @@
 
-import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { Suggestion, VoteType } from '@/types/suggestionTypes';
 import { useAuth } from '@/contexts/auth';
-import { toast } from 'sonner';
-import { useQueryClient } from '@tanstack/react-query';
+import { useVoting } from './useVoting';
 
 export const useSuggestionDetails = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const [voteLoading, setVoteLoading] = useState(false);
-  const queryClient = useQueryClient();
+  const { voteLoading, voteMutation } = useVoting();
 
   const fetchSuggestion = async () => {
+    if (!id) throw new Error('ID da sugestão não fornecido');
+
+    const { data, error } = await supabase
+      .from('suggestions')
+      .select(`
+        *,
+        profiles:user_id(name, avatar_url),
+        user_vote:suggestion_votes!inner(vote_type)
+      `)
+      .eq('id', id)
+      .eq('suggestion_votes.user_id', user?.id || '')
+      .single();
+
+    if (error) throw error;
+    
+    return {
+      ...data,
+      user_name: data.profiles?.name,
+      user_avatar: data.profiles?.avatar_url,
+      user_vote_type: data.user_vote?.[0]?.vote_type || null
+    };
+  };
+
+  const {
+    data: suggestion,
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['suggestion', id, user?.id],
+    queryFn: fetchSuggestion,
+    enabled: !!id
+  });
+
+  const handleVote = async (voteType: 'upvote' | 'downvote') => {
     if (!id) return;
-    
-    try {
-      setIsLoading(true);
-      console.log('Buscando detalhes da sugestão:', id);
-      
-      const { data, error } = await supabase
-        .from('suggestions')
-        .select(`
-          *,
-          profiles!suggestions_user_id_fkey (
-            name,
-            avatar_url
-          ),
-          suggestion_votes!left (
-            vote_type,
-            user_id,
-            id
-          )
-        `)
-        .eq('id', id)
-        .single();
-      
-      if (error) {
-        console.error('Erro ao buscar sugestão:', error);
-        setError(new Error(error.message));
-        return;
-      }
-      
-      // Processar os dados para incluir informações de voto do usuário
-      const userVote = data.suggestion_votes?.find(
-        vote => vote.user_id === user?.id
-      );
-      
-      const processedSuggestion = {
-        ...data,
-        user_name: data.profiles?.name,
-        user_avatar: data.profiles?.avatar_url,
-        user_vote_type: userVote?.vote_type || null,
-        user_vote_id: userVote?.id
-      };
-      
-      setSuggestion(processedSuggestion as Suggestion);
-    } catch (err: any) {
-      console.error('Erro inesperado ao buscar sugestão:', err);
-      setError(err);
-    } finally {
-      setIsLoading(false);
-    }
+    await voteMutation.mutateAsync({ suggestionId: id, voteType });
   };
-
-  const handleVote = async (voteType: VoteType) => {
-    if (!user || !suggestion) {
-      toast.error('Você precisa estar logado para votar');
-      return;
-    }
-    
-    try {
-      setVoteLoading(true);
-      
-      const currentVoteType = suggestion.user_vote_type;
-      
-      // Se o usuário já votou do mesmo tipo, remover o voto
-      if (currentVoteType === voteType) {
-        const { error } = await supabase
-          .from('suggestion_votes')
-          .delete()
-          .eq('suggestion_id', suggestion.id)
-          .eq('user_id', user.id);
-        
-        if (error) throw error;
-        
-        // Atualizar estado local
-        setSuggestion(prev => {
-          if (!prev) return null;
-          return {
-            ...prev,
-            user_vote_type: null,
-            user_vote_id: undefined,
-            [voteType === 'upvote' ? 'upvotes' : 'downvotes']: 
-              Math.max(0, (prev[voteType === 'upvote' ? 'upvotes' : 'downvotes'] || 0) - 1)
-          };
-        });
-        
-        toast.success('Voto removido');
-      } else {
-        // Upsert do voto
-        const { error } = await supabase
-          .from('suggestion_votes')
-          .upsert({
-            suggestion_id: suggestion.id,
-            user_id: user.id,
-            vote_type: voteType
-          });
-        
-        if (error) throw error;
-        
-        // Atualizar estado local
-        setSuggestion(prev => {
-          if (!prev) return null;
-          
-          let newSuggestion = { ...prev };
-          
-          // Se mudou o tipo de voto, decrementar o anterior
-          if (currentVoteType) {
-            const oldKey = currentVoteType === 'upvote' ? 'upvotes' : 'downvotes';
-            newSuggestion[oldKey] = Math.max(0, (prev[oldKey] || 0) - 1);
-          }
-          
-          // Incrementar o novo voto
-          const newKey = voteType === 'upvote' ? 'upvotes' : 'downvotes';
-          newSuggestion[newKey] = (prev[newKey] || 0) + 1;
-          newSuggestion.user_vote_type = voteType;
-          
-          return newSuggestion;
-        });
-        
-        toast.success(`Você ${voteType === 'upvote' ? 'apoiou' : 'não apoiou'} esta sugestão`);
-      }
-      
-      // Invalidar cache para manter consistência
-      queryClient.invalidateQueries({ queryKey: ['suggestions'] });
-      
-    } catch (err: any) {
-      console.error('Erro ao votar:', err);
-      toast.error('Erro ao registrar seu voto');
-    } finally {
-      setVoteLoading(false);
-    }
-  };
-
-  const refetch = fetchSuggestion;
-
-  useEffect(() => {
-    fetchSuggestion();
-  }, [id, user]);
 
   return {
     suggestion,
