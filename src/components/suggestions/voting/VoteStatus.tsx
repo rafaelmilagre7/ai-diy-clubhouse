@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { CheckCircle, XCircle } from 'lucide-react';
 
 interface VoteStatusProps {
   userVoteType: 'upvote' | 'downvote' | null | undefined;
@@ -9,26 +10,29 @@ interface VoteStatusProps {
 const VoteStatus: React.FC<VoteStatusProps> = ({ userVoteType }) => {
   if (!userVoteType) {
     return (
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Clock className="h-4 w-4" />
-        <span>Você ainda não votou nesta sugestão</span>
-      </div>
-    );
-  }
-
-  if (userVoteType === 'upvote') {
-    return (
-      <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 px-3 py-2 rounded-md">
-        <CheckCircle className="h-4 w-4" />
-        <span>Você apoiou esta sugestão</span>
-      </div>
+      <p className="text-sm text-muted-foreground">
+        Clique em apoiar ou não apoiar para registrar seu voto
+      </p>
     );
   }
 
   return (
-    <div className="flex items-center gap-2 text-sm text-red-700 bg-red-50 px-3 py-2 rounded-md">
-      <XCircle className="h-4 w-4" />
-      <span>Você não apoiou esta sugestão</span>
+    <div className="flex items-center gap-2">
+      {userVoteType === 'upvote' ? (
+        <>
+          <CheckCircle className="h-4 w-4 text-green-600" />
+          <Badge variant="secondary" className="bg-green-100 text-green-800">
+            Você apoiou esta sugestão
+          </Badge>
+        </>
+      ) : (
+        <>
+          <XCircle className="h-4 w-4 text-red-600" />
+          <Badge variant="secondary" className="bg-red-100 text-red-800">
+            Você não apoiou esta sugestão
+          </Badge>
+        </>
+      )}
     </div>
   );
 };
