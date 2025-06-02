@@ -1,5 +1,6 @@
 
-import { CheckCircle, Clock, Play, AlertCircle, XCircle } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export const getStatusLabel = (status: string): string => {
   switch (status) {
@@ -14,65 +15,35 @@ export const getStatusLabel = (status: string): string => {
     case 'declined':
       return 'Recusada';
     default:
-      return 'Desconhecido';
+      return 'Nova';
   }
 };
 
 export const getStatusColor = (status: string): string => {
   switch (status) {
     case 'new':
-      return 'bg-blue-100 text-blue-800 hover:bg-blue-100/80';
+      return 'bg-blue-100 text-blue-800 border-blue-200';
     case 'under_review':
-      return 'bg-purple-100 text-purple-800 hover:bg-purple-100/80';
+      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
     case 'in_development':
-      return 'bg-amber-100 text-amber-800 hover:bg-amber-100/80';
+      return 'bg-purple-100 text-purple-800 border-purple-200';
     case 'completed':
-      return 'bg-green-100 text-green-800 hover:bg-green-100/80';
+      return 'bg-green-100 text-green-800 border-green-200';
     case 'declined':
-      return 'bg-red-100 text-red-800 hover:bg-red-100/80';
+      return 'bg-red-100 text-red-800 border-red-200';
     default:
-      return 'bg-gray-100 text-gray-800 hover:bg-gray-100/80';
-  }
-};
-
-export const getStatusIcon = (status: string) => {
-  switch (status) {
-    case 'new':
-      return AlertCircle;
-    case 'under_review':
-      return Clock;
-    case 'in_development':
-      return Play;
-    case 'completed':
-      return CheckCircle;
-    case 'declined':
-      return XCircle;
-    default:
-      return AlertCircle;
+      return 'bg-gray-100 text-gray-800 border-gray-200';
   }
 };
 
 export const formatRelativeDate = (dateString: string): string => {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffTime = Math.abs(now.getTime() - date.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
-  if (diffDays === 0) {
-    return 'Hoje';
-  } else if (diffDays === 1) {
-    return 'Ontem';
-  } else if (diffDays < 7) {
-    return `${diffDays} dias atrás`;
-  } else if (diffDays < 30) {
-    const weeks = Math.floor(diffDays / 7);
-    return `${weeks} ${weeks === 1 ? 'semana' : 'semanas'} atrás`;
-  } else {
-    return date.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: '2-digit'
+  try {
+    return formatDistanceToNow(new Date(dateString), {
+      addSuffix: true,
+      locale: ptBR
     });
+  } catch (error) {
+    return 'Data inválida';
   }
 };
 
@@ -82,19 +53,11 @@ export const calculatePopularity = (upvotes: number, downvotes: number): number 
   return Math.round((upvotes / total) * 100);
 };
 
-export const getStatusPriority = (status: string): number => {
-  switch (status) {
-    case 'completed':
-      return 4;
-    case 'in_development':
-      return 3;
-    case 'under_review':
-      return 2;
-    case 'new':
-      return 1;
-    case 'declined':
-      return 0;
-    default:
-      return -1;
-  }
+export const getSuggestionPriority = (upvotes: number, downvotes: number, createdAt: string): 'high' | 'medium' | 'low' => {
+  const popularity = calculatePopularity(upvotes, downvotes);
+  const daysSinceCreated = Math.floor((Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24));
+  
+  if (popularity > 80 && upvotes > 5) return 'high';
+  if (popularity > 60 || (upvotes > 3 && daysSinceCreated < 7)) return 'medium';
+  return 'low';
 };

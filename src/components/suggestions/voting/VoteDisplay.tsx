@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { ThumbsUp, ThumbsDown, TrendingUp } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { ThumbsUp, ThumbsDown, TrendingUp, TrendingDown } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface VoteDisplayProps {
   upvotes: number;
@@ -9,44 +9,46 @@ interface VoteDisplayProps {
   showTrend?: boolean;
 }
 
-const VoteDisplay = ({ upvotes, downvotes, showTrend = true }: VoteDisplayProps) => {
+const VoteDisplay: React.FC<VoteDisplayProps> = ({ 
+  upvotes, 
+  downvotes, 
+  showTrend = false 
+}) => {
   const total = upvotes + downvotes;
   const approvalRate = total > 0 ? Math.round((upvotes / total) * 100) : 0;
-  const isPopular = upvotes > 5 && approvalRate > 70;
+  const isPositive = upvotes > downvotes;
 
   return (
     <div className="flex items-center gap-4">
-      {/* Contadores de votos */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1 text-green-600">
           <ThumbsUp className="h-4 w-4" />
-          <span className="font-semibold text-sm">{upvotes}</span>
+          <span className="font-semibold">{upvotes}</span>
         </div>
         
-        <div className="flex items-center gap-1 text-gray-500">
+        <div className="flex items-center gap-1 text-red-500">
           <ThumbsDown className="h-4 w-4" />
-          <span className="font-semibold text-sm">{downvotes}</span>
+          <span className="font-semibold">{downvotes}</span>
         </div>
       </div>
 
-      {/* Indicador de tendência */}
       {showTrend && total > 2 && (
-        <div className="flex items-center gap-1">
-          <div className={cn(
-            "px-2 py-1 rounded-full text-xs font-medium",
-            approvalRate >= 80 ? "bg-green-100 text-green-700" :
-            approvalRate >= 60 ? "bg-yellow-100 text-yellow-700" :
-            "bg-gray-100 text-gray-600"
-          )}>
+        <div className="flex items-center gap-2">
+          <Badge 
+            variant="secondary" 
+            className={`text-xs ${
+              isPositive 
+                ? 'bg-green-100 text-green-800 border-green-200' 
+                : 'bg-red-100 text-red-800 border-red-200'
+            }`}
+          >
+            {isPositive ? (
+              <TrendingUp className="h-3 w-3 mr-1" />
+            ) : (
+              <TrendingDown className="h-3 w-3 mr-1" />
+            )}
             {approvalRate}% aprovação
-          </div>
-          
-          {isPopular && (
-            <div className="flex items-center gap-1 text-orange-600 text-xs font-medium">
-              <TrendingUp className="h-3 w-3" />
-              <span>Popular</span>
-            </div>
-          )}
+          </Badge>
         </div>
       )}
     </div>

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useSuggestions } from '@/hooks/suggestions/useSuggestions';
 import { SuggestionFilter } from '@/types/suggestionTypes';
@@ -59,14 +60,14 @@ const SuggestionsLayout = () => {
         />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Card key={i} className="animate-pulse">
+            <Card key={i} className="animate-pulse hover-lift">
               <div className="p-4 space-y-3">
-                <Skeleton className="h-6 w-4/5 mb-2" />
-                <Skeleton className="h-4 w-2/5" />
-                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-6 w-4/5 mb-2 shimmer" />
+                <Skeleton className="h-4 w-2/5 shimmer" />
+                <Skeleton className="h-20 w-full shimmer" />
                 <div className="flex justify-between pt-2">
-                  <Skeleton className="h-4 w-16" />
-                  <Skeleton className="h-4 w-12" />
+                  <Skeleton className="h-4 w-16 shimmer" />
+                  <Skeleton className="h-4 w-12 shimmer" />
                 </div>
               </div>
             </Card>
@@ -104,11 +105,13 @@ const SuggestionsLayout = () => {
           </AlertDescription>
         </Alert>
       ) : (
-        <SuggestionsContent 
-          suggestions={suggestions} 
-          searchQuery={searchQuery}
-          filter={filter}
-        />
+        <div className="animate-slide-up">
+          <SuggestionsContent 
+            suggestions={suggestions} 
+            searchQuery={searchQuery}
+            filter={filter}
+          />
+        </div>
       )}
     </div>
   );
