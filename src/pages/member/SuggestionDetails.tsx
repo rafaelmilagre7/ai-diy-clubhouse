@@ -1,12 +1,12 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useSuggestionDetails } from '@/hooks/suggestions/useSuggestionDetails';
-import { useCommentsData } from '@/hooks/comments/useCommentsData';
-import { useCommentForm } from '@/hooks/comments/useCommentForm';
+import { useCommentsData } from '@/hooks/suggestions/useCommentsData';
+import { useCommentForm } from '@/hooks/suggestions/useCommentForm';
 import SuggestionContent from '@/components/suggestions/SuggestionContent';
-import { SuggestionLoadingState } from '@/components/suggestions/states/SuggestionLoadingState';
-import { SuggestionErrorState } from '@/components/suggestions/states/SuggestionErrorState';
+import SuggestionLoadingState from '@/components/suggestions/states/SuggestionLoadingState';
+import SuggestionErrorState from '@/components/suggestions/states/SuggestionErrorState';
 import { useAuth } from '@/contexts/auth';
 
 const SuggestionDetails = () => {
