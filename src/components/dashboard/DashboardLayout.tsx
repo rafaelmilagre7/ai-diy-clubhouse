@@ -10,7 +10,8 @@ import { ModernDashboardHeader } from "./ModernDashboardHeader";
 import { KpiGrid } from "./KpiGrid";
 import { useAuth } from "@/contexts/auth";
 import { SolutionsGridLoader } from "./SolutionsGridLoader";
-import { DashboardConnectionErrorState } from "./states/DashboardConnectionErrorState";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface DashboardLayoutProps {
   active: Solution[];
@@ -22,7 +23,6 @@ interface DashboardLayoutProps {
   isLoading?: boolean;
 }
 
-// Otimização: Memoizar o componente completo para evitar re-renderizações desnecessárias
 export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
   active,
   completed,
@@ -34,34 +34,50 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
 }) => {
   const { profile } = useAuth();
 
-  // Memoizar o cálculo do nome do usuário
+  console.log('DashboardLayout: Renderizando', {
+    isLoading,
+    active: active?.length || 0,
+    completed: completed?.length || 0,
+    recommended: recommended?.length || 0
+  });
+
+  // Nome do usuário com fallback
   const userName = useMemo(() => 
     profile?.name?.split(" ")[0] || "Membro"
   , [profile?.name]);
 
-  // Memoizar o estado de "sem soluções" para evitar recálculos
-  const hasNoSolutions = useMemo(() => 
-    !isLoading && 
-    (!active || active.length === 0) && 
-    (!completed || completed.length === 0) && 
-    (!recommended || recommended.length === 0)
-  , [isLoading, active, completed, recommended]);
-
-  // Memoizar a validação de dados para evitar recálculos
+  // Verificar se tem dados válidos
   const hasValidData = useMemo(() => 
     Array.isArray(active) && Array.isArray(completed) && Array.isArray(recommended)
   , [active, completed, recommended]);
 
-  // Memoizar os totais para o KPI Grid
+  // Verificar se tem algum conteúdo
+  const hasAnyContent = useMemo(() => 
+    (active?.length || 0) + (completed?.length || 0) + (recommended?.length || 0) > 0
+  , [active?.length, completed?.length, recommended?.length]);
+
+  // KPI totals com fallback
   const kpiTotals = useMemo(() => ({
     completed: completed?.length || 0,
     inProgress: active?.length || 0,
     total: (active?.length || 0) + (completed?.length || 0) + (recommended?.length || 0)
   }), [active?.length, completed?.length, recommended?.length]);
 
-  // Early return para dados inválidos
+  // Se não tem dados válidos e não está carregando, mostrar erro
   if (!hasValidData && !isLoading) {
-    return <DashboardConnectionErrorState />;
+    return (
+      <div className="space-y-8 md:pt-2">
+        <ModernDashboardHeader userName={userName} />
+        <Card className="p-8 text-center">
+          <CardContent>
+            <h3 className="text-lg font-semibold mb-2">Erro ao carregar dados</h3>
+            <p className="text-muted-foreground">
+              Não foi possível carregar os dados do dashboard. Tente recarregar a página.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -80,14 +96,14 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
       {/* TRILHA DE IMPLEMENTAÇÃO COM IA */}
       <ImplementationTrail />
 
-      {/* Mostrar loaders enquanto carrega, ou conteúdo quando pronto */}
+      {/* Conteúdo principal */}
       {isLoading ? (
         <div className="space-y-10">
           <SolutionsGridLoader title="Em andamento" count={2} />
           <SolutionsGridLoader title="Concluídas" count={2} />
           <SolutionsGridLoader title="Recomendadas" count={3} />
         </div>
-      ) : hasNoSolutions ? (
+      ) : !hasAnyContent ? (
         <NoSolutionsPlaceholder />
       ) : (
         <div className="space-y-10">
@@ -113,6 +129,18 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
               solutions={recommended}
               onSolutionClick={onSolutionClick}
             />
+          )}
+
+          {/* Fallback se todas as seções estão vazias mas temos dados válidos */}
+          {active?.length === 0 && completed?.length === 0 && recommended?.length === 0 && (
+            <Card className="p-8 text-center">
+              <CardContent>
+                <h3 className="text-lg font-semibold mb-2">Nenhuma solução encontrada</h3>
+                <p className="text-muted-foreground">
+                  Não encontramos soluções para a categoria selecionada. Tente mudar o filtro ou entre em contato com o suporte.
+                </p>
+              </CardContent>
+            </Card>
           )}
         </div>
       )}

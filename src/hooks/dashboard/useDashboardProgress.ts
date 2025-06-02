@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+
+import { useMemo } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { Solution } from "@/lib/supabase";
@@ -8,16 +9,26 @@ import { toast } from "sonner";
 export const useDashboardProgress = (solutions: Solution[] = []) => {
   const { user } = useAuth();
   
-  // Função para buscar o progresso - separada para facilitar cache
-  const fetchProgress = useCallback(async () => {
-    if (!user) {
-      console.log("useDashboardProgress: Usuário não autenticado");
-      throw new Error("Usuário não autenticado");
-    }
-    
-    console.log("useDashboardProgress: Buscando progresso para o usuário", user.id);
-    
-    try {
+  console.log("useDashboardProgress: Iniciando", { 
+    hasUser: !!user, 
+    solutionsCount: solutions.length 
+  });
+  
+  // Buscar progresso com configuração otimizada
+  const { 
+    data: progressData,
+    isLoading,
+    error
+  } = useQuery({
+    queryKey: ['user-progress', user?.id],
+    queryFn: async () => {
+      if (!user) {
+        console.log("useDashboardProgress: Usuário não autenticado");
+        return [];
+      }
+      
+      console.log("useDashboardProgress: Buscando progresso para", user.id);
+      
       const { data, error } = await supabase
         .from("progress")
         .select("*")
@@ -28,42 +39,43 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
         throw error;
       }
       
-      console.log("useDashboardProgress: Progresso carregado com sucesso, itens:", data?.length || 0);
-      return data;
-    } catch (error) {
-      console.error("useDashboardProgress: Exception ao buscar progresso:", error);
-      throw error;
-    }
-  }, [user]);
-  
-  // Usar React Query para cache e controle de estado
-  const { 
-    data: progressData,
-    isLoading,
-    error
-  } = useQuery({
-    queryKey: ['progress', user?.id],
-    queryFn: fetchProgress,
-    staleTime: 5 * 60 * 1000, // 5 minutos de cache
-    enabled: !!user && solutions.length > 0,
-    refetchOnWindowFocus: false, // Desativar refetch ao focar a janela
-    refetchInterval: false, // Desativar refetch automático baseado em intervalo
-    retry: 2, // Tentar 2 vezes antes de desistir
-    meta: {
-      onError: (err: any) => {
-        console.error("Erro durante o carregamento do progresso:", err);
-        toast.error("Erro ao carregar seu progresso", {
-          description: "Algumas funcionalidades podem não estar disponíveis"
-        });
-      }
+      console.log("useDashboardProgress: Progresso carregado:", data?.length || 0);
+      return data || [];
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    cacheTime: 10 * 60 * 1000, // 10 minutos
+    retry: 2,
+    refetchOnWindowFocus: false,
+    enabled: !!user, // Só executa se tem usuário
+    onError: (err: any) => {
+      console.error("useDashboardProgress: Erro no hook:", err);
+      toast.error("Erro ao carregar progresso", {
+        description: "Algumas funcionalidades podem não estar disponíveis"
+      });
     }
   });
 
-  // Usar useMemo para processar os dados apenas quando necessário
+  // Processar dados com fallbacks robustos
   const { active, completed, recommended } = useMemo(() => {
-    if (!solutions || solutions.length === 0 || !progressData) {
-      console.log("useDashboardProgress: Sem dados para processar");
+    console.log("useDashboardProgress: Processando dados", {
+      solutionsLength: solutions.length,
+      progressDataLength: progressData?.length || 0
+    });
+
+    // Se não há soluções, retornar arrays vazios (não é erro)
+    if (!solutions || solutions.length === 0) {
+      console.log("useDashboardProgress: Sem soluções disponíveis");
       return { active: [], completed: [], recommended: [] };
+    }
+
+    // Se não há dados de progresso, todas são recomendadas
+    if (!progressData || progressData.length === 0) {
+      console.log("useDashboardProgress: Sem progresso, todas são recomendadas");
+      return {
+        active: [],
+        completed: [],
+        recommended: solutions.slice(0, 6) // Limitar para performance
+      };
     }
 
     try {
@@ -89,11 +101,11 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
       const recommendedSolutions = solutions.filter(solution => 
         !activeSolutions.some(active => active.id === solution.id) && 
         !completedSolutions.some(completed => completed.id === solution.id)
-      );
+      ).slice(0, 6); // Limitar para performance
 
-      console.log("useDashboardProgress: Dados processados com sucesso", {
-        active: activeSolutions.length, 
-        completed: completedSolutions.length, 
+      console.log("useDashboardProgress: Processamento concluído", {
+        active: activeSolutions.length,
+        completed: completedSolutions.length,
         recommended: recommendedSolutions.length
       });
 
@@ -104,7 +116,7 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
       };
     } catch (err) {
       console.error("useDashboardProgress: Erro ao processar dados:", err);
-      return { active: [], completed: [], recommended: [] };
+      return { active: [], completed: [], recommended: solutions.slice(0, 6) };
     }
   }, [solutions, progressData]);
 

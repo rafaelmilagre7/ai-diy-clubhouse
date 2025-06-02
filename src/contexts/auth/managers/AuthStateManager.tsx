@@ -23,40 +23,39 @@ interface AuthStateManagerProps {
 }
 
 export const AuthStateManager: FC<AuthStateManagerProps> = ({ onStateChange }) => {
-  // Configurar listener de mudanças de estado de autenticação
   useEffect(() => {
+    let loadingTimeout: NodeJS.Timeout;
+    
     const setupAuthListener = () => {
+      console.log("AuthStateManager: Configurando listener de autenticação");
+      
       // Iniciar com carregando = true
       onStateChange({ isLoading: true });
-
-      logger.debug("Configurando listener de autenticação");
+      
+      // Timeout de segurança para garantir que loading sempre termine
+      loadingTimeout = setTimeout(() => {
+        console.warn("AuthStateManager: Timeout de carregamento atingido, forçando fim do loading");
+        onStateChange({ isLoading: false });
+      }, 5000); // 5 segundos máximo
 
       // Configurar listener para mudanças de autenticação
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         async (event, session) => {
-          logger.debug("Evento de autenticação", { event, userId: session?.user?.id });
+          console.log("AuthStateManager: Evento de autenticação", { event, userId: session?.user?.id });
+
+          // Limpar timeout se temos uma resposta
+          if (loadingTimeout) {
+            clearTimeout(loadingTimeout);
+          }
 
           if (event === 'SIGNED_IN') {
-            onStateChange({ session, user: session?.user || null });
+            onStateChange({ 
+              session, 
+              user: session?.user || null,
+              isLoading: false // Importante: finalizar loading imediatamente
+            });
 
-            // Verificar se é um login inicial ou apenas uma atualização de sessão
-            const isInitialLogin = !localStorage.getItem('lastAuthRoute');
-            
-            // Apenas redirecionar para o domínio correto em logins iniciais
-            if (isInitialLogin) {
-              const currentOrigin = window.location.origin;
-              const targetDomain = 'https://app.viverdeia.ai';
-
-              // Redirecionar apenas se for um domínio de produção diferente do alvo
-              if (!currentOrigin.includes('localhost') && currentOrigin !== targetDomain) {
-                toast.info("Redirecionando para o domínio principal...");
-                const currentPath = window.location.pathname;
-                redirectToDomain(currentPath);
-                return;
-              }
-            }
-
-            // Processar perfil do usuário em segundo plano
+            // Processar perfil em segundo plano
             if (session?.user) {
               setTimeout(async () => {
                 try {
@@ -72,33 +71,46 @@ export const AuthStateManager: FC<AuthStateManagerProps> = ({ onStateChange }) =
                     isFormacao: profile?.role === 'formacao'
                   });
                 } catch (error) {
-                  logger.error("Erro ao processar perfil", error);
+                  console.error("AuthStateManager: Erro ao processar perfil", error);
                 }
               }, 0);
             }
           } else if (event === 'SIGNED_OUT') {
-            logger.debug("Usuário desconectado, limpando estado");
+            console.log("AuthStateManager: Usuário desconectado");
             onStateChange({
               session: null,
               user: null,
               profile: null,
               isAdmin: false,
-              isFormacao: false
+              isFormacao: false,
+              isLoading: false
             });
-          } else if (event === 'USER_UPDATED') {
-            logger.debug("Dados do usuário atualizados");
-            onStateChange({ session, user: session?.user || null });
+          } else if (event === 'TOKEN_REFRESHED') {
+            console.log("AuthStateManager: Token atualizado");
+            onStateChange({ 
+              session, 
+              user: session?.user || null 
+            });
           }
         }
       );
 
       // Verificar sessão atual
       supabase.auth.getSession().then(async ({ data: { session } }) => {
-        logger.debug("Verificando sessão atual", { userId: session?.user?.id });
+        console.log("AuthStateManager: Verificando sessão atual", { userId: session?.user?.id });
 
-        onStateChange({ session, user: session?.user || null });
+        // Limpar timeout
+        if (loadingTimeout) {
+          clearTimeout(loadingTimeout);
+        }
 
-        // Processar perfil do usuário se houver sessão ativa
+        onStateChange({ 
+          session, 
+          user: session?.user || null,
+          isLoading: false // Sempre finalizar loading
+        });
+
+        // Processar perfil se houver sessão ativa
         if (session?.user) {
           try {
             const profile = await processUserProfile(
@@ -113,26 +125,34 @@ export const AuthStateManager: FC<AuthStateManagerProps> = ({ onStateChange }) =
               isFormacao: profile?.role === 'formacao'
             });
           } catch (error) {
-            logger.error("Erro ao processar perfil", error);
+            console.error("AuthStateManager: Erro ao processar perfil inicial", error);
           }
         }
-
-        // Marcar carregamento como concluído
-        onStateChange({ isLoading: false });
       }).catch(error => {
-        logger.error("Erro ao verificar sessão", error);
-        onStateChange({ isLoading: false, authError: error instanceof Error ? error : new Error('Erro desconhecido') });
+        console.error("AuthStateManager: Erro ao verificar sessão", error);
+        
+        // Limpar timeout e finalizar loading mesmo com erro
+        if (loadingTimeout) {
+          clearTimeout(loadingTimeout);
+        }
+        
+        onStateChange({ 
+          isLoading: false, 
+          authError: error instanceof Error ? error : new Error('Erro desconhecido') 
+        });
       });
 
       // Limpeza ao desmontar
       return () => {
-        logger.debug("Limpando listener de autenticação");
+        console.log("AuthStateManager: Limpando listener");
+        if (loadingTimeout) {
+          clearTimeout(loadingTimeout);
+        }
         subscription.unsubscribe();
       };
     };
 
-    // Inicializar listener
-    setupAuthListener();
+    return setupAuthListener();
   }, [onStateChange]);
 
   // Este componente não renderiza nada, apenas gerencia o estado

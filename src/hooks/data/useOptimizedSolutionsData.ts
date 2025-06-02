@@ -1,7 +1,7 @@
 
 import { useMemo } from 'react';
-import { useOptimizedAuth } from '@/hooks/auth/useOptimizedAuth';
-import { useOptimizedQuery } from '@/hooks/common/useOptimizedQuery';
+import { useAuth } from '@/contexts/auth';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Solution } from '@/lib/supabase';
 
@@ -18,30 +18,50 @@ export const useOptimizedSolutionsData = ({
   initialCategory = 'all',
   searchQuery = ''
 }: UseOptimizedSolutionsDataProps = {}) => {
-  const { isAdmin, isAuthenticated } = useOptimizedAuth();
+  const { profile } = useAuth();
+  const isAdmin = profile?.role === 'admin';
 
-  // Fetch solutions com cache otimizado
+  console.log('useOptimizedSolutionsData: Iniciando fetch', { isAdmin, profile: !!profile });
+
+  // Fetch solutions com configuração otimizada
   const { 
     data: solutions = [], 
     isLoading, 
     error 
-  } = useOptimizedQuery({
+  } = useQuery({
     queryKey: ['solutions', isAdmin],
     queryFn: async () => {
+      console.log('useOptimizedSolutionsData: Executando query');
+      
       let query = supabase.from("solutions").select("*");
       if (!isAdmin) {
         query = query.eq("published", true);
       }
       
       const { data, error } = await query.order('created_at', { ascending: false });
-      if (error) throw error;
+      
+      if (error) {
+        console.error('useOptimizedSolutionsData: Erro na query:', error);
+        throw error;
+      }
+      
+      console.log('useOptimizedSolutionsData: Dados carregados:', data?.length || 0);
       return data as Solution[];
     },
-    enabled: isAuthenticated
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    cacheTime: 10 * 60 * 1000, // 10 minutos
+    retry: 2,
+    refetchOnWindowFocus: false,
+    enabled: true // Sempre habilitado, não depende de profile
   });
 
   // Filtrar soluções de forma otimizada
   const filteredSolutions = useMemo(() => {
+    if (!solutions?.length) {
+      console.log('useOptimizedSolutionsData: Sem soluções para filtrar');
+      return [];
+    }
+    
     let filtered = [...solutions];
     
     // Filtrar por categoria
@@ -61,14 +81,15 @@ export const useOptimizedSolutionsData = ({
       );
     }
     
+    console.log('useOptimizedSolutionsData: Soluções filtradas:', filtered.length);
     return filtered;
   }, [solutions, initialCategory, searchQuery]);
 
   return {
-    solutions,
+    solutions: solutions || [],
     filteredSolutions,
     loading: isLoading,
     error: error ? String(error) : null,
-    canViewSolutions: isAuthenticated
+    canViewSolutions: true // Sempre true para simplificar
   };
 };
