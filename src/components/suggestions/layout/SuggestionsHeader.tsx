@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Plus, Search, TrendingUp, Clock, Settings, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { SuggestionFilter } from '@/hooks/suggestions/useSuggestions';
+import { SuggestionFilter } from '@/types/suggestionTypes';
 
 interface SuggestionsHeaderProps {
   searchQuery: string;

@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { useSuggestions, SuggestionFilter } from '@/hooks/suggestions/useSuggestions';
+import { useSuggestions } from '@/hooks/suggestions/useSuggestions';
+import { SuggestionFilter } from '@/types/suggestionTypes';
 import { SuggestionsHeader } from './SuggestionsHeader';
 import { SuggestionsContent } from './SuggestionsContent';
 import { Skeleton } from '@/components/ui/skeleton';
