@@ -5,7 +5,7 @@ import { SuggestionsEmptyState } from '../states/SuggestionsEmptyState';
 import { getStatusLabel, getStatusColor } from '@/utils/suggestionUtils';
 import { Suggestion, SuggestionFilter } from '@/types/suggestionTypes';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, Clock, Settings, CheckCircle, List } from 'lucide-react';
+import { TrendingUp, Clock, Settings, CheckCircle, List, BarChart3 } from 'lucide-react';
 
 interface SuggestionsContentProps {
   suggestions: Suggestion[];
@@ -31,15 +31,30 @@ const getFilterIcon = (filter: SuggestionFilter) => {
 const getFilterLabel = (filter: SuggestionFilter) => {
   switch (filter) {
     case 'popular':
-      return 'Populares';
+      return 'Sugestões Populares';
     case 'recent':
-      return 'Recentes';
+      return 'Sugestões Recentes';
     case 'in_development':
       return 'Em Desenvolvimento';
     case 'completed':
       return 'Implementadas';
     default:
-      return 'Todas';
+      return 'Todas as Sugestões';
+  }
+};
+
+const getFilterDescription = (filter: SuggestionFilter, count: number) => {
+  switch (filter) {
+    case 'popular':
+      return `${count} ${count === 1 ? 'sugestão' : 'sugestões'} mais votadas pela comunidade`;
+    case 'recent':
+      return `${count} ${count === 1 ? 'sugestão recente' : 'sugestões recentes'}`;
+    case 'in_development':
+      return `${count} ${count === 1 ? 'sugestão sendo' : 'sugestões sendo'} desenvolvida${count === 1 ? '' : 's'}`;
+    case 'completed':
+      return `${count} ${count === 1 ? 'sugestão implementada' : 'sugestões implementadas'}`;
+    default:
+      return `${count} ${count === 1 ? 'sugestão' : 'sugestões'} encontradas`;
   }
 };
 
@@ -50,6 +65,7 @@ export const SuggestionsContent: React.FC<SuggestionsContentProps> = ({
 }) => {
   const FilterIcon = getFilterIcon(filter);
   const filterLabel = getFilterLabel(filter);
+  const filterDescription = getFilterDescription(filter, suggestions.length);
   
   // Estatísticas por status
   const statusStats = suggestions.reduce((acc, suggestion) => {
@@ -62,41 +78,49 @@ export const SuggestionsContent: React.FC<SuggestionsContentProps> = ({
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header com estatísticas */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-card/50 rounded-lg border">
-        <div className="flex items-center gap-3">
-          <FilterIcon className="h-5 w-5 text-primary" />
-          <div className="text-left">
-            <h2 className="font-semibold text-lg">
-              {filterLabel}
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {suggestions.length} {suggestions.length === 1 ? 'sugestão' : 'sugestões'} 
-              {searchQuery && ` para "${searchQuery}"`}
-            </p>
+    <div className="space-y-8">
+      {/* Results Header */}
+      <div className="bg-card/50 border rounded-xl p-6">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-primary/10 text-primary rounded-lg">
+              <FilterIcon className="h-6 w-6" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-semibold mb-1">
+                {filterLabel}
+              </h2>
+              <p className="text-muted-foreground">
+                {filterDescription}
+                {searchQuery && ` para "${searchQuery}"`}
+              </p>
+            </div>
           </div>
+          
+          {/* Statistics */}
+          {Object.keys(statusStats).length > 1 && (
+            <div className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(statusStats).map(([status, count]) => (
+                  <Badge key={status} variant="outline" className="text-xs">
+                    {getStatusLabel(status)}: {count}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-        
-        {Object.keys(statusStats).length > 1 && (
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(statusStats).map(([status, count]) => (
-              <Badge key={status} variant="secondary" className="text-xs">
-                {getStatusLabel(status)}: {count}
-              </Badge>
-            ))}
-          </div>
-        )}
       </div>
 
-      {/* Grid de sugestões com animação */}
+      {/* Suggestions Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {suggestions.map((suggestion, index) => (
           <div 
             key={suggestion.id}
             className="animate-fade-in"
             style={{ 
-              animationDelay: `${index * 100}ms`,
+              animationDelay: `${index * 50}ms`,
               animationFillMode: 'both'
             }}
           >
@@ -109,10 +133,10 @@ export const SuggestionsContent: React.FC<SuggestionsContentProps> = ({
         ))}
       </div>
 
-      {/* Indicador de final da lista */}
-      {suggestions.length > 6 && (
-        <div className="text-left py-4">
-          <p className="text-sm text-muted-foreground">
+      {/* Results Footer */}
+      {suggestions.length > 9 && (
+        <div className="text-center py-6 border-t">
+          <p className="text-muted-foreground">
             Mostrando {suggestions.length} {suggestions.length === 1 ? 'sugestão' : 'sugestões'}
           </p>
         </div>
