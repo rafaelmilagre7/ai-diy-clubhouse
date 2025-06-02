@@ -22,11 +22,11 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const [lastError, setLastError] = useState<any>(null);
   
-  console.log('🔧 LoggingProvider: Inicializando provider');
-  
   // Funções de logging independentes de auth
   const log = useCallback((action: string, data: LogData = {}) => {
-    console.log(`[Log] ${action}:`, data);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[Log] ${action}:`, data);
+    }
     
     // Armazenar logs críticos apenas se tivermos um user_id
     if (data.critical && data.user_id) {
@@ -35,7 +35,9 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
   }, []);
   
   const logWarning = useCallback((action: string, data: LogData = {}) => {
-    console.warn(`[Warning] ${action}:`, data);
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(`[Warning] ${action}:`, data);
+    }
     
     // Armazenar avisos apenas se tivermos um user_id
     if (data.user_id) {
@@ -106,11 +108,13 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
           event_data: logEntry
         });
         
-      if (error) {
+      if (error && process.env.NODE_ENV === 'development') {
         console.error("Failed to store log:", error);
       }
     } catch (e) {
-      console.error("Error in logging system:", e);
+      if (process.env.NODE_ENV === 'development') {
+        console.error("Error in logging system:", e);
+      }
     }
   };
   
@@ -120,8 +124,6 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
     logError,
     lastError
   };
-  
-  console.log('✅ LoggingProvider: Provider configurado com sucesso');
   
   return (
     <LoggingContext.Provider value={contextValue}>
@@ -136,15 +138,21 @@ export const useLogging = (): LoggingContextType => {
   
   // Fallback gracioso se o provider não estiver disponível
   if (context === undefined) {
-    console.warn('⚠️ useLogging: Provider não encontrado, usando fallback');
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('⚠️ useLogging: Provider não encontrado, usando fallback');
+    }
     
     // Retornar implementação básica de fallback
     return {
       log: (action: string, data?: LogData) => {
-        console.log(`[Fallback Log] ${action}:`, data);
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`[Fallback Log] ${action}:`, data);
+        }
       },
       logWarning: (action: string, data?: LogData) => {
-        console.warn(`[Fallback Warning] ${action}:`, data);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`[Fallback Warning] ${action}:`, data);
+        }
       },
       logError: (action: string, error: any) => {
         console.error(`[Fallback Error] ${action}:`, error);
@@ -154,6 +162,5 @@ export const useLogging = (): LoggingContextType => {
     };
   }
   
-  console.log('✅ useLogging: Hook configurado corretamente');
   return context;
 };

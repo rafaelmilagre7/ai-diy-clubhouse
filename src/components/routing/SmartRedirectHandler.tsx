@@ -50,39 +50,28 @@ export const SmartRedirectHandler: React.FC<SmartRedirectHandlerProps> = ({ chil
   // Verificar se é admin (admins sempre têm acesso)
   const isAdmin = profile?.role === 'admin';
 
-  console.log('🔍 SmartRedirectHandler: Analisando navegação', {
-    pathname: location.pathname,
-    isPublicRoute,
-    isOnboardingRoute,
-    isProfileRoute,
-    requiresOnboarding,
-    isProtectedRoute,
-    isOnboardingComplete,
-    isAdmin,
-    userId: user?.id
-  });
-
   // Invalidar cache quando o usuário navega entre páginas
   useEffect(() => {
     if (user?.id && !isPublicRoute) {
-      console.log('🔄 SmartRedirectHandler: Invalidando cache ao navegar para:', location.pathname);
       invalidateOnboardingCache();
     }
   }, [location.pathname, user?.id, isPublicRoute, invalidateOnboardingCache]);
 
-  // Log da navegação atual
+  // Log da navegação atual - apenas em desenvolvimento
   useEffect(() => {
-    logger.debug('SmartRedirectHandler', 'Navegação detectada', {
-      pathname: location.pathname,
-      isPublicRoute,
-      isOnboardingRoute,
-      isProfileRoute,
-      requiresOnboarding,
-      isProtectedRoute,
-      isOnboardingComplete,
-      isAdmin,
-      userId: user?.id
-    });
+    if (process.env.NODE_ENV === 'development') {
+      logger.debug('SmartRedirectHandler', 'Navegação detectada', {
+        pathname: location.pathname,
+        isPublicRoute,
+        isOnboardingRoute,
+        isProfileRoute,
+        requiresOnboarding,
+        isProtectedRoute,
+        isOnboardingComplete,
+        isAdmin,
+        userId: user?.id
+      });
+    }
   }, [location.pathname, isPublicRoute, isOnboardingRoute, isProfileRoute, requiresOnboarding, isProtectedRoute, isOnboardingComplete, isAdmin, user?.id]);
 
   // Redirecionar para onboarding apenas se a rota atual requer onboarding E não é uma rota protegida
@@ -90,22 +79,11 @@ export const SmartRedirectHandler: React.FC<SmartRedirectHandlerProps> = ({ chil
     if (user && !isPublicRoute && !isOnboardingRoute && !authLoading && !onboardingLoading) {
       // NÃO redirecionar se for uma rota de perfil
       if (isProfileRoute) {
-        console.log('🔍 SmartRedirectHandler: Rota de perfil detectada - não redirecionando', {
-          pathname: location.pathname
-        });
         return;
       }
 
       // Só redirecionar se a rota requer onboarding, onboarding não está completo, não é admin E não é uma rota protegida
       if (requiresOnboarding && !isOnboardingComplete && !isAdmin && !isProtectedRoute) {
-        console.log('🔄 SmartRedirectHandler: Redirecionando para onboarding - rota requer onboarding', {
-          userId: user.id,
-          currentPath: location.pathname,
-          requiresOnboarding,
-          isProtectedRoute,
-          isOnboardingComplete,
-          isAdmin
-        });
         navigate('/onboarding-new', { replace: true });
       }
     }

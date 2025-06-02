@@ -14,12 +14,14 @@ const AppRoutes = () => {
   const location = useLocation();
   const [navigationEvents, setNavigationEvents] = useState<{path: string, timestamp: number}[]>([]);
   
-  // Para diagnóstico - mostrar quando a rota muda
+  // Para diagnóstico - mostrar quando a rota muda (apenas em desenvolvimento)
   useEffect(() => {
-    console.log("AppRoutes: Navegação para rota:", location.pathname, {
-      search: location.search,
-      state: location.state
-    });
+    if (process.env.NODE_ENV === 'development') {
+      console.log("AppRoutes: Navegação para rota:", location.pathname, {
+        search: location.search,
+        state: location.state
+      });
+    }
     
     // Armazenar eventos de navegação recentes para detectar loops
     const now = Date.now();
@@ -30,18 +32,20 @@ const AppRoutes = () => {
       // Remover eventos antigos (mais de 10 segundos)
       const filtered = updated.filter(event => now - event.timestamp < 10000);
       
-      // Detectar possíveis loops
-      const recentPathCounts: Record<string, number> = {};
-      filtered.forEach(event => {
-        recentPathCounts[event.path] = (recentPathCounts[event.path] || 0) + 1;
-      });
-      
-      // Alertar se houver muitos eventos para a mesma rota
-      Object.entries(recentPathCounts).forEach(([path, count]) => {
-        if (count > 3) {
-          console.warn(`AppRoutes: Possível loop de navegação detectado para a rota ${path} (${count} eventos em 10s)`);
-        }
-      });
+      // Detectar possíveis loops (apenas em desenvolvimento)
+      if (process.env.NODE_ENV === 'development') {
+        const recentPathCounts: Record<string, number> = {};
+        filtered.forEach(event => {
+          recentPathCounts[event.path] = (recentPathCounts[event.path] || 0) + 1;
+        });
+        
+        // Alertar se houver muitos eventos para a mesma rota
+        Object.entries(recentPathCounts).forEach(([path, count]) => {
+          if (count > 3) {
+            console.warn(`AppRoutes: Possível loop de navegação detectado para a rota ${path} (${count} eventos em 10s)`);
+          }
+        });
+      }
       
       return filtered;
     });

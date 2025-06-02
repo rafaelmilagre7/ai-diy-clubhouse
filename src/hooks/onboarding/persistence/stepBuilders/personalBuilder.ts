@@ -7,10 +7,10 @@ import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 export function buildPersonalInfoUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
   const updateObj: Record<string, any> = {};
   
-  console.log("Construindo objeto de atualização para Personal Info:", data);
-  
   if (!data || !progress) {
-    console.warn("Dados ou progresso não fornecidos para Personal Info Builder");
+    if (process.env.NODE_ENV === 'development') {
+      console.warn("Dados ou progresso não fornecidos para Personal Info Builder");
+    }
     return updateObj;
   }
   
@@ -32,7 +32,6 @@ export function buildPersonalInfoUpdate(data: Partial<OnboardingData>, progress:
       }
     });
     
-    console.log("Objeto de atualização gerado:", updateObj);
     return updateObj;
   } catch (error) {
     console.error("Erro ao construir objeto de atualização de Personal Info:", error);
