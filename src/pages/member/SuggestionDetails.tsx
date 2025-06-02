@@ -18,7 +18,8 @@ const SuggestionDetails = () => {
     isLoading,
     error,
     voteLoading,
-    handleVote
+    handleVote,
+    refetch
   } = useSuggestionDetails();
 
   const {
@@ -38,7 +39,7 @@ const SuggestionDetails = () => {
   }
 
   if (error || !suggestion) {
-    return <SuggestionErrorState error={error} />;
+    return <SuggestionErrorState errorMessage={error?.message} onRetry={refetch} />;
   }
 
   const isOwner = user?.id === suggestion.user_id;
