@@ -21,7 +21,7 @@ export interface Suggestion {
   profiles?: {
     name: string;
     avatar_url: string;
-  };
+  } | null;
   replies?: Suggestion[];
 }
 

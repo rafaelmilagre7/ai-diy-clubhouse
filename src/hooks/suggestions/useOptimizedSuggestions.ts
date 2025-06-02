@@ -5,6 +5,29 @@ import { supabase } from '@/lib/supabase';
 import { Suggestion, SuggestionFilter } from '@/types/suggestionTypes';
 import { useAuth } from '@/contexts/auth';
 
+interface RawSuggestionData {
+  id: string;
+  title: string;
+  description: string;
+  user_id: string;
+  status: string;
+  upvotes: number;
+  downvotes: number;
+  comment_count: number;
+  created_at: string;
+  updated_at: string;
+  is_pinned: boolean;
+  is_hidden: boolean;
+  profiles: {
+    name: string;
+    avatar_url: string;
+  } | null;
+  suggestion_votes: Array<{
+    vote_type: 'upvote' | 'downvote';
+    user_id: string;
+  }>;
+}
+
 export const useOptimizedSuggestions = (
   filter: SuggestionFilter = 'popular',
   searchQuery: string = ''
@@ -46,7 +69,7 @@ export const useOptimizedSuggestions = (
           updated_at,
           is_pinned,
           is_hidden,
-          profiles:user_id (
+          profiles!inner (
             name,
             avatar_url
           ),
@@ -93,21 +116,22 @@ export const useOptimizedSuggestions = (
 
       console.log('✅ Sugestões carregadas:', data?.length);
       
-      // Processar dados com otimização
-      const processedData = data?.map(suggestion => {
+      // Processar dados com validação de tipos
+      const processedData: Suggestion[] = (data as RawSuggestionData[])?.map(suggestion => {
         const userVote = suggestion.suggestion_votes?.find(
           vote => vote.user_id === user?.id
         );
         
         return {
           ...suggestion,
-          user_name: suggestion.profiles?.name,
-          user_avatar: suggestion.profiles?.avatar_url,
-          user_vote_type: userVote?.vote_type || null
+          user_name: suggestion.profiles?.name || 'Usuário',
+          user_avatar: suggestion.profiles?.avatar_url || '',
+          user_vote_type: userVote?.vote_type || null,
+          profiles: suggestion.profiles
         };
       }) || [];
 
-      return processedData as Suggestion[];
+      return processedData;
     },
     staleTime: 1000 * 60 * 3, // 3 minutos - cache mais agressivo
     gcTime: 1000 * 60 * 10, // 10 minutos na memória
