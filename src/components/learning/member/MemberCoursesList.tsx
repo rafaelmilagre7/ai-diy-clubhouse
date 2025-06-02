@@ -46,16 +46,26 @@ export const MemberCoursesList: React.FC<MemberCoursesListProps> = ({
   // Calcular progresso dos cursos
   const coursesWithProgress = courses.map(course => {
     const totalLessons = course.lesson_count || 0;
-    if (totalLessons === 0) return { ...course, progress: 0 };
+    if (totalLessons === 0) return { ...course, progress: 0, nextLessonId: null };
 
+    // Buscar progresso das aulas deste curso
     const courseProgress = userProgress.filter(progress => 
-      course.all_lessons?.some(lesson => lesson.id === progress.lesson_id && progress.progress_percentage === 100)
+      course.all_lessons?.some(lesson => lesson.id === progress.lesson_id)
     );
     
-    const completedLessons = courseProgress.length;
+    const completedLessons = courseProgress.filter(p => p.progress_percentage >= 100).length;
     const progress = Math.round((completedLessons / totalLessons) * 100);
     
-    return { ...course, progress };
+    // Encontrar próxima aula (primeira não concluída)
+    const nextLesson = course.all_lessons?.find(lesson => 
+      !courseProgress.some(p => p.lesson_id === lesson.id && p.progress_percentage >= 100)
+    );
+    
+    return { 
+      ...course, 
+      progress,
+      nextLessonId: nextLesson?.id || null
+    };
   });
 
   // Encontrar curso em andamento para o banner
@@ -70,6 +80,7 @@ export const MemberCoursesList: React.FC<MemberCoursesListProps> = ({
         <ContinueLearning 
           course={courseInProgress}
           progress={courseInProgress.progress}
+          nextLessonId={courseInProgress.nextLessonId}
         />
       )}
       

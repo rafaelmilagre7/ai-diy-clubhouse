@@ -1,195 +1,123 @@
 
-import React, { useEffect, useState } from "react";
-import { useModuleImplementation } from "@/hooks/useModuleImplementation";
-import LoadingScreen from "@/components/common/LoadingScreen";
-import { ImplementationHeader } from "@/components/implementation/ImplementationHeader";
-import { ImplementationNotFound } from "@/components/implementation/ImplementationNotFound";
-import { useLogging } from "@/hooks/useLogging";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { ModuleContentMaterials } from "@/components/implementation/content/ModuleContentMaterials";
-import { ModuleContentVideos } from "@/components/implementation/content/ModuleContentVideos";
-import { ModuleContentTools } from "@/components/implementation/content/ModuleContentTools";
-import { ModuleContentChecklist } from "@/components/implementation/content/ModuleContentChecklist";
-import { ImplementationComplete } from "@/components/implementation/content/ImplementationComplete";
-import { CommentsSection } from "@/components/implementation/content/tool-comments/CommentsSection";
-import { useSolutionCompletion } from "@/hooks/implementation/useSolutionCompletion";
-import { useRealtimeComments } from "@/hooks/implementation/useRealtimeComments";
-import { GlassCard } from "@/components/ui/GlassCard";
-import { ImplementationTabsNavigation } from "@/components/implementation/ImplementationTabsNavigation";
-import { PageTransition } from "@/components/transitions/PageTransition";
-import { FadeTransition } from "@/components/transitions/FadeTransition";
-import { StepProgressBar } from "@/components/implementation/StepProgressBar";
-import { SuccessCard } from "@/components/celebration/SuccessCard";
+import React from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { ArrowLeft, CheckCircle, Clock, Target } from 'lucide-react';
+import { useSolutionData } from '@/hooks/useSolutionData';
+import LoadingScreen from '@/components/common/LoadingScreen';
+import { SolutionNotFound } from '@/components/solution/SolutionNotFound';
 
 const SolutionImplementation = () => {
-  const {
-    solution,
-    modules,
-    currentModule,
-    loading,
-    completedModules,
-    progress
-  } = useModuleImplementation();
-  
-  const [activeTab, setActiveTab] = useState("tools");
-  const [showSuccess, setShowSuccess] = useState(false);
-  const { log, logError } = useLogging();
-  
-  const {
-    isCompleting,
-    isCompleted,
-    handleConfirmImplementation
-  } = useSolutionCompletion({
-    progressId: progress?.id,
-    solutionId: solution?.id,
-    moduleIdx: 0,
-    completedModules: completedModules,
-    setCompletedModules: () => {}
-  });
-  
-  const solutionId = solution?.id || "";
-  const moduleId = currentModule?.id || "";
-  
-  const enableRealtimeComments = !!solution && 
-                                !!currentModule && 
-                                activeTab === "comments";
-  
-  useRealtimeComments(solutionId, moduleId, enableRealtimeComments);
-  
-  useEffect(() => {
-    if (activeTab === "comments" && solution && currentModule) {
-      log("Aba de comentários ativada", { 
-        solutionId: solution.id, 
-        moduleId: currentModule.id
-      });
-    }
-  }, [activeTab, solution, currentModule, log]);
-  
-  const onComplete = async () => {
-    const success = await handleConfirmImplementation();
-    if (success) {
-      log("Implementation completed successfully", { solution_id: solution?.id });
-      setShowSuccess(true);
-    }
-  };
-  
-  useEffect(() => {
-    if (currentModule && solution) {
-      log("Module loaded", { 
-        solution_id: solution.id,
-        solution_title: solution.title,
-        module_id: currentModule.id,
-        module_title: currentModule.title,
-        module_type: currentModule.type,
-        has_content: !!currentModule.content,
-        content_keys: currentModule.content ? Object.keys(currentModule.content) : []
-      });
-    }
-  }, [currentModule, solution, log]);
-  
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { solution, loading, error, progress } = useSolutionData(id);
+
   if (loading) {
-    return <LoadingScreen />;
-  }
-  
-  if (!solution) {
-    const errorMsg = "Solution not found";
-    logError("Implementation not found", { error: errorMsg, solution_id: solution?.id });
-    return <ImplementationNotFound />;
+    return <LoadingScreen message="Carregando implementação..." />;
   }
 
-  // Preparar os passos para a barra de progresso
-  const moduleSteps = modules ? modules.map(module => module.title || "Etapa") : [];
-  
+  if (!solution) {
+    return <SolutionNotFound />;
+  }
+
+  const implementationSteps = [
+    { id: 1, title: 'Análise inicial', description: 'Entender os requisitos e objetivos', completed: true },
+    { id: 2, title: 'Planejamento', description: 'Definir estratégia e cronograma', completed: true },
+    { id: 3, title: 'Implementação', description: 'Executar a solução', completed: false },
+    { id: 4, title: 'Testes', description: 'Validar resultados', completed: false },
+    { id: 5, title: 'Otimização', description: 'Ajustar e melhorar', completed: false }
+  ];
+
+  const completedSteps = implementationSteps.filter(step => step.completed).length;
+  const progressPercentage = (completedSteps / implementationSteps.length) * 100;
+
   return (
-    <PageTransition className="min-h-screen bg-[#0F111A] pb-16">
-      <div className="container max-w-4xl py-4 md:py-6 animate-fade-in">
-        {/* Cartão de sucesso (aparece quando o usuário completa a implementação) */}
-        {showSuccess && (
-          <div className="mb-6">
-            <SuccessCard
-              title="Implementação Concluída!"
-              message={`Parabéns! Você finalizou com sucesso a implementação da solução "${solution.title}".`}
-              type="implementation"
-              onAnimationComplete={() => {
-                setTimeout(() => setShowSuccess(false), 5000);
-              }}
-            />
-          </div>
-        )}
-        
-        <GlassCard className="p-0 md:p-0 transition-all duration-300 shadow-xl border border-white/10 overflow-hidden">
-          <ImplementationHeader solution={solution} />
+    <div className="container py-8 px-4">
+      <div className="max-w-4xl mx-auto">
+        <Button
+          variant="ghost"
+          className="mb-6"
+          onClick={() => navigate(`/solutions/${id}`)}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Voltar para detalhes
+        </Button>
+
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Implementação da Solução</h1>
+          <h2 className="text-xl text-muted-foreground mb-4">{solution.title}</h2>
           
-          {/* Barra de progresso da implementação */}
-          {moduleSteps.length > 0 && (
-            <div className="px-4 md:px-6 pt-4">
-              <FadeTransition>
-                <StepProgressBar
-                  steps={moduleSteps}
-                  currentStep={modules.findIndex(m => m.id === currentModule?.id)}
-                  completedSteps={completedModules}
-                  className="mb-4"
-                />
-              </FadeTransition>
-            </div>
-          )}
-          
-          <div className="mt-0 px-4 md:px-6 pb-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <ImplementationTabsNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
-              
-              <div className="bg-[#151823] rounded-xl p-4 md:p-6 border border-white/10 min-h-[30vh]">
-                <TabsContent value="tools" className="mt-0 tab-fade-in">
-                  <FadeTransition>
-                    <ModuleContentTools module={currentModule} />
-                  </FadeTransition>
-                </TabsContent>
-                
-                <TabsContent value="materials" className="mt-0 tab-fade-in">
-                  <FadeTransition>
-                    <ModuleContentMaterials module={currentModule} />
-                  </FadeTransition>
-                </TabsContent>
-                
-                <TabsContent value="videos" className="mt-0 tab-fade-in">
-                  <FadeTransition>
-                    <ModuleContentVideos module={currentModule} />
-                  </FadeTransition>
-                </TabsContent>
-                
-                <TabsContent value="checklist" className="mt-0 tab-fade-in">
-                  <FadeTransition>
-                    <ModuleContentChecklist module={currentModule} />
-                  </FadeTransition>
-                </TabsContent>
-                
-                <TabsContent value="comments" className="mt-0 tab-fade-in">
-                  {solution && currentModule && (
-                    <FadeTransition>
-                      <CommentsSection 
-                        solutionId={solution.id} 
-                        moduleId={currentModule.id} 
-                      />
-                    </FadeTransition>
-                  )}
-                </TabsContent>
-                
-                <TabsContent value="complete" className="mt-0 tab-fade-in">
-                  <FadeTransition>
-                    <ImplementationComplete 
-                      solution={solution} 
-                      onComplete={onComplete} 
-                      isCompleting={isCompleting}
-                      isCompleted={isCompleted}
-                    />
-                  </FadeTransition>
-                </TabsContent>
+          <div className="flex items-center gap-4 mb-6">
+            <div className="flex-1">
+              <div className="flex justify-between text-sm mb-2">
+                <span>Progresso da implementação</span>
+                <span>{Math.round(progressPercentage)}%</span>
               </div>
-            </Tabs>
+              <Progress value={progressPercentage} className="h-3" />
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {completedSteps} de {implementationSteps.length} etapas
+            </div>
           </div>
-        </GlassCard>
+        </div>
+
+        <div className="grid gap-6">
+          {implementationSteps.map((step, index) => (
+            <Card key={step.id} className={`transition-all ${step.completed ? 'bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800' : ''}`}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    step.completed 
+                      ? 'bg-green-500 text-white' 
+                      : index === completedSteps 
+                        ? 'bg-viverblue text-white' 
+                        : 'bg-gray-200 text-gray-600'
+                  }`}>
+                    {step.completed ? (
+                      <CheckCircle className="h-4 w-4" />
+                    ) : index === completedSteps ? (
+                      <Clock className="h-4 w-4" />
+                    ) : (
+                      <Target className="h-4 w-4" />
+                    )}
+                  </div>
+                  <span className={step.completed ? 'text-green-700 dark:text-green-300' : ''}>
+                    Etapa {step.id}: {step.title}
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">{step.description}</p>
+                {index === completedSteps && !step.completed && (
+                  <div className="mt-4">
+                    <Button className="bg-viverblue hover:bg-viverblue-dark">
+                      Iniciar esta etapa
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="mt-8 flex gap-4">
+          <Button 
+            variant="outline"
+            onClick={() => navigate('/solutions')}
+          >
+            Ver outras soluções
+          </Button>
+          <Button 
+            className="bg-viverblue hover:bg-viverblue-dark"
+            onClick={() => navigate('/implementation-trail')}
+          >
+            Ver trilha completa
+          </Button>
+        </div>
       </div>
-    </PageTransition>
+    </div>
   );
 };
 

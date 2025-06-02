@@ -10,12 +10,19 @@ import { LearningCourseWithLessons } from '@/lib/supabase/types/learning';
 interface ContinueLearningProps {
   course: LearningCourseWithLessons;
   progress: number;
+  nextLessonId?: string;
 }
 
 export const ContinueLearning: React.FC<ContinueLearningProps> = ({
   course,
-  progress
+  progress,
+  nextLessonId
 }) => {
+  // Determinar link de continuação
+  const continueLink = nextLessonId 
+    ? `/learning/course/${course.id}/lesson/${nextLessonId}`
+    : `/learning/course/${course.id}`;
+
   return (
     <Card className="bg-gradient-to-r from-viverblue/10 to-viverblue/5 border-viverblue/20">
       <CardContent className="p-6">
@@ -59,9 +66,9 @@ export const ContinueLearning: React.FC<ContinueLearningProps> = ({
           {/* Botão de ação */}
           <div className="flex-shrink-0">
             <Button asChild className="bg-viverblue hover:bg-viverblue-dark">
-              <Link to={`/learning/course/${course.id}`}>
+              <Link to={continueLink}>
                 <Play className="w-4 h-4 mr-2" />
-                Continuar
+                {nextLessonId ? 'Continuar' : 'Ver curso'}
               </Link>
             </Button>
           </div>

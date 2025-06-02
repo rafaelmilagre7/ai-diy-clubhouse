@@ -1,236 +1,119 @@
 
-import { useState, useEffect, useRef } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/auth';
 
-interface UseLessonProgressProps {
-  lessonId?: string;
-}
-
-export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
-  const [progress, setProgress] = useState(0);
+export const useLessonProgress = (lessonId?: string) => {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
-  const isCreatingInitialProgress = useRef(false);
+  const [progress, setProgress] = useState(0);
 
-  // Buscar progresso atual da lição
-  const { 
-    data: userProgress,
-    refetch: refetchProgress,
-    isLoading: isLoadingProgress
+  // Buscar progresso atual da aula
+  const {
+    data: progressData,
+    isLoading
   } = useQuery({
-    queryKey: ["learning-lesson-progress", lessonId],
+    queryKey: ['lesson-progress', lessonId, user?.id],
     queryFn: async () => {
-      if (!lessonId) return null;
-      
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) return null;
-      
+      if (!lessonId || !user?.id) return null;
+
       const { data, error } = await supabase
-        .from("learning_progress")
-        .select("*")
-        .eq("user_id", userData.user.id)
-        .eq("lesson_id", lessonId)
+        .from('learning_progress')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('lesson_id', lessonId)
         .maybeSingle();
-        
-      if (error && error.code !== 'PGRST116') {
-        console.error("Erro ao carregar progresso da lição:", error);
+
+      if (error) {
+        console.error('Erro ao buscar progresso:', error);
         return null;
       }
-      
-      if (data) {
-        setProgress(data.progress_percentage);
-      }
-      
+
       return data;
     },
-    enabled: !!lessonId
+    enabled: !!lessonId && !!user?.id,
+    staleTime: 2 * 60 * 1000, // 2 minutos
+    gcTime: 5 * 60 * 1000 // 5 minutos
   });
-  
-  // Mutation para criar/atualizar progresso (usando UPSERT)
+
+  // Atualizar estado local quando dados chegarem
+  useEffect(() => {
+    if (progressData) {
+      setProgress(progressData.progress_percentage || 0);
+    }
+  }, [progressData]);
+
+  // Mutation para atualizar progresso
   const updateProgressMutation = useMutation({
     mutationFn: async (newProgress: number) => {
-      if (!lessonId) throw new Error("ID da lição não fornecido");
-      
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error("Usuário não autenticado");
-      
-      const timestamp = new Date().toISOString();
-      
-      // Usar UPSERT para evitar conflitos de chave duplicada
-      const { data, error } = await supabase
-        .from("learning_progress")
-        .upsert({
-          user_id: userData.user.id,
-          lesson_id: lessonId,
-          progress_percentage: newProgress,
-          started_at: timestamp,
-          updated_at: timestamp,
-          completed_at: newProgress >= 100 ? timestamp : null,
-          last_position_seconds: 0
-        }, {
-          onConflict: 'user_id,lesson_id',
-          ignoreDuplicates: false
-        })
-        .select()
-        .single();
-        
-      if (error) {
-        // Se ainda houver erro de duplicata, tentar UPDATE específico
-        if (error.code === '23505') {
-          const { error: updateError } = await supabase
-            .from("learning_progress")
-            .update({ 
-              progress_percentage: newProgress,
-              updated_at: timestamp,
-              completed_at: newProgress >= 100 ? timestamp : userProgress?.completed_at
-            })
-            .eq("user_id", userData.user.id)
-            .eq("lesson_id", lessonId);
-            
-          if (updateError) throw updateError;
-          return newProgress;
-        }
-        throw error;
-      }
-      
-      return data;
-    },
-    onSuccess: (result) => {
-      const newProgress = typeof result === 'number' ? result : result?.progress_percentage || 0;
-      setProgress(newProgress);
-      refetchProgress();
-      
-      if (newProgress >= 100) {
-        toast.success("Lição concluída com sucesso!");
-      }
-      
-      // CORREÇÃO: Invalidar cache de forma mais abrangente para evitar aulas desaparecendo
-      queryClient.invalidateQueries({ queryKey: ["learning-completed-lessons"] });
-      queryClient.invalidateQueries({ queryKey: ["learning-progress"] });
-      queryClient.invalidateQueries({ queryKey: ["learning-course-lessons"] });
-      queryClient.invalidateQueries({ queryKey: ["learning-modules"] });
-      
-      console.log("Progresso atualizado e cache invalidado:", {
-        lessonId,
-        newProgress,
-        timestamp: new Date().toISOString()
-      });
-    },
-    onError: (error: any) => {
-      console.error("Erro ao salvar progresso:", error);
-      
-      // Não mostrar toast para erros de duplicata - são esperados
-      if (error.code !== '23505') {
-        toast.error("Não foi possível salvar seu progresso");
-      }
-    }
-  });
+      if (!lessonId || !user?.id) throw new Error('Dados insuficientes');
 
-  // Mutation específica para inicializar progresso
-  const initializeProgressMutation = useMutation({
-    mutationFn: async () => {
-      if (!lessonId || isCreatingInitialProgress.current) {
-        return null;
+      const now = new Date().toISOString();
+
+      if (progressData) {
+        // Atualizar progresso existente
+        const { data, error } = await supabase
+          .from('learning_progress')
+          .update({
+            progress_percentage: newProgress,
+            updated_at: now,
+            completed_at: newProgress >= 100 ? now : progressData.completed_at
+          })
+          .eq('id', progressData.id)
+          .select();
+
+        if (error) throw error;
+        return data[0];
+      } else {
+        // Criar novo progresso
+        const { data, error } = await supabase
+          .from('learning_progress')
+          .insert({
+            user_id: user.id,
+            lesson_id: lessonId,
+            progress_percentage: newProgress,
+            started_at: now,
+            completed_at: newProgress >= 100 ? now : null
+          })
+          .select();
+
+        if (error) throw error;
+        return data[0];
       }
-      
-      isCreatingInitialProgress.current = true;
-      
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error("Usuário não autenticado");
-      
-      const timestamp = new Date().toISOString();
-      
-      // Verificar se já existe progresso antes de tentar criar
-      const { data: existingProgress } = await supabase
-        .from("learning_progress")
-        .select("id")
-        .eq("user_id", userData.user.id)
-        .eq("lesson_id", lessonId)
-        .maybeSingle();
-        
-      if (existingProgress) {
-        return existingProgress;
-      }
-      
-      // Tentar inserir novo registro
-      const { data, error } = await supabase
-        .from("learning_progress")
-        .insert({
-          user_id: userData.user.id,
-          lesson_id: lessonId,
-          progress_percentage: 1,
-          started_at: timestamp,
-          updated_at: timestamp
-        })
-        .select()
-        .single();
-        
-      if (error && error.code === '23505') {
-        // Se houve erro de duplicata, buscar o registro existente
-        const { data: existingData } = await supabase
-          .from("learning_progress")
-          .select("*")
-          .eq("user_id", userData.user.id)
-          .eq("lesson_id", lessonId)
-          .single();
-          
-        return existingData;
-      }
-      
-      if (error) throw error;
-      return data;
     },
     onSuccess: (data) => {
-      if (data) {
-        setProgress(data.progress_percentage || 1);
-        refetchProgress();
-      }
-    },
-    onError: (error: any) => {
-      console.error("Erro ao inicializar progresso:", error);
-      // Não mostrar toast para erros de inicialização
-    },
-    onSettled: () => {
-      isCreatingInitialProgress.current = false;
+      setProgress(data.progress_percentage || 0);
+      queryClient.invalidateQueries({
+        queryKey: ['lesson-progress', lessonId, user?.id]
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['user-learning-progress', user?.id]
+      });
     }
   });
 
-  // Marcar lição como iniciada quando a página carrega
-  useEffect(() => {
-    if (lessonId && 
-        !userProgress && 
-        !isLoadingProgress && 
-        !isCreatingInitialProgress.current &&
-        initializeProgressMutation.isIdle) {
-      
-      // Pequeno delay para evitar múltiplas execuções
-      const timer = setTimeout(() => {
-        initializeProgressMutation.mutate();
-      }, 100);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [lessonId, userProgress, isLoadingProgress, initializeProgressMutation]);
-
-  // Atualizar progresso quando o usuário interage com a lição
-  const updateProgress = (newProgress: number) => {
-    // Se o progresso for maior que o atual, atualizamos
-    if (newProgress > progress) {
-      updateProgressMutation.mutate(newProgress);
+  // Função para atualizar progresso de vídeo
+  const updateProgress = (videoId: string, videoProgress: number) => {
+    // Lógica simplificada: usar o progresso do vídeo atual
+    if (videoProgress > progress) {
+      updateProgressMutation.mutate(Math.min(videoProgress, 100));
     }
   };
-  
-  // Marcar lição como concluída
-  const completeLesson = async () => {
+
+  // Função para marcar como concluída
+  const markAsCompleted = async () => {
     await updateProgressMutation.mutateAsync(100);
   };
 
+  const isCompleted = progress >= 100;
+
   return {
     progress,
-    userProgress,
-    isUpdating: updateProgressMutation.isPending || initializeProgressMutation.isPending,
+    isCompleted,
     updateProgress,
-    completeLesson
+    markAsCompleted,
+    isLoading,
+    isUpdating: updateProgressMutation.isPending
   };
-}
+};
