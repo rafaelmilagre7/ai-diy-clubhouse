@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
+import MemberLayout from '@/components/layout/MemberLayout';
 import LearningPage from '@/pages/member/learning/LearningPage';
 import CourseDetails from '@/pages/member/learning/CourseDetails';
 import LessonView from '@/pages/member/learning/LessonView';
@@ -8,14 +9,23 @@ import LessonView from '@/pages/member/learning/LessonView';
 export const LearningRoutes = () => {
   return (
     <Routes>
-      {/* Página principal de cursos */}
-      <Route index element={<LearningPage />} />
+      <Route index element={
+        <MemberLayout>
+          <LearningPage />
+        </MemberLayout>
+      } />
       
-      {/* Detalhes de um curso específico */}
-      <Route path="course/:id" element={<CourseDetails />} />
+      <Route path="course/:id" element={
+        <MemberLayout>
+          <CourseDetails />
+        </MemberLayout>
+      } />
       
-      {/* Visualização de uma aula específica */}
-      <Route path="course/:courseId/lesson/:lessonId" element={<LessonView />} />
+      <Route path="course/:courseId/lesson/:lessonId" element={
+        <MemberLayout>
+          <LessonView />
+        </MemberLayout>
+      } />
     </Routes>
   );
 };
