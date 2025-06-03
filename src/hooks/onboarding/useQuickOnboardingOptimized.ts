@@ -2,6 +2,10 @@
 import { useState, useCallback } from 'react';
 import { QuickOnboardingData } from '@/types/quickOnboarding';
 import { useQuickOnboardingDataLoader } from './useQuickOnboardingDataLoader';
+import { useQuickOnboardingAutoSave } from './useQuickOnboardingAutoSave';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/auth';
+import { toast } from 'sonner';
 
 const initialData: QuickOnboardingData = {
   // Etapa 1: Informações Pessoais
@@ -36,6 +40,7 @@ const initialData: QuickOnboardingData = {
 };
 
 export const useQuickOnboardingOptimized = () => {
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const { 
     data, 
@@ -44,6 +49,9 @@ export const useQuickOnboardingOptimized = () => {
     hasExistingData, 
     loadError 
   } = useQuickOnboardingDataLoader();
+
+  // Adicionar auto-save
+  const { isSaving, lastSaveTime } = useQuickOnboardingAutoSave(data);
 
   const updateField = useCallback((field: keyof QuickOnboardingData, value: any) => {
     setData(prev => ({
@@ -55,11 +63,17 @@ export const useQuickOnboardingOptimized = () => {
   const canProceed = useCallback(() => {
     switch (currentStep) {
       case 1:
-        return !!(data.name && data.email);
+        // Etapa 1: Validar campos obrigatórios incluindo indicação condicional
+        const hasRequiredPersonalInfo = !!(data.name && data.email && data.whatsapp && data.how_found_us);
+        const hasReferralIfNeeded = data.how_found_us !== 'indicacao' || !!data.referred_by;
+        return hasRequiredPersonalInfo && hasReferralIfNeeded;
       case 2:
-        return !!(data.company_name && data.main_goal);
+        // Etapa 2: Validar informações completas do negócio
+        return !!(data.company_name && data.role && data.company_size && 
+                  data.company_segment && data.annual_revenue_range && data.main_challenge);
       case 3:
-        return !!(data.ai_knowledge_level && data.uses_ai);
+        // Etapa 3: Validar experiência completa com IA
+        return !!(data.ai_knowledge_level && data.uses_ai && data.main_goal);
       default:
         return false;
     }
@@ -75,6 +89,46 @@ export const useQuickOnboardingOptimized = () => {
     setCurrentStep(prev => Math.max(1, prev - 1));
   }, []);
 
+  const completeOnboarding = useCallback(async () => {
+    if (!user || !canProceed()) {
+      toast.error('Complete todas as etapas antes de finalizar');
+      return false;
+    }
+
+    try {
+      // Marcar como completo na tabela quick_onboarding
+      const { error: quickError } = await supabase
+        .from('quick_onboarding')
+        .update({ 
+          is_completed: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id);
+
+      if (quickError) throw quickError;
+
+      // Marcar como completo na tabela onboarding_progress também
+      const { error: progressError } = await supabase
+        .from('onboarding_progress')
+        .update({ 
+          is_completed: true,
+          current_step: 'completed',
+          completed_steps: ['personal_info', 'professional_info', 'ai_experience'],
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id);
+
+      if (progressError) throw progressError;
+
+      toast.success('Onboarding concluído com sucesso!');
+      return true;
+    } catch (error) {
+      console.error('Erro ao completar onboarding:', error);
+      toast.error('Erro ao finalizar onboarding. Tente novamente.');
+      return false;
+    }
+  }, [user, canProceed]);
+
   return {
     currentStep,
     data,
@@ -85,6 +139,10 @@ export const useQuickOnboardingOptimized = () => {
     isLoading,
     hasExistingData,
     loadError,
-    totalSteps: 4
+    totalSteps: 4,
+    // Adicionar estado de salvamento
+    isSaving,
+    lastSaveTime,
+    completeOnboarding
   };
 };

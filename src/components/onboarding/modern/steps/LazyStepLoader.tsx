@@ -1,84 +1,107 @@
 
-import React, { Suspense } from 'react';
+import React, { Suspense, lazy } from 'react';
+import { QuickOnboardingData } from '@/types/quickOnboarding';
 import { Loader2 } from 'lucide-react';
-import { adaptOnboardingStateToQuickData } from '@/types/quickOnboarding';
+import { AutoSaveFeedback } from '../AutoSaveFeedback';
 
-const StepQuemEVoceNew = React.lazy(() => 
-  import('./StepQuemEVoceNew').then(module => ({ default: module.StepQuemEVoceNew }))
-);
+// Lazy load dos componentes das etapas
+const StepQuemEVoceNew = lazy(() => import('./StepQuemEVoceNew').then(module => ({ default: module.StepQuemEVoceNew })));
+const StepSeuNegocioNew = lazy(() => import('./StepSeuNegocioNew').then(module => ({ default: module.StepSeuNegocioNew })));
+const StepExperienciaIANew = lazy(() => import('./StepExperienciaIANew').then(module => ({ default: module.StepExperienciaIANew })));
 
-const StepSeuNegocioNew = React.lazy(() => 
-  import('./StepSeuNegocioNew').then(module => ({ default: module.StepSeuNegocioNew }))
-);
-
-const StepExperienciaIANew = React.lazy(() => 
-  import('./StepExperienciaIANew').then(module => ({ default: module.StepExperienciaIANew }))
-);
-
-const StepLoader = () => (
-  <div className="flex items-center justify-center py-8">
-    <Loader2 className="h-6 w-6 text-viverblue animate-spin" />
-  </div>
-);
-
-interface LazyStepProps {
+interface LazyStepLoaderProps {
   step: number;
-  data: any;
-  onUpdate: (field: string, value: any) => void;
+  data: QuickOnboardingData;
+  onUpdate: (field: keyof QuickOnboardingData, value: any) => void;
   onNext: () => void;
-  onPrevious?: () => void;
+  onPrevious: () => void;
   canProceed: boolean;
   currentStep: number;
   totalSteps: number;
+  isSaving?: boolean;
+  lastSaveTime?: number | null;
 }
 
-export const LazyStepLoader: React.FC<LazyStepProps> = ({ 
-  step, 
-  data, 
-  onUpdate, 
-  onNext, 
-  onPrevious, 
-  canProceed, 
-  currentStep, 
-  totalSteps 
+export const LazyStepLoader: React.FC<LazyStepLoaderProps> = ({
+  step,
+  data,
+  onUpdate,
+  onNext,
+  onPrevious,
+  canProceed,
+  currentStep,
+  totalSteps,
+  isSaving,
+  lastSaveTime
 }) => {
-  // Adaptar dados para o formato correto
-  const adaptedData = adaptOnboardingStateToQuickData(data);
+  const LoadingFallback = () => (
+    <div className="flex flex-col items-center justify-center py-12 space-y-4">
+      <Loader2 className="h-8 w-8 text-viverblue animate-spin" />
+      <p className="text-gray-300">Carregando etapa...</p>
+    </div>
+  );
+
+  const renderStep = () => {
+    switch (step) {
+      case 1:
+        return (
+          <StepQuemEVoceNew
+            data={data}
+            onUpdate={onUpdate}
+            onNext={onNext}
+            canProceed={canProceed}
+            currentStep={currentStep}
+            totalSteps={totalSteps}
+          />
+        );
+      
+      case 2:
+        return (
+          <StepSeuNegocioNew
+            data={data}
+            onUpdate={onUpdate}
+            onNext={onNext}
+            onPrevious={onPrevious}
+            canProceed={canProceed}
+            currentStep={currentStep}
+            totalSteps={totalSteps}
+          />
+        );
+      
+      case 3:
+        return (
+          <StepExperienciaIANew
+            data={data}
+            onUpdate={onUpdate}
+            onNext={onNext}
+            onPrevious={onPrevious}
+            canProceed={canProceed}
+            currentStep={currentStep}
+            totalSteps={totalSteps}
+          />
+        );
+      
+      default:
+        return null;
+    }
+  };
 
   return (
-    <Suspense fallback={<StepLoader />}>
-      {step === 1 && (
-        <StepQuemEVoceNew 
-          data={adaptedData}
-          onUpdate={onUpdate}
-          onNext={onNext}
-          canProceed={canProceed}
-          currentStep={currentStep}
-          totalSteps={totalSteps}
+    <div className="space-y-6">
+      {/* Feedback de auto-save */}
+      <div className="flex justify-end">
+        <AutoSaveFeedback 
+          isSaving={isSaving} 
+          lastSaveTime={lastSaveTime}
+          hasUnsavedChanges={false}
+          isOnline={navigator.onLine}
         />
-      )}
-      {step === 2 && onPrevious && (
-        <StepSeuNegocioNew 
-          data={adaptedData}
-          onUpdate={onUpdate}
-          onNext={onNext}
-          onPrevious={onPrevious}
-          canProceed={canProceed}
-          currentStep={currentStep}
-          totalSteps={totalSteps}
-        />
-      )}
-      {step === 3 && onPrevious && (
-        <StepExperienciaIANew 
-          data={adaptedData}
-          onUpdate={onUpdate}
-          onNext={onNext}
-          onPrevious={onPrevious}
-          canProceed={canProceed}
-          currentStep={currentStep}
-          totalSteps={totalSteps}
-        />
-      )}
-    </Suspense>
+      </div>
+
+      {/* Conteúdo da etapa */}
+      <Suspense fallback={<LoadingFallback />}>
+        {renderStep()}
+      </Suspense>
+    </div>
   );
 };

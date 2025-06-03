@@ -1,97 +1,54 @@
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Loader, CheckCircle, WifiOff } from 'lucide-react';
+import React from 'react';
+import { Loader, CheckCircle, Wifi, WifiOff } from 'lucide-react';
 
 interface AutoSaveFeedbackProps {
   isSaving?: boolean;
-  hasUnsavedChanges?: boolean;
   lastSaveTime?: number | null;
+  hasUnsavedChanges?: boolean;
   isOnline?: boolean;
 }
 
 export const AutoSaveFeedback: React.FC<AutoSaveFeedbackProps> = ({ 
-  isSaving = false,
-  hasUnsavedChanges = false,
+  isSaving = false, 
   lastSaveTime = null,
+  hasUnsavedChanges = false,
   isOnline = true
 }) => {
-  const [showFeedback, setShowFeedback] = useState(false);
-
-  useEffect(() => {
-    if (isSaving || hasUnsavedChanges || !isOnline) {
-      setShowFeedback(true);
-    } else if (lastSaveTime) {
-      setShowFeedback(true);
-      // Esconder após 3 segundos se salvo com sucesso
-      const timer = setTimeout(() => setShowFeedback(false), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [isSaving, hasUnsavedChanges, lastSaveTime, isOnline]);
-
-  const getFeedbackContent = () => {
-    if (!isOnline) {
-      return {
-        icon: WifiOff,
-        text: 'Sem conexão - dados serão salvos quando reconectar',
-        color: 'text-orange-400',
-        bgColor: 'bg-orange-500/10'
-      };
-    }
-
-    if (isSaving) {
-      return {
-        icon: Loader,
-        text: 'Salvando alterações...',
-        color: 'text-blue-400',
-        bgColor: 'bg-blue-500/10',
-        spin: true
-      };
-    }
-
-    if (lastSaveTime && !hasUnsavedChanges) {
-      return {
-        icon: CheckCircle,
-        text: `Salvo às ${new Date(lastSaveTime).toLocaleTimeString('pt-BR', {
-          hour: '2-digit',
-          minute: '2-digit'
-        })}`,
-        color: 'text-green-400',
-        bgColor: 'bg-green-500/10'
-      };
-    }
-
-    if (hasUnsavedChanges) {
-      return {
-        icon: CheckCircle,
-        text: 'Alterações não salvas',
-        color: 'text-yellow-400',
-        bgColor: 'bg-yellow-500/10'
-      };
-    }
-
-    return null;
-  };
-
-  const content = getFeedbackContent();
-
-  if (!content || !showFeedback) return null;
-
-  const Icon = content.icon;
+  // Se não há informações relevantes, não mostrar nada
+  if (!lastSaveTime && !isSaving && !hasUnsavedChanges) return null;
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
-        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${content.bgColor} ${content.color} border border-current/20`}
-      >
-        <Icon 
-          className={`h-3 w-3 ${content.spin ? 'animate-spin' : ''}`} 
-        />
-        <span>{content.text}</span>
-      </motion.div>
-    </AnimatePresence>
+    <div className="flex items-center gap-2 text-sm">
+      {!isOnline && (
+        <div className="flex items-center gap-1 text-red-400">
+          <WifiOff className="h-3 w-3" />
+          <span>Offline</span>
+        </div>
+      )}
+      
+      {isSaving ? (
+        <div className="flex items-center gap-1 text-blue-400">
+          <Loader className="h-3 w-3 animate-spin" />
+          <span>Salvando...</span>
+        </div>
+      ) : lastSaveTime ? (
+        <div className="flex items-center gap-1 text-green-400">
+          <CheckCircle className="h-3 w-3" />
+          <span>
+            Salvo às{' '}
+            {new Date(lastSaveTime).toLocaleTimeString('pt-BR', {
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+          </span>
+        </div>
+      ) : hasUnsavedChanges ? (
+        <div className="flex items-center gap-1 text-yellow-400">
+          <Wifi className="h-3 w-3" />
+          <span>Não salvo</span>
+        </div>
+      ) : null}
+    </div>
   );
 };

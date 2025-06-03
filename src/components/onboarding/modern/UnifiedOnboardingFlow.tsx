@@ -1,12 +1,13 @@
 
 import React from 'react';
 import { useQuickOnboardingOptimized } from '@/hooks/onboarding/useQuickOnboardingOptimized';
-import { useOnboardingNavigation } from '@/hooks/onboarding/useOnboardingNavigation';
+import { useNavigate } from 'react-router-dom';
 import { LazyStepLoader } from './steps/LazyStepLoader';
 import { EnhancedTrailMagicExperience } from '../EnhancedTrailMagicExperience';
 import { Loader2 } from 'lucide-react';
 
 export const UnifiedOnboardingFlow: React.FC = () => {
+  const navigate = useNavigate();
   const {
     currentStep,
     data,
@@ -17,15 +18,18 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     isLoading,
     hasExistingData,
     loadError,
-    totalSteps
+    totalSteps,
+    isSaving,
+    lastSaveTime,
+    completeOnboarding
   } = useQuickOnboardingOptimized();
 
-  const { navigateToStep } = useOnboardingNavigation();
-
   const handleFinish = async () => {
-    console.log('Onboarding finalizado com dados:', data);
-    // Redirecionar para a página de conclusão do onboarding
-    navigateToStep('completed');
+    const success = await completeOnboarding();
+    if (success) {
+      console.log('Onboarding finalizado com dados:', data);
+      navigate('/onboarding-new/completed');
+    }
   };
 
   // Mostrar loading enquanto carrega dados existentes
@@ -74,6 +78,8 @@ export const UnifiedOnboardingFlow: React.FC = () => {
               canProceed={canProceed}
               currentStep={currentStep}
               totalSteps={totalSteps}
+              isSaving={isSaving}
+              lastSaveTime={lastSaveTime}
             />
           </div>
         );

@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuickOnboardingValidation } from '@/hooks/onboarding/useQuickOnboardingValidation';
+import { useOnboardingCompletion } from '@/hooks/onboarding/useOnboardingCompletion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, AlertCircle } from 'lucide-react';
@@ -18,33 +18,16 @@ export const OnboardingValidator: React.FC<OnboardingValidatorProps> = ({
   redirectTo = '/onboarding-new'
 }) => {
   const navigate = useNavigate();
-  const { validateOnboardingCompletion } = useQuickOnboardingValidation();
-  const [isValidating, setIsValidating] = useState(true);
-  const [isValid, setIsValid] = useState(false);
+  const { data: completionData, isLoading } = useOnboardingCompletion();
+  const [validationChecked, setValidationChecked] = useState(false);
 
   useEffect(() => {
-    const checkOnboarding = async () => {
-      if (!requireOnboarding) {
-        setIsValid(true);
-        setIsValidating(false);
-        return;
-      }
+    if (!isLoading) {
+      setValidationChecked(true);
+    }
+  }, [isLoading]);
 
-      try {
-        const isComplete = await validateOnboardingCompletion();
-        setIsValid(isComplete);
-      } catch (error) {
-        console.error('Erro ao validar onboarding:', error);
-        setIsValid(false);
-      } finally {
-        setIsValidating(false);
-      }
-    };
-
-    checkOnboarding();
-  }, [requireOnboarding, validateOnboardingCompletion]);
-
-  if (isValidating) {
+  if (isLoading || !validationChecked) {
     return (
       <Card className="w-full max-w-md mx-auto mt-8">
         <CardContent className="pt-6 flex flex-col items-center space-y-4">
@@ -55,7 +38,9 @@ export const OnboardingValidator: React.FC<OnboardingValidatorProps> = ({
     );
   }
 
-  if (!isValid && requireOnboarding) {
+  const isOnboardingComplete = completionData?.isCompleted || false;
+
+  if (!isOnboardingComplete && requireOnboarding) {
     return (
       <Card className="w-full max-w-md mx-auto mt-8">
         <CardContent className="pt-6 text-center space-y-4">

@@ -4455,6 +4455,10 @@ export type Database = {
         Args: { p_email: string }
         Returns: Json
       }
+      clean_user_onboarding_data: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
       create_invite: {
         Args: {
           p_email: string
@@ -4588,10 +4592,6 @@ export type Database = {
         Args: { user_id: string }
         Returns: boolean
       }
-      limpar_dados_onboarding: {
-        Args: { user_id_param?: string }
-        Returns: string
-      }
       log_permission_change: {
         Args: {
           user_id: string
@@ -4622,6 +4622,10 @@ export type Database = {
       migrate_existing_onboarding_data: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      migrate_onboarding_data_to_quick: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       normalize_solution_category: {
         Args: Record<PropertyKey, never>
@@ -4661,6 +4665,10 @@ export type Database = {
       }
       use_invite: {
         Args: { invite_token: string; user_id: string }
+        Returns: Json
+      }
+      user_can_access_feature: {
+        Args: { p_user_id: string; p_feature: string }
         Returns: Json
       }
       user_has_permission: {
