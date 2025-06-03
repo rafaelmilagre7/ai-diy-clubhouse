@@ -27,7 +27,10 @@ const AppRoutes = () => {
           <Route key={route.path} path={route.path} element={route.element} />
         ))}
         
-        {/* Member Routes - Usando componente protegido */}
+        {/* Onboarding Routes - SEM verificação de proteção extra */}
+        <Route path="/onboarding-new/*" element={<OnboardingRoutes />} />
+        
+        {/* Member Routes - Usando componente protegido APENAS para autenticação */}
         <Route path="/*" element={
           <ProtectedRoutes>
             <MemberRoutes />
@@ -38,9 +41,6 @@ const AppRoutes = () => {
         {adminRoutes.map((route) => (
           <Route key={route.path} path={route.path} element={route.element} />
         ))}
-        
-        {/* Onboarding Routes */}
-        <Route path="/onboarding-new/*" element={<OnboardingRoutes />} />
         
         {/* Formação Routes */}
         {formacaoRoutes.map((route) => (

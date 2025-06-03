@@ -24,25 +24,18 @@ export const OnboardingCompletionGuard: React.FC<OnboardingCompletionGuardProps>
 
   if (error) {
     console.error('Erro ao verificar onboarding:', error);
-    // Em caso de erro, permitir acesso ao onboarding
+    // Em caso de erro, permitir acesso
     return <>{children}</>;
   }
 
-  // NOVA LÓGICA: Verificar se o usuário está tentando acessar uma rota específica do onboarding
+  // LÓGICA SIMPLIFICADA: Apenas redirecionar se onboarding completo E tentando acessar onboarding
   const isOnOnboardingRoute = location.pathname.startsWith('/onboarding-new');
   
-  // Se o onboarding já foi completado E o usuário está tentando acessar o onboarding
   if (isOnboardingComplete && isOnOnboardingRoute) {
-    console.log('🔄 OnboardingCompletionGuard: Onboarding já completado, redirecionando para dashboard');
+    console.log('✅ OnboardingCompletionGuard: Onboarding completo, redirecionando para dashboard');
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Se não foi completado e está na rota do onboarding, permitir acesso
-  if (!isOnboardingComplete && isOnOnboardingRoute) {
-    console.log('✅ OnboardingCompletionGuard: Onboarding incompleto, permitindo acesso ao formulário');
-    return <>{children}</>;
-  }
-
-  // Para qualquer outra situação, permitir acesso
+  // Para todas as outras situações, permitir acesso
   return <>{children}</>;
 };
