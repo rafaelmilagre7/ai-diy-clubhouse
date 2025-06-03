@@ -32,6 +32,15 @@ export const SuggestionDetailsHeader = ({
 }: SuggestionDetailsHeaderProps) => {
   const navigate = useNavigate();
 
+  // Determinar a rota de retorno baseado no contexto admin
+  const getBackRoute = () => {
+    return isAdmin ? '/admin/suggestions' : '/suggestions';
+  };
+
+  const getDashboardRoute = () => {
+    return isAdmin ? '/admin' : '/dashboard';
+  };
+
   return (
     <div className="space-y-4">
       {/* Breadcrumb Navigation */}
@@ -39,17 +48,17 @@ export const SuggestionDetailsHeader = ({
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink 
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate(getDashboardRoute())}
               className="flex items-center gap-1 hover:text-primary cursor-pointer text-left"
             >
               <Home className="h-4 w-4" />
-              Dashboard
+              {isAdmin ? 'Admin' : 'Dashboard'}
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbLink 
-              onClick={() => navigate('/suggestions')}
+              onClick={() => navigate(getBackRoute())}
               className="hover:text-primary cursor-pointer text-left"
             >
               Sugestões
@@ -71,7 +80,7 @@ export const SuggestionDetailsHeader = ({
             variant="ghost"
             size="sm"
             className="flex items-center gap-2 hover:bg-accent/50 text-left"
-            onClick={() => navigate('/suggestions')}
+            onClick={() => navigate(getBackRoute())}
           >
             <ChevronLeft className="h-4 w-4" />
             <span>Voltar para Sugestões</span>

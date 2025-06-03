@@ -36,9 +36,9 @@ export const useAdminSuggestions = () => {
   const updateSuggestionStatus = async (suggestionId: string, status: string): Promise<boolean> => {
     try {
       setLoading(true);
-      console.log('Atualizando status da sugestão:', suggestionId, status);
+      console.log('Atualizando status da sugestão:', suggestionId, 'para:', status);
       
-      // Validar status - incluindo 'completed' que estava faltando
+      // Validar status - incluindo todos os status válidos
       const validStatuses = ['new', 'under_review', 'in_development', 'completed', 'declined'];
       if (!validStatuses.includes(status)) {
         console.error('Status inválido:', status);
@@ -46,19 +46,26 @@ export const useAdminSuggestions = () => {
         return false;
       }
       
-      const { error } = await supabase
+      const updateData = { 
+        status,
+        updated_at: new Date().toISOString()
+      };
+      
+      console.log('Dados da atualização:', updateData);
+      
+      const { data, error } = await supabase
         .from('suggestions')
-        .update({ 
-          status,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', suggestionId);
+        .update(updateData)
+        .eq('id', suggestionId)
+        .select();
       
       if (error) {
         console.error('Erro ao atualizar status da sugestão:', error);
-        toast.error('Erro ao atualizar status da sugestão: ' + error.message);
+        toast.error('Erro ao atualizar status: ' + error.message);
         return false;
       }
+      
+      console.log('Sugestão atualizada com sucesso:', data);
       
       // Mensagens de sucesso personalizadas
       const statusMessages = {
@@ -73,7 +80,7 @@ export const useAdminSuggestions = () => {
       return true;
     } catch (error: any) {
       console.error('Erro não esperado ao atualizar status da sugestão:', error);
-      toast.error('Erro ao atualizar status da sugestão: ' + error.message);
+      toast.error('Erro ao atualizar status: ' + error.message);
       return false;
     } finally {
       setLoading(false);

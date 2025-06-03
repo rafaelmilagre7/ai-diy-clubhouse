@@ -5,8 +5,7 @@ import { useSuggestionDetails } from '@/hooks/suggestions/useSuggestionDetails';
 import { useAdminSuggestions } from '@/hooks/suggestions/useAdminSuggestions';
 import { useAuth } from '@/contexts/auth';
 import { SuggestionDetailsHeader } from '@/components/suggestions/details/SuggestionDetailsHeader';
-import SuggestionContent from '@/components/suggestions/SuggestionContent';
-import { useSuggestionComments } from '@/hooks/suggestions/useSuggestionComments';
+import { AdminSuggestionView } from '@/components/suggestions/admin/AdminSuggestionView';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
@@ -32,20 +31,8 @@ const AdminSuggestionDetails = () => {
     suggestion, 
     isLoading, 
     error, 
-    userVote, 
-    voteLoading, 
-    handleVote, 
     refetch 
   } = useSuggestionDetails();
-
-  const {
-    comment,
-    comments,
-    isSubmitting,
-    commentsLoading,
-    setComment,
-    handleSubmitComment
-  } = useSuggestionComments(id);
 
   const { 
     loading: adminActionLoading, 
@@ -54,13 +41,14 @@ const AdminSuggestionDetails = () => {
   } = useAdminSuggestions();
 
   const isAdmin = profile?.role === 'admin';
-  const isOwner = suggestion?.user_id === profile?.id;
 
   const handleUpdateStatus = async (status: string) => {
     if (!suggestion) return;
     
+    console.log('Admin atualizando status para:', status);
     const success = await updateSuggestionStatus(suggestion.id, status);
     if (success) {
+      toast.success('Status atualizado com sucesso!');
       refetch();
     }
   };
@@ -105,19 +93,7 @@ const AdminSuggestionDetails = () => {
         onOpenDeleteDialog={() => setDeleteDialogOpen(true)}
       />
 
-      <SuggestionContent
-        suggestion={suggestion}
-        comment={comment}
-        comments={comments}
-        isSubmitting={isSubmitting}
-        commentsLoading={commentsLoading}
-        onCommentChange={setComment}
-        onSubmitComment={handleSubmitComment}
-        onVote={handleVote}
-        isOwner={isOwner}
-        userVote={userVote}
-        voteLoading={voteLoading}
-      />
+      <AdminSuggestionView suggestion={suggestion} />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
