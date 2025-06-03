@@ -1,7 +1,8 @@
 
 import { useParams, useLocation } from "react-router-dom";
 import LoadingScreen from "@/components/common/LoadingScreen";
-import { useSolutionData } from "@/hooks/useSolutionData";
+import { useSolutionDataCentralized } from "@/hooks/solution/useSolutionDataCentralized";
+import { SolutionDataProvider } from "@/contexts/SolutionDataContext";
 import { useSolutionInteractions } from "@/hooks/useSolutionInteractions";
 import { SolutionBackButton } from "@/components/solution/SolutionBackButton";
 import { SolutionHeaderSection } from "@/components/solution/SolutionHeaderSection";
@@ -10,7 +11,6 @@ import { SolutionSidebar } from "@/components/solution/SolutionSidebar";
 import { SolutionMobileActions } from "@/components/solution/SolutionMobileActions";
 import { SolutionNotFound } from "@/components/solution/SolutionNotFound";
 import { useEffect, useState } from "react";
-import { useToolsData } from "@/hooks/useToolsData";
 import { useLogging } from "@/hooks/useLogging";
 import { PageTransition } from "@/components/transitions/PageTransition";
 import { FadeTransition } from "@/components/transitions/FadeTransition";
@@ -22,11 +22,8 @@ const SolutionDetails = () => {
   const { log, logError } = useLogging();
   const [showStartSuccess, setShowStartSuccess] = useState(false);
   
-  // Garantir que os dados das ferramentas estejam corretos, mas ignorar erros
-  const { isLoading: toolsDataLoading } = useToolsData();
-  
-  // Fetch solution data with the updated hook that includes progress
-  const { solution, loading, error, progress } = useSolutionData(id);
+  // Usar o hook centralizado para buscar todos os dados
+  const { data, isLoading, error } = useSolutionDataCentralized(id);
   
   // Solution interaction handlers
   const { 
@@ -35,7 +32,7 @@ const SolutionDetails = () => {
     continueImplementation, 
     toggleFavorite, 
     downloadMaterials 
-  } = useSolutionInteractions(id, progress);
+  } = useSolutionInteractions(id, data?.progress);
 
   // Wrapped start implementation to show success animation
   const startImplementation = async () => {
@@ -49,82 +46,88 @@ const SolutionDetails = () => {
   
   // Log page visit
   useEffect(() => {
-    if (solution) {
+    if (data?.solution) {
       log("Solution details page visited", { 
-        solution_id: solution.id, 
-        solution_title: solution.title,
+        solution_id: data.solution.id, 
+        solution_title: data.solution.title,
         path: location.pathname
       });
     }
-  }, [solution, location.pathname, log]);
+  }, [data?.solution, location.pathname, log]);
   
-  if (loading) {
+  if (isLoading) {
     return <LoadingScreen message="Carregando detalhes da solução..." />;
   }
   
-  if (!solution) {
-    logError("Solution not found", { id });
+  if (error || !data?.solution) {
+    logError("Solution not found or error occurred", { id, error });
     return <SolutionNotFound />;
   }
   
   // Log para depuração
-  log("Renderizando SolutionDetails com solução", { 
-    solutionId: solution.id, 
-    solutionTitle: solution.title,
-    progress
+  log("Renderizando SolutionDetails com dados centralizados", { 
+    solutionId: data.solution.id, 
+    solutionTitle: data.solution.title,
+    hasProgress: !!data.progress,
+    modulesCount: data.modules.length,
+    materialsCount: data.materials.length,
+    toolsCount: data.tools.length,
+    videosCount: data.videos.length
   });
   
   return (
-    <PageTransition>
-      <div className="max-w-5xl mx-auto pb-12">
-        {showStartSuccess && (
-          <div className="fixed top-20 right-4 z-50 w-80">
-            <SuccessCard
-              title="Implementação Iniciada"
-              message="Você começou a implementação dessa solução. Boa jornada!"
-              type="step"
-              onAnimationComplete={() => setShowStartSuccess(false)}
-            />
-          </div>
-        )}
-        
-        <SolutionBackButton />
-        
-        <FadeTransition>
-          <SolutionHeaderSection solution={solution} />
-        </FadeTransition>
-        
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="md:col-span-2">
-            <FadeTransition delay={0.2}>
-              <SolutionTabsContent solution={solution} />
-            </FadeTransition>
-            
-            <FadeTransition delay={0.3}>
-              <SolutionMobileActions 
-                solutionId={solution.id}
-                progress={progress}
-                startImplementation={startImplementation}
-                continueImplementation={continueImplementation}
-                initializing={initializing}
+    <SolutionDataProvider data={data} isLoading={isLoading} error={error}>
+      <PageTransition>
+        <div className="max-w-5xl mx-auto pb-12">
+          {showStartSuccess && (
+            <div className="fixed top-20 right-4 z-50 w-80">
+              <SuccessCard
+                title="Implementação Iniciada"
+                message="Você começou a implementação dessa solução. Boa jornada!"
+                type="step"
+                onAnimationComplete={() => setShowStartSuccess(false)}
               />
-            </FadeTransition>
-          </div>
+            </div>
+          )}
           
-          <div className="md:col-span-1">
-            <FadeTransition delay={0.4} direction="right">
-              <SolutionSidebar 
-                solution={solution}
-                progress={progress}
-                startImplementation={startImplementation}
-                continueImplementation={continueImplementation}
-                initializing={initializing}
-              />
-            </FadeTransition>
+          <SolutionBackButton />
+          
+          <FadeTransition>
+            <SolutionHeaderSection solution={data.solution} />
+          </FadeTransition>
+          
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="md:col-span-2">
+              <FadeTransition delay={0.2}>
+                <SolutionTabsContent solution={data.solution} />
+              </FadeTransition>
+              
+              <FadeTransition delay={0.3}>
+                <SolutionMobileActions 
+                  solutionId={data.solution.id}
+                  progress={data.progress}
+                  startImplementation={startImplementation}
+                  continueImplementation={continueImplementation}
+                  initializing={initializing}
+                />
+              </FadeTransition>
+            </div>
+            
+            <div className="md:col-span-1">
+              <FadeTransition delay={0.4} direction="right">
+                <SolutionSidebar 
+                  solution={data.solution}
+                  progress={data.progress}
+                  startImplementation={startImplementation}
+                  continueImplementation={continueImplementation}
+                  initializing={initializing}
+                />
+              </FadeTransition>
+            </div>
           </div>
         </div>
-      </div>
-    </PageTransition>
+      </PageTransition>
+    </SolutionDataProvider>
   );
 };
 

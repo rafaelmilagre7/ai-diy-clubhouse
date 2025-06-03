@@ -1,10 +1,9 @@
 
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
 import { SolutionMaterialCard } from "../materials/SolutionMaterialCard";
 import { SolutionMaterialsLoading } from "../materials/SolutionMaterialsLoading";
 import { SolutionMaterialsEmpty } from "../materials/SolutionMaterialsEmpty";
+import { useSolutionDataContext } from "@/contexts/SolutionDataContext";
 import { useLogging } from "@/hooks/useLogging";
 
 interface SolutionMaterialsTabProps {
@@ -12,48 +11,21 @@ interface SolutionMaterialsTabProps {
 }
 
 export const SolutionMaterialsTab = ({ solutionId }: SolutionMaterialsTabProps) => {
-  const { log, logError } = useLogging();
-
-  const { data: materials, isLoading, error } = useQuery({
-    queryKey: ['solution-materials', solutionId],
-    queryFn: async () => {
-      log("Buscando materiais da solução", { solutionId });
-      
-      const { data, error } = await supabase
-        .from("solution_resources")
-        .select("*")
-        .eq("solution_id", solutionId)
-        .neq("type", "video") // Excluir vídeos (eles vão para a aba de vídeos)
-        .order("created_at", { ascending: true });
-      
-      if (error) {
-        logError("Erro ao buscar materiais", error);
-        throw error;
-      }
-      
-      log("Materiais encontrados", { count: data?.length || 0 });
-      return data || [];
-    },
-    enabled: !!solutionId,
-    staleTime: 5 * 60 * 1000
-  });
-
-  if (error) {
-    logError("Erro ao exibir materiais", error);
-    return (
-      <div className="text-center py-8">
-        <p className="text-red-400">Erro ao carregar materiais desta solução.</p>
-      </div>
-    );
-  }
+  const { data, isLoading } = useSolutionDataContext();
+  const { log } = useLogging();
 
   if (isLoading) {
     return <SolutionMaterialsLoading />;
   }
 
-  if (!materials || materials.length === 0) {
+  const materials = data?.materials || [];
+
+  if (materials.length === 0) {
+    log("Nenhum material encontrado para a solução", { solutionId });
     return <SolutionMaterialsEmpty />;
   }
+
+  log("Renderizando materiais da solução", { solutionId, count: materials.length });
 
   return (
     <div className="space-y-6">

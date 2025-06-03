@@ -3,81 +3,81 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Play, ExternalLink } from "lucide-react";
-import { YoutubeEmbed } from "@/components/common/YoutubeEmbed";
 
 interface SolutionVideoCardProps {
   video: any;
 }
 
 export const SolutionVideoCard = ({ video }: SolutionVideoCardProps) => {
-  const getYoutubeId = (url: string): string | null => {
-    const patterns = [
-      /(?:youtube\.com\/watch\?v=)([^&\n?#]+)/,
-      /(?:youtube\.com\/embed\/)([^&\n?#]+)/,
-      /(?:youtu\.be\/)([^&\n?#]+)/,
-      /(?:youtube\.com\/v\/)([^&\n?#]+)/
-    ];
+  const handlePlayVideo = () => {
+    if (video.url) {
+      window.open(video.url, '_blank');
+    }
+  };
+
+  const getThumbnail = () => {
+    if (video.thumbnail_url) {
+      return video.thumbnail_url;
+    }
     
-    for (const pattern of patterns) {
-      const match = url.match(pattern);
-      if (match && match[1] && match[1].length === 11) {
-        return match[1];
+    // Para vídeos do YouTube, extrair thumbnail
+    if (video.type === 'youtube' && video.url) {
+      const videoId = video.url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)?.[1];
+      if (videoId) {
+        return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
       }
     }
+    
     return null;
   };
 
-  const isYoutubeVideo = video.type === 'youtube' || video.url?.includes('youtube.com') || video.url?.includes('youtu.be');
-  const youtubeId = isYoutubeVideo ? getYoutubeId(video.url) : null;
-
   return (
-    <Card className="border-white/10 bg-backgroundLight">
+    <Card className="border-white/10 bg-backgroundLight hover:bg-backgroundLight/80 transition-colors">
       <CardContent className="p-4">
         <div className="space-y-4">
           <div>
             <h4 className="font-medium text-textPrimary mb-2">
-              {video.name}
+              {video.name || video.title}
             </h4>
-            {video.description && (
-              <p className="text-sm text-textSecondary">
-                {video.description}
-              </p>
-            )}
+            <div className="flex items-center space-x-2">
+              <span className="text-xs px-2 py-1 rounded bg-red-900/40 text-red-200 border border-red-700/30">
+                {video.type === 'youtube' ? 'YouTube' : 'Vídeo'}
+              </span>
+              {video.duration_seconds && (
+                <span className="text-xs text-textSecondary">
+                  {Math.floor(video.duration_seconds / 60)}:{(video.duration_seconds % 60).toString().padStart(2, '0')}
+                </span>
+              )}
+            </div>
           </div>
-
-          {isYoutubeVideo && youtubeId ? (
-            <div className="aspect-video overflow-hidden rounded-lg">
-              <YoutubeEmbed youtubeId={youtubeId} title={video.name} />
-            </div>
-          ) : video.type === 'video' ? (
-            <div className="aspect-video overflow-hidden rounded-lg bg-backgroundDark border border-white/10 flex items-center justify-center">
-              <Button
-                onClick={() => window.open(video.url, '_blank')}
-                variant="outline"
-                size="lg"
-              >
-                <Play className="h-5 w-5 mr-2" />
-                Assistir Vídeo
-              </Button>
-            </div>
-          ) : (
-            <div className="aspect-video overflow-hidden rounded-lg bg-backgroundDark border border-white/10 flex items-center justify-center">
-              <div className="text-center space-y-2">
-                <Play className="h-8 w-8 text-muted-foreground mx-auto" />
-                <p className="text-sm text-muted-foreground">
-                  Formato de vídeo não suportado
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open(video.url, '_blank')}
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Abrir Link
-                </Button>
+          
+          <div className="relative aspect-video bg-neutral-800 rounded-lg overflow-hidden">
+            {getThumbnail() ? (
+              <img 
+                src={getThumbnail()!} 
+                alt={video.name || video.title}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <Play className="h-12 w-12 text-neutral-600" />
               </div>
+            )}
+            <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+              <Play className="h-12 w-12 text-white" />
             </div>
-          )}
+          </div>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePlayVideo}
+            className="w-full"
+            disabled={!video.url}
+          >
+            <ExternalLink className="h-4 w-4 mr-2" />
+            Assistir Vídeo
+          </Button>
         </div>
       </CardContent>
     </Card>

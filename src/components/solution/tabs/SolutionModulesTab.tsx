@@ -1,10 +1,9 @@
 
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
 import { SolutionModuleCard } from "../modules/SolutionModuleCard";
 import { SolutionModulesLoading } from "../modules/SolutionModulesLoading";
 import { SolutionModulesEmpty } from "../modules/SolutionModulesEmpty";
+import { useSolutionDataContext } from "@/contexts/SolutionDataContext";
 import { useLogging } from "@/hooks/useLogging";
 
 interface SolutionModulesTabProps {
@@ -12,47 +11,21 @@ interface SolutionModulesTabProps {
 }
 
 export const SolutionModulesTab = ({ solutionId }: SolutionModulesTabProps) => {
-  const { log, logError } = useLogging();
-
-  const { data: modules, isLoading, error } = useQuery({
-    queryKey: ['solution-modules', solutionId],
-    queryFn: async () => {
-      log("Buscando módulos da solução", { solutionId });
-      
-      const { data, error } = await supabase
-        .from("modules")
-        .select("*")
-        .eq("solution_id", solutionId)
-        .order("module_order", { ascending: true });
-      
-      if (error) {
-        logError("Erro ao buscar módulos", error);
-        throw error;
-      }
-      
-      log("Módulos encontrados", { count: data?.length || 0 });
-      return data || [];
-    },
-    enabled: !!solutionId,
-    staleTime: 5 * 60 * 1000
-  });
-
-  if (error) {
-    logError("Erro ao exibir módulos", error);
-    return (
-      <div className="text-center py-8">
-        <p className="text-red-400">Erro ao carregar módulos desta solução.</p>
-      </div>
-    );
-  }
+  const { data, isLoading } = useSolutionDataContext();
+  const { log } = useLogging();
 
   if (isLoading) {
     return <SolutionModulesLoading />;
   }
 
-  if (!modules || modules.length === 0) {
+  const modules = data?.modules || [];
+
+  if (modules.length === 0) {
+    log("Nenhum módulo encontrado para a solução", { solutionId });
     return <SolutionModulesEmpty />;
   }
+
+  log("Renderizando módulos da solução", { solutionId, count: modules.length });
 
   return (
     <div className="space-y-6">

@@ -1,10 +1,9 @@
 
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
 import { SolutionVideoCard } from "../videos/SolutionVideoCard";
 import { SolutionVideosLoading } from "../videos/SolutionVideosLoading";
 import { SolutionVideosEmpty } from "../videos/SolutionVideosEmpty";
+import { useSolutionDataContext } from "@/contexts/SolutionDataContext";
 import { useLogging } from "@/hooks/useLogging";
 
 interface SolutionVideosTabProps {
@@ -12,48 +11,21 @@ interface SolutionVideosTabProps {
 }
 
 export const SolutionVideosTab = ({ solutionId }: SolutionVideosTabProps) => {
-  const { log, logError } = useLogging();
-
-  const { data: videos, isLoading, error } = useQuery({
-    queryKey: ['solution-videos', solutionId],
-    queryFn: async () => {
-      log("Buscando vídeos da solução", { solutionId });
-      
-      const { data, error } = await supabase
-        .from("solution_resources")
-        .select("*")
-        .eq("solution_id", solutionId)
-        .in("type", ["video", "youtube"])
-        .order("created_at", { ascending: true });
-      
-      if (error) {
-        logError("Erro ao buscar vídeos", error);
-        throw error;
-      }
-      
-      log("Vídeos encontrados", { count: data?.length || 0 });
-      return data || [];
-    },
-    enabled: !!solutionId,
-    staleTime: 5 * 60 * 1000
-  });
-
-  if (error) {
-    logError("Erro ao exibir vídeos", error);
-    return (
-      <div className="text-center py-8">
-        <p className="text-red-400">Erro ao carregar vídeos desta solução.</p>
-      </div>
-    );
-  }
+  const { data, isLoading } = useSolutionDataContext();
+  const { log } = useLogging();
 
   if (isLoading) {
     return <SolutionVideosLoading />;
   }
 
-  if (!videos || videos.length === 0) {
+  const videos = data?.videos || [];
+
+  if (videos.length === 0) {
+    log("Nenhum vídeo encontrado para a solução", { solutionId });
     return <SolutionVideosEmpty />;
   }
+
+  log("Renderizando vídeos da solução", { solutionId, count: videos.length });
 
   return (
     <div className="space-y-6">
