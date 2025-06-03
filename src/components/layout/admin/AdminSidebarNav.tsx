@@ -209,32 +209,20 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
       </ScrollArea>
 
       <div className="px-3 py-4 border-t border-gray-700 mt-auto space-y-2">
+        {/* CORREÇÃO CRÍTICA: Botão funcional para voltar ao painel de membro */}
         <Button
           variant="outline"
           className={cn(
             "w-full justify-start gap-2",
             !sidebarOpen && "justify-center"
           )}
-          asChild
+          onClick={() => {
+            // Forçar navegação para dashboard SEM redirecionamento
+            window.location.href = '/dashboard';
+          }}
         >
-          <Link to="/dashboard">
-            <User className="h-4 w-4" />
-            {sidebarOpen && <span>Painel do Membro</span>}
-          </Link>
-        </Button>
-        
-        <Button
-          variant="outline"
-          className={cn(
-            "w-full justify-start gap-2",
-            !sidebarOpen && "justify-center"
-          )}
-          asChild
-        >
-          <Link to="/dashboard">
-            <ChevronLeft className="h-4 w-4" />
-            {sidebarOpen && <span>Voltar ao Dashboard</span>}
-          </Link>
+          <User className="h-4 w-4" />
+          {sidebarOpen && <span>Painel do Membro</span>}
         </Button>
       </div>
     </div>

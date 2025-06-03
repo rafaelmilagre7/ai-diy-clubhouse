@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuthMethods } from './hooks/useAuthMethods';
 import { AuthStateManager, AuthState } from './managers/AuthStateManager';
 import { AuthContextType } from './types';
+import { processUserProfile } from '@/hooks/auth/utils/authSessionUtils';
 
 // Criação do contexto com valor padrão undefined
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -41,16 +42,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
   
   const setProfile = useCallback((value: React.SetStateAction<UserProfile | null>) => {
-    setAuthState(prev => ({
-      ...prev,
-      profile: typeof value === 'function' ? value(prev.profile) : value,
-      isAdmin: typeof value === 'function' 
-        ? (value(prev.profile)?.role === 'admin')
-        : (value?.role === 'admin'),
-      isFormacao: typeof value === 'function'
-        ? (value(prev.profile)?.role === 'formacao')
-        : (value?.role === 'formacao')
-    }));
+    setAuthState(prev => {
+      const newProfile = typeof value === 'function' ? value(prev.profile) : value;
+      return {
+        ...prev,
+        profile: newProfile,
+        isAdmin: newProfile?.role === 'admin',
+        isFormacao: newProfile?.role === 'formacao'
+      };
+    });
   }, []);
   
   const setIsLoading = useCallback((value: React.SetStateAction<boolean>) => {
@@ -71,6 +71,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Extrair métodos de autenticação
   const { signIn, signOut, signInAsMember, signInAsAdmin } = useAuthMethods({ setIsLoading });
   
+  // CORREÇÃO CRÍTICA: Carregar perfil completo quando usuário for definido
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (!user || profile || isLoading) return;
+      
+      try {
+        console.log("🔄 AuthProvider: Carregando perfil completo para usuário:", user.id);
+        
+        const userProfile = await processUserProfile(
+          user.id,
+          user.email,
+          user.user_metadata?.name || user.user_metadata?.full_name
+        );
+        
+        if (userProfile) {
+          console.log("✅ AuthProvider: Perfil carregado:", userProfile);
+          setProfile(userProfile);
+        } else {
+          console.warn("⚠️ AuthProvider: Falha ao carregar perfil");
+        }
+      } catch (error) {
+        console.error("❌ AuthProvider: Erro ao carregar perfil:", error);
+      }
+    };
+    
+    if (user && !profile) {
+      loadUserProfile();
+    }
+  }, [user, profile, isLoading, setProfile]);
+
   // Salvar a rota autenticada quando o usuário fizer login com sucesso
   useEffect(() => {
     if (user && profile && !isLoading) {

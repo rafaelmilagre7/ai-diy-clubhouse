@@ -149,6 +149,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
           );
         })}
 
+        {/* CORREÇÃO: Botão funcional para painel admin */}
         {isAdmin && (
           <Button
             variant="outline"
@@ -156,12 +157,13 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
               "w-full justify-start gap-3 border-viverblue/30 text-viverblue hover:bg-[#181A2A] mt-4",
               !sidebarOpen && "justify-center"
             )}
-            asChild
+            onClick={() => {
+              // Forçar navegação para admin SEM redirecionamento
+              window.location.href = '/admin';
+            }}
           >
-            <Link to="/admin">
-              <ShieldCheck className="h-4 w-4" />
-              {sidebarOpen && <span>Painel Admin</span>}
-            </Link>
+            <ShieldCheck className="h-4 w-4" />
+            {sidebarOpen && <span>Painel Admin</span>}
           </Button>
         )}
         

@@ -27,17 +27,7 @@ const AppRoutes = () => {
           <Route key={route.path} path={route.path} element={route.element} />
         ))}
         
-        {/* Onboarding Routes - SEM verificação de proteção extra */}
-        <Route path="/onboarding-new/*" element={<OnboardingRoutes />} />
-        
-        {/* Member Routes - Usando componente protegido APENAS para autenticação */}
-        <Route path="/*" element={
-          <ProtectedRoutes>
-            <MemberRoutes />
-          </ProtectedRoutes>
-        } />
-        
-        {/* Admin Routes */}
+        {/* CORREÇÃO CRÍTICA: Admin Routes ANTES do catch-all */}
         {adminRoutes.map((route) => (
           <Route key={route.path} path={route.path} element={route.element} />
         ))}
@@ -46,6 +36,16 @@ const AppRoutes = () => {
         {formacaoRoutes.map((route) => (
           <Route key={route.path} path={route.path} element={route.element} />
         ))}
+        
+        {/* Onboarding Routes */}
+        <Route path="/onboarding-new/*" element={<OnboardingRoutes />} />
+        
+        {/* CORREÇÃO: Member Routes como catch-all POR ÚLTIMO */}
+        <Route path="/*" element={
+          <ProtectedRoutes>
+            <MemberRoutes />
+          </ProtectedRoutes>
+        } />
         
         {/* Fallback route */}
         <Route path="*" element={<NotFound />} />

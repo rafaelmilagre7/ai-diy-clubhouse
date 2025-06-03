@@ -39,14 +39,13 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
     return "Carregando layout...";
   }, [authLoading, onboardingLoading, user]);
 
-  // Verificar autenticação - REMOVIDO O REDIRECIONAMENTO AUTOMÁTICO PARA ONBOARDING
+  // CORREÇÃO CRÍTICA: Verificação de autenticação simplificada SEM redirecionamentos automáticos
   useEffect(() => {
-    console.log('🔄 LayoutProvider: Verificando autenticação e onboarding', {
+    console.log('🔄 LayoutProvider: Verificando autenticação', {
       user: !!user,
+      profile: !!profile,
       isAdmin,
       authLoading,
-      onboardingLoading,
-      isOnboardingComplete,
       currentPath: location.pathname,
       routeChecks
     });
@@ -62,28 +61,7 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
         return;
       }
       
-      // REMOVIDO O REDIRECIONAMENTO FORÇADO PARA ONBOARDING
-      // Esta era a causa do loop de redirecionamento
-      // if (!routeChecks.isOnboardingRoute && !isOnboardingComplete) {
-      //   navigate('/onboarding-new', { replace: true });
-      //   return;
-      // }
-      
       setLayoutReady(true);
-      
-      // Verificar redirecionamento por role - APENAS se não estiver em rotas específicas
-      if (user && profile && !routeChecks.isOnboardingRoute) {
-        const { isLearningRoute, isPathAdmin, isPathFormacao } = routeChecks;
-        
-        if (isAdmin && !isPathAdmin && !isPathFormacao && !isLearningRoute) {
-          console.log('🔄 LayoutProvider: Admin redirecionando para /admin');
-          navigate('/admin', { replace: true });
-        } 
-        else if (isFormacao && !isAdmin && !isPathFormacao && !isLearningRoute) {
-          console.log('🔄 LayoutProvider: Formação redirecionando para /formacao');
-          navigate('/formacao', { replace: true });
-        }
-      }
     } else {
       timeoutRef.current = window.setTimeout(() => {
         setLayoutReady(true);
@@ -95,25 +73,27 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [user, profile, isAdmin, isFormacao, authLoading, onboardingLoading, isOnboardingComplete, navigate, routeChecks]);
+  }, [user, profile, isAdmin, isFormacao, authLoading, onboardingLoading, navigate, routeChecks]);
 
-  // Renderizar layout baseado na rota
-  if (layoutReady && user) {
+  // CORREÇÃO: Renderizar layout baseado APENAS na rota e perfil do usuário
+  if (layoutReady && user && profile) {
     const { isFormacaoRoute, isLearningRoute } = routeChecks;
     
+    // Layout de formação para rotas /formacao se usuário tem permissão
     if (isFormacaoRoute && (isFormacao || isAdmin)) {
       return (
         <PageTransitionWithFallback isVisible={true}>
           <FormacaoLayout>{children}</FormacaoLayout>
         </PageTransitionWithFallback>
       );
-    } else if (isLearningRoute || !isFormacao || isAdmin) {
-      return (
-        <PageTransitionWithFallback isVisible={true}>
-          <MemberLayout>{children}</MemberLayout>
-        </PageTransitionWithFallback>
-      );
-    }
+    } 
+    
+    // Layout padrão de membro para todas as outras rotas
+    return (
+      <PageTransitionWithFallback isVisible={true}>
+        <MemberLayout>{children}</MemberLayout>
+      </PageTransitionWithFallback>
+    );
   }
 
   return (
