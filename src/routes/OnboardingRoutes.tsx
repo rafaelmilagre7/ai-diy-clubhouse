@@ -2,7 +2,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import NovoOnboardingNew from '@/pages/onboarding/NovoOnboardingNew';
-import { OnboardingCompletedNew } from '@/components/onboarding/OnboardingCompletedNew';
+import OnboardingCompletedNew from '@/components/onboarding/OnboardingCompletedNew';
 
 export const OnboardingRoutes = () => {
   return (
