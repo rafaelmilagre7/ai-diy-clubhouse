@@ -12,8 +12,8 @@ const StepPersonalInfo = lazy(() =>
 );
 
 const StepCompanyInfo = lazy(() => 
-  import('../final/steps/StepCompanyInfo').then(module => ({ 
-    default: module.StepCompanyInfo 
+  import('../final/steps/StepBusinessInfo').then(module => ({ 
+    default: module.StepBusinessInfo 
   }))
 );
 
@@ -53,7 +53,7 @@ export const SimpleOnboardingFlow: React.FC<SimpleOnboardingFlowProps> = memo(({
   const [currentStep, setCurrentStep] = React.useState(initialStep);
   const [data, setData] = React.useState({
     personal_info: {},
-    company_info: {},
+    business_info: {},
     business_context: {},
     ai_experience: {},
     goals_info: {},
