@@ -8,8 +8,7 @@ import OptimizedDashboard from '@/pages/member/OptimizedDashboard';
 import SolutionDetails from '@/pages/member/SolutionDetails';
 import Solutions from '@/pages/member/Solutions';
 import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
-import ProfilePage from '@/pages/member/ProfilePage';
-import OnboardingPage from '@/pages/member/OnboardingPage';
+import Profile from '@/pages/member/Profile';
 import SuggestionsPage from '@/pages/member/Suggestions';
 import NewSuggestionPage from '@/pages/member/NewSuggestion';
 import SuggestionDetails from '@/pages/member/SuggestionDetails';
@@ -25,8 +24,7 @@ export const memberRoutes: RouteObject[] = [
   createMemberRoute("/solutions", Solutions),
   createMemberRoute("/solutions/:id", SolutionDetails),
   createMemberRoute("/implementation-trail", ImplementationTrailPage),
-  createMemberRoute("/profile", ProfilePage),
-  createMemberRoute("/onboarding", OnboardingPage),
+  createMemberRoute("/profile", Profile),
   createMemberRoute("/suggestions", SuggestionsPage),
   createMemberRoute("/suggestions/new", NewSuggestionPage),
   createMemberRoute("/suggestions/:id", SuggestionDetails),
