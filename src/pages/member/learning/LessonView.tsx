@@ -1,167 +1,42 @@
 
-import { useEffect } from "react";
+import React from "react";
 import { useParams } from "react-router-dom";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { AlertCircle, ArrowLeft } from "lucide-react";
+import { useLessonDetails } from "@/hooks/learning/useLessonDetails";
 import { LessonContent } from "@/components/learning/member/LessonContent";
-import { LessonHeader } from "@/components/learning/member/LessonHeader";
-import { useLessonData } from "@/hooks/learning/useLessonData";
-import { useLessonNavigation } from "@/hooks/learning/useLessonNavigation";
-import { useLessonProgress } from "@/hooks/learning/useLessonProgress";
-import { useCourseDetails } from "@/hooks/learning/useCourseDetails";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
-import { sortLessonsByNumber } from "@/components/learning/member/course-modules/CourseModulesHelpers";
+import LoadingScreen from "@/components/common/LoadingScreen";
 
-const LessonView = () => {
+export default function LessonView() {
   const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>();
-  
-  // Buscar dados da lição usando hooks personalizados
-  const {
-    lesson,
-    resources,
-    videos,
-    courseInfo,
-    moduleData,
-    isLoading,
-    error
-  } = useLessonData({ 
-    lessonId, 
-    courseId 
-  });
-  
-  // Buscar dados completos do curso para a celebração
-  const { course, userProgress } = useCourseDetails(courseId);
-  
-  // Garantir que temos arrays válidos
-  const safeResources = Array.isArray(resources) ? resources : [];
-  const safeVideos = Array.isArray(videos) ? videos : [];
-  
-  // Garantir que as aulas do módulo estão ordenadas corretamente por número no título
-  const safeModuleLessons = moduleData?.lessons ? 
-    (Array.isArray(moduleData.lessons) ? sortLessonsByNumber([...moduleData.lessons]) : []) : [];
-  
-  // Gerenciar navegação entre lições
-  const {
-    prevLesson,
-    nextLesson,
-    navigateToCourse,
-    navigateToNext
-  } = useLessonNavigation({
-    courseId,
-    currentLessonId: lessonId,
-    lessons: safeModuleLessons
-  });
-  
-  // Gerenciar progresso da lição
-  const {
-    progress,
-    updateProgress,
-    completeLesson
-  } = useLessonProgress({ lessonId });
-  
-  // Buscar lições completadas para o sidebar
-  const { data: completedLessonsData = [] } = useQuery({
-    queryKey: ["learning-completed-lessons", moduleData?.module?.id],
-    queryFn: async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user || !moduleData?.module?.id) return [];
-      
-      const { data, error } = await supabase
-        .from("learning_progress")
-        .select("lesson_id")
-        .eq("user_id", userData.user.id)
-        .gte("progress_percentage", 100);
-        
-      if (error) {
-        console.error("Erro ao carregar aulas concluídas:", error);
-        return [];
-      }
-      
-      if (!data || !Array.isArray(data)) return [];
-      
-      return data.map(item => item.lesson_id);
-    },
-    enabled: !!moduleData?.module?.id
-  });
-  
-  // Garantir que completedLessons é sempre um array
-  const completedLessons = Array.isArray(completedLessonsData) ? completedLessonsData : [];
-
-  // Atualizar progresso quando o usuário interage com a lição
-  const handleProgressUpdate = (videoId: string, newProgress: number) => {
-    updateProgress(newProgress);
-  };
+  const { 
+    lesson, 
+    course, 
+    videos, 
+    resources, 
+    isLoading, 
+    error 
+  } = useLessonDetails(lessonId, courseId);
 
   if (isLoading) {
-    return <div className="container py-8">Carregando conteúdo da aula...</div>;
+    return <LoadingScreen message="Carregando aula..." />;
   }
-  
-  // Se não tiver a lição, mostrar erro
-  if (!lesson) {
+
+  if (error || !lesson) {
     return (
-      <div className="container py-8">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Erro ao carregar aula</AlertTitle>
-          <AlertDescription>
-            {error ? error.message : "Não foi possível carregar a aula solicitada. Por favor, tente novamente."} 
-          </AlertDescription>
-        </Alert>
-        <Button
-          variant="outline"
-          className="mt-4"
-          onClick={() => window.history.back()}
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Voltar
-        </Button>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-2">Aula não encontrada</h2>
+          <p className="text-muted-foreground">A aula solicitada não existe ou não está disponível.</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container py-6">
-      <Button
-        variant="ghost"
-        className="mb-4"
-        onClick={navigateToCourse}
-      >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Voltar para o curso
-      </Button>
-      
-      {/* Conteúdo principal da aula (sem barra lateral) */}
-      <div>
-        <LessonHeader 
-          title={lesson?.title || ""} 
-          moduleTitle={moduleData?.module?.title || ""}
-          courseTitle={courseInfo?.title}
-          courseId={courseId}
-          progress={progress}
-        />
-        
-        <div className="mt-8">
-          <LessonContent 
-            lesson={lesson} 
-            videos={safeVideos}
-            resources={safeResources}
-            isCompleted={progress >= 100}
-            onProgressUpdate={handleProgressUpdate} 
-            onComplete={completeLesson}
-            prevLesson={prevLesson}
-            nextLesson={nextLesson}
-            courseId={courseId}
-            allLessons={safeModuleLessons}
-            onNextLesson={navigateToNext}
-            userProgress={userProgress}
-            course={course}
-          />
-        </div>
-      </div>
-    </div>
+    <LessonContent
+      lesson={lesson}
+      course={course}
+      videos={videos || []}
+      resources={resources || []}
+    />
   );
-};
-
-export default LessonView;
+}

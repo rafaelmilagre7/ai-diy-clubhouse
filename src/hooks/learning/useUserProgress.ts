@@ -1,44 +1,31 @@
 
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 
-export const useUserProgress = () => {
+export function useUserProgress() {
   const { user } = useAuth();
   
-  const { data: userProgress = [], isLoading, error } = useQuery({
-    queryKey: ["learning-user-progress"],
+  const { data: userProgress = [], isLoading } = useQuery({
+    queryKey: ["learning-user-progress", user?.id],
     queryFn: async () => {
-      if (!user) return [];
-      
       const { data, error } = await supabase
         .from("learning_progress")
-        .select(`
-          *,
-          lesson:learning_lessons(
-            *,
-            module:learning_modules(
-              *,
-              course_id
-            )
-          )
-        `)
-        .eq("user_id", user.id);
+        .select("*")
+        .eq("user_id", user?.id || "");
         
       if (error) {
-        console.error("Erro ao buscar progresso do usuário:", error);
+        console.error("Erro ao carregar progresso:", error);
         return [];
       }
       
-      return data || [];
+      return data;
     },
-    enabled: !!user
+    enabled: !!user?.id
   });
-  
+
   return {
     userProgress,
-    isLoading,
-    error
+    isLoading
   };
-};
+}

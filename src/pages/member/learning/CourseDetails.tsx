@@ -1,101 +1,44 @@
 
-import { useParams, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { CourseDetailsSkeleton } from "@/components/learning/member/CourseDetailsSkeleton";
-import { CourseModules } from "@/components/learning/member/CourseModules";
-import { CourseHeader } from "@/components/learning/member/CourseHeader";
-import { CourseProgress } from "@/components/learning/member/CourseProgress";
-import { ArrowLeft } from "lucide-react";
+import React from "react";
+import { useParams } from "react-router-dom";
 import { useCourseDetails } from "@/hooks/learning/useCourseDetails";
-import { useCourseStats } from "@/hooks/learning/useCourseStats";
+import { CourseDetailsSkeleton } from "@/components/learning/member/CourseDetailsSkeleton";
+import { CourseHeader } from "@/components/learning/member/CourseHeader";
+import { CourseModules } from "@/components/learning/member/CourseModules";
 import { AccessDenied } from "@/components/learning/member/AccessDenied";
 
-const CourseDetails = () => {
+export default function CourseDetails() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  
-  // Usar nossos hooks customizados
   const { course, modules, allLessons, userProgress, isLoading, accessDenied } = useCourseDetails(id);
-  const { courseStats, firstLessonId, courseProgress } = useCourseStats({ 
-    modules, 
-    allLessons, 
-    userProgress 
-  });
 
-  // Log para depuração
-  console.log("Dados do curso carregados:", {
-    courseId: id,
-    modulesCount: modules?.length || 0,
-    allLessonsCount: allLessons?.length || 0,
-    firstLessonId,
-    accessDenied
-  });
+  if (isLoading) {
+    return <CourseDetailsSkeleton />;
+  }
 
-  // Se o acesso foi negado, mostrar o componente específico
   if (accessDenied) {
+    return <AccessDenied />;
+  }
+
+  if (!course) {
     return (
-      <div className="container pt-6 pb-12">
-        <Button
-          variant="ghost"
-          className="mb-4"
-          onClick={() => navigate("/learning")}
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Voltar para Cursos
-        </Button>
-        
-        <AccessDenied courseId={id} />
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-2">Curso não encontrado</h2>
+          <p className="text-muted-foreground">O curso solicitado não existe ou não está disponível.</p>
+        </div>
       </div>
     );
   }
 
-  // Se o curso não foi encontrado, o hook de useCourseDetails já fará o redirecionamento
-  if (!id || !course) {
-    return null;
-  }
-
   return (
-    <div className="container pt-6 pb-12">
-      <Button
-        variant="ghost"
-        className="mb-4"
-        onClick={() => navigate("/learning")}
-      >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Voltar para Cursos
-      </Button>
+    <div className="space-y-6">
+      <CourseHeader course={course} />
       
-      {isLoading ? (
-        <CourseDetailsSkeleton />
-      ) : (
-        <>
-          <CourseHeader 
-            title={course.title} 
-            description={course.description} 
-            coverImage={course.cover_image_url}
-            stats={courseStats}
-            firstLessonId={firstLessonId}
-            courseId={id}
-          />
-          
-          <div className="mt-6">
-            <CourseProgress 
-              percentage={courseProgress} 
-              className="mb-6"
-            />
-            
-            <CourseModules 
-              modules={modules || []} 
-              courseId={id} 
-              userProgress={userProgress || []}
-              course={course}
-              expandedModules={[modules?.[0]?.id].filter(Boolean)}
-            />
-          </div>
-        </>
-      )}
+      <CourseModules 
+        modules={modules || []}
+        userProgress={userProgress || []}
+        courseId={course.id}
+      />
     </div>
   );
-};
-
-export default CourseDetails;
+}
