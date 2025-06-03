@@ -34,10 +34,20 @@ export interface QuickOnboardingData {
   company_segment?: string;
   company_website?: string;
   annual_revenue_range?: string;
+  current_position?: string;
   // Goals fields
   priority_solution_type?: string;
   how_implement?: string;
   week_availability?: string;
+  short_term_goals?: string[];
+  medium_term_goals?: string[];
+  important_kpis?: string[];
+  expected_outcomes?: string[];
+  // AI Experience fields
+  completed_formation?: boolean;
+  is_member_for_month?: boolean;
+  nps_score?: number;
+  improvement_suggestions?: string;
   // Personalization fields
   interests?: string[];
   time_preference?: string | string[];
@@ -48,6 +58,7 @@ export interface QuickOnboardingData {
   interested_in_interview?: boolean;
   mentorship_topics?: string[];
   live_interest?: number;
+  priority_topics?: string[];
 }
 
 export interface OnboardingStepProps {

@@ -6,6 +6,7 @@ export interface PersonalInfo {
   city?: string;
   state?: string;
   country?: string;
+  country_code?: string;
   linkedin_url?: string;
   whatsapp_number?: string;
   linkedin?: string;
@@ -13,6 +14,7 @@ export interface PersonalInfo {
   ddi?: string;
   whatsapp?: string;
   timezone?: string;
+  birth_date?: string;
 }
 
 export interface AIExperience {
@@ -38,9 +40,10 @@ export interface BusinessInfo {
   company_website?: string;
   current_position?: string;
   company_sector?: string;
-  company_segment?: string; // Add this field
+  company_segment?: string;
   company_size?: string;
   annual_revenue?: string;
+  annual_revenue_range?: string;
   role?: string;
 }
 
@@ -96,10 +99,14 @@ export interface OnboardingData {
   personal_info?: PersonalInfo;
   ai_experience?: AIExperience;
   business_info?: BusinessInfo;
+  professional_info?: BusinessInfo; // alias
   business_context?: BusinessContext;
   discovery_info?: DiscoveryInfo;
+  complementary_info?: DiscoveryInfo; // alias
   goals_info?: GoalsInfo;
+  business_goals?: GoalsInfo; // alias
   personalization?: PersonalizationInfo;
+  experience_personalization?: PersonalizationInfo; // alias
   // Campos diretos para compatibilidade
   name?: string;
   email?: string;
@@ -117,25 +124,27 @@ export interface OnboardingProgress {
   id?: string;
   user_id: string;
   personal_info?: PersonalInfo;
-  professional_info?: BusinessInfo; // alias para business_info
+  professional_info?: BusinessInfo;
   ai_experience?: AIExperience;
   business_info?: BusinessInfo;
   business_context?: BusinessContext;
-  business_goals?: GoalsInfo; // alias para goals_info
+  business_goals?: GoalsInfo;
   discovery_info?: DiscoveryInfo;
   goals_info?: GoalsInfo;
   personalization?: PersonalizationInfo;
-  experience_personalization?: PersonalizationInfo; // alias
-  complementary_info?: DiscoveryInfo; // alias
+  experience_personalization?: PersonalizationInfo;
+  complementary_info?: DiscoveryInfo;
   current_step?: string;
   completed_steps?: string[];
   is_completed?: boolean;
   created_at?: string;
   updated_at?: string;
+  debug_logs?: any;
   // Campos diretos para compatibilidade
   company_name?: string;
   company_size?: string;
   company_sector?: string;
+  current_position?: string;
   name?: string;
   email?: string;
 }
@@ -163,15 +172,25 @@ export interface StepProps {
 // Tipos adicionais para compatibilidade
 export interface PersonalInfoData extends PersonalInfo {}
 
-export interface ProfessionalDataInput extends BusinessInfo {}
+export interface ProfessionalDataInput extends BusinessInfo {
+  company_segment?: string;
+}
 
 export interface OnboardingStepProps extends StepProps {}
 
 export interface OnboardingStep {
   id: string;
   title: string;
+  section?: string;
   component: React.ComponentType<any>;
   isCompleted?: boolean;
+}
+
+export interface CompleteOnboardingStep extends OnboardingStep {
+  section: string;
+  path: string;
+  forClub?: boolean;
+  forFormation?: boolean;
 }
 
 export enum OnboardingStepType {

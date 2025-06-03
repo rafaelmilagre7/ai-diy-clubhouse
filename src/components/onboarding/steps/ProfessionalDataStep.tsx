@@ -35,20 +35,20 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
   const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<ProfessionalDataInput>({
     resolver: zodResolver(professionalDataSchema),
     defaultValues: {
-      company_name: initialData?.professional_info?.company_name || "",
-      role: initialData?.professional_info?.role || "",
-      company_size: initialData?.professional_info?.company_size || "",
-      company_sector: initialData?.professional_info?.company_sector || "",
-      company_segment: initialData?.professional_info?.company_segment || "",
-      company_website: initialData?.professional_info?.company_website || "",
-      annual_revenue: initialData?.professional_info?.annual_revenue || "",
-      current_position: initialData?.professional_info?.current_position || "",
+      company_name: initialData?.business_info?.company_name || "",
+      role: initialData?.business_info?.role || "",
+      company_size: initialData?.business_info?.company_size || "",
+      company_sector: initialData?.business_info?.company_sector || "",
+      company_segment: initialData?.business_info?.company_segment || "",
+      company_website: initialData?.business_info?.company_website || "",
+      annual_revenue: initialData?.business_info?.annual_revenue || "",
+      current_position: initialData?.business_info?.current_position || "",
     },
   });
 
   const handleFormSubmit = (data: ProfessionalDataInput) => {
-    onSubmit?.("professional_info", {
-      professional_info: data
+    onSubmit?.("business_info", {
+      business_info: data
     });
   };
 
@@ -134,6 +134,25 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
           </Select>
           {errors.company_sector && (
             <FormMessage type="error" message={errors.company_sector.message} />
+          )}
+        </div>
+
+        <div>
+          <Label htmlFor="company_segment">Segmento da Empresa</Label>
+          <Select onValueChange={(value) => setValue("company_segment", value)} value={watch("company_segment") || ""}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione o segmento" />
+            </SelectTrigger>
+            <SelectContent>
+              {segmentOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.company_segment && (
+            <FormMessage type="error" message={errors.company_segment.message} />
           )}
         </div>
 
