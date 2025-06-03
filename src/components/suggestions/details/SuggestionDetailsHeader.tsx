@@ -40,7 +40,7 @@ export const SuggestionDetailsHeader = ({
           <BreadcrumbItem>
             <BreadcrumbLink 
               onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-1 hover:text-primary cursor-pointer"
+              className="flex items-center gap-1 hover:text-primary cursor-pointer text-left"
             >
               <Home className="h-4 w-4" />
               Dashboard
@@ -50,14 +50,14 @@ export const SuggestionDetailsHeader = ({
           <BreadcrumbItem>
             <BreadcrumbLink 
               onClick={() => navigate('/suggestions')}
-              className="hover:text-primary cursor-pointer"
+              className="hover:text-primary cursor-pointer text-left"
             >
               Sugestões
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage className="text-muted-foreground max-w-[200px] truncate">
+            <BreadcrumbPage className="text-muted-foreground max-w-[200px] truncate text-left">
               {suggestionTitle || 'Detalhes da Sugestão'}
             </BreadcrumbPage>
           </BreadcrumbItem>
@@ -70,7 +70,7 @@ export const SuggestionDetailsHeader = ({
           <Button
             variant="ghost"
             size="sm"
-            className="flex items-center gap-2 hover:bg-accent/50"
+            className="flex items-center gap-2 hover:bg-accent/50 text-left"
             onClick={() => navigate('/suggestions')}
           >
             <ChevronLeft className="h-4 w-4" />
