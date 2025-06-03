@@ -1,192 +1,156 @@
 
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Check, CheckCircle, Trophy } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/auth";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { useSolutionData } from "@/hooks/useSolutionData";
-import { useProgressTracking } from "@/hooks/implementation/useProgressTracking";
-import { useImplementationData } from "@/hooks/implementation/useImplementationData";
-import { useToast } from "@/hooks/use-toast";
+import { CheckCircle, ArrowLeft, Loader } from "lucide-react";
+import { toast } from "sonner";
+import { PageTransition } from "@/components/transitions/PageTransition";
 import LoadingScreen from "@/components/common/LoadingScreen";
+import { NotFoundContent } from "@/components/implementation/NotFoundContent";
 
 const ImplementationConfirmation = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Carregar dados da solução
-  const { solution, loading: solutionLoading } = useSolutionData(id);
-  
-  // Carregar dados de implementação
-  const { 
-    modules,
-    progress,
-    completedModules,
-    setCompletedModules,
-    loading: implementationLoading 
-  } = useImplementationData();
-  
-  // Hooks de progresso
-  const {
-    isCompleting,
-    handleConfirmImplementation,
-    calculateProgress,
-  } = useProgressTracking(
-    progress, 
-    completedModules, 
-    setCompletedModules,
-    modules.length
-  );
-  
-  // Manipulador para confirmar implementação
-  const handleConfirm = async () => {
-    setIsSubmitting(true);
-    try {
-      const success = await handleConfirmImplementation();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [isConfirming, setIsConfirming] = useState(false);
+
+  // Buscar dados da solução
+  const { data: solution, isLoading, error } = useQuery({
+    queryKey: ['solution', id],
+    queryFn: async () => {
+      if (!id) throw new Error('ID da solução não fornecido');
       
-      if (success) {
-        // Exibir mensagem de sucesso
-        toast({
-          title: "Implementação concluída!",
-          description: "Parabéns! Você aplicou com sucesso esta solução em seu negócio.",
+      const { data, error } = await supabase
+        .from('solutions')
+        .select('*')
+        .eq('id', id)
+        .eq('published', true)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id
+  });
+
+  // Mutation para confirmar implementação
+  const confirmImplementation = useMutation({
+    mutationFn: async () => {
+      if (!user || !solution) throw new Error('Dados necessários não disponíveis');
+
+      const { error } = await supabase
+        .from('progress')
+        .upsert({
+          user_id: user.id,
+          solution_id: solution.id,
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         });
-        
-        // Redirecionar para página de certificado ou dashboard
-        navigate(`/solution/${id}/completed`);
-      }
-    } catch (error) {
-      console.error("Erro ao confirmar implementação:", error);
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao confirmar a implementação. Tente novamente.",
-        variant: "destructive",
-      });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Implementação confirmada com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['progress'] });
+      navigate(`/implementation/${id}/completed`);
+    },
+    onError: (error) => {
+      console.error('Erro ao confirmar implementação:', error);
+      toast.error('Erro ao confirmar implementação. Tente novamente.');
+    }
+  });
+
+  const handleConfirmImplementation = async () => {
+    setIsConfirming(true);
+    try {
+      await confirmImplementation.mutateAsync();
     } finally {
-      setIsSubmitting(false);
+      setIsConfirming(false);
     }
   };
-  
-  const handleCancel = () => {
-    navigate(`/implement/${id}/0`);
-  };
-  
-  if (solutionLoading || implementationLoading) {
-    return <LoadingScreen message="Carregando dados da solução..." />;
+
+  if (isLoading) {
+    return <LoadingScreen message="Carregando solução..." />;
   }
-  
-  if (!solution) {
-    return (
-      <div className="max-w-xl mx-auto p-8 text-center">
-        <h1 className="text-2xl font-bold mb-4">Solução não encontrada</h1>
-        <p className="text-muted-foreground mb-6">
-          Não foi possível encontrar a solução solicitada. Verifique o link e tente novamente.
-        </p>
-        <Button onClick={() => navigate("/dashboard")}>Voltar para Dashboard</Button>
-      </div>
-    );
+
+  if (error || !solution) {
+    return <NotFoundContent />;
   }
-  
+
   return (
-    <div className="max-w-2xl mx-auto p-4 md:p-8">
-      <Card className="shadow-lg border-t-4 border-t-primary">
-        <CardHeader>
-          <CardTitle className="text-2xl">Confirmar Implementação</CardTitle>
-          <CardDescription>
-            Você está prestes a confirmar que implementou a solução <span className="font-medium">{solution.title}</span> em seu negócio.
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent className="space-y-6">
-          <div className="flex items-center justify-between">
+    <PageTransition>
+      <div className="container max-w-3xl mx-auto py-8">
+        <Button
+          variant="ghost"
+          onClick={() => navigate(`/implementation/${id}`)}
+          className="mb-6"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Voltar para Implementação
+        </Button>
+
+        <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-3 text-green-800">
+              <CheckCircle className="h-8 w-8" />
+              Confirmar Implementação
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
             <div>
-              <p className="font-medium">Progresso da implementação</p>
-              <p className="text-sm text-muted-foreground">
-                {completedModules.length} de {modules.length} etapas concluídas
-              </p>
+              <h2 className="text-xl font-semibold mb-2">{solution.title}</h2>
+              <p className="text-muted-foreground">{solution.description}</p>
             </div>
-            <div className="font-bold text-lg">
-              {calculateProgress()}%
+
+            <div className="bg-white p-4 rounded-lg border border-green-200">
+              <h3 className="font-medium mb-2 text-green-800">
+                Ao confirmar esta implementação, você declara que:
+              </h3>
+              <ul className="space-y-2 text-sm text-green-700">
+                <li>• Implementou a solução com sucesso em seu negócio</li>
+                <li>• Seguiu todas as etapas recomendadas</li>
+                <li>• A solução está funcionando conforme esperado</li>
+                <li>• Está satisfeito com os resultados obtidos</li>
+              </ul>
             </div>
-          </div>
-          
-          <Progress value={calculateProgress()} className="h-2" />
-          
-          <div className="p-4 bg-green-50 border border-green-200 rounded-md">
-            <h3 className="font-medium flex items-center text-green-800">
-              <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
-              Benefícios desta implementação
-            </h3>
-            <ul className="mt-2 space-y-2">
-              <li className="flex items-start">
-                <Check className="h-4 w-4 mr-2 mt-1 text-green-600" />
-                <span className="text-sm text-green-800">Aumento de produtividade no seu negócio</span>
-              </li>
-              <li className="flex items-start">
-                <Check className="h-4 w-4 mr-2 mt-1 text-green-600" />
-                <span className="text-sm text-green-800">Redução de custos operacionais</span>
-              </li>
-              <li className="flex items-start">
-                <Check className="h-4 w-4 mr-2 mt-1 text-green-600" />
-                <span className="text-sm text-green-800">Melhoria na experiência do cliente</span>
-              </li>
-            </ul>
-          </div>
-          
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
-            <h3 className="font-medium flex items-center text-blue-800">
-              <Trophy className="h-5 w-5 mr-2 text-blue-600" />
-              Ao confirmar, você receberá:
-            </h3>
-            <ul className="mt-2 space-y-2">
-              <li className="flex items-start">
-                <Check className="h-4 w-4 mr-2 mt-1 text-blue-600" />
-                <span className="text-sm text-blue-800">Certificado de implementação</span>
-              </li>
-              <li className="flex items-start">
-                <Check className="h-4 w-4 mr-2 mt-1 text-blue-600" />
-                <span className="text-sm text-blue-800">Acesso a materiais exclusivos de otimização</span>
-              </li>
-              <li className="flex items-start">
-                <Check className="h-4 w-4 mr-2 mt-1 text-blue-600" />
-                <span className="text-sm text-blue-800">Reconhecimento na comunidade VIVER DE IA Club</span>
-              </li>
-            </ul>
-          </div>
-        </CardContent>
-        
-        <CardFooter className="flex flex-col sm:flex-row gap-3">
-          <Button 
-            variant="default" 
-            size="lg" 
-            className="w-full sm:w-auto"
-            onClick={handleConfirm}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <>Confirmando...</>
-            ) : (
-              <>
-                <CheckCircle className="mr-2 h-5 w-5" />
-                Confirmar Implementação
-              </>
-            )}
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            size="lg" 
-            className="w-full sm:w-auto"
-            onClick={handleCancel}
-            disabled={isSubmitting}
-          >
-            Voltar
-          </Button>
-        </CardFooter>
-      </Card>
-    </div>
+
+            <div className="flex gap-4 pt-4">
+              <Button
+                onClick={handleConfirmImplementation}
+                disabled={isConfirming}
+                className="bg-green-600 hover:bg-green-700 flex-1"
+              >
+                {isConfirming ? (
+                  <>
+                    <Loader className="mr-2 h-4 w-4 animate-spin" />
+                    Confirmando...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Confirmar Implementação
+                  </>
+                )}
+              </Button>
+              
+              <Button
+                variant="outline"
+                onClick={() => navigate(`/implementation/${id}`)}
+                disabled={isConfirming}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </PageTransition>
   );
 };
 
