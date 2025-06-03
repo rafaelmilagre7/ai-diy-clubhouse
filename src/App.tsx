@@ -1,81 +1,109 @@
-
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
+  useLocation,
+} from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
-import { AuthProvider } from '@/contexts/auth';
-import { LoggingProvider } from '@/contexts/logging';
-import { PerformanceProvider } from '@/contexts/performance/PerformanceProvider';
-import AppRoutes from '@/components/routing/AppRoutes';
-import { useServiceWorker } from '@/hooks/common/useServiceWorker';
-import { useBundleAnalyzer } from '@/utils/bundleAnalyzer';
-import { initializeBrandAssetsBucket } from '@/utils/storage/initStorage';
-import ErrorBoundary from '@/components/common/ErrorBoundary';
-import './App.css';
+import { useAuth } from './contexts/auth';
+import { RegisterForm } from './pages/auth/Register';
+import { ResetPasswordForm } from './pages/auth/ResetPassword';
+import { SetNewPasswordForm } from './pages/auth/SetNewPassword';
+import { ModernLoginPage } from './pages/auth/Login';
+import Dashboard from './pages/member/Dashboard';
+import Solutions from './pages/member/Solutions';
+import SolutionDetails from './pages/member/SolutionDetails';
+import ImplementationPage from './pages/member/ImplementationPage';
+import Tools from './pages/member/Tools';
+import CommunityRoutes from './pages/member/community/CommunityRoutes';
+import ProfileRoutes from './pages/member/profile/ProfileRoutes';
+import OnboardingRoutes from './pages/member/onboarding/OnboardingRoutes';
+import Events from './pages/member/Events';
+import ImplementationTrail from './pages/member/ImplementationTrail';
+import AdminRoutes from './pages/admin/AdminRoutes';
+import FormacaoRoutes from './pages/formacao/FormacaoRoutes';
+import LearningRoutes from './pages/learning/LearningRoutes';
+import { ProtectedRoutes } from './components/routes/ProtectedRoutes';
+import { PublicRoute } from './components/routes/PublicRoute';
+import { AdminProtectedRoutes } from './components/routes/AdminProtectedRoutes';
+import { FormacaoProtectedRoutes } from './components/routes/FormacaoProtectedRoutes';
+import ToolDetails from "@/pages/member/ToolDetails";
 
-// Configuração otimizada do React Query
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutos
-      gcTime: 10 * 60 * 1000, // 10 minutos (novo nome para cacheTime)
-      retry: (failureCount, error: any) => {
-        // Não tentar novamente para erros 4xx
-        if (error?.status >= 400 && error?.status < 500) {
-          return false;
-        }
-        return failureCount < 2;
-      },
-      refetchOnWindowFocus: false,
-      refetchOnMount: true,
-    },
-    mutations: {
-      retry: 1,
-    },
-  },
-});
-
-// Componente interno que usa os hooks
-const AppContent: React.FC = () => {
-  useServiceWorker();
-  const { analyzePerformance } = useBundleAnalyzer();
-
-  useEffect(() => {
-    // Inicializar storage bucket para brand assets
-    initializeBrandAssetsBucket();
-    
-    // Analisar performance após carregamento
-    const timer = setTimeout(() => {
-      if (import.meta.env.DEV) {
-        analyzePerformance();
-      }
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, [analyzePerformance]);
-
-  return <AppRoutes />;
+const App: React.FC = () => {
+  return (
+    <Router>
+      <ScrollToTop />
+      <MainAppContent />
+    </Router>
+  );
 };
 
-function App() {
-  return (
-    <ErrorBoundary>
-      <PerformanceProvider>
-        <LoggingProvider>
-          <QueryClientProvider client={queryClient}>
-            <AuthProvider>
-              <Router>
-                <AppContent />
-                <Toaster />
-                {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
-              </Router>
-            </AuthProvider>
-          </QueryClientProvider>
-        </LoggingProvider>
-      </PerformanceProvider>
-    </ErrorBoundary>
+const ScrollToTop: React.FC = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+};
+
+const MainAppContent: React.FC = () => {
+  const { isLoading } = useAuth();
+
+  if (isLoading) {
+    return <div>Carregando...</div>;
+  }
+
+        <Routes>
+          {/* Public Routes */}
+          <Route element={<PublicRoute />}>
+            <Route path="/login" element={<ModernLoginPage />} />
+            <Route path="/register" element={<RegisterForm />} />
+            <Route path="/reset-password" element={<ResetPasswordForm />} />
+            <Route path="/set-password" element={<SetNewPasswordForm />} />
+          </Route>
+
+          {/* Protected Routes */}
+          <Route element={<ProtectedRoutes />}>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/solutions" element={<Solutions />} />
+            <Route path="/solutions/:id" element={<SolutionDetails />} />
+            <Route path="/implementation/:id" element={<ImplementationPage />} />
+            <Route path="/tools" element={<Tools />} />
+            <Route path="/tools/:id" element={<ToolDetails />} />
+            <Route path="/comunidade/*" element={<CommunityRoutes />} />
+            <Route path="/profile/*" element={<ProfileRoutes />} />
+            <Route path="/onboarding/*" element={<OnboardingRoutes />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/implementation-trail" element={<ImplementationTrail />} />
+          </Route>
+
+          {/* Admin Protected Routes */}
+          <Route element={<AdminProtectedRoutes />}>
+            <Route path="/admin/*" element={<AdminRoutes />} />
+          </Route>
+
+          {/* Formação Protected Routes */}
+          <Route element={<FormacaoProtectedRoutes />}>
+            <Route path="/formacao/*" element={<FormacaoRoutes />} />
+          </Route>
+
+          {/* Learning Routes */}
+          <Route element={<ProtectedRoutes />}>
+            <Route path="/learning/*" element={<LearningRoutes />} />
+          </Route>
+
+          {/* 404 */}
+          <Route path="*" element={<div>Página não encontrada</div>} />
+        </Routes>
+
+      <Toaster />
+    </Router>
   );
-}
+};
 
 export default App;

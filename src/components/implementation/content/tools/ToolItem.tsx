@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 
 interface ToolItemProps {
   toolName: string;
+  toolId?: string;
   toolUrl?: string;
   isRequired?: boolean;
   hasBenefit?: boolean;
@@ -16,6 +17,7 @@ interface ToolItemProps {
 
 export const ToolItem = ({
   toolName,
+  toolId,
   toolUrl,
   isRequired = false,
   hasBenefit = false,
@@ -30,9 +32,14 @@ export const ToolItem = ({
 
   // Navegar para a página específica da ferramenta na plataforma
   const handleViewTool = () => {
-    // Criar um slug da ferramenta para navegação direta
-    const toolSlug = toolName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-    navigate(`/tools/${toolSlug}`);
+    if (toolId) {
+      // Se temos o ID da ferramenta, usar navegação direta
+      navigate(`/tools/${toolId}`);
+    } else {
+      // Fallback para busca por nome (slug)
+      const toolSlug = toolName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+      navigate(`/tools/${toolSlug}`);
+    }
   };
 
   // Determina se o ícone deve ser a primeira letra ou um logo

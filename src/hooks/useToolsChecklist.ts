@@ -39,26 +39,51 @@ export const useToolsChecklist = (solutionId: string | null) => {
   const fetchTools = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("solution_tools")
-        .select("*")
-        .eq("solution_id", solutionId);
-        
-      if (error) throw error;
       
-      if (data && data.length > 0) {
-        const solutionToolsData: SelectedTool[] = [];
+      // Primeiro tentar a nova tabela de referência
+      const { data: referenceData, error: referenceError } = await supabase
+        .from("solution_tools_reference")
+        .select(`
+          *,
+          tools (*)
+        `)
+        .eq("solution_id", solutionId);
+      
+      if (referenceError) {
+        console.warn("Erro ao buscar da tabela de referência, tentando fallback:", referenceError);
         
-        for (const solutionTool of data) {
-          const fullTool = availableTools.find(t => t.name === solutionTool.tool_name);
+        // Fallback para a tabela antiga
+        const { data: oldData, error: oldError } = await supabase
+          .from("solution_tools")
+          .select("*")
+          .eq("solution_id", solutionId);
           
-          if (fullTool) {
-            solutionToolsData.push({
-              ...fullTool,
-              is_required: solutionTool.is_required
-            });
+        if (oldError) throw oldError;
+        
+        if (oldData && oldData.length > 0) {
+          const solutionToolsData: SelectedTool[] = [];
+          
+          for (const solutionTool of oldData) {
+            const fullTool = availableTools.find(t => 
+              t.name.toLowerCase().trim() === solutionTool.tool_name.toLowerCase().trim()
+            );
+            
+            if (fullTool) {
+              solutionToolsData.push({
+                ...fullTool,
+                is_required: solutionTool.is_required
+              });
+            }
           }
+          
+          setTools(solutionToolsData);
         }
+      } else if (referenceData && referenceData.length > 0) {
+        // Usar dados da nova tabela de referência
+        const solutionToolsData: SelectedTool[] = referenceData.map(ref => ({
+          ...ref.tools,
+          is_required: ref.is_required
+        }));
         
         setTools(solutionToolsData);
       }
@@ -80,24 +105,47 @@ export const useToolsChecklist = (solutionId: string | null) => {
     try {
       setSavingTools(true);
       
+      // Limpar dados existentes nas duas tabelas
+      await supabase
+        .from("solution_tools_reference")
+        .delete()
+        .eq("solution_id", solutionId);
+        
       await supabase
         .from("solution_tools")
         .delete()
         .eq("solution_id", solutionId);
       
       if (tools.length > 0) {
-        const toolsToInsert = tools.map(tool => ({
+        // Inserir na nova tabela de referência
+        const referenceToolsToInsert = tools.map((tool, index) => ({
+          solution_id: solutionId,
+          tool_id: tool.id,
+          is_required: tool.is_required,
+          order_index: index
+        }));
+        
+        const { error: referenceInsertError } = await supabase
+          .from("solution_tools_reference")
+          .insert(referenceToolsToInsert);
+          
+        if (referenceInsertError) throw referenceInsertError;
+        
+        // Manter compatibilidade com a tabela antiga
+        const oldToolsToInsert = tools.map(tool => ({
           solution_id: solutionId,
           tool_name: tool.name,
           tool_url: tool.official_url,
           is_required: tool.is_required
         }));
         
-        const { error: insertError } = await supabase
+        const { error: oldInsertError } = await supabase
           .from("solution_tools")
-          .insert(toolsToInsert);
+          .insert(oldToolsToInsert);
           
-        if (insertError) throw insertError;
+        if (oldInsertError) {
+          console.warn("Erro ao inserir na tabela antiga (não crítico):", oldInsertError);
+        }
       }
       
       toast({
