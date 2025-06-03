@@ -69,12 +69,21 @@ export const ModuleLessons = ({
   
   return (
     <div>
-      {/* Carrossel de miniaturas para as aulas (estilo Netflix) */}
+      {/* Carrossel de miniaturas para as aulas (estilo Netflix) - Formato 9:16 */}
       <div className="p-4 border-b">
+        <div className="mb-2">
+          <p className="text-xs text-muted-foreground">
+            💡 <strong>Sistema de cores:</strong> 
+            <span className="text-green-600 ml-1">Verde = Concluída</span> | 
+            <span className="text-blue-600 ml-1">Azul = Em progresso</span> | 
+            <span className="text-gray-600 ml-1">Cinza = Não iniciada</span>
+          </p>
+        </div>
+        
         <Carousel
           opts={{
             align: "start",
-            loop: lessons.length > 3,
+            loop: lessons.length > 2, // Ajustado para formato vertical (menos aulas visíveis)
           }}
           className="w-full"
         >
@@ -87,7 +96,7 @@ export const ModuleLessons = ({
               return (
                 <CarouselItem 
                   key={lesson.id} 
-                  className="pl-4 basis-full sm:basis-1/2 md:basis-1/3"
+                  className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5"
                 >
                   <LessonThumbnail
                     lesson={lesson}
