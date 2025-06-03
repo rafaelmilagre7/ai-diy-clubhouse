@@ -10,9 +10,10 @@ export interface BaseSidebarProps {
   getInitials: (name: string | null) => string;
 }
 
-interface BaseContentProps {
+export interface BaseContentProps {
   children: React.ReactNode;
   sidebarOpen: boolean;
+  setSidebarOpen?: (open: boolean) => void;
 }
 
 interface BaseLayoutProps {
@@ -54,7 +55,10 @@ const BaseLayout: React.FC<BaseLayoutProps> = ({
         getInitials={getInitials}
       />
       
-      <ContentComponent sidebarOpen={sidebarOpen}>
+      <ContentComponent 
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+      >
         {children}
       </ContentComponent>
       
