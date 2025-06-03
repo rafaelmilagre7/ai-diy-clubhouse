@@ -5,7 +5,7 @@ import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/contexts/auth';
 import LayoutProvider from '@/components/layout/LayoutProvider';
-import { AppRoutes } from '@/routes/index';
+import AppRoutes from '@/components/routing/AppRoutes';
 import { PerformanceProvider } from '@/contexts/performance/PerformanceProvider';
 import { ErrorBoundary } from 'react-error-boundary';
 import { ErrorFallback } from '@/components/common/ErrorFallback';

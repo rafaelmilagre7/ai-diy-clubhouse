@@ -1,51 +1,52 @@
 
-import { RouteObject } from "react-router-dom";
-import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
-import AdminLayout from '@/components/layout/admin/AdminLayout';
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { Suspense } from 'react';
+import LoadingScreen from '@/components/common/LoadingScreen';
 
-// Admin pages - usando versões otimizadas
-import OptimizedAdminDashboard from '@/pages/admin/OptimizedAdminDashboard';
+// Admin pages
+import AdminDashboard from '@/pages/admin/AdminDashboard';
 import AdminUsers from '@/pages/admin/AdminUsers';
-import AdminTools from '@/pages/admin/AdminTools';
-import AdminToolEdit from '@/pages/admin/AdminToolEdit';
 import AdminSolutions from '@/pages/admin/AdminSolutions';
-import AdminSolutionEdit from '@/pages/admin/AdminSolutionEdit';
+import AdminSolutionEditor from '@/pages/admin/AdminSolutionEditor';
 import AdminSolutionCreate from '@/pages/admin/AdminSolutionCreate';
-import AdminAnalytics from '@/pages/admin/AdminAnalytics';
-import AdminOnboarding from '@/pages/admin/AdminOnboarding';
 import AdminSuggestions from '@/pages/admin/AdminSuggestions';
 import AdminSuggestionDetails from '@/pages/admin/AdminSuggestionDetails';
+import AdminTools from '@/pages/admin/AdminTools';
+import AdminOnboarding from '@/pages/admin/AdminOnboarding';
+import AdminOnboardingReset from '@/pages/admin/AdminOnboardingReset';
+import AdminAnalytics from '@/pages/admin/AdminAnalytics';
+import AdminCommunityModeration from '@/pages/admin/AdminCommunityModeration';
 import AdminEvents from '@/pages/admin/AdminEvents';
+import AdminPerformance from '@/pages/admin/AdminPerformance';
 import AdminRoles from '@/pages/admin/AdminRoles';
-import InvitesManagement from '@/pages/admin/invites/InvitesManagement';
-import CommunityModerationPage from '@/pages/admin/community/CommunityModerationPage';
-import PerformanceDashboard from '@/components/admin/performance/PerformanceDashboard';
-import AdminNetworkingPage from '@/pages/admin/networking/AdminNetworkingPage';
+import AdminInvites from '@/pages/admin/AdminInvites';
+import AdminPermissionsAudit from '@/pages/admin/AdminPermissionsAudit';
 
-// Função helper para criar rotas protegidas com AdminLayout
-const createAdminRoute = (path: string, Component: React.ComponentType<any>) => ({
-  path,
-  element: <ProtectedRoutes><AdminLayout><Component /></AdminLayout></ProtectedRoutes>
-});
+export const AdminRoutes = () => {
+  return (
+    <Suspense fallback={<LoadingScreen message="Carregando painel administrativo..." />}>
+      <Routes>
+        <Route index element={<AdminDashboard />} />
+        <Route path="users" element={<AdminUsers />} />
+        <Route path="solutions" element={<AdminSolutions />} />
+        <Route path="solutions/create" element={<AdminSolutionCreate />} />
+        <Route path="solutions/:id/edit" element={<AdminSolutionEditor />} />
+        <Route path="suggestions" element={<AdminSuggestions />} />
+        <Route path="suggestions/:id" element={<AdminSuggestionDetails />} />
+        <Route path="tools" element={<AdminTools />} />
+        <Route path="onboarding" element={<AdminOnboarding />} />
+        <Route path="onboarding/reset" element={<AdminOnboardingReset />} />
+        <Route path="analytics" element={<AdminAnalytics />} />
+        <Route path="community" element={<AdminCommunityModeration />} />
+        <Route path="events" element={<AdminEvents />} />
+        <Route path="performance" element={<AdminPerformance />} />
+        <Route path="roles" element={<AdminRoles />} />
+        <Route path="invites" element={<AdminInvites />} />
+        <Route path="permissions/audit" element={<AdminPermissionsAudit />} />
+      </Routes>
+    </Suspense>
+  );
+};
 
-export const adminRoutes: RouteObject[] = [
-  createAdminRoute("/admin", OptimizedAdminDashboard),
-  createAdminRoute("/admin/users", AdminUsers),
-  createAdminRoute("/admin/tools", AdminTools),
-  createAdminRoute("/admin/tools/new", AdminToolEdit),
-  createAdminRoute("/admin/tools/:id", AdminToolEdit),
-  createAdminRoute("/admin/solutions", AdminSolutions),
-  createAdminRoute("/admin/solutions/new", AdminSolutionCreate),
-  createAdminRoute("/admin/solutions/:id", AdminSolutionEdit),
-  createAdminRoute("/admin/solutions/view/:id", AdminSolutionEdit),
-  createAdminRoute("/admin/analytics", AdminAnalytics),
-  createAdminRoute("/admin/performance", PerformanceDashboard),
-  createAdminRoute("/admin/onboarding", AdminOnboarding),
-  createAdminRoute("/admin/suggestions", AdminSuggestions),
-  createAdminRoute("/admin/suggestions/:id", AdminSuggestionDetails),
-  createAdminRoute("/admin/events", AdminEvents),
-  createAdminRoute("/admin/roles", AdminRoles),
-  createAdminRoute("/admin/invites", InvitesManagement),
-  createAdminRoute("/admin/community", CommunityModerationPage),
-  createAdminRoute("/admin/networking", AdminNetworkingPage),
-];
+export default AdminRoutes;
