@@ -1,5 +1,5 @@
 
-import { useCallback, useState, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
@@ -7,53 +7,33 @@ import { useLogging } from '@/hooks/useLogging';
 import { useOfflinePersistence } from './useOfflinePersistence';
 import { useSyncMonitor } from '@/hooks/monitoring/useSyncMonitor';
 import { useConflictDetection } from './useConflictDetection';
-import { Comment } from '@/types/learningTypes';
+import { Comment, RawCommentData, normalizeCommentData } from '@/types/learningTypes';
 import { toast } from 'sonner';
 
-interface OptimisticComment extends Comment {
-  isOptimistic?: boolean;
-  isSending?: boolean;
-}
-
 export const useOptimizedLessonComments = (lessonId: string) => {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const { log, logError } = useLogging();
   const queryClient = useQueryClient();
-  
-  // Estados locais
-  const [optimisticComments, setOptimisticComments] = useState<OptimisticComment[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const optimisticCounterRef = useRef(0);
-  
-  // Hooks especializados
-  const { 
-    persistOperation, 
-    removePersistedOperation, 
-    loadFromStorage 
-  } = useOfflinePersistence(lessonId);
-  
   const { reportSyncIssue } = useSyncMonitor();
-  const { detectConflict, autoResolveConflict, validateDataIntegrity } = useConflictDetection();
-  
+  const { detectBatchConflicts, validateDataIntegrity } = useConflictDetection();
+  const { persistOperation, loadFromStorage } = useOfflinePersistence(lessonId);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [optimisticComments, setOptimisticComments] = useState<Comment[]>([]);
+  const optimisticCounterRef = useRef(0);
+
   const queryKey = ['learning-comments', lessonId];
 
-  // Buscar comentários do servidor
+  // Fetch comentários do Supabase
   const fetchComments = useCallback(async (): Promise<Comment[]> => {
     try {
-      log('Buscando comentários do servidor', { lessonId });
-      
-      const { data, error } = await supabase
+      log('Buscando comentários', { lessonId });
+
+      const { data: rawData, error } = await supabase
         .from('learning_comments')
         .select(`
-          id,
-          content,
-          created_at,
-          updated_at,
-          user_id,
-          lesson_id,
-          parent_id,
-          likes_count,
-          profiles!learning_comments_user_id_fkey (
+          *,
+          profiles (
             id,
             name,
             email,
@@ -64,214 +44,161 @@ export const useOptimizedLessonComments = (lessonId: string) => {
         .eq('lesson_id', lessonId)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        logError('Erro ao buscar comentários', { error, lessonId });
-        throw error;
-      }
+      if (error) throw error;
 
-      const comments = (data || []).map(comment => ({
-        ...comment,
-        user_has_liked: false, // Será atualizado por query separada se necessário
-        replies: []
-      }));
+      // Normalizar dados do Supabase
+      const normalizedComments = (rawData || []).map((item: any) => {
+        return normalizeCommentData({
+          ...item,
+          profiles: Array.isArray(item.profiles) ? item.profiles : [item.profiles]
+        } as RawCommentData);
+      });
 
       // Validar integridade dos dados
-      if (!validateDataIntegrity(comments)) {
-        reportSyncIssue('stale_data', 'fetchComments', 'Dados inconsistentes retornados do servidor', { lessonId }, 'medium');
+      if (!validateDataIntegrity(normalizedComments)) {
+        reportSyncIssue('stale_data', 'useOptimizedLessonComments', 'Dados com problemas de integridade');
       }
 
       log('Comentários carregados com sucesso', { 
-        count: comments.length,
-        lessonId 
+        lessonId, 
+        count: normalizedComments.length 
       });
 
-      return comments;
+      return normalizedComments;
+
     } catch (error) {
-      logError('Falha ao buscar comentários', { error, lessonId });
-      reportSyncIssue('cache_miss', 'fetchComments', 'Falha na busca de comentários', { error }, 'high');
-      throw error;
+      logError('Erro ao buscar comentários', { error, lessonId });
+      reportSyncIssue('cache_miss', 'useOptimizedLessonComments', 'Falha no carregamento');
+      return [];
     }
   }, [lessonId, log, logError, validateDataIntegrity, reportSyncIssue]);
 
-  // Query principal otimizada
+  // Query principal
   const {
-    data: serverComments = [],
+    data: comments = [],
     isLoading,
     error,
     refetch
   } = useQuery({
     queryKey,
     queryFn: fetchComments,
-    staleTime: 2 * 60 * 1000, // 2 minutos
+    staleTime: 30 * 1000, // 30 segundos
     refetchOnWindowFocus: false,
-    retry: (failureCount, error) => {
-      if (failureCount >= 2) {
-        reportSyncIssue('cache_miss', 'useQuery', 'Múltiplas falhas na query', { error, failureCount }, 'high');
-        return false;
-      }
-      return true;
-    }
+    retry: 2
   });
 
   // Adicionar comentário otimista
-  const addOptimisticComment = useCallback((content: string, parentId?: string) => {
-    if (!user || !profile) {
-      logError('Usuário não autenticado para comentário otimista', { lessonId });
-      return null;
-    }
+  const addOptimisticComment = useCallback((content: string, parentId: string | null = null) => {
+    if (!user) return null;
 
-    const optimisticId = `optimistic-${++optimisticCounterRef.current}-${Date.now()}`;
-    const optimisticComment: OptimisticComment = {
-      id: optimisticId,
-      content: content.trim(),
+    const optimisticComment: Comment = {
+      id: `optimistic-${++optimisticCounterRef.current}`,
+      content,
+      created_at: new Date().toISOString(),
       user_id: user.id,
       lesson_id: lessonId,
-      parent_id: parentId || null,
-      created_at: new Date().toISOString(),
+      parent_id: parentId,
       likes_count: 0,
       user_has_liked: false,
       profiles: {
         id: user.id,
-        name: profile.name || 'Você',
-        email: profile.email || '',
-        avatar_url: profile.avatar_url || '',
-        role: profile.role || 'member'
+        name: user.user_metadata?.name || user.email || 'Usuário',
+        email: user.email,
+        avatar_url: user.user_metadata?.avatar_url || '',
+        role: 'member'
       },
-      replies: [],
-      isOptimistic: true,
-      isSending: true
+      replies: []
     };
 
     setOptimisticComments(prev => [optimisticComment, ...prev]);
-
-    // Persistir para sincronização posterior
-    persistOperation({
-      type: 'add_comment',
-      data: { content, parentId },
-      lessonId
-    });
-
-    log('Comentário otimista adicionado', { 
-      optimisticId, 
-      lessonId,
-      hasParent: !!parentId 
-    });
     
+    log('Comentário otimista adicionado', { 
+      optimisticId: optimisticComment.id,
+      lessonId 
+    });
+
     return optimisticComment;
-  }, [user, profile, lessonId, persistOperation, log, logError]);
+  }, [user, lessonId, log]);
 
   // Confirmar comentário otimista
   const confirmOptimisticComment = useCallback((optimisticId: string, realComment: Comment) => {
-    setOptimisticComments(prev => 
-      prev.filter(comment => comment.id !== optimisticId)
-    );
+    setOptimisticComments(prev => prev.filter(c => c.id !== optimisticId));
     
-    // Invalidar cache para buscar dados atualizados
-    queryClient.invalidateQueries({ queryKey });
-    
-    log('Comentário confirmado pelo servidor', { 
-      optimisticId, 
-      realId: realComment.id,
-      lessonId 
+    // Atualizar cache do React Query
+    queryClient.setQueryData(queryKey, (oldData: Comment[] | undefined) => {
+      const existingData = oldData || [];
+      return [realComment, ...existingData];
     });
-  }, [queryClient, queryKey, log, lessonId]);
 
-  // Remover comentário otimista em caso de erro
+    log('Comentário otimista confirmado', { optimisticId, realId: realComment.id });
+  }, [queryClient, queryKey, log]);
+
+  // Remover comentário otimista
   const removeOptimisticComment = useCallback((optimisticId: string) => {
-    setOptimisticComments(prev => 
-      prev.filter(comment => comment.id !== optimisticId)
-    );
-    
-    toast.error('Erro ao enviar comentário. Tente novamente.');
-    log('Comentário otimista removido por erro', { optimisticId, lessonId });
-  }, [log, lessonId]);
+    setOptimisticComments(prev => prev.filter(c => c.id !== optimisticId));
+    log('Comentário otimista removido', { optimisticId });
+  }, [log]);
+
+  // Verificar se há comentários otimistas
+  const hasOptimisticComments = useCallback(() => {
+    return optimisticComments.length > 0;
+  }, [optimisticComments.length]);
 
   // Sincronização inteligente
   const performSmartSync = useCallback(async () => {
     try {
       log('Iniciando sincronização inteligente', { lessonId });
-      
-      // Processar operações pendentes
-      const pendingOps = loadFromStorage();
-      
-      for (const operation of pendingOps) {
-        try {
-          if (operation.type === 'add_comment') {
-            const { content, parentId } = operation.data;
-            
-            const { data, error } = await supabase
-              .from('learning_comments')
-              .insert({
-                content,
-                lesson_id: lessonId,
-                parent_id: parentId || null,
-                user_id: user?.id
-              })
-              .select()
-              .single();
 
-            if (error) throw error;
+      // Recarregar dados do servidor
+      const { data: freshData } = await refetch();
+      const serverComments = freshData || [];
 
-            // Remover da persistência após sucesso
-            removePersistedOperation(operation.id);
-            
-            log('Operação pendente sincronizada', { 
-              operationId: operation.id,
-              commentId: data.id 
-            });
-          }
-        } catch (error) {
-          logError('Erro ao sincronizar operação', { 
-            error, 
-            operationId: operation.id 
-          });
-        }
+      // Detectar conflitos
+      const conflicts = detectBatchConflicts(comments, serverComments);
+      
+      if (conflicts.length > 0) {
+        reportSyncIssue('conflict', 'useOptimizedLessonComments', 
+          `${conflicts.length} conflitos detectados`);
       }
 
-      // Forçar atualização dos dados
-      await refetch();
-      
-      log('Sincronização inteligente concluída', { lessonId });
-      
+      log('Sincronização inteligente concluída', { 
+        lessonId, 
+        conflictsFound: conflicts.length 
+      });
+
+      return serverComments;
+
     } catch (error) {
       logError('Erro na sincronização inteligente', { error, lessonId });
-      reportSyncIssue('sync_delay', 'performSmartSync', 'Falha na sincronização', { error }, 'high');
+      reportSyncIssue('sync_delay', 'useOptimizedLessonComments', 'Falha na sincronização');
+      throw error;
     }
-  }, [lessonId, loadFromStorage, removePersistedOperation, user?.id, refetch, log, logError, reportSyncIssue]);
+  }, [lessonId, log, logError, refetch, comments, detectBatchConflicts, reportSyncIssue]);
 
-  // Adicionar comentário com otimização
-  const addComment = useCallback(async (content: string, parentId?: string | null) => {
-    if (!content.trim()) return;
-    
+  // Adicionar comentário
+  const addComment = useCallback(async (content: string, parentId: string | null = null) => {
+    if (!user || isSubmitting) return;
+
     setIsSubmitting(true);
+    const optimisticComment = addOptimisticComment(content, parentId);
     
-    try {
-      // Adicionar otimisticamente
-      const optimisticComment = addOptimisticComment(content, parentId || undefined);
-      
-      if (!optimisticComment) {
-        throw new Error('Não foi possível criar comentário otimista');
-      }
+    if (!optimisticComment) {
+      setIsSubmitting(false);
+      return;
+    }
 
-      // Tentar enviar para o servidor
+    try {
       const { data, error } = await supabase
         .from('learning_comments')
         .insert({
-          content: content.trim(),
+          content,
           lesson_id: lessonId,
-          parent_id: parentId,
-          user_id: user?.id
+          user_id: user.id,
+          parent_id: parentId
         })
         .select(`
-          id,
-          content,
-          created_at,
-          updated_at,
-          user_id,
-          lesson_id,
-          parent_id,
-          likes_count,
-          profiles!learning_comments_user_id_fkey (
+          *,
+          profiles (
             id,
             name,
             email,
@@ -281,81 +208,90 @@ export const useOptimizedLessonComments = (lessonId: string) => {
         `)
         .single();
 
-      if (error) {
-        removeOptimisticComment(optimisticComment.id);
-        throw error;
-      }
+      if (error) throw error;
 
-      // Confirmar comentário otimista
-      confirmOptimisticComment(optimisticComment.id, data as Comment);
-      
+      const normalizedComment = normalizeCommentData({
+        ...data,
+        profiles: Array.isArray(data.profiles) ? data.profiles : [data.profiles]
+      } as RawCommentData);
+
+      confirmOptimisticComment(optimisticComment.id, normalizedComment);
       toast.success('Comentário adicionado com sucesso!');
-      
+
     } catch (error) {
+      removeOptimisticComment(optimisticComment.id);
       logError('Erro ao adicionar comentário', { error, lessonId });
-      toast.error('Erro ao adicionar comentário. Tente novamente.');
+      toast.error('Erro ao adicionar comentário');
     } finally {
       setIsSubmitting(false);
     }
-  }, [lessonId, user?.id, addOptimisticComment, removeOptimisticComment, confirmOptimisticComment, log, logError]);
+  }, [user, isSubmitting, lessonId, addOptimisticComment, confirmOptimisticComment, removeOptimisticComment, logError]);
+
+  // Curtir comentário
+  const likeComment = useCallback(async (commentId: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('learning_comment_likes')
+        .upsert({
+          comment_id: commentId,
+          user_id: user.id
+        });
+
+      if (error) throw error;
+
+      await refetch();
+      toast.success('Curtida adicionada!');
+
+    } catch (error) {
+      logError('Erro ao curtir comentário', { error, commentId });
+      toast.error('Erro ao curtir comentário');
+    }
+  }, [user, refetch, logError]);
 
   // Deletar comentário
   const deleteComment = useCallback(async (commentId: string) => {
+    if (!user) return;
+
     try {
       const { error } = await supabase
         .from('learning_comments')
         .delete()
-        .eq('id', commentId);
+        .eq('id', commentId)
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
-      queryClient.invalidateQueries({ queryKey });
-      toast.success('Comentário excluído com sucesso!');
-      
+      await refetch();
+      toast.success('Comentário removido!');
+
     } catch (error) {
-      logError('Erro ao excluir comentário', { error, commentId });
-      toast.error('Erro ao excluir comentário.');
+      logError('Erro ao deletar comentário', { error, commentId });
+      toast.error('Erro ao deletar comentário');
     }
-  }, [queryClient, queryKey, logError]);
+  }, [user, refetch, logError]);
 
-  // Curtir comentário
-  const likeComment = useCallback(async (commentId: string) => {
-    try {
-      // Implementação simplificada - pode ser expandida
-      queryClient.invalidateQueries({ queryKey });
-      
-    } catch (error) {
-      logError('Erro ao curtir comentário', { error, commentId });
-      toast.error('Erro ao curtir comentário.');
-    }
-  }, [queryClient, queryKey, logError]);
-
-  // Combinar comentários do servidor com otimistas
-  const allComments = [...optimisticComments, ...serverComments];
-
-  // Verificar se há comentários otimistas
-  const hasOptimisticComments = optimisticComments.length > 0;
-
-  // Forçar sincronização
-  const forceSync = useCallback(async () => {
-    await performSmartSync();
-  }, [performSmartSync]);
+  // Combinar comentários reais com otimistas
+  const allComments = [...optimisticComments, ...comments];
 
   return {
     comments: allComments,
     isLoading,
-    error,
+    error: error as Error | null,
     isSubmitting,
     addComment,
     deleteComment,
     likeComment,
-    forceSync,
-    hasOptimisticComments,
+    forceSync: performSmartSync,
     
-    // Funções avançadas
+    // Funções específicas do hook otimizado
+    fetchComments,
     addOptimisticComment,
     confirmOptimisticComment,
     removeOptimisticComment,
-    performSmartSync
+    hasOptimisticComments,
+    performSmartSync,
+    queryKey
   };
 };

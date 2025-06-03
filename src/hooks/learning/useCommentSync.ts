@@ -53,8 +53,24 @@ export const useCommentSync = (lessonId: string) => {
     log('Cache de comentários invalidado', { lessonId });
   }, [queryClient, queryKey, lessonId, log]);
 
+  // Operação de fila (mock para compatibilidade)
+  const queueOperation = useCallback((operation: any) => {
+    log('Operação adicionada à fila', { operation, lessonId });
+    return operation.id || 'queue-' + Date.now();
+  }, [lessonId, log]);
+
+  // Forçar sincronização de todas as operações
+  const forceSyncAll = useCallback(async () => {
+    await invalidateAndReload();
+    log('Sincronização forçada executada', { lessonId });
+  }, [invalidateAndReload, lessonId, log]);
+
   return {
     syncComment,
-    invalidateAndReload
+    invalidateAndReload,
+    queueOperation,
+    forceSyncAll,
+    pendingOperationsCount: 0,
+    queryKey
   };
 };

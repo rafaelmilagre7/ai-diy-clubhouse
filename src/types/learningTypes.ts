@@ -18,6 +18,43 @@ export interface Comment {
   replies?: Comment[];
 }
 
+// Interface para dados brutos do Supabase (com profiles como array)
+export interface RawCommentData {
+  id: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+  lesson_id: string;
+  parent_id: string | null;
+  likes_count: number;
+  profiles: Array<{
+    id?: string;
+    name: string;
+    email?: string;
+    avatar_url: string;
+    role?: string;
+  }>;
+}
+
+// Função utilitária para normalizar dados do Supabase
+export const normalizeCommentData = (rawData: RawCommentData): Comment => {
+  return {
+    id: rawData.id,
+    content: rawData.content,
+    created_at: rawData.created_at,
+    user_id: rawData.user_id,
+    lesson_id: rawData.lesson_id,
+    parent_id: rawData.parent_id,
+    likes_count: rawData.likes_count || 0,
+    profiles: Array.isArray(rawData.profiles) 
+      ? rawData.profiles[0] || { name: 'Usuário', avatar_url: '' }
+      : rawData.profiles,
+    user_has_liked: false,
+    replies: []
+  };
+};
+
 export interface Certificate {
   id: string;
   user_id: string;

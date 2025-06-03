@@ -37,7 +37,7 @@ export const LessonComments: React.FC<LessonCommentsProps> = ({ lessonId }) => {
   
   log('Renderizando comentários otimizados', { 
     lessonId, 
-    commentsCount: comments?.length || 0,
+    commentsCount: Array.isArray(comments) ? comments.length : 0,
     hasError: !!error,
     isConnected,
     isSubmitting
@@ -60,6 +60,9 @@ export const LessonComments: React.FC<LessonCommentsProps> = ({ lessonId }) => {
     await forceSync();
     performHealthCheck();
   };
+
+  // Garantir que comments seja sempre um array
+  const safeComments = Array.isArray(comments) ? comments : [];
 
   return (
     <div className="space-y-6">
@@ -93,7 +96,7 @@ export const LessonComments: React.FC<LessonCommentsProps> = ({ lessonId }) => {
       />
       
       <CommentList
-        comments={comments}
+        comments={safeComments}
         lessonId={lessonId}
         onReply={handleSubmitComment}
         onDelete={deleteComment}
