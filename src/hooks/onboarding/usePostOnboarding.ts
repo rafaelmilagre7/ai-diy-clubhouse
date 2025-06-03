@@ -1,5 +1,5 @@
 
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
@@ -8,6 +8,31 @@ import { toast } from 'sonner';
 export const usePostOnboarding = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [isFirstAccess, setIsFirstAccess] = useState(false);
+
+  // Verificar se é o primeiro acesso ao carregar o hook
+  useEffect(() => {
+    const checkFirstAccess = async () => {
+      if (!user?.id) return;
+
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('last_active')
+          .eq('id', user.id)
+          .single();
+
+        // Se não tem last_active ou é muito recente, é primeiro acesso
+        if (!profile?.last_active) {
+          setIsFirstAccess(true);
+        }
+      } catch (error) {
+        console.error('Erro ao verificar primeiro acesso:', error);
+      }
+    };
+
+    checkFirstAccess();
+  }, [user?.id]);
 
   const goToImplementationTrail = useCallback(() => {
     console.log('🎯 Navegando para trilha de implementação');
@@ -35,6 +60,7 @@ export const usePostOnboarding = () => {
         console.error('Erro ao marcar primeiro acesso:', error);
       } else {
         console.log('✅ Primeiro acesso ao dashboard marcado');
+        setIsFirstAccess(false); // Não é mais primeiro acesso
       }
     } catch (error) {
       console.error('Erro ao marcar primeiro acesso:', error);
@@ -80,6 +106,7 @@ export const usePostOnboarding = () => {
   }, [user?.id]);
 
   return {
+    isFirstAccess,
     goToImplementationTrail,
     goToDashboard,
     markFirstDashboardAccess,

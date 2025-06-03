@@ -10,7 +10,7 @@ import { lazy } from "react";
 const CourseDetails = lazy(() => import("@/pages/member/learning/CourseDetails"));
 const LessonView = lazy(() => import("@/pages/member/learning/LessonView"));
 
-export const LearningRoutes = () => {
+const LearningRoutes = () => {
   return (
     <Suspense fallback={<LoadingScreen message="Carregando área de aprendizado..." />}>
       <Routes>
@@ -21,3 +21,5 @@ export const LearningRoutes = () => {
     </Suspense>
   );
 };
+
+export default LearningRoutes;

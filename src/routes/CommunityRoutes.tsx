@@ -11,7 +11,7 @@ const TopicDetails = lazy(() => import("@/pages/member/community/TopicDetails"))
 const CategoryTopics = lazy(() => import("@/pages/member/community/CategoryTopics"));
 const NewTopic = lazy(() => import("@/pages/member/community/NewTopic"));
 
-export const CommunityRoutes = () => {
+const CommunityRoutes = () => {
   return (
     <Suspense fallback={<LoadingScreen message="Carregando comunidade..." />}>
       <Routes>
@@ -23,3 +23,5 @@ export const CommunityRoutes = () => {
     </Suspense>
   );
 };
+
+export default CommunityRoutes;
