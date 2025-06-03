@@ -12,22 +12,30 @@ interface ProtectedRouteProps {
   requireOnboarding?: boolean;
 }
 
-const ProtectedRoute = ({ 
+export const ProtectedRoute = ({ 
   children, 
   requireAdmin = false,
   requiredRole,
   requireOnboarding = false
 }: ProtectedRouteProps) => {
-  const { user, isAdmin, isLoading: authLoading } = useAuth();
+  const { user, isAdmin, isFormacao, isLoading: authLoading } = useAuth();
   const { isOnboardingComplete, isLoading: onboardingLoading } = useUnifiedOnboardingValidation();
   const location = useLocation();
   
-  // Timeout reduzido para ambiente de teste
-  const loadingTimeout = process.env.NODE_ENV === 'test' ? 1000 : 5000;
+  // Loading timeout otimizado
+  const [showContent, setShowContent] = React.useState(false);
+  
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowContent(true);
+    }, authLoading || onboardingLoading ? 3000 : 0);
+    
+    return () => clearTimeout(timer);
+  }, [authLoading, onboardingLoading]);
   
   // Se estiver carregando, mostra tela de loading
-  if (authLoading || onboardingLoading) {
-    return <LoadingScreen message="Verificando autenticação..." />;
+  if ((authLoading || onboardingLoading) && !showContent) {
+    return <LoadingScreen message="Verificando autenticação..." variant="skeleton" />;
   }
 
   // Se não houver usuário autenticado, redireciona para login
@@ -37,6 +45,11 @@ const ProtectedRoute = ({
   
   // Verificar permissões de admin
   if ((requiredRole === 'admin' || requireAdmin) && !isAdmin) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  // Verificar permissões de formação
+  if (requiredRole === 'formacao' && !(isFormacao || isAdmin)) {
     return <Navigate to="/dashboard" replace />;
   }
 

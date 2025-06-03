@@ -1,79 +1,72 @@
 
-import React, { useEffect } from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { Toaster } from '@/components/ui/toaster';
-import { AuthProvider } from '@/contexts/auth';
-import { LoggingProvider } from '@/contexts/logging';
-import { PerformanceProvider } from '@/contexts/performance/PerformanceProvider';
-import AppRoutes from '@/components/routing/AppRoutes';
-import { useServiceWorker } from '@/hooks/common/useServiceWorker';
-import { useBundleAnalyzer } from '@/utils/bundleAnalyzer';
-import { initializeBrandAssetsBucket } from '@/utils/storage/initStorage';
-import ErrorBoundary from '@/components/common/ErrorBoundary';
+import { Toaster } from 'sonner';
+import { AuthProvider } from '@/contexts/auth/AuthProvider';
+import AppRoutes from '@/routes/AppRoutes';
+import { ErrorBoundary } from 'react-error-boundary';
+import RouteErrorBoundary from '@/components/common/RouteErrorBoundary';
 import './App.css';
 
-// Configuração otimizada do React Query
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutos
-      gcTime: 10 * 60 * 1000, // 10 minutos (novo nome para cacheTime)
-      retry: (failureCount, error: any) => {
-        // Não tentar novamente para erros 4xx
-        if (error?.status >= 400 && error?.status < 500) {
-          return false;
-        }
-        return failureCount < 2;
-      },
+      staleTime: 1000 * 60 * 5, // 5 minutos
+      retry: 2,
       refetchOnWindowFocus: false,
-      refetchOnMount: true,
-    },
-    mutations: {
-      retry: 1,
     },
   },
 });
 
-// Componente interno que usa os hooks
-const AppContent: React.FC = () => {
-  useServiceWorker();
-  const { analyzePerformance } = useBundleAnalyzer();
-
-  useEffect(() => {
-    // Inicializar storage bucket para brand assets
-    initializeBrandAssetsBucket();
-    
-    // Analisar performance após carregamento
-    const timer = setTimeout(() => {
-      if (import.meta.env.DEV) {
-        analyzePerformance();
-      }
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, [analyzePerformance]);
-
-  return <AppRoutes />;
-};
+// Fallback para erros gerais
+const ErrorFallback = ({ error, resetErrorBoundary }: any) => (
+  <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="text-center">
+      <h2 className="text-2xl font-bold mb-4">Algo deu errado</h2>
+      <p className="text-muted-foreground mb-4">Ocorreu um erro inesperado na aplicação.</p>
+      <button
+        onClick={resetErrorBoundary}
+        className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
+      >
+        Tentar novamente
+      </button>
+    </div>
+  </div>
+);
 
 function App() {
   return (
-    <ErrorBoundary>
-      <PerformanceProvider>
-        <LoggingProvider>
-          <QueryClientProvider client={queryClient}>
-            <AuthProvider>
-              <Router>
-                <AppContent />
-                <Toaster />
-                {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
-              </Router>
-            </AuthProvider>
-          </QueryClientProvider>
-        </LoggingProvider>
-      </PerformanceProvider>
+    <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => window.location.reload()}>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <AuthProvider>
+            <RouteErrorBoundary>
+              <AppRoutes />
+            </RouteErrorBoundary>
+            
+            <Toaster 
+              position="top-right" 
+              expand={true}
+              richColors
+              closeButton
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: 'hsl(var(--background))',
+                  color: 'hsl(var(--foreground))',
+                  border: '1px solid hsl(var(--border))',
+                },
+              }}
+            />
+          </AuthProvider>
+        </BrowserRouter>
+        
+        {process.env.NODE_ENV === 'development' && (
+          <ReactQueryDevtools initialIsOpen={false} />
+        )}
+      </QueryClientProvider>
     </ErrorBoundary>
   );
 }
