@@ -17,8 +17,8 @@ import ResetPassword from '@/pages/auth/ResetPassword';
 import SetNewPassword from '@/pages/auth/SetNewPassword';
 
 // Member pages
-import DashboardPage from '@/pages/app/DashboardPage';
-import ImplementationTrailPage from '@/pages/app/ImplementationTrailPage';
+import Dashboard from '@/pages/member/Dashboard';
+import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
 
 // Route modules
 import { NetworkingRoutes } from '@/routes/NetworkingRoutes';
@@ -30,7 +30,7 @@ import { BenefitsRoutes } from '@/routes/BenefitsRoutes';
 import { OnboardingRoutes } from '@/routes/OnboardingRoutes';
 import { AdminRoutes } from '@/routes/AdminRoutes';
 import { FormacaoRoutes } from '@/routes/FormacaoRoutes';
-import { ProfileRoutes } from '@/routes/ProfileRoutes';
+import ProfileRoutes from '@/routes/ProfileRoutes';
 
 const AppRoutes = () => {
   return (
@@ -51,7 +51,7 @@ const AppRoutes = () => {
           {/* Rotas protegidas básicas */}
           <Route path="/dashboard" element={
             <ProtectedRoutes>
-              <DashboardPage />
+              <Dashboard />
             </ProtectedRoutes>
           } />
 
