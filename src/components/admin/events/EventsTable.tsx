@@ -12,7 +12,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { Event } from "@/types/events";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export const EventsTable = () => {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
@@ -67,28 +66,10 @@ export const EventsTable = () => {
               </TableCell>
               <TableCell>
                 {event.is_recurring ? (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Badge variant="outline" className="flex items-center gap-1">
-                          <Repeat className="h-3 w-3" />
-                          Recorrente
-                        </Badge>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>
-                          {event.recurrence_pattern === 'daily' && "Ocorre diariamente"}
-                          {event.recurrence_pattern === 'weekly' && "Ocorre semanalmente"}
-                          {event.recurrence_pattern === 'monthly' && "Ocorre mensalmente"}
-                          {event.recurrence_interval && event.recurrence_interval > 1 ? 
-                            ` a cada ${event.recurrence_interval} ${
-                              event.recurrence_pattern === 'daily' ? 'dias' : 
-                              event.recurrence_pattern === 'weekly' ? 'semanas' : 'meses'
-                            }` : ''}
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <Repeat className="h-3 w-3" />
+                    Recorrente
+                  </Badge>
                 ) : (
                   <Badge variant="outline">Único</Badge>
                 )}
