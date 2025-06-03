@@ -40,7 +40,7 @@ export const MemberCoursesList: React.FC<MemberCoursesListProps> = ({
   }
 
   if (!courses || courses.length === 0) {
-    return <EmptyCoursesState />;
+    return <EmptyCoursesState activeTab="all" />;
   }
 
   return (
@@ -56,8 +56,8 @@ export const MemberCoursesList: React.FC<MemberCoursesListProps> = ({
             description={course.description || ""}
             imageUrl={course.cover_image_url}
             progress={progress}
-            moduleCount={course.module_count}
-            lessonCount={course.lesson_count}
+            moduleCount={course.module_count || 0}
+            lessonCount={course.lesson_count || 0}
           />
         );
       })}

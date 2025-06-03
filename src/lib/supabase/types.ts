@@ -1,3 +1,4 @@
+
 export * from './types/database.types';
 
 export type UserRole = 'admin' | 'member' | 'formacao';
@@ -93,6 +94,7 @@ export interface LearningCourse {
   module_count?: number;
   lesson_count?: number;
   is_restricted?: boolean; // Adicionando a propriedade is_restricted
+  all_lessons?: LearningLesson[]; // Adicionando a propriedade all_lessons
 }
 
 export interface LearningModule {

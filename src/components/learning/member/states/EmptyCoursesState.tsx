@@ -5,11 +5,11 @@ import { useAuth } from "@/contexts/auth";
 import { Link } from "react-router-dom";
 
 interface EmptyCoursesStateProps {
-  activeTab: string;
+  activeTab?: string;
   message?: string;
 }
 
-export const EmptyCoursesState = ({ activeTab, message }: EmptyCoursesStateProps) => {
+export const EmptyCoursesState = ({ activeTab = "all", message }: EmptyCoursesStateProps) => {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin" || user?.role === "formacao";
 
