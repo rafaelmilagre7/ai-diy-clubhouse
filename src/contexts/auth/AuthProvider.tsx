@@ -35,15 +35,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user || null);
         
         if (session?.user) {
-          // Simular perfil básico para evitar erro
-          const basicProfile = {
+          // Criar perfil básico com todas as propriedades obrigatórias
+          const basicProfile: UserProfile = {
             id: session.user.id,
-            email: session.user.email,
+            email: session.user.email || '',
             name: session.user.user_metadata?.name || 'Usuário',
+            avatar_url: session.user.user_metadata?.avatar_url || null,
+            company_name: null,
+            industry: null,
             role: 'member',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
-          } as UserProfile;
+          };
           
           setProfile(basicProfile);
           setIsAdmin(false);
@@ -70,14 +73,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(session);
           setUser(session.user);
           
-          const basicProfile = {
+          const basicProfile: UserProfile = {
             id: session.user.id,
-            email: session.user.email,
+            email: session.user.email || '',
             name: session.user.user_metadata?.name || 'Usuário',
+            avatar_url: session.user.user_metadata?.avatar_url || null,
+            company_name: null,
+            industry: null,
             role: 'member',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
-          } as UserProfile;
+          };
           
           setProfile(basicProfile);
           setIsAdmin(false);
