@@ -28,6 +28,7 @@ function App() {
       FallbackComponent={(props) => (
         <ErrorFallback 
           {...props}
+          errorInfo={null}
           onRetry={() => window.location.reload()}
           onGoHome={() => window.location.href = '/dashboard'}
           retryCount={0}
