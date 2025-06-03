@@ -49,60 +49,64 @@ const SuggestionsLayout = () => {
 
   if (isLoading) {
     return (
-      <div className="w-full pl-8 pr-6 py-6 space-y-6">
-        <SuggestionsHeader 
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          filter={filter}
-          onFilterChange={handleFilterChange}
-        />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <div className="p-4 space-y-3">
-                <Skeleton className="h-6 w-4/5 mb-2" />
-                <Skeleton className="h-4 w-2/5" />
-                <Skeleton className="h-20 w-full" />
-                <div className="flex justify-between pt-2">
-                  <Skeleton className="h-4 w-16" />
-                  <Skeleton className="h-4 w-12" />
+      <div className="w-full min-h-screen bg-[#0F111A]">
+        <div className="px-4 md:px-6 lg:px-8 py-6 space-y-6">
+          <SuggestionsHeader 
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            filter={filter}
+            onFilterChange={handleFilterChange}
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Card key={i} className="animate-pulse">
+                <div className="p-4 space-y-3">
+                  <Skeleton className="h-6 w-4/5 mb-2" />
+                  <Skeleton className="h-4 w-2/5" />
+                  <Skeleton className="h-20 w-full" />
+                  <div className="flex justify-between pt-2">
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-4 w-12" />
+                  </div>
                 </div>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full pl-8 pr-6 py-6 space-y-6">
-      <SuggestionsHeader 
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        filter={filter}
-        onFilterChange={handleFilterChange}
-      />
-      
-      {error ? (
-        <Alert variant="destructive" className="mb-4 animate-fade-in">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Erro ao carregar sugestões</AlertTitle>
-          <AlertDescription className="flex flex-col gap-2">
-            <p>Não foi possível carregar as sugestões. Por favor, tente novamente.</p>
-            <Button variant="outline" size="sm" onClick={handleRetry} className="gap-2 w-fit">
-              <RefreshCw size={14} />
-              Tentar novamente
-            </Button>
-          </AlertDescription>
-        </Alert>
-      ) : (
-        <SuggestionsContent 
-          suggestions={suggestions} 
+    <div className="w-full min-h-screen bg-[#0F111A]">
+      <div className="px-4 md:px-6 lg:px-8 py-6 space-y-6">
+        <SuggestionsHeader 
           searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
           filter={filter}
+          onFilterChange={handleFilterChange}
         />
-      )}
+        
+        {error ? (
+          <Alert variant="destructive" className="mb-4 animate-fade-in">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Erro ao carregar sugestões</AlertTitle>
+            <AlertDescription className="flex flex-col gap-2">
+              <p>Não foi possível carregar as sugestões. Por favor, tente novamente.</p>
+              <Button variant="outline" size="sm" onClick={handleRetry} className="gap-2 w-fit">
+                <RefreshCw size={14} />
+                Tentar novamente
+              </Button>
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <SuggestionsContent 
+            suggestions={suggestions} 
+            searchQuery={searchQuery}
+            filter={filter}
+          />
+        )}
+      </div>
     </div>
   );
 };

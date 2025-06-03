@@ -77,12 +77,12 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution, onClick })
   return (
     <Card 
       className={cn(
-        "h-full cursor-pointer group transition-all duration-300 overflow-hidden transform hover:-translate-y-1 bg-[#151823] border-neutral-700",
+        "h-full cursor-pointer group transition-all duration-300 overflow-hidden transform hover:-translate-y-1 bg-[#151823] border-neutral-700 hover:shadow-lg",
         getCategoryStyle(solution.category)
       )}
       onClick={onClick}
     >
-      <div className="h-36 overflow-hidden relative">
+      <div className="h-32 overflow-hidden relative">
         {solution.thumbnail_url ? (
           <img 
             src={solution.thumbnail_url}
@@ -91,7 +91,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution, onClick })
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-[#1A1E2E]">
-            <span className="text-4xl font-bold text-neutral-500">
+            <span className="text-3xl font-bold text-neutral-500">
               {solution.title.charAt(0)}
             </span>
           </div>
@@ -99,11 +99,11 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution, onClick })
         <div className="absolute inset-0 bg-gradient-to-t from-[#0F111A] via-transparent to-transparent opacity-90"></div>
       </div>
       
-      <CardContent className="p-4 pb-2">
+      <CardContent className="p-3 pb-2">
         <CardContentSection title={solution.title} description={solution.description} />
       </CardContent>
       
-      <CardFooter className="px-4 py-3 flex items-center justify-between border-t border-neutral-800">
+      <CardFooter className="px-3 py-2 flex items-center justify-between border-t border-neutral-800">
         <div className="flex items-center space-x-2">
           {getCategoryBadge(solution.category)}
         </div>
