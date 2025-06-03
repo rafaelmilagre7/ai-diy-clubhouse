@@ -59,8 +59,22 @@ export const useCourseAccess = () => {
       throw error;
     }
 
-    // Corrigir tipagem: data é um array de objetos, cada um com uma propriedade roles
-    return data?.map(item => item.roles).filter(Boolean) as Role[] || [];
+    // Corrigir processamento: data é um array de objetos, cada um com uma propriedade roles
+    if (!data) return [];
+    
+    const roles: Role[] = [];
+    for (const item of data) {
+      // item.roles pode ser um objeto ou null
+      if (item.roles && typeof item.roles === 'object') {
+        roles.push({
+          id: item.roles.id,
+          name: item.roles.name,
+          description: item.roles.description || ''
+        });
+      }
+    }
+    
+    return roles;
   };
 
   // Buscar cursos que um role tem acesso - TIPAGEM CORRIGIDA
@@ -83,8 +97,23 @@ export const useCourseAccess = () => {
       throw error;
     }
 
-    // Corrigir tipagem: data é um array de objetos, cada um com uma propriedade learning_courses
-    return data?.map(item => item.learning_courses).filter(Boolean) as LearningCourse[] || [];
+    // Corrigir processamento: data é um array de objetos, cada um com uma propriedade learning_courses
+    if (!data) return [];
+    
+    const courses: LearningCourse[] = [];
+    for (const item of data) {
+      // item.learning_courses pode ser um objeto ou null
+      if (item.learning_courses && typeof item.learning_courses === 'object') {
+        courses.push({
+          id: item.learning_courses.id,
+          title: item.learning_courses.title,
+          description: item.learning_courses.description || '',
+          published: item.learning_courses.published || false
+        });
+      }
+    }
+    
+    return courses;
   };
 
   // Gerenciar acesso de um role a um curso
