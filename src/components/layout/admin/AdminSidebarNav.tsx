@@ -164,7 +164,25 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
 
   return (
     <div className="flex flex-col h-full">
-      <ScrollArea className="flex-1 px-3" style={{ height: "calc(100vh - 140px)" }}>
+      {/* SEÇÃO DE NAVEGAÇÃO ENTRE PAINÉIS - SEMPRE VISÍVEL */}
+      <div className="px-3 py-3 border-b border-gray-700">
+        <Button
+          variant="outline"
+          className={cn(
+            "w-full justify-start gap-2 border-viverblue/30 text-viverblue hover:bg-viverblue/10",
+            !sidebarOpen && "justify-center"
+          )}
+          onClick={() => {
+            window.location.href = '/dashboard';
+          }}
+        >
+          <User className="h-4 w-4" />
+          {sidebarOpen && <span>Painel do Membro</span>}
+        </Button>
+      </div>
+
+      {/* MENU PRINCIPAL COM SCROLL */}
+      <ScrollArea className="flex-1 px-3" style={{ height: "calc(100vh - 200px)" }}>
         <div className="py-4 space-y-2">
           <div className="space-y-1">
             {menuItems.map(item => renderMenuItem(item))}
@@ -202,29 +220,11 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
             </div>
           )}
           
-          <div className="space-y-1">
+          <div className="space-y-1 pb-4">
             {rbacItems.map(item => renderMenuItem(item))}
           </div>
         </div>
       </ScrollArea>
-
-      <div className="px-3 py-4 border-t border-gray-700 mt-auto space-y-2">
-        {/* CORREÇÃO CRÍTICA: Botão funcional para voltar ao painel de membro */}
-        <Button
-          variant="outline"
-          className={cn(
-            "w-full justify-start gap-2",
-            !sidebarOpen && "justify-center"
-          )}
-          onClick={() => {
-            // Forçar navegação para dashboard SEM redirecionamento
-            window.location.href = '/dashboard';
-          }}
-        >
-          <User className="h-4 w-4" />
-          {sidebarOpen && <span>Painel do Membro</span>}
-        </Button>
-      </div>
     </div>
   );
 }
