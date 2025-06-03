@@ -24,7 +24,7 @@ export const LessonComments: React.FC<LessonCommentsProps> = ({ lessonId }) => {
     error
   } = useLessonComments(lessonId);
   
-  // Ativar atualizações em tempo real
+  // Ativar atualizações em tempo real (com tratamento de erro melhorado)
   useRealtimeLessonComments(lessonId);
   
   log('Renderizando componente de comentários', { 
@@ -35,7 +35,15 @@ export const LessonComments: React.FC<LessonCommentsProps> = ({ lessonId }) => {
   
   const handleSubmitComment = async (content: string, parentId: string | null = null) => {
     log('Tentando enviar comentário', { lessonId, hasParentId: !!parentId });
-    await addComment(content, parentId);
+    try {
+      await addComment(content, parentId);
+    } catch (error) {
+      log('Erro ao enviar comentário', { 
+        lessonId, 
+        error: error instanceof Error ? error.message : String(error),
+        showToast: true // Este erro deve mostrar toast pois afeta diretamente a ação do usuário
+      });
+    }
   };
 
   return (

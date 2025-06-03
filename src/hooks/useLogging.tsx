@@ -57,11 +57,19 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
     console.error(`[ERROR] ${action}`, error || '');
     setLastError(error);
     
-    // Verificar se o erro deve mostrar um toast (padrão é mostrar)
+    // Verificar se o erro deve mostrar um toast (padrão é mostrar, mas pode ser desabilitado)
     const shouldShowToast = error?.showToast !== false;
     
-    // Show toast notification for errors that should be shown
-    if (shouldShowToast) {
+    // Filtrar erros específicos que não devem gerar toast
+    const isRealtimeError = action.toLowerCase().includes('canal') || 
+                           action.toLowerCase().includes('realtime') ||
+                           action.toLowerCase().includes('subscription');
+    
+    const isCommentError = action.toLowerCase().includes('comentário') && 
+                          action.toLowerCase().includes('erro');
+    
+    // Só mostrar toast para erros críticos que afetam a experiência do usuário
+    if (shouldShowToast && !isRealtimeError && !isCommentError) {
       toast({
         title: "Erro ao carregar conteúdo",
         description: "Ocorreu um erro ao carregar o conteúdo. Alguns dados podem não estar disponíveis.",
@@ -74,7 +82,9 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
       storeLog(action, { 
         error: error?.message || String(error),
         stack: error?.stack,
-        showToast: shouldShowToast
+        showToast: shouldShowToast,
+        isRealtimeError,
+        isCommentError
       }, "error", error.user_id);
     }
     
