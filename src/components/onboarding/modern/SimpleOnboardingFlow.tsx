@@ -3,6 +3,7 @@ import React, { memo, Suspense, lazy, useMemo } from 'react';
 import { OnboardingPerformanceOptimizer } from './performance/OnboardingPerformanceOptimizer';
 import { PerformanceWrapper } from '@/components/common/performance/PerformanceWrapper';
 import LoadingScreen from '@/components/common/LoadingScreen';
+import { OnboardingFinalData } from '@/types/onboardingFinal';
 
 // Lazy loading otimizado dos componentes de onboarding existentes
 const StepPersonalInfo = lazy(() => 
@@ -51,21 +52,24 @@ export const SimpleOnboardingFlow: React.FC<SimpleOnboardingFlowProps> = memo(({
   onComplete
 }) => {
   const [currentStep, setCurrentStep] = React.useState(initialStep);
-  const [data, setData] = React.useState({
-    personal_info: {},
+  const [data, setData] = React.useState<OnboardingFinalData>({
+    personal_info: {
+      name: '',
+      email: ''
+    },
+    location_info: {},
+    discovery_info: {},
     business_info: {},
     business_context: {},
-    ai_experience: {},
     goals_info: {},
-    discovery_info: {},
-    location_info: {},
+    ai_experience: {},
     personalization: {}
   });
   
   // Memoizar as props dos steps para evitar re-renders
   const stepProps = useMemo(() => ({
     data,
-    onUpdate: (section: string, value: any) => {
+    onUpdate: (section: keyof OnboardingFinalData, value: any) => {
       setData(prev => ({
         ...prev,
         [section]: value
