@@ -4,11 +4,12 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Loader2, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { BRAND_ASSETS } from "@/utils/storage/brandAssets";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -16,7 +17,6 @@ export default function LoginPage() {
   const { user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
   // Redirecionar usuários já logados
@@ -50,7 +50,7 @@ export default function LoginPage() {
       console.error("Erro de login:", error);
       toast.error("Erro ao fazer login", {
         description: error.message === "Invalid login credentials"
-          ? "Email ou senha incorretos. Verifique suas credenciais."
+          ? "Credenciais inválidas. Verifique seu email e senha."
           : error.message || "Ocorreu um erro ao tentar fazer login."
       });
     } finally {
@@ -64,24 +64,22 @@ export default function LoginPage() {
         {/* Logo e Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-6">
-            <img 
-              src="/lovable-uploads/logo-viverdeia.svg" 
-              alt="Logo Viver de IA"
+            <img
+              src={BRAND_ASSETS.horizontalLogo}
+              alt="VIVER DE IA Club"
               className="h-16 w-auto"
+              loading="eager"
               onError={(e) => {
-                console.error("Erro ao carregar logo:", e);
-                // Fallback para caso a imagem não carregue
-                e.currentTarget.style.display = 'none';
-                e.currentTarget.parentElement!.innerHTML = '<div class="h-16 w-16 bg-viverblue rounded-lg flex items-center justify-center text-white font-bold text-xl">VIA</div>';
+                e.currentTarget.src = "https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif";
               }}
             />
           </div>
           <div className="space-y-2">
-            <h2 className="text-2xl font-semibold text-white">
-              Bem-vindo de volta!
-            </h2>
-            <p className="text-gray-300">
-              Entre na sua conta para continuar sua jornada
+            <h1 className="text-3xl font-bold text-white">
+              Bem-vindo de volta
+            </h1>
+            <p className="text-white/60">
+              Entre na sua conta para acessar a plataforma
             </p>
           </div>
         </div>
@@ -91,56 +89,35 @@ export default function LoginPage() {
           <CardContent className="p-8">
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-white text-sm font-medium">
-                  Email
-                </Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="seu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-viverblue focus:ring-viverblue transition-all duration-200"
-                    disabled={isLoading}
-                    required
-                  />
-                </div>
+                <Label htmlFor="email" className="text-white">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
+                  required
+                />
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-white text-sm font-medium">
-                  Senha
-                </Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                  <Input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-viverblue focus:ring-viverblue transition-all duration-200"
-                    disabled={isLoading}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 text-gray-400 hover:text-white transition-colors"
-                    disabled={isLoading}
-                  >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-white">Senha</Label>
+                  <Link to="/esqueci-senha" className="text-xs text-white/60 hover:text-white">
+                    Esqueceu a senha?
+                  </Link>
                 </div>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="********"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
+                  required
+                />
               </div>
-              
-              <Button 
-                type="submit" 
-                className="w-full bg-viverblue hover:bg-viverblue/90 text-white font-semibold py-3 transition-all duration-200 transform hover:scale-[1.02]" 
-                disabled={isLoading}
-              >
+              <Button type="submit" className="w-full bg-viverblue hover:bg-viverblue/90" disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -151,16 +128,6 @@ export default function LoginPage() {
                 )}
               </Button>
             </form>
-
-            <div className="mt-6 text-center">
-              <Button
-                variant="link"
-                className="text-gray-300 hover:text-white text-sm"
-                onClick={() => navigate('/reset-password')}
-              >
-                Esqueceu sua senha?
-              </Button>
-            </div>
           </CardContent>
         </Card>
 
@@ -171,7 +138,7 @@ export default function LoginPage() {
           </p>
           <p className="mt-2">
             Se você recebeu um convite,{" "}
-            <Link to="/" className="text-viverblue hover:text-viverblue/80 underline">
+            <Link to="/" className="text-viverblue hover:text-viverblue/80">
               clique no link enviado por email
             </Link>
             {" "}para ativar sua conta.
