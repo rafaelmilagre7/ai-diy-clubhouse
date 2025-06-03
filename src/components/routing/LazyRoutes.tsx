@@ -45,7 +45,7 @@ export const LazyLessonViewWithSuspense = withSuspense(LazyLessonView);
 
 export const LazyCommunityHomeWithSuspense = withSuspense(LazyCommunityHome);
 export const LazyTopicViewWithSuspense = withSuspense(LazyTopicView);
-export const LazyCategoryViewWithSuspense = withSuspense(LazyCategoryView);
+export const LazyCategoryViewWithSuspense = withSuspense(LazyNewTopic);
 export const LazyNewTopicWithSuspense = withSuspense(LazyNewTopic);
 
 export const LazyNetworkingPageWithSuspense = withSuspense(LazyNetworkingPage);
