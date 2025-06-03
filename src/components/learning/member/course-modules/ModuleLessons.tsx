@@ -33,8 +33,8 @@ export const ModuleLessons = ({
       <div className="p-6 text-center">
         <div className="animate-pulse">
           <div className="h-8 bg-gray-700 rounded mb-4 w-1/3 mx-auto"></div>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {[1,2,3,4,5].map(i => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1,2,3].map(i => (
               <div key={i} className="aspect-[9/16] bg-gray-700 rounded-lg"></div>
             ))}
           </div>
@@ -53,46 +53,23 @@ export const ModuleLessons = ({
     );
   }
   
-  // Log detalhado para depuração do problema de aulas desaparecendo
-  console.log(`=== DEPURAÇÃO MÓDULO ${moduleId} ===`, {
-    totalAulas: lessons.length,
-    aulasEncontradas: lessons.map(l => ({
-      id: l.id, 
-      title: l.title,
-      published: l.published
-    })),
-    progressoDisponivel: userProgress.length,
-    progressoPorAula: lessons.map(lesson => {
-      const completed = isLessonCompleted(lesson.id);
-      const inProgress = isLessonInProgress(lesson.id);
-      const progress = getLessonProgress(lesson.id);
-      return {
-        lessonId: lesson.id,
-        lessonTitle: lesson.title,
-        completed,
-        inProgress,
-        progress
-      };
-    })
-  });
-  
   return (
-    <div className="space-y-6">
-      {/* Carrossel de miniaturas estilo Netflix */}
+    <div className="space-y-8">
+      {/* Carrossel de miniaturas estilo Netflix com cartões maiores */}
       <div className="relative px-6 pt-4">
-        <div className="mb-4">
-          <h3 className="text-xl font-semibold text-white mb-2">Aulas do Módulo</h3>
-          <p className="text-gray-400 text-sm">{lessons.length} aula{lessons.length !== 1 ? 's' : ''} disponível{lessons.length !== 1 ? 'is' : ''}</p>
+        <div className="mb-6">
+          <h3 className="text-2xl font-semibold text-white mb-2">Aulas do Módulo</h3>
+          <p className="text-gray-400">{lessons.length} aula{lessons.length !== 1 ? 's' : ''} disponível{lessons.length !== 1 ? 'is' : ''}</p>
         </div>
         
         <Carousel
           opts={{
             align: "start",
-            loop: lessons.length > 3,
+            loop: lessons.length > 2,
           }}
           className="w-full group"
         >
-          <CarouselContent className="-ml-3">
+          <CarouselContent className="-ml-6">
             {lessons.map(lesson => {
               const completed = isLessonCompleted(lesson.id);
               const inProgress = isLessonInProgress(lesson.id);
@@ -101,7 +78,7 @@ export const ModuleLessons = ({
               return (
                 <CarouselItem 
                   key={lesson.id} 
-                  className="pl-3 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5"
+                  className="pl-6 basis-full md:basis-1/2 lg:basis-1/3"
                 >
                   <LessonThumbnail
                     lesson={lesson}
@@ -120,27 +97,18 @@ export const ModuleLessons = ({
         </Carousel>
       </div>
       
-      {/* Lista detalhada de aulas */}
-      <div className="bg-gray-900/30 rounded-lg border border-gray-700/30 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-700/30 bg-gray-900/50">
-          <h4 className="text-lg font-medium text-white">Lista Completa</h4>
-          <p className="text-gray-400 text-sm">Visão detalhada de todas as aulas</p>
+      {/* Lista detalhada de aulas com design limpo */}
+      <div className="bg-gray-900/40 rounded-xl border border-gray-700/30 overflow-hidden">
+        <div className="px-6 py-5 border-b border-gray-700/30 bg-gray-900/60">
+          <h4 className="text-xl font-semibold text-white">Lista Completa</h4>
+          <p className="text-gray-400 text-sm mt-1">Visão detalhada de todas as aulas</p>
         </div>
         
-        <div className="divide-y divide-gray-700/30">
+        <div className="divide-y divide-gray-700/20">
           {lessons.map(lesson => {
             const completed = isLessonCompleted(lesson.id);
             const inProgress = isLessonInProgress(lesson.id);
             const progress = getLessonProgress(lesson.id);
-            
-            // Log individual para cada aula sendo renderizada
-            console.log(`Renderizando aula ${lesson.title}:`, {
-              id: lesson.id,
-              completed,
-              inProgress,
-              progress,
-              visible: true // Sempre verdadeiro - aulas nunca devem desaparecer
-            });
             
             return (
               <LessonListItem
