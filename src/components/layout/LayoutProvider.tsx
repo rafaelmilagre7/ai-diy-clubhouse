@@ -7,6 +7,7 @@ import LoadingScreen from "@/components/common/LoadingScreen";
 import MemberLayout from "./MemberLayout";
 import FormacaoLayout from "./formacao/FormacaoLayout";
 import { PageTransitionWithFallback } from "@/components/transitions/PageTransitionWithFallback";
+import AppRoutes from "@/components/routing/AppRoutes";
 
 const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
   const {
@@ -24,11 +25,12 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
 
   // Memoizar verificações de rota
   const routeChecks = useMemo(() => ({
-    isLearningRoute: location.pathname.startsWith('/learning'),
+    isLearningRoute: location.pathname.startsWith('/learning') || location.pathname.startsWith('/aprendizado'),
     isPathAdmin: location.pathname.startsWith('/admin'),
     isPathFormacao: location.pathname.startsWith('/formacao'),
     isFormacaoRoute: location.pathname.startsWith('/formacao'),
-    isOnboardingRoute: location.pathname.startsWith('/onboarding')
+    isOnboardingRoute: location.pathname.startsWith('/onboarding'),
+    isMemberRoute: !location.pathname.startsWith('/admin') && !location.pathname.startsWith('/formacao') && !location.pathname.startsWith('/onboarding')
   }), [location.pathname]);
 
   // Memoizar mensagem de loading
@@ -84,18 +86,22 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
 
   // Renderizar layout baseado na rota
   if (layoutReady && user) {
-    const { isFormacaoRoute, isLearningRoute } = routeChecks;
+    const { isFormacaoRoute, isLearningRoute, isMemberRoute } = routeChecks;
     
     if (isFormacaoRoute && (isFormacao || isAdmin)) {
       return (
         <PageTransitionWithFallback isVisible={true}>
-          <FormacaoLayout>{children}</FormacaoLayout>
+          <FormacaoLayout>
+            <AppRoutes />
+          </FormacaoLayout>
         </PageTransitionWithFallback>
       );
-    } else if (isLearningRoute || !isFormacao || isAdmin) {
+    } else if (isMemberRoute || isLearningRoute || !isFormacao || isAdmin) {
       return (
         <PageTransitionWithFallback isVisible={true}>
-          <MemberLayout>{children}</MemberLayout>
+          <MemberLayout>
+            <AppRoutes />
+          </MemberLayout>
         </PageTransitionWithFallback>
       );
     }
