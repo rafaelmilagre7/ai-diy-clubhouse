@@ -4,11 +4,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/contexts/auth';
-import { LayoutProvider } from '@/components/layout/LayoutProvider';
+import LayoutProvider from '@/components/layout/LayoutProvider';
 import { AppRoutes } from '@/routes/index';
-import { PerformanceProvider } from '@/contexts/PerformanceContext';
+import { PerformanceProvider } from '@/contexts/performance/PerformanceProvider';
 import { ErrorBoundary } from 'react-error-boundary';
-import ErrorFallback from '@/components/common/ErrorFallback';
+import { ErrorFallback } from '@/components/common/ErrorFallback';
 import './App.css';
 
 const queryClient = new QueryClient({
@@ -24,7 +24,17 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <ErrorBoundary FallbackComponent={ErrorFallback}>
+    <ErrorBoundary 
+      FallbackComponent={(props) => (
+        <ErrorFallback 
+          {...props}
+          onRetry={() => window.location.reload()}
+          onGoHome={() => window.location.href = '/dashboard'}
+          retryCount={0}
+          maxRetries={3}
+        />
+      )}
+    >
       <PerformanceProvider>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
