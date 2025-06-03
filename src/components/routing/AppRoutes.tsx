@@ -2,7 +2,6 @@
 import { Routes, Route } from 'react-router-dom';
 import { authRoutes } from '../../routes/AuthRoutes';
 import { adminRoutes } from '../../routes/AdminRoutes';
-import { memberRoutes } from '../../routes/MemberRoutes';
 import { OnboardingRoutes } from '../../routes/OnboardingRoutes';
 import { FormacaoRoutes } from '../../routes/FormacaoRoutes';
 import { CommunityRedirects } from './CommunityRedirects';
@@ -13,10 +12,14 @@ import NotFound from '@/pages/NotFound';
 import InvitePage from '@/pages/InvitePage';
 
 // Importar páginas que já existem
+import OptimizedDashboard from '@/pages/member/OptimizedDashboard';
+import Solutions from '@/pages/member/Solutions';
+import SolutionDetails from '@/pages/member/SolutionDetails';
+import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
 import Tools from '@/pages/member/Tools';
 import Events from '@/pages/member/Events';
+import Profile from '@/pages/member/Profile';
 import { CommunityRoutes } from '../../routes/CommunityRoutes';
-import { SolutionsRoutes } from '../../routes/SolutionsRoutes';
 import { LearningRoutes } from '../../routes/LearningRoutes';
 import { NetworkingRoutes } from '../../routes/NetworkingRoutes';
 
@@ -36,13 +39,59 @@ const AppRoutes = () => {
           <Route key={route.path} path={route.path} element={route.element} />
         ))}
         
-        {/* Member Routes */}
-        {memberRoutes.map((route) => (
-          <Route key={route.path} path={route.path} element={route.element} />
-        ))}
+        {/* Dashboard */}
+        <Route path="/dashboard" element={
+          <ProtectedRoutes>
+            <MemberLayout>
+              <OptimizedDashboard />
+            </MemberLayout>
+          </ProtectedRoutes>
+        } />
+
+        {/* Solutions Routes */}
+        <Route path="/solutions" element={
+          <ProtectedRoutes>
+            <MemberLayout>
+              <Solutions />
+            </MemberLayout>
+          </ProtectedRoutes>
+        } />
         
-        {/* Rotas específicas com layout */}
+        <Route path="/solutions/:id" element={
+          <ProtectedRoutes>
+            <MemberLayout>
+              <SolutionDetails />
+            </MemberLayout>
+          </ProtectedRoutes>
+        } />
+        
+        <Route path="/solutions/:id/implementar" element={
+          <ProtectedRoutes>
+            <MemberLayout>
+              <ImplementationTrailPage />
+            </MemberLayout>
+          </ProtectedRoutes>
+        } />
+
+        {/* Implementation Trail */}
+        <Route path="/implementation-trail" element={
+          <ProtectedRoutes>
+            <MemberLayout>
+              <ImplementationTrailPage />
+            </MemberLayout>
+          </ProtectedRoutes>
+        } />
+        
+        {/* Tools and Benefits */}
         <Route path="/tools" element={
+          <ProtectedRoutes>
+            <MemberLayout>
+              <Tools />
+            </MemberLayout>
+          </ProtectedRoutes>
+        } />
+        
+        <Route path="/benefits" element={
           <ProtectedRoutes>
             <MemberLayout>
               <Tools />
@@ -57,28 +106,21 @@ const AppRoutes = () => {
             </MemberLayout>
           </ProtectedRoutes>
         } />
-        
-        <Route path="/benefits" element={
+
+        {/* Profile */}
+        <Route path="/profile" element={
           <ProtectedRoutes>
             <MemberLayout>
-              <Tools />
+              <Profile />
             </MemberLayout>
           </ProtectedRoutes>
         } />
 
-        {/* Rotas de sub-sistemas */}
+        {/* Sub-sistemas com rotas aninhadas */}
         <Route path="/comunidade/*" element={
           <ProtectedRoutes>
             <MemberLayout>
               <CommunityRoutes />
-            </MemberLayout>
-          </ProtectedRoutes>
-        } />
-
-        <Route path="/solutions/*" element={
-          <ProtectedRoutes>
-            <MemberLayout>
-              <SolutionsRoutes />
             </MemberLayout>
           </ProtectedRoutes>
         } />

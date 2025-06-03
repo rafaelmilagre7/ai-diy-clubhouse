@@ -26,18 +26,28 @@ export const useOptimizedSolutionsData = ({
     isLoading, 
     error 
   } = useOptimizedQuery({
-    queryKey: ['solutions', isAdmin],
+    queryKey: ['solutions', 'published'],
     queryFn: async () => {
+      // Para membros, apenas soluções publicadas
+      // Para admins, todas as soluções (para teste)
       let query = supabase.from("solutions").select("*");
+      
       if (!isAdmin) {
         query = query.eq("published", true);
       }
       
       const { data, error } = await query.order('created_at', { ascending: false });
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao buscar soluções:", error);
+        throw error;
+      }
+      
+      console.log("Soluções carregadas:", data?.length || 0);
       return data as Solution[];
     },
-    enabled: isAuthenticated
+    enabled: isAuthenticated,
+    staleTime: 2 * 60 * 1000, // 2 minutos
+    retry: 3
   });
 
   // Filtrar soluções de forma otimizada
