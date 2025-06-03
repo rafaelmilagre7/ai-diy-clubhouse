@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import {
   BrowserRouter as Router,
@@ -57,52 +58,54 @@ const MainAppContent: React.FC = () => {
     return <div>Carregando...</div>;
   }
 
-        <Routes>
-          {/* Public Routes */}
-          <Route element={<PublicRoute />}>
-            <Route path="/login" element={<ModernLoginPage />} />
-            <Route path="/register" element={<RegisterForm />} />
-            <Route path="/reset-password" element={<ResetPasswordForm />} />
-            <Route path="/set-password" element={<SetNewPasswordForm />} />
-          </Route>
+  return (
+    <>
+      <Routes>
+        {/* Public Routes */}
+        <Route element={<PublicRoute />}>
+          <Route path="/login" element={<ModernLoginPage />} />
+          <Route path="/register" element={<RegisterForm />} />
+          <Route path="/reset-password" element={<ResetPasswordForm />} />
+          <Route path="/set-password" element={<SetNewPasswordForm />} />
+        </Route>
 
-          {/* Protected Routes */}
-          <Route element={<ProtectedRoutes />}>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/solutions" element={<Solutions />} />
-            <Route path="/solutions/:id" element={<SolutionDetails />} />
-            <Route path="/implementation/:id" element={<ImplementationPage />} />
-            <Route path="/tools" element={<Tools />} />
-            <Route path="/tools/:id" element={<ToolDetails />} />
-            <Route path="/comunidade/*" element={<CommunityRoutes />} />
-            <Route path="/profile/*" element={<ProfileRoutes />} />
-            <Route path="/onboarding/*" element={<OnboardingRoutes />} />
-            <Route path="/events" element={<Events />} />
-            <Route path="/implementation-trail" element={<ImplementationTrail />} />
-          </Route>
+        {/* Protected Routes */}
+        <Route element={<ProtectedRoutes />}>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/solutions" element={<Solutions />} />
+          <Route path="/solutions/:id" element={<SolutionDetails />} />
+          <Route path="/implementation/:id" element={<ImplementationPage />} />
+          <Route path="/tools" element={<Tools />} />
+          <Route path="/tools/:id" element={<ToolDetails />} />
+          <Route path="/comunidade/*" element={<CommunityRoutes />} />
+          <Route path="/profile/*" element={<ProfileRoutes />} />
+          <Route path="/onboarding/*" element={<OnboardingRoutes />} />
+          <Route path="/events" element={<Events />} />
+          <Route path="/implementation-trail" element={<ImplementationTrail />} />
+        </Route>
 
-          {/* Admin Protected Routes */}
-          <Route element={<AdminProtectedRoutes />}>
-            <Route path="/admin/*" element={<AdminRoutes />} />
-          </Route>
+        {/* Admin Protected Routes */}
+        <Route element={<AdminProtectedRoutes />}>
+          <Route path="/admin/*" element={<AdminRoutes />} />
+        </Route>
 
-          {/* Formação Protected Routes */}
-          <Route element={<FormacaoProtectedRoutes />}>
-            <Route path="/formacao/*" element={<FormacaoRoutes />} />
-          </Route>
+        {/* Formação Protected Routes */}
+        <Route element={<FormacaoProtectedRoutes />}>
+          <Route path="/formacao/*" element={<FormacaoRoutes />} />
+        </Route>
 
-          {/* Learning Routes */}
-          <Route element={<ProtectedRoutes />}>
-            <Route path="/learning/*" element={<LearningRoutes />} />
-          </Route>
+        {/* Learning Routes */}
+        <Route element={<ProtectedRoutes />}>
+          <Route path="/learning/*" element={<LearningRoutes />} />
+        </Route>
 
-          {/* 404 */}
-          <Route path="*" element={<div>Página não encontrada</div>} />
-        </Routes>
+        {/* 404 */}
+        <Route path="*" element={<div>Página não encontrada</div>} />
+      </Routes>
 
       <Toaster />
-    </Router>
+    </>
   );
 };
 
