@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { MoreVertical, Play, Trash2, CheckCircle } from 'lucide-react';
+import { MoreVertical, Play, Trash2, CheckCircle, Clock, AlertCircle, XCircle } from 'lucide-react';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -24,9 +24,13 @@ export const AdminActions = ({
   onOpenDeleteDialog
 }: AdminActionsProps) => {
   
-  const handleStatusUpdate = (newStatus: string) => {
-    console.log('Atualizando status para:', newStatus);
-    onUpdateStatus(newStatus);
+  const handleStatusUpdate = async (newStatus: string) => {
+    console.log('AdminActions: Atualizando status para:', newStatus);
+    try {
+      await onUpdateStatus(newStatus);
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
+    }
   };
 
   return (
@@ -34,28 +38,51 @@ export const AdminActions = ({
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" disabled={adminActionLoading}>
           <MoreVertical className="h-4 w-4 mr-2" />
-          Ações de Admin
+          {adminActionLoading ? 'Processando...' : 'Ações de Admin'}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="w-56">
+        
+        <DropdownMenuItem 
+          onClick={() => handleStatusUpdate('under_review')}
+          disabled={adminActionLoading || suggestionStatus === 'under_review'}
+        >
+          <Clock className="mr-2 h-4 w-4" />
+          {suggestionStatus === 'under_review' 
+            ? 'Já está em Análise' 
+            : 'Marcar como Em Análise'}
+        </DropdownMenuItem>
+        
         <DropdownMenuItem 
           onClick={() => handleStatusUpdate('in_development')}
           disabled={adminActionLoading || suggestionStatus === 'in_development'}
         >
           <Play className="mr-2 h-4 w-4" />
           {suggestionStatus === 'in_development' 
-            ? 'Já em Desenvolvimento' 
+            ? 'Já está em Desenvolvimento' 
             : 'Marcar como Em Desenvolvimento'}
         </DropdownMenuItem>
         
         <DropdownMenuItem 
           onClick={() => handleStatusUpdate('completed')}
           disabled={adminActionLoading || suggestionStatus === 'completed'}
+          className="text-green-600 focus:text-green-600"
         >
           <CheckCircle className="mr-2 h-4 w-4" />
           {suggestionStatus === 'completed' 
-            ? 'Já Implementada' 
+            ? 'Já está Implementada ✅' 
             : 'Marcar como Implementada'}
+        </DropdownMenuItem>
+        
+        <DropdownMenuItem 
+          onClick={() => handleStatusUpdate('declined')}
+          disabled={adminActionLoading || suggestionStatus === 'declined'}
+          className="text-red-600 focus:text-red-600"
+        >
+          <XCircle className="mr-2 h-4 w-4" />
+          {suggestionStatus === 'declined' 
+            ? 'Já foi Recusada' 
+            : 'Marcar como Recusada'}
         </DropdownMenuItem>
         
         <DropdownMenuSeparator />

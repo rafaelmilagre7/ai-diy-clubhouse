@@ -43,13 +43,28 @@ const AdminSuggestionDetails = () => {
   const isAdmin = profile?.role === 'admin';
 
   const handleUpdateStatus = async (status: string) => {
-    if (!suggestion) return;
+    if (!suggestion) {
+      toast.error('Sugestão não encontrada');
+      return;
+    }
     
-    console.log('Admin atualizando status para:', status);
-    const success = await updateSuggestionStatus(suggestion.id, status);
-    if (success) {
-      toast.success('Status atualizado com sucesso!');
-      refetch();
+    console.log('AdminSuggestionDetails: Iniciando atualização de status para:', status);
+    console.log('ID da sugestão:', suggestion.id);
+    
+    try {
+      const success = await updateSuggestionStatus(suggestion.id, status);
+      if (success) {
+        console.log('Status atualizado com sucesso, recarregando dados...');
+        // Forçar recarga dos dados
+        await refetch();
+        toast.success('Status atualizado e dados recarregados!');
+      } else {
+        console.error('Falha ao atualizar status');
+        toast.error('Falha ao atualizar status da sugestão');
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
+      toast.error('Erro inesperado ao atualizar status');
     }
   };
 

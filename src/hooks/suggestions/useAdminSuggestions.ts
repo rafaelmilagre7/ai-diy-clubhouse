@@ -52,12 +52,35 @@ export const useAdminSuggestions = () => {
       };
       
       console.log('Dados da atualização:', updateData);
+      console.log('ID da sugestão:', suggestionId);
       
+      // Primeiro, vamos verificar se a sugestão existe
+      const { data: existingSuggestion, error: checkError } = await supabase
+        .from('suggestions')
+        .select('id, status, title')
+        .eq('id', suggestionId)
+        .single();
+      
+      if (checkError) {
+        console.error('Erro ao verificar sugestão:', checkError);
+        toast.error('Erro ao verificar sugestão: ' + checkError.message);
+        return false;
+      }
+      
+      if (!existingSuggestion) {
+        console.error('Sugestão não encontrada:', suggestionId);
+        toast.error('Sugestão não encontrada');
+        return false;
+      }
+      
+      console.log('Sugestão encontrada:', existingSuggestion);
+      
+      // Agora fazer a atualização
       const { data, error } = await supabase
         .from('suggestions')
         .update(updateData)
         .eq('id', suggestionId)
-        .select();
+        .select('*');
       
       if (error) {
         console.error('Erro ao atualizar status da sugestão:', error);
