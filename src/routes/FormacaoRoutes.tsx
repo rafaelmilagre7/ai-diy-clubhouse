@@ -46,10 +46,6 @@ export const formacaoRoutes: RouteObject[] = [
     element: <FormacaoProtectedRoutes><FormacaoLayout><div>Página de Materiais</div></FormacaoLayout></FormacaoProtectedRoutes>
   },
   {
-    path: "/formacao/alunos",
-    element: <FormacaoProtectedRoutes><FormacaoLayout><div>Página de Alunos</div></FormacaoLayout></FormacaoProtectedRoutes>
-  },
-  {
     path: "/formacao/configuracoes",
     element: <FormacaoProtectedRoutes><FormacaoLayout><div>Configurações do LMS</div></FormacaoLayout></FormacaoProtectedRoutes>
   },

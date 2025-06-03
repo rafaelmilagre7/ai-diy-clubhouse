@@ -9,7 +9,6 @@ import {
   Settings,
   User,
   ChevronLeft,
-  Users,
   FileBox
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -45,11 +44,6 @@ export const FormacaoSidebarNav = ({ sidebarOpen }: FormacaoSidebarNavProps) => 
       icon: FileBox,
     },
     {
-      title: "Alunos",
-      href: "/formacao/alunos",
-      icon: Users,
-    },
-    {
       title: "Configurações",
       href: "/formacao/configuracoes",
       icon: Settings,
@@ -72,10 +66,6 @@ export const FormacaoSidebarNav = ({ sidebarOpen }: FormacaoSidebarNavProps) => 
     }
     
     if (href === "/formacao/materiais" && location.pathname.startsWith("/formacao/materiais/")) {
-      return true;
-    }
-    
-    if (href === "/formacao/alunos" && location.pathname.startsWith("/formacao/alunos/")) {
       return true;
     }
     

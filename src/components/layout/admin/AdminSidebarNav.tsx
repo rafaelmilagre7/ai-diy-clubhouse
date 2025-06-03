@@ -1,3 +1,4 @@
+
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -10,7 +11,6 @@ import {
   Calendar,
   GraduationCap,
   Shield,
-  FileText,
   Mail,
   User
 } from "lucide-react";
@@ -97,11 +97,6 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
       href: "/formacao/aulas",
       icon: BookOpen,
     },
-    {
-      title: "Alunos",
-      href: "/formacao/alunos",
-      icon: Users,
-    },
   ];
 
   const rbacItems = [
@@ -116,12 +111,6 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
       href: "/admin/invites",
       icon: Mail,
       permission: "users.invite"
-    },
-    {
-      title: "Log de Auditoria",
-      href: "/admin/permissions/audit",
-      icon: FileText,
-      permission: "permissions.view"
     },
   ];
 

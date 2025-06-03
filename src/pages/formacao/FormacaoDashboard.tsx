@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, BookOpen, Users, CheckCircle } from "lucide-react";
+import { Loader2, BookOpen, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,6 @@ const FormacaoDashboard = () => {
   const [stats, setStats] = useState({
     totalCursos: 0,
     totalAulas: 0,
-    totalAlunos: 0,
     aulasCompletadas: 0
   });
 
@@ -33,12 +32,6 @@ const FormacaoDashboard = () => {
           .from('learning_lessons')
           .select('*', { count: 'exact', head: true });
           
-        // Buscar contagem aproximada de alunos distintos (usuários com progresso)
-        const { data: alunos, error: errorAlunos } = await supabase
-          .from('learning_progress')
-          .select('user_id')
-          .limit(1000);
-          
         // Buscar aulas completadas
         const { data: completadas, error: errorCompletadas } = await supabase
           .from('learning_progress')
@@ -46,16 +39,13 @@ const FormacaoDashboard = () => {
           .not('completed_at', 'is', null)
           .limit(1000);
 
-        if (errorCursos || errorAulas || errorAlunos || errorCompletadas) {
+        if (errorCursos || errorAulas || errorCompletadas) {
           throw new Error("Erro ao buscar estatísticas");
         }
-
-        const alunosUnicos = new Set(alunos?.map(item => item.user_id));
 
         setStats({
           totalCursos: cursos || 0,
           totalAulas: aulas || 0,
-          totalAlunos: alunosUnicos.size,
           aulasCompletadas: completadas?.length || 0
         });
       } catch (error) {
@@ -74,7 +64,7 @@ const FormacaoDashboard = () => {
         <h2 className="text-3xl font-bold tracking-tight">Dashboard de Formação</h2>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card onClick={() => navigate("/formacao/cursos")} className="cursor-pointer hover:bg-gray-50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Cursos</CardTitle>
@@ -99,20 +89,6 @@ const FormacaoDashboard = () => {
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <div className="text-2xl font-bold">{stats.totalAulas}</div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card onClick={() => navigate("/formacao/alunos")} className="cursor-pointer hover:bg-gray-50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Alunos</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <div className="text-2xl font-bold">{stats.totalAlunos}</div>
             )}
           </CardContent>
         </Card>
