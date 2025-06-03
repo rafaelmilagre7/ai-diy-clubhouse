@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { Tabs } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
@@ -129,61 +128,44 @@ export const TabBasedImplementationWizard = ({ solutionId }: TabBasedImplementat
   const completedCount = completedSections.size;
   const totalSections = TABS.length - 1; // Excluir a aba de comentários do total
 
-  const renderTabContent = () => {
-    const commonProps = {
-      isCompleted: completedSections.has(activeTab)
-    };
-
-    const handleToolsComplete = () => handleSectionComplete("tools", "Ferramentas");
-    const handleMaterialsComplete = () => handleSectionComplete("materials", "Materiais");
-    const handleVideosComplete = () => handleSectionComplete("videos", "Vídeos");
-    const handleChecklistComplete = () => handleSectionComplete("checklist", "Checklist");
-
+  const renderActiveTabContent = () => {
     switch (activeTab) {
       case "tools":
         return (
           <TabBasedToolsSection 
-            {...commonProps}
-            onSectionComplete={handleToolsComplete}
-            onValidation={(interactionCount: number, timeSpent: number) => 
-              validateToolsSection(interactionCount, timeSpent)
-            }
+            onSectionComplete={() => handleSectionComplete("tools")}
+            onValidation={validateToolsSection}
+            isCompleted={completedSections.has("tools")}
           />
         );
       case "materials":
         return (
           <TabBasedMaterialsSection 
-            {...commonProps}
-            onSectionComplete={handleMaterialsComplete}
-            onValidation={(downloadCount: number, timeSpent: number) => 
-              validateMaterialsSection(downloadCount, timeSpent)
-            }
+            onSectionComplete={() => handleSectionComplete("materials")}
+            onValidation={validateMaterialsSection}
+            isCompleted={completedSections.has("materials")}
           />
         );
       case "videos":
         return (
           <TabBasedVideosSection 
-            {...commonProps}
-            onSectionComplete={handleVideosComplete}
-            onValidation={(watchedCount: number, totalWatchTime: number) => 
-              validateVideosSection(watchedCount, totalWatchTime)
-            }
+            onSectionComplete={() => handleSectionComplete("videos")}
+            onValidation={validateVideosSection}
+            isCompleted={completedSections.has("videos")}
           />
         );
       case "checklist":
         return (
           <TabBasedChecklistSection 
-            {...commonProps}
-            onSectionComplete={handleChecklistComplete}
-            onValidation={(checkedItems: number, totalItems: number) => 
-              validateChecklistSection(checkedItems, totalItems)
-            }
+            onSectionComplete={() => handleSectionComplete("checklist")}
+            onValidation={validateChecklistSection}
+            isCompleted={completedSections.has("checklist")}
           />
         );
       case "comments":
         return <TabBasedCommentsSection solutionId={solutionId} />;
       default:
-        return <div>Seção não encontrada</div>;
+        return null;
     }
   };
 
@@ -208,7 +190,7 @@ export const TabBasedImplementationWizard = ({ solutionId }: TabBasedImplementat
 
           <div className="p-6">
             <TabTransition activeTab={activeTab} direction={direction}>
-              {renderTabContent()}
+              {renderActiveTabContent()}
             </TabTransition>
           </div>
         </Tabs>
@@ -233,3 +215,5 @@ export const TabBasedImplementationWizard = ({ solutionId }: TabBasedImplementat
     </div>
   );
 };
+
+export default TabBasedImplementationWizard;

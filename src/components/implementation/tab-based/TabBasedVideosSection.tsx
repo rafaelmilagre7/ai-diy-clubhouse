@@ -5,14 +5,31 @@ import { SolutionVideoCard } from "@/components/solution/videos/SolutionVideoCar
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSectionTracking } from "@/hooks/implementation/useSectionTracking";
 
 interface TabBasedVideosSectionProps {
   onSectionComplete: () => void;
+  onValidation: (watchedCount: number, totalWatchTime: number) => { isValid: boolean; message?: string; requirement?: string; };
   isCompleted: boolean;
 }
 
-export const TabBasedVideosSection = ({ onSectionComplete, isCompleted }: TabBasedVideosSectionProps) => {
+export const TabBasedVideosSection = ({ onSectionComplete, onValidation, isCompleted }: TabBasedVideosSectionProps) => {
   const { data, isLoading } = useSolutionDataContext();
+  const { trackInteraction, getTimeSpentInSeconds, getActionCount } = useSectionTracking("videos");
+
+  const handleVideoWatch = () => {
+    trackInteraction("watch");
+  };
+
+  const handleSectionComplete = () => {
+    const watchedCount = getActionCount("watch");
+    const totalWatchTime = getTimeSpentInSeconds();
+    const validation = onValidation(watchedCount, totalWatchTime);
+    
+    if (validation.isValid) {
+      onSectionComplete();
+    }
+  };
 
   if (isLoading) {
     return (
@@ -70,13 +87,15 @@ export const TabBasedVideosSection = ({ onSectionComplete, isCompleted }: TabBas
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {videos.map((video) => (
-          <SolutionVideoCard key={video.id} video={video} />
+          <div key={video.id} onClick={handleVideoWatch}>
+            <SolutionVideoCard video={video} />
+          </div>
         ))}
       </div>
 
       <div className="flex justify-center pt-4">
         <Button 
-          onClick={onSectionComplete}
+          onClick={handleSectionComplete}
           disabled={isCompleted}
           className="bg-viverblue hover:bg-viverblue-dark"
         >

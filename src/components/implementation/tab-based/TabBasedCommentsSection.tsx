@@ -1,17 +1,14 @@
 
 import React from "react";
-import { useParams } from "react-router-dom";
 import { CommentsSection } from "@/components/implementation/content/CommentsSection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageSquare } from "lucide-react";
 
-export const TabBasedCommentsSection = () => {
-  const { id } = useParams<{ id: string }>();
-  
-  if (!id) {
-    return null;
-  }
+interface TabBasedCommentsSectionProps {
+  solutionId: string;
+}
 
+export const TabBasedCommentsSection = ({ solutionId }: TabBasedCommentsSectionProps) => {
   return (
     <div className="space-y-6">
       <Card className="border-white/10">
@@ -29,7 +26,7 @@ export const TabBasedCommentsSection = () => {
       <Card className="border-white/10">
         <CardContent className="p-6">
           <CommentsSection 
-            solutionId={id} 
+            solutionId={solutionId} 
             moduleId="tab-based-implementation" 
           />
         </CardContent>

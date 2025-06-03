@@ -5,14 +5,31 @@ import { SolutionMaterialCard } from "@/components/solution/materials/SolutionMa
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSectionTracking } from "@/hooks/implementation/useSectionTracking";
 
 interface TabBasedMaterialsSectionProps {
   onSectionComplete: () => void;
+  onValidation: (downloadCount: number, timeSpent: number) => { isValid: boolean; message?: string; requirement?: string; };
   isCompleted: boolean;
 }
 
-export const TabBasedMaterialsSection = ({ onSectionComplete, isCompleted }: TabBasedMaterialsSectionProps) => {
+export const TabBasedMaterialsSection = ({ onSectionComplete, onValidation, isCompleted }: TabBasedMaterialsSectionProps) => {
   const { data, isLoading } = useSolutionDataContext();
+  const { trackInteraction, getTimeSpentInSeconds, getActionCount } = useSectionTracking("materials");
+
+  const handleMaterialDownload = () => {
+    trackInteraction("download");
+  };
+
+  const handleSectionComplete = () => {
+    const downloadCount = getActionCount("download");
+    const timeSpent = getTimeSpentInSeconds();
+    const validation = onValidation(downloadCount, timeSpent);
+    
+    if (validation.isValid) {
+      onSectionComplete();
+    }
+  };
 
   if (isLoading) {
     return (
@@ -70,13 +87,15 @@ export const TabBasedMaterialsSection = ({ onSectionComplete, isCompleted }: Tab
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {materials.map((material) => (
-          <SolutionMaterialCard key={material.id} material={material} />
+          <div key={material.id} onClick={handleMaterialDownload}>
+            <SolutionMaterialCard material={material} />
+          </div>
         ))}
       </div>
 
       <div className="flex justify-center pt-4">
         <Button 
-          onClick={onSectionComplete}
+          onClick={handleSectionComplete}
           disabled={isCompleted}
           className="bg-viverblue hover:bg-viverblue-dark"
         >
