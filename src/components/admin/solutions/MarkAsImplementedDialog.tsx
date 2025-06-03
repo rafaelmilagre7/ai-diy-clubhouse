@@ -1,18 +1,9 @@
-
 import React, { useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Loader } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-
 interface MarkAsImplementedDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -20,7 +11,6 @@ interface MarkAsImplementedDialogProps {
   solutionTitle: string;
   onSuccess: () => void;
 }
-
 export const MarkAsImplementedDialog: React.FC<MarkAsImplementedDialogProps> = ({
   open,
   onOpenChange,
@@ -29,43 +19,34 @@ export const MarkAsImplementedDialog: React.FC<MarkAsImplementedDialogProps> = (
   onSuccess
 }) => {
   const [isLoading, setIsLoading] = useState(false);
-
   const handleMarkAsImplemented = async () => {
     setIsLoading(true);
-    
     try {
       // Buscar o progresso existente ou criar um novo
-      const { data: existingProgress } = await supabase
-        .from('progress')
-        .select('id')
-        .eq('solution_id', solutionId)
-        .single();
-
+      const {
+        data: existingProgress
+      } = await supabase.from('progress').select('id').eq('solution_id', solutionId).single();
       if (existingProgress) {
         // Atualizar progresso existente
-        const { error } = await supabase
-          .from('progress')
-          .update({
-            is_completed: true,
-            completed_at: new Date().toISOString()
-          })
-          .eq('id', existingProgress.id);
-
+        const {
+          error
+        } = await supabase.from('progress').update({
+          is_completed: true,
+          completed_at: new Date().toISOString()
+        }).eq('id', existingProgress.id);
         if (error) throw error;
       } else {
         // Criar novo progresso como implementado
-        const { error } = await supabase
-          .from('progress')
-          .insert({
-            solution_id: solutionId,
-            is_completed: true,
-            completed_at: new Date().toISOString(),
-            completed_modules: []
-          });
-
+        const {
+          error
+        } = await supabase.from('progress').insert({
+          solution_id: solutionId,
+          is_completed: true,
+          completed_at: new Date().toISOString(),
+          completed_modules: []
+        });
         if (error) throw error;
       }
-
       toast.success('Solução marcada como implementada com sucesso!');
       onSuccess();
       onOpenChange(false);
@@ -76,9 +57,7 @@ export const MarkAsImplementedDialog: React.FC<MarkAsImplementedDialogProps> = (
       setIsLoading(false);
     }
   };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+  return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-left">
@@ -98,7 +77,7 @@ export const MarkAsImplementedDialog: React.FC<MarkAsImplementedDialogProps> = (
           </p>
           
           <div className="bg-blue-50 p-3 rounded border border-blue-100">
-            <p className="text-sm text-blue-700 text-left">
+            <p className="text-sm text-left text-gray-950">
               Como administrador, você pode marcar soluções como implementadas 
               para fins de demonstração ou testes.
             </p>
@@ -106,29 +85,16 @@ export const MarkAsImplementedDialog: React.FC<MarkAsImplementedDialogProps> = (
         </div>
         
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isLoading}
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
             Cancelar
           </Button>
-          <Button
-            onClick={handleMarkAsImplemented}
-            disabled={isLoading}
-            className="gap-2"
-          >
-            {isLoading ? (
-              <>
+          <Button onClick={handleMarkAsImplemented} disabled={isLoading} className="gap-2">
+            {isLoading ? <>
                 <Loader className="h-4 w-4 animate-spin" />
                 Processando...
-              </>
-            ) : (
-              "Marcar como Implementada"
-            )}
+              </> : "Marcar como Implementada"}
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
