@@ -78,7 +78,7 @@ export interface GoalsInfo {
   priority_solution_type?: string;
   how_implement?: string;
   week_availability?: string;
-  live_interest?: number; // Moved from PersonalizationInfo for compatibility
+  live_interest?: number; // número para compatibilidade
 }
 
 export interface PersonalizationInfo {
@@ -88,7 +88,7 @@ export interface PersonalizationInfo {
   networking_availability?: boolean | string; // Allow both for compatibility
   mentorship_topics?: string[];
   skills_to_share?: string[];
-  live_interest?: number;
+  live_interest?: number; // número para compatibilidade
 }
 
 export interface OnboardingData {

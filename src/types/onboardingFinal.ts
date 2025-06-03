@@ -50,6 +50,7 @@ export interface OnboardingGoalsInfo {
   how_implement?: string;
   week_availability?: string;
   content_formats?: string[];
+  live_interest?: number; // número para compatibilidade
 }
 
 export interface OnboardingAIExperience {
@@ -70,12 +71,12 @@ export interface OnboardingAIExperience {
 
 export interface OnboardingPersonalization {
   interests?: string[];
-  time_preference?: string[];
+  time_preference?: string | string[];
   available_days?: string[];
-  networking_availability?: boolean; // Keep as boolean for final onboarding
+  networking_availability?: boolean | string; // Allow both types
   skills_to_share?: string[];
   mentorship_topics?: string[];
-  live_interest?: string;
+  live_interest?: number; // número para compatibilidade
   authorize_case_usage?: boolean;
   interested_in_interview?: boolean;
   priority_topics?: string[];

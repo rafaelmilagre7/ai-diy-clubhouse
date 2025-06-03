@@ -21,6 +21,26 @@ export interface QuickOnboardingData {
   desired_ai_areas?: string[];
   ai_knowledge_level?: string;
   has_implemented?: string;
+  // Location fields
+  country?: string;
+  state?: string;
+  city?: string;
+  instagram_url?: string;
+  linkedin_url?: string;
+  // Goals fields
+  priority_solution_type?: string;
+  how_implement?: string;
+  week_availability?: string;
+  // Personalization fields
+  interests?: string[];
+  time_preference?: string | string[];
+  available_days?: string[];
+  skills_to_share?: string[];
+  networking_availability?: boolean | string;
+  authorize_case_usage?: boolean;
+  interested_in_interview?: boolean;
+  mentorship_topics?: string[];
+  live_interest?: number;
 }
 
 export interface OnboardingStepProps {
