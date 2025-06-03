@@ -67,7 +67,7 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
   return (
     <div className="space-y-8 md:pt-2 animate-fade-in">
       {/* HEADER IMERSIVO */}
-      <ModernDashboardHeader userName={userName} />
+      <ModernDashboardHeader />
 
       {/* CARDS DE PROGRESSO (KPI) */}
       <KpiGrid 
@@ -88,7 +88,10 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
           <SolutionsGridLoader title="Recomendadas" count={3} />
         </div>
       ) : hasNoSolutions ? (
-        <NoSolutionsPlaceholder />
+        <NoSolutionsPlaceholder 
+          title="Nenhuma solução encontrada"
+          description="Comece explorando nossas soluções recomendadas para transformar seu negócio com IA"
+        />
       ) : (
         <div className="space-y-10">
           {/* Soluções Ativas */}
