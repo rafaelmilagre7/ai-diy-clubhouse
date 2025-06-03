@@ -3,7 +3,7 @@
 export { supabase } from './client';
 export type { Tables } from './client';
 
-// Exportar apenas tipos essenciais
+// Exportar todos os tipos essenciais do sistema
 export type {
   Database,
   UserProfile,
@@ -20,7 +20,23 @@ export type {
   Lesson,
   Resource,
   ImplementationTrail,
-  UserRole
+  UserRole,
+  UserChecklist
+} from './types/index';
+
+// Exportar tipos específicos do Learning/LMS
+export type {
+  LearningCourse,
+  LearningModule,
+  LearningLesson,
+  LearningProgress,
+  LearningResource,
+  LearningLessonVideo,
+  LearningComment,
+  LearningCertificate,
+  LearningLessonNps,
+  LearningCourseWithStats,
+  LearningModuleWithStats
 } from './types/index';
 
 // Exportar configurações básicas

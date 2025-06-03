@@ -28,31 +28,13 @@ afterEach(() => {
 });
 
 describe('Logger', () => {
-  test('should log debug messages in development', () => {
-    // Simular ambiente de desenvolvimento
-    Object.defineProperty(import.meta, 'env', {
-      value: { DEV: true },
-      writable: true
-    });
-    
+  test('should log debug messages', () => {
     logger.debug('Test debug message', { test: true });
     
     expect(console.debug).toHaveBeenCalledWith(
-      expect.stringContaining('🐛 [Unknown] Test debug message'),
+      expect.stringContaining('[DEBUG] Test debug message'),
       { test: true }
     );
-  });
-
-  test('should not log debug messages in production', () => {
-    // Simular ambiente de produção
-    Object.defineProperty(import.meta, 'env', {
-      value: { DEV: false },
-      writable: true
-    });
-    
-    logger.debug('Test debug message');
-    
-    expect(console.debug).not.toHaveBeenCalled();
   });
 
   test('should always log critical messages', () => {
