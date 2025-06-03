@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { SmartFeatureGuard } from '@/components/auth/SmartFeatureGuard';
+import { FeatureGuard } from '@/components/auth/FeatureGuard';
 import { NetworkingHeader } from '@/components/networking/NetworkingHeader';
 import { NetworkingFeed } from '@/components/networking/NetworkingFeed';
 import { ProfileDataSync } from '@/components/networking/ProfileDataSync';
@@ -10,7 +10,7 @@ import { Users, Building } from 'lucide-react';
 
 const NetworkingPage = () => {
   return (
-    <SmartFeatureGuard feature="networking">
+    <FeatureGuard feature="networking">
       <div className="p-6 space-y-6">
         <ProfileDataSync />
         <NetworkingHeader />
@@ -31,7 +31,7 @@ const NetworkingPage = () => {
             <TabsContent value="customers" className="space-y-4">
               <div className="mb-4">
                 <p className="text-sm text-muted-foreground">
-                  5 matches mensais selecionados pela IA baseados no seu perfil de onboarding
+                  5 matches mensais selecionados pela IA baseados no seu perfil
                 </p>
               </div>
               <NetworkingFeed matchType="customer" />
@@ -40,7 +40,7 @@ const NetworkingPage = () => {
             <TabsContent value="suppliers" className="space-y-4">
               <div className="mb-4">
                 <p className="text-sm text-muted-foreground">
-                  3 matches mensais de fornecedores especializados baseados nas suas necessidades
+                  3 matches mensais de fornecedores especializados
                 </p>
               </div>
               <NetworkingFeed matchType="supplier" />
@@ -48,7 +48,7 @@ const NetworkingPage = () => {
           </Tabs>
         </Card>
       </div>
-    </SmartFeatureGuard>
+    </FeatureGuard>
   );
 };
 

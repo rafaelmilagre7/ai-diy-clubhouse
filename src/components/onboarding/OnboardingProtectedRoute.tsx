@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useOnboardingCompletion } from '@/hooks/onboarding/useOnboardingCompletion';
+import { useOnboardingGuard } from '@/hooks/onboarding/useOnboardingGuard';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
 interface OnboardingProtectedRouteProps {
@@ -11,9 +11,9 @@ interface OnboardingProtectedRouteProps {
 
 export const OnboardingProtectedRoute: React.FC<OnboardingProtectedRouteProps> = ({
   children,
-  fallbackPath = '/onboarding-new'
+  fallbackPath = '/onboarding'
 }) => {
-  const { data: completionData, isLoading } = useOnboardingCompletion();
+  const { isOnboardingComplete, isLoading } = useOnboardingGuard(false);
 
   if (isLoading) {
     return (
@@ -24,14 +24,10 @@ export const OnboardingProtectedRoute: React.FC<OnboardingProtectedRouteProps> =
     );
   }
 
-  const isOnboardingComplete = completionData?.isCompleted || false;
-
   if (!isOnboardingComplete) {
     console.log("[OnboardingProtectedRoute] Onboarding incompleto, redirecionando para", fallbackPath);
-    console.log("[OnboardingProtectedRoute] Dados:", completionData);
     return <Navigate to={fallbackPath} replace />;
   }
 
-  console.log("[OnboardingProtectedRoute] Onboarding completo, permitindo acesso");
   return <>{children}</>;
 };

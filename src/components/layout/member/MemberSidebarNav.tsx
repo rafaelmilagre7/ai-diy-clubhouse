@@ -39,7 +39,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
     },
     {
       title: "Onboarding",
-      href: "/onboarding-new",
+      href: "/onboarding",
       icon: BookOpen,
     },
     {

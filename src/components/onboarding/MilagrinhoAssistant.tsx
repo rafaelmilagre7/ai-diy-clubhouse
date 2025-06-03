@@ -1,34 +1,36 @@
 
-import React from 'react';
-import { motion } from 'framer-motion';
+import React from "react";
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 interface MilagrinhoAssistantProps {
-  userName: string;
-  message: string;
+  userName?: string;
+  message?: string;
+  className?: string;
 }
 
-const MilagrinhoAssistant: React.FC<MilagrinhoAssistantProps> = ({ userName, message }) => {
+const MilagrinhoAssistant: React.FC<MilagrinhoAssistantProps> = ({ 
+  userName, 
+  message, 
+  className = "" 
+}) => {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-gradient-to-r from-viverblue/20 to-purple-600/20 rounded-2xl p-6 mb-8 border border-viverblue/30"
-    >
-      <div className="flex items-start space-x-4">
-        <div className="bg-viverblue rounded-full p-3 flex-shrink-0">
-          <div className="text-2xl">🤖</div>
-        </div>
-        <div className="flex-1">
-          <div className="flex items-center space-x-2 mb-2">
-            <h3 className="text-lg font-semibold text-white">Milagrinho</h3>
-            <div className="bg-green-500 w-2 h-2 rounded-full animate-pulse"></div>
-          </div>
-          <p className="text-gray-300 leading-relaxed">
-            <span className="text-viverblue font-medium">{userName}</span>, {message}
-          </p>
-        </div>
+    <div className={`mb-8 rounded-lg bg-gradient-to-br from-[#0ABAB5]/75 to-[#15192C] border border-[#0ABAB5]/40 p-6 flex items-center gap-3 shadow-lg ${className}`}>
+      <Avatar className="w-10 h-10">
+        <AvatarImage 
+          src="/lovable-uploads/833bbb5d-5aa6-47f4-96d2-320bb57726cf.png" 
+          alt="Milagrinho Avatar" 
+        />
+        <AvatarFallback>M</AvatarFallback>
+      </Avatar>
+      <div>
+        <p className="font-semibold text-[#0ABAB5] text-base">
+          Olá{userName ? `, ${userName}` : ""}!
+        </p>
+        <p className="text-white text-sm mt-1">
+          {message || "Para te recomendar as melhores trilhas e soluções, me conta um pouco da empresa onde você trabalha!"}
+        </p>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

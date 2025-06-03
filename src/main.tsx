@@ -1,16 +1,14 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App.tsx';
+import App from './App';
 import './index.css';
+import { HelmetProvider } from 'react-helmet-async';
 
-// Importar limpeza automática dos dados de onboarding (apenas em desenvolvimento)
-if (import.meta.env.DEV) {
-  import('./utils/autoCleanOnboarding');
-}
-
-ReactDOM.createRoot(document.getElementById('root')!).render(
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <App />
-  </React.StrictMode>,
+    <HelmetProvider>
+      <App />
+    </HelmetProvider>
+  </React.StrictMode>
 );

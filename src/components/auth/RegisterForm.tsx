@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
+import Divider from "./login/Divider";
+import GoogleLoginButton from "./login/GoogleLoginButton";
 
 const RegisterForm = () => {
   const [name, setName] = useState("");
@@ -69,6 +71,33 @@ const RegisterForm = () => {
       toast({
         title: "Erro no cadastro",
         description: error.message || "Não foi possível criar sua conta. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setIsLoading(true);
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin.includes('localhost') 
+            ? 'http://localhost:3000/auth' 
+            : 'https://app.viverdeia.ai/auth',
+        },
+      });
+      
+      if (error) throw error;
+      
+    } catch (error) {
+      console.error("Erro ao fazer login com Google:", error);
+      toast({
+        title: "Erro de autenticação",
+        description: "Não foi possível fazer login com o Google. Tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -155,6 +184,10 @@ const RegisterForm = () => {
           {isLoading ? "Criando conta..." : "Criar conta"}
         </Button>
       </form>
+
+      <Divider />
+
+      <GoogleLoginButton onClick={handleGoogleSignIn} isLoading={isLoading} />
     </div>
   );
 };

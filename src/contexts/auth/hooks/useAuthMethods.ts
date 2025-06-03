@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { supabase } from '@/lib/supabase';
 import { toast } from "sonner";
 import { cleanupAuthState, redirectToDomain } from "@/utils/authUtils";
@@ -8,12 +9,15 @@ interface UseAuthMethodsProps {
 }
 
 export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
+  const [authError, setAuthError] = useState<Error | null>(null);
+  
   /**
    * Login com email e senha
    */
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
+      setAuthError(null);
       
       // Limpar estado de autenticação anterior
       cleanupAuthState();
@@ -33,6 +37,7 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
       return { success: true, data };
     } catch (error: any) {
       console.error('Erro ao fazer login:', error);
+      setAuthError(error);
       
       toast.error("Erro ao fazer login", {
         description: error.message,
@@ -98,5 +103,6 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
     signOut,
     signInAsMember,
     signInAsAdmin,
+    authError
   };
 };

@@ -2,23 +2,56 @@
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { migrateUserOnboardingData } from './onboardingDataMigration';
-import { resetUserByEmail } from './adminUserReset';
 
 export const resetUserOnboarding = async (userEmail: string): Promise<{ success: boolean; message: string }> => {
   try {
     console.log(`Iniciando reset do onboarding para: ${userEmail}`);
     
-    // Usar a nova função de reset completo
-    const result = await resetUserByEmail(userEmail);
+    // Buscar o usuário pelo email
+    const { data: userProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', userEmail)
+      .single();
     
-    if (result.success) {
-      return { 
-        success: true, 
-        message: `Reset realizado com sucesso. ${result.backup_records} registros salvos em backup.` 
-      };
-    } else {
-      return { success: false, message: result.message };
+    if (profileError || !userProfile) {
+      return { success: false, message: 'Usuário não encontrado' };
     }
+    
+    const userId = userProfile.id;
+    
+    // Resetar dados do onboarding_progress
+    const { error: progressError } = await supabase
+      .from('onboarding_progress')
+      .delete()
+      .eq('user_id', userId);
+    
+    if (progressError) {
+      console.error('Erro ao deletar progresso:', progressError);
+    }
+    
+    // Resetar dados da tabela onboarding (legacy)
+    const { error: onboardingError } = await supabase
+      .from('onboarding')
+      .delete()
+      .eq('user_id', userId);
+    
+    if (onboardingError) {
+      console.error('Erro ao deletar onboarding legacy:', onboardingError);
+    }
+    
+    // Resetar trilhas de implementação
+    const { error: trailError } = await supabase
+      .from('implementation_trails')
+      .delete()
+      .eq('user_id', userId);
+    
+    if (trailError) {
+      console.error('Erro ao deletar trilhas:', trailError);
+    }
+    
+    console.log(`Reset completo para usuário ${userEmail} (${userId})`);
+    return { success: true, message: 'Dados resetados com sucesso' };
     
   } catch (error) {
     console.error('Erro ao resetar dados:', error);
@@ -134,23 +167,4 @@ export const forceRefreshOnboardingCache = async (userEmail: string) => {
     console.error('Erro ao limpar cache:', error);
     return { success: false, message: 'Erro ao limpar cache' };
   }
-};
-
-// Função utilitária para admins testarem reset via console do navegador
-export const adminTestReset = async (userEmail: string) => {
-  console.log(`🚀 Iniciando teste de reset para: ${userEmail}`);
-  
-  const result = await resetUserByEmail(userEmail);
-  
-  if (result.success) {
-    console.log('✅ Reset realizado com sucesso!');
-    console.log(`📊 Backup: ${result.backup_records} registros salvos`);
-    console.log(`🕒 Timestamp: ${result.reset_timestamp}`);
-    toast.success('Reset realizado com sucesso!');
-  } else {
-    console.error('❌ Falha no reset:', result.message);
-    toast.error(`Erro no reset: ${result.message}`);
-  }
-  
-  return result;
 };

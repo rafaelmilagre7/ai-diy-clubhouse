@@ -1,18 +1,22 @@
 
 import React from "react";
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Book, ExternalLink, Clock, Bookmark } from "lucide-react";
 import { TrailLessonEnriched } from "@/types/implementation-trail";
-import { TrailLessonCard } from "./TrailLessonCard";
 
 interface TrailLessonsListProps {
   lessons: TrailLessonEnriched[];
 }
 
 export const TrailLessonsList: React.FC<TrailLessonsListProps> = ({ lessons }) => {
+  const navigate = useNavigate();
+
   if (!lessons || lessons.length === 0) {
     return (
-      <div className="text-center py-8 bg-neutral-800/20 rounded-lg border border-neutral-700/50 p-6">
+      <div className="text-center py-4 bg-neutral-800/20 rounded-lg border border-neutral-700/50 p-4">
         <p className="text-neutral-400">Nenhuma aula recomendada encontrada na sua trilha.</p>
       </div>
     );
@@ -30,47 +34,101 @@ export const TrailLessonsList: React.FC<TrailLessonsListProps> = ({ lessons }) =
     
     return (
       <div className="space-y-4 mb-8">
-        {/* Header da seção */}
-        <div className="flex items-center gap-3 mb-4">
-          <Badge variant="outline" className={`${badgeClass} px-3 py-1 text-sm font-medium`}>
+        <div className="flex items-center gap-2 mb-2">
+          <Badge variant="outline" className={badgeClass}>
             {title}
           </Badge>
-          <div className="h-px flex-1 bg-gradient-to-r from-[#0ABAB5]/30 to-transparent"></div>
+          <div className="h-px flex-1 bg-neutral-800"></div>
         </div>
         
-        <p className="text-sm text-neutral-400 mb-6">{description}</p>
+        <p className="text-sm text-neutral-400 mb-4">{description}</p>
         
-        {/* Container com scroll horizontal */}
-        <ScrollArea className="w-full whitespace-nowrap">
-          <div className="flex gap-4 pb-4">
-            {items.map((lesson, index) => (
-              <TrailLessonCard
-                key={lesson.id}
-                lesson={lesson}
-                index={index}
-              />
-            ))}
-          </div>
-          <ScrollBar orientation="horizontal" className="mt-2" />
-        </ScrollArea>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {items.map((lesson) => (
+            <Card 
+              key={lesson.id} 
+              className="bg-[#151823] border-[#0ABAB5]/30 hover:border-[#0ABAB5]/60 transition-all cursor-pointer"
+              onClick={() => navigate(`/learning/lesson/${lesson.id}`)}
+            >
+              {/* Imagem de capa em formato vertical */}
+              <div className="aspect-[9/16] w-full overflow-hidden">
+                {lesson.cover_image_url ? (
+                  <img 
+                    src={lesson.cover_image_url} 
+                    alt={lesson.title} 
+                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-[#0ABAB5]/30 to-[#0ABAB5]/5 flex items-center justify-center">
+                    <Book className="h-12 w-12 text-[#0ABAB5]/40" />
+                  </div>
+                )}
+              </div>
+              
+              <CardHeader className="pb-2 pt-3">
+                <div className="flex justify-between items-start mb-1">
+                  <Badge variant="outline" className="bg-[#0ABAB5]/10 text-[#0ABAB5] border-[#0ABAB5]/30 text-xs">
+                    <Book className="h-3 w-3 mr-1" /> Aula
+                  </Badge>
+                </div>
+                <h3 className="text-lg font-medium line-clamp-2">{lesson.title}</h3>
+                <div className="text-xs text-neutral-400 mt-1 flex items-center">
+                  <Bookmark className="h-3 w-3 mr-1" /> 
+                  {lesson.module?.title || "Módulo sem nome"} • {lesson.module?.course?.title || "Curso sem nome"}
+                </div>
+              </CardHeader>
+              
+              <CardContent className="py-2">
+                <div className="text-sm text-neutral-300 bg-[#0ABAB5]/5 p-3 rounded-md border border-[#0ABAB5]/20 mb-3">
+                  <p className="italic line-clamp-3">"{lesson.justification || 'Recomendado com base no seu perfil'}"</p>
+                </div>
+                
+                <div className="flex items-center gap-2 text-xs text-neutral-400 mt-2">
+                  {lesson.difficulty_level && (
+                    <Badge variant="outline" className="text-xs">
+                      {lesson.difficulty_level === 'beginner' ? 'Iniciante' : 
+                       lesson.difficulty_level === 'intermediate' ? 'Intermediário' : 'Avançado'}
+                    </Badge>
+                  )}
+                  
+                  {lesson.estimated_time_minutes > 0 && (
+                    <div className="flex items-center ml-auto">
+                      <Clock size={12} className="mr-1" />
+                      <span>{lesson.estimated_time_minutes} min</span>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+              
+              <CardFooter className="pt-0">
+                <Button 
+                  variant="outline" 
+                  className="w-full border-[#0ABAB5]/30 hover:bg-[#0ABAB5]/10 hover:text-white"
+                >
+                  <ExternalLink size={14} className="mr-2" />
+                  Acessar aula
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   };
 
   return (
-    <div className="space-y-8">
+    <div>
       {renderPriorityGroup(
-        "🎯 Aulas Prioritárias", 
+        "Aulas Prioritárias", 
         priority1, 
-        "bg-[#0ABAB5]/20 text-[#0ABAB5] border-[#0ABAB5]/40",
-        "Estas aulas foram selecionadas para complementar suas soluções prioritárias e acelerar sua implementação."
+        "bg-[#0ABAB5]/20 text-[#0ABAB5] border-[#0ABAB5]/30",
+        "Estas aulas foram selecionadas para complementar suas soluções prioritárias e ajudar na implementação."
       )}
-      
       {renderPriorityGroup(
-        "📚 Aulas Complementares", 
+        "Aulas Complementares", 
         priority2, 
-        "bg-amber-500/20 text-amber-400 border-amber-500/40",
-        "Conteúdos adicionais que expandem seu conhecimento e aprofundam sua expertise nas áreas de interesse."
+        "bg-amber-500/20 text-amber-500 border-amber-500/30",
+        "Conteúdos adicionais que expandem seu conhecimento nas áreas de interesse."
       )}
     </div>
   );

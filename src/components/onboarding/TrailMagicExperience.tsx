@@ -1,118 +1,93 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import confetti from 'canvas-confetti';
+
+import React, { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Sparkles } from 'lucide-react';
 
 interface TrailMagicExperienceProps {
   onFinish: () => void;
 }
 
-export const TrailMagicExperience: React.FC<TrailMagicExperienceProps> = ({
-  onFinish
-}) => {
-  const [currentPhase, setCurrentPhase] = useState(0);
-  const [progress, setProgress] = useState(0);
-
-  const phases = [
-    {
-      text: "Analisando seu perfil...",
-      animation: "rotate"
-    },
-    {
-      text: "Gerando soluções personalizadas...",
-      animation: "scale"
-    },
-    {
-      text: "Otimizando sua trilha...",
-      animation: "slide"
-    }
+export const TrailMagicExperience: React.FC<TrailMagicExperienceProps> = ({ onFinish }) => {
+  const [step, setStep] = useState(0);
+  const [showFinishButton, setShowFinishButton] = useState(false);
+  
+  const messages = [
+    "Analisando seu perfil e objetivos...",
+    "Combinando com soluções de IA de alto impacto...",
+    "Personalizando recomendações específicas...",
+    "Organizando sua trilha ideal...",
+    "Trilha personalizada pronta!"
   ];
-
+  
   useEffect(() => {
-    const timer = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(timer);
-          // Após completar, aguarda 2 segundos e redireciona automaticamente
-          setTimeout(() => {
-            onFinish();
-          }, 2000);
-          return 100;
+    const timers: NodeJS.Timeout[] = [];
+    
+    // Avançar pelos passos com temporizadores
+    for (let i = 1; i < messages.length; i++) {
+      const timer = setTimeout(() => {
+        setStep(i);
+        if (i === messages.length - 1) {
+          setTimeout(() => setShowFinishButton(true), 1000);
         }
-        return prev + 2;
-      });
-    }, 150);
-
-    return () => clearInterval(timer);
-  }, [onFinish]);
-
-  useEffect(() => {
-    if (progress > 0 && progress % 33 === 0 && currentPhase < phases.length - 1) {
-      setCurrentPhase(currentPhase + 1);
+      }, i * 2000);
+      timers.push(timer);
     }
-  }, [progress, currentPhase, phases.length]);
-
+    
+    return () => timers.forEach(timer => clearTimeout(timer));
+  }, [messages.length]);
+  
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
-      <motion.div
-        className="relative h-24 flex items-center justify-center"
-        animate={{ rotate: 360 }}
-        transition={{
-          loop: Infinity,
-          duration: 2,
-          ease: "linear"
-        }}
-      >
-        <svg
-          className="absolute w-16 h-16 text-[#0ABAB5] animate-pulse"
-          fill="currentColor"
-          viewBox="0 0 200 200"
-        >
-          <motion.circle
-            cx="100"
-            cy="100"
-            r="80"
-            strokeWidth="15"
-            stroke="#0ABAB5"
-            fill="none"
-            variants={{
-              hidden: { opacity: 0 },
-              visible: { opacity: 1 }
-            }}
-            initial="hidden"
-            animate="visible"
-            transition={{ duration: 0.8, ease: "easeInOut" }}
-          />
-        </svg>
-        <div className="text-center">
-          <div className="text-xl font-semibold text-white">
-            {phases[currentPhase].text}
+    <div className="max-w-2xl mx-auto">
+      <div className="bg-gradient-to-br from-[#151823] to-[#1A1E2E] p-8 rounded-2xl border border-[#0ABAB5]/20 shadow-lg flex flex-col items-center justify-center min-h-[350px]">
+        <div className="relative mb-8">
+          <div className="absolute inset-0 rounded-full bg-[#0ABAB5]/20 blur-xl animate-pulse"></div>
+          <div className="relative">
+            <Sparkles className="h-16 w-16 text-[#0ABAB5] animate-pulse" />
           </div>
         </div>
-      </motion.div>
-
-      <div className="w-full bg-gray-700 rounded-full h-2.5 dark:bg-gray-700">
-        <motion.div
-          className="bg-[#0ABAB5] h-2.5 rounded-full"
-          style={{ width: `${progress}%` }}
-          transition={{ duration: 0.5, ease: "easeInOut" }}
-        />
-      </div>
-
-      {/* Remover o botão "Ver Minha Trilha" pois agora redireciona automaticamente */}
-      {progress === 100 && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center space-y-4"
-        >
-          <div className="text-2xl font-bold text-[#0ABAB5]">
-            ✨ Trilha personalizada pronta!
+        
+        <div className="space-y-6 w-full max-w-md">
+          {messages.map((message, idx) => (
+            <div 
+              key={idx} 
+              className={`flex items-center gap-3 transition-all duration-500 ${
+                idx <= step ? 'opacity-100' : 'opacity-30'
+              }`}
+            >
+              <div className={`h-6 w-6 rounded-full flex items-center justify-center ${
+                idx < step 
+                  ? 'bg-[#0ABAB5] text-white' 
+                  : idx === step 
+                    ? 'bg-white/10 border-2 border-[#0ABAB5] animate-pulse' 
+                    : 'bg-white/5 border border-white/10'
+              }`}>
+                {idx < step ? (
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                ) : (
+                  <span className="h-2 w-2 rounded-full bg-white/70"></span>
+                )}
+              </div>
+              <span className={`text-${idx <= step ? 'white' : 'neutral-500'} ${idx === step ? 'font-medium' : ''}`}>
+                {message}
+              </span>
+            </div>
+          ))}
+        </div>
+        
+        {showFinishButton && (
+          <div className="mt-8 animate-fade-in">
+            <Button
+              onClick={onFinish}
+              className="bg-gradient-to-r from-[#0ABAB5] to-[#34D399] hover:from-[#0ABAB5]/90 hover:to-[#34D399]/90 px-6 py-2 text-base"
+            >
+              <Sparkles className="mr-2 h-4 w-4" />
+              Ver Minha Trilha
+            </Button>
           </div>
-          <p className="text-gray-300">
-            Redirecionando para a página de conclusão...
-          </p>
-        </motion.div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
