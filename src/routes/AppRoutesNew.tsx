@@ -10,6 +10,7 @@ import LoadingScreen from '@/components/common/LoadingScreen';
 
 // Páginas gerais
 const NotFound = lazy(() => import('@/pages/NotFound'));
+const SimpleOnboardingPage = lazy(() => import('@/pages/onboarding/SimpleOnboardingPage'));
 
 export const AppRoutesNew: React.FC = () => {
   return (
@@ -17,6 +18,7 @@ export const AppRoutesNew: React.FC = () => {
       <Routes>
         {/* Rotas de onboarding */}
         <Route path="/onboarding-new/*" element={<OnboardingRoutes />} />
+        <Route path="/simple-onboarding" element={<SimpleOnboardingPage />} />
         
         {/* Rotas por role */}
         <Route path="/*" element={<MemberRoutes />} />

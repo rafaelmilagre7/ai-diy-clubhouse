@@ -17,6 +17,7 @@ const NotFound = lazy(() => import('@/pages/NotFound'));
 
 // Onboarding
 const NovoOnboardingNew = lazy(() => import('@/pages/onboarding/NovoOnboardingNew'));
+const SimpleOnboardingPage = lazy(() => import('@/pages/onboarding/SimpleOnboardingPage'));
 const OnboardingCompleted = lazy(() => import('@/components/onboarding/OnboardingCompletedNew'));
 
 // Admin pages
@@ -40,6 +41,7 @@ const AppRoutes = () => {
         
         {/* Onboarding */}
         <Route path="/onboarding-new" element={<NovoOnboardingNew />} />
+        <Route path="/simple-onboarding" element={<SimpleOnboardingPage />} />
         <Route path="/onboarding-new/completed" element={<OnboardingCompleted />} />
         
         {/* Páginas principais */}

@@ -18,7 +18,7 @@ const LayoutProviderNew = memo(() => {
   const [redirectHandled, setRedirectHandled] = useState(false);
 
   // Detectar tipo de rota
-  const isOnboardingRoute = location.pathname.startsWith('/onboarding');
+  const isOnboardingRoute = location.pathname.startsWith('/onboarding') || location.pathname.startsWith('/simple-onboarding');
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isFormacaoRoute = location.pathname.startsWith('/formacao');
   const isAuthRoute = location.pathname === '/login' || location.pathname === '/';
@@ -37,7 +37,8 @@ const LayoutProviderNew = memo(() => {
 
     // Se usuário logado mas onboarding incompleto (exceto admin), ir para onboarding
     if (user && !isOnboardingComplete && !isOnboardingRoute && !isAuthRoute && !isAdmin) {
-      navigate('/onboarding-new', { replace: true });
+      // Usar simple onboarding por padrão
+      navigate('/simple-onboarding', { replace: true });
       setRedirectHandled(true);
       return;
     }

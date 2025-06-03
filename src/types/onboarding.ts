@@ -1,199 +1,106 @@
 
-// Tipos base para o sistema de onboarding moderno
-export interface OnboardingData {
-  // Informações pessoais
-  personal_info?: {
-    name?: string;
-    email?: string;
-    whatsapp?: string;
-    country_code?: string;
-    birth_date?: string;
-    phone?: string;
-    ddi?: string;
-    city?: string;
-    state?: string;
-    country?: string;
-    linkedin?: string;
-    instagram?: string;
-    timezone?: string;
-  };
-  
-  // Informações profissionais
-  professional_info?: {
-    company_name?: string;
-    role?: string;
-    company_size?: string;
-    company_segment?: string;
-    company_website?: string;
-    annual_revenue_range?: string;
-    current_position?: string;
-  };
-  
-  // Contexto do negócio
-  business_context?: {
-    business_model?: string;
-    business_challenges?: string[];
-    short_term_goals?: string[];
-    medium_term_goals?: string[];
-    important_kpis?: string[];
-    additional_context?: string;
-  };
-  
-  // Objetivos de negócio
-  business_goals?: {
-    primary_goal?: string;
-    expected_outcomes?: string[];
-    expected_outcome_30days?: string;
-    priority_solution_type?: string;
-    how_implement?: string;
-    week_availability?: string;
-    content_formats?: string[];
-    timeline?: string;
-    live_interest?: number;
-  };
-  
-  // Experiência com IA
-  ai_experience?: {
-    ai_knowledge_level?: string;
-    knowledge_level?: string; // compatibilidade
-    previous_tools?: string[];
-    has_implemented?: string;
-    desired_ai_areas?: string[];
-    completed_formation?: boolean;
-    is_member_for_month?: boolean;
-    nps_score?: number;
-    improvement_suggestions?: string;
-  };
-  
-  // Personalização da experiência
-  experience_personalization?: {
-    interests?: string[];
-    time_preference?: string[];
-    available_days?: string[];
-    days_available?: string[];
-    preferred_times?: string[];
-    networking_availability?: number;
-    networking_level?: number;
-    skills_to_share?: string[];
-    shareable_skills?: string[];
-    mentorship_topics?: string[];
-    authorize_case_usage?: boolean;
-    interested_in_interview?: boolean;
-    priority_topics?: string[];
-  };
-  
-  // Informações complementares
-  complementary_info?: {
-    how_found_us?: string;
-    referred_by?: string;
-    country?: string;
-    state?: string;
-    city?: string;
-    timezone?: string;
-    instagram_url?: string;
-    linkedin_url?: string;
-  };
-  
-  // Dados de formação (se aplicável)
-  formation_data?: {
-    [key: string]: any;
-  };
-}
-
-export interface OnboardingProgress {
-  id: string;
-  user_id: string;
-  current_step: string;
-  is_completed: boolean;
-  completed_steps: string[];
-  personal_info?: any;
-  professional_info?: any;
-  business_context?: any;
-  business_goals?: any;
-  ai_experience?: any;
-  experience_personalization?: any;
-  complementary_info?: any;
-  formation_data?: any;
-  company_name?: string;
-  company_size?: string;
-  company_sector?: string;
-  company_website?: string;
-  current_position?: string;
-  annual_revenue?: string;
-  sync_status?: string;
-  last_sync_at?: string;
-  metadata?: any;
-  debug_logs?: any[];
-  created_at: string;
-  updated_at: string;
-  completed_at?: string;
-}
-
-// Interface para os steps do onboarding
-export interface OnboardingStepData {
-  stepId: string;
-  title: string;
-  description?: string;
-  isRequired: boolean;
-  data: Partial<OnboardingData>;
-}
-
-// Props para steps do onboarding
-export interface OnboardingStepProps {
-  onSubmit: (stepId: string, data: Partial<OnboardingData>) => void;
-  isSubmitting: boolean;
-  initialData?: OnboardingData;
-  isLastStep?: boolean;
-  onComplete?: () => void;
-  onPrevious?: () => void; // Adicionando propriedade faltante
-}
-
-// Tipos para informações pessoais (corrigindo propriedades opcionais)
-export interface PersonalInfoData {
+export interface PersonalInfo {
   name?: string;
   email?: string;
-  whatsapp?: string;
-  country_code?: string;
-  birth_date?: string;
   phone?: string;
-  ddi?: string;
   city?: string;
   state?: string;
   country?: string;
-  linkedin?: string;
-  instagram?: string;
-  timezone?: string;
+  linkedin_url?: string;
+  whatsapp_number?: string;
 }
 
-// Tipos para dados profissionais (adicionando propriedades faltantes)
-export interface ProfessionalDataInput {
+export interface AIExperience {
+  ai_knowledge_level?: string;
+  ai_tools_used?: string[];
+  ai_previous_attempts?: string;
+  ai_implemented_solutions?: string[];
+  ai_desired_solutions?: string[];
+  ai_suggestions?: string;
+  ai_nps?: number;
+}
+
+export interface BusinessInfo {
   company_name?: string;
-  role?: string;
-  company_size?: string;
-  company_segment?: string;
-  company_sector?: string; // Adicionando propriedade faltante
   company_website?: string;
-  annual_revenue_range?: string;
-  annual_revenue?: string; // Adicionando propriedade faltante
   current_position?: string;
+  company_sector?: string;
+  company_size?: string;
+  annual_revenue?: string;
 }
 
-// Tipo para steps do onboarding (adicionando propriedade section)
-export interface OnboardingStep {
-  id: string;
-  title: string;
-  description?: string;
-  isRequired: boolean;
-  data: Partial<OnboardingData>;
-  section?: string; // Adicionando propriedade faltante
+export interface BusinessContext {
+  business_model?: string;
+  business_challenges?: string[];
+  short_term_goals?: string[];
+  medium_term_goals?: string[];
+  kpis?: string[];
+  additional_context?: string;
 }
 
-// Tipo para steps completos do onboarding (adicionando tipo faltante)
-export interface CompleteOnboardingStep {
-  id: string;
-  title: string;
-  section: string;
-  path: string;
-  forClub?: boolean;
-  forFormation?: boolean;
+export interface DiscoveryInfo {
+  how_discovered?: string;
+  referral_name?: string;
+  priority_topics?: string[];
+  marketing_consent?: boolean;
+  whatsapp_consent?: boolean;
+}
+
+export interface GoalsInfo {
+  primary_goals?: string[];
+  secondary_goals?: string[];
+  success_metrics?: string[];
+  timeline?: string;
+  budget_range?: string;
+}
+
+export interface PersonalizationInfo {
+  interests?: string[];
+  available_days?: string[];
+  time_preference?: string;
+  networking_availability?: boolean;
+  mentorship_topics?: string[];
+  skills_to_share?: string[];
+}
+
+export interface OnboardingData {
+  personal_info?: PersonalInfo;
+  ai_experience?: AIExperience;
+  business_info?: BusinessInfo;
+  business_context?: BusinessContext;
+  discovery_info?: DiscoveryInfo;
+  goals_info?: GoalsInfo;
+  personalization?: PersonalizationInfo;
+}
+
+export interface OnboardingProgress {
+  id?: string;
+  user_id: string;
+  personal_info?: PersonalInfo;
+  ai_experience?: AIExperience;
+  business_info?: BusinessInfo;
+  business_context?: BusinessContext;
+  discovery_info?: DiscoveryInfo;
+  goals_info?: GoalsInfo;
+  personalization?: PersonalizationInfo;
+  current_step?: string;
+  completed_steps?: string[];
+  is_completed?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ValidationErrors {
+  [key: string]: string | string[] | ValidationErrors;
+}
+
+export interface StepProps {
+  data: OnboardingData;
+  onUpdate: (section: string, data: any) => void;
+  onNext: () => void;
+  onPrevious?: () => void;
+  canProceed: boolean;
+  currentStep: number;
+  totalSteps: number;
+  validationErrors?: ValidationErrors;
 }
