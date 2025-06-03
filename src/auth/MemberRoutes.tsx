@@ -18,11 +18,20 @@ const Implementation = React.lazy(() => import("@/pages/member/Implementation"))
 const ImplementationCompleted = React.lazy(() => import("@/pages/member/ImplementationCompleted"));
 const Events = React.lazy(() => import("@/pages/member/Events"));
 
+// Wrapper para adaptar RouteErrorBoundary ao react-error-boundary
+const RouteErrorFallback = ({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) => {
+  return (
+    <RouteErrorBoundary>
+      <div>Erro na rota</div>
+    </RouteErrorBoundary>
+  );
+};
+
 export const MemberRoutes = () => {
   return (
     <PerformanceWrapper componentName="MemberRoutes">
       <Layout>
-        <ErrorBoundary FallbackComponent={RouteErrorBoundary}>
+        <ErrorBoundary FallbackComponent={RouteErrorFallback}>
           <Suspense fallback={<LoadingScreen />}>
             <Routes>
               <Route path="/dashboard" element={<Dashboard />} />
