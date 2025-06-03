@@ -2,7 +2,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Tool } from '@/types/toolTypes';
-import { useLogging } from '@/hooks/useLogging';
 import { useAuth } from '@/contexts/auth';
 
 export const useTools = (options?: { 
@@ -10,7 +9,6 @@ export const useTools = (options?: {
   categoryFilter?: string;
   benefitsOnly?: boolean;
 }) => {
-  const { log, logError } = useLogging();
   const { user } = useAuth();
   const opts = {
     checkAccessRestrictions: true,
@@ -20,7 +18,7 @@ export const useTools = (options?: {
   const query = useQuery<Tool[], Error>({
     queryKey: ['tools', user?.id, opts.categoryFilter, opts.benefitsOnly],
     queryFn: async () => {
-      log('Buscando ferramentas...');
+      console.log('Buscando ferramentas...');
       
       // Buscar todas as ferramentas
       const { data, error } = await supabase
@@ -30,7 +28,7 @@ export const useTools = (options?: {
         .order('name');
 
       if (error) {
-        logError('Erro ao buscar ferramentas:', error);
+        console.error('Erro ao buscar ferramentas:', error);
         throw error;
       }
 
@@ -97,7 +95,7 @@ export const useTools = (options?: {
         has_valid_logo: !!tool.logo_url
       }));
 
-      log('Ferramentas encontradas:', { 
+      console.log('Ferramentas encontradas:', { 
         total: filteredData.length,
         comLogo: toolsWithLogosInfo.filter(t => t.has_valid_logo).length,
         semLogo: toolsWithLogosInfo.filter(t => !t.has_valid_logo).length
