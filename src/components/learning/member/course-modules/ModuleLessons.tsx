@@ -92,8 +92,8 @@ export const ModuleLessons = ({
             })}
           </CarouselContent>
           
-          <CarouselPrevious className="left-2 opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/80 hover:bg-black border-0 text-white shadow-2xl backdrop-blur-sm hover:scale-110" />
-          <CarouselNext className="right-2 opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/80 hover:bg-black border-0 text-white shadow-2xl backdrop-blur-sm hover:scale-110" />
+          <CarouselPrevious className="left-2 opacity-0 group-hover:opacity-100 transition-all duration-300 bg-teal-600/90 hover:bg-teal-500 border-0 text-white shadow-2xl backdrop-blur-sm hover:scale-110 h-12 w-12" />
+          <CarouselNext className="right-2 opacity-0 group-hover:opacity-100 transition-all duration-300 bg-teal-600/90 hover:bg-teal-500 border-0 text-white shadow-2xl backdrop-blur-sm hover:scale-110 h-12 w-12" />
         </Carousel>
       </div>
       

@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/accordion";
 import { Card } from "@/components/ui/card";
 import { LearningModule, LearningCourse, LearningProgress } from "@/lib/supabase/types";
-import { ChevronDown, BookOpen, PlayCircle } from "lucide-react";
+import { ChevronDown, BookOpen } from "lucide-react";
 import { ModuleLessons } from "./course-modules/ModuleLessons";
 import { isLessonCompleted, isLessonInProgress, getLessonProgress } from "./course-modules/CourseModulesHelpers";
 
@@ -43,17 +43,6 @@ export const CourseModules: React.FC<CourseModulesProps> = ({
   
   return (
     <div className="space-y-6">
-      {/* Header do conteúdo */}
-      <div className="flex items-center gap-3 px-1">
-        <div className="bg-viverblue/20 p-2 rounded-lg">
-          <BookOpen className="h-5 w-5 text-viverblue" />
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold text-white">Conteúdo do Curso</h2>
-          <p className="text-gray-400">{modules.length} módulo{modules.length !== 1 ? 's' : ''} disponível{modules.length !== 1 ? 'is' : ''}</p>
-        </div>
-      </div>
-      
       {/* Accordion de módulos */}
       <Accordion
         type="multiple" 
