@@ -1,4 +1,3 @@
-
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -8,7 +7,6 @@ import {
   MessageSquare,
   ChevronLeft,
   BookOpen,
-  Gauge,
   Calendar,
   GraduationCap,
   Shield,
@@ -35,11 +33,6 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
       title: "Dashboard",
       href: "/admin",
       icon: LayoutDashboard,
-    },
-    {
-      title: "Performance",
-      href: "/admin/performance",
-      icon: Gauge,
     },
     {
       title: "Eventos",
@@ -75,7 +68,7 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
     {
       title: "Analytics",
       href: "/admin/analytics",
-      icon: Gauge,
+      icon: LayoutDashboard,
     },
   ];
 

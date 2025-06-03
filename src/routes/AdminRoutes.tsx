@@ -17,7 +17,6 @@ import AdminEvents from '@/pages/admin/AdminEvents';
 import AdminRoles from '@/pages/admin/AdminRoles';
 import InvitesManagement from '@/pages/admin/invites/InvitesManagement';
 import CommunityModerationPage from '@/pages/admin/community/CommunityModerationPage';
-import PerformanceDashboard from '@/components/admin/performance/PerformanceDashboard';
 
 // Função helper para criar rotas protegidas com AdminLayout
 const createAdminRoute = (path: string, Component: React.ComponentType<any>) => ({
@@ -33,7 +32,6 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin/solutions/new", AdminSolutionCreate),
   createAdminRoute("/admin/solutions/:id", SolutionEditor),
   createAdminRoute("/admin/analytics", AdminAnalytics),
-  createAdminRoute("/admin/performance", PerformanceDashboard),
   createAdminRoute("/admin/onboarding", AdminOnboarding),
   createAdminRoute("/admin/suggestions", AdminSuggestions),
   createAdminRoute("/admin/events", AdminEvents),
