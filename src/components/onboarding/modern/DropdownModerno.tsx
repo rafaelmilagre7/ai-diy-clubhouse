@@ -2,10 +2,16 @@
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+interface DropdownOption {
+  value: string;
+  label: string;
+  icon?: string;
+}
+
 interface DropdownModernoProps {
   value: string;
   onChange: (value: string) => void;
-  options: Array<{ value: string; label: string }>;
+  options: DropdownOption[];
   placeholder: string;
   label: string;
   required?: boolean;
@@ -33,9 +39,12 @@ export const DropdownModerno: React.FC<DropdownModernoProps> = ({
             <SelectItem 
               key={option.value} 
               value={option.value}
-              className="text-white hover:bg-gray-700"
+              className="text-white hover:bg-gray-700 focus:bg-gray-700"
             >
-              {option.label}
+              <span className="flex items-center gap-2">
+                {option.icon && <span>{option.icon}</span>}
+                {option.label}
+              </span>
             </SelectItem>
           ))}
         </SelectContent>

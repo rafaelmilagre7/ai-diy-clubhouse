@@ -18,7 +18,7 @@ export const useUnifiedOnboardingValidation = () => {
     try {
       console.log('🔍 Verificando status do onboarding para usuário:', user.id);
 
-      // Verificar quick_onboarding primeiro (prioridade)
+      // Verificar quick_onboarding primeiro
       const { data: quickData } = await supabase
         .from('quick_onboarding')
         .select('is_completed')
@@ -33,22 +33,12 @@ export const useUnifiedOnboardingValidation = () => {
         return;
       }
 
-      // Verificar onboarding_progress como fallback
-      const { data: progressData } = await supabase
-        .from('onboarding_progress')
-        .select('is_completed')
-        .eq('user_id', user.id)
-        .eq('is_completed', true)
-        .maybeSingle();
-
-      const isCompleted = !!progressData;
-      console.log(`📊 Status final do onboarding: ${isCompleted}`);
-      
-      setIsOnboardingComplete(isCompleted);
+      // Se não encontrou, assumir incompleto
+      console.log('📊 Onboarding incompleto');
+      setIsOnboardingComplete(false);
 
     } catch (error) {
       console.error('❌ Erro ao verificar onboarding:', error);
-      // Em caso de erro, assumir que não está completo para segurança
       setIsOnboardingComplete(false);
     } finally {
       setIsLoading(false);

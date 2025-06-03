@@ -10,46 +10,46 @@ import AppRoutes from "@/components/routing/AppRoutes";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 
 const LayoutProvider = memo(() => {
-  const { user, profile, isAdmin, isFormacao, isLoading: authLoading } = useAuth();
+  const { user, isAdmin, isFormacao, isLoading: authLoading } = useAuth();
   const { isOnboardingComplete, isLoading: onboardingLoading } = useUnifiedOnboardingValidation();
   const navigate = useNavigate();
   const location = useLocation();
-  const [layoutReady, setLayoutReady] = useState(false);
+  const [redirectHandled, setRedirectHandled] = useState(false);
 
-  // Verificações de rota simplificadas
+  // Rotas que não precisam de layout
   const isOnboardingRoute = location.pathname.startsWith('/onboarding');
   const isFormacaoRoute = location.pathname.startsWith('/formacao');
   const isAuthRoute = location.pathname === '/login' || location.pathname === '/';
 
   useEffect(() => {
-    // Se ainda está carregando, aguardar
-    if (authLoading || onboardingLoading) {
+    if (authLoading || onboardingLoading || redirectHandled) {
       return;
     }
 
-    // Se não há usuário e não é rota de auth, ir para login
+    // Se não há usuário, ir para login
     if (!user && !isAuthRoute) {
       navigate('/login', { replace: true });
+      setRedirectHandled(true);
       return;
     }
 
-    // Se há usuário mas sem onboarding completo e não está na rota de onboarding
+    // Se usuário logado mas onboarding incompleto, ir para onboarding
     if (user && !isOnboardingComplete && !isOnboardingRoute && !isAuthRoute) {
       navigate('/onboarding-new', { replace: true });
+      setRedirectHandled(true);
       return;
     }
 
-    // Layout está pronto
-    setLayoutReady(true);
-  }, [user, isOnboardingComplete, authLoading, onboardingLoading, isOnboardingRoute, isAuthRoute, navigate]);
+    setRedirectHandled(true);
+  }, [user, isOnboardingComplete, authLoading, onboardingLoading, isOnboardingRoute, isAuthRoute, navigate, redirectHandled]);
 
-  // Mostrar loading enquanto verifica
-  if (!layoutReady || authLoading || onboardingLoading) {
+  // Loading state
+  if (authLoading || onboardingLoading || !redirectHandled) {
     return <LoadingScreen message="Carregando..." />;
   }
 
-  // Se não há usuário, deixar AppRoutes lidar com o roteamento
-  if (!user) {
+  // Se não há usuário ou está em rota de onboarding, renderizar sem layout
+  if (!user || isOnboardingRoute) {
     return (
       <ErrorBoundary>
         <AppRoutes />
@@ -57,7 +57,7 @@ const LayoutProvider = memo(() => {
     );
   }
 
-  // Escolher layout baseado na rota e papel do usuário
+  // Layout para formação
   if (isFormacaoRoute && (isFormacao || isAdmin)) {
     return (
       <ErrorBoundary>

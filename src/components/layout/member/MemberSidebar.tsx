@@ -18,7 +18,7 @@ export const MemberSidebar: React.FC<BaseSidebarProps> = ({
 }) => {
   return (
     <>
-      {/* Desktop Sidebar - sempre visível em desktop */}
+      {/* Desktop Sidebar */}
       <aside
         className={cn(
           "fixed left-0 top-0 z-30 h-full bg-[#0F111A] border-r border-gray-700 transition-all duration-300 ease-in-out",
@@ -81,7 +81,7 @@ export const MemberSidebar: React.FC<BaseSidebarProps> = ({
         />
       </aside>
 
-      {/* Mobile Menu Toggle - sempre visível em mobile */}
+      {/* Mobile Menu Button */}
       <Button
         variant="ghost"
         size="sm"
@@ -91,7 +91,7 @@ export const MemberSidebar: React.FC<BaseSidebarProps> = ({
         <Menu size={20} />
       </Button>
 
-      {/* Desktop Toggle - botão discreto para colapsar/expandir */}
+      {/* Desktop Toggle */}
       <Button
         variant="ghost"
         size="sm"

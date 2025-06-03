@@ -1,66 +1,44 @@
 
-import React from "react";
-import MemberLayout from "@/components/layout/MemberLayout";
-import { OnboardingHeader } from "./OnboardingHeader";
-import { useNavigate } from "react-router-dom";
-import { ProgressBar } from "./ProgressBar";
+import React from 'react';
 
 interface OnboardingLayoutProps {
   children: React.ReactNode;
   title: string;
   currentStep: number;
-  totalSteps?: number;
-  backUrl?: string;
+  totalSteps: number;
   onBackClick?: () => void;
-  hideProgress?: boolean;
 }
 
 export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
   children,
   title,
   currentStep,
-  totalSteps = 8,
-  backUrl,
-  onBackClick,
-  hideProgress = false
+  totalSteps
 }) => {
-  const navigate = useNavigate();
-
-  const handleBack = () => {
-    if (onBackClick) {
-      onBackClick();
-    } else if (backUrl) {
-      navigate(backUrl);
-    } else {
-      navigate(-1);
-    }
-  };
-
   return (
-    <MemberLayout>
-      <div className="w-full bg-[#0F111A] py-6">
-        <div className="px-4 md:px-6 lg:px-8 max-w-none">
-          <OnboardingHeader 
-            isOnboardingCompleted={false}
-            title={title}
-            step={currentStep}
-            onBackClick={backUrl || onBackClick ? handleBack : undefined}
-          />
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-white mb-4">{title}</h1>
           
-          {!hideProgress && (
-            <div className="mt-6">
-              <ProgressBar 
-                currentStep={currentStep} 
-                totalSteps={totalSteps} 
+          <div className="flex justify-center items-center gap-2 mb-2">
+            {Array.from({ length: totalSteps }, (_, i) => (
+              <div
+                key={i}
+                className={`w-3 h-3 rounded-full transition-colors ${
+                  i + 1 <= currentStep ? 'bg-viverblue' : 'bg-gray-600'
+                }`}
               />
-            </div>
-          )}
+            ))}
+          </div>
+          
+          <p className="text-sm text-gray-400">
+            Etapa {currentStep} de {totalSteps}
+          </p>
         </div>
-      </div>
-
-      <div className="px-4 md:px-6 lg:px-8 max-w-none mx-auto py-8">
+        
         {children}
       </div>
-    </MemberLayout>
+    </div>
   );
 };
