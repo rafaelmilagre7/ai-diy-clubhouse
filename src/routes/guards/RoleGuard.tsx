@@ -2,6 +2,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
+import { useUnifiedOnboardingValidation } from '@/hooks/onboarding/useUnifiedOnboardingValidation';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { toast } from 'sonner';
 
@@ -18,10 +19,11 @@ export const RoleGuard: React.FC<RoleGuardProps> = ({
   fallbackPath = '/dashboard',
   requireOnboarding = true
 }) => {
-  const { user, profile, isLoading } = useAuth();
+  const { user, profile, isLoading: authLoading } = useAuth();
+  const { isOnboardingComplete, isLoading: onboardingLoading } = useUnifiedOnboardingValidation();
   const location = useLocation();
 
-  if (isLoading) {
+  if (authLoading || onboardingLoading) {
     return <LoadingScreen message="Verificando permissões..." />;
   }
 
@@ -40,7 +42,7 @@ export const RoleGuard: React.FC<RoleGuardProps> = ({
   }
 
   // Verificar onboarding se necessário
-  if (requireOnboarding && !profile.onboarding_completed && profile.role !== 'admin') {
+  if (requireOnboarding && !isOnboardingComplete && profile.role !== 'admin') {
     if (!location.pathname.startsWith('/onboarding')) {
       return <Navigate to="/onboarding-new" replace />;
     }
