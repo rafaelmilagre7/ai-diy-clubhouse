@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useOnboardingUnified } from '@/hooks/onboarding/useOnboardingUnified';
+import { useQuickOnboardingOptimized } from '@/hooks/onboarding/useQuickOnboardingOptimized';
 import { useOnboardingNavigation } from '@/hooks/onboarding/useOnboardingNavigation';
 import { LazyStepLoader } from './steps/LazyStepLoader';
 import { EnhancedTrailMagicExperience } from '../EnhancedTrailMagicExperience';
@@ -15,19 +15,17 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     nextStep,
     previousStep,
     canProceed,
-    isSubmitting,
-    completeOnboarding,
-    totalSteps,
     isLoading,
     hasExistingData,
-    loadError
-  } = useOnboardingUnified();
+    loadError,
+    totalSteps
+  } = useQuickOnboardingOptimized();
 
   const { navigateToStep } = useOnboardingNavigation();
 
   const handleFinish = async () => {
-    const success = await completeOnboarding();
-    // Auto-redirect já está implementado no hook
+    // TODO: Implementar lógica de finalização
+    console.log('Onboarding finalizado com dados:', data);
   };
 
   // Mostrar loading enquanto carrega dados existentes
@@ -97,7 +95,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
   };
 
   return (
-    <div className="py-4">
+    <div className="space-y-6">
       {renderCurrentStep()}
     </div>
   );
