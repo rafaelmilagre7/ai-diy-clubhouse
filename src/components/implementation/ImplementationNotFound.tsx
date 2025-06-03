@@ -15,10 +15,10 @@ export const ImplementationNotFound = () => {
       </p>
       <Button 
         variant="outline" 
-        onClick={() => navigate("/dashboard")}
+        onClick={() => navigate("/solucoes")}
       >
         <ChevronLeft className="mr-2 h-4 w-4" />
-        Voltar para o Dashboard
+        Voltar para Soluções
       </Button>
     </div>
   );

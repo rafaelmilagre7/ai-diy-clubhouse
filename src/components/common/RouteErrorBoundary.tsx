@@ -50,7 +50,7 @@ class RouteErrorBoundary extends Component<RouteErrorBoundaryProps, RouteErrorBo
     const { isRouteError } = this.state;
 
     // Log específico para erros de roteamento
-    logger.error('RouteErrorBoundary capturou um erro', {
+    console.error('RouteErrorBoundary capturou um erro', {
       error: error.message,
       stack: error.stack,
       componentStack: errorInfo.componentStack,

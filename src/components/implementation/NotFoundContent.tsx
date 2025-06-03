@@ -16,11 +16,11 @@ export const NotFoundContent = () => {
       <div className="space-y-2">
         <Button 
           variant="default" 
-          onClick={() => navigate("/dashboard")}
+          onClick={() => navigate("/solucoes")}
           className="w-full sm:w-auto"
         >
           <ChevronLeft className="mr-2 h-4 w-4" />
-          Ir para o Dashboard
+          Ir para Soluções
         </Button>
       </div>
     </div>

@@ -26,15 +26,15 @@ export const ImplementationTrail = () => {
   };
 
   const handleSolutionClick = (id: string) => {
-    navigate(`/solution/${id}`);
+    navigate(`/solucoes/${id}`);
   };
 
   const handleLessonClick = (courseId: string, lessonId: string) => {
-    navigate(`/learning/course/${courseId}/lesson/${lessonId}`);
+    navigate(`/aprendizado/curso/${courseId}/aula/${lessonId}`);
   };
 
   const handleViewFullTrail = () => {
-    navigate('/implementation-trail');
+    navigate('/trilha-implementacao');
   };
 
   const handleNavigateToOnboarding = () => {
