@@ -2225,341 +2225,146 @@ export type Database = {
         }
         Relationships: []
       }
-      onboarding_ai_conversations: {
+      onboarding_backup: {
         Row: {
-          ai_context: Json
-          conversation_history: Json
+          ai_experience: Json | null
+          ai_knowledge_level: string | null
+          annual_revenue: string | null
+          budget_range: string | null
+          business_context: Json | null
+          business_data: Json | null
+          business_goals: Json | null
+          company_data: Json | null
+          company_name: string | null
+          company_sector: string | null
+          company_size: string | null
+          company_website: string | null
+          complementary_info: Json | null
+          completed_steps: string[] | null
           created_at: string | null
-          id: string
-          step_id: string
+          current_position: string | null
+          current_step: string | null
+          debug_logs: Json | null
+          decision_makers: string[] | null
+          experience_personalization: Json | null
+          formation_data: Json | null
+          goals: string[] | null
+          id: string | null
+          implementation_preferences: Json | null
+          implementation_speed: string | null
+          industry_focus: Json | null
+          is_completed: boolean | null
+          last_error: string | null
+          last_sync_at: string | null
+          personal_info: Json | null
+          priority_areas: string[] | null
+          professional_data: Json | null
+          professional_info: Json | null
+          resources_needs: Json | null
+          support_level: string | null
+          sync_status: string | null
+          target_market: string | null
+          team_info: Json | null
+          team_size: string | null
+          tech_stack: string[] | null
+          technical_expertise: string | null
+          training_needs: string[] | null
           updated_at: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
-          ai_context?: Json
-          conversation_history?: Json
+          ai_experience?: Json | null
+          ai_knowledge_level?: string | null
+          annual_revenue?: string | null
+          budget_range?: string | null
+          business_context?: Json | null
+          business_data?: Json | null
+          business_goals?: Json | null
+          company_data?: Json | null
+          company_name?: string | null
+          company_sector?: string | null
+          company_size?: string | null
+          company_website?: string | null
+          complementary_info?: Json | null
+          completed_steps?: string[] | null
           created_at?: string | null
-          id?: string
-          step_id: string
+          current_position?: string | null
+          current_step?: string | null
+          debug_logs?: Json | null
+          decision_makers?: string[] | null
+          experience_personalization?: Json | null
+          formation_data?: Json | null
+          goals?: string[] | null
+          id?: string | null
+          implementation_preferences?: Json | null
+          implementation_speed?: string | null
+          industry_focus?: Json | null
+          is_completed?: boolean | null
+          last_error?: string | null
+          last_sync_at?: string | null
+          personal_info?: Json | null
+          priority_areas?: string[] | null
+          professional_data?: Json | null
+          professional_info?: Json | null
+          resources_needs?: Json | null
+          support_level?: string | null
+          sync_status?: string | null
+          target_market?: string | null
+          team_info?: Json | null
+          team_size?: string | null
+          tech_stack?: string[] | null
+          technical_expertise?: string | null
+          training_needs?: string[] | null
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
-          ai_context?: Json
-          conversation_history?: Json
+          ai_experience?: Json | null
+          ai_knowledge_level?: string | null
+          annual_revenue?: string | null
+          budget_range?: string | null
+          business_context?: Json | null
+          business_data?: Json | null
+          business_goals?: Json | null
+          company_data?: Json | null
+          company_name?: string | null
+          company_sector?: string | null
+          company_size?: string | null
+          company_website?: string | null
+          complementary_info?: Json | null
+          completed_steps?: string[] | null
           created_at?: string | null
-          id?: string
-          step_id?: string
+          current_position?: string | null
+          current_step?: string | null
+          debug_logs?: Json | null
+          decision_makers?: string[] | null
+          experience_personalization?: Json | null
+          formation_data?: Json | null
+          goals?: string[] | null
+          id?: string | null
+          implementation_preferences?: Json | null
+          implementation_speed?: string | null
+          industry_focus?: Json | null
+          is_completed?: boolean | null
+          last_error?: string | null
+          last_sync_at?: string | null
+          personal_info?: Json | null
+          priority_areas?: string[] | null
+          professional_data?: Json | null
+          professional_info?: Json | null
+          resources_needs?: Json | null
+          support_level?: string | null
+          sync_status?: string | null
+          target_market?: string | null
+          team_info?: Json | null
+          team_size?: string | null
+          tech_stack?: string[] | null
+          technical_expertise?: string | null
+          training_needs?: string[] | null
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
-      }
-      onboarding_ai_experience: {
-        Row: {
-          completed_formation: boolean | null
-          created_at: string | null
-          desired_ai_areas: string[] | null
-          has_implemented: string | null
-          id: string
-          improvement_suggestions: string | null
-          is_member_for_month: boolean | null
-          knowledge_level: string | null
-          nps_score: number | null
-          previous_tools: string[] | null
-          progress_id: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          completed_formation?: boolean | null
-          created_at?: string | null
-          desired_ai_areas?: string[] | null
-          has_implemented?: string | null
-          id?: string
-          improvement_suggestions?: string | null
-          is_member_for_month?: boolean | null
-          knowledge_level?: string | null
-          nps_score?: number | null
-          previous_tools?: string[] | null
-          progress_id: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          completed_formation?: boolean | null
-          created_at?: string | null
-          desired_ai_areas?: string[] | null
-          has_implemented?: string | null
-          id?: string
-          improvement_suggestions?: string | null
-          is_member_for_month?: boolean | null
-          knowledge_level?: string | null
-          nps_score?: number | null
-          previous_tools?: string[] | null
-          progress_id?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "onboarding_ai_experience_progress_id_fkey"
-            columns: ["progress_id"]
-            isOneToOne: false
-            referencedRelation: "onboarding_profile_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "onboarding_ai_experience_progress_id_fkey"
-            columns: ["progress_id"]
-            isOneToOne: false
-            referencedRelation: "onboarding_progress"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      onboarding_business_context: {
-        Row: {
-          additional_context: string | null
-          business_challenges: string[] | null
-          business_model: string | null
-          created_at: string | null
-          id: string
-          important_kpis: string[] | null
-          medium_term_goals: string[] | null
-          progress_id: string
-          short_term_goals: string[] | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          additional_context?: string | null
-          business_challenges?: string[] | null
-          business_model?: string | null
-          created_at?: string | null
-          id?: string
-          important_kpis?: string[] | null
-          medium_term_goals?: string[] | null
-          progress_id: string
-          short_term_goals?: string[] | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          additional_context?: string | null
-          business_challenges?: string[] | null
-          business_model?: string | null
-          created_at?: string | null
-          id?: string
-          important_kpis?: string[] | null
-          medium_term_goals?: string[] | null
-          progress_id?: string
-          short_term_goals?: string[] | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "onboarding_business_context_progress_id_fkey"
-            columns: ["progress_id"]
-            isOneToOne: false
-            referencedRelation: "onboarding_profile_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "onboarding_business_context_progress_id_fkey"
-            columns: ["progress_id"]
-            isOneToOne: false
-            referencedRelation: "onboarding_progress"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      onboarding_business_goals: {
-        Row: {
-          content_formats: string[] | null
-          created_at: string | null
-          expected_outcome_30days: string | null
-          expected_outcomes: string[] | null
-          how_implement: string | null
-          id: string
-          live_interest: number | null
-          primary_goal: string | null
-          priority_solution_type: string | null
-          progress_id: string
-          timeline: string | null
-          updated_at: string | null
-          user_id: string
-          week_availability: string | null
-        }
-        Insert: {
-          content_formats?: string[] | null
-          created_at?: string | null
-          expected_outcome_30days?: string | null
-          expected_outcomes?: string[] | null
-          how_implement?: string | null
-          id?: string
-          live_interest?: number | null
-          primary_goal?: string | null
-          priority_solution_type?: string | null
-          progress_id: string
-          timeline?: string | null
-          updated_at?: string | null
-          user_id: string
-          week_availability?: string | null
-        }
-        Update: {
-          content_formats?: string[] | null
-          created_at?: string | null
-          expected_outcome_30days?: string | null
-          expected_outcomes?: string[] | null
-          how_implement?: string | null
-          id?: string
-          live_interest?: number | null
-          primary_goal?: string | null
-          priority_solution_type?: string | null
-          progress_id?: string
-          timeline?: string | null
-          updated_at?: string | null
-          user_id?: string
-          week_availability?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "onboarding_business_goals_progress_id_fkey"
-            columns: ["progress_id"]
-            isOneToOne: false
-            referencedRelation: "onboarding_profile_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "onboarding_business_goals_progress_id_fkey"
-            columns: ["progress_id"]
-            isOneToOne: false
-            referencedRelation: "onboarding_progress"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      onboarding_chat_messages: {
-        Row: {
-          created_at: string | null
-          id: string
-          is_ai: boolean
-          message: string
-          step_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          is_ai?: boolean
-          message: string
-          step_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          is_ai?: boolean
-          message?: string
-          step_id?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      onboarding_complementary_info: {
-        Row: {
-          authorize_case_studies: boolean | null
-          authorize_testimonials: boolean | null
-          created_at: string | null
-          how_discovered: string | null
-          id: string
-          interested_in_interviews: boolean | null
-          referral_name: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          authorize_case_studies?: boolean | null
-          authorize_testimonials?: boolean | null
-          created_at?: string | null
-          how_discovered?: string | null
-          id?: string
-          interested_in_interviews?: boolean | null
-          referral_name?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          authorize_case_studies?: boolean | null
-          authorize_testimonials?: boolean | null
-          created_at?: string | null
-          how_discovered?: string | null
-          id?: string
-          interested_in_interviews?: boolean | null
-          referral_name?: string | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      onboarding_experience_personalization: {
-        Row: {
-          available_days: string[] | null
-          created_at: string | null
-          id: string
-          interests: string[] | null
-          mentorship_topics: string[] | null
-          networking_availability: number | null
-          progress_id: string
-          skills_to_share: string[] | null
-          time_preference: string[] | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          available_days?: string[] | null
-          created_at?: string | null
-          id?: string
-          interests?: string[] | null
-          mentorship_topics?: string[] | null
-          networking_availability?: number | null
-          progress_id: string
-          skills_to_share?: string[] | null
-          time_preference?: string[] | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          available_days?: string[] | null
-          created_at?: string | null
-          id?: string
-          interests?: string[] | null
-          mentorship_topics?: string[] | null
-          networking_availability?: number | null
-          progress_id?: string
-          skills_to_share?: string[] | null
-          time_preference?: string[] | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "onboarding_experience_personalization_progress_id_fkey"
-            columns: ["progress_id"]
-            isOneToOne: false
-            referencedRelation: "onboarding_profile_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "onboarding_experience_personalization_progress_id_fkey"
-            columns: ["progress_id"]
-            isOneToOne: false
-            referencedRelation: "onboarding_progress"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       onboarding_history: {
         Row: {
@@ -3185,6 +2990,93 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      quick_onboarding: {
+        Row: {
+          ai_knowledge_level: string
+          annual_revenue_range: string
+          birth_date: string | null
+          company_name: string
+          company_segment: string
+          company_size: string
+          company_website: string | null
+          completed_at: string | null
+          country_code: string
+          created_at: string
+          current_step: number
+          email: string
+          how_found_us: string
+          id: string
+          instagram_url: string | null
+          is_completed: boolean
+          linkedin_url: string | null
+          main_challenge: string
+          main_goal: string
+          name: string
+          referred_by: string | null
+          role: string
+          updated_at: string
+          user_id: string
+          uses_ai: string
+          whatsapp: string
+        }
+        Insert: {
+          ai_knowledge_level: string
+          annual_revenue_range: string
+          birth_date?: string | null
+          company_name: string
+          company_segment: string
+          company_size: string
+          company_website?: string | null
+          completed_at?: string | null
+          country_code?: string
+          created_at?: string
+          current_step?: number
+          email: string
+          how_found_us: string
+          id?: string
+          instagram_url?: string | null
+          is_completed?: boolean
+          linkedin_url?: string | null
+          main_challenge: string
+          main_goal: string
+          name: string
+          referred_by?: string | null
+          role: string
+          updated_at?: string
+          user_id: string
+          uses_ai: string
+          whatsapp: string
+        }
+        Update: {
+          ai_knowledge_level?: string
+          annual_revenue_range?: string
+          birth_date?: string | null
+          company_name?: string
+          company_segment?: string
+          company_size?: string
+          company_website?: string | null
+          completed_at?: string | null
+          country_code?: string
+          created_at?: string
+          current_step?: number
+          email?: string
+          how_found_us?: string
+          id?: string
+          instagram_url?: string | null
+          is_completed?: boolean
+          linkedin_url?: string | null
+          main_challenge?: string
+          main_goal?: string
+          name?: string
+          referred_by?: string | null
+          role?: string
+          updated_at?: string
+          user_id?: string
+          uses_ai?: string
+          whatsapp?: string
+        }
+        Relationships: []
       }
       referral_benefits: {
         Row: {
@@ -4479,13 +4371,6 @@ export type Database = {
         }
         Relationships: []
       }
-      onboarding_status: {
-        Row: {
-          tabela: string | null
-          total_registros: number | null
-        }
-        Relationships: []
-      }
       suggestions_with_profiles: {
         Row: {
           category_id: string | null
@@ -4729,6 +4614,10 @@ export type Database = {
       merge_json_data: {
         Args: { target: Json; source: Json }
         Returns: Json
+      }
+      migrate_existing_onboarding_data: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       normalize_solution_category: {
         Args: Record<PropertyKey, never>

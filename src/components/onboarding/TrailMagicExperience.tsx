@@ -1,92 +1,171 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Sparkles, CheckCircle, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Sparkles } from 'lucide-react';
 
 interface TrailMagicExperienceProps {
   onFinish: () => void;
 }
 
 export const TrailMagicExperience: React.FC<TrailMagicExperienceProps> = ({ onFinish }) => {
-  const [step, setStep] = useState(0);
-  const [showFinishButton, setShowFinishButton] = useState(false);
-  
-  const messages = [
-    "Analisando seu perfil e objetivos...",
-    "Combinando com soluções de IA de alto impacto...",
-    "Personalizando recomendações específicas...",
-    "Organizando sua trilha ideal...",
-    "Trilha personalizada pronta!"
-  ];
-  
-  useEffect(() => {
-    const timers: NodeJS.Timeout[] = [];
-    
-    // Avançar pelos passos com temporizadores
-    for (let i = 1; i < messages.length; i++) {
-      const timer = setTimeout(() => {
-        setStep(i);
-        if (i === messages.length - 1) {
-          setTimeout(() => setShowFinishButton(true), 1000);
-        }
-      }, i * 2000);
-      timers.push(timer);
+  const [currentPhase, setCurrentPhase] = useState(0);
+  const [isComplete, setIsComplete] = useState(false);
+
+  const phases = [
+    {
+      title: "Analisando seu perfil...",
+      description: "Processando suas informações pessoais e profissionais",
+      duration: 2000,
+      icon: <Sparkles className="w-8 h-8 text-yellow-400" />
+    },
+    {
+      title: "Identificando oportunidades de IA...",
+      description: "Mapeando as melhores soluções para seu negócio",
+      duration: 2500,
+      icon: <Wand2 className="w-8 h-8 text-purple-400" />
+    },
+    {
+      title: "Criando sua trilha personalizada...",
+      description: "Organizando um plano de implementação sob medida",
+      duration: 2000,
+      icon: <CheckCircle className="w-8 h-8 text-green-400" />
     }
-    
-    return () => timers.forEach(timer => clearTimeout(timer));
-  }, [messages.length]);
-  
+  ];
+
+  useEffect(() => {
+    if (currentPhase < phases.length) {
+      const timer = setTimeout(() => {
+        setCurrentPhase(prev => prev + 1);
+      }, phases[currentPhase]?.duration || 2000);
+
+      return () => clearTimeout(timer);
+    } else {
+      setIsComplete(true);
+      // Auto-redirect após mostrar "Trilha personalizada pronta!"
+      setTimeout(() => {
+        onFinish();
+      }, 3000);
+    }
+  }, [currentPhase, phases, onFinish]);
+
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="bg-gradient-to-br from-[#151823] to-[#1A1E2E] p-8 rounded-2xl border border-[#0ABAB5]/20 shadow-lg flex flex-col items-center justify-center min-h-[350px]">
-        <div className="relative mb-8">
-          <div className="absolute inset-0 rounded-full bg-[#0ABAB5]/20 blur-xl animate-pulse"></div>
-          <div className="relative">
-            <Sparkles className="h-16 w-16 text-[#0ABAB5] animate-pulse" />
-          </div>
-        </div>
-        
-        <div className="space-y-6 w-full max-w-md">
-          {messages.map((message, idx) => (
-            <div 
-              key={idx} 
-              className={`flex items-center gap-3 transition-all duration-500 ${
-                idx <= step ? 'opacity-100' : 'opacity-30'
-              }`}
+      <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-700">
+        <div className="text-center space-y-8">
+          {!isComplete ? (
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentPhase}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
+                className="space-y-6"
+              >
+                <div className="flex justify-center">
+                  <motion.div
+                    animate={{ 
+                      rotate: 360,
+                      scale: [1, 1.1, 1]
+                    }}
+                    transition={{ 
+                      rotate: { duration: 2, repeat: Infinity, ease: "linear" },
+                      scale: { duration: 1, repeat: Infinity }
+                    }}
+                  >
+                    {phases[currentPhase]?.icon}
+                  </motion.div>
+                </div>
+
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold text-white">
+                    {phases[currentPhase]?.title}
+                  </h3>
+                  <p className="text-gray-300">
+                    {phases[currentPhase]?.description}
+                  </p>
+                </div>
+
+                <div className="w-full bg-gray-700 rounded-full h-2">
+                  <motion.div
+                    className="bg-gradient-to-r from-viverblue to-purple-500 h-2 rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${((currentPhase + 1) / phases.length) * 100}%` }}
+                    transition={{ duration: 0.5 }}
+                  />
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, type: "spring" }}
+              className="space-y-6"
             >
-              <div className={`h-6 w-6 rounded-full flex items-center justify-center ${
-                idx < step 
-                  ? 'bg-[#0ABAB5] text-white' 
-                  : idx === step 
-                    ? 'bg-white/10 border-2 border-[#0ABAB5] animate-pulse' 
-                    : 'bg-white/5 border border-white/10'
-              }`}>
-                {idx < step ? (
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                ) : (
-                  <span className="h-2 w-2 rounded-full bg-white/70"></span>
-                )}
+              <motion.div
+                animate={{ 
+                  rotate: [0, 10, -10, 0],
+                  scale: [1, 1.2, 1]
+                }}
+                transition={{ 
+                  duration: 0.6,
+                  repeat: 2
+                }}
+                className="flex justify-center"
+              >
+                <div className="w-20 h-20 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+                  <CheckCircle className="w-10 h-10 text-white" />
+                </div>
+              </motion.div>
+
+              <div className="space-y-3">
+                <h3 className="text-2xl font-bold text-white">
+                  🎉 Trilha personalizada pronta!
+                </h3>
+                <p className="text-gray-300 text-lg">
+                  Sua jornada de implementação de IA foi criada com sucesso!
+                </p>
               </div>
-              <span className={`text-${idx <= step ? 'white' : 'neutral-500'} ${idx === step ? 'font-medium' : ''}`}>
-                {message}
-              </span>
-            </div>
-          ))}
+
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1, duration: 0.5 }}
+              >
+                <p className="text-sm text-gray-400">
+                  Redirecionando automaticamente em alguns segundos...
+                </p>
+              </motion.div>
+            </motion.div>
+          )}
         </div>
-        
-        {showFinishButton && (
-          <div className="mt-8 animate-fade-in">
-            <Button
-              onClick={onFinish}
-              className="bg-gradient-to-r from-[#0ABAB5] to-[#34D399] hover:from-[#0ABAB5]/90 hover:to-[#34D399]/90 px-6 py-2 text-base"
-            >
-              <Sparkles className="mr-2 h-4 w-4" />
-              Ver Minha Trilha
-            </Button>
-          </div>
-        )}
+      </div>
+
+      {/* Efeitos de partículas animadas */}
+      <div className="absolute inset-0 pointer-events-none">
+        {[...Array(20)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-viverblue rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              y: [0, -100, 0],
+              opacity: [0, 1, 0],
+              scale: [0, 1, 0]
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              delay: Math.random() * 2,
+              ease: "easeInOut"
+            }}
+          />
+        ))}
       </div>
     </div>
   );

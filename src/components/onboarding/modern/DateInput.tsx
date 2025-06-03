@@ -1,57 +1,53 @@
 
 import React from 'react';
 import { Input } from '@/components/ui/input';
-import { Phone } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 
-interface WhatsAppInputProps {
+interface DateInputProps {
   value: string;
   onChange: (value: string) => void;
-  placeholder?: string;
+  label?: string;
   required?: boolean;
+  placeholder?: string;
 }
 
-export const WhatsAppInput: React.FC<WhatsAppInputProps> = ({
+export const DateInput: React.FC<DateInputProps> = ({
   value,
   onChange,
-  placeholder = "(11) 99999-9999",
-  required = true
+  label = "Data de nascimento",
+  required = false,
+  placeholder = "dd/mm/aaaa"
 }) => {
-  const formatWhatsApp = (input: string) => {
-    // Remove tudo que não é número
-    const numbers = input.replace(/\D/g, '');
-    
-    // Aplica a máscara (11) 99999-9999
-    if (numbers.length <= 2) {
-      return numbers;
-    } else if (numbers.length <= 7) {
-      return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
-    } else {
-      return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
-    }
-  };
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatWhatsApp(e.target.value);
-    onChange(formatted);
+    let inputValue = e.target.value.replace(/\D/g, '');
+    
+    if (inputValue.length >= 2) {
+      inputValue = inputValue.substring(0, 2) + '/' + inputValue.substring(2);
+    }
+    if (inputValue.length >= 5) {
+      inputValue = inputValue.substring(0, 5) + '/' + inputValue.substring(5, 9);
+    }
+    
+    onChange(inputValue);
   };
 
-  const isValid = value.length === 15; // (11) 99999-9999
+  const isValid = value.length === 10 && /^\d{2}\/\d{2}\/\d{4}$/.test(value);
 
   return (
     <div className="space-y-2">
       <label className="block text-sm font-medium text-white">
-        WhatsApp {required && <span className="text-red-400">*</span>}
+        {label} {required && <span className="text-red-400">*</span>}
       </label>
       <div className="relative">
         <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-          <Phone className={`w-4 h-4 ${isValid ? 'text-green-400' : 'text-viverblue'}`} />
+          <Calendar className={`w-4 h-4 ${isValid ? 'text-green-400' : 'text-gray-400'}`} />
         </div>
         <Input
-          type="tel"
+          type="text"
           value={value}
           onChange={handleChange}
           placeholder={placeholder}
-          maxLength={15}
+          maxLength={10}
           className={`pl-10 h-12 bg-gray-800/50 border transition-all duration-200 ${
             isValid
               ? 'border-green-500/50 bg-green-50/5 focus:ring-green-500/50'
@@ -67,7 +63,7 @@ export const WhatsAppInput: React.FC<WhatsAppInputProps> = ({
         )}
       </div>
       {isValid && (
-        <p className="text-green-400 text-sm animate-fade-in">Número válido! ✓</p>
+        <p className="text-green-400 text-sm animate-fade-in">Data válida! ✓</p>
       )}
     </div>
   );
