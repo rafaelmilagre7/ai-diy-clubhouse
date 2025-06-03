@@ -1,4 +1,3 @@
-
 export interface PersonalInfo {
   name?: string;
   email?: string;
@@ -15,6 +14,7 @@ export interface PersonalInfo {
   whatsapp?: string;
   timezone?: string;
   birth_date?: string;
+  _updated_at?: string; // Add this property
 }
 
 export interface AIExperience {
@@ -33,6 +33,7 @@ export interface AIExperience {
   nps_score?: number;
   completed_formation?: boolean;
   is_member_for_month?: boolean;
+  _updated_at?: string; // Add this property
 }
 
 export interface BusinessInfo {
@@ -45,6 +46,7 @@ export interface BusinessInfo {
   annual_revenue?: string;
   annual_revenue_range?: string;
   role?: string;
+  _updated_at?: string; // Add this property
 }
 
 export interface BusinessContext {
@@ -55,6 +57,7 @@ export interface BusinessContext {
   kpis?: string[];
   important_kpis?: string[];
   additional_context?: string;
+  _updated_at?: string; // Add this property
 }
 
 export interface DiscoveryInfo {
@@ -67,6 +70,7 @@ export interface DiscoveryInfo {
   whatsapp_consent?: boolean;
   authorize_case_usage?: boolean;
   interested_in_interview?: boolean;
+  _updated_at?: string; // Add this property
 }
 
 export interface GoalsInfo {
@@ -83,6 +87,7 @@ export interface GoalsInfo {
   how_implement?: string;
   week_availability?: string;
   live_interest?: number;
+  _updated_at?: string; // Add this property
 }
 
 export interface PersonalizationInfo {
@@ -93,6 +98,10 @@ export interface PersonalizationInfo {
   mentorship_topics?: string[];
   skills_to_share?: string[];
   live_interest?: number;
+  authorize_case_usage?: boolean; // Add this property
+  interested_in_interview?: boolean;
+  priority_topics?: string[];
+  _updated_at?: string; // Add this property
 }
 
 export interface OnboardingData {
@@ -139,7 +148,7 @@ export interface OnboardingProgress {
   is_completed?: boolean;
   created_at?: string;
   updated_at?: string;
-  debug_logs?: any;
+  debug_logs?: any; // Add this property
   // Campos diretos para compatibilidade
   company_name?: string;
   company_size?: string;
