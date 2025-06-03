@@ -1,6 +1,5 @@
 
 import { cn } from "@/lib/utils";
-import { MemberHeader } from "./MemberHeader";
 import { BaseContentProps } from "../BaseLayout";
 
 export const MemberContent = ({ 
@@ -15,7 +14,6 @@ export const MemberContent = ({
         sidebarOpen ? "md:ml-64" : "md:ml-[70px]"
       )}
     >
-      <MemberHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       <main className="flex-1 overflow-auto">
         <div className="w-full h-full">
           {children}
