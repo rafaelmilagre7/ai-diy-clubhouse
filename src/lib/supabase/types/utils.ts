@@ -38,6 +38,25 @@ export const ensureArray = <T>(value: T[] | undefined | null): T[] => {
   return Array.isArray(value) ? value : [];
 };
 
+// Versão específica para arrays de objetos
+export const ensureArrayOfObjects = <T extends Record<string, any>>(
+  value: T[] | undefined | null
+): T[] => {
+  if (!Array.isArray(value)) return [];
+  return value.filter(item => item && typeof item === 'object' && !Array.isArray(item));
+};
+
+// Helper para garantir que um valor é um objeto válido
+export const ensureObject = <T extends Record<string, any>>(
+  value: T | undefined | null,
+  fallback: Partial<T> = {}
+): T => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return { ...fallback } as T;
+  }
+  return value;
+};
+
 export const ensureNumber = (value: number | string | undefined | null, fallback = 0): number => {
   const num = typeof value === 'string' ? parseInt(value, 10) : value;
   return typeof num === 'number' && !isNaN(num) ? num : fallback;
@@ -88,6 +107,36 @@ export const validateCourseData = (course: any) => {
     all_lessons: ensureArray(course?.all_lessons),
     created_at: ensureString(course?.created_at),
     updated_at: ensureString(course?.updated_at)
+  };
+};
+
+// Validator para objetos de lesson
+export const validateLessonData = (lesson: any) => {
+  const validatedLesson = ensureObject(lesson, {
+    id: '',
+    title: 'Aula sem título',
+    description: '',
+    order_index: 0,
+    estimated_time_minutes: 0,
+    difficulty_level: 'beginner'
+  });
+
+  return {
+    id: ensureString(validatedLesson.id),
+    title: ensureString(validatedLesson.title, 'Aula sem título'),
+    description: ensureString(validatedLesson.description),
+    order_index: ensureNumber(validatedLesson.order_index, 0),
+    cover_image_url: validatedLesson.cover_image_url || null,
+    estimated_time_minutes: ensureNumber(validatedLesson.estimated_time_minutes, 0),
+    difficulty_level: ensureString(validatedLesson.difficulty_level, 'beginner'),
+    module_id: ensureString(validatedLesson.module_id),
+    published: ensureBoolean(validatedLesson.published),
+    created_at: ensureString(validatedLesson.created_at),
+    updated_at: ensureString(validatedLesson.updated_at),
+    content: validatedLesson.content || null,
+    ai_assistant_enabled: ensureBoolean(validatedLesson.ai_assistant_enabled),
+    ai_assistant_prompt: validatedLesson.ai_assistant_prompt || null,
+    ai_assistant_id: validatedLesson.ai_assistant_id || null
   };
 };
 

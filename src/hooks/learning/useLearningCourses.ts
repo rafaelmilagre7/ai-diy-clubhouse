@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { LearningCourse, LearningLesson, LearningModule } from "@/lib/supabase/types";
 import { useAuth } from "@/contexts/auth";
-import { ensureArray, ensureNumber, validateCourseData } from "@/lib/supabase/types/utils";
+import { ensureArray, ensureNumber, validateCourseData, validateLessonData, ensureObject } from "@/lib/supabase/types/utils";
 
 // Tipagem específica para a query com módulos e aulas
 interface CourseWithModulesQuery extends LearningCourse {
@@ -81,18 +81,23 @@ export const useLearningCourses = () => {
           const moduleLessons = ensureArray(module?.lessons || []);
           lessonCount += moduleLessons.length;
           
-          // Adicionar informações do curso e módulo a cada aula
-          const enrichedLessons = moduleLessons.map(lesson => ({
-            ...lesson,
-            module: {
-              id: module?.id || '',
-              title: module?.title || "Módulo sem título",
-              course: {
-                id: course.id,
-                title: course.title || "Curso sem título"
+          // Adicionar informações do curso e módulo a cada aula COM VALIDAÇÃO
+          const enrichedLessons = moduleLessons.map(lesson => {
+            // Garantir que lesson é um objeto válido antes do spread
+            const validatedLesson = validateLessonData(lesson);
+            
+            return {
+              ...validatedLesson,
+              module: {
+                id: module?.id || '',
+                title: module?.title || "Módulo sem título",
+                course: {
+                  id: course.id,
+                  title: course.title || "Curso sem título"
+                }
               }
-            }
-          }));
+            };
+          });
           
           lessons = [...lessons, ...enrichedLessons];
         });
