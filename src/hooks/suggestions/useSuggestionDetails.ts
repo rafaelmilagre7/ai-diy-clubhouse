@@ -2,9 +2,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/auth';
+import { useVoting } from './useVoting';
 
 export const useSuggestionDetails = () => {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
+  const { voteLoading, voteMutation } = useVoting();
 
   const fetchSuggestionDetails = async () => {
     if (!id) {
@@ -35,6 +39,28 @@ export const useSuggestionDetails = () => {
     return data;
   };
 
+  const fetchUserVote = async () => {
+    if (!user || !id) {
+      return null;
+    }
+
+    console.log('Buscando voto do usuário para sugestão:', id);
+
+    const { data, error } = await supabase
+      .from('suggestion_votes')
+      .select('*')
+      .eq('suggestion_id', id)
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Erro ao buscar voto do usuário:', error);
+      return null;
+    }
+
+    return data;
+  };
+
   const {
     data: suggestion,
     isLoading,
@@ -48,10 +74,36 @@ export const useSuggestionDetails = () => {
     retry: 2
   });
 
+  const {
+    data: userVote,
+    isLoading: userVoteLoading
+  } = useQuery({
+    queryKey: ['user-vote', id, user?.id],
+    queryFn: fetchUserVote,
+    enabled: !!id && !!user,
+    staleTime: 1000 * 60, // 1 minuto
+    retry: 1
+  });
+
+  const handleVote = async (voteType: 'upvote' | 'downvote') => {
+    if (!id) return;
+    
+    await voteMutation.mutateAsync({
+      suggestionId: id,
+      voteType
+    });
+    
+    // Recarregar dados após votação
+    refetch();
+  };
+
   return {
     suggestion,
-    isLoading,
+    isLoading: isLoading || userVoteLoading,
     error,
-    refetch
+    refetch,
+    userVote,
+    voteLoading,
+    handleVote
   };
 };
