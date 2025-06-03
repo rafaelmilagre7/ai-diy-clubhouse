@@ -1,3 +1,4 @@
+
 import { Solution } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { PlayCircle, CheckCircle, Award } from "lucide-react";
@@ -61,13 +62,16 @@ export const SolutionSidebar = ({
           ) : (
             <div>
               <p className="text-sm text-neutral-400">
-                Implementação não concluída
+                Implementação em andamento
+              </p>
+              <p className="text-xs text-neutral-500 mt-1">
+                Continue de onde parou
               </p>
             </div>
           )
         ) : (
           <p className="text-sm text-neutral-400">
-            Implementação não iniciada
+            Pronto para implementar
           </p>
         )}
       </div>
@@ -93,12 +97,13 @@ export const SolutionSidebar = ({
           </div>
         ) : (
           <Button 
-            className="w-full" 
+            className="w-full bg-viverblue hover:bg-viverblue-dark" 
             onClick={handleImplementation} 
             disabled={initializing}
           >
             <PlayCircle className="mr-2 h-5 w-5" />
-            {initializing ? 'Preparando...' : 'Implementar solução'}
+            {initializing ? 'Preparando...' : 
+             progress ? 'Continuar Implementação' : 'Iniciar Implementação'}
           </Button>
         )}
       </div>
@@ -132,32 +137,14 @@ export const SolutionSidebar = ({
               </span>
             </div>
           )}
-          {typeof solution.success_rate === "number" && solution.success_rate > 0 && (
-            <div className="flex justify-between text-sm">
-              <span className="text-neutral-400">Taxa de sucesso:</span>
-              <span className="font-medium text-neutral-200">
-                {solution.success_rate}%
-              </span>
-            </div>
-          )}
         </div>
       </div>
       
-      {solution.tags && solution.tags.length > 0 && (
-        <div className="pt-4 border-t border-white/5">
-          <h3 className="font-medium mb-2 text-neutral-100">Tags</h3>
-          <div className="flex flex-wrap gap-2">
-            {solution.tags.map((tag, index) => (
-              <span 
-                key={index}
-                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900/40 text-blue-200 border border-blue-700/30"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
+      <div className="pt-4 border-t border-white/5">
+        <p className="text-xs text-neutral-500">
+          💡 Materiais, ferramentas e vídeos estarão disponíveis na implementação
+        </p>
+      </div>
     </div>
   );
 };

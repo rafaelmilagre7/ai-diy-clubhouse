@@ -65,13 +65,10 @@ const SolutionDetails = () => {
   }
   
   // Log para depuração
-  log("Renderizando SolutionDetails com dados centralizados", { 
+  log("Renderizando SolutionDetails - capa simplificada", { 
     solutionId: data.solution.id, 
     solutionTitle: data.solution.title,
-    hasProgress: !!data.progress,
-    materialsCount: data.materials.length,
-    toolsCount: data.tools.length,
-    videosCount: data.videos.length
+    hasProgress: !!data.progress
   });
   
   return (
