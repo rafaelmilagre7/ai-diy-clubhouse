@@ -40,7 +40,7 @@ const AppRoutes = () => {
   return (
     <Suspense fallback={<LoadingScreen />}>
       <Routes>
-        {/* Rota raiz com redirecionamento inteligente */}
+        {/* ÚNICA rota raiz com redirecionamento inteligente */}
         <Route path="/" element={<RootRedirect />} />
         
         {/* Rota de login pública - SEM layout */}
@@ -201,7 +201,7 @@ const AppRoutes = () => {
         />
 
         {/* Fallback para 404 */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
   );

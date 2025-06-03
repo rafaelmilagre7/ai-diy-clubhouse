@@ -60,7 +60,7 @@ export default function LoginPage() {
       console.error("Erro de login:", error);
       toast.error("Erro ao fazer login", {
         description: error.message === "Invalid login credentials"
-          ? "Credenciais inválidas. Verifique seu email e senha."
+          ? "Email ou senha incorretos. Verifique suas credenciais."
           : error.message || "Ocorreu um erro ao tentar fazer login."
       });
     } finally {
@@ -70,21 +70,26 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-lg">
         {/* Logo e Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-br from-viverblue to-purple-500 rounded-xl flex items-center justify-center">
-              <Sparkles className="h-6 w-6 text-white" />
+            <div className="w-14 h-14 bg-gradient-to-br from-viverblue to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
+              <Sparkles className="h-7 w-7 text-white" />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-white">Viver de IA</h1>
-              <p className="text-sm text-gray-300">Club</p>
+            <div className="text-left">
+              <h1 className="text-3xl font-bold text-white">Viver de IA</h1>
+              <p className="text-sm text-gray-300 font-medium">Club</p>
             </div>
           </div>
-          <p className="text-gray-300 text-lg">
-            Entre na sua conta para continuar
-          </p>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-semibold text-white">
+              Bem-vindo de volta!
+            </h2>
+            <p className="text-gray-300">
+              Entre na sua conta para continuar sua jornada
+            </p>
+          </div>
         </div>
 
         {/* Card de Login */}
@@ -107,7 +112,8 @@ export default function LoginPage() {
                     placeholder="seu@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-viverblue focus:ring-viverblue"
+                    className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-viverblue focus:ring-viverblue transition-all duration-200"
+                    disabled={isLoading}
                     required
                   />
                 </div>
@@ -123,13 +129,15 @@ export default function LoginPage() {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-viverblue focus:ring-viverblue"
+                    className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-viverblue focus:ring-viverblue transition-all duration-200"
+                    disabled={isLoading}
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-3 text-gray-400 hover:text-white transition-colors"
+                    disabled={isLoading}
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
@@ -138,7 +146,7 @@ export default function LoginPage() {
               
               <Button 
                 type="submit" 
-                className="w-full bg-viverblue hover:bg-viverblue/90 text-white font-semibold py-3 transition-all duration-200 transform hover:scale-[1.02]" 
+                className="w-full bg-viverblue hover:bg-viverblue/90 text-white font-semibold py-3 transition-all duration-200 transform hover:scale-[1.02] shadow-lg" 
                 disabled={isLoading}
               >
                 {isLoading ? (
