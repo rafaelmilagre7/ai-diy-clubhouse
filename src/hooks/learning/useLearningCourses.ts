@@ -15,6 +15,8 @@ export const useLearningCourses = () => {
   } = useQuery({
     queryKey: ["learning-courses", user?.id],
     queryFn: async (): Promise<LearningCourseWithLessons[]> => {
+      console.log('🔍 useLearningCourses: Buscando cursos do banco...');
+      
       // Buscar todos os cursos publicados com módulos e aulas
       const { data, error } = await supabase
         .from("learning_courses")
@@ -40,9 +42,14 @@ export const useLearningCourses = () => {
         .order("order_index", { ascending: true });
 
       if (error) {
-        console.error("Erro ao buscar cursos:", error);
+        console.error("❌ useLearningCourses: Erro ao buscar cursos:", error);
         throw error;
       }
+
+      console.log('✅ useLearningCourses: Cursos encontrados:', { 
+        count: data?.length || 0,
+        courses: data?.map(c => ({ id: c.id, title: c.title, published: c.published }))
+      });
 
       // Buscar os cursos restritos (que têm controle de acesso)
       const { data: restrictedCourses, error: restrictedError } = await supabase
@@ -50,7 +57,7 @@ export const useLearningCourses = () => {
         .select("course_id");
 
       if (restrictedError) {
-        console.error("Erro ao buscar cursos restritos:", restrictedError);
+        console.error("❌ useLearningCourses: Erro ao buscar cursos restritos:", restrictedError);
         throw restrictedError;
       }
 
@@ -58,7 +65,7 @@ export const useLearningCourses = () => {
       const restrictedIds = new Set(restrictedCourses?.map(rc => rc.course_id) || []);
       
       // Processar cursos com dados de módulos e aulas
-      const processedCourses: LearningCourseWithLessons[] = data.map(course => {
+      const processedCourses: LearningCourseWithLessons[] = (data || []).map(course => {
         // Calcular contagem de módulos
         const moduleCount = course.modules?.length || 0;
         
@@ -100,8 +107,19 @@ export const useLearningCourses = () => {
       
       // Se o usuário não estiver autenticado, filtrar os cursos restritos
       if (!user) {
-        return processedCourses.filter(course => !course.is_restricted);
+        const filteredCourses = processedCourses.filter(course => !course.is_restricted);
+        console.log('🔒 useLearningCourses: Cursos filtrados (usuário não autenticado):', { 
+          originalCount: processedCourses.length,
+          filteredCount: filteredCourses.length
+        });
+        return filteredCourses;
       }
+
+      console.log('📋 useLearningCourses: Cursos processados:', { 
+        count: processedCourses.length,
+        restricted: processedCourses.filter(c => c.is_restricted).length,
+        unrestricted: processedCourses.filter(c => !c.is_restricted).length
+      });
 
       return processedCourses;
     },

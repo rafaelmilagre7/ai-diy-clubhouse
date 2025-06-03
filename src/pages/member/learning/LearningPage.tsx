@@ -10,8 +10,19 @@ export default function LearningPage() {
   const { courses, isLoading } = useLearningCourses();
   const { userProgress } = useUserProgress();
   
+  console.log('🎓 LearningPage: Carregando cursos', { 
+    coursesCount: courses?.length,
+    isLoading,
+    courses: courses?.map(c => ({ id: c.id, title: c.title, published: c.published }))
+  });
+  
   // Filtrar apenas cursos publicados
-  const allCourses = courses.filter(course => course.published);
+  const publishedCourses = courses?.filter(course => course.published) || [];
+  
+  console.log('📚 LearningPage: Cursos publicados', { 
+    publishedCount: publishedCourses.length,
+    publishedCourses: publishedCourses.map(c => ({ id: c.id, title: c.title }))
+  });
   
   return (
     <div className="space-y-6">
@@ -21,10 +32,12 @@ export default function LearningPage() {
       <ContinueLearning className="mt-6" />
       
       <div className="mt-12">
-        <h2 className="text-2xl font-semibold mb-6">Todos os cursos</h2>
+        <h2 className="text-2xl font-semibold mb-6">
+          Todos os cursos ({publishedCourses.length})
+        </h2>
         <MemberCoursesList 
-          courses={allCourses}
-          userProgress={userProgress}
+          courses={publishedCourses}
+          userProgress={userProgress || []}
           isLoading={isLoading}
         />
       </div>
