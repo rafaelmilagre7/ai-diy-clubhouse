@@ -8,3 +8,4 @@ export { useLessonsByModule } from './useLessonsByModule';
 export { useLessonData } from './useLessonData';
 export { useLessonNavigation } from './useLessonNavigation';
 export { useCourseAccess } from './useCourseAccess';
+export { useCourseCompletion } from './useCourseCompletion';
