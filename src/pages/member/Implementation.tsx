@@ -39,7 +39,11 @@ const Implementation = () => {
   };
 
   return (
-    <SolutionDataProvider data={mockSolutionData} isLoading={loading} error={error || null}>
+    <SolutionDataProvider 
+      data={mockSolutionData} 
+      isLoading={loading} 
+      error={error ? new Error(error) : null}
+    >
       <PageTransition>
         <div className="container max-w-5xl mx-auto py-8">
           <ImplementationHeader 
