@@ -2,14 +2,18 @@
 import React from "react";
 import { ChevronLeft } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Solution } from "@/lib/supabase";
+import { Solution, Module, Progress } from "@/lib/supabase";
 
 interface ImplementationHeaderProps {
   solution: Solution;
+  currentModule?: Module | null;
+  progress?: Progress | null;
 }
 
 export const ImplementationHeader = ({
-  solution
+  solution,
+  currentModule,
+  progress
 }: ImplementationHeaderProps) => {
   return (
     <div className="bg-[#0F111A] border-b border-white/10">
@@ -24,6 +28,12 @@ export const ImplementationHeader = ({
             <span>Dashboard</span>
             <span>/</span>
             <span className="text-neutral-200">{solution.title}</span>
+            {currentModule && (
+              <>
+                <span>/</span>
+                <span className="text-neutral-200">{currentModule.title}</span>
+              </>
+            )}
           </div>
         </div>
       </div>
