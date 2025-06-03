@@ -1,4 +1,3 @@
-
 import { Solution } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { PlayCircle, CheckCircle, Award } from "lucide-react";
@@ -25,7 +24,7 @@ export const SolutionSidebar = ({
   // Handler para o botão de implementação
   const handleImplementation = () => {
     if (progress?.is_completed) {
-      navigate(`/implement/${solution.id}/0`);
+      navigate(`/implementation/${solution.id}`);
     } else if (progress) {
       console.log("Chamando continueImplementation");
       continueImplementation();
