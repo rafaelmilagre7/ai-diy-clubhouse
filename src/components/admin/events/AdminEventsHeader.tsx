@@ -16,7 +16,7 @@ export const AdminEventsHeader = ({}: AdminEventsHeaderProps) => {
 
   return (
     <div className="flex items-center justify-between mb-6">
-      <div>
+      <div className="text-left">
         <h1 className="text-2xl font-bold">Gerenciar Eventos</h1>
         <p className="text-muted-foreground">
           Adicione e gerencie eventos da comunidade

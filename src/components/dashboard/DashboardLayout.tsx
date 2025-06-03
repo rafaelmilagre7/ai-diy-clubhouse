@@ -65,7 +65,7 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
   }
 
   return (
-    <div className="space-y-8 md:pt-2 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       {/* HEADER IMERSIVO */}
       <ModernDashboardHeader userName={userName} />
 
@@ -82,7 +82,7 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
 
       {/* Mostrar loaders enquanto carrega, ou conteúdo quando pronto */}
       {isLoading ? (
-        <div className="space-y-10">
+        <div className="space-y-8">
           <SolutionsGridLoader title="Em andamento" count={2} />
           <SolutionsGridLoader title="Concluídas" count={2} />
           <SolutionsGridLoader title="Recomendadas" count={3} />
@@ -90,7 +90,7 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
       ) : hasNoSolutions ? (
         <NoSolutionsPlaceholder />
       ) : (
-        <div className="space-y-10">
+        <div className="space-y-8">
           {/* Soluções Ativas */}
           {active && active.length > 0 && (
             <ActiveSolutions
