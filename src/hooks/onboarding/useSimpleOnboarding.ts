@@ -3,30 +3,61 @@ import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-
-interface OnboardingData {
-  name: string;
-  email: string;
-  whatsapp: string;
-  country_code: string;
-  birth_date: string;
-  how_found_us: string;
-  company_name: string;
-  role: string;
-  [key: string]: any;
-}
+import { QuickOnboardingData } from '@/types/quickOnboarding';
 
 export const useSimpleOnboarding = () => {
   const { user, profile } = useAuth();
-  const [data, setData] = useState<OnboardingData>({
+  const [data, setData] = useState<QuickOnboardingData>({
     name: profile?.name || '',
     email: profile?.email || user?.email || '',
     whatsapp: '',
     country_code: '+55',
     birth_date: '',
+    country: '',
+    state: '',
+    city: '',
+    instagram_url: '',
+    linkedin_url: '',
     how_found_us: '',
+    referred_by: '',
     company_name: profile?.company_name || '',
-    role: profile?.role || 'member'
+    role: profile?.role || 'member',
+    company_size: '',
+    company_segment: '',
+    company_website: '',
+    annual_revenue_range: '',
+    current_position: '',
+    business_model: '',
+    business_challenges: [],
+    short_term_goals: [],
+    medium_term_goals: [],
+    important_kpis: [],
+    additional_context: '',
+    primary_goal: '',
+    expected_outcomes: [],
+    expected_outcome_30days: '',
+    priority_solution_type: '',
+    how_implement: '',
+    week_availability: '',
+    content_formats: [],
+    ai_knowledge_level: 'iniciante',
+    previous_tools: [],
+    has_implemented: '',
+    desired_ai_areas: [],
+    completed_formation: false,
+    is_member_for_month: false,
+    nps_score: 0,
+    improvement_suggestions: '',
+    interests: [],
+    time_preference: [],
+    available_days: [],
+    networking_availability: 5,
+    skills_to_share: [],
+    mentorship_topics: [],
+    live_interest: 0,
+    authorize_case_usage: false,
+    interested_in_interview: false,
+    priority_topics: []
   });
   
   const [currentStep, setCurrentStep] = useState(1);
@@ -65,7 +96,7 @@ export const useSimpleOnboarding = () => {
     loadExistingData();
   }, [user?.id]);
 
-  const updateField = useCallback((field: string, value: any) => {
+  const updateField = useCallback((field: keyof QuickOnboardingData, value: any) => {
     setData(prev => ({ ...prev, [field]: value }));
   }, []);
 
@@ -73,6 +104,12 @@ export const useSimpleOnboarding = () => {
     switch (currentStep) {
       case 1:
         return !!(data.name && data.email && data.whatsapp && data.birth_date);
+      case 2:
+        return !!(data.country && data.state && data.city);
+      case 3:
+        return !!(data.how_found_us);
+      case 4:
+        return !!(data.company_name && data.role && data.company_size && data.company_segment);
       default:
         return true;
     }
