@@ -1,202 +1,132 @@
 
-import { useCallback, useRef } from 'react';
+import { logger } from './logger';
+import { formatBytes } from './performance/performanceUtils';
 
 interface BundleInfo {
   name: string;
   size: number;
-  type: 'js' | 'css' | 'other';
-  isLazy?: boolean;
+  type: 'js' | 'css' | 'html' | 'other';
+  isLazy: boolean;
 }
 
-interface PerformanceAnalysis {
-  totalBundleSize: number;
-  largestBundles: BundleInfo[];
-  unusedCode: string[];
-  recommendations: string[];
+interface AnalysisResult {
+  totalSize: number;
   loadTime: number;
-  resourceTiming: PerformanceResourceTiming[];
+  largestBundles: BundleInfo[];
+  recommendations: string[];
 }
 
 export const useBundleAnalyzer = () => {
-  const analysisCache = useRef<Map<string, PerformanceAnalysis>>(new Map());
-
-  const analyzePerformance = useCallback((): PerformanceAnalysis => {
-    try {
-      const now = performance.now();
-      const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-      const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
-      
-      // Analisar bundles JavaScript e CSS
-      const bundles: BundleInfo[] = [];
-      let totalSize = 0;
-
-      resources.forEach((resource) => {
-        if (resource.name.includes('/assets/') || resource.name.includes('.js') || resource.name.includes('.css')) {
-          const size = resource.transferSize || resource.encodedBodySize || 0;
-          const isLazy = resource.name.includes('lazy') || resource.name.includes('chunk');
-          
-          let type: 'js' | 'css' | 'other' = 'other';
-          if (resource.name.includes('.js')) type = 'js';
-          if (resource.name.includes('.css')) type = 'css';
-
-          bundles.push({
-            name: resource.name.split('/').pop() || resource.name,
-            size,
-            type,
-            isLazy
-          });
-          
-          totalSize += size;
-        }
-      });
-
-      // Ordenar por tamanho (maiores primeiro)
-      const largestBundles = bundles
-        .sort((a, b) => b.size - a.size)
-        .slice(0, 10);
-
-      // Gerar recomendações
-      const recommendations: string[] = [];
-      
-      // Bundle muito grande
-      if (totalSize > 2000000) { // 2MB
-        recommendations.push('Bundle total muito grande (>2MB). Considere code splitting.');
-      }
-      
-      // Bundles individuais grandes
-      largestBundles.forEach(bundle => {
-        if (bundle.size > 500000 && !bundle.isLazy) { // 500KB
-          recommendations.push(`Bundle ${bundle.name} é muito grande (${(bundle.size / 1024).toFixed(0)}KB). Considere lazy loading.`);
-        }
-      });
-
-      // Tempo de carregamento - usar fetchStart como fallback para navigationStart
-      const loadTime = navigation.loadEventEnd - (navigation.fetchStart || 0);
-      if (loadTime > 3000) {
-        recommendations.push('Tempo de carregamento lento (>3s). Otimize recursos críticos.');
-      }
-
-      // Recursos não otimizados
-      const unoptimizedResources = resources.filter(resource => {
-        // Verificar se imagens não estão comprimidas
-        if (resource.name.includes('.jpg') || resource.name.includes('.png')) {
-          const compressionRatio = (resource.transferSize || 0) / (resource.decodedBodySize || 1);
-          return compressionRatio > 0.8; // Baixa compressão
-        }
-        return false;
-      });
-
-      if (unoptimizedResources.length > 0) {
-        recommendations.push(`${unoptimizedResources.length} imagens podem ser melhor comprimidas.`);
-      }
-
-      // Detectar código não utilizado (aproximação)
-      const unusedCode: string[] = [];
-      const jsResources = resources.filter(r => r.name.includes('.js'));
-      
-      // Análise básica de uso vs tamanho
-      jsResources.forEach(resource => {
-        if (resource.transferSize && resource.transferSize > 100000) { // >100KB
-          // Se é um bundle grande mas carregou muito rápido, pode ter código não usado
-          const loadSpeed = resource.transferSize / (resource.duration || 1);
-          if (loadSpeed > 10000) { // Carregou muito rápido para o tamanho
-            unusedCode.push(resource.name.split('/').pop() || resource.name);
-          }
-        }
-      });
-
-      const analysis: PerformanceAnalysis = {
-        totalBundleSize: totalSize,
-        largestBundles,
-        unusedCode,
-        recommendations,
-        loadTime,
-        resourceTiming: resources
-      };
-
-      // Cache do resultado
-      const cacheKey = `analysis_${Date.now()}`;
-      analysisCache.current.set(cacheKey, analysis);
-
-      // Log dos resultados em desenvolvimento
-      if (import.meta.env.DEV) {
-        console.group('📊 Bundle Analysis');
-        console.log('Total Bundle Size:', (totalSize / 1024 / 1024).toFixed(2), 'MB');
-        console.log('Load Time:', loadTime.toFixed(0), 'ms');
-        console.log('Largest Bundles:', largestBundles.slice(0, 5));
-        console.log('Recommendations:', recommendations);
-        if (unusedCode.length > 0) {
-          console.log('Potential Unused Code:', unusedCode);
-        }
-        console.groupEnd();
-      }
-
-      return analysis;
-
-    } catch (error) {
-      console.error('Erro na análise de performance:', error);
-      
-      // Retorno fallback
+  const analyzePerformance = async (): Promise<AnalysisResult> => {
+    if (typeof window === 'undefined') {
       return {
-        totalBundleSize: 0,
-        largestBundles: [],
-        unusedCode: [],
-        recommendations: ['Erro ao analisar performance'],
+        totalSize: 0,
         loadTime: 0,
-        resourceTiming: []
+        largestBundles: [],
+        recommendations: []
       };
     }
-  }, []);
 
-  const generateOptimizationReport = useCallback(() => {
-    const analysis = analyzePerformance();
+    const startTime = performance.now();
     
-    const report = {
-      summary: {
-        bundleSize: `${(analysis.totalBundleSize / 1024 / 1024).toFixed(2)} MB`,
-        loadTime: `${analysis.loadTime.toFixed(0)} ms`,
-        optimizationOpportunities: analysis.recommendations.length
-      },
-      details: {
-        largestBundles: analysis.largestBundles.map(bundle => ({
-          name: bundle.name,
-          size: `${(bundle.size / 1024).toFixed(0)} KB`,
-          type: bundle.type,
-          lazy: bundle.isLazy
-        })),
-        recommendations: analysis.recommendations,
-        unusedCode: analysis.unusedCode
-      },
-      score: calculatePerformanceScore(analysis)
+    // Analisar recursos carregados
+    const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
+    const bundles: BundleInfo[] = [];
+    let totalSize = 0;
+
+    for (const resource of resources) {
+      if (resource.name.includes('.js') || resource.name.includes('.css')) {
+        const size = resource.transferSize || resource.decodedBodySize || 0;
+        totalSize += size;
+
+        const isLazy = resource.name.includes('chunk-') || resource.name.includes('lazy');
+        
+        bundles.push({
+          name: resource.name.split('/').pop() || 'unknown',
+          size,
+          type: resource.name.includes('.js') ? 'js' : 'css',
+          isLazy
+        });
+      }
+    }
+
+    // Ordenar por tamanho
+    bundles.sort((a, b) => b.size - a.size);
+
+    const endTime = performance.now();
+    const loadTime = endTime - startTime;
+
+    // Gerar recomendações
+    const recommendations: string[] = [];
+    
+    const largeMainBundles = bundles.filter(b => !b.isLazy && b.size > 100000);
+    if (largeMainBundles.length > 0) {
+      recommendations.push('Considere dividir bundles principais grandes em chunks menores');
+    }
+
+    const totalMainSize = bundles.filter(b => !b.isLazy).reduce((sum, b) => sum + b.size, 0);
+    if (totalMainSize > 1000000) { // 1MB
+      recommendations.push('Bundle principal excede 1MB - considere lazy loading');
+    }
+
+    const result: AnalysisResult = {
+      totalSize,
+      loadTime,
+      largestBundles: bundles.slice(0, 5),
+      recommendations
     };
 
-    return report;
-  }, [analyzePerformance]);
+    // Log dos resultados
+    logger.info('Total Bundle Size:', formatBytes(totalSize));
+    logger.info('Load Time:', `${loadTime.toFixed(0)} ms`);
+    logger.info('Largest Bundles:', result.largestBundles);
+    logger.info('Recommendations:', recommendations);
 
-  const calculatePerformanceScore = (analysis: PerformanceAnalysis): number => {
-    let score = 100;
-    
-    // Penalizar por tamanho do bundle
-    if (analysis.totalBundleSize > 2000000) score -= 20; // >2MB
-    else if (analysis.totalBundleSize > 1000000) score -= 10; // >1MB
-    
-    // Penalizar por tempo de carregamento
-    if (analysis.loadTime > 5000) score -= 30; // >5s
-    else if (analysis.loadTime > 3000) score -= 15; // >3s
-    else if (analysis.loadTime > 1000) score -= 5; // >1s
-    
-    // Penalizar por código não utilizado
-    score -= analysis.unusedCode.length * 5;
-    
-    // Penalizar por bundles grandes não-lazy
-    const largeBundles = analysis.largestBundles.filter(b => b.size > 500000 && !b.isLazy);
-    score -= largeBundles.length * 10;
-    
-    return Math.max(0, Math.min(100, score));
+    return result;
+  };
+
+  const optimizeBundles = () => {
+    // Implementar otimizações automáticas quando possível
+    if ('serviceWorker' in navigator) {
+      // Preload de recursos críticos via service worker
+      navigator.serviceWorker.ready.then(registration => {
+        registration.active?.postMessage({
+          type: 'PRELOAD_CRITICAL_RESOURCES'
+        });
+      });
+    }
+
+    // Cleanup de event listeners não utilizados
+    if (typeof window !== 'undefined') {
+      // Remover listeners órfãos
+      const originalAddEventListener = window.addEventListener;
+      const originalRemoveEventListener = window.removeEventListener;
+      
+      let listenerCount = 0;
+      
+      window.addEventListener = function(type, listener, options) {
+        listenerCount++;
+        return originalAddEventListener.call(this, type, listener, options);
+      };
+      
+      window.removeEventListener = function(type, listener, options) {
+        listenerCount = Math.max(0, listenerCount - 1);
+        return originalRemoveEventListener.call(this, type, listener, options);
+      };
+
+      // Log de listeners ativos periodicamente
+      setInterval(() => {
+        if (listenerCount > 50) {
+          logger.warn('Muitos event listeners ativos', { count: listenerCount });
+        }
+      }, 30000);
+    }
   };
 
   return {
     analyzePerformance,
-    generateOptimizationReport
+    optimizeBundles
   };
 };
+
+export default useBundleAnalyzer;

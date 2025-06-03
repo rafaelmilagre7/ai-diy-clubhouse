@@ -3,32 +3,33 @@ import { useMemo } from 'react';
 import { useAuth } from '@/contexts/auth';
 
 /**
- * Hook otimizado para contexto de autenticação
- * Memoiza valores computados para evitar re-renders desnecessários
+ * Hook otimizado para autenticação com memoização
+ * Evita re-computações desnecessárias
  */
 export const useOptimizedAuth = () => {
-  const auth = useAuth();
-  
-  // Memoizar valores computados para evitar recálculos
-  const authState = useMemo(() => ({
-    user: auth.user,
-    profile: auth.profile,
-    isAuthenticated: !!auth.user,
-    isAdmin: auth.profile?.role === 'admin',
-    isFormacao: auth.profile?.role === 'formacao',
-    isMember: auth.profile?.role === 'member',
-    isLoading: auth.isLoading,
-    hasProfile: !!auth.profile
-  }), [auth.user, auth.profile, auth.isLoading]);
+  const { user, profile, isLoading } = useAuth();
 
-  // Memoizar métodos para evitar re-criação
-  const authMethods = useMemo(() => ({
-    signOut: auth.signOut,
-    setProfile: auth.setProfile
-  }), [auth.signOut, auth.setProfile]);
+  // Memoizar computações baseadas no role
+  const authData = useMemo(() => {
+    const role = profile?.role || 'member';
+    
+    return {
+      isAuthenticated: !!user,
+      isAdmin: role === 'admin',
+      isFormacao: role === 'formacao',
+      isMember: role === 'member',
+      role,
+      userId: user?.id,
+      userEmail: user?.email,
+      userName: profile?.name,
+      userAvatar: profile?.avatar_url
+    };
+  }, [user, profile]);
 
   return {
-    ...authState,
-    ...authMethods
+    ...authData,
+    user,
+    profile,
+    isLoading
   };
 };
