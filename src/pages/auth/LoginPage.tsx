@@ -59,7 +59,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center px-4 sm:px-8">
+    <div className="h-screen bg-slate-950 flex items-center justify-center px-4 sm:px-8">
       <div className="w-full flex flex-col items-center">
         {/* Logo e Header */}
         <div className="text-center mb-8">
@@ -68,6 +68,12 @@ export default function LoginPage() {
               src="/lovable-uploads/logo-viverdeia.svg" 
               alt="Logo Viver de IA"
               className="h-16 w-auto"
+              onError={(e) => {
+                console.error("Erro ao carregar logo:", e);
+                // Fallback para caso a imagem não carregue
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.parentElement!.innerHTML = '<div class="h-16 w-16 bg-viverblue rounded-lg flex items-center justify-center text-white font-bold text-xl">VIA</div>';
+              }}
             />
           </div>
           <div className="space-y-2">
@@ -81,7 +87,7 @@ export default function LoginPage() {
         </div>
 
         {/* Card de Login */}
-        <Card className="w-full max-w-md bg-white/5 backdrop-blur-md border border-white/10 rounded-xl">
+        <Card className="w-full sm:max-w-md bg-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-none">
           <CardContent className="p-8">
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
