@@ -1,16 +1,13 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useQuickOnboardingNew } from '@/hooks/onboarding/useQuickOnboardingNew';
-import { StepQuemEVoceNew } from './steps/StepQuemEVoceNew';
-import { StepSeuNegocioNew } from './steps/StepSeuNegocioNew';
-import { StepExperienciaIANew } from './steps/StepExperienciaIANew';
+import { useOnboardingUnified } from '@/hooks/onboarding/useOnboardingUnified';
+import { useOnboardingNavigation } from '@/hooks/onboarding/useOnboardingNavigation';
+import { LazyStepLoader } from './steps/LazyStepLoader';
 import { EnhancedTrailMagicExperience } from '../EnhancedTrailMagicExperience';
 import MilagrinhoAssistant from '../MilagrinhoAssistant';
 import { Loader2 } from 'lucide-react';
 
-export const ModernOnboardingFlowNew: React.FC = () => {
-  const navigate = useNavigate();
+export const UnifiedOnboardingFlow: React.FC = () => {
   const {
     currentStep,
     data,
@@ -21,10 +18,12 @@ export const ModernOnboardingFlowNew: React.FC = () => {
     isSubmitting,
     completeOnboarding,
     totalSteps,
-    isLoadingData,
+    isLoading,
     hasExistingData,
     loadError
-  } = useQuickOnboardingNew();
+  } = useOnboardingUnified();
+
+  const { navigateToStep } = useOnboardingNavigation();
 
   const handleFinish = async () => {
     const success = await completeOnboarding();
@@ -32,7 +31,7 @@ export const ModernOnboardingFlowNew: React.FC = () => {
   };
 
   // Mostrar loading enquanto carrega dados existentes
-  if (isLoadingData) {
+  if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-12 space-y-4">
         <Loader2 className="h-8 w-8 text-viverblue animate-spin" />
@@ -57,6 +56,8 @@ export const ModernOnboardingFlowNew: React.FC = () => {
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
+      case 2:
+      case 3:
         return (
           <div className="space-y-4">
             {showDataLoadedMessage && (
@@ -66,41 +67,17 @@ export const ModernOnboardingFlowNew: React.FC = () => {
                 </p>
               </div>
             )}
-            <StepQuemEVoceNew
+            <LazyStepLoader
+              step={currentStep}
               data={data}
               onUpdate={updateField}
               onNext={nextStep}
+              onPrevious={previousStep}
               canProceed={canProceed}
               currentStep={currentStep}
               totalSteps={totalSteps}
             />
           </div>
-        );
-      
-      case 2:
-        return (
-          <StepSeuNegocioNew
-            data={data}
-            onUpdate={updateField}
-            onNext={nextStep}
-            onPrevious={previousStep}
-            canProceed={canProceed}
-            currentStep={currentStep}
-            totalSteps={totalSteps}
-          />
-        );
-      
-      case 3:
-        return (
-          <StepExperienciaIANew
-            data={data}
-            onUpdate={updateField}
-            onNext={nextStep}
-            onPrevious={previousStep}
-            canProceed={canProceed}
-            currentStep={currentStep}
-            totalSteps={totalSteps}
-          />
         );
       
       case 4:

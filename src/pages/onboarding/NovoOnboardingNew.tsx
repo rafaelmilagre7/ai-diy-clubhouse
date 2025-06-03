@@ -1,31 +1,31 @@
 
 import React from 'react';
-import MemberLayout from '@/components/layout/MemberLayout';
-import { ModernOnboardingFlowNew } from '@/components/onboarding/modern/ModernOnboardingFlowNew';
+import { UnifiedOnboardingFlow } from '@/components/onboarding/modern/UnifiedOnboardingFlow';
+import { PageTransition } from '@/components/transitions/PageTransition';
+import { FadeTransition } from '@/components/transitions/FadeTransition';
 
-const NovoOnboardingNew: React.FC = () => {
+const NovoOnboardingNew = () => {
   return (
-    <MemberLayout>
+    <PageTransition>
       <div className="min-h-screen bg-gradient-to-b from-[#0F111A] to-[#161A2C]">
         <div className="container mx-auto px-4 py-8">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-white mb-2">
-                Bem-vindo ao VIVER DE IA Club
-              </h1>
-              <p className="text-viverblue-light text-lg">
-                Vamos personalizar sua experiência em alguns passos simples
-              </p>
-              <p className="text-gray-400 text-sm mt-2">
-                💾 Seus dados são salvos automaticamente conforme você preenche
-              </p>
+          <FadeTransition>
+            <div className="max-w-4xl mx-auto">
+              <div className="text-center mb-8">
+                <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                  Bem-vindo ao <span className="text-viverblue">VIVER DE IA</span>
+                </h1>
+                <p className="text-lg text-gray-300">
+                  Vamos conhecer você melhor para criar sua experiência personalizada
+                </p>
+              </div>
+              
+              <UnifiedOnboardingFlow />
             </div>
-            
-            <ModernOnboardingFlowNew />
-          </div>
+          </FadeTransition>
         </div>
       </div>
-    </MemberLayout>
+    </PageTransition>
   );
 };
 
