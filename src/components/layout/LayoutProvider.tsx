@@ -39,33 +39,48 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
     return "Carregando layout...";
   }, [authLoading, onboardingLoading, user]);
 
-  // Verificar autenticação
+  // Verificar autenticação - REMOVIDO O REDIRECIONAMENTO AUTOMÁTICO PARA ONBOARDING
   useEffect(() => {
+    console.log('🔄 LayoutProvider: Verificando autenticação e onboarding', {
+      user: !!user,
+      isAdmin,
+      authLoading,
+      onboardingLoading,
+      isOnboardingComplete,
+      currentPath: location.pathname,
+      routeChecks
+    });
+
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
     
     if (!authLoading && !onboardingLoading) {
       if (!user) {
+        console.log('❌ LayoutProvider: Usuário não autenticado, redirecionando para login');
         navigate('/login', { replace: true });
         return;
       }
       
-      if (!routeChecks.isOnboardingRoute && !isOnboardingComplete) {
-        navigate('/onboarding-new', { replace: true });
-        return;
-      }
+      // REMOVIDO O REDIRECIONAMENTO FORÇADO PARA ONBOARDING
+      // Esta era a causa do loop de redirecionamento
+      // if (!routeChecks.isOnboardingRoute && !isOnboardingComplete) {
+      //   navigate('/onboarding-new', { replace: true });
+      //   return;
+      // }
       
       setLayoutReady(true);
       
-      // Verificar redirecionamento por role
-      if (user && profile) {
+      // Verificar redirecionamento por role - APENAS se não estiver em rotas específicas
+      if (user && profile && !routeChecks.isOnboardingRoute) {
         const { isLearningRoute, isPathAdmin, isPathFormacao } = routeChecks;
         
         if (isAdmin && !isPathAdmin && !isPathFormacao && !isLearningRoute) {
+          console.log('🔄 LayoutProvider: Admin redirecionando para /admin');
           navigate('/admin', { replace: true });
         } 
         else if (isFormacao && !isAdmin && !isPathFormacao && !isLearningRoute) {
+          console.log('🔄 LayoutProvider: Formação redirecionando para /formacao');
           navigate('/formacao', { replace: true });
         }
       }

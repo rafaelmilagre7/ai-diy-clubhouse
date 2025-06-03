@@ -2,10 +2,12 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
+import { useOptimizedAuth } from '@/hooks/auth/useOptimizedAuth';
 import { useCallback, useMemo } from 'react';
 
 export const useUnifiedOnboardingValidation = () => {
   const { user } = useAuth();
+  const { isAdmin } = useOptimizedAuth();
   const queryClient = useQueryClient();
 
   const { data, isLoading, error, refetch } = useQuery({
@@ -19,7 +21,19 @@ export const useUnifiedOnboardingValidation = () => {
         };
       }
 
+      // CORREÇÃO CRÍTICA: Para admins, sempre considerar onboarding completo
+      if (isAdmin) {
+        console.log('✅ useUnifiedOnboardingValidation: Admin detectado, considerando onboarding completo');
+        return {
+          isOnboardingComplete: true,
+          hasValidData: true,
+          source: 'admin_bypass'
+        };
+      }
+
       try {
+        console.log('🔍 useUnifiedOnboardingValidation: Verificando onboarding para usuário:', user.id);
+
         // Verificar PRIMEIRO na tabela onboarding_final
         const { data: finalData, error: finalError } = await supabase
           .from('onboarding_final')
@@ -59,12 +73,13 @@ export const useUnifiedOnboardingValidation = () => {
           };
         }
 
-        // Se não encontrou dados, assumir que precisa fazer onboarding
-        console.log('⚠️ Nenhum dado de onboarding encontrado - criando estado inicial');
+        // CORREÇÃO CRÍTICA: Se não encontrou dados, para usuários normais pode ser que precisem fazer onboarding
+        // Mas para evitar loops, não forçar redirecionamento aqui
+        console.log('⚠️ Nenhum dado de onboarding encontrado - assumindo incompleto');
         return {
           isOnboardingComplete: false,
           hasValidData: true,
-          source: 'new_user'
+          source: 'no_data_found'
         };
 
       } catch (error) {
@@ -106,6 +121,8 @@ export const useUnifiedOnboardingValidation = () => {
     invalidateOnboardingCache,
     revalidateOnboarding
   }), [data, isLoading, error, invalidateOnboardingCache, revalidateOnboarding]);
+
+  console.log('📋 useUnifiedOnboardingValidation: Resultado final', result);
 
   return result;
 };
