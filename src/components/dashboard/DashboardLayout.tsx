@@ -22,7 +22,6 @@ interface DashboardLayoutProps {
   isLoading?: boolean;
 }
 
-// Otimização: Memoizar o componente completo para evitar re-renderizações desnecessárias
 export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
   active,
   completed,
@@ -34,12 +33,10 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
 }) => {
   const { profile } = useAuth();
 
-  // Memoizar o cálculo do nome do usuário
   const userName = useMemo(() => 
     profile?.name?.split(" ")[0] || "Membro"
   , [profile?.name]);
 
-  // Memoizar o estado de "sem soluções" para evitar recálculos
   const hasNoSolutions = useMemo(() => 
     !isLoading && 
     (!active || active.length === 0) && 
@@ -47,25 +44,22 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
     (!recommended || recommended.length === 0)
   , [isLoading, active, completed, recommended]);
 
-  // Memoizar a validação de dados para evitar recálculos
   const hasValidData = useMemo(() => 
     Array.isArray(active) && Array.isArray(completed) && Array.isArray(recommended)
   , [active, completed, recommended]);
 
-  // Memoizar os totais para o KPI Grid
   const kpiTotals = useMemo(() => ({
     completed: completed?.length || 0,
     inProgress: active?.length || 0,
     total: (active?.length || 0) + (completed?.length || 0) + (recommended?.length || 0)
   }), [active?.length, completed?.length, recommended?.length]);
 
-  // Early return para dados inválidos
   if (!hasValidData && !isLoading) {
     return <DashboardConnectionErrorState />;
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="w-full space-y-4 animate-fade-in">
       {/* HEADER IMERSIVO */}
       <ModernDashboardHeader />
 
@@ -82,7 +76,7 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
 
       {/* Mostrar loaders enquanto carrega, ou conteúdo quando pronto */}
       {isLoading ? (
-        <div className="space-y-8">
+        <div className="space-y-6">
           <SolutionsGridLoader title="Em andamento" count={2} />
           <SolutionsGridLoader title="Concluídas" count={2} />
           <SolutionsGridLoader title="Recomendadas" count={3} />
@@ -93,7 +87,7 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
           description="Comece explorando nossas soluções recomendadas para transformar seu negócio com IA"
         />
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* Soluções Ativas */}
           {active && active.length > 0 && (
             <ActiveSolutions

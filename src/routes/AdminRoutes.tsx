@@ -36,6 +36,7 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin/solutions", AdminSolutions),
   createAdminRoute("/admin/solutions/new", AdminSolutionCreate),
   createAdminRoute("/admin/solutions/:id", AdminSolutionEdit),
+  createAdminRoute("/admin/solutions/view/:id", AdminSolutionEdit), // Adicionada rota para visualização
   createAdminRoute("/admin/analytics", AdminAnalytics),
   createAdminRoute("/admin/performance", PerformanceDashboard),
   createAdminRoute("/admin/onboarding", AdminOnboarding),
