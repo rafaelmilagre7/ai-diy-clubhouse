@@ -1,8 +1,10 @@
 
-export { useLessonsByModule } from './useLessonsByModule';
-export { useVideoProgress } from './useVideoProgress';
-export { useLessonNPS } from './useLessonNPS';
+// Exportação centralizada de todos os hooks de learning
+export { useLearningCourses } from './useLearningCourses';
 export { useCourseDetails } from './useCourseDetails';
-export { useCourseStats } from './useCourseStats';
+export { useCourseStats, useSimpleCourseStats } from './useCourseStats';
 export { useUserProgress } from './useUserProgress';
-export { useCourseCompletion } from './useCourseCompletion';
+export { useLessonsByModule } from './useLessonsByModule';
+export { useLessonData } from './useLessonData';
+export { useLessonNavigation } from './useLessonNavigation';
+export { useCourseAccess } from './useCourseAccess';
