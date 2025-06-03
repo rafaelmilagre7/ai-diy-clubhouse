@@ -1,106 +1,88 @@
 
 import React from "react";
-import { useSolutionDataContext } from "@/contexts/SolutionDataContext";
-import { SolutionToolCard } from "@/components/solution/tools/SolutionToolCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Wrench } from "lucide-react";
+import { Wrench, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useSectionTracking } from "@/hooks/implementation/useSectionTracking";
 
 interface TabBasedToolsSectionProps {
-  onSectionComplete: () => void;
-  onValidation: (interactionCount: number, timeSpent: number) => { isValid: boolean; message?: string; requirement?: string; };
-  isCompleted: boolean;
+  solutionId: string;
+  tools: any[];
 }
 
-export const TabBasedToolsSection = ({ onSectionComplete, onValidation, isCompleted }: TabBasedToolsSectionProps) => {
-  const { data, isLoading } = useSolutionDataContext();
-  const { trackInteraction, getTimeSpentInSeconds, getActionCount } = useSectionTracking("tools");
-
-  const handleToolInteraction = () => {
-    trackInteraction("explore");
-  };
-
-  const handleSectionComplete = () => {
-    const interactionCount = getActionCount("explore");
-    const timeSpent = getTimeSpentInSeconds();
-    const validation = onValidation(interactionCount, timeSpent);
-    
-    if (validation.isValid) {
-      onSectionComplete();
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <div className="h-6 bg-gray-200 rounded animate-pulse"></div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 bg-gray-200 rounded animate-pulse"></div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  const tools = data?.tools || [];
-
+export const TabBasedToolsSection = ({ solutionId, tools }: TabBasedToolsSectionProps) => {
   if (tools.length === 0) {
     return (
-      <Card className="border-white/10">
-        <CardContent className="p-8 text-center">
-          <Wrench className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-          <h3 className="text-lg font-semibold mb-2">Nenhuma ferramenta disponível</h3>
-          <p className="text-gray-500 mb-4">
-            Esta solução não possui ferramentas específicas recomendadas.
-          </p>
-          <Button 
-            onClick={onSectionComplete}
-            className="bg-viverblue hover:bg-viverblue-dark"
-          >
-            Continuar
-          </Button>
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        <Card className="border-white/10">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Wrench className="w-5 h-5" />
+              Ferramentas Necessárias
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-12">
+              <Wrench className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2">Nenhuma ferramenta específica</h3>
+              <p className="text-muted-foreground">
+                Esta solução não requer ferramentas externas específicas.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   return (
     <div className="space-y-6">
       <Card className="border-white/10">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Wrench className="w-5 h-5" />
-              Ferramentas Recomendadas
-            </CardTitle>
-            <p className="text-sm text-gray-500 mt-1">
-              Explore as ferramentas necessárias para implementar esta solução
-            </p>
-          </div>
-          {isCompleted && (
-            <CheckCircle className="w-6 h-6 text-green-500" />
-          )}
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Wrench className="w-5 h-5" />
+            Ferramentas Necessárias
+          </CardTitle>
+          <p className="text-sm text-muted-foreground mt-2">
+            Estas são as ferramentas recomendadas para implementar esta solução
+          </p>
         </CardHeader>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {tools.map((tool) => (
-          <div key={tool.id} onClick={handleToolInteraction}>
-            <SolutionToolCard tool={tool} />
-          </div>
+      <div className="grid gap-4">
+        {tools.map((tool, index) => (
+          <Card key={tool.id || index} className="border-white/10">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h3 className="font-medium text-lg mb-2">
+                    {tool.tools?.name || tool.name || "Ferramenta"}
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    {tool.tools?.description || tool.description || "Ferramenta necessária para esta implementação."}
+                  </p>
+                  
+                  {tool.tools?.category && (
+                    <span className="inline-block px-2 py-1 bg-viverblue/10 text-viverblue text-xs rounded">
+                      {tool.tools.category}
+                    </span>
+                  )}
+                </div>
+                
+                {(tool.tools?.official_url || tool.url) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(tool.tools?.official_url || tool.url, '_blank')}
+                    className="ml-4"
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Acessar
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         ))}
-      </div>
-
-      <div className="flex justify-center pt-4">
-        <Button 
-          onClick={handleSectionComplete}
-          disabled={isCompleted}
-          className="bg-viverblue hover:bg-viverblue-dark"
-        >
-          {isCompleted ? "Seção Concluída" : "Marcar como Concluída"}
-        </Button>
       </div>
     </div>
   );

@@ -1,49 +1,57 @@
 
 import React from "react";
-import { useImplementationData } from "@/hooks/useImplementationData";
+import { useParams } from "react-router-dom";
+import { useImplementationFlow } from "@/hooks/implementation/useImplementationFlow";
 import { ImplementationNotFound } from "@/components/implementation/ImplementationNotFound";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { ImplementationHeader } from "@/components/implementation/ImplementationHeader";
-import { useLogging } from "@/hooks/useLogging";
-import { useSolutionDataCentralized } from "@/hooks/solution/useSolutionDataCentralized";
+import { OptimizedImplementationWizard } from "@/components/implementation/tab-based/OptimizedImplementationWizard";
 import { SolutionDataProvider } from "@/contexts/SolutionDataContext";
-import { TabBasedImplementationWizard } from "@/components/implementation/tab-based/TabBasedImplementationWizard";
+import { PageTransition } from "@/components/transitions/PageTransition";
 
 const Implementation = () => {
-  const { solution, progress, loading } = useImplementationData();
-  const { log } = useLogging();
+  const { id } = useParams<{ id: string }>();
+  const {
+    solution,
+    progress,
+    materials,
+    tools,
+    videos,
+    loading,
+    error
+  } = useImplementationFlow();
   
-  // Buscar dados centralizados da solução
-  const { data: solutionData, isLoading: dataLoading } = useSolutionDataCentralized(solution?.id);
-  
-  if (loading || dataLoading) {
+  if (loading) {
     return <LoadingScreen message="Carregando implementação..." />;
   }
 
-  if (!solution) {
+  if (error || !solution || !id) {
     return <ImplementationNotFound />;
   }
 
-  log("Renderizando Implementation com sistema por abas", { 
-    solutionId: solution.id,
-    hasProgress: !!progress,
-    materialsCount: solutionData?.materials.length || 0,
-    toolsCount: solutionData?.tools.length || 0,
-    videosCount: solutionData?.videos.length || 0
-  });
+  // Criar dados fictícios para manter compatibilidade com SolutionDataProvider
+  const mockSolutionData = {
+    solution,
+    materials,
+    tools,
+    videos,
+    progress
+  };
 
   return (
-    <SolutionDataProvider data={solutionData} isLoading={dataLoading} error={null}>
-      <div className="container max-w-5xl mx-auto py-8">
-        <ImplementationHeader 
-          solution={solution}
-          progress={progress}
-        />
-        
-        <div className="mt-8">
-          <TabBasedImplementationWizard solutionId={solution.id} />
+    <SolutionDataProvider data={mockSolutionData} isLoading={loading} error={error}>
+      <PageTransition>
+        <div className="container max-w-5xl mx-auto py-8">
+          <ImplementationHeader 
+            solution={solution}
+            progress={progress}
+          />
+          
+          <div className="mt-8">
+            <OptimizedImplementationWizard solutionId={id} />
+          </div>
         </div>
-      </div>
+      </PageTransition>
     </SolutionDataProvider>
   );
 };
