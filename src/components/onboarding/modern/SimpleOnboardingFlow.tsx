@@ -19,6 +19,7 @@ export const SimpleOnboardingFlow: React.FC<QuickOnboardingFlowProps> = ({ onCom
     whatsapp: '',
     country_code: '+55',
     how_found_us: '',
+    howFoundUs: '', // alias for compatibility
     primary_goal: '',
     expected_outcome_30days: '',
     content_formats: []
@@ -43,10 +44,21 @@ export const SimpleOnboardingFlow: React.FC<QuickOnboardingFlowProps> = ({ onCom
   }, [data, saveProgress]);
 
   const handleUpdate = (field: keyof QuickOnboardingData, value: any) => {
-    setData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setData(prev => {
+      const updated = {
+        ...prev,
+        [field]: value
+      };
+      
+      // Sync how_found_us and howFoundUs
+      if (field === 'how_found_us') {
+        updated.howFoundUs = value;
+      } else if (field === 'howFoundUs') {
+        updated.how_found_us = value;
+      }
+      
+      return updated;
+    });
   };
 
   const handleNext = async () => {
@@ -79,7 +91,7 @@ export const SimpleOnboardingFlow: React.FC<QuickOnboardingFlowProps> = ({ onCom
       case 1:
         return !!(data.name && data.email && data.whatsapp);
       case 2:
-        return !!(data.how_found_us);
+        return !!(data.how_found_us || data.howFoundUs);
       case 3:
         return !!(data.primary_goal && data.expected_outcome_30days && data.content_formats.length > 0);
       default:
@@ -98,6 +110,21 @@ export const SimpleOnboardingFlow: React.FC<QuickOnboardingFlowProps> = ({ onCom
       3: 'Seus objetivos'
     };
     return titles[currentStep as keyof typeof titles] || '';
+  };
+
+  // Prepare props for StepQuemEVoce with required interface
+  const stepQuemEVoceProps = {
+    data: {
+      name: data.name,
+      email: data.email,
+      whatsapp: data.whatsapp,
+      howFoundUs: data.howFoundUs || data.how_found_us || ''
+    },
+    onUpdate: handleUpdate,
+    onNext: handleNext,
+    canProceed: canProceed(),
+    currentStep,
+    totalSteps: TOTAL_STEPS
   };
 
   const stepProps = {
@@ -129,7 +156,7 @@ export const SimpleOnboardingFlow: React.FC<QuickOnboardingFlowProps> = ({ onCom
 
       {/* Content */}
       <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700/50 p-8">
-        {currentStep === 1 && <StepQuemEVoce {...stepProps} />}
+        {currentStep === 1 && <StepQuemEVoce {...stepQuemEVoceProps} />}
         {currentStep === 2 && <StepComoNosConheceu {...stepProps} />}
         {currentStep === 3 && <StepObjetivosMetas {...stepProps} />}
       </div>

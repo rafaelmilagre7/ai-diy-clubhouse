@@ -78,13 +78,14 @@ export interface GoalsInfo {
   priority_solution_type?: string;
   how_implement?: string;
   week_availability?: string;
+  live_interest?: number; // Moved from PersonalizationInfo for compatibility
 }
 
 export interface PersonalizationInfo {
   interests?: string[];
   available_days?: string[];
   time_preference?: string | string[];
-  networking_availability?: boolean;
+  networking_availability?: boolean | string; // Allow both for compatibility
   mentorship_topics?: string[];
   skills_to_share?: string[];
   live_interest?: number;

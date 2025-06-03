@@ -72,7 +72,7 @@ export interface OnboardingPersonalization {
   interests?: string[];
   time_preference?: string[];
   available_days?: string[];
-  networking_availability?: string;
+  networking_availability?: boolean; // Keep as boolean for final onboarding
   skills_to_share?: string[];
   mentorship_topics?: string[];
   live_interest?: string;
