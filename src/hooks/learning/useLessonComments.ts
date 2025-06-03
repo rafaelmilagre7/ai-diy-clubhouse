@@ -36,7 +36,7 @@ export const useLessonComments = (lessonId: string) => {
     queryKey,
     queryFn: fetchComments,
     staleTime: 2 * 60 * 1000, // 2 minutos
-    cacheTime: 10 * 60 * 1000, // 10 minutos
+    gcTime: 10 * 60 * 1000, // 10 minutos (era cacheTime)
     retry: 2,
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
     onError: (error: any) => {

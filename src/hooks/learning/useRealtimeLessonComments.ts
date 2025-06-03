@@ -1,228 +1,159 @@
-
 import { useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/auth';
 import { useLogging } from '@/hooks/useLogging';
+import { toast } from 'sonner';
 
-interface RealtimeConfig {
+interface RealtimeOptions {
   isEnabled?: boolean;
-  reconnectInterval?: number;
-  maxReconnectAttempts?: number;
   debounceMs?: number;
+  maxReconnectAttempts?: number;
 }
 
 export const useRealtimeLessonComments = (
-  lessonId: string, 
-  config: RealtimeConfig = {}
+  lessonId: string,
+  options: RealtimeOptions = {}
 ) => {
+  const { user } = useAuth();
+  const { log, logError } = useLogging();
+  const queryClient = useQueryClient();
+  
   const {
     isEnabled = true,
-    reconnectInterval = 5000,
-    maxReconnectAttempts = 5,
-    debounceMs = 500
-  } = config;
+    debounceMs = 500,
+    maxReconnectAttempts = 3
+  } = options;
   
-  const queryClient = useQueryClient();
-  const { log, logError } = useLogging();
-  
-  const channelsRef = useRef<any[]>([]);
+  const channelRef = useRef<any>(null);
   const reconnectAttemptsRef = useRef(0);
-  const debounceTimerRef = useRef<NodeJS.Timeout>();
-  const lastUpdateRef = useRef<number>(0);
   const isConnectedRef = useRef(false);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   const queryKey = ['learning-comments', lessonId];
 
-  // Invalidação com debounce
+  // Invalidar comentários com debounce
   const debouncedInvalidate = useCallback(() => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
     
     debounceTimerRef.current = setTimeout(() => {
-      const now = Date.now();
-      
-      // Evitar invalidações muito frequentes
-      if (now - lastUpdateRef.current < debounceMs) {
-        return;
-      }
-      
-      lastUpdateRef.current = now;
-      
       queryClient.invalidateQueries({ queryKey });
-      log('Cache de comentários invalidado (debounced)', { lessonId });
+      log('Comentários invalidados via realtime', { lessonId });
     }, debounceMs);
-  }, [queryClient, queryKey, lessonId, log, debounceMs]);
+  }, [queryClient, queryKey, debounceMs, lessonId, log]);
 
-  // Configurar conexões realtime resilientes
-  const setupRealtimeConnections = useCallback(() => {
+  // Verificação de saúde da conexão
+  const performHealthCheck = useCallback(() => {
+    if (!channelRef.current) return false;
+    
+    const state = channelRef.current.state;
+    const isHealthy = state === 'joined' || state === 'joining';
+    
+    log('Health check realtime', { 
+      lessonId, 
+      state, 
+      isHealthy,
+      reconnectAttempts: reconnectAttemptsRef.current 
+    });
+    
+    return isHealthy;
+  }, [lessonId, log]);
+
+  // Configurar conexão realtime
+  const setupRealtimeConnection = useCallback(() => {
     if (!isEnabled || !lessonId) return;
     
-    // Limpar conexões existentes
-    channelsRef.current.forEach(channel => {
-      if (channel) {
-        supabase.removeChannel(channel);
-      }
-    });
-    channelsRef.current = [];
+    // Limpar conexão anterior
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+    }
     
-    log('Configurando conexões realtime resilientes', { lessonId });
+    log('Configurando conexão realtime para comentários', { lessonId });
     
-    // Canal para comentários
-    const commentsChannel = supabase
-      .channel(`lesson-comments-${lessonId}-${Date.now()}`)
+    const channel = supabase
+      .channel(`lesson-comments-${lessonId}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'learning_comments',
         filter: `lesson_id=eq.${lessonId}`
       }, (payload) => {
-        log('Mudança nos comentários detectada', { 
+        // Type guard para verificar se payload.new e payload.old têm a propriedade id
+        const hasNewId = payload.new && typeof payload.new === 'object' && 'id' in payload.new;
+        const hasOldId = payload.old && typeof payload.old === 'object' && 'id' in payload.old;
+        
+        const recordId = hasNewId 
+          ? (payload.new as any).id 
+          : hasOldId 
+            ? (payload.old as any).id 
+            : 'unknown';
+            
+        log('Mudança detectada nos comentários', { 
           event: payload.eventType, 
           lessonId,
-          commentId: payload.new?.id || payload.old?.id
+          recordId
         });
+        
         debouncedInvalidate();
       })
-      .subscribe((status) => {
-        handleSubscriptionStatus(status, 'comments');
-      });
-    
-    // Canal para curtidas
-    const likesChannel = supabase
-      .channel(`lesson-comment-likes-${lessonId}-${Date.now()}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'learning_comment_likes'
       }, (payload) => {
-        log('Mudança nas curtidas detectada', { 
-          event: payload.eventType,
-          lessonId 
-        });
+        log('Curtida modificada em comentário', { lessonId });
         debouncedInvalidate();
       })
       .subscribe((status) => {
-        handleSubscriptionStatus(status, 'likes');
+        if (status === 'SUBSCRIBED') {
+          isConnectedRef.current = true;
+          reconnectAttemptsRef.current = 0;
+          log('Canal realtime conectado', { lessonId });
+        } else if (status === 'CHANNEL_ERROR') {
+          isConnectedRef.current = false;
+          logError('Erro no canal realtime', { status, lessonId });
+          
+          // Tentar reconectar
+          if (reconnectAttemptsRef.current < maxReconnectAttempts) {
+            reconnectAttemptsRef.current++;
+            const delay = Math.pow(2, reconnectAttemptsRef.current) * 1000;
+            
+            setTimeout(() => {
+              log('Tentando reconectar canal realtime', { 
+                lessonId, 
+                attempt: reconnectAttemptsRef.current 
+              });
+              setupRealtimeConnection();
+            }, delay);
+          } else {
+            toast.error('Conexão instável detectada', {
+              description: 'Comentários serão atualizados quando você recarregar a página.',
+              duration: 5000
+            });
+          }
+        }
       });
     
-    channelsRef.current = [commentsChannel, likesChannel];
-  }, [isEnabled, lessonId, log, debouncedInvalidate]);
+    channelRef.current = channel;
+  }, [isEnabled, lessonId, debouncedInvalidate, maxReconnectAttempts, log, logError]);
 
-  // Gerenciar status das conexões
-  const handleSubscriptionStatus = useCallback((status: string, channelType: string) => {
-    switch (status) {
-      case 'SUBSCRIBED':
-        log(`Canal ${channelType} conectado com sucesso`, { lessonId });
-        reconnectAttemptsRef.current = 0;
-        isConnectedRef.current = true;
-        break;
-        
-      case 'CHANNEL_ERROR':
-      case 'TIMED_OUT':
-      case 'CLOSED':
-        logError(`Erro no canal ${channelType}: ${status}`, { 
-          lessonId, 
-          status,
-          showToast: false // Não mostrar toast para erros de realtime
-        });
-        isConnectedRef.current = false;
-        
-        // Tentar reconectar com backoff exponencial
-        if (reconnectAttemptsRef.current < maxReconnectAttempts) {
-          reconnectAttemptsRef.current++;
-          const delay = Math.min(
-            reconnectInterval * Math.pow(2, reconnectAttemptsRef.current - 1),
-            30000 // Max 30 segundos
-          );
-          
-          log(`Tentando reconectar em ${delay}ms (tentativa ${reconnectAttemptsRef.current}/${maxReconnectAttempts})`, { 
-            lessonId, 
-            channelType 
-          });
-          
-          setTimeout(() => {
-            setupRealtimeConnections();
-          }, delay);
-        } else {
-          log(`Máximo de tentativas de reconexão atingido para ${channelType}`, { lessonId });
-          
-          // Implementar fallback: polling periódico
-          const fallbackInterval = setInterval(() => {
-            if (!isConnectedRef.current) {
-              log('Fallback: invalidando cache por polling', { lessonId });
-              debouncedInvalidate();
-            } else {
-              clearInterval(fallbackInterval);
-            }
-          }, 30000); // A cada 30 segundos
-          
-          // Parar fallback após 10 minutos
-          setTimeout(() => {
-            clearInterval(fallbackInterval);
-          }, 600000);
-        }
-        break;
-    }
-  }, [lessonId, log, logError, maxReconnectAttempts, reconnectInterval, setupRealtimeConnections, debouncedInvalidate]);
-
-  // Health check das conexões
-  const performHealthCheck = useCallback(() => {
-    const activeChannels = channelsRef.current.filter(channel => 
-      channel && channel.state === 'joined'
-    );
-    
-    const isHealthy = activeChannels.length > 0;
-    
-    log('Health check realtime', { 
-      lessonId,
-      totalChannels: channelsRef.current.length,
-      activeChannels: activeChannels.length,
-      isHealthy,
-      reconnectAttempts: reconnectAttemptsRef.current
-    });
-    
-    if (!isHealthy && reconnectAttemptsRef.current === 0) {
-      log('Conexão não saudável, tentando reconectar', { lessonId });
-      setupRealtimeConnections();
-    }
-    
-    return isHealthy;
-  }, [lessonId, log, setupRealtimeConnections]);
-
-  // Configurar conexões ao montar e limpar ao desmontar
+  // Efeito para montar e desmontar a conexão realtime
   useEffect(() => {
-    if (isEnabled && lessonId) {
-      setupRealtimeConnections();
-      
-      // Health check periódico
-      const healthCheckInterval = setInterval(performHealthCheck, 60000); // A cada minuto
-      
-      return () => {
-        clearInterval(healthCheckInterval);
-        
-        // Limpar debounce timer
-        if (debounceTimerRef.current) {
-          clearTimeout(debounceTimerRef.current);
-        }
-        
-        // Limpar canais
-        channelsRef.current.forEach(channel => {
-          if (channel) {
-            supabase.removeChannel(channel);
-          }
-        });
-        channelsRef.current = [];
-        
-        log('Conexões realtime limpas', { lessonId });
-      };
-    }
-  }, [isEnabled, lessonId, setupRealtimeConnections, performHealthCheck, log]);
+    setupRealtimeConnection();
+    
+    return () => {
+      log('Desmontando conexão realtime', { lessonId });
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
+  }, [setupRealtimeConnection, lessonId, log]);
 
   return {
     isConnected: isConnectedRef.current,
-    reconnectAttempts: reconnectAttemptsRef.current,
-    performHealthCheck,
-    forceReconnect: setupRealtimeConnections
+    performHealthCheck
   };
 };

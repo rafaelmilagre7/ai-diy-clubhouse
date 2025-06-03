@@ -4,6 +4,7 @@ export interface Comment {
   content: string;
   created_at: string;
   user_id: string;
+  lesson_id: string;
   parent_id: string | null;
   profiles: {
     id?: string;
