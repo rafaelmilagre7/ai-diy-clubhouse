@@ -8,6 +8,7 @@ interface AuthenticatedLayoutProps {
 
 /**
  * Layout para páginas autenticadas - inclui sidebar e header
+ * Garante que todas as rotas protegidas tenham o layout consistente
  */
 const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) => {
   return (
