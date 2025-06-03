@@ -48,10 +48,10 @@ export const useSmartFeatureAccess = (feature: string) => {
       setIsLoading(true);
       setError(null);
 
-      logger.info('useSmartFeatureAccess', `Verificando acesso para feature: ${feature}`, {
+      logger.info(`Verificando acesso para feature: ${feature}`, {
         userId: user.id,
         feature
-      });
+      }, 'useSmartFeatureAccess');
 
       const result = await executeWithRetry(async () => {
         const { data, error: rpcError } = await supabase.rpc('user_can_access_feature', {
@@ -60,22 +60,22 @@ export const useSmartFeatureAccess = (feature: string) => {
         });
 
         if (rpcError) {
-          logger.error('useSmartFeatureAccess', 'Erro na função RPC', {
+          logger.error('Erro na função RPC', {
             error: rpcError.message,
             userId: user.id,
             feature
-          });
+          }, 'useSmartFeatureAccess');
           throw rpcError;
         }
 
         return data;
       }, `verificação de acesso para ${feature}`);
 
-      logger.info('useSmartFeatureAccess', 'Verificação de acesso concluída', {
+      logger.info('Verificação de acesso concluída', {
         result,
         userId: user.id,
         feature
-      });
+      }, 'useSmartFeatureAccess');
 
       setAccessData(result);
       cache.set(cacheKey, result);
@@ -83,11 +83,11 @@ export const useSmartFeatureAccess = (feature: string) => {
     } catch (err: any) {
       const errorMessage = err.message || 'Erro ao verificar permissões';
       
-      logger.error('useSmartFeatureAccess', 'Falha na verificação de acesso', {
+      logger.error('Falha na verificação de acesso', {
         error: errorMessage,
         userId: user.id,
         feature
-      });
+      }, 'useSmartFeatureAccess');
       
       setError(errorMessage);
       
