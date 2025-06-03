@@ -6,6 +6,7 @@ export const BusinessContextLoading = () => {
   return (
     <OnboardingLayout
       currentStep={3}
+      totalSteps={8}
       title="Contexto do Negócio"
     >
       <div className="flex flex-col items-center justify-center py-12">
