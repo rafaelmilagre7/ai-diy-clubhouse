@@ -6,7 +6,6 @@ import { useLogging } from "@/hooks/useLogging";
 
 export interface SolutionData {
   solution: any | null;
-  modules: any[];
   materials: any[];
   tools: any[];
   videos: any[];
@@ -50,14 +49,7 @@ export const useSolutionDataCentralized = (solutionId: string | undefined) => {
         }
 
         // 2. Buscar dados relacionados em paralelo
-        const [modulesResult, materialsResult, toolsResult, videosResult, progressResult] = await Promise.allSettled([
-          // Módulos
-          supabase
-            .from("modules")
-            .select("*")
-            .eq("solution_id", solutionId)
-            .order("module_order", { ascending: true }),
-          
+        const [materialsResult, toolsResult, videosResult, progressResult] = await Promise.allSettled([
           // Materiais (excluindo vídeos)
           supabase
             .from("solution_resources")
@@ -102,10 +94,6 @@ export const useSolutionDataCentralized = (solutionId: string | undefined) => {
         ]);
 
         // Processar resultados com tratamento de erros graceful
-        const modules = modulesResult.status === 'fulfilled' && !modulesResult.value.error 
-          ? modulesResult.value.data || [] 
-          : [];
-          
         const materials = materialsResult.status === 'fulfilled' && !materialsResult.value.error 
           ? materialsResult.value.data || [] 
           : [];
@@ -123,16 +111,15 @@ export const useSolutionDataCentralized = (solutionId: string | undefined) => {
           : null;
 
         // Log de erros não críticos
-        [modulesResult, materialsResult, toolsResult, videosResult, progressResult].forEach((result, index) => {
+        [materialsResult, toolsResult, videosResult, progressResult].forEach((result, index) => {
           if (result.status === 'rejected') {
-            const sections = ['modules', 'materials', 'tools', 'videos', 'progress'];
+            const sections = ['materials', 'tools', 'videos', 'progress'];
             logError(`Erro ao buscar ${sections[index]}:`, result.reason);
           }
         });
 
         log("Dados completos carregados com sucesso", {
           solution: !!solution,
-          modules: modules.length,
           materials: materials.length,
           tools: tools.length,
           videos: videos.length,
@@ -141,7 +128,6 @@ export const useSolutionDataCentralized = (solutionId: string | undefined) => {
 
         return {
           solution,
-          modules,
           materials,
           tools,
           videos,
