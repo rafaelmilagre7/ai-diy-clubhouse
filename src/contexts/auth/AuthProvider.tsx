@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { UserProfile } from '@/lib/supabase';
@@ -44,8 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             company_name: null,
             industry: null,
             role: 'member',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+            created_at: new Date().toISOString()
           };
           
           setProfile(basicProfile);
@@ -81,8 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             company_name: null,
             industry: null,
             role: 'member',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+            created_at: new Date().toISOString()
           };
           
           setProfile(basicProfile);
