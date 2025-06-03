@@ -1,8 +1,9 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, CheckSquare, Square, ListChecks } from "lucide-react";
+import { CheckCircle, CheckSquare, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 
 interface TabBasedChecklistSectionProps {
@@ -10,75 +11,85 @@ interface TabBasedChecklistSectionProps {
   isCompleted: boolean;
 }
 
-const defaultChecklistItems = [
+// Mock checklist data - in a real app this would come from the solution data
+const mockChecklistItems = [
   {
-    id: 1,
-    title: "Ferramentas configuradas",
-    description: "Todas as ferramentas necessárias foram configuradas e testadas",
-    category: "Preparação"
+    id: "1",
+    title: "Configurar ambiente de desenvolvimento",
+    description: "Instalar todas as dependências necessárias e configurar o ambiente",
+    completed: false,
+    category: "setup"
   },
   {
-    id: 2,
-    title: "Materiais revisados",
-    description: "Documentos e materiais de apoio foram baixados e revisados",
-    category: "Preparação"
+    id: "2", 
+    title: "Conectar APIs necessárias",
+    description: "Integrar com as APIs de terceiros mencionadas na solução",
+    completed: false,
+    category: "integration"
   },
   {
-    id: 3,
-    title: "Vídeos assistidos",
-    description: "Vídeo-aulas foram assistidas e compreendidas",
-    category: "Aprendizado"
+    id: "3",
+    title: "Configurar banco de dados",
+    description: "Criar estrutura de dados e configurar conexões",
+    completed: false,
+    category: "database"
   },
   {
-    id: 4,
-    title: "Ambiente de teste preparado",
-    description: "Ambiente seguro para testes foi configurado",
-    category: "Implementação"
+    id: "4",
+    title: "Implementar funcionalidades core",
+    description: "Desenvolver as principais funcionalidades da solução",
+    completed: false,
+    category: "development"
   },
   {
-    id: 5,
-    title: "Backup realizado",
-    description: "Backup dos dados importantes foi realizado antes da implementação",
-    category: "Segurança"
+    id: "5",
+    title: "Realizar testes",
+    description: "Executar testes de funcionalidade e performance",
+    completed: false,
+    category: "testing"
   },
   {
-    id: 6,
-    title: "Implementação executada",
-    description: "A solução foi implementada seguindo os passos recomendados",
-    category: "Implementação"
-  },
-  {
-    id: 7,
-    title: "Testes realizados",
-    description: "Testes foram executados para validar o funcionamento",
-    category: "Validação"
-  },
-  {
-    id: 8,
-    title: "Documentação atualizada",
-    description: "Documentação interna foi atualizada com as mudanças",
-    category: "Finalização"
+    id: "6",
+    title: "Deploy em produção",
+    description: "Publicar a solução no ambiente de produção",
+    completed: false,
+    category: "deployment"
   }
 ];
 
 export const TabBasedChecklistSection = ({ onSectionComplete, isCompleted }: TabBasedChecklistSectionProps) => {
-  const [checkedItems, setCheckedItems] = useState<Set<number>>(new Set());
+  const [checklistItems, setChecklistItems] = useState(mockChecklistItems);
+  const [showAllCompleted, setShowAllCompleted] = useState(false);
 
-  const toggleItem = (itemId: number) => {
-    const newCheckedItems = new Set(checkedItems);
-    if (newCheckedItems.has(itemId)) {
-      newCheckedItems.delete(itemId);
-    } else {
-      newCheckedItems.add(itemId);
+  const completedCount = checklistItems.filter(item => item.completed).length;
+  const totalCount = checklistItems.length;
+  const allCompleted = completedCount === totalCount;
+
+  useEffect(() => {
+    if (allCompleted && !showAllCompleted) {
+      setShowAllCompleted(true);
+      setTimeout(() => {
+        setShowAllCompleted(false);
+      }, 3000);
     }
-    setCheckedItems(newCheckedItems);
+  }, [allCompleted, showAllCompleted]);
+
+  const toggleItem = (itemId: string) => {
+    setChecklistItems(items =>
+      items.map(item =>
+        item.id === itemId ? { ...item, completed: !item.completed } : item
+      )
+    );
   };
 
-  const completedCount = checkedItems.size;
-  const totalCount = defaultChecklistItems.length;
-  const completionPercentage = Math.round((completedCount / totalCount) * 100);
-
-  const categories = [...new Set(defaultChecklistItems.map(item => item.category))];
+  const categoryColors = {
+    setup: "info",
+    integration: "warning", 
+    database: "neutral",
+    development: "success",
+    testing: "info",
+    deployment: "success"
+  } as const;
 
   return (
     <div className="space-y-6">
@@ -86,90 +97,115 @@ export const TabBasedChecklistSection = ({ onSectionComplete, isCompleted }: Tab
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <ListChecks className="w-5 h-5" />
+              <CheckSquare className="w-5 h-5" />
               Checklist de Implementação
             </CardTitle>
             <p className="text-sm text-gray-500 mt-1">
-              Siga esta lista para garantir uma implementação completa e segura
+              Acompanhe cada etapa da implementação desta solução
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="text-sm">
-              <span className="font-semibold">{completedCount}</span>
-              <span className="text-gray-500">/{totalCount}</span>
-            </div>
-            <div className="text-sm font-semibold text-viverblue">
-              {completionPercentage}%
-            </div>
-            {isCompleted && (
-              <CheckCircle className="w-6 h-6 text-green-500" />
-            )}
-          </div>
+          {isCompleted && (
+            <CheckCircle className="w-6 h-6 text-green-500" />
+          )}
         </CardHeader>
       </Card>
 
-      <div className="space-y-4">
-        {categories.map((category) => (
-          <Card key={category} className="border-white/10">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold">{category}</h3>
-                <Badge variant="outline">
-                  {defaultChecklistItems.filter(item => 
-                    item.category === category && checkedItems.has(item.id)
-                  ).length}/{defaultChecklistItems.filter(item => item.category === category).length}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="space-y-3">
-                {defaultChecklistItems
-                  .filter(item => item.category === category)
-                  .map((item) => {
-                    const isChecked = checkedItems.has(item.id);
-                    return (
-                      <div
-                        key={item.id}
-                        className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                          isChecked 
-                            ? 'bg-green-50 border-green-200 dark:bg-green-900/10 dark:border-green-800' 
-                            : 'bg-white border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-750'
-                        }`}
-                        onClick={() => toggleItem(item.id)}
-                      >
-                        <div className="mt-0.5">
-                          {isChecked ? (
-                            <CheckSquare className="w-5 h-5 text-green-600" />
-                          ) : (
-                            <Square className="w-5 h-5 text-gray-400" />
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <h4 className={`font-medium ${isChecked ? 'text-green-800 dark:text-green-200' : ''}`}>
-                            {item.title}
-                          </h4>
-                          <p className={`text-sm mt-1 ${isChecked ? 'text-green-700 dark:text-green-300' : 'text-gray-600 dark:text-gray-400'}`}>
-                            {item.description}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            </CardContent>
-          </Card>
+      {/* Progress Overview */}
+      <Card className="border-white/10">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">Progresso</h3>
+            <span className="text-sm font-medium">
+              {completedCount}/{totalCount} concluídos
+            </span>
+          </div>
+          
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-4">
+            <motion.div
+              className="bg-viverblue h-2 rounded-full"
+              initial={{ width: 0 }}
+              animate={{ width: `${(completedCount / totalCount) * 100}%` }}
+              transition={{ duration: 0.5 }}
+            />
+          </div>
+
+          <AnimatePresence>
+            {allCompleted && showAllCompleted && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700"
+              >
+                <p className="text-green-800 dark:text-green-300 font-medium">
+                  🎉 Todos os itens foram concluídos!
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </CardContent>
+      </Card>
+
+      {/* Checklist Items */}
+      <div className="space-y-3">
+        {checklistItems.map((item, index) => (
+          <motion.div
+            key={item.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+          >
+            <Card 
+              className={`border-white/10 cursor-pointer transition-all hover:shadow-md ${
+                item.completed ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-700' : ''
+              }`}
+              onClick={() => toggleItem(item.id)}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <motion.div
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="mt-1"
+                  >
+                    {item.completed ? (
+                      <CheckSquare className="w-5 h-5 text-green-500" />
+                    ) : (
+                      <Square className="w-5 h-5 text-gray-400" />
+                    )}
+                  </motion.div>
+                  
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className={`font-medium ${
+                        item.completed ? 'line-through text-gray-500' : ''
+                      }`}>
+                        {item.title}
+                      </h4>
+                      <Badge variant={categoryColors[item.category]} className="text-xs">
+                        {item.category}
+                      </Badge>
+                    </div>
+                    <p className={`text-sm text-gray-600 dark:text-gray-400 ${
+                      item.completed ? 'line-through' : ''
+                    }`}>
+                      {item.description}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         ))}
       </div>
 
       <div className="flex justify-center pt-4">
         <Button 
           onClick={onSectionComplete}
-          disabled={isCompleted || completedCount < totalCount}
+          disabled={isCompleted}
           className="bg-viverblue hover:bg-viverblue-dark"
         >
-          {isCompleted ? "Implementação Concluída" : 
-           completedCount < totalCount ? `Complete o checklist (${completedCount}/${totalCount})` : 
-           "Finalizar Implementação"}
+          {isCompleted ? "Seção Concluída" : "Marcar como Concluída"}
         </Button>
       </div>
     </div>
