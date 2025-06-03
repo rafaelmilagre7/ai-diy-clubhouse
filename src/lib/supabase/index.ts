@@ -1,27 +1,27 @@
 
-// Re-exportação centralizada para garantir compatibilidade com importações existentes
-export * from './client';
-export * from './types';
-export * from './config';
+// Exportações simplificadas para evitar dependências circulares
+export { supabase } from './client';
+export type { Tables } from './client';
 
-// Exportação explícita das funções de storage
-export { 
-  getYoutubeVideoId, 
-  getYoutubeThumbnailUrl, 
-  formatVideoDuration,
-  setupLearningStorageBuckets,
-  ensureBucketExists,
-  extractPandaVideoInfo,
-  uploadFileWithFallback
-  // Adicione outras funções que precisam ser exportadas
-} from './storage';
+// Exportar apenas tipos essenciais
+export type {
+  Database,
+  UserProfile,
+  Solution,
+  Progress,
+  Analytics,
+  ForumCategory,
+  ForumTopic,
+  ForumPost,
+  Tool,
+  Event,
+  Course,
+  Module,
+  Lesson,
+  Resource,
+  ImplementationTrail,
+  UserRole
+} from './types/index';
 
-// Exportação explícita das funções de RPC
-export {
-  createStoragePublicPolicy,
-  incrementTopicViews,
-  incrementTopicReplies,
-  deleteForumTopic,
-  deleteForumPost
-  // Adicionar outras funções de RPC conforme necessário
-} from './rpc';
+// Exportar configurações básicas
+export { ensureStorageBucketExists, createStoragePublicPolicy } from './client';
