@@ -1,86 +1,195 @@
 
-import React from "react";
-import { useSolutionDataContext } from "@/contexts/SolutionDataContext";
-import { SolutionToolCard } from "@/components/solution/tools/SolutionToolCard";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle, ExternalLink, Clock, AlertCircle } from "lucide-react";
+import { useSectionTracking } from "@/hooks/implementation/useSectionTracking";
 
-interface TabBasedToolsSectionProps {
-  onSectionComplete: () => void;
-  isCompleted: boolean;
+interface Tool {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  url: string;
+  difficulty: "beginner" | "intermediate" | "advanced";
 }
 
-export const TabBasedToolsSection = ({ onSectionComplete, isCompleted }: TabBasedToolsSectionProps) => {
-  const { data, isLoading } = useSolutionDataContext();
+interface TabBasedToolsSectionProps {
+  onSectionComplete: (validationData: any) => void;
+  isCompleted: boolean;
+  validation?: {
+    isValid: boolean;
+    message?: string;
+    requirement?: string;
+  };
+}
 
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <div className="h-6 bg-gray-200 rounded animate-pulse"></div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 bg-gray-200 rounded animate-pulse"></div>
-          ))}
-        </div>
-      </div>
-    );
-  }
+export const TabBasedToolsSection = ({ 
+  onSectionComplete, 
+  isCompleted,
+  validation 
+}: TabBasedToolsSectionProps) => {
+  const [exploredTools, setExploredTools] = useState<Set<string>>(new Set());
+  const { trackInteraction, getTimeSpentInSeconds, getActionCount } = useSectionTracking("tools");
 
-  const tools = data?.tools || [];
+  // Mock data das ferramentas
+  const tools: Tool[] = [
+    {
+      id: "1",
+      name: "ChatGPT",
+      description: "Assistente de IA para geração de texto e conversação",
+      category: "IA Conversacional",
+      url: "https://chat.openai.com",
+      difficulty: "beginner"
+    },
+    {
+      id: "2", 
+      name: "Claude",
+      description: "IA da Anthropic para análise e escrita",
+      category: "IA Conversacional",
+      url: "https://claude.ai",
+      difficulty: "beginner"
+    },
+    {
+      id: "3",
+      name: "Midjourney",
+      description: "Geração de imagens com IA",
+      category: "IA Visual",
+      url: "https://midjourney.com",
+      difficulty: "intermediate"
+    }
+  ];
 
-  if (tools.length === 0) {
-    return (
-      <Card className="border-white/10">
-        <CardContent className="p-8 text-center">
-          <Wrench className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-          <h3 className="text-lg font-semibold mb-2">Nenhuma ferramenta necessária</h3>
-          <p className="text-gray-500 mb-4">
-            Esta solução não requer ferramentas específicas para implementação.
-          </p>
-          <Button 
-            onClick={onSectionComplete}
-            className="bg-viverblue hover:bg-viverblue-dark"
-          >
-            Continuar
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
+  const handleToolExplore = (toolId: string, toolName: string) => {
+    setExploredTools(prev => new Set([...prev, toolId]));
+    trackInteraction(`explore_${toolName}`);
+  };
+
+  const handleCompleteSection = () => {
+    const validationData = {
+      interactionCount: exploredTools.size,
+      timeSpent: getTimeSpentInSeconds(),
+      exploredTools: Array.from(exploredTools)
+    };
+    
+    onSectionComplete(validationData);
+  };
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case "beginner": return "bg-green-100 text-green-800";
+      case "intermediate": return "bg-amber-100 text-amber-800"; 
+      case "advanced": return "bg-red-100 text-red-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
 
   return (
     <div className="space-y-6">
-      <Card className="border-white/10">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Wrench className="w-5 h-5" />
-              Ferramentas Necessárias
-            </CardTitle>
-            <p className="text-sm text-gray-500 mt-1">
-              Configure e prepare estas ferramentas para implementar a solução
-            </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold">Ferramentas Essenciais</h2>
+          <p className="text-gray-600 mt-1">
+            Explore as ferramentas necessárias para implementar esta solução
+          </p>
+        </div>
+        
+        {validation && !validation.isValid && (
+          <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <AlertCircle className="h-4 w-4 text-amber-600" />
+            <span className="text-sm text-amber-800">{validation.requirement}</span>
           </div>
-          {isCompleted && (
-            <CheckCircle className="w-6 h-6 text-green-500" />
-          )}
-        </CardHeader>
-      </Card>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {tools.map((tool) => (
-          <SolutionToolCard key={tool.id} tool={tool} />
-        ))}
+        )}
       </div>
 
-      <div className="flex justify-center pt-4">
-        <Button 
-          onClick={onSectionComplete}
+      {/* Progress indicator */}
+      <Card className="bg-blue-50 border-blue-200">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-blue-600" />
+              <span className="text-sm font-medium">Progresso</span>
+            </div>
+            <div className="text-sm text-gray-600">
+              {exploredTools.size}/2 ferramentas exploradas • {Math.floor(getTimeSpentInSeconds() / 60)}min
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Tools grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {tools.map((tool) => {
+          const isExplored = exploredTools.has(tool.id);
+          
+          return (
+            <Card key={tool.id} className={`transition-all duration-200 ${
+              isExplored ? 'border-green-200 bg-green-50' : 'hover:shadow-md'
+            }`}>
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <CardTitle className="text-lg">{tool.name}</CardTitle>
+                  {isExplored && <CheckCircle className="h-5 w-5 text-green-600" />}
+                </div>
+                <div className="flex gap-2">
+                  <Badge variant="secondary" className="text-xs">
+                    {tool.category}
+                  </Badge>
+                  <Badge className={`text-xs ${getDifficultyColor(tool.difficulty)}`}>
+                    {tool.difficulty}
+                  </Badge>
+                </div>
+              </CardHeader>
+              
+              <CardContent className="space-y-3">
+                <p className="text-sm text-gray-600">{tool.description}</p>
+                
+                <Button
+                  variant={isExplored ? "secondary" : "default"}
+                  size="sm"
+                  className="w-full"
+                  onClick={() => handleToolExplore(tool.id, tool.name)}
+                  asChild
+                >
+                  <a
+                    href={tool.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    {isExplored ? "Explorado" : "Explorar Ferramenta"}
+                  </a>
+                </Button>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Completion button */}
+      <div className="flex justify-between items-center pt-6 border-t">
+        <div className="text-sm text-gray-600">
+          {validation?.message && (
+            <p className="text-amber-600">{validation.message}</p>
+          )}
+        </div>
+        
+        <Button
+          onClick={handleCompleteSection}
           disabled={isCompleted}
-          className="bg-viverblue hover:bg-viverblue-dark"
+          size="lg"
+          className="flex items-center gap-2"
         >
-          {isCompleted ? "Seção Concluída" : "Marcar como Concluída"}
+          {isCompleted ? (
+            <>
+              <CheckCircle className="h-4 w-4" />
+              Seção Concluída
+            </>
+          ) : (
+            "Marcar como Concluída"
+          )}
         </Button>
       </div>
     </div>

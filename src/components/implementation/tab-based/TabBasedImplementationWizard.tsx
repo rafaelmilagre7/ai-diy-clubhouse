@@ -10,6 +10,8 @@ import { EnhancedProgressBar } from "./progress/EnhancedProgressBar";
 import { AnimatedTabsList } from "./navigation/AnimatedTabsList";
 import { TabTransition } from "./transitions/TabTransition";
 import { CompletionFeedback } from "./feedback/CompletionFeedback";
+import { ValidationDialog } from "./validation/ValidationDialog";
+import { useValidations } from "@/hooks/implementation/useValidations";
 
 interface TabBasedImplementationWizardProps {
   solutionId: string;
@@ -21,6 +23,21 @@ export const TabBasedImplementationWizard = ({ solutionId }: TabBasedImplementat
   const [showCompletionFeedback, setShowCompletionFeedback] = useState(false);
   const [lastCompletedSection, setLastCompletedSection] = useState("");
   const [tabDirection, setTabDirection] = useState<"left" | "right">("right");
+  const [showValidationDialog, setShowValidationDialog] = useState(false);
+  const [pendingCompletion, setPendingCompletion] = useState<{
+    sectionId: string;
+    sectionName: string;
+  } | null>(null);
+
+  const { 
+    validations, 
+    validateToolsSection, 
+    validateMaterialsSection, 
+    validateVideosSection, 
+    validateChecklistSection,
+    getSectionValidation,
+    isAllValid 
+  } = useValidations();
 
   const tabs = [
     { id: "tools", label: "Ferramentas", icon: "🔧" },
@@ -68,15 +85,66 @@ export const TabBasedImplementationWizard = ({ solutionId }: TabBasedImplementat
     setActiveTab(newTab);
   };
 
-  const handleSectionComplete = (sectionId: string) => {
+  const handleSectionComplete = (sectionId: string, validationData?: any) => {
+    const sectionName = tabLabels[sectionId as keyof typeof tabLabels];
+    
+    // Validar seção antes de completar
+    let validation;
+    switch (sectionId) {
+      case 'tools':
+        validation = validateToolsSection(
+          validationData?.interactionCount || 0, 
+          validationData?.timeSpent || 0
+        );
+        break;
+      case 'materials':
+        validation = validateMaterialsSection(
+          validationData?.downloadCount || 0, 
+          validationData?.timeSpent || 0
+        );
+        break;
+      case 'videos':
+        validation = validateVideosSection(
+          validationData?.watchedCount || 0, 
+          validationData?.totalWatchTime || 0
+        );
+        break;
+      case 'checklist':
+        validation = validateChecklistSection(
+          validationData?.checkedItems || 0, 
+          validationData?.totalItems || 0
+        );
+        break;
+      default:
+        validation = { isValid: true };
+    }
+
+    if (!validation.isValid) {
+      setPendingCompletion({ sectionId, sectionName });
+      setShowValidationDialog(true);
+      return;
+    }
+
+    // Completar seção
+    completeSection(sectionId, sectionName);
+  };
+
+  const completeSection = (sectionId: string, sectionName: string) => {
     const newCompleted = new Set(completedSections);
     newCompleted.add(sectionId);
     setCompletedSections(newCompleted);
     saveProgress(newCompleted);
     
     // Show completion feedback
-    setLastCompletedSection(tabLabels[sectionId as keyof typeof tabLabels]);
+    setLastCompletedSection(sectionName);
     setShowCompletionFeedback(true);
+  };
+
+  const handleValidationConfirm = () => {
+    if (pendingCompletion) {
+      completeSection(pendingCompletion.sectionId, pendingCompletion.sectionName);
+      setPendingCompletion(null);
+    }
   };
 
   const handleContinueAfterCompletion = () => {
@@ -117,29 +185,33 @@ export const TabBasedImplementationWizard = ({ solutionId }: TabBasedImplementat
           <TabTransition activeTab={activeTab} direction={tabDirection}>
             <TabsContent value="tools" className="mt-0">
               <TabBasedToolsSection
-                onSectionComplete={() => handleSectionComplete("tools")}
+                onSectionComplete={(validationData) => handleSectionComplete("tools", validationData)}
                 isCompleted={completedSections.has("tools")}
+                validation={getSectionValidation("tools")}
               />
             </TabsContent>
 
             <TabsContent value="materials" className="mt-0">
               <TabBasedMaterialsSection
-                onSectionComplete={() => handleSectionComplete("materials")}
+                onSectionComplete={(validationData) => handleSectionComplete("materials", validationData)}
                 isCompleted={completedSections.has("materials")}
+                validation={getSectionValidation("materials")}
               />
             </TabsContent>
 
             <TabsContent value="videos" className="mt-0">
               <TabBasedVideosSection
-                onSectionComplete={() => handleSectionComplete("videos")}
+                onSectionComplete={(validationData) => handleSectionComplete("videos", validationData)}
                 isCompleted={completedSections.has("videos")}
+                validation={getSectionValidation("videos")}
               />
             </TabsContent>
 
             <TabsContent value="checklist" className="mt-0">
               <TabBasedChecklistSection
-                onSectionComplete={() => handleSectionComplete("checklist")}
+                onSectionComplete={(validationData) => handleSectionComplete("checklist", validationData)}
                 isCompleted={completedSections.has("checklist")}
+                validation={getSectionValidation("checklist")}
               />
             </TabsContent>
 
@@ -149,6 +221,34 @@ export const TabBasedImplementationWizard = ({ solutionId }: TabBasedImplementat
           </TabTransition>
         </div>
       </Tabs>
+
+      {/* Validation Dialog */}
+      <ValidationDialog
+        isOpen={showValidationDialog}
+        onOpenChange={setShowValidationDialog}
+        onConfirm={handleValidationConfirm}
+        title="Confirmação de Conclusão"
+        description={
+          pendingCompletion 
+            ? `Você está prestes a marcar a seção "${pendingCompletion.sectionName}" como concluída.`
+            : ""
+        }
+        validationMessage={
+          pendingCompletion 
+            ? getSectionValidation(pendingCompletion.sectionId)?.message
+            : undefined
+        }
+        isValid={
+          pendingCompletion 
+            ? getSectionValidation(pendingCompletion.sectionId)?.isValid || false
+            : false
+        }
+        confirmText={
+          pendingCompletion && !getSectionValidation(pendingCompletion.sectionId)?.isValid
+            ? "Concluir Mesmo Assim"
+            : "Confirmar Conclusão"
+        }
+      />
 
       {/* Completion Feedback Modal */}
       <CompletionFeedback
