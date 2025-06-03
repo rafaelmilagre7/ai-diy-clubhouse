@@ -4,40 +4,40 @@ import { OnboardingPerformanceOptimizer } from './performance/OnboardingPerforma
 import { PerformanceWrapper } from '@/components/common/performance/PerformanceWrapper';
 import LoadingScreen from '@/components/common/LoadingScreen';
 
-// Lazy loading otimizado dos componentes de onboarding
-const OnboardingStepPersonalInfo = lazy(() => 
-  import('./steps/OnboardingStepPersonalInfo').then(module => ({ 
-    default: module.OnboardingStepPersonalInfo 
+// Lazy loading otimizado dos componentes de onboarding existentes
+const StepPersonalInfo = lazy(() => 
+  import('../final/steps/StepPersonalInfo').then(module => ({ 
+    default: module.StepPersonalInfo 
   }))
 );
 
-const OnboardingStepCompanyInfo = lazy(() => 
-  import('./steps/OnboardingStepCompanyInfo').then(module => ({ 
-    default: module.OnboardingStepCompanyInfo 
+const StepCompanyInfo = lazy(() => 
+  import('../final/steps/StepCompanyInfo').then(module => ({ 
+    default: module.StepCompanyInfo 
   }))
 );
 
-const OnboardingStepBusinessGoals = lazy(() => 
-  import('./steps/OnboardingStepBusinessGoals').then(module => ({ 
-    default: module.OnboardingStepBusinessGoals 
+const StepBusinessContext = lazy(() => 
+  import('../final/steps/StepBusinessContext').then(module => ({ 
+    default: module.StepBusinessContext 
   }))
 );
 
-const OnboardingStepAIExperience = lazy(() => 
-  import('./steps/OnboardingStepAIExperience').then(module => ({ 
-    default: module.OnboardingStepAIExperience 
+const StepAIExperience = lazy(() => 
+  import('../final/steps/StepAIExperience').then(module => ({ 
+    default: module.StepAIExperience 
   }))
 );
 
-const OnboardingStepImplementation = lazy(() => 
-  import('./steps/OnboardingStepImplementation').then(module => ({ 
-    default: module.OnboardingStepImplementation 
+const StepGoalsInfo = lazy(() => 
+  import('../final/steps/StepGoalsInfo').then(module => ({ 
+    default: module.StepGoalsInfo 
   }))
 );
 
-const OnboardingStepCompletion = lazy(() => 
-  import('./steps/OnboardingStepCompletion').then(module => ({ 
-    default: module.OnboardingStepCompletion 
+const StepDiscoveryInfo = lazy(() => 
+  import('../final/steps/StepDiscoveryInfo').then(module => ({ 
+    default: module.StepDiscoveryInfo 
   }))
 );
 
@@ -51,23 +51,41 @@ export const SimpleOnboardingFlow: React.FC<SimpleOnboardingFlowProps> = memo(({
   onComplete
 }) => {
   const [currentStep, setCurrentStep] = React.useState(initialStep);
+  const [data, setData] = React.useState({
+    personal_info: {},
+    company_info: {},
+    business_context: {},
+    ai_experience: {},
+    goals_info: {},
+    discovery_info: {}
+  });
   
   // Memoizar as props dos steps para evitar re-renders
   const stepProps = useMemo(() => ({
+    data,
+    onUpdate: (section: string, value: any) => {
+      setData(prev => ({
+        ...prev,
+        [section]: value
+      }));
+    },
     onNext: () => setCurrentStep(prev => prev + 1),
-    onBack: () => setCurrentStep(prev => prev - 1),
-    onComplete: onComplete || (() => {})
-  }), [onComplete]);
+    onPrevious: () => setCurrentStep(prev => prev - 1),
+    onComplete: onComplete || (() => {}),
+    canProceed: true,
+    currentStep,
+    totalSteps: 6
+  }), [data, onComplete, currentStep]);
 
   // Memoizar o componente do step atual
   const CurrentStepComponent = useMemo(() => {
     const components = [
-      OnboardingStepPersonalInfo,
-      OnboardingStepCompanyInfo,
-      OnboardingStepBusinessGoals,
-      OnboardingStepAIExperience,
-      OnboardingStepImplementation,
-      OnboardingStepCompletion
+      StepPersonalInfo,
+      StepCompanyInfo,
+      StepBusinessContext,
+      StepAIExperience,
+      StepGoalsInfo,
+      StepDiscoveryInfo
     ];
 
     const Component = components[currentStep - 1];
@@ -93,7 +111,9 @@ export const SimpleOnboardingFlow: React.FC<SimpleOnboardingFlowProps> = memo(({
               skeletonVariant="page"
             />
           }>
-            <CurrentStepComponent {...stepProps} />
+            <div className="container mx-auto px-4 py-8">
+              <CurrentStepComponent {...stepProps} />
+            </div>
           </Suspense>
         </div>
       </OnboardingPerformanceOptimizer>

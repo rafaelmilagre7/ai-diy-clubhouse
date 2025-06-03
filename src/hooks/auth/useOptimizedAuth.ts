@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/auth';
  * Evita re-computações desnecessárias
  */
 export const useOptimizedAuth = () => {
-  const { user, profile, isLoading } = useAuth();
+  const { user, profile, isLoading, signOut } = useAuth();
 
   // Memoizar computações baseadas no role
   const authData = useMemo(() => {
@@ -30,6 +30,7 @@ export const useOptimizedAuth = () => {
     ...authData,
     user,
     profile,
-    isLoading
+    isLoading,
+    signOut
   };
 };

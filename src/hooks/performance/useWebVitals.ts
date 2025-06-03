@@ -77,8 +77,10 @@ export const useWebVitals = () => {
       const clsObserver = new PerformanceObserver((list) => {
         let clsValue = 0;
         for (const entry of list.getEntries()) {
-          if (!entry.hadRecentInput) {
-            clsValue += (entry as any).value;
+          // Cast para o tipo específico LayoutShift
+          const layoutShiftEntry = entry as any;
+          if (!layoutShiftEntry.hadRecentInput) {
+            clsValue += layoutShiftEntry.value;
           }
         }
 
