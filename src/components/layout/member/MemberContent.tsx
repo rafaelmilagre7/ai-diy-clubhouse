@@ -11,6 +11,8 @@ export const MemberContent = ({
     <div 
       className={cn(
         "flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden",
+        // Em mobile, não tem margem (sidebar fica sobreposta)
+        // Em desktop, margem baseada no estado da sidebar (sem espaço extra)
         sidebarOpen ? "md:ml-64" : "md:ml-[70px]"
       )}
     >
