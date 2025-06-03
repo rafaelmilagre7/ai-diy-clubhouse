@@ -49,10 +49,10 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
         console.log("Usando progresso existente:", progress);
       }
       
-      // Navigate directly to the implementation page
+      // Navigate to the implementation page using the correct route
       toast.success("Redirecionando para a implementação...");
-      console.log("Redirecionando para /implement/" + solutionId + "/0");
-      navigate(`/implement/${solutionId}/0`);
+      console.log("Redirecionando para /implementation/" + solutionId);
+      navigate(`/implementation/${solutionId}`);
       return true; // Retorna true quando a implementação é iniciada com sucesso
     } catch (error) {
       console.error("Erro ao iniciar implementação:", error);
@@ -73,11 +73,11 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
       return false; // Retorna false em caso de erro
     }
     
-    // Navigate directly to the implementation page
+    // Navigate to the implementation page using the correct route
     console.log("Continuando implementação no módulo:", progress.current_module);
     toast.success("Redirecionando para onde você parou...");
-    console.log("Redirecionando para /implement/" + solutionId + "/" + (progress.current_module || 0));
-    navigate(`/implement/${solutionId}/${progress.current_module || 0}`);
+    console.log("Redirecionando para /implementation/" + solutionId);
+    navigate(`/implementation/${solutionId}`);
     return true; // Retorna true quando a continuação é bem-sucedida
   };
   

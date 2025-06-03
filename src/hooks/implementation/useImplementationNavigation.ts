@@ -8,35 +8,30 @@ export const useImplementationNavigation = () => {
     moduleIdx: string;
   }>();
   
-  // Normaliza os parâmetros, suportando tanto /implement/:id/:moduleIdx quanto /implementation/:id/:moduleIdx
+  // Normaliza os parâmetros, suportando tanto /implementation/:id quanto /implementation/:id/:moduleIdx
   const moduleIdxParam = moduleIndex || moduleIdx || "0";
   const moduleIdxNumber = parseInt(moduleIdxParam);
   const navigate = useNavigate();
   
-  // Usa consistentemente o padrão /implement/:id/:moduleIdx para navegação
-  const basePath = "/implement";
+  // Usa consistentemente o padrão /implementation/:id para navegação
+  const basePath = "/implementation";
   
-  // Navigate to next module
+  // Navigate to next module (caso futuramente tenhamos navegação por módulos)
   const handleComplete = () => {
-    console.log(`Navegando para o próximo módulo: ${moduleIdxNumber + 1}`);
-    navigate(`${basePath}/${id}/${moduleIdxNumber + 1}`);
+    console.log(`Implementação concluída para solução: ${id}`);
+    navigate(`/implementation/completed/${id}`);
   };
   
-  // Navigate to previous module
+  // Navigate to previous module or back to solution
   const handlePrevious = () => {
-    if (moduleIdxNumber > 0) {
-      console.log(`Navegando para o módulo anterior: ${moduleIdxNumber - 1}`);
-      navigate(`${basePath}/${id}/${moduleIdxNumber - 1}`);
-    } else {
-      console.log(`Voltando para a página de solução: ${id}`);
-      navigate(`/solution/${id}`);
-    }
+    console.log(`Voltando para a página de solução: ${id}`);
+    navigate(`/solution/${id}`);
   };
   
-  // Navigate to specific module
+  // Navigate to specific module (placeholder para funcionalidade futura)
   const handleNavigateToModule = (moduleIdx: number) => {
-    console.log(`Navegando para o módulo específico: ${moduleIdx}`);
-    navigate(`${basePath}/${id}/${moduleIdx}`);
+    console.log(`Navegação por módulos não implementada ainda: ${moduleIdx}`);
+    // Para futuras implementações com módulos específicos
   };
   
   return {
