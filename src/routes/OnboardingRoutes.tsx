@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { OnboardingFinalFlow } from '@/components/onboarding/final/OnboardingFinalFlow';
+import OnboardingFinalFlow from '@/components/onboarding/final/OnboardingFinalFlow';
 import { OnboardingCompletionGuard } from '@/components/onboarding/OnboardingCompletionGuard';
 import OnboardingFinalCompleted from '@/pages/onboarding/OnboardingFinalCompleted';
 

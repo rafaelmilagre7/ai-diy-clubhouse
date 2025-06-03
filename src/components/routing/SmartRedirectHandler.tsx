@@ -6,7 +6,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import LoadingScreen from '@/components/common/LoadingScreen';
 
 interface SmartRedirectHandlerProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 // Rotas que requerem onboarding completo
@@ -78,4 +78,27 @@ export const SmartRedirectHandler: React.FC<SmartRedirectHandlerProps> = ({ chil
   }
 
   return <>{children}</>;
+};
+
+// Para compatibilidade com rotas que não precisam de redirecionamento
+export const SimpleRedirectHandler: React.FC = () => {
+  const { user, profile, isLoading: authLoading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      // Redirecionamento baseado no perfil do usuário
+      if (profile?.role === 'admin') {
+        navigate('/admin', { replace: true });
+      } else if (profile?.role === 'formacao') {
+        navigate('/formacao', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
+    } else if (!authLoading && !user) {
+      navigate('/login', { replace: true });
+    }
+  }, [user, profile, authLoading, navigate]);
+
+  return <LoadingScreen message="Redirecionando..." />;
 };

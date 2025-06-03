@@ -23,32 +23,32 @@ import {
   LazyNetworkingPageWithSuspense
 } from '@/components/routing/LazyRoutes';
 
-// Importações diretas para páginas críticas
-import DashboardPage from '@/pages/member/DashboardPage';
-import ProfilePage from '@/pages/member/ProfilePage';
-import EditProfilePage from '@/pages/member/EditProfilePage';
+// Importações diretas para páginas críticas - usando os caminhos corretos
+import Dashboard from '@/pages/member/Dashboard';
+import Profile from '@/pages/member/Profile';
+import EditProfile from '@/pages/member/EditProfile';
 
 export const memberRoutes: RouteObject[] = [
   // Rotas raiz redirecionadas
   {
     path: "/",
-    element: <ProtectedRoute><DashboardPage /></ProtectedRoute>
+    element: <ProtectedRoute><Dashboard /></ProtectedRoute>
   },
   
   // Dashboard principal
   {
     path: "/dashboard",
-    element: <ProtectedRoute><MemberLayout><DashboardPage /></MemberLayout></ProtectedRoute>
+    element: <ProtectedRoute><MemberLayout><Dashboard /></MemberLayout></ProtectedRoute>
   },
   
   // Perfil do usuário
   {
     path: "/profile",
-    element: <ProtectedRoute><MemberLayout><ProfilePage /></MemberLayout></ProtectedRoute>
+    element: <ProtectedRoute><MemberLayout><Profile /></MemberLayout></ProtectedRoute>
   },
   {
     path: "/profile/edit",
-    element: <ProtectedRoute><MemberLayout><EditProfilePage /></MemberLayout></ProtectedRoute>
+    element: <ProtectedRoute><MemberLayout><EditProfile /></MemberLayout></ProtectedRoute>
   },
   
   // Trilha de implementação
