@@ -29,7 +29,7 @@ const LayoutProvider = memo(() => {
     isPathAdmin: location.pathname.startsWith('/admin'),
     isPathFormacao: location.pathname.startsWith('/formacao'),
     isFormacaoRoute: location.pathname.startsWith('/formacao'),
-    isOnboardingRoute: location.pathname.startsWith('/onboarding'),
+    isOnboardingRoute: location.pathname.startsWith('/onboarding') || location.pathname.startsWith('/onboarding-new'),
     isMemberRoute: !location.pathname.startsWith('/admin') && !location.pathname.startsWith('/formacao') && !location.pathname.startsWith('/onboarding')
   }), [location.pathname]);
 
@@ -53,6 +53,7 @@ const LayoutProvider = memo(() => {
         return;
       }
       
+      // Permitir acesso às rotas de onboarding mesmo se não completo
       if (!routeChecks.isOnboardingRoute && !isOnboardingComplete) {
         navigate('/onboarding-new', { replace: true });
         return;
@@ -60,8 +61,8 @@ const LayoutProvider = memo(() => {
       
       setLayoutReady(true);
       
-      // Verificar redirecionamento por role
-      if (user && profile) {
+      // Verificar redirecionamento por role apenas se não estiver em onboarding
+      if (user && profile && !routeChecks.isOnboardingRoute) {
         const { isLearningRoute, isPathAdmin, isPathFormacao } = routeChecks;
         
         if (isAdmin && !isPathAdmin && !isPathFormacao && !isLearningRoute) {
@@ -86,7 +87,7 @@ const LayoutProvider = memo(() => {
 
   // Renderizar layout baseado na rota
   if (layoutReady && user) {
-    const { isFormacaoRoute, isLearningRoute, isMemberRoute } = routeChecks;
+    const { isFormacaoRoute, isLearningRoute, isMemberRoute, isOnboardingRoute } = routeChecks;
     
     if (isFormacaoRoute && (isFormacao || isAdmin)) {
       return (
@@ -96,7 +97,7 @@ const LayoutProvider = memo(() => {
           </FormacaoLayout>
         </PageTransitionWithFallback>
       );
-    } else if (isMemberRoute || isLearningRoute || !isFormacao || isAdmin) {
+    } else if (isMemberRoute || isLearningRoute || isOnboardingRoute || !isFormacao || isAdmin) {
       return (
         <PageTransitionWithFallback isVisible={true}>
           <MemberLayout>

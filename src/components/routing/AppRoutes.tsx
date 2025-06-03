@@ -20,6 +20,9 @@ const Networking = lazy(() => import('@/pages/member/networking/NetworkingPage')
 const ImplementationTrail = lazy(() => import('@/pages/member/ImplementationTrailPage'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
+// Onboarding pages
+const NovoOnboardingNew = lazy(() => import('@/pages/onboarding/NovoOnboardingNew'));
+
 // Admin pages
 const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'));
 const AdminSolutions = lazy(() => import('@/pages/admin/AdminSolutions'));
@@ -46,6 +49,10 @@ const AppRoutes = () => {
       <Routes>
         {/* Rotas principais em português */}
         <Route path="/dashboard" element={<OptimizedDashboard />} />
+        
+        {/* Onboarding routes */}
+        <Route path="/onboarding-new" element={<NovoOnboardingNew />} />
+        <Route path="/onboarding-new/*" element={<NovoOnboardingNew />} />
         
         {/* Soluções */}
         <Route path="/solucoes" element={<Solutions />} />

@@ -34,23 +34,11 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
   const { isAdmin, isFormacao, profile } = useAuth();
   const { isOnboardingComplete, isLoading: onboardingLoading } = useUnifiedOnboardingValidation();
 
-  console.log('🔍 MemberSidebarNav: Status do networking e onboarding:', {
-    isOnboardingComplete,
-    onboardingLoading,
-    isAdmin,
-    userRole: profile?.role
-  });
-
   const menuItems = [
     {
       title: "Dashboard",
       href: "/dashboard",
       icon: LayoutDashboard,
-    },
-    {
-      title: "Onboarding",
-      href: "/onboarding-new",
-      icon: BookOpen,
     },
     {
       title: "Trilha de Implementação",
@@ -78,11 +66,6 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
       icon: Gift,
     },
     {
-      title: "Sugestões",
-      href: "/suggestions",
-      icon: MessageSquare,
-    },
-    {
       title: "Comunidade",
       href: "/comunidade",
       icon: MessagesSquare,
@@ -103,18 +86,10 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
   // Adicionar networking se o usuário completou o onboarding OU é admin
   const hasNetworkingAccess = isAdmin || isOnboardingComplete;
   if (hasNetworkingAccess && !onboardingLoading) {
-    console.log('✅ MemberSidebarNav: Adicionando networking ao menu');
     menuItems.splice(5, 0, {
       title: "Networking",
       href: "/networking",
       icon: Users,
-    });
-  } else {
-    console.log('❌ MemberSidebarNav: Networking não disponível', {
-      hasNetworkingAccess,
-      onboardingLoading,
-      isAdmin,
-      isOnboardingComplete
     });
   }
 
