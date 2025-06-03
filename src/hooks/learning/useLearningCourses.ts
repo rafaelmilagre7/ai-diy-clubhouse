@@ -5,6 +5,13 @@ import { LearningCourse, LearningLesson, LearningModule } from "@/lib/supabase/t
 import { useAuth } from "@/contexts/auth";
 import { ensureArray, ensureNumber, validateCourseData } from "@/lib/supabase/types/utils";
 
+// Tipagem específica para a query com módulos e aulas
+interface CourseWithModulesQuery extends LearningCourse {
+  modules: Array<LearningModule & {
+    lessons: LearningLesson[];
+  }>;
+}
+
 export const useLearningCourses = () => {
   const { user } = useAuth();
 
@@ -58,7 +65,7 @@ export const useLearningCourses = () => {
       const restrictedIds = new Set(ensureArray(restrictedCourses).map(rc => rc.course_id));
       
       // Processar cursos com dados de módulos e aulas - COM VALIDAÇÃO DEFENSIVA
-      const processedCourses = ensureArray(data).map(course => {
+      const processedCourses = ensureArray(data as CourseWithModulesQuery[]).map(course => {
         // Validar dados básicos do curso
         const validatedCourse = validateCourseData(course);
         
@@ -70,16 +77,16 @@ export const useLearningCourses = () => {
         let lessonCount = 0;
         let lessons: any[] = [];
         
-        modules.forEach(module => {
-          const moduleLessons = ensureArray(module.lessons);
+        modules.forEach((module: any) => {
+          const moduleLessons = ensureArray(module?.lessons || []);
           lessonCount += moduleLessons.length;
           
           // Adicionar informações do curso e módulo a cada aula
           const enrichedLessons = moduleLessons.map(lesson => ({
             ...lesson,
             module: {
-              id: module.id,
-              title: module.title || "Módulo sem título",
+              id: module?.id || '',
+              title: module?.title || "Módulo sem título",
               course: {
                 id: course.id,
                 title: course.title || "Curso sem título"

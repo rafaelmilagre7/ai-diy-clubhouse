@@ -5,14 +5,24 @@ import { MemberCoursesList } from "@/components/learning/member/MemberCoursesLis
 import { useLearningCourses } from "@/hooks/learning/useLearningCourses";
 import { useUserProgress } from "@/hooks/learning/useUserProgress";
 import { ContinueLearning } from "@/components/learning/member/ContinueLearning";
+import { LearningCourseWithStats } from "@/lib/supabase/types";
 import { ensureArray } from "@/lib/supabase/types/utils";
 
 export default function LearningPage() {
   const { courses = [], isLoading } = useLearningCourses();
   const { userProgress = [] } = useUserProgress();
   
-  // Filtrar apenas cursos publicados com validação defensiva
-  const allCourses = ensureArray(courses).filter(course => course?.published);
+  // Filtrar apenas cursos publicados e garantir tipo correto
+  const allCourses: LearningCourseWithStats[] = ensureArray(courses)
+    .filter(course => course?.published)
+    .map(course => ({
+      ...course,
+      // Garantir que todas as propriedades obrigatórias estejam presentes
+      slug: course.slug || course.id || 'curso-sem-slug',
+      order_index: course.order_index || 0,
+      created_by: course.created_by || null,
+      is_restricted: course.is_restricted || false
+    }));
   
   return (
     <div className="space-y-6">

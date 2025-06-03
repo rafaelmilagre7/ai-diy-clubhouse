@@ -51,15 +51,17 @@ export const ensureBoolean = (value: boolean | undefined | null, fallback = fals
   return typeof value === 'boolean' ? value : fallback;
 };
 
-// Helper para criar props defensivas
+// Helper para criar props defensivas - VERSÃO CORRIGIDA
 export const createSafeProps = <T extends Record<string, any>>(
   props: T | undefined,
   defaults: Partial<T> = {}
 ): T => {
-  if (!props) return defaults as T;
+  if (!props) return { ...defaults } as T;
   
-  const safeProps = { ...defaults };
+  // Criar um novo objeto com os defaults primeiro
+  const safeProps: Record<string, any> = { ...defaults };
   
+  // Iterar sobre as propriedades do objeto de entrada
   Object.keys(props).forEach(key => {
     const value = props[key];
     if (value !== undefined && value !== null) {
@@ -78,6 +80,9 @@ export const validateCourseData = (course: any) => {
     description: ensureString(course?.description),
     cover_image_url: course?.cover_image_url || null,
     published: ensureBoolean(course?.published),
+    slug: ensureString(course?.slug, course?.id || 'curso-sem-slug'),
+    order_index: ensureNumber(course?.order_index, 0),
+    created_by: course?.created_by || null,
     module_count: ensureNumber(course?.module_count),
     lesson_count: ensureNumber(course?.lesson_count),
     all_lessons: ensureArray(course?.all_lessons),

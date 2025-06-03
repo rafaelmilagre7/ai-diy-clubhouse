@@ -133,6 +133,7 @@ export interface LearningCourseWithStats extends LearningCourse {
   lesson_count?: number;
   all_lessons?: LearningLesson[];
   progress?: number;
+  is_restricted?: boolean;
 }
 
 export interface LearningModuleWithStats extends LearningModule {
