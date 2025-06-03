@@ -3,43 +3,45 @@ import { RouteObject } from "react-router-dom";
 import { FormacaoProtectedRoutes } from '@/auth/FormacaoProtectedRoutes';
 import FormacaoLayout from '@/components/layout/formacao/FormacaoLayout';
 
-// Formação (Admin LMS)
-import FormacaoDashboard from '@/pages/formacao/FormacaoDashboard';
-import FormacaoCursos from '@/pages/formacao/FormacaoCursos';
-import FormacaoCursoDetalhes from '@/pages/formacao/FormacaoCursoDetalhes';
-import FormacaoModuloDetalhes from '@/pages/formacao/FormacaoModuloDetalhes';
-import FormacaoAulas from '@/pages/formacao/FormacaoAulas';
-import FormacaoAulaDetalhes from '@/pages/formacao/FormacaoAulaDetalhes';
-import FormacaoAulaEditar from '@/pages/formacao/FormacaoAulaEditar';
+// Importar componentes lazy
+import {
+  LazyFormacaoDashboardWithSuspense,
+  LazyFormacaoCursosWithSuspense,
+  LazyFormacaoCursoDetalhesWithSuspense,
+  LazyFormacaoModuloDetalhesWithSuspense,
+  LazyFormacaoAulasWithSuspense,
+  LazyFormacaoAulaDetalhesWithSuspense,
+  LazyFormacaoAulaEditarWithSuspense
+} from '@/components/routing/LazyRoutes';
 
 export const formacaoRoutes: RouteObject[] = [
   {
     path: "/formacao",
-    element: <FormacaoProtectedRoutes><FormacaoLayout><FormacaoDashboard /></FormacaoLayout></FormacaoProtectedRoutes>
+    element: <FormacaoProtectedRoutes><FormacaoLayout><LazyFormacaoDashboardWithSuspense /></FormacaoLayout></FormacaoProtectedRoutes>
   },
   {
     path: "/formacao/cursos",
-    element: <FormacaoProtectedRoutes><FormacaoLayout><FormacaoCursos /></FormacaoLayout></FormacaoProtectedRoutes>
+    element: <FormacaoProtectedRoutes><FormacaoLayout><LazyFormacaoCursosWithSuspense /></FormacaoLayout></FormacaoProtectedRoutes>
   },
   {
     path: "/formacao/cursos/:id",
-    element: <FormacaoProtectedRoutes><FormacaoLayout><FormacaoCursoDetalhes /></FormacaoLayout></FormacaoProtectedRoutes>
+    element: <FormacaoProtectedRoutes><FormacaoLayout><LazyFormacaoCursoDetalhesWithSuspense /></FormacaoLayout></FormacaoProtectedRoutes>
   },
   {
     path: "/formacao/modulos/:id",
-    element: <FormacaoProtectedRoutes><FormacaoLayout><FormacaoModuloDetalhes /></FormacaoLayout></FormacaoProtectedRoutes>
+    element: <FormacaoProtectedRoutes><FormacaoLayout><LazyFormacaoModuloDetalhesWithSuspense /></FormacaoLayout></FormacaoProtectedRoutes>
   },
   {
     path: "/formacao/aulas",
-    element: <FormacaoProtectedRoutes><FormacaoLayout><FormacaoAulas /></FormacaoLayout></FormacaoProtectedRoutes>
+    element: <FormacaoProtectedRoutes><FormacaoLayout><LazyFormacaoAulasWithSuspense /></FormacaoLayout></FormacaoProtectedRoutes>
   },
   {
     path: "/formacao/aulas/:id",
-    element: <FormacaoProtectedRoutes><FormacaoLayout><FormacaoAulaDetalhes /></FormacaoLayout></FormacaoProtectedRoutes>
+    element: <FormacaoProtectedRoutes><FormacaoLayout><LazyFormacaoAulaDetalhesWithSuspense /></FormacaoLayout></FormacaoProtectedRoutes>
   },
   {
     path: "/formacao/aulas/:id/editar",
-    element: <FormacaoProtectedRoutes><FormacaoLayout><FormacaoAulaEditar /></FormacaoLayout></FormacaoProtectedRoutes>
+    element: <FormacaoProtectedRoutes><FormacaoLayout><LazyFormacaoAulaEditarWithSuspense /></FormacaoLayout></FormacaoProtectedRoutes>
   },
   {
     path: "/formacao/materiais",

@@ -12,7 +12,7 @@ interface CommentsListProps {
   isLoading: boolean;
 }
 
-const CommentsList = ({ comments, isLoading }: CommentsListProps) => {
+const CommentsList = React.memo(({ comments, isLoading }: CommentsListProps) => {
   if (isLoading) {
     return (
       <div className="space-y-4 mt-4">
@@ -82,6 +82,8 @@ const CommentsList = ({ comments, isLoading }: CommentsListProps) => {
       })}
     </div>
   );
-};
+});
+
+CommentsList.displayName = 'CommentsList';
 
 export default CommentsList;

@@ -6,6 +6,7 @@ import { ThumbsUp, MessageSquare, Trash2, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import React from 'react';
 
 interface CommentItemProps {
   comment: Comment;
@@ -16,7 +17,7 @@ interface CommentItemProps {
   isReply?: boolean;
 }
 
-export const CommentItem = ({
+const CommentItem = React.memo(({
   comment,
   currentUserId,
   onReply,
@@ -131,4 +132,8 @@ export const CommentItem = ({
       </div>
     </div>
   );
-};
+});
+
+CommentItem.displayName = 'CommentItem';
+
+export { CommentItem };
