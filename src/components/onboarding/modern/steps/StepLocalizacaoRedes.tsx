@@ -11,7 +11,43 @@ const COUNTRY_OPTIONS = [
   { value: 'US', label: '🇺🇸 Estados Unidos' },
   { value: 'PT', label: '🇵🇹 Portugal' },
   { value: 'ES', label: '🇪🇸 Espanha' },
-  { value: 'FR', label: '🇫🇷 França' }
+  { value: 'AR', label: '🇦🇷 Argentina' },
+  { value: 'MX', label: '🇲🇽 México' },
+  { value: 'CO', label: '🇨🇴 Colômbia' },
+  { value: 'PE', label: '🇵🇪 Peru' },
+  { value: 'CL', label: '🇨🇱 Chile' },
+  { value: 'UY', label: '🇺🇾 Uruguai' },
+  { value: 'OTHER', label: '🌍 Outro país' }
+];
+
+const BRAZILIAN_STATES = [
+  { value: 'AC', label: 'Acre' },
+  { value: 'AL', label: 'Alagoas' },
+  { value: 'AP', label: 'Amapá' },
+  { value: 'AM', label: 'Amazonas' },
+  { value: 'BA', label: 'Bahia' },
+  { value: 'CE', label: 'Ceará' },
+  { value: 'DF', label: 'Distrito Federal' },
+  { value: 'ES', label: 'Espírito Santo' },
+  { value: 'GO', label: 'Goiás' },
+  { value: 'MA', label: 'Maranhão' },
+  { value: 'MT', label: 'Mato Grosso' },
+  { value: 'MS', label: 'Mato Grosso do Sul' },
+  { value: 'MG', label: 'Minas Gerais' },
+  { value: 'PA', label: 'Pará' },
+  { value: 'PB', label: 'Paraíba' },
+  { value: 'PR', label: 'Paraná' },
+  { value: 'PE', label: 'Pernambuco' },
+  { value: 'PI', label: 'Piauí' },
+  { value: 'RJ', label: 'Rio de Janeiro' },
+  { value: 'RN', label: 'Rio Grande do Norte' },
+  { value: 'RS', label: 'Rio Grande do Sul' },
+  { value: 'RO', label: 'Rondônia' },
+  { value: 'RR', label: 'Roraima' },
+  { value: 'SC', label: 'Santa Catarina' },
+  { value: 'SP', label: 'São Paulo' },
+  { value: 'SE', label: 'Sergipe' },
+  { value: 'TO', label: 'Tocantins' }
 ];
 
 export const StepLocalizacaoRedes: React.FC<OnboardingStepProps> = ({
@@ -23,14 +59,16 @@ export const StepLocalizacaoRedes: React.FC<OnboardingStepProps> = ({
   currentStep,
   totalSteps
 }) => {
+  const isBrazil = data.country === 'BR';
+
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-3xl mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-white mb-2">
-          Onde você está? 🌍
+          Localização e redes sociais 📍
         </h2>
         <p className="text-gray-400">
-          Nos ajude a entender sua localização para personalizar sua experiência
+          Onde você está localizado e como podemos nos conectar
         </p>
       </div>
 
@@ -44,7 +82,18 @@ export const StepLocalizacaoRedes: React.FC<OnboardingStepProps> = ({
           required
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {isBrazil && (
+          <DropdownModerno
+            value={data.state || ''}
+            onChange={(value) => onUpdate('state', value)}
+            options={BRAZILIAN_STATES}
+            placeholder="Selecione seu estado"
+            label="Estado"
+            required
+          />
+        )}
+
+        {!isBrazil && data.country && (
           <div className="space-y-2">
             <label className="block text-sm font-medium text-white">
               Estado/Região <span className="text-red-400">*</span>
@@ -53,23 +102,23 @@ export const StepLocalizacaoRedes: React.FC<OnboardingStepProps> = ({
               type="text"
               value={data.state || ''}
               onChange={(e) => onUpdate('state', e.target.value)}
-              placeholder="Ex: São Paulo"
+              placeholder="Digite seu estado ou região"
               className="h-12 bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:ring-viverblue/50"
             />
           </div>
+        )}
 
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-white">
-              Cidade <span className="text-red-400">*</span>
-            </label>
-            <Input
-              type="text"
-              value={data.city || ''}
-              onChange={(e) => onUpdate('city', e.target.value)}
-              placeholder="Ex: São Paulo"
-              className="h-12 bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:ring-viverblue/50"
-            />
-          </div>
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-white">
+            Cidade <span className="text-red-400">*</span>
+          </label>
+          <Input
+            type="text"
+            value={data.city || ''}
+            onChange={(e) => onUpdate('city', e.target.value)}
+            placeholder="Digite sua cidade"
+            className="h-12 bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:ring-viverblue/50"
+          />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -78,10 +127,10 @@ export const StepLocalizacaoRedes: React.FC<OnboardingStepProps> = ({
               Instagram (opcional)
             </label>
             <Input
-              type="url"
+              type="text"
               value={data.instagram_url || ''}
               onChange={(e) => onUpdate('instagram_url', e.target.value)}
-              placeholder="https://instagram.com/seuusuario"
+              placeholder="@seuusuario ou link completo"
               className="h-12 bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:ring-viverblue/50"
             />
           </div>
@@ -91,13 +140,20 @@ export const StepLocalizacaoRedes: React.FC<OnboardingStepProps> = ({
               LinkedIn (opcional)
             </label>
             <Input
-              type="url"
+              type="text"
               value={data.linkedin_url || ''}
               onChange={(e) => onUpdate('linkedin_url', e.target.value)}
-              placeholder="https://linkedin.com/in/seuusuario"
+              placeholder="Link do seu perfil LinkedIn"
               className="h-12 bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:ring-viverblue/50"
             />
           </div>
+        </div>
+
+        <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-4">
+          <p className="text-sm text-purple-300">
+            🌐 <strong>Networking:</strong> Suas redes sociais nos ajudam a 
+            conectar você com outros membros da sua região e área de interesse.
+          </p>
         </div>
 
         <div className="flex justify-between items-center pt-6 border-t border-gray-700">

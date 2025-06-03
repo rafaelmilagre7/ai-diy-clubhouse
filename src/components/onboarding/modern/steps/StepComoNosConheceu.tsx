@@ -6,13 +6,17 @@ import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { OnboardingStepProps } from '@/types/quickOnboarding';
 import { DropdownModerno } from '../DropdownModerno';
 
-const HOW_FOUND_OPTIONS = [
-  { value: 'google', label: '🔍 Google/Pesquisa' },
+const HOW_FOUND_US_OPTIONS = [
+  { value: 'google', label: '🔍 Pesquisa no Google' },
   { value: 'youtube', label: '📺 YouTube' },
+  { value: 'instagram', label: '📷 Instagram' },
   { value: 'linkedin', label: '💼 LinkedIn' },
-  { value: 'instagram', label: '📸 Instagram' },
-  { value: 'indicacao', label: '👥 Indicação de alguém' },
-  { value: 'evento', label: '🎯 Evento/Palestra' },
+  { value: 'facebook', label: '📘 Facebook' },
+  { value: 'indicacao_amigo', label: '👥 Indicação de amigo/conhecido' },
+  { value: 'evento', label: '🎪 Evento/Palestra' },
+  { value: 'podcast', label: '🎧 Podcast' },
+  { value: 'blog_artigo', label: '📝 Blog/Artigo' },
+  { value: 'publicidade', label: '📢 Publicidade online' },
   { value: 'outro', label: '🔄 Outro' }
 ];
 
@@ -25,16 +29,14 @@ export const StepComoNosConheceu: React.FC<OnboardingStepProps> = ({
   currentStep,
   totalSteps
 }) => {
-  const showReferredBy = data.how_found_us === 'indicacao';
-
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-3xl mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-white mb-2">
           Como nos conheceu? 🤝
         </h2>
         <p className="text-gray-400">
-          Queremos entender como chegou até nós
+          Queremos entender como você chegou até nós
         </p>
       </div>
 
@@ -42,31 +44,38 @@ export const StepComoNosConheceu: React.FC<OnboardingStepProps> = ({
         <DropdownModerno
           value={data.how_found_us || ''}
           onChange={(value) => onUpdate('how_found_us', value)}
-          options={HOW_FOUND_OPTIONS}
-          placeholder="Como conheceu a Viver de IA?"
+          options={HOW_FOUND_US_OPTIONS}
+          placeholder="Selecione como nos conheceu"
           label="Como nos conheceu?"
           required
         />
 
-        {showReferredBy && (
+        {(data.how_found_us === 'indicacao_amigo' || data.how_found_us === 'outro') && (
           <div className="space-y-2">
             <label className="block text-sm font-medium text-white">
-              Quem te indicou? <span className="text-red-400">*</span>
+              {data.how_found_us === 'indicacao_amigo' 
+                ? 'Quem te indicou?' 
+                : 'Conte-nos mais detalhes'
+              }
             </label>
             <Input
               type="text"
               value={data.referred_by || ''}
               onChange={(e) => onUpdate('referred_by', e.target.value)}
-              placeholder="Nome da pessoa que te indicou"
+              placeholder={
+                data.how_found_us === 'indicacao_amigo'
+                  ? "Nome da pessoa que te indicou"
+                  : "Descreva como nos conheceu"
+              }
               className="h-12 bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:ring-viverblue/50"
             />
           </div>
         )}
 
-        <div className="bg-viverblue/10 border border-viverblue/20 rounded-lg p-4">
-          <p className="text-sm text-viverblue-light">
-            💡 <strong>Dica:</strong> Essa informação nos ajuda a entender melhor 
-            nossos canais de comunicação e criar conteúdo mais direcionado.
+        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+          <p className="text-sm text-green-300">
+            📊 <strong>Feedback valioso:</strong> Essas informações nos ajudam a 
+            melhorar nossos canais de comunicação e chegar a mais pessoas como você.
           </p>
         </div>
 
