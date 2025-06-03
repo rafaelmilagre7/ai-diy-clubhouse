@@ -7,7 +7,10 @@ import AdminLayout from '@/components/layout/admin/AdminLayout';
 import OptimizedAdminDashboard from '@/pages/admin/OptimizedAdminDashboard';
 import AdminUsers from '@/pages/admin/AdminUsers';
 import AdminTools from '@/pages/admin/AdminTools';
+import AdminToolEdit from '@/pages/admin/AdminToolEdit';
 import AdminSolutions from '@/pages/admin/AdminSolutions';
+import AdminSolutionEdit from '@/pages/admin/AdminSolutionEdit';
+import AdminSolutionCreate from '@/pages/admin/AdminSolutionCreate';
 import AdminAnalytics from '@/pages/admin/AdminAnalytics';
 import AdminOnboarding from '@/pages/admin/AdminOnboarding';
 import AdminSuggestions from '@/pages/admin/AdminSuggestions';
@@ -28,7 +31,11 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin", OptimizedAdminDashboard),
   createAdminRoute("/admin/users", AdminUsers),
   createAdminRoute("/admin/tools", AdminTools),
+  createAdminRoute("/admin/tools/new", AdminToolEdit),
+  createAdminRoute("/admin/tools/:id", AdminToolEdit),
   createAdminRoute("/admin/solutions", AdminSolutions),
+  createAdminRoute("/admin/solutions/new", AdminSolutionCreate),
+  createAdminRoute("/admin/solutions/:id", AdminSolutionEdit),
   createAdminRoute("/admin/analytics", AdminAnalytics),
   createAdminRoute("/admin/performance", PerformanceDashboard),
   createAdminRoute("/admin/onboarding", AdminOnboarding),
