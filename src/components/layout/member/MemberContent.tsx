@@ -17,7 +17,7 @@ export const MemberContent = ({
     >
       <MemberHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       <main className="flex-1 overflow-auto">
-        <div className="max-w-full mx-auto p-4 md:p-6">
+        <div className="w-full h-full px-4 md:px-8 py-4 md:py-6">
           {children}
         </div>
       </main>

@@ -59,7 +59,7 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
   }
 
   return (
-    <div className="w-full space-y-4 animate-fade-in">
+    <div className="w-full min-h-full space-y-6 animate-fade-in">
       {/* HEADER IMERSIVO */}
       <ModernDashboardHeader />
 
@@ -76,7 +76,7 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
 
       {/* Mostrar loaders enquanto carrega, ou conteúdo quando pronto */}
       {isLoading ? (
-        <div className="space-y-6">
+        <div className="space-y-8">
           <SolutionsGridLoader title="Em andamento" count={2} />
           <SolutionsGridLoader title="Concluídas" count={2} />
           <SolutionsGridLoader title="Recomendadas" count={3} />
@@ -87,7 +87,7 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
           description="Comece explorando nossas soluções recomendadas para transformar seu negócio com IA"
         />
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Soluções Ativas */}
           {active && active.length > 0 && (
             <ActiveSolutions

@@ -8,13 +8,12 @@ interface SolutionsGridProps {
   onSolutionClick: (solution: Solution) => void;
 }
 
-// Otimização: Usar memo para evitar re-renderizações desnecessárias
 export const SolutionsGrid: FC<SolutionsGridProps> = memo(({ 
   solutions, 
   onSolutionClick 
 }) => {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 animate-fade-in">
       {solutions.map((solution) => (
         <SolutionCard
           key={solution.id}
