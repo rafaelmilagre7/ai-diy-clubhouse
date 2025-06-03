@@ -69,8 +69,8 @@ export const ImplementationsTabContent = ({ implementations }: ImplementationsTa
           ))}
         </div>
       ) : (
-        <div className="text-center py-12 bg-[#1A1E2E] rounded-lg border border-neutral-700/50">
-          <p className="text-medium-contrast">Nenhuma implementação encontrada com o filtro atual.</p>
+        <div className="text-left py-12 bg-[#1A1E2E] rounded-lg border border-neutral-700/50">
+          <p className="text-medium-contrast text-left ml-6">Nenhuma implementação encontrada com o filtro atual.</p>
         </div>
       )}
     </div>

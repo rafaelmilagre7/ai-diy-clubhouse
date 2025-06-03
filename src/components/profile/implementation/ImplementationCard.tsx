@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle, Clock } from "lucide-react";
+import { CheckCircle, Clock, TrendingUp, Settings, BarChart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/utils/dateUtils";
 import { Implementation } from "@/hooks/useProfileData";
@@ -43,6 +43,20 @@ export const ImplementationCard = ({ implementation }: ImplementationCardProps) 
     }
   };
 
+  // Função para obter ícone da categoria
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case "Receita":
+        return <TrendingUp className="mr-1 h-3 w-3" />;
+      case "Operacional":
+        return <Settings className="mr-1 h-3 w-3" />;
+      case "Estratégia":
+        return <BarChart className="mr-1 h-3 w-3" />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <Card className={cn(
       "overflow-hidden hover:shadow-md transition-all duration-300 card-hover-dark", 
@@ -61,10 +75,11 @@ export const ImplementationCard = ({ implementation }: ImplementationCardProps) 
               <Badge 
                 variant="outline" 
                 className={cn(
-                  "badge-high-contrast-dark",
+                  "badge-high-contrast-dark flex items-center",
                   getCategoryBadgeClass(implementation.solution.category)
                 )}
               >
+                {getCategoryIcon(implementation.solution.category)}
                 {implementation.solution.category}
               </Badge>
               <Badge variant="neutral" className="badge-high-contrast-dark">

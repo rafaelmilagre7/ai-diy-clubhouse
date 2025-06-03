@@ -14,8 +14,8 @@ export const ActiveSolutions: FC<ActiveSolutionsProps> = ({
 }) => {
   return (
     <div className="mb-8 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-      <h2 className="text-2xl font-bold mb-2 text-white">Projetos em andamento</h2>
-      <p className="text-neutral-400 mb-6">
+      <h2 className="text-2xl font-bold mb-2 text-white text-left">Projetos em andamento</h2>
+      <p className="text-neutral-400 mb-6 text-left">
         Continue implementando esses projetos em seu negócio
       </p>
       <SolutionsGrid solutions={solutions} onSolutionClick={onSolutionClick} />
