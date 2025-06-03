@@ -60,13 +60,13 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
 
   return (
     <div className="w-full min-h-screen bg-[#0F111A] space-y-0 animate-fade-in">
-      {/* HEADER IMERSIVO - alinhado à esquerda */}
-      <div className="pl-8 pr-6 pt-6 pb-4">
+      {/* HEADER IMERSIVO */}
+      <div className="w-full max-w-screen-2xl mx-auto px-4 lg:px-6 xl:px-8 pt-6 pb-4">
         <ModernDashboardHeader />
       </div>
 
-      {/* CARDS DE PROGRESSO (KPI) - alinhado à esquerda */}
-      <div className="pl-8 pr-6 pb-4">
+      {/* CARDS DE PROGRESSO (KPI) */}
+      <div className="w-full max-w-screen-2xl mx-auto px-4 lg:px-6 xl:px-8 pb-4">
         <KpiGrid 
           completed={kpiTotals.completed} 
           inProgress={kpiTotals.inProgress}
@@ -75,13 +75,13 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
         />
       </div>
 
-      {/* TRILHA DE IMPLEMENTAÇÃO COM IA - alinhado à esquerda */}
-      <div className="pl-8 pr-6 pb-4">
+      {/* TRILHA DE IMPLEMENTAÇÃO COM IA */}
+      <div className="w-full max-w-screen-2xl mx-auto px-4 lg:px-6 xl:px-8 pb-4">
         <ImplementationTrail />
       </div>
 
-      {/* Conteúdo principal - alinhado à esquerda */}
-      <div className="pl-8 pr-6 pb-6">
+      {/* Conteúdo principal */}
+      <div className="w-full max-w-screen-2xl mx-auto px-4 lg:px-6 xl:px-8 pb-6">
         {/* Mostrar loaders enquanto carrega, ou conteúdo quando pronto */}
         {isLoading ? (
           <div className="space-y-6">

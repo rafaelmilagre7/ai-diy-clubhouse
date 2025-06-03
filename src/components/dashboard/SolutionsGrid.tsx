@@ -13,14 +13,16 @@ export const SolutionsGrid: FC<SolutionsGridProps> = memo(({
   onSolutionClick 
 }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-6 animate-fade-in">
-      {solutions.map((solution) => (
-        <SolutionCard
-          key={solution.id}
-          solution={solution}
-          onClick={() => onSolutionClick(solution)}
-        />
-      ))}
+    <div className="w-full max-w-7xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-fade-in">
+        {solutions.map((solution) => (
+          <SolutionCard
+            key={solution.id}
+            solution={solution}
+            onClick={() => onSolutionClick(solution)}
+          />
+        ))}
+      </div>
     </div>
   );
 });
