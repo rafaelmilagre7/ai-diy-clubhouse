@@ -4,22 +4,44 @@
 export const mockUseUnifiedOnboardingValidation = {
   complete: {
     isOnboardingComplete: true,
+    hasValidData: true,
     isLoading: false,
+    error: null,
+    source: 'quick_onboarding',
+    onboardingData: {
+      is_completed: true,
+      current_step: 'completed'
+    },
     checkOnboardingStatus: jest.fn()
   },
   incomplete: {
     isOnboardingComplete: false,
+    hasValidData: true,
     isLoading: false,
+    error: null,
+    source: 'quick_onboarding',
+    onboardingData: {
+      is_completed: false,
+      current_step: 'step_1'
+    },
     checkOnboardingStatus: jest.fn()
   },
   loading: {
     isOnboardingComplete: false,
+    hasValidData: false,
     isLoading: true,
+    error: null,
+    source: 'none',
+    onboardingData: null,
     checkOnboardingStatus: jest.fn()
   },
   error: {
     isOnboardingComplete: false,
+    hasValidData: false,
     isLoading: false,
+    error: new Error('Test error'),
+    source: 'error',
+    onboardingData: null,
     checkOnboardingStatus: jest.fn()
   }
 };
