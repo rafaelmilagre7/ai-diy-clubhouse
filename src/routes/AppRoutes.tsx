@@ -2,6 +2,7 @@
 import React, { Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import LoadingScreen from '@/components/common/LoadingScreen';
+import { useAuth } from '@/contexts/auth';
 
 // Imports diretos para evitar lazy loading circular
 import LoginPage from '@/pages/auth/LoginPage';
@@ -24,12 +25,23 @@ const ProfileRoutes = React.lazy(() => import('./ProfileRoutes'));
 // Componentes de proteção com imports diretos
 import { ProtectedRoute } from '@/components/routing/ProtectedRoute';
 
+// Componente para redirecionamento inteligente na rota raiz
+const RootRedirect = () => {
+  const { user, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return <LoadingScreen message="Carregando..." />;
+  }
+  
+  return user ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />;
+};
+
 const AppRoutes = () => {
   return (
     <Suspense fallback={<LoadingScreen />}>
       <Routes>
-        {/* Rota raiz única - redireciona para login por padrão */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        {/* Rota raiz com redirecionamento inteligente */}
+        <Route path="/" element={<RootRedirect />} />
         
         {/* Rota de login pública - SEM layout */}
         <Route path="/login" element={<LoginPage />} />
