@@ -80,3 +80,16 @@ export interface UserChecklist {
   created_at: string;
   updated_at: string;
 }
+
+// === ADDITIONAL TYPES ===
+export type Database = any; // Tipo do banco de dados
+export type Analytics = any; // Tipo de analytics
+export type ForumCategory = any; // Tipo de categoria do fórum
+export type ForumTopic = any; // Tipo de tópico do fórum
+export type ForumPost = any; // Tipo de post do fórum
+export type Tool = any; // Tipo de ferramenta
+export type Event = any; // Tipo de evento
+export type Course = any; // Tipo de curso (diferente de LearningCourse)
+export type Lesson = any; // Tipo de aula (diferente de LearningLesson)
+export type Resource = any; // Tipo de recurso (diferente de LearningResource)
+export type ImplementationTrail = any; // Tipo de trilha de implementação

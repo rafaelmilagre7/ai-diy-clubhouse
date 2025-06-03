@@ -1,5 +1,5 @@
 
-// Logger simplificado que não acessa localStorage durante inicialização
+// Logger completo com todos os métodos necessários
 interface LogEntry {
   timestamp: string;
   level: 'info' | 'warn' | 'error' | 'debug' | 'critical' | 'performance';
@@ -78,6 +78,7 @@ class Logger {
     }
   }
 
+  // Métodos básicos de log
   info(message: string, data?: any) {
     this.log('info', message, data);
   }
@@ -94,6 +95,7 @@ class Logger {
     this.log('debug', message, data);
   }
 
+  // Métodos especiais
   critical(message: string, data?: any) {
     this.log('critical', message, data);
   }

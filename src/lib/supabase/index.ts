@@ -1,5 +1,5 @@
 
-// Exportações simplificadas para evitar dependências circulares
+// Exportações principais do cliente
 export { supabase } from './client';
 export type { Tables } from './client';
 
@@ -21,10 +21,11 @@ export type {
   Resource,
   ImplementationTrail,
   UserRole,
-  UserChecklist
+  UserChecklist,
+  SolutionCategory
 } from './types/index';
 
-// Exportar tipos específicos do Learning/LMS
+// Exportar tipos específicos do Learning/LMS - TODOS OS TIPOS
 export type {
   LearningCourse,
   LearningModule,
@@ -37,7 +38,23 @@ export type {
   LearningLessonNps,
   LearningCourseWithStats,
   LearningModuleWithStats
-} from './types/index';
+} from './types/learning';
+
+// Exportar tipos de onboarding
+export type {
+  OnboardingFinal,
+  OnboardingPersonalInfo,
+  OnboardingBusinessInfo,
+  OnboardingStepComponentProps
+} from './types/onboarding';
+
+// Exportar utilitários
+export type {
+  OptionalProps,
+  RequiredProps,
+  WithFallbacks,
+  SafeComponentProps
+} from './types/utils';
 
 // Exportar configurações básicas
 export { ensureStorageBucketExists, createStoragePublicPolicy } from './client';
