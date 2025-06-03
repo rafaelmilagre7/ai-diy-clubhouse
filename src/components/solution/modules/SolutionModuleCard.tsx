@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronRight, Clock, BookOpen } from "lucide-react";
+import { ChevronDown, ChevronRight, BookOpen } from "lucide-react";
 import { Module } from "@/lib/supabase";
 import { SolutionModuleContent } from "./SolutionModuleContent";
 
@@ -42,12 +42,6 @@ export const SolutionModuleCard = ({ module, moduleNumber }: SolutionModuleCardP
                 <span className="text-xs px-2 py-1 rounded bg-blue-900/40 text-blue-200 border border-blue-700/30">
                   {getModuleTypeLabel(module.type)}
                 </span>
-                {module.estimated_time_minutes && module.estimated_time_minutes > 0 && (
-                  <div className="flex items-center text-xs text-textSecondary">
-                    <Clock className="h-3 w-3 mr-1" />
-                    {module.estimated_time_minutes} min
-                  </div>
-                )}
               </div>
             </div>
           </div>
