@@ -11,6 +11,9 @@ interface LoggingContextType {
   log: (action: string, data?: LogData) => void;
   logWarning: (action: string, data?: LogData) => void;
   logError: (action: string, error: any) => any;
+  // Aliases para compatibilidade com código existente
+  warn: (action: string, data?: LogData) => void;
+  error: (action: string, error: any) => any;
   lastError: any;
 }
 
@@ -24,6 +27,8 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
   
   // Funções de logging otimizadas
   const log = useCallback((action: string, data: LogData = {}) => {
+    console.log(`[LOG] ${action}`, data || '');
+    
     // Armazenar logs críticos apenas se tivermos um user_id
     if (data.critical && data.user_id) {
       storeLog(action, data, "info", data.user_id);
@@ -31,6 +36,8 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
   }, []);
   
   const logWarning = useCallback((action: string, data: LogData = {}) => {
+    console.warn(`[WARN] ${action}`, data || '');
+    
     // Armazenar avisos apenas se tivermos um user_id
     if (data.user_id) {
       storeLog(action, data, "warning", data.user_id);
@@ -47,6 +54,7 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
   }, [toast]);
   
   const logError = useCallback((action: string, error: any) => {
+    console.error(`[ERROR] ${action}`, error || '');
     setLastError(error);
     
     // Verificar se o erro deve mostrar um toast (padrão é mostrar)
@@ -72,6 +80,10 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
     
     return error;
   }, [toast]);
+
+  // Aliases para compatibilidade
+  const warn = logWarning;
+  const error = logError;
   
   const storeLog = async (action: string, data: LogData, level: string, user_id: string) => {
     try {
@@ -113,6 +125,8 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
     log,
     logWarning,
     logError,
+    warn,
+    error,
     lastError
   };
   
@@ -131,9 +145,14 @@ export const useLogging = (): LoggingContextType => {
   if (context === undefined) {
     // Retornar implementação básica de fallback
     return {
-      log: () => {},
-      logWarning: () => {},
+      log: (action: string, data?: LogData) => console.log(`[LOG] ${action}`, data || ''),
+      logWarning: (action: string, data?: LogData) => console.warn(`[WARN] ${action}`, data || ''),
       logError: (action: string, error: any) => {
+        console.error(`[Fallback Error] ${action}:`, error);
+        return error;
+      },
+      warn: (action: string, data?: LogData) => console.warn(`[WARN] ${action}`, data || ''),
+      error: (action: string, error: any) => {
         console.error(`[Fallback Error] ${action}:`, error);
         return error;
       },

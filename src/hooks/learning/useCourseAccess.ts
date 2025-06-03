@@ -26,7 +26,7 @@ export const useCourseAccess = () => {
     }
   };
 
-  // Buscar roles que têm acesso a um curso específico
+  // Buscar roles que têm acesso a um curso específico - TIPAGEM CORRIGIDA
   const getRolesByCourse = async (courseId: string) => {
     const { data, error } = await supabase
       .from('course_access_control')
@@ -45,10 +45,11 @@ export const useCourseAccess = () => {
       throw error;
     }
 
+    // Corrigir tipagem: data é um array de objetos, cada um com uma propriedade roles
     return data?.map(item => item.roles).filter(Boolean) || [];
   };
 
-  // Buscar cursos que um role tem acesso
+  // Buscar cursos que um role tem acesso - TIPAGEM CORRIGIDA
   const getCoursesByRole = async (roleId: string) => {
     const { data, error } = await supabase
       .from('course_access_control')
@@ -68,6 +69,7 @@ export const useCourseAccess = () => {
       throw error;
     }
 
+    // Corrigir tipagem: data é um array de objetos, cada um com uma propriedade learning_courses
     return data?.map(item => item.learning_courses).filter(Boolean) || [];
   };
 
