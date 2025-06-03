@@ -1,7 +1,6 @@
 
 import React from "react";
 import ModulesForm from "@/components/admin/solution/ModulesForm";
-import { moduleTypes } from "@/components/admin/solution/moduleTypes";
 
 interface ModulesTabProps {
   solutionId: string | null;
@@ -21,7 +20,7 @@ const ModulesTab: React.FC<ModulesTabProps> = ({
       solutionId={solutionId} 
       onSave={onSave} 
       saving={saving}
-      currentModuleStep={currentModuleStep - 1} // Adjust for 0-based index for modules
+      currentStep={currentModuleStep}
     />
   );
 };
