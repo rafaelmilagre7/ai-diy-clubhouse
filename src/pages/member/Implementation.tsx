@@ -1,62 +1,77 @@
 
 import React from "react";
-import { useParams } from "react-router-dom";
-import { useImplementationFlow } from "@/hooks/implementation/useImplementationFlow";
+import { useImplementationData } from "@/hooks/useImplementationData";
+import { useImplementationProgress } from "@/hooks/useImplementationProgress";
+import { ModuleContent } from "@/components/implementation/ModuleContent";
 import { ImplementationNotFound } from "@/components/implementation/ImplementationNotFound";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { ImplementationHeader } from "@/components/implementation/ImplementationHeader";
-import { OptimizedImplementationWizard } from "@/components/implementation/tab-based/OptimizedImplementationWizard";
-import { SolutionDataProvider } from "@/contexts/SolutionDataContext";
-import { PageTransition } from "@/components/transitions/PageTransition";
+import { StepProgressBar } from "@/components/implementation/StepProgressBar";
+import { useLogging } from "@/hooks/useLogging";
 
 const Implementation = () => {
-  const { id } = useParams<{ id: string }>();
-  const {
-    solution,
-    progress,
-    materials,
-    tools,
-    videos,
-    loading,
-    error
-  } = useImplementationFlow();
+  const { solution, modules, progress, completedModules, setCompletedModules, loading } = useImplementationData();
+  const { log } = useLogging();
   
+  const {
+    currentModuleIndex,
+    handleModuleComplete,
+    handleNavigateToModule
+  } = useImplementationProgress({
+    modules,
+    progress,
+    completedModules,
+    setCompletedModules
+  });
+
   if (loading) {
     return <LoadingScreen message="Carregando implementação..." />;
   }
 
-  if (error || !solution || !id) {
+  if (!solution) {
     return <ImplementationNotFound />;
   }
 
-  // Criar dados fictícios para manter compatibilidade com SolutionDataProvider
-  const mockSolutionData = {
-    solution,
-    materials,
-    tools,
-    videos,
-    progress
-  };
+  // Determinar o módulo atual
+  const currentModule = modules.length > 0 ? modules[currentModuleIndex] : null;
+  
+  // Se não há módulos, o sistema de fallback será usado no ModuleContent
+  log("Renderizando Implementation", { 
+    solutionId: solution.id,
+    modulesCount: modules.length,
+    currentModuleIndex,
+    currentModule: currentModule?.id || 'fallback'
+  });
+
+  // Criar lista de steps baseada nos módulos ou usar fallback
+  const steps = modules.length > 0 
+    ? modules.map(module => module.title)
+    : ["Visualizar Solução"];
 
   return (
-    <SolutionDataProvider 
-      data={mockSolutionData} 
-      isLoading={loading} 
-      error={error ? new Error(error) : null}
-    >
-      <PageTransition>
-        <div className="container max-w-5xl mx-auto py-8">
-          <ImplementationHeader 
-            solution={solution}
-            progress={progress}
-          />
-          
-          <div className="mt-8">
-            <OptimizedImplementationWizard solutionId={id} />
-          </div>
-        </div>
-      </PageTransition>
-    </SolutionDataProvider>
+    <div className="container max-w-4xl mx-auto py-8">
+      <ImplementationHeader 
+        solution={solution}
+        currentModule={currentModule}
+        progress={progress}
+      />
+      
+      <StepProgressBar
+        steps={steps}
+        currentStep={currentModuleIndex}
+        completedSteps={completedModules}
+        className="mb-8"
+      />
+      
+      <ModuleContent
+        module={currentModule}
+        solution={solution}
+        onComplete={handleModuleComplete}
+        onError={(error) => {
+          console.error("Module content error:", error);
+        }}
+      />
+    </div>
   );
 };
 

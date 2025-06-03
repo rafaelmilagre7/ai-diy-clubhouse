@@ -1,40 +1,26 @@
 
 import { useMemo } from 'react';
+import { useOptimizedAuth } from '@/hooks/auth/useOptimizedAuth';
 import { useUnifiedOnboardingValidation } from '@/hooks/onboarding/useUnifiedOnboardingValidation';
-import { useAuth } from '@/contexts/auth';
 
+/**
+ * Hook otimizado para acesso ao networking
+ * Remove lógica desnecessária e memoiza resultados
+ */
 export const useOptimizedNetworkingAccess = () => {
-  const { profile } = useAuth();
-  const { isOnboardingComplete, isLoading } = useUnifiedOnboardingValidation();
+  const { isAdmin, isLoading: authLoading } = useOptimizedAuth();
+  const { isOnboardingComplete, isLoading: onboardingLoading } = useUnifiedOnboardingValidation();
 
-  const result = useMemo(() => {
-    // Admin sempre tem acesso
-    const isAdmin = profile?.role === 'admin';
-    
-    // Para admin, sempre permitir acesso
-    if (isAdmin) {
-      return {
-        hasAccess: true,
-        isLoading: false,
-        needsOnboarding: false,
-        accessMessage: '',
-        reason: null
-      };
-    }
-
-    // Para usuários normais, verificar onboarding
-    const hasAccess = isOnboardingComplete;
+  return useMemo(() => {
+    const isLoading = authLoading || onboardingLoading;
+    const hasAccess = isAdmin || isOnboardingComplete;
 
     return {
       hasAccess,
       isLoading,
-      needsOnboarding: !hasAccess,
-      accessMessage: !hasAccess ? 'Complete o onboarding para acessar o Networking' : '',
-      reason: !hasAccess ? 'Complete o onboarding para acessar o networking' : null
+      isAdmin,
+      needsOnboarding: !hasAccess && !isAdmin,
+      accessMessage: !hasAccess ? 'Complete o onboarding para acessar o Networking' : null
     };
-  }, [profile?.role, isOnboardingComplete, isLoading]);
-
-  console.log('🔍 useOptimizedNetworkingAccess:', result);
-
-  return result;
+  }, [isAdmin, isOnboardingComplete, authLoading, onboardingLoading]);
 };

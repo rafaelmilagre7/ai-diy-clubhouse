@@ -1,85 +1,84 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/auth';
+import { NetworkingHeader } from '@/components/networking/NetworkingHeader';
+import { NetworkingFeed } from '@/components/networking/NetworkingFeed';
+import { NetworkingBlockedState } from '@/components/networking/NetworkingBlockedState';
+import { ProfileDataSync } from '@/components/networking/ProfileDataSync';
+import { useNetworkingAccess } from '@/hooks/networking/useNetworkingAccess';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, Building, Loader2 } from 'lucide-react';
 
 const NetworkingPage = () => {
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { hasAccess, isLoading: accessLoading, needsOnboarding } = useNetworkingAccess();
 
-  console.log('🌐 NetworkingPage: Carregando página', { 
-    isAdmin: profile?.role === 'admin',
-    userRole: profile?.role 
-  });
+  const handleNavigateToOnboarding = () => {
+    navigate('/onboarding-new');
+  };
 
-  // Para admin, sempre mostrar interface funcional
-  const isAdmin = profile?.role === 'admin';
+  // Se ainda está carregando verificação de acesso
+  if (accessLoading) {
+    return (
+      <div className="p-6 space-y-6">
+        <ProfileDataSync />
+        <NetworkingHeader />
+        <Card className="p-8 text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-viverblue" />
+          <p className="text-muted-foreground">Verificando acesso ao networking...</p>
+        </Card>
+      </div>
+    );
+  }
+
+  // Se não tem acesso (onboarding incompleto)
+  if (!hasAccess && needsOnboarding) {
+    return (
+      <div className="p-6 space-y-6">
+        <ProfileDataSync />
+        <NetworkingHeader />
+        <NetworkingBlockedState onNavigateToOnboarding={handleNavigateToOnboarding} />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="space-y-2">
-        <h1 className="text-2xl font-bold text-white">Networking Inteligente</h1>
-        <p className="text-gray-400">
-          Conecte-se com outros empreendedores através de IA
-        </p>
-      </div>
+      <ProfileDataSync />
+      <NetworkingHeader />
       
       <Card className="p-6">
-        {isAdmin ? (
-          <div className="space-y-4">
-            <div className="text-center py-8">
-              <Users className="h-12 w-12 mx-auto mb-4 text-viverblue" />
-              <h3 className="text-lg font-semibold mb-2">Área de Networking</h3>
-              <p className="text-gray-400 mb-4">
-                Sistema de networking funcionando - você está logado como admin
+        <Tabs defaultValue="customers" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="customers" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Potenciais Clientes
+            </TabsTrigger>
+            <TabsTrigger value="suppliers" className="flex items-center gap-2">
+              <Building className="h-4 w-4" />
+              Potenciais Fornecedores
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="customers" className="space-y-4">
+            <div className="mb-4">
+              <p className="text-sm text-muted-foreground">
+                5 matches mensais selecionados pela IA baseados no seu perfil de onboarding
               </p>
             </div>
-            
-            <Tabs defaultValue="customers" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="customers" className="flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  Potenciais Clientes
-                </TabsTrigger>
-                <TabsTrigger value="suppliers" className="flex items-center gap-2">
-                  <Building className="h-4 w-4" />
-                  Potenciais Fornecedores
-                </TabsTrigger>
-              </TabsList>
+            <NetworkingFeed matchType="customer" />
+          </TabsContent>
 
-              <TabsContent value="customers" className="space-y-4">
-                <div className="text-center py-8 border border-gray-700 rounded-lg">
-                  <p className="text-gray-400">
-                    🤖 Sistema de matching funcionando
-                  </p>
-                  <p className="text-sm text-gray-500 mt-2">
-                    Matches de clientes seriam exibidos aqui
-                  </p>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="suppliers" className="space-y-4">
-                <div className="text-center py-8 border border-gray-700 rounded-lg">
-                  <p className="text-gray-400">
-                    🤖 Sistema de matching funcionando
-                  </p>
-                  <p className="text-sm text-gray-500 mt-2">
-                    Matches de fornecedores seriam exibidos aqui
-                  </p>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-viverblue" />
-            <p className="text-muted-foreground">Verificando acesso ao networking...</p>
-          </div>
-        )}
+          <TabsContent value="suppliers" className="space-y-4">
+            <div className="mb-4">
+              <p className="text-sm text-muted-foreground">
+                3 matches mensais de fornecedores especializados baseados nas suas necessidades
+              </p>
+            </div>
+            <NetworkingFeed matchType="supplier" />
+          </TabsContent>
+        </Tabs>
       </Card>
     </div>
   );

@@ -39,29 +39,36 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
     return "Carregando layout...";
   }, [authLoading, onboardingLoading, user]);
 
-  // CORREÇÃO CRÍTICA: Verificação de autenticação simplificada SEM redirecionamentos automáticos
+  // Verificar autenticação
   useEffect(() => {
-    console.log('🔄 LayoutProvider: Verificando autenticação', {
-      user: !!user,
-      profile: !!profile,
-      isAdmin,
-      authLoading,
-      currentPath: location.pathname,
-      routeChecks
-    });
-
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
     
     if (!authLoading && !onboardingLoading) {
       if (!user) {
-        console.log('❌ LayoutProvider: Usuário não autenticado, redirecionando para login');
         navigate('/login', { replace: true });
         return;
       }
       
+      if (!routeChecks.isOnboardingRoute && !isOnboardingComplete) {
+        navigate('/onboarding-new', { replace: true });
+        return;
+      }
+      
       setLayoutReady(true);
+      
+      // Verificar redirecionamento por role
+      if (user && profile) {
+        const { isLearningRoute, isPathAdmin, isPathFormacao } = routeChecks;
+        
+        if (isAdmin && !isPathAdmin && !isPathFormacao && !isLearningRoute) {
+          navigate('/admin', { replace: true });
+        } 
+        else if (isFormacao && !isAdmin && !isPathFormacao && !isLearningRoute) {
+          navigate('/formacao', { replace: true });
+        }
+      }
     } else {
       timeoutRef.current = window.setTimeout(() => {
         setLayoutReady(true);
@@ -73,27 +80,25 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [user, profile, isAdmin, isFormacao, authLoading, onboardingLoading, navigate, routeChecks]);
+  }, [user, profile, isAdmin, isFormacao, authLoading, onboardingLoading, isOnboardingComplete, navigate, routeChecks]);
 
-  // CORREÇÃO: Renderizar layout baseado APENAS na rota e perfil do usuário
-  if (layoutReady && user && profile) {
+  // Renderizar layout baseado na rota
+  if (layoutReady && user) {
     const { isFormacaoRoute, isLearningRoute } = routeChecks;
     
-    // Layout de formação para rotas /formacao se usuário tem permissão
     if (isFormacaoRoute && (isFormacao || isAdmin)) {
       return (
         <PageTransitionWithFallback isVisible={true}>
           <FormacaoLayout>{children}</FormacaoLayout>
         </PageTransitionWithFallback>
       );
-    } 
-    
-    // Layout padrão de membro para todas as outras rotas
-    return (
-      <PageTransitionWithFallback isVisible={true}>
-        <MemberLayout>{children}</MemberLayout>
-      </PageTransitionWithFallback>
-    );
+    } else if (isLearningRoute || !isFormacao || isAdmin) {
+      return (
+        <PageTransitionWithFallback isVisible={true}>
+          <MemberLayout>{children}</MemberLayout>
+        </PageTransitionWithFallback>
+      );
+    }
   }
 
   return (

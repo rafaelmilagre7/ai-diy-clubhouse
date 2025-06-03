@@ -1,78 +1,30 @@
 
-import React from "react";
 import { Solution } from "@/lib/supabase";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
-import { SolutionOverviewTab } from "./tabs/SolutionOverviewTab";
-import { SolutionMaterialsTab } from "./tabs/SolutionMaterialsTab";
-import { SolutionToolsTab } from "./tabs/SolutionToolsTab";
-import { SolutionVideosTab } from "./tabs/SolutionVideosTab";
 
 interface SolutionContentSectionProps {
   solution: Solution;
 }
 
 export const SolutionContentSection = ({ solution }: SolutionContentSectionProps) => {
+  // Função para renderizar o conteúdo HTML de forma segura
+  const renderContent = (content: string) => {
+    return { __html: content };
+  };
+
   return (
-    <Tabs defaultValue="overview" className="w-full">
-      <TabsList className="grid w-full grid-cols-4 bg-backgroundLight border border-white/10">
-        <TabsTrigger 
-          value="overview" 
-          className="data-[state=active]:bg-viverblue data-[state=active]:text-white"
-        >
-          Visão Geral
-        </TabsTrigger>
-        <TabsTrigger 
-          value="materials" 
-          className="data-[state=active]:bg-viverblue data-[state=active]:text-white"
-        >
-          Materiais
-        </TabsTrigger>
-        <TabsTrigger 
-          value="tools" 
-          className="data-[state=active]:bg-viverblue data-[state=active]:text-white"
-        >
-          Ferramentas
-        </TabsTrigger>
-        <TabsTrigger 
-          value="videos" 
-          className="data-[state=active]:bg-viverblue data-[state=active]:text-white"
-        >
-          Vídeos
-        </TabsTrigger>
-      </TabsList>
-      
-      <TabsContent value="overview" className="mt-6">
-        <Card className="border-white/10">
-          <CardContent className="p-6">
-            <SolutionOverviewTab solution={solution} />
-          </CardContent>
-        </Card>
-      </TabsContent>
-      
-      <TabsContent value="materials" className="mt-6">
-        <Card className="border-white/10">
-          <CardContent className="p-6">
-            <SolutionMaterialsTab solutionId={solution.id} />
-          </CardContent>
-        </Card>
-      </TabsContent>
-      
-      <TabsContent value="tools" className="mt-6">
-        <Card className="border-white/10">
-          <CardContent className="p-6">
-            <SolutionToolsTab solutionId={solution.id} />
-          </CardContent>
-        </Card>
-      </TabsContent>
-      
-      <TabsContent value="videos" className="mt-6">
-        <Card className="border-white/10">
-          <CardContent className="p-6">
-            <SolutionVideosTab solutionId={solution.id} />
-          </CardContent>
-        </Card>
-      </TabsContent>
-    </Tabs>
+    <div className="bg-[#151823] border border-white/5 p-6 rounded-lg shadow-sm">
+      <div className="prose max-w-none prose-invert">
+        <h2 className="text-xl font-semibold mb-4 text-neutral-100">Sobre esta solução</h2>
+        
+        {solution.overview ? (
+          <div 
+            className="text-neutral-200 prose-headings:text-neutral-100 prose-p:text-neutral-200 prose-strong:text-neutral-100 prose-em:text-neutral-200 prose-li:text-neutral-200" 
+            dangerouslySetInnerHTML={renderContent(solution.overview)} 
+          />
+        ) : (
+          <p className="text-neutral-200">{solution.description}</p>
+        )}
+      </div>
+    </div>
   );
 };

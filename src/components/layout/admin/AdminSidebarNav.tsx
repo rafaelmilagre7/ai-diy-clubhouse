@@ -164,25 +164,7 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
 
   return (
     <div className="flex flex-col h-full">
-      {/* SEÇÃO DE NAVEGAÇÃO ENTRE PAINÉIS - SEMPRE VISÍVEL */}
-      <div className="px-3 py-3 border-b border-gray-700">
-        <Button
-          variant="outline"
-          className={cn(
-            "w-full justify-start gap-2 border-viverblue/30 text-viverblue hover:bg-viverblue/10",
-            !sidebarOpen && "justify-center"
-          )}
-          onClick={() => {
-            window.location.href = '/dashboard';
-          }}
-        >
-          <User className="h-4 w-4" />
-          {sidebarOpen && <span>Painel do Membro</span>}
-        </Button>
-      </div>
-
-      {/* MENU PRINCIPAL COM SCROLL */}
-      <ScrollArea className="flex-1 px-3" style={{ height: "calc(100vh - 200px)" }}>
+      <ScrollArea className="flex-1 px-3" style={{ height: "calc(100vh - 140px)" }}>
         <div className="py-4 space-y-2">
           <div className="space-y-1">
             {menuItems.map(item => renderMenuItem(item))}
@@ -220,11 +202,41 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
             </div>
           )}
           
-          <div className="space-y-1 pb-4">
+          <div className="space-y-1">
             {rbacItems.map(item => renderMenuItem(item))}
           </div>
         </div>
       </ScrollArea>
+
+      <div className="px-3 py-4 border-t border-gray-700 mt-auto space-y-2">
+        <Button
+          variant="outline"
+          className={cn(
+            "w-full justify-start gap-2",
+            !sidebarOpen && "justify-center"
+          )}
+          asChild
+        >
+          <Link to="/dashboard">
+            <User className="h-4 w-4" />
+            {sidebarOpen && <span>Painel do Membro</span>}
+          </Link>
+        </Button>
+        
+        <Button
+          variant="outline"
+          className={cn(
+            "w-full justify-start gap-2",
+            !sidebarOpen && "justify-center"
+          )}
+          asChild
+        >
+          <Link to="/dashboard">
+            <ChevronLeft className="h-4 w-4" />
+            {sidebarOpen && <span>Voltar ao Dashboard</span>}
+          </Link>
+        </Button>
+      </div>
     </div>
   );
 }

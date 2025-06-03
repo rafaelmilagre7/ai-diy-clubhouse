@@ -2,12 +2,10 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
-import { useOptimizedAuth } from '@/hooks/auth/useOptimizedAuth';
 import { useCallback, useMemo } from 'react';
 
 export const useUnifiedOnboardingValidation = () => {
   const { user } = useAuth();
-  const { isAdmin } = useOptimizedAuth();
   const queryClient = useQueryClient();
 
   const { data, isLoading, error, refetch } = useQuery({
@@ -21,29 +19,16 @@ export const useUnifiedOnboardingValidation = () => {
         };
       }
 
-      // CORREÇÃO CRÍTICA: Para admins, sempre considerar onboarding completo
-      if (isAdmin) {
-        console.log('✅ useUnifiedOnboardingValidation: Admin detectado, considerando onboarding completo');
-        return {
-          isOnboardingComplete: true,
-          hasValidData: true,
-          source: 'admin_bypass'
-        };
-      }
-
       try {
-        console.log('🔍 useUnifiedOnboardingValidation: Verificando onboarding para usuário:', user.id);
-
-        // Verificar PRIMEIRO na tabela onboarding_final
+        // Verificar PRIMEIRO na tabela onboarding_final (nova prioridade)
         const { data: finalData, error: finalError } = await supabase
           .from('onboarding_final')
           .select('is_completed, completed_at, id')
           .eq('user_id', user.id)
-          .eq('is_completed', true)
+          .eq('is_completed', true) // APENAS registros realmente completos
           .maybeSingle();
 
         if (finalData && !finalError) {
-          console.log('✅ Onboarding encontrado completo em onboarding_final:', finalData);
           return {
             isOnboardingComplete: true,
             hasValidData: true,
@@ -53,7 +38,7 @@ export const useUnifiedOnboardingValidation = () => {
           };
         }
 
-        // FALLBACK: Verificar na tabela quick_onboarding
+        // Verificar na tabela quick_onboarding como fallback
         const { data: quickData, error: quickError } = await supabase
           .from('quick_onboarding')
           .select('is_completed, current_step, id')
@@ -62,7 +47,6 @@ export const useUnifiedOnboardingValidation = () => {
 
         if (quickData && !quickError) {
           const isCompleted = quickData.is_completed === true;
-          console.log('📊 Status do quick_onboarding:', { isCompleted, step: quickData.current_step });
           
           return {
             isOnboardingComplete: isCompleted,
@@ -73,17 +57,58 @@ export const useUnifiedOnboardingValidation = () => {
           };
         }
 
-        // CORREÇÃO CRÍTICA: Se não encontrou dados, para usuários normais pode ser que precisem fazer onboarding
-        // Mas para evitar loops, não forçar redirecionamento aqui
-        console.log('⚠️ Nenhum dado de onboarding encontrado - assumindo incompleto');
+        // Se não encontrou dados em nenhuma tabela, criar um registro inicial
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('name, email, company_name, role')
+          .eq('id', user.id)
+          .single();
+
+        // Criar registro inicial no quick_onboarding
+        const { data: newRecord, error: insertError } = await supabase
+          .from('quick_onboarding')
+          .insert({
+            user_id: user.id,
+            is_completed: false,
+            current_step: 1,
+            name: profileData?.name || '',
+            email: profileData?.email || '',
+            whatsapp: '',
+            country_code: '+55',
+            how_found_us: '',
+            company_name: profileData?.company_name || '',
+            role: profileData?.role || 'member',
+            company_size: '',
+            company_segment: '',
+            annual_revenue_range: '',
+            main_challenge: '',
+            ai_knowledge_level: 'iniciante',
+            expected_outcome_30days: '',
+            primary_goal: '',
+            business_model: '',
+            uses_ai: false,
+            main_goal: ''
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          return {
+            isOnboardingComplete: false,
+            hasValidData: false,
+            source: 'error',
+            error: insertError
+          };
+        }
+
         return {
           isOnboardingComplete: false,
           hasValidData: true,
-          source: 'no_data_found'
+          source: 'quick_onboarding_new',
+          currentStep: 1,
+          onboardingId: newRecord.id
         };
-
       } catch (error) {
-        console.error('❌ Erro ao verificar onboarding:', error);
         return {
           isOnboardingComplete: false,
           hasValidData: false,
@@ -93,17 +118,18 @@ export const useUnifiedOnboardingValidation = () => {
       }
     },
     enabled: !!user?.id,
-    staleTime: 30 * 1000, // 30 segundos para reduzir refetches
-    refetchOnMount: false, // Não refetch automático
-    refetchOnWindowFocus: false, // Não refetch no foco
+    staleTime: 10 * 1000, // 10 segundos
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
     retry: 1
   });
 
-  // Função para invalidar cache
+  // Função para invalidar cache e forçar revalidação
   const invalidateOnboardingCache = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['unified-onboarding-validation'] });
     queryClient.invalidateQueries({ queryKey: ['onboarding-completion'] });
     queryClient.invalidateQueries({ queryKey: ['onboarding-completion-check'] });
+    queryClient.removeQueries({ queryKey: ['unified-onboarding-validation'] });
   }, [queryClient]);
 
   // Função para revalidar dados
@@ -121,8 +147,6 @@ export const useUnifiedOnboardingValidation = () => {
     invalidateOnboardingCache,
     revalidateOnboarding
   }), [data, isLoading, error, invalidateOnboardingCache, revalidateOnboarding]);
-
-  console.log('📋 useUnifiedOnboardingValidation: Resultado final', result);
 
   return result;
 };

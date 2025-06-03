@@ -1,32 +1,13 @@
-
 import { useState } from "react";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
+import { useSolutionData } from "@/hooks/useSolutionData";
 import { useSolutionSave } from "@/hooks/useSolutionSave";
 import { useSolutionSteps } from "@/hooks/useSolutionSteps";
 import { Solution } from "@/lib/supabase";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
 
 export const useSolutionEditor = (id: string | undefined, user: any) => {
-  // Get solution data directly using React Query
-  const { data: solution, isLoading: loading } = useQuery({
-    queryKey: ['solution', id],
-    queryFn: async () => {
-      if (!id) return null;
-      
-      const { data, error } = await supabase
-        .from('solutions')
-        .select('*')
-        .eq('id', id)
-        .maybeSingle();
-      
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id
-  });
-
-  const [solutionState, setSolution] = useState<Solution | null>(solution || null);
+  // Get solution data
+  const { solution, setSolution, loading } = useSolutionData(id);
   
   // Get step navigation
   const { currentStep, setCurrentStep, activeTab, setActiveTab, totalSteps, stepTitles } = useSolutionSteps(0);
@@ -63,7 +44,7 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
   };
 
   return {
-    solution: solutionState || solution,
+    solution,
     loading,
     saving,
     activeTab,

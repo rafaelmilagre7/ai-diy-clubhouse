@@ -2,12 +2,11 @@
 import { Routes, Route } from 'react-router-dom';
 import { authRoutes } from '../../routes/AuthRoutes';
 import { adminRoutes } from '../../routes/AdminRoutes';
-import { MemberRoutes } from '../../auth/MemberRoutes';
+import { memberRoutes } from '../../routes/MemberRoutes';
 import { OnboardingRoutes } from '../../routes/OnboardingRoutes';
 import { formacaoRoutes } from '../../routes/FormacaoRoutes';
 import { CommunityRedirects } from './CommunityRedirects';
 import { SmartRoutePreloader } from './SmartRoutePreloader';
-import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import NotFound from '@/pages/NotFound';
 import InvitePage from '@/pages/InvitePage';
 
@@ -27,25 +26,23 @@ const AppRoutes = () => {
           <Route key={route.path} path={route.path} element={route.element} />
         ))}
         
-        {/* CORREÇÃO CRÍTICA: Admin Routes ANTES do catch-all */}
-        {adminRoutes.map((route) => (
+        {/* Member Routes */}
+        {memberRoutes.map((route) => (
           <Route key={route.path} path={route.path} element={route.element} />
         ))}
         
-        {/* Formação Routes */}
-        {formacaoRoutes.map((route) => (
+        {/* Admin Routes */}
+        {adminRoutes.map((route) => (
           <Route key={route.path} path={route.path} element={route.element} />
         ))}
         
         {/* Onboarding Routes */}
         <Route path="/onboarding-new/*" element={<OnboardingRoutes />} />
         
-        {/* CORREÇÃO: Member Routes como catch-all POR ÚLTIMO */}
-        <Route path="/*" element={
-          <ProtectedRoutes>
-            <MemberRoutes />
-          </ProtectedRoutes>
-        } />
+        {/* Formação Routes */}
+        {formacaoRoutes.map((route) => (
+          <Route key={route.path} path={route.path} element={route.element} />
+        ))}
         
         {/* Fallback route */}
         <Route path="*" element={<NotFound />} />

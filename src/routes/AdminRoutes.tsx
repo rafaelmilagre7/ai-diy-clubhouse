@@ -8,8 +8,6 @@ import OptimizedAdminDashboard from '@/pages/admin/OptimizedAdminDashboard';
 import AdminUsers from '@/pages/admin/AdminUsers';
 import AdminTools from '@/pages/admin/AdminTools';
 import AdminSolutions from '@/pages/admin/AdminSolutions';
-import AdminSolutionCreate from '@/pages/admin/AdminSolutionCreate';
-import SolutionEditor from '@/pages/admin/SolutionEditor';
 import AdminAnalytics from '@/pages/admin/AdminAnalytics';
 import AdminOnboarding from '@/pages/admin/AdminOnboarding';
 import AdminSuggestions from '@/pages/admin/AdminSuggestions';
@@ -31,8 +29,6 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin/users", AdminUsers),
   createAdminRoute("/admin/tools", AdminTools),
   createAdminRoute("/admin/solutions", AdminSolutions),
-  createAdminRoute("/admin/solutions/new", AdminSolutionCreate),
-  createAdminRoute("/admin/solutions/:id", SolutionEditor),
   createAdminRoute("/admin/analytics", AdminAnalytics),
   createAdminRoute("/admin/performance", PerformanceDashboard),
   createAdminRoute("/admin/onboarding", AdminOnboarding),
