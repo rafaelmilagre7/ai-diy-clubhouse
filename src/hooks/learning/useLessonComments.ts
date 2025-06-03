@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/auth';
@@ -5,27 +6,32 @@ import { useLogging } from '@/hooks/useLogging';
 import { Comment } from '@/types/learningTypes';
 import { useOptimizedLessonComments } from './useOptimizedLessonComments';
 import { useCommentSync } from './useCommentSync';
+import { useSyncMonitor } from '@/hooks/monitoring/useSyncMonitor';
+import { useOfflinePersistence } from './useOfflinePersistence';
 import { toast } from 'sonner';
 
 export const useLessonComments = (lessonId: string) => {
   const { user } = useAuth();
   const { log, logError } = useLogging();
+  const { reportSyncIssue } = useSyncMonitor();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Hooks otimizados
+  // Hooks otimizados integrados
   const {
     fetchComments,
     addOptimisticComment,
     confirmOptimisticComment,
     removeOptimisticComment,
     performSmartSync,
-    queryKey
+    queryKey,
+    hasOptimisticComments
   } = useOptimizedLessonComments(lessonId);
   
-  const { queueOperation } = useCommentSync(lessonId);
+  const { queueOperation, forceSyncAll, pendingOperationsCount } = useCommentSync(lessonId);
+  const { loadFromStorage, getPersistedCount } = useOfflinePersistence(lessonId);
   
-  // Query principal com stale time otimizado
+  // Query principal com configuração otimizada
   const { 
     data: comments = [], 
     isLoading, 
@@ -48,10 +54,39 @@ export const useLessonComments = (lessonId: string) => {
         lessonId,
         showToast: false // Não mostrar toast para erros de carregamento
       });
+      
+      reportSyncIssue(
+        'cache_miss',
+        'LessonComments',
+        `Erro ao carregar comentários: ${error.message}`,
+        { error, lessonId },
+        'high'
+      );
     }
-  }, [error, logError, lessonId]);
+  }, [error, logError, lessonId, reportSyncIssue]);
 
-  // Adicionar comentário com sync otimizado
+  // Restaurar operações offline ao montar
+  useEffect(() => {
+    const persistedOps = loadFromStorage();
+    if (persistedOps.length > 0) {
+      log('Operações offline detectadas', {
+        count: persistedOps.length,
+        lessonId
+      });
+      
+      toast.info('Operações offline detectadas', {
+        description: `${persistedOps.length} operações serão sincronizadas`,
+        duration: 3000
+      });
+      
+      // Tentar sincronizar automaticamente
+      setTimeout(() => {
+        forceSyncAll();
+      }, 1000);
+    }
+  }, [loadFromStorage, forceSyncAll, log, lessonId]);
+
+  // Adicionar comentário com sistema robusto
   const addComment = async (content: string, parentId: string | null = null) => {
     if (!user) {
       toast.error('Você precisa estar logado para comentar');
@@ -66,7 +101,7 @@ export const useLessonComments = (lessonId: string) => {
     setIsSubmitting(true);
     
     try {
-      // 1. Adicionar comentário otimista
+      // 1. Adicionar comentário otimista imediatamente
       const optimisticComment = addOptimisticComment(content.trim(), parentId || undefined);
       
       if (!optimisticComment) {
@@ -74,37 +109,50 @@ export const useLessonComments = (lessonId: string) => {
       }
       
       // 2. Adicionar à fila de sincronização
-      queueOperation({
+      const operationId = queueOperation({
         type: 'add',
         data: { content: content.trim(), parentId }
       });
       
-      // 3. Confirmar comentário otimista após delay (simular resposta do servidor)
+      // 3. Simular confirmação após delay (em produção, viria do servidor)
       setTimeout(() => {
-        confirmOptimisticComment(optimisticComment.id, {
+        const confirmedComment: Comment = {
           ...optimisticComment,
-          id: `confirmed_${Date.now()}` // Simular ID do servidor
-        });
+          id: `confirmed_${Date.now()}`, // Simular ID do servidor
+          created_at: new Date().toISOString()
+        };
+        
+        confirmOptimisticComment(optimisticComment.id, confirmedComment);
       }, 1000);
       
       toast.success('Comentário adicionado com sucesso');
       
-      log('Comentário adicionado', { 
+      log('Comentário adicionado com sistema robusto', { 
         lessonId, 
         hasParentId: !!parentId,
-        optimisticId: optimisticComment.id
+        optimisticId: optimisticComment.id,
+        operationId
       });
       
     } catch (error: any) {
       // Remover comentário otimista em caso de erro
-      const optimisticId = `optimistic_${Date.now()}`;
-      removeOptimisticComment(optimisticId);
+      if (error.optimisticId) {
+        removeOptimisticComment(error.optimisticId);
+      }
       
       logError('Erro ao adicionar comentário', { 
         error, 
         lessonId,
         showToast: true
       });
+      
+      reportSyncIssue(
+        'sync_delay',
+        'LessonComments',
+        `Erro ao adicionar comentário: ${error.message}`,
+        { error, lessonId },
+        'high'
+      );
       
       toast.error('Erro ao adicionar comentário. Tente novamente.');
     } finally {
@@ -141,6 +189,14 @@ export const useLessonComments = (lessonId: string) => {
         showToast: true
       });
       
+      reportSyncIssue(
+        'sync_delay',
+        'LessonComments',
+        `Erro ao deletar comentário: ${error.message}`,
+        { error, commentId, lessonId },
+        'medium'
+      );
+      
       toast.error('Erro ao remover comentário. Tente novamente.');
     }
   };
@@ -171,12 +227,6 @@ export const useLessonComments = (lessonId: string) => {
       }
       
       const isCurrentlyLiked = currentComment.user_has_liked;
-      const newLikesCount = isCurrentlyLiked 
-        ? currentComment.likes_count - 1 
-        : currentComment.likes_count + 1;
-      
-      // Atualização otimista no cache
-      // (implementação seria similar ao addOptimisticComment, mas para likes)
       
       // Adicionar à fila de sincronização
       queueOperation({
@@ -187,7 +237,7 @@ export const useLessonComments = (lessonId: string) => {
       log('Comentário curtido/descurtido', { 
         commentId, 
         isLiking: !isCurrentlyLiked,
-        newLikesCount 
+        lessonId
       });
       
     } catch (error: any) {
@@ -197,18 +247,42 @@ export const useLessonComments = (lessonId: string) => {
         showToast: true
       });
       
+      reportSyncIssue(
+        'sync_delay',
+        'LessonComments',
+        `Erro ao curtir comentário: ${error.message}`,
+        { error, commentId },
+        'low'
+      );
+      
       toast.error('Erro ao curtir comentário. Tente novamente.');
     }
   };
 
-  // Forçar sincronização
+  // Forçar sincronização com monitoramento
   const forceSync = async () => {
     try {
-      log('Forçando sincronização de comentários', { lessonId });
+      log('Forçando sincronização robusta', { lessonId });
+      
+      // Sincronizar operações pendentes
+      await forceSyncAll();
+      
+      // Sincronização inteligente
       await performSmartSync();
-      toast.success('Comentários sincronizados');
+      
+      toast.success('Comentários sincronizados com sucesso');
+      
     } catch (error: any) {
       logError('Erro na sincronização forçada', { error, lessonId });
+      
+      reportSyncIssue(
+        'sync_delay',
+        'LessonComments',
+        `Erro na sincronização: ${error.message}`,
+        { error, lessonId },
+        'high'
+      );
+      
       toast.error('Erro ao sincronizar comentários');
     }
   };
@@ -220,8 +294,15 @@ export const useLessonComments = (lessonId: string) => {
     addComment,
     deleteComment,
     likeComment,
-    isSubmitting,
+    isSubmitting: isSubmitting || hasOptimisticComments,
     forceSync,
-    refetch
+    refetch,
+    
+    // Informações de sincronização
+    syncStatus: {
+      pendingOperations: pendingOperationsCount,
+      persistedOperations: getPersistedCount(),
+      hasOptimisticComments
+    }
   };
 };
