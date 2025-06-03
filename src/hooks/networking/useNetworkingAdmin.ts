@@ -13,7 +13,7 @@ export function useGenerateMatches() {
 
       const userId = targetUserId || user.id;
 
-      console.log('🤖 Gerando matches com IA para usuário:', userId);
+      console.log('🤖 Gerando matches para usuário:', userId);
 
       const { data, error } = await supabase.functions.invoke('generate-networking-matches', {
         body: { 
@@ -27,27 +27,7 @@ export function useGenerateMatches() {
         throw error;
       }
 
-      console.log('✅ Matches gerados com IA:', data);
-      return data;
-    }
-  });
-}
-
-export function useRunScheduledNetworkingGeneration() {
-  return useMutation({
-    mutationFn: async () => {
-      console.log('🔄 Executando geração programada de matches...');
-
-      const { data, error } = await supabase.functions.invoke('schedule-networking-matches', {
-        body: {}
-      });
-
-      if (error) {
-        console.error('❌ Erro na geração programada:', error);
-        throw error;
-      }
-
-      console.log('✅ Geração programada concluída:', data);
+      console.log('✅ Matches gerados:', data);
       return data;
     }
   });

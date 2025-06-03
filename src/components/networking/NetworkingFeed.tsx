@@ -1,12 +1,9 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useNetworkMatches } from '@/hooks/networking/useNetworkMatches';
-import { useNetworkingAccess } from '@/hooks/networking/useNetworkingAccess';
 import { NetworkMatchCard } from './NetworkMatchCard';
-import { NetworkingBlockedState } from './NetworkingBlockedState';
 import { Card } from '@/components/ui/card';
-import { Loader2, Users, RefreshCw, CheckCircle, PieChart, Zap } from 'lucide-react';
+import { Loader2, Users, RefreshCw, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useGenerateMatches } from '@/hooks/networking/useNetworkingAdmin';
 import { useQueryClient } from '@tanstack/react-query';
@@ -19,53 +16,24 @@ interface NetworkingFeedProps {
 export const NetworkingFeed: React.FC<NetworkingFeedProps> = ({
   matchType
 }) => {
-  const navigate = useNavigate();
-  const { hasAccess, isLoading: accessLoading, needsOnboarding } = useNetworkingAccess();
   const { data: matches, isLoading, error, refetch } = useNetworkMatches(matchType);
   const generateMatches = useGenerateMatches();
   const queryClient = useQueryClient();
 
-  const handleNavigateToOnboarding = () => {
-    navigate('/onboarding-new');
-  };
-
   const handleRegenerateMatches = async () => {
     try {
-      toast.loading('Analisando perfis com IA...', {
-        duration: 3000,
-      });
-      
+      console.log('🔄 Regenerando matches...');
       await generateMatches.mutateAsync({
         forceRegenerate: true
       });
-      
-      // Aguardar um pouco para a operação concluir
-      setTimeout(async () => {
-        await refetch();
-        queryClient.invalidateQueries({ queryKey: ['network-matches'] });
-        toast.success('Matches regenerados com IA!');
-      }, 1000);
+      await refetch();
+      queryClient.invalidateQueries({ queryKey: ['network-matches'] });
+      toast.success('Matches regenerados com sucesso!');
     } catch (error) {
+      console.error('❌ Erro ao regenerar matches:', error);
       toast.error('Erro ao regenerar matches. Tente novamente.');
     }
   };
-
-  // Se ainda está carregando verificação de acesso
-  if (accessLoading) {
-    return (
-      <Card className="p-8 text-center">
-        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-viverblue" />
-        <p className="text-muted-foreground">Verificando acesso...</p>
-      </Card>
-    );
-  }
-
-  // Se não tem acesso (onboarding incompleto) - PARA TODOS OS USUÁRIOS
-  if (!hasAccess && needsOnboarding) {
-    return <NetworkingBlockedState onNavigateToOnboarding={handleNavigateToOnboarding} />;
-  }
-
-  const expectedCount = matchType === 'customer' ? 5 : 3;
 
   if (isLoading) {
     return (
@@ -80,6 +48,7 @@ export const NetworkingFeed: React.FC<NetworkingFeedProps> = ({
   }
 
   if (error) {
+    console.error('❌ Erro no componente NetworkingFeed:', error);
     return (
       <Card className="p-8 text-center">
         <div className="text-red-500 mb-4">
@@ -94,40 +63,38 @@ export const NetworkingFeed: React.FC<NetworkingFeedProps> = ({
     );
   }
 
+  const expectedCount = matchType === 'customer' ? 5 : 3;
+
   if (!matches || matches.length === 0) {
     return (
       <Card className="p-8 text-center">
-        <div className="bg-neutral-800/60 border border-neutral-700/40 rounded-full h-20 w-20 flex items-center justify-center mx-auto mb-6">
-          <Zap className="h-10 w-10 text-viverblue opacity-70" />
-        </div>
-        
-        <h3 className="text-lg font-semibold mb-2">Seu networking inteligente</h3>
+        <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+        <h3 className="text-lg font-semibold mb-2">Nenhum match encontrado</h3>
         <p className="text-muted-foreground mb-4">
           {matchType === 'customer' 
-            ? `Nossa IA gerará ${expectedCount} potenciais clientes compatíveis com seu perfil.`
-            : `Nossa IA gerará ${expectedCount} potenciais fornecedores compatíveis com seu perfil.`
+            ? `Vamos gerar ${expectedCount} potenciais clientes para você este mês.`
+            : `Vamos gerar ${expectedCount} potenciais fornecedores para você este mês.`
           }
         </p>
-        <div className="space-y-2 mb-6 max-w-md mx-auto">
-          <div className="flex items-center gap-3 bg-neutral-800/50 border border-neutral-700/40 rounded-md p-3 text-left">
-            <PieChart className="h-5 w-5 text-viverblue" />
-            <div className="text-sm">
-              <p className="font-medium">Análise de compatibilidade com IA</p>
-              <p className="text-xs text-neutral-500 mt-0.5">Avaliamos múltiplos fatores para oferecer os melhores matches</p>
-            </div>
-          </div>
+        <div className="space-y-2 mb-4">
+          <p className="text-xs text-muted-foreground">
+            💡 Nossa IA precisa de mais dados para gerar matches perfeitos
+          </p>
+          <p className="text-xs text-muted-foreground">
+            🔍 Verifique se seu perfil está completo para melhores resultados
+          </p>
         </div>
         <Button 
           onClick={handleRegenerateMatches} 
           disabled={generateMatches.isPending}
-          className="gap-2 bg-viverblue hover:bg-viverblue/90"
+          className="gap-2"
         >
           {generateMatches.isPending ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <Zap className="h-4 w-4" />
+            <RefreshCw className="h-4 w-4" />
           )}
-          Gerar Matches com IA Agora
+          Gerar Matches Agora
         </Button>
       </Card>
     );
@@ -155,9 +122,9 @@ export const NetworkingFeed: React.FC<NetworkingFeedProps> = ({
           {generateMatches.isPending ? (
             <Loader2 className="h-3 w-3 animate-spin" />
           ) : (
-            <Zap className="h-3 w-3" />
+            <RefreshCw className="h-3 w-3" />
           )}
-          Regenerar com IA
+          Atualizar
         </Button>
       </div>
       
@@ -175,10 +142,10 @@ export const NetworkingFeed: React.FC<NetworkingFeedProps> = ({
         <Card className="p-4 bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
           <div className="text-center">
             <p className="text-sm text-blue-600 dark:text-blue-400">
-              🎯 A IA está analisando mais {expectedCount - matches.length} perfis compatíveis para você
+              🎯 Ainda estamos gerando {expectedCount - matches.length} matches adicionais para você
             </p>
             <p className="text-xs text-blue-500 dark:text-blue-300 mt-1">
-              Os matches são atualizados durante o mês conforme novos perfis são analisados pela IA
+              Os matches são atualizados durante o mês conforme novos perfis são analisados
             </p>
           </div>
         </Card>

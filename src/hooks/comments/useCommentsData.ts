@@ -14,8 +14,8 @@ export const useCommentsData = (toolId: string) => {
     error,
     refetch
   } = useQuery({
-    // Chave padronizada para todos os comentários
-    queryKey: ['comments', toolId],
+    // Usando uma chave padrão que será referenciada em outros lugares
+    queryKey: ['solution-comments', toolId, 'all'],
     queryFn: async () => {
       if (!toolId) return [];
 
@@ -101,6 +101,13 @@ export const useCommentsData = (toolId: string) => {
           }, {});
         }
 
+        // Log para diagnóstico
+        log('Dados brutos dos comentários:', { 
+          parentCount: parentComments?.length || 0,
+          repliesCount: replies?.length || 0,
+          profilesCount: Object.keys(profilesMap).length || 0
+        });
+
         // Organizar respostas dentro dos comentários principais
         const organizedComments = (parentComments || []).map((parentComment: any) => ({
           ...parentComment,
@@ -115,9 +122,11 @@ export const useCommentsData = (toolId: string) => {
             }))
         }));
 
-        log('Comentários carregados e organizados', { 
+        log('Comentários organizados e processados:', { 
           count: organizedComments.length,
-          totalWithReplies: organizedComments.reduce((acc, c) => acc + 1 + (c.replies?.length || 0), 0)
+          firstCommentHasProfiles: organizedComments.length > 0 
+            ? !!organizedComments[0].profiles 
+            : false
         });
         
         return organizedComments;
@@ -126,10 +135,7 @@ export const useCommentsData = (toolId: string) => {
         throw error;
       }
     },
-    enabled: !!toolId,
-    staleTime: 30000, // 30 segundos
-    refetchOnWindowFocus: false,
-    refetchOnMount: true
+    enabled: !!toolId
   });
 
   return {

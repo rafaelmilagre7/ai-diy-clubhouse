@@ -1,10 +1,33 @@
 
 import React from 'react';
+import { QuickFormStep } from '../QuickFormStep';
+import { WhatsAppInput } from '../WhatsAppInput';
+import { DropdownModerno } from '../DropdownModerno';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { User, Mail, Phone } from 'lucide-react';
-import { StepQuemEVoceProps } from '@/types/quickOnboarding';
+import MilagrinhoAssistant from '../../MilagrinhoAssistant';
+
+interface StepQuemEVoceProps {
+  data: {
+    name: string;
+    email: string;
+    whatsapp: string;
+    howFoundUs: string;
+  };
+  onUpdate: (field: string, value: string) => void;
+  onNext: () => void;
+  canProceed: boolean;
+  currentStep: number;
+  totalSteps: number;
+}
+
+const HOW_FOUND_OPTIONS = [
+  { value: 'google', label: 'Pesquisa no Google', icon: '🔍' },
+  { value: 'instagram', label: 'Instagram', icon: '📱' },
+  { value: 'linkedin', label: 'LinkedIn', icon: '💼' },
+  { value: 'youtube', label: 'YouTube', icon: '📺' },
+  { value: 'indicacao', label: 'Indicação de alguém', icon: '👥' },
+  { value: 'outros', label: 'Outros', icon: '💭' }
+];
 
 export const StepQuemEVoce: React.FC<StepQuemEVoceProps> = ({
   data,
@@ -14,82 +37,67 @@ export const StepQuemEVoce: React.FC<StepQuemEVoceProps> = ({
   currentStep,
   totalSteps
 }) => {
+  const firstName = data.name.split(' ')[0];
+
   return (
-    <div className="space-y-6">
-      <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-white">Vamos nos conhecer!</h2>
-        <p className="text-gray-400">
-          Conte-nos um pouco sobre você para personalizar sua experiência
-        </p>
-      </div>
+    <>
+      <MilagrinhoAssistant
+        userName={firstName || undefined}
+        message="Olá! Eu sou o Milagrinho, seu assistente de IA. Vamos começar conhecendo você melhor para criar uma experiência personalizada no VIVER DE IA Club!"
+      />
+      
+      <QuickFormStep
+        title="Quem é você?"
+        description="Vamos começar com suas informações básicas"
+        currentStep={currentStep}
+        totalSteps={totalSteps}
+        onNext={onNext}
+        canProceed={canProceed}
+        showBack={false}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-white">
+              Nome completo <span className="text-red-400">*</span>
+            </label>
+            <Input
+              type="text"
+              value={data.name}
+              onChange={(e) => onUpdate('name', e.target.value)}
+              placeholder="Seu nome"
+              className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50"
+            />
+          </div>
 
-      <div className="space-y-4">
-        {/* Nome */}
-        <div className="space-y-2">
-          <Label htmlFor="name" className="text-white flex items-center gap-2">
-            <User className="h-4 w-4 text-viverblue" />
-            Nome completo
-          </Label>
-          <Input
-            id="name"
-            type="text"
-            value={data.name}
-            onChange={(e) => onUpdate('name', e.target.value)}
-            placeholder="Digite seu nome completo"
-            className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-viverblue"
-          />
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-white">
+              Email <span className="text-red-400">*</span>
+            </label>
+            <Input
+              type="email"
+              value={data.email}
+              onChange={(e) => onUpdate('email', e.target.value)}
+              placeholder="seu@email.com"
+              className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50"
+            />
+          </div>
         </div>
 
-        {/* Email */}
-        <div className="space-y-2">
-          <Label htmlFor="email" className="text-white flex items-center gap-2">
-            <Mail className="h-4 w-4 text-viverblue" />
-            Email
-          </Label>
-          <Input
-            id="email"
-            type="email"
-            value={data.email}
-            onChange={(e) => onUpdate('email', e.target.value)}
-            placeholder="seu@email.com"
-            className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-viverblue"
-          />
-        </div>
+        <WhatsAppInput
+          value={data.whatsapp}
+          onChange={(value) => onUpdate('whatsapp', value)}
+          placeholder="(11) 99999-9999"
+        />
 
-        {/* WhatsApp */}
-        <div className="space-y-2">
-          <Label htmlFor="whatsapp" className="text-white flex items-center gap-2">
-            <Phone className="h-4 w-4 text-viverblue" />
-            WhatsApp
-          </Label>
-          <Input
-            id="whatsapp"
-            type="tel"
-            value={data.whatsapp}
-            onChange={(e) => onUpdate('whatsapp', e.target.value)}
-            placeholder="(11) 99999-9999"
-            className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-viverblue"
-          />
-        </div>
-      </div>
-
-      {/* Botão de Continuar */}
-      <div className="flex justify-center pt-4">
-        <Button
-          onClick={onNext}
-          disabled={!canProceed}
-          className="bg-viverblue hover:bg-viverblue/90 text-white px-8 py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Continuar
-        </Button>
-      </div>
-
-      {/* Indicador de progresso */}
-      <div className="flex justify-center">
-        <span className="text-sm text-gray-400">
-          Etapa {currentStep} de {totalSteps}
-        </span>
-      </div>
-    </div>
+        <DropdownModerno
+          value={data.howFoundUs}
+          onChange={(value) => onUpdate('howFoundUs', value)}
+          options={HOW_FOUND_OPTIONS}
+          placeholder="Selecione uma opção"
+          label="Como conheceu o VIVER DE IA?"
+          required
+        />
+      </QuickFormStep>
+    </>
   );
 };

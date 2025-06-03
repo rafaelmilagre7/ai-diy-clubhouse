@@ -8,8 +8,8 @@ export const SolutionBackButton = () => {
   const navigate = useNavigate();
   
   const handleBack = () => {
-    // Navegar para a nova rota de soluções em português
-    navigate('/solucoes', { replace: true });
+    // Tentar navegar para a página de soluções, ou para o dashboard se algo der errado
+    navigate('/solutions', { replace: true });
   };
   
   return (

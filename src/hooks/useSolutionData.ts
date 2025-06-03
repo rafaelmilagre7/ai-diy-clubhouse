@@ -51,7 +51,7 @@ export const useSolutionData = (id: string | undefined) => {
               description: "Esta solução não está disponível no momento.",
               variant: "destructive"
             });
-            navigate("/solucoes");
+            navigate("/solutions");
             return;
           }
           

@@ -1,161 +1,397 @@
-
-import React, { useState } from "react";
-import { VideoPlayer } from "@/components/formacao/aulas/VideoPlayer";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Play, ChevronDown, ChevronUp } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useState, useEffect, useRef } from "react";
 import { LearningLessonVideo } from "@/lib/supabase";
+import { Play, Pause, Volume2, VolumeX, ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import { PandaVideoPlayer } from "@/components/formacao/comum/PandaVideoPlayer";
+import { VideoPlaylist } from "./VideoPlaylist";
+import { Card } from "@/components/ui/card";
+import { formatVideoTime, formatSeconds } from "@/utils/timeUtils";
 
 interface LessonVideoPlayerProps {
   videos: LearningLessonVideo[];
   onProgress?: (videoId: string, progress: number) => void;
+  initialVideoIndex?: number;
 }
 
-export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
-  videos,
-  onProgress
+export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({ 
+  videos, 
+  onProgress,
+  initialVideoIndex = 0
 }) => {
-  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-  const [playlistCollapsed, setPlaylistCollapsed] = useState(false);
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(initialVideoIndex);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+  const [videoProgresses, setVideoProgresses] = useState<Record<string, number>>({});
   
+  const videoRef = useRef<HTMLVideoElement>(null);
+  
+  // Garantir que temos pelo menos um vídeo
   if (!videos || videos.length === 0) {
     return (
-      <Card>
-        <CardContent className="p-8 text-center">
-          <p className="text-muted-foreground">Nenhum vídeo disponível para esta aula</p>
-        </CardContent>
+      <Card className="rounded-md overflow-hidden">
+        <div className="aspect-video bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          <p className="text-muted-foreground">Nenhum vídeo disponível para esta aula.</p>
+        </div>
       </Card>
     );
   }
-
+  
+  // O vídeo atual
   const currentVideo = videos[currentVideoIndex];
-  const hasMultipleVideos = videos.length > 1;
-
-  const handleVideoSelect = (index: number) => {
-    setCurrentVideoIndex(index);
-  };
-
-  const handleVideoProgress = (currentTime: number, duration: number) => {
-    if (onProgress && currentVideo) {
-      const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
-      onProgress(currentVideo.id, progress);
+  
+  // Avançar para o próximo vídeo quando o atual terminar
+  const handleVideoEnd = () => {
+    if (currentVideoIndex < videos.length - 1) {
+      setCurrentVideoIndex(currentVideoIndex + 1);
     }
   };
-
-  // Layout para vídeo único - usa toda a largura
-  if (!hasMultipleVideos) {
-    return (
-      <div className="w-full">
-        <VideoPlayer
-          video={currentVideo}
-          onTimeUpdate={handleVideoProgress}
-        />
-        {currentVideo.title && (
-          <div className="mt-3 px-1">
-            <h3 className="text-lg font-medium text-textPrimary">{currentVideo.title}</h3>
-            {currentVideo.description && (
-              <p className="text-sm text-textSecondary mt-1">{currentVideo.description}</p>
+  
+  // Atualizar o progresso do vídeo atual
+  const handleProgress = (progress: number) => {
+    if (onProgress && currentVideo) {
+      onProgress(currentVideo.id, progress);
+      
+      // Atualizar o estado local dos progressos
+      setVideoProgresses(prev => ({
+        ...prev,
+        [currentVideo.id]: progress
+      }));
+    }
+  };
+  
+  // Configurar evento de metadados para obter duração
+  useEffect(() => {
+    const videoElement = videoRef.current;
+    if (!videoElement) return;
+    
+    const handleMetadata = () => {
+      setDuration(videoElement.duration);
+    };
+    
+    videoElement.addEventListener('loadedmetadata', handleMetadata);
+    
+    return () => {
+      videoElement.removeEventListener('loadedmetadata', handleMetadata);
+    };
+  }, [currentVideo]);
+  
+  // Se for um vídeo do Panda, usar componente específico
+  if (currentVideo?.video_type === 'panda') {
+    // Extrair ID do vídeo do Panda da URL ou usar o campo video_file_path como fallback
+    let pandaVideoId = "";
+    
+    if (currentVideo.video_file_path) {
+      pandaVideoId = currentVideo.video_file_path;
+    } else if (currentVideo.url) {
+      // Tentar extrair o ID do vídeo da URL do Panda Video
+      const matches = currentVideo.url.match(/embed\/\?v=([^&]+)/);
+      if (matches && matches[1]) {
+        pandaVideoId = matches[1];
+      } else {
+        pandaVideoId = currentVideo.url.split('/').pop() || '';
+      }
+    }
+    
+    if (pandaVideoId) {
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="md:col-span-3">
+            {/* Player de vídeo */}
+            <div className="overflow-hidden rounded-lg shadow-lg">
+              <PandaVideoPlayer
+                videoId={pandaVideoId}
+                title={currentVideo.title}
+                onProgress={(progress: number) => {
+                  if (onProgress && currentVideo) {
+                    handleProgress(progress);
+                  }
+                }}
+                onEnded={handleVideoEnd}
+              />
+            </div>
+            
+            {/* Título e descrição do vídeo */}
+            <div className="mt-3">
+              <h3 className="text-lg font-medium">{currentVideo.title}</h3>
+              {currentVideo.description && (
+                <p className="mt-1 text-muted-foreground">{currentVideo.description}</p>
+              )}
+            </div>
+            
+            {/* Controles de navegação em tela pequena (visíveis apenas em dispositivos móveis) */}
+            {videos.length > 1 && (
+              <div className="flex justify-between mt-4 md:hidden">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentVideoIndex(prev => Math.max(0, prev - 1))}
+                  disabled={currentVideoIndex <= 0}
+                >
+                  <ChevronLeft className="mr-1 h-4 w-4" />
+                  Anterior
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentVideoIndex(prev => Math.min(videos.length - 1, prev + 1))}
+                  disabled={currentVideoIndex >= videos.length - 1}
+                >
+                  Próximo
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+              </div>
             )}
           </div>
-        )}
-      </div>
-    );
-  }
-
-  // Layout para múltiplos vídeos - player principal + playlist
-  return (
-    <div className="w-full">
-      {/* Layout responsivo para múltiplos vídeos */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        {/* Player principal */}
-        <div className="lg:col-span-3">
-          <VideoPlayer
-            video={currentVideo}
-            onTimeUpdate={handleVideoProgress}
-          />
-          {currentVideo.title && (
-            <div className="mt-3 px-1">
-              <h3 className="text-lg font-medium text-textPrimary">{currentVideo.title}</h3>
-              {currentVideo.description && (
-                <p className="text-sm text-textSecondary mt-1">{currentVideo.description}</p>
-              )}
+          
+          {/* Playlist de vídeos (visível apenas em desktop) */}
+          {videos.length > 1 && (
+            <div className="hidden md:block">
+              <VideoPlaylist
+                videos={videos}
+                currentVideoIndex={currentVideoIndex}
+                onSelectVideo={setCurrentVideoIndex}
+                progresses={videoProgresses}
+              />
+            </div>
+          )}
+          
+          {/* Playlist de vídeos para mobile */}
+          {videos.length > 1 && (
+            <div className="md:hidden mt-4">
+              <details>
+                <summary className="cursor-pointer font-medium">
+                  Lista de vídeos
+                </summary>
+                <div className="mt-2">
+                  <VideoPlaylist
+                    videos={videos}
+                    currentVideoIndex={currentVideoIndex}
+                    onSelectVideo={setCurrentVideoIndex}
+                    progresses={videoProgresses}
+                  />
+                </div>
+              </details>
             </div>
           )}
         </div>
-
-        {/* Playlist - responsiva */}
-        <div className="lg:col-span-1">
-          <Card className="bg-cardBg border-cardBorder">
-            <div className="p-3 border-b border-cardBorder">
-              <Button
-                variant="ghost"
-                className="w-full flex items-center justify-between p-2 lg:cursor-default"
-                onClick={() => setPlaylistCollapsed(!playlistCollapsed)}
-              >
-                <span className="font-medium text-sm">
-                  Playlist ({videos.length} vídeos)
-                </span>
-                {/* Botão de colapsar apenas no mobile */}
-                <div className="lg:hidden">
-                  {playlistCollapsed ? (
-                    <ChevronDown className="h-4 w-4" />
-                  ) : (
-                    <ChevronUp className="h-4 w-4" />
-                  )}
-                </div>
-              </Button>
-            </div>
+      );
+    }
+  }
+  
+  // Para outros tipos de vídeo, continuar com o player padrão
+  
+  // Atualizar tempo atual e progresso
+  useEffect(() => {
+    const videoElement = videoRef.current;
+    if (!videoElement || !onProgress || !currentVideo) return;
+    
+    const handleTimeUpdate = () => {
+      setCurrentTime(videoElement.currentTime);
+      
+      // Calcular progresso como porcentagem
+      if (duration > 0) {
+        const progressPercent = Math.round((videoElement.currentTime / duration) * 100);
+        
+        // Atualizar progresso em 25%, 50%, 75% e 100%
+        if (progressPercent >= 25 && progressPercent < 50) {
+          handleProgress(25);
+        } else if (progressPercent >= 50 && progressPercent < 75) {
+          handleProgress(50);
+        } else if (progressPercent >= 75 && progressPercent < 100) {
+          handleProgress(75);
+        } else if (progressPercent === 100) {
+          handleProgress(100);
+        }
+      }
+    };
+    
+    const handleEnded = () => {
+      setIsPlaying(false);
+      handleProgress(100);
+      handleVideoEnd();
+    };
+    
+    videoElement.addEventListener('timeupdate', handleTimeUpdate);
+    videoElement.addEventListener('ended', handleEnded);
+    
+    return () => {
+      videoElement.removeEventListener('timeupdate', handleTimeUpdate);
+      videoElement.removeEventListener('ended', handleEnded);
+    };
+  }, [duration, onProgress, currentVideo]);
+  
+  // Para outros tipos de vídeo, mostrar player padrão
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="md:col-span-3">
+        <div className="overflow-hidden rounded-lg shadow-lg bg-black">
+          <div className="relative">
+            <video
+              ref={videoRef}
+              src={currentVideo.url}
+              className="w-full h-auto"
+              poster={currentVideo.thumbnail_url || undefined}
+            />
             
-            <CardContent className={cn(
-              "p-0 transition-all duration-200",
-              playlistCollapsed && "lg:block hidden"
-            )}>
-              <div className="max-h-96 overflow-y-auto">
-                {videos.map((video, index) => (
-                  <Button
-                    key={video.id}
-                    variant="ghost"
-                    className={cn(
-                      "w-full justify-start p-3 rounded-none border-b border-cardBorder/50 h-auto",
-                      currentVideoIndex === index && "bg-viverblue/10 border-l-2 border-l-viverblue"
-                    )}
-                    onClick={() => handleVideoSelect(index)}
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center space-x-2 text-white">
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    className="h-8 w-8 text-white hover:bg-white/20" 
+                    onClick={() => {
+                      const videoElement = videoRef.current;
+                      if (!videoElement) return;
+                      
+                      if (isPlaying) {
+                        videoElement.pause();
+                      } else {
+                        videoElement.play();
+                      }
+                      
+                      setIsPlaying(!isPlaying);
+                    }}
                   >
-                    <div className="flex items-start gap-2 text-left">
-                      <div className="flex-shrink-0 mt-1">
-                        <Play className={cn(
-                          "h-3 w-3",
-                          currentVideoIndex === index ? "text-viverblue" : "text-textSecondary"
-                        )} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className={cn(
-                          "text-xs font-medium truncate",
-                          currentVideoIndex === index ? "text-viverblue" : "text-textPrimary"
-                        )}>
-                          {video.title || `Vídeo ${index + 1}`}
-                        </p>
-                        {video.description && (
-                          <p className="text-xs text-textSecondary mt-1 line-clamp-2">
-                            {video.description}
-                          </p>
-                        )}
-                        {video.duration_seconds && (
-                          <p className="text-xs text-textSecondary mt-1">
-                            {Math.floor(video.duration_seconds / 60)}:
-                            {String(video.duration_seconds % 60).padStart(2, '0')}
-                          </p>
-                        )}
-                      </div>
-                    </div>
+                    {isPlaying ? <Pause size={16} /> : <Play size={16} />}
                   </Button>
-                ))}
+                  
+                  <span className="text-xs">
+                    {formatVideoTime(currentTime)} / {formatVideoTime(duration)}
+                  </span>
+                  
+                  <div className="flex-grow mx-2">
+                    <Slider
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={[(currentTime / duration) * 100 || 0]}
+                      onValueChange={(value) => {
+                        const videoElement = videoRef.current;
+                        if (!videoElement) return;
+                        
+                        videoElement.currentTime = value[0] * duration / 100;
+                        setCurrentTime(videoElement.currentTime);
+                      }}
+                      className="cursor-pointer"
+                    />
+                  </div>
+                  
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    className="h-8 w-8 text-white hover:bg-white/20" 
+                    onClick={() => {
+                      const videoElement = videoRef.current;
+                      if (!videoElement) return;
+                      
+                      videoElement.muted = !isMuted;
+                      setIsMuted(!isMuted);
+                    }}
+                  >
+                    {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                  </Button>
+                  
+                  <div className="w-20">
+                    <Slider
+                      min={0}
+                      max={1}
+                      step={0.1}
+                      value={[isMuted ? 0 : volume]}
+                      onValueChange={(value) => {
+                        const newVolume = value[0];
+                        
+                        const videoElement = videoRef.current;
+                        if (!videoElement) return;
+                        
+                        videoElement.volume = newVolume;
+                        setVolume(newVolume);
+                        
+                        if (newVolume === 0) {
+                          setIsMuted(true);
+                          videoElement.muted = true;
+                        } else if (isMuted) {
+                          setIsMuted(false);
+                          videoElement.muted = false;
+                        }
+                      }}
+                      className="cursor-pointer"
+                    />
+                  </div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+          
+          <div className="p-4 bg-black text-white">
+            <h3 className="font-medium">{currentVideo.title}</h3>
+            {currentVideo.description && (
+              <p className="text-sm text-white/70 mt-1">{currentVideo.description}</p>
+            )}
+          </div>
         </div>
+        
+        {/* Controles de navegação em tela pequena */}
+        {videos.length > 1 && (
+          <div className="flex justify-between mt-4 md:hidden">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentVideoIndex(prev => Math.max(0, prev - 1))}
+              disabled={currentVideoIndex <= 0}
+            >
+              <ChevronLeft className="mr-1 h-4 w-4" />
+              Anterior
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentVideoIndex(prev => Math.min(videos.length - 1, prev + 1))}
+              disabled={currentVideoIndex >= videos.length - 1}
+            >
+              Próximo
+              <ChevronRight className="ml-1 h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
+      
+      {/* Playlist de vídeos para desktop */}
+      {videos.length > 1 && (
+        <div className="hidden md:block">
+          <VideoPlaylist
+            videos={videos}
+            currentVideoIndex={currentVideoIndex}
+            onSelectVideo={setCurrentVideoIndex}
+            progresses={videoProgresses}
+          />
+        </div>
+      )}
+      
+      {/* Playlist de vídeos para mobile */}
+      {videos.length > 1 && (
+        <div className="md:hidden mt-4">
+          <details>
+            <summary className="cursor-pointer font-medium">
+              Lista de vídeos
+            </summary>
+            <div className="mt-2">
+              <VideoPlaylist
+                videos={videos}
+                currentVideoIndex={currentVideoIndex}
+                onSelectVideo={setCurrentVideoIndex}
+                progresses={videoProgresses}
+              />
+            </div>
+          </details>
+        </div>
+      )}
     </div>
   );
 };

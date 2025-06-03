@@ -1,76 +1,121 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
-import { useTrailEnrichment } from "@/hooks/implementation/useTrailEnrichment";
-import { useTrailSolutionsEnrichment } from "@/hooks/implementation/useTrailSolutionsEnrichment";
-import { useOnboardingCompletion } from "@/hooks/onboarding/useOnboardingCompletion";
-import { MinimalTrailLoader } from "./MinimalTrailLoader";
-import { MinimalTrailEmptyState } from "./MinimalTrailEmptyState";
-import { MinimalOnboardingIncompleteState } from "./MinimalOnboardingIncompleteState";
-import { MinimalTrailContent } from "./MinimalTrailContent";
+import { supabase } from "@/lib/supabase";
+import { TrailCardLoader } from "./TrailCardLoader";
+import { TrailEmptyState } from "./TrailEmptyState";
+import { TrailCardList } from "./TrailCardList";
+import { TrailCardHeader } from "./TrailCardHeader";
 
 export const ImplementationTrail = () => {
   const navigate = useNavigate();
   const { trail, isLoading, hasContent, refreshTrail, generateImplementationTrail } = useImplementationTrail();
-  const { enrichedLessons, isLoading: lessonsLoading } = useTrailEnrichment(trail);
-  const { enrichedSolutions, isLoading: solutionsLoading } = useTrailSolutionsEnrichment(trail);
-  const { 
-    data: onboardingData, 
-    isLoading: onboardingLoading 
-  } = useOnboardingCompletion();
+  const [solutions, setSolutions] = useState<any[]>([]);
+  const [loadingSolutions, setLoadingSolutions] = useState(true);
+
+  useEffect(() => {
+    const fetchSolutionsForTrail = async () => {
+      if (!trail) {
+        setLoadingSolutions(false);
+        return;
+      }
+
+      try {
+        setLoadingSolutions(true);
+        const solutionIds = [
+          ...trail.priority1.map(r => r.solutionId),
+          ...trail.priority2.map(r => r.solutionId),
+          ...trail.priority3.map(r => r.solutionId)
+        ];
+
+        if (solutionIds.length === 0) {
+          setSolutions([]);
+          setLoadingSolutions(false);
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from("solutions")
+          .select("*")
+          .in("id", solutionIds);
+
+        if (error) throw error;
+
+        const mappedSolutions: any[] = [];
+
+        trail.priority1.forEach(rec => {
+          const solution = data?.find(s => s.id === rec.solutionId);
+          if (solution) {
+            mappedSolutions.push({
+              ...solution,
+              priority: 1,
+              justification: rec.justification,
+              solutionId: rec.solutionId
+            });
+          }
+        });
+
+        trail.priority2.forEach(rec => {
+          const solution = data?.find(s => s.id === rec.solutionId);
+          if (solution) {
+            mappedSolutions.push({
+              ...solution,
+              priority: 2,
+              justification: rec.justification,
+              solutionId: rec.solutionId
+            });
+          }
+        });
+
+        trail.priority3.forEach(rec => {
+          const solution = data?.find(s => s.id === rec.solutionId);
+          if (solution) {
+            mappedSolutions.push({
+              ...solution,
+              priority: 3,
+              justification: rec.justification,
+              solutionId: rec.solutionId
+            });
+          }
+        });
+
+        setSolutions(mappedSolutions);
+      } catch (error) {
+        console.error("Erro ao buscar soluções para a trilha:", error);
+      } finally {
+        setLoadingSolutions(false);
+      }
+    };
+
+    fetchSolutionsForTrail();
+  }, [trail]);
 
   const handleRegenerateTrail = async () => {
     await generateImplementationTrail();
   };
 
   const handleSolutionClick = (id: string) => {
-    navigate(`/solucoes/${id}`);
+    navigate(`/solution/${id}`);
   };
 
-  const handleLessonClick = (courseId: string, lessonId: string) => {
-    navigate(`/aprendizado/curso/${courseId}/aula/${lessonId}`);
-  };
-
-  const handleViewFullTrail = () => {
-    navigate('/trilha-implementacao');
-  };
-
-  const handleNavigateToOnboarding = () => {
-    navigate('/onboarding-new');
-  };
-
-  // Se ainda está carregando dados do onboarding ou trilha inicial
-  if (isLoading || onboardingLoading) {
-    return <MinimalTrailLoader />;
+  if (isLoading || loadingSolutions) {
+    return <TrailCardLoader />;
   }
 
-  // Se onboarding não foi completado, mostrar estado específico
-  const isOnboardingComplete = onboardingData?.isCompleted || false;
-  if (!isOnboardingComplete) {
-    return <MinimalOnboardingIncompleteState onNavigateToOnboarding={handleNavigateToOnboarding} />;
+  if (!hasContent || solutions.length === 0) {
+    return <TrailEmptyState onRegenerate={handleRegenerateTrail} />;
   }
-
-  // Se onboarding completo mas não tem trilha, mostrar estado vazio
-  if (!hasContent) {
-    return <MinimalTrailEmptyState onRegenerate={handleRegenerateTrail} />;
-  }
-
-  // Se tem trilha, mostrar conteúdo normal
-  const isLoadingContent = lessonsLoading || solutionsLoading;
 
   return (
-    <Card className="w-full border-neutral-700/30 bg-neutral-800/20">
-      <CardContent className="p-4">
-        <MinimalTrailContent
-          enrichedSolutions={enrichedSolutions}
-          enrichedLessons={enrichedLessons}
-          isLoading={isLoadingContent}
+    <Card className="w-full">
+      <TrailCardHeader onUpdate={handleRegenerateTrail} />
+      <CardContent>
+        <TrailCardList
+          solutions={solutions}
           onSolutionClick={handleSolutionClick}
-          onLessonClick={handleLessonClick}
-          onViewAll={handleViewFullTrail}
-          onRegenerate={handleRegenerateTrail}
+          onSeeAll={() => navigate('/solutions')}
         />
       </CardContent>
     </Card>

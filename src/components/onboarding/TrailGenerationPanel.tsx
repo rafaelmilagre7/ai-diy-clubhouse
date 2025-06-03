@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
@@ -114,7 +115,7 @@ export const TrailGenerationPanel: React.FC<TrailGenerationPanelProps> = ({ onbo
   // Função para regenerar a trilha
   const handleRegenerate = async () => {
     try {
-      await generateImplementationTrail();
+      await generateImplementationTrail(onboardingData || {});
     } catch (error) {
       console.error("Erro ao regenerar trilha:", error);
     }

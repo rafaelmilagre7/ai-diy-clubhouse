@@ -1,22 +1,33 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { SimpleOnboardingFlow } from './SimpleOnboardingFlow';
-import ErrorBoundary from '@/components/common/ErrorBoundary';
+import { useOnboardingMigration } from '@/hooks/onboarding/useOnboardingMigration';
+import { useAuth } from '@/contexts/auth';
 import LoadingScreen from '@/components/common/LoadingScreen';
-import { useNavigate } from 'react-router-dom';
 
 export const UnifiedOnboardingFlow: React.FC = () => {
-  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { runFullMigration } = useOnboardingMigration();
 
-  const handleComplete = () => {
-    navigate('/dashboard');
-  };
+  // Executar migração automaticamente na primeira carga (silenciosamente)
+  useEffect(() => {
+    if (user?.id) {
+      console.log('🔄 Verificando necessidade de migração de dados...');
+      
+      // Executar migração em background sem toast desnecessário
+      runFullMigration().then(result => {
+        if (result.success) {
+          console.log('✅ Verificação de migração concluída:', result.message);
+        } else {
+          console.warn('⚠️ Verificação de migração com problemas:', result.message);
+        }
+      });
+    }
+  }, [user?.id, runFullMigration]);
 
-  return (
-    <ErrorBoundary>
-      <React.Suspense fallback={<LoadingScreen message="Carregando onboarding..." />}>
-        <SimpleOnboardingFlow onComplete={handleComplete} />
-      </React.Suspense>
-    </ErrorBoundary>
-  );
+  if (!user) {
+    return <LoadingScreen message="Verificando autenticação..." />;
+  }
+
+  return <SimpleOnboardingFlow />;
 };

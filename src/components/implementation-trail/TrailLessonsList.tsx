@@ -1,134 +1,77 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { BookOpen, Clock, Users, ArrowRight } from "lucide-react";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { TrailLessonEnriched } from "@/types/implementation-trail";
-import { useNavigate } from "react-router-dom";
+import { TrailLessonCard } from "./TrailLessonCard";
 
 interface TrailLessonsListProps {
   lessons: TrailLessonEnriched[];
 }
 
 export const TrailLessonsList: React.FC<TrailLessonsListProps> = ({ lessons }) => {
-  const navigate = useNavigate();
-
   if (!lessons || lessons.length === 0) {
     return (
-      <Card className="bg-neutral-800/20 border-neutral-700/50">
-        <CardContent className="pt-6">
-          <div className="text-center">
-            <BookOpen className="h-12 w-12 text-neutral-400 mx-auto mb-4" />
-            <p className="text-neutral-400">Nenhuma aula recomendada encontrada</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="text-center py-8 bg-neutral-800/20 rounded-lg border border-neutral-700/50 p-6">
+        <p className="text-neutral-400">Nenhuma aula recomendada encontrada na sua trilha.</p>
+      </div>
     );
   }
 
-  const handleLessonClick = (lesson: TrailLessonEnriched) => {
-    if (lesson.module.course.id && lesson.id) {
-      navigate(`/learning/course/${lesson.module.course.id}/lesson/${lesson.id}`);
-    }
-  };
-
-  const getPriorityColor = (priority: number) => {
-    switch (priority) {
-      case 1: return "bg-viverblue text-white";
-      case 2: return "bg-amber-500 text-white";
-      case 3: return "bg-neutral-500 text-white";
-      default: return "bg-neutral-600 text-white";
-    }
-  };
-
-  const getPriorityLabel = (priority: number) => {
-    switch (priority) {
-      case 1: return "Alta Prioridade";
-      case 2: return "Prioridade Média";
-      case 3: return "Complementar";
-      default: return "Recomendado";
-    }
+  // Ordenar aulas por prioridade
+  const sortedLessons = [...lessons].sort((a, b) => (a.priority || 1) - (b.priority || 1));
+  
+  // Agrupar por prioridade
+  const priority1 = sortedLessons.filter(l => l.priority === 1);
+  const priority2 = sortedLessons.filter(l => l.priority === 2);
+  
+  const renderPriorityGroup = (title: string, items: TrailLessonEnriched[], badgeClass: string, description: string) => {
+    if (items.length === 0) return null;
+    
+    return (
+      <div className="space-y-4 mb-8">
+        {/* Header da seção */}
+        <div className="flex items-center gap-3 mb-4">
+          <Badge variant="outline" className={`${badgeClass} px-3 py-1 text-sm font-medium`}>
+            {title}
+          </Badge>
+          <div className="h-px flex-1 bg-gradient-to-r from-[#0ABAB5]/30 to-transparent"></div>
+        </div>
+        
+        <p className="text-sm text-neutral-400 mb-6">{description}</p>
+        
+        {/* Container com scroll horizontal */}
+        <ScrollArea className="w-full whitespace-nowrap">
+          <div className="flex gap-4 pb-4">
+            {items.map((lesson, index) => (
+              <TrailLessonCard
+                key={lesson.id}
+                lesson={lesson}
+                index={index}
+              />
+            ))}
+          </div>
+          <ScrollBar orientation="horizontal" className="mt-2" />
+        </ScrollArea>
+      </div>
+    );
   };
 
   return (
-    <div className="space-y-4">
-      {lessons.map((lesson, index) => (
-        <Card 
-          key={lesson.id} 
-          className="bg-neutral-800/50 border-neutral-700/50 hover:border-viverblue/30 transition-all duration-300 cursor-pointer group"
-          onClick={() => handleLessonClick(lesson)}
-        >
-          <CardHeader className="pb-3">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <Badge className={`${getPriorityColor(lesson.priority || 1)} text-xs px-2 py-1`}>
-                    {getPriorityLabel(lesson.priority || 1)}
-                  </Badge>
-                  {lesson.difficulty_level && (
-                    <Badge variant="outline" className="text-xs border-neutral-600 text-neutral-300">
-                      {lesson.difficulty_level}
-                    </Badge>
-                  )}
-                </div>
-                <CardTitle className="text-lg text-white group-hover:text-viverblue transition-colors">
-                  {lesson.title}
-                </CardTitle>
-                <div className="flex items-center gap-2 text-sm text-neutral-400 mt-1">
-                  <BookOpen className="h-4 w-4" />
-                  <span>{lesson.module.course.title}</span>
-                  <span>•</span>
-                  <span>{lesson.module.title}</span>
-                </div>
-              </div>
-              <ArrowRight className="h-5 w-5 text-neutral-400 group-hover:text-viverblue transition-colors opacity-0 group-hover:opacity-100" />
-            </div>
-          </CardHeader>
-          
-          <CardContent className="pt-0">
-            {lesson.description && (
-              <p className="text-neutral-300 text-sm mb-3 line-clamp-2">
-                {lesson.description}
-              </p>
-            )}
-            
-            {lesson.justification && (
-              <div className="bg-viverblue/10 border border-viverblue/20 rounded-lg p-3 mb-3">
-                <p className="text-sm text-viverblue font-medium">
-                  💡 {lesson.justification}
-                </p>
-              </div>
-            )}
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4 text-xs text-neutral-400">
-                {lesson.estimated_time_minutes && (
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    <span>{lesson.estimated_time_minutes} min</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-1">
-                  <Users className="h-3 w-3" />
-                  <span>Aula #{index + 1}</span>
-                </div>
-              </div>
-              
-              <Button 
-                size="sm" 
-                className="bg-viverblue hover:bg-viverblue/80 text-white"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleLessonClick(lesson);
-                }}
-              >
-                Assistir Aula
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+    <div className="space-y-8">
+      {renderPriorityGroup(
+        "🎯 Aulas Prioritárias", 
+        priority1, 
+        "bg-[#0ABAB5]/20 text-[#0ABAB5] border-[#0ABAB5]/40",
+        "Estas aulas foram selecionadas para complementar suas soluções prioritárias e acelerar sua implementação."
+      )}
+      
+      {renderPriorityGroup(
+        "📚 Aulas Complementares", 
+        priority2, 
+        "bg-amber-500/20 text-amber-400 border-amber-500/40",
+        "Conteúdos adicionais que expandem seu conhecimento e aprofundam sua expertise nas áreas de interesse."
+      )}
     </div>
   );
 };

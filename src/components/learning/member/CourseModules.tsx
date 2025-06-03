@@ -1,97 +1,83 @@
 
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { ChevronRight, PlayCircle, CheckCircle2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { 
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger 
+} from "@/components/ui/accordion";
+import { Card } from "@/components/ui/card";
+import { LearningModule, LearningCourse, LearningProgress } from "@/lib/supabase/types";
+import { ChevronDown } from "lucide-react";
+import { ModuleLessons } from "./course-modules/ModuleLessons";
+import { isLessonCompleted, isLessonInProgress, getLessonProgress } from "./course-modules/CourseModulesHelpers";
 
 interface CourseModulesProps {
-  modules: any[];
-  userProgress: any[];
+  modules: LearningModule[];
   courseId: string;
-  course: {
-    id: string;
-    title: string;
-    description?: string;
-  };
+  userProgress: LearningProgress[];
+  course: LearningCourse;
+  expandedModules?: string[];
 }
 
-export const CourseModules: React.FC<CourseModulesProps> = ({
-  modules,
+export const CourseModules: React.FC<CourseModulesProps> = ({ 
+  modules, 
+  courseId, 
   userProgress,
-  courseId,
-  course
+  course,
+  expandedModules = []
 }) => {
-  const navigate = useNavigate();
-
-  if (!modules || modules.length === 0) {
+  // Estado para rastrear módulos expandidos (para lembrar o estado mesmo ao recarregar componente)
+  const [openModules, setOpenModules] = useState<string[]>(expandedModules);
+  
+  // Caso não haja módulos, mostrar mensagem
+  if (modules.length === 0) {
     return (
-      <div className="text-center py-12">
-        <h3 className="text-lg font-semibold mb-2">Nenhum módulo disponível</h3>
-        <p className="text-muted-foreground">
-          Este curso ainda não possui módulos publicados.
-        </p>
-      </div>
+      <Card className="p-6 text-center text-muted-foreground">
+        <p>Este curso ainda não possui módulos disponíveis.</p>
+      </Card>
     );
   }
-
+  
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Módulos do Curso</h2>
-      
-      {modules.map((module, index) => {
-        const moduleProgress = 0; // TODO: Calcular progresso real do módulo
+    <Card className="border rounded-lg overflow-hidden">
+      <div className="p-6">
+        <h2 className="text-xl font-semibold mb-6">Conteúdo do curso</h2>
         
-        return (
-          <Card key={module.id} className="hover:shadow-md transition-shadow">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="space-y-1">
-                  <CardTitle className="text-lg">
-                    Módulo {index + 1}: {module.title}
-                  </CardTitle>
-                  {module.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {module.description}
-                    </p>
-                  )}
-                </div>
-                <Badge variant="outline">
-                  {moduleProgress > 0 ? `${moduleProgress}%` : "Não iniciado"}
-                </Badge>
-              </div>
-            </CardHeader>
-            
-            <CardContent className="space-y-4">
-              {moduleProgress > 0 && (
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Progresso</span>
-                    <span>{moduleProgress}%</span>
+        <Accordion
+          type="multiple" 
+          value={openModules}
+          onValueChange={setOpenModules}
+          className="space-y-6"
+        >
+          {modules.map(module => (
+            <AccordionItem
+              key={module.id}
+              value={module.id}
+              className="border rounded-lg overflow-hidden"
+            >
+              <div className="border-b">
+                <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-accent/50">
+                  <div className="flex justify-between w-full items-center text-left">
+                    <span className="font-semibold">{module.title}</span>
+                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
                   </div>
-                  <Progress value={moduleProgress} className="h-2" />
-                </div>
-              )}
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                  <PlayCircle className="w-4 h-4" />
-                  <span>0 aulas</span>
-                </div>
-                
-                <button
-                  onClick={() => navigate(`/learning/course/${courseId}/module/${module.id}`)}
-                  className="flex items-center space-x-1 text-sm text-viverblue hover:text-viverblue-dark transition-colors"
-                >
-                  <span>Acessar módulo</span>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
+                </AccordionTrigger>
               </div>
-            </CardContent>
-          </Card>
-        );
-      })}
-    </div>
+              <AccordionContent className="p-0">
+                <ModuleLessons 
+                  moduleId={module.id} 
+                  courseId={courseId}
+                  userProgress={userProgress}
+                  isLessonCompleted={(lessonId) => isLessonCompleted(lessonId, userProgress)}
+                  isLessonInProgress={(lessonId) => isLessonInProgress(lessonId, userProgress)}
+                  getLessonProgress={(lessonId) => getLessonProgress(lessonId, userProgress)}
+                />
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </div>
+    </Card>
   );
 };

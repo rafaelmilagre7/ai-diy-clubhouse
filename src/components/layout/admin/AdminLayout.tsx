@@ -48,9 +48,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
       profileAvatar={profile?.avatar_url}
       getInitials={getInitials}
     >
-      <div className="w-full">
-        {children}
-      </div>
+      {children}
     </BaseLayout>
   );
 };

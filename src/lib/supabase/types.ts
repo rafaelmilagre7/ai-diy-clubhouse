@@ -220,23 +220,3 @@ export interface LearningLessonNps {
   created_at: string;
   updated_at: string;
 }
-
-// Nova interface para a tabela onboarding_final
-export interface OnboardingFinal {
-  id: string;
-  user_id: string;
-  personal_info: Record<string, any>;
-  location_info: Record<string, any>;
-  discovery_info: Record<string, any>;
-  business_info: Record<string, any>;
-  business_context: Record<string, any>;
-  goals_info: Record<string, any>;
-  ai_experience: Record<string, any>;
-  personalization: Record<string, any>;
-  is_completed: boolean;
-  current_step: number;
-  completed_steps: number[];
-  completed_at: string | null;
-  created_at: string;
-  updated_at: string;
-}

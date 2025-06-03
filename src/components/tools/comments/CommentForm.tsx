@@ -1,3 +1,4 @@
+
 import { useRef, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
@@ -104,16 +105,7 @@ export const CommentForm = ({
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             className="min-h-24 resize-none bg-[#151823] border-white/10 text-textPrimary focus-visible:ring-viverblue"
-            disabled={isSubmitting}
           />
-          
-          {/* Indicador visual para envio */}
-          {isSubmitting && (
-            <div className="mt-2 flex items-center gap-2 text-xs text-viverblue">
-              <div className="w-3 h-3 border-2 border-viverblue border-t-transparent rounded-full animate-spin" />
-              <span>Enviando comentário...</span>
-            </div>
-          )}
           
           <ImageGallery 
             images={images} 
@@ -127,7 +119,7 @@ export const CommentForm = ({
             multiple
             onChange={handleImageUpload}
             className="hidden"
-            disabled={images.length >= 3 || isSubmitting}
+            disabled={images.length >= 3}
           />
           
           <CommentControls 

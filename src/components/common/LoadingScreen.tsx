@@ -1,7 +1,6 @@
 
 import React, { Suspense, memo } from "react";
 import { LoadingState } from "./LoadingState";
-import { SmartSkeletonLoader } from "./SmartSkeletonLoader";
 
 // Import dinâmico da versão otimizada
 const OptimizedLoadingScreen = React.lazy(() => import("./OptimizedLoadingScreen"));
@@ -13,44 +12,36 @@ interface LoadingScreenProps {
   size?: "sm" | "md" | "lg";
   showProgress?: boolean;
   progressValue?: number;
-  skeletonVariant?: "page" | "card" | "list" | "dashboard" | "table";
 }
 
 const LoadingScreen = memo<LoadingScreenProps>(({ 
   message = "Carregando",
   useOptimized = true,
-  variant = "skeleton",
+  variant = "spinner",
   size = "lg",
   showProgress = false,
-  progressValue = 0,
-  skeletonVariant = "page"
+  progressValue = 0
 }) => {
-  // Fallback inteligente com skeleton loader
-  const SmartFallback = memo(() => (
-    <div className="min-h-screen bg-background p-6">
-      {variant === "skeleton" ? (
-        <SmartSkeletonLoader variant={skeletonVariant} />
-      ) : (
-        <LoadingState
-          variant={variant}
-          size={size}
-          message={`${message} - Estamos preparando sua experiência personalizada do VIVER DE IA Club...`}
-          fullScreen
-        />
-      )}
+  // Fallback para versão simples se a otimizada falhar
+  const SimpleFallback = () => (
+    <div className="min-h-screen bg-background">
+      <LoadingState
+        variant={variant}
+        size={size}
+        message={`${message} - Estamos preparando sua experiência personalizada do VIVER DE IA Club...`}
+        fullScreen
+      />
     </div>
-  ));
-
-  SmartFallback.displayName = 'SmartFallback';
+  );
 
   // Se não quiser usar a versão otimizada, usar a simples
   if (!useOptimized) {
-    return <SmartFallback />;
+    return <SimpleFallback />;
   }
 
   // Usar versão otimizada com fallback
   return (
-    <Suspense fallback={<SmartFallback />}>
+    <Suspense fallback={<SimpleFallback />}>
       <OptimizedLoadingScreen
         message={message}
         variant={variant}

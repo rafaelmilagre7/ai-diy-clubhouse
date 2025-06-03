@@ -19,22 +19,20 @@ export function buildProfessionalDataUpdate(
     // Definir valores padrão para evitar undefined
     const companyName = inputData.company_name || "";
     const companySize = inputData.company_size || "";
-    // Usar company_segment em vez de company_sector
-    const companySector = inputData.company_segment || "";
+    const companySector = inputData.company_sector || "";
     const companyWebsite = inputData.company_website || "";
     const currentPosition = inputData.current_position || "";
-    // Usar annual_revenue_range em vez de annual_revenue
-    const annualRevenue = inputData.annual_revenue_range || "";
+    const annualRevenue = inputData.annual_revenue || "";
     
     // Criar objeto professional_info (não duplicar referências)
     updateObj.professional_info = {
       ...(progress?.professional_info || {}),
       company_name: companyName,
       company_size: companySize,
-      company_segment: companySector,
+      company_sector: companySector,
       company_website: companyWebsite,
       current_position: currentPosition,
-      annual_revenue_range: annualRevenue
+      annual_revenue: annualRevenue
     };
 
     // Também atualizar os campos de nível superior para compatibilidade
@@ -54,10 +52,10 @@ export function buildProfessionalDataUpdate(
     if (typeof professional_info === 'object') {
       updateObj.company_name = professional_info.company_name || "";
       updateObj.company_size = professional_info.company_size || "";
-      updateObj.company_sector = professional_info.company_segment || "";
+      updateObj.company_sector = professional_info.company_sector || "";
       updateObj.company_website = professional_info.company_website || "";
       updateObj.current_position = professional_info.current_position || "";
-      updateObj.annual_revenue = professional_info.annual_revenue_range || "";
+      updateObj.annual_revenue = professional_info.annual_revenue || "";
     }
   }
   

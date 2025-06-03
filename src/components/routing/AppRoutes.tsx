@@ -1,76 +1,97 @@
 
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/auth';
-import LoadingScreen from '@/components/common/LoadingScreen';
-import { lazy, Suspense } from 'react';
-
-// Lazy loading das páginas principais
-const OptimizedDashboard = lazy(() => import('@/pages/member/OptimizedDashboard'));
-const Solutions = lazy(() => import('@/pages/member/Solutions'));
-const Profile = lazy(() => import('@/pages/member/Profile'));
-const Tools = lazy(() => import('@/pages/member/Tools'));
-const Learning = lazy(() => import('@/pages/member/learning/LearningPage'));
-const Community = lazy(() => import('@/pages/member/community/CommunityPage'));
-const Networking = lazy(() => import('@/pages/member/networking/NetworkingPage'));
-const ImplementationTrail = lazy(() => import('@/pages/member/ImplementationTrailPage'));
-const NotFound = lazy(() => import('@/pages/NotFound'));
-
-// Onboarding
-const NovoOnboardingNew = lazy(() => import('@/pages/onboarding/NovoOnboardingNew'));
-const SimpleOnboardingPage = lazy(() => import('@/pages/onboarding/SimpleOnboardingPage'));
-const OnboardingCompleted = lazy(() => import('@/components/onboarding/OnboardingCompletedNew'));
-
-// Admin pages
-const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'));
-
-// Formação
-const FormacaoDashboard = lazy(() => import('@/pages/formacao/FormacaoDashboard'));
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { authRoutes } from '../../routes/AuthRoutes';
+import { adminRoutes } from '../../routes/AdminRoutes';
+import { memberRoutes } from '../../routes/MemberRoutes';
+import { OnboardingRoutes } from '../../routes/OnboardingRoutes';
+import { formacaoRoutes } from '../../routes/FormacaoRoutes';
+import { CommunityRedirects } from './CommunityRedirects';
+import NotFound from '@/pages/NotFound';
+import InvitePage from '@/pages/InvitePage';
 
 const AppRoutes = () => {
-  const { isLoading } = useAuth();
-
-  if (isLoading) {
-    return <LoadingScreen />;
-  }
-
+  const location = useLocation();
+  const [navigationEvents, setNavigationEvents] = useState<{path: string, timestamp: number}[]>([]);
+  
+  // Para diagnóstico - mostrar quando a rota muda
+  useEffect(() => {
+    console.log("AppRoutes: Navegação para rota:", location.pathname, {
+      search: location.search,
+      state: location.state
+    });
+    
+    // Armazenar eventos de navegação recentes para detectar loops
+    const now = Date.now();
+    setNavigationEvents(prev => {
+      // Adicionar evento atual
+      const updated = [...prev, {path: location.pathname, timestamp: now}];
+      
+      // Remover eventos antigos (mais de 10 segundos)
+      const filtered = updated.filter(event => now - event.timestamp < 10000);
+      
+      // Detectar possíveis loops
+      const recentPathCounts: Record<string, number> = {};
+      filtered.forEach(event => {
+        recentPathCounts[event.path] = (recentPathCounts[event.path] || 0) + 1;
+      });
+      
+      // Alertar se houver muitos eventos para a mesma rota
+      Object.entries(recentPathCounts).forEach(([path, count]) => {
+        if (count > 3) {
+          console.warn(`AppRoutes: Possível loop de navegação detectado para a rota ${path} (${count} eventos em 10s)`);
+        }
+      });
+      
+      return filtered;
+    });
+  }, [location]);
+  
+  // Verificar se estamos em uma rota de comunidade para evitar renderizar CommunityRedirects
+  // Ou em uma rota de autenticação/convite onde não precisamos do redirecionamento
+  const skipRedirects = 
+    location.pathname.startsWith('/comunidade') || 
+    location.pathname.startsWith('/login') ||
+    location.pathname.startsWith('/auth') ||
+    location.pathname.startsWith('/convite');
+  
   return (
-    <Suspense fallback={<LoadingScreen />}>
+    <>
+      {/* Componente auxiliar para redirecionar antigas URLs - não renderizar em rotas onde não é necessário */}
+      {!skipRedirects && <CommunityRedirects />}
+      
       <Routes>
-        {/* Dashboard principal */}
-        <Route path="/dashboard" element={<OptimizedDashboard />} />
+        {/* Convite Routes - Alta prioridade e fora do sistema de autenticação */}
+        <Route path="/convite/:token" element={<InvitePage />} />
+        <Route path="/convite" element={<InvitePage />} />
         
-        {/* Onboarding */}
-        <Route path="/onboarding-new" element={<NovoOnboardingNew />} />
-        <Route path="/simple-onboarding" element={<SimpleOnboardingPage />} />
-        <Route path="/onboarding-new/completed" element={<OnboardingCompleted />} />
+        {/* Auth Routes */}
+        {authRoutes.map((route) => (
+          <Route key={route.path} path={route.path} element={route.element} />
+        ))}
         
-        {/* Páginas principais */}
-        <Route path="/solucoes" element={<Solutions />} />
-        <Route path="/trilha-implementacao" element={<ImplementationTrail />} />
-        <Route path="/ferramentas" element={<Tools />} />
-        <Route path="/aprendizado" element={<Learning />} />
-        <Route path="/aprendizado/*" element={<Learning />} />
-        <Route path="/comunidade" element={<Community />} />
-        <Route path="/comunidade/*" element={<Community />} />
-        <Route path="/networking" element={<Networking />} />
-        <Route path="/perfil" element={<Profile />} />
+        {/* Member Routes */}
+        {memberRoutes.map((route) => (
+          <Route key={route.path} path={route.path} element={route.element} />
+        ))}
         
-        {/* Admin */}
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/*" element={<AdminDashboard />} />
+        {/* Admin Routes */}
+        {adminRoutes.map((route) => (
+          <Route key={route.path} path={route.path} element={route.element} />
+        ))}
         
-        {/* Formação */}
-        <Route path="/formacao" element={<FormacaoDashboard />} />
-        <Route path="/formacao/*" element={<FormacaoDashboard />} />
+        {/* Onboarding Routes */}
+        <Route path="/onboarding-new/*" element={<OnboardingRoutes />} />
         
-        {/* Redirects */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/home" element={<Navigate to="/dashboard" replace />} />
+        {/* Formação Routes */}
+        {formacaoRoutes.map((route) => (
+          <Route key={route.path} path={route.path} element={route.element} />
+        ))}
         
-        {/* 404 */}
+        {/* Fallback route */}
         <Route path="*" element={<NotFound />} />
       </Routes>
-    </Suspense>
+    </>
   );
 };
 

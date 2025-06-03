@@ -22,7 +22,6 @@ export const useAdminSuggestions = () => {
         return false;
       }
       
-      toast.success('Sugestão removida com sucesso');
       return true;
     } catch (error: any) {
       console.error('Erro não esperado ao remover sugestão:', error);
@@ -36,74 +35,24 @@ export const useAdminSuggestions = () => {
   const updateSuggestionStatus = async (suggestionId: string, status: string): Promise<boolean> => {
     try {
       setLoading(true);
-      console.log('Atualizando status da sugestão:', suggestionId, 'para:', status);
+      console.log('Atualizando status da sugestão:', suggestionId, status);
       
-      // Validar status - incluindo todos os status válidos
-      const validStatuses = ['new', 'under_review', 'in_development', 'completed', 'declined'];
-      if (!validStatuses.includes(status)) {
-        console.error('Status inválido:', status);
-        toast.error('Status inválido: ' + status);
-        return false;
-      }
-      
-      const updateData = { 
-        status,
-        updated_at: new Date().toISOString()
-      };
-      
-      console.log('Dados da atualização:', updateData);
-      console.log('ID da sugestão:', suggestionId);
-      
-      // Primeiro, vamos verificar se a sugestão existe
-      const { data: existingSuggestion, error: checkError } = await supabase
+      const { error } = await supabase
         .from('suggestions')
-        .select('id, status, title')
-        .eq('id', suggestionId)
-        .single();
-      
-      if (checkError) {
-        console.error('Erro ao verificar sugestão:', checkError);
-        toast.error('Erro ao verificar sugestão: ' + checkError.message);
-        return false;
-      }
-      
-      if (!existingSuggestion) {
-        console.error('Sugestão não encontrada:', suggestionId);
-        toast.error('Sugestão não encontrada');
-        return false;
-      }
-      
-      console.log('Sugestão encontrada:', existingSuggestion);
-      
-      // Agora fazer a atualização
-      const { data, error } = await supabase
-        .from('suggestions')
-        .update(updateData)
-        .eq('id', suggestionId)
-        .select('*');
+        .update({ status })
+        .eq('id', suggestionId);
       
       if (error) {
         console.error('Erro ao atualizar status da sugestão:', error);
-        toast.error('Erro ao atualizar status: ' + error.message);
+        toast.error('Erro ao atualizar status da sugestão: ' + error.message);
         return false;
       }
       
-      console.log('Sugestão atualizada com sucesso:', data);
-      
-      // Mensagens de sucesso personalizadas
-      const statusMessages = {
-        'new': 'Sugestão marcada como nova',
-        'under_review': 'Sugestão em análise',
-        'in_development': 'Sugestão marcada como em desenvolvimento',
-        'completed': 'Sugestão marcada como implementada! 🎉',
-        'declined': 'Sugestão marcada como recusada'
-      };
-      
-      toast.success(statusMessages[status as keyof typeof statusMessages] || `Status atualizado para ${status}`);
+      toast.success(`Status da sugestão atualizado para ${status}`);
       return true;
     } catch (error: any) {
       console.error('Erro não esperado ao atualizar status da sugestão:', error);
-      toast.error('Erro ao atualizar status: ' + error.message);
+      toast.error('Erro ao atualizar status da sugestão: ' + error.message);
       return false;
     } finally {
       setLoading(false);

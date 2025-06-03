@@ -19,66 +19,81 @@ export const useTrailSolutionsEnrichment = (trail: ImplementationTrail | null) =
         setIsLoading(true);
         setError(null);
 
-        // Coletar todos os IDs das soluções
-        const allSolutionIds = [
-          ...(trail.priority1?.map(s => s.solutionId) || []),
-          ...(trail.priority2?.map(s => s.solutionId) || []),
-          ...(trail.priority3?.map(s => s.solutionId) || [])
+        // Extrair todos os IDs de soluções das 3 prioridades
+        const allSolutions = [
+          ...trail.priority1.map(s => ({ ...s, priority: 1 })),
+          ...trail.priority2.map(s => ({ ...s, priority: 2 })),
+          ...trail.priority3.map(s => ({ ...s, priority: 3 }))
         ];
 
-        if (allSolutionIds.length === 0) {
+        if (allSolutions.length === 0) {
           setEnrichedSolutions([]);
+          setIsLoading(false);
           return;
         }
 
-        // Buscar detalhes das soluções
-        const { data: solutions, error: solutionsError } = await supabase
+        const solutionIds = allSolutions.map(s => s.solutionId);
+
+        // Buscar dados completos das soluções
+        const { data: solutionsData, error: solutionsError } = await supabase
           .from('solutions')
-          .select('*')
-          .in('id', allSolutionIds)
+          .select(`
+            id,
+            title,
+            description,
+            category,
+            difficulty,
+            thumbnail_url,
+            tags,
+            published
+          `)
+          .in('id', solutionIds)
           .eq('published', true);
 
         if (solutionsError) {
+          console.error('Erro ao buscar soluções:', solutionsError);
           throw solutionsError;
         }
 
-        // Criar mapa de soluções para acesso rápido
-        const solutionsMap = new Map(solutions?.map(s => [s.id, s]) || []);
+        if (!solutionsData || solutionsData.length === 0) {
+          console.warn('Nenhuma solução encontrada para os IDs fornecidos');
+          setEnrichedSolutions([]);
+          setIsLoading(false);
+          return;
+        }
 
-        // Enriquecer soluções com prioridades e justificativas
-        const enriched: TrailSolutionEnriched[] = [];
-
-        // Processar cada prioridade
-        [
-          { items: trail.priority1 || [], priority: 1 },
-          { items: trail.priority2 || [], priority: 2 },
-          { items: trail.priority3 || [], priority: 3 }
-        ].forEach(({ items, priority }) => {
-          items.forEach(trailSolution => {
-            const solution = solutionsMap.get(trailSolution.solutionId);
-            if (solution) {
-              enriched.push({
-                ...trailSolution,
-                id: solution.id,
-                title: solution.title,
-                description: solution.description,
-                thumbnail_url: solution.thumbnail_url,
-                category: solution.category,
-                difficulty: solution.difficulty,
-                tags: solution.tags,
-                solution: solution,
-                priority
-              });
+        // Enriquecer soluções com dados da trilha
+        const enriched: TrailSolutionEnriched[] = allSolutions
+          .map(trailSolution => {
+            const solutionData = solutionsData.find(s => s.id === trailSolution.solutionId);
+            
+            if (!solutionData) {
+              console.warn(`Solução não encontrada para ID: ${trailSolution.solutionId}`);
+              return null;
             }
-          });
-        });
+
+            return {
+              ...trailSolution,
+              id: solutionData.id,
+              title: solutionData.title || 'Solução sem título',
+              description: solutionData.description || 'Descrição não disponível',
+              category: solutionData.category || 'Sem categoria',
+              difficulty: solutionData.difficulty || 'medium',
+              thumbnail_url: solutionData.thumbnail_url,
+              tags: solutionData.tags || [],
+              solution: solutionData
+            };
+          })
+          .filter(Boolean) as TrailSolutionEnriched[];
+
+        // Ordenar por prioridade
+        enriched.sort((a, b) => (a.priority || 1) - (b.priority || 1));
 
         setEnrichedSolutions(enriched);
-        console.log('✅ Soluções enriquecidas:', enriched.length);
-
       } catch (err) {
-        console.error('❌ Erro ao enriquecer soluções:', err);
-        setError(err instanceof Error ? err.message : 'Erro ao carregar soluções');
+        console.error('Erro ao enriquecer soluções da trilha:', err);
+        setError('Erro ao carregar soluções recomendadas');
+        setEnrichedSolutions([]);
       } finally {
         setIsLoading(false);
       }

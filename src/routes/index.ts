@@ -3,4 +3,3 @@
 import AppRoutes from '../components/routing/AppRoutes';
 
 export { AppRoutes };
-export default AppRoutes;

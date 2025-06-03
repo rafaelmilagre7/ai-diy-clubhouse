@@ -25,7 +25,6 @@ export default function LearningPage() {
         <MemberCoursesList 
           courses={allCourses}
           userProgress={userProgress}
-          isLoading={isLoading}
         />
       </div>
     </div>

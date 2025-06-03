@@ -3,28 +3,22 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Home, AlertTriangle } from 'lucide-react';
+import { ErrorFallbackProps } from './ErrorBoundary';
 
-interface ErrorFallbackProps {
-  error?: Error;
-  errorInfo?: any;
-  onRetry?: () => void;
-  onGoHome?: () => void;
-  retryCount?: number;
-  maxRetries?: number;
-  showDetails?: boolean;
+interface CustomErrorFallbackProps extends ErrorFallbackProps {
   title?: string;
   description?: string;
   icon?: React.ReactNode;
   variant?: 'default' | 'minimal' | 'detailed';
 }
 
-export const ErrorFallback: React.FC<ErrorFallbackProps> = ({
+export const ErrorFallback: React.FC<CustomErrorFallbackProps> = ({
   error,
   errorInfo,
   onRetry,
   onGoHome,
-  retryCount = 0,
-  maxRetries = 3,
+  retryCount,
+  maxRetries,
   showDetails = false,
   title = "Algo deu errado",
   description = "Ocorreu um erro inesperado. Tente novamente ou volte para o dashboard.",
@@ -40,18 +34,16 @@ export const ErrorFallback: React.FC<ErrorFallbackProps> = ({
         <h3 className="text-lg font-medium mb-2">{title}</h3>
         <p className="text-muted-foreground mb-4">{description}</p>
         <div className="flex gap-2">
-          {canRetry && onRetry && (
+          {canRetry && (
             <Button size="sm" onClick={onRetry}>
               <RefreshCw className="w-4 h-4 mr-1" />
               Tentar novamente
             </Button>
           )}
-          {onGoHome && (
-            <Button size="sm" variant="outline" onClick={onGoHome}>
-              <Home className="w-4 h-4 mr-1" />
-              Dashboard
-            </Button>
-          )}
+          <Button size="sm" variant="outline" onClick={onGoHome}>
+            <Home className="w-4 h-4 mr-1" />
+            Dashboard
+          </Button>
         </div>
       </div>
     );
@@ -95,19 +87,17 @@ export const ErrorFallback: React.FC<ErrorFallbackProps> = ({
           )}
 
           <div className="flex gap-3 justify-center">
-            {canRetry && onRetry && (
+            {canRetry && (
               <Button onClick={onRetry} className="flex items-center gap-2">
                 <RefreshCw className="w-4 h-4" />
                 Tentar novamente
               </Button>
             )}
             
-            {onGoHome && (
-              <Button variant="outline" onClick={onGoHome} className="flex items-center gap-2">
-                <Home className="w-4 h-4" />
-                Dashboard
-              </Button>
-            )}
+            <Button variant="outline" onClick={onGoHome} className="flex items-center gap-2">
+              <Home className="w-4 h-4" />
+              Dashboard
+            </Button>
           </div>
 
           {retryCount > 0 && (

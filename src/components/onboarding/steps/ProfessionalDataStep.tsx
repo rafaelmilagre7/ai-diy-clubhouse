@@ -1,181 +1,221 @@
 
-import React from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FormMessage } from "@/components/ui/form-message";
-import { OnboardingStepProps, ProfessionalDataInput } from "@/types/onboarding";
+import React, { useState, useEffect, useRef } from "react";
+import { useForm, FormProvider } from "react-hook-form";
+import { CompanyNameField } from "./professional-inputs/CompanyNameField";
+import { CompanySizeField } from "./professional-inputs/CompanySizeField";
+import { CompanySectorField } from "./professional-inputs/CompanySectorField";
+import { WebsiteField } from "./professional-inputs/WebsiteField";
+import { CurrentPositionField } from "./professional-inputs/CurrentPositionField";
+import { AnnualRevenueField } from "./professional-inputs/AnnualRevenueField";
+import { AlertCircle, Building2 } from "lucide-react";
+import { OnboardingStepProps } from "@/types/onboarding";
+import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { NavigationButtons } from "@/components/onboarding/NavigationButtons";
+import { 
+  validateCompanyName, 
+  validateWebsite, 
+  normalizeWebsiteUrl,
+  validateCompanySize,
+  validateCompanySector,
+  validateCurrentPosition 
+} from "@/utils/professionalDataValidation";
 
 interface ProfessionalDataStepProps extends OnboardingStepProps {
-  // Propriedades específicas podem ser adicionadas aqui se necessário
+  personalInfo?: any;
 }
-
-const professionalDataSchema = z.object({
-  company_name: z.string().min(1, "Nome da empresa é obrigatório"),
-  role: z.string().min(1, "Cargo é obrigatório"),
-  company_size: z.string().min(1, "Tamanho da empresa é obrigatório"),
-  company_sector: z.string().min(1, "Setor da empresa é obrigatório"),
-  company_segment: z.string().optional(),
-  company_website: z.string().url("URL inválida").optional().or(z.literal("")),
-  annual_revenue: z.string().optional(),
-  current_position: z.string().optional(),
-});
 
 export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
   onSubmit,
   isSubmitting,
   initialData,
-  isLastStep,
+  isLastStep = false,
   onComplete,
+  personalInfo
 }) => {
-  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<ProfessionalDataInput>({
-    resolver: zodResolver(professionalDataSchema),
+  const [isLoading, setIsLoading] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const initialDataProcessedRef = useRef(false);
+  const toastShown = useRef(false);
+  
+  // Função melhorada para extrair dados iniciais do objeto
+  const getInitialValue = (field: string) => {
+    if (!initialData) return "";
+    
+    // Primeiro verificar no objeto professional_info
+    if (initialData.professional_info && 
+        initialData.professional_info[field] !== undefined && 
+        initialData.professional_info[field] !== null) {
+      return initialData.professional_info[field];
+    }
+    
+    // Depois verificar nos campos de nível superior
+    if (initialData[field] !== undefined && initialData[field] !== null) {
+      return initialData[field];
+    }
+    
+    return "";
+  };
+  
+  // Inicializar formulário com métodos do react-hook-form
+  const methods = useForm({
     defaultValues: {
-      company_name: initialData?.business_info?.company_name || "",
-      role: initialData?.business_info?.role || "",
-      company_size: initialData?.business_info?.company_size || "",
-      company_sector: initialData?.business_info?.company_sector || "",
-      company_segment: initialData?.business_info?.company_segment || "",
-      company_website: initialData?.business_info?.company_website || "",
-      annual_revenue: initialData?.business_info?.annual_revenue || "",
-      current_position: initialData?.business_info?.current_position || "",
+      company_name: "",
+      company_size: "",
+      company_sector: "",
+      company_website: "",
+      current_position: "",
+      annual_revenue: ""
     },
+    mode: "onChange"
   });
+  
+  // Efeito para atualizar o formulário quando os dados iniciais mudarem
+  // Com ref para evitar atualizações desnecessárias
+  useEffect(() => {
+    if (initialData && !initialDataProcessedRef.current) {
+      console.log("Atualizando formulário com dados iniciais:", initialData);
+      
+      // Resetar o formulário com os valores iniciais
+      methods.reset({
+        company_name: getInitialValue('company_name'),
+        company_size: getInitialValue('company_size'),
+        company_sector: getInitialValue('company_sector'),
+        company_website: getInitialValue('company_website'),
+        current_position: getInitialValue('current_position'),
+        annual_revenue: getInitialValue('annual_revenue')
+      });
+      
+      initialDataProcessedRef.current = true;
+    }
+  }, [initialData, methods]);
 
-  const handleFormSubmit = (data: ProfessionalDataInput) => {
-    onSubmit?.("business_info", {
-      business_info: data
-    });
+  // Validação melhorada de dados antes do envio
+  const validateData = (data: any): string[] => {
+    const errors: string[] = [];
+    
+    // Usar funções de validação específicas
+    const companyNameError = validateCompanyName(data.company_name);
+    if (companyNameError) errors.push(companyNameError);
+    
+    const websiteError = validateWebsite(data.company_website);
+    if (websiteError) errors.push(websiteError);
+    
+    const companySizeError = validateCompanySize(data.company_size);
+    if (companySizeError) errors.push(companySizeError);
+    
+    const companySectorError = validateCompanySector(data.company_sector);
+    if (companySectorError) errors.push(companySectorError);
+    
+    const currentPositionError = validateCurrentPosition(data.current_position);
+    if (currentPositionError) errors.push(currentPositionError);
+    
+    return errors;
+  };
+  
+  // Ajustada para não retornar valor booleano e corresponder ao tipo Promise<void>
+  const handleSubmit = async (data: any) => {
+    setIsLoading(true);
+    setValidationErrors([]);
+    toastShown.current = false;
+    
+    try {
+      // Validar dados antes do envio
+      const errors = validateData(data);
+      
+      if (errors.length > 0) {
+        setValidationErrors(errors);
+        setIsLoading(false);
+        return;
+      }
+      
+      console.log("Enviando dados profissionais:", data);
+      
+      // Normalizar URL do website
+      if (data.company_website) {
+        data.company_website = normalizeWebsiteUrl(data.company_website);
+      }
+      
+      // Estruturando os dados para seguir o padrão professional_info
+      const professionalData = {
+        professional_info: {
+          company_name: data.company_name,
+          company_size: data.company_size,
+          company_sector: data.company_sector,
+          company_website: data.company_website,
+          current_position: data.current_position,
+          annual_revenue: data.annual_revenue
+        }
+      };
+      
+      await onSubmit("professional_info", professionalData);
+      
+      // Mostra feedback de sucesso apenas uma vez
+      if (!toastShown.current) {
+        toast.success("Dados salvos com sucesso!", {
+          description: "Redirecionando para a próxima etapa..."
+        });
+        toastShown.current = true;
+      }
+      
+    } catch (error) {
+      console.error("Erro ao enviar dados profissionais:", error);
+      setValidationErrors(["Falha ao salvar dados. Por favor, tente novamente."]);
+      
+      if (!toastShown.current) {
+        toast.error("Erro ao salvar dados", {
+          description: "Verifique sua conexão e tente novamente."
+        });
+        toastShown.current = true;
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const companySizeOptions = [
-    { value: "1-10", label: "1-10 funcionários" },
-    { value: "11-50", label: "11-50 funcionários" },
-    { value: "51-200", label: "51-200 funcionários" },
-    { value: "201-500", label: "201-500 funcionários" },
-    { value: "501-1000", label: "501-1000 funcionários" },
-    { value: "1000+", label: "Mais de 1000 funcionários" },
-  ];
-
-  const segmentOptions = [
-    { value: "tecnologia", label: "Tecnologia" },
-    { value: "saude", label: "Saúde" },
-    { value: "educacao", label: "Educação" },
-    { value: "financeiro", label: "Financeiro" },
-    { value: "varejo", label: "Varejo" },
-    { value: "industria", label: "Indústria" },
-    { value: "servicos", label: "Serviços" },
-    { value: "outros", label: "Outros" },
-  ];
-
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
-      <div className="space-y-4">
-        <div>
-          <Label htmlFor="company_name">Nome da Empresa *</Label>
-          <Input
-            id="company_name"
-            {...register("company_name")}
-            placeholder="Nome da sua empresa"
-          />
-          {errors.company_name && (
-            <FormMessage type="error" message={errors.company_name.message} />
-          )}
-        </div>
+    <FormProvider {...methods}>
+      <form onSubmit={methods.handleSubmit(handleSubmit)} className="space-y-8">
+        <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6">
+          <div className="flex items-center gap-2 mb-6">
+            <Building2 className="h-5 w-5 text-[#0ABAB5]" />
+            <h3 className="text-lg font-semibold text-[#0ABAB5]">Dados da Empresa</h3>
+          </div>
 
-        <div>
-          <Label htmlFor="role">Seu Cargo *</Label>
-          <Input
-            id="role"
-            {...register("role")}
-            placeholder="Ex: CEO, Diretor, Gerente..."
-          />
-          {errors.role && (
-            <FormMessage type="error" message={errors.role.message} />
+          {validationErrors.length > 0 && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                {validationErrors.map((err, i) => (
+                  <div key={i}>{err}</div>
+                ))}
+              </AlertDescription>
+            </Alert>
           )}
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <CompanyNameField />
+            <CurrentPositionField />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <CompanySizeField />
+            <CompanySectorField />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <AnnualRevenueField />
+            <WebsiteField />
+          </div>
         </div>
-
-        <div>
-          <Label htmlFor="company_size">Tamanho da Empresa *</Label>
-          <Select onValueChange={(value) => setValue("company_size", value)} value={watch("company_size")}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione o tamanho da empresa" />
-            </SelectTrigger>
-            <SelectContent>
-              {companySizeOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.company_size && (
-            <FormMessage type="error" message={errors.company_size.message} />
-          )}
-        </div>
-
-        <div>
-          <Label htmlFor="company_sector">Setor da Empresa *</Label>
-          <Select onValueChange={(value) => setValue("company_sector", value)} value={watch("company_sector")}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione o setor" />
-            </SelectTrigger>
-            <SelectContent>
-              {segmentOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.company_sector && (
-            <FormMessage type="error" message={errors.company_sector.message} />
-          )}
-        </div>
-
-        <div>
-          <Label htmlFor="company_segment">Segmento da Empresa</Label>
-          <Select onValueChange={(value) => setValue("company_segment", value)} value={watch("company_segment") || ""}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione o segmento" />
-            </SelectTrigger>
-            <SelectContent>
-              {segmentOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.company_segment && (
-            <FormMessage type="error" message={errors.company_segment.message} />
-          )}
-        </div>
-
-        <div>
-          <Label htmlFor="company_website">Website da Empresa</Label>
-          <Input
-            id="company_website"
-            {...register("company_website")}
-            placeholder="https://www.suaempresa.com"
-          />
-          {errors.company_website && (
-            <FormMessage type="error" message={errors.company_website.message} />
-          )}
-        </div>
-      </div>
-
-      <Button
-        type="submit"
-        className="w-full bg-viverblue hover:bg-viverblue-dark text-white"
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? "Salvando..." : isLastStep ? "Finalizar" : "Continuar"}
-      </Button>
-    </form>
+        
+        <NavigationButtons 
+          isSubmitting={isSubmitting || isLoading}
+          submitText="Próximo Passo"
+          loadingText="Salvando..."
+          showPrevious={false}
+        />
+      </form>
+    </FormProvider>
   );
 };

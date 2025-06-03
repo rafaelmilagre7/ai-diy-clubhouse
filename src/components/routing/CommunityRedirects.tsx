@@ -14,8 +14,15 @@ export const CommunityRedirects = () => {
   const processingRef = useRef<boolean>(false);
   
   useEffect(() => {
+    // Log para diagnóstico
+    console.log("CommunityRedirects avaliando:", location.pathname, {
+      state: location.state,
+      search: location.search
+    });
+    
     // Evitar processamento duplicado
     if (processingRef.current) {
+      console.log("CommunityRedirects: Já processando um redirecionamento, ignorando");
       return;
     }
     
@@ -23,14 +30,13 @@ export const CommunityRedirects = () => {
     const now = Date.now();
     const timeSinceLastRedirect = now - lastRedirectTimeRef.current;
     if (timeSinceLastRedirect < 1500) { // 1.5 segundos de cooldown
-      if (process.env.NODE_ENV === 'development') {
-        console.warn(`CommunityRedirects: Cooldown ativado (${timeSinceLastRedirect}ms), ignorando redirecionamento`);
-      }
+      console.warn(`CommunityRedirects: Cooldown ativado (${timeSinceLastRedirect}ms), ignorando redirecionamento`);
       return;
     }
     
     // Não processar redirecionamentos nas rotas já da comunidade
     if (location.pathname.startsWith('/comunidade')) {
+      console.log("CommunityRedirects: Ignorando rota de comunidade:", location.pathname);
       return;
     }
     
@@ -52,9 +58,13 @@ export const CommunityRedirects = () => {
       return;
     }
     
+    console.log("CommunityRedirects verificando:", location.pathname);
+    
     const redirect = checkForumRedirect(location.pathname);
     
     if (redirect) {
+      console.log(`CommunityRedirects: Redirecionando de ${location.pathname} para ${redirect.path}`);
+      
       // Prevenção contra loops de redirecionamento
       if (redirect.path === location.pathname) {
         console.error("CommunityRedirects: Loop de redirecionamento detectado, abortando");

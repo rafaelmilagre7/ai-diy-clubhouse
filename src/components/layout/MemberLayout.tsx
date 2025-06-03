@@ -1,6 +1,6 @@
 
 import React, { memo, useMemo, useCallback } from "react";
-import { useOptimizedAuth } from "@/hooks/auth/useOptimizedAuth";
+import { useAuth } from "@/contexts/auth";
 import BaseLayout from "./BaseLayout";
 import { MemberSidebar } from "./member/MemberSidebar";
 import { MemberContent } from "./member/MemberContent";
@@ -14,7 +14,7 @@ interface MemberLayoutProps {
  * MemberLayout usando BaseLayout unificado com otimizações de performance
  */
 const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
-  const { profile, signOut } = useOptimizedAuth();
+  const { profile, signOut } = useAuth();
 
   // Memoizar função para obter iniciais para evitar recriação
   const getInitials = useCallback((name: string | null) => {

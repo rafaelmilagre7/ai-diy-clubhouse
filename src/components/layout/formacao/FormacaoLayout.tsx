@@ -6,18 +6,14 @@ import { FormacaoSidebar } from "./FormacaoSidebar";
 import { FormacaoContent } from "./FormacaoContent";
 import { toast } from "sonner";
 
-interface FormacaoLayoutProps {
-  children: React.ReactNode;
-}
-
 /**
- * FormacaoLayout usando BaseLayout unificado com otimização de re-renders
+ * FormacaoLayout usando BaseLayout unificado
  */
-const FormacaoLayout = React.memo(({ children }: FormacaoLayoutProps) => {
+const FormacaoLayout = ({ children }: { children: React.ReactNode }) => {
   const { profile, signOut } = useAuth();
 
   // Função para obter iniciais do nome do usuário
-  const getInitials = React.useCallback((name: string | null) => {
+  const getInitials = (name: string | null) => {
     if (!name) return "F";
     return name
       .split(" ")
@@ -25,10 +21,10 @@ const FormacaoLayout = React.memo(({ children }: FormacaoLayoutProps) => {
       .join("")
       .toUpperCase()
       .substring(0, 2);
-  }, []);
+  };
 
   // Handler para signOut
-  const handleSignOut = React.useCallback(async () => {
+  const handleSignOut = async () => {
     try {
       const result = await signOut();
       if (result.success) {
@@ -39,7 +35,7 @@ const FormacaoLayout = React.memo(({ children }: FormacaoLayoutProps) => {
     } catch (error) {
       toast.error("Erro ao fazer logout");
     }
-  }, [signOut]);
+  };
 
   return (
     <BaseLayout
@@ -55,8 +51,6 @@ const FormacaoLayout = React.memo(({ children }: FormacaoLayoutProps) => {
       {children}
     </BaseLayout>
   );
-});
-
-FormacaoLayout.displayName = 'FormacaoLayout';
+};
 
 export default FormacaoLayout;

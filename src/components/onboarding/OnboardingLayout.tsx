@@ -1,16 +1,19 @@
 
-import React from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Sparkles } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React from "react";
+import MemberLayout from "@/components/layout/MemberLayout";
+import { OnboardingHeader } from "./OnboardingHeader";
+import { useNavigate } from "react-router-dom";
+import { ProgressBar } from "./ProgressBar";
 
 interface OnboardingLayoutProps {
   children: React.ReactNode;
   title: string;
   currentStep: number;
-  totalSteps: number;
+  totalSteps?: number;
+  backUrl?: string;
   onBackClick?: () => void;
+  isFormacao?: boolean;
+  hideProgress?: boolean;
 }
 
 export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
@@ -18,60 +21,55 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
   title,
   currentStep,
   totalSteps,
-  onBackClick
+  backUrl,
+  onBackClick,
+  isFormacao = false,
+  hideProgress = false
 }) => {
-  const progressPercentage = (currentStep / totalSteps) * 100;
+  const navigate = useNavigate();
+
+  // Função padronizada para navegação
+  const handleBack = () => {
+    if (onBackClick) {
+      // Se tiver callback específico, usar ele
+      console.log("[OnboardingLayout] Navegando de volta via callback");
+      onBackClick();
+    } else if (backUrl) {
+      // Se tiver URL específica, usar ela
+      console.log(`[OnboardingLayout] Navegando de volta para ${backUrl}`);
+      navigate(backUrl);
+    } else {
+      // Fallback para comportamento padrão
+      console.log("[OnboardingLayout] Navegação padrão para trás");
+      navigate(-1);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-[#0F111A] flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl space-y-6">
-        {/* Header com logo e progresso */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center space-y-4"
-        >
-          <div className="flex items-center justify-center gap-2">
-            <Sparkles className="h-8 w-8 text-viverblue" />
-            <h1 className="text-2xl font-bold text-viverblue">VIVER DE IA</h1>
-          </div>
+    <MemberLayout>
+      <div className="w-full bg-[#0F111A] py-6">
+        <div className="container max-w-screen-lg">
+          <OnboardingHeader 
+            isOnboardingCompleted={false}
+            title={title}
+            step={currentStep}
+            onBackClick={backUrl || onBackClick ? handleBack : undefined}
+          />
           
-          {/* Barra de progresso */}
-          <div className="w-full bg-gray-700 rounded-full h-2">
-            <motion.div
-              className="bg-gradient-to-r from-viverblue to-viverblue/80 h-2 rounded-full"
-              initial={{ width: 0 }}
-              animate={{ width: `${progressPercentage}%` }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
-            />
-          </div>
-          
-          <h2 className="text-xl font-semibold text-white">{title}</h2>
-        </motion.div>
-
-        {/* Botão de voltar */}
-        {onBackClick && (
-          <div className="flex justify-start">
-            <Button
-              onClick={onBackClick}
-              variant="ghost"
-              className="text-gray-400 hover:text-white hover:bg-gray-800 flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Voltar
-            </Button>
-          </div>
-        )}
-
-        {/* Conteúdo principal */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          {children}
-        </motion.div>
+          {!hideProgress && (
+            <div className="mt-6">
+              <ProgressBar 
+                currentStep={currentStep} 
+                totalSteps={totalSteps || 8} 
+              />
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+
+      <div className="container max-w-screen-lg mx-auto py-8">
+        {children}
+      </div>
+    </MemberLayout>
   );
 };

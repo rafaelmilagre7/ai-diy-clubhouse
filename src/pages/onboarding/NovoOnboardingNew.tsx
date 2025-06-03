@@ -1,13 +1,18 @@
 
 import React from 'react';
 import { UnifiedOnboardingFlow } from '@/components/onboarding/modern/UnifiedOnboardingFlow';
-import { OnboardingCompletionGuard } from '@/components/onboarding/OnboardingCompletionGuard';
+import { OnboardingLayout } from '@/components/onboarding/OnboardingLayout';
 
-const NovoOnboardingNew: React.FC = () => {
+const NovoOnboardingNew = () => {
   return (
-    <OnboardingCompletionGuard>
+    <OnboardingLayout
+      title="Configure sua experiência"
+      currentStep={1}
+      totalSteps={4}
+      hideProgress={true}
+    >
       <UnifiedOnboardingFlow />
-    </OnboardingCompletionGuard>
+    </OnboardingLayout>
   );
 };
 

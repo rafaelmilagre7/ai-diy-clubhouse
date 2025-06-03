@@ -1,94 +1,169 @@
 
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/auth";
+import { useLocation } from "react-router-dom";
 import { 
-  Home, 
-  Users, 
-  BookOpen, 
-  Wrench, 
-  Target, 
+  LayoutDashboard, 
+  Lightbulb, 
+  Settings, 
+  Trophy,
+  Gift,
+  MessageSquare,
+  ShieldCheck,
   User,
-  MessageCircle,
-  Star
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+  BookOpen,
+  Map,
+  Calendar,
+  GraduationCap,
+  Wrench,
+  MessagesSquare,
+  Network
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { isActiveRoute } from "@/components/community/utils/routingUtils";
 
-interface MemberSidebarNavProps {
+interface SidebarNavProps {
   sidebarOpen: boolean;
 }
 
-const navigationItems = [
-  {
-    name: 'Dashboard',
-    href: '/dashboard',
-    icon: Home,
-  },
-  {
-    name: 'Comunidade',
-    href: '/comunidade',
-    icon: MessageCircle,
-  },
-  {
-    name: 'Aprendizado',
-    href: '/learning',
-    icon: BookOpen,
-  },
-  {
-    name: 'Soluções',
-    href: '/solutions',
-    icon: Star,
-  },
-  {
-    name: 'Ferramentas',
-    href: '/tools',
-    icon: Wrench,
-  },
-  {
-    name: 'Trilha',
-    href: '/implementation-trail',
-    icon: Target,
-  },
-  {
-    name: 'Networking',
-    href: '/networking',
-    icon: Users,
-  },
-  {
-    name: 'Perfil',
-    href: '/profile',
-    icon: User,
-  },
-];
-
-export const MemberSidebarNav: React.FC<MemberSidebarNavProps> = ({ sidebarOpen }) => {
+export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
   const location = useLocation();
+  const { isAdmin, isFormacao, profile } = useAuth();
+
+  const menuItems = [
+    {
+      title: "Dashboard",
+      href: "/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      title: "Onboarding",
+      href: "/onboarding-new",
+      icon: BookOpen,
+    },
+    {
+      title: "Trilha de Implementação",
+      href: "/implementation-trail",
+      icon: Map,
+    },
+    {
+      title: "Soluções",
+      href: "/solutions",
+      icon: Lightbulb,
+    },
+    {
+      title: "Cursos",
+      href: "/learning",
+      icon: GraduationCap,
+    },
+    {
+      title: "Ferramentas",
+      href: "/tools",
+      icon: Wrench,
+    },
+    {
+      title: "Benefícios",
+      href: "/benefits",
+      icon: Gift,
+    },
+    {
+      title: "Sugestões",
+      href: "/suggestions",
+      icon: MessageSquare,
+    },
+    {
+      title: "Comunidade",
+      href: "/comunidade",
+      icon: MessagesSquare,
+      highlight: true
+    },
+    {
+      title: "Perfil",
+      href: "/profile",
+      icon: User,
+    },
+    {
+      title: "Eventos",
+      href: "/events",
+      icon: Calendar,
+    },
+    {
+      title: "Networking",
+      href: "/networking",
+      icon: Network,
+      adminOnly: true // Apenas para admin e formação
+    }
+  ];
 
   return (
-    <nav className="space-y-1 px-3">
-      {navigationItems.map((item) => {
-        const isActive = location.pathname === item.href || 
-                        location.pathname.startsWith(item.href + '/');
-        
-        return (
-          <Link key={item.name} to={item.href}>
+    <div className="space-y-2 py-4">
+      <div className="px-3 space-y-1">
+        {menuItems.map((item) => {
+          // Se for adminOnly, mostrar apenas para admin e formação
+          if (item.adminOnly && (!profile || (profile.role !== 'admin' && profile.role !== 'formacao'))) {
+            return null;
+          }
+
+          const active = isActiveRoute(location.pathname, item.href);
+          
+          return (
             <Button
+              key={item.href}
               variant="ghost"
               className={cn(
-                "w-full justify-start gap-3 h-11 px-3",
-                "text-gray-300 hover:text-white hover:bg-gray-800/50",
-                isActive && "bg-viverblue/20 text-viverblue hover:bg-viverblue/30",
-                !sidebarOpen && "justify-center px-0"
+                "w-full justify-start gap-3 rounded-lg hover:bg-[#181A2A] text-neutral-400 dark:text-neutral-300",
+                !sidebarOpen && "justify-center",
+                active && "hubla-active-nav",
+                item.highlight && "relative"
               )}
+              asChild
             >
-              <item.icon size={20} className="shrink-0" />
-              {sidebarOpen && (
-                <span className="text-sm font-medium">{item.name}</span>
-              )}
+              <Link to={item.href}>
+                <item.icon className={cn(
+                  "h-4 w-4", 
+                  active ? "text-viverblue" : "text-neutral-400"
+                )} />
+                {sidebarOpen && (
+                  <span>{item.title}</span>
+                )}
+              </Link>
             </Button>
-          </Link>
-        );
-      })}
-    </nav>
+          );
+        })}
+
+        {isAdmin && (
+          <Button
+            variant="outline"
+            className={cn(
+              "w-full justify-start gap-3 border-viverblue/30 text-viverblue hover:bg-[#181A2A] mt-4",
+              !sidebarOpen && "justify-center"
+            )}
+            asChild
+          >
+            <Link to="/admin">
+              <ShieldCheck className="h-4 w-4" />
+              {sidebarOpen && <span>Painel Admin</span>}
+            </Link>
+          </Button>
+        )}
+        
+        {isFormacao && (
+          <Button
+            variant="outline"
+            className={cn(
+              "w-full justify-start gap-3 border-viverblue/30 text-viverblue hover:bg-[#181A2A] mt-4",
+              !sidebarOpen && "justify-center"
+            )}
+            asChild
+          >
+            <Link to="/formacao">
+              <GraduationCap className="h-4 w-4" />
+              {sidebarOpen && <span>Área de Cursos</span>}
+            </Link>
+          </Button>
+        )}
+      </div>
+    </div>
   );
 };

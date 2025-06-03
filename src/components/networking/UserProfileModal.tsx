@@ -1,231 +1,210 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
 import { 
   Building, 
-  MapPin, 
-  Phone, 
-  MessageSquare, 
-  ExternalLink,
-  Target,
-  Lightbulb,
+  Star, 
+  UserPlus, 
   TrendingUp,
-  Users
+  Mail,
+  ExternalLink,
+  MessageCircle
 } from 'lucide-react';
 import { NetworkMatch } from '@/hooks/networking/useNetworkMatches';
 
 interface UserProfileModalProps {
-  match: NetworkMatch | null;
+  userId: string;
   isOpen: boolean;
   onClose: () => void;
-  onContact: (matchId: string) => void;
+  match: NetworkMatch;
+  onConnect: () => void;
+  onDismiss: () => void;
 }
 
 export const UserProfileModal: React.FC<UserProfileModalProps> = ({
-  match,
   isOpen,
   onClose,
-  onContact
+  match,
+  onConnect,
+  onDismiss
 }) => {
-  if (!match?.matched_user) return null;
-
-  const { matched_user, ai_analysis, match_strengths, suggested_topics, compatibility_score } = match;
-
-  const handleContact = () => {
-    onContact(match.id);
-    onClose();
-  };
-
-  const handleWhatsApp = () => {
-    if (matched_user.whatsapp_number) {
-      const message = encodeURIComponent(`Olá! Vi seu perfil através do Viver de IA e gostaria de trocar uma ideia sobre possíveis oportunidades de colaboração.`);
-      window.open(`https://wa.me/${matched_user.whatsapp_number}?text=${message}`, '_blank');
-    }
-  };
+  const compatibilityColor = 
+    match.compatibility_score >= 80 ? 'text-green-500' :
+    match.compatibility_score >= 60 ? 'text-yellow-500' : 'text-red-500';
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-3">
-            <Avatar className="h-12 w-12">
-              <AvatarImage src={matched_user.avatar_url || ''} />
-              <AvatarFallback className="bg-viverblue text-white">
-                {matched_user.name.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h3 className="text-xl font-semibold">{matched_user.name}</h3>
-              <p className="text-muted-foreground">{matched_user.current_position}</p>
-            </div>
-          </DialogTitle>
+          <DialogTitle>Perfil do Usuário</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Score de Compatibilidade */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5 text-viverblue" />
-                Score de Compatibilidade
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4">
-                <div className="text-3xl font-bold text-viverblue">
-                  {Math.round(compatibility_score * 100)}%
-                </div>
-                <div className="flex-1">
-                  <div className="w-full bg-neutral-700 rounded-full h-2">
-                    <div 
-                      className="bg-viverblue h-2 rounded-full transition-all"
-                      style={{ width: `${compatibility_score * 100}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Informações da Empresa */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building className="h-5 w-5" />
-                Informações Profissionais
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {matched_user.company_name && (
-                <div className="flex items-center gap-2">
+          {/* Profile Header */}
+          <div className="flex items-start gap-4">
+            <Avatar className="h-16 w-16">
+              <AvatarImage src={match.matched_user?.avatar_url} />
+              <AvatarFallback className="text-lg">
+                {match.matched_user?.name?.slice(0, 2).toUpperCase() || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            
+            <div className="flex-1">
+              <h2 className="text-xl font-bold">{match.matched_user?.name || 'Usuário'}</h2>
+              <p className="text-muted-foreground">{match.matched_user?.current_position || 'Posição não informada'}</p>
+              
+              {match.matched_user?.company_name && (
+                <div className="flex items-center gap-2 mt-2 text-sm">
                   <Building className="h-4 w-4 text-muted-foreground" />
-                  <span>{matched_user.company_name}</span>
+                  <span>{match.matched_user.company_name}</span>
                 </div>
               )}
-              {matched_user.current_position && (
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                  <span>{matched_user.current_position}</span>
+
+              <div className="flex items-center gap-2 mt-2">
+                <Star className={`h-4 w-4 ${compatibilityColor}`} />
+                <span className={`font-medium ${compatibilityColor}`}>
+                  {match.compatibility_score}% de compatibilidade
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Contact Information */}
+          <div className="space-y-3">
+            <h3 className="font-semibold flex items-center gap-2">
+              <Mail className="h-4 w-4" />
+              Informações de Contato
+            </h3>
+            
+            <div className="bg-muted/30 p-4 rounded-lg space-y-3">
+              {/* Email */}
+              <div className="flex items-center gap-3">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Email</p>
+                  <p className="text-sm text-muted-foreground">{match.matched_user?.email || 'Não informado'}</p>
+                </div>
+                {match.matched_user?.email && (
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={`mailto:${match.matched_user.email}`} className="gap-1">
+                      <ExternalLink className="h-3 w-3" />
+                      Enviar Email
+                    </a>
+                  </Button>
+                )}
+              </div>
+
+              {/* WhatsApp */}
+              {match.matched_user?.whatsapp_number && (
+                <div className="flex items-center gap-3">
+                  <MessageCircle className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">WhatsApp</p>
+                    <p className="text-sm text-muted-foreground">{match.matched_user.whatsapp_number}</p>
+                  </div>
+                  <Button variant="outline" size="sm" asChild>
+                    <a 
+                      href={`https://wa.me/${match.matched_user.whatsapp_number.replace(/\D/g, '')}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="gap-1"
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                      Conversar
+                    </a>
+                  </Button>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          {/* Pontos Fortes do Match */}
-          {match_strengths && match_strengths.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-green-500" />
-                  Pontos Fortes da Compatibilidade
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {match_strengths.map((strength, index) => (
-                    <div key={index} className="border-l-2 border-green-500 pl-4">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium">{strength.factor}</span>
-                        <Badge variant="secondary">{Math.round(strength.strength * 100)}%</Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{strength.description}</p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          <Separator />
 
-          {/* Análise da IA */}
-          {ai_analysis && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Lightbulb className="h-5 w-5 text-yellow-500" />
-                  Insights da IA
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Pontos Fortes da IA */}
-                {ai_analysis.strengths && ai_analysis.strengths.length > 0 && (
-                  <div>
-                    <h4 className="font-medium mb-2 text-green-600">Pontos Fortes</h4>
-                    <ul className="space-y-1">
-                      {ai_analysis.strengths.map((strength, index) => (
-                        <li key={index} className="text-sm flex items-start gap-2">
-                          <span className="text-green-500 mt-1">•</span>
-                          <span>{strength}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+          {/* Match Analysis */}
+          <div className="space-y-4">
+            <h3 className="font-semibold flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              Análise do Match
+            </h3>
+            
+            <div className="bg-muted/50 p-4 rounded-lg">
+              <p className="text-sm font-medium mb-2">Motivo do match:</p>
+              <p className="text-sm">{match.match_reason}</p>
+            </div>
 
-                {/* Oportunidades */}
-                {ai_analysis.opportunities && ai_analysis.opportunities.length > 0 && (
-                  <div>
-                    <h4 className="font-medium mb-2 text-viverblue">Oportunidades Identificadas</h4>
-                    <ul className="space-y-1">
-                      {ai_analysis.opportunities.map((opportunity, index) => (
-                        <li key={index} className="text-sm flex items-start gap-2">
-                          <span className="text-viverblue mt-1">•</span>
-                          <span>{opportunity}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Abordagem Recomendada */}
-                {ai_analysis.recommendedApproach && (
-                  <div>
-                    <h4 className="font-medium mb-2 text-purple-600">Abordagem Recomendada</h4>
-                    <p className="text-sm bg-purple-50 dark:bg-purple-950/20 p-3 rounded-lg">
-                      {ai_analysis.recommendedApproach}
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Tópicos Sugeridos */}
-          {suggested_topics && suggested_topics.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5 text-blue-500" />
-                  Tópicos para Conversa
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+            {match.ai_analysis?.strengths && match.ai_analysis.strengths.length > 0 && (
+              <div>
+                <p className="text-sm font-medium mb-2">Pontos fortes identificados:</p>
                 <div className="flex flex-wrap gap-2">
-                  {suggested_topics.map((topic, index) => (
-                    <Badge key={index} variant="outline" className="bg-blue-50 dark:bg-blue-950/20">
-                      {topic}
+                  {match.ai_analysis.strengths.map((strength, index) => (
+                    <Badge key={index} variant="secondary">
+                      {strength}
                     </Badge>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              </div>
+            )}
 
-          {/* Ações */}
-          <div className="flex gap-3">
-            <Button onClick={handleContact} className="flex-1 bg-viverblue hover:bg-viverblue/90">
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Marcar como Contatado
-            </Button>
-            
-            {matched_user.whatsapp_number && (
-              <Button onClick={handleWhatsApp} variant="outline" className="flex-1">
-                <Phone className="h-4 w-4 mr-2" />
-                WhatsApp
-              </Button>
+            {match.ai_analysis?.opportunities && match.ai_analysis.opportunities.length > 0 && (
+              <div>
+                <p className="text-sm font-medium mb-2">Oportunidades identificadas:</p>
+                <div className="flex flex-wrap gap-2">
+                  {match.ai_analysis.opportunities.map((opportunity, index) => (
+                    <Badge key={index} variant="outline">
+                      {opportunity}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {match.ai_analysis?.recommended_approach && (
+              <div>
+                <p className="text-sm font-medium mb-2">Abordagem recomendada:</p>
+                <p className="text-sm bg-viverblue/5 p-3 rounded border-l-2 border-viverblue">
+                  {match.ai_analysis.recommended_approach}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <Separator />
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-2">
+            {match.status === 'pending' || match.status === 'viewed' ? (
+              <>
+                <Button onClick={onConnect} className="flex-1 gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  Conectar
+                </Button>
+                <Button variant="outline" onClick={onDismiss} className="flex-1">
+                  Dispensar
+                </Button>
+              </>
+            ) : match.status === 'contacted' ? (
+              <div className="flex-1 text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+                  Solicitação de conexão enviada
+                </p>
+              </div>
+            ) : (
+              <div className="flex-1 text-center p-3 bg-muted rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  Match dispensado
+                </p>
+              </div>
             )}
           </div>
         </div>

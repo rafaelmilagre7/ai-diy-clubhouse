@@ -1,24 +1,38 @@
 
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Lightbulb } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
-interface NoSolutionsPlaceholderProps {
-  title: string;
-  description: string;
-}
-
-export const NoSolutionsPlaceholder: React.FC<NoSolutionsPlaceholderProps> = ({ 
-  title, 
-  description 
-}) => {
+export const NoSolutionsPlaceholder = () => {
   return (
-    <Card className="border-dashed border-2 border-neutral-600 bg-transparent">
-      <CardContent className="flex flex-col items-center justify-center py-12 text-left">
-        <Lightbulb className="h-12 w-12 text-neutral-500 mb-4" />
-        <h3 className="text-lg font-semibold text-neutral-300 mb-2 text-left w-full">{title}</h3>
-        <p className="text-neutral-500 text-left w-full">{description}</p>
-      </CardContent>
-    </Card>
+    <div className="flex flex-col items-center justify-center py-12 text-center">
+      <div className="rounded-full bg-muted p-6 mb-4">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-10 w-10 text-muted-foreground"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+      </div>
+      <h3 className="text-xl font-semibold mb-2">Nenhuma solução disponível</h3>
+      <p className="text-muted-foreground max-w-md mb-6">
+        Parece que não há soluções disponíveis no momento.
+        Tente selecionar outra categoria ou volte mais tarde.
+      </p>
+      <Link to="/solutions">
+        <Button variant="default" className="bg-viverblue hover:bg-viverblue/90">
+          Explorar todas as soluções
+        </Button>
+      </Link>
+    </div>
   );
 };

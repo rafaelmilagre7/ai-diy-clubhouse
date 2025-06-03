@@ -1,142 +1,172 @@
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
-import { supabase } from '@/lib/supabase';
-import { ImplementationTrail } from '@/types/implementation-trail';
-import { useTrailCache } from './useTrailCache';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { ImplementationTrail } from '@/types/implementation-trail';
+import { sanitizeTrailData } from './useImplementationTrail.utils';
 
 export const useImplementationTrail = () => {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const [trail, setTrail] = useState<ImplementationTrail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Criar hash do perfil para cache
-  const profileHash = useMemo(() => {
-    if (!profile) return '';
-    
-    const profileData = {
-      name: profile.name || '',
-      company: profile.company_name || '',
-      industry: profile.industry || '',
-      role: profile.role || ''
-    };
-    
-    return btoa(JSON.stringify(profileData));
-  }, [profile?.name, profile?.company_name, profile?.industry, profile?.role]);
-
-  const { 
-    cachedTrail, 
-    saveToCache, 
-    invalidateCache, 
-    isCacheValid 
-  } = useTrailCache(user?.id || '', profileHash);
-
-  // Verificar se tem conteúdo válido
-  const hasContent = useMemo(() => {
-    if (!trail) return false;
-    
-    const hasSolutions = (
-      (trail.priority1 && trail.priority1.length > 0) ||
-      (trail.priority2 && trail.priority2.length > 0) ||
-      (trail.priority3 && trail.priority3.length > 0)
-    );
-    
-    const hasLessons = trail.recommended_lessons && trail.recommended_lessons.length > 0;
-    
-    return hasSolutions || hasLessons;
-  }, [trail]);
-
-  // Carregar trilha do cache
-  useEffect(() => {
-    if (cachedTrail && isCacheValid) {
-      setTrail(cachedTrail);
-      console.log('✅ Trilha carregada do cache');
-    }
-  }, [cachedTrail, isCacheValid]);
-
-  // Função para gerar trilha com IA
-  const generateImplementationTrail = useCallback(async (): Promise<void> => {
+  // Função para carregar trilha existente
+  const loadTrail = useCallback(async (forceReload = false) => {
     if (!user?.id) {
-      throw new Error('Usuário não autenticado');
-    }
-
-    setIsRegenerating(true);
-    setError(null);
-
-    try {
-      console.log('🤖 Iniciando geração de trilha com IA...');
-
-      // Chamar Edge Function para geração
-      const { data, error: edgeError } = await supabase.functions.invoke('generate-implementation-trail', {
-        body: { user_id: user.id }
-      });
-
-      if (edgeError) {
-        console.error('❌ Erro na Edge Function:', edgeError);
-        throw new Error(`Erro ao gerar trilha: ${edgeError.message}`);
-      }
-
-      if (!data?.trail_data) {
-        throw new Error('Dados da trilha não foram retornados');
-      }
-
-      console.log('✅ Trilha gerada com sucesso:', data.trail_data);
-      
-      const newTrail = data.trail_data as ImplementationTrail;
-      setTrail(newTrail);
-      
-      // Salvar no cache
-      saveToCache(newTrail);
-      
-      toast.success('Trilha personalizada gerada com sucesso!');
-      
-    } catch (err) {
-      console.error('❌ Erro ao gerar trilha:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
-      setError(errorMessage);
-      toast.error(`Erro ao gerar trilha: ${errorMessage}`);
-      throw err;
-    } finally {
-      setIsRegenerating(false);
-    }
-  }, [user?.id, saveToCache]);
-
-  // Função para atualizar trilha
-  const refreshTrail = useCallback(async (force = false): Promise<void> => {
-    if (!user?.id) return;
-
-    // Se temos cache válido e não é forçado, não fazer nada
-    if (isCacheValid && !force) {
-      console.log('Cache válido, não é necessário atualizar');
+      console.log('Usuário não definido, não carregando trilha');
       return;
     }
 
     try {
-      await generateImplementationTrail();
-    } catch (err) {
-      console.error('Erro ao atualizar trilha:', err);
-      // Em caso de erro, manter trilha atual se existir
-    }
-  }, [user?.id, isCacheValid, generateImplementationTrail]);
+      if (forceReload) {
+        setRefreshing(true);
+      } else {
+        setIsLoading(true);
+      }
+      
+      setError(null);
+      console.log('🔄 Carregando trilha para usuário:', user.id);
 
-  // Função para invalidar cache
-  const clearCache = useCallback(() => {
-    invalidateCache();
-    setTrail(null);
-    toast.success('Cache da trilha limpo');
-  }, [invalidateCache]);
+      // Buscar trilha sem filtro por status para evitar problemas
+      const { data, error: trailError } = await supabase
+        .from('implementation_trails')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (trailError) {
+        console.error('❌ Erro ao carregar trilha:', trailError);
+        throw trailError;
+      }
+
+      console.log('📊 Dados da trilha retornados:', data);
+
+      if (data?.trail_data) {
+        console.log('✅ Trilha encontrada, sanitizando dados...');
+        const sanitizedTrail = sanitizeTrailData(data.trail_data);
+        
+        if (sanitizedTrail) {
+          console.log('✅ Trilha sanitizada com sucesso:', sanitizedTrail);
+          setTrail(sanitizedTrail);
+        } else {
+          console.log('⚠️ Falha ao sanitizar trilha');
+          setTrail(null);
+        }
+      } else {
+        console.log('ℹ️ Nenhuma trilha encontrada para o usuário');
+        setTrail(null);
+      }
+    } catch (error) {
+      console.error('❌ Erro ao carregar trilha:', error);
+      setError('Erro ao carregar trilha de implementação');
+      setTrail(null);
+    } finally {
+      setIsLoading(false);
+      setRefreshing(false);
+    }
+  }, [user?.id]);
+
+  // Função para gerar nova trilha usando edge function inteligente
+  const generateImplementationTrail = useCallback(async (onboardingData: any = null) => {
+    if (!user?.id) {
+      toast.error('Usuário não autenticado');
+      return;
+    }
+
+    try {
+      setRegenerating(true);
+      setError(null);
+      console.log('🚀 Iniciando geração inteligente da trilha para usuário:', user.id);
+
+      // Usar a edge function inteligente com melhor tratamento de erro
+      const { data, error: functionError } = await supabase.functions.invoke('generate-smart-trail', {
+        body: { user_id: user.id }
+      });
+
+      if (functionError) {
+        console.error('❌ Erro da edge function:', functionError);
+        
+        // Tratar erro específico de duplicação
+        if (functionError.message?.includes('duplicate key')) {
+          console.log('🔄 Trilha já existe, tentando recarregar...');
+          await loadTrail(true);
+          toast.success('Trilha carregada com sucesso!');
+          return;
+        }
+        
+        throw new Error(`Erro ao gerar trilha: ${functionError.message}`);
+      }
+
+      if (!data?.success) {
+        console.error('❌ Edge function retornou erro:', data);
+        throw new Error(data?.error || 'Erro desconhecido ao gerar trilha');
+      }
+
+      if (data?.trail_data) {
+        console.log('✅ Trilha inteligente gerada com sucesso:', data.trail_data);
+        const sanitizedTrail = sanitizeTrailData(data.trail_data);
+        setTrail(sanitizedTrail);
+        toast.success('Trilha personalizada gerada com sucesso!');
+      } else {
+        throw new Error('Trilha gerada, mas dados inválidos');
+      }
+
+    } catch (error) {
+      console.error('❌ Erro ao gerar trilha:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao gerar trilha de implementação';
+      setError(errorMessage);
+      
+      // Se for erro de duplicação, tentar carregar trilha existente
+      if (errorMessage.includes('duplicate') || errorMessage.includes('already exists')) {
+        console.log('🔄 Tentando carregar trilha existente após erro de duplicação...');
+        await loadTrail(true);
+        toast.success('Trilha existente carregada!');
+      } else {
+        toast.error(errorMessage);
+      }
+    } finally {
+      setRegenerating(false);
+    }
+  }, [user?.id, loadTrail]);
+
+  // Carregar trilha ao inicializar
+  useEffect(() => {
+    if (user?.id) {
+      console.log('🏁 Componente montado, carregando trilha...');
+      loadTrail();
+    }
+  }, [user?.id, loadTrail]);
+
+  // Determinar se há conteúdo válido
+  const hasContent = trail && (
+    (trail.priority1 && trail.priority1.length > 0) ||
+    (trail.priority2 && trail.priority2.length > 0) ||
+    (trail.priority3 && trail.priority3.length > 0)
+  );
+
+  console.log('🎯 Hook state:', {
+    hasContent: !!hasContent,
+    trail: trail ? 'presente' : 'ausente',
+    isLoading,
+    regenerating,
+    refreshing,
+    error
+  });
 
   return {
     trail,
     isLoading,
-    regenerating: isRegenerating,
+    regenerating,
+    refreshing,
     error,
-    hasContent,
-    generateImplementationTrail,
-    refreshTrail,
-    clearCache
+    hasContent: !!hasContent,
+    refreshTrail: loadTrail,
+    generateImplementationTrail
   };
 };

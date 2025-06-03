@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Solution } from '@/lib/supabase';
-import { BarChart, Settings, TrendingUp } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CardContentSection } from './CardContent';
 
@@ -26,41 +26,6 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution, onClick })
     }
   };
   
-  const getCategoryBadge = (category: string) => {
-    const getCategoryIcon = () => {
-      switch (category) {
-        case 'Receita':
-          return <TrendingUp className="h-3 w-3 mr-1" />;
-        case 'Operacional':
-          return <Settings className="h-3 w-3 mr-1" />;
-        case 'Estratégia':
-          return <BarChart className="h-3 w-3 mr-1" />;
-        default:
-          return null;
-      }
-    };
-
-    const getCategoryColor = () => {
-      switch (category) {
-        case 'Receita':
-          return "bg-revenue/20 text-revenue border-revenue/40";
-        case 'Operacional':
-          return "bg-operational/20 text-operational border-operational/40";
-        case 'Estratégia':
-          return "bg-strategy/20 text-strategy border-strategy/40";
-        default:
-          return "bg-viverblue/20 text-viverblue border-viverblue/40";
-      }
-    };
-
-    return (
-      <Badge variant="outline" className={cn("flex items-center", getCategoryColor())}>
-        {getCategoryIcon()}
-        {category}
-      </Badge>
-    );
-  };
-  
   const getDifficultyBadge = (difficulty: string) => {
     switch (difficulty) {
       case 'easy':
@@ -77,12 +42,12 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution, onClick })
   return (
     <Card 
       className={cn(
-        "h-full cursor-pointer group transition-all duration-300 overflow-hidden transform hover:-translate-y-1 bg-[#151823] border-neutral-700 hover:shadow-lg",
+        "h-full cursor-pointer group transition-all duration-300 overflow-hidden transform hover:-translate-y-1 bg-[#151823] border-neutral-700",
         getCategoryStyle(solution.category)
       )}
       onClick={onClick}
     >
-      <div className="h-32 overflow-hidden relative">
+      <div className="h-36 overflow-hidden relative">
         {solution.thumbnail_url ? (
           <img 
             src={solution.thumbnail_url}
@@ -91,7 +56,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution, onClick })
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-[#1A1E2E]">
-            <span className="text-3xl font-bold text-neutral-500">
+            <span className="text-4xl font-bold text-neutral-500">
               {solution.title.charAt(0)}
             </span>
           </div>
@@ -99,13 +64,14 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution, onClick })
         <div className="absolute inset-0 bg-gradient-to-t from-[#0F111A] via-transparent to-transparent opacity-90"></div>
       </div>
       
-      <CardContent className="p-3 pb-2">
+      <CardContent className="p-4 pb-2">
         <CardContentSection title={solution.title} description={solution.description} />
       </CardContent>
       
-      <CardFooter className="px-3 py-2 flex items-center justify-between border-t border-neutral-800">
-        <div className="flex items-center space-x-2">
-          {getCategoryBadge(solution.category)}
+      <CardFooter className="px-4 py-3 flex items-center justify-between border-t border-neutral-800">
+        <div className="flex items-center space-x-1 text-xs text-neutral-300">
+          <Clock className="h-3.5 w-3.5 mr-1" />
+          <span>{solution.estimated_time || 30} min</span>
         </div>
         {getDifficultyBadge(solution.difficulty)}
       </CardFooter>

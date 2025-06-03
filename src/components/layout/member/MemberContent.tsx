@@ -1,25 +1,24 @@
 
-import React from "react";
 import { cn } from "@/lib/utils";
+import { MemberHeader } from "./MemberHeader";
 import { BaseContentProps } from "../BaseLayout";
 
-export const MemberContent: React.FC<BaseContentProps> = ({ 
-  children, 
-  sidebarOpen 
-}) => {
+export const MemberContent = ({ 
+  sidebarOpen, 
+  setSidebarOpen, 
+  children 
+}: BaseContentProps) => {
   return (
-    <main
+    <div 
       className={cn(
-        "flex-1 overflow-auto transition-all duration-300 ease-in-out",
-        // Em desktop, sempre deixar espaço para sidebar
-        "md:ml-0",
-        // Ajustar margin baseado no estado do sidebar
+        "flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden",
         sidebarOpen ? "md:ml-64" : "md:ml-[70px]"
       )}
     >
-      <div className="min-h-screen bg-[#0F111A]">
+      <MemberHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <main className="flex-1 overflow-auto">
         {children}
-      </div>
-    </main>
+      </main>
+    </div>
   );
 };

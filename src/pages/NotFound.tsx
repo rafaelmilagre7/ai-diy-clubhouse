@@ -1,34 +1,107 @@
 
-import React from "react";
+import { useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Home, ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Home, LogOut, RefreshCw, MapPin } from "lucide-react";
+import { toast } from "sonner";
+import { logger } from "@/utils/logger";
 
-export default function NotFound() {
-  const navigate = useNavigate();
+const NotFound = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    // Log melhorado do erro 404
+    logger.error("404 Error: Usuário tentou acessar rota inexistente", {
+      pathname: location.pathname,
+      search: location.search,
+      state: location.state,
+      userAgent: navigator.userAgent,
+      timestamp: new Date().toISOString()
+    });
+  }, [location]);
+
+  const handleLogout = () => {
+    try {
+      localStorage.removeItem('supabase.auth.token');
+      toast.success("Redirecionando para o login...");
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 500);
+    } catch (error) {
+      logger.error("Erro ao fazer logout da página 404", error);
+      // Fallback direto
+      window.location.href = '/login';
+    }
+  };
+
+  const handleReload = () => {
+    window.location.reload();
+  };
+
+  const handleGoHome = () => {
+    window.location.href = '/dashboard';
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center space-y-6 max-w-md mx-auto px-4">
-        <div className="space-y-2">
-          <h1 className="text-6xl font-bold text-muted-foreground">404</h1>
-          <h2 className="text-2xl font-semibold">Página não encontrada</h2>
-          <p className="text-muted-foreground">
-            A página que você está procurando não existe ou foi movida.
-          </p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-lg">
+        <CardHeader className="text-center">
+          <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+            <MapPin className="w-8 h-8 text-blue-600" />
+          </div>
+          <CardTitle className="text-3xl font-bold mb-2">404</CardTitle>
+          <p className="text-xl text-muted-foreground">Página não encontrada</p>
+        </CardHeader>
         
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Button onClick={() => navigate(-1)} variant="outline">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar
-          </Button>
-          <Button onClick={() => navigate("/dashboard")}>
-            <Home className="w-4 h-4 mr-2" />
-            Ir para Dashboard
-          </Button>
-        </div>
-      </div>
+        <CardContent className="space-y-6">
+          <div className="text-center">
+            <p className="text-muted-foreground mb-4">
+              A página que você está procurando não existe ou foi movida.
+            </p>
+            
+            <div className="bg-muted p-4 rounded-lg text-sm">
+              <p className="font-medium mb-2">URL solicitada:</p>
+              <code className="text-xs bg-background px-2 py-1 rounded">
+                {location.pathname}{location.search}
+              </code>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="text-center">
+              <p className="text-sm font-medium mb-3">O que você pode fazer:</p>
+            </div>
+            
+            <div className="flex flex-col gap-3">
+              <Button onClick={handleGoHome} className="flex items-center gap-2 w-full">
+                <Home className="h-4 w-4" />
+                Ir para o Dashboard
+              </Button>
+              
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={handleReload} className="flex items-center gap-2 flex-1">
+                  <RefreshCw className="h-4 w-4" />
+                  Recarregar
+                </Button>
+                
+                <Button variant="outline" onClick={handleLogout} className="flex items-center gap-2 flex-1">
+                  <LogOut className="h-4 w-4" />
+                  Fazer Login
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">
+              Se o problema persistir, entre em contato com o suporte.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
-}
+};
+
+export default NotFound;

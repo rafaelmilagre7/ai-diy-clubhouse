@@ -1,18 +1,16 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { ImplementationTrail, TrailLessonEnriched } from '@/types/implementation-trail';
-import { useAuth } from '@/contexts/auth';
 
 export const useTrailEnrichment = (trail: ImplementationTrail | null) => {
-  const { user } = useAuth();
   const [enrichedLessons, setEnrichedLessons] = useState<TrailLessonEnriched[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const enrichLessons = async () => {
-      if (!trail?.recommended_lessons || !user?.id) {
+      if (!trail?.recommended_lessons || trail.recommended_lessons.length === 0) {
         setEnrichedLessons([]);
         return;
       }
@@ -21,76 +19,85 @@ export const useTrailEnrichment = (trail: ImplementationTrail | null) => {
         setIsLoading(true);
         setError(null);
 
-        const lessonIds = trail.recommended_lessons.map(l => l.lessonId);
-        
-        if (lessonIds.length === 0) {
-          setEnrichedLessons([]);
-          return;
-        }
+        const lessonIds = trail.recommended_lessons.map(lesson => lesson.lessonId);
 
-        // Buscar detalhes completos das aulas
         const { data: lessons, error: lessonsError } = await supabase
           .from('learning_lessons')
           .select(`
-            *,
-            learning_modules(
+            id,
+            title,
+            description,
+            cover_image_url,
+            estimated_time_minutes,
+            difficulty_level,
+            module_id,
+            learning_modules!inner(
               id,
               title,
-              learning_courses(
+              learning_courses!inner(
                 id,
                 title
               )
             )
           `)
-          .in('id', lessonIds)
-          .eq('published', true);
+          .in('id', lessonIds);
 
         if (lessonsError) {
+          console.error('Erro ao buscar aulas:', lessonsError);
           throw lessonsError;
         }
 
-        // Enriquecer aulas com dados da trilha
-        const enriched: TrailLessonEnriched[] = trail.recommended_lessons
-          .map(recommendation => {
-            const lesson = lessons?.find(l => l.id === recommendation.lessonId);
-            if (!lesson) return null;
+        if (!lessons) {
+          setEnrichedLessons([]);
+          return;
+        }
 
-            return {
-              ...recommendation,
-              id: lesson.id,
-              title: lesson.title,
-              description: lesson.description,
-              cover_image_url: lesson.cover_image_url,
-              estimated_time_minutes: lesson.estimated_time_minutes,
-              difficulty_level: lesson.difficulty_level,
-              module: {
-                id: lesson.learning_modules?.id || '',
-                title: lesson.learning_modules?.title || '',
-                course: {
-                  id: lesson.learning_modules?.learning_courses?.id || '',
-                  title: lesson.learning_modules?.learning_courses?.title || ''
-                }
+        // Enriquecer as aulas com dados da trilha
+        const enriched: TrailLessonEnriched[] = lessons.map(lesson => {
+          const trailLesson = trail.recommended_lessons!.find(tl => tl.lessonId === lesson.id);
+          
+          // Acessar o primeiro elemento dos arrays retornados pelo Supabase
+          const moduleData = Array.isArray(lesson.learning_modules) ? lesson.learning_modules[0] : lesson.learning_modules;
+          const courseData = Array.isArray(moduleData?.learning_courses) ? moduleData.learning_courses[0] : moduleData?.learning_courses;
+          
+          return {
+            id: lesson.id,
+            title: lesson.title,
+            description: lesson.description,
+            cover_image_url: lesson.cover_image_url,
+            estimated_time_minutes: lesson.estimated_time_minutes || 0,
+            difficulty_level: lesson.difficulty_level,
+            lessonId: lesson.id,
+            moduleId: lesson.module_id,
+            courseId: courseData?.id,
+            justification: trailLesson?.justification,
+            priority: trailLesson?.priority || 1,
+            module: {
+              id: moduleData?.id || '',
+              title: moduleData?.title || '',
+              course: {
+                id: courseData?.id || '',
+                title: courseData?.title || ''
               }
-            };
-          })
-          .filter(Boolean) as TrailLessonEnriched[];
+            }
+          };
+        });
 
         // Ordenar por prioridade
-        enriched.sort((a, b) => (a.priority || 999) - (b.priority || 999));
+        enriched.sort((a, b) => (a.priority || 1) - (b.priority || 1));
 
         setEnrichedLessons(enriched);
-        console.log('✅ Aulas enriquecidas:', enriched.length);
-
       } catch (err) {
-        console.error('❌ Erro ao enriquecer aulas:', err);
-        setError(err instanceof Error ? err.message : 'Erro ao carregar aulas');
+        console.error('Erro ao enriquecer aulas da trilha:', err);
+        setError('Erro ao carregar aulas recomendadas');
+        setEnrichedLessons([]);
       } finally {
         setIsLoading(false);
       }
     };
 
     enrichLessons();
-  }, [trail, user?.id]);
+  }, [trail]);
 
   return {
     enrichedLessons,

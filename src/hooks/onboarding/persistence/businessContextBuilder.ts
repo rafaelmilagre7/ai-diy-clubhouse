@@ -38,6 +38,19 @@ export function buildBusinessContextUpdate(data: Partial<OnboardingData>, progre
       }
     });
     
+    // Compatibilidade: copiar para business_data apenas se já existir no progresso atual
+    if (progress.business_data !== undefined) {
+      // Certificar que business_data é um objeto
+      const baseBusinessData = typeof progress.business_data === 'object' && progress.business_data 
+        ? progress.business_data 
+        : {};
+        
+      updateObj.business_data = {
+        ...baseBusinessData,
+        ...updateObj.business_context
+      };
+    }
+    
     console.log("Objeto de atualização gerado:", updateObj);
     return updateObj;
   } catch (error) {

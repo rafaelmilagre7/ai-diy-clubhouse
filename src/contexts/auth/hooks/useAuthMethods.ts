@@ -59,34 +59,33 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
   };
   
   /**
-   * Logout simplificado e robusto
+   * Logout
    */
   const signOut = async () => {
     try {
       setIsLoading(true);
       
-      // Fazer logout do Supabase primeiro
-      const { error } = await supabase.auth.signOut({ scope: 'global' });
-      
-      if (error) {
-        console.error('Erro ao fazer logout do Supabase:', error);
-      }
-      
-      // Limpar estado de autenticação após logout
+      // Limpar estado de autenticação
       cleanupAuthState();
+      
+      // Tentar logout global para garantir limpeza completa
+      await supabase.auth.signOut({ scope: 'global' });
       
       toast.success("Logout realizado com sucesso");
       
-      // Redirecionamento direto e simples
-      window.location.href = '/login';
+      // Redirecionamento forçado para garantir limpeza completa do estado
+      window.location.href = window.location.origin.includes('localhost')
+        ? 'http://localhost:3000/login'
+        : 'https://app.viverdeia.ai/login';
         
       return { success: true };
     } catch (error: any) {
       console.error('Erro ao fazer logout:', error);
       
-      // Mesmo em caso de erro, forçar limpeza e redirecionamento
-      cleanupAuthState();
-      window.location.href = '/login';
+      // Mesmo em caso de erro, forçar redirecionamento para login
+      window.location.href = window.location.origin.includes('localhost')
+        ? 'http://localhost:3000/login'
+        : 'https://app.viverdeia.ai/login';
       
       return { success: false, error };
     } finally {

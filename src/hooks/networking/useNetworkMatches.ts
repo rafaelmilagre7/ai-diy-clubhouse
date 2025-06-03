@@ -9,16 +9,10 @@ export interface NetworkMatch {
   match_type: 'customer' | 'supplier';
   compatibility_score: number;
   match_reason: string;
-  match_strengths?: {
-    factor: string;
-    strength: number;
-    description: string;
-  }[];
-  suggested_topics?: string[];
   ai_analysis: {
-    opportunities?: string[];
-    recommendedApproach?: string;
     strengths?: string[];
+    opportunities?: string[];
+    recommended_approach?: string;
   };
   month_year: string;
   status: 'pending' | 'viewed' | 'contacted' | 'dismissed';
@@ -47,40 +41,31 @@ export function useNetworkMatches(matchType?: 'customer' | 'supplier') {
         throw new Error('Usuário não autenticado');
       }
 
-      // Verificar se o onboarding está completo (SEM exceção para admin)
-      const { data: onboardingData } = await supabase
-        .from('onboarding_final')
-        .select('is_completed')
-        .eq('user_id', user.id)
-        .eq('is_completed', true)
-        .maybeSingle();
+      console.log('🔍 Buscando matches para usuário:', user.id);
 
-      if (!onboardingData) {
-        // Verificar fallback no quick_onboarding
-        const { data: quickOnboardingData } = await supabase
-          .from('quick_onboarding')
-          .select('is_completed')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (!quickOnboardingData?.is_completed) {
-          // LIMPAR matches existentes se onboarding incompleto
-          await supabase
-            .from('network_matches')
-            .delete()
-            .eq('user_id', user.id);
-          
-          return [];
+      // Primeiro, tentar gerar matches se não existir nenhum
+      try {
+        console.log('🤖 Tentando gerar matches automaticamente...');
+        const { data: generateResult, error: generateError } = await supabase.functions.invoke('generate-networking-matches', {
+          body: { target_user_id: user.id, force_regenerate: false }
+        });
+        
+        if (generateError) {
+          console.log('❌ Erro ao gerar matches automaticamente:', generateError);
+        } else {
+          console.log('✅ Resultado da geração:', generateResult);
         }
+      } catch (error) {
+        console.log('❌ Exceção ao gerar matches automaticamente:', error);
+        // Continuar mesmo se não conseguir gerar matches
       }
 
-      // Buscar matches existentes
+      // Buscar matches primeiro
       let query = supabase
         .from('network_matches')
         .select('*')
         .eq('user_id', user.id)
-        .eq('status', 'pending')
-        .order('compatibility_score', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (matchType) {
         query = query.eq('match_type', matchType);
@@ -89,8 +74,11 @@ export function useNetworkMatches(matchType?: 'customer' | 'supplier') {
       const { data: matches, error: matchesError } = await query;
 
       if (matchesError) {
+        console.error('❌ Erro ao buscar matches:', matchesError);
         throw matchesError;
       }
+
+      console.log(`✅ Matches encontrados: ${matches?.length || 0}`, matches);
 
       // Se não há matches, retornar array vazio
       if (!matches || matches.length === 0) {
@@ -106,8 +94,11 @@ export function useNetworkMatches(matchType?: 'customer' | 'supplier') {
         .in('id', matchedUserIds);
 
       if (profilesError) {
+        console.error('❌ Erro ao buscar perfis:', profilesError);
         throw profilesError;
       }
+
+      console.log('✅ Perfis encontrados:', profiles?.length || 0, profiles);
 
       // Combinar matches com dados dos usuários
       const transformedData = matches.map(match => {
@@ -135,10 +126,11 @@ export function useNetworkMatches(matchType?: 'customer' | 'supplier') {
         };
       });
 
+      console.log('✅ Dados transformados:', transformedData);
       return transformedData as NetworkMatch[];
     },
     staleTime: 5 * 60 * 1000, // 5 minutos
-    retry: 1,
+    retry: 2,
   });
 }
 

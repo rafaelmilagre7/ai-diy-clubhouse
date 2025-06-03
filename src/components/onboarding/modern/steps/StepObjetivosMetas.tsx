@@ -1,33 +1,28 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Textarea } from '@/components/ui/textarea';
-import { MultiSelectorModerno } from '../MultiSelectorModerno';
-import { Target, Lightbulb, Calendar } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { OnboardingStepProps } from '@/types/quickOnboarding';
+import { DropdownModerno } from '../DropdownModerno';
 
-const primaryGoalOptions = [
-  { value: 'aumentar_vendas', label: 'Aumentar vendas com IA' },
-  { value: 'automatizar_processos', label: 'Automatizar processos' },
-  { value: 'melhorar_atendimento', label: 'Melhorar atendimento ao cliente' },
-  { value: 'otimizar_marketing', label: 'Otimizar estratégias de marketing' },
-  { value: 'reduzir_custos', label: 'Reduzir custos operacionais' },
-  { value: 'inovar_produtos', label: 'Inovar produtos/serviços' },
-  { value: 'aprender_ia', label: 'Aprender sobre IA' },
-  { value: 'network', label: 'Fazer networking' }
+const PRIMARY_GOAL_OPTIONS = [
+  { value: 'automatizar-processos', label: '🤖 Automatizar processos e reduzir trabalho manual' },
+  { value: 'melhorar-atendimento', label: '💬 Melhorar atendimento e experiência do cliente' },
+  { value: 'aumentar-receita', label: '💰 Aumentar receita e vendas' },
+  { value: 'reduzir-custos', label: '📉 Reduzir custos operacionais' },
+  { value: 'inovar-produtos', label: '🚀 Inovar produtos e serviços' },
+  { value: 'melhorar-marketing', label: '📢 Otimizar marketing e geração de leads' },
+  { value: 'analise-dados', label: '📊 Melhorar análise e tomada de decisão' },
+  { value: 'competitive-advantage', label: '🎯 Obter vantagem competitiva' }
 ];
 
-const contentFormatOptions = [
-  { value: 'videos', label: 'Vídeos práticos' },
-  { value: 'artigos', label: 'Artigos e guias' },
-  { value: 'webinars', label: 'Webinars ao vivo' },
-  { value: 'podcasts', label: 'Podcasts' },
-  { value: 'cases', label: 'Cases de sucesso' },
-  { value: 'templates', label: 'Templates e ferramentas' },
-  { value: 'mentoria', label: 'Mentorias 1:1' },
-  { value: 'workshops', label: 'Workshops práticos' }
+const WEEK_AVAILABILITY_OPTIONS = [
+  { value: '1-2h', label: '⏱️ 1-2 horas por semana' },
+  { value: '3-5h', label: '⏰ 3-5 horas por semana' },
+  { value: '6-10h', label: '🕐 6-10 horas por semana' },
+  { value: '10h+', label: '⏳ Mais de 10 horas por semana' },
+  { value: 'flexivel', label: '🔄 Flexível conforme necessário' }
 ];
 
 export const StepObjetivosMetas: React.FC<OnboardingStepProps> = ({
@@ -40,100 +35,94 @@ export const StepObjetivosMetas: React.FC<OnboardingStepProps> = ({
   totalSteps
 }) => {
   return (
-    <div className="space-y-6">
-      <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-white flex items-center justify-center gap-2">
-          <Target className="h-6 w-6 text-viverblue" />
-          Seus objetivos e metas
+    <div className="max-w-2xl mx-auto">
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-bold text-white mb-2">
+          Objetivos e metas 🎯
         </h2>
         <p className="text-gray-400">
-          Vamos personalizar sua experiência baseada nos seus objetivos
+          Vamos definir seus objetivos e como você pretende alcançá-los
         </p>
       </div>
 
-      <div className="space-y-6">
-        {/* Objetivo Principal */}
-        <div className="space-y-3">
-          <Label className="text-white flex items-center gap-2">
-            <Lightbulb className="h-4 w-4 text-viverblue" />
-            Qual seu principal objetivo?
-          </Label>
-          <RadioGroup
-            value={data.primary_goal}
-            onValueChange={(value) => onUpdate('primary_goal', value)}
-            className="space-y-2"
-          >
-            {primaryGoalOptions.map((option) => (
-              <div key={option.value} className="flex items-center space-x-3">
-                <RadioGroupItem 
-                  value={option.value} 
-                  id={option.value}
-                  className="border-gray-600 text-viverblue"
-                />
-                <Label 
-                  htmlFor={option.value} 
-                  className="text-white cursor-pointer flex-1"
-                >
-                  {option.label}
-                </Label>
-              </div>
-            ))}
-          </RadioGroup>
-        </div>
+      <div className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700/50 space-y-6">
+        <DropdownModerno
+          value={data.primary_goal || ''}
+          onChange={(value) => onUpdate('primary_goal', value)}
+          options={PRIMARY_GOAL_OPTIONS}
+          placeholder="Selecione seu objetivo principal"
+          label="Principal objetivo com IA"
+          required
+        />
 
-        {/* Resultado esperado em 30 dias */}
         <div className="space-y-2">
-          <Label htmlFor="expected_outcome" className="text-white flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-viverblue" />
-            O que você espera alcançar em 30 dias?
-          </Label>
-          <Textarea
-            id="expected_outcome"
-            value={data.expected_outcome_30days}
+          <label className="block text-sm font-medium text-white">
+            O que espera alcançar em 30 dias? <span className="text-red-400">*</span>
+          </label>
+          <Input
+            type="text"
+            value={data.expected_outcome_30days || ''}
             onChange={(e) => onUpdate('expected_outcome_30days', e.target.value)}
-            placeholder="Descreva o que você gostaria de alcançar no primeiro mês..."
-            className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-viverblue min-h-[100px]"
+            placeholder="Ex: Implementar chatbot, automatizar processo específico..."
+            className="h-12 bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:ring-viverblue/50"
           />
         </div>
 
-        {/* Formatos de conteúdo preferidos */}
-        <div className="space-y-2">
-          <Label className="text-white">
-            Que tipos de conteúdo você prefere?
-          </Label>
-          <MultiSelectorModerno
-            value={data.content_formats || []}
-            onChange={(formats) => onUpdate('content_formats', formats)}
-            options={contentFormatOptions}
-            placeholder="Selecione os formatos que mais te interessam..."
-          />
+        <DropdownModerno
+          value={data.week_availability || ''}
+          onChange={(value) => onUpdate('week_availability', value)}
+          options={WEEK_AVAILABILITY_OPTIONS}
+          placeholder="Disponibilidade semanal"
+          label="Quanto tempo pode dedicar por semana?"
+        />
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 text-center">
+            <h4 className="font-semibold text-green-400 mb-2">🎯 Objetivo</h4>
+            <p className="text-sm text-gray-300">Definir meta clara e específica</p>
+          </div>
+          
+          <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 text-center">
+            <h4 className="font-semibold text-blue-400 mb-2">📅 Prazo</h4>
+            <p className="text-sm text-gray-300">Estabelecer cronograma realista</p>
+          </div>
+          
+          <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-4 text-center">
+            <h4 className="font-semibold text-purple-400 mb-2">⚡ Ação</h4>
+            <p className="text-sm text-gray-300">Começar implementação prática</p>
+          </div>
         </div>
-      </div>
 
-      {/* Botões de navegação */}
-      <div className="flex justify-between pt-4">
-        <Button
-          onClick={onPrevious}
-          variant="outline"
-          className="border-gray-600 text-gray-300 hover:bg-gray-700"
-        >
-          Voltar
-        </Button>
-        
-        <Button
-          onClick={onNext}
-          disabled={!canProceed}
-          className="bg-viverblue hover:bg-viverblue/90 text-white px-8 py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Finalizar
-        </Button>
-      </div>
+        <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-4">
+          <p className="text-sm text-orange-400">
+            🚀 <strong>Sucesso:</strong> Com objetivos claros e dedicação adequada, 
+            você estará no caminho certo para transformar seu negócio com IA.
+          </p>
+        </div>
 
-      {/* Indicador de progresso */}
-      <div className="flex justify-center">
-        <span className="text-sm text-gray-400">
-          Etapa {currentStep} de {totalSteps}
-        </span>
+        <div className="flex justify-between items-center pt-6 border-t border-gray-700">
+          <Button
+            onClick={onPrevious}
+            variant="ghost"
+            className="text-gray-400 hover:text-white flex items-center gap-2"
+          >
+            <ArrowLeft size={16} />
+            <span>Voltar</span>
+          </Button>
+          
+          <div className="text-sm text-gray-400">
+            Etapa {currentStep} de {totalSteps}
+          </div>
+          
+          <Button
+            onClick={onNext}
+            disabled={!canProceed}
+            className="bg-viverblue hover:bg-viverblue-dark transition-colors flex items-center gap-2"
+          >
+            <span>Continuar</span>
+            <ArrowRight size={16} />
+          </Button>
+        </div>
       </div>
     </div>
   );

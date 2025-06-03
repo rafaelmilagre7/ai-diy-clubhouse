@@ -136,6 +136,7 @@ class AsyncErrorBoundary extends Component<AsyncErrorBoundaryProps, AsyncErrorBo
       return (
         <ErrorFallback
           error={error}
+          errorInfo={null}
           onRetry={this.handleRetry}
           onGoHome={this.handleGoHome}
           retryCount={this.state.retryCount}

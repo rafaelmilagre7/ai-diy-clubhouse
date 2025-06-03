@@ -17,7 +17,7 @@ interface CommentListProps {
   onDelete: (comment: Comment) => void;
 }
 
-const CommentList = React.memo(({
+export const CommentList = ({
   comments,
   isLoading,
   error,
@@ -104,8 +104,4 @@ const CommentList = React.memo(({
       ))}
     </div>
   );
-});
-
-CommentList.displayName = 'CommentList';
-
-export { CommentList };
+};

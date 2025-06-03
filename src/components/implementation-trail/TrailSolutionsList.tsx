@@ -1,11 +1,10 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Lightbulb, ArrowRight, Star } from "lucide-react";
-import { TrailSolutionEnriched } from "@/types/implementation-trail";
 import { useNavigate } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ArrowUpRight } from "lucide-react";
+import { TrailSolutionEnriched } from "@/types/implementation-trail";
 
 interface TrailSolutionsListProps {
   solutions: TrailSolutionEnriched[];
@@ -16,157 +15,112 @@ export const TrailSolutionsList: React.FC<TrailSolutionsListProps> = ({ solution
 
   if (!solutions || solutions.length === 0) {
     return (
-      <Card className="bg-neutral-800/20 border-neutral-700/50">
-        <CardContent className="pt-6">
-          <div className="text-center">
-            <Lightbulb className="h-12 w-12 text-neutral-400 mx-auto mb-4" />
-            <p className="text-neutral-400">Nenhuma solução recomendada encontrada</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="text-center py-8 bg-neutral-800/20 rounded-lg border border-neutral-700/50 p-4">
+        <p className="text-neutral-400">Nenhuma solução encontrada na sua trilha.</p>
+      </div>
     );
   }
 
-  const handleSolutionClick = (solution: TrailSolutionEnriched) => {
-    navigate(`/solution/${solution.id}`);
-  };
-
-  const getPriorityColor = (priority: number) => {
-    switch (priority) {
-      case 1: return "bg-viverblue text-white";
-      case 2: return "bg-amber-500 text-white";
-      case 3: return "bg-neutral-500 text-white";
-      default: return "bg-neutral-600 text-white";
-    }
-  };
-
-  const getPriorityLabel = (priority: number) => {
-    switch (priority) {
-      case 1: return "Alta Prioridade";
-      case 2: return "Prioridade Média";
-      case 3: return "Complementar";
-      default: return "Recomendado";
-    }
-  };
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty?.toLowerCase()) {
-      case 'iniciante': return "text-green-400 border-green-400";
-      case 'intermediário': return "text-amber-400 border-amber-400";
-      case 'avançado': return "text-red-400 border-red-400";
-      default: return "text-neutral-400 border-neutral-400";
-    }
-  };
-
   // Agrupar por prioridade
-  const groupedSolutions = solutions.reduce((acc, solution) => {
-    const priority = solution.priority || 1;
-    if (!acc[priority]) acc[priority] = [];
-    acc[priority].push(solution);
-    return acc;
-  }, {} as Record<number, TrailSolutionEnriched[]>);
+  const priority1 = solutions.filter(s => s.priority === 1);
+  const priority2 = solutions.filter(s => s.priority === 2);
+  const priority3 = solutions.filter(s => s.priority === 3);
+
+  const renderPriorityGroup = (title: string, items: TrailSolutionEnriched[], badgeClass: string, description: string) => {
+    if (items.length === 0) return null;
+    
+    return (
+      <div className="space-y-4 mb-8">
+        <div className="flex items-center gap-2 mb-2">
+          <Badge variant="outline" className={badgeClass}>
+            {title}
+          </Badge>
+          <div className="h-px flex-1 bg-neutral-800"></div>
+        </div>
+        
+        <p className="text-sm text-neutral-400 mb-4">{description}</p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {items.map(solution => (
+            <Card key={solution.id} 
+              className="bg-[#151823] border-[#0ABAB5]/30 hover:border-[#0ABAB5]/60 transition-all cursor-pointer overflow-hidden"
+              onClick={() => navigate(`/solution/${solution.id}`)}
+            >
+              <div className="flex flex-col h-full">
+                {/* Imagem da solução */}
+                <div className="w-full aspect-video relative">
+                  {solution.thumbnail_url ? (
+                    <img 
+                      src={solution.thumbnail_url} 
+                      alt={solution.title || 'Solução'}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-full w-full bg-gradient-to-br from-[#0ABAB5]/30 to-[#0ABAB5]/5 flex items-center justify-center">
+                      <span className="text-2xl font-semibold text-[#0ABAB5]">
+                        {solution.title ? solution.title.charAt(0).toUpperCase() : 'S'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Conteúdo da solução */}
+                <CardContent className="py-4 px-4 flex flex-col justify-between flex-grow">
+                  <div>
+                    <div className="flex justify-between items-start mb-2">
+                      <Badge variant="outline" className="bg-[#0ABAB5]/10 text-[#0ABAB5] border-[#0ABAB5]/30">
+                        {solution.category || 'Categoria'}
+                      </Badge>
+                      <Badge variant="outline" className="bg-neutral-800/50 text-neutral-400">
+                        {solution.difficulty || 'Medium'}
+                      </Badge>
+                    </div>
+                    
+                    <h5 className="font-medium text-white mb-2 line-clamp-1">
+                      {solution.title || 'Solução sem título'}
+                    </h5>
+                    <p className="text-sm text-neutral-400 line-clamp-2 mb-3">
+                      {solution.description || 'Descrição não disponível'}
+                    </p>
+                  </div>
+                  
+                  <div className="text-xs text-neutral-300 bg-[#0ABAB5]/5 p-2 rounded border border-[#0ABAB5]/20">
+                    <p className="italic line-clamp-2">
+                      "{solution.justification || 'Recomendado com base no seu perfil'}"
+                    </p>
+                    <div className="flex justify-end mt-1">
+                      <ArrowUpRight className="h-3 w-3 text-[#0ABAB5]" />
+                    </div>
+                  </div>
+                </CardContent>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   return (
-    <div className="space-y-8">
-      {[1, 2, 3].map(priority => {
-        const prioritySolutions = groupedSolutions[priority];
-        if (!prioritySolutions || prioritySolutions.length === 0) return null;
-
-        return (
-          <div key={priority} className="space-y-4">
-            <div className="flex items-center gap-3">
-              <Badge className={`${getPriorityColor(priority)} text-sm px-3 py-1`}>
-                <Star className="h-3 w-3 mr-1" />
-                {getPriorityLabel(priority)}
-              </Badge>
-              <div className="flex-1 border-t border-viverblue/20"></div>
-            </div>
-
-            <div className="grid gap-4">
-              {prioritySolutions.map((solution, index) => (
-                <Card 
-                  key={solution.id} 
-                  className="bg-neutral-800/50 border-neutral-700/50 hover:border-viverblue/40 transition-all duration-300 cursor-pointer group"
-                  onClick={() => handleSolutionClick(solution)}
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Badge variant="outline" className="text-xs border-neutral-600 text-neutral-300">
-                            {solution.category}
-                          </Badge>
-                          <Badge 
-                            variant="outline" 
-                            className={`text-xs ${getDifficultyColor(solution.difficulty)}`}
-                          >
-                            {solution.difficulty}
-                          </Badge>
-                        </div>
-                        <CardTitle className="text-lg text-white group-hover:text-viverblue transition-colors">
-                          {solution.title}
-                        </CardTitle>
-                      </div>
-                      <ArrowRight className="h-5 w-5 text-neutral-400 group-hover:text-viverblue transition-colors opacity-0 group-hover:opacity-100" />
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent className="pt-0">
-                    <p className="text-neutral-300 text-sm mb-3 line-clamp-2">
-                      {solution.description}
-                    </p>
-                    
-                    {solution.justification && (
-                      <div className="bg-viverblue/10 border border-viverblue/20 rounded-lg p-3 mb-4">
-                        <p className="text-sm text-viverblue font-medium">
-                          🎯 {solution.justification}
-                        </p>
-                      </div>
-                    )}
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {solution.tags && solution.tags.length > 0 && (
-                          <div className="flex gap-1">
-                            {solution.tags.slice(0, 2).map((tag, tagIndex) => (
-                              <Badge 
-                                key={tagIndex} 
-                                variant="secondary" 
-                                className="text-xs bg-neutral-700 text-neutral-300"
-                              >
-                                {tag}
-                              </Badge>
-                            ))}
-                            {solution.tags.length > 2 && (
-                              <Badge 
-                                variant="secondary" 
-                                className="text-xs bg-neutral-700 text-neutral-300"
-                              >
-                                +{solution.tags.length - 2}
-                              </Badge>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      
-                      <Button 
-                        size="sm" 
-                        className="bg-viverblue hover:bg-viverblue/80 text-white"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSolutionClick(solution);
-                        }}
-                      >
-                        Ver Solução
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        );
-      })}
+    <div>
+      {renderPriorityGroup(
+        "Prioridade Alta", 
+        priority1, 
+        "bg-[#0ABAB5]/20 text-[#0ABAB5] border-[#0ABAB5]/30",
+        "Estas soluções foram selecionadas como prioridade máxima para seu perfil e objetivos de negócio."
+      )}
+      {renderPriorityGroup(
+        "Prioridade Média", 
+        priority2, 
+        "bg-amber-500/20 text-amber-500 border-amber-500/30",
+        "Depois de implementar as soluções prioritárias, estas podem trazer bons resultados para seu negócio."
+      )}
+      {renderPriorityGroup(
+        "Complementar", 
+        priority3, 
+        "bg-neutral-500/20 text-neutral-400 border-neutral-500/30",
+        "Soluções adicionais que podem complementar sua estratégia de implementação de IA."
+      )}
     </div>
   );
 };

@@ -7,44 +7,33 @@ interface TrailLoadingStateProps {
   isRegenerating?: boolean;
 }
 
-export const TrailLoadingState: React.FC<TrailLoadingStateProps> = ({ 
-  isRegenerating = false 
+export const TrailLoadingState: React.FC<TrailLoadingStateProps> = ({
+  isRegenerating = false
 }) => {
   return (
-    <Card className="bg-gradient-to-br from-viverblue/10 via-transparent to-viverblue/5 border-viverblue/20">
-      <CardHeader className="text-center pb-4">
-        <div className="flex justify-center mb-4">
-          <div className="p-4 rounded-full bg-viverblue/20">
-            <Loader2 className="h-8 w-8 text-viverblue animate-spin" />
-          </div>
-        </div>
-        <CardTitle className="text-xl text-viverblue flex items-center justify-center gap-2">
-          <Sparkles className="h-5 w-5" />
-          {isRegenerating ? 'Regenerando' : 'Gerando'} Sua Trilha Personalizada
+    <Card className="w-full">
+      <CardHeader className="text-center">
+        <CardTitle className="text-2xl font-bold text-viverblue flex items-center justify-center gap-2">
+          <Sparkles className="h-6 w-6" />
+          {isRegenerating ? 'Regenerando' : 'Carregando'} Trilha Personalizada
         </CardTitle>
       </CardHeader>
-      
-      <CardContent className="text-center space-y-6">
-        <div className="space-y-3">
-          <p className="text-neutral-300">
-            Nossa IA está analisando seu perfil e criando uma trilha personalizada...
-          </p>
-          
-          <div className="bg-viverblue/10 border border-viverblue/20 rounded-lg p-4">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <div className="w-2 h-2 bg-viverblue rounded-full animate-pulse"></div>
-              <div className="w-2 h-2 bg-viverblue rounded-full animate-pulse delay-100"></div>
-              <div className="w-2 h-2 bg-viverblue rounded-full animate-pulse delay-200"></div>
-            </div>
-            <p className="text-sm text-viverblue font-medium">
-              Analisando seu onboarding e selecionando as melhores soluções...
+      <CardContent className="py-8">
+        <div className="flex flex-col items-center justify-center space-y-4">
+          <Loader2 className="h-12 w-12 text-viverblue animate-spin" />
+          <div className="text-center space-y-2">
+            <p className="text-lg text-white">
+              {isRegenerating 
+                ? 'Criando uma nova trilha personalizada para você...' 
+                : 'Preparando sua trilha de implementação...'
+              }
             </p>
-          </div>
-
-          <div className="text-xs text-neutral-500 space-y-1">
-            <p>✨ Selecionando soluções prioritárias</p>
-            <p>📚 Escolhendo aulas personalizadas</p>
-            <p>🎯 Organizando por nível de impacto</p>
+            <p className="text-sm text-neutral-400">
+              {isRegenerating 
+                ? 'Analisando seu perfil e gerando novas recomendações'
+                : 'Carregando soluções e aulas recomendadas'
+              }
+            </p>
           </div>
         </div>
       </CardContent>

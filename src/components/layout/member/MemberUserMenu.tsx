@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/auth";
-import { LogOut, User } from "lucide-react";
+import { LogOut, Settings, User } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface MemberUserMenuProps {
@@ -57,6 +57,12 @@ export const MemberUserMenu = ({
             <Link to="/profile" className="cursor-pointer w-full flex items-center">
               <User className="mr-2 h-4 w-4" />
               <span>Perfil</span>
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to="/dashboard" className="cursor-pointer w-full flex items-center">
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Configurações</span>
             </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />

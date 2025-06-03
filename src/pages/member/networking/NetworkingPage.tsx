@@ -1,48 +1,13 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { NetworkingHeader } from '@/components/networking/NetworkingHeader';
 import { NetworkingFeed } from '@/components/networking/NetworkingFeed';
-import { NetworkingBlockedState } from '@/components/networking/NetworkingBlockedState';
 import { ProfileDataSync } from '@/components/networking/ProfileDataSync';
-import { useNetworkingAccess } from '@/hooks/networking/useNetworkingAccess';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Building, Loader2 } from 'lucide-react';
+import { Users, Building } from 'lucide-react';
 
 const NetworkingPage = () => {
-  const navigate = useNavigate();
-  const { hasAccess, isLoading: accessLoading, needsOnboarding } = useNetworkingAccess();
-
-  const handleNavigateToOnboarding = () => {
-    navigate('/onboarding-new');
-  };
-
-  // Se ainda está carregando verificação de acesso
-  if (accessLoading) {
-    return (
-      <div className="p-6 space-y-6">
-        <ProfileDataSync />
-        <NetworkingHeader />
-        <Card className="p-8 text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-viverblue" />
-          <p className="text-muted-foreground">Verificando acesso ao networking...</p>
-        </Card>
-      </div>
-    );
-  }
-
-  // Se não tem acesso (onboarding incompleto)
-  if (!hasAccess && needsOnboarding) {
-    return (
-      <div className="p-6 space-y-6">
-        <ProfileDataSync />
-        <NetworkingHeader />
-        <NetworkingBlockedState onNavigateToOnboarding={handleNavigateToOnboarding} />
-      </div>
-    );
-  }
-
   return (
     <div className="p-6 space-y-6">
       <ProfileDataSync />

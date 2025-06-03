@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Suggestion } from '@/types/suggestionTypes';
 
-export type SuggestionFilter = 'all' | 'popular' | 'recent' | 'in_development' | 'completed';
+export type SuggestionFilter = 'all' | 'popular' | 'recent';
 
 export const useSuggestions = () => {
   const [filter, setFilter] = useState<SuggestionFilter>('popular');
@@ -21,17 +21,11 @@ export const useSuggestions = () => {
       console.log('Buscando sugestões...', { filter, searchQuery });
       
       try {
+        // Usamos a view suggestions_with_profiles que já conecta os dados de perfil
         let query = supabase
           .from('suggestions_with_profiles')
           .select('*')
-          .eq('is_hidden', false);
-
-        // Filtragem por status específico
-        if (filter === 'in_development') {
-          query = query.eq('status', 'in_development');
-        } else if (filter === 'completed') {
-          query = query.eq('status', 'completed');
-        }
+          .eq('is_hidden', false); // Apenas sugestões não ocultas
 
         // Filtragem por termo de busca
         if (searchQuery) {
@@ -42,11 +36,6 @@ export const useSuggestions = () => {
         if (filter === 'popular') {
           query = query.order('upvotes', { ascending: false });
         } else if (filter === 'recent') {
-          query = query.order('created_at', { ascending: false });
-        } else if (filter === 'in_development' || filter === 'completed') {
-          query = query.order('updated_at', { ascending: false });
-        } else {
-          // Filtro 'all' - ordenar por data de criação
           query = query.order('created_at', { ascending: false });
         }
 
@@ -65,7 +54,7 @@ export const useSuggestions = () => {
       }
     },
     refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 1,
+    staleTime: 1000 * 60 * 1, // 1 minuto
     refetchOnMount: true,
   });
 

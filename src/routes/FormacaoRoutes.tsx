@@ -1,39 +1,56 @@
 
-import { Routes, Route } from "react-router-dom";
-import { Suspense, lazy } from "react";
-import LoadingScreen from "@/components/common/LoadingScreen";
+import { RouteObject } from "react-router-dom";
 import { FormacaoProtectedRoutes } from '@/auth/FormacaoProtectedRoutes';
 import FormacaoLayout from '@/components/layout/formacao/FormacaoLayout';
 
-// Lazy imports
-const FormacaoDashboard = lazy(() => import('@/pages/formacao/FormacaoDashboard'));
-const FormacaoCursos = lazy(() => import('@/pages/formacao/FormacaoCursos'));
-const FormacaoCursoDetalhes = lazy(() => import('@/pages/formacao/FormacaoCursoDetalhes'));
-const FormacaoModuloDetalhes = lazy(() => import('@/pages/formacao/FormacaoModuloDetalhes'));
-const FormacaoAulas = lazy(() => import('@/pages/formacao/FormacaoAulas'));
-const FormacaoAulaDetalhes = lazy(() => import('@/pages/formacao/FormacaoAulaDetalhes'));
-const FormacaoAulaEditar = lazy(() => import('@/pages/formacao/FormacaoAulaEditar'));
+// Formação (Admin LMS)
+import FormacaoDashboard from '@/pages/formacao/FormacaoDashboard';
+import FormacaoCursos from '@/pages/formacao/FormacaoCursos';
+import FormacaoCursoDetalhes from '@/pages/formacao/FormacaoCursoDetalhes';
+import FormacaoModuloDetalhes from '@/pages/formacao/FormacaoModuloDetalhes';
+import FormacaoAulas from '@/pages/formacao/FormacaoAulas';
+import FormacaoAulaDetalhes from '@/pages/formacao/FormacaoAulaDetalhes';
+import FormacaoAulaEditar from '@/pages/formacao/FormacaoAulaEditar';
 
-export const FormacaoRoutes = () => {
-  return (
-    <FormacaoProtectedRoutes>
-      <FormacaoLayout>
-        <Suspense fallback={<LoadingScreen message="Carregando área de formação..." />}>
-          <Routes>
-            <Route index element={<FormacaoDashboard />} />
-            <Route path="cursos" element={<FormacaoCursos />} />
-            <Route path="curso/:id" element={<FormacaoCursoDetalhes />} />
-            <Route path="cursos/:id" element={<FormacaoCursoDetalhes />} />
-            <Route path="modulos/:id" element={<FormacaoModuloDetalhes />} />
-            <Route path="aulas" element={<FormacaoAulas />} />
-            <Route path="aulas/:id" element={<FormacaoAulaDetalhes />} />
-            <Route path="aulas/:id/editar" element={<FormacaoAulaEditar />} />
-            <Route path="materiais" element={<div>Página de Materiais</div>} />
-            <Route path="alunos" element={<div>Página de Alunos</div>} />
-            <Route path="configuracoes" element={<div>Configurações do LMS</div>} />
-          </Routes>
-        </Suspense>
-      </FormacaoLayout>
-    </FormacaoProtectedRoutes>
-  );
-};
+export const formacaoRoutes: RouteObject[] = [
+  {
+    path: "/formacao",
+    element: <FormacaoProtectedRoutes><FormacaoLayout><FormacaoDashboard /></FormacaoLayout></FormacaoProtectedRoutes>
+  },
+  {
+    path: "/formacao/cursos",
+    element: <FormacaoProtectedRoutes><FormacaoLayout><FormacaoCursos /></FormacaoLayout></FormacaoProtectedRoutes>
+  },
+  {
+    path: "/formacao/cursos/:id",
+    element: <FormacaoProtectedRoutes><FormacaoLayout><FormacaoCursoDetalhes /></FormacaoLayout></FormacaoProtectedRoutes>
+  },
+  {
+    path: "/formacao/modulos/:id",
+    element: <FormacaoProtectedRoutes><FormacaoLayout><FormacaoModuloDetalhes /></FormacaoLayout></FormacaoProtectedRoutes>
+  },
+  {
+    path: "/formacao/aulas",
+    element: <FormacaoProtectedRoutes><FormacaoLayout><FormacaoAulas /></FormacaoLayout></FormacaoProtectedRoutes>
+  },
+  {
+    path: "/formacao/aulas/:id",
+    element: <FormacaoProtectedRoutes><FormacaoLayout><FormacaoAulaDetalhes /></FormacaoLayout></FormacaoProtectedRoutes>
+  },
+  {
+    path: "/formacao/aulas/:id/editar",
+    element: <FormacaoProtectedRoutes><FormacaoLayout><FormacaoAulaEditar /></FormacaoLayout></FormacaoProtectedRoutes>
+  },
+  {
+    path: "/formacao/materiais",
+    element: <FormacaoProtectedRoutes><FormacaoLayout><div>Página de Materiais</div></FormacaoLayout></FormacaoProtectedRoutes>
+  },
+  {
+    path: "/formacao/alunos",
+    element: <FormacaoProtectedRoutes><FormacaoLayout><div>Página de Alunos</div></FormacaoLayout></FormacaoProtectedRoutes>
+  },
+  {
+    path: "/formacao/configuracoes",
+    element: <FormacaoProtectedRoutes><FormacaoLayout><div>Configurações do LMS</div></FormacaoLayout></FormacaoProtectedRoutes>
+  },
+];

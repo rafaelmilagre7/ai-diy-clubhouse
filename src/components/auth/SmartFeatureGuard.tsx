@@ -1,125 +1,257 @@
 
-import React, { ReactNode } from 'react';
-import { useUnifiedOnboardingValidation } from '@/hooks/onboarding/useUnifiedOnboardingValidation';
-import { useAuth } from '@/contexts/auth';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, AlertCircle, CheckCircle, Zap } from 'lucide-react';
+import { useFeatureAccess } from '@/hooks/onboarding/useFeatureAccess';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { motion } from 'framer-motion';
+import { 
+  Lock, 
+  Sparkles, 
+  ArrowRight, 
+  CheckCircle, 
+  Clock,
+  Shield
+} from 'lucide-react';
 
 interface SmartFeatureGuardProps {
+  children: React.ReactNode;
   feature: string;
-  children: ReactNode;
-  fallback?: ReactNode;
-  showDetails?: boolean;
+  fallbackPath?: string;
+  customBlockContent?: React.ReactNode;
 }
 
-// Mapeamento de features para verificações específicas
-const FEATURE_CONFIG = {
-  networking: {
-    title: 'Networking Inteligente',
-    description: 'Conecte-se com outros empreendedores e expanda sua rede de negócios',
-    requiresOnboarding: true
-  },
-  implementation_trail: {
-    title: 'Trilha de Implementação',
-    description: 'Sua jornada personalizada de implementação de IA baseada no seu perfil',
-    requiresOnboarding: true
-  }
-} as const;
+const FeatureBlockCard: React.FC<{
+  feature: string;
+  blockReason: string;
+  userRole: string | null;
+  onRedirect: () => void;
+}> = ({ feature, blockReason, userRole, onRedirect }) => {
+  const getFeatureConfig = () => {
+    switch (feature) {
+      case 'networking':
+        return {
+          title: 'Networking Inteligente',
+          description: 'Conecte-se com outros empresários e encontre oportunidades de negócio através de IA',
+          benefits: [
+            'Matches personalizados baseados no seu perfil',
+            'Sugestões de tópicos para conversas',
+            'Análise de compatibilidade empresarial',
+            'Conexões estratégicas mensais'
+          ],
+          icon: <Sparkles className="h-8 w-8 text-viverblue" />
+        };
+      case 'implementation_trail':
+        return {
+          title: 'Trilha de Implementação',
+          description: 'Sua jornada personalizada de IA baseada nos seus objetivos de negócio',
+          benefits: [
+            'Trilha 100% personalizada para seu negócio',
+            'Soluções ordenadas por prioridade',
+            'Estimativas de ROI e impacto',
+            'Guias passo a passo de implementação'
+          ],
+          icon: <CheckCircle className="h-8 w-8 text-viverblue" />
+        };
+      default:
+        return {
+          title: 'Funcionalidade Premium',
+          description: 'Esta funcionalidade está disponível após completar o onboarding',
+          benefits: [
+            'Acesso a recursos avançados',
+            'Experiência personalizada',
+            'Suporte especializado'
+          ],
+          icon: <Lock className="h-8 w-8 text-viverblue" />
+        };
+    }
+  };
+
+  const config = getFeatureConfig();
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="max-w-2xl mx-auto"
+    >
+      <Card className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border-gray-700 shadow-2xl">
+        <CardHeader className="text-center space-y-4 pb-6">
+          <div className="flex justify-center">
+            <div className="bg-viverblue/10 rounded-full p-4 border border-viverblue/20">
+              {config.icon}
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <CardTitle className="text-2xl font-bold text-white">
+              {config.title}
+            </CardTitle>
+            <p className="text-gray-300 text-base">
+              {config.description}
+            </p>
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-6">
+          {/* Razão do bloqueio */}
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <Clock className="h-5 w-5 text-amber-400" />
+              <div>
+                <h4 className="font-semibold text-amber-200">
+                  {blockReason === 'incomplete_onboarding' 
+                    ? 'Complete seu onboarding primeiro'
+                    : 'Acesso restrito'
+                  }
+                </h4>
+                <p className="text-sm text-amber-300/80">
+                  {blockReason === 'incomplete_onboarding'
+                    ? 'Para personalizar sua experiência, precisamos conhecer melhor seu negócio.'
+                    : `Seu perfil atual (${userRole}) não tem acesso a esta funcionalidade.`
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Benefícios */}
+          <div className="space-y-3">
+            <h4 className="font-semibold text-white flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-viverblue" />
+              O que você terá acesso:
+            </h4>
+            <ul className="space-y-2">
+              {config.benefits.map((benefit, index) => (
+                <li key={index} className="flex items-start gap-3 text-gray-300">
+                  <CheckCircle className="h-4 w-4 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-sm">{benefit}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Call to Action */}
+          <div className="pt-4 border-t border-gray-700">
+            <Button 
+              onClick={onRedirect}
+              className="w-full bg-viverblue hover:bg-viverblue/90 text-white font-semibold py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
+              size="lg"
+            >
+              {blockReason === 'incomplete_onboarding' ? (
+                <>
+                  Completar Onboarding
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              ) : (
+                <>
+                  Falar com Suporte
+                  <Shield className="h-4 w-4" />
+                </>
+              )}
+            </Button>
+            
+            {blockReason === 'incomplete_onboarding' && (
+              <p className="text-center text-sm text-gray-400 mt-3">
+                ⏱️ Tempo estimado: 5-10 minutos
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+};
 
 export const SmartFeatureGuard: React.FC<SmartFeatureGuardProps> = ({
-  feature,
   children,
-  fallback,
-  showDetails = false
+  feature,
+  fallbackPath = '/onboarding-new',
+  customBlockContent
 }) => {
   const navigate = useNavigate();
-  const { profile } = useAuth();
-  const { isOnboardingComplete, isLoading } = useUnifiedOnboardingValidation();
+  const { 
+    hasAccess, 
+    isLoading, 
+    error, 
+    blockReason, 
+    userRole,
+    shouldRedirectToOnboarding 
+  } = useFeatureAccess({ 
+    feature,
+    autoCheck: true 
+  });
 
-  const config = FEATURE_CONFIG[feature as keyof typeof FEATURE_CONFIG];
-  
-  // Timeout reduzido para ambiente de teste
-  const loadingTimeout = process.env.NODE_ENV === 'test' ? 1000 : 5000;
-  
+  const handleRedirect = () => {
+    if (shouldRedirectToOnboarding()) {
+      navigate('/onboarding-new');
+    } else {
+      // Para outros casos (sem permissão), pode redirecionar para suporte ou dashboard
+      navigate('/dashboard');
+    }
+  };
+
+  // Loading state
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue"></div>
-        <span className="ml-3 text-gray-400">Verificando acesso...</span>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+        <LoadingSpinner size="lg" />
+        <div className="text-center space-y-2">
+          <h3 className="text-lg font-semibold text-white">
+            Verificando permissões...
+          </h3>
+          <p className="text-gray-400">
+            Validando seu acesso à funcionalidade
+          </p>
+        </div>
       </div>
     );
   }
 
-  // Admins sempre têm acesso
-  const isAdmin = profile?.role === 'admin';
-  
-  // Para features que requerem onboarding
-  if (config?.requiresOnboarding && !isOnboardingComplete && !isAdmin) {
-    if (fallback) {
-      return <>{fallback}</>;
-    }
-
+  // Error state
+  if (error) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh] p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Card className="max-w-md mx-auto text-center border-yellow-200 bg-yellow-50 dark:bg-yellow-950 dark:border-yellow-800">
-            <CardHeader className="pb-4">
-              <div className="flex justify-center mb-4">
-                <AlertCircle className="w-12 h-12 text-yellow-500" />
-              </div>
-              <CardTitle className="text-xl text-yellow-800 dark:text-yellow-200">
-                {config?.title || 'Funcionalidade'} Bloqueada
-              </CardTitle>
-              <CardDescription className="text-yellow-700 dark:text-yellow-300">
-                Complete seu onboarding para desbloquear esta funcionalidade
-              </CardDescription>
-            </CardHeader>
-            
-            <CardContent className="space-y-4">
-              {config?.description && (
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-sm">
-                  <p className="text-gray-600 dark:text-gray-300">
-                    <strong>{config.title}:</strong> {config.description}
-                  </p>
-                </div>
-              )}
-
-              {showDetails && (
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-sm space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Funcionalidade:</span>
-                    <span className="font-medium">{feature}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Onboarding:</span>
-                    <span className="font-medium text-red-600">
-                      Incompleto
-                    </span>
-                  </div>
-                </div>
-              )}
-              
-              <Button 
-                onClick={() => navigate('/onboarding-new')}
-                className="w-full bg-yellow-600 hover:bg-yellow-700 text-white"
-              >
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Completar Onboarding
-              </Button>
-            </CardContent>
-          </Card>
-        </motion.div>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+        <div className="bg-red-500/10 border border-red-500/20 rounded-full p-4">
+          <Shield className="h-8 w-8 text-red-400" />
+        </div>
+        <div className="text-center space-y-2">
+          <h3 className="text-lg font-semibold text-white">
+            Erro ao verificar permissões
+          </h3>
+          <p className="text-gray-400">
+            {error}
+          </p>
+          <Button 
+            onClick={() => window.location.reload()} 
+            variant="outline"
+            className="mt-4"
+          >
+            Tentar novamente
+          </Button>
+        </div>
       </div>
     );
   }
 
-  // Se chegou até aqui, tem acesso
-  return <>{children}</>;
+  // Access granted - render children
+  if (hasAccess) {
+    return <>{children}</>;
+  }
+
+  // Access denied - show block screen
+  return (
+    <div className="container py-8 px-4">
+      {customBlockContent || (
+        <FeatureBlockCard
+          feature={feature}
+          blockReason={blockReason}
+          userRole={userRole}
+          onRedirect={handleRedirect}
+        />
+      )}
+    </div>
+  );
 };

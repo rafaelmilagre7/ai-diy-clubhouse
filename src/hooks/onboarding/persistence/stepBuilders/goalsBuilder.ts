@@ -1,46 +1,41 @@
 
-import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
+import { OnboardingData, OnboardingProgress, ProfessionalDataInput } from "@/types/onboarding";
 
-/**
- * Builder específico para dados de objetivos de negócio
- */
-export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
-  const updateObj: Record<string, any> = {};
+export function buildGoalsUpdate(data: Partial<OnboardingData> | ProfessionalDataInput, progress: OnboardingProgress | null) {
+  const updateObj: Partial<OnboardingProgress> = {};
   
-  console.log("Construindo objeto de atualização para Business Goals:", data);
-  
-  if (!data || !progress) {
-    console.warn("Dados ou progresso não fornecidos para Business Goals Builder");
-    return updateObj;
-  }
-  
-  try {
-    // Verificar se os dados vêm no formato aninhado ou direto
-    const goalsData = data.business_goals || {};
+  // Verificar se temos dados profissionais
+  if ('professional_info' in data && data.professional_info) {
+    updateObj.professional_info = data.professional_info;
     
-    // Garantir que o objeto business_goals existe
-    updateObj.business_goals = {
-      ...(typeof progress.business_goals === 'object' ? progress.business_goals || {} : {}),
-      ...goalsData,
-      _last_updated: new Date().toISOString()
+    // Campos diretos para compatibilidade
+    updateObj.company_name = data.professional_info.company_name;
+    updateObj.company_size = data.professional_info.company_size;
+    updateObj.company_sector = data.professional_info.company_sector;
+    updateObj.company_website = data.professional_info.company_website;
+    updateObj.current_position = data.professional_info.current_position;
+    updateObj.annual_revenue = data.professional_info.annual_revenue;
+  } 
+  // Verificar campos diretos
+  else if ('company_name' in data || 'company_size' in data) {
+    if ('company_name' in data) updateObj.company_name = data.company_name as string;
+    if ('company_size' in data) updateObj.company_size = data.company_size as string;
+    if ('company_sector' in data) updateObj.company_sector = data.company_sector as string;
+    if ('company_website' in data) updateObj.company_website = data.company_website as string;
+    if ('current_position' in data) updateObj.current_position = data.current_position as string;
+    if ('annual_revenue' in data) updateObj.annual_revenue = data.annual_revenue as string;
+    
+    // Atualizar também no objeto aninhado
+    updateObj.professional_info = {
+      ...(progress?.professional_info || {}),
+      ...(updateObj.company_name ? { company_name: updateObj.company_name } : {}),
+      ...(updateObj.company_size ? { company_size: updateObj.company_size } : {}),
+      ...(updateObj.company_sector ? { company_sector: updateObj.company_sector } : {}),
+      ...(updateObj.company_website ? { company_website: updateObj.company_website } : {}),
+      ...(updateObj.current_position ? { current_position: updateObj.current_position } : {}),
+      ...(updateObj.annual_revenue ? { annual_revenue: updateObj.annual_revenue } : {})
     };
-    
-    // Remover valores undefined que podem causar erro no Supabase
-    Object.keys(updateObj.business_goals).forEach(key => {
-      if (updateObj.business_goals[key] === undefined) {
-        delete updateObj.business_goals[key];
-      }
-      
-      // Garantir que arrays continuem sendo arrays
-      if (Array.isArray(updateObj.business_goals[key]) && updateObj.business_goals[key].length === 0) {
-        updateObj.business_goals[key] = [];
-      }
-    });
-    
-    console.log("Objeto de atualização gerado:", updateObj);
-    return updateObj;
-  } catch (error) {
-    console.error("Erro ao construir objeto de atualização de Business Goals:", error);
-    return updateObj;
   }
+  
+  return updateObj;
 }

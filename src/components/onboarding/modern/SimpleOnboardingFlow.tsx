@@ -1,165 +1,142 @@
 
-import React, { useState, useEffect } from 'react';
-import { StepQuemEVoce } from './steps/StepQuemEVoce';
-import { StepComoNosConheceu } from './steps/StepComoNosConheceu';
-import { StepObjetivosMetas } from './steps/StepObjetivosMetas';
-import { useSimpleOnboardingFlow } from '@/hooks/onboarding/useSimpleOnboardingFlow';
-import { QuickOnboardingFlowProps, QuickOnboardingData } from '@/types/quickOnboarding';
-import { OnboardingLayout } from '../OnboardingLayout';
+import React from 'react';
+import { useSimpleOnboarding } from '@/hooks/onboarding/useSimpleOnboarding';
+import { QuickFormStep } from './QuickFormStep';
 import LoadingScreen from '@/components/common/LoadingScreen';
-import { toast } from 'sonner';
+import { StepQuemEVoceNew } from './steps/StepQuemEVoceNew';
+import { StepLocalizacaoRedes } from './steps/StepLocalizacaoRedes';
+import { StepComoNosConheceu } from './steps/StepComoNosConheceu';
+import { StepSeuNegocio } from './steps/StepSeuNegocio';
+import { StepContextoNegocio } from './steps/StepContextoNegocio';
+import { StepObjetivosMetas } from './steps/StepObjetivosMetas';
+import { StepExperienciaIA } from './steps/StepExperienciaIA';
+import { StepPersonalizacao } from './steps/StepPersonalizacao';
+import { useNavigate } from 'react-router-dom';
 
-const TOTAL_STEPS = 3;
-
-export const SimpleOnboardingFlow: React.FC<QuickOnboardingFlowProps> = ({ onComplete }) => {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [data, setData] = useState<QuickOnboardingData>({
-    name: '',
-    email: '',
-    whatsapp: '',
-    country_code: '+55',
-    how_found_us: '',
-    howFoundUs: '', // alias for compatibility
-    primary_goal: '',
-    expected_outcome_30days: '',
-    content_formats: []
-  });
-
+export const SimpleOnboardingFlow: React.FC = () => {
+  const navigate = useNavigate();
   const {
-    saveProgress,
+    data,
+    currentStep,
+    updateField,
+    nextStep,
+    previousStep,
     completeOnboarding,
-    isLoading,
-    isSubmitting
-  } = useSimpleOnboardingFlow();
+    canProceed,
+    totalSteps,
+    isSaving,
+    isCompleting,
+    isLoading
+  } = useSimpleOnboarding();
 
-  // Auto-save a cada mudança
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (data.name || data.email) {
-        saveProgress(data);
-      }
-    }, 1000);
-
-    return () => clearTimeout(timeoutId);
-  }, [data, saveProgress]);
-
-  const handleUpdate = (field: keyof QuickOnboardingData, value: any) => {
-    setData(prev => {
-      const updated = {
-        ...prev,
-        [field]: value
-      };
-      
-      // Sync how_found_us and howFoundUs
-      if (field === 'how_found_us') {
-        updated.howFoundUs = value;
-      } else if (field === 'howFoundUs') {
-        updated.how_found_us = value;
-      }
-      
-      return updated;
-    });
-  };
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
 
   const handleNext = async () => {
-    if (currentStep < TOTAL_STEPS) {
-      setCurrentStep(prev => prev + 1);
-    } else {
-      // Finalizar onboarding
-      try {
-        const result = await completeOnboarding(data);
-        if (result.success) {
-          toast.success('Bem-vindo ao VIVER DE IA Club! 🎉');
-          onComplete();
-        } else {
-          toast.error('Erro ao finalizar onboarding: ' + result.error);
-        }
-      } catch (error) {
-        toast.error('Erro inesperado ao finalizar onboarding');
+    if (currentStep === totalSteps) {
+      // Última etapa - completar onboarding
+      const success = await completeOnboarding();
+      if (success) {
+        navigate('/onboarding-new/completed');
       }
+    } else {
+      // Próxima etapa - salvar e avançar
+      await nextStep();
     }
   };
 
   const handlePrevious = () => {
-    if (currentStep > 1) {
-      setCurrentStep(prev => prev - 1);
-    }
+    previousStep();
   };
 
-  const canProceed = () => {
+  const getStepContent = () => {
+    const stepProps = {
+      data,
+      onUpdate: updateField,
+      onNext: handleNext,
+      onPrevious: currentStep > 1 ? handlePrevious : undefined,
+      canProceed,
+      currentStep,
+      totalSteps
+    };
+
     switch (currentStep) {
       case 1:
-        return !!(data.name && data.email && data.whatsapp);
+        return <StepQuemEVoceNew {...stepProps} />;
       case 2:
-        return !!(data.how_found_us || data.howFoundUs);
+        return <StepLocalizacaoRedes {...stepProps} />;
       case 3:
-        return !!(data.primary_goal && data.expected_outcome_30days && data.content_formats.length > 0);
+        return <StepComoNosConheceu {...stepProps} />;
+      case 4:
+        return <StepSeuNegocio {...stepProps} />;
+      case 5:
+        return <StepContextoNegocio {...stepProps} />;
+      case 6:
+        return <StepObjetivosMetas {...stepProps} />;
+      case 7:
+        return <StepExperienciaIA {...stepProps} />;
+      case 8:
+        return <StepPersonalizacao {...stepProps} />;
       default:
-        return false;
+        return null;
     }
   };
-
-  if (isLoading) {
-    return <LoadingScreen message="Carregando onboarding..." />;
-  }
 
   const getStepTitle = () => {
     const titles = {
-      1: 'Bem-vindo ao VIVER DE IA Club!',
-      2: 'Como nos conheceu?',
-      3: 'Seus objetivos'
+      1: 'Informações Pessoais',
+      2: 'Localização e Contato',
+      3: 'Como nos conheceu?',
+      4: 'Dados Profissionais',
+      5: 'Contexto do Negócio',
+      6: 'Objetivos de Negócio',
+      7: 'Experiência com IA',
+      8: 'Personalização da Experiência'
     };
     return titles[currentStep as keyof typeof titles] || '';
   };
 
-  // Prepare props for StepQuemEVoce with required interface
-  const stepQuemEVoceProps = {
-    data: {
-      name: data.name,
-      email: data.email,
-      whatsapp: data.whatsapp,
-      howFoundUs: data.howFoundUs || data.how_found_us || ''
-    },
-    onUpdate: handleUpdate,
-    onNext: handleNext,
-    canProceed: canProceed(),
-    currentStep,
-    totalSteps: TOTAL_STEPS
-  };
-
-  const stepProps = {
-    data,
-    onUpdate: handleUpdate,
-    onNext: handleNext,
-    onPrevious: currentStep > 1 ? handlePrevious : undefined,
-    canProceed: canProceed(),
-    currentStep,
-    totalSteps: TOTAL_STEPS
+  const getStepDescription = () => {
+    const descriptions = {
+      1: 'Vamos começar com suas informações básicas',
+      2: 'Nos ajude a entender onde você está localizado',
+      3: 'Como você descobriu a Viver de IA?',
+      4: 'Conte-nos sobre sua empresa e posição',
+      5: 'Ajude-nos a entender seu contexto de negócio',
+      6: 'Quais são seus principais objetivos?',
+      7: 'Qual é sua experiência atual com IA?',
+      8: 'Vamos personalizar sua experiência'
+    };
+    return descriptions[currentStep as keyof typeof descriptions] || '';
   };
 
   return (
-    <OnboardingLayout
-      title={getStepTitle()}
-      currentStep={currentStep}
-      totalSteps={TOTAL_STEPS}
-      onBackClick={currentStep > 1 ? handlePrevious : undefined}
-    >
-      {/* Feedback de submissão */}
-      {isSubmitting && (
-        <div className="mb-6 p-4 bg-viverblue/10 border border-viverblue/20 rounded-lg">
-          <div className="flex items-center justify-center gap-3 text-viverblue">
-            <div className="w-5 h-5 border-2 border-viverblue border-t-transparent rounded-full animate-spin"></div>
-            <span className="font-medium">Finalizando onboarding...</span>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
+      <QuickFormStep
+        title={getStepTitle()}
+        description={getStepDescription()}
+        currentStep={currentStep}
+        totalSteps={totalSteps}
+        onNext={handleNext}
+        onPrevious={currentStep > 1 ? handlePrevious : undefined}
+        canProceed={canProceed && !isSaving && !isCompleting}
+        showBack={currentStep > 1}
+      >
+        {/* Indicador discreto de salvamento apenas quando necessário */}
+        {(isSaving || isCompleting) && (
+          <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+            <div className="flex items-center gap-2 text-blue-400">
+              <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-sm">
+                {isCompleting ? 'Finalizando onboarding...' : 'Salvando progresso...'}
+              </span>
+            </div>
           </div>
-        </div>
-      )}
-
-      {/* Content */}
-      <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700/50 p-8">
-        {currentStep === 1 && <StepQuemEVoce {...stepQuemEVoceProps} />}
-        {currentStep === 2 && <StepComoNosConheceu {...stepProps} />}
-        {currentStep === 3 && <StepObjetivosMetas {...stepProps} />}
-      </div>
-    </OnboardingLayout>
+        )}
+        
+        {getStepContent()}
+      </QuickFormStep>
+    </div>
   );
 };

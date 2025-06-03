@@ -61,15 +61,12 @@ function getAIExperienceSummaryComponent(data: OnboardingData['ai_experience']) 
     return false;
   };
 
-  // Obter o nível de conhecimento (suporta ambos os formatos)
-  const knowledgeLevel = processedData.ai_knowledge_level || processedData.knowledge_level;
-
   return (
     <div className="space-y-3 text-sm">
       <p>
         <span className="font-medium">Nível de conhecimento em IA:</span> {
-          knowledgeLevel 
-            ? (knowledgeLevelMap[knowledgeLevel] || knowledgeLevel) 
+          processedData.knowledge_level 
+            ? (knowledgeLevelMap[processedData.knowledge_level] || processedData.knowledge_level) 
             : "Não preenchido"
         }
       </p>
