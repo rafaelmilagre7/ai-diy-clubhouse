@@ -78,21 +78,21 @@ class Logger {
     }
   }
 
-  // Métodos básicos de log
-  info(message: string, data?: any) {
-    this.log('info', message, data);
+  // Métodos básicos de log - CORRIGIDO para aceitar 3 parâmetros
+  info(message: string, data?: any, component?: string) {
+    this.log('info', message, data, component);
   }
 
-  warn(message: string, data?: any) {
-    this.log('warn', message, data);
+  warn(message: string, data?: any, component?: string) {
+    this.log('warn', message, data, component);
   }
 
-  error(message: string, data?: any) {
-    this.log('error', message, data);
+  error(message: string, data?: any, component?: string) {
+    this.log('error', message, data, component);
   }
 
-  debug(message: string, data?: any) {
-    this.log('debug', message, data);
+  debug(message: string, data?: any, component?: string) {
+    this.log('debug', message, data, component);
   }
 
   // Métodos especiais
