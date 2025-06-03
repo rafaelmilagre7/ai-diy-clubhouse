@@ -1,29 +1,30 @@
 
 import React from 'react';
 import { useSimpleOnboarding } from '@/hooks/onboarding/useSimpleOnboarding';
+import { OnboardingLayout } from '../OnboardingLayout';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { StepQuemEVoceNew } from './steps/StepQuemEVoceNew';
 import { StepLocalizacaoRedes } from './steps/StepLocalizacaoRedes';
 import { StepComoNosConheceu } from './steps/StepComoNosConheceu';
 import { StepSeuNegocio } from './steps/StepSeuNegocio';
 import { StepContextoNegocio } from './steps/StepContextoNegocio';
-import { StepObjetivosMetas } from './steps/StepObjetivosMetas';
+import { StepObjetivos } from './steps/StepObjetivos';
 import { StepExperienciaIA } from './steps/StepExperienciaIA';
 import { StepPersonalizacao } from './steps/StepPersonalizacao';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 export const SimpleOnboardingFlow: React.FC = () => {
   const navigate = useNavigate();
   const {
     data,
-    currentStep,
     updateField,
     nextStep,
     previousStep,
     completeOnboarding,
     canProceed,
+    currentStep,
     totalSteps,
-    isSaving,
     isCompleting,
     isLoading
   } = useSimpleOnboarding();
@@ -34,11 +35,16 @@ export const SimpleOnboardingFlow: React.FC = () => {
 
   const handleNext = async () => {
     if (currentStep === totalSteps) {
+      // Última etapa - finalizar onboarding
       const success = await completeOnboarding();
       if (success) {
+        toast.success('Onboarding finalizado com sucesso!');
         navigate('/onboarding-new/completed');
+      } else {
+        toast.error('Erro ao finalizar onboarding. Tente novamente.');
       }
     } else {
+      // Próxima etapa
       await nextStep();
     }
   };
@@ -53,7 +59,7 @@ export const SimpleOnboardingFlow: React.FC = () => {
       onUpdate: updateField,
       onNext: handleNext,
       onPrevious: currentStep > 1 ? handlePrevious : undefined,
-      canProceed: canProceed && !isSaving && !isCompleting,
+      canProceed,
       currentStep,
       totalSteps
     };
@@ -70,33 +76,51 @@ export const SimpleOnboardingFlow: React.FC = () => {
       case 5:
         return <StepContextoNegocio {...stepProps} />;
       case 6:
-        return <StepObjetivosMetas {...stepProps} />;
+        return <StepObjetivos {...stepProps} />;
       case 7:
         return <StepExperienciaIA {...stepProps} />;
       case 8:
         return <StepPersonalizacao {...stepProps} />;
       default:
-        return <StepQuemEVoceNew {...stepProps} />;
+        return null;
     }
   };
 
+  const getStepTitle = () => {
+    const titles = {
+      1: 'Quem é você?',
+      2: 'Localização e Redes',
+      3: 'Como nos conheceu?',
+      4: 'Sobre seu negócio',
+      5: 'Contexto do negócio',
+      6: 'Objetivos e metas',
+      7: 'Experiência com IA',
+      8: 'Personalização'
+    };
+    return titles[currentStep as keyof typeof titles] || '';
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
-      {/* Indicador de salvamento */}
-      {(isSaving || isCompleting) && (
-        <div className="fixed top-4 right-4 z-50">
-          <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg backdrop-blur-sm">
-            <div className="flex items-center gap-2 text-blue-400">
-              <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-sm">
-                {isCompleting ? 'Finalizando...' : 'Salvando...'}
-              </span>
-            </div>
+    <OnboardingLayout
+      title={getStepTitle()}
+      currentStep={currentStep}
+      totalSteps={totalSteps}
+      onBackClick={currentStep > 1 ? handlePrevious : undefined}
+    >
+      {/* Feedback de submissão */}
+      {isCompleting && (
+        <div className="mb-6 p-4 bg-viverblue/10 border border-viverblue/20 rounded-lg">
+          <div className="flex items-center justify-center gap-3 text-viverblue">
+            <div className="w-5 h-5 border-2 border-viverblue border-t-transparent rounded-full animate-spin"></div>
+            <span className="font-medium">Finalizando onboarding...</span>
           </div>
         </div>
       )}
-      
-      {getStepContent()}
-    </div>
+
+      {/* Content */}
+      <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700/50 p-8">
+        {getStepContent()}
+      </div>
+    </OnboardingLayout>
   );
 };
