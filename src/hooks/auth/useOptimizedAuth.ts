@@ -13,19 +13,38 @@ export const useOptimizedAuth = () => {
   const authState = useMemo(() => ({
     user: auth.user,
     profile: auth.profile,
+    session: auth.session,
     isAuthenticated: !!auth.user,
-    isAdmin: auth.profile?.role === 'admin' || auth.isAdmin,
-    isFormacao: auth.profile?.role === 'formacao' || auth.isFormacao,
+    isAdmin: auth.isAdmin,
+    isFormacao: auth.isFormacao,
     isMember: auth.profile?.role === 'member',
     isLoading: auth.isLoading,
-    hasProfile: !!auth.profile
-  }), [auth.user, auth.profile, auth.isLoading, auth.isAdmin, auth.isFormacao]);
+    hasProfile: !!auth.profile,
+    authError: auth.authError
+  }), [
+    auth.user, 
+    auth.profile, 
+    auth.session,
+    auth.isAdmin, 
+    auth.isFormacao, 
+    auth.isLoading, 
+    auth.authError
+  ]);
 
   // Memoizar métodos para evitar re-criação
   const authMethods = useMemo(() => ({
     signOut: auth.signOut,
+    signIn: auth.signIn,
+    signInAsMember: auth.signInAsMember,
+    signInAsAdmin: auth.signInAsAdmin,
     setProfile: auth.setProfile
-  }), [auth.signOut, auth.setProfile]);
+  }), [
+    auth.signOut, 
+    auth.signIn, 
+    auth.signInAsMember, 
+    auth.signInAsAdmin, 
+    auth.setProfile
+  ]);
 
   return {
     ...authState,

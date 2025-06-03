@@ -1,12 +1,13 @@
+
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useAuth } from "@/contexts/auth";
+import { useOptimizedAuth } from "@/hooks/auth/useOptimizedAuth";
 import { supabase } from "@/lib/supabase";
 import { Solution } from "@/lib/supabase";
 import { useQuery } from '@tanstack/react-query';
 import { toast } from "sonner";
 
 export const useDashboardProgress = (solutions: Solution[] = []) => {
-  const { user } = useAuth();
+  const { user } = useOptimizedAuth();
   
   // Função para buscar o progresso - separada para facilitar cache
   const fetchProgress = useCallback(async () => {

@@ -9,12 +9,12 @@ import { Solution } from "@/lib/supabase";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, RefreshCw } from "lucide-react";
-import { useAuth } from "@/contexts/auth";
+import { useOptimizedAuth } from "@/hooks/auth/useOptimizedAuth";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { user, profile, isLoading: authLoading } = useAuth();
+  const { user, profile, isLoading: authLoading } = useOptimizedAuth();
   
   // Estado para controle de erros
   const [hasError, setHasError] = useState(false);
