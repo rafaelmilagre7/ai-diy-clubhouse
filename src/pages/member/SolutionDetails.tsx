@@ -69,7 +69,6 @@ const SolutionDetails = () => {
     solutionId: data.solution.id, 
     solutionTitle: data.solution.title,
     hasProgress: !!data.progress,
-    modulesCount: data.modules.length,
     materialsCount: data.materials.length,
     toolsCount: data.tools.length,
     videosCount: data.videos.length
