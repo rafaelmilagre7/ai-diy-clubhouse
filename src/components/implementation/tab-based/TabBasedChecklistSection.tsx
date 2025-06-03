@@ -30,7 +30,11 @@ export const TabBasedChecklistSection = ({ onSectionComplete, onValidation, isCo
   };
 
   const handleSectionComplete = () => {
-    const checklist = data?.checklist || [];
+    // Extrair checklist dos módulos da solução ou usar array vazio
+    const checklist = data?.solution?.modules?.flatMap((module: any) => 
+      module.content?.blocks?.filter((block: any) => block.type === 'checklist')?.flatMap((block: any) => block.data?.items || [])
+    ) || [];
+    
     const validation = onValidation(checkedItems.size, checklist.length);
     
     if (validation.isValid) {
@@ -51,7 +55,10 @@ export const TabBasedChecklistSection = ({ onSectionComplete, onValidation, isCo
     );
   }
 
-  const checklist = data?.checklist || [];
+  // Extrair checklist dos módulos da solução
+  const checklist = data?.solution?.modules?.flatMap((module: any) => 
+    module.content?.blocks?.filter((block: any) => block.type === 'checklist')?.flatMap((block: any) => block.data?.items || [])
+  ) || [];
 
   if (checklist.length === 0) {
     return (

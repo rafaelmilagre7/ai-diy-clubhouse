@@ -1,219 +1,228 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Tabs } from "@/components/ui/tabs";
-import { Card } from "@/components/ui/card";
-import { useLogging } from "@/hooks/useLogging";
+
+import React, { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useValidations } from "@/hooks/implementation/useValidations";
+import { ValidationDialog } from "./validation/ValidationDialog";
 import { TabBasedToolsSection } from "./TabBasedToolsSection";
 import { TabBasedMaterialsSection } from "./TabBasedMaterialsSection";
 import { TabBasedVideosSection } from "./TabBasedVideosSection";
 import { TabBasedChecklistSection } from "./TabBasedChecklistSection";
 import { TabBasedCommentsSection } from "./TabBasedCommentsSection";
-import { TabTransition } from "./transitions/TabTransition";
-import { CompletionFeedback } from "./feedback/CompletionFeedback";
-import { EnhancedProgressBar } from "./progress/EnhancedProgressBar";
-import { AnimatedTabsList } from "./navigation/AnimatedTabsList";
-import { ValidationDialog } from "./validation/ValidationDialog";
-import { useValidations } from "@/hooks/implementation/useValidations";
+import { CheckCircle, Wrench, FileText, PlayCircle, ListChecks, MessageSquare } from "lucide-react";
+import { useLogging } from "@/hooks/useLogging";
 
 interface TabBasedImplementationWizardProps {
   solutionId: string;
 }
 
-const TABS = [
-  { id: "tools", label: "Ferramentas", icon: "🛠️" },
-  { id: "materials", label: "Materiais", icon: "📚" },
-  { id: "videos", label: "Vídeos", icon: "📹" },
-  { id: "checklist", label: "Checklist", icon: "✅" },
-  { id: "comments", label: "Discussão", icon: "💬" }
-];
-
 export const TabBasedImplementationWizard = ({ solutionId }: TabBasedImplementationWizardProps) => {
+  const { log } = useLogging();
   const [activeTab, setActiveTab] = useState("tools");
   const [completedSections, setCompletedSections] = useState<Set<string>>(new Set());
-  const [showCompletionFeedback, setShowCompletionFeedback] = useState(false);
-  const [completedSectionName, setCompletedSectionName] = useState("");
-  const [direction, setDirection] = useState<"left" | "right">("right");
-  const [showValidationDialog, setShowValidationDialog] = useState(false);
-  const [pendingCompletion, setPendingCompletion] = useState<string | null>(null);
-  
-  const { log } = useLogging();
-  const { validations, validateToolsSection, validateMaterialsSection, validateVideosSection, validateChecklistSection, getSectionValidation } = useValidations();
+  const [validationDialog, setValidationDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    validationResult: any;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    validationResult: null,
+    onConfirm: () => {}
+  });
 
-  // Carregar progresso do localStorage
-  useEffect(() => {
-    const savedProgress = localStorage.getItem(`implementation-progress-${solutionId}`);
-    if (savedProgress) {
-      try {
-        const progress = JSON.parse(savedProgress);
-        setCompletedSections(new Set(progress.completedSections || []));
-        setActiveTab(progress.activeTab || "tools");
-      } catch (error) {
-        log("Erro ao carregar progresso salvo", { error });
-      }
-    }
-  }, [solutionId, log]);
+  const {
+    validateToolsSection,
+    validateMaterialsSection,
+    validateVideosSection,
+    validateChecklistSection
+  } = useValidations();
 
-  // Salvar progresso no localStorage
-  const saveProgress = useCallback((completed: Set<string>, active: string) => {
-    const progress = {
-      completedSections: Array.from(completed),
-      activeTab: active,
-      lastUpdated: new Date().toISOString()
-    };
-    localStorage.setItem(`implementation-progress-${solutionId}`, JSON.stringify(progress));
-    log("Progresso salvo", progress);
-  }, [solutionId, log]);
-
-  const getTabDirection = (fromIndex: number, toIndex: number) => {
-    return toIndex > fromIndex ? "right" : "left";
-  };
-
-  const handleTabChange = (tabId: string) => {
-    const currentIndex = TABS.findIndex(tab => tab.id === activeTab);
-    const newIndex = TABS.findIndex(tab => tab.id === tabId);
+  const handleSectionComplete = (sectionId: string) => {
+    log("Seção marcada como concluída", { sectionId });
+    setCompletedSections(prev => new Set([...prev, sectionId]));
     
-    setDirection(getTabDirection(currentIndex, newIndex));
-    setActiveTab(tabId);
-    saveProgress(completedSections, tabId);
-    
-    log("Mudança de aba", { from: activeTab, to: tabId, direction: getTabDirection(currentIndex, newIndex) });
-  };
-
-  const handleSectionComplete = (sectionId: string, sectionName: string) => {
-    const validation = getSectionValidation(sectionId);
-    
-    if (!validation?.isValid) {
-      setPendingCompletion(sectionId);
-      setShowValidationDialog(true);
-      return;
-    }
-
-    completeSection(sectionId, sectionName);
-  };
-
-  const completeSection = (sectionId: string, sectionName: string) => {
-    const newCompleted = new Set(completedSections);
-    newCompleted.add(sectionId);
-    setCompletedSections(newCompleted);
-    saveProgress(newCompleted, activeTab);
-    
-    setCompletedSectionName(sectionName);
-    setShowCompletionFeedback(true);
-    
-    log("Seção completada", { sectionId, sectionName });
-  };
-
-  const handleCompletionContinue = () => {
-    setShowCompletionFeedback(false);
-    
-    // Auto-avançar para próxima aba se não for a última
-    const currentIndex = TABS.findIndex(tab => tab.id === activeTab);
-    if (currentIndex < TABS.length - 1) {
-      const nextTab = TABS[currentIndex + 1];
-      setTimeout(() => {
-        handleTabChange(nextTab.id);
-      }, 500);
+    // Avançar para próxima aba automaticamente
+    const tabs = ["tools", "materials", "videos", "checklist", "comments"];
+    const currentIndex = tabs.indexOf(activeTab);
+    if (currentIndex < tabs.length - 1) {
+      setActiveTab(tabs[currentIndex + 1]);
     }
   };
 
-  const handleValidationConfirm = () => {
-    if (pendingCompletion) {
-      const tabName = TABS.find(tab => tab.id === pendingCompletion)?.label || pendingCompletion;
-      completeSection(pendingCompletion, tabName);
-      setPendingCompletion(null);
-    }
-    setShowValidationDialog(false);
+  const showValidationDialog = (title: string, description: string, validationResult: any, onConfirm: () => void) => {
+    setValidationDialog({
+      isOpen: true,
+      title,
+      description,
+      validationResult,
+      onConfirm
+    });
   };
 
-  const currentTabName = TABS.find(tab => tab.id === activeTab)?.label || activeTab;
-  const completedCount = completedSections.size;
-  const totalSections = TABS.length - 1; // Excluir a aba de comentários do total
-
-  const renderActiveTabContent = () => {
-    switch (activeTab) {
-      case "tools":
-        return (
-          <TabBasedToolsSection 
-            onSectionComplete={() => handleSectionComplete("tools")}
-            onValidation={validateToolsSection}
-            isCompleted={completedSections.has("tools")}
-          />
-        );
-      case "materials":
-        return (
-          <TabBasedMaterialsSection 
-            onSectionComplete={() => handleSectionComplete("materials")}
-            onValidation={validateMaterialsSection}
-            isCompleted={completedSections.has("materials")}
-          />
-        );
-      case "videos":
-        return (
-          <TabBasedVideosSection 
-            onSectionComplete={() => handleSectionComplete("videos")}
-            onValidation={validateVideosSection}
-            isCompleted={completedSections.has("videos")}
-          />
-        );
-      case "checklist":
-        return (
-          <TabBasedChecklistSection 
-            onSectionComplete={() => handleSectionComplete("checklist")}
-            onValidation={validateChecklistSection}
-            isCompleted={completedSections.has("checklist")}
-          />
-        );
-      case "comments":
-        return <TabBasedCommentsSection solutionId={solutionId} />;
-      default:
-        return null;
+  const handleToolsValidation = (interactionCount: number, timeSpent: number) => {
+    const result = validateToolsSection(interactionCount, timeSpent);
+    
+    if (!result.isValid) {
+      showValidationDialog(
+        "Validação da Seção Ferramentas",
+        "Você precisa explorar mais as ferramentas antes de continuar.",
+        result,
+        () => handleSectionComplete("tools")
+      );
     }
+    
+    return result;
   };
 
-  const validation = pendingCompletion ? getSectionValidation(pendingCompletion) : null;
+  const handleMaterialsValidation = (downloadCount: number, timeSpent: number) => {
+    const result = validateMaterialsSection(downloadCount, timeSpent);
+    
+    if (!result.isValid) {
+      showValidationDialog(
+        "Validação da Seção Materiais",
+        "Você precisa baixar e revisar mais materiais antes de continuar.",
+        result,
+        () => handleSectionComplete("materials")
+      );
+    }
+    
+    return result;
+  };
+
+  const handleVideosValidation = (watchedCount: number, totalWatchTime: number) => {
+    const result = validateVideosSection(watchedCount, totalWatchTime);
+    
+    if (!result.isValid) {
+      showValidationDialog(
+        "Validação da Seção Vídeos",
+        "Você precisa assistir mais vídeos antes de continuar.",
+        result,
+        () => handleSectionComplete("videos")
+      );
+    }
+    
+    return result;
+  };
+
+  const handleChecklistValidation = (checkedItems: number, totalItems: number) => {
+    const result = validateChecklistSection(checkedItems, totalItems);
+    
+    if (!result.isValid) {
+      showValidationDialog(
+        "Validação da Lista de Verificação",
+        "Você precisa completar mais itens da lista antes de continuar.",
+        result,
+        () => handleSectionComplete("checklist")
+      );
+    }
+    
+    return result;
+  };
+
+  const getTabIcon = (tabId: string) => {
+    const isCompleted = completedSections.has(tabId);
+    const iconClass = `w-4 h-4 mr-2 ${isCompleted ? 'text-green-500' : ''}`;
+    
+    switch (tabId) {
+      case "tools": return isCompleted ? <CheckCircle className={iconClass} /> : <Wrench className={iconClass} />;
+      case "materials": return isCompleted ? <CheckCircle className={iconClass} /> : <FileText className={iconClass} />;
+      case "videos": return isCompleted ? <CheckCircle className={iconClass} /> : <PlayCircle className={iconClass} />;
+      case "checklist": return isCompleted ? <CheckCircle className={iconClass} /> : <ListChecks className={iconClass} />;
+      case "comments": return <MessageSquare className={iconClass} />;
+      default: return null;
+    }
+  };
 
   return (
-    <div className="space-y-6">
-      <EnhancedProgressBar
-        completedSections={completedCount}
-        totalSections={totalSections}
-        currentSection={currentTabName}
-      />
-
-      <Card className="border-white/10 bg-backgroundLight">
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <AnimatedTabsList
-            tabs={TABS}
-            completedSections={completedSections}
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
+    <>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-5 bg-backgroundLight border border-white/10">
+          <TabsTrigger 
+            value="tools" 
+            className="data-[state=active]:bg-viverblue data-[state=active]:text-white flex items-center"
+          >
+            {getTabIcon("tools")}
+            Ferramentas
+          </TabsTrigger>
+          <TabsTrigger 
+            value="materials" 
+            className="data-[state=active]:bg-viverblue data-[state=active]:text-white flex items-center"
+          >
+            {getTabIcon("materials")}
+            Materiais
+          </TabsTrigger>
+          <TabsTrigger 
+            value="videos" 
+            className="data-[state=active]:bg-viverblue data-[state=active]:text-white flex items-center"
+          >
+            {getTabIcon("videos")}
+            Vídeos
+          </TabsTrigger>
+          <TabsTrigger 
+            value="checklist" 
+            className="data-[state=active]:bg-viverblue data-[state=active]:text-white flex items-center"
+          >
+            {getTabIcon("checklist")}
+            Checklist
+          </TabsTrigger>
+          <TabsTrigger 
+            value="comments" 
+            className="data-[state=active]:bg-viverblue data-[state=active]:text-white flex items-center"
+          >
+            {getTabIcon("comments")}
+            Discussão
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="tools" className="mt-6">
+          <TabBasedToolsSection
+            onSectionComplete={() => handleSectionComplete("tools")}
+            onValidation={handleToolsValidation}
+            isCompleted={completedSections.has("tools")}
           />
-
-          <div className="p-6">
-            <TabTransition activeTab={activeTab} direction={direction}>
-              {renderActiveTabContent()}
-            </TabTransition>
-          </div>
-        </Tabs>
-      </Card>
-
-      <CompletionFeedback
-        isVisible={showCompletionFeedback}
-        sectionName={completedSectionName}
-        onContinue={handleCompletionContinue}
-      />
+        </TabsContent>
+        
+        <TabsContent value="materials" className="mt-6">
+          <TabBasedMaterialsSection
+            onSectionComplete={() => handleSectionComplete("materials")}
+            onValidation={handleMaterialsValidation}
+            isCompleted={completedSections.has("materials")}
+          />
+        </TabsContent>
+        
+        <TabsContent value="videos" className="mt-6">
+          <TabBasedVideosSection
+            onSectionComplete={() => handleSectionComplete("videos")}
+            onValidation={handleVideosValidation}
+            isCompleted={completedSections.has("videos")}
+          />
+        </TabsContent>
+        
+        <TabsContent value="checklist" className="mt-6">
+          <TabBasedChecklistSection
+            onSectionComplete={() => handleSectionComplete("checklist")}
+            onValidation={handleChecklistValidation}
+            isCompleted={completedSections.has("checklist")}
+          />
+        </TabsContent>
+        
+        <TabsContent value="comments" className="mt-6">
+          <TabBasedCommentsSection solutionId={solutionId} />
+        </TabsContent>
+      </Tabs>
 
       <ValidationDialog
-        isOpen={showValidationDialog}
-        onOpenChange={setShowValidationDialog}
-        onConfirm={handleValidationConfirm}
-        title="Completar Seção"
-        description="Você tem certeza que deseja marcar esta seção como concluída?"
-        validationMessage={validation?.message}
-        isValid={validation?.isValid || false}
-        confirmText={validation?.isValid ? "Continuar" : "Completar Mesmo Assim"}
+        isOpen={validationDialog.isOpen}
+        onOpenChange={(open) => setValidationDialog(prev => ({ ...prev, isOpen: open }))}
+        onConfirm={validationDialog.onConfirm}
+        title={validationDialog.title}
+        description={validationDialog.description}
+        validationMessage={validationDialog.validationResult?.message}
+        isValid={validationDialog.validationResult?.isValid || false}
       />
-    </div>
+    </>
   );
 };
-
-export default TabBasedImplementationWizard;
