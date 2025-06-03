@@ -29,7 +29,7 @@ export const DashboardHeader = ({
   
   return (
     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-      <div className="text-left">
+      <div>
         <h1 className="text-3xl font-bold">Bem-vindo, {profile?.name?.split(" ")[0] || "Membro"}!</h1>
         <p className="text-muted-foreground mt-1">
           Você tem {activeSolutionsCount} {activeSolutionsCount === 1 ? 'solução' : 'soluções'} em andamento 

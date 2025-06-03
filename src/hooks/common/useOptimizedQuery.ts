@@ -1,32 +1,41 @@
 
-import { useQuery } from '@tanstack/react-query';
-
-interface OptimizedQueryOptions {
-  queryKey: (string | number | boolean | null | undefined)[];
-  queryFn: () => Promise<any>;
-  enabled?: boolean;
-  staleTime?: number;
-  refetchOnWindowFocus?: boolean;
-  retry?: number;
-}
+import { useQuery, UseQueryOptions } from '@tanstack/react-query';
+import { useMemo } from 'react';
 
 /**
- * Hook otimizado para queries que evita problemas de dependência
+ * Hook otimizado para React Query com configurações padrão
  */
-export const useOptimizedQuery = ({
-  queryKey,
-  queryFn,
-  enabled = true,
-  staleTime = 5 * 60 * 1000, // 5 minutos
-  refetchOnWindowFocus = false,
-  retry = 2
-}: OptimizedQueryOptions) => {
-  return useQuery({
-    queryKey,
-    queryFn,
-    enabled,
-    staleTime,
-    refetchOnWindowFocus,
-    retry
-  });
+export const useOptimizedQuery = <TData, TError = Error>(
+  options: UseQueryOptions<TData, TError>
+) => {
+  // Configurações otimizadas padrão
+  const optimizedOptions = useMemo(() => ({
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    cacheTime: 10 * 60 * 1000, // 10 minutos
+    retry: 2,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+    ...options
+  }), [options]);
+
+  return useQuery(optimizedOptions);
+};
+
+/**
+ * Hook para queries que devem ser executadas apenas uma vez
+ */
+export const useStaticQuery = <TData, TError = Error>(
+  options: UseQueryOptions<TData, TError>
+) => {
+  const staticOptions = useMemo(() => ({
+    staleTime: Infinity,
+    cacheTime: Infinity,
+    retry: 1,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
+    ...options
+  }), [options]);
+
+  return useQuery(staticOptions);
 };

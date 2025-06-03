@@ -1,107 +1,120 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { supabase, Solution } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth";
-import { supabase, Solution, Progress } from "@/lib/supabase";
+import { useNavigate } from "react-router-dom";
+import { useLogging } from "@/hooks/useLogging";
 
 export const useSolutionData = (id: string | undefined) => {
+  const { user, profile } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { log, logError } = useLogging();
   const [solution, setSolution] = useState<Solution | null>(null);
-  const [progress, setProgress] = useState<Progress | null>(null);
+  const [progress, setProgress] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const { user } = useAuth();
+  const isAdmin = profile?.role === 'admin';
 
   useEffect(() => {
-    const fetchSolutionData = async () => {
+    const fetchSolution = async () => {
       if (!id) {
         setLoading(false);
         return;
       }
-
+      
       try {
         setLoading(true);
-        setError(null);
+        log(`Buscando solução com ID`, { id });
         
-        // Fetch solution data
-        const { data: solutionData, error: solutionError } = await supabase
+        let query = supabase
           .from("solutions")
           .select("*")
-          .eq("id", id)
-          .maybeSingle();
-
-        if (solutionError) {
-          console.error("Erro ao carregar solução:", solutionError);
-          setError("Não foi possível carregar a solução.");
-          toast({
-            title: "Erro ao carregar",
-            description: "Não foi possível carregar a solução.",
-            variant: "destructive"
-          });
-          navigate("/solutions");
-          return;
+          .eq("id", id);
+          
+        // Se não for um admin, só mostra soluções publicadas
+        if (!isAdmin) {
+          query = query.eq("published", true);
         }
-
-        if (solutionData) {
-          setSolution(solutionData as Solution);
-          console.log("Solução carregada:", solutionData);
+        
+        const { data, error: fetchError } = await query.maybeSingle();
+        
+        if (fetchError) {
+          logError("Erro ao buscar solução:", fetchError);
+          
+          // Se o erro for de registro não encontrado e o usuário não é admin,
+          // provavelmente está tentando acessar uma solução não publicada
+          if (fetchError.code === "PGRST116" && !isAdmin) {
+            toast({
+              title: "Solução não disponível",
+              description: "Esta solução não está disponível no momento.",
+              variant: "destructive"
+            });
+            navigate("/solutions");
+            return;
+          }
+          
+          throw fetchError;
+        }
+        
+        if (data) {
+          log("Dados da solução encontrados:", { solution: data });
+          setSolution(data as Solution);
+          
+          // Fetch progress for this solution and user if user is authenticated
+          if (user) {
+            try {
+              const { data: progressData, error: progressError } = await supabase
+                .from("progress")
+                .select("*")
+                .eq("solution_id", id)
+                .eq("user_id", user.id)
+                .maybeSingle(); // Usando maybeSingle em vez de single para evitar erros
+                
+              if (progressError) {
+                logError("Erro ao buscar progresso:", progressError);
+              } else if (progressData) {
+                setProgress(progressData);
+                log("Dados de progresso encontrados:", { progress: progressData });
+              } else {
+                log("Nenhum progresso encontrado para esta solução", { solutionId: id, userId: user.id });
+              }
+            } catch (progressFetchError) {
+              logError("Erro ao buscar progresso:", progressFetchError);
+            }
+          }
         } else {
-          console.log("Solução não encontrada");
-          setError("Solução não encontrada.");
+          log("Nenhuma solução encontrada com ID", { id });
+          setError("Solução não encontrada");
+          // Não redirecionamos automaticamente para dar chance ao usuário de ver a mensagem
           toast({
             title: "Solução não encontrada",
-            description: "A solução solicitada não existe.",
+            description: "Não foi possível encontrar a solução solicitada.",
             variant: "destructive"
           });
-          navigate("/solutions");
-          return;
-        }
-
-        // Fetch progress data if user is authenticated
-        if (user && solutionData) {
-          try {
-            const { data: progressData, error: progressError } = await supabase
-              .from("progress")
-              .select("*")
-              .eq("user_id", user.id)
-              .eq("solution_id", id)
-              .maybeSingle();
-
-            if (progressError) {
-              console.error("Erro ao carregar progresso:", progressError);
-              // Don't show error for progress, just continue without it
-            } else if (progressData) {
-              setProgress(progressData as Progress);
-              console.log("Progresso carregado:", progressData);
-            }
-          } catch (progressError) {
-            console.error("Erro ao buscar progresso:", progressError);
-            // Continue without progress data
-          }
         }
       } catch (error: any) {
-        console.error("Erro ao buscar dados da solução:", error);
-        setError("Ocorreu um erro inesperado ao carregar a solução.");
+        logError("Erro em useSolutionData:", error);
+        setError(error.message || "Erro ao buscar a solução");
         toast({
-          title: "Erro inesperado",
-          description: "Ocorreu um erro ao carregar a solução.",
+          title: "Erro ao carregar solução",
+          description: error.message || "Não foi possível carregar os dados da solução.",
           variant: "destructive"
         });
       } finally {
         setLoading(false);
       }
     };
-
-    fetchSolutionData();
-  }, [id, user, navigate, toast]);
+    
+    fetchSolution();
+  }, [id, toast, user, navigate, isAdmin, profile?.role, log, logError]);
 
   return {
     solution,
     setSolution,
-    progress,
     loading,
-    error
+    error,
+    progress
   };
 };

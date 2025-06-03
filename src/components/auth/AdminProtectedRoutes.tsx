@@ -15,6 +15,9 @@ const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) => {
   const { user, isAdmin, isLoading } = useAuth();
   const location = useLocation();
 
+  // Timeout reduzido para ambiente de teste
+  const loadingTimeout = process.env.NODE_ENV === 'test' ? 1000 : 5000;
+
   if (isLoading) {
     return <LoadingScreen message="Verificando permissões de administrador..." />;
   }

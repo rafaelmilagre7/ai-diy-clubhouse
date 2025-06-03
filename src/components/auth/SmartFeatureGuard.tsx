@@ -41,6 +41,9 @@ export const SmartFeatureGuard: React.FC<SmartFeatureGuardProps> = ({
 
   const config = FEATURE_CONFIG[feature as keyof typeof FEATURE_CONFIG];
   
+  // Timeout reduzido para ambiente de teste
+  const loadingTimeout = process.env.NODE_ENV === 'test' ? 1000 : 5000;
+  
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">

@@ -11,7 +11,7 @@ interface AdminToolsHeaderProps {
 export const AdminToolsHeader = ({ onRefreshRequest }: AdminToolsHeaderProps) => {
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-      <div className="text-left">
+      <div>
         <h1 className="text-2xl font-bold">Ferramentas</h1>
         <p className="text-muted-foreground mt-1">
           Gerencie ferramentas e benefícios para membros

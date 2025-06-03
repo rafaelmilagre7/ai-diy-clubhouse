@@ -1,16 +1,9 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { LearningCourse, LearningLesson, LearningModule } from "@/lib/supabase/types";
+import { LearningLesson, LearningModule } from "@/lib/supabase/types";
+import { LearningCourseWithLessons } from "@/lib/supabase/types/learning";
 import { useAuth } from "@/contexts/auth";
-import { ensureArray, ensureNumber, validateCourseData, validateLessonData, ensureObject } from "@/lib/supabase/types/utils";
-
-// Tipagem específica para a query com módulos e aulas
-interface CourseWithModulesQuery extends LearningCourse {
-  modules: Array<LearningModule & {
-    lessons: LearningLesson[];
-  }>;
-}
 
 export const useLearningCourses = () => {
   const { user } = useAuth();
@@ -21,7 +14,7 @@ export const useLearningCourses = () => {
     error
   } = useQuery({
     queryKey: ["learning-courses", user?.id],
-    queryFn: async () => {
+    queryFn: async (): Promise<LearningCourseWithLessons[]> => {
       // Buscar todos os cursos publicados com módulos e aulas
       const { data, error } = await supabase
         .from("learning_courses")
@@ -62,48 +55,42 @@ export const useLearningCourses = () => {
       }
 
       // Criar um conjunto com IDs dos cursos restritos para acesso mais rápido
-      const restrictedIds = new Set(ensureArray(restrictedCourses).map(rc => rc.course_id));
+      const restrictedIds = new Set(restrictedCourses?.map(rc => rc.course_id) || []);
       
-      // Processar cursos com dados de módulos e aulas - COM VALIDAÇÃO DEFENSIVA
-      const processedCourses = ensureArray(data as CourseWithModulesQuery[]).map(course => {
-        // Validar dados básicos do curso
-        const validatedCourse = validateCourseData(course);
-        
-        // Calcular contagem de módulos com validação
-        const modules = ensureArray(course.modules);
-        const moduleCount = modules.length;
+      // Processar cursos com dados de módulos e aulas
+      const processedCourses: LearningCourseWithLessons[] = data.map(course => {
+        // Calcular contagem de módulos
+        const moduleCount = course.modules?.length || 0;
         
         // Calcular contagem total de aulas em todos os módulos
         let lessonCount = 0;
-        let lessons: any[] = [];
+        let lessons: LearningLesson[] = [];
         
-        modules.forEach((module: any) => {
-          const moduleLessons = ensureArray(module?.lessons || []);
-          lessonCount += moduleLessons.length;
-          
-          // Adicionar informações do curso e módulo a cada aula COM VALIDAÇÃO
-          const enrichedLessons = moduleLessons.map(lesson => {
-            // Garantir que lesson é um objeto válido antes do spread
-            const validatedLesson = validateLessonData(lesson);
-            
-            return {
-              ...validatedLesson,
-              module: {
-                id: module?.id || '',
-                title: module?.title || "Módulo sem título",
-                course: {
-                  id: course.id,
-                  title: course.title || "Curso sem título"
+        if (course.modules) {
+          course.modules.forEach(module => {
+            if (module.lessons) {
+              lessonCount += module.lessons.length;
+              
+              // Adicionar informações do curso e módulo a cada aula
+              const moduleLessons = module.lessons.map(lesson => ({
+                ...lesson,
+                module: {
+                  id: module.id,
+                  title: module.title,
+                  course: {
+                    id: course.id,
+                    title: course.title
+                  }
                 }
-              }
-            };
+              }));
+              
+              lessons = [...lessons, ...moduleLessons];
+            }
           });
-          
-          lessons = [...lessons, ...enrichedLessons];
-        });
+        }
         
         return {
-          ...validatedCourse,
+          ...course,
           is_restricted: restrictedIds.has(course.id),
           module_count: moduleCount,
           lesson_count: lessonCount,
@@ -129,7 +116,7 @@ export const useLearningCourses = () => {
     getAllLessons: () => {
       if (!courses || courses.length === 0) return [];
       
-      return courses.flatMap(course => ensureArray(course.all_lessons));
+      return courses.flatMap(course => course.all_lessons || []);
     }
   };
 };

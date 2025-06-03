@@ -1,38 +1,34 @@
 
-import { useAuth } from "@/contexts/auth";
-import { useMemo } from "react";
+import { useMemo } from 'react';
+import { useAuth } from '@/contexts/auth';
 
+/**
+ * Hook otimizado para contexto de autenticação
+ * Memoiza valores computados para evitar re-renders desnecessários
+ */
 export const useOptimizedAuth = () => {
-  const authContext = useAuth();
+  const auth = useAuth();
   
-  console.log("🔐 useOptimizedAuth: Estado do contexto", {
-    hasUser: !!authContext.user,
-    hasProfile: !!authContext.profile,
-    isLoading: authContext.isLoading,
-    profileRole: authContext.profile?.role
-  });
+  // Memoizar valores computados para evitar recálculos
+  const authState = useMemo(() => ({
+    user: auth.user,
+    profile: auth.profile,
+    isAuthenticated: !!auth.user,
+    isAdmin: auth.profile?.role === 'admin',
+    isFormacao: auth.profile?.role === 'formacao',
+    isMember: auth.profile?.role === 'member',
+    isLoading: auth.isLoading,
+    hasProfile: !!auth.profile
+  }), [auth.user, auth.profile, auth.isLoading]);
 
-  // Memoizar computações caras
-  const computed = useMemo(() => {
-    const isAuthenticated = !!authContext.user;
-    const isAdmin = authContext.profile?.role === 'admin' || authContext.isAdmin;
-    const isFormacao = authContext.profile?.role === 'formacao' || authContext.isFormacao;
-    
-    console.log("🧮 useOptimizedAuth: Valores computados", {
-      isAuthenticated,
-      isAdmin,
-      isFormacao
-    });
-    
-    return {
-      isAuthenticated,
-      isAdmin,
-      isFormacao
-    };
-  }, [authContext.user, authContext.profile?.role, authContext.isAdmin, authContext.isFormacao]);
+  // Memoizar métodos para evitar re-criação
+  const authMethods = useMemo(() => ({
+    signOut: auth.signOut,
+    setProfile: auth.setProfile
+  }), [auth.signOut, auth.setProfile]);
 
   return {
-    ...authContext,
-    ...computed
+    ...authState,
+    ...authMethods
   };
 };

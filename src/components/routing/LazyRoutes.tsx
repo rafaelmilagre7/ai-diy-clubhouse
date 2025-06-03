@@ -23,6 +23,15 @@ const LazyNewTopic = React.lazy(() => import('@/pages/member/community/NewTopic'
 // Lazy loading para networking
 const LazyNetworkingPage = React.lazy(() => import('@/pages/member/networking/NetworkingPage'));
 
+// NOVO: Lazy loading para área de formação
+const LazyFormacaoDashboard = React.lazy(() => import('@/pages/formacao/FormacaoDashboard'));
+const LazyFormacaoCursos = React.lazy(() => import('@/pages/formacao/FormacaoCursos'));
+const LazyFormacaoCursoDetalhes = React.lazy(() => import('@/pages/formacao/FormacaoCursoDetalhes'));
+const LazyFormacaoModuloDetalhes = React.lazy(() => import('@/pages/formacao/FormacaoModuloDetalhes'));
+const LazyFormacaoAulas = React.lazy(() => import('@/pages/formacao/FormacaoAulas'));
+const LazyFormacaoAulaDetalhes = React.lazy(() => import('@/pages/formacao/FormacaoAulaDetalhes'));
+const LazyFormacaoAulaEditar = React.lazy(() => import('@/pages/formacao/FormacaoAulaEditar'));
+
 // HOC para adicionar Suspense automaticamente
 const withSuspense = (Component: React.ComponentType) => {
   return (props: any) => (
@@ -49,3 +58,12 @@ export const LazyCategoryViewWithSuspense = withSuspense(LazyCategoryView);
 export const LazyNewTopicWithSuspense = withSuspense(LazyNewTopic);
 
 export const LazyNetworkingPageWithSuspense = withSuspense(LazyNetworkingPage);
+
+// NOVO: Componentes de formação com lazy loading
+export const LazyFormacaoDashboardWithSuspense = withSuspense(LazyFormacaoDashboard);
+export const LazyFormacaoCursosWithSuspense = withSuspense(LazyFormacaoCursos);
+export const LazyFormacaoCursoDetalhesWithSuspense = withSuspense(LazyFormacaoCursoDetalhes);
+export const LazyFormacaoModuloDetalhesWithSuspense = withSuspense(LazyFormacaoModuloDetalhes);
+export const LazyFormacaoAulasWithSuspense = withSuspense(LazyFormacaoAulas);
+export const LazyFormacaoAulaDetalhesWithSuspense = withSuspense(LazyFormacaoAulaDetalhes);
+export const LazyFormacaoAulaEditarWithSuspense = withSuspense(LazyFormacaoAulaEditar);

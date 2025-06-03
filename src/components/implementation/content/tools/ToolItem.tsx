@@ -1,14 +1,13 @@
 
 import React from "react";
-import { ExternalLink, ArrowRight } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToolImage } from "@/hooks/useToolImage";
-import { useNavigate } from "react-router-dom";
+import { Avatar } from "@/components/ui/avatar";
 
 interface ToolItemProps {
   toolName: string;
-  toolId?: string;
   toolUrl?: string;
   isRequired?: boolean;
   hasBenefit?: boolean;
@@ -17,29 +16,15 @@ interface ToolItemProps {
 
 export const ToolItem = ({
   toolName,
-  toolId,
   toolUrl,
   isRequired = false,
   hasBenefit = false,
   benefitType,
 }: ToolItemProps) => {
   const { logoUrl, loading, error } = useToolImage({ toolName });
-  const navigate = useNavigate();
   
   const formatName = (name: string) => {
     return name.charAt(0).toUpperCase() + name.slice(1);
-  };
-
-  // Navegar para a página específica da ferramenta na plataforma
-  const handleViewTool = () => {
-    if (toolId) {
-      // Se temos o ID da ferramenta, usar navegação direta
-      navigate(`/tools/${toolId}`);
-    } else {
-      // Fallback para busca por nome (slug)
-      const toolSlug = toolName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-      navigate(`/tools/${toolSlug}`);
-    }
   };
 
   // Determina se o ícone deve ser a primeira letra ou um logo
@@ -49,12 +34,11 @@ export const ToolItem = ({
     // Se temos uma URL de logo e não estamos carregando nem temos erros
     if (logoUrl && !loading && !error) {
       return (
-        <div className="bg-white h-10 w-10 rounded-md flex items-center justify-center overflow-hidden p-1">
+        <div className="bg-white h-10 w-10 rounded-md flex items-center justify-center overflow-hidden">
           <img 
             src={logoUrl} 
             alt={`Logo ${name}`} 
-            className="max-h-8 max-w-8 object-contain"
-            style={{ aspectRatio: '1/1' }}
+            className="h-full w-full object-contain"
             onError={(e) => {
               // Em caso de erro ao carregar a imagem, mostrar a letra inicial
               e.currentTarget.style.display = 'none';
@@ -112,28 +96,18 @@ export const ToolItem = ({
         </div>
       </div>
       
-      <div className="mt-auto pt-3 space-y-2">
-        <Button 
-          variant="default"
-          className="w-full bg-viverblue hover:bg-viverblue/90"
-          onClick={handleViewTool}
-        >
-          <ArrowRight className="mr-2 h-4 w-4" />
-          Ver na plataforma
-        </Button>
-        
-        {toolUrl && (
+      {toolUrl && (
+        <div className="mt-auto pt-3">
           <Button 
             variant="outline"
-            size="sm"
-            className="w-full bg-transparent border-white/20 text-white/70 hover:bg-white/5 hover:text-white text-xs"
+            className="w-full bg-transparent border-viverblue/20 text-viverblue hover:bg-viverblue/10 hover:text-viverblue"
             onClick={() => window.open(toolUrl, '_blank')}
           >
-            <ExternalLink className="mr-1 h-3 w-3" />
-            Site oficial
+            <ExternalLink className="mr-2 h-4 w-4" />
+            Acessar ferramenta
           </Button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -28,16 +28,16 @@ export const useAuthDataIntegrity = () => {
 
   const checkAndFixData = useCallback(async () => {
     if (!user?.id) {
-      logger.warn('Tentativa de verificação sem usuário autenticado', undefined, 'useAuthDataIntegrity');
+      logger.warn('useAuthDataIntegrity', 'Tentativa de verificação sem usuário autenticado');
       return null;
     }
 
     try {
       setIsChecking(true);
       
-      logger.info('Iniciando verificação de integridade', {
+      logger.info('useAuthDataIntegrity', 'Iniciando verificação de integridade', {
         userId: user.id
-      }, 'useAuthDataIntegrity');
+      });
 
       const result = await executeWithRetry(async () => {
         const { data, error } = await supabase.rpc('check_and_fix_onboarding_data', {
@@ -45,26 +45,26 @@ export const useAuthDataIntegrity = () => {
         });
 
         if (error) {
-          logger.error('Erro ao verificar integridade', {
+          logger.error('useAuthDataIntegrity', 'Erro ao verificar integridade', {
             error: error.message,
             userId: user.id
-          }, 'useAuthDataIntegrity');
+          });
           throw error;
         }
 
         return data;
       }, 'verificação de integridade dos dados');
 
-      logger.info('Verificação concluída com sucesso', {
+      logger.info('useAuthDataIntegrity', 'Verificação concluída com sucesso', {
         result,
         userId: user.id
-      }, 'useAuthDataIntegrity');
+      });
 
       setLastCheck(result);
 
       // Se o perfil foi criado, atualizar o contexto de auth
       if (result.profile_created && !profile) {
-        logger.info('Perfil criado automaticamente, atualizando contexto', undefined, 'useAuthDataIntegrity');
+        logger.info('useAuthDataIntegrity', 'Perfil criado automaticamente, atualizando contexto');
         
         try {
           const { data: newProfile, error: profileError } = await supabase
@@ -77,15 +77,15 @@ export const useAuthDataIntegrity = () => {
             setProfile(newProfile);
             toast.success('Perfil configurado automaticamente');
             
-            logger.info('Contexto de perfil atualizado', {
+            logger.info('useAuthDataIntegrity', 'Contexto de perfil atualizado', {
               profileId: newProfile.id
-            }, 'useAuthDataIntegrity');
+            });
           }
         } catch (profileErr: any) {
-          logger.error('Erro ao buscar perfil recém-criado', {
+          logger.error('useAuthDataIntegrity', 'Erro ao buscar perfil recém-criado', {
             error: profileErr.message,
             userId: user.id
-          }, 'useAuthDataIntegrity');
+          });
         }
       }
 
@@ -93,10 +93,10 @@ export const useAuthDataIntegrity = () => {
     } catch (error: any) {
       const errorMessage = error.message || 'Erro ao verificar dados do usuário';
       
-      logger.error('Falha na verificação de integridade', {
+      logger.error('useAuthDataIntegrity', 'Falha na verificação de integridade', {
         error: errorMessage,
         userId: user.id
-      }, 'useAuthDataIntegrity');
+      });
       
       toast.error('Erro ao verificar dados do usuário');
       return null;

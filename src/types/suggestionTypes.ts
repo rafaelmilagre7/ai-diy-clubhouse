@@ -73,8 +73,10 @@ export interface NotificationType {
 export type SuggestionStatus = 'new' | 'under_review' | 'in_development' | 'completed' | 'declined';
 export type VoteType = 'upvote' | 'downvote';
 
+// Atualizado para incluir os novos filtros
+export type SuggestionFilter = 'all' | 'popular' | 'recent' | 'in_development' | 'completed';
+
 export interface UserVote {
   id: string;
   vote_type: VoteType;
 }
-

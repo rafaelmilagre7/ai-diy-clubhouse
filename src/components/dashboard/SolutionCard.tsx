@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Solution } from '@/lib/supabase';
-import { Clock, Layers } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CardContentSection } from './CardContent';
 
@@ -39,27 +39,6 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution, onClick })
     }
   };
 
-  // Função para renderizar informações de tempo/módulos
-  const renderTimeOrModuleInfo = () => {
-    // Se há tempo estimado válido, mostra o tempo
-    if (solution.estimated_time && solution.estimated_time > 0) {
-      return (
-        <div className="flex items-center space-x-1 text-xs text-neutral-300">
-          <Clock className="h-3.5 w-3.5 mr-1" />
-          <span>{solution.estimated_time} min</span>
-        </div>
-      );
-    }
-
-    // Se não há tempo, mas há módulos relacionados, mostra a categoria como info principal
-    return (
-      <div className="flex items-center space-x-1 text-xs text-neutral-300">
-        <Layers className="h-3.5 w-3.5 mr-1" />
-        <span>{solution.category}</span>
-      </div>
-    );
-  };
-
   return (
     <Card 
       className={cn(
@@ -90,7 +69,10 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution, onClick })
       </CardContent>
       
       <CardFooter className="px-4 py-3 flex items-center justify-between border-t border-neutral-800">
-        {renderTimeOrModuleInfo()}
+        <div className="flex items-center space-x-1 text-xs text-neutral-300">
+          <Clock className="h-3.5 w-3.5 mr-1" />
+          <span>{solution.estimated_time || 30} min</span>
+        </div>
         {getDifficultyBadge(solution.difficulty)}
       </CardFooter>
     </Card>

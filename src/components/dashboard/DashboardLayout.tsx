@@ -8,7 +8,7 @@ import { ImplementationTrail } from "./ImplementationTrail";
 import { Solution } from "@/lib/supabase";
 import { ModernDashboardHeader } from "./ModernDashboardHeader";
 import { KpiGrid } from "./KpiGrid";
-import { useOptimizedAuth } from "@/hooks/auth/useOptimizedAuth";
+import { useAuth } from "@/contexts/auth";
 import { SolutionsGridLoader } from "./SolutionsGridLoader";
 import { DashboardConnectionErrorState } from "./states/DashboardConnectionErrorState";
 
@@ -32,15 +32,7 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
   onSolutionClick,
   isLoading = false
 }) => {
-  const { profile } = useOptimizedAuth();
-
-  console.log("DashboardLayout: Renderizando com dados:", {
-    profile: !!profile,
-    active: active?.length || 0,
-    completed: completed?.length || 0,
-    recommended: recommended?.length || 0,
-    isLoading
-  });
+  const { profile } = useAuth();
 
   // Memoizar o cálculo do nome do usuário
   const userName = useMemo(() => 
@@ -69,12 +61,11 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
 
   // Early return para dados inválidos
   if (!hasValidData && !isLoading) {
-    console.log("DashboardLayout: Dados inválidos, mostrando erro");
     return <DashboardConnectionErrorState />;
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-8 md:pt-2 animate-fade-in">
       {/* HEADER IMERSIVO */}
       <ModernDashboardHeader userName={userName} />
 
@@ -91,7 +82,7 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
 
       {/* Mostrar loaders enquanto carrega, ou conteúdo quando pronto */}
       {isLoading ? (
-        <div className="space-y-8">
+        <div className="space-y-10">
           <SolutionsGridLoader title="Em andamento" count={2} />
           <SolutionsGridLoader title="Concluídas" count={2} />
           <SolutionsGridLoader title="Recomendadas" count={3} />
@@ -99,7 +90,7 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
       ) : hasNoSolutions ? (
         <NoSolutionsPlaceholder />
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-10">
           {/* Soluções Ativas */}
           {active && active.length > 0 && (
             <ActiveSolutions

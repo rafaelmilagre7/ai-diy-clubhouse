@@ -1,19 +1,68 @@
 
-import React from 'react';
+import React, { Suspense, memo } from "react";
+import { LoadingState } from "./LoadingState";
+import { SmartSkeletonLoader } from "./SmartSkeletonLoader";
+
+// Import dinâmico da versão otimizada
+const OptimizedLoadingScreen = React.lazy(() => import("./OptimizedLoadingScreen"));
 
 interface LoadingScreenProps {
   message?: string;
+  useOptimized?: boolean;
+  variant?: "spinner" | "skeleton" | "dots";
+  size?: "sm" | "md" | "lg";
+  showProgress?: boolean;
+  progressValue?: number;
+  skeletonVariant?: "page" | "card" | "list" | "dashboard" | "table";
 }
 
-const LoadingScreen: React.FC<LoadingScreenProps> = ({ message = "Carregando..." }) => {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-        <p className="text-white text-lg">{message}</p>
-      </div>
+const LoadingScreen = memo<LoadingScreenProps>(({ 
+  message = "Carregando",
+  useOptimized = true,
+  variant = "skeleton",
+  size = "lg",
+  showProgress = false,
+  progressValue = 0,
+  skeletonVariant = "page"
+}) => {
+  // Fallback inteligente com skeleton loader
+  const SmartFallback = memo(() => (
+    <div className="min-h-screen bg-background p-6">
+      {variant === "skeleton" ? (
+        <SmartSkeletonLoader variant={skeletonVariant} />
+      ) : (
+        <LoadingState
+          variant={variant}
+          size={size}
+          message={`${message} - Estamos preparando sua experiência personalizada do VIVER DE IA Club...`}
+          fullScreen
+        />
+      )}
     </div>
+  ));
+
+  SmartFallback.displayName = 'SmartFallback';
+
+  // Se não quiser usar a versão otimizada, usar a simples
+  if (!useOptimized) {
+    return <SmartFallback />;
+  }
+
+  // Usar versão otimizada com fallback
+  return (
+    <Suspense fallback={<SmartFallback />}>
+      <OptimizedLoadingScreen
+        message={message}
+        variant={variant}
+        size={size}
+        showProgress={showProgress}
+        progressValue={progressValue}
+        fullScreen={true}
+      />
+    </Suspense>
   );
-};
+});
+
+LoadingScreen.displayName = 'LoadingScreen';
 
 export default LoadingScreen;

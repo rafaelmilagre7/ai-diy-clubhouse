@@ -1,95 +1,79 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Module, supabase } from "@/lib/supabase";
 import { ToolsLoading } from "./tools/ToolsLoading";
+import { ToolsEmptyState } from "./tools/ToolsEmptyState";
 import { ToolItem } from "./tools/ToolItem";
 import { useQuery } from "@tanstack/react-query";
-import { Tool } from "@/types/toolTypes";
+import { SolutionTool } from "@/types/toolTypes";
+import { useToolsData } from "@/hooks/useToolsData";
 import { useLogging } from "@/hooks/useLogging";
 
 interface ModuleContentToolsProps {
   module: Module;
 }
 
-interface SolutionToolReference {
-  id: string;
-  solution_id: string;
-  tool_id: string;
-  is_required: boolean;
-  order_index: number;
-  tools: Tool;
-}
-
 export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
   const { log, logError } = useLogging();
+  // Garantir que os dados das ferramentas estejam corretos
+  const { isLoading: toolsDataLoading } = useToolsData();
 
   const { data: tools, isLoading, error } = useQuery({
-    queryKey: ['solution-tools-reference', module.solution_id],
+    queryKey: ['solution-tools', module.solution_id],
     queryFn: async () => {
-      log("Buscando ferramentas da solução via tabela de referência", { solution_id: module.solution_id });
+      log("Buscando ferramentas da solução", { solution_id: module.solution_id });
       
-      try {
-        // Buscar ferramentas usando a nova tabela de referência
-        const { data: toolsData, error: toolsError } = await supabase
-          .from("solution_tools_reference")
-          .select(`
-            *,
-            tools (*)
-          `)
-          .eq("solution_id", module.solution_id)
-          .order('order_index');
-        
-        if (toolsError) {
-          logError("Erro ao buscar ferramentas via tabela de referência", toolsError);
-          
-          // Fallback para a tabela antiga se a nova não funcionar
-          log("Tentando fallback para solution_tools...");
-          const { data: fallbackData, error: fallbackError } = await supabase
-            .from("solution_tools")
-            .select("*")
-            .eq("solution_id", module.solution_id);
-          
-          if (fallbackError) {
-            logError("Erro no fallback para solution_tools", fallbackError);
-            throw fallbackError;
-          }
-          
-          // Buscar detalhes das ferramentas para o fallback
-          const toolsWithDetails = await Promise.all(
-            (fallbackData || []).map(async (solutionTool) => {
-              const { data: toolDetails } = await supabase
-                .from("tools")
-                .select("*")
-                .ilike("name", solutionTool.tool_name)
-                .maybeSingle();
-              
-              return {
-                ...solutionTool,
-                tools: toolDetails || {
-                  id: solutionTool.tool_name,
-                  name: solutionTool.tool_name,
-                  official_url: solutionTool.tool_url || "",
-                  has_member_benefit: false
-                }
-              };
-            })
-          );
-          
-          return toolsWithDetails;
-        }
-        
-        log("Ferramentas da solução recuperadas via tabela de referência", { 
-          count: toolsData?.length || 0
-        });
-        
-        return toolsData || [];
-      } catch (error) {
-        logError("Erro ao processar ferramentas da solução", error);
-        throw error;
+      // Buscar as ferramentas associadas à solução
+      const { data: solutionTools, error: toolsError } = await supabase
+        .from("solution_tools")
+        .select("*")
+        .eq("solution_id", module.solution_id);
+      
+      if (toolsError) {
+        logError("Erro ao buscar ferramentas da solução", toolsError);
+        throw toolsError;
       }
+      
+      // Para cada ferramenta da solução, buscar informações detalhadas
+      const toolsWithDetails = await Promise.all(
+        (solutionTools || []).map(async (solutionTool) => {
+          try {
+            // Buscar informações detalhadas da ferramenta pelo nome
+            const { data: toolDetails, error: detailsError } = await supabase
+              .from("tools")
+              .select("*")
+              .ilike("name", solutionTool.tool_name)
+              .maybeSingle();
+            
+            if (detailsError) {
+              logError("Erro ao buscar detalhes da ferramenta", {
+                error: detailsError,
+                tool_name: solutionTool.tool_name
+              });
+            }
+            
+            return {
+              ...solutionTool,
+              details: toolDetails || null
+            };
+          } catch (error) {
+            logError("Erro ao processar detalhes da ferramenta", {
+              error,
+              tool_name: solutionTool.tool_name
+            });
+            return solutionTool;
+          }
+        })
+      );
+      
+      log("Ferramentas da solução recuperadas", { 
+        count: toolsWithDetails?.length || 0, 
+        tools: toolsWithDetails?.map(t => t.tool_name) 
+      });
+      
+      return toolsWithDetails;
     },
-    enabled: !!module.solution_id,
-    staleTime: 5 * 60 * 1000
+    enabled: !toolsDataLoading // Só executa a query depois que os dados estiverem prontos
   });
 
   if (error) {
@@ -97,7 +81,7 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
     return null;
   }
 
-  if (isLoading) {
+  if (isLoading || toolsDataLoading) {
     return (
       <div className="space-y-4 mt-8">
         <h3 className="text-lg font-semibold">Ferramentas Necessárias</h3>
@@ -121,20 +105,16 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {tools.map((toolRef) => {
-          const tool = toolRef.tools;
-          return (
-            <ToolItem 
-              key={toolRef.id} 
-              toolName={tool.name}
-              toolId={tool.id}
-              toolUrl={tool.official_url || ""}
-              isRequired={toolRef.is_required} 
-              hasBenefit={tool.has_member_benefit}
-              benefitType={tool.benefit_type as any}
-            />
-          );
-        })}
+        {tools.map((tool) => (
+          <ToolItem 
+            key={tool.id} 
+            toolName={tool.tool_name}
+            toolUrl={tool.tool_url || ""}
+            isRequired={tool.is_required} 
+            hasBenefit={tool.details?.has_member_benefit}
+            benefitType={tool.details?.benefit_type as any}
+          />
+        ))}
       </div>
     </div>
   );

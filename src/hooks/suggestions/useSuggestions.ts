@@ -2,9 +2,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { Suggestion } from '@/types/suggestionTypes';
-
-export type SuggestionFilter = 'all' | 'popular' | 'recent';
+import { Suggestion, SuggestionFilter } from '@/types/suggestionTypes';
 
 export const useSuggestions = () => {
   const [filter, setFilter] = useState<SuggestionFilter>('popular');
@@ -27,6 +25,13 @@ export const useSuggestions = () => {
           .select('*')
           .eq('is_hidden', false); // Apenas sugestões não ocultas
 
+        // Filtragem por status específico
+        if (filter === 'in_development') {
+          query = query.eq('status', 'in_development');
+        } else if (filter === 'completed') {
+          query = query.eq('status', 'completed');
+        }
+
         // Filtragem por termo de busca
         if (searchQuery) {
           query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
@@ -36,6 +41,12 @@ export const useSuggestions = () => {
         if (filter === 'popular') {
           query = query.order('upvotes', { ascending: false });
         } else if (filter === 'recent') {
+          query = query.order('created_at', { ascending: false });
+        } else if (filter === 'in_development' || filter === 'completed') {
+          // Para filtros de status, ordenar por data de atualização
+          query = query.order('updated_at', { ascending: false });
+        } else {
+          // Filtro 'all' - ordenar por data de criação
           query = query.order('created_at', { ascending: false });
         }
 

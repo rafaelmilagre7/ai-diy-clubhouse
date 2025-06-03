@@ -1,59 +1,27 @@
 
-// Exportações principais do cliente
-export { supabase } from './client';
+// Re-exportação centralizada para garantir compatibilidade com importações existentes
+export * from './client';
+export * from './types';
+export * from './config';
 
-// Exportar todos os tipos essenciais do sistema
-export type {
-  Database,
-  UserProfile,
-  Solution,
-  Progress,
-  Analytics,
-  ForumCategory,
-  ForumTopic,
-  ForumPost,
-  Tool,
-  Event,
-  Course,
-  Module,
-  Lesson,
-  Resource,
-  ImplementationTrail,
-  UserRole,
-  UserChecklist,
-  SolutionCategory
-} from './types/index';
+// Exportação explícita das funções de storage
+export { 
+  getYoutubeVideoId, 
+  getYoutubeThumbnailUrl, 
+  formatVideoDuration,
+  setupLearningStorageBuckets,
+  ensureBucketExists,
+  extractPandaVideoInfo,
+  uploadFileWithFallback
+  // Adicione outras funções que precisam ser exportadas
+} from './storage';
 
-// Exportar tipos específicos do Learning/LMS - TODOS OS TIPOS
-export type {
-  LearningCourse,
-  LearningModule,
-  LearningLesson,
-  LearningProgress,
-  LearningResource,
-  LearningLessonVideo,
-  LearningComment,
-  LearningCertificate,
-  LearningLessonNps,
-  LearningCourseWithStats,
-  LearningModuleWithStats
-} from './types/learning';
-
-// Exportar tipos de onboarding
-export type {
-  OnboardingFinal,
-  OnboardingPersonalInfo,
-  OnboardingBusinessInfo,
-  OnboardingStepComponentProps
-} from './types/onboarding';
-
-// Exportar utilitários
-export type {
-  OptionalProps,
-  RequiredProps,
-  WithFallbacks,
-  SafeComponentProps
-} from './types/utils';
-
-// Exportar configurações básicas
-export { ensureStorageBucketExists, createStoragePublicPolicy } from './client';
+// Exportação explícita das funções de RPC
+export {
+  createStoragePublicPolicy,
+  incrementTopicViews,
+  incrementTopicReplies,
+  deleteForumTopic,
+  deleteForumPost
+  // Adicionar outras funções de RPC conforme necessário
+} from './rpc';

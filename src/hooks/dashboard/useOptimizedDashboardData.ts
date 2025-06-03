@@ -1,6 +1,6 @@
 
 import { useMemo } from "react";
-import { useOptimizedAuth } from "@/hooks/auth/useOptimizedAuth";
+import { useAuth } from "@/contexts/auth";
 import { useOptimizedQuery } from "@/hooks/common/useOptimizedQuery";
 import { supabase } from "@/lib/supabase";
 import { Solution } from "@/lib/supabase";
@@ -10,9 +10,12 @@ import { Solution } from "@/lib/supabase";
  * Remove lógica desnecessária e melhora cache
  */
 export const useOptimizedDashboardData = () => {
-  const { profile, isAdmin } = useOptimizedAuth();
+  const { profile } = useAuth();
   
-  console.log("useOptimizedDashboardData: Iniciando com profile:", !!profile, "isAdmin:", isAdmin);
+  const isAdmin = useMemo(() => 
+    profile?.role === 'admin', 
+    [profile?.role]
+  );
 
   // Fetch solutions com cache otimizado
   const { 
@@ -22,21 +25,16 @@ export const useOptimizedDashboardData = () => {
   } = useOptimizedQuery({
     queryKey: ['solutions', isAdmin],
     queryFn: async () => {
-      console.log("useOptimizedDashboardData: Buscando soluções");
       let query = supabase.from("solutions").select("*");
       if (!isAdmin) {
         query = query.eq("published", true);
       }
       
       const { data, error } = await query;
-      if (error) {
-        console.error("useOptimizedDashboardData: Erro ao buscar soluções:", error);
-        throw error;
-      }
-      console.log("useOptimizedDashboardData: Soluções carregadas:", data?.length || 0);
+      if (error) throw error;
       return data as Solution[];
     },
-    enabled: !!profile // Só busca quando tem profile
+    enabled: !!profile
   });
 
   // Fetch progress data com cache otimizado
@@ -46,59 +44,38 @@ export const useOptimizedDashboardData = () => {
   } = useOptimizedQuery({
     queryKey: ['progress'],
     queryFn: async () => {
-      console.log("useOptimizedDashboardData: Buscando progresso");
       const { data, error } = await supabase
         .from("progress")
         .select("*");
       
-      if (error) {
-        console.error("useOptimizedDashboardData: Erro ao buscar progresso:", error);
-        throw error;
-      }
-      console.log("useOptimizedDashboardData: Progresso carregado:", data?.length || 0);
+      if (error) throw error;
       return data || [];
     },
-    enabled: !!profile // Só busca quando tem profile
+    enabled: !!profile
   });
 
-  // Fetch profiles data com cache otimizado  
+  // Fetch profiles data com cache otimizado
   const { 
     data: profilesData = [], 
     isLoading: profilesLoading 
   } = useOptimizedQuery({
     queryKey: ['profiles'],
     queryFn: async () => {
-      console.log("useOptimizedDashboardData: Buscando perfis");
       const { data, error } = await supabase
         .from("profiles")
         .select("*");
       
-      if (error) {
-        console.error("useOptimizedDashboardData: Erro ao buscar perfis:", error);
-        throw error;
-      }
-      console.log("useOptimizedDashboardData: Perfis carregados:", data?.length || 0);
+      if (error) throw error;
       return data || [];
     },
-    enabled: !!profile // Só busca quando tem profile
-  });
-
-  const loading = useMemo(() => 
-    solutionsLoading || progressLoading || profilesLoading,
-    [solutionsLoading, progressLoading, profilesLoading]
-  );
-
-  console.log("useOptimizedDashboardData: Estado final:", {
-    solutions: solutions.length,
-    loading,
-    hasError: !!solutionsError
+    enabled: !!profile
   });
 
   return {
     solutions,
     progressData,
     profilesData,
-    loading,
+    loading: solutionsLoading || progressLoading || profilesLoading,
     error: solutionsError
   };
 };

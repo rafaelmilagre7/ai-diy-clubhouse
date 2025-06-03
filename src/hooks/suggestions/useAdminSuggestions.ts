@@ -22,6 +22,7 @@ export const useAdminSuggestions = () => {
         return false;
       }
       
+      toast.success('Sugestão removida com sucesso');
       return true;
     } catch (error: any) {
       console.error('Erro não esperado ao remover sugestão:', error);
@@ -37,9 +38,19 @@ export const useAdminSuggestions = () => {
       setLoading(true);
       console.log('Atualizando status da sugestão:', suggestionId, status);
       
+      // Validar status
+      const validStatuses = ['new', 'under_review', 'in_development', 'completed', 'declined'];
+      if (!validStatuses.includes(status)) {
+        toast.error('Status inválido');
+        return false;
+      }
+      
       const { error } = await supabase
         .from('suggestions')
-        .update({ status })
+        .update({ 
+          status,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', suggestionId);
       
       if (error) {
@@ -48,7 +59,16 @@ export const useAdminSuggestions = () => {
         return false;
       }
       
-      toast.success(`Status da sugestão atualizado para ${status}`);
+      // Mensagens de sucesso personalizadas
+      const statusMessages = {
+        'new': 'Sugestão marcada como nova',
+        'under_review': 'Sugestão em análise',
+        'in_development': 'Sugestão marcada como em desenvolvimento',
+        'completed': 'Sugestão marcada como implementada! 🎉',
+        'declined': 'Sugestão marcada como recusada'
+      };
+      
+      toast.success(statusMessages[status as keyof typeof statusMessages] || `Status atualizado para ${status}`);
       return true;
     } catch (error: any) {
       console.error('Erro não esperado ao atualizar status da sugestão:', error);

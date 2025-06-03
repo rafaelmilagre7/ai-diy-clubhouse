@@ -8,30 +8,35 @@ export const useImplementationNavigation = () => {
     moduleIdx: string;
   }>();
   
-  // Normaliza os parâmetros, suportando tanto /implementation/:id quanto /implementation/:id/:moduleIdx
+  // Normaliza os parâmetros, suportando tanto /implement/:id/:moduleIdx quanto /implementation/:id/:moduleIdx
   const moduleIdxParam = moduleIndex || moduleIdx || "0";
   const moduleIdxNumber = parseInt(moduleIdxParam);
   const navigate = useNavigate();
   
-  // Usa consistentemente o padrão /implementation/:id para navegação
-  const basePath = "/implementation";
+  // Usa consistentemente o padrão /implement/:id/:moduleIdx para navegação
+  const basePath = "/implement";
   
-  // Navigate to next module (caso futuramente tenhamos navegação por módulos)
+  // Navigate to next module
   const handleComplete = () => {
-    console.log(`Implementação concluída para solução: ${id}`);
-    navigate(`/implementation/completed/${id}`);
+    console.log(`Navegando para o próximo módulo: ${moduleIdxNumber + 1}`);
+    navigate(`${basePath}/${id}/${moduleIdxNumber + 1}`);
   };
   
-  // Navigate to previous module or back to solution
+  // Navigate to previous module
   const handlePrevious = () => {
-    console.log(`Voltando para a página de solução: ${id}`);
-    navigate(`/solution/${id}`);
+    if (moduleIdxNumber > 0) {
+      console.log(`Navegando para o módulo anterior: ${moduleIdxNumber - 1}`);
+      navigate(`${basePath}/${id}/${moduleIdxNumber - 1}`);
+    } else {
+      console.log(`Voltando para a página de solução: ${id}`);
+      navigate(`/solution/${id}`);
+    }
   };
   
-  // Navigate to specific module (placeholder para funcionalidade futura)
+  // Navigate to specific module
   const handleNavigateToModule = (moduleIdx: number) => {
-    console.log(`Navegação por módulos não implementada ainda: ${moduleIdx}`);
-    // Para futuras implementações com módulos específicos
+    console.log(`Navegando para o módulo específico: ${moduleIdx}`);
+    navigate(`${basePath}/${id}/${moduleIdx}`);
   };
   
   return {

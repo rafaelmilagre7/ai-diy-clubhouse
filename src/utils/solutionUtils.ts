@@ -26,27 +26,3 @@ export const createUniqueSlug = (text: string, maxLength = 60): string => {
   const slug = baseSlugify(text, true);
   return truncateSlug(slug, maxLength);
 };
-
-/**
- * Gets the translated text for difficulty levels
- */
-export const getDifficultyText = (difficulty: string): string => {
-  switch (difficulty) {
-    case "easy": return "Fácil";
-    case "medium": return "Normal";
-    case "advanced": return "Avançado";
-    default: return difficulty;
-  }
-};
-
-/**
- * Gets the color class for difficulty levels
- */
-export const getDifficultyColor = (difficulty: string): string => {
-  switch (difficulty) {
-    case "easy": return "bg-green-500";
-    case "medium": return "bg-yellow-500";
-    case "advanced": return "bg-orange-500";
-    default: return "bg-gray-500";
-  }
-};

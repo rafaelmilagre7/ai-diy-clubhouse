@@ -19,10 +19,10 @@ const PublishTab: React.FC<PublishTabProps> = ({
 }) => {
   return (
     <PublishSolutionForm 
-      solutionId={solutionId}
+      solutionId={solutionId} 
       solution={solution}
-      onSave={onSave}
-      saving={saving}
+      onSave={onSave} 
+      saving={saving} 
     />
   );
 };

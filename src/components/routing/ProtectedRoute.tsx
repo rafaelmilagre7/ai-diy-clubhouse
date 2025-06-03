@@ -22,6 +22,9 @@ const ProtectedRoute = ({
   const { isOnboardingComplete, isLoading: onboardingLoading } = useUnifiedOnboardingValidation();
   const location = useLocation();
   
+  // Timeout reduzido para ambiente de teste
+  const loadingTimeout = process.env.NODE_ENV === 'test' ? 1000 : 5000;
+  
   // Se estiver carregando, mostra tela de loading
   if (authLoading || onboardingLoading) {
     return <LoadingScreen message="Verificando autenticação..." />;

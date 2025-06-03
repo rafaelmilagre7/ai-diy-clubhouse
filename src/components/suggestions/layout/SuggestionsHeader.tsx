@@ -3,9 +3,9 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Plus, Search, TrendingUp, Clock } from 'lucide-react';
+import { Plus, Search, TrendingUp, Clock, Settings, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { SuggestionFilter } from '@/hooks/suggestions/useSuggestions';
+import { SuggestionFilter } from '@/types/suggestionTypes';
 
 interface SuggestionsHeaderProps {
   searchQuery: string;
@@ -25,12 +25,7 @@ export const SuggestionsHeader: React.FC<SuggestionsHeaderProps> = ({
   return (
     <div className="flex flex-col space-y-4">
       <div className="flex items-center justify-between">
-        <div className="text-left">
-          <h1 className="text-2xl font-bold">Sugestões</h1>
-          <p className="text-muted-foreground mt-1">
-            Compartilhe suas ideias e veja as sugestões da comunidade
-          </p>
-        </div>
+        <h1 className="text-2xl font-bold">Sugestões</h1>
         <Button 
           onClick={() => navigate('/suggestions/new')}
           className="gap-2"
@@ -65,6 +60,14 @@ export const SuggestionsHeader: React.FC<SuggestionsHeaderProps> = ({
           <ToggleGroupItem value="recent" className="gap-1 whitespace-nowrap">
             <Clock className="h-4 w-4" />
             <span className="hidden md:inline">Recentes</span>
+          </ToggleGroupItem>
+          <ToggleGroupItem value="in_development" className="gap-1 whitespace-nowrap">
+            <Settings className="h-4 w-4" />
+            <span className="hidden md:inline">Em Desenvolvimento</span>
+          </ToggleGroupItem>
+          <ToggleGroupItem value="completed" className="gap-1 whitespace-nowrap">
+            <CheckCircle className="h-4 w-4" />
+            <span className="hidden md:inline">Implementadas</span>
           </ToggleGroupItem>
         </ToggleGroup>
       </div>

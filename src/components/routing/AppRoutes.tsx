@@ -1,29 +1,53 @@
 
 import { Routes, Route } from 'react-router-dom';
-import ModernLogin from '@/pages/auth/ModernLogin';
-import Dashboard from '@/pages/member/Dashboard';
-import LoadingScreen from '@/components/common/LoadingScreen';
-import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
+import { authRoutes } from '../../routes/AuthRoutes';
+import { adminRoutes } from '../../routes/AdminRoutes';
+import { memberRoutes } from '../../routes/MemberRoutes';
+import { OnboardingRoutes } from '../../routes/OnboardingRoutes';
+import { formacaoRoutes } from '../../routes/FormacaoRoutes';
+import { CommunityRedirects } from './CommunityRedirects';
+import { SmartRoutePreloader } from './SmartRoutePreloader';
+import NotFound from '@/pages/NotFound';
+import InvitePage from '@/pages/InvitePage';
 
 const AppRoutes = () => {
   return (
-    <Routes>
-      {/* Rota pública de login */}
-      <Route path="/login" element={<ModernLogin />} />
+    <>
+      <CommunityRedirects />
+      <SmartRoutePreloader />
       
-      {/* Rota protegida do dashboard */}
-      <Route path="/dashboard" element={
-        <ProtectedRoutes>
-          <Dashboard />
-        </ProtectedRoutes>
-      } />
-      
-      {/* Rota raiz redireciona para login se não autenticado */}
-      <Route path="/" element={<ModernLogin />} />
-      
-      {/* Fallback para rotas não encontradas */}
-      <Route path="*" element={<ModernLogin />} />
-    </Routes>
+      <Routes>
+        {/* Convite Routes */}
+        <Route path="/convite/:token" element={<InvitePage />} />
+        <Route path="/convite" element={<InvitePage />} />
+        
+        {/* Auth Routes */}
+        {authRoutes.map((route) => (
+          <Route key={route.path} path={route.path} element={route.element} />
+        ))}
+        
+        {/* Member Routes */}
+        {memberRoutes.map((route) => (
+          <Route key={route.path} path={route.path} element={route.element} />
+        ))}
+        
+        {/* Admin Routes */}
+        {adminRoutes.map((route) => (
+          <Route key={route.path} path={route.path} element={route.element} />
+        ))}
+        
+        {/* Onboarding Routes */}
+        <Route path="/onboarding-new/*" element={<OnboardingRoutes />} />
+        
+        {/* Formação Routes */}
+        {formacaoRoutes.map((route) => (
+          <Route key={route.path} path={route.path} element={route.element} />
+        ))}
+        
+        {/* Fallback route */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </>
   );
 };
 

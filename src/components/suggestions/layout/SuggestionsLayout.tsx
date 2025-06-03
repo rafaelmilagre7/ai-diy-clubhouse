@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { useSuggestions, SuggestionFilter } from '@/hooks/suggestions/useSuggestions';
+import { useSuggestions } from '@/hooks/suggestions/useSuggestions';
+import { SuggestionFilter } from '@/types/suggestionTypes';
 import { SuggestionsHeader } from './SuggestionsHeader';
 import { SuggestionsContent } from './SuggestionsContent';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -57,11 +58,15 @@ const SuggestionsLayout = () => {
         />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Card key={i}>
+            <Card key={i} className="animate-pulse">
               <div className="p-4 space-y-3">
                 <Skeleton className="h-6 w-4/5 mb-2" />
                 <Skeleton className="h-4 w-2/5" />
                 <Skeleton className="h-20 w-full" />
+                <div className="flex justify-between pt-2">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-12" />
+                </div>
               </div>
             </Card>
           ))}
@@ -80,7 +85,7 @@ const SuggestionsLayout = () => {
       />
       
       {error ? (
-        <Alert variant="destructive" className="mb-4">
+        <Alert variant="destructive" className="mb-4 animate-fade-in">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Erro ao carregar sugestões</AlertTitle>
           <AlertDescription className="flex flex-col gap-2">
@@ -95,6 +100,7 @@ const SuggestionsLayout = () => {
         <SuggestionsContent 
           suggestions={suggestions} 
           searchQuery={searchQuery}
+          filter={filter}
         />
       )}
     </div>
