@@ -78,7 +78,7 @@ class Logger {
     }
   }
 
-  // Métodos básicos de log - CORRIGIDO para aceitar 3 parâmetros
+  // Métodos básicos de log - CORRIGIDO para aceitar data como objeto e component como string
   info(message: string, data?: any, component?: string) {
     this.log('info', message, data, component);
   }
@@ -96,12 +96,12 @@ class Logger {
   }
 
   // Métodos especiais
-  critical(message: string, data?: any) {
-    this.log('critical', message, data);
+  critical(message: string, data?: any, component?: string) {
+    this.log('critical', message, data, component);
   }
 
-  performance(message: string, data?: any) {
-    this.log('performance', message, data);
+  performance(message: string, data?: any, component?: string) {
+    this.log('performance', message, data, component);
   }
 
   // Métodos para gerenciamento do buffer
