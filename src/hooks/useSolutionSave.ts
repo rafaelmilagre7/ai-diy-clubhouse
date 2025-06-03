@@ -37,12 +37,12 @@ export const useSolutionSave = (
         return;
       }
       
-      // Preparar dados para salvar
+      // Preparar dados para salvar - CORRIGIDO: usar valores corretos para o banco
       const solutionData = {
         title: values.title,
         description: values.description,
-        category: values.category as "revenue" | "operational" | "strategy",
-        difficulty: values.difficulty as "easy" | "medium" | "advanced", // Garantir que é um dos valores válidos da enum
+        category: values.category, // Manter os valores em português
+        difficulty: values.difficulty as "easy" | "medium" | "advanced",
         slug: slug,
         thumbnail_url: values.thumbnail_url || null,
         published: values.published || false,
