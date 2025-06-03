@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/auth';
 import { useLogging } from '@/hooks/useLogging';
@@ -38,15 +37,19 @@ export const useLessonComments = (lessonId: string) => {
     staleTime: 2 * 60 * 1000, // 2 minutos
     gcTime: 10 * 60 * 1000, // 10 minutos (era cacheTime)
     retry: 2,
-    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
-    onError: (error: any) => {
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000)
+  });
+
+  // Monitorar erros com useEffect (substitui onError do v4)
+  useEffect(() => {
+    if (error) {
       logError('Erro ao carregar comentários', { 
         error, 
         lessonId,
         showToast: false // Não mostrar toast para erros de carregamento
       });
     }
-  });
+  }, [error, logError, lessonId]);
 
   // Adicionar comentário com sync otimizado
   const addComment = async (content: string, parentId: string | null = null) => {
