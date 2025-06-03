@@ -2,7 +2,9 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { Suggestion, SuggestionFilter } from '@/types/suggestionTypes';
+import { Suggestion } from '@/types/suggestionTypes';
+
+export type SuggestionFilter = 'all' | 'popular' | 'recent' | 'in_development' | 'completed';
 
 export const useSuggestions = () => {
   const [filter, setFilter] = useState<SuggestionFilter>('popular');
@@ -19,11 +21,10 @@ export const useSuggestions = () => {
       console.log('Buscando sugestões...', { filter, searchQuery });
       
       try {
-        // Usamos a view suggestions_with_profiles que já conecta os dados de perfil
         let query = supabase
           .from('suggestions_with_profiles')
           .select('*')
-          .eq('is_hidden', false); // Apenas sugestões não ocultas
+          .eq('is_hidden', false);
 
         // Filtragem por status específico
         if (filter === 'in_development') {
@@ -43,7 +44,6 @@ export const useSuggestions = () => {
         } else if (filter === 'recent') {
           query = query.order('created_at', { ascending: false });
         } else if (filter === 'in_development' || filter === 'completed') {
-          // Para filtros de status, ordenar por data de atualização
           query = query.order('updated_at', { ascending: false });
         } else {
           // Filtro 'all' - ordenar por data de criação
@@ -65,7 +65,7 @@ export const useSuggestions = () => {
       }
     },
     refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 1, // 1 minuto
+    staleTime: 1000 * 60 * 1,
     refetchOnMount: true,
   });
 
