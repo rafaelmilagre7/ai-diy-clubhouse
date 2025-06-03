@@ -1,54 +1,51 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowLeft, Plus, X } from 'lucide-react';
+import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { OnboardingStepProps } from '@/types/quickOnboarding';
+import { MultiSelectorModerno } from '../MultiSelectorModerno';
 
-const INTEREST_SUGGESTIONS = [
-  'Automação de processos',
-  'Marketing digital',
-  'Análise de dados',
-  'Atendimento ao cliente',
-  'Vendas e CRM',
-  'E-commerce',
-  'Gestão de projetos',
-  'Recursos humanos',
-  'Finanças e contabilidade',
-  'Operações',
-  'Inovação tecnológica',
-  'Sustentabilidade'
+const INTERESTS_OPTIONS = [
+  { value: 'automatizacao', label: '🤖 Automação de processos' },
+  { value: 'marketing', label: '📊 Marketing digital' },
+  { value: 'vendas', label: '💰 Automação de vendas' },
+  { value: 'atendimento', label: '💬 Atendimento ao cliente' },
+  { value: 'analise_dados', label: '📈 Análise de dados' },
+  { value: 'desenvolvimento', label: '💻 Desenvolvimento de software' },
+  { value: 'design', label: '🎨 Design e criatividade' },
+  { value: 'gestao', label: '📋 Gestão e produtividade' },
+  { value: 'financeiro', label: '💳 Gestão financeira' },
+  { value: 'rh', label: '👥 Recursos humanos' },
 ];
 
 const TIME_PREFERENCE_OPTIONS = [
-  'Manhã (06:00-12:00)',
-  'Tarde (12:00-18:00)',
-  'Noite (18:00-22:00)',
-  'Madrugada (22:00-06:00)'
+  { value: 'manha', label: '🌅 Manhã (6h - 12h)' },
+  { value: 'tarde', label: '☀️ Tarde (12h - 18h)' },
+  { value: 'noite', label: '🌙 Noite (18h - 24h)' },
+  { value: 'madrugada', label: '🌃 Madrugada (0h - 6h)' },
 ];
 
 const AVAILABLE_DAYS_OPTIONS = [
-  'Segunda-feira',
-  'Terça-feira',
-  'Quarta-feira',
-  'Quinta-feira',
-  'Sexta-feira',
-  'Sábado',
-  'Domingo'
+  { value: 'segunda', label: 'Segunda-feira' },
+  { value: 'terca', label: 'Terça-feira' },
+  { value: 'quarta', label: 'Quarta-feira' },
+  { value: 'quinta', label: 'Quinta-feira' },
+  { value: 'sexta', label: 'Sexta-feira' },
+  { value: 'sabado', label: 'Sábado' },
+  { value: 'domingo', label: 'Domingo' },
 ];
 
-const SKILLS_SUGGESTIONS = [
-  'Marketing digital',
-  'Vendas',
-  'Gestão de projetos',
-  'Análise de dados',
-  'Desenvolvimento',
-  'Design',
-  'Finanças',
-  'Recursos humanos',
-  'Operações',
-  'Estratégia',
-  'Liderança',
-  'Consultoria'
+const SKILLS_OPTIONS = [
+  { value: 'marketing_digital', label: '📱 Marketing Digital' },
+  { value: 'vendas', label: '💼 Vendas' },
+  { value: 'design', label: '🎨 Design' },
+  { value: 'desenvolvimento', label: '💻 Desenvolvimento' },
+  { value: 'gestao_projetos', label: '📊 Gestão de Projetos' },
+  { value: 'analise_dados', label: '📈 Análise de Dados' },
+  { value: 'atendimento_cliente', label: '🎧 Atendimento ao Cliente' },
+  { value: 'financeiro', label: '💰 Gestão Financeira' },
+  { value: 'recursos_humanos', label: '👥 Recursos Humanos' },
+  { value: 'consultoria', label: '🎯 Consultoria' },
 ];
 
 export const StepPersonalizacao: React.FC<OnboardingStepProps> = ({
@@ -60,239 +57,163 @@ export const StepPersonalizacao: React.FC<OnboardingStepProps> = ({
   currentStep,
   totalSteps
 }) => {
-  const addInterest = (interest: string) => {
-    const currentInterests = data.interests || [];
-    if (!currentInterests.includes(interest)) {
-      onUpdate('interests', [...currentInterests, interest]);
-    }
+  const handleInterestsChange = (newInterests: string[]) => {
+    onUpdate('interests', newInterests);
   };
 
-  const removeInterest = (interest: string) => {
-    const currentInterests = data.interests || [];
-    onUpdate('interests', currentInterests.filter(i => i !== interest));
+  const handleInterestsRemove = (interestToRemove: string) => {
+    const currentInterests = Array.isArray(data.interests) ? data.interests : [];
+    const updatedInterests = currentInterests.filter(interest => interest !== interestToRemove);
+    onUpdate('interests', updatedInterests);
   };
 
-  const toggleTimePreference = (time: string) => {
-    const currentTimes = data.time_preference || [];
-    if (currentTimes.includes(time)) {
-      onUpdate('time_preference', currentTimes.filter(t => t !== time));
-    } else {
-      onUpdate('time_preference', [...currentTimes, time]);
-    }
+  const handleTimePreferenceChange = (newTimePrefs: string[]) => {
+    onUpdate('time_preference', newTimePrefs);
   };
 
-  const toggleAvailableDay = (day: string) => {
-    const currentDays = data.available_days || [];
-    if (currentDays.includes(day)) {
-      onUpdate('available_days', currentDays.filter(d => d !== day));
-    } else {
-      onUpdate('available_days', [...currentDays, day]);
-    }
+  const handleTimePreferenceRemove = (timeToRemove: string) => {
+    const currentTimePrefs = Array.isArray(data.time_preference) 
+      ? data.time_preference 
+      : typeof data.time_preference === 'string' 
+        ? [data.time_preference] 
+        : [];
+    const updatedTimePrefs = currentTimePrefs.filter((time: string) => time !== timeToRemove);
+    onUpdate('time_preference', updatedTimePrefs);
   };
 
-  const addSkill = (skill: string) => {
-    const currentSkills = data.skills_to_share || [];
-    if (!currentSkills.includes(skill)) {
-      onUpdate('skills_to_share', [...currentSkills, skill]);
-    }
+  const handleAvailableDaysChange = (newDays: string[]) => {
+    onUpdate('available_days', newDays);
   };
 
-  const removeSkill = (skill: string) => {
-    const currentSkills = data.skills_to_share || [];
-    onUpdate('skills_to_share', currentSkills.filter(s => s !== skill));
+  const handleAvailableDaysRemove = (dayToRemove: string) => {
+    const currentDays = Array.isArray(data.available_days) ? data.available_days : [];
+    const updatedDays = currentDays.filter(day => day !== dayToRemove);
+    onUpdate('available_days', updatedDays);
+  };
+
+  const handleSkillsChange = (newSkills: string[]) => {
+    onUpdate('skills_to_share', newSkills);
+  };
+
+  const handleSkillsRemove = (skillToRemove: string) => {
+    const currentSkills = Array.isArray(data.skills_to_share) ? data.skills_to_share : [];
+    const updatedSkills = currentSkills.filter(skill => skill !== skillToRemove);
+    onUpdate('skills_to_share', updatedSkills);
   };
 
   return (
     <div className="max-w-3xl mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-white mb-2">
-          Personalização da experiência 🎨
+          Personalização da experiência 🎯
         </h2>
         <p className="text-gray-400">
-          Ajude-nos a personalizar sua jornada na plataforma
+          Vamos personalizar sua experiência na comunidade
         </p>
       </div>
 
-      <div className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700/50 space-y-6">
-        <div className="space-y-4">
-          <label className="block text-sm font-medium text-white">
-            Principais interesses (opcional)
-          </label>
-          
-          {/* Interesses selecionados */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            {(data.interests || []).map((interest, index) => (
-              <div
-                key={index}
-                className="bg-viverblue/20 text-viverblue px-3 py-1 rounded-full text-sm flex items-center gap-2"
-              >
-                <span>{interest}</span>
-                <button
-                  onClick={() => removeInterest(interest)}
-                  className="text-viverblue hover:text-white"
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            ))}
-          </div>
+      <div className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700/50 space-y-8">
+        <MultiSelectorModerno
+          title="Áreas de interesse"
+          description="Selecione as áreas que mais te interessam"
+          options={INTERESTS_OPTIONS}
+          selectedValues={Array.isArray(data.interests) ? data.interests : []}
+          onSelectionChange={handleInterestsChange}
+          onRemove={handleInterestsRemove}
+          placeholder="Clique para selecionar suas áreas de interesse"
+          emptyMessage="Nenhuma área selecionada"
+        />
 
-          {/* Sugestões de interesses */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            {INTEREST_SUGGESTIONS.map((interest, index) => (
-              <button
-                key={index}
-                onClick={() => addInterest(interest)}
-                disabled={(data.interests || []).includes(interest)}
-                className={`text-left p-2 rounded-lg border transition-colors text-sm ${
-                  (data.interests || []).includes(interest)
-                    ? 'bg-viverblue/20 border-viverblue/40 text-viverblue cursor-not-allowed'
-                    : 'bg-gray-700/50 border-gray-600 text-gray-300 hover:bg-gray-600/50 hover:border-gray-500'
-                }`}
-              >
-                <Plus size={14} className="inline mr-1" />
-                {interest}
-              </button>
-            ))}
-          </div>
-        </div>
+        <MultiSelectorModerno
+          title="Horários preferenciais"
+          description="Quando você prefere participar de atividades?"
+          options={TIME_PREFERENCE_OPTIONS}
+          selectedValues={Array.isArray(data.time_preference) 
+            ? data.time_preference 
+            : typeof data.time_preference === 'string' 
+              ? [data.time_preference] 
+              : []
+          }
+          onSelectionChange={handleTimePreferenceChange}
+          onRemove={handleTimePreferenceRemove}
+          placeholder="Selecione seus horários preferenciais"
+          emptyMessage="Nenhum horário selecionado"
+        />
 
-        <div className="space-y-4">
-          <label className="block text-sm font-medium text-white">
-            Horários preferidos para estudar (opcional)
-          </label>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {TIME_PREFERENCE_OPTIONS.map((time, index) => (
-              <button
-                key={index}
-                onClick={() => toggleTimePreference(time)}
-                className={`text-left p-3 rounded-lg border transition-colors ${
-                  (data.time_preference || []).includes(time)
-                    ? 'bg-green-500/20 border-green-500/40 text-green-300'
-                    : 'bg-gray-700/50 border-gray-600 text-gray-300 hover:bg-gray-600/50 hover:border-gray-500'
-                }`}
-              >
-                {time}
-              </button>
-            ))}
-          </div>
-        </div>
+        <MultiSelectorModerno
+          title="Dias disponíveis"
+          description="Em quais dias da semana você tem mais disponibilidade?"
+          options={AVAILABLE_DAYS_OPTIONS}
+          selectedValues={Array.isArray(data.available_days) ? data.available_days : []}
+          onSelectionChange={handleAvailableDaysChange}
+          onRemove={handleAvailableDaysRemove}
+          placeholder="Selecione seus dias disponíveis"
+          emptyMessage="Nenhum dia selecionado"
+        />
+
+        <MultiSelectorModerno
+          title="Habilidades para compartilhar"
+          description="Quais conhecimentos você poderia compartilhar com a comunidade?"
+          options={SKILLS_OPTIONS}
+          selectedValues={Array.isArray(data.skills_to_share) ? data.skills_to_share : []}
+          onSelectionChange={handleSkillsChange}
+          onRemove={handleSkillsRemove}
+          placeholder="Selecione as habilidades que você pode compartilhar"
+          emptyMessage="Nenhuma habilidade selecionada"
+        />
 
         <div className="space-y-4">
-          <label className="block text-sm font-medium text-white">
-            Dias disponíveis para networking (opcional)
-          </label>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            {AVAILABLE_DAYS_OPTIONS.map((day, index) => (
-              <button
-                key={index}
-                onClick={() => toggleAvailableDay(day)}
-                className={`text-left p-2 rounded-lg border transition-colors text-sm ${
-                  (data.available_days || []).includes(day)
-                    ? 'bg-purple-500/20 border-purple-500/40 text-purple-300'
-                    : 'bg-gray-700/50 border-gray-600 text-gray-300 hover:bg-gray-600/50 hover:border-gray-500'
-                }`}
-              >
-                {day}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <label className="block text-sm font-medium text-white">
-            Habilidades que você pode compartilhar (opcional)
-          </label>
-          
-          {/* Habilidades selecionadas */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            {(data.skills_to_share || []).map((skill, index) => (
-              <div
-                key={index}
-                className="bg-orange-500/20 text-orange-300 px-3 py-1 rounded-full text-sm flex items-center gap-2"
-              >
-                <span>{skill}</span>
-                <button
-                  onClick={() => removeSkill(skill)}
-                  className="text-orange-300 hover:text-white"
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            ))}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-white">
+              Disponibilidade para networking
+            </label>
+            <select
+              value={data.networking_availability === true ? 'sim' : data.networking_availability === false ? 'nao' : ''}
+              onChange={(e) => onUpdate('networking_availability', e.target.value === 'sim' ? true : e.target.value === 'nao' ? false : '')}
+              className="w-full h-12 p-3 bg-gray-800/50 border border-gray-600 text-white rounded-md focus:ring-viverblue/50"
+            >
+              <option value="">Selecione uma opção</option>
+              <option value="sim">Sim, tenho interesse em networking</option>
+              <option value="nao">Não, prefiro focar no aprendizado</option>
+            </select>
+            <p className="text-xs text-gray-400">
+              {data.networking_availability === true ? '✅ Interesse em networking' : ''}
+            </p>
           </div>
 
-          {/* Sugestões de habilidades */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            {SKILLS_SUGGESTIONS.map((skill, index) => (
-              <button
-                key={index}
-                onClick={() => addSkill(skill)}
-                disabled={(data.skills_to_share || []).includes(skill)}
-                className={`text-left p-2 rounded-lg border transition-colors text-sm ${
-                  (data.skills_to_share || []).includes(skill)
-                    ? 'bg-orange-500/20 border-orange-500/40 text-orange-300 cursor-not-allowed'
-                    : 'bg-gray-700/50 border-gray-600 text-gray-300 hover:bg-gray-600/50 hover:border-gray-500'
-                }`}
-              >
-                <Plus size={14} className="inline mr-1" />
-                {skill}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <label className="block text-sm font-medium text-white">
-            Disponibilidade para networking (0-10)
-          </label>
-          <input
-            type="range"
-            min="0"
-            max="10"
-            value={data.networking_availability || 0}
-            onChange={(e) => onUpdate('networking_availability', parseInt(e.target.value))}
-            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
-          />
-          <div className="text-center text-gray-400">
-            {data.networking_availability || 0}/10
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div className="flex items-center space-x-3">
-            <input
-              type="checkbox"
-              id="authorize_case_usage"
-              checked={data.authorize_case_usage || false}
-              onChange={(e) => onUpdate('authorize_case_usage', e.target.checked)}
-              className="h-4 w-4 text-viverblue border-gray-600 rounded focus:ring-viverblue/50"
-            />
-            <label htmlFor="authorize_case_usage" className="text-sm text-white">
-              Autorizo o uso do meu caso como exemplo (anonimizado)
+          <div className="space-y-2">
+            <label className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                checked={data.authorize_case_usage || false}
+                onChange={(e) => onUpdate('authorize_case_usage', e.target.checked)}
+                className="w-4 h-4 text-viverblue bg-gray-800 border-gray-600 rounded focus:ring-viverblue"
+              />
+              <span className="text-sm text-white">
+                Autorizo o uso do meu caso de sucesso como exemplo para outros membros
+              </span>
             </label>
           </div>
 
-          <div className="flex items-center space-x-3">
-            <input
-              type="checkbox"
-              id="interested_in_interview"
-              checked={data.interested_in_interview || false}
-              onChange={(e) => onUpdate('interested_in_interview', e.target.checked)}
-              className="h-4 w-4 text-viverblue border-gray-600 rounded focus:ring-viverblue/50"
-            />
-            <label htmlFor="interested_in_interview" className="text-sm text-white">
-              Tenho interesse em participar de entrevistas/cases
+          <div className="space-y-2">
+            <label className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                checked={data.interested_in_interview || false}
+                onChange={(e) => onUpdate('interested_in_interview', e.target.checked)}
+                className="w-4 h-4 text-viverblue bg-gray-800 border-gray-600 rounded focus:ring-viverblue"
+              />
+              <span className="text-sm text-white">
+                Tenho interesse em participar de entrevistas/depoimentos
+              </span>
             </label>
           </div>
         </div>
 
-        <div className="bg-gradient-to-r from-viverblue/10 to-purple-500/10 border border-viverblue/20 rounded-lg p-4">
+        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
           <p className="text-sm text-blue-300">
-            🎉 <strong>Quase pronto!</strong> Essas informações nos ajudam a personalizar 
-            sua experiência, conectar você com pessoas relevantes e sugerir conteúdos adequados ao seu perfil.
+            🌟 <strong>Comunidade:</strong> Essas informações nos ajudam a conectar você 
+            com pessoas que têm interesses similares e criar experiências mais relevantes.
           </p>
         </div>
 
@@ -312,9 +233,10 @@ export const StepPersonalizacao: React.FC<OnboardingStepProps> = ({
           
           <Button
             onClick={onNext}
-            className="bg-gradient-to-r from-viverblue to-purple-600 hover:from-viverblue-dark hover:to-purple-700 transition-all flex items-center gap-2"
+            disabled={!canProceed}
+            className="bg-viverblue hover:bg-viverblue-dark transition-colors flex items-center gap-2"
           >
-            <span>Finalizar</span>
+            <span>Continuar</span>
             <ArrowRight size={16} />
           </Button>
         </div>

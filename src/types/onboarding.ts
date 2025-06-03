@@ -38,6 +38,7 @@ export interface BusinessInfo {
   company_website?: string;
   current_position?: string;
   company_sector?: string;
+  company_segment?: string; // Add this field
   company_size?: string;
   annual_revenue?: string;
   role?: string;
@@ -78,17 +79,17 @@ export interface GoalsInfo {
   priority_solution_type?: string;
   how_implement?: string;
   week_availability?: string;
-  live_interest?: number; // número para compatibilidade
+  live_interest?: number;
 }
 
 export interface PersonalizationInfo {
   interests?: string[];
   available_days?: string[];
   time_preference?: string | string[];
-  networking_availability?: boolean | string; // Allow both for compatibility
+  networking_availability?: boolean | string;
   mentorship_topics?: string[];
   skills_to_share?: string[];
-  live_interest?: number; // número para compatibilidade
+  live_interest?: number;
 }
 
 export interface OnboardingData {
@@ -152,6 +153,11 @@ export interface StepProps {
   currentStep: number;
   totalSteps: number;
   validationErrors?: ValidationErrors;
+  onSubmit?: (stepId: string, data: any) => void;
+  isSubmitting?: boolean;
+  initialData?: OnboardingData;
+  isLastStep?: boolean;
+  onComplete?: () => void;
 }
 
 // Tipos adicionais para compatibilidade

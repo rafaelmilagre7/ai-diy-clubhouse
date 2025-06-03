@@ -27,6 +27,13 @@ export interface QuickOnboardingData {
   city?: string;
   instagram_url?: string;
   linkedin_url?: string;
+  // Business fields
+  company_name?: string;
+  role?: string;
+  company_size?: string;
+  company_segment?: string;
+  company_website?: string;
+  annual_revenue_range?: string;
   // Goals fields
   priority_solution_type?: string;
   how_implement?: string;

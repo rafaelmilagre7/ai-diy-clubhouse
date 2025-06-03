@@ -18,9 +18,10 @@ const professionalDataSchema = z.object({
   company_name: z.string().min(1, "Nome da empresa é obrigatório"),
   role: z.string().min(1, "Cargo é obrigatório"),
   company_size: z.string().min(1, "Tamanho da empresa é obrigatório"),
-  company_segment: z.string().min(1, "Setor da empresa é obrigatório"),
+  company_sector: z.string().min(1, "Setor da empresa é obrigatório"),
+  company_segment: z.string().optional(),
   company_website: z.string().url("URL inválida").optional().or(z.literal("")),
-  annual_revenue_range: z.string().optional(),
+  annual_revenue: z.string().optional(),
   current_position: z.string().optional(),
 });
 
@@ -37,15 +38,16 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
       company_name: initialData?.professional_info?.company_name || "",
       role: initialData?.professional_info?.role || "",
       company_size: initialData?.professional_info?.company_size || "",
+      company_sector: initialData?.professional_info?.company_sector || "",
       company_segment: initialData?.professional_info?.company_segment || "",
       company_website: initialData?.professional_info?.company_website || "",
-      annual_revenue_range: initialData?.professional_info?.annual_revenue_range || "",
+      annual_revenue: initialData?.professional_info?.annual_revenue || "",
       current_position: initialData?.professional_info?.current_position || "",
     },
   });
 
   const handleFormSubmit = (data: ProfessionalDataInput) => {
-    onSubmit("professional_info", {
+    onSubmit?.("professional_info", {
       professional_info: data
     });
   };
@@ -117,8 +119,8 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
         </div>
 
         <div>
-          <Label htmlFor="company_segment">Setor da Empresa *</Label>
-          <Select onValueChange={(value) => setValue("company_segment", value)} value={watch("company_segment")}>
+          <Label htmlFor="company_sector">Setor da Empresa *</Label>
+          <Select onValueChange={(value) => setValue("company_sector", value)} value={watch("company_sector")}>
             <SelectTrigger>
               <SelectValue placeholder="Selecione o setor" />
             </SelectTrigger>
@@ -130,8 +132,8 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
               ))}
             </SelectContent>
           </Select>
-          {errors.company_segment && (
-            <FormMessage type="error" message={errors.company_segment.message} />
+          {errors.company_sector && (
+            <FormMessage type="error" message={errors.company_sector.message} />
           )}
         </div>
 
