@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useUnifiedOnboardingValidation } from '@/hooks/onboarding/useUnifiedOnboardingValidation';
 import LoadingScreen from '@/components/common/LoadingScreen';
 
@@ -10,6 +10,7 @@ interface OnboardingCompletionGuardProps {
 
 export const OnboardingCompletionGuard: React.FC<OnboardingCompletionGuardProps> = ({ children }) => {
   const { isOnboardingComplete, isLoading, error, invalidateOnboardingCache } = useUnifiedOnboardingValidation();
+  const location = useLocation();
 
   // Invalidar cache ao montar o componente para garantir dados frescos
   useEffect(() => {
@@ -27,13 +28,21 @@ export const OnboardingCompletionGuard: React.FC<OnboardingCompletionGuardProps>
     return <>{children}</>;
   }
 
-  // Se o onboarding já foi completado, redirecionar para o review (não para dashboard)
-  if (isOnboardingComplete) {
-    console.log('🔄 OnboardingCompletionGuard: Onboarding já completado, redirecionando para review');
-    return <Navigate to="/profile/onboarding-review" replace />;
+  // NOVA LÓGICA: Verificar se o usuário está tentando acessar uma rota específica do onboarding
+  const isOnOnboardingRoute = location.pathname.startsWith('/onboarding-new');
+  
+  // Se o onboarding já foi completado E o usuário está tentando acessar o onboarding
+  if (isOnboardingComplete && isOnOnboardingRoute) {
+    console.log('🔄 OnboardingCompletionGuard: Onboarding já completado, redirecionando para dashboard');
+    return <Navigate to="/dashboard" replace />;
   }
 
-  // Se não foi completado, permitir acesso ao fluxo de onboarding
-  console.log('✅ OnboardingCompletionGuard: Onboarding incompleto, permitindo acesso ao formulário');
+  // Se não foi completado e está na rota do onboarding, permitir acesso
+  if (!isOnboardingComplete && isOnOnboardingRoute) {
+    console.log('✅ OnboardingCompletionGuard: Onboarding incompleto, permitindo acesso ao formulário');
+    return <>{children}</>;
+  }
+
+  // Para qualquer outra situação, permitir acesso
   return <>{children}</>;
 };
