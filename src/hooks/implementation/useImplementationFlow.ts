@@ -5,7 +5,6 @@ import { useAuth } from "@/contexts/auth";
 import { supabase, Solution, Progress } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useLogging } from "@/hooks/useLogging";
-import { useSolutionDataCentralized } from "@/hooks/solution/useSolutionDataCentralized";
 
 export const useImplementationFlow = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,56 +16,101 @@ export const useImplementationFlow = () => {
   
   const [solution, setSolution] = useState<Solution | null>(null);
   const [progress, setProgress] = useState<Progress | null>(null);
-  const [completedModules, setCompletedModules] = useState<number[]>([]);
+  const [materials, setMaterials] = useState<any[]>([]);
+  const [tools, setTools] = useState<any[]>([]);
+  const [videos, setVideos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("tools");
 
-  // Buscar dados centralizados da solução
-  const { data: solutionData, isLoading: dataLoading, error: dataError } = useSolutionDataCentralized(id);
-
-  // Fetch solution and progress
+  // Fetch all implementation data
   useEffect(() => {
     const fetchImplementationData = async () => {
       if (!id || !user) return;
       
       try {
         setLoading(true);
+        log("Buscando dados da implementação", { solutionId: id });
         
-        // Verificar se a solução existe nos dados centralizados
-        if (solutionData?.solution) {
-          setSolution(solutionData.solution);
-          log("Solução carregada para implementação", { 
-            solutionId: solutionData.solution.id,
-            title: solutionData.solution.title
-          });
+        // Buscar solução
+        let solutionQuery = supabase
+          .from("solutions")
+          .select("*")
+          .eq("id", id);
+          
+        if (!isAdmin) {
+          solutionQuery = solutionQuery.eq("published", true);
         }
         
-        // Buscar progresso do usuário
-        const { data: progressData, error: progressError } = await supabase
-          .from("progress")
-          .select("*")
-          .eq("user_id", user.id)
-          .eq("solution_id", id)
-          .maybeSingle();
+        const { data: solutionData, error: solutionError } = await solutionQuery.maybeSingle();
         
-        if (progressError) {
-          logError("Erro ao buscar progresso:", progressError);
-        } else if (progressData) {
-          setProgress(progressData as Progress);
+        if (solutionError) {
+          logError("Erro ao buscar solução:", solutionError);
+          setError("Erro ao carregar solução");
+          return;
+        }
+
+        if (!solutionData) {
+          setError("Solução não encontrada");
+          navigate("/solutions");
+          return;
+        }
+
+        setSolution(solutionData as Solution);
+
+        // Buscar dados relacionados em paralelo
+        const [materialsResult, toolsResult, videosResult, progressResult] = await Promise.allSettled([
+          // Materiais
+          supabase
+            .from("solution_resources")
+            .select("*")
+            .eq("solution_id", id)
+            .neq("type", "video")
+            .neq("type", "youtube")
+            .order("created_at", { ascending: true }),
           
-          if (progressData.completed_modules && Array.isArray(progressData.completed_modules)) {
-            setCompletedModules(progressData.completed_modules);
-          } else {
-            setCompletedModules([]);
-          }
+          // Ferramentas
+          supabase
+            .from("solution_tools_reference")
+            .select(`*, tools (*)`)
+            .eq("solution_id", id)
+            .order('order_index'),
           
-          log("Progresso carregado", { 
-            progressId: progressData.id,
-            completedModules: progressData.completed_modules?.length || 0
-          });
+          // Vídeos
+          supabase
+            .from("solution_resources")
+            .select("*")
+            .eq("solution_id", id)
+            .in("type", ["video", "youtube"])
+            .order("created_at", { ascending: true }),
+          
+          // Progresso do usuário
+          supabase
+            .from("progress")
+            .select("*")
+            .eq("solution_id", id)
+            .eq("user_id", user.id)
+            .maybeSingle()
+        ]);
+
+        // Processar resultados
+        if (materialsResult.status === 'fulfilled' && !materialsResult.value.error) {
+          setMaterials(materialsResult.value.data || []);
+        }
+        
+        if (toolsResult.status === 'fulfilled' && !toolsResult.value.error) {
+          setTools(toolsResult.value.data || []);
+        }
+        
+        if (videosResult.status === 'fulfilled' && !videosResult.value.error) {
+          setVideos(videosResult.value.data || []);
+        }
+        
+        if (progressResult.status === 'fulfilled' && !progressResult.value.error) {
+          setProgress(progressResult.value.data);
         } else {
-          // Criar progresso inicial se não existir
-          const { data: newProgress, error: createError } = await supabase
+          // Criar progresso inicial
+          const { data: newProgress } = await supabase
             .from("progress")
             .insert({
               user_id: user.id,
@@ -79,31 +123,33 @@ export const useImplementationFlow = () => {
             .select()
             .single();
           
-          if (createError) {
-            logError("Erro ao criar progresso:", createError);
-          } else if (newProgress) {
+          if (newProgress) {
             setProgress(newProgress as Progress);
-            setCompletedModules([]);
-            log("Progresso inicial criado", { progressId: newProgress.id });
           }
         }
+
+        log("Dados carregados com sucesso", {
+          solution: !!solutionData,
+          materials: materialsResult.status === 'fulfilled' ? materialsResult.value.data?.length : 0,
+          tools: toolsResult.status === 'fulfilled' ? toolsResult.value.data?.length : 0,
+          videos: videosResult.status === 'fulfilled' ? videosResult.value.data?.length : 0
+        });
+
       } catch (error) {
         logError("Erro ao buscar dados de implementação:", error);
+        setError("Erro ao carregar implementação");
         toast({
           title: "Erro ao carregar implementação",
           description: "Ocorreu um erro ao tentar carregar os dados da implementação.",
           variant: "destructive",
         });
-        navigate("/solutions");
       } finally {
         setLoading(false);
       }
     };
     
-    if (!dataLoading && solutionData) {
-      fetchImplementationData();
-    }
-  }, [id, user, solutionData, dataLoading, toast, navigate, log, logError]);
+    fetchImplementationData();
+  }, [id, user, isAdmin, toast, navigate, log, logError]);
 
   // Função para marcar implementação como completa
   const completeImplementation = async () => {
@@ -146,26 +192,22 @@ export const useImplementationFlow = () => {
     }
   };
 
-  const isLoadingAny = loading || dataLoading;
-
   return {
     // Dados
     solution,
     progress,
-    completedModules,
-    materials: solutionData?.materials || [],
-    tools: solutionData?.tools || [],
-    videos: solutionData?.videos || [],
+    materials,
+    tools,
+    videos,
     
     // Estados
-    loading: isLoadingAny,
-    error: dataError,
+    loading,
+    error,
     activeTab,
     setActiveTab,
     
     // Ações
     completeImplementation,
-    setCompletedModules,
     
     // Metadados
     solutionId: id,

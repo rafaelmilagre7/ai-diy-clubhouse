@@ -2,11 +2,12 @@
 import { Routes, Route } from 'react-router-dom';
 import { authRoutes } from '../../routes/AuthRoutes';
 import { adminRoutes } from '../../routes/AdminRoutes';
-import { memberRoutes } from '../../routes/MemberRoutes';
+import { MemberRoutes } from '../../auth/MemberRoutes';
 import { OnboardingRoutes } from '../../routes/OnboardingRoutes';
 import { formacaoRoutes } from '../../routes/FormacaoRoutes';
 import { CommunityRedirects } from './CommunityRedirects';
 import { SmartRoutePreloader } from './SmartRoutePreloader';
+import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import NotFound from '@/pages/NotFound';
 import InvitePage from '@/pages/InvitePage';
 
@@ -26,10 +27,12 @@ const AppRoutes = () => {
           <Route key={route.path} path={route.path} element={route.element} />
         ))}
         
-        {/* Member Routes */}
-        {memberRoutes.map((route) => (
-          <Route key={route.path} path={route.path} element={route.element} />
-        ))}
+        {/* Member Routes - Usando componente protegido */}
+        <Route path="/*" element={
+          <ProtectedRoutes>
+            <MemberRoutes />
+          </ProtectedRoutes>
+        } />
         
         {/* Admin Routes */}
         {adminRoutes.map((route) => (
