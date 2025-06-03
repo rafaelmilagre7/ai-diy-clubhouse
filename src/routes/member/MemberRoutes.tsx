@@ -21,12 +21,12 @@ export const MemberRoutes: React.FC = () => {
     <Suspense fallback={<LoadingScreen />}>
       <Routes>
         {/* Rota principal - Dashboard */}
-        <Route index element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<Dashboard />} />
         
         {/* Trilha de implementação - requer onboarding */}
         <Route 
-          path="/implementation-trail" 
+          path="implementation-trail" 
           element={
             <OnboardingProtectedRoute>
               <ImplementationTrailPage />
@@ -36,7 +36,7 @@ export const MemberRoutes: React.FC = () => {
         
         {/* Networking - requer onboarding */}
         <Route 
-          path="/networking/*" 
+          path="networking/*" 
           element={
             <OnboardingProtectedRoute>
               <NetworkingRoutes />
@@ -45,15 +45,15 @@ export const MemberRoutes: React.FC = () => {
         />
         
         {/* Demais rotas - não requerem onboarding */}
-        <Route path="/profile/*" element={<ProfileRoutes />} />
-        <Route path="/solutions" element={<SolutionsPage />} />
-        <Route path="/solutions/:id" element={<SolutionDetails />} />
-        <Route path="/comunidade/*" element={<CommunityRoutes />} />
-        <Route path="/learning/*" element={<LearningRoutes />} />
-        <Route path="/tools" element={<ToolsPage />} />
+        <Route path="profile/*" element={<ProfileRoutes />} />
+        <Route path="solutions" element={<SolutionsPage />} />
+        <Route path="solutions/:id" element={<SolutionDetails />} />
+        <Route path="comunidade/*" element={<CommunityRoutes />} />
+        <Route path="learning/*" element={<LearningRoutes />} />
+        <Route path="tools" element={<ToolsPage />} />
         
         {/* Fallback */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="dashboard" replace />} />
       </Routes>
     </Suspense>
   );
