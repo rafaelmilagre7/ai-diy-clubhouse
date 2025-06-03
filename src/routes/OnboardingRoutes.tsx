@@ -1,43 +1,24 @@
 
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { OnboardingFinalFlow } from '@/components/onboarding/final/OnboardingFinalFlow';
-import { OnboardingCompletionGuard } from '@/components/onboarding/OnboardingCompletionGuard';
-import OnboardingFinalCompleted from '@/pages/onboarding/OnboardingFinalCompleted';
+import NovoOnboardingNew from '@/pages/onboarding/NovoOnboardingNew';
+import { OnboardingCompletedNew } from '@/components/onboarding/OnboardingCompletedNew';
 
 export const OnboardingRoutes = () => {
   return (
-    <OnboardingCompletionGuard>
-      <Routes>
-        {/* Novo fluxo de onboarding final - salva apenas no final */}
-        <Route 
-          path="final" 
-          element={<OnboardingFinalFlow />} 
-        />
-        
-        <Route 
-          path="final/completed" 
-          element={<OnboardingFinalCompleted />} 
-        />
-        
-        {/* Redirecionar rota principal para o novo sistema */}
-        <Route 
-          index 
-          element={<Navigate to="/onboarding-new/final" replace />} 
-        />
-        
-        {/* Redirecionar página de sucesso antiga para a nova */}
-        <Route 
-          path="completed" 
-          element={<Navigate to="/onboarding-new/final/completed" replace />} 
-        />
-        
-        {/* Redirect de todas as outras rotas antigas para o novo sistema */}
-        <Route 
-          path="*" 
-          element={<Navigate to="/onboarding-new/final" replace />} 
-        />
-      </Routes>
-    </OnboardingCompletionGuard>
+    <Routes>
+      {/* Rota principal do onboarding */}
+      <Route index element={<NovoOnboardingNew />} />
+      
+      {/* Página de conclusão */}
+      <Route path="completed" element={<OnboardingCompletedNew />} />
+      
+      {/* Redirect de rotas antigas para o novo sistema */}
+      <Route path="final" element={<Navigate to="/onboarding-new" replace />} />
+      <Route path="final/*" element={<Navigate to="/onboarding-new" replace />} />
+      
+      {/* Catch-all para outras rotas */}
+      <Route path="*" element={<Navigate to="/onboarding-new" replace />} />
+    </Routes>
   );
 };

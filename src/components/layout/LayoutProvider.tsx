@@ -1,123 +1,79 @@
 
 import { useNavigate, useLocation } from "react-router-dom";
-import { useEffect, useState, useRef, memo, useMemo } from "react";
-import { useOptimizedAuth } from "@/hooks/auth/useOptimizedAuth";
+import { useEffect, useState, memo } from "react";
+import { useAuth } from "@/contexts/auth";
 import { useUnifiedOnboardingValidation } from "@/hooks/onboarding/useUnifiedOnboardingValidation";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import MemberLayout from "./MemberLayout";
 import FormacaoLayout from "./formacao/FormacaoLayout";
-import { PageTransitionWithFallback } from "@/components/transitions/PageTransitionWithFallback";
 import AppRoutes from "@/components/routing/AppRoutes";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 
 const LayoutProvider = memo(() => {
-  const {
-    user,
-    profile,
-    isAdmin,
-    isFormacao,
-    isLoading: authLoading,
-  } = useOptimizedAuth();
+  const { user, profile, isAdmin, isFormacao, isLoading: authLoading } = useAuth();
   const { isOnboardingComplete, isLoading: onboardingLoading } = useUnifiedOnboardingValidation();
   const navigate = useNavigate();
   const location = useLocation();
   const [layoutReady, setLayoutReady] = useState(false);
-  const timeoutRef = useRef<number | null>(null);
 
-  // Memoizar verificações de rota
-  const routeChecks = useMemo(() => ({
-    isLearningRoute: location.pathname.startsWith('/learning') || location.pathname.startsWith('/aprendizado'),
-    isPathAdmin: location.pathname.startsWith('/admin'),
-    isPathFormacao: location.pathname.startsWith('/formacao'),
-    isFormacaoRoute: location.pathname.startsWith('/formacao'),
-    isOnboardingRoute: location.pathname.startsWith('/onboarding') || location.pathname.startsWith('/onboarding-new'),
-    isMemberRoute: !location.pathname.startsWith('/admin') && !location.pathname.startsWith('/formacao') && !location.pathname.startsWith('/onboarding')
-  }), [location.pathname]);
+  // Verificações de rota simplificadas
+  const isOnboardingRoute = location.pathname.startsWith('/onboarding');
+  const isFormacaoRoute = location.pathname.startsWith('/formacao');
+  const isAuthRoute = location.pathname === '/login' || location.pathname === '/';
 
-  // Memoizar mensagem de loading
-  const loadingMessage = useMemo(() => {
-    if (authLoading) return "Preparando seu dashboard...";
-    if (onboardingLoading) return "Verificando configurações...";
-    if (!user) return "Verificando autenticação...";
-    return "Carregando layout...";
-  }, [authLoading, onboardingLoading, user]);
-
-  // Verificar autenticação
   useEffect(() => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
+    // Se ainda está carregando, aguardar
+    if (authLoading || onboardingLoading) {
+      return;
     }
-    
-    if (!authLoading && !onboardingLoading) {
-      if (!user) {
-        navigate('/login', { replace: true });
-        return;
-      }
-      
-      // Permitir acesso às rotas de onboarding mesmo se não completo
-      if (!routeChecks.isOnboardingRoute && !isOnboardingComplete) {
-        navigate('/onboarding-new', { replace: true });
-        return;
-      }
-      
-      setLayoutReady(true);
-      
-      // Verificar redirecionamento por role apenas se não estiver em onboarding
-      if (user && profile && !routeChecks.isOnboardingRoute) {
-        const { isLearningRoute, isPathAdmin, isPathFormacao } = routeChecks;
-        
-        if (isAdmin && !isPathAdmin && !isPathFormacao && !isLearningRoute) {
-          navigate('/admin', { replace: true });
-        } 
-        else if (isFormacao && !isAdmin && !isPathFormacao && !isLearningRoute) {
-          navigate('/formacao', { replace: true });
-        }
-      }
-    } else {
-      timeoutRef.current = window.setTimeout(() => {
-        setLayoutReady(true);
-      }, 3000);
-    }
-    
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [user, profile, isAdmin, isFormacao, authLoading, onboardingLoading, isOnboardingComplete, navigate, routeChecks]);
 
-  // Renderizar layout baseado na rota
-  if (layoutReady && user) {
-    const { isFormacaoRoute, isLearningRoute, isMemberRoute, isOnboardingRoute } = routeChecks;
-    
-    if (isFormacaoRoute && (isFormacao || isAdmin)) {
-      return (
-        <ErrorBoundary>
-          <PageTransitionWithFallback isVisible={true}>
-            <FormacaoLayout>
-              <AppRoutes />
-            </FormacaoLayout>
-          </PageTransitionWithFallback>
-        </ErrorBoundary>
-      );
-    } else if (isMemberRoute || isLearningRoute || isOnboardingRoute || !isFormacao || isAdmin) {
-      return (
-        <ErrorBoundary>
-          <PageTransitionWithFallback isVisible={true}>
-            <MemberLayout>
-              <AppRoutes />
-            </MemberLayout>
-          </PageTransitionWithFallback>
-        </ErrorBoundary>
-      );
+    // Se não há usuário e não é rota de auth, ir para login
+    if (!user && !isAuthRoute) {
+      navigate('/login', { replace: true });
+      return;
     }
+
+    // Se há usuário mas sem onboarding completo e não está na rota de onboarding
+    if (user && !isOnboardingComplete && !isOnboardingRoute && !isAuthRoute) {
+      navigate('/onboarding-new', { replace: true });
+      return;
+    }
+
+    // Layout está pronto
+    setLayoutReady(true);
+  }, [user, isOnboardingComplete, authLoading, onboardingLoading, isOnboardingRoute, isAuthRoute, navigate]);
+
+  // Mostrar loading enquanto verifica
+  if (!layoutReady || authLoading || onboardingLoading) {
+    return <LoadingScreen message="Carregando..." />;
   }
 
+  // Se não há usuário, deixar AppRoutes lidar com o roteamento
+  if (!user) {
+    return (
+      <ErrorBoundary>
+        <AppRoutes />
+      </ErrorBoundary>
+    );
+  }
+
+  // Escolher layout baseado na rota e papel do usuário
+  if (isFormacaoRoute && (isFormacao || isAdmin)) {
+    return (
+      <ErrorBoundary>
+        <FormacaoLayout>
+          <AppRoutes />
+        </FormacaoLayout>
+      </ErrorBoundary>
+    );
+  }
+
+  // Layout padrão para membros
   return (
     <ErrorBoundary>
-      <PageTransitionWithFallback isVisible={true}>
-        <LoadingScreen message={loadingMessage} />
-      </PageTransitionWithFallback>
+      <MemberLayout>
+        <AppRoutes />
+      </MemberLayout>
     </ErrorBoundary>
   );
 });

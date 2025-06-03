@@ -10,26 +10,23 @@ export const useUnifiedOnboardingValidation = () => {
 
   const checkOnboardingStatus = useCallback(async () => {
     if (!user?.id) {
+      setIsOnboardingComplete(false);
       setIsLoading(false);
       return;
     }
 
     try {
-      console.log('🔍 Verificando status unificado do onboarding...');
+      console.log('🔍 Verificando status do onboarding para usuário:', user.id);
 
-      // Verificar quick_onboarding primeiro
-      const { data: quickData, error: quickError } = await supabase
+      // Verificar quick_onboarding primeiro (prioridade)
+      const { data: quickData } = await supabase
         .from('quick_onboarding')
         .select('is_completed')
         .eq('user_id', user.id)
+        .eq('is_completed', true)
         .maybeSingle();
 
-      if (quickError && quickError.code !== 'PGRST116') {
-        console.error('❌ Erro ao verificar quick_onboarding:', quickError);
-      }
-
-      // Se quick_onboarding está completo, considerar como completo
-      if (quickData?.is_completed) {
+      if (quickData) {
         console.log('✅ Quick onboarding completo');
         setIsOnboardingComplete(true);
         setIsLoading(false);
@@ -37,22 +34,21 @@ export const useUnifiedOnboardingValidation = () => {
       }
 
       // Verificar onboarding_progress como fallback
-      const { data: progressData, error: progressError } = await supabase
+      const { data: progressData } = await supabase
         .from('onboarding_progress')
         .select('is_completed')
         .eq('user_id', user.id)
+        .eq('is_completed', true)
         .maybeSingle();
 
-      if (progressError && progressError.code !== 'PGRST116') {
-        console.error('❌ Erro ao verificar onboarding_progress:', progressError);
-      }
-
-      const isCompleted = progressData?.is_completed || false;
+      const isCompleted = !!progressData;
       console.log(`📊 Status final do onboarding: ${isCompleted}`);
+      
       setIsOnboardingComplete(isCompleted);
 
     } catch (error) {
-      console.error('❌ Erro inesperado na validação:', error);
+      console.error('❌ Erro ao verificar onboarding:', error);
+      // Em caso de erro, assumir que não está completo para segurança
       setIsOnboardingComplete(false);
     } finally {
       setIsLoading(false);

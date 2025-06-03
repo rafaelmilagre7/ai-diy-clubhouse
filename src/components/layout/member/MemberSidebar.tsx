@@ -18,17 +18,17 @@ export const MemberSidebar: React.FC<BaseSidebarProps> = ({
 }) => {
   return (
     <>
-      {/* Desktop Sidebar */}
+      {/* Desktop Sidebar - sempre visível em desktop */}
       <aside
         className={cn(
           "fixed left-0 top-0 z-30 h-full bg-[#0F111A] border-r border-gray-700 transition-all duration-300 ease-in-out",
           "hidden md:flex md:flex-col",
-          sidebarOpen ? "w-64" : "w-[70px]"
+          sidebarOpen ? "w-64" : "w-16"
         )}
       >
         <SidebarLogo sidebarOpen={sidebarOpen} />
         
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto py-4">
           <MemberSidebarNav sidebarOpen={sidebarOpen} />
         </div>
         
@@ -41,10 +41,18 @@ export const MemberSidebar: React.FC<BaseSidebarProps> = ({
         />
       </aside>
 
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Mobile Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-0 z-40 h-full w-64 bg-[#0F111A] border-r border-gray-700 transition-all duration-300 ease-in-out md:hidden",
+          "fixed left-0 top-0 z-50 h-full w-64 bg-[#0F111A] border-r border-gray-700 transition-transform duration-300 ease-in-out md:hidden",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -60,7 +68,7 @@ export const MemberSidebar: React.FC<BaseSidebarProps> = ({
           </Button>
         </div>
         
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto py-4">
           <MemberSidebarNav sidebarOpen={true} />
         </div>
         
@@ -73,14 +81,27 @@ export const MemberSidebar: React.FC<BaseSidebarProps> = ({
         />
       </aside>
 
-      {/* Mobile Menu Button */}
+      {/* Mobile Menu Toggle - sempre visível em mobile */}
       <Button
         variant="ghost"
         size="sm"
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="fixed top-4 left-4 z-50 md:hidden bg-[#0F111A]/80 backdrop-blur-sm border border-gray-700 text-white hover:bg-gray-800"
+        className="fixed top-4 left-4 z-40 md:hidden bg-[#0F111A]/90 backdrop-blur-sm border border-gray-700 text-white hover:bg-gray-800"
       >
         <Menu size={20} />
+      </Button>
+
+      {/* Desktop Toggle - botão discreto para colapsar/expandir */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        className={cn(
+          "fixed top-4 z-30 hidden md:flex bg-[#0F111A]/90 backdrop-blur-sm border border-gray-700 text-white hover:bg-gray-800",
+          sidebarOpen ? "left-[248px]" : "left-[48px]"
+        )}
+      >
+        <Menu size={16} />
       </Button>
     </>
   );
