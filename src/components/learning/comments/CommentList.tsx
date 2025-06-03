@@ -17,7 +17,7 @@ interface CommentListProps {
   error?: Error | null;
 }
 
-const CommentList = React.memo<CommentListProps>(({
+export const CommentList: React.FC<CommentListProps> = ({
   comments,
   lessonId,
   onReply,
@@ -94,9 +94,6 @@ const CommentList = React.memo<CommentListProps>(({
       ))}
     </div>
   );
-});
+};
 
-CommentList.displayName = 'CommentList';
-
-export { CommentList };
 export default CommentList;

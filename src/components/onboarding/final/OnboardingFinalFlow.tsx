@@ -14,7 +14,7 @@ import { StepPersonalization } from './steps/StepPersonalization';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
-const OnboardingFinalFlow: React.FC = () => {
+export const OnboardingFinalFlow: React.FC = () => {
   const navigate = useNavigate();
   const {
     data,
@@ -132,6 +132,3 @@ const OnboardingFinalFlow: React.FC = () => {
     </OnboardingLayout>
   );
 };
-
-// Export default adicionado
-export default OnboardingFinalFlow;

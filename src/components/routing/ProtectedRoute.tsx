@@ -2,6 +2,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from "@/contexts/auth";
+import { useUnifiedOnboardingValidation } from '@/hooks/onboarding/useUnifiedOnboardingValidation';
 import LoadingScreen from "@/components/common/LoadingScreen";
 
 interface ProtectedRouteProps {
@@ -11,41 +12,36 @@ interface ProtectedRouteProps {
   requireOnboarding?: boolean;
 }
 
-export const ProtectedRoute = ({ 
+const ProtectedRoute = ({ 
   children, 
   requireAdmin = false,
   requiredRole,
   requireOnboarding = false
 }: ProtectedRouteProps) => {
-  const { user, profile, isLoading } = useAuth();
+  const { user, isAdmin, isLoading: authLoading } = useAuth();
+  const { isOnboardingComplete, isLoading: onboardingLoading } = useUnifiedOnboardingValidation();
   const location = useLocation();
   
-  console.log('ProtectedRoute: Checking auth', { user: !!user, profile: !!profile, isLoading });
-  
-  // Se estiver carregando, mostra tela de loading por tempo limitado
-  if (isLoading) {
+  // Se estiver carregando, mostra tela de loading
+  if (authLoading || onboardingLoading) {
     return <LoadingScreen message="Verificando autenticação..." />;
   }
 
   // Se não houver usuário autenticado, redireciona para login
   if (!user) {
-    console.log('ProtectedRoute: No user, redirecting to login');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
   
   // Verificar permissões de admin
-  if ((requiredRole === 'admin' || requireAdmin) && profile?.role !== 'admin') {
-    console.log('ProtectedRoute: Admin required but user is not admin');
-    return <Navigate to="/dashboard" replace />;
-  }
-  
-  // Verificar permissões de formação
-  if (requiredRole === 'formacao' && profile?.role !== 'formacao' && profile?.role !== 'admin') {
-    console.log('ProtectedRoute: Formacao required but user does not have permission');
+  if ((requiredRole === 'admin' || requireAdmin) && !isAdmin) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  console.log('ProtectedRoute: Access granted');
+  // Verificar onboarding apenas se explicitamente requerido
+  if (requireOnboarding && !isOnboardingComplete && !isAdmin && !location.pathname.startsWith('/onboarding')) {
+    return <Navigate to="/onboarding-new" replace />;
+  }
+
   return <>{children}</>;
 };
 

@@ -1,12 +1,11 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { MoreVertical, Play, Trash2, CheckCircle } from 'lucide-react';
+import { MoreVertical, Play, Trash2 } from 'lucide-react';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
-  DropdownMenuSeparator,
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 
@@ -41,19 +40,6 @@ export const AdminActions = ({
             ? 'Já em Desenvolvimento' 
             : 'Marcar como Em Desenvolvimento'}
         </DropdownMenuItem>
-        
-        <DropdownMenuItem 
-          onClick={() => onUpdateStatus('completed')}
-          disabled={adminActionLoading || suggestionStatus === 'completed'}
-        >
-          <CheckCircle className="mr-2 h-4 w-4" />
-          {suggestionStatus === 'completed' 
-            ? 'Já Implementada' 
-            : 'Marcar como Concluída'}
-        </DropdownMenuItem>
-        
-        <DropdownMenuSeparator />
-        
         <DropdownMenuItem 
           onClick={onOpenDeleteDialog}
           className="text-destructive"

@@ -3,28 +3,24 @@ import { useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { v4 as uuidv4 } from 'uuid';
-import { compressImage, isValidImageFile, formatFileSize } from '@/utils/imageCompression';
 
 interface UseFileUploadProps {
   bucketName: string;
   folder?: string;
   onUploadComplete: (url: string, fileName?: string, fileSize?: number) => void;
   maxSize?: number;
-  autoCompress?: boolean; // Nova opção para compressão automática
 }
 
 export const useFileUpload = ({ 
   bucketName, 
   folder = '',
   onUploadComplete, 
-  maxSize = 300, // 300MB por padrão
-  autoCompress = true // Compressão ativada por padrão
+  maxSize = 300 // Atualizando para 300MB por padrão
 }: UseFileUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [uploadedFileUrl, setUploadedFileUrl] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [compressionProgress, setCompressionProgress] = useState<string | null>(null);
   const { toast } = useToast();
   const isUploadingRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -63,38 +59,8 @@ export const useFileUpload = ({
       setUploading(true);
       setFileName(file.name);
 
-      let processedFile = file;
-      
-      // Aplicar compressão automática se habilitada e for imagem
-      if (autoCompress && isValidImageFile(file)) {
-        setCompressionProgress('Comprimindo imagem...');
-        
-        try {
-          const originalSize = formatFileSize(file.size);
-          processedFile = await compressImage(file, {
-            maxWidth: 1920,
-            maxHeight: 1080,
-            quality: 0.85,
-            maxSizeKB: 500
-          });
-          const compressedSize = formatFileSize(processedFile.size);
-          
-          console.log(`Compressão concluída: ${originalSize} → ${compressedSize}`);
-          setCompressionProgress(null);
-          
-          toast({
-            title: 'Imagem otimizada',
-            description: `Tamanho reduzido de ${originalSize} para ${compressedSize}`,
-          });
-        } catch (compressionError) {
-          console.warn('Falha na compressão, usando arquivo original:', compressionError);
-          setCompressionProgress(null);
-          // Continuar com arquivo original se compressão falhar
-        }
-      }
-
-      // Gerar nome único para o arquivo
-      const fileExt = processedFile.name.split('.').pop();
+      // Gerar um nome único para o arquivo
+      const fileExt = file.name.split('.').pop();
       const fileName = `${uuidv4()}.${fileExt}`;
       const filePath = folder ? `${folder}/${fileName}` : fileName;
       
@@ -103,10 +69,12 @@ export const useFileUpload = ({
       // Fazer upload para o Supabase Storage
       const { data, error } = await supabase.storage
         .from(bucketName)
-        .upload(filePath, processedFile, {
+        .upload(filePath, file, {
           cacheControl: '3600',
           upsert: true,
-          duplex: "half",
+          duplex: "half", // Melhor suporte para uploads grandes
+          // Se necessário, podemos adicionar o signal do AbortController aqui
+          // signal: abortControllerRef.current.signal
         });
 
       if (error) {
@@ -125,7 +93,7 @@ export const useFileUpload = ({
       
       const publicUrl = urlData.publicUrl;
       setUploadedFileUrl(publicUrl);
-      onUploadComplete(publicUrl, processedFile.name, processedFile.size);
+      onUploadComplete(publicUrl, file.name, file.size);
 
       toast({
         title: 'Upload concluído',
@@ -135,6 +103,7 @@ export const useFileUpload = ({
     } catch (error: any) {
       console.error('Erro no upload:', error);
       
+      // Verificar se o erro é de timeout ou conexão
       const errorMessage = error.message || 'Erro ao fazer upload do arquivo';
       let displayMessage = errorMessage;
       
@@ -152,7 +121,6 @@ export const useFileUpload = ({
       });
     } finally {
       setUploading(false);
-      setCompressionProgress(null);
       abortControllerRef.current = null;
       setTimeout(() => {
         isUploadingRef.current = false;
@@ -165,7 +133,6 @@ export const useFileUpload = ({
     uploadedFileUrl,
     fileName,
     error,
-    compressionProgress,
     handleFileUpload,
     setUploadedFileUrl,
     cancelUpload,

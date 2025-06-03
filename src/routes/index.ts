@@ -1,4 +1,5 @@
 
-// Exportação simples do AppRoutes unificado
-export { default } from './AppRoutes';
-export { default as AppRoutes } from './AppRoutes';
+// Este arquivo apenas exporta o componente AppRoutes
+import AppRoutes from '../components/routing/AppRoutes';
+
+export { AppRoutes };
