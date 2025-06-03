@@ -5,8 +5,6 @@ import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import EmailPasswordForm from "./login/EmailPasswordForm";
-import GoogleLoginButton from "./login/GoogleLoginButton";
-import Divider from "./login/Divider";
 import { motion } from "framer-motion";
 
 const LoginForm = () => {
@@ -14,7 +12,7 @@ const LoginForm = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { signIn, user } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   
   // Redirect if already logged in
@@ -23,36 +21,6 @@ const LoginForm = () => {
       navigate('/dashboard', { replace: true });
     }
   }, [user, navigate]);
-
-  const handleGoogleSignIn = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      toast.info("Iniciando login com Google...", {
-        style: {
-          background: 'rgba(0, 234, 217, 0.1)',
-          border: '1px solid rgba(0, 234, 217, 0.3)',
-          color: 'white'
-        }
-      });
-      
-      // Usar string vazias para indicar login com Google
-      await signIn("", "");
-      // Navigation is handled by auth state change listeners
-    } catch (error: any) {
-      const errorMessage = "Não foi possível fazer login com o Google. Tente novamente.";
-      setError(errorMessage);
-      toast.error(errorMessage, {
-        style: {
-          background: 'rgba(239, 68, 68, 0.1)',
-          border: '1px solid rgba(239, 68, 68, 0.3)',
-          color: 'white'
-        }
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -143,13 +111,6 @@ const LoginForm = () => {
         onSubmit={handleEmailSignIn}
         isLoading={isLoading}
         error={error}
-      />
-
-      <Divider />
-
-      <GoogleLoginButton 
-        onClick={handleGoogleSignIn}
-        isLoading={isLoading}
       />
     </motion.div>
   );
