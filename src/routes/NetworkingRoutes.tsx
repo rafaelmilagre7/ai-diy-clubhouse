@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import NetworkingPage from '@/pages/member/NetworkingPage';
+import NetworkingPage from '@/pages/member/networking/NetworkingPage';
 
 export const NetworkingRoutes = () => {
   return (
