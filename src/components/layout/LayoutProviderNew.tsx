@@ -15,44 +15,69 @@ const LayoutProviderNew = memo(() => {
   const { isOnboardingComplete, isLoading: onboardingLoading } = useUnifiedOnboardingValidation();
   const navigate = useNavigate();
   const location = useLocation();
-  const [redirectHandled, setRedirectHandled] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   // Detectar tipo de rota
   const isOnboardingRoute = location.pathname.startsWith('/onboarding') || location.pathname.startsWith('/simple-onboarding');
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isFormacaoRoute = location.pathname.startsWith('/formacao');
-  const isAuthRoute = location.pathname === '/login' || location.pathname === '/';
+  const isLoginRoute = location.pathname === '/login';
+  const isRootRoute = location.pathname === '/';
 
   useEffect(() => {
-    if (authLoading || onboardingLoading || redirectHandled) {
+    // Aguardar carregamento inicial
+    if (authLoading || onboardingLoading) {
       return;
     }
 
-    // Se não há usuário, ir para login
-    if (!user && !isAuthRoute) {
+    // Evitar múltiplos redirecionamentos
+    if (hasInitialized) {
+      return;
+    }
+
+    console.log('🔄 LayoutProviderNew: Verificando redirecionamento', {
+      user: !!user,
+      isOnboardingComplete,
+      currentPath: location.pathname,
+      isAdmin,
+      isOnboardingRoute,
+      isLoginRoute
+    });
+
+    // Se não há usuário e não está em rota de login, ir para login
+    if (!user && !isLoginRoute && !isOnboardingRoute) {
+      console.log('🔄 Redirecionando para login - usuário não autenticado');
       navigate('/login', { replace: true });
-      setRedirectHandled(true);
+      setHasInitialized(true);
       return;
     }
 
     // Se usuário logado mas onboarding incompleto (exceto admin), ir para onboarding
-    if (user && !isOnboardingComplete && !isOnboardingRoute && !isAuthRoute && !isAdmin) {
-      // Usar simple onboarding por padrão
+    if (user && !isOnboardingComplete && !isOnboardingRoute && !isAdmin) {
+      console.log('🔄 Redirecionando para onboarding - onboarding incompleto');
       navigate('/simple-onboarding', { replace: true });
-      setRedirectHandled(true);
+      setHasInitialized(true);
       return;
     }
 
-    setRedirectHandled(true);
-  }, [user, isOnboardingComplete, authLoading, onboardingLoading, isOnboardingRoute, isAuthRoute, isAdmin, navigate, redirectHandled]);
+    // Se usuário está na raiz e autenticado, ir para dashboard
+    if (user && isRootRoute) {
+      console.log('🔄 Redirecionando para dashboard - usuário na raiz');
+      navigate('/dashboard', { replace: true });
+      setHasInitialized(true);
+      return;
+    }
+
+    setHasInitialized(true);
+  }, [user, isOnboardingComplete, authLoading, onboardingLoading, location.pathname, isAdmin, navigate, hasInitialized, isOnboardingRoute, isLoginRoute, isRootRoute]);
 
   // Loading state
-  if (authLoading || onboardingLoading || !redirectHandled) {
-    return <LoadingScreen message="Carregando..." />;
+  if (authLoading || onboardingLoading || !hasInitialized) {
+    return <LoadingScreen message="Carregando aplicação..." />;
   }
 
-  // Se não há usuário ou está em rota de onboarding, renderizar sem layout
-  if (!user || isOnboardingRoute) {
+  // Se não há usuário ou está em rota de onboarding/login, renderizar sem layout
+  if (!user || isOnboardingRoute || isLoginRoute) {
     return (
       <ErrorBoundary>
         <AppRoutesNew />

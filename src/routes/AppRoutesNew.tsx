@@ -16,18 +16,22 @@ export const AppRoutesNew: React.FC = () => {
   return (
     <Suspense fallback={<LoadingScreen />}>
       <Routes>
+        {/* Rota raiz */}
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        
         {/* Rotas de onboarding */}
         <Route path="/onboarding-new/*" element={<OnboardingRoutes />} />
         <Route path="/simple-onboarding" element={<SimpleOnboardingPage />} />
         
-        {/* Rotas por role */}
-        <Route path="/*" element={<MemberRoutes />} />
+        {/* Rotas por role - ordem específica */}
         <Route path="/admin/*" element={<AdminRoutes />} />
         <Route path="/formacao/*" element={<FormacaoRoutes />} />
         
-        {/* 404 */}
-        <Route path="/404" element={<NotFound />} />
-        <Route path="*" element={<Navigate to="/404" replace />} />
+        {/* Rotas de membros - deve vir por último para capturar todas as outras rotas */}
+        <Route path="/*" element={<MemberRoutes />} />
+        
+        {/* 404 - fallback final */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
   );
