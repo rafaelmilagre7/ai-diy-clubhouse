@@ -38,7 +38,8 @@ export function CourseAccessControl({
       if (course && open) {
         try {
           const courseRoles = await getRolesByCourse(course.id);
-          const roleIds = courseRoles.map(role => role.id);
+          // Corrigindo o acesso às propriedades - courseRoles já são os roles, não precisam de .roles
+          const roleIds = courseRoles.map(role => role?.id).filter(Boolean);
           setSelectedRoles(roleIds);
         } catch (error) {
           console.error("Erro ao carregar papéis do curso:", error);
