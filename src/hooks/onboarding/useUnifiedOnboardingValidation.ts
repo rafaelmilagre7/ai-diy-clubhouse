@@ -18,24 +18,37 @@ export const useUnifiedOnboardingValidation = () => {
     try {
       console.log('🔍 Verificando status do onboarding para usuário:', user.id);
 
-      // Verificar quick_onboarding primeiro
-      const { data: quickData } = await supabase
-        .from('quick_onboarding')
+      // Verificar PRIMEIRO na tabela onboarding_final
+      const { data: finalData, error: finalError } = await supabase
+        .from('onboarding_final')
         .select('is_completed')
         .eq('user_id', user.id)
         .eq('is_completed', true)
         .maybeSingle();
 
-      if (quickData) {
-        console.log('✅ Quick onboarding completo');
+      if (finalData && !finalError) {
+        console.log('✅ Onboarding final COMPLETO');
         setIsOnboardingComplete(true);
         setIsLoading(false);
         return;
       }
 
-      // Se não encontrou, assumir incompleto
-      console.log('📊 Onboarding incompleto');
-      setIsOnboardingComplete(false);
+      // Verificar na tabela onboarding como fallback
+      const { data: onboardingData, error: onboardingError } = await supabase
+        .from('onboarding')
+        .select('is_completed')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (onboardingData && !onboardingError) {
+        const isCompleted = onboardingData.is_completed === true;
+        console.log('✅ Onboarding status:', isCompleted);
+        setIsOnboardingComplete(isCompleted);
+      } else {
+        // Se não encontrou dados, assumir incompleto
+        console.log('📊 Onboarding incompleto - nenhum registro encontrado');
+        setIsOnboardingComplete(false);
+      }
 
     } catch (error) {
       console.error('❌ Erro ao verificar onboarding:', error);

@@ -7,7 +7,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/auth';
 import { LoggingProvider } from '@/contexts/logging';
 import { PerformanceProvider } from '@/contexts/performance/PerformanceProvider';
-import LayoutProvider from '@/components/layout/LayoutProvider';
+import LayoutProviderNew from '@/components/layout/LayoutProviderNew';
 import { useServiceWorker } from '@/hooks/common/useServiceWorker';
 import { useBundleAnalyzer } from '@/utils/bundleAnalyzer';
 import { initializeBrandAssetsBucket } from '@/utils/storage/initStorage';
@@ -55,7 +55,7 @@ const AppContent: React.FC = () => {
     return () => clearTimeout(timer);
   }, [analyzePerformance]);
 
-  return <LayoutProvider />;
+  return <LayoutProviderNew />;
 };
 
 function App() {
