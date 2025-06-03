@@ -5,7 +5,7 @@ import { LegacyRouteRedirects } from './LegacyRouteRedirects';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { lazy, Suspense } from 'react';
 
-// Lazy loading das páginas
+// Lazy loading das páginas - usando os caminhos corretos
 const OptimizedDashboard = lazy(() => import('@/pages/member/OptimizedDashboard'));
 const SolutionDetails = lazy(() => import('@/pages/member/SolutionDetails'));
 const SolutionImplementation = lazy(() => import('@/pages/member/SolutionImplementation'));
@@ -14,10 +14,10 @@ const Profile = lazy(() => import('@/pages/member/Profile'));
 const Tools = lazy(() => import('@/pages/member/Tools'));
 const Benefits = lazy(() => import('@/pages/member/Benefits'));
 const Events = lazy(() => import('@/pages/member/Events'));
-const Learning = lazy(() => import('@/pages/member/Learning'));
-const Community = lazy(() => import('@/pages/member/Community'));
-const Networking = lazy(() => import('@/pages/member/Networking'));
-const ImplementationTrail = lazy(() => import('@/pages/member/ImplementationTrail'));
+const Learning = lazy(() => import('@/pages/member/learning/LearningPage'));
+const Community = lazy(() => import('@/pages/member/community/CommunityPage'));
+const Networking = lazy(() => import('@/pages/member/networking/NetworkingPage'));
+const ImplementationTrail = lazy(() => import('@/pages/member/ImplementationTrailPage'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 // Admin pages
@@ -33,7 +33,7 @@ const AdminRoles = lazy(() => import('@/pages/admin/AdminRoles'));
 // Formação pages
 const FormacaoDashboard = lazy(() => import('@/pages/formacao/FormacaoDashboard'));
 
-export const AppRoutes = () => {
+const AppRoutes = () => {
   const { isLoading } = useAuth();
 
   if (isLoading) {
@@ -101,3 +101,5 @@ export const AppRoutes = () => {
     </Suspense>
   );
 };
+
+export default AppRoutes;
