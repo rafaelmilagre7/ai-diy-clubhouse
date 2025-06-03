@@ -60,6 +60,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
+  // Função para buscar perfil do usuário
+  const fetchUserProfile = useCallback(async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
+        console.error('Erro ao buscar perfil:', error);
+        return null;
+      }
+
+      return data as UserProfile;
+    } catch (error) {
+      console.error('Erro ao buscar perfil:', error);
+      return null;
+    }
+  }, []);
+
   // Handler otimizado para atualização de estado do AuthStateManager
   const handleAuthStateChange = useCallback((newState: Partial<AuthState>) => {
     setAuthState(prev => ({
@@ -70,6 +91,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
   // Extrair métodos de autenticação
   const { signIn, signOut, signInAsMember, signInAsAdmin } = useAuthMethods({ setIsLoading });
+  
+  // Buscar perfil quando usuário é autenticado
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (user && !profile) {
+        const userProfile = await fetchUserProfile(user.id);
+        if (userProfile) {
+          setProfile(userProfile);
+        }
+      }
+    };
+
+    loadProfile();
+  }, [user, profile, fetchUserProfile, setProfile]);
   
   // Salvar a rota autenticada quando o usuário fizer login com sucesso
   useEffect(() => {

@@ -34,7 +34,7 @@ export const useOptimizedDashboardData = () => {
       if (error) throw error;
       return data as Solution[];
     },
-    enabled: !!profile
+    enabled: !!profile // Só busca quando tem profile
   });
 
   // Fetch progress data com cache otimizado
@@ -51,10 +51,10 @@ export const useOptimizedDashboardData = () => {
       if (error) throw error;
       return data || [];
     },
-    enabled: !!profile
+    enabled: !!profile // Só busca quando tem profile
   });
 
-  // Fetch profiles data com cache otimizado
+  // Fetch profiles data com cache otimizado  
   const { 
     data: profilesData = [], 
     isLoading: profilesLoading 
@@ -68,7 +68,7 @@ export const useOptimizedDashboardData = () => {
       if (error) throw error;
       return data || [];
     },
-    enabled: !!profile
+    enabled: !!profile // Só busca quando tem profile
   });
 
   return {

@@ -14,12 +14,12 @@ export const useOptimizedAuth = () => {
     user: auth.user,
     profile: auth.profile,
     isAuthenticated: !!auth.user,
-    isAdmin: auth.profile?.role === 'admin',
-    isFormacao: auth.profile?.role === 'formacao',
+    isAdmin: auth.profile?.role === 'admin' || auth.isAdmin,
+    isFormacao: auth.profile?.role === 'formacao' || auth.isFormacao,
     isMember: auth.profile?.role === 'member',
     isLoading: auth.isLoading,
     hasProfile: !!auth.profile
-  }), [auth.user, auth.profile, auth.isLoading]);
+  }), [auth.user, auth.profile, auth.isLoading, auth.isAdmin, auth.isFormacao]);
 
   // Memoizar métodos para evitar re-criação
   const authMethods = useMemo(() => ({
