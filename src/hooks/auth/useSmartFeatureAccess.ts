@@ -1,132 +1,62 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
-import { useAccessCache } from './useAccessCache';
-import { useRetryWithBackoff } from './useRetryWithBackoff';
-import { logger } from '@/utils/logger';
 
-interface FeatureAccessResult {
-  has_access: boolean;
-  has_role_access: boolean;
-  onboarding_complete: boolean;
-  user_role: string | null;
+export interface FeatureAccessResult {
+  hasAccess: boolean;
+  hasRoleAccess: boolean;
+  onboardingComplete: boolean;
+  userRole: string | null;
   feature: string;
-  block_reason: 'none' | 'insufficient_role' | 'incomplete_onboarding';
+  blockReason: 'insufficient_role' | 'incomplete_onboarding' | 'none';
 }
 
-export const useSmartFeatureAccess = (feature: string) => {
-  const { user, isLoading: authLoading } = useAuth();
-  const [accessData, setAccessData] = useState<FeatureAccessResult | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
-  const cache = useAccessCache({ ttl: 5 * 60 * 1000 }); // 5 minutos
-  const { executeWithRetry } = useRetryWithBackoff({
-    maxAttempts: 3,
-    initialDelay: 1000
-  });
+export function useSmartFeatureAccess(feature: string) {
+  const { user } = useAuth();
 
-  const checkAccess = useCallback(async () => {
-    if (!user?.id || authLoading) {
-      setIsLoading(true);
-      return;
-    }
+  return useQuery({
+    queryKey: ['smart-feature-access', user?.id, feature],
+    queryFn: async (): Promise<FeatureAccessResult> => {
+      if (!user?.id) {
+        return {
+          hasAccess: false,
+          hasRoleAccess: false,
+          onboardingComplete: false,
+          userRole: null,
+          feature,
+          blockReason: 'insufficient_role'
+        };
+      }
 
-    const cacheKey = `access-${user.id}-${feature}`;
-    
-    // Verificar cache primeiro
-    const cachedResult = cache.get(cacheKey);
-    if (cachedResult) {
-      setAccessData(cachedResult);
-      setIsLoading(false);
-      setError(null);
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      logger.info('useSmartFeatureAccess', `Verificando acesso para feature: ${feature}`, {
-        userId: user.id,
-        feature
+      const { data, error } = await supabase.rpc('user_can_access_feature', {
+        p_user_id: user.id,
+        p_feature: feature
       });
 
-      const result = await executeWithRetry(async () => {
-        const { data, error: rpcError } = await supabase.rpc('user_can_access_feature', {
-          p_user_id: user.id,
-          p_feature: feature
-        });
+      if (error) {
+        console.error('Erro ao verificar acesso à funcionalidade:', error);
+        return {
+          hasAccess: false,
+          hasRoleAccess: false,
+          onboardingComplete: false,
+          userRole: null,
+          feature,
+          blockReason: 'insufficient_role'
+        };
+      }
 
-        if (rpcError) {
-          logger.error('useSmartFeatureAccess', 'Erro na função RPC', {
-            error: rpcError.message,
-            userId: user.id,
-            feature
-          });
-          throw rpcError;
-        }
-
-        return data;
-      }, `verificação de acesso para ${feature}`);
-
-      logger.info('useSmartFeatureAccess', 'Verificação de acesso concluída', {
-        result,
-        userId: user.id,
-        feature
-      });
-
-      setAccessData(result);
-      cache.set(cacheKey, result);
-
-    } catch (err: any) {
-      const errorMessage = err.message || 'Erro ao verificar permissões';
-      
-      logger.error('useSmartFeatureAccess', 'Falha na verificação de acesso', {
-        error: errorMessage,
-        userId: user.id,
-        feature
-      });
-      
-      setError(errorMessage);
-      
-      // Fallback: usuário não autenticado = sem acesso
-      const fallbackData: FeatureAccessResult = {
-        has_access: false,
-        has_role_access: false,
-        onboarding_complete: false,
-        user_role: null,
-        feature,
-        block_reason: 'insufficient_role'
+      return {
+        hasAccess: data.has_access,
+        hasRoleAccess: data.has_role_access,
+        onboardingComplete: data.onboarding_complete,
+        userRole: data.user_role,
+        feature: data.feature,
+        blockReason: data.block_reason
       };
-      
-      setAccessData(fallbackData);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user?.id, feature, authLoading, cache, executeWithRetry]);
-
-  // Verificar acesso quando usuário ou feature mudarem
-  useEffect(() => {
-    checkAccess();
-  }, [checkAccess]);
-
-  const blockMessages = {
-    insufficient_role: 'Você não tem permissão para acessar esta funcionalidade.',
-    incomplete_onboarding: 'Complete seu onboarding para acessar esta funcionalidade.',
-    none: ''
-  };
-
-  return {
-    hasAccess: accessData?.has_access ?? false,
-    hasRoleAccess: accessData?.has_role_access ?? false,
-    onboardingComplete: accessData?.onboarding_complete ?? false,
-    userRole: accessData?.user_role,
-    blockReason: accessData?.block_reason ?? 'insufficient_role',
-    blockMessage: blockMessages[accessData?.block_reason ?? 'insufficient_role'],
-    isLoading,
-    error,
-    refetch: checkAccess
-  };
-};
+    },
+    enabled: !!user?.id,
+    staleTime: 30 * 1000, // 30 segundos
+    refetchOnMount: true,
+  });
+}

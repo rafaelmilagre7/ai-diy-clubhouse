@@ -1,7 +1,6 @@
 
 import { RouteObject } from "react-router-dom";
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
-import { SmartFeatureGuard } from '@/components/auth/SmartFeatureGuard';
 import MemberLayout from '@/components/layout/MemberLayout';
 
 // Member pages
@@ -37,27 +36,18 @@ import NetworkingPage from '@/pages/member/networking/NetworkingPage';
 import { ConnectionsManager } from '@/components/networking/ConnectionsManager';
 
 // Função helper para criar rotas protegidas com MemberLayout
-const createProtectedRoute = (path: string, Component: React.ComponentType<any>, featureGuard?: string) => ({
+const createProtectedRoute = (path: string, Component: React.ComponentType<any>) => ({
   path,
-  element: (
-    <ProtectedRoutes>
-      <MemberLayout>
-        {featureGuard ? (
-          <SmartFeatureGuard feature={featureGuard}>
-            <Component />
-          </SmartFeatureGuard>
-        ) : (
-          <Component />
-        )}
-      </MemberLayout>
-    </ProtectedRoutes>
-  )
+  element: <ProtectedRoutes><MemberLayout><Component /></MemberLayout></ProtectedRoutes>
 });
+
+// Log para diagnóstico
+console.log("Carregando rotas de membros com estrutura simplificada");
 
 export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/", Dashboard),
   createProtectedRoute("/dashboard", Dashboard),
-  createProtectedRoute("/implementation-trail", ImplementationTrailPage, "implementation_trail"),
+  createProtectedRoute("/implementation-trail", ImplementationTrailPage),
   createProtectedRoute("/solutions", Solutions),
   createProtectedRoute("/tools", Tools),
   createProtectedRoute("/tools/:id", ToolDetails),
@@ -71,7 +61,7 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/benefits", Benefits),
   createProtectedRoute("/events", Events),
   
-  // Learning/LMS Routes - sem guard de feature
+  // Learning/LMS Routes
   createProtectedRoute("/learning", LearningPage),
   createProtectedRoute("/learning/course/:id", CourseDetails),
   createProtectedRoute("/learning/course/:courseId/lesson/:lessonId", LessonView),
@@ -81,13 +71,13 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/suggestions/:id", SuggestionDetails),
   createProtectedRoute("/suggestions/new", NewSuggestion),
   
-  // Comunidade Routes - sem guard de feature
+  // Comunidade Routes
   createProtectedRoute("/comunidade", CommunityHome),
   createProtectedRoute("/comunidade/topico/:topicId", TopicView),
   createProtectedRoute("/comunidade/categoria/:slug", CategoryView),
   createProtectedRoute("/comunidade/novo-topico/:categorySlug", NewTopic),
   
-  // Networking Routes - mantém guard de feature
-  createProtectedRoute("/networking", NetworkingPage, "networking"),
-  createProtectedRoute("/networking/connections", () => <ConnectionsManager />, "networking")
+  // Networking Routes
+  createProtectedRoute("/networking", NetworkingPage),
+  createProtectedRoute("/networking/connections", () => <ConnectionsManager />)
 ];

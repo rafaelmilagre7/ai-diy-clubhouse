@@ -1,178 +1,133 @@
 
-import { useState, useCallback, useMemo } from 'react';
-import { toast } from 'sonner';
+import { useState, useCallback } from 'react';
 import { QuickOnboardingData } from '@/types/quickOnboarding';
+import { useQuickOnboardingDataLoader } from './useQuickOnboardingDataLoader';
+import { useQuickOnboardingAutoSave } from './useQuickOnboardingAutoSave';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/auth';
+import { toast } from 'sonner';
 
-export interface QuickOnboardingOptimized {
-  // Etapa 1: Quem é você?
-  name: string;
-  email: string;
-  whatsapp: string;
-  howFoundUs: string;
-
-  // Etapa 2: Seu Negócio
-  companyName: string;
-  role: string;
-  companySize: string;
-  business_challenges: string[]; // Atualizado para usar array
-
-  // Etapa 3: Experiência com IA
-  aiKnowledge: number;
-  has_implemented: string; // Atualizado de uses_ai
-  primary_goal: string; // Atualizado de main_goal
-}
-
-const initialData: QuickOnboardingOptimized = {
+const initialData: QuickOnboardingData = {
+  // Etapa 1: Informações Pessoais
   name: '',
   email: '',
   whatsapp: '',
-  howFoundUs: '',
-  companyName: '',
+  country_code: '+55',
+  birth_date: '',
+  instagram_url: '',
+  linkedin_url: '',
+  how_found_us: '',
+  referred_by: '',
+
+  // Etapa 2: Negócio
+  company_name: '',
   role: '',
-  companySize: '',
-  business_challenges: [], // Array vazio como padrão
-  aiKnowledge: 3,
+  company_size: '',
+  company_segment: '',
+  company_website: '',
+  annual_revenue_range: '',
+  main_challenge: '',
+
+  // Etapa 3: Experiência com IA
+  ai_knowledge_level: '',
+  uses_ai: '',
+  main_goal: '',
+
+  // Campos adicionais para compatibilidade
+  desired_ai_areas: [],
   has_implemented: '',
-  primary_goal: ''
+  previous_tools: []
 };
 
 export const useQuickOnboardingOptimized = () => {
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
-  const [data, setData] = useState<QuickOnboardingOptimized>(initialData);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [validationCache, setValidationCache] = useState<Record<number, boolean>>({});
+  const { 
+    data, 
+    setData, 
+    isLoading, 
+    hasExistingData, 
+    loadError 
+  } = useQuickOnboardingDataLoader();
 
-  const updateField = useCallback((field: keyof QuickOnboardingOptimized, value: string | number | string[]) => {
-    setData(prev => {
-      const newData = { ...prev, [field]: value };
-      // Invalidar cache de validação para o step atual
-      setValidationCache(cache => ({ ...cache, [currentStep]: false }));
-      return newData;
-    });
-  }, [currentStep]);
+  // Adicionar auto-save
+  const { isSaving, lastSaveTime } = useQuickOnboardingAutoSave(data);
 
-  const validateStep = useCallback((step: number): boolean => {
-    // Usar cache se disponível
-    if (validationCache[step] !== undefined) {
-      return validationCache[step];
-    }
+  const updateField = useCallback((field: keyof QuickOnboardingData, value: any) => {
+    setData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  }, [setData]);
 
-    let isValid = false;
-    switch (step) {
+  const canProceed = useCallback(() => {
+    switch (currentStep) {
       case 1:
-        isValid = !!(data.name && data.email && data.whatsapp && data.howFoundUs);
-        break;
+        // Etapa 1: Validar campos obrigatórios incluindo indicação condicional
+        const hasRequiredPersonalInfo = !!(data.name && data.email && data.whatsapp && data.how_found_us);
+        const hasReferralIfNeeded = data.how_found_us !== 'indicacao' || !!data.referred_by;
+        return hasRequiredPersonalInfo && hasReferralIfNeeded;
       case 2:
-        isValid = !!(data.companyName && data.role && data.companySize && data.business_challenges.length > 0);
-        break;
+        // Etapa 2: Validar informações completas do negócio
+        return !!(data.company_name && data.role && data.company_size && 
+                  data.company_segment && data.annual_revenue_range && data.main_challenge);
       case 3:
-        isValid = !!(data.has_implemented && data.primary_goal);
-        break;
+        // Etapa 3: Validar experiência completa com IA
+        return !!(data.ai_knowledge_level && data.uses_ai && data.main_goal);
       default:
-        isValid = false;
+        return false;
     }
-
-    // Atualizar cache
-    setValidationCache(cache => ({ ...cache, [step]: isValid }));
-    return isValid;
-  }, [data, validationCache]);
-
-  const canProceed = useMemo(() => validateStep(currentStep), [validateStep, currentStep]);
+  }, [currentStep, data]);
 
   const nextStep = useCallback(() => {
-    if (validateStep(currentStep)) {
-      if (currentStep < 4) {
-        setCurrentStep(prev => prev + 1);
-        if (currentStep < 3) {
-          toast.success('Ótimo! Vamos continuar 🎉');
-        }
-      }
-    } else {
-      toast.error('Por favor, preencha todos os campos obrigatórios');
+    if (canProceed()) {
+      setCurrentStep(prev => prev + 1);
     }
-  }, [currentStep, validateStep]);
+  }, [canProceed]);
 
   const previousStep = useCallback(() => {
-    if (currentStep > 1) {
-      setCurrentStep(prev => prev - 1);
-    }
-  }, [currentStep]);
-
-  const addChallenge = useCallback((challenge: string) => {
-    setData(prev => ({
-      ...prev,
-      business_challenges: [...prev.business_challenges, challenge]
-    }));
-  }, []);
-
-  const removeChallenge = useCallback((index: number) => {
-    setData(prev => ({
-      ...prev,
-      business_challenges: prev.business_challenges.filter((_, i) => i !== index)
-    }));
+    setCurrentStep(prev => Math.max(1, prev - 1));
   }, []);
 
   const completeOnboarding = useCallback(async () => {
-    setIsSubmitting(true);
+    if (!user || !canProceed()) {
+      toast.error('Complete todas as etapas antes de finalizar');
+      return false;
+    }
+
     try {
-      console.log('Dados do onboarding:', data);
-      
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      toast.success('Onboarding concluído com sucesso! 🎉');
+      // Marcar como completo na tabela quick_onboarding
+      const { error: quickError } = await supabase
+        .from('quick_onboarding')
+        .update({ 
+          is_completed: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id);
+
+      if (quickError) throw quickError;
+
+      // Marcar como completo na tabela onboarding_progress também
+      const { error: progressError } = await supabase
+        .from('onboarding_progress')
+        .update({ 
+          is_completed: true,
+          current_step: 'completed',
+          completed_steps: ['personal_info', 'professional_info', 'ai_experience'],
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id);
+
+      if (progressError) throw progressError;
+
+      toast.success('Onboarding concluído com sucesso!');
       return true;
     } catch (error) {
       console.error('Erro ao completar onboarding:', error);
-      toast.error('Erro ao salvar dados. Tente novamente.');
+      toast.error('Erro ao finalizar onboarding. Tente novamente.');
       return false;
-    } finally {
-      setIsSubmitting(false);
     }
-  }, [data]);
-
-  const getStepValidationErrors = useCallback((step: number): string[] => {
-    const errors: string[] = [];
-    
-    switch (step) {
-      case 1:
-        if (!data.name) errors.push('Nome é obrigatório');
-        if (!data.email) errors.push('Email é obrigatório');
-        if (!data.whatsapp) errors.push('WhatsApp é obrigatório');
-        if (!data.howFoundUs) errors.push('Como nos conheceu é obrigatório');
-        break;
-      case 2:
-        if (!data.companyName) errors.push('Nome da empresa é obrigatório');
-        if (!data.role) errors.push('Seu cargo é obrigatório');
-        if (!data.companySize) errors.push('Tamanho da empresa é obrigatório');
-        if (data.business_challenges.length === 0) errors.push('Selecione pelo menos um desafio');
-        break;
-      case 3:
-        if (!data.has_implemented) errors.push('Responda se já implementou IA');
-        if (!data.primary_goal) errors.push('Selecione seu principal objetivo');
-        break;
-    }
-    
-    return errors;
-  }, [data]);
-
-  const getProgressPercentage = useMemo(() => {
-    let completedFields = 0;
-    let totalFields = 0;
-
-    // Contar campos preenchidos por step
-    const stepFields = {
-      1: [data.name, data.email, data.whatsapp, data.howFoundUs],
-      2: [data.companyName, data.role, data.companySize, ...(data.business_challenges.length > 0 ? ['challenges'] : [])],
-      3: [data.has_implemented, data.primary_goal]
-    };
-
-    Object.values(stepFields).forEach(fields => {
-      totalFields += fields.length;
-      completedFields += fields.filter(field => field && field.toString().trim()).length;
-    });
-
-    return totalFields > 0 ? Math.round((completedFields / totalFields) * 100) : 0;
-  }, [data]);
+  }, [user, canProceed]);
 
   return {
     currentStep,
@@ -180,14 +135,14 @@ export const useQuickOnboardingOptimized = () => {
     updateField,
     nextStep,
     previousStep,
-    canProceed,
-    isSubmitting,
-    completeOnboarding,
-    validateStep,
-    getStepValidationErrors,
-    addChallenge,
-    removeChallenge,
-    getProgressPercentage,
-    totalSteps: 4
+    canProceed: canProceed(),
+    isLoading,
+    hasExistingData,
+    loadError,
+    totalSteps: 4,
+    // Adicionar estado de salvamento
+    isSaving,
+    lastSaveTime,
+    completeOnboarding
   };
 };

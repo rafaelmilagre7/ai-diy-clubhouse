@@ -2,40 +2,32 @@
 import { cleanRafaelData } from './cleanOnboardingData';
 import { createTestUser } from './createTestUser';
 
-// Função para setup automático mais seguro
-const safeAutoSetup = async () => {
+// Executar automaticamente a limpeza dos dados do Rafael e criar usuário de teste
+console.log('🚀 Executando setup automático para desenvolvimento...');
+
+// Aguardar um pouco para garantir que o Supabase está inicializado
+setTimeout(async () => {
   try {
-    console.log('🔧 Executando setup automático seguro...');
+    // Limpar dados do Rafael
+    console.log('🧹 Limpando dados do Rafael...');
+    const cleanResult = await cleanRafaelData();
+    console.log('📊 Resultado da limpeza:', cleanResult);
     
-    // Verificar se estamos em desenvolvimento
-    if (!import.meta.env.DEV) {
-      console.log('⚠️ Setup automático desabilitado em produção');
-      return;
-    }
-    
-    // Apenas verificar/criar usuário de teste, sem limpeza automática
-    console.log('👤 Verificando usuário de teste...');
+    // Criar usuário de teste
+    console.log('👤 Criando usuário de teste...');
     const testUserResult = await createTestUser();
+    console.log('📊 Resultado da criação do usuário:', testUserResult);
     
-    if (testUserResult.success && testUserResult.message === 'Usuário criado com sucesso') {
+    if (testUserResult.success) {
       console.log('✅ Setup completo!');
       console.log(`📧 Email: ${testUserResult.email}`);
       console.log(`🔑 Senha: ${testUserResult.password}`);
-    } else if (testUserResult.success) {
-      console.log('✅ Usuário de teste verificado');
-    } else {
-      console.warn('⚠️ Falha na verificação do usuário de teste:', testUserResult.error);
+      console.log('💡 Use essas credenciais para testar o onboarding');
     }
     
   } catch (error) {
     console.error('❌ Erro no setup automático:', error);
   }
-};
+}, 2000);
 
-// Executar apenas se explicitamente importado
-console.log('🚀 Módulo autoCleanOnboarding carregado');
-
-// Aguardar um pouco para garantir que o Supabase está inicializado
-setTimeout(safeAutoSetup, 3000);
-
-export { safeAutoSetup };
+export {};

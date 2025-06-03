@@ -13,7 +13,6 @@ export interface OnboardingData {
     state?: string;
     city?: string;
     timezone?: string;
-    birth_date?: string; 
   };
   // 2. Dados Profissionais 
   professional_info: {
@@ -96,10 +95,6 @@ export interface OnboardingData {
   resources_needs?: any;
   team_info?: any;
   implementation_preferences?: any;
-  
-  // Campos de controle do onboarding
-  current_step?: string;
-  is_completed?: boolean;
 }
 
 // Tipo base para experiência com IA (estrutura normal)

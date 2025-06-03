@@ -22,8 +22,6 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const [lastError, setLastError] = useState<any>(null);
   
-  console.log('🔧 LoggingProvider: Inicializando provider');
-  
   // Funções de logging independentes de auth
   const log = useCallback((action: string, data: LogData = {}) => {
     console.log(`[Log] ${action}:`, data);
@@ -121,8 +119,6 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
     lastError
   };
   
-  console.log('✅ LoggingProvider: Provider configurado com sucesso');
-  
   return (
     <LoggingContext.Provider value={contextValue}>
       {children}
@@ -130,30 +126,11 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Hook to use the logging context with fallback gracioso
+// Hook to use the logging context
 export const useLogging = (): LoggingContextType => {
   const context = useContext(LoggingContext);
-  
-  // Fallback gracioso se o provider não estiver disponível
   if (context === undefined) {
-    console.warn('⚠️ useLogging: Provider não encontrado, usando fallback');
-    
-    // Retornar implementação básica de fallback
-    return {
-      log: (action: string, data?: LogData) => {
-        console.log(`[Fallback Log] ${action}:`, data);
-      },
-      logWarning: (action: string, data?: LogData) => {
-        console.warn(`[Fallback Warning] ${action}:`, data);
-      },
-      logError: (action: string, error: any) => {
-        console.error(`[Fallback Error] ${action}:`, error);
-        return error;
-      },
-      lastError: null
-    };
+    throw new Error("useLogging must be used within a LoggingProvider");
   }
-  
-  console.log('✅ useLogging: Hook configurado corretamente');
   return context;
 };

@@ -1,160 +1,140 @@
 
 import { useState, useCallback } from 'react';
-import { useAuth } from '@/contexts/auth';
-import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { QuickOnboardingData } from '@/types/quickOnboarding';
 
-const getInitialData = (): QuickOnboardingData => ({
+export interface QuickOnboardingData {
+  // Etapa 1: Quem é você?
+  name: string;
+  email: string;
+  whatsapp: string;
+  howFoundUs: string;
+
+  // Etapa 2: Seu Negócio
+  companyName: string;
+  role: string;
+  companySize: string;
+  mainChallenge: string;
+
+  // Etapa 3: Experiência com IA
+  aiKnowledge: number;
+  usesAI: string;
+  mainGoal: string;
+}
+
+const initialData: QuickOnboardingData = {
   name: '',
   email: '',
   whatsapp: '',
-  country_code: '+55',
-  birth_date: '',
-  country: '',
-  state: '',
-  city: '',
-  timezone: '',
-  instagram_url: '',
-  linkedin_url: '',
-  how_found_us: '',
-  referred_by: '',
-  company_name: '',
+  howFoundUs: '',
+  companyName: '',
   role: '',
-  company_size: '',
-  company_segment: '',
-  company_website: '',
-  annual_revenue_range: '',
-  current_position: '',
-  business_model: '',
-  business_challenges: [],
-  short_term_goals: [],
-  medium_term_goals: [],
-  important_kpis: [],
-  additional_context: '',
-  primary_goal: '',
-  expected_outcomes: [],
-  expected_outcome_30days: '',
-  priority_solution_type: '',
-  how_implement: '',
-  week_availability: '',
-  content_formats: [],
-  ai_knowledge_level: '1',
-  previous_tools: [],
-  has_implemented: '',
-  desired_ai_areas: [],
-  completed_formation: false,
-  is_member_for_month: false,
-  nps_score: 0,
-  improvement_suggestions: '',
-  interests: [],
-  time_preference: [],
-  available_days: [],
-  networking_availability: 5,
-  skills_to_share: [],
-  mentorship_topics: [],
-  live_interest: 0,
-  authorize_case_usage: false,
-  interested_in_interview: false,
-  priority_topics: [],
-  currentStep: '1'
-});
+  companySize: '',
+  mainChallenge: '',
+  aiKnowledge: 3,
+  usesAI: '',
+  mainGoal: ''
+};
 
 export const useQuickOnboarding = () => {
-  const { user } = useAuth();
-  const [data, setData] = useState<QuickOnboardingData | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [data, setData] = useState<QuickOnboardingData>(initialData);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Carregar dados salvos
-  const loadData = useCallback(async () => {
-    if (!user?.id) return;
+  const updateField = useCallback((field: keyof QuickOnboardingData, value: string | number) => {
+    setData(prev => ({ ...prev, [field]: value }));
+  }, []);
 
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const { data: savedData, error: fetchError } = await supabase
-        .from('quick_onboarding')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        console.error('Erro ao carregar dados:', fetchError);
-        setError('Erro ao carregar dados salvos');
-        return;
-      }
-
-      if (savedData) {
-        console.log('📥 Dados carregados do banco:', savedData);
-        setData(savedData);
-      } else {
-        console.log('📝 Inicializando com dados padrão');
-        setData(getInitialData());
-      }
-    } catch (err) {
-      console.error('Erro inesperado ao carregar dados:', err);
-      setError('Erro inesperado');
-      setData(getInitialData());
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user?.id]);
-
-  // Completar onboarding
-  const completeOnboarding = useCallback(async (onboardingData: QuickOnboardingData): Promise<boolean> => {
-    if (!user?.id) {
-      console.error('❌ Usuário não autenticado');
-      return false;
-    }
-
-    try {
-      console.log('🏁 Completando onboarding...', onboardingData);
-
-      // Marcar como completo
-      const dataToSave = {
-        ...onboardingData,
-        user_id: user.id,
-        is_completed: true,
-        completed_at: new Date().toISOString()
-      };
-
-      const { error: saveError } = await supabase
-        .from('quick_onboarding')
-        .upsert(dataToSave, { 
-          onConflict: 'user_id',
-          ignoreDuplicates: false 
-        });
-
-      if (saveError) {
-        console.error('❌ Erro ao completar onboarding:', saveError);
-        toast.error('Erro ao finalizar onboarding');
+  const validateStep = useCallback((step: number): boolean => {
+    switch (step) {
+      case 1:
+        return !!(data.name && data.email && data.whatsapp && data.howFoundUs);
+      case 2:
+        return !!(data.companyName && data.role && data.companySize && data.mainChallenge);
+      case 3:
+        return !!(data.usesAI && data.mainGoal);
+      default:
         return false;
-      }
+    }
+  }, [data]);
 
-      console.log('✅ Onboarding completado com sucesso');
-      toast.success('Onboarding completado com sucesso! 🎉');
+  const canProceed = validateStep(currentStep);
+
+  const nextStep = useCallback(() => {
+    if (validateStep(currentStep)) {
+      if (currentStep < 4) {
+        setCurrentStep(prev => prev + 1);
+        // Pequena celebração
+        if (currentStep < 3) {
+          toast.success('Ótimo! Vamos continuar 🎉');
+        }
+      }
+    } else {
+      toast.error('Por favor, preencha todos os campos obrigatórios');
+    }
+  }, [currentStep, validateStep]);
+
+  const previousStep = useCallback(() => {
+    if (currentStep > 1) {
+      setCurrentStep(prev => prev - 1);
+    }
+  }, [currentStep]);
+
+  const completeOnboarding = useCallback(async () => {
+    setIsSubmitting(true);
+    try {
+      // Aqui você pode implementar a lógica de salvamento
+      console.log('Dados do onboarding:', data);
+      
+      // Simular API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      toast.success('Onboarding concluído com sucesso! 🎉');
       return true;
     } catch (error) {
-      console.error('❌ Erro inesperado ao completar onboarding:', error);
-      toast.error('Erro inesperado ao finalizar');
+      console.error('Erro ao completar onboarding:', error);
+      toast.error('Erro ao salvar dados. Tente novamente.');
       return false;
+    } finally {
+      setIsSubmitting(false);
     }
-  }, [user?.id]);
+  }, [data]);
 
-  // Carregar dados na inicialização
-  useState(() => {
-    if (user?.id && !data) {
-      loadData();
+  const getStepValidationErrors = useCallback((step: number): string[] => {
+    const errors: string[] = [];
+    
+    switch (step) {
+      case 1:
+        if (!data.name) errors.push('Nome é obrigatório');
+        if (!data.email) errors.push('Email é obrigatório');
+        if (!data.whatsapp) errors.push('WhatsApp é obrigatório');
+        if (!data.howFoundUs) errors.push('Como nos conheceu é obrigatório');
+        break;
+      case 2:
+        if (!data.companyName) errors.push('Nome da empresa é obrigatório');
+        if (!data.role) errors.push('Seu cargo é obrigatório');
+        if (!data.companySize) errors.push('Tamanho da empresa é obrigatório');
+        if (!data.mainChallenge) errors.push('Principal desafio é obrigatório');
+        break;
+      case 3:
+        if (!data.usesAI) errors.push('Responda se já usa IA no trabalho');
+        if (!data.mainGoal) errors.push('Selecione seu principal objetivo');
+        break;
     }
-  });
+    
+    return errors;
+  }, [data]);
 
   return {
+    currentStep,
     data,
-    isLoading,
-    error,
+    updateField,
+    nextStep,
+    previousStep,
+    canProceed,
+    isSubmitting,
     completeOnboarding,
-    loadData
+    validateStep,
+    getStepValidationErrors,
+    totalSteps: 4
   };
 };

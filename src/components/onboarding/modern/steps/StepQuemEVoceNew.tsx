@@ -1,21 +1,38 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
-import { OnboardingStepProps } from '@/types/quickOnboarding';
-import { DropdownModerno } from '../DropdownModerno';
+import { QuickOnboardingData } from '@/types/quickOnboarding';
+import { ConditionalReferralInput } from '../ConditionalReferralInput';
 import { DateInput } from '../DateInput';
+import { WhatsAppInput } from '../WhatsAppInput';
+import { SocialLinksInput } from '../SocialLinksInput';
+import { CountrySelector } from '../CountrySelector';
+import { AutoSaveFeedback } from '../AutoSaveFeedback';
 
-const COUNTRY_CODE_OPTIONS = [
-  { value: '+55', label: '🇧🇷 Brasil (+55)' },
-  { value: '+1', label: '🇺🇸 EUA (+1)' },
-  { value: '+351', label: '🇵🇹 Portugal (+351)' },
-  { value: '+34', label: '🇪🇸 Espanha (+34)' },
-  { value: '+33', label: '🇫🇷 França (+33)' }
+interface StepQuemEVoceNewProps {
+  data: QuickOnboardingData;
+  onUpdate: (field: keyof QuickOnboardingData, value: string) => void;
+  onNext: () => void;
+  canProceed: boolean;
+  currentStep: number;
+  totalSteps: number;
+}
+
+const HOW_FOUND_OPTIONS = [
+  { value: 'google', label: 'Google' },
+  { value: 'youtube', label: 'YouTube' },
+  { value: 'instagram', label: 'Instagram' },
+  { value: 'linkedin', label: 'LinkedIn' },
+  { value: 'indicacao', label: 'Indicação de alguém' },
+  { value: 'evento', label: 'Evento' },
+  { value: 'podcast', label: 'Podcast' },
+  { value: 'outro', label: 'Outro' }
 ];
 
-export const StepQuemEVoceNew: React.FC<OnboardingStepProps> = ({
+export const StepQuemEVoceNew: React.FC<StepQuemEVoceNewProps> = ({
   data,
   onUpdate,
   onNext,
@@ -24,7 +41,7 @@ export const StepQuemEVoceNew: React.FC<OnboardingStepProps> = ({
   totalSteps
 }) => {
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-3xl mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-white mb-2">
           Quem é você? 👋
@@ -32,20 +49,26 @@ export const StepQuemEVoceNew: React.FC<OnboardingStepProps> = ({
         <p className="text-gray-400">
           Vamos começar conhecendo você melhor
         </p>
+        <div className="flex items-center justify-center mt-4">
+          <AutoSaveFeedback 
+            lastSaveTime={Date.now()}
+            hasUnsavedChanges={!data.name || !data.email}
+          />
+        </div>
       </div>
 
       <div className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700/50 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <label className="block text-sm font-medium text-white">
               Nome completo <span className="text-red-400">*</span>
             </label>
             <Input
               type="text"
-              value={data.name || ''}
+              value={data.name}
               onChange={(e) => onUpdate('name', e.target.value)}
               placeholder="Seu nome completo"
-              className="h-12 bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:ring-viverblue/50"
+              className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50"
             />
           </div>
 
@@ -55,54 +78,69 @@ export const StepQuemEVoceNew: React.FC<OnboardingStepProps> = ({
             </label>
             <Input
               type="email"
-              value={data.email || ''}
+              value={data.email}
               onChange={(e) => onUpdate('email', e.target.value)}
               placeholder="seu@email.com"
-              className="h-12 bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:ring-viverblue/50"
+              className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <DropdownModerno
-            value={data.country_code || '+55'}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <CountrySelector
+            value={data.country_code}
             onChange={(value) => onUpdate('country_code', value)}
-            options={COUNTRY_CODE_OPTIONS}
-            placeholder="País"
-            label="País"
             required
           />
-
-          <div className="md:col-span-2 space-y-2">
-            <label className="block text-sm font-medium text-white">
-              WhatsApp <span className="text-red-400">*</span>
-            </label>
-            <Input
-              type="tel"
-              value={data.whatsapp || ''}
-              onChange={(e) => onUpdate('whatsapp', e.target.value)}
-              placeholder="(11) 99999-9999"
-              className="h-12 bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:ring-viverblue/50"
-            />
-          </div>
+          
+          <WhatsAppInput
+            value={data.whatsapp}
+            onChange={(value) => onUpdate('whatsapp', value)}
+            required
+          />
         </div>
 
         <DateInput
           value={data.birth_date || ''}
           onChange={(value) => onUpdate('birth_date', value)}
-          required
         />
 
-        <div className="bg-viverblue/10 border border-viverblue/20 rounded-lg p-4">
-          <p className="text-sm text-viverblue-light">
-            🔒 <strong>Privacidade:</strong> Seus dados são protegidos e utilizados 
-            apenas para personalizar sua experiência na plataforma.
-          </p>
+        <SocialLinksInput
+          instagramValue={data.instagram_url || ''}
+          linkedinValue={data.linkedin_url || ''}
+          onInstagramChange={(value) => onUpdate('instagram_url', value)}
+          onLinkedinChange={(value) => onUpdate('linkedin_url', value)}
+        />
+
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-white">
+            Como conheceu o VIVER DE IA? <span className="text-red-400">*</span>
+          </label>
+          <Select value={data.how_found_us} onValueChange={(value) => onUpdate('how_found_us', value)}>
+            <SelectTrigger className="h-12 bg-gray-800/50 border-gray-600 text-white focus:ring-viverblue/50">
+              <SelectValue placeholder="Selecione como nos conheceu" />
+            </SelectTrigger>
+            <SelectContent className="bg-gray-800 border-gray-600">
+              {HOW_FOUND_OPTIONS.map((option) => (
+                <SelectItem 
+                  key={option.value} 
+                  value={option.value}
+                  className="text-white hover:bg-gray-700"
+                >
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
+        <ConditionalReferralInput
+          howFoundUs={data.how_found_us}
+          referredBy={data.referred_by || ''}
+          onReferredByChange={(value) => onUpdate('referred_by', value)}
+        />
+
         <div className="flex justify-between items-center pt-6 border-t border-gray-700">
-          <div></div>
-          
           <div className="text-sm text-gray-400">
             Etapa {currentStep} de {totalSteps}
           </div>

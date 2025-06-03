@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { authRoutes } from '../../routes/AuthRoutes';
 import { adminRoutes } from '../../routes/AdminRoutes';
 import { memberRoutes } from '../../routes/MemberRoutes';
-import { OnboardingRoutes } from '../../routes/OnboardingRoutes';
+import { onboardingRoutes } from '../../routes/OnboardingRoutes';
 import { formacaoRoutes } from '../../routes/FormacaoRoutes';
 import { CommunityRedirects } from './CommunityRedirects';
 import NotFound from '@/pages/NotFound';
@@ -81,7 +81,9 @@ const AppRoutes = () => {
         ))}
         
         {/* Onboarding Routes */}
-        <Route path="/onboarding-new/*" element={<OnboardingRoutes />} />
+        {onboardingRoutes.map((route) => (
+          <Route key={route.path} path={route.path} element={route.element} />
+        ))}
         
         {/* Formação Routes */}
         {formacaoRoutes.map((route) => (

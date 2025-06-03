@@ -80,9 +80,8 @@ export class OnboardingValidator {
       errors.annual_revenue_range = 'Faixa de faturamento anual é obrigatória';
     }
 
-    // Validação de business_challenges como array
-    if (!Array.isArray(data.business_challenges) || data.business_challenges.length === 0) {
-      errors.business_challenges = 'Selecione pelo menos um desafio do negócio';
+    if (!data.main_challenge?.trim()) {
+      errors.main_challenge = 'Principal desafio é obrigatório';
     }
 
     // Validação de URL opcional
@@ -104,12 +103,12 @@ export class OnboardingValidator {
       errors.ai_knowledge_level = 'Nível de conhecimento em IA é obrigatório';
     }
 
-    if (!data.has_implemented?.trim()) {
-      errors.has_implemented = 'Implementação de IA é obrigatória';
+    if (!data.uses_ai?.trim()) {
+      errors.uses_ai = 'Uso atual de IA é obrigatório';
     }
 
-    if (!data.primary_goal?.trim()) {
-      errors.primary_goal = 'Principal objetivo é obrigatório';
+    if (!data.main_goal?.trim()) {
+      errors.main_goal = 'Principal objetivo é obrigatório';
     }
 
     return {

@@ -1,154 +1,117 @@
 
-import { useState, useCallback } from 'react';
-import { toast } from 'sonner';
+import { useState, useEffect } from 'react';
 import { QuickOnboardingData } from '@/types/quickOnboarding';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/auth';
 
-export interface QuickOnboardingDataLoader {
-  // Etapa 1: Quem é você?
-  name: string;
-  email: string;
-  whatsapp: string;
-  howFoundUs: string;
-
-  // Etapa 2: Seu Negócio
-  companyName: string;
-  role: string;
-  companySize: string;
-  business_challenges: string[]; // Atualizado para usar array
-
-  // Etapa 3: Experiência com IA
-  aiKnowledge: number;
-  has_implemented: string; // Atualizado de uses_ai
-  primary_goal: string; // Atualizado de main_goal
-}
-
-const initialData: QuickOnboardingDataLoader = {
+const initialData: QuickOnboardingData = {
+  // Etapa 1: Informações Pessoais
   name: '',
   email: '',
   whatsapp: '',
-  howFoundUs: '',
-  companyName: '',
+  country_code: '+55',
+  birth_date: '',
+  instagram_url: '',
+  linkedin_url: '',
+  how_found_us: '',
+  referred_by: '',
+
+  // Etapa 2: Negócio
+  company_name: '',
   role: '',
-  companySize: '',
-  business_challenges: [], // Array vazio como padrão
-  aiKnowledge: 3,
+  company_size: '',
+  company_segment: '',
+  company_website: '',
+  annual_revenue_range: '',
+  main_challenge: '',
+
+  // Etapa 3: Experiência com IA
+  ai_knowledge_level: '',
+  uses_ai: '',
+  main_goal: '',
+
+  // Campos adicionais para compatibilidade
+  desired_ai_areas: [],
   has_implemented: '',
-  primary_goal: ''
+  previous_tools: []
 };
 
 export const useQuickOnboardingDataLoader = () => {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [data, setData] = useState<QuickOnboardingDataLoader>(initialData);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
+  const [data, setData] = useState<QuickOnboardingData>(initialData);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasExistingData, setHasExistingData] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  const updateField = useCallback((field: keyof QuickOnboardingDataLoader, value: string | number | string[]) => {
-    setData(prev => ({ ...prev, [field]: value }));
-  }, []);
-
-  const validateStep = useCallback((step: number): boolean => {
-    switch (step) {
-      case 1:
-        return !!(data.name && data.email && data.whatsapp && data.howFoundUs);
-      case 2:
-        return !!(data.companyName && data.role && data.companySize && data.business_challenges.length > 0);
-      case 3:
-        return !!(data.has_implemented && data.primary_goal);
-      default:
-        return false;
-    }
-  }, [data]);
-
-  const canProceed = validateStep(currentStep);
-
-  const nextStep = useCallback(() => {
-    if (validateStep(currentStep)) {
-      if (currentStep < 4) {
-        setCurrentStep(prev => prev + 1);
-        if (currentStep < 3) {
-          toast.success('Ótimo! Vamos continuar 🎉');
-        }
+  useEffect(() => {
+    const loadExistingData = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
       }
-    } else {
-      toast.error('Por favor, preencha todos os campos obrigatórios');
-    }
-  }, [currentStep, validateStep]);
 
-  const previousStep = useCallback(() => {
-    if (currentStep > 1) {
-      setCurrentStep(prev => prev - 1);
-    }
-  }, [currentStep]);
+      try {
+        console.log('🔄 Carregando dados existentes do onboarding...');
+        
+        // Buscar dados na tabela quick_onboarding
+        const { data: quickData, error: quickError } = await supabase
+          .from('quick_onboarding')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
 
-  const addChallenge = useCallback((challenge: string) => {
-    setData(prev => ({
-      ...prev,
-      business_challenges: [...prev.business_challenges, challenge]
-    }));
-  }, []);
+        if (quickData && !quickError) {
+          console.log('✅ Dados encontrados na quick_onboarding:', quickData);
+          setData({
+            name: quickData.name || '',
+            email: quickData.email || user.email || '',
+            whatsapp: quickData.whatsapp || '',
+            country_code: quickData.country_code || '+55',
+            birth_date: quickData.birth_date || '',
+            instagram_url: quickData.instagram_url || '',
+            linkedin_url: quickData.linkedin_url || '',
+            how_found_us: quickData.how_found_us || '',
+            referred_by: quickData.referred_by || '',
+            company_name: quickData.company_name || '',
+            role: quickData.role || '',
+            company_size: quickData.company_size || '',
+            company_segment: quickData.company_segment || '',
+            company_website: quickData.company_website || '',
+            annual_revenue_range: quickData.annual_revenue_range || '',
+            main_challenge: quickData.main_challenge || '',
+            ai_knowledge_level: quickData.ai_knowledge_level || '',
+            uses_ai: quickData.uses_ai || '',
+            main_goal: quickData.main_goal || '',
+            desired_ai_areas: quickData.desired_ai_areas || [],
+            has_implemented: quickData.has_implemented || '',
+            previous_tools: quickData.previous_tools || []
+          });
+          setHasExistingData(true);
+        } else {
+          console.log('ℹ️ Nenhum dado encontrado, iniciando com dados vazios');
+          // Inicializar com dados básicos do usuário
+          setData(prev => ({
+            ...prev,
+            email: user.email || '',
+            name: user.user_metadata?.name || ''
+          }));
+        }
+      } catch (error: any) {
+        console.error('❌ Erro ao carregar dados:', error);
+        setLoadError('Erro ao carregar seus dados. Você pode continuar mesmo assim.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const removeChallenge = useCallback((index: number) => {
-    setData(prev => ({
-      ...prev,
-      business_challenges: prev.business_challenges.filter((_, i) => i !== index)
-    }));
-  }, []);
-
-  const completeOnboarding = useCallback(async () => {
-    setIsSubmitting(true);
-    try {
-      console.log('Dados do onboarding:', data);
-      
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      toast.success('Onboarding concluído com sucesso! 🎉');
-      return true;
-    } catch (error) {
-      console.error('Erro ao completar onboarding:', error);
-      toast.error('Erro ao salvar dados. Tente novamente.');
-      return false;
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [data]);
-
-  const getStepValidationErrors = useCallback((step: number): string[] => {
-    const errors: string[] = [];
-    
-    switch (step) {
-      case 1:
-        if (!data.name) errors.push('Nome é obrigatório');
-        if (!data.email) errors.push('Email é obrigatório');
-        if (!data.whatsapp) errors.push('WhatsApp é obrigatório');
-        if (!data.howFoundUs) errors.push('Como nos conheceu é obrigatório');
-        break;
-      case 2:
-        if (!data.companyName) errors.push('Nome da empresa é obrigatório');
-        if (!data.role) errors.push('Seu cargo é obrigatório');
-        if (!data.companySize) errors.push('Tamanho da empresa é obrigatório');
-        if (data.business_challenges.length === 0) errors.push('Selecione pelo menos um desafio');
-        break;
-      case 3:
-        if (!data.has_implemented) errors.push('Responda se já implementou IA');
-        if (!data.primary_goal) errors.push('Selecione seu principal objetivo');
-        break;
-    }
-    
-    return errors;
-  }, [data]);
+    loadExistingData();
+  }, [user]);
 
   return {
-    currentStep,
     data,
-    updateField,
-    nextStep,
-    previousStep,
-    canProceed,
-    isSubmitting,
-    completeOnboarding,
-    validateStep,
-    getStepValidationErrors,
-    addChallenge,
-    removeChallenge,
-    totalSteps: 4
+    setData,
+    isLoading,
+    hasExistingData,
+    loadError
   };
 };

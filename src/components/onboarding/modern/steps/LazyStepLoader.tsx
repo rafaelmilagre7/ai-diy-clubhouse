@@ -1,11 +1,14 @@
 
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { QuickOnboardingData } from '@/types/quickOnboarding';
+import { Loader2 } from 'lucide-react';
 import { AutoSaveFeedback } from '../AutoSaveFeedback';
 import { EnhancedOnboardingStep } from '../EnhancedOnboardingStep';
-import { StepQuemEVoceNew } from './StepQuemEVoceNew';
-import { StepSeuNegocioNew } from './StepSeuNegocioNew';
-import { StepExperienciaIANew } from './StepExperienciaIANew';
+
+// Lazy load dos componentes das etapas
+const StepQuemEVoceNew = lazy(() => import('./StepQuemEVoceNew').then(module => ({ default: module.StepQuemEVoceNew })));
+const StepSeuNegocioNew = lazy(() => import('./StepSeuNegocioNew').then(module => ({ default: module.StepSeuNegocioNew })));
+const StepExperienciaIANew = lazy(() => import('./StepExperienciaIANew').then(module => ({ default: module.StepExperienciaIANew })));
 
 interface LazyStepLoaderProps {
   step: number;
@@ -17,7 +20,7 @@ interface LazyStepLoaderProps {
   currentStep: number;
   totalSteps: number;
   isSaving?: boolean;
-  lastSaveTime?: Date | null;
+  lastSaveTime?: number | null;
 }
 
 export const LazyStepLoader: React.FC<LazyStepLoaderProps> = ({
@@ -32,7 +35,12 @@ export const LazyStepLoader: React.FC<LazyStepLoaderProps> = ({
   isSaving,
   lastSaveTime
 }) => {
-  console.log('🔄 LazyStepLoader renderizado:', { step, currentStep, canProceed });
+  const LoadingFallback = () => (
+    <div className="flex flex-col items-center justify-center py-12 space-y-4">
+      <Loader2 className="h-8 w-8 text-viverblue animate-spin" />
+      <p className="text-gray-300">Carregando etapa...</p>
+    </div>
+  );
 
   const getStepConfig = () => {
     switch (step) {
@@ -62,8 +70,6 @@ export const LazyStepLoader: React.FC<LazyStepLoaderProps> = ({
   const stepConfig = getStepConfig();
 
   const renderStepContent = () => {
-    console.log('🎯 Renderizando conteúdo do step:', step);
-    
     switch (step) {
       case 1:
         return (
@@ -104,27 +110,35 @@ export const LazyStepLoader: React.FC<LazyStepLoaderProps> = ({
         );
       
       default:
-        console.log('⚠️ Step não reconhecido:', step);
-        return (
-          <div className="text-center py-12">
-            <p className="text-gray-400">Etapa não encontrada: {step}</p>
-          </div>
-        );
+        return null;
     }
   };
 
   return (
-    <div className="relative">
-      {/* Feedback de auto-save discreto no canto superior direito */}
-      <div className="absolute top-4 right-4 z-10">
+    <EnhancedOnboardingStep
+      title={stepConfig.title}
+      subtitle={stepConfig.subtitle}
+      currentStep={currentStep}
+      totalSteps={totalSteps}
+      canProceed={canProceed}
+      onNext={onNext}
+      onPrevious={currentStep > 1 ? onPrevious : undefined}
+      isLoading={isSaving}
+    >
+      {/* Feedback de auto-save */}
+      <div className="flex justify-end mb-6">
         <AutoSaveFeedback 
           isSaving={isSaving} 
-          lastSaveTime={lastSaveTime ? lastSaveTime.getTime() : null}
+          lastSaveTime={lastSaveTime}
+          hasUnsavedChanges={false}
+          isOnline={navigator.onLine}
         />
       </div>
 
       {/* Conteúdo da etapa */}
-      {renderStepContent()}
-    </div>
+      <Suspense fallback={<LoadingFallback />}>
+        {renderStepContent()}
+      </Suspense>
+    </EnhancedOnboardingStep>
   );
 };
