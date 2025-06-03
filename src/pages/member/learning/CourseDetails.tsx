@@ -32,12 +32,13 @@ export default function CourseDetails() {
 
   return (
     <div className="space-y-6">
-      <CourseHeader course={course} />
+      <CourseHeader courseId={course.id} course={course} />
       
       <CourseModules 
         modules={modules || []}
         userProgress={userProgress || []}
         courseId={course.id}
+        course={course}
       />
     </div>
   );

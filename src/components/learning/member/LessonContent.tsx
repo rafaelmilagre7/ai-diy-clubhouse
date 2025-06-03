@@ -13,9 +13,9 @@ interface LessonContentProps {
   lesson: LearningLesson | null;
   videos: LearningLessonVideo[];
   resources: LearningResource[];
-  isCompleted: boolean;
+  isCompleted?: boolean;
   onProgressUpdate?: (videoId: string, progress: number) => void;
-  onComplete: () => void;
+  onComplete?: () => void;
   prevLesson?: LearningLesson | null;
   nextLesson?: LearningLesson | null;
   courseId?: string;
@@ -29,9 +29,9 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   lesson,
   videos,
   resources,
-  isCompleted,
+  isCompleted = false,
   onProgressUpdate,
-  onComplete,
+  onComplete = () => {},
   prevLesson,
   nextLesson,
   courseId,
