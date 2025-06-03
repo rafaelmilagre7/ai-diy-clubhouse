@@ -38,14 +38,19 @@ export const RoleCourseAccess: React.FC<RoleCourseAccessProps> = ({
       if (role && open) {
         try {
           const roleCourses = await getCoursesByRole(role.id);
-          // Garantir que roleCourses é um array e tem elementos com id
-          const courseIds = roleCourses
-            .filter(course => course && typeof course === 'object' && 'id' in course)
-            .map(course => course.id as string)
-            .filter(Boolean);
-          setSelectedCourses(courseIds);
+          // Garantir que roleCourses é um array válido
+          if (Array.isArray(roleCourses)) {
+            const courseIds = roleCourses
+              .filter(course => course && typeof course === 'object' && 'id' in course)
+              .map(course => String(course.id))
+              .filter(Boolean);
+            setSelectedCourses(courseIds);
+          } else {
+            setSelectedCourses([]);
+          }
         } catch (error) {
           console.error("Erro ao carregar cursos do papel:", error);
+          setSelectedCourses([]);
         }
       }
     };
