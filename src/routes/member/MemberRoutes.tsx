@@ -11,10 +11,10 @@ const ImplementationTrailPage = lazy(() => import('@/pages/implementation-trail/
 const ProfileRoutes = lazy(() => import('@/routes/ProfileRoutes'));
 const SolutionsPage = lazy(() => import('@/pages/member/Solutions'));
 const SolutionDetails = lazy(() => import('@/pages/member/SolutionDetails'));
-const CommunityRoutes = lazy(() => import('@/routes/CommunityRoutes').then(module => ({ default: module.CommunityRoutes })));
+const CommunityRoutes = lazy(() => import('@/routes/CommunityRoutes'));
 const NetworkingRoutes = lazy(() => import('@/routes/NetworkingRoutes'));
 const ToolsPage = lazy(() => import('@/pages/member/Tools'));
-const LearningRoutes = lazy(() => import('@/routes/LearningRoutes').then(module => ({ default: module.LearningRoutes })));
+const LearningRoutes = lazy(() => import('@/routes/LearningRoutes'));
 
 export const MemberRoutes: React.FC = () => {
   return (

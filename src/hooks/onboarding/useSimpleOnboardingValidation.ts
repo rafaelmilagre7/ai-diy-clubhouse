@@ -1,71 +1,60 @@
 
-import { useCallback, useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/auth';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/auth';
 
-interface SimpleOnboardingValidation {
-  isOnboardingComplete: boolean;
-  isLoading: boolean;
-  hasValidData: boolean;
-  checkOnboardingStatus: () => Promise<void>;
-}
-
-export const useSimpleOnboardingValidation = (): SimpleOnboardingValidation => {
+export const useSimpleOnboardingValidation = () => {
   const { user } = useAuth();
-  const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasValidData, setHasValidData] = useState(false);
 
-  const checkOnboardingStatus = useCallback(async () => {
-    if (!user?.id) {
-      setIsOnboardingComplete(false);
-      setIsLoading(false);
-      setHasValidData(true);
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-
-      // Verificar se existe progresso de onboarding
-      const { data: progressData, error: progressError } = await supabase
-        .from('onboarding_progress')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (progressError && progressError.code !== 'PGRST116') {
-        console.error('Erro ao verificar progresso:', progressError);
-        setIsOnboardingComplete(false);
-        setHasValidData(true);
-        return;
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['simple-onboarding-validation', user?.id],
+    queryFn: async () => {
+      if (!user?.id) {
+        return {
+          isCompleted: false,
+          hasData: false
+        };
       }
 
-      // Se existe progresso e está completo
-      if (progressData?.is_completed) {
-        setIsOnboardingComplete(true);
-      } else {
-        setIsOnboardingComplete(false);
+      try {
+        // Verificar quick_onboarding primeiro
+        const { data: quickData, error: quickError } = await supabase
+          .from('quick_onboarding')
+          .select('is_completed, name, email')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (quickData && !quickError) {
+          return {
+            isCompleted: quickData.is_completed || false,
+            hasData: true,
+            userData: quickData
+          };
+        }
+
+        return {
+          isCompleted: false,
+          hasData: false
+        };
+      } catch (error) {
+        console.error('Erro ao verificar onboarding:', error);
+        return {
+          isCompleted: false,
+          hasData: false,
+          error
+        };
       }
-
-      setHasValidData(true);
-    } catch (error) {
-      console.error('Erro ao validar onboarding:', error);
-      setIsOnboardingComplete(false);
-      setHasValidData(true);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user?.id]);
-
-  useEffect(() => {
-    checkOnboardingStatus();
-  }, [checkOnboardingStatus]);
+    },
+    enabled: !!user?.id,
+    staleTime: 60 * 1000, // 1 minuto
+    retry: 1
+  });
 
   return {
-    isOnboardingComplete,
+    isOnboardingComplete: data?.isCompleted || false,
+    hasValidData: data?.hasData || false,
+    userData: data?.userData || null,
     isLoading,
-    hasValidData,
-    checkOnboardingStatus
+    error
   };
 };

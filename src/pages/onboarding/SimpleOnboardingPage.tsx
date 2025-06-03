@@ -2,20 +2,18 @@
 import React from 'react';
 import { SimpleOnboardingFlow } from '@/components/onboarding/modern/SimpleOnboardingFlow';
 import { useNavigate } from 'react-router-dom';
-import { OnboardingCompletionGuard } from '@/components/onboarding/OnboardingCompletionGuard';
+import { toast } from 'sonner';
 
-export const SimpleOnboardingPage: React.FC = () => {
+const SimpleOnboardingPage: React.FC = () => {
   const navigate = useNavigate();
 
   const handleComplete = () => {
-    navigate('/dashboard');
+    console.log('✅ Onboarding completo, redirecionando...');
+    toast.success('Bem-vindo ao VIVER DE IA Club! 🎉');
+    navigate('/onboarding-new/completed');
   };
 
-  return (
-    <OnboardingCompletionGuard>
-      <SimpleOnboardingFlow onComplete={handleComplete} />
-    </OnboardingCompletionGuard>
-  );
+  return <SimpleOnboardingFlow onComplete={handleComplete} />;
 };
 
 export default SimpleOnboardingPage;

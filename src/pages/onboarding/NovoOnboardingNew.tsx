@@ -1,16 +1,14 @@
 
 import React from 'react';
-import { SimpleOnboardingFlow } from '@/components/onboarding/modern/SimpleOnboardingFlow';
-import { useNavigate } from 'react-router-dom';
+import { UnifiedOnboardingFlow } from '@/components/onboarding/modern/UnifiedOnboardingFlow';
+import { OnboardingCompletionGuard } from '@/components/onboarding/OnboardingCompletionGuard';
 
-const NovoOnboardingNew = () => {
-  const navigate = useNavigate();
-  
-  const handleComplete = () => {
-    navigate('/dashboard');
-  };
-
-  return <SimpleOnboardingFlow onComplete={handleComplete} />;
+const NovoOnboardingNew: React.FC = () => {
+  return (
+    <OnboardingCompletionGuard>
+      <UnifiedOnboardingFlow />
+    </OnboardingCompletionGuard>
+  );
 };
 
 export default NovoOnboardingNew;

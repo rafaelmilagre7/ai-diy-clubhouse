@@ -1,7 +1,8 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { User, Sparkles, ArrowRight } from "lucide-react";
+import { AlertTriangle, ArrowRight, Clock } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface MinimalOnboardingIncompleteStateProps {
   onNavigateToOnboarding: () => void;
@@ -11,29 +12,44 @@ export const MinimalOnboardingIncompleteState: React.FC<MinimalOnboardingIncompl
   onNavigateToOnboarding
 }) => {
   return (
-    <div className="flex items-center justify-between py-3 px-4 bg-amber-500/5 border border-amber-500/20 rounded-lg">
-      <div className="flex items-center gap-3">
-        <div className="p-2 rounded-full bg-amber-500/20">
-          <User className="h-4 w-4 text-amber-400" />
+    <div className="text-center py-8 space-y-6">
+      {/* Ícone */}
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ type: "spring", stiffness: 200 }}
+        className="flex justify-center"
+      >
+        <div className="bg-amber-100 dark:bg-amber-900/20 p-4 rounded-full">
+          <AlertTriangle className="h-10 w-10 text-amber-600 dark:text-amber-400" />
         </div>
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Sparkles className="h-3 w-3 text-viverblue" />
-            <span className="text-sm font-medium text-white">Trilha de Implementação IA</span>
-          </div>
-          <p className="text-xs text-neutral-400">
-            Complete seu perfil para gerar recomendações personalizadas
-          </p>
-        </div>
+      </motion.div>
+      
+      {/* Conteúdo */}
+      <div className="space-y-3">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          Complete seu Onboarding
+        </h3>
+        <p className="text-gray-600 dark:text-gray-400 text-sm max-w-md mx-auto">
+          Para gerar sua trilha personalizada, complete primeiro as informações 
+          sobre você e sua empresa no onboarding.
+        </p>
       </div>
       
+      {/* Botão de ação */}
       <Button 
         onClick={onNavigateToOnboarding}
-        className="bg-viverblue hover:bg-viverblue/90 text-white h-8 px-3 text-xs"
+        className="bg-viverblue hover:bg-viverblue/90 text-white px-6 py-2 flex items-center gap-2 mx-auto"
       >
-        <ArrowRight className="mr-1 h-3 w-3" />
-        Completar
+        <Clock className="h-4 w-4" />
+        Completar Onboarding
+        <ArrowRight className="h-4 w-4" />
       </Button>
+      
+      {/* Info adicional */}
+      <div className="text-xs text-gray-500 dark:text-gray-400">
+        <p>⏱️ Tempo estimado: 5-10 minutos</p>
+      </div>
     </div>
   );
 };

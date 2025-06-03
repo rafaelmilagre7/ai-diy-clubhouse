@@ -1,70 +1,99 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@/contexts/auth';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/auth';
+import { useCallback } from 'react';
 
 export const useUnifiedOnboardingValidation = () => {
   const { user } = useAuth();
-  const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const checkOnboardingStatus = useCallback(async () => {
-    if (!user?.id) {
-      setIsOnboardingComplete(false);
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      console.log('🔍 Verificando status do onboarding para usuário:', user.id);
-
-      // Verificar PRIMEIRO na tabela onboarding_final
-      const { data: finalData, error: finalError } = await supabase
-        .from('onboarding_final')
-        .select('is_completed')
-        .eq('user_id', user.id)
-        .eq('is_completed', true)
-        .maybeSingle();
-
-      if (finalData && !finalError) {
-        console.log('✅ Onboarding final COMPLETO');
-        setIsOnboardingComplete(true);
-        setIsLoading(false);
-        return;
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['unified-onboarding-validation', user?.id],
+    queryFn: async () => {
+      if (!user?.id) {
+        console.log('🔍 useUnifiedOnboardingValidation: Nenhum usuário encontrado');
+        return {
+          isCompleted: false,
+          hasData: false,
+          source: 'no_user'
+        };
       }
 
-      // Verificar na tabela onboarding como fallback
-      const { data: onboardingData, error: onboardingError } = await supabase
-        .from('onboarding')
-        .select('is_completed')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      try {
+        console.log('🔍 useUnifiedOnboardingValidation: Verificando onboarding para usuário:', user.id);
+        
+        // Verificar primeiro na tabela quick_onboarding
+        const { data: quickData, error: quickError } = await supabase
+          .from('quick_onboarding')
+          .select('is_completed, name, email, current_step')
+          .eq('user_id', user.id)
+          .maybeSingle();
 
-      if (onboardingData && !onboardingError) {
-        const isCompleted = onboardingData.is_completed === true;
-        console.log('✅ Onboarding status:', isCompleted);
-        setIsOnboardingComplete(isCompleted);
-      } else {
-        // Se não encontrou dados, assumir incompleto
-        console.log('📊 Onboarding incompleto - nenhum registro encontrado');
-        setIsOnboardingComplete(false);
+        if (quickData && !quickError) {
+          console.log('✅ useUnifiedOnboardingValidation: Quick onboarding encontrado:', quickData);
+          return {
+            isCompleted: quickData.is_completed || false,
+            hasData: true,
+            source: 'quick_onboarding',
+            data: quickData
+          };
+        }
+
+        // Fallback para onboarding_progress
+        const { data: progressData, error: progressError } = await supabase
+          .from('onboarding_progress')
+          .select('is_completed, current_step')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (progressData && !progressError) {
+          console.log('✅ useUnifiedOnboardingValidation: Onboarding progress encontrado:', progressData);
+          return {
+            isCompleted: progressData.is_completed || false,
+            hasData: true,
+            source: 'onboarding_progress',
+            data: progressData
+          };
+        }
+
+        // Se não encontrou dados em nenhuma tabela
+        console.log('⚠️ useUnifiedOnboardingValidation: Nenhum dado de onboarding encontrado');
+        return {
+          isCompleted: false,
+          hasData: false,
+          source: 'none'
+        };
+      } catch (error) {
+        console.error('❌ useUnifiedOnboardingValidation: Erro ao verificar conclusão do onboarding:', error);
+        return {
+          isCompleted: false,
+          hasData: false,
+          source: 'error',
+          error
+        };
       }
+    },
+    enabled: !!user?.id,
+    staleTime: 30 * 1000, // 30 segundos
+    retry: 2,
+    retryDelay: 1000
+  });
 
-    } catch (error) {
-      console.error('❌ Erro ao verificar onboarding:', error);
-      setIsOnboardingComplete(false);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user?.id]);
-
-  useEffect(() => {
-    checkOnboardingStatus();
-  }, [checkOnboardingStatus]);
+  // Função para invalidar e recarregar os dados
+  const checkOnboardingStatus = useCallback(() => {
+    queryClient.invalidateQueries({
+      queryKey: ['unified-onboarding-validation', user?.id]
+    });
+  }, [queryClient, user?.id]);
 
   return {
-    isOnboardingComplete,
+    isOnboardingComplete: data?.isCompleted || false,
+    hasValidData: data?.hasData || false,
     isLoading,
+    error,
+    source: data?.source || 'none',
+    onboardingData: data?.data || null,
     checkOnboardingStatus
   };
 };
