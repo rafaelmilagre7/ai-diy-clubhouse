@@ -1,30 +1,28 @@
 
 import { RouteObject } from "react-router-dom";
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
-import NovoOnboarding from '@/pages/onboarding/NovoOnboarding';
 import NovoOnboardingNew from '@/pages/onboarding/NovoOnboardingNew';
-import { OnboardingCompleted } from "@/components/onboarding/OnboardingCompleted";
-import { OnboardingCompletedNew } from "@/components/onboarding/OnboardingCompletedNew";
+import OnboardingCompletedNewPage from '@/pages/onboarding/OnboardingCompletedNew';
 
 export const onboardingRoutes: RouteObject[] = [
-  // Rota principal do onboarding - experiência one-page
+  // Rota principal do onboarding - redireciona para o novo sistema
   {
     path: "/onboarding",
-    element: <ProtectedRoutes><NovoOnboarding /></ProtectedRoutes>
+    element: <ProtectedRoutes><NovoOnboardingNew /></ProtectedRoutes>
   },
-  // Nova rota do onboarding moderno
+  // Rota do novo onboarding moderno
   {
     path: "/onboarding-new",
     element: <ProtectedRoutes><NovoOnboardingNew /></ProtectedRoutes>
   },
   // Rota para a página de sucesso do onboarding
   {
-    path: "/onboarding/completed",
-    element: <ProtectedRoutes><OnboardingCompleted /></ProtectedRoutes>
-  },
-  // Nova rota para a página de sucesso do onboarding novo
-  {
     path: "/onboarding-new/completed",
-    element: <ProtectedRoutes><OnboardingCompletedNew /></ProtectedRoutes>
+    element: <ProtectedRoutes><OnboardingCompletedNewPage /></ProtectedRoutes>
+  },
+  // Compatibilidade com rotas antigas
+  {
+    path: "/onboarding/completed",
+    element: <ProtectedRoutes><OnboardingCompletedNewPage /></ProtectedRoutes>
   }
 ];

@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -6,6 +5,7 @@ import { QuickOnboardingData } from '@/types/quickOnboarding';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth';
 import { OnboardingValidator } from '@/utils/onboardingValidation';
+import { useQuickOnboardingAutoSave } from './useQuickOnboardingAutoSave';
 
 const TOTAL_STEPS = 4;
 
@@ -43,6 +43,9 @@ export const useQuickOnboardingNew = () => {
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // Auto-save hook
+  const { saveToSupabase } = useQuickOnboardingAutoSave(data);
 
   // Atualizar campo específico com validação
   const updateField = useCallback((field: keyof QuickOnboardingData, value: string) => {
@@ -189,7 +192,7 @@ export const useQuickOnboardingNew = () => {
     }
   }, [user?.id, data]);
 
-  // Completar onboarding
+  // Completar onboarding com redirecionamento automático
   const completeOnboarding = useCallback(async () => {
     setIsSubmitting(true);
     
@@ -198,10 +201,10 @@ export const useQuickOnboardingNew = () => {
       
       toast.success('Onboarding concluído com sucesso!');
       
-      // Redirecionar para a nova página de conclusão
+      // Redirecionar automaticamente após a animação
       setTimeout(() => {
         navigate('/onboarding-new/completed');
-      }, 1500);
+      }, 3000); // 3 segundos para ver a animação
       
       return true;
     } catch (error) {
