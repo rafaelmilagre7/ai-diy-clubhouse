@@ -1,16 +1,32 @@
 
-import { useQuery, UseQueryOptions } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
+
+interface OptimizedQueryOptions {
+  queryKey: (string | number | boolean | null | undefined)[];
+  queryFn: () => Promise<any>;
+  enabled?: boolean;
+  staleTime?: number;
+  refetchOnWindowFocus?: boolean;
+  retry?: number;
+}
 
 /**
- * Hook otimizado para queries com configurações padrão
+ * Hook otimizado para queries que evita problemas de dependência
  */
-export const useOptimizedQuery = <TData = unknown, TError = unknown>(
-  options: UseQueryOptions<TData, TError>
-) => {
+export const useOptimizedQuery = ({
+  queryKey,
+  queryFn,
+  enabled = true,
+  staleTime = 5 * 60 * 1000, // 5 minutos
+  refetchOnWindowFocus = false,
+  retry = 2
+}: OptimizedQueryOptions) => {
   return useQuery({
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    refetchOnWindowFocus: false,
-    retry: 2,
-    ...options,
+    queryKey,
+    queryFn,
+    enabled,
+    staleTime,
+    refetchOnWindowFocus,
+    retry
   });
 };

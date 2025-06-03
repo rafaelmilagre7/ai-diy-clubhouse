@@ -1,3 +1,4 @@
+
 import { RouteObject } from "react-router-dom";
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import { SmartFeatureGuard } from '@/components/auth/SmartFeatureGuard';
