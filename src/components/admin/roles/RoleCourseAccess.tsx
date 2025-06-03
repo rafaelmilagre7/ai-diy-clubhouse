@@ -42,7 +42,7 @@ export const RoleCourseAccess: React.FC<RoleCourseAccessProps> = ({
           if (Array.isArray(roleCourses)) {
             const courseIds = roleCourses
               .filter(course => course && typeof course === 'object' && 'id' in course)
-              .map(course => String(course.id))
+              .map(course => String((course as any).id))
               .filter(Boolean);
             setSelectedCourses(courseIds);
           } else {

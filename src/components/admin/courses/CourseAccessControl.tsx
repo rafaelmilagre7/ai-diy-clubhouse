@@ -42,7 +42,7 @@ export function CourseAccessControl({
           if (Array.isArray(courseRoles)) {
             const roleIds = courseRoles
               .filter(role => role && typeof role === 'object' && 'id' in role)
-              .map(role => String(role.id))
+              .map(role => String((role as any).id))
               .filter(Boolean);
             setSelectedRoles(roleIds);
           } else {
