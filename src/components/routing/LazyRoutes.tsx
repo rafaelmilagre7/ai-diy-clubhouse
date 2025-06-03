@@ -23,6 +23,11 @@ const LazyNewTopic = React.lazy(() => import('@/pages/member/community/NewTopic'
 // Lazy loading para networking
 const LazyNetworkingPage = React.lazy(() => import('@/pages/member/networking/NetworkingPage'));
 
+// Lazy loading para soluções e trilhas - caminhos corretos
+const LazyImplementationTrail = React.lazy(() => import('@/pages/member/ImplementationTrailPage'));
+const LazySolutions = React.lazy(() => import('@/pages/member/Solutions'));
+const LazyTools = React.lazy(() => import('@/pages/member/Tools'));
+
 // NOVO: Lazy loading para área de formação
 const LazyFormacaoDashboard = React.lazy(() => import('@/pages/formacao/FormacaoDashboard'));
 const LazyFormacaoCursos = React.lazy(() => import('@/pages/formacao/FormacaoCursos'));
@@ -58,6 +63,11 @@ export const LazyCategoryViewWithSuspense = withSuspense(LazyCategoryView);
 export const LazyNewTopicWithSuspense = withSuspense(LazyNewTopic);
 
 export const LazyNetworkingPageWithSuspense = withSuspense(LazyNetworkingPage);
+
+// Componentes corrigidos com caminhos válidos
+export const LazyImplementationTrailWithSuspense = withSuspense(LazyImplementationTrail);
+export const LazySolutionsWithSuspense = withSuspense(LazySolutions);
+export const LazyToolsWithSuspense = withSuspense(LazyTools);
 
 // NOVO: Componentes de formação com lazy loading
 export const LazyFormacaoDashboardWithSuspense = withSuspense(LazyFormacaoDashboard);
