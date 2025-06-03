@@ -3,6 +3,20 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 
+// Tipos específicos para as funções de acesso
+interface Role {
+  id: string;
+  name: string;
+  description: string;
+}
+
+interface LearningCourse {
+  id: string;
+  title: string;
+  description: string;
+  published: boolean;
+}
+
 export const useCourseAccess = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -27,7 +41,7 @@ export const useCourseAccess = () => {
   };
 
   // Buscar roles que têm acesso a um curso específico - TIPAGEM CORRIGIDA
-  const getRolesByCourse = async (courseId: string) => {
+  const getRolesByCourse = async (courseId: string): Promise<Role[]> => {
     const { data, error } = await supabase
       .from('course_access_control')
       .select(`
@@ -46,11 +60,11 @@ export const useCourseAccess = () => {
     }
 
     // Corrigir tipagem: data é um array de objetos, cada um com uma propriedade roles
-    return data?.map(item => item.roles).filter(Boolean) || [];
+    return data?.map(item => item.roles).filter(Boolean) as Role[] || [];
   };
 
   // Buscar cursos que um role tem acesso - TIPAGEM CORRIGIDA
-  const getCoursesByRole = async (roleId: string) => {
+  const getCoursesByRole = async (roleId: string): Promise<LearningCourse[]> => {
     const { data, error } = await supabase
       .from('course_access_control')
       .select(`
@@ -70,7 +84,7 @@ export const useCourseAccess = () => {
     }
 
     // Corrigir tipagem: data é um array de objetos, cada um com uma propriedade learning_courses
-    return data?.map(item => item.learning_courses).filter(Boolean) || [];
+    return data?.map(item => item.learning_courses).filter(Boolean) as LearningCourse[] || [];
   };
 
   // Gerenciar acesso de um role a um curso
