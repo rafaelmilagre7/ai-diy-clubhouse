@@ -40,7 +40,7 @@ export const useCourseAccess = () => {
     }
   };
 
-  // Buscar roles que têm acesso a um curso específico - TIPAGEM CORRIGIDA
+  // Buscar roles que têm acesso a um curso específico
   const getRolesByCourse = async (courseId: string): Promise<Role[]> => {
     const { data, error } = await supabase
       .from('course_access_control')
@@ -59,17 +59,18 @@ export const useCourseAccess = () => {
       throw error;
     }
 
-    // Corrigir processamento: data é um array de objetos, cada um com uma propriedade roles
+    // Processar dados usando type assertion - padrão usado em outros hooks
     if (!data) return [];
     
     const roles: Role[] = [];
     for (const item of data) {
-      // item.roles pode ser um objeto ou null
-      if (item.roles && typeof item.roles === 'object') {
+      // Usar type assertion para acessar as propriedades corretas
+      const roleData = (item as any).roles;
+      if (roleData && typeof roleData === 'object') {
         roles.push({
-          id: item.roles.id,
-          name: item.roles.name,
-          description: item.roles.description || ''
+          id: roleData.id,
+          name: roleData.name,
+          description: roleData.description || ''
         });
       }
     }
@@ -77,7 +78,7 @@ export const useCourseAccess = () => {
     return roles;
   };
 
-  // Buscar cursos que um role tem acesso - TIPAGEM CORRIGIDA
+  // Buscar cursos que um role tem acesso
   const getCoursesByRole = async (roleId: string): Promise<LearningCourse[]> => {
     const { data, error } = await supabase
       .from('course_access_control')
@@ -97,18 +98,19 @@ export const useCourseAccess = () => {
       throw error;
     }
 
-    // Corrigir processamento: data é um array de objetos, cada um com uma propriedade learning_courses
+    // Processar dados usando type assertion - padrão usado em outros hooks
     if (!data) return [];
     
     const courses: LearningCourse[] = [];
     for (const item of data) {
-      // item.learning_courses pode ser um objeto ou null
-      if (item.learning_courses && typeof item.learning_courses === 'object') {
+      // Usar type assertion para acessar as propriedades corretas
+      const courseData = (item as any).learning_courses;
+      if (courseData && typeof courseData === 'object') {
         courses.push({
-          id: item.learning_courses.id,
-          title: item.learning_courses.title,
-          description: item.learning_courses.description || '',
-          published: item.learning_courses.published || false
+          id: courseData.id,
+          title: courseData.title,
+          description: courseData.description || '',
+          published: courseData.published || false
         });
       }
     }
