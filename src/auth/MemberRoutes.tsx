@@ -3,7 +3,6 @@ import React, { Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "react-error-boundary";
 import Layout from "@/components/layout/Layout";
-import RouteErrorBoundary from "@/components/common/RouteErrorBoundary";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { PerformanceWrapper } from "@/components/common/performance/PerformanceWrapper";
 
@@ -18,11 +17,25 @@ const Implementation = React.lazy(() => import("@/pages/member/Implementation"))
 const ImplementationCompleted = React.lazy(() => import("@/pages/member/ImplementationCompleted"));
 const Events = React.lazy(() => import("@/pages/member/Events"));
 
+// Fallback component for ErrorBoundary
+const ErrorFallback = ({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) => (
+  <div className="flex flex-col items-center justify-center min-h-96 p-8">
+    <h2 className="text-xl font-semibold mb-4">Algo deu errado</h2>
+    <p className="text-muted-foreground mb-4">Ocorreu um erro inesperado.</p>
+    <button 
+      onClick={resetErrorBoundary}
+      className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
+    >
+      Tentar novamente
+    </button>
+  </div>
+);
+
 export const MemberRoutes = () => {
   return (
     <PerformanceWrapper componentName="MemberRoutes">
       <Layout>
-        <ErrorBoundary FallbackComponent={RouteErrorBoundary}>
+        <ErrorBoundary FallbackComponent={ErrorFallback}>
           <Suspense fallback={<LoadingScreen />}>
             <Routes>
               <Route path="/dashboard" element={<Dashboard />} />
