@@ -8,12 +8,13 @@ import {
   CarouselNext, 
   CarouselPrevious 
 } from "@/components/ui/carousel";
-import { LearningCourse } from "@/lib/supabase";
+import { LearningCourseWithStats } from "@/lib/supabase/types";
 import { cn } from "@/lib/utils";
+import { ensureNumber } from "@/lib/supabase/types/utils";
 
 interface CourseCarouselProps {
   title: string;
-  courses: LearningCourse[];
+  courses?: LearningCourseWithStats[];
   className?: string;
   userProgress?: any[];
   showEmptyMessage?: boolean;
@@ -82,8 +83,8 @@ export const CourseCarousel: React.FC<CourseCarouselProps> = ({
                   description={course.description || ""}
                   imageUrl={course.cover_image_url}
                   progress={calculateProgress(course.id)}
-                  moduleCount={course.module_count}
-                  lessonCount={course.lesson_count}
+                  moduleCount={ensureNumber(course.module_count)}
+                  lessonCount={ensureNumber(course.lesson_count)}
                 />
               </CarouselItem>
             ))}

@@ -5,13 +5,14 @@ import { MemberCoursesList } from "@/components/learning/member/MemberCoursesLis
 import { useLearningCourses } from "@/hooks/learning/useLearningCourses";
 import { useUserProgress } from "@/hooks/learning/useUserProgress";
 import { ContinueLearning } from "@/components/learning/member/ContinueLearning";
+import { ensureArray } from "@/lib/supabase/types/utils";
 
 export default function LearningPage() {
-  const { courses, isLoading } = useLearningCourses();
-  const { userProgress } = useUserProgress();
+  const { courses = [], isLoading } = useLearningCourses();
+  const { userProgress = [] } = useUserProgress();
   
-  // Filtrar apenas cursos publicados
-  const allCourses = courses.filter(course => course.published);
+  // Filtrar apenas cursos publicados com validação defensiva
+  const allCourses = ensureArray(courses).filter(course => course?.published);
   
   return (
     <div className="space-y-6">
@@ -25,6 +26,7 @@ export default function LearningPage() {
         <MemberCoursesList 
           courses={allCourses}
           userProgress={userProgress}
+          isLoading={isLoading}
         />
       </div>
     </div>

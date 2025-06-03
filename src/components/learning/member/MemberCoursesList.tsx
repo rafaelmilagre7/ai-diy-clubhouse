@@ -7,8 +7,8 @@ import { LearningCourseWithStats, LearningProgress } from "@/lib/supabase/types"
 import { ensureNumber, ensureArray } from "@/lib/supabase/types/utils";
 
 interface MemberCoursesListProps {
-  courses: LearningCourseWithStats[];
-  userProgress: LearningProgress[];
+  courses?: LearningCourseWithStats[];
+  userProgress?: LearningProgress[];
   isLoading?: boolean;
 }
 
@@ -31,7 +31,7 @@ const calculateCourseProgress = (course: LearningCourseWithStats, userProgress: 
 };
 
 export const MemberCoursesList: React.FC<MemberCoursesListProps> = ({
-  courses,
+  courses = [],
   userProgress = [],
   isLoading = false
 }) => {
