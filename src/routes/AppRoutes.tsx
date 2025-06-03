@@ -7,6 +7,7 @@ import LoadingScreen from '@/components/common/LoadingScreen';
 import LoginPage from '@/pages/auth/LoginPage';
 import DashboardPage from '@/pages/app/DashboardPage';
 import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
+import AuthenticatedLayout from '@/components/layout/AuthenticatedLayout';
 
 // Lazy imports apenas para páginas não críticas
 const CommunityRoutes = React.lazy(() => import('./CommunityRoutes'));
@@ -30,15 +31,17 @@ const AppRoutes = () => {
         {/* Rota raiz única - redireciona para login por padrão */}
         <Route path="/" element={<Navigate to="/login" replace />} />
         
-        {/* Rota de login pública */}
+        {/* Rota de login pública - SEM layout */}
         <Route path="/login" element={<LoginPage />} />
 
-        {/* Rotas protegidas básicas */}
+        {/* Rotas protegidas COM layout autenticado */}
         <Route 
           path="/dashboard" 
           element={
             <ProtectedRoute>
-              <DashboardPage />
+              <AuthenticatedLayout>
+                <DashboardPage />
+              </AuthenticatedLayout>
             </ProtectedRoute>
           } 
         />
@@ -47,19 +50,23 @@ const AppRoutes = () => {
           path="/implementation-trail" 
           element={
             <ProtectedRoute>
-              <ImplementationTrailPage />
+              <AuthenticatedLayout>
+                <ImplementationTrailPage />
+              </AuthenticatedLayout>
             </ProtectedRoute>
           } 
         />
 
-        {/* Rotas lazy com proteção */}
+        {/* Rotas lazy com proteção E layout */}
         <Route 
           path="/comunidade/*" 
           element={
             <ProtectedRoute>
-              <Suspense fallback={<LoadingScreen />}>
-                <CommunityRoutes />
-              </Suspense>
+              <AuthenticatedLayout>
+                <Suspense fallback={<LoadingScreen />}>
+                  <CommunityRoutes />
+                </Suspense>
+              </AuthenticatedLayout>
             </ProtectedRoute>
           } 
         />
@@ -68,9 +75,11 @@ const AppRoutes = () => {
           path="/learning/*" 
           element={
             <ProtectedRoute>
-              <Suspense fallback={<LoadingScreen />}>
-                <LearningRoutes />
-              </Suspense>
+              <AuthenticatedLayout>
+                <Suspense fallback={<LoadingScreen />}>
+                  <LearningRoutes />
+                </Suspense>
+              </AuthenticatedLayout>
             </ProtectedRoute>
           } 
         />
@@ -79,9 +88,11 @@ const AppRoutes = () => {
           path="/solutions/*" 
           element={
             <ProtectedRoute>
-              <Suspense fallback={<LoadingScreen />}>
-                <SolutionsRoutes />
-              </Suspense>
+              <AuthenticatedLayout>
+                <Suspense fallback={<LoadingScreen />}>
+                  <SolutionsRoutes />
+                </Suspense>
+              </AuthenticatedLayout>
             </ProtectedRoute>
           } 
         />
@@ -90,9 +101,11 @@ const AppRoutes = () => {
           path="/tools/*" 
           element={
             <ProtectedRoute>
-              <Suspense fallback={<LoadingScreen />}>
-                <ToolsRoutes />
-              </Suspense>
+              <AuthenticatedLayout>
+                <Suspense fallback={<LoadingScreen />}>
+                  <ToolsRoutes />
+                </Suspense>
+              </AuthenticatedLayout>
             </ProtectedRoute>
           } 
         />
@@ -101,9 +114,11 @@ const AppRoutes = () => {
           path="/benefits/*" 
           element={
             <ProtectedRoute>
-              <Suspense fallback={<LoadingScreen />}>
-                <BenefitsRoutes />
-              </Suspense>
+              <AuthenticatedLayout>
+                <Suspense fallback={<LoadingScreen />}>
+                  <BenefitsRoutes />
+                </Suspense>
+              </AuthenticatedLayout>
             </ProtectedRoute>
           } 
         />
@@ -112,9 +127,11 @@ const AppRoutes = () => {
           path="/networking/*" 
           element={
             <ProtectedRoute>
-              <Suspense fallback={<LoadingScreen />}>
-                <NetworkingRoutes />
-              </Suspense>
+              <AuthenticatedLayout>
+                <Suspense fallback={<LoadingScreen />}>
+                  <NetworkingRoutes />
+                </Suspense>
+              </AuthenticatedLayout>
             </ProtectedRoute>
           } 
         />
@@ -123,9 +140,11 @@ const AppRoutes = () => {
           path="/onboarding-new/*" 
           element={
             <ProtectedRoute>
-              <Suspense fallback={<LoadingScreen />}>
-                <OnboardingRoutes />
-              </Suspense>
+              <AuthenticatedLayout>
+                <Suspense fallback={<LoadingScreen />}>
+                  <OnboardingRoutes />
+                </Suspense>
+              </AuthenticatedLayout>
             </ProtectedRoute>
           } 
         />
@@ -134,9 +153,11 @@ const AppRoutes = () => {
           path="/admin/*" 
           element={
             <ProtectedRoute requireAdmin={true}>
-              <Suspense fallback={<LoadingScreen />}>
-                <AdminRoutes />
-              </Suspense>
+              <AuthenticatedLayout>
+                <Suspense fallback={<LoadingScreen />}>
+                  <AdminRoutes />
+                </Suspense>
+              </AuthenticatedLayout>
             </ProtectedRoute>
           } 
         />
@@ -145,9 +166,11 @@ const AppRoutes = () => {
           path="/formacao/*" 
           element={
             <ProtectedRoute requiredRole="formacao">
-              <Suspense fallback={<LoadingScreen />}>
-                <FormacaoRoutes />
-              </Suspense>
+              <AuthenticatedLayout>
+                <Suspense fallback={<LoadingScreen />}>
+                  <FormacaoRoutes />
+                </Suspense>
+              </AuthenticatedLayout>
             </ProtectedRoute>
           } 
         />
@@ -156,9 +179,11 @@ const AppRoutes = () => {
           path="/profile/*" 
           element={
             <ProtectedRoute>
-              <Suspense fallback={<LoadingScreen />}>
-                <ProfileRoutes />
-              </Suspense>
+              <AuthenticatedLayout>
+                <Suspense fallback={<LoadingScreen />}>
+                  <ProfileRoutes />
+                </Suspense>
+              </AuthenticatedLayout>
             </ProtectedRoute>
           } 
         />
