@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Solution } from "@/types/solution";
-import { ArrowRight, Lightbulb, Clock } from "lucide-react";
+import { ArrowRight, Lightbulb, Clock, Layers } from "lucide-react";
 
 interface TrailPanelSolutionsProps {
   solutions: (Solution & { priority: number; justification: string })[];
@@ -35,6 +35,25 @@ export const TrailPanelSolutions: React.FC<TrailPanelSolutionsProps> = ({ soluti
     1: "Alta Prioridade",
     2: "Média Prioridade", 
     3: "Baixa Prioridade"
+  };
+
+  // Função para renderizar informações de tempo
+  const renderTimeInfo = (solution: Solution) => {
+    if (solution.estimated_time && solution.estimated_time > 0) {
+      return (
+        <div className="flex items-center gap-2 mt-3 text-sm text-neutral-400">
+          <Clock size={14} />
+          <span>{solution.estimated_time} minutos estimados</span>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="flex items-center gap-2 mt-3 text-sm text-neutral-400">
+        <Layers size={14} />
+        <span>Solução em módulos</span>
+      </div>
+    );
   };
 
   return (
@@ -73,10 +92,7 @@ export const TrailPanelSolutions: React.FC<TrailPanelSolutionsProps> = ({ soluti
                   <div className="text-sm text-neutral-300 bg-[#0ABAB5]/5 p-3 rounded-md border border-[#0ABAB5]/20">
                     <p className="italic">"{solution.justification}"</p>
                   </div>
-                  <div className="flex items-center gap-2 mt-3 text-sm text-neutral-400">
-                    <Clock size={14} />
-                    <span>{solution.estimated_time || 30} minutos estimados</span>
-                  </div>
+                  {renderTimeInfo(solution)}
                 </CardContent>
                 
                 <CardFooter>

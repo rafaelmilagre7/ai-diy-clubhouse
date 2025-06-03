@@ -5,7 +5,7 @@ import { Solution } from '@/lib/supabase';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Clock, BarChart, TrendingUp, Settings, Zap } from 'lucide-react';
+import { Clock, BarChart, TrendingUp, Settings, Zap, Layers } from 'lucide-react';
 import { SolutionCategory } from '@/lib/types/categoryTypes';
 
 interface SolutionCardProps {
@@ -55,6 +55,27 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
     }
   };
 
+  // Função para renderizar informações de tempo ou categoria
+  const renderTimeInfo = () => {
+    // Se há tempo estimado válido, mostra o tempo
+    if (solution.estimated_time && solution.estimated_time > 0) {
+      return (
+        <div className="flex items-center">
+          <Clock className="h-3 w-3 mr-1" />
+          <span>{solution.estimated_time} min</span>
+        </div>
+      );
+    }
+
+    // Se não há tempo, mostra ícone de módulos
+    return (
+      <div className="flex items-center">
+        <Layers className="h-3 w-3 mr-1" />
+        <span>Módulos</span>
+      </div>
+    );
+  };
+
   return (
     <Link to={`/solution/${solution.id}`} className="block">
       <Card className="h-full overflow-hidden transition-shadow hover:shadow-md bg-[#151823] border-neutral-700">
@@ -92,12 +113,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
           </ScrollArea>
         </CardContent>
         <CardFooter className="p-4 pt-0 flex gap-2 flex-wrap justify-between text-xs text-neutral-400">
-          {solution.estimated_time && solution.estimated_time > 0 && (
-            <div className="flex items-center">
-              <Clock className="h-3 w-3 mr-1" />
-              <span>{solution.estimated_time} min</span>
-            </div>
-          )}
+          {renderTimeInfo()}
           <Badge
             variant="outline"
             className={`font-medium ${getDifficultyBadgeStyle(solution.difficulty)}`}
