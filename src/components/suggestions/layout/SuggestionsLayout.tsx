@@ -49,7 +49,7 @@ const SuggestionsLayout = () => {
 
   if (isLoading) {
     return (
-      <div className="container py-6 space-y-6">
+      <div className="w-full py-4 space-y-6">
         <SuggestionsHeader 
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
@@ -76,7 +76,7 @@ const SuggestionsLayout = () => {
   }
 
   return (
-    <div className="container py-6 space-y-6">
+    <div className="w-full py-4 space-y-6">
       <SuggestionsHeader 
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
