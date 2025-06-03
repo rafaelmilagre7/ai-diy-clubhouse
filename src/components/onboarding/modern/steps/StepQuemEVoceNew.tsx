@@ -36,7 +36,7 @@ export const StepQuemEVoceNew: React.FC<OnboardingStepProps> = ({
 
       <div className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700/50 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
+          <div className="space-y-2 text-left">
             <label className="block text-sm font-medium text-white">
               Nome completo <span className="text-red-400">*</span>
             </label>
@@ -49,7 +49,7 @@ export const StepQuemEVoceNew: React.FC<OnboardingStepProps> = ({
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 text-left">
             <label className="block text-sm font-medium text-white">
               E-mail <span className="text-red-400">*</span>
             </label>
@@ -64,16 +64,18 @@ export const StepQuemEVoceNew: React.FC<OnboardingStepProps> = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <DropdownModerno
-            value={data.country_code || '+55'}
-            onChange={(value) => onUpdate('country_code', value)}
-            options={COUNTRY_CODE_OPTIONS}
-            placeholder="País"
-            label="País"
-            required
-          />
+          <div className="text-left">
+            <DropdownModerno
+              value={data.country_code || '+55'}
+              onChange={(value) => onUpdate('country_code', value)}
+              options={COUNTRY_CODE_OPTIONS}
+              placeholder="País"
+              label="País"
+              required
+            />
+          </div>
 
-          <div className="md:col-span-2 space-y-2">
+          <div className="md:col-span-2 space-y-2 text-left">
             <label className="block text-sm font-medium text-white">
               WhatsApp <span className="text-red-400">*</span>
             </label>
@@ -87,14 +89,16 @@ export const StepQuemEVoceNew: React.FC<OnboardingStepProps> = ({
           </div>
         </div>
 
-        <DateInput
-          value={data.birth_date || ''}
-          onChange={(value) => onUpdate('birth_date', value)}
-          required
-        />
+        <div className="text-left">
+          <DateInput
+            value={data.birth_date || ''}
+            onChange={(value) => onUpdate('birth_date', value)}
+            required
+          />
+        </div>
 
         <div className="bg-viverblue/10 border border-viverblue/20 rounded-lg p-4">
-          <p className="text-sm text-viverblue-light">
+          <p className="text-sm text-viverblue-light text-left">
             🔒 <strong>Privacidade:</strong> Seus dados são protegidos e utilizados 
             apenas para personalizar sua experiência na plataforma.
           </p>

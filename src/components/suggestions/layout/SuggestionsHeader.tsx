@@ -25,7 +25,12 @@ export const SuggestionsHeader: React.FC<SuggestionsHeaderProps> = ({
   return (
     <div className="flex flex-col space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Sugestões</h1>
+        <div className="text-left">
+          <h1 className="text-2xl font-bold">Sugestões</h1>
+          <p className="text-muted-foreground mt-1">
+            Compartilhe suas ideias e veja as sugestões da comunidade
+          </p>
+        </div>
         <Button 
           onClick={() => navigate('/suggestions/new')}
           className="gap-2"

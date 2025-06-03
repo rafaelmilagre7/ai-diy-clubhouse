@@ -22,7 +22,7 @@ export const ToolsHeader = ({
   return (
     <div className="space-y-6">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div>
+        <div className="text-left">
           <h1 className="text-2xl font-bold text-textPrimary">Ferramentas</h1>
           <p className="text-textSecondary mt-1">
             Explore todas as ferramentas recomendadas pelo VIVER DE IA Club

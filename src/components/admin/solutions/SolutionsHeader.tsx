@@ -7,9 +7,9 @@ import { Plus } from 'lucide-react';
 export const SolutionsHeader = () => {
   return (
     <div className="flex justify-between items-center">
-      <div>
+      <div className="text-left">
         <h1 className="text-2xl font-bold tracking-tight">Soluções</h1>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground mt-1">
           Gerencie todas as soluções disponíveis na plataforma.
         </p>
       </div>
