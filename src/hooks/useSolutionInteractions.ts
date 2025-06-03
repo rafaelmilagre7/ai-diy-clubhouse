@@ -16,7 +16,7 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
   const startImplementation = async () => {
     if (!user || !solutionId) {
       toast.error("Você precisa estar logado para implementar esta solução");
-      return false; // Retorna false em caso de erro
+      return false;
     }
     
     try {
@@ -33,7 +33,7 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
             solution_id: solutionId,
             current_module: 0,
             is_completed: false,
-            completed_modules: [], // Initialize as empty array
+            completed_modules: [],
             last_activity: new Date().toISOString(),
           })
           .select()
@@ -53,7 +53,7 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
       toast.success("Redirecionando para a implementação...");
       console.log("Redirecionando para /implementation/" + solutionId);
       navigate(`/implementation/${solutionId}`);
-      return true; // Retorna true quando a implementação é iniciada com sucesso
+      return true;
     } catch (error) {
       console.error("Erro ao iniciar implementação:", error);
       uiToast({
@@ -61,7 +61,7 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
         description: "Ocorreu um erro ao tentar iniciar a implementação da solução.",
         variant: "destructive",
       });
-      return false; // Retorna false em caso de erro
+      return false;
     } finally {
       setInitializing(false);
     }
@@ -70,7 +70,7 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
   const continueImplementation = () => {
     if (!solutionId || !progress) {
       toast.error("Não foi possível continuar a implementação");
-      return false; // Retorna false em caso de erro
+      return false;
     }
     
     // Navigate to the implementation page using the correct route
@@ -78,7 +78,7 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
     toast.success("Redirecionando para onde você parou...");
     console.log("Redirecionando para /implementation/" + solutionId);
     navigate(`/implementation/${solutionId}`);
-    return true; // Retorna true quando a continuação é bem-sucedida
+    return true;
   };
   
   const toggleFavorite = () => {
