@@ -9,22 +9,16 @@ interface OnboardingCompletionGuardProps {
 }
 
 export const OnboardingCompletionGuard: React.FC<OnboardingCompletionGuardProps> = ({ children }) => {
-  const { isOnboardingComplete, isLoading, error, invalidateOnboardingCache } = useUnifiedOnboardingValidation();
+  const { isOnboardingComplete, isLoading, checkOnboardingStatus } = useUnifiedOnboardingValidation();
 
   // Invalidar cache ao montar o componente para garantir dados frescos
   useEffect(() => {
-    console.log('🔄 OnboardingCompletionGuard: Invalidando cache na montagem');
-    invalidateOnboardingCache();
-  }, [invalidateOnboardingCache]);
+    console.log('🔄 OnboardingCompletionGuard: Verificando status na montagem');
+    checkOnboardingStatus();
+  }, [checkOnboardingStatus]);
 
   if (isLoading) {
     return <LoadingScreen message="Verificando status do onboarding..." />;
-  }
-
-  if (error) {
-    console.error('Erro ao verificar onboarding:', error);
-    // Em caso de erro, permitir acesso ao onboarding
-    return <>{children}</>;
   }
 
   // Se o onboarding já foi completado, redirecionar para o review (não para dashboard)
