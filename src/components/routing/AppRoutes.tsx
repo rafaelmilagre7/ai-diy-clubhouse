@@ -4,7 +4,7 @@ import { authRoutes } from '../../routes/AuthRoutes';
 import { adminRoutes } from '../../routes/AdminRoutes';
 import { memberRoutes } from '../../routes/MemberRoutes';
 import { OnboardingRoutes } from '../../routes/OnboardingRoutes';
-import { formacaoRoutes } from '../../routes/FormacaoRoutes';
+import { FormacaoRoutes } from '../../routes/FormacaoRoutes';
 import { CommunityRedirects } from './CommunityRedirects';
 import { SmartRoutePreloader } from './SmartRoutePreloader';
 import NotFound from '@/pages/NotFound';
@@ -40,9 +40,7 @@ const AppRoutes = () => {
         <Route path="/onboarding-new/*" element={<OnboardingRoutes />} />
         
         {/* Formação Routes */}
-        {formacaoRoutes.map((route) => (
-          <Route key={route.path} path={route.path} element={route.element} />
-        ))}
+        <Route path="/formacao/*" element={<FormacaoRoutes />} />
         
         {/* Fallback route */}
         <Route path="*" element={<NotFound />} />
