@@ -1,7 +1,6 @@
 
 // Exportações principais do cliente
 export { supabase } from './client';
-export type { Tables } from './client';
 
 // Exportar todos os tipos essenciais do sistema
 export type {
