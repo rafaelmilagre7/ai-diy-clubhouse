@@ -6,6 +6,7 @@ export type FeaturePermission =
   | 'networking.access'
   | 'courses.manage'
   | 'tools.admin'
+  | 'solutions.view'
   | 'solutions.create'
   | 'analytics.view'
   | 'community.moderate'
@@ -26,6 +27,11 @@ const FEATURE_CONFIGS: Record<string, FeatureAccessConfig> = {
     fallbackRoles: ['admin', 'membro_club'],
     description: 'Acesso ao sistema de networking inteligente',
     upgradeMessage: 'O Networking Inteligente é exclusivo para membros Club. Faça upgrade para membro Club para conectar-se com outros empreendedores e expandir sua rede de negócios.'
+  },
+  solutions: {
+    permission: 'solutions.view',
+    fallbackRoles: ['admin', 'member', 'membro_club'],
+    description: 'Visualização e acesso às soluções'
   },
   courseManagement: {
     permission: 'courses.manage',
