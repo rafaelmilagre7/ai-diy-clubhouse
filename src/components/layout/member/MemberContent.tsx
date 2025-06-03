@@ -1,13 +1,9 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
+import { BaseContentProps } from "../BaseLayout";
 
-interface MemberContentProps {
-  children: React.ReactNode;
-  sidebarOpen: boolean;
-}
-
-export const MemberContent: React.FC<MemberContentProps> = ({ 
+export const MemberContent: React.FC<BaseContentProps> = ({ 
   children, 
   sidebarOpen 
 }) => {

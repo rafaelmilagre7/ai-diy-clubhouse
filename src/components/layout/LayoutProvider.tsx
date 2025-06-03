@@ -8,6 +8,7 @@ import MemberLayout from "./MemberLayout";
 import FormacaoLayout from "./formacao/FormacaoLayout";
 import { PageTransitionWithFallback } from "@/components/transitions/PageTransitionWithFallback";
 import AppRoutes from "@/components/routing/AppRoutes";
+import ErrorBoundary from "@/components/common/ErrorBoundary";
 
 const LayoutProvider = memo(() => {
   const {
@@ -36,7 +37,7 @@ const LayoutProvider = memo(() => {
   // Memoizar mensagem de loading
   const loadingMessage = useMemo(() => {
     if (authLoading) return "Preparando seu dashboard...";
-    if (onboardingLoading) return "Verificando onboarding...";
+    if (onboardingLoading) return "Verificando configurações...";
     if (!user) return "Verificando autenticação...";
     return "Carregando layout...";
   }, [authLoading, onboardingLoading, user]);
@@ -75,7 +76,7 @@ const LayoutProvider = memo(() => {
     } else {
       timeoutRef.current = window.setTimeout(() => {
         setLayoutReady(true);
-      }, 2000);
+      }, 3000);
     }
     
     return () => {
@@ -91,27 +92,33 @@ const LayoutProvider = memo(() => {
     
     if (isFormacaoRoute && (isFormacao || isAdmin)) {
       return (
-        <PageTransitionWithFallback isVisible={true}>
-          <FormacaoLayout>
-            <AppRoutes />
-          </FormacaoLayout>
-        </PageTransitionWithFallback>
+        <ErrorBoundary>
+          <PageTransitionWithFallback isVisible={true}>
+            <FormacaoLayout>
+              <AppRoutes />
+            </FormacaoLayout>
+          </PageTransitionWithFallback>
+        </ErrorBoundary>
       );
     } else if (isMemberRoute || isLearningRoute || isOnboardingRoute || !isFormacao || isAdmin) {
       return (
-        <PageTransitionWithFallback isVisible={true}>
-          <MemberLayout>
-            <AppRoutes />
-          </MemberLayout>
-        </PageTransitionWithFallback>
+        <ErrorBoundary>
+          <PageTransitionWithFallback isVisible={true}>
+            <MemberLayout>
+              <AppRoutes />
+            </MemberLayout>
+          </PageTransitionWithFallback>
+        </ErrorBoundary>
       );
     }
   }
 
   return (
-    <PageTransitionWithFallback isVisible={true}>
-      <LoadingScreen message={loadingMessage} />
-    </PageTransitionWithFallback>
+    <ErrorBoundary>
+      <PageTransitionWithFallback isVisible={true}>
+        <LoadingScreen message={loadingMessage} />
+      </PageTransitionWithFallback>
+    </ErrorBoundary>
   );
 });
 
