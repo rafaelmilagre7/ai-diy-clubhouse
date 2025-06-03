@@ -1,6 +1,6 @@
 
 import { useNavigate, useLocation } from "react-router-dom";
-import { useEffect, useState, useRef, ReactNode, memo, useMemo } from "react";
+import { useEffect, useState, useRef, memo, useMemo } from "react";
 import { useOptimizedAuth } from "@/hooks/auth/useOptimizedAuth";
 import { useUnifiedOnboardingValidation } from "@/hooks/onboarding/useUnifiedOnboardingValidation";
 import LoadingScreen from "@/components/common/LoadingScreen";
@@ -9,7 +9,7 @@ import FormacaoLayout from "./formacao/FormacaoLayout";
 import { PageTransitionWithFallback } from "@/components/transitions/PageTransitionWithFallback";
 import AppRoutes from "@/components/routing/AppRoutes";
 
-const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
+const LayoutProvider = memo(() => {
   const {
     user,
     profile,
