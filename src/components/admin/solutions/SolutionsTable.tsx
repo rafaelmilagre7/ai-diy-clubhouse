@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Edit, Trash2, CheckCircle, Eye } from 'lucide-react';
-import { formatDate } from './utils/dateFormatter';
+import { formatDate } from '@/utils/dateUtils';
 import { Solution } from '@/types/solutionTypes';
 import { PublishStatus } from './PublishStatus';
 import { SolutionDifficultyBadge } from './SolutionDifficultyBadge';
