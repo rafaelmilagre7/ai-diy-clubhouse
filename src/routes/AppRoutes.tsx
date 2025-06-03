@@ -6,7 +6,7 @@ import LoadingScreen from '@/components/common/LoadingScreen';
 // Imports diretos para evitar lazy loading circular
 import LoginPage from '@/pages/auth/LoginPage';
 import DashboardPage from '@/pages/app/DashboardPage';
-import ImplementationTrailPage from '@/pages/app/ImplementationTrailPage';
+import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
 
 // Lazy imports apenas para páginas não críticas
 const CommunityRoutes = React.lazy(() => import('./CommunityRoutes'));

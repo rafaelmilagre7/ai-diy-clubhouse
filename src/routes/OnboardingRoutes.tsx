@@ -5,7 +5,7 @@ import OnboardingFinalFlow from '@/components/onboarding/final/OnboardingFinalFl
 import { OnboardingCompletionGuard } from '@/components/onboarding/OnboardingCompletionGuard';
 import OnboardingFinalCompleted from '@/pages/onboarding/OnboardingFinalCompleted';
 
-export const OnboardingRoutes = () => {
+const OnboardingRoutes = () => {
   return (
     <OnboardingCompletionGuard>
       <Routes>
@@ -41,3 +41,5 @@ export const OnboardingRoutes = () => {
     </OnboardingCompletionGuard>
   );
 };
+
+export default OnboardingRoutes;
