@@ -1,17 +1,32 @@
 
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PlayCircle, Clock, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Play, ExternalLink } from "lucide-react";
 
 interface SolutionVideoCardProps {
-  video: any;
+  video: {
+    id: string;
+    title: string;
+    description?: string;
+    url: string;
+    thumbnail_url?: string;
+    type: string;
+    duration?: number;
+  };
 }
 
 export const SolutionVideoCard = ({ video }: SolutionVideoCardProps) => {
-  const handlePlayVideo = () => {
+  const formatDuration = (seconds?: number) => {
+    if (!seconds) return null;
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  const handleWatchVideo = () => {
     if (video.url) {
-      window.open(video.url, '_blank');
+      window.open(video.url, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -20,65 +35,66 @@ export const SolutionVideoCard = ({ video }: SolutionVideoCardProps) => {
       return video.thumbnail_url;
     }
     
-    // Para vídeos do YouTube, extrair thumbnail
+    // Para vídeos do YouTube, extrair thumbnail da URL
     if (video.type === 'youtube' && video.url) {
-      const videoId = video.url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)?.[1];
-      if (videoId) {
-        return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+      const youtubeRegex = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/;
+      const match = video.url.match(youtubeRegex);
+      if (match) {
+        return `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`;
       }
     }
     
     return null;
   };
 
+  const thumbnail = getThumbnail();
+
   return (
-    <Card className="border-white/10 bg-backgroundLight hover:bg-backgroundLight/80 transition-colors">
-      <CardContent className="p-4">
-        <div className="space-y-4">
-          <div>
-            <h4 className="font-medium text-textPrimary mb-2">
-              {video.name || video.title}
-            </h4>
-            <div className="flex items-center space-x-2">
-              <span className="text-xs px-2 py-1 rounded bg-red-900/40 text-red-200 border border-red-700/30">
-                {video.type === 'youtube' ? 'YouTube' : 'Vídeo'}
-              </span>
-              {video.duration_seconds && (
-                <span className="text-xs text-textSecondary">
-                  {Math.floor(video.duration_seconds / 60)}:{(video.duration_seconds % 60).toString().padStart(2, '0')}
-                </span>
-              )}
+    <Card className="border-white/10 hover:border-viverblue/30 transition-colors group">
+      <div className="relative">
+        {thumbnail ? (
+          <div className="relative aspect-video rounded-t-lg overflow-hidden">
+            <img 
+              src={thumbnail} 
+              alt={video.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+            />
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <PlayCircle className="w-12 h-12 text-white" />
             </div>
-          </div>
-          
-          <div className="relative aspect-video bg-neutral-800 rounded-lg overflow-hidden">
-            {getThumbnail() ? (
-              <img 
-                src={getThumbnail()!} 
-                alt={video.name || video.title}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <Play className="h-12 w-12 text-neutral-600" />
+            {video.duration && (
+              <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                <Clock className="w-3 h-3 inline mr-1" />
+                {formatDuration(video.duration)}
               </div>
             )}
-            <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-              <Play className="h-12 w-12 text-white" />
-            </div>
           </div>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handlePlayVideo}
-            className="w-full"
-            disabled={!video.url}
-          >
-            <ExternalLink className="h-4 w-4 mr-2" />
-            Assistir Vídeo
-          </Button>
-        </div>
+        ) : (
+          <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded-t-lg flex items-center justify-center">
+            <PlayCircle className="w-16 h-16 text-gray-400" />
+          </div>
+        )}
+      </div>
+      
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg leading-tight">{video.title}</CardTitle>
+        {video.description && (
+          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+            {video.description}
+          </p>
+        )}
+      </CardHeader>
+      
+      <CardContent className="pt-0">
+        <Button 
+          onClick={handleWatchVideo}
+          className="w-full bg-viverblue hover:bg-viverblue-dark"
+          disabled={!video.url}
+        >
+          <PlayCircle className="w-4 h-4 mr-2" />
+          Assistir Vídeo
+          <ExternalLink className="w-4 h-4 ml-2" />
+        </Button>
       </CardContent>
     </Card>
   );
