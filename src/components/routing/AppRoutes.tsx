@@ -23,6 +23,9 @@ import { CommunityRoutes } from '../../routes/CommunityRoutes';
 import { LearningRoutes } from '../../routes/LearningRoutes';
 import { NetworkingRoutes } from '../../routes/NetworkingRoutes';
 
+// Importar página de implementação
+import SolutionImplementation from '@/pages/member/SolutionImplementation';
+
 const AppRoutes = () => {
   return (
     <>
@@ -67,9 +70,7 @@ const AppRoutes = () => {
         
         <Route path="/solutions/:id/implementar" element={
           <ProtectedRoutes>
-            <MemberLayout>
-              <ImplementationTrailPage />
-            </MemberLayout>
+            <SolutionImplementation />
           </ProtectedRoutes>
         } />
 
