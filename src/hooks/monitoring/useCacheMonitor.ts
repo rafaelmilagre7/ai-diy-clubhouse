@@ -1,3 +1,4 @@
+
 import { useCallback, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSyncMonitor } from './useSyncMonitor';
@@ -177,7 +178,7 @@ export const useCacheMonitor = () => {
       freshQueries: queries.filter(q => !q.isStale()).length,
       staleQueries: queries.filter(q => q.isStale()).length,
       errorQueries: queries.filter(q => q.state.error).length,
-      loadingQueries: queries.filter(q => q.isFetching()).length
+      loadingQueries: queries.filter(q => q.state.fetchStatus === 'fetching').length
     };
 
     return {
