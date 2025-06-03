@@ -1,7 +1,8 @@
 
 import React from "react";
 import { CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useLessonComments } from "@/hooks/learning/useLessonComments";
 import { CommentForm } from "./CommentForm";
 import { CommentList } from "./CommentList";
@@ -14,6 +15,8 @@ interface LessonCommentsProps {
 
 export const LessonComments: React.FC<LessonCommentsProps> = ({ lessonId }) => {
   const { log } = useLogging();
+  
+  // Hook principal otimizado
   const {
     comments,
     isLoading,
@@ -21,38 +24,66 @@ export const LessonComments: React.FC<LessonCommentsProps> = ({ lessonId }) => {
     deleteComment,
     likeComment,
     isSubmitting,
-    error
+    error,
+    forceSync
   } = useLessonComments(lessonId);
   
-  // Ativar atualizações em tempo real (com tratamento de erro melhorado)
-  useRealtimeLessonComments(lessonId);
+  // Ativar realtime otimizado
+  const { isConnected, performHealthCheck } = useRealtimeLessonComments(lessonId, {
+    isEnabled: true,
+    debounceMs: 300, // Debounce de 300ms para evitar updates excessivos
+    maxReconnectAttempts: 3
+  });
   
-  log('Renderizando componente de comentários', { 
+  log('Renderizando comentários otimizados', { 
     lessonId, 
     commentsCount: comments?.length || 0,
-    hasError: !!error
+    hasError: !!error,
+    isConnected,
+    isSubmitting
   });
   
   const handleSubmitComment = async (content: string, parentId: string | null = null) => {
-    log('Tentando enviar comentário', { lessonId, hasParentId: !!parentId });
+    log('Enviando comentário otimizado', { lessonId, hasParentId: !!parentId });
     try {
       await addComment(content, parentId);
     } catch (error) {
       log('Erro ao enviar comentário', { 
         lessonId, 
-        error: error instanceof Error ? error.message : String(error),
-        showToast: true // Este erro deve mostrar toast pois afeta diretamente a ação do usuário
+        error: error instanceof Error ? error.message : String(error)
       });
     }
+  };
+
+  const handleForceSync = async () => {
+    log('Forçando sincronização manual', { lessonId });
+    await forceSync();
+    performHealthCheck();
   };
 
   return (
     <div className="space-y-6">
       <CardHeader className="px-0 pt-0">
-        <CardTitle className="flex items-center gap-2">
-          <MessageCircle className="h-5 w-5" />
-          <span>Comentários</span>
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <MessageCircle className="h-5 w-5" />
+            <span>Comentários</span>
+            {!isConnected && (
+              <span className="text-xs text-yellow-500">(modo offline)</span>
+            )}
+          </CardTitle>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleForceSync}
+            className="text-xs"
+            disabled={isSubmitting}
+          >
+            <RefreshCw className="h-3 w-3 mr-1" />
+            Sincronizar
+          </Button>
+        </div>
       </CardHeader>
       
       <CommentForm
