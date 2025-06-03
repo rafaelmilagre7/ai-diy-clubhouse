@@ -1,5 +1,7 @@
 
-import { RouteObject } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
+import { Suspense } from "react";
+import LoadingScreen from "@/components/common/LoadingScreen";
 import { FormacaoProtectedRoutes } from '@/auth/FormacaoProtectedRoutes';
 import FormacaoLayout from '@/components/layout/formacao/FormacaoLayout';
 
@@ -14,49 +16,26 @@ import {
   LazyFormacaoAulaEditarWithSuspense
 } from '@/components/routing/LazyRoutes';
 
-export const formacaoRoutes: RouteObject[] = [
-  {
-    path: "/formacao",
-    element: <FormacaoProtectedRoutes><FormacaoLayout><LazyFormacaoDashboardWithSuspense /></FormacaoLayout></FormacaoProtectedRoutes>
-  },
-  {
-    path: "/formacao/cursos",
-    element: <FormacaoProtectedRoutes><FormacaoLayout><LazyFormacaoCursosWithSuspense /></FormacaoLayout></FormacaoProtectedRoutes>
-  },
-  {
-    path: "/formacao/curso/:id",
-    element: <FormacaoProtectedRoutes><FormacaoLayout><LazyFormacaoCursoDetalhesWithSuspense /></FormacaoLayout></FormacaoProtectedRoutes>
-  },
-  {
-    path: "/formacao/cursos/:id",
-    element: <FormacaoProtectedRoutes><FormacaoLayout><LazyFormacaoCursoDetalhesWithSuspense /></FormacaoLayout></FormacaoProtectedRoutes>
-  },
-  {
-    path: "/formacao/modulos/:id",
-    element: <FormacaoProtectedRoutes><FormacaoLayout><LazyFormacaoModuloDetalhesWithSuspense /></FormacaoLayout></FormacaoProtectedRoutes>
-  },
-  {
-    path: "/formacao/aulas",
-    element: <FormacaoProtectedRoutes><FormacaoLayout><LazyFormacaoAulasWithSuspense /></FormacaoLayout></FormacaoProtectedRoutes>
-  },
-  {
-    path: "/formacao/aulas/:id",
-    element: <FormacaoProtectedRoutes><FormacaoLayout><LazyFormacaoAulaDetalhesWithSuspense /></FormacaoLayout></FormacaoProtectedRoutes>
-  },
-  {
-    path: "/formacao/aulas/:id/editar",
-    element: <FormacaoProtectedRoutes><FormacaoLayout><LazyFormacaoAulaEditarWithSuspense /></FormacaoLayout></FormacaoProtectedRoutes>
-  },
-  {
-    path: "/formacao/materiais",
-    element: <FormacaoProtectedRoutes><FormacaoLayout><div>Página de Materiais</div></FormacaoLayout></FormacaoProtectedRoutes>
-  },
-  {
-    path: "/formacao/alunos",
-    element: <FormacaoProtectedRoutes><FormacaoLayout><div>Página de Alunos</div></FormacaoLayout></FormacaoProtectedRoutes>
-  },
-  {
-    path: "/formacao/configuracoes",
-    element: <FormacaoProtectedRoutes><FormacaoLayout><div>Configurações do LMS</div></FormacaoLayout></FormacaoProtectedRoutes>
-  },
-];
+export const FormacaoRoutes = () => {
+  return (
+    <FormacaoProtectedRoutes>
+      <FormacaoLayout>
+        <Suspense fallback={<LoadingScreen message="Carregando área de formação..." />}>
+          <Routes>
+            <Route index element={<LazyFormacaoDashboardWithSuspense />} />
+            <Route path="cursos" element={<LazyFormacaoCursosWithSuspense />} />
+            <Route path="curso/:id" element={<LazyFormacaoCursoDetalhesWithSuspense />} />
+            <Route path="cursos/:id" element={<LazyFormacaoCursoDetalhesWithSuspense />} />
+            <Route path="modulos/:id" element={<LazyFormacaoModuloDetalhesWithSuspense />} />
+            <Route path="aulas" element={<LazyFormacaoAulasWithSuspense />} />
+            <Route path="aulas/:id" element={<LazyFormacaoAulaDetalhesWithSuspense />} />
+            <Route path="aulas/:id/editar" element={<LazyFormacaoAulaEditarWithSuspense />} />
+            <Route path="materiais" element={<div>Página de Materiais</div>} />
+            <Route path="alunos" element={<div>Página de Alunos</div>} />
+            <Route path="configuracoes" element={<div>Configurações do LMS</div>} />
+          </Routes>
+        </Suspense>
+      </FormacaoLayout>
+    </FormacaoProtectedRoutes>
+  );
+};
