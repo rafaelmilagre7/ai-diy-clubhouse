@@ -6,7 +6,6 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Toaster } from 'sonner';
 import { AuthProvider } from '@/contexts/auth/AuthProvider';
 import { ErrorBoundary } from 'react-error-boundary';
-import RouteErrorBoundary from '@/components/common/RouteErrorBoundary';
 import AppRoutes from '@/routes/AppRoutes';
 import './App.css';
 
@@ -20,7 +19,7 @@ const queryClient = new QueryClient({
   },
 });
 
-// Fallback para erros gerais
+// Fallback simples para erros gerais
 const ErrorFallback = ({ error, resetErrorBoundary }: any) => (
   <div className="min-h-screen flex items-center justify-center bg-background p-4">
     <div className="text-center">
@@ -44,9 +43,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <AuthProvider>
-            <RouteErrorBoundary>
-              <AppRoutes />
-            </RouteErrorBoundary>
+            <AppRoutes />
             
             <Toaster 
               position="top-right" 
