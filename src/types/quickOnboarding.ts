@@ -13,6 +13,7 @@ export interface QuickOnboardingData {
   primary_goal: string;
   expected_outcome_30days: string;
   content_formats: string[];
+  currentStep?: number; // Added missing property
   // Additional fields for extended steps
   business_challenges?: string[];
   business_model?: string;
