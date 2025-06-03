@@ -7,10 +7,8 @@ import { Toaster } from 'sonner';
 import { AuthProvider } from '@/contexts/auth/AuthProvider';
 import { ErrorBoundary } from 'react-error-boundary';
 import RouteErrorBoundary from '@/components/common/RouteErrorBoundary';
-import './App.css';
-
-// Import direto para evitar problemas de inicialização
 import AppRoutes from '@/routes/AppRoutes';
+import './App.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,6 +37,8 @@ const ErrorFallback = ({ error, resetErrorBoundary }: any) => (
 );
 
 function App() {
+  console.log('App: Inicializando aplicação principal');
+
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => window.location.reload()}>
       <QueryClientProvider client={queryClient}>
