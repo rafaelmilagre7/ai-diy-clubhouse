@@ -7,9 +7,18 @@ import { Button } from "@/components/ui/button";
 interface TabBasedMaterialsSectionProps {
   solutionId: string;
   materials: any[];
+  onSectionComplete?: () => void;
+  onValidation?: (downloadCount: number, timeSpent: number) => { isValid: boolean; message?: string; requirement?: string; };
+  isCompleted?: boolean;
 }
 
-export const TabBasedMaterialsSection = ({ solutionId, materials }: TabBasedMaterialsSectionProps) => {
+export const TabBasedMaterialsSection = ({ 
+  solutionId, 
+  materials, 
+  onSectionComplete, 
+  onValidation, 
+  isCompleted 
+}: TabBasedMaterialsSectionProps) => {
   const handleDownload = (material: any) => {
     if (material.file_url || material.url) {
       window.open(material.file_url || material.url, '_blank');

@@ -7,9 +7,18 @@ import { Button } from "@/components/ui/button";
 interface TabBasedToolsSectionProps {
   solutionId: string;
   tools: any[];
+  onSectionComplete?: () => void;
+  onValidation?: (interactionCount: number, timeSpent: number) => { isValid: boolean; message?: string; requirement?: string; };
+  isCompleted?: boolean;
 }
 
-export const TabBasedToolsSection = ({ solutionId, tools }: TabBasedToolsSectionProps) => {
+export const TabBasedToolsSection = ({ 
+  solutionId, 
+  tools, 
+  onSectionComplete, 
+  onValidation, 
+  isCompleted 
+}: TabBasedToolsSectionProps) => {
   if (tools.length === 0) {
     return (
       <div className="space-y-6">

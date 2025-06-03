@@ -7,9 +7,18 @@ import { YoutubeEmbed } from "@/components/common/YoutubeEmbed";
 interface TabBasedVideosSectionProps {
   solutionId: string;
   videos: any[];
+  onSectionComplete?: () => void;
+  onValidation?: (watchedCount: number, totalWatchTime: number) => { isValid: boolean; message?: string; requirement?: string; };
+  isCompleted?: boolean;
 }
 
-export const TabBasedVideosSection = ({ solutionId, videos }: TabBasedVideosSectionProps) => {
+export const TabBasedVideosSection = ({ 
+  solutionId, 
+  videos, 
+  onSectionComplete, 
+  onValidation, 
+  isCompleted 
+}: TabBasedVideosSectionProps) => {
   if (videos.length === 0) {
     return (
       <div className="space-y-6">

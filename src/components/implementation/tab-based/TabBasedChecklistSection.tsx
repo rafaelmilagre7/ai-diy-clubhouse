@@ -7,9 +7,18 @@ import { Solution } from "@/lib/supabase";
 interface TabBasedChecklistSectionProps {
   solutionId: string;
   solution: Solution;
+  onSectionComplete?: () => void;
+  onValidation?: (checkedItems: number, totalItems: number) => { isValid: boolean; message?: string; requirement?: string; };
+  isCompleted?: boolean;
 }
 
-export const TabBasedChecklistSection = ({ solutionId, solution }: TabBasedChecklistSectionProps) => {
+export const TabBasedChecklistSection = ({ 
+  solutionId, 
+  solution, 
+  onSectionComplete, 
+  onValidation, 
+  isCompleted 
+}: TabBasedChecklistSectionProps) => {
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
 
   // Checklist genérico baseado na solução
@@ -59,6 +68,11 @@ export const TabBasedChecklistSection = ({ solutionId, solution }: TabBasedCheck
       newCheckedItems.add(itemId);
     }
     setCheckedItems(newCheckedItems);
+    
+    // Chamar validação se fornecida
+    if (onValidation) {
+      onValidation(newCheckedItems.size, defaultChecklist.length);
+    }
   };
 
   const completionPercentage = Math.round((checkedItems.size / defaultChecklist.length) * 100);
