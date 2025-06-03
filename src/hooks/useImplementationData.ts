@@ -43,7 +43,6 @@ export const useImplementationData = () => {
         
         if (solutionError) {
           logError("Erro ao buscar solução:", solutionError);
-          // Se a solução não for encontrada ou não estiver publicada (para membros)
           if (!isAdmin) {
             toast({
               title: "Solução não disponível",
@@ -81,22 +80,13 @@ export const useImplementationData = () => {
           throw modulesError;
         }
         
+        // Se não há módulos reais, deixar o array vazio para o fallback funcionar
         if (modulesData && modulesData.length > 0) {
+          log("Módulos encontrados para a solução", { count: modulesData.length });
           setModules(modulesData as Module[]);
         } else {
-          // Create placeholder module for implementation screen
-          const placeholderModule = {
-            id: `placeholder-module`,
-            solution_id: id,
-            title: solutionData?.title || "Implementação",
-            content: {},
-            type: "implementation",
-            module_order: 0,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          };
-          
-          setModules([placeholderModule as Module]);
+          log("Nenhum módulo encontrado, sistema de fallback será usado");
+          setModules([]);
         }
         
         // Fetch user progress
@@ -112,11 +102,8 @@ export const useImplementationData = () => {
             if (progressError) {
               logError("Erro ao buscar progresso:", progressError);
             } else if (progressData) {
-              // Cast to Progress type - now with completed_at instead of completion_date
               setProgress(progressData as Progress);
               
-              // Parse completed modules from progress data
-              // Handle the case where completed_modules might not exist in the database
               if (progressData.completed_modules && Array.isArray(progressData.completed_modules)) {
                 setCompletedModules(progressData.completed_modules);
               } else {
@@ -132,7 +119,7 @@ export const useImplementationData = () => {
                   solution_id: id,
                   current_module: 0,
                   is_completed: false,
-                  completed_modules: [], // Initialize as empty array
+                  completed_modules: [],
                   last_activity: new Date().toISOString(),
                 })
                 .select()
