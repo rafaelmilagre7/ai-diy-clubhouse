@@ -109,6 +109,12 @@
   .form-description {
     @apply text-neutral-600 dark:text-neutral-300;
   }
+
+  /* Pattern background for decorative elements */
+  .bg-dot-pattern {
+    background-image: radial-gradient(circle, rgba(0, 234, 217, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
 }
 
 /* Responsividade (breakpoints de headings, container, cards) */
@@ -120,4 +126,31 @@
 }
 @media (max-width: 600px) {
   .container { @apply px-2; }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Focus styles for accessibility */
+*:focus-visible {
+  @apply outline-none ring-2 ring-viverblue ring-offset-2 ring-offset-transparent;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-neutral-800;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-viverblue rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-viverblue-dark;
 }
