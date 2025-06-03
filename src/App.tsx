@@ -5,10 +5,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Toaster } from 'sonner';
 import { AuthProvider } from '@/contexts/auth/AuthProvider';
-import AppRoutes from '@/routes/AppRoutes';
 import { ErrorBoundary } from 'react-error-boundary';
 import RouteErrorBoundary from '@/components/common/RouteErrorBoundary';
 import './App.css';
+
+// Import direto para evitar problemas de inicialização
+import AppRoutes from '@/routes/AppRoutes';
 
 const queryClient = new QueryClient({
   defaultOptions: {

@@ -3,7 +3,7 @@ import { RouteObject } from "react-router-dom";
 import { ProtectedRoute } from '@/components/routing/ProtectedRoute';
 import MemberLayout from '@/components/layout/MemberLayout';
 
-// Importações lazy dos componentes
+// Importações lazy dos componentes - verificando se há problemas com ícones
 import {
   LazyImplementationTrailWithSuspense,
   LazySolutionsWithSuspense,
@@ -23,18 +23,12 @@ import {
   LazyNetworkingPageWithSuspense
 } from '@/components/routing/LazyRoutes';
 
-// Importações diretas para páginas críticas - usando os caminhos corretos
+// Importações diretas para páginas críticas
 import Dashboard from '@/pages/member/Dashboard';
 import Profile from '@/pages/member/Profile';
 import EditProfile from '@/pages/member/EditProfile';
 
 export const memberRoutes: RouteObject[] = [
-  // Rotas raiz redirecionadas
-  {
-    path: "/",
-    element: <ProtectedRoute><Dashboard /></ProtectedRoute>
-  },
-  
   // Dashboard principal
   {
     path: "/dashboard",

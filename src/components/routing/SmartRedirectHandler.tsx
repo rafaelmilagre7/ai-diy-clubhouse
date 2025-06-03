@@ -1,7 +1,5 @@
 
 import React, { useEffect } from 'react';
-import { useAuth } from '@/contexts/auth';
-import { useUnifiedOnboardingValidation } from '@/hooks/onboarding/useUnifiedOnboardingValidation';
 import { useLocation, useNavigate } from 'react-router-dom';
 import LoadingScreen from '@/components/common/LoadingScreen';
 
@@ -26,10 +24,8 @@ const PROTECTED_ROUTES = [
 ];
 
 export const SmartRedirectHandler: React.FC<SmartRedirectHandlerProps> = ({ children }) => {
-  const { user, profile, isLoading: authLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const { isOnboardingComplete, isLoading: onboardingLoading } = useUnifiedOnboardingValidation();
 
   const isOnboardingRoute = location.pathname.startsWith('/onboarding');
   const isPublicRoute = location.pathname === '/login' || location.pathname === '/';
@@ -43,62 +39,51 @@ export const SmartRedirectHandler: React.FC<SmartRedirectHandlerProps> = ({ chil
     location.pathname.startsWith(route)
   );
 
-  const isAdmin = profile?.role === 'admin';
-
   useEffect(() => {
-    if (user && !isPublicRoute && !isOnboardingRoute && !authLoading && !onboardingLoading) {
-      // NÃO redirecionar se for uma rota de perfil
-      if (isProfileRoute) {
+    // Lógica de redirecionamento simplificada para evitar loops
+    if (!isPublicRoute && !isOnboardingRoute && !isProfileRoute) {
+      // Verificar se há token de autenticação
+      const hasAuth = localStorage.getItem('supabase.auth.token');
+      
+      if (!hasAuth) {
+        navigate('/login', { replace: true });
         return;
       }
 
-      // Só redirecionar se a rota requer onboarding, onboarding não está completo, não é admin E não é uma rota protegida
-      if (requiresOnboarding && !isOnboardingComplete && !isAdmin && !isProtectedRoute) {
-        navigate('/onboarding-new', { replace: true });
+      // Se requer onboarding e não é rota protegida, redirecionar
+      if (requiresOnboarding && !isProtectedRoute) {
+        const onboardingComplete = localStorage.getItem('onboarding_complete');
+        if (!onboardingComplete) {
+          navigate('/onboarding-new', { replace: true });
+        }
       }
     }
-  }, [
-    user, 
-    isPublicRoute, 
-    isOnboardingRoute,
-    isProfileRoute,
-    requiresOnboarding,
-    isProtectedRoute,
-    authLoading, 
-    onboardingLoading,
-    isOnboardingComplete,
-    isAdmin,
-    navigate,
-    location.pathname
-  ]);
-
-  // Mostrar loading enquanto verifica dados
-  if ((authLoading || onboardingLoading) && !isPublicRoute) {
-    return <LoadingScreen message="Verificando configurações da conta..." />;
-  }
+  }, [location.pathname, navigate, isPublicRoute, isOnboardingRoute, isProfileRoute, requiresOnboarding, isProtectedRoute]);
 
   return <>{children}</>;
 };
 
-// Para compatibilidade com rotas que não precisam de redirecionamento
+// Redirecionamento simples sem hooks de auth para evitar dependências circulares
 export const SimpleRedirectHandler: React.FC = () => {
-  const { user, profile, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!authLoading && user) {
-      // Redirecionamento baseado no perfil do usuário
-      if (profile?.role === 'admin') {
+    // Verificação simples sem dependências do contexto de auth
+    const hasAuth = localStorage.getItem('supabase.auth.token');
+    const userRole = localStorage.getItem('user_role');
+    
+    if (hasAuth) {
+      if (userRole === 'admin') {
         navigate('/admin', { replace: true });
-      } else if (profile?.role === 'formacao') {
+      } else if (userRole === 'formacao') {
         navigate('/formacao', { replace: true });
       } else {
         navigate('/dashboard', { replace: true });
       }
-    } else if (!authLoading && !user) {
+    } else {
       navigate('/login', { replace: true });
     }
-  }, [user, profile, authLoading, navigate]);
+  }, [navigate]);
 
   return <LoadingScreen message="Redirecionando..." />;
 };
