@@ -1,23 +1,22 @@
 
 import React from 'react';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowLeft } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Input } from '@/components/ui/input';
+import { Search, Users } from 'lucide-react';
 import { OnboardingStepProps } from '@/types/quickOnboarding';
-import { DropdownModerno } from '../DropdownModerno';
 
-const HOW_FOUND_US_OPTIONS = [
-  { value: 'google', label: '🔍 Pesquisa no Google' },
-  { value: 'youtube', label: '📺 YouTube' },
-  { value: 'instagram', label: '📷 Instagram' },
-  { value: 'linkedin', label: '💼 LinkedIn' },
-  { value: 'facebook', label: '📘 Facebook' },
-  { value: 'indicacao_amigo', label: '👥 Indicação de amigo/conhecido' },
-  { value: 'evento', label: '🎪 Evento/Palestra' },
-  { value: 'podcast', label: '🎧 Podcast' },
-  { value: 'blog_artigo', label: '📝 Blog/Artigo' },
-  { value: 'publicidade', label: '📢 Publicidade online' },
-  { value: 'outro', label: '🔄 Outro' }
+const howFoundUsOptions = [
+  { value: 'google', label: 'Google / Busca online' },
+  { value: 'youtube', label: 'YouTube' },
+  { value: 'instagram', label: 'Instagram' },
+  { value: 'linkedin', label: 'LinkedIn' },
+  { value: 'facebook', label: 'Facebook' },
+  { value: 'indicacao', label: 'Indicação de amigo' },
+  { value: 'evento', label: 'Evento / Palestra' },
+  { value: 'podcast', label: 'Podcast' },
+  { value: 'outro', label: 'Outro' }
 ];
 
 export const StepComoNosConheceu: React.FC<OnboardingStepProps> = ({
@@ -30,78 +29,83 @@ export const StepComoNosConheceu: React.FC<OnboardingStepProps> = ({
   totalSteps
 }) => {
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-white mb-2">
-          Como nos conheceu? 🤝
+    <div className="space-y-6">
+      <div className="text-center space-y-2">
+        <h2 className="text-2xl font-bold text-white flex items-center justify-center gap-2">
+          <Search className="h-6 w-6 text-viverblue" />
+          Como nos conheceu?
         </h2>
         <p className="text-gray-400">
-          Queremos entender como você chegou até nós
+          Isso nos ajuda a entender melhor nossos canais de comunicação
         </p>
       </div>
 
-      <div className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700/50 space-y-6">
-        <DropdownModerno
-          value={data.how_found_us || ''}
-          onChange={(value) => onUpdate('how_found_us', value)}
-          options={HOW_FOUND_US_OPTIONS}
-          placeholder="Selecione como nos conheceu"
-          label="Como nos conheceu?"
-          required
-        />
+      <div className="space-y-4">
+        <RadioGroup
+          value={data.how_found_us}
+          onValueChange={(value) => onUpdate('how_found_us', value)}
+          className="space-y-2"
+        >
+          {howFoundUsOptions.map((option) => (
+            <div key={option.value} className="flex items-center space-x-3">
+              <RadioGroupItem 
+                value={option.value} 
+                id={option.value}
+                className="border-gray-600 text-viverblue"
+              />
+              <Label 
+                htmlFor={option.value} 
+                className="text-white cursor-pointer flex-1"
+              >
+                {option.label}
+              </Label>
+            </div>
+          ))}
+        </RadioGroup>
 
-        {(data.how_found_us === 'indicacao_amigo' || data.how_found_us === 'outro') && (
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-white">
-              {data.how_found_us === 'indicacao_amigo' 
-                ? 'Quem te indicou?' 
-                : 'Conte-nos mais detalhes'
-              }
-            </label>
+        {/* Campo para indicação */}
+        {data.how_found_us === 'indicacao' && (
+          <div className="space-y-2 mt-4">
+            <Label htmlFor="referred_by" className="text-white flex items-center gap-2">
+              <Users className="h-4 w-4 text-viverblue" />
+              Quem te indicou?
+            </Label>
             <Input
+              id="referred_by"
               type="text"
               value={data.referred_by || ''}
               onChange={(e) => onUpdate('referred_by', e.target.value)}
-              placeholder={
-                data.how_found_us === 'indicacao_amigo'
-                  ? "Nome da pessoa que te indicou"
-                  : "Descreva como nos conheceu"
-              }
-              className="h-12 bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:ring-viverblue/50"
+              placeholder="Nome da pessoa que te indicou"
+              className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-viverblue"
             />
           </div>
         )}
+      </div>
 
-        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
-          <p className="text-sm text-green-300">
-            📊 <strong>Feedback valioso:</strong> Essas informações nos ajudam a 
-            melhorar nossos canais de comunicação e chegar a mais pessoas como você.
-          </p>
-        </div>
+      {/* Botões de navegação */}
+      <div className="flex justify-between pt-4">
+        <Button
+          onClick={onPrevious}
+          variant="outline"
+          className="border-gray-600 text-gray-300 hover:bg-gray-700"
+        >
+          Voltar
+        </Button>
+        
+        <Button
+          onClick={onNext}
+          disabled={!canProceed}
+          className="bg-viverblue hover:bg-viverblue/90 text-white px-8 py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Continuar
+        </Button>
+      </div>
 
-        <div className="flex justify-between items-center pt-6 border-t border-gray-700">
-          <Button
-            onClick={onPrevious}
-            variant="ghost"
-            className="text-gray-400 hover:text-white flex items-center gap-2"
-          >
-            <ArrowLeft size={16} />
-            <span>Anterior</span>
-          </Button>
-          
-          <div className="text-sm text-gray-400">
-            Etapa {currentStep} de {totalSteps}
-          </div>
-          
-          <Button
-            onClick={onNext}
-            disabled={!canProceed}
-            className="bg-viverblue hover:bg-viverblue-dark transition-colors flex items-center gap-2"
-          >
-            <span>Continuar</span>
-            <ArrowRight size={16} />
-          </Button>
-        </div>
+      {/* Indicador de progresso */}
+      <div className="flex justify-center">
+        <span className="text-sm text-gray-400">
+          Etapa {currentStep} de {totalSteps}
+        </span>
       </div>
     </div>
   );

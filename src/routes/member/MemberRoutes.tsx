@@ -1,41 +1,60 @@
 
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { RoleGuard } from '../guards/RoleGuard';
+import { OnboardingProtectedRoute } from '@/components/onboarding/OnboardingProtectedRoute';
 import { lazy, Suspense } from 'react';
 import LoadingScreen from '@/components/common/LoadingScreen';
 
-// Lazy loading das páginas de membros
-const Dashboard = lazy(() => import('@/pages/member/OptimizedDashboard'));
-const Solutions = lazy(() => import('@/pages/member/Solutions'));
-const ImplementationTrail = lazy(() => import('@/pages/member/ImplementationTrailPage'));
-const Tools = lazy(() => import('@/pages/member/Tools'));
-const Learning = lazy(() => import('@/pages/member/learning/LearningPage'));
-const Community = lazy(() => import('@/pages/member/community/CommunityPage'));
-const Networking = lazy(() => import('@/pages/member/networking/NetworkingPage'));
-const Profile = lazy(() => import('@/pages/member/Profile'));
+// Lazy loading das páginas principais
+const Dashboard = lazy(() => import('@/pages/Dashboard'));
+const ImplementationTrailPage = lazy(() => import('@/pages/implementation-trail/ImplementationTrailPage'));
+const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
+const SolutionsPage = lazy(() => import('@/pages/SolutionsPage'));
+const SolutionDetails = lazy(() => import('@/pages/SolutionDetails'));
+const CommunityPage = lazy(() => import('@/pages/community/CommunityPage'));
+const NetworkingPage = lazy(() => import('@/pages/NetworkingPage'));
+const ToolsPage = lazy(() => import('@/pages/ToolsPage'));
+const LearningPage = lazy(() => import('@/pages/LearningPage'));
 
 export const MemberRoutes: React.FC = () => {
   return (
-    <RoleGuard allowedRoles={['member', 'admin', 'formacao']}>
-      <Suspense fallback={<LoadingScreen />}>
-        <Routes>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/solucoes" element={<Solutions />} />
-          <Route path="/trilha-implementacao" element={<ImplementationTrail />} />
-          <Route path="/ferramentas" element={<Tools />} />
-          <Route path="/aprendizado" element={<Learning />} />
-          <Route path="/aprendizado/*" element={<Learning />} />
-          <Route path="/comunidade" element={<Community />} />
-          <Route path="/comunidade/*" element={<Community />} />
-          <Route path="/networking" element={<Networking />} />
-          <Route path="/perfil" element={<Profile />} />
-          
-          {/* Redirects */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/home" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </Suspense>
-    </RoleGuard>
+    <Suspense fallback={<LoadingScreen />}>
+      <Routes>
+        {/* Rota principal - Dashboard */}
+        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        
+        {/* Trilha de implementação - requer onboarding */}
+        <Route 
+          path="/implementation-trail" 
+          element={
+            <OnboardingProtectedRoute>
+              <ImplementationTrailPage />
+            </OnboardingProtectedRoute>
+          } 
+        />
+        
+        {/* Networking - requer onboarding */}
+        <Route 
+          path="/networking" 
+          element={
+            <OnboardingProtectedRoute>
+              <NetworkingPage />
+            </OnboardingProtectedRoute>
+          } 
+        />
+        
+        {/* Demais rotas - não requerem onboarding */}
+        <Route path="/profile/*" element={<ProfilePage />} />
+        <Route path="/solutions" element={<SolutionsPage />} />
+        <Route path="/solutions/:id" element={<SolutionDetails />} />
+        <Route path="/comunidade/*" element={<CommunityPage />} />
+        <Route path="/learning/*" element={<LearningPage />} />
+        <Route path="/tools" element={<ToolsPage />} />
+        
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+    </Suspense>
   );
 };

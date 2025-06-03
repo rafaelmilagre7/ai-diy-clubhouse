@@ -1,32 +1,33 @@
 
 import React from 'react';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowRight, ArrowLeft } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Textarea } from '@/components/ui/textarea';
+import { MultiSelectorModerno } from '../MultiSelectorModerno';
+import { Target, Lightbulb, Calendar } from 'lucide-react';
 import { OnboardingStepProps } from '@/types/quickOnboarding';
-import { DropdownModerno } from '../DropdownModerno';
 
-const PRIMARY_GOAL_OPTIONS = [
-  { value: 'reducao_custos', label: '💰 Redução de custos operacionais' },
-  { value: 'aumento_receita', label: '📈 Aumento de receita' },
-  { value: 'melhoria_processos', label: '⚙️ Melhoria de processos' },
-  { value: 'atendimento_cliente', label: '🎯 Melhorar atendimento ao cliente' },
-  { value: 'automacao', label: '🤖 Automação de tarefas' },
-  { value: 'analise_dados', label: '📊 Análise de dados' },
-  { value: 'inovacao', label: '💡 Inovação e diferenciação' },
-  { value: 'expansao', label: '🚀 Expansão do negócio' }
+const primaryGoalOptions = [
+  { value: 'aumentar_vendas', label: 'Aumentar vendas com IA' },
+  { value: 'automatizar_processos', label: 'Automatizar processos' },
+  { value: 'melhorar_atendimento', label: 'Melhorar atendimento ao cliente' },
+  { value: 'otimizar_marketing', label: 'Otimizar estratégias de marketing' },
+  { value: 'reduzir_custos', label: 'Reduzir custos operacionais' },
+  { value: 'inovar_produtos', label: 'Inovar produtos/serviços' },
+  { value: 'aprender_ia', label: 'Aprender sobre IA' },
+  { value: 'network', label: 'Fazer networking' }
 ];
 
-const CONTENT_FORMATS_OPTIONS = [
-  'Vídeos curtos',
-  'Webinars',
-  'Artigos detalhados',
-  'Infográficos',
-  'Podcasts',
-  'Cases práticos',
-  'Templates prontos',
-  'Workshops ao vivo'
+const contentFormatOptions = [
+  { value: 'videos', label: 'Vídeos práticos' },
+  { value: 'artigos', label: 'Artigos e guias' },
+  { value: 'webinars', label: 'Webinars ao vivo' },
+  { value: 'podcasts', label: 'Podcasts' },
+  { value: 'cases', label: 'Cases de sucesso' },
+  { value: 'templates', label: 'Templates e ferramentas' },
+  { value: 'mentoria', label: 'Mentorias 1:1' },
+  { value: 'workshops', label: 'Workshops práticos' }
 ];
 
 export const StepObjetivosMetas: React.FC<OnboardingStepProps> = ({
@@ -38,97 +39,101 @@ export const StepObjetivosMetas: React.FC<OnboardingStepProps> = ({
   currentStep,
   totalSteps
 }) => {
-  const handleContentFormatChange = (format: string, checked: boolean) => {
-    const currentFormats = Array.isArray(data.content_formats) ? data.content_formats : [];
-    if (checked) {
-      onUpdate('content_formats', [...currentFormats, format]);
-    } else {
-      onUpdate('content_formats', currentFormats.filter(f => f !== format));
-    }
-  };
-
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-white mb-2">
-          Seus objetivos e metas 🎯
+    <div className="space-y-6">
+      <div className="text-center space-y-2">
+        <h2 className="text-2xl font-bold text-white flex items-center justify-center gap-2">
+          <Target className="h-6 w-6 text-viverblue" />
+          Seus objetivos e metas
         </h2>
         <p className="text-gray-400">
-          Vamos alinhar suas expectativas e objetivos
+          Vamos personalizar sua experiência baseada nos seus objetivos
         </p>
       </div>
 
-      <div className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700/50 space-y-6">
-        <DropdownModerno
-          value={data.primary_goal || ''}
-          onChange={(value) => onUpdate('primary_goal', value)}
-          options={PRIMARY_GOAL_OPTIONS}
-          placeholder="Selecione seu objetivo principal"
-          label="Objetivo principal com IA"
-          required
-        />
+      <div className="space-y-6">
+        {/* Objetivo Principal */}
+        <div className="space-y-3">
+          <Label className="text-white flex items-center gap-2">
+            <Lightbulb className="h-4 w-4 text-viverblue" />
+            Qual seu principal objetivo?
+          </Label>
+          <RadioGroup
+            value={data.primary_goal}
+            onValueChange={(value) => onUpdate('primary_goal', value)}
+            className="space-y-2"
+          >
+            {primaryGoalOptions.map((option) => (
+              <div key={option.value} className="flex items-center space-x-3">
+                <RadioGroupItem 
+                  value={option.value} 
+                  id={option.value}
+                  className="border-gray-600 text-viverblue"
+                />
+                <Label 
+                  htmlFor={option.value} 
+                  className="text-white cursor-pointer flex-1"
+                >
+                  {option.label}
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
+        </div>
 
+        {/* Resultado esperado em 30 dias */}
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-white">
-            O que espera alcançar em 30 dias? <span className="text-red-400">*</span>
-          </label>
-          <Input
-            type="text"
-            value={data.expected_outcome_30days || ''}
+          <Label htmlFor="expected_outcome" className="text-white flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-viverblue" />
+            O que você espera alcançar em 30 dias?
+          </Label>
+          <Textarea
+            id="expected_outcome"
+            value={data.expected_outcome_30days}
             onChange={(e) => onUpdate('expected_outcome_30days', e.target.value)}
-            placeholder="Ex: Implementar um chatbot para atendimento básico"
-            className="h-12 bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:ring-viverblue/50"
+            placeholder="Descreva o que você gostaria de alcançar no primeiro mês..."
+            className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-viverblue min-h-[100px]"
           />
         </div>
 
-        <div className="space-y-4">
-          <label className="block text-sm font-medium text-white">
-            Formatos de conteúdo preferidos <span className="text-red-400">*</span>
-          </label>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {CONTENT_FORMATS_OPTIONS.map((format) => (
-              <label key={format} className="flex items-center gap-2 text-white cursor-pointer">
-                <Checkbox
-                  checked={Array.isArray(data.content_formats) && data.content_formats.includes(format)}
-                  onCheckedChange={(checked) => handleContentFormatChange(format, checked as boolean)}
-                  className="border-gray-600 data-[state=checked]:bg-viverblue data-[state=checked]:border-viverblue"
-                />
-                <span className="text-sm">{format}</span>
-              </label>
-            ))}
-          </div>
+        {/* Formatos de conteúdo preferidos */}
+        <div className="space-y-2">
+          <Label className="text-white">
+            Que tipos de conteúdo você prefere?
+          </Label>
+          <MultiSelectorModerno
+            value={data.content_formats || []}
+            onChange={(formats) => onUpdate('content_formats', formats)}
+            options={contentFormatOptions}
+            placeholder="Selecione os formatos que mais te interessam..."
+          />
         </div>
+      </div>
 
-        <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-4">
-          <p className="text-sm text-orange-300">
-            ⚡ <strong>Importante:</strong> Definir objetivos claros nos ajuda a 
-            personalizar sua trilha de implementação de IA.
-          </p>
-        </div>
+      {/* Botões de navegação */}
+      <div className="flex justify-between pt-4">
+        <Button
+          onClick={onPrevious}
+          variant="outline"
+          className="border-gray-600 text-gray-300 hover:bg-gray-700"
+        >
+          Voltar
+        </Button>
+        
+        <Button
+          onClick={onNext}
+          disabled={!canProceed}
+          className="bg-viverblue hover:bg-viverblue/90 text-white px-8 py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Finalizar
+        </Button>
+      </div>
 
-        <div className="flex justify-between items-center pt-6 border-t border-gray-700">
-          <Button
-            onClick={onPrevious}
-            variant="ghost"
-            className="text-gray-400 hover:text-white flex items-center gap-2"
-          >
-            <ArrowLeft size={16} />
-            <span>Anterior</span>
-          </Button>
-          
-          <div className="text-sm text-gray-400">
-            Etapa {currentStep} de {totalSteps}
-          </div>
-          
-          <Button
-            onClick={onNext}
-            disabled={!canProceed}
-            className="bg-viverblue hover:bg-viverblue-dark transition-colors flex items-center gap-2"
-          >
-            <span>Continuar</span>
-            <ArrowRight size={16} />
-          </Button>
-        </div>
+      {/* Indicador de progresso */}
+      <div className="flex justify-center">
+        <span className="text-sm text-gray-400">
+          Etapa {currentStep} de {totalSteps}
+        </span>
       </div>
     </div>
   );
