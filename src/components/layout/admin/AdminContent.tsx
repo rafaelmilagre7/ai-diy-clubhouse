@@ -16,7 +16,7 @@ export const AdminContent = ({
       )}
     >
       <AdminHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-      <main className="flex-1 overflow-auto max-w-7xl mx-auto p-8 w-full">
+      <main className="flex-1 overflow-auto w-full pl-4 pr-4 py-6">
         {children}
       </main>
     </div>
