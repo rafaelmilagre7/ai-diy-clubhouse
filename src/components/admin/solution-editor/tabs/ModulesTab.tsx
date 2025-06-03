@@ -20,7 +20,7 @@ const ModulesTab: React.FC<ModulesTabProps> = ({
       solutionId={solutionId} 
       onSave={onSave} 
       saving={saving}
-      currentStep={currentModuleStep}
+      currentModuleStep={currentModuleStep}
     />
   );
 };
