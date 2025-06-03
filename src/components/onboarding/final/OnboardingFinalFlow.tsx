@@ -11,6 +11,7 @@ import { StepBusinessContext } from './steps/StepBusinessContext';
 import { StepGoalsInfo } from './steps/StepGoalsInfo';
 import { StepAIExperience } from './steps/StepAIExperience';
 import { StepPersonalization } from './steps/StepPersonalization';
+import { OnboardingStepComponentProps } from '@/types/onboardingFinal';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -61,7 +62,7 @@ export const OnboardingFinalFlow: React.FC = () => {
   };
 
   const getStepContent = () => {
-    const stepProps = {
+    const stepProps: OnboardingStepComponentProps = {
       data,
       onUpdate: updateSection,
       onNext: handleNext,
