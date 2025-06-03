@@ -57,7 +57,9 @@ export const SimpleOnboardingFlow: React.FC<SimpleOnboardingFlowProps> = memo(({
     business_context: {},
     ai_experience: {},
     goals_info: {},
-    discovery_info: {}
+    discovery_info: {},
+    location_info: {},
+    personalization: {}
   });
   
   // Memoizar as props dos steps para evitar re-renders
