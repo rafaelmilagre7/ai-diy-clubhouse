@@ -26,11 +26,15 @@ import { NetworkingRoutes } from '../../routes/NetworkingRoutes';
 // Importar página de implementação
 import SolutionImplementation from '@/pages/member/SolutionImplementation';
 
+// Componente para redirects das rotas antigas
+import { LegacyRouteRedirects } from './LegacyRouteRedirects';
+
 const AppRoutes = () => {
   return (
     <>
       <CommunityRedirects />
       <SmartRoutePreloader />
+      <LegacyRouteRedirects />
       
       <Routes>
         {/* Convite Routes */}
@@ -51,7 +55,105 @@ const AppRoutes = () => {
           </ProtectedRoutes>
         } />
 
-        {/* Solutions Routes */}
+        {/* Soluções Routes - Nova estrutura em português */}
+        <Route path="/solucoes" element={
+          <ProtectedRoutes>
+            <MemberLayout>
+              <Solutions />
+            </MemberLayout>
+          </ProtectedRoutes>
+        } />
+        
+        <Route path="/solucoes/:id" element={
+          <ProtectedRoutes>
+            <MemberLayout>
+              <SolutionDetails />
+            </MemberLayout>
+          </ProtectedRoutes>
+        } />
+        
+        <Route path="/solucoes/:id/implementar" element={
+          <ProtectedRoutes>
+            <SolutionImplementation />
+          </ProtectedRoutes>
+        } />
+
+        <Route path="/solucoes/:id/implementar/:moduleIdx" element={
+          <ProtectedRoutes>
+            <SolutionImplementation />
+          </ProtectedRoutes>
+        } />
+
+        {/* Trilha de Implementação */}
+        <Route path="/trilha-implementacao" element={
+          <ProtectedRoutes>
+            <MemberLayout>
+              <ImplementationTrailPage />
+            </MemberLayout>
+          </ProtectedRoutes>
+        } />
+        
+        {/* Ferramentas e Benefícios */}
+        <Route path="/ferramentas" element={
+          <ProtectedRoutes>
+            <MemberLayout>
+              <Tools />
+            </MemberLayout>
+          </ProtectedRoutes>
+        } />
+        
+        <Route path="/beneficios" element={
+          <ProtectedRoutes>
+            <MemberLayout>
+              <Tools />
+            </MemberLayout>
+          </ProtectedRoutes>
+        } />
+        
+        {/* Eventos */}
+        <Route path="/eventos" element={
+          <ProtectedRoutes>
+            <MemberLayout>
+              <Events />
+            </MemberLayout>
+          </ProtectedRoutes>
+        } />
+
+        {/* Perfil */}
+        <Route path="/perfil" element={
+          <ProtectedRoutes>
+            <MemberLayout>
+              <Profile />
+            </MemberLayout>
+          </ProtectedRoutes>
+        } />
+
+        {/* Sub-sistemas com rotas aninhadas - URLs em português */}
+        <Route path="/comunidade/*" element={
+          <ProtectedRoutes>
+            <MemberLayout>
+              <CommunityRoutes />
+            </MemberLayout>
+          </ProtectedRoutes>
+        } />
+
+        <Route path="/aprendizado/*" element={
+          <ProtectedRoutes>
+            <MemberLayout>
+              <LearningRoutes />
+            </MemberLayout>
+          </ProtectedRoutes>
+        } />
+
+        <Route path="/networking/*" element={
+          <ProtectedRoutes>
+            <MemberLayout>
+              <NetworkingRoutes />
+            </MemberLayout>
+          </ProtectedRoutes>
+        } />
+
+        {/* Manter rotas antigas para compatibilidade - serão redirecionadas */}
         <Route path="/solutions" element={
           <ProtectedRoutes>
             <MemberLayout>
@@ -68,13 +170,6 @@ const AppRoutes = () => {
           </ProtectedRoutes>
         } />
         
-        <Route path="/solutions/:id/implementar" element={
-          <ProtectedRoutes>
-            <SolutionImplementation />
-          </ProtectedRoutes>
-        } />
-
-        {/* Implementation Trail */}
         <Route path="/implementation-trail" element={
           <ProtectedRoutes>
             <MemberLayout>
@@ -83,7 +178,6 @@ const AppRoutes = () => {
           </ProtectedRoutes>
         } />
         
-        {/* Tools and Benefits */}
         <Route path="/tools" element={
           <ProtectedRoutes>
             <MemberLayout>
@@ -108,7 +202,6 @@ const AppRoutes = () => {
           </ProtectedRoutes>
         } />
 
-        {/* Profile */}
         <Route path="/profile" element={
           <ProtectedRoutes>
             <MemberLayout>
@@ -117,27 +210,10 @@ const AppRoutes = () => {
           </ProtectedRoutes>
         } />
 
-        {/* Sub-sistemas com rotas aninhadas */}
-        <Route path="/comunidade/*" element={
-          <ProtectedRoutes>
-            <MemberLayout>
-              <CommunityRoutes />
-            </MemberLayout>
-          </ProtectedRoutes>
-        } />
-
         <Route path="/learning/*" element={
           <ProtectedRoutes>
             <MemberLayout>
               <LearningRoutes />
-            </MemberLayout>
-          </ProtectedRoutes>
-        } />
-
-        <Route path="/networking/*" element={
-          <ProtectedRoutes>
-            <MemberLayout>
-              <NetworkingRoutes />
             </MemberLayout>
           </ProtectedRoutes>
         } />

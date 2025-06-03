@@ -54,27 +54,27 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
     },
     {
       title: "Trilha de Implementação",
-      href: "/implementation-trail",
+      href: "/trilha-implementacao",
       icon: Map,
     },
     {
       title: "Soluções",
-      href: "/solutions",
+      href: "/solucoes",
       icon: Lightbulb,
     },
     {
       title: "Cursos",
-      href: "/learning",
+      href: "/aprendizado",
       icon: GraduationCap,
     },
     {
       title: "Ferramentas",
-      href: "/tools",
+      href: "/ferramentas",
       icon: Wrench,
     },
     {
       title: "Benefícios",
-      href: "/benefits",
+      href: "/beneficios",
       icon: Gift,
     },
     {
@@ -90,12 +90,12 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
     },
     {
       title: "Perfil",
-      href: "/profile",
+      href: "/perfil",
       icon: User,
     },
     {
       title: "Eventos",
-      href: "/events",
+      href: "/eventos",
       icon: Calendar,
     }
   ];

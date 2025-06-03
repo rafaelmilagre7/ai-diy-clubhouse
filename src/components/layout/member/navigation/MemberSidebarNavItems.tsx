@@ -26,7 +26,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
   const { isAdmin } = useOptimizedAuth();
   const { hasAccess: hasNetworkingAccess, isLoading: networkingLoading } = useOptimizedNetworkingAccess();
 
-  // Memoizar itens de navegação
+  // Memoizar itens de navegação com URLs em português
   const navigationItems = useMemo(() => {
     const baseItems = [
       {
@@ -35,32 +35,32 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
         label: 'Dashboard'
       },
       {
-        to: '/implementation-trail',
+        to: '/trilha-implementacao',
         icon: Route,
         label: 'Trilha de IA'
       },
       {
-        to: '/solutions',
+        to: '/solucoes',
         icon: Lightbulb,
         label: 'Soluções'
       },
       {
-        to: '/tools',
+        to: '/ferramentas',
         icon: Wrench,
         label: 'Ferramentas'
       },
       {
-        to: '/benefits',
+        to: '/beneficios',
         icon: Gift,
         label: 'Benefícios'
       },
       {
-        to: '/events',
+        to: '/eventos',
         icon: Calendar,
         label: 'Eventos'
       },
       {
-        to: '/learning',
+        to: '/aprendizado',
         icon: BookOpen,
         label: 'Aprendizado'
       },
