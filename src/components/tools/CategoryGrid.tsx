@@ -138,7 +138,7 @@ export const CategoryGrid = ({ selectedCategory, onCategoryChange }: CategoryGri
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="w-full mb-6"
+      className="w-full mb-6 pl-8 pr-6"
     >
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
         {categories.map((category) => (

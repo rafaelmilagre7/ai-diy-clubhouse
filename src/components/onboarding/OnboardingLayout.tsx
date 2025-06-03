@@ -39,7 +39,7 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
   return (
     <MemberLayout>
       <div className="w-full bg-[#0F111A] py-6">
-        <div className="container max-w-screen-lg">
+        <div className="pl-8 pr-6 max-w-none">
           <OnboardingHeader 
             isOnboardingCompleted={false}
             title={title}
@@ -58,7 +58,7 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
         </div>
       </div>
 
-      <div className="container max-w-screen-lg mx-auto py-8">
+      <div className="pl-8 pr-6 max-w-none mx-auto py-8">
         {children}
       </div>
     </MemberLayout>
