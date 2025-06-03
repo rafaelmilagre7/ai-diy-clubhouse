@@ -16,6 +16,9 @@ const NovoOnboardingNew: React.FC = () => {
               <p className="text-viverblue-light text-lg">
                 Vamos personalizar sua experiência em alguns passos simples
               </p>
+              <p className="text-gray-400 text-sm mt-2">
+                💾 Seus dados são salvos automaticamente conforme você preenche
+              </p>
             </div>
             
             <ModernOnboardingFlowNew />

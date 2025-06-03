@@ -1,9 +1,8 @@
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 
 export const usePostOnboarding = () => {
   const { user } = useAuth();
@@ -11,95 +10,75 @@ export const usePostOnboarding = () => {
   const [isFirstAccess, setIsFirstAccess] = useState(false);
   const [hasCompletedTrail, setHasCompletedTrail] = useState(false);
 
-  // Verificar se é o primeiro acesso após onboarding
+  // Verificar se é o primeiro acesso ao dashboard
   useEffect(() => {
-    const checkFirstAccess = async () => {
-      if (!user?.id) return;
-
-      try {
-        const { data: onboardingData } = await supabase
-          .from('quick_onboarding')
-          .select('completed_at, first_dashboard_access')
-          .eq('user_id', user.id)
-          .single();
-
-        if (onboardingData?.completed_at && !onboardingData?.first_dashboard_access) {
-          setIsFirstAccess(true);
-        }
-      } catch (error) {
-        console.error('Erro ao verificar primeiro acesso:', error);
-      }
-    };
-
-    checkFirstAccess();
-  }, [user?.id]);
-
-  // Marcar primeiro acesso ao dashboard
-  const markFirstDashboardAccess = useCallback(async () => {
-    if (!user?.id) return;
-
-    try {
-      await supabase
-        .from('quick_onboarding')
-        .update({ 
-          first_dashboard_access: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id);
-
-      setIsFirstAccess(false);
-    } catch (error) {
-      console.error('Erro ao marcar primeiro acesso:', error);
-    }
-  }, [user?.id]);
-
-  // Verificar se tem trilha gerada
-  const checkTrailStatus = useCallback(async () => {
-    if (!user?.id) return;
-
-    try {
-      const { data: trailData } = await supabase
-        .from('implementation_trails')
-        .select('status, trail_data')
-        .eq('user_id', user.id)
-        .eq('status', 'completed')
-        .single();
-
-      setHasCompletedTrail(!!trailData);
-    } catch (error) {
-      console.log('Nenhuma trilha encontrada ainda');
-      setHasCompletedTrail(false);
+    if (user?.id) {
+      const firstAccessKey = `first_dashboard_access_${user.id}`;
+      const hasAccessed = localStorage.getItem(firstAccessKey);
+      setIsFirstAccess(!hasAccessed);
     }
   }, [user?.id]);
 
   // Navegar para trilha de implementação
   const goToImplementationTrail = useCallback(() => {
+    console.log('🚀 Navegando para trilha de implementação');
     navigate('/implementation-trail');
   }, [navigate]);
 
   // Navegar para dashboard
   const goToDashboard = useCallback(() => {
-    if (isFirstAccess) {
-      markFirstDashboardAccess();
-    }
+    console.log('🏠 Navegando para dashboard');
     navigate('/dashboard');
-  }, [navigate, isFirstAccess, markFirstDashboardAccess]);
+  }, [navigate]);
 
-  // Iniciar tour de boas-vindas
+  // Marcar primeiro acesso ao dashboard como concluído
+  const markFirstDashboardAccess = useCallback(() => {
+    if (user?.id) {
+      const firstAccessKey = `first_dashboard_access_${user.id}`;
+      localStorage.setItem(firstAccessKey, 'true');
+      setIsFirstAccess(false);
+    }
+  }, [user?.id]);
+
+  // Iniciar tour de boas-vindas (placeholder para futura implementação)
   const startWelcomeTour = useCallback(() => {
-    toast.success('Bem-vindo! Vamos fazer um tour rápido pelas funcionalidades principais.', {
-      duration: 5000
-    });
+    console.log('🎯 Iniciando tour de boas-vindas');
+    // TODO: Implementar tour guiado
     goToDashboard();
   }, [goToDashboard]);
+
+  // Verificar se tem trilha gerada
+  const checkTrailStatus = useCallback(async () => {
+    if (!user?.id) return false;
+
+    try {
+      console.log('🔍 Verificando status da trilha para usuário:', user.id);
+      
+      const { data } = await supabase
+        .from('implementation_trails')
+        .select('trail_data')
+        .eq('user_id', user.id)
+        .single();
+
+      const hasTrail = !!data?.trail_data;
+      console.log('📊 Status da trilha:', hasTrail ? 'presente' : 'ausente');
+      
+      setHasCompletedTrail(hasTrail);
+      return hasTrail;
+    } catch (error) {
+      console.log('ℹ️ Trilha ainda não existe:', error);
+      setHasCompletedTrail(false);
+      return false;
+    }
+  }, [user?.id]);
 
   return {
     isFirstAccess,
     hasCompletedTrail,
     goToImplementationTrail,
     goToDashboard,
+    markFirstDashboardAccess,
     startWelcomeTour,
-    checkTrailStatus,
-    markFirstDashboardAccess
+    checkTrailStatus
   };
 };

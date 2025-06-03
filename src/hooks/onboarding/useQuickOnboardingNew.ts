@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -6,43 +7,25 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth';
 import { OnboardingValidator } from '@/utils/onboardingValidation';
 import { useQuickOnboardingAutoSave } from './useQuickOnboardingAutoSave';
+import { useQuickOnboardingDataLoader } from './useQuickOnboardingDataLoader';
 
 const TOTAL_STEPS = 4;
 
-const initialData: QuickOnboardingData = {
-  // Etapa 1: Informações Pessoais
-  name: '',
-  email: '',
-  whatsapp: '',
-  country_code: '+55',
-  birth_date: '',
-  instagram_url: '',
-  linkedin_url: '',
-  how_found_us: '',
-  referred_by: '',
-
-  // Etapa 2: Negócio
-  company_name: '',
-  role: '',
-  company_size: '',
-  company_segment: '',
-  company_website: '',
-  annual_revenue_range: '',
-  main_challenge: '',
-
-  // Etapa 3: Experiência com IA
-  ai_knowledge_level: '',
-  uses_ai: '',
-  main_goal: ''
-};
-
 export const useQuickOnboardingNew = () => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [data, setData] = useState<QuickOnboardingData>(initialData);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // Usar o novo hook de carregamento de dados
+  const { 
+    data, 
+    setData, 
+    isLoading: isLoadingData, 
+    hasExistingData,
+    loadError 
+  } = useQuickOnboardingDataLoader();
 
   // Auto-save hook
   const { saveToSupabase } = useQuickOnboardingAutoSave(data);
@@ -231,6 +214,10 @@ export const useQuickOnboardingNew = () => {
     isSubmitting,
     completeOnboarding,
     validationErrors,
-    clearErrors: () => setValidationErrors({})
+    clearErrors: () => setValidationErrors({}),
+    // Novos campos para indicar estado de carregamento
+    isLoadingData,
+    hasExistingData,
+    loadError
   };
 };

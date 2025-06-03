@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
@@ -92,8 +93,7 @@ export const ImplementationTrail = () => {
   }, [trail]);
 
   const handleRegenerateTrail = async () => {
-    // Passamos null explicitamente, que agora é válido na tipagem
-    await generateImplementationTrail(null);
+    await generateImplementationTrail();
   };
 
   const handleSolutionClick = (id: string) => {
