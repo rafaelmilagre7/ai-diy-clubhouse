@@ -28,9 +28,11 @@ export const ToolItem = ({
     return name.charAt(0).toUpperCase() + name.slice(1);
   };
 
-  // Navegar para a página da ferramenta na plataforma
+  // Navegar para a página específica da ferramenta na plataforma
   const handleViewTool = () => {
-    navigate(`/tools?search=${encodeURIComponent(toolName)}`);
+    // Criar um slug da ferramenta para navegação direta
+    const toolSlug = toolName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    navigate(`/tools/${toolSlug}`);
   };
 
   // Determina se o ícone deve ser a primeira letra ou um logo
@@ -40,11 +42,11 @@ export const ToolItem = ({
     // Se temos uma URL de logo e não estamos carregando nem temos erros
     if (logoUrl && !loading && !error) {
       return (
-        <div className="bg-white h-10 w-10 rounded-md flex items-center justify-center overflow-hidden aspect-square">
+        <div className="bg-white h-10 w-10 rounded-md flex items-center justify-center overflow-hidden p-1">
           <img 
             src={logoUrl} 
             alt={`Logo ${name}`} 
-            className="h-8 w-8 object-contain"
+            className="max-h-8 max-w-8 object-contain"
             style={{ aspectRatio: '1/1' }}
             onError={(e) => {
               // Em caso de erro ao carregar a imagem, mostrar a letra inicial
@@ -63,7 +65,7 @@ export const ToolItem = ({
     
     // Fallback para quando não temos o logo
     return (
-      <div className="bg-viverblue/20 text-viverblue h-10 w-10 rounded-md flex items-center justify-center font-semibold aspect-square">
+      <div className="bg-viverblue/20 text-viverblue h-10 w-10 rounded-md flex items-center justify-center font-semibold">
         {firstLetter}
       </div>
     );
