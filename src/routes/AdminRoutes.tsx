@@ -14,6 +14,7 @@ import AdminSolutionCreate from '@/pages/admin/AdminSolutionCreate';
 import AdminAnalytics from '@/pages/admin/AdminAnalytics';
 import AdminOnboarding from '@/pages/admin/AdminOnboarding';
 import AdminSuggestions from '@/pages/admin/AdminSuggestions';
+import AdminSuggestionDetails from '@/pages/admin/AdminSuggestionDetails';
 import AdminEvents from '@/pages/admin/AdminEvents';
 import AdminRoles from '@/pages/admin/AdminRoles';
 import InvitesManagement from '@/pages/admin/invites/InvitesManagement';
@@ -36,11 +37,12 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin/solutions", AdminSolutions),
   createAdminRoute("/admin/solutions/new", AdminSolutionCreate),
   createAdminRoute("/admin/solutions/:id", AdminSolutionEdit),
-  createAdminRoute("/admin/solutions/view/:id", AdminSolutionEdit), // Adicionada rota para visualização
+  createAdminRoute("/admin/solutions/view/:id", AdminSolutionEdit),
   createAdminRoute("/admin/analytics", AdminAnalytics),
   createAdminRoute("/admin/performance", PerformanceDashboard),
   createAdminRoute("/admin/onboarding", AdminOnboarding),
   createAdminRoute("/admin/suggestions", AdminSuggestions),
+  createAdminRoute("/admin/suggestions/:id", AdminSuggestionDetails),
   createAdminRoute("/admin/events", AdminEvents),
   createAdminRoute("/admin/roles", AdminRoles),
   createAdminRoute("/admin/invites", InvitesManagement),

@@ -23,17 +23,23 @@ export const AdminActions = ({
   onUpdateStatus,
   onOpenDeleteDialog
 }: AdminActionsProps) => {
+  
+  const handleStatusUpdate = (newStatus: string) => {
+    console.log('Atualizando status para:', newStatus);
+    onUpdateStatus(newStatus);
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" disabled={adminActionLoading}>
           <MoreVertical className="h-4 w-4 mr-2" />
           Ações de Admin
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem 
-          onClick={() => onUpdateStatus('in_development')}
+          onClick={() => handleStatusUpdate('in_development')}
           disabled={adminActionLoading || suggestionStatus === 'in_development'}
         >
           <Play className="mr-2 h-4 w-4" />
@@ -43,13 +49,13 @@ export const AdminActions = ({
         </DropdownMenuItem>
         
         <DropdownMenuItem 
-          onClick={() => onUpdateStatus('completed')}
+          onClick={() => handleStatusUpdate('completed')}
           disabled={adminActionLoading || suggestionStatus === 'completed'}
         >
           <CheckCircle className="mr-2 h-4 w-4" />
           {suggestionStatus === 'completed' 
             ? 'Já Implementada' 
-            : 'Marcar como Concluída'}
+            : 'Marcar como Implementada'}
         </DropdownMenuItem>
         
         <DropdownMenuSeparator />

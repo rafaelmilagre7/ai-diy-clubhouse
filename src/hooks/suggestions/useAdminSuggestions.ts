@@ -38,10 +38,11 @@ export const useAdminSuggestions = () => {
       setLoading(true);
       console.log('Atualizando status da sugestão:', suggestionId, status);
       
-      // Validar status
+      // Validar status - incluindo 'completed' que estava faltando
       const validStatuses = ['new', 'under_review', 'in_development', 'completed', 'declined'];
       if (!validStatuses.includes(status)) {
-        toast.error('Status inválido');
+        console.error('Status inválido:', status);
+        toast.error('Status inválido: ' + status);
         return false;
       }
       
