@@ -1,38 +1,30 @@
 
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Loader2, Eye, EyeOff, Mail, Lock, Sparkles } from "lucide-react";
+import { Loader2, Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
-  // Verificar se já está logado sem usar o hook useAuth para evitar dependências circulares
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          const from = location.state?.from || "/dashboard";
-          navigate(from, { replace: true });
-        }
-      } catch (error) {
-        console.error('Erro ao verificar sessão:', error);
-      }
-    };
-    
-    checkAuth();
-  }, [navigate, location]);
+  // Redirecionar usuários já logados
+  if (user) {
+    const from = location.state?.from?.pathname || "/dashboard";
+    navigate(from, { replace: true });
+    return null;
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,9 +44,7 @@ export default function LoginPage() {
       
       if (error) throw error;
       
-      // Login bem-sucedido, redirecionar
-      toast.success("Login realizado com sucesso!");
-      navigate('/dashboard', { replace: true });
+      // Login bem-sucedido, o redirecionamento será feito após a atualização do estado de autenticação
       
     } catch (error: any) {
       console.error("Erro de login:", error);
@@ -69,18 +59,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-lg">
+    <div className="h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center px-4 sm:px-8">
+      <div className="w-full flex flex-col items-center">
         {/* Logo e Header */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <div className="w-14 h-14 bg-gradient-to-br from-viverblue to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
-              <Sparkles className="h-7 w-7 text-white" />
-            </div>
-            <div className="text-left">
-              <h1 className="text-3xl font-bold text-white">Viver de IA</h1>
-              <p className="text-sm text-gray-300 font-medium">Club</p>
-            </div>
+          <div className="flex justify-center mb-6">
+            <img 
+              src="/lovable-uploads/logo-viverdeia.svg" 
+              alt="Logo Viver de IA"
+              className="h-16 w-auto"
+            />
           </div>
           <div className="space-y-2">
             <h2 className="text-2xl font-semibold text-white">
@@ -93,17 +81,13 @@ export default function LoginPage() {
         </div>
 
         {/* Card de Login */}
-        <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-2xl">
-          <CardHeader className="text-center pb-6">
-            <CardTitle className="text-white text-xl">Acesse sua conta</CardTitle>
-            <CardDescription className="text-gray-300">
-              Digite suas credenciais para entrar na plataforma
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+        <Card className="w-full max-w-md bg-white/5 backdrop-blur-md border border-white/10 rounded-xl">
+          <CardContent className="p-8">
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-white font-medium">Email</Label>
+                <Label htmlFor="email" className="text-white text-sm font-medium">
+                  Email
+                </Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                   <Input
@@ -118,14 +102,16 @@ export default function LoginPage() {
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-white font-medium">Senha</Label>
+                <Label htmlFor="password" className="text-white text-sm font-medium">
+                  Senha
+                </Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                   <Input
                     id="password"
-                    type={showPassword ? "text" : "password"}
+                    type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -146,7 +132,7 @@ export default function LoginPage() {
               
               <Button 
                 type="submit" 
-                className="w-full bg-viverblue hover:bg-viverblue/90 text-white font-semibold py-3 transition-all duration-200 transform hover:scale-[1.02] shadow-lg" 
+                className="w-full bg-viverblue hover:bg-viverblue/90 text-white font-semibold py-3 transition-all duration-200 transform hover:scale-[1.02]" 
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -159,19 +145,30 @@ export default function LoginPage() {
                 )}
               </Button>
             </form>
-            
+
             <div className="mt-6 text-center">
-              <p className="text-sm text-gray-400">
-                O acesso à plataforma é exclusivo para membros convidados.
-              </p>
+              <Button
+                variant="link"
+                className="text-gray-300 hover:text-white text-sm"
+                onClick={() => navigate('/reset-password')}
+              >
+                Esqueceu sua senha?
+              </Button>
             </div>
           </CardContent>
         </Card>
-        
-        {/* Footer */}
-        <div className="text-center mt-8">
-          <p className="text-sm text-gray-400">
-            Desenvolvido com ❤️ para a comunidade Viver de IA
+
+        {/* Rodapé */}
+        <div className="mt-8 text-center text-xs text-white/60">
+          <p>
+            O acesso à plataforma é exclusivo para membros convidados.
+          </p>
+          <p className="mt-2">
+            Se você recebeu um convite,{" "}
+            <Link to="/" className="text-viverblue hover:text-viverblue/80 underline">
+              clique no link enviado por email
+            </Link>
+            {" "}para ativar sua conta.
           </p>
         </div>
       </div>
