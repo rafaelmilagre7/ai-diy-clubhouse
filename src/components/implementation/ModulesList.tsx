@@ -28,11 +28,11 @@ export const ModulesList = ({ activeModule }: ModulesListProps) => {
                 module.id === activeModule ? "bg-viverblue" : "bg-secondary"
               } text-${
                 module.id === activeModule ? "white" : "secondary-foreground"
-              } rounded-full h-6 w-6 flex items-center justify-center mr-2`}
-            >
-              {module.id}
+              } rounded-full h-2 w-2 flex items-center justify-center mr-3`}
+            />
+            <span className={module.id === activeModule ? "font-medium text-viverblue" : ""}>
+              {module.name} - {module.description}
             </span>
-            <span>{module.name} - {module.description}</span>
           </li>
         ))}
       </ol>

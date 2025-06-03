@@ -1,10 +1,10 @@
 
 import React from "react";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToolImage } from "@/hooks/useToolImage";
-import { Avatar } from "@/components/ui/avatar";
+import { useNavigate } from "react-router-dom";
 
 interface ToolItemProps {
   toolName: string;
@@ -22,9 +22,15 @@ export const ToolItem = ({
   benefitType,
 }: ToolItemProps) => {
   const { logoUrl, loading, error } = useToolImage({ toolName });
+  const navigate = useNavigate();
   
   const formatName = (name: string) => {
     return name.charAt(0).toUpperCase() + name.slice(1);
+  };
+
+  // Navegar para a página da ferramenta na plataforma
+  const handleViewTool = () => {
+    navigate(`/tools?search=${encodeURIComponent(toolName)}`);
   };
 
   // Determina se o ícone deve ser a primeira letra ou um logo
@@ -34,11 +40,12 @@ export const ToolItem = ({
     // Se temos uma URL de logo e não estamos carregando nem temos erros
     if (logoUrl && !loading && !error) {
       return (
-        <div className="bg-white h-10 w-10 rounded-md flex items-center justify-center overflow-hidden">
+        <div className="bg-white h-10 w-10 rounded-md flex items-center justify-center overflow-hidden aspect-square">
           <img 
             src={logoUrl} 
             alt={`Logo ${name}`} 
-            className="h-full w-full object-contain"
+            className="h-8 w-8 object-contain"
+            style={{ aspectRatio: '1/1' }}
             onError={(e) => {
               // Em caso de erro ao carregar a imagem, mostrar a letra inicial
               e.currentTarget.style.display = 'none';
@@ -56,7 +63,7 @@ export const ToolItem = ({
     
     // Fallback para quando não temos o logo
     return (
-      <div className="bg-viverblue/20 text-viverblue h-10 w-10 rounded-md flex items-center justify-center font-semibold">
+      <div className="bg-viverblue/20 text-viverblue h-10 w-10 rounded-md flex items-center justify-center font-semibold aspect-square">
         {firstLetter}
       </div>
     );
@@ -96,18 +103,28 @@ export const ToolItem = ({
         </div>
       </div>
       
-      {toolUrl && (
-        <div className="mt-auto pt-3">
+      <div className="mt-auto pt-3 space-y-2">
+        <Button 
+          variant="default"
+          className="w-full bg-viverblue hover:bg-viverblue/90"
+          onClick={handleViewTool}
+        >
+          <ArrowRight className="mr-2 h-4 w-4" />
+          Ver na plataforma
+        </Button>
+        
+        {toolUrl && (
           <Button 
             variant="outline"
-            className="w-full bg-transparent border-viverblue/20 text-viverblue hover:bg-viverblue/10 hover:text-viverblue"
+            size="sm"
+            className="w-full bg-transparent border-white/20 text-white/70 hover:bg-white/5 hover:text-white text-xs"
             onClick={() => window.open(toolUrl, '_blank')}
           >
-            <ExternalLink className="mr-2 h-4 w-4" />
-            Acessar ferramenta
+            <ExternalLink className="mr-1 h-3 w-3" />
+            Site oficial
           </Button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
