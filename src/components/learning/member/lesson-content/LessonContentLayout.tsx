@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { LessonContentTabs } from "./LessonContentTabs";
+import { LessonContentVertical } from "./LessonContentVertical";
 import { LessonActionButtons } from "./LessonActionButtons";
 import { LessonModalsManager } from "./LessonModalsManager";
 import { LearningLesson, LearningLessonVideo, LearningResource, LearningCourse } from "@/lib/supabase";
@@ -13,8 +13,6 @@ interface LessonContentLayoutProps {
   isCompleted: boolean;
   prevLesson?: LearningLesson | null;
   nextLesson?: LearningLesson | null;
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
   showNPSModal: boolean;
   setShowNPSModal: (show: boolean) => void;
   showCelebrationModal: boolean;
@@ -36,8 +34,6 @@ export const LessonContentLayout: React.FC<LessonContentLayoutProps> = ({
   isCompleted,
   prevLesson,
   nextLesson,
-  activeTab,
-  setActiveTab,
   showNPSModal,
   setShowNPSModal,
   showCelebrationModal,
@@ -53,17 +49,17 @@ export const LessonContentLayout: React.FC<LessonContentLayoutProps> = ({
 }) => {
   return (
     <>
-      <Card className="bg-cardBg border-cardBorder">
-        <CardContent className="p-6">
-          <LessonContentTabs
-            lesson={lesson}
-            videos={videos}
-            resources={resources}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            onProgressUpdate={onProgressUpdate}
-          />
+      {/* Conteúdo principal da aula em layout vertical */}
+      <LessonContentVertical
+        lesson={lesson}
+        videos={videos}
+        resources={resources}
+        onProgressUpdate={onProgressUpdate}
+      />
 
+      {/* Botões de ação fixos após todo o conteúdo */}
+      <Card className="bg-cardBg border-cardBorder mt-8 sticky bottom-4 z-10 shadow-lg">
+        <CardContent className="p-4">
           <LessonActionButtons
             lesson={lesson}
             isCompleted={isCompleted}
@@ -76,6 +72,7 @@ export const LessonContentLayout: React.FC<LessonContentLayoutProps> = ({
         </CardContent>
       </Card>
 
+      {/* Modais */}
       <LessonModalsManager
         lesson={lesson}
         showNPSModal={showNPSModal}

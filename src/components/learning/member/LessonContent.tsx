@@ -44,9 +44,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
     showNPSModal,
     setShowNPSModal,
     showCelebrationModal,
-    setShowCelebrationModal,
-    activeTab,
-    setActiveTab
+    setShowCelebrationModal
   } = useLessonContentState();
 
   const {
@@ -109,8 +107,6 @@ export const LessonContent: React.FC<LessonContentProps> = ({
       isCompleted={isCompleted}
       prevLesson={prevLesson}
       nextLesson={nextLesson}
-      activeTab={activeTab}
-      setActiveTab={setActiveTab}
       showNPSModal={showNPSModal}
       setShowNPSModal={setShowNPSModal}
       showCelebrationModal={showCelebrationModal}
