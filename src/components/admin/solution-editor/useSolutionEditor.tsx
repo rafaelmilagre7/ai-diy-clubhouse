@@ -1,9 +1,8 @@
-import { useState } from "react";
+
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
 import { useSolutionData } from "@/hooks/useSolutionData";
 import { useSolutionSave } from "@/hooks/useSolutionSave";
 import { useSolutionSteps } from "@/hooks/useSolutionSteps";
-import { Solution } from "@/lib/supabase";
 
 export const useSolutionEditor = (id: string | undefined, user: any) => {
   // Get solution data
