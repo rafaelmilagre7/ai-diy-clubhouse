@@ -24,6 +24,10 @@ export const formacaoRoutes: RouteObject[] = [
     element: <FormacaoProtectedRoutes><FormacaoLayout><LazyFormacaoCursosWithSuspense /></FormacaoLayout></FormacaoProtectedRoutes>
   },
   {
+    path: "/formacao/curso/:id",
+    element: <FormacaoProtectedRoutes><FormacaoLayout><LazyFormacaoCursoDetalhesWithSuspense /></FormacaoLayout></FormacaoProtectedRoutes>
+  },
+  {
     path: "/formacao/cursos/:id",
     element: <FormacaoProtectedRoutes><FormacaoLayout><LazyFormacaoCursoDetalhesWithSuspense /></FormacaoLayout></FormacaoProtectedRoutes>
   },
