@@ -9,7 +9,8 @@ export const steps: CompleteOnboardingStep[] = [
     section: "personal_info",
     path: "/onboarding/personal-info",
     forClub: true,
-    forFormation: true
+    forFormation: true,
+    component: () => null // placeholder component
   },
   {
     id: "ai_experience",
@@ -17,14 +18,16 @@ export const steps: CompleteOnboardingStep[] = [
     section: "ai_experience",
     path: "/onboarding/ai-experience",
     forClub: true,
-    forFormation: true
+    forFormation: true,
+    component: () => null // placeholder component
   },
   {
     id: "trail_generation",
     title: "Geração de Trilha",
     section: "trail_generation", 
     path: "/onboarding/trail-generation",
-    forClub: true
+    forClub: true,
+    component: () => null // placeholder component
   }
 ];
 
@@ -35,35 +38,40 @@ export const formationSteps: CompleteOnboardingStep[] = [
     title: "Informações Pessoais",
     section: "personal_info",
     path: "/onboarding/formacao/personal-info",
-    forFormation: true
+    forFormation: true,
+    component: () => null // placeholder component
   },
   {
     id: "ai_experience",
     title: "Experiência com IA",
     section: "ai_experience", 
     path: "/onboarding/formacao/ai-experience",
-    forFormation: true
+    forFormation: true,
+    component: () => null // placeholder component
   },
   {
     id: "learning_goals",
     title: "Objetivos de Aprendizado",
     section: "formation_data",
     path: "/onboarding/formacao/goals",
-    forFormation: true
+    forFormation: true,
+    component: () => null // placeholder component
   },
   {
     id: "learning_preferences",
     title: "Preferências de Aprendizado", 
     section: "formation_data",
     path: "/onboarding/formacao/preferences",
-    forFormation: true
+    forFormation: true,
+    component: () => null // placeholder component
   },
   {
     id: "review",
     title: "Revisão",
     section: "review",
     path: "/onboarding/formacao/review",
-    forFormation: true
+    forFormation: true,
+    component: () => null // placeholder component
   }
 ];
 

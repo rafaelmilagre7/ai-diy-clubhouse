@@ -53,7 +53,7 @@ export interface QuickOnboardingData {
   time_preference?: string | string[];
   available_days?: string[];
   skills_to_share?: string[];
-  networking_availability?: boolean | string;
+  networking_availability?: boolean | string | number;
   authorize_case_usage?: boolean;
   interested_in_interview?: boolean;
   mentorship_topics?: string[];

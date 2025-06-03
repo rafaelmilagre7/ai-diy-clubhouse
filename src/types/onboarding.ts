@@ -89,7 +89,7 @@ export interface PersonalizationInfo {
   interests?: string[];
   available_days?: string[];
   time_preference?: string | string[];
-  networking_availability?: boolean | string;
+  networking_availability?: boolean | string | number;
   mentorship_topics?: string[];
   skills_to_share?: string[];
   live_interest?: number;

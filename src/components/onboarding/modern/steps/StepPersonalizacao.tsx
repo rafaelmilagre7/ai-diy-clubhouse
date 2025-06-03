@@ -3,49 +3,45 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { OnboardingStepProps } from '@/types/quickOnboarding';
+import { SliderInput } from '../SliderInput';
 import { MultiSelectorModerno } from '../MultiSelectorModerno';
 
 const INTERESTS_OPTIONS = [
-  { value: 'automatizacao', label: '🤖 Automação de processos' },
-  { value: 'marketing', label: '📊 Marketing digital' },
-  { value: 'vendas', label: '💰 Automação de vendas' },
-  { value: 'atendimento', label: '💬 Atendimento ao cliente' },
-  { value: 'analise_dados', label: '📈 Análise de dados' },
-  { value: 'desenvolvimento', label: '💻 Desenvolvimento de software' },
-  { value: 'design', label: '🎨 Design e criatividade' },
-  { value: 'gestao', label: '📋 Gestão e produtividade' },
-  { value: 'financeiro', label: '💳 Gestão financeira' },
-  { value: 'rh', label: '👥 Recursos humanos' },
+  { value: 'automacao_processos', label: '🤖 Automação de Processos' },
+  { value: 'chatbots', label: '💬 Chatbots e Assistentes Virtuais' },
+  { value: 'analise_dados', label: '📊 Análise de Dados com IA' },
+  { value: 'marketing_digital', label: '📱 Marketing Digital com IA' },
+  { value: 'vendas', label: '💰 Otimização de Vendas' },
+  { value: 'atendimento', label: '🎧 Atendimento ao Cliente' },
+  { value: 'gestao', label: '📈 Gestão e Produtividade' },
+  { value: 'criacao_conteudo', label: '✍️ Criação de Conteúdo' }
 ];
 
 const TIME_PREFERENCE_OPTIONS = [
-  { value: 'manha', label: '🌅 Manhã (6h - 12h)' },
-  { value: 'tarde', label: '☀️ Tarde (12h - 18h)' },
-  { value: 'noite', label: '🌙 Noite (18h - 24h)' },
-  { value: 'madrugada', label: '🌃 Madrugada (0h - 6h)' },
+  { value: 'manha', label: '🌅 Manhã (06:00 - 12:00)' },
+  { value: 'tarde', label: '☀️ Tarde (12:00 - 18:00)' },
+  { value: 'noite', label: '🌙 Noite (18:00 - 24:00)' }
 ];
 
 const AVAILABLE_DAYS_OPTIONS = [
-  { value: 'segunda', label: 'Segunda-feira' },
-  { value: 'terca', label: 'Terça-feira' },
-  { value: 'quarta', label: 'Quarta-feira' },
-  { value: 'quinta', label: 'Quinta-feira' },
-  { value: 'sexta', label: 'Sexta-feira' },
-  { value: 'sabado', label: 'Sábado' },
-  { value: 'domingo', label: 'Domingo' },
+  { value: 'segunda', label: '📅 Segunda-feira' },
+  { value: 'terca', label: '📅 Terça-feira' },
+  { value: 'quarta', label: '📅 Quarta-feira' },
+  { value: 'quinta', label: '📅 Quinta-feira' },
+  { value: 'sexta', label: '📅 Sexta-feira' },
+  { value: 'sabado', label: '📅 Sábado' },
+  { value: 'domingo', label: '📅 Domingo' }
 ];
 
 const SKILLS_OPTIONS = [
-  { value: 'marketing_digital', label: '📱 Marketing Digital' },
-  { value: 'vendas', label: '💼 Vendas' },
-  { value: 'design', label: '🎨 Design' },
-  { value: 'desenvolvimento', label: '💻 Desenvolvimento' },
-  { value: 'gestao_projetos', label: '📊 Gestão de Projetos' },
-  { value: 'analise_dados', label: '📈 Análise de Dados' },
-  { value: 'atendimento_cliente', label: '🎧 Atendimento ao Cliente' },
-  { value: 'financeiro', label: '💰 Gestão Financeira' },
-  { value: 'recursos_humanos', label: '👥 Recursos Humanos' },
-  { value: 'consultoria', label: '🎯 Consultoria' },
+  { value: 'marketing', label: '📊 Marketing Digital' },
+  { value: 'vendas', label: '💰 Vendas' },
+  { value: 'tecnologia', label: '💻 Tecnologia' },
+  { value: 'gestao', label: '👥 Gestão de Equipe' },
+  { value: 'financeiro', label: '💰 Financeiro' },
+  { value: 'operacoes', label: '⚙️ Operações' },
+  { value: 'rh', label: '👤 Recursos Humanos' },
+  { value: 'design', label: '🎨 Design' }
 ];
 
 export const StepPersonalizacao: React.FC<OnboardingStepProps> = ({
@@ -57,48 +53,31 @@ export const StepPersonalizacao: React.FC<OnboardingStepProps> = ({
   currentStep,
   totalSteps
 }) => {
-  const handleInterestsChange = (newInterests: string[]) => {
-    onUpdate('interests', newInterests);
+  // Ensure we work with arrays
+  const getArrayValue = (value: string | string[] | undefined): string[] => {
+    if (!value) return [];
+    return Array.isArray(value) ? value : [value];
   };
 
-  const handleInterestsRemove = (interestToRemove: string) => {
-    const currentInterests = Array.isArray(data.interests) ? data.interests : [];
-    const updatedInterests = currentInterests.filter(interest => interest !== interestToRemove);
-    onUpdate('interests', updatedInterests);
+  const currentInterests = getArrayValue(data.interests);
+  const currentTimePreference = getArrayValue(data.time_preference);
+  const currentAvailableDays = getArrayValue(data.available_days);
+  const currentSkills = getArrayValue(data.skills_to_share);
+
+  const handleInterestsChange = (selectedInterests: string[]) => {
+    onUpdate('interests', selectedInterests);
   };
 
-  const handleTimePreferenceChange = (newTimePrefs: string[]) => {
-    onUpdate('time_preference', newTimePrefs);
+  const handleTimePreferenceChange = (selectedTimes: string[]) => {
+    onUpdate('time_preference', selectedTimes);
   };
 
-  const handleTimePreferenceRemove = (timeToRemove: string) => {
-    const currentTimePrefs = Array.isArray(data.time_preference) 
-      ? data.time_preference 
-      : typeof data.time_preference === 'string' 
-        ? [data.time_preference] 
-        : [];
-    const updatedTimePrefs = currentTimePrefs.filter((time: string) => time !== timeToRemove);
-    onUpdate('time_preference', updatedTimePrefs);
+  const handleAvailableDaysChange = (selectedDays: string[]) => {
+    onUpdate('available_days', selectedDays);
   };
 
-  const handleAvailableDaysChange = (newDays: string[]) => {
-    onUpdate('available_days', newDays);
-  };
-
-  const handleAvailableDaysRemove = (dayToRemove: string) => {
-    const currentDays = Array.isArray(data.available_days) ? data.available_days : [];
-    const updatedDays = currentDays.filter(day => day !== dayToRemove);
-    onUpdate('available_days', updatedDays);
-  };
-
-  const handleSkillsChange = (newSkills: string[]) => {
-    onUpdate('skills_to_share', newSkills);
-  };
-
-  const handleSkillsRemove = (skillToRemove: string) => {
-    const currentSkills = Array.isArray(data.skills_to_share) ? data.skills_to_share : [];
-    const updatedSkills = currentSkills.filter(skill => skill !== skillToRemove);
-    onUpdate('skills_to_share', updatedSkills);
+  const handleSkillsChange = (selectedSkills: string[]) => {
+    onUpdate('skills_to_share', selectedSkills);
   };
 
   return (
@@ -108,112 +87,119 @@ export const StepPersonalizacao: React.FC<OnboardingStepProps> = ({
           Personalização da experiência 🎯
         </h2>
         <p className="text-gray-400">
-          Vamos personalizar sua experiência na comunidade
+          Vamos personalizar sua jornada no VIVER DE IA Club
         </p>
       </div>
 
       <div className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700/50 space-y-8">
-        <MultiSelectorModerno
-          title="Áreas de interesse"
-          description="Selecione as áreas que mais te interessam"
-          options={INTERESTS_OPTIONS}
-          selectedValues={Array.isArray(data.interests) ? data.interests : []}
-          onSelectionChange={handleInterestsChange}
-          onRemove={handleInterestsRemove}
-          placeholder="Clique para selecionar suas áreas de interesse"
-          emptyMessage="Nenhuma área selecionada"
-        />
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-white">
+            Áreas de interesse em IA <span className="text-red-400">*</span>
+          </label>
+          <MultiSelectorModerno
+            value={currentInterests}
+            onChange={handleInterestsChange}
+            options={INTERESTS_OPTIONS}
+            placeholder="Selecione suas áreas de interesse..."
+          />
+        </div>
 
-        <MultiSelectorModerno
-          title="Horários preferenciais"
-          description="Quando você prefere participar de atividades?"
-          options={TIME_PREFERENCE_OPTIONS}
-          selectedValues={Array.isArray(data.time_preference) 
-            ? data.time_preference 
-            : typeof data.time_preference === 'string' 
-              ? [data.time_preference] 
-              : []
-          }
-          onSelectionChange={handleTimePreferenceChange}
-          onRemove={handleTimePreferenceRemove}
-          placeholder="Selecione seus horários preferenciais"
-          emptyMessage="Nenhum horário selecionado"
-        />
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-white">
+            Horários preferidos para lives/eventos
+          </label>
+          <MultiSelectorModerno
+            value={currentTimePreference}
+            onChange={handleTimePreferenceChange}
+            options={TIME_PREFERENCE_OPTIONS}
+            placeholder="Selecione seus horários preferidos..."
+          />
+        </div>
 
-        <MultiSelectorModerno
-          title="Dias disponíveis"
-          description="Em quais dias da semana você tem mais disponibilidade?"
-          options={AVAILABLE_DAYS_OPTIONS}
-          selectedValues={Array.isArray(data.available_days) ? data.available_days : []}
-          onSelectionChange={handleAvailableDaysChange}
-          onRemove={handleAvailableDaysRemove}
-          placeholder="Selecione seus dias disponíveis"
-          emptyMessage="Nenhum dia selecionado"
-        />
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-white">
+            Dias disponíveis para networking
+          </label>
+          <MultiSelectorModerno
+            value={currentAvailableDays}
+            onChange={handleAvailableDaysChange}
+            options={AVAILABLE_DAYS_OPTIONS}
+            placeholder="Selecione os dias disponíveis..."
+          />
+        </div>
 
-        <MultiSelectorModerno
-          title="Habilidades para compartilhar"
-          description="Quais conhecimentos você poderia compartilhar com a comunidade?"
-          options={SKILLS_OPTIONS}
-          selectedValues={Array.isArray(data.skills_to_share) ? data.skills_to_share : []}
-          onSelectionChange={handleSkillsChange}
-          onRemove={handleSkillsRemove}
-          placeholder="Selecione as habilidades que você pode compartilhar"
-          emptyMessage="Nenhuma habilidade selecionada"
-        />
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-white">
+            Conhecimentos que pode compartilhar
+          </label>
+          <MultiSelectorModerno
+            value={currentSkills}
+            onChange={handleSkillsChange}
+            options={SKILLS_OPTIONS}
+            placeholder="Selecione suas expertise..."
+          />
+        </div>
 
         <div className="space-y-4">
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-white">
-              Disponibilidade para networking
-            </label>
-            <select
-              value={data.networking_availability === true ? 'sim' : data.networking_availability === false ? 'nao' : ''}
-              onChange={(e) => onUpdate('networking_availability', e.target.value === 'sim' ? true : e.target.value === 'nao' ? false : '')}
-              className="w-full h-12 p-3 bg-gray-800/50 border border-gray-600 text-white rounded-md focus:ring-viverblue/50"
-            >
-              <option value="">Selecione uma opção</option>
-              <option value="sim">Sim, tenho interesse em networking</option>
-              <option value="nao">Não, prefiro focar no aprendizado</option>
-            </select>
-            <p className="text-xs text-gray-400">
-              {data.networking_availability === true ? '✅ Interesse em networking' : ''}
-            </p>
-          </div>
+          <label className="block text-sm font-medium text-white">
+            Interesse em participar de lives/eventos (0-10)
+          </label>
+          <SliderInput
+            value={typeof data.live_interest === 'number' ? data.live_interest : 5}
+            onChange={(value) => onUpdate('live_interest', value)}
+            min={0}
+            max={10}
+            step={1}
+            label="Interesse em lives"
+          />
+        </div>
 
-          <div className="space-y-2">
-            <label className="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                checked={data.authorize_case_usage || false}
-                onChange={(e) => onUpdate('authorize_case_usage', e.target.checked)}
-                className="w-4 h-4 text-viverblue bg-gray-800 border-gray-600 rounded focus:ring-viverblue"
-              />
-              <span className="text-sm text-white">
-                Autorizo o uso do meu caso de sucesso como exemplo para outros membros
-              </span>
+        <div className="space-y-4">
+          <div className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              id="networking"
+              checked={!!data.networking_availability}
+              onChange={(e) => onUpdate('networking_availability', e.target.checked)}
+              className="w-4 h-4 text-viverblue bg-gray-800 border-gray-600 rounded focus:ring-viverblue"
+            />
+            <label htmlFor="networking" className="text-sm font-medium text-white">
+              Disponível para networking com outros membros
             </label>
           </div>
 
-          <div className="space-y-2">
-            <label className="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                checked={data.interested_in_interview || false}
-                onChange={(e) => onUpdate('interested_in_interview', e.target.checked)}
-                className="w-4 h-4 text-viverblue bg-gray-800 border-gray-600 rounded focus:ring-viverblue"
-              />
-              <span className="text-sm text-white">
-                Tenho interesse em participar de entrevistas/depoimentos
-              </span>
+          <div className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              id="authorize_case"
+              checked={!!data.authorize_case_usage}
+              onChange={(e) => onUpdate('authorize_case_usage', e.target.checked)}
+              className="w-4 h-4 text-viverblue bg-gray-800 border-gray-600 rounded focus:ring-viverblue"
+            />
+            <label htmlFor="authorize_case" className="text-sm font-medium text-white">
+              Autorizo uso do meu caso como exemplo (anonimizado)
+            </label>
+          </div>
+
+          <div className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              id="interview"
+              checked={!!data.interested_in_interview}
+              onChange={(e) => onUpdate('interested_in_interview', e.target.checked)}
+              className="w-4 h-4 text-viverblue bg-gray-800 border-gray-600 rounded focus:ring-viverblue"
+            />
+            <label htmlFor="interview" className="text-sm font-medium text-white">
+              Interesse em participar de entrevistas/cases
             </label>
           </div>
         </div>
 
         <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
           <p className="text-sm text-blue-300">
-            🌟 <strong>Comunidade:</strong> Essas informações nos ajudam a conectar você 
-            com pessoas que têm interesses similares e criar experiências mais relevantes.
+            🎯 <strong>Personalização:</strong> Usaremos essas informações para 
+            personalizar sua experiência, recomendar conteúdos relevantes e conectar 
+            você com outros membros com interesses similares.
           </p>
         </div>
 
