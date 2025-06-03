@@ -59,60 +59,69 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
   }
 
   return (
-    <div className="w-full min-h-full px-6 py-6 space-y-6 animate-fade-in">
-      {/* HEADER IMERSIVO */}
-      <ModernDashboardHeader />
+    <div className="w-full min-h-screen bg-[#0F111A] space-y-0 animate-fade-in">
+      {/* HEADER IMERSIVO - sem padding lateral */}
+      <div className="px-6 pt-6 pb-4">
+        <ModernDashboardHeader />
+      </div>
 
-      {/* CARDS DE PROGRESSO (KPI) */}
-      <KpiGrid 
-        completed={kpiTotals.completed} 
-        inProgress={kpiTotals.inProgress}
-        total={kpiTotals.total}
-        isLoading={isLoading}
-      />
-
-      {/* TRILHA DE IMPLEMENTAÇÃO COM IA */}
-      <ImplementationTrail />
-
-      {/* Mostrar loaders enquanto carrega, ou conteúdo quando pronto */}
-      {isLoading ? (
-        <div className="space-y-6">
-          <SolutionsGridLoader title="Em andamento" count={2} />
-          <SolutionsGridLoader title="Concluídas" count={2} />
-          <SolutionsGridLoader title="Recomendadas" count={3} />
-        </div>
-      ) : hasNoSolutions ? (
-        <NoSolutionsPlaceholder 
-          title="Nenhuma solução encontrada"
-          description="Comece explorando nossas soluções recomendadas para transformar seu negócio com IA"
+      {/* CARDS DE PROGRESSO (KPI) - sem padding lateral */}
+      <div className="px-6 pb-4">
+        <KpiGrid 
+          completed={kpiTotals.completed} 
+          inProgress={kpiTotals.inProgress}
+          total={kpiTotals.total}
+          isLoading={isLoading}
         />
-      ) : (
-        <div className="space-y-6">
-          {/* Soluções Ativas */}
-          {active && active.length > 0 && (
-            <ActiveSolutions
-              solutions={active}
-              onSolutionClick={onSolutionClick}
-            />
-          )}
+      </div>
 
-          {/* Soluções Completadas */}
-          {completed && completed.length > 0 && (
-            <CompletedSolutions
-              solutions={completed}
-              onSolutionClick={onSolutionClick}
-            />
-          )}
+      {/* TRILHA DE IMPLEMENTAÇÃO COM IA - sem padding lateral */}
+      <div className="px-6 pb-4">
+        <ImplementationTrail />
+      </div>
 
-          {/* Soluções Recomendadas */}
-          {recommended && recommended.length > 0 && (
-            <RecommendedSolutions
-              solutions={recommended}
-              onSolutionClick={onSolutionClick}
-            />
-          )}
-        </div>
-      )}
+      {/* Conteúdo principal - sem padding lateral */}
+      <div className="px-6 pb-6">
+        {/* Mostrar loaders enquanto carrega, ou conteúdo quando pronto */}
+        {isLoading ? (
+          <div className="space-y-6">
+            <SolutionsGridLoader title="Em andamento" count={2} />
+            <SolutionsGridLoader title="Concluídas" count={2} />
+            <SolutionsGridLoader title="Recomendadas" count={3} />
+          </div>
+        ) : hasNoSolutions ? (
+          <NoSolutionsPlaceholder 
+            title="Nenhuma solução encontrada"
+            description="Comece explorando nossas soluções recomendadas para transformar seu negócio com IA"
+          />
+        ) : (
+          <div className="space-y-6">
+            {/* Soluções Ativas */}
+            {active && active.length > 0 && (
+              <ActiveSolutions
+                solutions={active}
+                onSolutionClick={onSolutionClick}
+              />
+            )}
+
+            {/* Soluções Completadas */}
+            {completed && completed.length > 0 && (
+              <CompletedSolutions
+                solutions={completed}
+                onSolutionClick={onSolutionClick}
+              />
+            )}
+
+            {/* Soluções Recomendadas */}
+            {recommended && recommended.length > 0 && (
+              <RecommendedSolutions
+                solutions={recommended}
+                onSolutionClick={onSolutionClick}
+              />
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 });
