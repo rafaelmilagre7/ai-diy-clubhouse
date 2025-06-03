@@ -1,4 +1,3 @@
-
 import { RouteObject } from "react-router-dom";
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import { SmartFeatureGuard } from '@/components/auth/SmartFeatureGuard';
@@ -6,7 +5,7 @@ import MemberLayout from '@/components/layout/MemberLayout';
 import ProfileRoutes from './ProfileRoutes';
 
 // Páginas críticas - carregamento imediato
-import OptimizedDashboard from '@/pages/member/OptimizedDashboard';
+import Dashboard from '@/pages/member/Dashboard'; // Mudança aqui: usar Dashboard em vez de OptimizedDashboard
 import Solutions from '@/pages/member/Solutions';
 import Tools from '@/pages/member/Tools';
 import ToolDetails from '@/pages/member/ToolDetails';
@@ -55,8 +54,8 @@ const createProtectedRoute = (path: string, Component: React.ComponentType<any>,
 
 export const memberRoutes: RouteObject[] = [
   // Rotas críticas - carregamento imediato
-  createProtectedRoute("/", OptimizedDashboard),
-  createProtectedRoute("/dashboard", OptimizedDashboard),
+  createProtectedRoute("/", Dashboard), // Mudança aqui: usar Dashboard em vez de OptimizedDashboard
+  createProtectedRoute("/dashboard", Dashboard), // Mudança aqui: usar Dashboard em vez de OptimizedDashboard
   createProtectedRoute("/implementation-trail", ImplementationTrailPage, "implementation_trail"),
   createProtectedRoute("/solutions", Solutions),
   createProtectedRoute("/tools", Tools),

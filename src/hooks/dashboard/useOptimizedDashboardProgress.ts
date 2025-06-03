@@ -1,6 +1,6 @@
 
 import { useMemo } from "react";
-import { useAuth } from "@/contexts/auth";
+import { useOptimizedAuth } from "@/hooks/auth/useOptimizedAuth";
 import { useOptimizedQuery } from "@/hooks/common/useOptimizedQuery";
 import { supabase } from "@/lib/supabase";
 import { Solution } from "@/lib/supabase";
@@ -10,7 +10,9 @@ import { Solution } from "@/lib/supabase";
  * Melhora performance e remove logs desnecessários
  */
 export const useOptimizedDashboardProgress = (solutions: Solution[] = []) => {
-  const { user } = useAuth();
+  const { user } = useOptimizedAuth();
+  
+  console.log("useOptimizedDashboardProgress: Iniciando com user:", !!user, "solutions:", solutions.length);
   
   // Fetch progress com cache otimizado
   const { 
@@ -20,14 +22,24 @@ export const useOptimizedDashboardProgress = (solutions: Solution[] = []) => {
   } = useOptimizedQuery({
     queryKey: ['user-progress', user?.id],
     queryFn: async () => {
-      if (!user) throw new Error("Usuário não autenticado");
+      if (!user) {
+        console.log("useOptimizedDashboardProgress: Usuário não autenticado");
+        throw new Error("Usuário não autenticado");
+      }
+      
+      console.log("useOptimizedDashboardProgress: Buscando progresso para usuário:", user.id);
       
       const { data, error } = await supabase
         .from("progress")
         .select("*")
         .eq("user_id", user.id);
         
-      if (error) throw error;
+      if (error) {
+        console.error("useOptimizedDashboardProgress: Erro ao buscar progresso:", error);
+        throw error;
+      }
+      
+      console.log("useOptimizedDashboardProgress: Progresso carregado:", data?.length || 0);
       return data || [];
     },
     enabled: !!user && solutions.length > 0
@@ -36,8 +48,14 @@ export const useOptimizedDashboardProgress = (solutions: Solution[] = []) => {
   // Processar dados de forma otimizada
   const { active, completed, recommended } = useMemo(() => {
     if (!solutions.length || !progressData) {
+      console.log("useOptimizedDashboardProgress: Sem dados para processar");
       return { active: [], completed: [], recommended: [] };
     }
+
+    console.log("useOptimizedDashboardProgress: Processando dados:", {
+      solutions: solutions.length,
+      progressData: progressData.length
+    });
 
     // Soluções ativas (em progresso)
     const activeSolutions = solutions.filter(solution => 
@@ -62,6 +80,12 @@ export const useOptimizedDashboardProgress = (solutions: Solution[] = []) => {
       !activeSolutions.some(active => active.id === solution.id) && 
       !completedSolutions.some(completed => completed.id === solution.id)
     );
+
+    console.log("useOptimizedDashboardProgress: Dados processados:", {
+      active: activeSolutions.length,
+      completed: completedSolutions.length,
+      recommended: recommendedSolutions.length
+    });
 
     return {
       active: activeSolutions,

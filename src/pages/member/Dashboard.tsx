@@ -1,4 +1,3 @@
-
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
@@ -12,9 +11,18 @@ import { AlertCircle, RefreshCw } from "lucide-react";
 import { useOptimizedAuth } from "@/hooks/auth/useOptimizedAuth";
 
 const Dashboard = () => {
+  console.log("Dashboard: Componente iniciando");
+  
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { user, profile, isLoading: authLoading } = useOptimizedAuth();
+  const { user, profile, isLoading: authLoading, isAuthenticated } = useOptimizedAuth();
+  
+  console.log("Dashboard: Estado de autenticação:", {
+    user: !!user,
+    profile: !!profile,
+    authLoading,
+    isAuthenticated
+  });
   
   // Estado para controle de erros
   const [hasError, setHasError] = useState(false);
@@ -24,12 +32,21 @@ const Dashboard = () => {
   const initialCategory = useMemo(() => searchParams.get("category") || "general", [searchParams]);
   const [category, setCategory] = useState<string>(initialCategory);
   
+  console.log("Dashboard: Categoria atual:", category);
+  
   // Otimização: Adicionar configuração de staleTime mais longa para reduzir requisições
   const { solutions, loading: solutionsLoading, error: solutionsError } = useSolutionsData();
+  
+  console.log("Dashboard: Dados de soluções:", {
+    solutions: solutions?.length || 0,
+    solutionsLoading,
+    solutionsError: !!solutionsError
+  });
   
   // Tratamento de erro para soluções
   useEffect(() => {
     if (solutionsError) {
+      console.error("Dashboard: Erro nas soluções:", solutionsError);
       setHasError(true);
       setErrorMessage("Não foi possível carregar as soluções. Verifique sua conexão com a internet.");
       toast.error("Erro ao carregar soluções", {
@@ -46,6 +63,8 @@ const Dashboard = () => {
       : solutions;
   }, [solutions, category]);
   
+  console.log("Dashboard: Soluções filtradas:", filteredSolutions.length);
+  
   // Usar as soluções filtradas para obter o progresso
   const { 
     active, 
@@ -55,9 +74,18 @@ const Dashboard = () => {
     error: progressError
   } = useDashboardProgress(filteredSolutions);
   
+  console.log("Dashboard: Dados de progresso:", {
+    active: active?.length || 0,
+    completed: completed?.length || 0,
+    recommended: recommended?.length || 0,
+    progressLoading,
+    progressError: !!progressError
+  });
+  
   // Tratamento de erro para progresso
   useEffect(() => {
     if (progressError) {
+      console.error("Dashboard: Erro no progresso:", progressError);
       setHasError(true);
       setErrorMessage("Não foi possível carregar seu progresso. Por favor, tente novamente mais tarde.");
     }
@@ -65,10 +93,12 @@ const Dashboard = () => {
   
   // Verificação de autenticação
   useEffect(() => {
-    if (!authLoading && !user) {
+    console.log("Dashboard: Verificando autenticação:", { authLoading, isAuthenticated });
+    if (!authLoading && !isAuthenticated) {
+      console.log("Dashboard: Redirecionando para login");
       navigate('/login', { replace: true });
     }
-  }, [user, authLoading, navigate]);
+  }, [isAuthenticated, authLoading, navigate]);
   
   // Função para lidar com a mudança de categoria - memoizada para evitar recriação
   const handleCategoryChange = useCallback((newCategory: string) => {
@@ -116,7 +146,7 @@ const Dashboard = () => {
           </AlertDescription>
         </Alert>
         <Button 
-          onClick={handleRetry} 
+          onClick={() => window.location.reload()} 
           className="mt-4 flex items-center gap-2"
         >
           <RefreshCw className="h-4 w-4" /> Tentar novamente
@@ -128,6 +158,8 @@ const Dashboard = () => {
     );
   }
 
+  console.log("Dashboard: Renderizando layout principal");
+
   // Renderizar o layout diretamente, sem usar um componente de carregamento bloqueante
   return (
     <DashboardLayout
@@ -135,8 +167,13 @@ const Dashboard = () => {
       completed={completed}
       recommended={recommended}
       category={category}
-      onCategoryChange={handleCategoryChange}
-      onSolutionClick={handleSolutionClick}
+      onCategoryChange={(newCategory: string) => {
+        setCategory(newCategory);
+        setSearchParams({ category: newCategory });
+      }}
+      onSolutionClick={(solution: Solution) => {
+        navigate(`/solution/${solution.id}`);
+      }}
       isLoading={solutionsLoading || progressLoading || authLoading}
     />
   );

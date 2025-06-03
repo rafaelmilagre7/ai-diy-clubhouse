@@ -8,7 +8,7 @@ import { ImplementationTrail } from "./ImplementationTrail";
 import { Solution } from "@/lib/supabase";
 import { ModernDashboardHeader } from "./ModernDashboardHeader";
 import { KpiGrid } from "./KpiGrid";
-import { useAuth } from "@/contexts/auth";
+import { useOptimizedAuth } from "@/hooks/auth/useOptimizedAuth";
 import { SolutionsGridLoader } from "./SolutionsGridLoader";
 import { DashboardConnectionErrorState } from "./states/DashboardConnectionErrorState";
 
@@ -32,7 +32,15 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
   onSolutionClick,
   isLoading = false
 }) => {
-  const { profile } = useAuth();
+  const { profile } = useOptimizedAuth();
+
+  console.log("DashboardLayout: Renderizando com dados:", {
+    profile: !!profile,
+    active: active?.length || 0,
+    completed: completed?.length || 0,
+    recommended: recommended?.length || 0,
+    isLoading
+  });
 
   // Memoizar o cálculo do nome do usuário
   const userName = useMemo(() => 
@@ -61,6 +69,7 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
 
   // Early return para dados inválidos
   if (!hasValidData && !isLoading) {
+    console.log("DashboardLayout: Dados inválidos, mostrando erro");
     return <DashboardConnectionErrorState />;
   }
 
