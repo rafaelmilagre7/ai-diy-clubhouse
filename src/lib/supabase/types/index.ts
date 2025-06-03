@@ -1,15 +1,40 @@
 
-import { Database } from './database.types';
-
-// Tipos de tabelas
-export type LearningLesson = Database['public']['Tables']['learning_lessons']['Row'];
-export type LearningLessonVideo = Database['public']['Tables']['learning_lesson_videos']['Row'];
-export type LearningModule = Database['public']['Tables']['learning_modules']['Row'];
-export type LearningCourse = Database['public']['Tables']['learning_courses']['Row'];
-export type LearningProgress = Database['public']['Tables']['learning_progress']['Row'];
-export type LearningResource = Database['public']['Tables']['learning_resources']['Row'];
-export type LearningLessonTool = Database['public']['Tables']['learning_lesson_tools']['Row'];
-export type LearningComment = Database['public']['Tables']['learning_comments']['Row'];
-
-// Outros tipos existentes
+// Exportação centralizada e organizada de todos os tipos
+export * from './core';
+export * from './learning';
+export * from './onboarding';
+export * from './utils';
 export * from './database.types';
+
+// Re-exportações para compatibilidade
+export type { 
+  LearningCourse,
+  LearningModule, 
+  LearningLesson,
+  LearningProgress,
+  LearningCourseWithStats,
+  LearningModuleWithStats
+} from './learning';
+
+export type {
+  Solution,
+  Module,
+  Progress,
+  UserProfile,
+  UserRole,
+  SolutionCategory
+} from './core';
+
+export type {
+  OnboardingFinal,
+  OnboardingPersonalInfo,
+  OnboardingBusinessInfo,
+  OnboardingStepComponentProps
+} from './onboarding';
+
+export type {
+  OptionalProps,
+  RequiredProps,
+  WithFallbacks,
+  SafeComponentProps
+} from './utils';
