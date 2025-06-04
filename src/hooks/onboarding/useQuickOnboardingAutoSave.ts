@@ -30,14 +30,9 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
     saveTimeoutRef.current = setTimeout(async () => {
       try {
         setIsSaving(true);
-        console.log('💾 Auto-salvando dados do onboarding...', {
-          name: data.name,
-          email: data.email,
-          company_name: data.company_name,
-          ai_knowledge_level: data.ai_knowledge_level
-        });
+        console.log('💾 Auto-salvando dados do onboarding...');
         
-        // Preparar dados limpos para quick_onboarding
+        // Preparar dados limpos para quick_onboarding (sem campos inválidos)
         const quickOnboardingData = {
           user_id: user.id,
           name: data.name || '',
@@ -62,9 +57,16 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
           desired_ai_areas: data.desired_ai_areas || [],
           has_implemented: data.has_implemented || '',
           previous_tools: data.previous_tools || [],
-          is_completed: false, // Manter false até conclusão manual
-          updated_at: new Date().toISOString()
+          is_completed: false // Manter false até conclusão manual
+          // Removido updated_at - será tratado pelo trigger
         };
+
+        console.log('📤 Auto-save payload:', {
+          user_id: quickOnboardingData.user_id,
+          name: quickOnboardingData.name,
+          email: quickOnboardingData.email,
+          company_name: quickOnboardingData.company_name
+        });
 
         // Usar upsert para inserir ou atualizar
         const { error: quickError } = await supabase
@@ -149,13 +151,14 @@ const saveToOnboardingProgress = async (data: QuickOnboardingData, userId: strin
       current_step: determineCurrentStep(data),
       completed_steps: getCompletedSteps(data),
       is_completed: false, // Manter false até conclusão manual
+      // Campos top-level para compatibilidade
       company_name: data.company_name || '',
       company_size: data.company_size || '',
       company_sector: data.company_segment || '',
       company_website: data.company_website || '',
       current_position: data.role || '',
-      annual_revenue: data.annual_revenue_range || '',
-      updated_at: new Date().toISOString()
+      annual_revenue: data.annual_revenue_range || ''
+      // Removido name e updated_at - serão tratados pelo trigger
     };
 
     const { error } = await supabase
