@@ -4,12 +4,14 @@ import { useQuickOnboardingOptimized } from '@/hooks/onboarding/useQuickOnboardi
 import { useNavigate } from 'react-router-dom';
 import { LazyStepLoader } from './steps/LazyStepLoader';
 import { EnhancedTrailMagicExperience } from '../EnhancedTrailMagicExperience';
+import { OnboardingSuccessScreen } from '../OnboardingSuccessScreen';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const UnifiedOnboardingFlow: React.FC = () => {
   const navigate = useNavigate();
   const [isCompleting, setIsCompleting] = useState(false);
+  const [showSuccessScreen, setShowSuccessScreen] = useState(false);
   
   const {
     currentStep,
@@ -45,15 +47,16 @@ export const UnifiedOnboardingFlow: React.FC = () => {
       if (success) {
         console.log('✅ Onboarding finalizado com sucesso!');
         
-        // Mostrar sucesso e aguardar antes de redirecionar
-        toast.success('Onboarding concluído! Redirecionando...', {
+        // Mostrar sucesso
+        toast.success('Onboarding concluído com sucesso!', {
           duration: 2000
         });
         
-        // Aguardar um momento para garantir que a operação foi concluída
+        // Mostrar tela de sucesso ao invés de redirecionar
         setTimeout(() => {
-          navigate('/onboarding-new/completed');
-        }, 2000);
+          setShowSuccessScreen(true);
+          setIsCompleting(false);
+        }, 1500);
       } else {
         console.error('❌ Falha na finalização do onboarding');
         toast.error('Erro ao finalizar onboarding. Tente novamente.');
@@ -64,6 +67,11 @@ export const UnifiedOnboardingFlow: React.FC = () => {
       toast.error('Erro ao finalizar onboarding. Tente novamente.');
       setIsCompleting(false);
     }
+  };
+
+  const handleNavigateFromSuccess = (path: string) => {
+    console.log(`🚀 Navegando para: ${path}`);
+    navigate(path);
   };
 
   // Mostrar loading enquanto carrega dados existentes
@@ -84,6 +92,11 @@ export const UnifiedOnboardingFlow: React.FC = () => {
         <p className="text-gray-300">Você pode continuar com dados em branco.</p>
       </div>
     );
+  }
+
+  // Mostrar tela de sucesso se o onboarding foi concluído
+  if (showSuccessScreen) {
+    return <OnboardingSuccessScreen onNavigate={handleNavigateFromSuccess} />;
   }
 
   // Mostrar indicador se dados foram carregados
