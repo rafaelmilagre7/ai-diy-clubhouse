@@ -1,301 +1,272 @@
-
 import { useState, useCallback } from 'react';
 import { QuickOnboardingData } from '@/types/quickOnboarding';
-import { useQuickOnboardingDataLoader } from './useQuickOnboardingDataLoader';
-import { useQuickOnboardingAutoSave } from './useQuickOnboardingAutoSave';
-import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
+import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-
-const initialData: QuickOnboardingData = {
-  // Etapa 1: Informações Pessoais
-  name: '',
-  email: '',
-  whatsapp: '',
-  country_code: '+55',
-  birth_date: '',
-  instagram_url: '',
-  linkedin_url: '',
-  how_found_us: '',
-  referred_by: '',
-
-  // Etapa 2: Negócio
-  company_name: '',
-  role: '',
-  company_size: '',
-  company_segment: '',
-  company_website: '',
-  annual_revenue_range: '',
-  main_challenge: '',
-
-  // Etapa 3: Experiência com IA
-  ai_knowledge_level: '',
-  uses_ai: '',
-  main_goal: '',
-
-  // Campos adicionais para compatibilidade
-  desired_ai_areas: [],
-  has_implemented: '',
-  previous_tools: []
-};
+import { useOnboardingValidation } from './useOnboardingValidation';
+import { useQuickOnboardingAutoSave } from './useQuickOnboardingAutoSave';
 
 export const useQuickOnboardingOptimized = () => {
   const { user } = useAuth();
+  const [data, setData] = useState<QuickOnboardingData>({
+    name: '',
+    email: '',
+    whatsapp: '',
+    country_code: '',
+    birth_date: null,
+    instagram_url: null,
+    linkedin_url: null,
+    how_found_us: '',
+    referred_by: null,
+    company_name: '',
+    role: '',
+    company_size: '',
+    company_segment: '',
+    company_website: null,
+    annual_revenue_range: '',
+    main_challenge: '',
+    ai_knowledge_level: '',
+    uses_ai: '',
+    main_goal: '',
+    desired_ai_areas: [],
+    has_implemented: '',
+    previous_tools: [],
+  });
   const [currentStep, setCurrentStep] = useState(1);
-  const { 
-    data, 
-    setData, 
-    isLoading, 
-    hasExistingData, 
-    loadError 
-  } = useQuickOnboardingDataLoader();
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [hasExistingData, setHasExistingData] = useState(false);
+  const totalSteps = 4;
 
-  // Adicionar auto-save
+  const { validateAllSteps } = useOnboardingValidation();
   const { isSaving, lastSaveTime } = useQuickOnboardingAutoSave(data);
 
-  const updateField = useCallback((field: keyof QuickOnboardingData, value: any) => {
-    setData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  }, [setData]);
-
-  // Função para verificar se dados estão salvos no banco
-  const validateDataInDatabase = useCallback(async (): Promise<boolean> => {
-    if (!user) return false;
-
-    try {
-      const { data: quickData, error } = await supabase
-        .from('quick_onboarding')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (error || !quickData) {
-        console.log('❌ Dados não encontrados no banco');
-        return false;
+  useEffect(() => {
+    const loadInitialData = async () => {
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
       }
 
-      // Verificar se todos os dados essenciais estão presentes
-      const hasEssentialData = !!(
-        quickData.name && quickData.email && quickData.whatsapp && quickData.how_found_us &&
-        quickData.company_name && quickData.role && quickData.company_size && 
-        quickData.company_segment && quickData.annual_revenue_range && quickData.main_challenge &&
-        quickData.ai_knowledge_level && quickData.uses_ai && quickData.main_goal
-      );
+      try {
+        const { data: onboardingData, error } = await supabase
+          .from('quick_onboarding')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
 
-      console.log('✅ Dados validados no banco:', hasEssentialData);
-      return hasEssentialData;
-    } catch (error) {
-      console.error('❌ Erro ao validar dados no banco:', error);
-      return false;
-    }
-  }, [user]);
+        if (error && error.code !== 'PGRST116') {
+          console.error('Erro ao carregar dados:', error);
+          setLoadError('Erro ao carregar seus dados. Tente novamente.');
+          setIsLoading(false);
+          return;
+        }
+
+        if (onboardingData) {
+          setData(onboardingData);
+          setHasExistingData(true);
+        }
+
+        setIsLoading(false);
+      } catch (err) {
+        console.error('Erro ao carregar dados:', err);
+        setLoadError('Erro ao carregar seus dados. Tente novamente.');
+        setIsLoading(false);
+      }
+    };
+
+    loadInitialData();
+  }, [user?.id]);
+
+  const updateField = useCallback((fieldName: keyof QuickOnboardingData, value: any) => {
+    setData(prevData => ({ ...prevData, [fieldName]: value }));
+  }, []);
+
+  const nextStep = useCallback(() => {
+    setCurrentStep(prevStep => Math.min(prevStep + 1, totalSteps));
+  }, [totalSteps]);
+
+  const previousStep = useCallback(() => {
+    setCurrentStep(prevStep => Math.max(prevStep - 1, 1));
+  }, []);
 
   const canProceed = useCallback(() => {
     switch (currentStep) {
       case 1:
-        // Etapa 1: Validar campos obrigatórios incluindo indicação condicional
-        const hasRequiredPersonalInfo = !!(data.name && data.email && data.whatsapp && data.how_found_us);
-        const hasReferralIfNeeded = data.how_found_us !== 'indicacao' || !!data.referred_by;
-        return hasRequiredPersonalInfo && hasReferralIfNeeded;
+        return !!(data.name && data.email && data.whatsapp && data.how_found_us);
       case 2:
-        // Etapa 2: Validar informações completas do negócio
         return !!(data.company_name && data.role && data.company_size && 
                   data.company_segment && data.annual_revenue_range && data.main_challenge);
       case 3:
-        // Etapa 3: Validar experiência completa com IA
         return !!(data.ai_knowledge_level && data.uses_ai && data.main_goal);
-      case 4:
-        // Etapa 4: Validar que todas as etapas anteriores estão completas
-        const step1Valid = !!(data.name && data.email && data.whatsapp && data.how_found_us &&
-                              (data.how_found_us !== 'indicacao' || data.referred_by));
-        const step2Valid = !!(data.company_name && data.role && data.company_size && 
-                              data.company_segment && data.annual_revenue_range && data.main_challenge);
-        const step3Valid = !!(data.ai_knowledge_level && data.uses_ai && data.main_goal);
-        
-        return step1Valid && step2Valid && step3Valid;
       default:
-        return false;
+        return true;
     }
   }, [currentStep, data]);
 
-  const nextStep = useCallback(() => {
-    if (canProceed()) {
-      setCurrentStep(prev => prev + 1);
+  const completeOnboarding = useCallback(async (): Promise<boolean> => {
+    if (!user?.id) {
+      console.error('❌ Usuário não autenticado');
+      toast.error('Erro: usuário não autenticado');
+      return false;
     }
-  }, [canProceed]);
-
-  const previousStep = useCallback(() => {
-    setCurrentStep(prev => Math.max(1, prev - 1));
-  }, []);
-
-  // Função para garantir que existe registro em onboarding_progress
-  const ensureOnboardingProgress = useCallback(async (): Promise<string | null> => {
-    if (!user) return null;
 
     try {
-      // Verificar se já existe
-      const { data: existingProgress } = await supabase
+      console.log('🎯 Iniciando finalização do onboarding...');
+      
+      // Validar se todas as etapas estão completas
+      const isValid = validateAllSteps(data);
+      if (!isValid) {
+        console.error('❌ Dados do onboarding incompletos');
+        toast.error('Por favor, complete todas as etapas antes de finalizar');
+        return false;
+      }
+
+      // Verificar se existe registro na tabela onboarding_progress
+      const { data: existingProgress, error: fetchError } = await supabase
         .from('onboarding_progress')
-        .select('id')
+        .select('*')
         .eq('user_id', user.id)
         .single();
 
-      if (existingProgress) {
-        return existingProgress.id;
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        console.error('❌ Erro ao verificar progresso existente:', fetchError);
+        throw fetchError;
       }
 
-      // Criar novo registro se não existir
+      // Preparar dados APENAS com campos válidos da tabela onboarding_progress
       const progressData = {
         user_id: user.id,
+        current_step: 'completed',
+        is_completed: true,
+        completed_steps: ['personal_info', 'professional_info', 'ai_experience', 'trail_generation'],
         personal_info: {
-          name: data.name,
-          email: data.email,
-          phone: data.whatsapp,
-          ddi: data.country_code,
-          linkedin: data.linkedin_url,
-          instagram: data.instagram_url
+          name: data.name || '',
+          email: data.email || '',
+          phone: data.whatsapp || '',
+          ddi: data.country_code || '',
+          linkedin: data.linkedin_url || '',
+          instagram: data.instagram_url || ''
         },
         professional_info: {
-          company_name: data.company_name,
-          current_position: data.role,
-          company_size: data.company_size,
-          company_sector: data.company_segment,
-          company_website: data.company_website,
-          annual_revenue: data.annual_revenue_range
-        },
-        ai_experience: {
-          knowledge_level: data.ai_knowledge_level,
-          previous_tools: data.previous_tools,
-          desired_ai_areas: data.desired_ai_areas,
-          has_implemented: data.has_implemented,
-          uses_ai: data.uses_ai
+          company_name: data.company_name || '',
+          company_size: data.company_size || '',
+          company_sector: data.company_segment || '',
+          company_website: data.company_website || '',
+          current_position: data.role || '',
+          annual_revenue: data.annual_revenue_range || ''
         },
         business_goals: {
-          primary_goal: data.main_goal,
-          expected_outcomes: []
+          primary_goal: data.main_goal || '',
+          expected_outcomes: data.desired_ai_areas || []
         },
-        business_context: {
-          business_challenges: data.main_challenge ? [data.main_challenge] : []
+        ai_experience: {
+          knowledge_level: data.ai_knowledge_level || '',
+          previous_tools: data.previous_tools || [],
+          has_implemented: data.has_implemented || 'nao',
+          desired_ai_areas: data.desired_ai_areas || [],
+          uses_ai: data.uses_ai || ''
         },
         complementary_info: {
-          how_found_us: data.how_found_us,
-          referred_by: data.referred_by
+          how_found_us: data.how_found_us || '',
+          referred_by: data.referred_by || ''
         },
+        business_context: {},
         experience_personalization: {},
-        current_step: 'completed',
-        completed_steps: ['personal_info', 'professional_info', 'ai_experience'],
-        is_completed: false,
-        created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
 
-      const { data: newProgress, error } = await supabase
-        .from('onboarding_progress')
-        .insert([progressData])
-        .select('id')
-        .single();
+      let progressResult;
 
-      if (error) throw error;
+      if (existingProgress) {
+        // Atualizar registro existente
+        console.log('📝 Atualizando registro existente de onboarding_progress...');
+        const { data: updateResult, error: updateError } = await supabase
+          .from('onboarding_progress')
+          .update(progressData)
+          .eq('id', existingProgress.id)
+          .select()
+          .single();
 
-      console.log('✅ Registro criado em onboarding_progress:', newProgress.id);
-      return newProgress.id;
-    } catch (error) {
-      console.error('❌ Erro ao garantir onboarding_progress:', error);
-      return null;
-    }
-  }, [user, data]);
+        if (updateError) throw updateError;
+        progressResult = updateResult;
+      } else {
+        // Criar novo registro
+        console.log('✨ Criando novo registro de onboarding_progress...');
+        const { data: insertResult, error: insertError } = await supabase
+          .from('onboarding_progress')
+          .insert([{ ...progressData, created_at: new Date().toISOString() }])
+          .select()
+          .single();
 
-  const completeOnboarding = useCallback(async () => {
-    if (!user || !canProceed()) {
-      toast.error('Complete todas as etapas antes de finalizar');
-      return false;
-    }
-
-    console.log('🚀 Iniciando finalização do onboarding...');
-
-    try {
-      // 1. Validar se dados estão salvos no banco
-      console.log('📋 Validando dados no banco...');
-      const dataValid = await validateDataInDatabase();
-      if (!dataValid) {
-        toast.error('Dados não estão completos no sistema. Aguarde o salvamento automático.');
-        return false;
+        if (insertError) throw insertError;
+        progressResult = insertResult;
       }
 
-      // 2. Garantir que existe registro em onboarding_progress
-      console.log('📄 Garantindo registro em onboarding_progress...');
-      const progressId = await ensureOnboardingProgress();
-      if (!progressId) {
-        toast.error('Erro ao criar registro de progresso. Tente novamente.');
-        return false;
-      }
-
-      // 3. Atualizar ambas as tabelas de forma atômica usando transação
-      console.log('💾 Salvando conclusão nas tabelas...');
-      
-      // Atualizar quick_onboarding
-      const { error: quickError } = await supabase
+      // Atualizar quick_onboarding como concluído
+      console.log('📝 Atualizando quick_onboarding como concluído...');
+      const { error: quickUpdateError } = await supabase
         .from('quick_onboarding')
         .update({ 
-          is_completed: true,
-          updated_at: new Date().toISOString()
+          is_completed: true, 
+          updated_at: new Date().toISOString() 
         })
         .eq('user_id', user.id);
 
-      if (quickError) throw quickError;
-
-      // Atualizar onboarding_progress
-      const { error: progressError } = await supabase
-        .from('onboarding_progress')
-        .update({ 
-          is_completed: true,
-          current_step: 'completed',
-          completed_steps: ['personal_info', 'professional_info', 'ai_experience'],
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id);
-
-      if (progressError) throw progressError;
-
-      console.log('✅ Onboarding concluído com sucesso!');
-      toast.success('Onboarding concluído com sucesso!');
-      return true;
-    } catch (error: any) {
-      console.error('❌ Erro ao completar onboarding:', error);
-      
-      // Retry simples uma vez
-      try {
-        console.log('🔄 Tentando novamente...');
-        
-        const { error: retryQuickError } = await supabase
-          .from('quick_onboarding')
-          .update({ is_completed: true, updated_at: new Date().toISOString() })
-          .eq('user_id', user.id);
-
-        const { error: retryProgressError } = await supabase
-          .from('onboarding_progress')
-          .update({ 
-            is_completed: true,
-            current_step: 'completed',
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', user.id);
-
-        if (!retryQuickError && !retryProgressError) {
-          console.log('✅ Sucesso no retry!');
-          toast.success('Onboarding concluído com sucesso!');
-          return true;
-        }
-      } catch (retryError) {
-        console.error('❌ Erro no retry:', retryError);
+      if (quickUpdateError) {
+        console.warn('⚠️ Erro ao atualizar quick_onboarding:', quickUpdateError);
+        // Não falhar por causa disso, pois o principal já foi salvo
       }
 
-      toast.error('Erro ao finalizar onboarding. Verifique sua conexão e tente novamente.');
-      return false;
+      console.log('✅ Onboarding finalizado com sucesso!', progressResult);
+      toast.success('Onboarding concluído com sucesso!');
+      
+      return true;
+
+    } catch (error: any) {
+      console.error('❌ Erro na finalização do onboarding:', error);
+      
+      // Retry uma vez em caso de erro de rede
+      try {
+        console.log('🔄 Tentativa de retry...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Preparar dados simplificados para retry
+        const retryData = {
+          user_id: user.id,
+          current_step: 'completed',
+          is_completed: true,
+          completed_steps: ['personal_info', 'professional_info', 'ai_experience', 'trail_generation'],
+          personal_info: { name: data.name || '', email: data.email || '' },
+          professional_info: { company_name: data.company_name || '' },
+          business_goals: { primary_goal: data.main_goal || '' },
+          ai_experience: { knowledge_level: data.ai_knowledge_level || '' },
+          complementary_info: { how_found_us: data.how_found_us || '' },
+          business_context: {},
+          experience_personalization: {},
+          updated_at: new Date().toISOString()
+        };
+
+        const { error: retryError } = await supabase
+          .from('onboarding_progress')
+          .upsert(retryData, { 
+            onConflict: 'user_id',
+            ignoreDuplicates: false 
+          });
+
+        if (retryError) throw retryError;
+        
+        console.log('✅ Retry bem-sucedido!');
+        toast.success('Onboarding concluído com sucesso!');
+        return true;
+        
+      } catch (retryError) {
+        console.error('❌ Erro no retry:', retryError);
+        toast.error('Erro ao finalizar onboarding. Tente novamente.');
+        return false;
+      }
     }
-  }, [user, canProceed, validateDataInDatabase, ensureOnboardingProgress]);
+  }, [user, data, validateAllSteps, supabase]);
 
   return {
     currentStep,
@@ -303,12 +274,11 @@ export const useQuickOnboardingOptimized = () => {
     updateField,
     nextStep,
     previousStep,
-    canProceed: canProceed(),
+    canProceed,
     isLoading,
     hasExistingData,
     loadError,
-    totalSteps: 4,
-    // Adicionar estado de salvamento
+    totalSteps,
     isSaving,
     lastSaveTime,
     completeOnboarding

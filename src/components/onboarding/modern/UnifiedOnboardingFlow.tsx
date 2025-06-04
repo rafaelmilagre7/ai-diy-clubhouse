@@ -42,13 +42,20 @@ export const UnifiedOnboardingFlow: React.FC = () => {
       toast.dismiss(loadingToast);
       
       if (success) {
-        console.log('✅ Onboarding finalizado com sucesso!', data);
+        console.log('✅ Onboarding finalizado com sucesso!');
+        
+        // Mostrar sucesso e aguardar antes de redirecionar
+        toast.success('Onboarding concluído! Redirecionando...', {
+          duration: 2000
+        });
         
         // Aguardar um momento para garantir que a operação foi concluída
         setTimeout(() => {
           navigate('/onboarding-new/completed');
-        }, 1000);
+        }, 2000);
       } else {
+        console.error('❌ Falha na finalização do onboarding');
+        toast.error('Erro ao finalizar onboarding. Tente novamente.');
         setIsCompleting(false);
       }
     } catch (error) {
@@ -119,7 +126,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
                   <Loader2 className="h-5 w-5 text-blue-400 animate-spin" />
                   <div>
                     <p className="text-blue-400 font-medium">Finalizando seu onboarding...</p>
-                    <p className="text-blue-300 text-sm">Salvando seus dados e criando sua trilha personalizada</p>
+                    <p className="text-blue-300 text-sm">Salvando seus dados e liberando acesso às funcionalidades</p>
                   </div>
                 </div>
               </div>
