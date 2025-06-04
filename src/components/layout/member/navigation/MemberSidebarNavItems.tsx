@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useNetworkingAccess } from '@/hooks/networking/useNetworkingAccess';
 import { useAuth } from '@/contexts/auth';
+import { usePermissions } from '@/hooks/auth/usePermissions';
 
 interface MemberSidebarNavItemsProps {
   sidebarOpen: boolean;
@@ -26,6 +27,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
   const location = useLocation();
   const { hasAccess: hasNetworkingAccess } = useNetworkingAccess();
   const { profile } = useAuth();
+  const { hasPermission } = usePermissions();
 
   const menuItems = [
     {
@@ -69,11 +71,19 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
     });
   }
 
-  // Adicionar área de formação se o usuário tem acesso
-  if (profile?.role === 'formacao' || profile?.role === 'admin') {
+  // Verificar se tem permissão para gestão do LMS (Área de Formação)
+  if (hasPermission('lms.manage')) {
     menuItems.push({
       title: "Área de Formação",
       href: "/formacao",
+      icon: GraduationCap,
+    });
+  }
+  // Se não tem permissão para gestão mas tem acesso aos cursos (consumo)
+  else if (hasPermission('formacao.view') || profile?.role === 'formacao' || profile?.role === 'membro_club') {
+    menuItems.push({
+      title: "Cursos",
+      href: "/learning",
       icon: GraduationCap,
     });
   }
