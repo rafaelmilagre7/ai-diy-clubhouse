@@ -1,6 +1,7 @@
+
 export * from './types/database.types';
 
-export type UserRole = 'admin' | 'member' | 'formacao';
+export type UserRole = 'admin' | 'formacao' | 'membro_club';
 
 export interface UserProfile {
   id: string;

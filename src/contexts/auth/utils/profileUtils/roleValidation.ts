@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
  * Determines the user role based on email address
  */
 export const determineRoleFromEmail = (email: string | undefined | null): UserRole => {
-  if (!email) return 'member';
+  if (!email) return 'formacao';
   
   // Lista de emails administrativos
   const isAdminEmail = email === 'admin@teste.com' || 
@@ -14,7 +14,15 @@ export const determineRoleFromEmail = (email: string | undefined | null): UserRo
                         email === 'rafael@viverdeia.ai' ||
                         email?.endsWith('@viverdeia.ai');
                         
-  return isAdminEmail ? 'admin' : 'member';
+  if (isAdminEmail) return 'admin';
+  
+  // Emails para formação (padrão para novos usuários)
+  if (email.includes('formacao') || email.includes('curso')) {
+    return 'formacao';
+  }
+  
+  // Para outros casos, retorna formacao como padrão
+  return 'formacao';
 };
 
 /**

@@ -83,8 +83,8 @@ export const UserRoleManager = ({
   const formatRoleName = (roleName: string): string => {
     const roleMap: Record<string, string> = {
       "admin": "Administrador",
-      "member": "Membro",
-      "formacao": "Formação"
+      "formacao": "Membro da Formação",
+      "membro_club": "Membro do Club"
     };
     
     return roleMap[roleName.toLowerCase()] || roleName;
