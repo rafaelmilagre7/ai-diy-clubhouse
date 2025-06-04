@@ -49,7 +49,6 @@ export const useQuickOnboardingOptimized = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaveTime, setLastSaveTime] = useState<number | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const [isCompleted, setIsCompleted] = useState<boolean>(false);
   const [saveTimeoutId, setSaveTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
   const totalSteps = 4;
@@ -76,19 +75,8 @@ export const useQuickOnboardingOptimized = () => {
         setData(existingData);
         setHasExistingData(true);
         
-        // Normalizar isCompleted para boolean puro
-        const normalizedIsCompleted = (
-          existingData.isCompleted === true ||
-          existingData.isCompleted === 'true' ||
-          existingData.is_completed === true ||
-          existingData.is_completed === 'true'
-        );
-        setIsCompleted(normalizedIsCompleted);
-        
         // Definir step atual baseado nos dados
-        if (normalizedIsCompleted) {
-          setCurrentStep(4);
-        } else if (existingData.main_goal) {
+        if (existingData.main_goal) {
           setCurrentStep(4);
         } else if (existingData.company_name && existingData.role) {
           setCurrentStep(3);
@@ -100,7 +88,6 @@ export const useQuickOnboardingOptimized = () => {
 
         devLog.info('Dados carregados', { 
           hasData: !!existingData, 
-          isCompleted: normalizedIsCompleted,
           currentStep: currentStep 
         });
       }
@@ -111,6 +98,12 @@ export const useQuickOnboardingOptimized = () => {
       setIsLoading(false);
     }
   }, [user?.id, currentStep]);
+
+  // Normalizar isCompleted para boolean puro
+  const isCompleted: boolean = useMemo(() => {
+    return data?.is_completed === true || data?.is_completed === 'true' || 
+           data?.isCompleted === true || data?.isCompleted === 'true';
+  }, [data?.is_completed, data?.isCompleted]);
 
   // Verificar se pode finalizar
   const canFinalize = useMemo(() => {
@@ -235,7 +228,6 @@ export const useQuickOnboardingOptimized = () => {
 
       if (error) throw error;
 
-      setIsCompleted(true);
       setLastSaveTime(Date.now());
       devLog.info('Onboarding finalizado com sucesso');
       return true;
@@ -280,5 +272,5 @@ export const useQuickOnboardingOptimized = () => {
     isCompleted,
     retryCount,
     canFinalize
-  } as const;
+  };
 };
