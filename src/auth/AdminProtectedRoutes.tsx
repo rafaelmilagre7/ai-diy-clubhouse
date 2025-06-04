@@ -10,12 +10,19 @@ import AdminDashboard from '@/pages/admin/AdminDashboard';
 import AdminSolutions from '@/pages/admin/AdminSolutions';
 import SolutionEditor from '@/pages/admin/SolutionEditor';
 
+// LMS (Área de Formação)
+import AdminCourses from '@/pages/admin/AdminCourses';
+import AdminLessons from '@/pages/admin/AdminLessons';
+import LessonEditor from '@/pages/admin/LessonEditor';
+
 // Outros módulos administrativos
 import AdminUsers from '@/pages/admin/AdminUsers';
+import AdminInvites from '@/pages/admin/AdminInvites';
 import AdminEvents from '@/pages/admin/AdminEvents';
 import AdminRoles from '@/pages/admin/AdminRoles';
 import AdminSuggestions from '@/pages/admin/AdminSuggestions';
 import AdminOnboarding from '@/pages/admin/AdminOnboarding';
+import AdminConfig from '@/pages/admin/AdminConfig';
 
 const AdminProtectedRoutes = () => {
   return (
@@ -28,7 +35,7 @@ const AdminProtectedRoutes = () => {
       <Route path="solutions/:id" element={<SolutionEditor />} />
       <Route path="solutions/new" element={<SolutionEditor />} />
       
-      {/* LMS - Área de Formação (rotas comentadas temporariamente - componentes não existem)
+      {/* LMS - Área de Formação (protegida por permissão) */}
       <Route 
         path="courses" 
         element={
@@ -61,14 +68,12 @@ const AdminProtectedRoutes = () => {
           </SmartFeatureGuard>
         } 
       />
-      */}
       
       {/* Usuários */}
       <Route path="users" element={<AdminUsers />} />
       
-      {/* Convites - comentado temporariamente, componente não existe
+      {/* Convites */}
       <Route path="invites" element={<AdminInvites />} />
-      */}
       
       {/* Eventos */}
       <Route path="events" element={<AdminEvents />} />
@@ -82,9 +87,8 @@ const AdminProtectedRoutes = () => {
       {/* Onboarding */}
       <Route path="onboarding" element={<AdminOnboarding />} />
       
-      {/* Configurações - comentado temporariamente, componente não existe
+      {/* Configurações */}
       <Route path="config" element={<AdminConfig />} />
-      */}
       
       {/* Rota padrão */}
       <Route path="*" element={<Navigate to="/admin" replace />} />
