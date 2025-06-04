@@ -1,30 +1,52 @@
-
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { QuickOnboardingData } from '@/types/quickOnboarding';
-import { useAuth } from '@/contexts/auth';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useQuickOnboardingAutoSave } from './useQuickOnboardingAutoSave';
-import { OnboardingValidator } from '@/utils/onboardingValidation';
+import { useAuth } from '@/contexts/auth';
+import { QuickOnboardingData } from '@/types/quickOnboarding';
+import { toast } from 'sonner';
 
-export const useQuickOnboardingOptimized = () => {
+export interface UseQuickOnboardingOptimizedResult {
+  currentStep: number;
+  data: QuickOnboardingData;
+  updateField: (field: string, value: any) => void;
+  nextStep: () => void;
+  previousStep: () => void;
+  canProceed: () => boolean;
+  isLoading: boolean;
+  hasExistingData: boolean;
+  loadError: string | null;
+  totalSteps: number;
+  isSaving: boolean;
+  lastSaveTime: number | null;
+  completeOnboarding: () => Promise<boolean>;
+  isCompleted: boolean;
+  retryCount: number;
+}
+
+export const useQuickOnboardingOptimized = (): UseQuickOnboardingOptimizedResult => {
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [hasExistingData, setHasExistingData] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const totalSteps = 4;
+
   const [data, setData] = useState<QuickOnboardingData>({
     name: '',
     email: '',
     whatsapp: '',
     country_code: '+55',
-    birth_date: null,
-    instagram_url: null,
-    linkedin_url: null,
+    birth_date: '',
+    instagram_url: '',
+    linkedin_url: '',
     how_found_us: '',
-    referred_by: null,
+    referred_by: '',
     company_name: '',
     role: '',
     company_size: '',
     company_segment: '',
-    company_website: null,
+    company_website: '',
     annual_revenue_range: '',
     main_challenge: '',
     ai_knowledge_level: '',
@@ -35,313 +57,276 @@ export const useQuickOnboardingOptimized = () => {
     previous_tools: []
   });
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasExistingData, setHasExistingData] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
-  const loadAttempted = useRef(false);
-  
-  const totalSteps = 4;
-
-  // Auto-save hook
-  const { isSaving, lastSaveTime } = useQuickOnboardingAutoSave(data);
-
-  // Função para sanitizar payload rigorosamente
-  const sanitizePayload = (payload: any): any => {
-    console.log('🧹 Sanitizando payload antes do envio');
-    console.log('📥 Payload original:', JSON.stringify(payload, null, 2));
-    
-    const clean = { ...payload };
-    
-    // Lista rigorosa de campos que NUNCA devem existir
-    const forbiddenFields = [
-      'updated_at', 'created_at', 'id', 'user_id', 
-      'name', // Este campo aparentemente não existe na tabela
-      'profiles', 'auth', 'metadata'
-    ];
-    
-    forbiddenFields.forEach(field => {
-      if (field in clean) {
-        console.log(`❌ Removendo campo proibido: ${field}`);
-        delete clean[field];
-      }
-    });
-    
-    // Remove campos undefined/null/vazios
-    Object.keys(clean).forEach(key => {
-      if (clean[key] === undefined || clean[key] === null || clean[key] === '') {
-        console.log(`❌ Removendo campo vazio: ${key}`);
-        delete clean[key];
-      }
-    });
-
-    console.log('✅ Payload sanitizado final:', JSON.stringify(clean, null, 2));
-    return clean;
-  };
-
-  // Carregar dados existentes
-  useEffect(() => {
-    if (!user || loadAttempted.current) return;
-    
-    const loadExistingData = async () => {
-      loadAttempted.current = true;
-      setIsLoading(true);
-      console.log('📥 Carregando dados existentes do onboarding...');
-
-      try {
-        // Verificar dados em quick_onboarding
-        const { data: quickData, error: quickError } = await supabase
-          .from('quick_onboarding')
-          .select('*')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (quickError && quickError.code !== 'PGRST116') {
-          console.error('❌ Erro ao carregar quick_onboarding:', quickError);
-          throw quickError;
-        }
-
-        if (quickData) {
-          console.log('✅ Dados encontrados em quick_onboarding:', quickData);
-          
-          if (quickData.is_completed) {
-            console.log('🎯 Onboarding já está marcado como concluído');
-            setIsCompleted(true);
-            setCurrentStep(4);
-          }
-
-          // Mapear dados para o estado
-          setData({
-            name: quickData.name || '',
-            email: quickData.email || '',
-            whatsapp: quickData.whatsapp || '',
-            country_code: quickData.country_code || '+55',
-            birth_date: quickData.birth_date || null,
-            instagram_url: quickData.instagram_url || null,
-            linkedin_url: quickData.linkedin_url || null,
-            how_found_us: quickData.how_found_us || '',
-            referred_by: quickData.referred_by || null,
-            company_name: quickData.company_name || '',
-            role: quickData.role || '',
-            company_size: quickData.company_size || '',
-            company_segment: quickData.company_segment || '',
-            company_website: quickData.company_website || null,
-            annual_revenue_range: quickData.annual_revenue_range || '',
-            main_challenge: quickData.main_challenge || '',
-            ai_knowledge_level: quickData.ai_knowledge_level || '',
-            uses_ai: quickData.uses_ai || '',
-            main_goal: quickData.main_goal || '',
-            desired_ai_areas: quickData.desired_ai_areas || [],
-            has_implemented: quickData.has_implemented || '',
-            previous_tools: quickData.previous_tools || []
-          });
-
-          setHasExistingData(true);
-          
-          // Determinar step atual baseado nos dados
-          const determineStep = () => {
-            if (!quickData.name || !quickData.email || !quickData.whatsapp || !quickData.how_found_us) {
-              return 1;
-            }
-            if (!quickData.company_name || !quickData.role || !quickData.company_size || !quickData.company_segment || !quickData.annual_revenue_range || !quickData.main_challenge) {
-              return 2;
-            }
-            if (!quickData.ai_knowledge_level || !quickData.uses_ai || !quickData.main_goal) {
-              return 3;
-            }
-            return quickData.is_completed ? 4 : 4; // Se todos os dados estão preenchidos, vai para finalização
-          };
-
-          setCurrentStep(determineStep());
-        }
-
-      } catch (error: any) {
-        console.error('❌ Erro ao carregar dados:', error);
-        setLoadError(error.message || 'Erro ao carregar dados do onboarding');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadExistingData();
-  }, [user]);
-
-  // Função para finalizar onboarding
-  const completeOnboarding = async (): Promise<boolean> => {
-    if (!user) {
-      console.error('❌ Usuário não encontrado');
+  // Função específica para validar se o usuário está autenticado
+  const validateUserAuth = useCallback(async () => {
+    if (!user?.id) {
+      console.error('❌ Usuário não autenticado');
       return false;
     }
 
+    try {
+      // Verificar se a sessão está válida
+      const { data: session, error } = await supabase.auth.getSession();
+      if (error || !session?.session) {
+        console.error('❌ Sessão inválida:', error);
+        return false;
+      }
+      
+      console.log('✅ Usuário autenticado:', user.id);
+      return true;
+    } catch (error) {
+      console.error('❌ Erro ao validar autenticação:', error);
+      return false;
+    }
+  }, [user]);
+
+  // Função para sanitizar rigorosamente o payload
+  const sanitizeQuickOnboardingPayload = useCallback((payload: any) => {
+    console.log('🧹 Sanitizando payload para quick_onboarding');
+    console.log('📥 Payload original:', JSON.stringify(payload, null, 2));
+    
+    // Lista de campos permitidos na tabela quick_onboarding
+    const allowedFields = [
+      'user_id',
+      'email',
+      'whatsapp', 
+      'country_code',
+      'birth_date',
+      'instagram_url',
+      'linkedin_url',
+      'how_found_us',
+      'referred_by',
+      'company_name',
+      'role',
+      'company_size',
+      'company_segment',
+      'company_website',
+      'annual_revenue_range',
+      'main_challenge',
+      'ai_knowledge_level',
+      'uses_ai',
+      'main_goal',
+      'desired_ai_areas',
+      'has_implemented',
+      'previous_tools',
+      'is_completed'
+    ];
+    
+    const clean: any = {};
+    
+    // Incluir apenas campos permitidos
+    allowedFields.forEach(field => {
+      if (field === 'user_id') {
+        clean[field] = user?.id;
+      } else if (field === 'is_completed') {
+        clean[field] = false; // Sempre false até finalização manual
+      } else if (payload.hasOwnProperty(field)) {
+        const value = payload[field];
+        
+        // Tratar casos especiais
+        if (field === 'birth_date' && value === '') {
+          clean[field] = null;
+        } else if (field === 'instagram_url' && value === '') {
+          clean[field] = null;
+        } else if (field === 'linkedin_url' && value === '') {
+          clean[field] = null;
+        } else if (field === 'company_website' && value === '') {
+          clean[field] = null;
+        } else if (field === 'referred_by' && value === '') {
+          clean[field] = null;
+        } else if (['desired_ai_areas', 'previous_tools'].includes(field)) {
+          clean[field] = Array.isArray(value) ? value : [];
+        } else if (value !== undefined && value !== '') {
+          clean[field] = value;
+        }
+      }
+    });
+
+    // Garantir campos obrigatórios
+    if (!clean.email || clean.email === '') {
+      clean.email = user?.email || '';
+    }
+
+    console.log('✅ Payload sanitizado:', JSON.stringify(clean, null, 2));
+    return clean;
+  }, [user]);
+
+  const completeOnboarding = useCallback(async (): Promise<boolean> => {
     console.log('🎯 Iniciando finalização do onboarding...');
+    
+    // Validar autenticação
+    const isAuthValid = await validateUserAuth();
+    if (!isAuthValid) {
+      toast.error('Erro de autenticação. Faça login novamente.');
+      return false;
+    }
 
     try {
-      // Preparar dados limpos para quick_onboarding
-      const quickOnboardingPayload = sanitizePayload({
-        email: data.email || '',
-        whatsapp: data.whatsapp || '',
-        country_code: data.country_code || '+55',
-        birth_date: data.birth_date || null,
-        instagram_url: data.instagram_url || null,
-        linkedin_url: data.linkedin_url || null,
-        how_found_us: data.how_found_us || '',
-        referred_by: data.referred_by || null,
-        company_name: data.company_name || '',
-        role: data.role || '',
-        company_size: data.company_size || '',
-        company_segment: data.company_segment || '',
-        company_website: data.company_website || null,
-        annual_revenue_range: data.annual_revenue_range || '',
-        main_challenge: data.main_challenge || '',
-        ai_knowledge_level: data.ai_knowledge_level || '',
-        uses_ai: data.uses_ai || '',
-        main_goal: data.main_goal || '',
-        desired_ai_areas: data.desired_ai_areas || [],
-        has_implemented: data.has_implemented || '',
-        previous_tools: data.previous_tools || [],
+      // Preparar payload final com is_completed = true
+      const finalPayload = sanitizeQuickOnboardingPayload({
+        ...data,
         is_completed: true
       });
 
-      console.log('📤 Enviando para quick_onboarding...');
-      
-      const { error: quickError } = await supabase
+      console.log('📤 Enviando payload final para Supabase');
+      console.log('🔑 User ID:', user?.id);
+      console.log('📊 Payload:', JSON.stringify(finalPayload, null, 2));
+
+      // Usar upsert com on_conflict baseado em user_id
+      const { data: result, error } = await supabase
         .from('quick_onboarding')
-        .upsert(quickOnboardingPayload, { 
+        .upsert(finalPayload, { 
           onConflict: 'user_id',
           ignoreDuplicates: false 
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Erro detalhado do Supabase:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
         });
 
-      if (quickError) {
-        console.error('❌ Erro ao salvar em quick_onboarding:', quickError);
-        
-        // Se erro 400, não fazer retry
-        if (quickError.code === '42703' || quickError.message?.includes('does not exist')) {
-          console.error('❌ Erro estrutural detectado - payload inválido');
-          setRetryCount(prev => prev + 1);
+        // Tratamento específico de erros
+        if (error.code === '42703') {
+          toast.error('Erro de estrutura: campo não existe na tabela');
+          return false;
+        } else if (error.code === '23505') {
+          toast.error('Erro: dados duplicados detectados');
+          return false;
+        } else if (error.message?.includes('RLS')) {
+          toast.error('Erro de permissão: verifique autenticação');
           return false;
         }
+
+        // Incrementar contador de retry apenas para erros não estruturais
+        if (retryCount < 3) {
+          console.log(`⚠️ Tentativa ${retryCount + 1}/3 falhará - incrementando retry`);
+          setRetryCount(prev => prev + 1);
+        }
         
-        throw quickError;
+        throw error;
       }
 
-      console.log('✅ quick_onboarding salvo com sucesso');
-
-      // Também salvar em onboarding_progress para compatibilidade
-      await saveToOnboardingProgress();
-
+      console.log('✅ Onboarding finalizado com sucesso:', result);
       setIsCompleted(true);
-      console.log('🎉 Onboarding finalizado com sucesso!');
+      setRetryCount(0);
+      
       return true;
 
     } catch (error: any) {
       console.error('❌ Erro na finalização:', error);
-      setRetryCount(prev => prev + 1);
+      
+      // Não fazer retry para erros 400/403
+      if (error.status === 400 || error.status === 403) {
+        console.error('❌ Erro crítico - interrompendo retries');
+        return false;
+      }
+      
       return false;
     }
-  };
+  }, [data, user, validateUserAuth, sanitizeQuickOnboardingPayload, retryCount]);
 
-  // Função auxiliar para salvar em onboarding_progress
-  const saveToOnboardingProgress = async () => {
+  const loadExistingData = useCallback(async () => {
+    if (!user?.id) return;
+
+    setIsLoading(true);
     try {
-      const progressPayload = sanitizePayload({
-        personal_info: {
-          email: data.email,
-          phone: data.whatsapp,
-          ddi: data.country_code,
-          linkedin: data.linkedin_url,
-          instagram: data.instagram_url
-        },
-        professional_info: {
-          company_name: data.company_name,
-          current_position: data.role,
-          company_size: data.company_size,
-          company_sector: data.company_segment,
-          company_website: data.company_website,
-          annual_revenue: data.annual_revenue_range
-        },
-        ai_experience: {
-          knowledge_level: data.ai_knowledge_level,
-          previous_tools: data.previous_tools,
-          desired_ai_areas: data.desired_ai_areas,
-          has_implemented: data.has_implemented,
-          uses_ai: data.uses_ai
-        },
-        business_goals: {
-          primary_goal: data.main_goal,
-          expected_outcomes: []
-        },
-        business_context: {
-          business_challenges: data.main_challenge ? [data.main_challenge] : []
-        },
-        complementary_info: {
-          how_found_us: data.how_found_us,
-          referred_by: data.referred_by
-        },
-        experience_personalization: {},
-        current_step: 'completed',
-        completed_steps: ['personal_info', 'professional_info', 'ai_experience'],
-        is_completed: true,
-        // Campos top-level para compatibilidade
-        company_name: data.company_name || '',
-        company_size: data.company_size || '',
-        company_sector: data.company_segment || '',
-        company_website: data.company_website || '',
-        current_position: data.role || '',
-        annual_revenue: data.annual_revenue_range || ''
-      });
+      console.log('📊 Carregando dados existentes para:', user.id);
+      
+      const { data: existingData, error } = await supabase
+        .from('quick_onboarding')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      const { error } = await supabase
-        .from('onboarding_progress')
-        .upsert(progressPayload, { 
-          onConflict: 'user_id',
-          ignoreDuplicates: false 
+      if (error && error.code !== 'PGRST116') {
+        console.error('❌ Erro ao carregar dados:', error);
+        setLoadError('Erro ao carregar dados salvos');
+        return;
+      }
+
+      if (existingData) {
+        console.log('✅ Dados existentes encontrados');
+        setHasExistingData(true);
+        setIsCompleted(existingData.is_completed || false);
+        
+        // Mapear dados existentes para o estado
+        setData({
+          name: existingData.name || '',
+          email: existingData.email || '',
+          whatsapp: existingData.whatsapp || '',
+          country_code: existingData.country_code || '+55',
+          birth_date: existingData.birth_date || '',
+          instagram_url: existingData.instagram_url || '',
+          linkedin_url: existingData.linkedin_url || '',
+          how_found_us: existingData.how_found_us || '',
+          referred_by: existingData.referred_by || '',
+          company_name: existingData.company_name || '',
+          role: existingData.role || '',
+          company_size: existingData.company_size || '',
+          company_segment: existingData.company_segment || '',
+          company_website: existingData.company_website || '',
+          annual_revenue_range: existingData.annual_revenue_range || '',
+          main_challenge: existingData.main_challenge || '',
+          ai_knowledge_level: existingData.ai_knowledge_level || '',
+          uses_ai: existingData.uses_ai || '',
+          main_goal: existingData.main_goal || '',
+          desired_ai_areas: existingData.desired_ai_areas || [],
+          has_implemented: existingData.has_implemented || '',
+          previous_tools: existingData.previous_tools || []
         });
-
-      if (error) {
-        console.error('⚠️ Erro ao salvar em onboarding_progress:', error);
-      } else {
-        console.log('✅ onboarding_progress salvo');
       }
     } catch (error) {
-      console.error('⚠️ Erro ao salvar em onboarding_progress:', error);
+      console.error('❌ Erro inesperado:', error);
+      setLoadError('Erro inesperado ao carregar dados');
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [user]);
 
-  // Função para avançar etapa
-  const nextStep = useCallback(() => {
-    if (currentStep < totalSteps) {
-      setCurrentStep(prev => prev + 1);
+  useEffect(() => {
+    if (user?.id) {
+      loadExistingData();
+    } else {
+      setIsLoading(false);
     }
-  }, [currentStep]);
+  }, [user, loadExistingData]);
 
-  // Função para voltar etapa
-  const previousStep = useCallback(() => {
-    if (currentStep > 1) {
-      setCurrentStep(prev => prev - 1);
-    }
-  }, [currentStep]);
-
-  // Função para validar se pode prosseguir
-  const canProceed = useCallback((): boolean => {
-    switch (currentStep) {
-      case 1:
-        return OnboardingValidator.validateStep1(data).isValid;
-      case 2:
-        return OnboardingValidator.validateStep2(data).isValid;
-      case 3:
-        return OnboardingValidator.validateStep3(data).isValid;
-      default:
-        return OnboardingValidator.validateAllSteps(data).isValid;
-    }
-  }, [currentStep, data]);
-
-  // Função para atualizar dados
-  const updateField = useCallback((field: keyof QuickOnboardingData, value: any) => {
+  const updateField = useCallback((field: string, value: any) => {
     setData(prev => ({
       ...prev,
       [field]: value
     }));
   }, []);
+
+  const nextStep = useCallback(() => {
+    if (currentStep < totalSteps) {
+      setCurrentStep(prev => prev + 1);
+    }
+  }, []);
+
+  const previousStep = useCallback(() => {
+    if (currentStep > 1) {
+      setCurrentStep(prev => prev - 1);
+    }
+  }, []);
+
+  const canProceed = useCallback(() => {
+    switch (currentStep) {
+      case 1:
+        return !!(data.name && data.email && data.whatsapp && data.how_found_us);
+      case 2:
+        return !!(data.company_name && data.role && data.company_size && data.company_segment && data.annual_revenue_range && data.main_challenge);
+      case 3:
+        return !!(data.ai_knowledge_level && data.uses_ai && data.main_goal);
+      default:
+        return true;
+    }
+  }, [currentStep, data]);
 
   return {
     currentStep,
@@ -354,8 +339,8 @@ export const useQuickOnboardingOptimized = () => {
     hasExistingData,
     loadError,
     totalSteps,
-    isSaving,
-    lastSaveTime,
+    isSaving: false,
+    lastSaveTime: null,
     completeOnboarding,
     isCompleted,
     retryCount
