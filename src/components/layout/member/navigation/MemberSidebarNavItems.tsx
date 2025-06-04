@@ -71,7 +71,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
     });
   }
 
-  // Verificar se tem permissão para gestão do LMS (Área de Formação)
+  // Adicionar Área de Formação APENAS se tem permissão lms.manage
   if (hasPermission('lms.manage')) {
     menuItems.push({
       title: "Área de Formação",
