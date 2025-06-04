@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuickOnboardingOptimized } from '@/hooks/onboarding/useQuickOnboardingOptimized';
 import { useNavigate } from 'react-router-dom';
@@ -118,7 +117,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
   }
 
   // VERIFICAÇÃO PRINCIPAL: Se onboarding está realmente concluído no backend
-  if (isCompleted && !showSuccessScreen) {
+  if (Boolean(isCompleted) && !showSuccessScreen) {
     return <OnboardingReadOnlyView data={data} />;
   }
 

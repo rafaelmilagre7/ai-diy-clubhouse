@@ -1,6 +1,5 @@
-
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
 import { QuickOnboardingData } from '@/types/quickOnboarding';
 import { devLog } from '@/utils/devLogging';
@@ -10,7 +9,7 @@ const MAX_RETRIES = 3;
 
 export const useQuickOnboardingOptimized = () => {
   const { user } = useAuth();
-  const [currentStep, setCurrentStep] = useState<string>('1');
+  const [currentStep, setCurrentStep] = useState<number>(1);
   const [data, setData] = useState<QuickOnboardingData>({
     // Dados pessoais
     name: '',
@@ -261,7 +260,7 @@ export const useQuickOnboardingOptimized = () => {
   }, [saveTimeoutId]);
 
   return {
-    currentStep: parseInt(currentStep),
+    currentStep,
     data,
     updateField,
     nextStep,
