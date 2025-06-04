@@ -29,7 +29,7 @@ const NPSRatingButton: React.FC<NPSRatingButtonProps> = ({ value, selectedValue,
       type="button"
       variant="outline"
       className={`
-        w-12 h-12 p-0 flex-shrink-0 transition-all duration-300 font-semibold text-lg rounded-lg
+        w-10 h-10 sm:w-12 sm:h-12 p-0 flex-shrink-0 transition-all duration-300 font-semibold text-sm sm:text-lg rounded-lg
         ${getButtonStyles()}
         hover:scale-105 active:scale-95 focus:ring-2 focus:ring-viverblue/30
       `}
@@ -123,9 +123,9 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
               </p>
             </div>
             
-            {/* Grid responsivo para os botões NPS */}
+            {/* Grid responsivo para os botões NPS - uma única linha */}
             <div className="space-y-6">
-              <div className="flex flex-wrap justify-center gap-2 max-w-3xl mx-auto">
+              <div className="flex justify-center gap-1 sm:gap-2 overflow-x-auto px-2">
                 {Array.from({ length: 11 }, (_, i) => (
                   <NPSRatingButton
                     key={i}
@@ -137,7 +137,7 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
               </div>
               
               {/* Labels da escala */}
-              <div className="flex justify-between text-sm font-medium text-gray-600 max-w-3xl mx-auto px-4">
+              <div className="flex justify-between text-sm font-medium text-gray-600 px-4">
                 <span className="text-left">Não recomendaria</span>
                 <span className="text-right">Recomendaria totalmente</span>
               </div>
