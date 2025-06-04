@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -85,8 +84,12 @@ export const LoginForm = () => {
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <div className="relative">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <Mail className="w-5 h-5 text-gray-400" strokeWidth={1.5} aria-hidden="true" />
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
+            <Mail 
+              className="w-5 h-5 text-gray-400" 
+              strokeWidth={1.5} 
+              aria-hidden="true" 
+            />
           </div>
           <Input
             id="email"
@@ -94,7 +97,7 @@ export const LoginForm = () => {
             placeholder="seu@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="pl-10 bg-gray-800 border-gray-700 text-white"
+            className="pl-11 bg-gray-800 border-gray-700 text-white text-base font-medium antialiased"
           />
         </div>
       </div>
@@ -102,8 +105,12 @@ export const LoginForm = () => {
       <div className="space-y-2">
         <Label htmlFor="password">Senha</Label>
         <div className="relative">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <Lock className="w-5 h-5 text-gray-400" strokeWidth={1.5} aria-hidden="true" />
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
+            <Lock 
+              className="w-5 h-5 text-gray-400" 
+              strokeWidth={1.5} 
+              aria-hidden="true" 
+            />
           </div>
           <Input
             id="password"
@@ -111,18 +118,26 @@ export const LoginForm = () => {
             placeholder="********"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="pl-10 pr-10 bg-gray-800 border-gray-700 text-white"
+            className="pl-11 pr-12 bg-gray-800 border-gray-700 text-white text-base font-medium antialiased"
           />
           <button
             type="button"
             onClick={handleTogglePassword}
-            className="absolute inset-y-0 right-0 flex items-center pr-3"
+            className="absolute inset-y-0 right-0 flex items-center pr-3 z-10"
             aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
           >
             {showPassword ? (
-              <EyeOff className="w-5 h-5 text-gray-400" strokeWidth={1.5} aria-hidden="true" />
+              <EyeOff 
+                className="w-5 h-5 text-gray-400" 
+                strokeWidth={1.5} 
+                aria-hidden="true" 
+              />
             ) : (
-              <Eye className="w-5 h-5 text-gray-400" strokeWidth={1.5} aria-hidden="true" />
+              <Eye 
+                className="w-5 h-5 text-gray-400" 
+                strokeWidth={1.5} 
+                aria-hidden="true" 
+              />
             )}
           </button>
         </div>

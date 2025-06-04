@@ -40,9 +40,13 @@ const EmailPasswordForm = ({
         <Label htmlFor="email" className="text-white font-semibold text-sm">
           Email
         </Label>
-        <div className="relative group">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <Mail className="w-5 h-5 text-gray-400" strokeWidth={1.5} aria-hidden="true" />
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
+            <Mail 
+              className="w-5 h-5 text-gray-400" 
+              strokeWidth={1.5} 
+              aria-hidden="true" 
+            />
           </div>
           <Input
             id="email"
@@ -53,7 +57,7 @@ const EmailPasswordForm = ({
             disabled={isLoading}
             required
             autoComplete="username"
-            className="pl-10 h-12 bg-white/10 backdrop-blur-sm border-white/20 text-white placeholder:text-white/50 focus:border-viverblue focus:ring-2 focus:ring-viverblue/20 transition-all duration-200 hover:bg-white/15"
+            className="pl-11 h-12 bg-white/10 backdrop-blur-sm border-white/20 text-white placeholder:text-white/50 focus:border-viverblue focus:ring-2 focus:ring-viverblue/20 transition-all duration-200 hover:bg-white/15 text-base font-medium antialiased"
           />
         </div>
       </motion.div>
@@ -76,9 +80,13 @@ const EmailPasswordForm = ({
             Esqueceu sua senha?
           </Link>
         </div>
-        <div className="relative group">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <Lock className="w-5 h-5 text-gray-400" strokeWidth={1.5} aria-hidden="true" />
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
+            <Lock 
+              className="w-5 h-5 text-gray-400" 
+              strokeWidth={1.5} 
+              aria-hidden="true" 
+            />
           </div>
           <Input
             id="password"
@@ -89,19 +97,27 @@ const EmailPasswordForm = ({
             disabled={isLoading}
             required
             autoComplete="current-password"
-            className="pl-10 pr-12 h-12 bg-white/10 backdrop-blur-sm border-white/20 text-white placeholder:text-white/50 focus:border-viverblue focus:ring-2 focus:ring-viverblue/20 transition-all duration-200 hover:bg-white/15"
+            className="pl-11 pr-12 h-12 bg-white/10 backdrop-blur-sm border-white/20 text-white placeholder:text-white/50 focus:border-viverblue focus:ring-2 focus:ring-viverblue/20 transition-all duration-200 hover:bg-white/15 text-base font-medium antialiased"
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-viverblue transition-colors duration-200"
+            className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-viverblue transition-colors duration-200 z-10"
             tabIndex={-1}
             aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
           >
             {showPassword ? (
-              <EyeOff className="w-5 h-5" strokeWidth={1.5} aria-hidden="true" />
+              <EyeOff 
+                className="w-5 h-5" 
+                strokeWidth={1.5} 
+                aria-hidden="true" 
+              />
             ) : (
-              <Eye className="w-5 h-5" strokeWidth={1.5} aria-hidden="true" />
+              <Eye 
+                className="w-5 h-5" 
+                strokeWidth={1.5} 
+                aria-hidden="true" 
+              />
             )}
           </button>
         </div>
@@ -135,7 +151,11 @@ const EmailPasswordForm = ({
         >
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 w-5 h-5 animate-spin" strokeWidth={1.5} aria-hidden="true" />
+              <Loader2 
+                className="mr-2 w-5 h-5 animate-spin" 
+                strokeWidth={1.5} 
+                aria-hidden="true" 
+              />
               Entrando...
             </>
           ) : (
