@@ -8,7 +8,6 @@ import { ModernSuccessScreen } from './ModernSuccessScreen';
 import { OnboardingReadOnlyView } from './OnboardingReadOnlyView';
 import { Loader2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
-import { devLog } from '@/utils/devLogging';
 
 export const UnifiedOnboardingFlow: React.FC = () => {
   const navigate = useNavigate();
@@ -36,13 +35,11 @@ export const UnifiedOnboardingFlow: React.FC = () => {
 
   const handleFinish = async () => {
     if (isCompleting) {
-      devLog.warn('Finalização já em progresso, ignorando...');
       return;
     }
 
     // Validação prévia rigorosa
-    if (!canFinalize()) {
-      devLog.error('Validação prévia falhou - não pode finalizar');
+    if (!canFinalize) {
       toast.error('Complete todos os campos obrigatórios antes de finalizar', {
         duration: 3000
       });
@@ -50,7 +47,6 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     }
     
     setIsCompleting(true);
-    devLog.info('Iniciando finalização do onboarding...');
     
     try {
       const loadingToast = toast.loading('Finalizando seu onboarding...', {
@@ -62,8 +58,6 @@ export const UnifiedOnboardingFlow: React.FC = () => {
       toast.dismiss(loadingToast);
       
       if (success) {
-        devLog.info('Onboarding finalizado com sucesso!');
-        
         toast.success('Onboarding concluído com sucesso!', {
           duration: 2000
         });
@@ -74,7 +68,6 @@ export const UnifiedOnboardingFlow: React.FC = () => {
           setIsCompleting(false);
         }, 1500);
       } else {
-        devLog.error('Falha na finalização do onboarding');
         const retryMessage = retryCount > 0 ? ` (${retryCount}/3 tentativas)` : '';
         toast.error(`Erro ao finalizar onboarding${retryMessage}. Verifique os dados e tente novamente.`, {
           duration: 5000
@@ -82,7 +75,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
         setIsCompleting(false);
       }
     } catch (error) {
-      devLog.error('Erro na finalização:', error);
+      console.error('Erro na finalização:', error);
       toast.error('Erro inesperado ao finalizar onboarding. Tente novamente.', {
         duration: 5000
       });
@@ -91,7 +84,6 @@ export const UnifiedOnboardingFlow: React.FC = () => {
   };
 
   const handleNavigateFromSuccess = (path: string) => {
-    devLog.info(`Navegando para: ${path}`);
     navigate(path);
   };
 
@@ -127,36 +119,12 @@ export const UnifiedOnboardingFlow: React.FC = () => {
 
   // VERIFICAÇÃO PRINCIPAL: Se onboarding está realmente concluído no backend
   if (isCompleted && !showSuccessScreen) {
-    devLog.info('Onboarding completo - exibindo dados em modo somente leitura');
     return <OnboardingReadOnlyView data={data} />;
   }
 
   // Mostrar tela de sucesso apenas se foi explicitamente ativada após finalização
   if (showSuccessScreen) {
-    devLog.info('Exibindo tela de sucesso');
     return <ModernSuccessScreen onNavigate={handleNavigateFromSuccess} />;
-  }
-
-  // Controle de navegação seguro - impedir acesso à etapa 4 sem completar as anteriores
-  const canAccessStep4 = () => {
-    // Para acessar step 4, precisa ter completado as 3 primeiras etapas
-    if (currentStep === 4) {
-      return canFinalize();
-    }
-    
-    return true;
-  };
-
-  // Se tentou acessar etapa 4 sem completar as anteriores, voltar para etapa apropriada
-  if (currentStep === 4 && !canFinalize()) {
-    devLog.warn('Tentativa de acessar etapa 4 sem completar anteriores - redirecionando');
-    // Encontrar a primeira etapa incompleta
-    if (!canProceed()) {
-      // Redirecionar para etapa 1 no próximo render
-      setTimeout(() => {
-        devLog.info('Redirecionando para etapa 1');
-      }, 100);
-    }
   }
 
   // Mostrar indicador se dados foram carregados mas onboarding não está concluído
@@ -182,7 +150,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
               onUpdate={updateField}
               onNext={nextStep}
               onPrevious={previousStep}
-              canProceed={canProceed()}
+              canProceed={canProceed}
               currentStep={currentStep}
               totalSteps={totalSteps}
               isSaving={isSaving}
@@ -193,7 +161,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
       
       case 4:
         // Só renderizar etapa 4 se realmente pode finalizar
-        if (!canFinalize()) {
+        if (!canFinalize) {
           return (
             <div className="text-center py-12 space-y-4">
               <div className="flex items-center justify-center gap-2 text-yellow-400 mb-4">
@@ -212,7 +180,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
             isCompleting={isCompleting}
             retryCount={retryCount}
             onFinish={handleFinish}
-            canFinalize={canFinalize()}
+            canFinalize={canFinalize}
           />
         );
       
