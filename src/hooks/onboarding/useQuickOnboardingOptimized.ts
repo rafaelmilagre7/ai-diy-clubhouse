@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
@@ -272,7 +271,7 @@ export const useQuickOnboardingOptimized = () => {
     isSaving,
     lastSaveTime,
     completeOnboarding,
-    isCompleted,
+    isCompleted: data?.is_completed === true || data?.is_completed === 'true',
     retryCount,
     canFinalize
   };
