@@ -32,7 +32,7 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
         setIsSaving(true);
         console.log('💾 Auto-salvando dados do onboarding...');
         
-        // Preparar dados limpos para quick_onboarding (sem campos inválidos)
+        // Preparar dados limpos para quick_onboarding (SEM campos inválidos)
         const quickOnboardingData = {
           user_id: user.id,
           name: data.name || '',
@@ -58,7 +58,7 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
           has_implemented: data.has_implemented || '',
           previous_tools: data.previous_tools || [],
           is_completed: false // Manter false até conclusão manual
-          // Removido updated_at - será tratado pelo trigger
+          // REMOVIDO: updated_at (será tratado pelo trigger)
         };
 
         console.log('📤 Auto-save payload:', {
@@ -158,7 +158,8 @@ const saveToOnboardingProgress = async (data: QuickOnboardingData, userId: strin
       company_website: data.company_website || '',
       current_position: data.role || '',
       annual_revenue: data.annual_revenue_range || ''
-      // Removido name e updated_at - serão tratados pelo trigger
+      // REMOVIDO: name (não existe na tabela)
+      // REMOVIDO: updated_at (será tratado pelo trigger)
     };
 
     const { error } = await supabase

@@ -28,7 +28,8 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     isSaving,
     lastSaveTime,
     completeOnboarding,
-    isCompleted
+    isCompleted,
+    retryCount
   } = useQuickOnboardingOptimized();
 
   const handleFinish = async () => {
@@ -57,7 +58,8 @@ export const UnifiedOnboardingFlow: React.FC = () => {
         }, 1500);
       } else {
         console.error('❌ Falha na finalização do onboarding');
-        toast.error('Erro ao finalizar onboarding. Tente novamente.');
+        const retryMessage = retryCount > 0 ? ` (${retryCount} tentativas realizadas)` : '';
+        toast.error(`Erro ao finalizar onboarding${retryMessage}. Tente novamente.`);
         setIsCompleting(false);
       }
     } catch (error) {
@@ -146,6 +148,13 @@ export const UnifiedOnboardingFlow: React.FC = () => {
                     <p className="text-blue-300 text-sm">Salvando seus dados e liberando acesso às funcionalidades</p>
                   </div>
                 </div>
+              </div>
+            )}
+            {retryCount > 0 && (
+              <div className="mb-6 bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4">
+                <p className="text-yellow-400 text-sm">
+                  ⚠️ Algumas tentativas falharam ({retryCount} tentativas). Tentando novamente...
+                </p>
               </div>
             )}
             <EnhancedTrailMagicExperience 
