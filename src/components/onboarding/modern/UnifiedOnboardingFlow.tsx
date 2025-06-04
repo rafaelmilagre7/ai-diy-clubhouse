@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuickOnboardingOptimized } from '@/hooks/onboarding/useQuickOnboardingOptimized';
 import { useNavigate } from 'react-router-dom';
@@ -19,7 +20,6 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     updateField,
     nextStep,
     previousStep,
-    canProceed,
     isLoading,
     hasExistingData,
     loadError,
@@ -29,15 +29,13 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     completeOnboarding,
     isCompleted,
     retryCount,
+    canProceed,
     canFinalize
   } = useQuickOnboardingOptimized();
 
   const handleFinish = async () => {
-    if (isCompleting) {
-      return;
-    }
+    if (isCompleting) return;
 
-    // Validação prévia rigorosa
     if (!canFinalize) {
       toast.error('Complete todos os campos obrigatórios antes de finalizar', {
         duration: 3000
@@ -61,7 +59,6 @@ export const UnifiedOnboardingFlow: React.FC = () => {
           duration: 2000
         });
         
-        // Pequeno delay antes de mostrar tela de sucesso
         setTimeout(() => {
           setShowSuccessScreen(true);
           setIsCompleting(false);
@@ -86,7 +83,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     navigate(path);
   };
 
-  // Mostrar loading enquanto carrega dados existentes
+  // Loading state
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-12 space-y-4">
@@ -96,7 +93,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     );
   }
 
-  // Mostrar erro se houver problema no carregamento, mas ignorar erros relacionados a onboarding_completed
+  // Error state (ignorar erros de onboarding_completed)
   if (loadError && !loadError.includes('onboarding_completed')) {
     return (
       <div className="text-center py-12 space-y-4">
@@ -116,17 +113,17 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     );
   }
 
-  // VERIFICAÇÃO PRINCIPAL: Se onboarding está realmente concluído no backend
-  if (isCompleted === true || isCompleted === 'true' && !showSuccessScreen) {
+  // Se onboarding está concluído, mostrar visualização readonly
+  if (isCompleted && !showSuccessScreen) {
     return <OnboardingReadOnlyView data={data} />;
   }
 
-  // Mostrar tela de sucesso apenas se foi explicitamente ativada após finalização
+  // Tela de sucesso após finalização
   if (showSuccessScreen) {
     return <ModernSuccessScreen onNavigate={handleNavigateFromSuccess} />;
   }
 
-  // Mostrar indicador se dados foram carregados mas onboarding não está concluído
+  // Indicador de dados carregados
   const showDataLoadedMessage = hasExistingData && currentStep === 1 && !isCompleted;
 
   const renderCurrentStep = () => {
@@ -159,7 +156,6 @@ export const UnifiedOnboardingFlow: React.FC = () => {
         );
       
       case 4:
-        // Só renderizar etapa 4 se realmente pode finalizar
         if (!canFinalize) {
           return (
             <div className="text-center py-12 space-y-4">

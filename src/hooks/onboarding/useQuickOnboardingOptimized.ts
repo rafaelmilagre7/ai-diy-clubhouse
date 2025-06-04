@@ -2,47 +2,41 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
-import { QuickOnboardingData } from '@/types/quickOnboarding';
+import { QuickOnboardingData, OnboardingStatus, ValidationResult } from '@/types/quickOnboarding';
 import { devLog } from '@/utils/devLogging';
 
-const SAVE_DELAY = 2000; // 2 segundos
+const SAVE_DELAY = 2000;
 const MAX_RETRIES = 3;
+
+const INITIAL_DATA: QuickOnboardingData = {
+  name: '',
+  email: '',
+  whatsapp: '',
+  country_code: '',
+  birth_date: '',
+  instagram_url: '',
+  linkedin_url: '',
+  how_found_us: '',
+  referred_by: '',
+  company_name: '',
+  role: '',
+  company_size: '',
+  company_segment: '',
+  company_website: '',
+  annual_revenue_range: '',
+  main_challenge: '',
+  ai_knowledge_level: '',
+  uses_ai: '',
+  main_goal: '',
+  desired_ai_areas: [],
+  has_implemented: '',
+  previous_tools: []
+};
 
 export const useQuickOnboardingOptimized = () => {
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState<number>(1);
-  const [data, setData] = useState<QuickOnboardingData>({
-    // Dados pessoais
-    name: '',
-    email: '',
-    whatsapp: '',
-    country_code: '',
-    birth_date: '',
-    instagram_url: '',
-    linkedin_url: '',
-    how_found_us: '',
-    referred_by: '',
-
-    // Dados do negócio
-    company_name: '',
-    role: '',
-    company_size: '',
-    company_segment: '',
-    company_website: '',
-    annual_revenue_range: '',
-    main_challenge: '',
-
-    // Experiência com IA
-    ai_knowledge_level: '',
-    uses_ai: '',
-    main_goal: '',
-
-    // Campos adicionais para compatibilidade
-    desired_ai_areas: [],
-    has_implemented: '',
-    previous_tools: []
-  });
-
+  const [data, setData] = useState<QuickOnboardingData>(INITIAL_DATA);
   const [isLoading, setIsLoading] = useState(true);
   const [hasExistingData, setHasExistingData] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -50,8 +44,59 @@ export const useQuickOnboardingOptimized = () => {
   const [lastSaveTime, setLastSaveTime] = useState<number | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [saveTimeoutId, setSaveTimeoutId] = useState<NodeJS.Timeout | null>(null);
+  const [backendCompleted, setBackendCompleted] = useState<boolean>(false);
 
   const totalSteps = 4;
+
+  // Validação por etapa
+  const validateStep = useCallback((step: number, stepData: QuickOnboardingData): ValidationResult => {
+    const errors: Record<string, string> = {};
+
+    switch (step) {
+      case 1:
+        if (!stepData.name?.trim()) errors.name = 'Nome é obrigatório';
+        if (!stepData.email?.trim()) errors.email = 'E-mail é obrigatório';
+        if (!stepData.whatsapp?.trim()) errors.whatsapp = 'WhatsApp é obrigatório';
+        if (!stepData.country_code?.trim()) errors.country_code = 'País é obrigatório';
+        if (!stepData.how_found_us?.trim()) errors.how_found_us = 'Como conheceu é obrigatório';
+        break;
+      
+      case 2:
+        if (!stepData.company_name?.trim()) errors.company_name = 'Nome da empresa é obrigatório';
+        if (!stepData.role?.trim()) errors.role = 'Cargo é obrigatório';
+        if (!stepData.company_size?.trim()) errors.company_size = 'Tamanho da empresa é obrigatório';
+        if (!stepData.company_segment?.trim()) errors.company_segment = 'Segmento é obrigatório';
+        if (!stepData.annual_revenue_range?.trim()) errors.annual_revenue_range = 'Faturamento é obrigatório';
+        if (!stepData.main_challenge?.trim()) errors.main_challenge = 'Principal desafio é obrigatório';
+        break;
+      
+      case 3:
+        if (!stepData.ai_knowledge_level?.trim()) errors.ai_knowledge_level = 'Nível de conhecimento é obrigatório';
+        if (!stepData.uses_ai?.trim()) errors.uses_ai = 'Uso de IA é obrigatório';
+        if (!stepData.main_goal?.trim()) errors.main_goal = 'Principal objetivo é obrigatório';
+        break;
+    }
+
+    return {
+      isValid: Object.keys(errors).length === 0,
+      errors
+    };
+  }, []);
+
+  // Status calculado
+  const status = useMemo((): OnboardingStatus => {
+    const currentStepValidation = validateStep(currentStep, data);
+    const allStepsValidation = validateStep(1, data).isValid && 
+                              validateStep(2, data).isValid && 
+                              validateStep(3, data).isValid;
+
+    return {
+      isCompleted: backendCompleted,
+      currentStep,
+      canProceed: currentStepValidation.isValid,
+      canFinalize: allStepsValidation && !backendCompleted
+    };
+  }, [currentStep, data, backendCompleted, validateStep]);
 
   // Carregar dados existentes
   const loadExistingData = useCallback(async () => {
@@ -72,23 +117,38 @@ export const useQuickOnboardingOptimized = () => {
       }
 
       if (existingData) {
-        setData(existingData);
+        // Normalizar dados carregados
+        const normalizedData: QuickOnboardingData = {
+          ...INITIAL_DATA,
+          ...existingData,
+          desired_ai_areas: existingData.desired_ai_areas || [],
+          previous_tools: existingData.previous_tools || []
+        };
+
+        setData(normalizedData);
         setHasExistingData(true);
         
-        // Definir step atual baseado nos dados
-        if (existingData.main_goal) {
+        // Verificar se está completo no backend
+        const completed = existingData.is_completed === true || existingData.is_completed === 'true';
+        setBackendCompleted(completed);
+        
+        // Definir step baseado no progresso
+        if (completed) {
           setCurrentStep(4);
-        } else if (existingData.company_name && existingData.role) {
+        } else if (normalizedData.main_goal) {
+          setCurrentStep(4);
+        } else if (normalizedData.company_name && normalizedData.role) {
           setCurrentStep(3);
-        } else if (existingData.name && existingData.email) {
+        } else if (normalizedData.name && normalizedData.email) {
           setCurrentStep(2);
         } else {
           setCurrentStep(1);
         }
 
-        devLog.info('Dados carregados', { 
-          hasData: !!existingData, 
-          currentStep: currentStep 
+        devLog.info('Dados carregados com sucesso', { 
+          hasData: true, 
+          isCompleted: completed,
+          currentStep 
         });
       }
     } catch (error: any) {
@@ -99,52 +159,8 @@ export const useQuickOnboardingOptimized = () => {
     }
   }, [user?.id, currentStep]);
 
-  // Normalizar isCompleted para boolean puro
-  const isCompleted = useMemo(() => {
-    return data?.isCompleted === true || data?.isCompleted === 'true' ||
-           data?.is_completed === true || data?.is_completed === 'true';
-  }, [data?.isCompleted, data?.is_completed]);
-
-  // Verificar se pode finalizar
-  const canFinalize = useMemo(() => {
-    const requiredFields = [
-      data.name,
-      data.email,
-      data.whatsapp,
-      data.country_code,
-      data.how_found_us,
-      data.company_name,
-      data.role,
-      data.company_size,
-      data.company_segment,
-      data.annual_revenue_range,
-      data.main_challenge,
-      data.ai_knowledge_level,
-      data.uses_ai,
-      data.main_goal
-    ];
-
-    return requiredFields.every(field => field && field.toString().trim() !== '');
-  }, [data]);
-
-  // Verificar se pode prosseguir para próxima etapa
-  const canProceed = useMemo(() => {
-    switch (currentStep) {
-      case 1:
-        return data.name && data.email && data.whatsapp && data.country_code && data.how_found_us;
-      case 2:
-        return data.company_name && data.role && data.company_size && data.company_segment && data.annual_revenue_range && data.main_challenge;
-      case 3:
-        return data.ai_knowledge_level && data.uses_ai && data.main_goal;
-      case 4:
-        return canFinalize;
-      default:
-        return false;
-    }
-  }, [currentStep, data, canFinalize]);
-
-  // Salvar dados automaticamente
-  const saveData = useCallback(async (dataToSave: QuickOnboardingData) => {
+  // Salvar dados
+  const saveData = useCallback(async (dataToSave: QuickOnboardingData): Promise<boolean> => {
     if (!user?.id) return false;
 
     try {
@@ -173,8 +189,8 @@ export const useQuickOnboardingOptimized = () => {
     }
   }, [user?.id]);
 
-  // Atualizar campo
-  const updateField = useCallback((field: keyof QuickOnboardingData, value: string) => {
+  // Atualizar campo com auto-save
+  const updateField = useCallback((field: keyof QuickOnboardingData, value: any) => {
     setData(prev => ({ ...prev, [field]: value }));
 
     // Auto-save com debounce
@@ -192,23 +208,22 @@ export const useQuickOnboardingOptimized = () => {
     setSaveTimeoutId(newTimeoutId);
   }, [saveData, saveTimeoutId]);
 
-  // Navegar para próxima etapa
+  // Navegação
   const nextStep = useCallback(() => {
-    if (currentStep < totalSteps && canProceed) {
-      setCurrentStep(currentStep + 1);
+    if (currentStep < totalSteps && status.canProceed) {
+      setCurrentStep(prev => prev + 1);
     }
-  }, [currentStep, canProceed, totalSteps]);
+  }, [currentStep, status.canProceed, totalSteps]);
 
-  // Navegar para etapa anterior
   const previousStep = useCallback(() => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+      setCurrentStep(prev => prev - 1);
     }
   }, [currentStep]);
 
   // Finalizar onboarding
   const completeOnboarding = useCallback(async (): Promise<boolean> => {
-    if (!user?.id || !canFinalize) {
+    if (!user?.id || !status.canFinalize) {
       devLog.warn('Tentativa de finalizar onboarding sem dados válidos');
       return false;
     }
@@ -228,6 +243,7 @@ export const useQuickOnboardingOptimized = () => {
 
       if (error) throw error;
 
+      setBackendCompleted(true);
       setLastSaveTime(Date.now());
       devLog.info('Onboarding finalizado com sucesso');
       return true;
@@ -238,7 +254,7 @@ export const useQuickOnboardingOptimized = () => {
     } finally {
       setIsSaving(false);
     }
-  }, [user?.id, data, canFinalize]);
+  }, [user?.id, data, status.canFinalize]);
 
   // Carregar dados na inicialização
   useEffect(() => {
@@ -247,6 +263,7 @@ export const useQuickOnboardingOptimized = () => {
     }
   }, [user?.id, loadExistingData]);
 
+  // Cleanup
   useEffect(() => {
     return () => {
       if (saveTimeoutId) {
@@ -256,21 +273,31 @@ export const useQuickOnboardingOptimized = () => {
   }, [saveTimeoutId]);
 
   return {
-    currentStep,
+    // Dados e status
     data,
-    updateField,
-    nextStep,
-    previousStep,
-    canProceed,
+    currentStep,
+    totalSteps,
     isLoading,
     hasExistingData,
     loadError,
-    totalSteps,
+    
+    // Status computado (sempre boolean limpo)
+    isCompleted: status.isCompleted,
+    canProceed: status.canProceed,
+    canFinalize: status.canFinalize,
+    
+    // Operações
+    updateField,
+    nextStep,
+    previousStep,
+    completeOnboarding,
+    
+    // Feedback
     isSaving,
     lastSaveTime,
-    completeOnboarding,
-    isCompleted,
     retryCount,
-    canFinalize
+    
+    // Validação
+    validateStep: (step: number) => validateStep(step, data)
   };
 };
