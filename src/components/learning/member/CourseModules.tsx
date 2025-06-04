@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Accordion,
   AccordionContent,
@@ -27,17 +27,41 @@ export const CourseModules: React.FC<CourseModulesProps> = ({
   course,
   expandedModules = []
 }) => {
-  // Estado para rastrear módulos expandidos (para lembrar o estado mesmo ao recarregar componente)
-  const [openModules, setOpenModules] = useState<string[]>(expandedModules);
+  console.log("CourseModules renderizado:", {
+    modulesCount: modules?.length || 0,
+    courseId,
+    expandedModules
+  });
+
+  // Estado para rastrear módulos expandidos - expandir primeiro módulo por padrão
+  const [openModules, setOpenModules] = useState<string[]>(() => {
+    if (expandedModules.length > 0) {
+      return expandedModules;
+    }
+    // Se não há módulos expandidos especificados, expandir o primeiro módulo
+    return modules.length > 0 ? [modules[0].id] : [];
+  });
+  
+  // Atualizar módulos abertos quando os módulos mudarem
+  useEffect(() => {
+    if (modules.length > 0 && openModules.length === 0) {
+      console.log("Expandindo primeiro módulo automaticamente:", modules[0].id);
+      setOpenModules([modules[0].id]);
+    }
+  }, [modules, openModules.length]);
   
   // Caso não haja módulos, mostrar mensagem
-  if (modules.length === 0) {
+  if (!modules || modules.length === 0) {
+    console.log("Nenhum módulo encontrado para exibir");
     return (
       <Card className="p-6 text-center text-muted-foreground">
         <p>Este curso ainda não possui módulos disponíveis.</p>
       </Card>
     );
   }
+  
+  console.log("Renderizando", modules.length, "módulos:", 
+    modules.map(m => ({ id: m.id, title: m.title })));
   
   return (
     <Card className="border rounded-lg overflow-hidden">
@@ -47,10 +71,13 @@ export const CourseModules: React.FC<CourseModulesProps> = ({
         <Accordion
           type="multiple" 
           value={openModules}
-          onValueChange={setOpenModules}
+          onValueChange={(newOpenModules) => {
+            console.log("Módulos abertos alterados:", newOpenModules);
+            setOpenModules(newOpenModules);
+          }}
           className="space-y-6"
         >
-          {modules.map(module => (
+          {modules.map((module, index) => (
             <AccordionItem
               key={module.id}
               value={module.id}

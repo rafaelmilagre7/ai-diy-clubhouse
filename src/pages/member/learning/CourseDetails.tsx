@@ -23,16 +23,19 @@ const CourseDetails = () => {
   });
 
   // Log para depuração
-  console.log("Dados do curso carregados:", {
+  console.log("CourseDetails - Dados do curso carregados:", {
     courseId: id,
+    courseTitle: course?.title,
     modulesCount: modules?.length || 0,
     allLessonsCount: allLessons?.length || 0,
     firstLessonId,
-    accessDenied
+    accessDenied,
+    isLoading
   });
 
   // Se o acesso foi negado, mostrar o componente específico
   if (accessDenied) {
+    console.log("Acesso negado - exibindo componente AccessDenied");
     return (
       <div className="container pt-6 pb-12">
         <Button
@@ -51,8 +54,12 @@ const CourseDetails = () => {
 
   // Se o curso não foi encontrado, o hook de useCourseDetails já fará o redirecionamento
   if (!id || !course) {
+    console.log("Curso não encontrado, redirecionando...");
     return null;
   }
+
+  // Definir quais módulos devem ser expandidos por padrão (primeiro módulo)
+  const expandedModules = modules && modules.length > 0 ? [modules[0].id] : [];
 
   return (
     <div className="container pt-6 pb-12">
@@ -89,7 +96,7 @@ const CourseDetails = () => {
               courseId={id} 
               userProgress={userProgress || []}
               course={course}
-              expandedModules={[modules?.[0]?.id].filter(Boolean)}
+              expandedModules={expandedModules}
             />
           </div>
         </>

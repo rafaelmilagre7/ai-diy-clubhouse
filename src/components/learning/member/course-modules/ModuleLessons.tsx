@@ -28,6 +28,12 @@ export const ModuleLessons = ({
   // Garantir que lessons seja sempre um array válido
   const lessons = Array.isArray(data) ? data : [];
   
+  console.log(`ModuleLessons renderizado para módulo ${moduleId}:`, {
+    lessonsCount: lessons.length,
+    isLoading,
+    lessons: lessons.map(l => ({ id: l.id, title: l.title }))
+  });
+  
   if (isLoading) {
     return (
       <div className="p-4 text-center">
@@ -37,6 +43,7 @@ export const ModuleLessons = ({
   }
   
   if (!lessons || lessons.length === 0) {
+    console.log(`Nenhuma aula encontrada para o módulo ${moduleId}`);
     return (
       <div className="p-4 text-center">
         <p className="text-muted-foreground">Este módulo ainda não possui aulas disponíveis.</p>
@@ -44,14 +51,14 @@ export const ModuleLessons = ({
     );
   }
   
-  // Log para depuração
-  console.log(`Renderizando ${lessons.length} aulas do módulo ${moduleId}:`, 
-    lessons.map(l => ({id: l.id, title: l.title})));
-  
   return (
     <div>
-      {/* Carrossel de miniaturas para as aulas (estilo Netflix) */}
-      <div className="p-4 border-b">
+      {/* Banner estilo Netflix - Carrossel de miniaturas destacado */}
+      <div className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
+        <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">
+          Aulas do Módulo ({lessons.length})
+        </h3>
+        
         <Carousel
           opts={{
             align: "start",
@@ -68,7 +75,7 @@ export const ModuleLessons = ({
               return (
                 <CarouselItem 
                   key={lesson.id} 
-                  className="pl-4 basis-full sm:basis-1/2 md:basis-1/3"
+                  className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4"
                 >
                   <LessonThumbnail
                     lesson={lesson}
@@ -87,8 +94,14 @@ export const ModuleLessons = ({
         </Carousel>
       </div>
       
-      {/* Lista completa de aulas (formato tradicional) */}
-      <div className="divide-y">
+      {/* Lista detalhada de aulas (formato tradicional) */}
+      <div className="divide-y bg-white dark:bg-gray-950">
+        <div className="px-6 py-3 bg-gray-50 dark:bg-gray-900">
+          <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">
+            Lista Detalhada das Aulas
+          </h4>
+        </div>
+        
         {lessons.map(lesson => {
           const completed = isLessonCompleted(lesson.id);
           const inProgress = isLessonInProgress(lesson.id);
