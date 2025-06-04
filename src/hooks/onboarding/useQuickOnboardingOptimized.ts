@@ -100,10 +100,10 @@ export const useQuickOnboardingOptimized = () => {
   }, [user?.id, currentStep]);
 
   // Normalizar isCompleted para boolean puro
-  const isCompleted: boolean = useMemo(() => {
-    return data?.is_completed === true || data?.is_completed === 'true' || 
-           data?.isCompleted === true || data?.isCompleted === 'true';
-  }, [data?.is_completed, data?.isCompleted]);
+  const isCompleted = useMemo(() => {
+    return data?.isCompleted === true || data?.isCompleted === 'true' ||
+           data?.is_completed === true || data?.is_completed === 'true';
+  }, [data?.isCompleted, data?.is_completed]);
 
   // Verificar se pode finalizar
   const canFinalize = useMemo(() => {
