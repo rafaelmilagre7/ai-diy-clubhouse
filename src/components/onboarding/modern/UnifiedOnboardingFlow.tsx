@@ -4,7 +4,8 @@ import { useQuickOnboardingOptimized } from '@/hooks/onboarding/useQuickOnboardi
 import { useNavigate } from 'react-router-dom';
 import { LazyStepLoader } from './steps/LazyStepLoader';
 import { EnhancedTrailMagicExperience } from '../EnhancedTrailMagicExperience';
-import { OnboardingSuccessScreen } from '../OnboardingSuccessScreen';
+import { ModernSuccessScreen } from './ModernSuccessScreen';
+import { OnboardingReadOnlyView } from './OnboardingReadOnlyView';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -26,33 +27,30 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     totalSteps,
     isSaving,
     lastSaveTime,
-    completeOnboarding
+    completeOnboarding,
+    isCompleted
   } = useQuickOnboardingOptimized();
 
   const handleFinish = async () => {
-    if (isCompleting) return; // Evitar múltiplos cliques
+    if (isCompleting) return;
     
     setIsCompleting(true);
     console.log('🎯 Iniciando finalização do onboarding...');
     
     try {
-      // Mostrar loading toast
       const loadingToast = toast.loading('Finalizando seu onboarding...');
       
       const success = await completeOnboarding();
       
-      // Remover loading toast
       toast.dismiss(loadingToast);
       
       if (success) {
         console.log('✅ Onboarding finalizado com sucesso!');
         
-        // Mostrar sucesso
         toast.success('Onboarding concluído com sucesso!', {
           duration: 2000
         });
         
-        // Mostrar tela de sucesso ao invés de redirecionar
         setTimeout(() => {
           setShowSuccessScreen(true);
           setIsCompleting(false);
@@ -94,9 +92,14 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     );
   }
 
+  // Se onboarding já foi concluído, mostrar visualização somente leitura
+  if (isCompleted && !showSuccessScreen) {
+    return <OnboardingReadOnlyView data={data} />;
+  }
+
   // Mostrar tela de sucesso se o onboarding foi concluído
   if (showSuccessScreen) {
-    return <OnboardingSuccessScreen onNavigate={handleNavigateFromSuccess} />;
+    return <ModernSuccessScreen onNavigate={handleNavigateFromSuccess} />;
   }
 
   // Mostrar indicador se dados foram carregados

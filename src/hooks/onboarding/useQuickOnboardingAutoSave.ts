@@ -1,8 +1,8 @@
+
 import { useEffect, useRef, useState } from 'react';
 import { QuickOnboardingData } from '@/types/quickOnboarding';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
-import { toast } from 'sonner';
 
 export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
   const { user } = useAuth();
@@ -37,65 +37,51 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
           ai_knowledge_level: data.ai_knowledge_level
         });
         
-        // Verificar se já existe um registro na tabela quick_onboarding
-        const { data: existingData, error: fetchError } = await supabase
-          .from('quick_onboarding')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-
-        // Preparar dados apenas com campos válidos da tabela quick_onboarding
+        // Preparar dados limpos para quick_onboarding
         const quickOnboardingData = {
           user_id: user.id,
-          name: data.name,
-          email: data.email,
-          whatsapp: data.whatsapp,
-          country_code: data.country_code,
+          name: data.name || '',
+          email: data.email || '',
+          whatsapp: data.whatsapp || '',
+          country_code: data.country_code || '+55',
           birth_date: data.birth_date || null,
           instagram_url: data.instagram_url || null,
           linkedin_url: data.linkedin_url || null,
-          how_found_us: data.how_found_us,
+          how_found_us: data.how_found_us || '',
           referred_by: data.referred_by || null,
-          company_name: data.company_name,
-          role: data.role,
-          company_size: data.company_size,
-          company_segment: data.company_segment,
+          company_name: data.company_name || '',
+          role: data.role || '',
+          company_size: data.company_size || '',
+          company_segment: data.company_segment || '',
           company_website: data.company_website || null,
-          annual_revenue_range: data.annual_revenue_range,
-          main_challenge: data.main_challenge,
-          ai_knowledge_level: data.ai_knowledge_level,
-          uses_ai: data.uses_ai,
-          main_goal: data.main_goal,
-          desired_ai_areas: data.desired_ai_areas,
-          has_implemented: data.has_implemented,
-          previous_tools: data.previous_tools,
+          annual_revenue_range: data.annual_revenue_range || '',
+          main_challenge: data.main_challenge || '',
+          ai_knowledge_level: data.ai_knowledge_level || '',
+          uses_ai: data.uses_ai || '',
+          main_goal: data.main_goal || '',
+          desired_ai_areas: data.desired_ai_areas || [],
+          has_implemented: data.has_implemented || '',
+          previous_tools: data.previous_tools || [],
+          is_completed: false, // Manter false até conclusão manual
           updated_at: new Date().toISOString()
         };
 
-        if (existingData && !fetchError) {
-          // Atualizar registro existente
-          const { error: updateError } = await supabase
-            .from('quick_onboarding')
-            .update(quickOnboardingData)
-            .eq('id', existingData.id);
+        // Usar upsert para inserir ou atualizar
+        const { error: quickError } = await supabase
+          .from('quick_onboarding')
+          .upsert(quickOnboardingData, { 
+            onConflict: 'user_id',
+            ignoreDuplicates: false 
+          });
 
-          if (updateError) throw updateError;
-          console.log('✅ Dados atualizados na quick_onboarding');
-        } else {
-          // Criar novo registro
-          const { error: insertError } = await supabase
-            .from('quick_onboarding')
-            .insert([{ 
-              ...quickOnboardingData, 
-              created_at: new Date().toISOString(),
-              is_completed: false
-            }]);
-
-          if (insertError) throw insertError;
-          console.log('✅ Novo registro criado na quick_onboarding');
+        if (quickError) {
+          console.error('❌ Erro ao salvar quick_onboarding:', quickError);
+          throw quickError;
         }
 
-        // Também atualizar/criar na tabela onboarding_progress para compatibilidade
+        console.log('✅ quick_onboarding salvo com sucesso');
+
+        // Também salvar em onboarding_progress para compatibilidade
         await saveToOnboardingProgress(data, user.id);
 
         setLastSaveTime(Date.now());
@@ -103,7 +89,6 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
         
       } catch (error: any) {
         console.error('❌ Erro no auto-save:', error);
-        // Não mostrar toast de erro para auto-save para não incomodar o usuário
       } finally {
         setIsSaving(false);
       }
@@ -125,7 +110,6 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
 // Função auxiliar para manter compatibilidade com onboarding_progress
 const saveToOnboardingProgress = async (data: QuickOnboardingData, userId: string) => {
   try {
-    // Preparar dados apenas com campos válidos da tabela onboarding_progress
     const progressData = {
       user_id: userId,
       personal_info: {
@@ -164,38 +148,30 @@ const saveToOnboardingProgress = async (data: QuickOnboardingData, userId: strin
       experience_personalization: {},
       current_step: determineCurrentStep(data),
       completed_steps: getCompletedSteps(data),
-      is_completed: false, // Manter como false até conclusão manual
-      // Campos válidos da tabela
-      company_name: data.company_name,
-      company_size: data.company_size,
-      company_sector: data.company_segment,
-      company_website: data.company_website,
-      current_position: data.role,
-      annual_revenue: data.annual_revenue_range,
+      is_completed: false, // Manter false até conclusão manual
+      company_name: data.company_name || '',
+      company_size: data.company_size || '',
+      company_sector: data.company_segment || '',
+      company_website: data.company_website || '',
+      current_position: data.role || '',
+      annual_revenue: data.annual_revenue_range || '',
       updated_at: new Date().toISOString()
     };
 
-    const { data: existingProgress } = await supabase
+    const { error } = await supabase
       .from('onboarding_progress')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
+      .upsert(progressData, { 
+        onConflict: 'user_id',
+        ignoreDuplicates: false 
+      });
 
-    if (existingProgress) {
-      await supabase
-        .from('onboarding_progress')
-        .update(progressData)
-        .eq('id', existingProgress.id);
-      console.log('✅ onboarding_progress atualizado');
+    if (error) {
+      console.error('⚠️ Erro ao salvar no onboarding_progress:', error);
     } else {
-      await supabase
-        .from('onboarding_progress')
-        .insert([{ ...progressData, created_at: new Date().toISOString() }]);
-      console.log('✅ onboarding_progress criado');
+      console.log('✅ onboarding_progress salvo');
     }
   } catch (error) {
     console.error('⚠️ Erro ao salvar no onboarding_progress:', error);
-    // Não lançar erro para não interromper o auto-save principal
   }
 };
 
