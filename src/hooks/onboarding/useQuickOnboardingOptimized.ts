@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
@@ -258,12 +257,6 @@ export const useQuickOnboardingOptimized = () => {
     };
   }, [saveTimeoutId]);
 
-  const normalizedIsCompleted =
-    data?.isCompleted === true ||
-    data?.isCompleted === 'true' ||
-    data?.is_completed === true ||
-    data?.is_completed === 'true';
-
   return {
     currentStep,
     data,
@@ -278,8 +271,8 @@ export const useQuickOnboardingOptimized = () => {
     isSaving,
     lastSaveTime,
     completeOnboarding,
-    isCompleted: normalizedIsCompleted,
+    isCompleted: !!isCompleted,
     retryCount,
     canFinalize
-  };
+  } as const;
 };
