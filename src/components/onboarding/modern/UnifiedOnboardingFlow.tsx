@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useQuickOnboardingOptimized } from '@/hooks/onboarding/useQuickOnboardingOptimized';
 import { useNavigate } from 'react-router-dom';
 import { LazyStepLoader } from './steps/LazyStepLoader';
-import { EnhancedTrailMagicExperience } from '../EnhancedTrailMagicExperience';
+import { ModernFinalizationScreen } from './ModernFinalizationScreen';
 import { ModernSuccessScreen } from './ModernSuccessScreen';
 import { OnboardingReadOnlyView } from './OnboardingReadOnlyView';
 import { Loader2 } from 'lucide-react';
@@ -142,29 +142,11 @@ export const UnifiedOnboardingFlow: React.FC = () => {
       
       case 4:
         return (
-          <div className="animate-fade-in">
-            {isCompleting && (
-              <div className="mb-6 bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
-                <div className="flex items-center gap-3">
-                  <Loader2 className="h-5 w-5 text-blue-400 animate-spin" />
-                  <div>
-                    <p className="text-blue-400 font-medium">Finalizando seu onboarding...</p>
-                    <p className="text-blue-300 text-sm">Salvando seus dados e liberando acesso às funcionalidades</p>
-                  </div>
-                </div>
-              </div>
-            )}
-            {retryCount > 0 && (
-              <div className="mb-6 bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4">
-                <p className="text-yellow-400 text-sm">
-                  ⚠️ Algumas tentativas falharam ({retryCount} tentativas). Tentando novamente...
-                </p>
-              </div>
-            )}
-            <EnhancedTrailMagicExperience 
-              onFinish={handleFinish}
-            />
-          </div>
+          <ModernFinalizationScreen
+            isCompleting={isCompleting}
+            retryCount={retryCount}
+            onFinish={handleFinish}
+          />
         );
       
       default:

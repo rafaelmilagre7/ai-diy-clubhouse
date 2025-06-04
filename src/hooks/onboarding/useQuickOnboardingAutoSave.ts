@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { QuickOnboardingData } from '@/types/quickOnboarding';
 import { supabase } from '@/lib/supabase';
@@ -120,6 +119,7 @@ const saveToOnboardingProgress = async (data: QuickOnboardingData, userId: strin
         ddi: data.country_code,
         linkedin: data.linkedin_url,
         instagram: data.instagram_url
+        // REMOVIDO: name (campo não existe na tabela onboarding_progress)
       },
       professional_info: {
         company_name: data.company_name,
