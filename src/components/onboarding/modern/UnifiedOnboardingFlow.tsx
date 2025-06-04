@@ -32,7 +32,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     canFinalize
   } = useQuickOnboardingOptimized();
 
-  const isCompleted = rawIsCompleted === true;
+  const isCompleted = rawIsCompleted as boolean;
 
   const handleFinish = async () => {
     if (isCompleting) {
