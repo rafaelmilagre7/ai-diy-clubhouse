@@ -88,12 +88,6 @@ const SuggestionDetailsPage = () => {
 
       <SuggestionContent
         suggestion={suggestion}
-        comment=""
-        comments={[]}
-        isSubmitting={false}
-        commentsLoading={false}
-        onCommentChange={() => {}}
-        onSubmitComment={() => {}}
         onVote={handleVote}
         isOwner={isOwner}
         userVote={userVote as UserVote | null}
