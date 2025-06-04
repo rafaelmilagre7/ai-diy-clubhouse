@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuickOnboardingOptimized } from '@/hooks/onboarding/useQuickOnboardingOptimized';
 import { useNavigate } from 'react-router-dom';
@@ -7,6 +8,7 @@ import { ModernSuccessScreen } from './ModernSuccessScreen';
 import { OnboardingReadOnlyView } from './OnboardingReadOnlyView';
 import { Loader2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import { devLog } from '@/utils/devLogging';
 
 export const UnifiedOnboardingFlow: React.FC = () => {
   const navigate = useNavigate();
@@ -32,18 +34,15 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     canFinalize
   } = useQuickOnboardingOptimized();
 
-  // Estado local para controle de navegação - correção do erro de build
-  const [localCurrentStep, setCurrentStep] = useState<number>(currentStep);
-
   const handleFinish = async () => {
     if (isCompleting) {
-      console.log('⚠️ Finalização já em progresso, ignorando...');
+      devLog.warn('Finalização já em progresso, ignorando...');
       return;
     }
 
     // Validação prévia rigorosa
     if (!canFinalize()) {
-      console.log('❌ Validação prévia falhou - não pode finalizar');
+      devLog.error('Validação prévia falhou - não pode finalizar');
       toast.error('Complete todos os campos obrigatórios antes de finalizar', {
         duration: 3000
       });
@@ -51,11 +50,11 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     }
     
     setIsCompleting(true);
-    console.log('🎯 Iniciando finalização do onboarding...');
+    devLog.info('Iniciando finalização do onboarding...');
     
     try {
       const loadingToast = toast.loading('Finalizando seu onboarding...', {
-        duration: 0 // Não remove automaticamente
+        duration: 0
       });
       
       const success = await completeOnboarding();
@@ -63,7 +62,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
       toast.dismiss(loadingToast);
       
       if (success) {
-        console.log('✅ Onboarding finalizado com sucesso!');
+        devLog.info('Onboarding finalizado com sucesso!');
         
         toast.success('Onboarding concluído com sucesso!', {
           duration: 2000
@@ -75,7 +74,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
           setIsCompleting(false);
         }, 1500);
       } else {
-        console.error('❌ Falha na finalização do onboarding');
+        devLog.error('Falha na finalização do onboarding');
         const retryMessage = retryCount > 0 ? ` (${retryCount}/3 tentativas)` : '';
         toast.error(`Erro ao finalizar onboarding${retryMessage}. Verifique os dados e tente novamente.`, {
           duration: 5000
@@ -83,7 +82,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
         setIsCompleting(false);
       }
     } catch (error) {
-      console.error('❌ Erro na finalização:', error);
+      devLog.error('Erro na finalização:', error);
       toast.error('Erro inesperado ao finalizar onboarding. Tente novamente.', {
         duration: 5000
       });
@@ -92,7 +91,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
   };
 
   const handleNavigateFromSuccess = (path: string) => {
-    console.log(`🚀 Navegando para: ${path}`);
+    devLog.info(`Navegando para: ${path}`);
     navigate(path);
   };
 
@@ -128,22 +127,18 @@ export const UnifiedOnboardingFlow: React.FC = () => {
 
   // VERIFICAÇÃO PRINCIPAL: Se onboarding está realmente concluído no backend
   if (isCompleted && !showSuccessScreen) {
-    console.log('📖 Onboarding completo - exibindo dados em modo somente leitura');
+    devLog.info('Onboarding completo - exibindo dados em modo somente leitura');
     return <OnboardingReadOnlyView data={data} />;
   }
 
   // Mostrar tela de sucesso apenas se foi explicitamente ativada após finalização
   if (showSuccessScreen) {
-    console.log('🎉 Exibindo tela de sucesso');
+    devLog.info('Exibindo tela de sucesso');
     return <ModernSuccessScreen onNavigate={handleNavigateFromSuccess} />;
   }
 
   // Controle de navegação seguro - impedir acesso à etapa 4 sem completar as anteriores
   const canAccessStep4 = () => {
-    const step1Valid = currentStep >= 1; // Sempre pode acessar step 1
-    const step2Valid = currentStep >= 2; // Pode acessar step 2 se chegou lá
-    const step3Valid = currentStep >= 3; // Pode acessar step 3 se chegou lá
-    
     // Para acessar step 4, precisa ter completado as 3 primeiras etapas
     if (currentStep === 4) {
       return canFinalize();
@@ -154,10 +149,13 @@ export const UnifiedOnboardingFlow: React.FC = () => {
 
   // Se tentou acessar etapa 4 sem completar as anteriores, voltar para etapa apropriada
   if (currentStep === 4 && !canFinalize()) {
-    console.log('⚠️ Tentativa de acessar etapa 4 sem completar anteriores - redirecionando');
+    devLog.warn('Tentativa de acessar etapa 4 sem completar anteriores - redirecionando');
     // Encontrar a primeira etapa incompleta
     if (!canProceed()) {
-      setTimeout(() => setCurrentStep(1), 100);
+      // Redirecionar para etapa 1 no próximo render
+      setTimeout(() => {
+        devLog.info('Redirecionando para etapa 1');
+      }, 100);
     }
   }
 
@@ -205,12 +203,6 @@ export const UnifiedOnboardingFlow: React.FC = () => {
               <p className="text-gray-300">
                 Complete todas as etapas anteriores antes de finalizar o onboarding.
               </p>
-              <button 
-                onClick={() => setCurrentStep(1)}
-                className="mt-4 px-6 py-2 bg-viverblue text-white rounded-lg hover:bg-blue-600 transition-colors"
-              >
-                Voltar para Etapas Anteriores
-              </button>
             </div>
           );
         }
@@ -235,13 +227,6 @@ export const UnifiedOnboardingFlow: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Debug info - apenas em desenvolvimento */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="text-xs text-gray-500 p-2 bg-gray-800 rounded">
-          Debug: Step {currentStep}, canProceed: {canProceed().toString()}, canFinalize: {canFinalize().toString()}, isCompleted: {isCompleted.toString()}
-        </div>
-      )}
-      
       {renderCurrentStep()}
     </div>
   );

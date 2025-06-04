@@ -2,6 +2,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle, ArrowRight, Loader2, AlertTriangle, XCircle } from 'lucide-react';
+import { devLog } from '@/utils/devLogging';
 
 interface ModernFinalizationScreenProps {
   isCompleting: boolean;
@@ -16,7 +17,7 @@ export const ModernFinalizationScreen: React.FC<ModernFinalizationScreenProps> =
   onFinish,
   canFinalize = true
 }) => {
-  console.log('🎯 ModernFinalizationScreen - canFinalize:', canFinalize, 'isCompleting:', isCompleting);
+  devLog.debug('ModernFinalizationScreen', { canFinalize, isCompleting });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-6">
