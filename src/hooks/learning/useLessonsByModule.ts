@@ -17,11 +17,13 @@ export const useLessonsByModule = (moduleId: string) => {
           return [];
         }
 
-        const { data, error } = await supabase
+        console.log(`Buscando aulas para o módulo ${moduleId}...`);
+
+        // Buscar todas as aulas do módulo (incluindo não publicadas para debug)
+        const { data: allLessonsData, error } = await supabase
           .from("learning_lessons")
           .select("*, videos:learning_lesson_videos(*)")
           .eq("module_id", moduleId)
-          .eq("published", true)
           .order("order_index", { ascending: true });
           
         if (error) {
@@ -30,11 +32,11 @@ export const useLessonsByModule = (moduleId: string) => {
         }
         
         // Garantir que data é sempre um array
-        const lessons = Array.isArray(data) ? data : [];
+        const allLessons = Array.isArray(allLessonsData) ? allLessonsData : [];
         
-        // Fazer um log detalhado para depuração das aulas encontradas
-        console.log(`Encontradas ${lessons.length} aulas para o módulo ${moduleId}:`, 
-          lessons.map(l => ({
+        console.log(`Total de aulas encontradas no módulo ${moduleId}:`, allLessons.length);
+        console.log("Status das aulas:", 
+          allLessons.map(l => ({
             id: l.id, 
             title: l.title, 
             order_index: l.order_index,
@@ -42,8 +44,13 @@ export const useLessonsByModule = (moduleId: string) => {
           }))
         );
         
+        // Filtrar apenas aulas publicadas
+        const publishedLessons = allLessons.filter(lesson => lesson.published);
+        
+        console.log(`Aulas publicadas no módulo ${moduleId}:`, publishedLessons.length);
+        
         // Ordenar as aulas por número no título e garantir consistência
-        const sortedLessons = sortLessonsByNumber(lessons);
+        const sortedLessons = sortLessonsByNumber(publishedLessons);
         
         console.log(`Aulas ordenadas para o módulo ${moduleId}:`, 
           sortedLessons.map(l => ({
@@ -59,6 +66,9 @@ export const useLessonsByModule = (moduleId: string) => {
         return [];
       }
     },
-    enabled: !!moduleId
+    enabled: !!moduleId,
+    // Forçar refetch para garantir dados atualizados
+    staleTime: 0,
+    refetchOnWindowFocus: true
   });
 };

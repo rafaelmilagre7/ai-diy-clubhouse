@@ -36,10 +36,7 @@ export function useCourseDetails(courseId?: string) {
     },
     enabled: !!user?.id && !!courseId,
     // Em caso de erro, permitir acesso
-    retry: 1,
-    onError: (error) => {
-      console.error("Erro na query de verificação de acesso:", error);
-    }
+    retry: 1
   });
   
   // Buscar detalhes do curso - sempre buscar se não há negação explícita de acesso
@@ -67,7 +64,7 @@ export function useCourseDetails(courseId?: string) {
       console.log(`Curso ${courseId} carregado:`, data?.title);
       return data;
     },
-    enabled: !!courseId && hasAccess !== false && !accessDenied
+    enabled: !!courseId && (hasAccess !== false || isAccessError) && !accessDenied
   });
   
   // Buscar módulos do curso - sempre buscar se temos o curso
@@ -92,14 +89,14 @@ export function useCourseDetails(courseId?: string) {
       }
       
       console.log(`${data?.length || 0} módulos carregados para o curso ${courseId}:`, 
-        data?.map(m => ({ id: m.id, title: m.title })) || []);
+        data?.map(m => ({ id: m.id, title: m.title, published: m.published })) || []);
       
       return data;
     },
-    enabled: !!course && hasAccess !== false && !accessDenied
+    enabled: !!course && (hasAccess !== false || isAccessError) && !accessDenied
   });
   
-  // Buscar todas as aulas do curso para estatísticas
+  // Buscar todas as aulas do curso para estatísticas - incluir aulas não publicadas para debug
   const { 
     data: allLessons, 
     isLoading: isLoadingLessons 
@@ -114,24 +111,42 @@ export function useCourseDetails(courseId?: string) {
       const moduleIds = modules.map(m => m.id);
       console.log(`Carregando aulas dos módulos: ${moduleIds.join(", ")}`);
       
-      const { data, error } = await supabase
+      // Buscar TODAS as aulas (incluindo não publicadas) para debug
+      const { data: allLessonsData, error } = await supabase
         .from("learning_lessons")
         .select("*, learning_lesson_videos(*)")
-        .in("module_id", moduleIds)
-        .eq("published", true);
+        .in("module_id", moduleIds);
         
       if (error) {
         console.error("Erro ao carregar aulas:", error);
         return [];
       }
       
-      const sortedLessons = sortLessonsByNumber(data || []);
-      console.log(`${sortedLessons.length} aulas carregadas para o curso ${courseId}:`,
-        sortedLessons.map(l => ({ id: l.id, title: l.title })));
+      console.log(`Total de aulas encontradas (incluindo não publicadas): ${allLessonsData?.length || 0}`);
+      console.log("Status das aulas por módulo:", 
+        modules.map(module => {
+          const moduleLessons = allLessonsData?.filter(lesson => lesson.module_id === module.id) || [];
+          const publishedLessons = moduleLessons.filter(lesson => lesson.published);
+          return {
+            moduleId: module.id,
+            moduleTitle: module.title,
+            totalLessons: moduleLessons.length,
+            publishedLessons: publishedLessons.length,
+            lessons: moduleLessons.map(l => ({ id: l.id, title: l.title, published: l.published }))
+          };
+        })
+      );
+      
+      // Filtrar apenas aulas publicadas para o resultado final
+      const publishedLessons = allLessonsData?.filter(lesson => lesson.published) || [];
+      const sortedLessons = sortLessonsByNumber(publishedLessons);
+      
+      console.log(`${sortedLessons.length} aulas publicadas carregadas para o curso ${courseId}:`,
+        sortedLessons.map(l => ({ id: l.id, title: l.title, module_id: l.module_id })));
       
       return sortedLessons;
     },
-    enabled: !!modules?.length && hasAccess !== false && !accessDenied
+    enabled: !!modules?.length && (hasAccess !== false || isAccessError) && !accessDenied
   });
   
   // Buscar progresso do usuário para este curso
@@ -154,7 +169,7 @@ export function useCourseDetails(courseId?: string) {
       console.log(`Progresso carregado para o usuário: ${data?.length || 0} entradas`);
       return data;
     },
-    enabled: !!course && hasAccess !== false && !accessDenied
+    enabled: !!course && (hasAccess !== false || isAccessError) && !accessDenied
   });
 
   // Verificar erro do curso e redirecionar se necessário
