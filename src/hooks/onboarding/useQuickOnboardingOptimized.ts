@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
@@ -76,7 +77,12 @@ export const useQuickOnboardingOptimized = () => {
         setHasExistingData(true);
         
         // Normalizar isCompleted para boolean puro
-        const normalizedIsCompleted = existingData.is_completed === true || existingData.is_completed === 'true';
+        const normalizedIsCompleted = (
+          existingData.isCompleted === true ||
+          existingData.isCompleted === 'true' ||
+          existingData.is_completed === true ||
+          existingData.is_completed === 'true'
+        );
         setIsCompleted(normalizedIsCompleted);
         
         // Definir step atual baseado nos dados
@@ -271,29 +277,8 @@ export const useQuickOnboardingOptimized = () => {
     isSaving,
     lastSaveTime,
     completeOnboarding,
-    isCompleted: !!(
-      data?.isCompleted === true || data?.isCompleted === 'true' ||
-      data?.is_completed === true || data?.is_completed === 'true' ||
-      isCompleted === true
-    ),
+    isCompleted,
     retryCount,
     canFinalize
-  } satisfies {
-    currentStep: number;
-    data: QuickOnboardingData;
-    updateField: (field: keyof QuickOnboardingData, value: string) => void;
-    nextStep: () => void;
-    previousStep: () => void;
-    canProceed: boolean;
-    isLoading: boolean;
-    hasExistingData: boolean;
-    loadError: string | null;
-    totalSteps: number;
-    isSaving: boolean;
-    lastSaveTime: number | null;
-    completeOnboarding: () => Promise<boolean>;
-    isCompleted: boolean;
-    retryCount: number;
-    canFinalize: boolean;
-  };
+  } as const;
 };
