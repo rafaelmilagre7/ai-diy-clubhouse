@@ -1,454 +1,379 @@
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/auth";
-import { supabase, UserProfile } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
+import { UserProfile } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import {
-  Search,
-  Filter,
-  MoreVertical,
-  User,
-  Shield,
-  MailIcon,
-  Trash2,
-  UserX,
-  UserCog,
-  UserPlus,
-  CheckCircle,
-  AlertTriangle,
-} from "lucide-react";
-import LoadingScreen from "@/components/common/LoadingScreen";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
+import { Loader2, MoreVertical, Search, RefreshCw, UserPlus, Download } from "lucide-react";
+import { useAuth } from "@/contexts/auth";
 
 const UserManagement = () => {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  
   const [users, setUsers] = useState<UserProfile[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all");
-  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
-  const [isUserDetailsOpen, setIsUserDetailsOpen] = useState(false);
-  
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { hasPermission } = useAuth();
+
+  // Verificar se o usuário tem permissões para gerenciar usuários
+  const canManageUsers = hasPermission('users.view') || hasPermission('admin.all');
+  const canAssignRoles = hasPermission('users.assign_roles') || hasPermission('admin.all');
+  const canDeleteUsers = hasPermission('users.delete') || hasPermission('admin.all');
+
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setLoading(true);
-        
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("*");
-        
-        if (error) {
-          throw error;
-        }
-        
-        if (data && data.length > 0) {
-          setUsers(data as UserProfile[]);
-          setFilteredUsers(data as UserProfile[]);
-        } else {
-          const mockUsers = [
-            {
-              id: "1",
-              email: "admin@viverdeiaclub.com.br",
-              name: "Admin User",
-              avatar_url: null,
-              role: "admin",
-              company_name: "VIVER DE IA Club",
-              industry: "Educação",
-              created_at: "2025-01-01T00:00:00Z",
-            },
-            {
-              id: "2",
-              email: "joao.silva@example.com",
-              name: "João Silva",
-              avatar_url: null,
-              role: "member",
-              company_name: "Tech Solutions",
-              industry: "Tecnologia",
-              created_at: "2025-01-15T10:30:00Z",
-            },
-            {
-              id: "3",
-              email: "maria.oliveira@example.com",
-              name: "Maria Oliveira",
-              avatar_url: null,
-              role: "member",
-              company_name: "Marketing Pro",
-              industry: "Marketing",
-              created_at: "2025-02-10T14:45:00Z",
-            },
-            {
-              id: "4",
-              email: "pedro.santos@example.com",
-              name: "Pedro Santos",
-              avatar_url: null,
-              role: "member",
-              company_name: "Consultoria Santos",
-              industry: "Consultoria",
-              created_at: "2025-02-20T09:15:00Z",
-            },
-            {
-              id: "5",
-              email: "ana.pereira@example.com",
-              name: "Ana Pereira",
-              avatar_url: null,
-              role: "member",
-              company_name: "Pereira Imóveis",
-              industry: "Imobiliário",
-              created_at: "2025-03-05T16:20:00Z",
-            },
-          ] as UserProfile[];
-          
-          setUsers(mockUsers);
-          setFilteredUsers(mockUsers);
-        }
-      } catch (error) {
-        console.error("Error fetching users:", error);
-        toast({
-          title: "Erro ao carregar usuários",
-          description: "Ocorreu um erro ao tentar carregar a lista de usuários.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchUsers();
-  }, [toast]);
-  
-  useEffect(() => {
-    let filtered = [...users];
-    
-    if (roleFilter !== "all") {
-      filtered = filtered.filter((user) => user.role === roleFilter);
+    if (canManageUsers) {
+      fetchUsers();
     }
+  }, [canManageUsers]);
+
+  const fetchUsers = async () => {
+    if (!canManageUsers) return;
     
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (user) =>
-          user.name.toLowerCase().includes(query) ||
-          user.email.toLowerCase().includes(query) ||
-          (user.company_name && user.company_name.toLowerCase().includes(query)) ||
-          (user.industry && user.industry.toLowerCase().includes(query))
-      );
-    }
-    
-    setFilteredUsers(filtered);
-  }, [searchQuery, roleFilter, users]);
-  
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .substring(0, 2);
-  };
-  
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    }).format(date);
-  };
-  
-  const handleViewUser = (user: UserProfile) => {
-    setSelectedUser(user);
-    setIsUserDetailsOpen(true);
-  };
-  
-  const handleUpdateRole = async (userId: string, newRole: "admin" | "member") => {
     try {
-      setUsers(
-        users.map((user) =>
-          user.id === userId ? { ...user, role: newRole } : user
-        )
-      );
+      setLoading(true);
       
-      toast({
-        title: "Função atualizada",
-        description: `Usuário atualizado para ${newRole === "admin" ? "Administrador" : "Membro"}.`,
-      });
-    } catch (error) {
-      console.error("Error updating user role:", error);
-      toast({
-        title: "Erro ao atualizar função",
-        description: "Ocorreu um erro ao tentar atualizar a função do usuário.",
-        variant: "destructive",
-      });
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          email,
+          name,
+          role,
+          role_id,
+          avatar_url,
+          company_name,
+          industry,
+          created_at,
+          user_roles (
+            id,
+            name,
+            description
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Erro ao buscar usuários:', error);
+        throw error;
+      }
+
+      // Mapear os dados garantindo tipos corretos
+      const mappedUsers: UserProfile[] = (profiles || []).map(profile => ({
+        id: profile.id,
+        email: profile.email || '',
+        name: profile.name,
+        role: profile.role || 'membro_club', // Valor padrão válido
+        role_id: profile.role_id,
+        user_roles: profile.user_roles,
+        avatar_url: profile.avatar_url,
+        company_name: profile.company_name,
+        industry: profile.industry,
+        created_at: profile.created_at || new Date().toISOString(),
+      }));
+
+      setUsers(mappedUsers);
+    } catch (error: any) {
+      console.error('Erro ao buscar usuários:', error);
+      toast.error('Erro ao carregar usuários: ' + error.message);
+    } finally {
+      setLoading(false);
+      setIsRefreshing(false);
     }
   };
-  
-  if (loading) {
-    return <LoadingScreen />;
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    fetchUsers();
+  };
+
+  const handleRoleChange = async (userId: string, newRole: 'admin' | 'formacao' | 'membro_club') => {
+    if (!canAssignRoles) {
+      toast.error('Você não tem permissão para alterar papéis de usuários');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      // Atualizar o estado local
+      setUsers(prev => prev.map(user => 
+        user.id === userId ? { ...user, role: newRole } : user
+      ));
+
+      toast.success('Papel do usuário atualizado com sucesso');
+    } catch (error: any) {
+      console.error('Erro ao atualizar papel:', error);
+      toast.error('Erro ao atualizar papel: ' + error.message);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!canDeleteUsers) {
+      toast.error('Você não tem permissão para excluir usuários');
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.admin.deleteUser(userId);
+      
+      if (error) throw error;
+
+      // Remover do estado local
+      setUsers(prev => prev.filter(user => user.id !== userId));
+      
+      toast.success('Usuário excluído com sucesso');
+    } catch (error: any) {
+      console.error('Erro ao excluir usuário:', error);
+      toast.error('Erro ao excluir usuário: ' + error.message);
+    }
+  };
+
+  const exportUsers = () => {
+    const csvContent = [
+      ['Nome', 'Email', 'Papel', 'Empresa', 'Setor', 'Data de Criação'],
+      ...users.map(user => [
+        user.name || '',
+        user.email || '',
+        user.role || '',
+        user.company_name || '',
+        user.industry || '',
+        new Date(user.created_at).toLocaleDateString('pt-BR')
+      ])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'usuarios.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const filteredUsers = users.filter(user =>
+    user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.company_name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const getRoleBadgeVariant = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return 'destructive';
+      case 'formacao':
+        return 'secondary';
+      case 'membro_club':
+        return 'default';
+      default:
+        return 'outline';
+    }
+  };
+
+  const getRoleDisplayName = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return 'Administrador';
+      case 'formacao':
+        return 'Membro da Formação';
+      case 'membro_club':
+        return 'Membro do Club';
+      default:
+        return role;
+    }
+  };
+
+  if (!canManageUsers) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle>Acesso Restrito</CardTitle>
+            <CardDescription>
+              Você não tem permissão para visualizar a lista de usuários.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
   }
-  
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Carregando usuários...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Usuários</h1>
-        <p className="text-muted-foreground mt-1">
-          Gerencie os membros e administradores da plataforma
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Gerenciamento de Usuários</h1>
+          <p className="text-muted-foreground">
+            Gerencie usuários e suas permissões
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={exportUsers} variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            Exportar
+          </Button>
+          <Button onClick={handleRefresh} variant="outline" disabled={isRefreshing}>
+            {isRefreshing ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4 mr-2" />
+            )}
+            Atualizar
+          </Button>
+        </div>
       </div>
-      
-      <div className="flex flex-col sm:flex-row gap-4">
+
+      {/* Estatísticas */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Usuários</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{users.length}</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Administradores</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {users.filter(u => u.role === 'admin').length}
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Membros da Formação</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {users.filter(u => u.role === 'formacao').length}
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Membros do Club</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {users.filter(u => u.role === 'membro_club').length}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Barra de busca */}
+      <div className="flex items-center space-x-2">
         <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            type="search"
             placeholder="Buscar usuários..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-8"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <Select value={roleFilter} onValueChange={setRoleFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filtrar por função" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas as funções</SelectItem>
-            <SelectItem value="admin">Administradores</SelectItem>
-            <SelectItem value="member">Membros</SelectItem>
-          </SelectContent>
-        </Select>
-        <Button variant="outline">
-          <Filter className="mr-2 h-4 w-4" />
-          Mais Filtros
-        </Button>
       </div>
-      
-      <div className="rounded-md border">
+
+      {/* Tabela de usuários */}
+      <Card>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Usuário</TableHead>
+              <TableHead>Nome</TableHead>
               <TableHead>Email</TableHead>
+              <TableHead>Papel</TableHead>
               <TableHead>Empresa</TableHead>
-              <TableHead>Função</TableHead>
-              <TableHead>Membro desde</TableHead>
+              <TableHead>Data de Criação</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredUsers.length > 0 ? (
-              filteredUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.avatar_url || undefined} />
-                        <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-                      </Avatar>
-                      <span className="font-medium">{user.name}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.company_name || "-"}</TableCell>
-                  <TableCell>
-                    {user.role === "admin" ? (
-                      <Badge variant="outline" className="bg-viverblue/10 text-viverblue border-viverblue/30">
-                        <Shield className="mr-1 h-3 w-3" />
-                        Admin
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-200">
-                        <User className="mr-1 h-3 w-3" />
-                        Membro
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>{formatDate(user.created_at)}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleViewUser(user)}>
-                          <User className="mr-2 h-4 w-4" />
-                          <span>Ver detalhes</span>
+            {filteredUsers.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell className="font-medium">
+                  {user.name || 'Sem nome'}
+                </TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>
+                  <Badge variant={getRoleBadgeVariant(user.role)}>
+                    {getRoleDisplayName(user.role)}
+                  </Badge>
+                </TableCell>
+                <TableCell>{user.company_name || '-'}</TableCell>
+                <TableCell>
+                  {new Date(user.created_at).toLocaleDateString('pt-BR')}
+                </TableCell>
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {canAssignRoles && user.role !== 'admin' && (
+                        <DropdownMenuItem
+                          onClick={() => handleRoleChange(user.id, 'admin')}
+                        >
+                          Promover a Admin
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <MailIcon className="mr-2 h-4 w-4" />
-                          <span>Enviar mensagem</span>
+                      )}
+                      {canAssignRoles && user.role !== 'formacao' && (
+                        <DropdownMenuItem
+                          onClick={() => handleRoleChange(user.id, 'formacao')}
+                        >
+                          Mover para Formação
                         </DropdownMenuItem>
-                        {user.role === "member" ? (
-                          <DropdownMenuItem onClick={() => handleUpdateRole(user.id, "admin")}>
-                            <Shield className="mr-2 h-4 w-4" />
-                            <span>Tornar admin</span>
-                          </DropdownMenuItem>
-                        ) : (
-                          <DropdownMenuItem onClick={() => handleUpdateRole(user.id, "member")}>
-                            <User className="mr-2 h-4 w-4" />
-                            <span>Tornar membro</span>
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem className="text-destructive focus:text-destructive">
-                          <UserX className="mr-2 h-4 w-4" />
-                          <span>Desativar conta</span>
+                      )}
+                      {canAssignRoles && user.role !== 'membro_club' && (
+                        <DropdownMenuItem
+                          onClick={() => handleRoleChange(user.id, 'membro_club')}
+                        >
+                          Mover para Club
                         </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">
-                  <div className="flex flex-col items-center justify-center">
-                    <UserCog className="h-8 w-8 text-muted-foreground mb-2" />
-                    <h3 className="text-lg font-medium">Nenhum usuário encontrado</h3>
-                    <p className="text-muted-foreground mt-1">
-                      {searchQuery || roleFilter !== "all"
-                        ? "Tente mudar os filtros para encontrar outros usuários."
-                        : "Não há usuários cadastrados no sistema."}
-                    </p>
-                  </div>
+                      )}
+                      {canDeleteUsers && (
+                        <DropdownMenuItem
+                          onClick={() => handleDeleteUser(user.id)}
+                          className="text-destructive"
+                        >
+                          Excluir Usuário
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
-            )}
+            ))}
           </TableBody>
         </Table>
-      </div>
-      
-      {selectedUser && (
-        <Dialog open={isUserDetailsOpen} onOpenChange={setIsUserDetailsOpen}>
-          <DialogContent className="sm:max-w-[550px]">
-            <DialogHeader>
-              <DialogTitle>Detalhes do Usuário</DialogTitle>
-              <DialogDescription>
-                Informações detalhadas e estatísticas do usuário.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="flex flex-col items-center py-4">
-              <Avatar className="h-20 w-20">
-                <AvatarImage src={selectedUser.avatar_url || undefined} />
-                <AvatarFallback className="text-xl">{getInitials(selectedUser.name)}</AvatarFallback>
-              </Avatar>
-              <h2 className="text-xl font-semibold mt-4">{selectedUser.name}</h2>
-              <p className="text-muted-foreground">{selectedUser.email}</p>
-              
-              <div className="mt-2">
-                {selectedUser.role === "admin" ? (
-                  <Badge variant="outline" className="bg-viverblue/10 text-viverblue border-viverblue/30">
-                    <Shield className="mr-1 h-3 w-3" />
-                    Administrador
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-200">
-                    <User className="mr-1 h-3 w-3" />
-                    Membro
-                  </Badge>
-                )}
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4 py-2">
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Empresa</p>
-                <p className="font-medium">{selectedUser.company_name || "Não informado"}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Indústria</p>
-                <p className="font-medium">{selectedUser.industry || "Não informado"}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Membro desde</p>
-                <p className="font-medium">{formatDate(selectedUser.created_at)}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Status</p>
-                <p className="font-medium flex items-center">
-                  <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
-                  Ativo
-                </p>
-              </div>
-            </div>
-            
-            <div className="space-y-2 py-2">
-              <h3 className="font-medium">Estatísticas</h3>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="rounded-md border p-3 text-center">
-                  <p className="text-2xl font-bold">3</p>
-                  <p className="text-xs text-muted-foreground">Implementações</p>
-                </div>
-                <div className="rounded-md border p-3 text-center">
-                  <p className="text-2xl font-bold">2</p>
-                  <p className="text-xs text-muted-foreground">Concluídas</p>
-                </div>
-                <div className="rounded-md border p-3 text-center">
-                  <p className="text-2xl font-bold">67%</p>
-                  <p className="text-xs text-muted-foreground">Taxa de conclusão</p>
-                </div>
-              </div>
-            </div>
-            
-            <DialogFooter className="flex-col sm:flex-row gap-2">
-              <Button variant="outline" className="sm:w-auto">
-                <MailIcon className="mr-2 h-4 w-4" />
-                Enviar mensagem
-              </Button>
-              {selectedUser.role === "member" ? (
-                <Button onClick={() => handleUpdateRole(selectedUser.id, "admin")}>
-                  <Shield className="mr-2 h-4 w-4" />
-                  Tornar admin
-                </Button>
-              ) : (
-                <Button onClick={() => handleUpdateRole(selectedUser.id, "member")}>
-                  <User className="mr-2 h-4 w-4" />
-                  Tornar membro
-                </Button>
-              )}
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+      </Card>
     </div>
   );
 };

@@ -9,7 +9,7 @@ describe('UserRoleDialog', () => {
     id: '1',
     email: 'test@example.com',
     name: 'Test User',
-    role: 'member',
+    role: 'membro_club',
     avatar_url: null,
     company_name: 'Test Company',
     industry: 'Technology',
@@ -18,9 +18,9 @@ describe('UserRoleDialog', () => {
 
   const mockAvailableRoles = [
     { 
-      id: 'member-role-id', 
-      name: 'member', 
-      description: 'Membro', 
+      id: 'membro-club-role-id', 
+      name: 'membro_club', 
+      description: 'Membro do Club', 
       is_system: true, 
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z'
@@ -39,7 +39,7 @@ describe('UserRoleDialog', () => {
     open: true,
     onOpenChange: jest.fn(),
     selectedUser: mockUser,
-    newRoleId: 'member-role-id',
+    newRoleId: 'membro-club-role-id',
     onRoleChange: jest.fn(),
     onUpdateRole: jest.fn(),
     saving: false,
