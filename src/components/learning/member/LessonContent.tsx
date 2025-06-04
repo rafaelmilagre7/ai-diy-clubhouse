@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { LearningLesson } from "@/lib/supabase";
 import { LessonVideoPlayer } from "./LessonVideoPlayer";
@@ -70,8 +69,10 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   };
   
   const handleCompleteLesson = () => {
-    if (onComplete) {
-      onComplete();
+    // Se a aula não estava concluída anteriormente, mostrar o modal de conclusão com NPS
+    if (!isCompleted && onComplete) {
+      onComplete(); // Marcar como concluída primeiro
+      setCompletionDialogOpen(true); // Depois abrir o modal de NPS
     }
   };
 
@@ -167,7 +168,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
         isOpen={completionDialogOpen}
         setIsOpen={setCompletionDialogOpen}
         lesson={lesson}
-        onNext={onNextLesson}
+        onNext={handleNavigateToNext}
         nextLesson={nextLesson}
       />
     </div>
