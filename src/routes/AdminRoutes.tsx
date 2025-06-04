@@ -7,6 +7,7 @@ import AdminLayout from '@/components/layout/AdminLayout';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
 import AdminUsers from '@/pages/admin/AdminUsers';
 import AdminTools from '@/pages/admin/AdminTools';
+import AdminToolEdit from '@/pages/admin/AdminToolEdit';
 import AdminSolutions from '@/pages/admin/AdminSolutions';
 import AdminSolutionCreate from '@/pages/admin/AdminSolutionCreate';
 import SolutionEditor from '@/pages/admin/SolutionEditor';
@@ -28,6 +29,8 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin", AdminDashboard),
   createAdminRoute("/admin/users", AdminUsers),
   createAdminRoute("/admin/tools", AdminTools),
+  createAdminRoute("/admin/tools/new", AdminToolEdit),
+  createAdminRoute("/admin/tools/:id", AdminToolEdit),
   createAdminRoute("/admin/solutions", AdminSolutions),
   createAdminRoute("/admin/solutions/new", AdminSolutionCreate),
   createAdminRoute("/admin/solutions/:id", SolutionEditor),
