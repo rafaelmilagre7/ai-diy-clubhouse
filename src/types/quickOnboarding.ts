@@ -30,6 +30,9 @@ export interface QuickOnboardingData {
   desired_ai_areas: string[];
   has_implemented: string;
   previous_tools: string[];
+  
+  // Campo de completude (pode vir como string do banco)
+  isCompleted?: boolean | string;
 }
 
 // Adapter para converter OnboardingState para QuickOnboardingData
