@@ -80,91 +80,74 @@ const SolutionImplementation: React.FC = () => {
           currentModule={currentModule}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Sidebar Navigation */}
-          <div className="lg:col-span-1">
-            <ImplementationNavigation
-              modules={modules}
-              currentModuleIndex={currentModuleIndex}
-              completedModules={completedModules}
-              onModuleSelect={handleNavigateToModule}
-            />
-          </div>
+        {/* Main Content Area - Sem sidebar, apenas o wizard com abas */}
+        <div className="w-full">
+          <Card className="bg-[#151823]/80 backdrop-blur-sm border-neutral-700/50">
+            <CardContent className="p-6">
+              {/* Tabs Navigation */}
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <ImplementationTabsNavigation
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                />
 
-          {/* Main Content Area */}
-          <div className="lg:col-span-3">
-            <Card className="bg-[#151823]/80 backdrop-blur-sm border-neutral-700/50">
-              <CardContent className="p-6">
-                {/* Tabs Navigation */}
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                  <ImplementationTabsNavigation
-                    activeTab={activeTab}
-                    setActiveTab={setActiveTab}
-                  />
+                {/* Tab Contents */}
+                <div className="mt-6">
+                  <TabsContent value="tools" className="mt-0">
+                    <ModuleContentTools
+                      module={currentModule}
+                    />
+                  </TabsContent>
 
-                  {/* Tab Contents */}
-                  <div className="mt-6">
-                    <TabsContent value="tools" className="mt-0">
-                      <ModuleContentTools
-                        module={currentModule}
-                        onInteraction={() => setModuleInteraction(true)}
-                      />
-                    </TabsContent>
+                  <TabsContent value="materials" className="mt-0">
+                    <ModuleContentMaterials
+                      module={currentModule}
+                    />
+                  </TabsContent>
 
-                    <TabsContent value="materials" className="mt-0">
-                      <ModuleContentMaterials
-                        module={currentModule}
-                        onInteraction={() => setModuleInteraction(true)}
-                      />
-                    </TabsContent>
+                  <TabsContent value="videos" className="mt-0">
+                    <ModuleContentVideos
+                      module={currentModule}
+                    />
+                  </TabsContent>
 
-                    <TabsContent value="videos" className="mt-0">
-                      <ModuleContentVideos
-                        module={currentModule}
-                        onInteraction={() => setModuleInteraction(true)}
-                      />
-                    </TabsContent>
+                  <TabsContent value="checklist" className="mt-0">
+                    <ModuleContentChecklist
+                      module={currentModule}
+                    />
+                  </TabsContent>
 
-                    <TabsContent value="checklist" className="mt-0">
-                      <ModuleContentChecklist
-                        module={currentModule}
-                        onInteraction={() => setModuleInteraction(true)}
-                      />
-                    </TabsContent>
+                  <TabsContent value="comments" className="mt-0">
+                    <CommentsSection
+                      solutionId={id!}
+                      moduleId={currentModule?.id || 'default'}
+                    />
+                  </TabsContent>
 
-                    <TabsContent value="comments" className="mt-0">
-                      <CommentsSection
-                        solutionId={id!}
-                        moduleIndex={currentModuleIndex}
-                        onInteraction={() => setModuleInteraction(true)}
-                      />
-                    </TabsContent>
-
-                    <TabsContent value="complete" className="mt-0">
-                      <div className="text-center space-y-6 py-8">
-                        <div className="max-w-md mx-auto">
-                          <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
-                          <h3 className="text-2xl font-bold text-white mb-2">
-                            Concluir Implementação
-                          </h3>
-                          <p className="text-gray-300 mb-6">
-                            Você está pronto para marcar esta etapa como concluída?
-                          </p>
-                          <Button
-                            onClick={handleMarkAsCompleted}
-                            className="bg-gradient-to-r from-viverblue to-viverblue-light hover:from-viverblue/90 hover:to-viverblue-light/90 text-white font-semibold px-8 py-3 rounded-lg transition-all duration-200"
-                            size="lg"
-                          >
-                            Marcar como Concluída
-                          </Button>
-                        </div>
+                  <TabsContent value="complete" className="mt-0">
+                    <div className="text-center space-y-6 py-8">
+                      <div className="max-w-md mx-auto">
+                        <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
+                        <h3 className="text-2xl font-bold text-white mb-2">
+                          Concluir Implementação
+                        </h3>
+                        <p className="text-gray-300 mb-6">
+                          Você está pronto para marcar esta etapa como concluída?
+                        </p>
+                        <Button
+                          onClick={handleMarkAsCompleted}
+                          className="bg-gradient-to-r from-viverblue to-viverblue-light hover:from-viverblue/90 hover:to-viverblue-light/90 text-white font-semibold px-8 py-3 rounded-lg transition-all duration-200"
+                          size="lg"
+                        >
+                          Marcar como Concluída
+                        </Button>
                       </div>
-                    </TabsContent>
-                  </div>
-                </Tabs>
-              </CardContent>
-            </Card>
-          </div>
+                    </div>
+                  </TabsContent>
+                </div>
+              </Tabs>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
