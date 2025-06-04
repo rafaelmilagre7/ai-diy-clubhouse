@@ -43,7 +43,8 @@ const LessonView = () => {
     prevLesson,
     nextLesson,
     navigateToCourse,
-    navigateToNext
+    navigateToNext,
+    navigateToPrevious
   } = useLessonNavigation({
     courseId,
     currentLessonId: lessonId,
@@ -52,9 +53,10 @@ const LessonView = () => {
   
   // Gerenciar progresso da lição
   const {
-    progress,
+    isCompleted,
     updateProgress,
-    completeLesson
+    completeLesson,
+    isUpdating
   } = useLessonProgress({ lessonId });
   
   // Buscar lições completadas para o sidebar
@@ -135,7 +137,7 @@ const LessonView = () => {
           moduleTitle={moduleData?.module?.title || ""}
           courseTitle={courseInfo?.title}
           courseId={courseId}
-          progress={progress}
+          progress={isCompleted ? 100 : 0}
         />
         
         <div className="mt-8">
@@ -143,7 +145,7 @@ const LessonView = () => {
             lesson={lesson} 
             videos={safeVideos}
             resources={safeResources}
-            isCompleted={progress >= 100}
+            isCompleted={isCompleted}
             onProgressUpdate={handleProgressUpdate} 
             onComplete={completeLesson}
             prevLesson={prevLesson}
@@ -151,6 +153,8 @@ const LessonView = () => {
             courseId={courseId}
             allLessons={safeModuleLessons}
             onNextLesson={navigateToNext}
+            onPreviousLesson={navigateToPrevious}
+            isUpdating={isUpdating}
           />
         </div>
       </div>

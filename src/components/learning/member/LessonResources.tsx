@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Download, FilePlus2, FileImage, FileVideo, Link as LinkIcon } from "lucide-react";
+import { FileText, Download, FilePlus2, FileImage, FileVideo, Link as LinkIcon, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 
@@ -23,12 +23,10 @@ export const LessonResources = ({ resources = [] }: { resources: LessonResourceP
   const [activeType, setActiveType] = useState<string>("all");
   const [downloading, setDownloading] = useState<string | null>(null);
 
-  if (!resources || resources.length === 0) {
-    return null;
-  }
-
   // Preparar tipos de recursos para filtragem
-  const resourceTypes = ["all", ...new Set(resources.map(r => r.resource_type || "outros"))];
+  const resourceTypes = resources.length > 0 ? 
+    ["all", ...new Set(resources.map(r => r.resource_type || "outros"))] : 
+    ["all"];
 
   // Filtrar recursos baseado no tipo ativo
   const filteredResources = activeType === "all" 
@@ -121,9 +119,15 @@ export const LessonResources = ({ resources = [] }: { resources: LessonResourceP
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Material complementar</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <BookOpen className="h-5 w-5" />
+          Material complementar
+        </CardTitle>
         <CardDescription>
-          Recursos adicionais para aprofundar seus conhecimentos
+          {resources.length > 0 
+            ? "Recursos adicionais para aprofundar seus conhecimentos"
+            : "Esta aula não possui materiais complementares disponíveis para download"
+          }
         </CardDescription>
         
         {resourceTypes.length > 2 && (
@@ -148,67 +152,82 @@ export const LessonResources = ({ resources = [] }: { resources: LessonResourceP
       </CardHeader>
       
       <CardContent>
-        <div className="space-y-2 divide-y">
-          {filteredResources.length === 0 ? (
-            <p className="py-8 text-center text-muted-foreground">
-              Nenhum recurso deste tipo disponível.
-            </p>
-          ) : (
-            filteredResources.map((resource, index) => (
-              <div key={resource.id} className={`pt-3 ${index > 0 ? 'pt-3' : ''}`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-start gap-3">
-                    {getResourceIcon(resource)}
-                    <div>
-                      {/* Usar title ou name, com fallback para garantir que sempre exiba algo */}
-                      <h4 className="font-medium">{resource.title || resource.name || "Material sem título"}</h4>
-                      {resource.description && (
-                        <p className="text-sm text-muted-foreground mt-0.5">
-                          {resource.description}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-2 mt-1">
-                        {resource.file_size_bytes && (
-                          <span className="text-xs text-muted-foreground">
-                            {formatFileSize(resource.file_size_bytes)}
-                          </span>
+        {resources.length === 0 ? (
+          <div className="py-8 text-center">
+            <div className="bg-muted/50 rounded-lg p-6">
+              <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="font-medium text-muted-foreground mb-2">
+                Nenhum material adicional
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Esta aula não possui materiais complementares disponíveis para download. 
+                O conteúdo principal da aula já contém todas as informações necessárias.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-2 divide-y">
+            {filteredResources.length === 0 ? (
+              <p className="py-8 text-center text-muted-foreground">
+                Nenhum recurso deste tipo disponível.
+              </p>
+            ) : (
+              filteredResources.map((resource, index) => (
+                <div key={resource.id} className={`pt-3 ${index > 0 ? 'pt-3' : ''}`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-start gap-3">
+                      {getResourceIcon(resource)}
+                      <div>
+                        {/* Usar title ou name, com fallback para garantir que sempre exiba algo */}
+                        <h4 className="font-medium">{resource.title || resource.name || "Material sem título"}</h4>
+                        {resource.description && (
+                          <p className="text-sm text-muted-foreground mt-0.5">
+                            {resource.description}
+                          </p>
                         )}
-                        {resource.resource_type && (
-                          <span className="text-xs bg-muted px-2 py-0.5 rounded-full">
-                            {resource.resource_type}
-                          </span>
-                        )}
-                        {resource.external_url && (
-                          <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">
-                            Link externo
-                          </span>
-                        )}
+                        <div className="flex items-center gap-2 mt-1">
+                          {resource.file_size_bytes && (
+                            <span className="text-xs text-muted-foreground">
+                              {formatFileSize(resource.file_size_bytes)}
+                            </span>
+                          )}
+                          {resource.resource_type && (
+                            <span className="text-xs bg-muted px-2 py-0.5 rounded-full">
+                              {resource.resource_type}
+                            </span>
+                          )}
+                          {resource.external_url && (
+                            <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">
+                              Link externo
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
+                    
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleResourceClick(resource)}
+                      disabled={downloading === resource.id}
+                      className="ml-2 flex-shrink-0"
+                    >
+                      {downloading === resource.id ? (
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                      ) : resource.external_url ? (
+                        <LinkIcon className="h-4 w-4 mr-1" />
+                      ) : (
+                        <Download className="h-4 w-4 mr-1" />
+                      )}
+                      {resource.external_url ? "Abrir" : "Baixar"}
+                    </Button>
                   </div>
-                  
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleResourceClick(resource)}
-                    disabled={downloading === resource.id}
-                    className="ml-2 flex-shrink-0"
-                  >
-                    {downloading === resource.id ? (
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                    ) : resource.external_url ? (
-                      <LinkIcon className="h-4 w-4 mr-1" />
-                    ) : (
-                      <Download className="h-4 w-4 mr-1" />
-                    )}
-                    {resource.external_url ? "Abrir" : "Baixar"}
-                  </Button>
+                  {index < filteredResources.length - 1 && <Separator className="mt-3" />}
                 </div>
-                {index < filteredResources.length - 1 && <Separator className="mt-3" />}
-              </div>
-            ))
-          )}
-        </div>
+              ))
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

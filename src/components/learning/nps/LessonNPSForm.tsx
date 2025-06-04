@@ -19,7 +19,7 @@ const NPSRatingButton: React.FC<NPSRatingButtonProps> = ({ value, selectedValue,
     <Button
       type="button"
       variant={isSelected ? "default" : "outline"}
-      className={`w-10 h-10 p-0 ${
+      className={`w-10 h-10 p-0 flex-shrink-0 ${
         isSelected
           ? "bg-primary text-primary-foreground"
           : "hover:bg-primary/10"
@@ -64,7 +64,7 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({ lessonId, onComple
   }
 
   return (
-    <Card className="w-full max-w-lg mx-auto">
+    <Card className="w-full max-w-2xl mx-auto">
       <form onSubmit={handleSubmit}>
         <CardHeader>
           <CardTitle>Sua opinião é importante!</CardTitle>
@@ -73,15 +73,31 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({ lessonId, onComple
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex flex-wrap gap-2 justify-center">
-            {Array.from({ length: 11 }, (_, i) => (
-              <NPSRatingButton
-                key={i}
-                value={i}
-                selectedValue={score}
-                onClick={setScore}
-              />
-            ))}
+          {/* Escala NPS em uma linha com scroll horizontal em mobile */}
+          <div className="space-y-4">
+            <div className="overflow-x-auto pb-2">
+              <div className="flex gap-2 min-w-max justify-center px-2">
+                {Array.from({ length: 11 }, (_, i) => (
+                  <NPSRatingButton
+                    key={i}
+                    value={i}
+                    selectedValue={score}
+                    onClick={setScore}
+                  />
+                ))}
+              </div>
+            </div>
+            
+            {/* Labels da escala */}
+            <div className="flex justify-between text-sm text-muted-foreground px-2">
+              <span>0 - Péssimo</span>
+              {score !== null && (
+                <span className="text-lg font-medium text-primary">
+                  Nota: {score}
+                </span>
+              )}
+              <span>10 - Excelente</span>
+            </div>
           </div>
           
           {score !== null && (

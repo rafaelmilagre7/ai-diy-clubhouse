@@ -5,13 +5,13 @@ import { LessonVideoPlayer } from "./LessonVideoPlayer";
 import { LessonComments } from "../comments/LessonComments";
 import { LessonResources } from "./LessonResources";
 import { LessonAssistantChat } from "../assistant/LessonAssistantChat";
+import { LessonNavigationBar } from "./LessonNavigationBar";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LessonCompletionModal } from "../completion/LessonCompletionModal";
 import { LessonDescription } from "./LessonDescription";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { AlertCircle } from "lucide-react";
 
 interface LessonContentProps {
   lesson: LearningLesson;
@@ -25,6 +25,8 @@ interface LessonContentProps {
   courseId?: string;
   allLessons?: any[];
   onNextLesson?: () => void;
+  onPreviousLesson?: () => void;
+  isUpdating?: boolean;
 }
 
 export const LessonContent: React.FC<LessonContentProps> = ({ 
@@ -38,10 +40,11 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   nextLesson,
   courseId,
   allLessons = [],
-  onNextLesson
+  onNextLesson,
+  onPreviousLesson,
+  isUpdating = false
 }) => {
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('assistant');
   
   // Verificar se temos um objeto lesson válido
   if (!lesson) {
@@ -67,7 +70,6 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   };
   
   const handleCompleteLesson = () => {
-    setCompletionDialogOpen(true);
     if (onComplete) {
       onComplete();
     }
@@ -92,11 +94,10 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   
   // Verificar condições para exibição dos componentes
   const hasVideos = safeVideos.length > 0;
-  const hasResources = safeResources.length > 0;
   const hasAiAssistant = lesson.ai_assistant_enabled;
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20"> {/* Adicionar padding bottom para a barra de navegação fixa */}
       {/* Player de vídeo como elemento principal - agora com largura total */}
       {hasVideos && (
         <div>
@@ -104,19 +105,6 @@ export const LessonContent: React.FC<LessonContentProps> = ({
             videos={safeVideos}
             onProgress={(videoId, progress) => handleVideoProgress(videoId, progress)}
           />
-          
-          {/* Botão de Concluir Aula logo abaixo do vídeo */}
-          <div className="mt-4 flex justify-end">
-            <Button 
-              onClick={handleCompleteLesson}
-              size="sm"
-              variant={isCompleted ? "outline" : "default"}
-              className="gap-2"
-            >
-              <CheckCircle className="h-4 w-4" />
-              {isCompleted ? "Aula Concluída" : "Marcar como Concluída"}
-            </Button>
-          </div>
         </div>
       )}
       
@@ -127,12 +115,10 @@ export const LessonContent: React.FC<LessonContentProps> = ({
         </div>
       )}
       
-      {/* Recursos/Materiais da aula (agora sempre visíveis) */}
-      {hasResources && (
-        <div className="mt-6">
-          <LessonResources resources={safeResources} />
-        </div>
-      )}
+      {/* Recursos/Materiais da aula (sempre visível) */}
+      <div className="mt-6">
+        <LessonResources resources={safeResources} />
+      </div>
       
       <Separator className="my-6" />
       
@@ -154,6 +140,17 @@ export const LessonContent: React.FC<LessonContentProps> = ({
           </Tabs>
         </div>
       )}
+      
+      {/* Barra de navegação fixa */}
+      <LessonNavigationBar
+        isCompleted={isCompleted}
+        onComplete={handleCompleteLesson}
+        onPrevious={onPreviousLesson}
+        onNext={onNextLesson || (() => {})}
+        prevLesson={prevLesson}
+        nextLesson={nextLesson}
+        isUpdating={isUpdating}
+      />
       
       {/* Modal de conclusão da aula */}
       <LessonCompletionModal
