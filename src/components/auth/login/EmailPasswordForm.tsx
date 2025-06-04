@@ -42,7 +42,7 @@ const EmailPasswordForm = ({
         </Label>
         <div className="relative group">
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <Mail className="h-5 w-5 text-white/60 group-focus-within:text-viverblue transition-colors" />
+            <Mail className="h-5 w-5 text-gray-400 antialiased" strokeWidth={2} />
           </div>
           <Input
             id="email"
@@ -78,7 +78,7 @@ const EmailPasswordForm = ({
         </div>
         <div className="relative group">
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <Lock className="h-5 w-5 text-white/60 group-focus-within:text-viverblue transition-colors" />
+            <Lock className="h-5 w-5 text-gray-400 antialiased" strokeWidth={2} />
           </div>
           <Input
             id="password"
@@ -94,13 +94,13 @@ const EmailPasswordForm = ({
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute inset-y-0 right-0 flex items-center pr-3 text-white/60 hover:text-viverblue transition-colors duration-200"
+            className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-viverblue transition-colors duration-200"
             tabIndex={-1}
           >
             {showPassword ? (
-              <EyeOff className="h-5 w-5" />
+              <EyeOff className="h-5 w-5 antialiased" strokeWidth={2} />
             ) : (
-              <Eye className="h-5 w-5" />
+              <Eye className="h-5 w-5 antialiased" strokeWidth={2} />
             )}
           </button>
         </div>
@@ -134,7 +134,7 @@ const EmailPasswordForm = ({
         >
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              <Loader2 className="mr-2 h-5 w-5 animate-spin antialiased" strokeWidth={2} />
               Entrando...
             </>
           ) : (
