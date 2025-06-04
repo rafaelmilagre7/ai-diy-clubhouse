@@ -18,12 +18,6 @@ interface SuggestionContentProps {
     user_name?: string;
     user_avatar?: string;
   };
-  comment: string;
-  comments: any[];
-  isSubmitting: boolean;
-  commentsLoading: boolean;
-  onCommentChange: (value: string) => void;
-  onSubmitComment: (e: React.FormEvent) => void;
   onVote: (voteType: 'upvote' | 'downvote') => Promise<void>;
   isOwner?: boolean;
   userVote?: UserVote | null;
@@ -32,12 +26,6 @@ interface SuggestionContentProps {
 
 const SuggestionContent = ({
   suggestion,
-  comment,
-  comments,
-  isSubmitting,
-  commentsLoading,
-  onCommentChange,
-  onSubmitComment,
   onVote,
   isOwner = false,
   userVote,
@@ -46,12 +34,6 @@ const SuggestionContent = ({
   return (
     <SuggestionContainer
       suggestion={suggestion}
-      comment={comment}
-      comments={comments}
-      isSubmitting={isSubmitting}
-      commentsLoading={commentsLoading}
-      onCommentChange={onCommentChange}
-      onSubmitComment={onSubmitComment}
       onVote={onVote}
       isOwner={isOwner}
       userVote={userVote}
