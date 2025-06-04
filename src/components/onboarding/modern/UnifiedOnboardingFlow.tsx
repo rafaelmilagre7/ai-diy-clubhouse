@@ -1,13 +1,16 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuickOnboardingOptimized } from '@/hooks/onboarding/useQuickOnboardingOptimized';
 import { useNavigate } from 'react-router-dom';
 import { LazyStepLoader } from './steps/LazyStepLoader';
 import { EnhancedTrailMagicExperience } from '../EnhancedTrailMagicExperience';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export const UnifiedOnboardingFlow: React.FC = () => {
   const navigate = useNavigate();
+  const [isCompleting, setIsCompleting] = useState(false);
+  
   const {
     currentStep,
     data,
@@ -25,10 +28,34 @@ export const UnifiedOnboardingFlow: React.FC = () => {
   } = useQuickOnboardingOptimized();
 
   const handleFinish = async () => {
-    const success = await completeOnboarding();
-    if (success) {
-      console.log('Onboarding finalizado com dados:', data);
-      navigate('/onboarding-new/completed');
+    if (isCompleting) return; // Evitar múltiplos cliques
+    
+    setIsCompleting(true);
+    console.log('🎯 Iniciando finalização do onboarding...');
+    
+    try {
+      // Mostrar loading toast
+      const loadingToast = toast.loading('Finalizando seu onboarding...');
+      
+      const success = await completeOnboarding();
+      
+      // Remover loading toast
+      toast.dismiss(loadingToast);
+      
+      if (success) {
+        console.log('✅ Onboarding finalizado com sucesso!', data);
+        
+        // Aguardar um momento para garantir que a operação foi concluída
+        setTimeout(() => {
+          navigate('/onboarding-new/completed');
+        }, 1000);
+      } else {
+        setIsCompleting(false);
+      }
+    } catch (error) {
+      console.error('❌ Erro na finalização:', error);
+      toast.error('Erro ao finalizar onboarding. Tente novamente.');
+      setIsCompleting(false);
     }
   };
 
@@ -87,7 +114,21 @@ export const UnifiedOnboardingFlow: React.FC = () => {
       case 4:
         return (
           <div className="animate-fade-in">
-            <EnhancedTrailMagicExperience onFinish={handleFinish} />
+            {isCompleting && (
+              <div className="mb-6 bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+                <div className="flex items-center gap-3">
+                  <Loader2 className="h-5 w-5 text-blue-400 animate-spin" />
+                  <div>
+                    <p className="text-blue-400 font-medium">Finalizando seu onboarding...</p>
+                    <p className="text-blue-300 text-sm">Salvando seus dados e criando sua trilha personalizada</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            <EnhancedTrailMagicExperience 
+              onFinish={handleFinish}
+              disabled={isCompleting}
+            />
           </div>
         );
       

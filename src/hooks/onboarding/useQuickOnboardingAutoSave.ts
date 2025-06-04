@@ -31,6 +31,12 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
     saveTimeoutRef.current = setTimeout(async () => {
       try {
         setIsSaving(true);
+        console.log('💾 Auto-salvando dados do onboarding...', {
+          name: data.name,
+          email: data.email,
+          company_name: data.company_name,
+          ai_knowledge_level: data.ai_knowledge_level
+        });
         
         // Verificar se já existe um registro na tabela quick_onboarding
         const { data: existingData, error: fetchError } = await supabase
@@ -74,6 +80,7 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
             .eq('id', existingData.id);
 
           if (updateError) throw updateError;
+          console.log('✅ Dados atualizados na quick_onboarding');
         } else {
           // Criar novo registro
           const { error: insertError } = await supabase
@@ -85,17 +92,18 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
             }]);
 
           if (insertError) throw insertError;
+          console.log('✅ Novo registro criado na quick_onboarding');
         }
 
-        // Também salvar/atualizar na tabela onboarding_progress para compatibilidade
+        // Também atualizar/criar na tabela onboarding_progress para compatibilidade
         await saveToOnboardingProgress(data, user.id);
 
         setLastSaveTime(Date.now());
-        console.log('✅ Dados do onboarding salvos automaticamente');
+        console.log('✅ Auto-save concluído com sucesso');
         
       } catch (error: any) {
-        console.error('❌ Erro ao salvar dados automaticamente:', error);
-        toast.error('Erro ao salvar dados. Tente novamente.');
+        console.error('❌ Erro no auto-save:', error);
+        // Não mostrar toast de erro para auto-save para não incomodar o usuário
       } finally {
         setIsSaving(false);
       }
@@ -156,7 +164,7 @@ const saveToOnboardingProgress = async (data: QuickOnboardingData, userId: strin
       experience_personalization: {},
       current_step: determineCurrentStep(data),
       completed_steps: getCompletedSteps(data),
-      is_completed: isOnboardingCompleted(data),
+      is_completed: false, // Manter como false até conclusão manual
       updated_at: new Date().toISOString()
     };
 
@@ -171,13 +179,16 @@ const saveToOnboardingProgress = async (data: QuickOnboardingData, userId: strin
         .from('onboarding_progress')
         .update(progressData)
         .eq('id', existingProgress.id);
+      console.log('✅ onboarding_progress atualizado');
     } else {
       await supabase
         .from('onboarding_progress')
-        .insert([progressData]);
+        .insert([{ ...progressData, created_at: new Date().toISOString() }]);
+      console.log('✅ onboarding_progress criado');
     }
   } catch (error) {
-    console.error('Erro ao salvar no onboarding_progress:', error);
+    console.error('⚠️ Erro ao salvar no onboarding_progress:', error);
+    // Não lançar erro para não interromper o auto-save principal
   }
 };
 
@@ -208,13 +219,4 @@ const getCompletedSteps = (data: QuickOnboardingData): string[] => {
   }
   
   return steps;
-};
-
-const isOnboardingCompleted = (data: QuickOnboardingData): boolean => {
-  return !!(
-    data.name && data.email && data.whatsapp && data.how_found_us &&
-    data.company_name && data.role && data.company_size && data.company_segment && 
-    data.annual_revenue_range && data.main_challenge &&
-    data.ai_knowledge_level && data.uses_ai && data.main_goal
-  );
 };
