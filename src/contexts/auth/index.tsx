@@ -59,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminCheckComplete, setAdminCheckComplete] = useState(false);
 
-  // Verificação definitiva se o usuário é admin
+  // Verificação definitiva se o usuário é admin - APENAS para papel 'admin'
   const checkIsAdmin = async (email?: string | null, userId?: string) => {
     // Se não temos email ou userId, não pode ser admin
     if (!email || !userId) {
@@ -67,7 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
 
-    // Verificação rápida por email (alta prioridade)
+    // Verificação rápida por email (alta prioridade) - apenas @viverdeia.ai
     const isAdminByEmail = email.includes('@viverdeia.ai') || 
                          email === 'admin@teste.com' || 
                          email === 'admin@viverdeia.ai';
@@ -100,7 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Erro ao verificar status de admin:', error);
       
-      // Verificação de fallback pelo papel no perfil
+      // Verificação de fallback pelo papel no perfil - APENAS papel 'admin'
       try {
         const { data: profileData } = await supabase
           .from('profiles')
@@ -108,13 +108,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .eq('id', userId)
           .single();
           
+        // CORREÇÃO: Apenas papel 'admin' é considerado admin
         const isAdminByRole = profileData?.role === 'admin';
         setIsAdmin(isAdminByRole);
         saveAdminStatus(userId, isAdminByRole);
         return isAdminByRole;
       } catch (profileError) {
         console.error('Erro ao verificar perfil:', profileError);
-        setIsAdmin(isAdminByEmail); // Usar resultado da verificação por email como fallback final
+        // Usar resultado da verificação por email como fallback final
+        setIsAdmin(isAdminByEmail);
         return isAdminByEmail;
       }
     } finally {
