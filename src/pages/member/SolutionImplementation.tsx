@@ -1,19 +1,12 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useParams } from "react-router-dom";
-import { useSolutionData } from "@/hooks/useSolutionData";
-import { useModuleImplementation } from "@/hooks/useModuleImplementation";
-import LoadingScreen from "@/components/common/LoadingScreen";
-import { useToast } from "@/hooks/use-toast";
-import { PageTransition } from "@/components/transitions/PageTransition";
-import { GlassCard } from "@/components/ui/GlassCard";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { ImplementationHeader } from "@/components/implementation/ImplementationHeader";
 import { ImplementationNavigation } from "@/components/implementation/ImplementationNavigation";
-import { ImplementationProgress } from "@/components/implementation/ImplementationProgress";
 import { ImplementationTabsNavigation } from "@/components/implementation/ImplementationTabsNavigation";
-import { useImplementationNavigation } from "@/hooks/implementation/useImplementationNavigation";
-import { useProgressTracking } from "@/hooks/implementation/useProgressTracking";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { ModuleContentTools } from "@/components/implementation/content/ModuleContentTools";
 import { ModuleContentMaterials } from "@/components/implementation/content/ModuleContentMaterials";
 import { ModuleContentVideos } from "@/components/implementation/content/ModuleContentVideos";
@@ -21,31 +14,26 @@ import { ModuleContentChecklist } from "@/components/implementation/content/Modu
 import { CommentsSection } from "@/components/implementation/content/CommentsSection";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
+import { useImplementationData } from "@/hooks/implementation/useImplementationData";
+import { useProgressTracking } from "@/hooks/implementation/useProgressTracking";
+import { useImplementationNavigation } from "@/hooks/implementation/useImplementationNavigation";
 
-const SolutionImplementation = () => {
-  const { id } = useParams<{ id: string }>();
-  const { toast } = useToast();
+const SolutionImplementation: React.FC = () => {
+  const { id, moduleIdx } = useParams<{ id: string; moduleIdx: string }>();
+  const currentModuleIndex = parseInt(moduleIdx || "0");
   const [activeTab, setActiveTab] = useState("tools");
   
   const {
     solution,
     modules,
-    currentModule,
+    progress,
     completedModules,
     setCompletedModules,
-    progress,
     loading
-  } = useModuleImplementation();
-
-  const { handleComplete, handlePrevious, currentModuleIdx } = useImplementationNavigation();
-
+  } = useImplementationData();
+  
   const {
-    moduleIdx,
-    hasInteracted,
-    showConfirmationModal,
-    setShowConfirmationModal,
     handleMarkAsCompleted,
-    handleConfirmImplementation,
     calculateProgress,
     setModuleInteraction
   } = useProgressTracking(
@@ -54,188 +42,132 @@ const SolutionImplementation = () => {
     setCompletedModules,
     modules.length
   );
+  
+  const {
+    handleNavigateToModule
+  } = useImplementationNavigation();
 
-  useEffect(() => {
-    if (solution) {
-      console.log("Solution loaded for implementation", { 
-        solution_id: solution.id,
-        solution_title: solution.title,
-        modules_count: modules.length,
-        current_module_index: currentModuleIdx
-      });
-    }
-  }, [solution, modules.length, currentModuleIdx]);
-  
   if (loading) {
-    return <LoadingScreen />;
-  }
-  
-  if (!solution) {
     return (
-      <PageTransition className="min-h-screen bg-[#0F111A] pb-16">
-        <div className="container max-w-4xl py-4 md:py-6 animate-fade-in">
-          <GlassCard className="p-6 text-center">
-            <h2 className="text-xl font-semibold mb-2">Solução não encontrada</h2>
-            <p className="text-muted-foreground">
-              A solução que você está procurando não foi encontrada ou não está disponível.
-            </p>
-          </GlassCard>
-        </div>
-      </PageTransition>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0A0B14] to-[#1A1E2E]">
+        <LoadingSpinner />
+      </div>
     );
   }
 
-  const handleModuleComplete = () => {
-    console.log("Module completed, advancing to next module");
-    setModuleInteraction(true);
-    handleMarkAsCompleted();
-  };
+  if (!solution) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0A0B14] to-[#1A1E2E]">
+        <div className="text-white text-center">
+          <h2 className="text-2xl font-bold mb-4">Solução não encontrada</h2>
+          <p className="text-gray-300">A solução que você está procurando não foi encontrada.</p>
+        </div>
+      </div>
+    );
+  }
 
-  const isLastModule = currentModuleIdx >= modules.length - 1;
+  const currentModule = modules[currentModuleIndex] || null;
   const progressPercentage = calculateProgress();
 
   return (
-    <PageTransition className="min-h-screen bg-[#0F111A] pb-16">
-      <div className="container max-w-6xl py-4 md:py-6 animate-fade-in">
-        {/* Header da implementação */}
-        <ImplementationHeader 
+    <div className="min-h-screen bg-gradient-to-br from-[#0A0B14] to-[#1A1E2E] text-white">
+      <div className="container mx-auto px-4 py-6">
+        {/* Header */}
+        <ImplementationHeader
           solution={solution}
-          currentModuleIndex={currentModuleIdx}
+          currentModuleIndex={currentModuleIndex}
           totalModules={modules.length}
           currentModule={currentModule}
         />
 
-        {/* Barra de progresso */}
-        <ImplementationProgress 
-          progress={progressPercentage}
-          currentStep={currentModuleIdx + 1}
-          totalSteps={modules.length}
-          completedModules={completedModules}
-        />
-
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-6">
-          {/* Navegação lateral */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Sidebar Navigation */}
           <div className="lg:col-span-1">
             <ImplementationNavigation
               modules={modules}
-              currentModuleIndex={currentModuleIdx}
+              currentModuleIndex={currentModuleIndex}
               completedModules={completedModules}
-              onModuleSelect={(index) => {
-                window.location.href = `/implement/${id}/${index}`;
-              }}
+              onModuleSelect={handleNavigateToModule}
             />
           </div>
 
-          {/* Conteúdo principal com abas */}
+          {/* Main Content Area */}
           <div className="lg:col-span-3">
-            <GlassCard className="p-0 transition-all duration-300 shadow-xl border border-white/10">
-              {currentModule ? (
+            <Card className="bg-[#151823]/80 backdrop-blur-sm border-neutral-700/50">
+              <CardContent className="p-6">
+                {/* Tabs Navigation */}
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                  <div className="p-6 pb-0">
-                    <div className="mb-6">
-                      <h2 className="text-2xl font-bold text-white mb-2">
-                        {currentModule.title}
-                      </h2>
-                      <p className="text-neutral-300">
-                        {currentModule.description}
-                      </p>
-                    </div>
-                    
-                    <ImplementationTabsNavigation 
-                      activeTab={activeTab}
-                      setActiveTab={setActiveTab}
-                    />
-                  </div>
+                  <ImplementationTabsNavigation
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                  />
 
-                  <div className="p-6 pt-0">
+                  {/* Tab Contents */}
+                  <div className="mt-6">
                     <TabsContent value="tools" className="mt-0">
-                      <ModuleContentTools module={currentModule} />
+                      <ModuleContentTools
+                        module={currentModule}
+                        onInteraction={() => setModuleInteraction(true)}
+                      />
                     </TabsContent>
 
                     <TabsContent value="materials" className="mt-0">
-                      <ModuleContentMaterials module={currentModule} />
+                      <ModuleContentMaterials
+                        module={currentModule}
+                        onInteraction={() => setModuleInteraction(true)}
+                      />
                     </TabsContent>
 
                     <TabsContent value="videos" className="mt-0">
-                      <ModuleContentVideos module={currentModule} />
+                      <ModuleContentVideos
+                        module={currentModule}
+                        onInteraction={() => setModuleInteraction(true)}
+                      />
                     </TabsContent>
 
                     <TabsContent value="checklist" className="mt-0">
-                      <ModuleContentChecklist module={currentModule} />
+                      <ModuleContentChecklist
+                        module={currentModule}
+                        onInteraction={() => setModuleInteraction(true)}
+                      />
                     </TabsContent>
 
                     <TabsContent value="comments" className="mt-0">
-                      <CommentsSection 
-                        solutionId={solution.id}
-                        moduleId={currentModule.id}
+                      <CommentsSection
+                        solutionId={id!}
+                        moduleIndex={currentModuleIndex}
+                        onInteraction={() => setModuleInteraction(true)}
                       />
                     </TabsContent>
 
                     <TabsContent value="complete" className="mt-0">
-                      <div className="text-center py-12">
-                        <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold mb-4">Concluir Módulo</h3>
-                        <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                          Você completou todas as etapas deste módulo. Clique no botão abaixo para marcar como concluído e avançar.
-                        </p>
-                        <Button 
-                          onClick={handleModuleComplete}
-                          size="lg"
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          <CheckCircle2 className="h-5 w-5 mr-2" />
-                          Marcar como Concluído
-                        </Button>
+                      <div className="text-center space-y-6 py-8">
+                        <div className="max-w-md mx-auto">
+                          <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
+                          <h3 className="text-2xl font-bold text-white mb-2">
+                            Concluir Implementação
+                          </h3>
+                          <p className="text-gray-300 mb-6">
+                            Você está pronto para marcar esta etapa como concluída?
+                          </p>
+                          <Button
+                            onClick={handleMarkAsCompleted}
+                            className="bg-gradient-to-r from-viverblue to-viverblue-light hover:from-viverblue/90 hover:to-viverblue-light/90 text-white font-semibold px-8 py-3 rounded-lg transition-all duration-200"
+                            size="lg"
+                          >
+                            Marcar como Concluída
+                          </Button>
+                        </div>
                       </div>
                     </TabsContent>
                   </div>
                 </Tabs>
-              ) : (
-                <div className="p-8 text-center">
-                  <h3 className="text-xl font-semibold mb-4">Módulo não encontrado</h3>
-                  <p className="text-muted-foreground">
-                    O módulo atual não pôde ser carregado. Por favor, tente navegar para outro módulo.
-                  </p>
-                </div>
-              )}
-            </GlassCard>
-
-            {/* Navegação entre módulos */}
-            <div className="flex justify-between items-center mt-6">
-              <button
-                onClick={handlePrevious}
-                disabled={currentModuleIdx === 0}
-                className="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                ← Anterior
-              </button>
-
-              <div className="text-sm text-muted-foreground">
-                Módulo {currentModuleIdx + 1} de {modules.length}
-              </div>
-
-              {isLastModule ? (
-                <button
-                  onClick={handleConfirmImplementation}
-                  disabled={!hasInteracted}
-                  className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  Finalizar Implementação
-                </button>
-              ) : (
-                <button
-                  onClick={handleComplete}
-                  disabled={!hasInteracted}
-                  className="px-6 py-2 bg-viverblue text-white rounded-md hover:bg-viverblue/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  Próximo →
-                </button>
-              )}
-            </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
-    </PageTransition>
+    </div>
   );
 };
 
