@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuickOnboardingOptimized } from '@/hooks/onboarding/useQuickOnboardingOptimized';
 import { useNavigate } from 'react-router-dom';
@@ -32,6 +31,9 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     retryCount,
     canFinalize
   } = useQuickOnboardingOptimized();
+
+  // Estado local para controle de navegação - correção do erro de build
+  const [localCurrentStep, setCurrentStep] = useState<number>(currentStep);
 
   const handleFinish = async () => {
     if (isCompleting) {
