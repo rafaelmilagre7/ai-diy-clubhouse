@@ -51,6 +51,7 @@ export const StepQuemEVoceNew: React.FC<StepQuemEVoceNewProps> = ({
         </p>
         <div className="flex items-center justify-center mt-4">
           <AutoSaveFeedback 
+            isSaving={false}
             lastSaveTime={Date.now()}
             hasUnsavedChanges={!data.name || !data.email}
           />
