@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuickOnboardingOptimized } from '@/hooks/onboarding/useQuickOnboardingOptimized';
 import { useNavigate } from 'react-router-dom';
@@ -108,7 +109,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
               onUpdate={updateField}
               onNext={nextStep}
               onPrevious={previousStep}
-              canProceed={canProceed}
+              canProceed={canProceed()}
               currentStep={currentStep}
               totalSteps={totalSteps}
               isSaving={isSaving}
