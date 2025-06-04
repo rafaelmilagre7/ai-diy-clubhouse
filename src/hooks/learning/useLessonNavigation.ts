@@ -2,12 +2,11 @@
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { LearningLesson } from "@/lib/supabase";
-import { sortLessonsByNumber } from "@/components/learning/member/course-modules/CourseModulesHelpers";
 
 interface UseLessonNavigationProps {
   courseId?: string;
   currentLessonId?: string;
-  lessons?: LearningLesson[];
+  lessons?: LearningLesson[]; // Todas as aulas do curso
 }
 
 interface AdjacentLessons {
@@ -27,36 +26,35 @@ export function useLessonNavigation({
       return { prev: null, next: null };
     }
     
-    // Aplicar a ordenação consistente por número no título antes de buscar aulas adjacentes
-    const sortedLessons = sortLessonsByNumber([...lessons]);
-    
-    // Adicionar log para depuração da ordem das aulas
-    console.log("Aulas ordenadas para navegação:", 
-      sortedLessons.map(l => ({
+    // As aulas já vêm ordenadas do hook useLessonData
+    console.log("Aulas para navegação:", 
+      lessons.map(l => ({
         id: l.id, 
         title: l.title, 
-        order_index: l.order_index,
+        moduleTitle: l.module?.title,
         isCurrent: l.id === currentLessonId
       }))
     );
     
-    const currentIndex = sortedLessons.findIndex(lesson => lesson.id === currentLessonId);
+    const currentIndex = lessons.findIndex(lesson => lesson.id === currentLessonId);
     
     if (currentIndex === -1) {
-      console.log("Aula atual não encontrada na lista de aulas ordenadas");
+      console.log("Aula atual não encontrada na lista de aulas do curso");
       return { prev: null, next: null };
     }
     
-    const prevLesson = currentIndex > 0 ? sortedLessons[currentIndex - 1] : null;
-    const nextLesson = currentIndex < sortedLessons.length - 1 ? sortedLessons[currentIndex + 1] : null;
+    const prevLesson = currentIndex > 0 ? lessons[currentIndex - 1] : null;
+    const nextLesson = currentIndex < lessons.length - 1 ? lessons[currentIndex + 1] : null;
     
-    console.log("Navegação calculada:", {
+    console.log("Navegação do curso calculada:", {
       currentIndex,
-      totalLessons: sortedLessons.length,
+      totalLessons: lessons.length,
       hasPrev: !!prevLesson,
       hasNext: !!nextLesson,
       prevTitle: prevLesson?.title,
-      nextTitle: nextLesson?.title
+      nextTitle: nextLesson?.title,
+      prevModule: prevLesson?.module?.title,
+      nextModule: nextLesson?.module?.title
     });
     
     return {

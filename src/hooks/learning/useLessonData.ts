@@ -108,7 +108,81 @@ export function useLessonData({ lessonId, courseId }: UseLessonDataProps) {
     enabled: !!courseId
   });
   
-  // Buscar informações do módulo para navegação
+  // Buscar TODAS as aulas do curso para navegação correta
+  const { 
+    data: allCourseLessons = [] 
+  } = useQuery({
+    queryKey: ["learning-course-all-lessons", courseId],
+    queryFn: async () => {
+      if (!courseId) return [];
+      
+      // Buscar todos os módulos do curso com suas aulas
+      const { data: modules, error: modulesError } = await supabase
+        .from("learning_modules")
+        .select(`
+          id,
+          title,
+          order_index,
+          lessons:learning_lessons(
+            id,
+            title,
+            module_id,
+            order_index,
+            published
+          )
+        `)
+        .eq("course_id", courseId)
+        .eq("published", true)
+        .order("order_index", { ascending: true });
+        
+      if (modulesError) {
+        console.error("Erro ao buscar módulos:", modulesError);
+        return [];
+      }
+      
+      // Organizar todas as aulas do curso em ordem
+      const allLessons: LearningLesson[] = [];
+      
+      if (modules) {
+        // Ordenar módulos por order_index
+        const sortedModules = modules.sort((a, b) => a.order_index - b.order_index);
+        
+        sortedModules.forEach(module => {
+          if (module.lessons) {
+            // Filtrar apenas aulas publicadas
+            const publishedLessons = module.lessons.filter(lesson => lesson.published);
+            
+            // Ordenar aulas dentro do módulo
+            const sortedLessons = sortLessonsByNumber([...publishedLessons]);
+            
+            // Adicionar informações do módulo a cada aula
+            const lessonsWithModule = sortedLessons.map(lesson => ({
+              ...lesson,
+              module: {
+                id: module.id,
+                title: module.title,
+                order_index: module.order_index
+              }
+            }));
+            
+            allLessons.push(...lessonsWithModule);
+          }
+        });
+      }
+      
+      console.log("Todas as aulas do curso ordenadas:", allLessons.map(l => ({
+        id: l.id,
+        title: l.title,
+        moduleTitle: l.module?.title,
+        moduleOrder: l.module?.order_index
+      })));
+      
+      return allLessons;
+    },
+    enabled: !!courseId
+  });
+  
+  // Buscar informações do módulo atual para compatibilidade
   const { 
     data: moduleData 
   } = useQuery({
@@ -124,25 +198,12 @@ export function useLessonData({ lessonId, courseId }: UseLessonDataProps) {
         
       if (moduleError) return null;
       
-      const { data: moduleLessons, error: lessonsError } = await supabase
-        .from("learning_lessons")
-        .select("*")
-        .eq("module_id", lesson.module_id)
-        .eq("published", true)
-        .order("order_index", { ascending: true })
-        // Adicionando ordenação secundária pelo título para garantir consistência
-        .order("title", { ascending: true });
-        
-      if (lessonsError) {
-        return { module: moduleInfo, lessons: [] };
-      }
+      // Usar as aulas do curso inteiro em vez de apenas do módulo
+      const moduleLessons = allCourseLessons.filter(l => l.module_id === lesson.module_id);
       
-      // Ordenar lições por número no título para garantir navegação correta
-      const sortedLessons = sortLessonsByNumber(moduleLessons || []);
-      
-      return { module: moduleInfo, lessons: sortedLessons };
+      return { module: moduleInfo, lessons: moduleLessons };
     },
-    enabled: !!lesson?.module_id
+    enabled: !!lesson?.module_id && allCourseLessons.length > 0
   });
 
   return {
@@ -151,6 +212,7 @@ export function useLessonData({ lessonId, courseId }: UseLessonDataProps) {
     videos,
     courseInfo,
     moduleData,
+    allCourseLessons, // Nova propriedade com todas as aulas do curso
     isLoading: isLoadingLesson || isLoadingResources || isLoadingVideos,
     error: lessonError
   };

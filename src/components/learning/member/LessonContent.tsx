@@ -96,11 +96,15 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   const hasVideos = safeVideos.length > 0;
   const hasAiAssistant = lesson.ai_assistant_enabled;
   
+  // Calcular posição da aula no curso
+  const currentLessonIndex = allLessons.findIndex(l => l.id === lesson.id);
+  const totalLessons = allLessons.length;
+
   return (
-    <div className="space-y-6 pb-20"> {/* Adicionar padding bottom para a barra de navegação fixa */}
-      {/* Player de vídeo como elemento principal - agora com largura total */}
+    <div className="space-y-8">
+      {/* Player de vídeo como elemento principal */}
       {hasVideos && (
-        <div>
+        <div className="w-full">
           <LessonVideoPlayer 
             videos={safeVideos}
             onProgress={(videoId, progress) => handleVideoProgress(videoId, progress)}
@@ -108,29 +112,46 @@ export const LessonContent: React.FC<LessonContentProps> = ({
         </div>
       )}
       
+      {/* Barra de navegação logo abaixo do vídeo */}
+      <div className="w-full">
+        <LessonNavigationBar
+          isCompleted={isCompleted}
+          onComplete={handleCompleteLesson}
+          onPrevious={onPreviousLesson}
+          onNext={onNextLesson || (() => {})}
+          prevLesson={prevLesson}
+          nextLesson={nextLesson}
+          isUpdating={isUpdating}
+          currentLessonIndex={currentLessonIndex}
+          totalLessons={totalLessons}
+        />
+      </div>
+      
+      <Separator className="my-8" />
+      
       {/* Descrição da aula, se existir */}
       {hasDescription && (
-        <div className="mt-6">
+        <div>
           <LessonDescription lesson={lesson} />
         </div>
       )}
       
-      {/* Recursos/Materiais da aula (sempre visível) */}
-      <div className="mt-6">
+      {/* Recursos/Materiais da aula */}
+      <div>
         <LessonResources resources={safeResources} />
       </div>
       
-      <Separator className="my-6" />
+      <Separator className="my-8" />
       
       {/* Comentários sempre visíveis após os recursos */}
-      <div className="mt-6">
+      <div>
         <LessonComments lessonId={lesson.id} />
       </div>
       
       {/* Assistente IA em uma aba separada, se estiver disponível */}
       {hasAiAssistant && (
-        <div className="mt-6">
-          <Tabs defaultValue="assistant" className="mt-4">
+        <div className="mt-8">
+          <Tabs defaultValue="assistant">
             <TabsList>
               <TabsTrigger value="assistant">Assistente IA</TabsTrigger>
             </TabsList>
@@ -140,17 +161,6 @@ export const LessonContent: React.FC<LessonContentProps> = ({
           </Tabs>
         </div>
       )}
-      
-      {/* Barra de navegação fixa */}
-      <LessonNavigationBar
-        isCompleted={isCompleted}
-        onComplete={handleCompleteLesson}
-        onPrevious={onPreviousLesson}
-        onNext={onNextLesson || (() => {})}
-        prevLesson={prevLesson}
-        nextLesson={nextLesson}
-        isUpdating={isUpdating}
-      />
       
       {/* Modal de conclusão da aula */}
       <LessonCompletionModal

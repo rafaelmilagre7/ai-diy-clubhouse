@@ -11,7 +11,6 @@ import { useLessonNavigation } from "@/hooks/learning/useLessonNavigation";
 import { useLessonProgress } from "@/hooks/learning/useLessonProgress";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { sortLessonsByNumber } from "@/components/learning/member/course-modules/CourseModulesHelpers";
 
 const LessonView = () => {
   const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>();
@@ -23,6 +22,7 @@ const LessonView = () => {
     videos,
     courseInfo,
     moduleData,
+    allCourseLessons, // Nova propriedade com todas as aulas do curso
     isLoading,
     error
   } = useLessonData({ 
@@ -33,12 +33,9 @@ const LessonView = () => {
   // Garantir que temos arrays válidos
   const safeResources = Array.isArray(resources) ? resources : [];
   const safeVideos = Array.isArray(videos) ? videos : [];
+  const safeAllCourseLessons = Array.isArray(allCourseLessons) ? allCourseLessons : [];
   
-  // Garantir que as aulas do módulo estão ordenadas corretamente por número no título
-  const safeModuleLessons = moduleData?.lessons ? 
-    (Array.isArray(moduleData.lessons) ? sortLessonsByNumber([...moduleData.lessons]) : []) : [];
-  
-  // Gerenciar navegação entre lições
+  // Gerenciar navegação entre lições usando TODAS as aulas do curso
   const {
     prevLesson,
     nextLesson,
@@ -48,7 +45,7 @@ const LessonView = () => {
   } = useLessonNavigation({
     courseId,
     currentLessonId: lessonId,
-    lessons: safeModuleLessons
+    lessons: safeAllCourseLessons // Usar todas as aulas do curso em vez de apenas do módulo
   });
   
   // Gerenciar progresso da lição
@@ -130,7 +127,7 @@ const LessonView = () => {
         Voltar para o curso
       </Button>
       
-      {/* Conteúdo principal da aula (sem barra lateral) */}
+      {/* Conteúdo principal da aula */}
       <div>
         <LessonHeader 
           title={lesson?.title || ""} 
@@ -151,7 +148,7 @@ const LessonView = () => {
             prevLesson={prevLesson}
             nextLesson={nextLesson}
             courseId={courseId}
-            allLessons={safeModuleLessons}
+            allLessons={safeAllCourseLessons}
             onNextLesson={navigateToNext}
             onPreviousLesson={navigateToPrevious}
             isUpdating={isUpdating}
