@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuickOnboardingOptimized } from '@/hooks/onboarding/useQuickOnboardingOptimized';
 import { useNavigate } from 'react-router-dom';
@@ -128,7 +127,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
   }
 
   // Mostrar indicador se dados foram carregados mas onboarding não está concluído
-  const showDataLoadedMessage = hasExistingData && currentStep === 1 && !Boolean(isCompleted);
+  const showDataLoadedMessage = hasExistingData && currentStep === 1 && isCompleted !== true;
 
   const renderCurrentStep = () => {
     switch (currentStep) {
