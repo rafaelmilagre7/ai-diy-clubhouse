@@ -32,6 +32,7 @@ const SuggestionDetailsPage = () => {
 
   const { removeSuggestion, updateSuggestionStatus, loading: adminActionLoading } = useAdminSuggestions();
 
+  // Buscar comentários apenas se for admin
   const { 
     comment, 
     setComment, 
@@ -39,7 +40,10 @@ const SuggestionDetailsPage = () => {
     commentsLoading, 
     isSubmitting, 
     handleSubmitComment,
-  } = useComments({ suggestionId: suggestion?.id || '' });
+  } = useComments({ 
+    suggestionId: suggestion?.id || '',
+    enabled: isAdmin // Só buscar comentários se for admin
+  });
 
   const handleRemoveSuggestion = async () => {
     if (suggestion?.id) {
@@ -98,23 +102,26 @@ const SuggestionDetailsPage = () => {
 
       <SuggestionContent
         suggestion={suggestion}
-        comment={comment}
-        comments={comments}
+        comment={isAdmin ? comment : ''}
+        comments={isAdmin ? comments : []}
         isSubmitting={isSubmitting}
         commentsLoading={commentsLoading}
-        onCommentChange={setComment}
-        onSubmitComment={handleSubmitComment}
+        onCommentChange={isAdmin ? setComment : () => {}}
+        onSubmitComment={isAdmin ? handleSubmitComment : () => {}}
         onVote={handleVote}
         isOwner={isOwner}
         userVote={userVote as UserVote | null}
         voteLoading={voteLoading}
       />
 
-      <DeleteSuggestionDialog
-        isOpen={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        onConfirmDelete={handleRemoveSuggestion}
-      />
+      {/* Dialog de exclusão apenas para admins */}
+      {isAdmin && (
+        <DeleteSuggestionDialog
+          isOpen={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          onConfirmDelete={handleRemoveSuggestion}
+        />
+      )}
     </div>
   );
 };

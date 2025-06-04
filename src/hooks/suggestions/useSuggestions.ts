@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Suggestion } from '@/types/suggestionTypes';
 
-export type SuggestionFilter = 'all' | 'popular' | 'recent';
+export type SuggestionFilter = 'all' | 'popular' | 'recent' | 'new' | 'in_development' | 'completed';
 
 export const useSuggestions = () => {
   const [filter, setFilter] = useState<SuggestionFilter>('popular');
@@ -32,8 +32,18 @@ export const useSuggestions = () => {
           query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
         }
 
+        // Filtragem por status
+        if (filter === 'new') {
+          query = query.eq('status', 'new');
+        } else if (filter === 'in_development') {
+          query = query.eq('status', 'in_development');
+        } else if (filter === 'completed') {
+          query = query.eq('status', 'completed');
+        }
+
         // Ordenação
-        if (filter === 'popular') {
+        if (filter === 'popular' || filter === 'new' || filter === 'in_development' || filter === 'completed') {
+          // Ordenar por votos líquidos (upvotes - downvotes) em ordem decrescente
           query = query.order('upvotes', { ascending: false });
         } else if (filter === 'recent') {
           query = query.order('created_at', { ascending: false });
@@ -46,8 +56,18 @@ export const useSuggestions = () => {
           throw error;
         }
 
-        console.log('Sugestões encontradas:', data?.length, data);
-        return data || [];
+        // Ordenar por votos líquidos no frontend para garantir precisão
+        let sortedData = data || [];
+        if (filter === 'popular' || filter === 'new' || filter === 'in_development' || filter === 'completed') {
+          sortedData = sortedData.sort((a, b) => {
+            const aNetVotes = (a.upvotes || 0) - (a.downvotes || 0);
+            const bNetVotes = (b.upvotes || 0) - (b.downvotes || 0);
+            return bNetVotes - aNetVotes; // Ordem decrescente
+          });
+        }
+
+        console.log('Sugestões encontradas:', sortedData.length, sortedData);
+        return sortedData;
       } catch (error) {
         console.error('Erro na consulta de sugestões:', error);
         throw error;

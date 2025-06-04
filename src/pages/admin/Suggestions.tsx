@@ -13,7 +13,8 @@ import {
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
-  DropdownMenuTrigger 
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import { 
   AlertDialog, 
@@ -28,7 +29,7 @@ import {
 import { useSuggestions } from '@/hooks/suggestions/useSuggestions';
 import { useAdminSuggestions } from '@/hooks/suggestions/useAdminSuggestions';
 import { getStatusLabel, getStatusColor } from '@/utils/suggestionUtils';
-import { MoreVertical, Trash2, Play, Eye } from 'lucide-react';
+import { MoreVertical, Trash2, Play, Eye, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -87,7 +88,7 @@ const AdminSuggestionsPage = () => {
       console.log('Atualizando status da sugestão:', suggestionId, status);
       const success = await updateSuggestionStatus(suggestionId, status);
       if (success) {
-        toast.success(`Sugestão marcada como ${status === 'in_development' ? 'Em Desenvolvimento' : status}`);
+        toast.success(`Sugestão marcada como ${getStatusLabel(status)}`);
         refetch();
       }
     } catch (error) {
@@ -137,61 +138,95 @@ const AdminSuggestionsPage = () => {
             <TableRow>
               <TableHead>Título</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Votos</TableHead>
+              <TableHead>Votos Líquidos</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {suggestions.map((suggestion) => (
-              <TableRow key={suggestion.id}>
-                <TableCell>{suggestion.title}</TableCell>
-                <TableCell>
-                  <Badge className={getStatusColor(suggestion.status)}>
-                    {getStatusLabel(suggestion.status)}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {suggestion.upvotes - suggestion.downvotes}
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem 
-                        onClick={() => viewSuggestionDetails(suggestion.id)}
-                      >
-                        <Eye className="mr-2 h-4 w-4" />
-                        Ver Detalhes
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => handleUpdateStatus('in_development', suggestion.id)}
-                        disabled={suggestion.status === 'in_development' || loading}
-                      >
-                        <Play className="mr-2 h-4 w-4" />
-                        {suggestion.status === 'in_development' 
-                          ? 'Já em Desenvolvimento' 
-                          : 'Marcar como Em Desenvolvimento'}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => {
-                          setSelectedSuggestion(suggestion.id);
-                          setDeleteDialogOpen(true);
-                        }}
-                        className="text-destructive"
-                        disabled={loading}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Remover Sugestão
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
+            {suggestions.map((suggestion) => {
+              const netVotes = (suggestion.upvotes || 0) - (suggestion.downvotes || 0);
+              return (
+                <TableRow key={suggestion.id}>
+                  <TableCell className="font-medium">{suggestion.title}</TableCell>
+                  <TableCell>
+                    <Badge className={getStatusColor(suggestion.status)}>
+                      {getStatusLabel(suggestion.status)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <span className={`font-semibold ${netVotes >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {netVotes > 0 ? `+${netVotes}` : netVotes}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem 
+                          onClick={() => viewSuggestionDetails(suggestion.id)}
+                        >
+                          <Eye className="mr-2 h-4 w-4" />
+                          Ver Detalhes
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuSeparator />
+                        
+                        {/* Alterar Status */}
+                        <DropdownMenuItem 
+                          onClick={() => handleUpdateStatus('under_review', suggestion.id)}
+                          disabled={suggestion.status === 'under_review' || loading}
+                        >
+                          <Clock className="mr-2 h-4 w-4" />
+                          {suggestion.status === 'under_review' ? 'Já em Análise' : 'Marcar como Em Análise'}
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuItem 
+                          onClick={() => handleUpdateStatus('in_development', suggestion.id)}
+                          disabled={suggestion.status === 'in_development' || loading}
+                        >
+                          <Play className="mr-2 h-4 w-4" />
+                          {suggestion.status === 'in_development' ? 'Já em Desenvolvimento' : 'Marcar como Em Desenvolvimento'}
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuItem 
+                          onClick={() => handleUpdateStatus('completed', suggestion.id)}
+                          disabled={suggestion.status === 'completed' || loading}
+                        >
+                          <CheckCircle className="mr-2 h-4 w-4" />
+                          {suggestion.status === 'completed' ? 'Já Implementada' : 'Marcar como Implementada'}
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuItem 
+                          onClick={() => handleUpdateStatus('declined', suggestion.id)}
+                          disabled={suggestion.status === 'declined' || loading}
+                        >
+                          <XCircle className="mr-2 h-4 w-4" />
+                          {suggestion.status === 'declined' ? 'Já Recusada' : 'Marcar como Recusada'}
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuSeparator />
+                        
+                        <DropdownMenuItem 
+                          onClick={() => {
+                            setSelectedSuggestion(suggestion.id);
+                            setDeleteDialogOpen(true);
+                          }}
+                          className="text-destructive"
+                          disabled={loading}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Remover Sugestão
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       )}

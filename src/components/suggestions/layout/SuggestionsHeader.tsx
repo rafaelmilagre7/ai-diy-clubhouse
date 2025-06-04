@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Plus, Search, TrendingUp, Clock } from 'lucide-react';
+import { Plus, Search, TrendingUp, Clock, Lightbulb, Wrench, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { SuggestionFilter } from '@/hooks/suggestions/useSuggestions';
 
@@ -46,22 +46,45 @@ export const SuggestionsHeader: React.FC<SuggestionsHeaderProps> = ({
           />
         </div>
         
-        <ToggleGroup 
-          type="single" 
-          defaultValue={filter} 
-          value={filter}
-          onValueChange={(value) => value && onFilterChange(value as SuggestionFilter)}
-          className="flex-shrink-0"
-        >
-          <ToggleGroupItem value="popular" className="gap-1 whitespace-nowrap">
-            <TrendingUp className="h-4 w-4" />
-            <span className="hidden md:inline">Populares</span>
-          </ToggleGroupItem>
-          <ToggleGroupItem value="recent" className="gap-1 whitespace-nowrap">
-            <Clock className="h-4 w-4" />
-            <span className="hidden md:inline">Recentes</span>
-          </ToggleGroupItem>
-        </ToggleGroup>
+        <div className="flex flex-col sm:flex-row gap-2 flex-shrink-0">
+          {/* Filtros gerais */}
+          <ToggleGroup 
+            type="single" 
+            value={filter}
+            onValueChange={(value) => value && onFilterChange(value as SuggestionFilter)}
+            className="justify-start"
+          >
+            <ToggleGroupItem value="popular" className="gap-1 whitespace-nowrap">
+              <TrendingUp className="h-4 w-4" />
+              <span className="hidden md:inline">Populares</span>
+            </ToggleGroupItem>
+            <ToggleGroupItem value="recent" className="gap-1 whitespace-nowrap">
+              <Clock className="h-4 w-4" />
+              <span className="hidden md:inline">Recentes</span>
+            </ToggleGroupItem>
+          </ToggleGroup>
+          
+          {/* Filtros por status */}
+          <ToggleGroup 
+            type="single" 
+            value={filter}
+            onValueChange={(value) => value && onFilterChange(value as SuggestionFilter)}
+            className="justify-start"
+          >
+            <ToggleGroupItem value="new" className="gap-1 whitespace-nowrap">
+              <Lightbulb className="h-4 w-4" />
+              <span className="hidden md:inline">Novas</span>
+            </ToggleGroupItem>
+            <ToggleGroupItem value="in_development" className="gap-1 whitespace-nowrap">
+              <Wrench className="h-4 w-4" />
+              <span className="hidden md:inline">Em Desenvolvimento</span>
+            </ToggleGroupItem>
+            <ToggleGroupItem value="completed" className="gap-1 whitespace-nowrap">
+              <CheckCircle className="h-4 w-4" />
+              <span className="hidden md:inline">Implementadas</span>
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
       </div>
     </div>
   );

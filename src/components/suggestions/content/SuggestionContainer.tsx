@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { useAuth } from '@/contexts/auth';
 import { UserVote } from '@/types/suggestionTypes';
 import SuggestionTitle from './SuggestionTitle';
 import SuggestionDescription from './SuggestionDescription';
@@ -47,6 +48,7 @@ const SuggestionContainer = ({
   userVote,
   voteLoading = false
 }: SuggestionContainerProps) => {
+  const { isAdmin } = useAuth();
   const voteBalance = suggestion.upvotes - suggestion.downvotes;
   const categoryName = suggestion.category?.name || '';
 
@@ -74,14 +76,17 @@ const SuggestionContainer = ({
           voteBalance={voteBalance}
         />
 
-        <CommentsSection
-          comment={comment}
-          comments={comments}
-          isSubmitting={isSubmitting}
-          commentsLoading={commentsLoading}
-          onCommentChange={onCommentChange}
-          onSubmitComment={onSubmitComment}
-        />
+        {/* Comentários apenas para admins */}
+        {isAdmin && (
+          <CommentsSection
+            comment={comment}
+            comments={comments}
+            isSubmitting={isSubmitting}
+            commentsLoading={commentsLoading}
+            onCommentChange={onCommentChange}
+            onSubmitComment={onSubmitComment}
+          />
+        )}
       </CardContent>
     </Card>
   );

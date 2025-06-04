@@ -7,15 +7,16 @@ import { toast } from 'sonner';
 
 interface UseCommentsProps {
   suggestionId: string;
+  enabled?: boolean;
 }
 
-export const useComments = ({ suggestionId }: UseCommentsProps) => {
+export const useComments = ({ suggestionId, enabled = true }: UseCommentsProps) => {
   const { user } = useAuth();
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchComments = async () => {
-    if (!suggestionId) {
+    if (!suggestionId || !enabled) {
       return [];
     }
 
@@ -69,7 +70,7 @@ export const useComments = ({ suggestionId }: UseCommentsProps) => {
   const { data: comments = [], isLoading: commentsLoading, refetch: refetchComments } = useQuery({
     queryKey: ['suggestion-comments', suggestionId],
     queryFn: fetchComments,
-    enabled: !!suggestionId,
+    enabled: !!suggestionId && enabled,
     staleTime: 1000 * 60 // 1 minuto
   });
 
