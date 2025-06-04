@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useLessonNPS } from "@/hooks/learning/useLessonNPS";
-import { Loader2 } from "lucide-react";
+import { Loader2, Star } from "lucide-react";
 
 interface NPSRatingButtonProps {
   value: number;
@@ -14,16 +14,27 @@ interface NPSRatingButtonProps {
 
 const NPSRatingButton: React.FC<NPSRatingButtonProps> = ({ value, selectedValue, onClick }) => {
   const isSelected = value === selectedValue;
+  
+  // Determinar cor baseada no valor
+  const getButtonStyles = () => {
+    if (isSelected) {
+      if (value >= 9) return "bg-green-500 text-white border-green-500 shadow-lg shadow-green-200";
+      if (value >= 7) return "bg-yellow-500 text-white border-yellow-500 shadow-lg shadow-yellow-200";
+      return "bg-red-500 text-white border-red-500 shadow-lg shadow-red-200";
+    }
+    
+    return "bg-white text-gray-700 border-gray-200 hover:border-viverblue hover:bg-viverblue/5 hover:text-viverblue";
+  };
 
   return (
     <Button
       type="button"
-      variant={isSelected ? "default" : "outline"}
-      className={`w-10 h-10 p-0 flex-shrink-0 ${
-        isSelected
-          ? "bg-primary text-primary-foreground"
-          : "hover:bg-primary/10"
-      }`}
+      variant="outline"
+      className={`
+        w-12 h-12 p-0 flex-shrink-0 transition-all duration-200 font-bold text-lg
+        ${getButtonStyles()}
+        hover:scale-110 active:scale-95
+      `}
       onClick={() => onClick(value)}
     >
       {value}
@@ -55,28 +66,49 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({ lessonId, onComple
     }
   };
 
+  const getScoreLabel = () => {
+    if (score === null) return "";
+    if (score >= 9) return "Excelente! 🎉";
+    if (score >= 7) return "Muito bom! 👍";
+    return "Podemos melhorar 🤔";
+  };
+
+  const getScoreColor = () => {
+    if (score === null) return "text-gray-500";
+    if (score >= 9) return "text-green-600";
+    if (score >= 7) return "text-yellow-600";
+    return "text-red-600";
+  };
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center space-y-3">
+          <Loader2 className="w-8 h-8 animate-spin text-viverblue mx-auto" />
+          <p className="text-gray-600">Carregando avaliação...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card className="border-0 shadow-none bg-transparent">
       <form onSubmit={handleSubmit}>
-        <CardHeader>
-          <CardTitle>Sua opinião é importante!</CardTitle>
-          <CardDescription>
-            Em uma escala de 0 a 10, qual a probabilidade de você recomendar esta aula para um colega?
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Escala NPS em uma linha com scroll horizontal em mobile */}
-          <div className="space-y-4">
-            <div className="overflow-x-auto pb-2">
-              <div className="flex gap-2 min-w-max justify-center px-2">
+        <CardContent className="space-y-8 p-0">
+          {/* Escala NPS */}
+          <div className="space-y-6">
+            <div className="text-center">
+              <p className="text-lg font-medium text-gray-800 mb-2">
+                De 0 a 10, qual a probabilidade de você recomendar esta aula?
+              </p>
+              <p className="text-sm text-gray-600">
+                Sua avaliação é anônima e nos ajuda a melhorar
+              </p>
+            </div>
+            
+            {/* Grid responsivo para os botões NPS */}
+            <div className="space-y-4">
+              <div className="grid grid-cols-11 gap-2 max-w-2xl mx-auto">
                 {Array.from({ length: 11 }, (_, i) => (
                   <NPSRatingButton
                     key={i}
@@ -86,49 +118,62 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({ lessonId, onComple
                   />
                 ))}
               </div>
-            </div>
-            
-            {/* Labels da escala */}
-            <div className="flex justify-between text-sm text-muted-foreground px-2">
-              <span>0 - Péssimo</span>
+              
+              {/* Labels da escala */}
+              <div className="flex justify-between text-sm text-gray-500 max-w-2xl mx-auto px-2">
+                <span className="text-left">Não recomendaria</span>
+                <span className="text-right">Recomendaria totalmente</span>
+              </div>
+              
+              {/* Feedback da nota selecionada */}
               {score !== null && (
-                <span className="text-lg font-medium text-primary">
-                  Nota: {score}
-                </span>
+                <div className="text-center animate-fade-in">
+                  <div className={`text-xl font-semibold ${getScoreColor()}`}>
+                    {getScoreLabel()}
+                  </div>
+                  <div className="text-lg font-bold text-viverblue mt-1">
+                    Sua nota: {score}
+                  </div>
+                </div>
               )}
-              <span>10 - Excelente</span>
             </div>
           </div>
           
+          {/* Campo de feedback opcional */}
           {score !== null && (
-            <div className="space-y-2">
-              <label htmlFor="feedback" className="text-sm font-medium">
-                Você gostaria de compartilhar o motivo da sua avaliação? (opcional)
+            <div className="space-y-3 animate-fade-in">
+              <label htmlFor="feedback" className="block text-base font-medium text-gray-800">
+                Quer nos contar mais sobre sua experiência? (opcional)
               </label>
               <Textarea
                 id="feedback"
-                placeholder="Conte-nos o que você achou da aula..."
+                placeholder="Compartilhe o que mais gostou ou como podemos melhorar..."
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
                 rows={4}
-                className="resize-none"
+                className="resize-none border-gray-200 focus:border-viverblue focus:ring-viverblue/20 text-base"
               />
             </div>
           )}
         </CardContent>
-        <CardFooter>
+        
+        <CardFooter className="p-0 pt-6">
           <Button 
             type="submit" 
-            className="w-full" 
+            className="w-full bg-viverblue hover:bg-viverblue-dark text-white font-semibold py-3 text-lg shadow-lg transition-all duration-200 hover:shadow-xl" 
             disabled={score === null || isSubmitting}
+            size="lg"
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Enviando...
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Enviando sua avaliação...
               </>
             ) : (
-              'Enviar avaliação'
+              <>
+                <Star className="mr-2 h-5 w-5" />
+                Enviar avaliação
+              </>
             )}
           </Button>
         </CardFooter>
