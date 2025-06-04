@@ -271,8 +271,29 @@ export const useQuickOnboardingOptimized = () => {
     isSaving,
     lastSaveTime,
     completeOnboarding,
-    isCompleted: !!isCompleted,
+    isCompleted: !!(
+      data?.isCompleted === true || data?.isCompleted === 'true' ||
+      data?.is_completed === true || data?.is_completed === 'true' ||
+      isCompleted === true
+    ),
     retryCount,
     canFinalize
-  } as const;
+  } satisfies {
+    currentStep: number;
+    data: QuickOnboardingData;
+    updateField: (field: keyof QuickOnboardingData, value: string) => void;
+    nextStep: () => void;
+    previousStep: () => void;
+    canProceed: boolean;
+    isLoading: boolean;
+    hasExistingData: boolean;
+    loadError: string | null;
+    totalSteps: number;
+    isSaving: boolean;
+    lastSaveTime: number | null;
+    completeOnboarding: () => Promise<boolean>;
+    isCompleted: boolean;
+    retryCount: number;
+    canFinalize: boolean;
+  };
 };
