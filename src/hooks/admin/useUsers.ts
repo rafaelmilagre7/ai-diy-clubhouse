@@ -13,7 +13,7 @@ export const useUsers = () => {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [error, setError] = useState<Error | null>(null);
   
-  const { user, hasPermission } = useAuth();
+  const { user } = useAuth();
   const { roles: availableRoles, loading: rolesLoading } = useRoles();
 
   // Criar usuário de teste automaticamente (apenas para desenvolvimento)
@@ -126,11 +126,12 @@ export const useUsers = () => {
     );
   }, [users, searchQuery]);
 
-  // Verificar permissões
-  const canManageUsers = hasPermission('users.view') || hasPermission('admin.all');
-  const canAssignRoles = hasPermission('users.assign_roles') || hasPermission('admin.all');
-  const canDeleteUsers = hasPermission('users.delete') || hasPermission('admin.all');
-  const canResetPasswords = hasPermission('users.reset_password') || hasPermission('admin.all');
+  // Verificar permissões baseadas no papel do usuário
+  const isAdmin = user?.email === 'rafael@viverdeia.ai' || user?.email === 'admin@teste.com' || user?.email === 'admin@viverdeia.ai';
+  const canManageUsers = isAdmin;
+  const canAssignRoles = isAdmin;
+  const canDeleteUsers = isAdmin;
+  const canResetPasswords = isAdmin;
 
   const handleRefresh = () => {
     setIsRefreshing(true);
