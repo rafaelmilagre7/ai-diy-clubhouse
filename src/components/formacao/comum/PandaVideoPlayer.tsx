@@ -37,10 +37,12 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
         
         const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
         
-        // Detectar progresso do vídeo
+        // Detectar progresso do vídeo - simplificar para binário
         if (data.event === 'progress' && onProgress && typeof data.percent === 'number') {
-          onProgress(data.percent);
-          console.log(`PandaVideoPlayer: progresso ${data.percent}%`);
+          // Converter para progresso binário: >= 95% é considerado concluído
+          const binaryProgress = data.percent >= 95 ? 100 : 0;
+          onProgress(binaryProgress);
+          console.log(`PandaVideoPlayer: progresso ${data.percent}% (binário: ${binaryProgress}%)`);
         }
         
         // Detectar final do vídeo
@@ -73,7 +75,7 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
   };
 
   return (
-    <div className={`aspect-video ${className || ''}`}>
+    <div className={`w-full aspect-video ${className || ''}`}>
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-md">
           <div className="animate-pulse">Carregando vídeo...</div>

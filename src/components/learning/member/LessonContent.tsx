@@ -97,7 +97,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   
   return (
     <div className="space-y-6">
-      {/* Player de vídeo como elemento principal */}
+      {/* Player de vídeo como elemento principal - agora com largura total */}
       {hasVideos && (
         <div>
           <LessonVideoPlayer 
@@ -166,4 +166,3 @@ export const LessonContent: React.FC<LessonContentProps> = ({
     </div>
   );
 };
-
