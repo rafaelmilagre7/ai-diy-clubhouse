@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { LearningLesson, LearningLessonVideo, LearningResource } from "@/lib/supabase";
@@ -116,20 +115,12 @@ export function useLessonData({ lessonId, courseId }: UseLessonDataProps) {
     queryFn: async () => {
       if (!courseId) return [];
       
-      // Buscar todos os módulos do curso com suas aulas
+      // Buscar todos os módulos do curso com suas aulas (todos os campos)
       const { data: modules, error: modulesError } = await supabase
         .from("learning_modules")
         .select(`
-          id,
-          title,
-          order_index,
-          lessons:learning_lessons(
-            id,
-            title,
-            module_id,
-            order_index,
-            published
-          )
+          *,
+          lessons:learning_lessons(*)
         `)
         .eq("course_id", courseId)
         .eq("published", true)
@@ -153,7 +144,7 @@ export function useLessonData({ lessonId, courseId }: UseLessonDataProps) {
             const publishedLessons = module.lessons.filter(lesson => lesson.published);
             
             // Ordenar aulas dentro do módulo
-            const sortedLessons = sortLessonsByNumber([...publishedLessons]);
+            const sortedLessons = sortLessonsByNumber(publishedLessons);
             
             // Adicionar informações do módulo a cada aula
             const lessonsWithModule = sortedLessons.map(lesson => ({
@@ -161,7 +152,13 @@ export function useLessonData({ lessonId, courseId }: UseLessonDataProps) {
               module: {
                 id: module.id,
                 title: module.title,
-                order_index: module.order_index
+                description: module.description,
+                cover_image_url: module.cover_image_url,
+                course_id: module.course_id,
+                order_index: module.order_index,
+                published: module.published,
+                created_at: module.created_at,
+                updated_at: module.updated_at
               }
             }));
             
