@@ -83,7 +83,7 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
 
         console.log('✅ quick_onboarding salvo com sucesso');
 
-        // Também salvar em onboarding_progress para compatibilidade
+        // Também salvar em onboarding_progress para compatibilidade (SEM campo 'name')
         await saveToOnboardingProgress(data, user.id);
 
         setLastSaveTime(Date.now());
@@ -109,7 +109,7 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
   };
 };
 
-// Função auxiliar para manter compatibilidade com onboarding_progress
+// Função auxiliar para manter compatibilidade com onboarding_progress (SEM campo 'name')
 const saveToOnboardingProgress = async (data: QuickOnboardingData, userId: string) => {
   try {
     const progressData = {
@@ -151,14 +151,13 @@ const saveToOnboardingProgress = async (data: QuickOnboardingData, userId: strin
       current_step: determineCurrentStep(data),
       completed_steps: getCompletedSteps(data),
       is_completed: false, // Manter false até conclusão manual
-      // Campos top-level para compatibilidade
+      // Campos top-level para compatibilidade (SEM 'name')
       company_name: data.company_name || '',
       company_size: data.company_size || '',
       company_sector: data.company_segment || '',
       company_website: data.company_website || '',
       current_position: data.role || '',
       annual_revenue: data.annual_revenue_range || ''
-      // REMOVIDO: name (não existe na tabela)
       // REMOVIDO: updated_at (será tratado pelo trigger)
     };
 

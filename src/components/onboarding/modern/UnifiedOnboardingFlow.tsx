@@ -52,6 +52,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
           duration: 2000
         });
         
+        // Esperar um pouco antes de mostrar a tela de sucesso
         setTimeout(() => {
           setShowSuccessScreen(true);
           setIsCompleting(false);
@@ -94,18 +95,21 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     );
   }
 
-  // Se onboarding já foi concluído, mostrar visualização somente leitura
+  // CORREÇÃO PRINCIPAL: Verificar se onboarding está realmente concluído
+  // Só mostrar tela de leitura se isCompleted for true (confirmado pelo backend)
   if (isCompleted && !showSuccessScreen) {
+    console.log('📖 Exibindo dados em modo somente leitura');
     return <OnboardingReadOnlyView data={data} />;
   }
 
-  // Mostrar tela de sucesso se o onboarding foi concluído
+  // Mostrar tela de sucesso apenas se foi explicitamente ativada após finalização
   if (showSuccessScreen) {
+    console.log('🎉 Exibindo tela de sucesso');
     return <ModernSuccessScreen onNavigate={handleNavigateFromSuccess} />;
   }
 
-  // Mostrar indicador se dados foram carregados
-  const showDataLoadedMessage = hasExistingData && currentStep === 1;
+  // Mostrar indicador se dados foram carregados mas onboarding não está concluído
+  const showDataLoadedMessage = hasExistingData && currentStep === 1 && !isCompleted;
 
   const renderCurrentStep = () => {
     switch (currentStep) {
