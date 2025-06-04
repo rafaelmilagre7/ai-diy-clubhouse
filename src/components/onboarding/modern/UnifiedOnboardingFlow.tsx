@@ -127,7 +127,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
   }
 
   // Mostrar indicador se dados foram carregados mas onboarding não está concluído
-  const showDataLoadedMessage = hasExistingData && currentStep === 1 && !isCompleted;
+  const showDataLoadedMessage = hasExistingData && currentStep === 1 && !Boolean(isCompleted);
 
   const renderCurrentStep = () => {
     switch (currentStep) {

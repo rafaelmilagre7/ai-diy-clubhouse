@@ -78,15 +78,15 @@ export const useQuickOnboardingOptimized = () => {
         
         // Definir step atual baseado nos dados
         if (existingData.is_completed) {
-          setCurrentStep('4');
+          setCurrentStep(4);
         } else if (existingData.main_goal) {
-          setCurrentStep('4');
+          setCurrentStep(4);
         } else if (existingData.company_name && existingData.role) {
-          setCurrentStep('3');
+          setCurrentStep(3);
         } else if (existingData.name && existingData.email) {
-          setCurrentStep('2');
+          setCurrentStep(2);
         } else {
-          setCurrentStep('1');
+          setCurrentStep(1);
         }
 
         devLog.info('Dados carregados', { 
@@ -127,9 +127,7 @@ export const useQuickOnboardingOptimized = () => {
 
   // Verificar se pode prosseguir para próxima etapa
   const canProceed = useMemo(() => {
-    const stepNum = parseInt(currentStep);
-    
-    switch (stepNum) {
+    switch (currentStep) {
       case 1:
         return data.name && data.email && data.whatsapp && data.country_code && data.how_found_us;
       case 2:
@@ -194,17 +192,15 @@ export const useQuickOnboardingOptimized = () => {
 
   // Navegar para próxima etapa
   const nextStep = useCallback(() => {
-    const stepNum = parseInt(currentStep);
-    if (stepNum < totalSteps && canProceed) {
-      setCurrentStep((stepNum + 1).toString());
+    if (currentStep < totalSteps && canProceed) {
+      setCurrentStep(currentStep + 1);
     }
   }, [currentStep, canProceed, totalSteps]);
 
   // Navegar para etapa anterior
   const previousStep = useCallback(() => {
-    const stepNum = parseInt(currentStep);
-    if (stepNum > 1) {
-      setCurrentStep((stepNum - 1).toString());
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
     }
   }, [currentStep]);
 
