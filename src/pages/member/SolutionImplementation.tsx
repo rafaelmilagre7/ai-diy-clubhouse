@@ -35,7 +35,6 @@ const SolutionImplementation: React.FC = () => {
   
   const {
     handleMarkAsCompleted,
-    calculateProgress,
     setModuleInteraction
   } = useProgressTracking(
     progress,
@@ -68,12 +67,11 @@ const SolutionImplementation: React.FC = () => {
   }
 
   const currentModule = modules[currentModuleIndex] || null;
-  const progressPercentage = calculateProgress();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0A0B14] to-[#1A1E2E] text-white">
       <div className="container mx-auto px-4 py-6">
-        {/* Header melhorado */}
+        {/* Header */}
         <div className="mb-8">
           {/* Botão de voltar */}
           <Button
@@ -117,12 +115,6 @@ const SolutionImplementation: React.FC = () => {
                 <div className="flex items-center gap-2 text-viverblue mb-2">
                   <Target className="h-5 w-5" />
                   <span className="font-medium">Implementação</span>
-                </div>
-                <div className="text-2xl font-bold text-white">
-                  {Math.round(progressPercentage)}%
-                </div>
-                <div className="text-sm text-gray-400">
-                  Progresso
                 </div>
               </div>
             </div>
