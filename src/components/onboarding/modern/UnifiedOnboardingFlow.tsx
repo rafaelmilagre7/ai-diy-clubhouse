@@ -28,12 +28,10 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     isSaving,
     lastSaveTime,
     completeOnboarding,
-    isCompleted: rawIsCompleted,
+    isCompleted,
     retryCount,
     canFinalize
   } = useQuickOnboardingOptimized();
-
-  const isCompleted = rawIsCompleted === true || rawIsCompleted === 'true';
 
   const handleFinish = async () => {
     if (isCompleting) {
