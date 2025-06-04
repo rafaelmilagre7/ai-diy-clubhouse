@@ -45,17 +45,17 @@ export const AdminActions = ({
 
         {/* Opção: Marcar como Implementada */}
         <DropdownMenuItem 
-          onClick={() => onUpdateStatus('completed')}
-          disabled={adminActionLoading || suggestionStatus === 'completed'}
+          onClick={() => onUpdateStatus('implemented')}
+          disabled={adminActionLoading || suggestionStatus === 'implemented'}
         >
           <CheckCircle className="mr-2 h-4 w-4" />
-          {suggestionStatus === 'completed' 
+          {suggestionStatus === 'implemented' 
             ? 'Já Implementada' 
             : 'Marcar como Implementada'}
         </DropdownMenuItem>
 
         {/* Opção: Marcar como Nova (reverter status) */}
-        {(suggestionStatus === 'in_development' || suggestionStatus === 'completed') && (
+        {(suggestionStatus === 'in_development' || suggestionStatus === 'implemented') && (
           <DropdownMenuItem 
             onClick={() => onUpdateStatus('new')}
             disabled={adminActionLoading}

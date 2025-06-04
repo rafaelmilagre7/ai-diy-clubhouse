@@ -9,9 +9,9 @@ const getStatusDisplayName = (status: string): string => {
       return 'Nova';
     case 'in_development':
       return 'Em Desenvolvimento';
-    case 'completed':
+    case 'implemented':
       return 'Implementada';
-    case 'declined':
+    case 'rejected':
       return 'Recusada';
     default:
       return status;
