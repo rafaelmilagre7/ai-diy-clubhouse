@@ -86,7 +86,7 @@ export const LoginForm = () => {
         <Label htmlFor="email">Email</Label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <Mail className="h-5 w-5 text-gray-400 antialiased" strokeWidth={2} />
+            <Mail className="w-5 h-5 text-gray-400" strokeWidth={1.5} aria-hidden="true" />
           </div>
           <Input
             id="email"
@@ -103,7 +103,7 @@ export const LoginForm = () => {
         <Label htmlFor="password">Senha</Label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <Lock className="h-5 w-5 text-gray-400 antialiased" strokeWidth={2} />
+            <Lock className="w-5 h-5 text-gray-400" strokeWidth={1.5} aria-hidden="true" />
           </div>
           <Input
             id="password"
@@ -117,11 +117,12 @@ export const LoginForm = () => {
             type="button"
             onClick={handleTogglePassword}
             className="absolute inset-y-0 right-0 flex items-center pr-3"
+            aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
           >
             {showPassword ? (
-              <EyeOff className="h-5 w-5 text-gray-400 antialiased" strokeWidth={2} />
+              <EyeOff className="w-5 h-5 text-gray-400" strokeWidth={1.5} aria-hidden="true" />
             ) : (
-              <Eye className="h-5 w-5 text-gray-400 antialiased" strokeWidth={2} />
+              <Eye className="w-5 h-5 text-gray-400" strokeWidth={1.5} aria-hidden="true" />
             )}
           </button>
         </div>

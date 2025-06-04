@@ -42,7 +42,7 @@ const EmailPasswordForm = ({
         </Label>
         <div className="relative group">
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <Mail className="h-5 w-5 text-gray-400 antialiased" strokeWidth={2} />
+            <Mail className="w-5 h-5 text-gray-400" strokeWidth={1.5} aria-hidden="true" />
           </div>
           <Input
             id="email"
@@ -78,7 +78,7 @@ const EmailPasswordForm = ({
         </div>
         <div className="relative group">
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <Lock className="h-5 w-5 text-gray-400 antialiased" strokeWidth={2} />
+            <Lock className="w-5 h-5 text-gray-400" strokeWidth={1.5} aria-hidden="true" />
           </div>
           <Input
             id="password"
@@ -96,11 +96,12 @@ const EmailPasswordForm = ({
             onClick={() => setShowPassword(!showPassword)}
             className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-viverblue transition-colors duration-200"
             tabIndex={-1}
+            aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
           >
             {showPassword ? (
-              <EyeOff className="h-5 w-5 antialiased" strokeWidth={2} />
+              <EyeOff className="w-5 h-5" strokeWidth={1.5} aria-hidden="true" />
             ) : (
-              <Eye className="h-5 w-5 antialiased" strokeWidth={2} />
+              <Eye className="w-5 h-5" strokeWidth={1.5} aria-hidden="true" />
             )}
           </button>
         </div>
@@ -134,7 +135,7 @@ const EmailPasswordForm = ({
         >
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-5 w-5 animate-spin antialiased" strokeWidth={2} />
+              <Loader2 className="mr-2 w-5 h-5 animate-spin" strokeWidth={1.5} aria-hidden="true" />
               Entrando...
             </>
           ) : (
