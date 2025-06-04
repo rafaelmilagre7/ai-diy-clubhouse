@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuickOnboardingOptimized } from '@/hooks/onboarding/useQuickOnboardingOptimized';
 import { useNavigate } from 'react-router-dom';
@@ -28,12 +27,10 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     isSaving,
     lastSaveTime,
     completeOnboarding,
-    isCompleted: rawIsCompleted,
+    isCompleted,
     retryCount,
     canFinalize
   } = useQuickOnboardingOptimized();
-
-  const isCompleted = rawIsCompleted === true;
 
   const handleFinish = async () => {
     if (isCompleting) {
@@ -99,8 +96,8 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     );
   }
 
-  // Mostrar erro se houver problema no carregamento
-  if (loadError) {
+  // Mostrar erro se houver problema no carregamento, mas ignorar erros relacionados a onboarding_completed
+  if (loadError && !loadError.includes('onboarding_completed')) {
     return (
       <div className="text-center py-12 space-y-4">
         <div className="flex items-center justify-center gap-2 text-red-400 mb-4">

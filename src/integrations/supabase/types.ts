@@ -3816,6 +3816,7 @@ export type Database = {
           last_active: string | null
           linkedin_url: string | null
           name: string | null
+          onboarding_completed: boolean
           professional_bio: string | null
           referrals_count: number
           role: string
@@ -3836,6 +3837,7 @@ export type Database = {
           last_active?: string | null
           linkedin_url?: string | null
           name?: string | null
+          onboarding_completed?: boolean
           professional_bio?: string | null
           referrals_count?: number
           role?: string
@@ -3856,6 +3858,7 @@ export type Database = {
           last_active?: string | null
           linkedin_url?: string | null
           name?: string | null
+          onboarding_completed?: boolean
           professional_bio?: string | null
           referrals_count?: number
           role?: string
