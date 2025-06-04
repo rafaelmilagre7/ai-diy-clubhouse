@@ -18,10 +18,10 @@ const NPSRatingButton: React.FC<NPSRatingButtonProps> = ({ value, selectedValue,
   
   const getButtonStyles = () => {
     if (isSelected) {
-      return "bg-viverblue text-white border-viverblue shadow-lg transform scale-110 font-bold";
+      return "bg-viverblue text-white border-viverblue shadow-md ring-2 ring-viverblue/20";
     }
     
-    return "bg-white text-gray-700 border-gray-300 hover:border-viverblue hover:bg-viverblue/10 hover:text-viverblue hover:shadow-md";
+    return "bg-white text-gray-700 border-gray-200 hover:border-viverblue hover:bg-viverblue/5 hover:text-viverblue";
   };
 
   return (
@@ -29,9 +29,9 @@ const NPSRatingButton: React.FC<NPSRatingButtonProps> = ({ value, selectedValue,
       type="button"
       variant="outline"
       className={`
-        w-10 h-10 sm:w-12 sm:h-12 p-0 flex-shrink-0 transition-all duration-300 font-semibold text-sm sm:text-lg rounded-lg
+        w-11 h-11 sm:w-12 sm:h-12 p-0 flex-shrink-0 transition-all duration-200 font-semibold text-base rounded-lg
         ${getButtonStyles()}
-        hover:scale-105 active:scale-95 focus:ring-2 focus:ring-viverblue/30
+        hover:scale-102 active:scale-98 focus:outline-none focus:ring-2 focus:ring-viverblue/30 focus:ring-offset-2
       `}
       onClick={() => onClick(value)}
     >
@@ -114,18 +114,45 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
         <CardContent className="space-y-8 p-0">
           {/* Escala NPS */}
           <div className="space-y-6">
-            <div className="text-center">
-              <h3 className="text-2xl font-bold text-gray-800 mb-3">
+            <div className="text-center space-y-3">
+              <h3 className="text-2xl font-bold text-gray-800">
                 Como foi sua experiência?
               </h3>
-              <p className="text-lg text-gray-700 mb-6">
+              <p className="text-lg text-gray-600 max-w-md mx-auto">
                 De 0 a 10, qual a probabilidade de você recomendar esta aula?
               </p>
             </div>
             
-            {/* Grid responsivo para os botões NPS - uma única linha */}
-            <div className="space-y-6">
-              <div className="flex justify-center gap-1 sm:gap-2 overflow-x-auto px-2">
+            {/* Botões NPS com layout responsivo otimizado */}
+            <div className="space-y-4">
+              {/* Desktop: uma linha, Mobile: duas linhas */}
+              <div className="block sm:hidden space-y-3">
+                {/* Mobile: 0-5 */}
+                <div className="flex justify-center gap-2">
+                  {Array.from({ length: 6 }, (_, i) => (
+                    <NPSRatingButton
+                      key={i}
+                      value={i}
+                      selectedValue={score}
+                      onClick={setScore}
+                    />
+                  ))}
+                </div>
+                {/* Mobile: 6-10 */}
+                <div className="flex justify-center gap-2">
+                  {Array.from({ length: 5 }, (_, i) => (
+                    <NPSRatingButton
+                      key={i + 6}
+                      value={i + 6}
+                      selectedValue={score}
+                      onClick={setScore}
+                    />
+                  ))}
+                </div>
+              </div>
+              
+              {/* Desktop: linha única */}
+              <div className="hidden sm:flex justify-center gap-2 max-w-4xl mx-auto">
                 {Array.from({ length: 11 }, (_, i) => (
                   <NPSRatingButton
                     key={i}
@@ -137,24 +164,26 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
               </div>
               
               {/* Labels da escala */}
-              <div className="flex justify-between text-sm font-medium text-gray-600 px-4">
-                <span className="text-left">Não recomendaria</span>
-                <span className="text-right">Recomendaria totalmente</span>
+              <div className="flex justify-between text-sm font-medium text-gray-500 px-2 max-w-4xl mx-auto">
+                <span>Não recomendaria</span>
+                <span>Recomendaria totalmente</span>
               </div>
-              
-              {/* Container com altura fixa para feedback da nota - evita quebra de layout */}
-              <div className="min-h-[80px] flex items-center justify-center">
-                {score !== null && (
-                  <div className="text-center animate-fade-in bg-viverblue/5 border border-viverblue/20 p-4 rounded-lg max-w-md mx-auto">
-                    <div className="text-2xl font-bold text-viverblue mb-1">
+            </div>
+            
+            {/* Feedback da nota selecionada - altura fixa para evitar layout shift */}
+            <div className="h-20 flex items-center justify-center">
+              {score !== null && (
+                <div className="text-center animate-fade-in">
+                  <div className="inline-flex items-center gap-3 bg-viverblue/5 border border-viverblue/20 px-6 py-3 rounded-xl">
+                    <div className="text-xl font-bold text-viverblue">
                       {getScoreLabel()}
                     </div>
-                    <div className="text-xl font-bold text-gray-700">
+                    <div className="text-lg font-semibold text-gray-700">
                       Sua nota: {score}
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
           
@@ -170,7 +199,7 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
                 rows={4}
-                className="resize-none border-gray-300 focus:border-viverblue focus:ring-viverblue/20 text-base rounded-lg"
+                className="resize-none border-gray-200 focus:border-viverblue focus:ring-viverblue/20 text-base rounded-xl transition-colors"
               />
             </div>
           )}
@@ -179,7 +208,7 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
         <CardFooter className="p-0 pt-8">
           <Button 
             type="submit" 
-            className="w-full bg-viverblue hover:bg-viverblue-dark text-white font-bold py-4 text-lg shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.02] rounded-lg" 
+            className="w-full bg-viverblue hover:bg-viverblue-dark text-white font-semibold py-4 text-lg shadow-md transition-all duration-200 hover:shadow-lg hover:scale-[1.02] rounded-xl" 
             disabled={score === null || isSubmitting}
             size="lg"
           >
