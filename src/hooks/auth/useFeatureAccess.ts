@@ -5,6 +5,7 @@ import { usePermissions } from '@/hooks/auth/usePermissions';
 export type FeaturePermission = 
   | 'networking.access'
   | 'courses.manage'
+  | 'lms.manage'
   | 'tools.admin'
   | 'solutions.view'
   | 'solutions.create'
@@ -37,6 +38,11 @@ const FEATURE_CONFIGS: Record<string, FeatureAccessConfig> = {
     permission: 'courses.manage',
     fallbackRoles: ['admin', 'formacao'],
     description: 'Gerenciamento de cursos e aulas'
+  },
+  lmsManagement: {
+    permission: 'lms.manage',
+    fallbackRoles: ['admin'],
+    description: 'Gestão completa do sistema de aprendizagem (LMS)'
   },
   toolsAdmin: {
     permission: 'tools.admin',

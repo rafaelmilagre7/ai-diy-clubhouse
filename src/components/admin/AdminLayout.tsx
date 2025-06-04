@@ -1,32 +1,19 @@
 
 import { useEffect, useState } from "react";
-import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
-import {
-  Users,
-  LayoutDashboard,
-  Settings,
-  BookOpen,
-  CalendarDays,
-  Mail,
-  LogOut,
-  Boxes,
-  MessageSquare,
-  Lightbulb,
-  UserCog
-} from "lucide-react";
+import { Outlet, useNavigate } from "react-router-dom";
+import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/auth";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { AdminSidebarNav } from "@/components/layout/admin/AdminSidebarNav";
 
 const AdminLayout = () => {
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [isMounted, setIsMounted] = useState(false);
 
   // Verificar se o usuário está autenticado e é admin
@@ -57,61 +44,6 @@ const AdminLayout = () => {
       toast.error("Erro ao fazer logout");
     }
   };
-
-  // Lista de links da navegação
-  const navItems = [
-    { 
-      to: "/admin", 
-      icon: <LayoutDashboard className="h-5 w-5" />, 
-      label: "Dashboard",
-      isExact: true
-    },
-    { 
-      to: "/admin/solutions", 
-      icon: <Boxes className="h-5 w-5" />, 
-      label: "Soluções" 
-    },
-    { 
-      to: "/admin/courses", 
-      icon: <BookOpen className="h-5 w-5" />, 
-      label: "Cursos" 
-    },
-    { 
-      to: "/admin/users", 
-      icon: <Users className="h-5 w-5" />, 
-      label: "Usuários" 
-    },
-    { 
-      to: "/admin/invites", 
-      icon: <Mail className="h-5 w-5" />, 
-      label: "Convites" 
-    },
-    { 
-      to: "/admin/events", 
-      icon: <CalendarDays className="h-5 w-5" />, 
-      label: "Eventos" 
-    },
-    { 
-      to: "/admin/roles", 
-      icon: <UserCog className="h-5 w-5" />, 
-      label: "Perfis" 
-    },
-    { 
-      to: "/admin/suggestions", 
-      icon: <Lightbulb className="h-5 w-5" />, 
-      label: "Sugestões" 
-    },
-    { 
-      to: "/admin/onboarding", 
-      icon: <MessageSquare className="h-5 w-5" />, 
-      label: "Onboarding" 
-    },
-    { 
-      to: "/admin/config", 
-      icon: <Settings className="h-5 w-5" />, 
-      label: "Configurações" 
-    }
-  ];
 
   // Renderização condicional enquanto verifica permissões
   if (!isMounted || !user) {
@@ -165,24 +97,7 @@ const AdminLayout = () => {
           <Separator className="my-4" />
           
           <ScrollArea className="flex-1 px-1" style={{ height: "calc(100vh - 240px)" }}>
-            <div className="space-y-1">
-              {navItems.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.isExact}
-                  className={({ isActive }) => cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
-                    isActive 
-                      ? "bg-gray-700 text-white" 
-                      : "text-gray-400 hover:text-white hover:bg-gray-700/50"
-                  )}
-                >
-                  {item.icon}
-                  {item.label}
-                </NavLink>
-              ))}
-            </div>
+            <AdminSidebarNav sidebarOpen={true} />
           </ScrollArea>
         </div>
         
