@@ -33,13 +33,18 @@ export const UnifiedOnboardingFlow: React.FC = () => {
   } = useQuickOnboardingOptimized();
 
   const handleFinish = async () => {
-    if (isCompleting) return;
+    if (isCompleting) {
+      console.log('⚠️ Finalização já em progresso, ignorando...');
+      return;
+    }
     
     setIsCompleting(true);
     console.log('🎯 Iniciando finalização do onboarding...');
     
     try {
-      const loadingToast = toast.loading('Finalizando seu onboarding...');
+      const loadingToast = toast.loading('Finalizando seu onboarding...', {
+        duration: 0 // Não remove automaticamente
+      });
       
       const success = await completeOnboarding();
       
@@ -52,20 +57,24 @@ export const UnifiedOnboardingFlow: React.FC = () => {
           duration: 2000
         });
         
-        // Esperar um pouco antes de mostrar a tela de sucesso
+        // Pequeno delay antes de mostrar tela de sucesso
         setTimeout(() => {
           setShowSuccessScreen(true);
           setIsCompleting(false);
         }, 1500);
       } else {
         console.error('❌ Falha na finalização do onboarding');
-        const retryMessage = retryCount > 0 ? ` (${retryCount} tentativas realizadas)` : '';
-        toast.error(`Erro ao finalizar onboarding${retryMessage}. Tente novamente.`);
+        const retryMessage = retryCount > 0 ? ` (${retryCount}/3 tentativas)` : '';
+        toast.error(`Erro ao finalizar onboarding${retryMessage}. Verifique os dados e tente novamente.`, {
+          duration: 5000
+        });
         setIsCompleting(false);
       }
     } catch (error) {
       console.error('❌ Erro na finalização:', error);
-      toast.error('Erro ao finalizar onboarding. Tente novamente.');
+      toast.error('Erro inesperado ao finalizar onboarding. Tente novamente.', {
+        duration: 5000
+      });
       setIsCompleting(false);
     }
   };
@@ -95,10 +104,9 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     );
   }
 
-  // CORREÇÃO PRINCIPAL: Verificar se onboarding está realmente concluído
-  // Só mostrar tela de leitura se isCompleted for true (confirmado pelo backend)
+  // VERIFICAÇÃO PRINCIPAL: Se onboarding está realmente concluído no backend
   if (isCompleted && !showSuccessScreen) {
-    console.log('📖 Exibindo dados em modo somente leitura');
+    console.log('📖 Onboarding completo - exibindo dados em modo somente leitura');
     return <OnboardingReadOnlyView data={data} />;
   }
 

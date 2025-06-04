@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from 'react';
 import { QuickOnboardingData } from '@/types/quickOnboarding';
 import { supabase } from '@/lib/supabase';
@@ -9,6 +10,25 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
   const [lastSaveTime, setLastSaveTime] = useState<number | null>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout>();
   const lastDataRef = useRef<string>('');
+
+  // Sanitizar payload antes de salvar
+  const sanitizeAutoSavePayload = (payload: any) => {
+    const clean = { ...payload };
+    
+    // Remove campos que não existem nas tabelas
+    delete clean.updated_at;
+    delete clean.created_at;
+    delete clean.id;
+    
+    // Remove undefined
+    Object.keys(clean).forEach(key => {
+      if (clean[key] === undefined) {
+        delete clean[key];
+      }
+    });
+
+    return clean;
+  };
 
   useEffect(() => {
     // Só salvar se o usuário estiver logado e houver dados básicos
@@ -31,8 +51,8 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
         setIsSaving(true);
         console.log('💾 Auto-salvando dados do onboarding...');
         
-        // Preparar dados limpos para quick_onboarding (SEM campos inválidos)
-        const quickOnboardingData = {
+        // Preparar dados limpos para quick_onboarding
+        const quickOnboardingData = sanitizeAutoSavePayload({
           user_id: user.id,
           name: data.name || '',
           email: data.email || '',
@@ -57,10 +77,9 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
           has_implemented: data.has_implemented || '',
           previous_tools: data.previous_tools || [],
           is_completed: false // Manter false até conclusão manual
-          // REMOVIDO: updated_at (será tratado pelo trigger)
-        };
+        });
 
-        console.log('📤 Auto-save payload:', {
+        console.log('📤 Auto-save payload limpo:', {
           user_id: quickOnboardingData.user_id,
           name: quickOnboardingData.name,
           email: quickOnboardingData.email,
@@ -76,13 +95,13 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
           });
 
         if (quickError) {
-          console.error('❌ Erro ao salvar quick_onboarding:', quickError);
+          console.error('❌ Erro ao auto-salvar quick_onboarding:', quickError);
           throw quickError;
         }
 
-        console.log('✅ quick_onboarding salvo com sucesso');
+        console.log('✅ quick_onboarding auto-salvo com sucesso');
 
-        // Também salvar em onboarding_progress para compatibilidade (SEM campo 'name')
+        // Também salvar em onboarding_progress para compatibilidade
         await saveToOnboardingProgress(data, user.id);
 
         setLastSaveTime(Date.now());
@@ -108,7 +127,7 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
   };
 };
 
-// Função auxiliar para manter compatibilidade com onboarding_progress (SEM campo 'name')
+// Função auxiliar para manter compatibilidade com onboarding_progress
 const saveToOnboardingProgress = async (data: QuickOnboardingData, userId: string) => {
   try {
     const progressData = {
@@ -119,7 +138,6 @@ const saveToOnboardingProgress = async (data: QuickOnboardingData, userId: strin
         ddi: data.country_code,
         linkedin: data.linkedin_url,
         instagram: data.instagram_url
-        // REMOVIDO: name (campo não existe na tabela onboarding_progress)
       },
       professional_info: {
         company_name: data.company_name,
@@ -151,14 +169,13 @@ const saveToOnboardingProgress = async (data: QuickOnboardingData, userId: strin
       current_step: determineCurrentStep(data),
       completed_steps: getCompletedSteps(data),
       is_completed: false, // Manter false até conclusão manual
-      // Campos top-level para compatibilidade (SEM 'name')
+      // Campos top-level para compatibilidade
       company_name: data.company_name || '',
       company_size: data.company_size || '',
       company_sector: data.company_segment || '',
       company_website: data.company_website || '',
       current_position: data.role || '',
       annual_revenue: data.annual_revenue_range || ''
-      // REMOVIDO: updated_at (será tratado pelo trigger)
     };
 
     const { error } = await supabase
