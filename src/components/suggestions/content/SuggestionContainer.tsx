@@ -1,12 +1,10 @@
 
 import React from 'react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import { useAuth } from '@/contexts/auth';
 import { UserVote } from '@/types/suggestionTypes';
 import SuggestionTitle from './SuggestionTitle';
 import SuggestionDescription from './SuggestionDescription';
 import SuggestionVoting from '../SuggestionVoting';
-import CommentsSection from './CommentsSection';
 
 interface SuggestionContainerProps {
   suggestion: {
@@ -23,12 +21,6 @@ interface SuggestionContainerProps {
     user_name?: string;
     user_avatar?: string;
   };
-  comment: string;
-  comments: any[];
-  isSubmitting: boolean;
-  commentsLoading: boolean;
-  onCommentChange: (value: string) => void;
-  onSubmitComment: (e: React.FormEvent) => void;
   onVote: (voteType: 'upvote' | 'downvote') => Promise<void>;
   isOwner?: boolean;
   userVote?: UserVote | null;
@@ -37,18 +29,11 @@ interface SuggestionContainerProps {
 
 const SuggestionContainer = ({
   suggestion,
-  comment,
-  comments,
-  isSubmitting,
-  commentsLoading,
-  onCommentChange,
-  onSubmitComment,
   onVote,
   isOwner = false,
   userVote,
   voteLoading = false
 }: SuggestionContainerProps) => {
-  const { isAdmin } = useAuth();
   const voteBalance = suggestion.upvotes - suggestion.downvotes;
   const categoryName = suggestion.category?.name || '';
 
@@ -75,18 +60,6 @@ const SuggestionContainer = ({
           onVote={onVote}
           voteBalance={voteBalance}
         />
-
-        {/* Comentários apenas para admins */}
-        {isAdmin && (
-          <CommentsSection
-            comment={comment}
-            comments={comments}
-            isSubmitting={isSubmitting}
-            commentsLoading={commentsLoading}
-            onCommentChange={onCommentChange}
-            onSubmitComment={onSubmitComment}
-          />
-        )}
       </CardContent>
     </Card>
   );

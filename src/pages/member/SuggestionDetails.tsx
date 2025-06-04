@@ -4,7 +4,6 @@ import { useAuth } from '@/contexts/auth';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import SuggestionContent from '@/components/suggestions/SuggestionContent';
-import { useComments } from '@/hooks/suggestions/useComments';
 import { useSuggestionDetails } from '@/hooks/suggestions/useSuggestionDetails';
 import { useAdminSuggestions } from '@/hooks/suggestions/useAdminSuggestions';
 import { DeleteSuggestionDialog } from '@/components/suggestions/details/DeleteSuggestionDialog';
@@ -31,19 +30,6 @@ const SuggestionDetailsPage = () => {
   } = useSuggestionDetails();
 
   const { removeSuggestion, updateSuggestionStatus, loading: adminActionLoading } = useAdminSuggestions();
-
-  // Buscar comentários apenas se for admin
-  const { 
-    comment, 
-    setComment, 
-    comments, 
-    commentsLoading, 
-    isSubmitting, 
-    handleSubmitComment,
-  } = useComments({ 
-    suggestionId: suggestion?.id || '',
-    enabled: isAdmin // Só buscar comentários se for admin
-  });
 
   const handleRemoveSuggestion = async () => {
     if (suggestion?.id) {
@@ -102,12 +88,12 @@ const SuggestionDetailsPage = () => {
 
       <SuggestionContent
         suggestion={suggestion}
-        comment={isAdmin ? comment : ''}
-        comments={isAdmin ? comments : []}
-        isSubmitting={isSubmitting}
-        commentsLoading={commentsLoading}
-        onCommentChange={isAdmin ? setComment : () => {}}
-        onSubmitComment={isAdmin ? handleSubmitComment : () => {}}
+        comment=""
+        comments={[]}
+        isSubmitting={false}
+        commentsLoading={false}
+        onCommentChange={() => {}}
+        onSubmitComment={() => {}}
         onVote={handleVote}
         isOwner={isOwner}
         userVote={userVote as UserVote | null}
