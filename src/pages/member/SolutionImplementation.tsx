@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useSolutionData } from "@/hooks/useSolutionData";
 import { useModuleImplementation } from "@/hooks/useModuleImplementation";
@@ -7,16 +7,25 @@ import LoadingScreen from "@/components/common/LoadingScreen";
 import { useToast } from "@/hooks/use-toast";
 import { PageTransition } from "@/components/transitions/PageTransition";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { ModuleContent } from "@/components/implementation/ModuleContent";
 import { ImplementationHeader } from "@/components/implementation/ImplementationHeader";
 import { ImplementationNavigation } from "@/components/implementation/ImplementationNavigation";
 import { ImplementationProgress } from "@/components/implementation/ImplementationProgress";
+import { ImplementationTabsNavigation } from "@/components/implementation/ImplementationTabsNavigation";
 import { useImplementationNavigation } from "@/hooks/implementation/useImplementationNavigation";
 import { useProgressTracking } from "@/hooks/implementation/useProgressTracking";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { ModuleContentTools } from "@/components/implementation/content/ModuleContentTools";
+import { ModuleContentMaterials } from "@/components/implementation/content/ModuleContentMaterials";
+import { ModuleContentVideos } from "@/components/implementation/content/ModuleContentVideos";
+import { ModuleContentChecklist } from "@/components/implementation/content/ModuleContentChecklist";
+import { CommentsSection } from "@/components/implementation/content/CommentsSection";
+import { Button } from "@/components/ui/button";
+import { CheckCircle2 } from "lucide-react";
 
 const SolutionImplementation = () => {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("tools");
   
   const {
     solution,
@@ -117,22 +126,70 @@ const SolutionImplementation = () => {
             />
           </div>
 
-          {/* Conteúdo principal */}
+          {/* Conteúdo principal com abas */}
           <div className="lg:col-span-3">
             <GlassCard className="p-0 transition-all duration-300 shadow-xl border border-white/10">
               {currentModule ? (
-                <ModuleContent
-                  module={currentModule}
-                  onComplete={handleModuleComplete}
-                  onError={(error) => {
-                    console.error("Module content error:", error);
-                    toast({
-                      title: "Erro no módulo",
-                      description: "Ocorreu um erro ao carregar o conteúdo do módulo.",
-                      variant: "destructive"
-                    });
-                  }}
-                />
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                  <div className="p-6 pb-0">
+                    <div className="mb-6">
+                      <h2 className="text-2xl font-bold text-white mb-2">
+                        {currentModule.title}
+                      </h2>
+                      <p className="text-neutral-300">
+                        {currentModule.description}
+                      </p>
+                    </div>
+                    
+                    <ImplementationTabsNavigation 
+                      activeTab={activeTab}
+                      setActiveTab={setActiveTab}
+                    />
+                  </div>
+
+                  <div className="p-6 pt-0">
+                    <TabsContent value="tools" className="mt-0">
+                      <ModuleContentTools module={currentModule} />
+                    </TabsContent>
+
+                    <TabsContent value="materials" className="mt-0">
+                      <ModuleContentMaterials module={currentModule} />
+                    </TabsContent>
+
+                    <TabsContent value="videos" className="mt-0">
+                      <ModuleContentVideos module={currentModule} />
+                    </TabsContent>
+
+                    <TabsContent value="checklist" className="mt-0">
+                      <ModuleContentChecklist module={currentModule} />
+                    </TabsContent>
+
+                    <TabsContent value="comments" className="mt-0">
+                      <CommentsSection 
+                        solutionId={solution.id}
+                        moduleId={currentModule.id}
+                      />
+                    </TabsContent>
+
+                    <TabsContent value="complete" className="mt-0">
+                      <div className="text-center py-12">
+                        <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
+                        <h3 className="text-xl font-semibold mb-4">Concluir Módulo</h3>
+                        <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                          Você completou todas as etapas deste módulo. Clique no botão abaixo para marcar como concluído e avançar.
+                        </p>
+                        <Button 
+                          onClick={handleModuleComplete}
+                          size="lg"
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <CheckCircle2 className="h-5 w-5 mr-2" />
+                          Marcar como Concluído
+                        </Button>
+                      </div>
+                    </TabsContent>
+                  </div>
+                </Tabs>
               ) : (
                 <div className="p-8 text-center">
                   <h3 className="text-xl font-semibold mb-4">Módulo não encontrado</h3>
