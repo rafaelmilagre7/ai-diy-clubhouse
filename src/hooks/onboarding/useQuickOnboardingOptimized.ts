@@ -20,9 +20,10 @@ export interface UseQuickOnboardingOptimizedResult {
   completeOnboarding: () => Promise<boolean>;
   isCompleted: boolean;
   retryCount: number;
+  canFinalize: () => boolean;
 }
 
-export const useQuickOnboardingOptimized = (): UseQuickOnboardingOptimizedResult => {
+export const useQuickOnboardingOptimized = () => {
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
@@ -151,6 +152,48 @@ export const useQuickOnboardingOptimized = (): UseQuickOnboardingOptimizedResult
     return clean;
   }, [user]);
 
+  // Função robusta para verificar se pode finalizar
+  const canFinalize = useCallback((): boolean => {
+    console.log('🔍 Verificando se pode finalizar onboarding...');
+    
+    // Verificar se dados básicos existem
+    if (!data.name || !data.email || !data.whatsapp) {
+      console.log('❌ Dados pessoais incompletos');
+      return false;
+    }
+
+    // Verificar se dados de negócio existem
+    if (!data.company_name || !data.role || !data.company_size || !data.company_segment) {
+      console.log('❌ Dados de negócio incompletos');
+      return false;
+    }
+
+    // Verificar se dados de IA existem
+    if (!data.ai_knowledge_level || !data.uses_ai || !data.main_goal) {
+      console.log('❌ Dados de experiência com IA incompletos');
+      return false;
+    }
+
+    // Verificar campos obrigatórios específicos
+    if (!data.how_found_us) {
+      console.log('❌ Campo "como conheceu" não preenchido');
+      return false;
+    }
+
+    if (data.how_found_us === 'indicacao' && !data.referred_by) {
+      console.log('❌ Campo "indicado por" obrigatório quando escolheu indicação');
+      return false;
+    }
+
+    if (!data.annual_revenue_range || !data.main_challenge) {
+      console.log('❌ Campos de negócio obrigatórios faltando');
+      return false;
+    }
+
+    console.log('✅ Todos os dados obrigatórios estão preenchidos');
+    return true;
+  }, [data]);
+
   const completeOnboarding = useCallback(async (): Promise<boolean> => {
     console.log('🎯 Iniciando finalização do onboarding...');
     
@@ -158,6 +201,15 @@ export const useQuickOnboardingOptimized = (): UseQuickOnboardingOptimizedResult
     const isAuthValid = await validateUserAuth();
     if (!isAuthValid) {
       toast.error('Erro de autenticação. Faça login novamente.');
+      return false;
+    }
+
+    // Validação rigorosa antes de qualquer tentativa
+    if (!canFinalize()) {
+      console.error('❌ Tentativa de finalizar onboarding com dados incompletos');
+      toast.error('Complete todas as etapas antes de finalizar', {
+        duration: 4000
+      });
       return false;
     }
 
@@ -315,18 +367,24 @@ export const useQuickOnboardingOptimized = (): UseQuickOnboardingOptimizedResult
     }
   }, []);
 
-  const canProceed = useCallback(() => {
+  // Atualizar canProceed para incluir validação de finalização
+  const canProceed = useCallback((): boolean => {
     switch (currentStep) {
       case 1:
-        return !!(data.name && data.email && data.whatsapp && data.how_found_us);
+        return !!(data.name && data.email && data.whatsapp && data.how_found_us && 
+                 (data.how_found_us !== 'indicacao' || data.referred_by));
       case 2:
-        return !!(data.company_name && data.role && data.company_size && data.company_segment && data.annual_revenue_range && data.main_challenge);
+        return !!(data.company_name && data.role && data.company_size && 
+                 data.company_segment && data.annual_revenue_range && data.main_challenge);
       case 3:
         return !!(data.ai_knowledge_level && data.uses_ai && data.main_goal);
+      case 4:
+        // Na etapa final, usar validação rigorosa
+        return canFinalize();
       default:
-        return true;
+        return false;
     }
-  }, [currentStep, data]);
+  }, [currentStep, data, canFinalize]);
 
   return {
     currentStep,
@@ -343,6 +401,7 @@ export const useQuickOnboardingOptimized = (): UseQuickOnboardingOptimizedResult
     lastSaveTime: null,
     completeOnboarding,
     isCompleted,
-    retryCount
+    retryCount,
+    canFinalize
   };
 };

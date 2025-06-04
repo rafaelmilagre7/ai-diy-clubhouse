@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuickOnboardingOptimized } from '@/hooks/onboarding/useQuickOnboardingOptimized';
 import { useNavigate } from 'react-router-dom';
@@ -29,7 +28,8 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     lastSaveTime,
     completeOnboarding,
     isCompleted,
-    retryCount
+    retryCount,
+    canFinalize
   } = useQuickOnboardingOptimized();
 
   const handleFinish = async () => {
@@ -154,6 +154,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
             isCompleting={isCompleting}
             retryCount={retryCount}
             onFinish={handleFinish}
+            canFinalize={canFinalize()}
           />
         );
       

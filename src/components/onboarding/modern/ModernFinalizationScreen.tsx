@@ -1,18 +1,20 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle, ArrowRight, Loader2 } from 'lucide-react';
+import { CheckCircle, ArrowRight, Loader2, AlertTriangle } from 'lucide-react';
 
 interface ModernFinalizationScreenProps {
   isCompleting: boolean;
   retryCount: number;
   onFinish: () => void;
+  canFinalize?: boolean; // Nova prop para validação
 }
 
 export const ModernFinalizationScreen: React.FC<ModernFinalizationScreenProps> = ({
   isCompleting,
   retryCount,
-  onFinish
+  onFinish,
+  canFinalize = true // Default true para compatibilidade
 }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-6">
@@ -90,6 +92,21 @@ export const ModernFinalizationScreen: React.FC<ModernFinalizationScreenProps> =
           transition={{ delay: 0.8, duration: 0.6 }}
           className="space-y-4"
         >
+          {/* Validação de dados incompletos */}
+          {!canFinalize && !isCompleting && (
+            <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+              <div className="flex items-center justify-center gap-3">
+                <AlertTriangle className="h-5 w-5 text-red-400" />
+                <div>
+                  <p className="text-red-400 font-medium">Dados incompletos</p>
+                  <p className="text-red-300 text-sm">
+                    Complete todas as etapas anteriores antes de finalizar
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {isCompleting && (
             <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
               <div className="flex items-center justify-center gap-3">
@@ -112,7 +129,7 @@ export const ModernFinalizationScreen: React.FC<ModernFinalizationScreenProps> =
             </div>
           )}
 
-          {!isCompleting && (
+          {!isCompleting && canFinalize && (
             <motion.button
               onClick={onFinish}
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-4 px-8 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center gap-2 mx-auto"
@@ -121,6 +138,16 @@ export const ModernFinalizationScreen: React.FC<ModernFinalizationScreenProps> =
             >
               Finalizar Configuração
               <ArrowRight className="h-5 w-5" />
+            </motion.button>
+          )}
+
+          {!canFinalize && !isCompleting && (
+            <motion.button
+              disabled
+              className="bg-gray-600 text-gray-400 font-semibold py-4 px-8 rounded-lg flex items-center gap-2 mx-auto cursor-not-allowed opacity-50"
+            >
+              Complete as etapas anteriores
+              <AlertTriangle className="h-5 w-5" />
             </motion.button>
           )}
         </motion.div>
