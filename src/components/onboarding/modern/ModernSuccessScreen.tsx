@@ -2,7 +2,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Home, Route, Users, Sparkles } from 'lucide-react';
+import { CheckCircle, Home, Route, Users, Sparkles, ArrowRight } from 'lucide-react';
 
 interface ModernSuccessScreenProps {
   onNavigate: (path: string) => void;
@@ -25,7 +25,9 @@ export const ModernSuccessScreen: React.FC<ModernSuccessScreenProps> = ({ onNavi
           className="flex justify-center mb-8"
         >
           <div className="relative">
-            <CheckCircle className="h-24 w-24 text-emerald-400" />
+            <div className="w-24 h-24 bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center shadow-2xl">
+              <CheckCircle className="h-14 w-14 text-white" />
+            </div>
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -64,9 +66,10 @@ export const ModernSuccessScreen: React.FC<ModernSuccessScreenProps> = ({ onNavi
           <motion.div
             whileHover={{ scale: 1.02, y: -4 }}
             whileTap={{ scale: 0.98 }}
-            className="group"
+            className="group cursor-pointer"
+            onClick={() => onNavigate('/dashboard')}
           >
-            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8 h-full cursor-pointer transition-all duration-300 hover:bg-white/15 hover:border-white/30">
+            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8 h-full transition-all duration-300 hover:bg-white/15 hover:border-white/30 hover:shadow-2xl">
               <div className="flex flex-col items-center text-center space-y-4">
                 <div className="p-4 bg-blue-500/20 rounded-xl group-hover:bg-blue-500/30 transition-colors">
                   <Home className="h-8 w-8 text-blue-300" />
@@ -77,9 +80,10 @@ export const ModernSuccessScreen: React.FC<ModernSuccessScreenProps> = ({ onNavi
                 </p>
                 <Button
                   onClick={() => onNavigate('/dashboard')}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white border-0 mt-4"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white border-0 mt-4 group-hover:shadow-lg transition-all"
                 >
                   Ir para Dashboard
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -89,9 +93,10 @@ export const ModernSuccessScreen: React.FC<ModernSuccessScreenProps> = ({ onNavi
           <motion.div
             whileHover={{ scale: 1.02, y: -4 }}
             whileTap={{ scale: 0.98 }}
-            className="group"
+            className="group cursor-pointer"
+            onClick={() => onNavigate('/implementation-trail')}
           >
-            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8 h-full cursor-pointer transition-all duration-300 hover:bg-white/15 hover:border-white/30">
+            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8 h-full transition-all duration-300 hover:bg-white/15 hover:border-white/30 hover:shadow-2xl">
               <div className="flex flex-col items-center text-center space-y-4">
                 <div className="p-4 bg-emerald-500/20 rounded-xl group-hover:bg-emerald-500/30 transition-colors">
                   <Route className="h-8 w-8 text-emerald-300" />
@@ -102,9 +107,10 @@ export const ModernSuccessScreen: React.FC<ModernSuccessScreenProps> = ({ onNavi
                 </p>
                 <Button
                   onClick={() => onNavigate('/implementation-trail')}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white border-0 mt-4"
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white border-0 mt-4 group-hover:shadow-lg transition-all"
                 >
                   Começar Trilha
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -114,9 +120,10 @@ export const ModernSuccessScreen: React.FC<ModernSuccessScreenProps> = ({ onNavi
           <motion.div
             whileHover={{ scale: 1.02, y: -4 }}
             whileTap={{ scale: 0.98 }}
-            className="group"
+            className="group cursor-pointer"
+            onClick={() => onNavigate('/networking')}
           >
-            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8 h-full cursor-pointer transition-all duration-300 hover:bg-white/15 hover:border-white/30">
+            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8 h-full transition-all duration-300 hover:bg-white/15 hover:border-white/30 hover:shadow-2xl">
               <div className="flex flex-col items-center text-center space-y-4">
                 <div className="p-4 bg-purple-500/20 rounded-xl group-hover:bg-purple-500/30 transition-colors">
                   <Users className="h-8 w-8 text-purple-300" />
@@ -127,9 +134,10 @@ export const ModernSuccessScreen: React.FC<ModernSuccessScreenProps> = ({ onNavi
                 </p>
                 <Button
                   onClick={() => onNavigate('/networking')}
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white border-0 mt-4"
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white border-0 mt-4 group-hover:shadow-lg transition-all"
                 >
                   Explorar Networking
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
             </div>
