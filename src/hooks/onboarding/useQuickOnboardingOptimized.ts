@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useQuickOnboardingAutoSave } from './useQuickOnboardingAutoSave';
@@ -28,8 +29,7 @@ const initialData: QuickOnboardingData = {
   main_goal: '',
   desired_ai_areas: [],
   has_implemented: '',
-  previous_tools: [],
-  is_completed: false
+  previous_tools: []
 };
 
 export const useQuickOnboardingOptimized = () => {
@@ -89,7 +89,7 @@ export const useQuickOnboardingOptimized = () => {
     if (user) {
       loadExistingData();
     }
-  }, [user]);
+  }, [user, loadExistingData]);
 
   const updateField = useCallback((field: keyof QuickOnboardingData, value: any) => {
     setData(prev => ({ ...prev, [field]: value }));
@@ -143,7 +143,6 @@ export const useQuickOnboardingOptimized = () => {
       const progressData = {
         user_id: user.id,
         personal_info: {
-          name: data.name,
           email: data.email,
           phone: data.whatsapp,
           ddi: data.country_code,
@@ -227,7 +226,7 @@ export const useQuickOnboardingOptimized = () => {
         console.log('⚠️ Tentando novamente...');
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        const retryResult = await this.completeOnboarding();
+        const retryResult = await completeOnboarding();
         return retryResult;
       }
     } catch (error: any) {
