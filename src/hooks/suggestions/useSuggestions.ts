@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Suggestion } from '@/types/suggestionTypes';
 
-export type SuggestionFilter = 'all' | 'popular' | 'recent' | 'new' | 'in_development' | 'completed';
+export type SuggestionFilter = 'all' | 'popular' | 'recent' | 'new' | 'in_development' | 'implemented';
 
 export const useSuggestions = () => {
   const [filter, setFilter] = useState<SuggestionFilter>('popular');
@@ -37,12 +37,12 @@ export const useSuggestions = () => {
           query = query.eq('status', 'new');
         } else if (filter === 'in_development') {
           query = query.eq('status', 'in_development');
-        } else if (filter === 'completed') {
-          query = query.eq('status', 'completed');
+        } else if (filter === 'implemented') {
+          query = query.eq('status', 'implemented');
         }
 
         // Ordenação
-        if (filter === 'popular' || filter === 'new' || filter === 'in_development' || filter === 'completed') {
+        if (filter === 'popular' || filter === 'new' || filter === 'in_development' || filter === 'implemented') {
           // Ordenar por votos líquidos (upvotes - downvotes) em ordem decrescente
           query = query.order('upvotes', { ascending: false });
         } else if (filter === 'recent') {
@@ -58,7 +58,7 @@ export const useSuggestions = () => {
 
         // Ordenar por votos líquidos no frontend para garantir precisão
         let sortedData = data || [];
-        if (filter === 'popular' || filter === 'new' || filter === 'in_development' || filter === 'completed') {
+        if (filter === 'popular' || filter === 'new' || filter === 'in_development' || filter === 'implemented') {
           sortedData = sortedData.sort((a, b) => {
             const aNetVotes = (a.upvotes || 0) - (a.downvotes || 0);
             const bNetVotes = (b.upvotes || 0) - (b.downvotes || 0);

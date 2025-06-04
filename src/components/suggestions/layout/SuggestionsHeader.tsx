@@ -79,7 +79,7 @@ export const SuggestionsHeader: React.FC<SuggestionsHeaderProps> = ({
               <Wrench className="h-4 w-4" />
               <span className="hidden md:inline">Em Desenvolvimento</span>
             </ToggleGroupItem>
-            <ToggleGroupItem value="completed" className="gap-1 whitespace-nowrap">
+            <ToggleGroupItem value="implemented" className="gap-1 whitespace-nowrap">
               <CheckCircle className="h-4 w-4" />
               <span className="hidden md:inline">Implementadas</span>
             </ToggleGroupItem>
