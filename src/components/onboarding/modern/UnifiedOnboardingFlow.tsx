@@ -117,7 +117,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
   }
 
   // VERIFICAÇÃO PRINCIPAL: Se onboarding está realmente concluído no backend
-  if (Boolean(isCompleted) && !showSuccessScreen) {
+  if (Boolean(Boolean(isCompleted)) && !showSuccessScreen) {
     return <OnboardingReadOnlyView data={data} />;
   }
 
