@@ -1,4 +1,3 @@
-
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/auth";
 import { useLocation } from "react-router-dom";
@@ -22,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { isActiveRoute } from "@/components/community/utils/routingUtils";
+import { usePermissions } from "@/hooks/auth/usePermissions";
 
 interface SidebarNavProps {
   sidebarOpen: boolean;
@@ -29,7 +29,8 @@ interface SidebarNavProps {
 
 export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
   const location = useLocation();
-  const { isAdmin, isFormacao, profile } = useAuth();
+  const { isAdmin, profile } = useAuth();
+  const { hasPermission } = usePermissions();
 
   const menuItems = [
     {
@@ -148,7 +149,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
           </Button>
         )}
         
-        {isFormacao && (
+        {hasPermission('lms.manage') && (
           <Button
             variant="outline"
             className={cn(
