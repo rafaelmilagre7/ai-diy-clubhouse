@@ -10,7 +10,6 @@ import {
   BookOpen,
   Calendar,
   GraduationCap,
-  Shield,
   Mail,
   User
 } from "lucide-react";
@@ -72,15 +71,6 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
     },
   ];
 
-  const communityItems = [
-    {
-      title: "Moderação",
-      href: "/admin/community",
-      icon: Shield,
-      permission: "community.moderate"
-    }
-  ];
-
   const formacaoItems = [
     {
       title: "LMS Dashboard",
@@ -103,7 +93,7 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
     {
       title: "Papéis",
       href: "/admin/roles",
-      icon: Shield,
+      icon: Settings,
       permission: "roles.view"
     },
     {
@@ -150,18 +140,6 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
         <div className="py-4 space-y-2">
           <div className="space-y-1">
             {menuItems.map(item => renderMenuItem(item))}
-          </div>
-
-          <Separator className="my-3" />
-          
-          {sidebarOpen && (
-            <div className="mb-2 px-2 text-xs font-semibold text-gray-500">
-              COMUNIDADE
-            </div>
-          )}
-          
-          <div className="space-y-1">
-            {communityItems.map(item => renderMenuItem(item))}
           </div>
 
           <Separator className="my-3" />
