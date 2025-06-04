@@ -11,22 +11,31 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
   const saveTimeoutRef = useRef<NodeJS.Timeout>();
   const lastDataRef = useRef<string>('');
 
-  // Sanitizar payload antes de salvar
+  // Sanitizar payload rigorosamente antes de salvar
   const sanitizeAutoSavePayload = (payload: any) => {
+    console.log('🧹 Auto-save: Sanitizando payload');
+    console.log('📥 Auto-save payload original:', JSON.stringify(payload, null, 2));
+    
     const clean = { ...payload };
     
-    // Remove campos que não existem nas tabelas
-    delete clean.updated_at;
-    delete clean.created_at;
-    delete clean.id;
+    // Remove campos que NUNCA devem existir
+    const forbiddenFields = ['updated_at', 'created_at', 'id'];
+    forbiddenFields.forEach(field => {
+      if (field in clean) {
+        console.log(`❌ Auto-save: Removendo campo proibido: ${field}`);
+        delete clean[field];
+      }
+    });
     
-    // Remove undefined
+    // Remove undefined/null
     Object.keys(clean).forEach(key => {
       if (clean[key] === undefined) {
+        console.log(`❌ Auto-save: Removendo campo undefined: ${key}`);
         delete clean[key];
       }
     });
 
+    console.log('✅ Auto-save payload sanitizado:', JSON.stringify(clean, null, 2));
     return clean;
   };
 
@@ -54,7 +63,6 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
         // Preparar dados limpos para quick_onboarding
         const quickOnboardingData = sanitizeAutoSavePayload({
           user_id: user.id,
-          name: data.name || '',
           email: data.email || '',
           whatsapp: data.whatsapp || '',
           country_code: data.country_code || '+55',
@@ -79,12 +87,7 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
           is_completed: false // Manter false até conclusão manual
         });
 
-        console.log('📤 Auto-save payload limpo:', {
-          user_id: quickOnboardingData.user_id,
-          name: quickOnboardingData.name,
-          email: quickOnboardingData.email,
-          company_name: quickOnboardingData.company_name
-        });
+        console.log('📤 Auto-save: Enviando payload para quick_onboarding');
 
         // Usar upsert para inserir ou atualizar
         const { error: quickError } = await supabase
@@ -96,6 +99,11 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
 
         if (quickError) {
           console.error('❌ Erro ao auto-salvar quick_onboarding:', quickError);
+          // Se for erro de estrutura, não continuar tentando
+          if (quickError.code === '42703' || quickError.message?.includes('does not exist')) {
+            console.error('❌ Auto-save: Erro de estrutura - interrompendo auto-save');
+            return;
+          }
           throw quickError;
         }
 
@@ -109,6 +117,10 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
         
       } catch (error: any) {
         console.error('❌ Erro no auto-save:', error);
+        // Em caso de erro estrutural, não fazer mais tentativas
+        if (error.code === '42703' || error.message?.includes('does not exist')) {
+          console.error('❌ Auto-save: Erro estrutural detectado - interrompendo');
+        }
       } finally {
         setIsSaving(false);
       }
