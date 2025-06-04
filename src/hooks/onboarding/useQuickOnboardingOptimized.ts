@@ -258,8 +258,11 @@ export const useQuickOnboardingOptimized = () => {
     };
   }, [saveTimeoutId]);
 
-  const normalizedIsCompleted = data?.isCompleted === true || data?.isCompleted === 'true' ||
-                                data?.is_completed === true || data?.is_completed === 'true';
+  const normalizedIsCompleted =
+    data?.isCompleted === true ||
+    data?.isCompleted === 'true' ||
+    data?.is_completed === true ||
+    data?.is_completed === 'true';
 
   return {
     currentStep,
