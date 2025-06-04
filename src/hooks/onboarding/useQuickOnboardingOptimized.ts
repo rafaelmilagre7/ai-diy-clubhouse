@@ -139,7 +139,7 @@ export const useQuickOnboardingOptimized = () => {
         return false;
       }
 
-      // Preparar dados para onboarding_progress
+      // Preparar dados para onboarding_progress - apenas campos válidos da tabela
       const progressData = {
         user_id: user.id,
         personal_info: {
@@ -179,7 +179,13 @@ export const useQuickOnboardingOptimized = () => {
         current_step: 'completed',
         completed_steps: ['personal_info', 'professional_info', 'ai_experience'],
         is_completed: true,
-        updated_at: new Date().toISOString()
+        // Remover campos que causam erro - usar apenas campos válidos da tabela
+        company_name: data.company_name,
+        company_size: data.company_size,
+        company_sector: data.company_segment,
+        company_website: data.company_website,
+        current_position: data.role,
+        annual_revenue: data.annual_revenue_range
       };
 
       // Verificar se existe progresso
@@ -206,13 +212,15 @@ export const useQuickOnboardingOptimized = () => {
         if (insertError) console.error('❌ Erro ao criar progresso:', insertError);
       }
 
-      // Atualizar quick_onboarding como concluído
+      // Atualizar quick_onboarding como concluído - apenas campos válidos
+      const quickOnboardingUpdate = {
+        is_completed: true,
+        updated_at: new Date().toISOString()
+      };
+
       const { error: quickError } = await supabase
         .from('quick_onboarding')
-        .update({ 
-          is_completed: true,
-          updated_at: new Date().toISOString()
-        })
+        .update(quickOnboardingUpdate)
         .eq('user_id', user.id);
 
       const quickSuccess = !quickError;
@@ -222,12 +230,8 @@ export const useQuickOnboardingOptimized = () => {
         console.log('✅ Onboarding finalizado com sucesso!');
         return true;
       } else {
-        // Retry uma vez em caso de falha
-        console.log('⚠️ Tentando novamente...');
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const retryResult = await completeOnboarding();
-        return retryResult;
+        console.error('❌ Falha na finalização do onboarding');
+        return false;
       }
     } catch (error: any) {
       console.error('❌ Erro na finalização do onboarding:', error);

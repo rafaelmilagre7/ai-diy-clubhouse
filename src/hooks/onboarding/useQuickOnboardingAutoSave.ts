@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { QuickOnboardingData } from '@/types/quickOnboarding';
 import { supabase } from '@/lib/supabase';
@@ -45,6 +44,7 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
           .eq('user_id', user.id)
           .single();
 
+        // Preparar dados apenas com campos válidos da tabela quick_onboarding
         const quickOnboardingData = {
           user_id: user.id,
           name: data.name,
@@ -125,10 +125,10 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
 // Função auxiliar para manter compatibilidade com onboarding_progress
 const saveToOnboardingProgress = async (data: QuickOnboardingData, userId: string) => {
   try {
+    // Preparar dados apenas com campos válidos da tabela onboarding_progress
     const progressData = {
       user_id: userId,
       personal_info: {
-        name: data.name,
         email: data.email,
         phone: data.whatsapp,
         ddi: data.country_code,
@@ -165,6 +165,13 @@ const saveToOnboardingProgress = async (data: QuickOnboardingData, userId: strin
       current_step: determineCurrentStep(data),
       completed_steps: getCompletedSteps(data),
       is_completed: false, // Manter como false até conclusão manual
+      // Campos válidos da tabela
+      company_name: data.company_name,
+      company_size: data.company_size,
+      company_sector: data.company_segment,
+      company_website: data.company_website,
+      current_position: data.role,
+      annual_revenue: data.annual_revenue_range,
       updated_at: new Date().toISOString()
     };
 
