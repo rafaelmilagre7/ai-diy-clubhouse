@@ -33,6 +33,7 @@ export interface QuickOnboardingData {
   
   // Campo de completude (pode vir como string do banco)
   isCompleted?: boolean | string;
+  is_completed?: boolean | string; // Compatibilidade com Supabase
 }
 
 // Adapter para converter OnboardingState para QuickOnboardingData

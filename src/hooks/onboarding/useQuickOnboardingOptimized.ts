@@ -271,7 +271,7 @@ export const useQuickOnboardingOptimized = () => {
     isSaving,
     lastSaveTime,
     completeOnboarding,
-    isCompleted: data?.is_completed === true || data?.is_completed === 'true',
+    isCompleted: data?.is_completed === true || data?.is_completed === 'true' || data?.is_completed === true || data?.is_completed === 'true',
     retryCount,
     canFinalize
   };
