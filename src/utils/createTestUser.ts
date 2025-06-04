@@ -19,9 +19,7 @@ export const createTestUser = async () => {
     
     if (existingProfile) {
       console.log('✅ Usuário de teste já existe:', email);
-      toast.success('Usuário de teste já existe!', {
-        description: `Email: ${email} | Senha: ${password}`
-      });
+      // Removido o toast para evitar notificação indesejada
       return { success: true, email, password, message: 'Usuário já existe' };
     }
     
