@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuickOnboardingOptimized } from '@/hooks/onboarding/useQuickOnboardingOptimized';
 import { useNavigate } from 'react-router-dom';
@@ -5,7 +6,7 @@ import { LazyStepLoader } from './steps/LazyStepLoader';
 import { ModernFinalizationScreen } from './ModernFinalizationScreen';
 import { ModernSuccessScreen } from './ModernSuccessScreen';
 import { OnboardingReadOnlyView } from './OnboardingReadOnlyView';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const UnifiedOnboardingFlow: React.FC = () => {
@@ -35,6 +36,15 @@ export const UnifiedOnboardingFlow: React.FC = () => {
   const handleFinish = async () => {
     if (isCompleting) {
       console.log('⚠️ Finalização já em progresso, ignorando...');
+      return;
+    }
+
+    // Validação prévia rigorosa
+    if (!canFinalize()) {
+      console.log('❌ Validação prévia falhou - não pode finalizar');
+      toast.error('Complete todos os campos obrigatórios antes de finalizar', {
+        duration: 3000
+      });
       return;
     }
     
@@ -98,8 +108,18 @@ export const UnifiedOnboardingFlow: React.FC = () => {
   if (loadError) {
     return (
       <div className="text-center py-12 space-y-4">
+        <div className="flex items-center justify-center gap-2 text-red-400 mb-4">
+          <AlertTriangle className="h-6 w-6" />
+          <p className="text-lg font-medium">Erro no Carregamento</p>
+        </div>
         <p className="text-red-400">⚠️ {loadError}</p>
         <p className="text-gray-300">Você pode continuar com dados em branco.</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="mt-4 px-4 py-2 bg-viverblue text-white rounded-lg hover:bg-blue-600 transition-colors"
+        >
+          Tentar Novamente
+        </button>
       </div>
     );
   }
@@ -114,6 +134,29 @@ export const UnifiedOnboardingFlow: React.FC = () => {
   if (showSuccessScreen) {
     console.log('🎉 Exibindo tela de sucesso');
     return <ModernSuccessScreen onNavigate={handleNavigateFromSuccess} />;
+  }
+
+  // Controle de navegação seguro - impedir acesso à etapa 4 sem completar as anteriores
+  const canAccessStep4 = () => {
+    const step1Valid = currentStep >= 1; // Sempre pode acessar step 1
+    const step2Valid = currentStep >= 2; // Pode acessar step 2 se chegou lá
+    const step3Valid = currentStep >= 3; // Pode acessar step 3 se chegou lá
+    
+    // Para acessar step 4, precisa ter completado as 3 primeiras etapas
+    if (currentStep === 4) {
+      return canFinalize();
+    }
+    
+    return true;
+  };
+
+  // Se tentou acessar etapa 4 sem completar as anteriores, voltar para etapa apropriada
+  if (currentStep === 4 && !canFinalize()) {
+    console.log('⚠️ Tentativa de acessar etapa 4 sem completar anteriores - redirecionando');
+    // Encontrar a primeira etapa incompleta
+    if (!canProceed()) {
+      setTimeout(() => setCurrentStep(1), 100);
+    }
   }
 
   // Mostrar indicador se dados foram carregados mas onboarding não está concluído
@@ -149,6 +192,27 @@ export const UnifiedOnboardingFlow: React.FC = () => {
         );
       
       case 4:
+        // Só renderizar etapa 4 se realmente pode finalizar
+        if (!canFinalize()) {
+          return (
+            <div className="text-center py-12 space-y-4">
+              <div className="flex items-center justify-center gap-2 text-yellow-400 mb-4">
+                <AlertTriangle className="h-6 w-6" />
+                <p className="text-lg font-medium">Etapas Anteriores Incompletas</p>
+              </div>
+              <p className="text-gray-300">
+                Complete todas as etapas anteriores antes de finalizar o onboarding.
+              </p>
+              <button 
+                onClick={() => setCurrentStep(1)}
+                className="mt-4 px-6 py-2 bg-viverblue text-white rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                Voltar para Etapas Anteriores
+              </button>
+            </div>
+          );
+        }
+
         return (
           <ModernFinalizationScreen
             isCompleting={isCompleting}
@@ -159,12 +223,23 @@ export const UnifiedOnboardingFlow: React.FC = () => {
         );
       
       default:
-        return null;
+        return (
+          <div className="text-center py-12">
+            <p className="text-gray-400">Etapa não encontrada</p>
+          </div>
+        );
     }
   };
 
   return (
     <div className="space-y-6">
+      {/* Debug info - apenas em desenvolvimento */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="text-xs text-gray-500 p-2 bg-gray-800 rounded">
+          Debug: Step {currentStep}, canProceed: {canProceed().toString()}, canFinalize: {canFinalize().toString()}, isCompleted: {isCompleted.toString()}
+        </div>
+      )}
+      
       {renderCurrentStep()}
     </div>
   );

@@ -1,21 +1,23 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle, ArrowRight, Loader2, AlertTriangle } from 'lucide-react';
+import { CheckCircle, ArrowRight, Loader2, AlertTriangle, XCircle } from 'lucide-react';
 
 interface ModernFinalizationScreenProps {
   isCompleting: boolean;
   retryCount: number;
   onFinish: () => void;
-  canFinalize?: boolean; // Nova prop para validação
+  canFinalize?: boolean;
 }
 
 export const ModernFinalizationScreen: React.FC<ModernFinalizationScreenProps> = ({
   isCompleting,
   retryCount,
   onFinish,
-  canFinalize = true // Default true para compatibilidade
+  canFinalize = true
 }) => {
+  console.log('🎯 ModernFinalizationScreen - canFinalize:', canFinalize, 'isCompleting:', isCompleting);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-6">
       <motion.div
@@ -48,8 +50,16 @@ export const ModernFinalizationScreen: React.FC<ModernFinalizationScreenProps> =
         >
           <div className="relative">
             {/* Main Circle */}
-            <div className="w-32 h-32 mx-auto bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-6 shadow-2xl">
-              {isCompleting ? (
+            <div className={`w-32 h-32 mx-auto rounded-full flex items-center justify-center mb-6 shadow-2xl transition-all duration-300 ${
+              !canFinalize 
+                ? 'bg-gradient-to-r from-red-500 to-orange-500' 
+                : isCompleting 
+                  ? 'bg-gradient-to-r from-blue-500 to-purple-600' 
+                  : 'bg-gradient-to-r from-green-500 to-blue-500'
+            }`}>
+              {!canFinalize ? (
+                <XCircle className="h-16 w-16 text-white" />
+              ) : isCompleting ? (
                 <Loader2 className="h-16 w-16 text-white animate-spin" />
               ) : (
                 <CheckCircle className="h-16 w-16 text-white" />
@@ -62,12 +72,18 @@ export const ModernFinalizationScreen: React.FC<ModernFinalizationScreenProps> =
                 <div key={step} className="flex items-center space-x-3">
                   <div className="flex-1 bg-gray-700 rounded-full h-2 overflow-hidden">
                     <motion.div
-                      className="h-full bg-gradient-to-r from-blue-500 to-purple-600"
+                      className={`h-full transition-all duration-500 ${
+                        !canFinalize 
+                          ? 'bg-gradient-to-r from-red-500 to-orange-500' 
+                          : 'bg-gradient-to-r from-blue-500 to-purple-600'
+                      }`}
                       initial={{ width: "0%" }}
                       animate={{ 
-                        width: isCompleting 
-                          ? index < 2 ? "100%" : "60%" 
-                          : "100%" 
+                        width: !canFinalize 
+                          ? "0%" 
+                          : isCompleting 
+                            ? index < 2 ? "100%" : "60%" 
+                            : "100%" 
                       }}
                       transition={{ 
                         delay: 0.6 + (index * 0.3), 
@@ -94,20 +110,25 @@ export const ModernFinalizationScreen: React.FC<ModernFinalizationScreenProps> =
         >
           {/* Validação de dados incompletos */}
           {!canFinalize && !isCompleting && (
-            <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
-              <div className="flex items-center justify-center gap-3">
-                <AlertTriangle className="h-5 w-5 text-red-400" />
+            <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-6">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <AlertTriangle className="h-6 w-6 text-red-400" />
                 <div>
-                  <p className="text-red-400 font-medium">Dados incompletos</p>
-                  <p className="text-red-300 text-sm">
-                    Complete todas as etapas anteriores antes de finalizar
-                  </p>
+                  <p className="text-red-400 font-semibold text-lg">Dados Incompletos</p>
                 </div>
+              </div>
+              <div className="text-center space-y-2">
+                <p className="text-red-300">
+                  Ainda há campos obrigatórios que precisam ser preenchidos antes de finalizar o onboarding.
+                </p>
+                <p className="text-red-200 text-sm">
+                  Por favor, volte às etapas anteriores e complete todas as informações solicitadas.
+                </p>
               </div>
             </div>
           )}
 
-          {isCompleting && (
+          {isCompleting && canFinalize && (
             <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
               <div className="flex items-center justify-center gap-3">
                 <Loader2 className="h-5 w-5 text-blue-400 animate-spin" />
@@ -129,6 +150,7 @@ export const ModernFinalizationScreen: React.FC<ModernFinalizationScreenProps> =
             </div>
           )}
 
+          {/* Botão de Finalizar - só aparece se canFinalize for true */}
           {!isCompleting && canFinalize && (
             <motion.button
               onClick={onFinish}
@@ -141,14 +163,21 @@ export const ModernFinalizationScreen: React.FC<ModernFinalizationScreenProps> =
             </motion.button>
           )}
 
+          {/* Botão desabilitado se não pode finalizar */}
           {!canFinalize && !isCompleting && (
-            <motion.button
-              disabled
-              className="bg-gray-600 text-gray-400 font-semibold py-4 px-8 rounded-lg flex items-center gap-2 mx-auto cursor-not-allowed opacity-50"
-            >
-              Complete as etapas anteriores
-              <AlertTriangle className="h-5 w-5" />
-            </motion.button>
+            <div className="text-center">
+              <motion.button
+                disabled
+                className="bg-gray-600 text-gray-400 font-semibold py-4 px-8 rounded-lg flex items-center gap-2 mx-auto cursor-not-allowed opacity-50"
+              >
+                Complete as etapas anteriores
+                <AlertTriangle className="h-5 w-5" />
+              </motion.button>
+              
+              <p className="text-gray-400 text-sm mt-3">
+                Volte às etapas anteriores para completar todos os campos obrigatórios
+              </p>
+            </div>
           )}
         </motion.div>
 
@@ -160,7 +189,10 @@ export const ModernFinalizationScreen: React.FC<ModernFinalizationScreenProps> =
           className="mt-8"
         >
           <p className="text-gray-500 text-sm">
-            Este processo pode levar alguns segundos. Por favor, não feche esta página.
+            {!canFinalize 
+              ? 'Complete todos os campos obrigatórios para prosseguir' 
+              : 'Este processo pode levar alguns segundos. Por favor, não feche esta página.'
+            }
           </p>
         </motion.div>
       </motion.div>
