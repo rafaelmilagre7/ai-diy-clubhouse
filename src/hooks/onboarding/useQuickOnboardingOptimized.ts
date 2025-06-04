@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
@@ -48,7 +49,7 @@ export const useQuickOnboardingOptimized = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaveTime, setLastSaveTime] = useState<number | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const [isCompleted, setIsCompleted] = useState(false);
+  const [isCompleted, setIsCompleted] = useState<boolean>(false);
   const [saveTimeoutId, setSaveTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
   const totalSteps = 4;
@@ -74,10 +75,13 @@ export const useQuickOnboardingOptimized = () => {
       if (existingData) {
         setData(existingData);
         setHasExistingData(true);
-        setIsCompleted(existingData.is_completed || false);
+        
+        // Normalizar isCompleted para boolean puro
+        const normalizedIsCompleted = existingData.is_completed === true || existingData.is_completed === 'true';
+        setIsCompleted(normalizedIsCompleted);
         
         // Definir step atual baseado nos dados
-        if (existingData.is_completed) {
+        if (normalizedIsCompleted) {
           setCurrentStep(4);
         } else if (existingData.main_goal) {
           setCurrentStep(4);
@@ -91,7 +95,7 @@ export const useQuickOnboardingOptimized = () => {
 
         devLog.info('Dados carregados', { 
           hasData: !!existingData, 
-          isCompleted: existingData.is_completed,
+          isCompleted: normalizedIsCompleted,
           currentStep: currentStep 
         });
       }
@@ -246,7 +250,6 @@ export const useQuickOnboardingOptimized = () => {
     }
   }, [user?.id, loadExistingData]);
 
-  // Cleanup timeout
   useEffect(() => {
     return () => {
       if (saveTimeoutId) {
