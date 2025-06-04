@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuickOnboardingOptimized } from '@/hooks/onboarding/useQuickOnboardingOptimized';
 import { useNavigate } from 'react-router-dom';
@@ -127,7 +126,6 @@ export const UnifiedOnboardingFlow: React.FC = () => {
             )}
             <EnhancedTrailMagicExperience 
               onFinish={handleFinish}
-              disabled={isCompleting}
             />
           </div>
         );
