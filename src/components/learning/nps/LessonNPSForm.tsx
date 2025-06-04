@@ -18,12 +18,10 @@ const NPSRatingButton: React.FC<NPSRatingButtonProps> = ({ value, selectedValue,
   
   const getButtonStyles = () => {
     if (isSelected) {
-      if (value >= 9) return "bg-green-600 text-white border-green-600 shadow-lg transform scale-110";
-      if (value >= 7) return "bg-yellow-500 text-white border-yellow-500 shadow-lg transform scale-110";
-      return "bg-red-500 text-white border-red-500 shadow-lg transform scale-110";
+      return "bg-viverblue text-white border-viverblue shadow-lg transform scale-110 font-bold";
     }
     
-    return "bg-white text-gray-700 border-gray-300 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600 hover:shadow-md";
+    return "bg-white text-gray-700 border-gray-300 hover:border-viverblue hover:bg-viverblue/10 hover:text-viverblue hover:shadow-md";
   };
 
   return (
@@ -31,9 +29,9 @@ const NPSRatingButton: React.FC<NPSRatingButtonProps> = ({ value, selectedValue,
       type="button"
       variant="outline"
       className={`
-        w-12 h-12 p-0 flex-shrink-0 transition-all duration-300 font-bold text-lg rounded-lg
+        w-12 h-12 p-0 flex-shrink-0 transition-all duration-300 font-semibold text-lg rounded-lg
         ${getButtonStyles()}
-        hover:scale-105 active:scale-95 focus:ring-2 focus:ring-blue-300
+        hover:scale-105 active:scale-95 focus:ring-2 focus:ring-viverblue/30
       `}
       onClick={() => onClick(value)}
     >
@@ -80,18 +78,11 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
     return "Podemos melhorar 🤔";
   };
 
-  const getScoreColor = () => {
-    if (score === null) return "text-gray-500";
-    if (score >= 9) return "text-green-600";
-    if (score >= 7) return "text-yellow-600";
-    return "text-red-600";
-  };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center space-y-3">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-500 mx-auto" />
+          <Loader2 className="w-8 h-8 animate-spin text-viverblue mx-auto" />
           <p className="text-gray-600">Carregando avaliação...</p>
         </div>
       </div>
@@ -102,9 +93,9 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
     return (
       <div className="text-center py-8 space-y-4">
         <div className="flex justify-center">
-          <CheckCircle2 className="h-16 w-16 text-green-500 animate-bounce" />
+          <CheckCircle2 className="h-16 w-16 text-viverblue animate-bounce" />
         </div>
-        <h3 className="text-2xl font-bold text-green-600">
+        <h3 className="text-2xl font-bold text-viverblue">
           Avaliação enviada com sucesso!
         </h3>
         <p className="text-gray-600">
@@ -151,17 +142,19 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
                 <span className="text-right">Recomendaria totalmente</span>
               </div>
               
-              {/* Feedback da nota selecionada */}
-              {score !== null && (
-                <div className="text-center animate-fade-in bg-gray-50 p-4 rounded-lg">
-                  <div className={`text-2xl font-bold ${getScoreColor()}`}>
-                    {getScoreLabel()}
+              {/* Container com altura fixa para feedback da nota - evita quebra de layout */}
+              <div className="min-h-[80px] flex items-center justify-center">
+                {score !== null && (
+                  <div className="text-center animate-fade-in bg-viverblue/5 border border-viverblue/20 p-4 rounded-lg max-w-md mx-auto">
+                    <div className="text-2xl font-bold text-viverblue mb-1">
+                      {getScoreLabel()}
+                    </div>
+                    <div className="text-xl font-bold text-gray-700">
+                      Sua nota: {score}
+                    </div>
                   </div>
-                  <div className="text-xl font-bold text-blue-600 mt-2">
-                    Sua nota: {score}
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
           
@@ -177,7 +170,7 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
                 rows={4}
-                className="resize-none border-gray-300 focus:border-blue-500 focus:ring-blue-500/20 text-base rounded-lg"
+                className="resize-none border-gray-300 focus:border-viverblue focus:ring-viverblue/20 text-base rounded-lg"
               />
             </div>
           )}
@@ -186,7 +179,7 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
         <CardFooter className="p-0 pt-8">
           <Button 
             type="submit" 
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 text-lg shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.02] rounded-lg" 
+            className="w-full bg-viverblue hover:bg-viverblue-dark text-white font-bold py-4 text-lg shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.02] rounded-lg" 
             disabled={score === null || isSubmitting}
             size="lg"
           >
