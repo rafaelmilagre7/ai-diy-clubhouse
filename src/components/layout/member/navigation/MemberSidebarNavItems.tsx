@@ -79,14 +79,6 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       icon: GraduationCap,
     });
   }
-  // Se não tem permissão para gestão mas tem acesso aos cursos (consumo)
-  else if (hasPermission('formacao.view') || profile?.role === 'formacao' || profile?.role === 'membro_club') {
-    menuItems.push({
-      title: "Cursos",
-      href: "/learning",
-      icon: GraduationCap,
-    });
-  }
 
   // Adicionar eventos se for admin
   if (profile?.role === 'admin') {
