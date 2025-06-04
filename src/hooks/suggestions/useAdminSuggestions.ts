@@ -3,6 +3,21 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
+const getStatusDisplayName = (status: string): string => {
+  switch (status) {
+    case 'new':
+      return 'Nova';
+    case 'in_development':
+      return 'Em Desenvolvimento';
+    case 'completed':
+      return 'Implementada';
+    case 'declined':
+      return 'Recusada';
+    default:
+      return status;
+  }
+};
+
 export const useAdminSuggestions = () => {
   const [loading, setLoading] = useState(false);
 
@@ -48,7 +63,8 @@ export const useAdminSuggestions = () => {
         return false;
       }
       
-      toast.success(`Status da sugestão atualizado para ${status}`);
+      const statusDisplayName = getStatusDisplayName(status);
+      toast.success(`Sugestão marcada como "${statusDisplayName}" com sucesso`);
       return true;
     } catch (error: any) {
       console.error('Erro não esperado ao atualizar status da sugestão:', error);
