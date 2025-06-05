@@ -11,7 +11,8 @@ import {
   Calendar,
   GraduationCap,
   Mail,
-  User
+  User,
+  Gift
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -53,6 +54,11 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
       title: "Ferramentas",
       href: "/admin/tools",
       icon: Settings,
+    },
+    {
+      title: "Benefícios",
+      href: "/admin/benefits",
+      icon: Gift,
     },
     {
       title: "Sugestões",
