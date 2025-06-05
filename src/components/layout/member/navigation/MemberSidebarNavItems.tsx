@@ -42,7 +42,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
     },
     {
       title: "Trilha de Implementação",
-      href: "/implementation-trail",
+      href: "/trilha-implementacao",
       icon: Route,
     },
     {
