@@ -1,3 +1,4 @@
+
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/auth";
 import { useLocation } from "react-router-dom";
@@ -13,7 +14,6 @@ import {
   BookOpen,
   Map,
   Calendar,
-  GraduationCap,
   Wrench,
   MessagesSquare,
   Network
@@ -21,7 +21,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { isActiveRoute } from "@/components/community/utils/routingUtils";
-import { usePermissions } from "@/hooks/auth/usePermissions";
 
 interface SidebarNavProps {
   sidebarOpen: boolean;
@@ -30,7 +29,6 @@ interface SidebarNavProps {
 export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
   const location = useLocation();
   const { isAdmin, profile } = useAuth();
-  const { hasPermission } = usePermissions();
 
   const menuItems = [
     {
@@ -56,7 +54,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
     {
       title: "Cursos",
       href: "/learning",
-      icon: GraduationCap,
+      icon: BookOpen,
     },
     {
       title: "Ferramentas",
@@ -145,22 +143,6 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
             <Link to="/admin">
               <ShieldCheck className="h-4 w-4" />
               {sidebarOpen && <span>Painel Admin</span>}
-            </Link>
-          </Button>
-        )}
-        
-        {hasPermission('lms.manage') && (
-          <Button
-            variant="outline"
-            className={cn(
-              "w-full justify-start gap-3 border-viverblue/30 text-viverblue hover:bg-[#181A2A] mt-4",
-              !sidebarOpen && "justify-center"
-            )}
-            asChild
-          >
-            <Link to="/formacao">
-              <GraduationCap className="h-4 w-4" />
-              {sidebarOpen && <span>Área de Cursos</span>}
             </Link>
           </Button>
         )}
