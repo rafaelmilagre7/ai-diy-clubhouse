@@ -12,6 +12,7 @@ import { authRoutes } from '@/routes/AuthRoutes';
 import { adminRoutes } from '@/routes/AdminRoutes';
 import { onboardingRoutes } from '@/routes/OnboardingRoutes';
 import { formacaoRoutes } from '@/routes/FormacaoRoutes';
+import { memberRoutes } from '@/routes/MemberRoutes';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ function App() {
       element: <Navigate to="/dashboard" replace />
     },
     ...authRoutes,
+    ...memberRoutes,
     ...mainRoutes,
     ...adminRoutes,
     ...onboardingRoutes,
