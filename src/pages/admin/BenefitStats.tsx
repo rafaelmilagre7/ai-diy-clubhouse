@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Search, TrendingUp, Users, ArrowUpRight } from 'lucide-react';
 import LoadingScreen from '@/components/common/LoadingScreen';
+import { BenefitStatsHeader } from '@/components/admin/benefits/BenefitStatsHeader';
+import { BenefitActionsCell } from '@/components/admin/benefits/BenefitActionsCell';
 
 interface BenefitStat {
   id: string;
@@ -65,14 +67,9 @@ const BenefitStats = () => {
   
   return (
     <div className="space-y-6">
+      <BenefitStatsHeader />
+      
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Estatísticas de Benefícios</h1>
-          <p className="text-muted-foreground">
-            Acompanhe o desempenho das parcerias e benefícios oferecidos aos membros
-          </p>
-        </div>
-        
         <div className="w-full md:w-auto">
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -154,6 +151,7 @@ const BenefitStats = () => {
                   <TableHead>Benefício</TableHead>
                   <TableHead>Categoria</TableHead>
                   <TableHead className="text-right">Cliques</TableHead>
+                  <TableHead className="text-center">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -168,6 +166,9 @@ const BenefitStats = () => {
                     </TableCell>
                     <TableCell className="text-right">
                       {stat.benefit_clicks || 0}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <BenefitActionsCell tool={stat as any} />
                     </TableCell>
                   </TableRow>
                 ))}
