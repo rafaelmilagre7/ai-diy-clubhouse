@@ -1,6 +1,7 @@
 
 import { useState, useCallback, useMemo, useRef } from 'react';
 import { useQuickOnboardingDataLoader } from './useQuickOnboardingDataLoader';
+import { useQuickOnboardingAutoSave } from './useQuickOnboardingAutoSave';
 import { useOnboardingValidation } from './useOnboardingValidation';
 import { QuickOnboardingData } from '@/types/quickOnboarding';
 import { supabase } from '@/lib/supabase';
@@ -10,6 +11,7 @@ import { toast } from 'sonner';
 export const useQuickOnboardingOptimized = () => {
   const { user } = useAuth();
   const { data, setData, isLoading, hasExistingData, loadError } = useQuickOnboardingDataLoader();
+  const { isSaving, lastSaveTime: autoSaveTime } = useQuickOnboardingAutoSave(data);
   
   const [currentStep, setCurrentStep] = useState(1);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -17,6 +19,16 @@ export const useQuickOnboardingOptimized = () => {
   const [isCompletingOnboarding, setIsCompletingOnboarding] = useState(false);
   
   const isInitializedRef = useRef(false);
+  
+  // Normalizar lastSaveTime para number | null
+  const lastSaveTime = useMemo(() => {
+    if (autoSaveTime === null || autoSaveTime === undefined) return null;
+    if (typeof autoSaveTime === 'number') return autoSaveTime;
+    if (typeof autoSaveTime === 'object' && autoSaveTime !== null && 'getTime' in autoSaveTime) {
+      return (autoSaveTime as Date).getTime();
+    }
+    return null;
+  }, [autoSaveTime]);
 
   const {
     validateStep1,
@@ -206,6 +218,8 @@ export const useQuickOnboardingOptimized = () => {
     isLoading,
     hasExistingData,
     loadError,
+    isSaving,
+    lastSaveTime,
     
     // Finalização
     isCompleted,

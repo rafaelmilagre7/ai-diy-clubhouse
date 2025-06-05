@@ -6,6 +6,7 @@ import { PersonalInfoStep } from './PersonalInfoStep';
 import { ProfessionalInfoStep } from './ProfessionalInfoStep';
 import { AIExperienceStep } from './AIExperienceStep';
 import { NavigationButtons } from '@/components/onboarding/NavigationButtons';
+import { AutoSaveFeedback } from '@/components/onboarding/modern/AutoSaveFeedback';
 
 interface LazyStepLoaderProps {
   step: number;
@@ -16,6 +17,8 @@ interface LazyStepLoaderProps {
   canProceed: boolean;
   currentStep: number;
   totalSteps: number;
+  isSaving: boolean;
+  lastSaveTime: number | null;
 }
 
 const StepLoader: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -36,7 +39,9 @@ export const LazyStepLoader: React.FC<LazyStepLoaderProps> = ({
   onPrevious,
   canProceed,
   currentStep,
-  totalSteps
+  totalSteps,
+  isSaving,
+  lastSaveTime
 }) => {
   const renderStep = () => {
     switch (step) {
@@ -70,12 +75,17 @@ export const LazyStepLoader: React.FC<LazyStepLoaderProps> = ({
   return (
     <div className="space-y-6">
       {renderStep()}
+      
+      {/* Feedback de salvamento */}
+      <div className="flex justify-center">
+        <AutoSaveFeedback isSaving={isSaving} lastSaveTime={lastSaveTime} />
+      </div>
 
       {/* Navegação */}
       <NavigationButtons
         onPrevious={currentStep > 1 ? onPrevious : undefined}
         onNext={onNext}
-        isSubmitting={false}
+        isSubmitting={isSaving}
         isLastStep={false}
         showPrevious={currentStep > 1}
         submitText={canProceed ? "Continuar" : "Complete os campos obrigatórios"}

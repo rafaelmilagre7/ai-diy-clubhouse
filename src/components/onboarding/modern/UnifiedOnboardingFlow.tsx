@@ -1,11 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuickOnboardingOptimized } from '@/hooks/onboarding/useQuickOnboardingOptimized';
 import { useNavigate } from 'react-router-dom';
 import { LazyStepLoader } from './steps/LazyStepLoader';
+import { ModernFinalizationScreen } from './ModernFinalizationScreen';
 import { ModernSuccessScreen } from './ModernSuccessScreen';
 import { OnboardingReviewScreen } from './OnboardingReviewScreen';
-import { Loader2, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const UnifiedOnboardingFlow: React.FC = () => {
@@ -24,6 +25,8 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     hasExistingData,
     loadError,
     totalSteps,
+    isSaving,
+    lastSaveTime,
     completeOnboarding,
     isCompleted,
     retryCount,
@@ -31,14 +34,6 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     canFinalize,
     canAccessStep
   } = useQuickOnboardingOptimized();
-
-  // Verificar se o onboarding já está completo e redirecionar para a tela de revisão
-  useEffect(() => {
-    if (hasExistingData && data.personal_info?.name && isCompleted) {
-      // Se onboarding está completo, mostrar direto a tela de revisão
-      console.log('Onboarding já completo, mostrando tela de revisão');
-    }
-  }, [hasExistingData, data, isCompleted]);
 
   const handleFinish = async () => {
     if (isCompleting) return;
@@ -134,27 +129,12 @@ export const UnifiedOnboardingFlow: React.FC = () => {
   // Se onboarding está concluído, mostrar tela de revisão
   if (isCompleted && !showSuccessScreen) {
     return (
-      <div className="space-y-6">
-        {/* Indicador de onboarding completo */}
-        <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4 mb-6">
-          <div className="flex items-center gap-3">
-            <CheckCircle className="h-5 w-5 text-green-400" />
-            <div>
-              <p className="text-green-400 font-medium">Onboarding Concluído!</p>
-              <p className="text-green-300 text-sm">
-                Seus dados estão salvos. Você pode revisar ou atualizar as informações abaixo.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <OnboardingReviewScreen
-          data={data}
-          onEdit={handleEditStep}
-          onContinue={() => setShowSuccessScreen(true)}
-          isLoading={isCompleting}
-        />
-      </div>
+      <OnboardingReviewScreen
+        data={data}
+        onEdit={handleEditStep}
+        onContinue={handleFinish}
+        isLoading={isCompleting}
+      />
     );
   }
 
@@ -184,6 +164,8 @@ export const UnifiedOnboardingFlow: React.FC = () => {
               canProceed={canProceed}
               currentStep={currentStep}
               totalSteps={totalSteps}
+              isSaving={isSaving}
+              lastSaveTime={lastSaveTime}
             />
           </div>
         );
