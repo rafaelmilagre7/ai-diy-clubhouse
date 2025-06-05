@@ -1,4 +1,3 @@
-
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -192,7 +191,7 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
           disabled={!isOnboardingComplete}
         >
           {isOnboardingComplete ? (
-            <Link to="/solutions">
+            <Link to="/trilha-implementacao">
               <Lightbulb className="h-4 w-4" />
               {sidebarOpen && <span>Trilha de Implementação</span>}
             </Link>

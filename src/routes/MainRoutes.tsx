@@ -6,7 +6,7 @@ import NetworkingPage from '@/pages/dashboard/NetworkingPage';
 
 export const mainRoutes: RouteObject[] = [
   {
-    path: "/solutions",
+    path: "/trilha-implementacao",
     element: <ProtectedRoutes><TrilhaSolutionsPage /></ProtectedRoutes>
   },
   {
