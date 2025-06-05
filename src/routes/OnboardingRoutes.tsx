@@ -2,17 +2,23 @@
 import { RouteObject } from "react-router-dom";
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import NovoOnboardingNew from '@/pages/onboarding/NovoOnboardingNew';
+import ModernOnboardingPage from '@/pages/onboarding/ModernOnboardingPage';
 import OnboardingCompletedNewPage from '@/pages/onboarding/OnboardingCompletedNew';
 
 export const onboardingRoutes: RouteObject[] = [
-  // Rota principal do onboarding - redireciona para o novo sistema
+  // Rota principal do onboarding - nova experiência moderna
   {
     path: "/onboarding",
-    element: <ProtectedRoutes><NovoOnboardingNew /></ProtectedRoutes>
+    element: <ProtectedRoutes><ModernOnboardingPage /></ProtectedRoutes>
   },
   // Rota do novo onboarding moderno
   {
     path: "/onboarding-new",
+    element: <ProtectedRoutes><ModernOnboardingPage /></ProtectedRoutes>
+  },
+  // Rota legada (compatibilidade)
+  {
+    path: "/onboarding-legacy",
     element: <ProtectedRoutes><NovoOnboardingNew /></ProtectedRoutes>
   },
   // Rota para a página de sucesso do onboarding

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
@@ -9,36 +8,42 @@ export const useQuickOnboardingOptimized = () => {
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [data, setData] = useState<QuickOnboardingData>({
-    name: '',
-    email: '',
-    whatsapp: '',
-    country_code: '+55',
-    birth_date: '',
-    instagram_url: '',
-    linkedin_url: '',
-    how_found_us: '',
-    referred_by: '',
-    company_name: '',
-    role: '',
-    company_size: '',
-    company_segment: '',
-    company_website: '',
-    annual_revenue_range: '',
-    main_challenge: '',
-    ai_knowledge_level: '',
-    uses_ai: '',
-    main_goal: '',
-    desired_ai_areas: [],
-    has_implemented: '',
-    previous_tools: []
+    personal_info: {
+      name: '',
+      email: '',
+      whatsapp: '',
+      country_code: '+55',
+      birth_date: '',
+      instagram_url: '',
+      linkedin_url: '',
+      how_found_us: '',
+      referred_by: ''
+    },
+    professional_info: {
+      company_name: '',
+      role: '',
+      company_size: '',
+      company_segment: '',
+      company_website: '',
+      annual_revenue_range: '',
+      main_challenge: ''
+    },
+    ai_experience: {
+      ai_knowledge_level: '',
+      uses_ai: '',
+      main_goal: '',
+      desired_ai_areas: [],
+      has_implemented: '',
+      previous_tools: []
+    }
   });
   
   const [isLoading, setIsLoading] = useState(true);
   const [hasExistingData, setHasExistingData] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
-  const [isCompleted, setIsCompleted] = useState(false);
+  const [lastSaveTime, setLastSaveTime] = useState<number | null>(null);
+  const [isCompleted, setIsCompleted] = useState<boolean>(false);
   const [retryCount, setRetryCount] = useState(0);
 
   const totalSteps = 4;
@@ -46,31 +51,40 @@ export const useQuickOnboardingOptimized = () => {
   // Helper function to check if a field is properly filled
   const isFilled = (value?: string | null) => !!value?.trim();
 
-  // Normalize data from database
+  // Helper function to check if array has items
+  const hasItems = (arr?: any[]) => Array.isArray(arr) && arr.length > 0;
+
+  // Normalize data from database to structured format
   const normalizeData = (dbData: any): QuickOnboardingData => {
     return {
-      name: dbData?.name || '',
-      email: dbData?.email || '',
-      whatsapp: dbData?.whatsapp || '',
-      country_code: dbData?.country_code || '+55',
-      birth_date: dbData?.birth_date || '',
-      instagram_url: dbData?.instagram_url || '',
-      linkedin_url: dbData?.linkedin_url || '',
-      how_found_us: dbData?.how_found_us || '',
-      referred_by: dbData?.referred_by || '',
-      company_name: dbData?.company_name || '',
-      role: dbData?.role || '',
-      company_size: dbData?.company_size || '',
-      company_segment: dbData?.company_segment || '',
-      company_website: dbData?.company_website || '',
-      annual_revenue_range: dbData?.annual_revenue_range || '',
-      main_challenge: dbData?.main_challenge || '',
-      ai_knowledge_level: dbData?.ai_knowledge_level || '',
-      uses_ai: dbData?.uses_ai || '',
-      main_goal: dbData?.main_goal || '',
-      desired_ai_areas: Array.isArray(dbData?.desired_ai_areas) ? dbData.desired_ai_areas : [],
-      has_implemented: dbData?.has_implemented || '',
-      previous_tools: Array.isArray(dbData?.previous_tools) ? dbData.previous_tools : []
+      personal_info: {
+        name: dbData?.name || dbData?.personal_info?.name || '',
+        email: dbData?.email || dbData?.personal_info?.email || '',
+        whatsapp: dbData?.whatsapp || dbData?.personal_info?.whatsapp || '',
+        country_code: dbData?.country_code || dbData?.personal_info?.country_code || '+55',
+        birth_date: dbData?.birth_date || dbData?.personal_info?.birth_date || '',
+        instagram_url: dbData?.instagram_url || dbData?.personal_info?.instagram_url || '',
+        linkedin_url: dbData?.linkedin_url || dbData?.personal_info?.linkedin_url || '',
+        how_found_us: dbData?.how_found_us || dbData?.personal_info?.how_found_us || '',
+        referred_by: dbData?.referred_by || dbData?.personal_info?.referred_by || ''
+      },
+      professional_info: {
+        company_name: dbData?.company_name || dbData?.professional_info?.company_name || '',
+        role: dbData?.role || dbData?.professional_info?.role || '',
+        company_size: dbData?.company_size || dbData?.professional_info?.company_size || '',
+        company_segment: dbData?.company_segment || dbData?.professional_info?.company_segment || '',
+        company_website: dbData?.company_website || dbData?.professional_info?.company_website || '',
+        annual_revenue_range: dbData?.annual_revenue_range || dbData?.professional_info?.annual_revenue_range || '',
+        main_challenge: dbData?.main_challenge || dbData?.professional_info?.main_challenge || ''
+      },
+      ai_experience: {
+        ai_knowledge_level: dbData?.ai_knowledge_level || dbData?.ai_experience?.ai_knowledge_level || '',
+        uses_ai: dbData?.uses_ai || dbData?.ai_experience?.uses_ai || '',
+        main_goal: dbData?.main_goal || dbData?.ai_experience?.main_goal || '',
+        desired_ai_areas: dbData?.desired_ai_areas || dbData?.ai_experience?.desired_ai_areas || [],
+        has_implemented: dbData?.has_implemented || dbData?.ai_experience?.has_implemented || '',
+        previous_tools: dbData?.previous_tools || dbData?.ai_experience?.previous_tools || []
+      }
     };
   };
 
@@ -101,11 +115,23 @@ export const useQuickOnboardingOptimized = () => {
         setIsCompleted(completedStatus);
 
         // Determine current step based on filled data with proper validation
-        if (isFilled(normalizedData.main_goal)) {
+        const personalComplete = isFilled(normalizedData.personal_info.name) && 
+                                isFilled(normalizedData.personal_info.email) &&
+                                isFilled(normalizedData.personal_info.how_found_us);
+        
+        const professionalComplete = isFilled(normalizedData.professional_info.company_name) && 
+                                    isFilled(normalizedData.professional_info.role) &&
+                                    isFilled(normalizedData.professional_info.company_size);
+        
+        const aiComplete = isFilled(normalizedData.ai_experience.ai_knowledge_level) &&
+                          isFilled(normalizedData.ai_experience.main_goal) &&
+                          hasItems(normalizedData.ai_experience.desired_ai_areas);
+
+        if (aiComplete && professionalComplete && personalComplete) {
           setCurrentStep(4);
-        } else if (isFilled(normalizedData.company_name) && isFilled(normalizedData.role)) {
+        } else if (professionalComplete && personalComplete) {
           setCurrentStep(3);
-        } else if (isFilled(normalizedData.name) && isFilled(normalizedData.email)) {
+        } else if (personalComplete) {
           setCurrentStep(2);
         } else {
           setCurrentStep(1);
@@ -123,36 +149,52 @@ export const useQuickOnboardingOptimized = () => {
     }
   }, [user?.id]);
 
-  // Update field
-  const updateField = useCallback((field: keyof QuickOnboardingData, value: any) => {
-    setData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+  // Update field with structured approach
+  const updateField = useCallback((field: string, value: any) => {
+    setData(prev => {
+      const newData = { ...prev };
+      
+      // Handle nested field updates
+      if (field.includes('.')) {
+        const [section, subField] = field.split('.');
+        if (section === 'personal_info' || section === 'professional_info' || section === 'ai_experience') {
+          newData[section] = {
+            ...newData[section],
+            [subField]: value
+          };
+        }
+      } else {
+        // Handle direct field updates for backward compatibility
+        const legacyField = field as keyof QuickOnboardingData;
+        (newData as any)[legacyField] = value;
+      }
+      
+      return newData;
+    });
   }, []);
 
-  // Validate step
+  // Validate step with structured data
   const validateStep = (step: number): ValidationResult => {
     const errors: Record<string, string> = {};
 
     switch (step) {
       case 1:
-        if (!isFilled(data.name)) errors.name = 'Nome é obrigatório';
-        if (!isFilled(data.email)) errors.email = 'Email é obrigatório';
-        if (!isFilled(data.whatsapp)) errors.whatsapp = 'WhatsApp é obrigatório';
-        if (!isFilled(data.how_found_us)) errors.how_found_us = 'Como nos conheceu é obrigatório';
+        if (!isFilled(data.personal_info.name)) errors['personal_info.name'] = 'Nome é obrigatório';
+        if (!isFilled(data.personal_info.email)) errors['personal_info.email'] = 'Email é obrigatório';
+        if (!isFilled(data.personal_info.whatsapp)) errors['personal_info.whatsapp'] = 'WhatsApp é obrigatório';
+        if (!isFilled(data.personal_info.how_found_us)) errors['personal_info.how_found_us'] = 'Como nos conheceu é obrigatório';
         break;
       case 2:
-        if (!isFilled(data.company_name)) errors.company_name = 'Nome da empresa é obrigatório';
-        if (!isFilled(data.role)) errors.role = 'Cargo é obrigatório';
-        if (!isFilled(data.company_size)) errors.company_size = 'Tamanho da empresa é obrigatório';
-        if (!isFilled(data.company_segment)) errors.company_segment = 'Segmento é obrigatório';
+        if (!isFilled(data.professional_info.company_name)) errors['professional_info.company_name'] = 'Nome da empresa é obrigatório';
+        if (!isFilled(data.professional_info.role)) errors['professional_info.role'] = 'Cargo é obrigatório';
+        if (!isFilled(data.professional_info.company_size)) errors['professional_info.company_size'] = 'Tamanho da empresa é obrigatório';
+        if (!isFilled(data.professional_info.company_segment)) errors['professional_info.company_segment'] = 'Segmento é obrigatório';
         break;
       case 3:
-        if (!isFilled(data.ai_knowledge_level)) errors.ai_knowledge_level = 'Nível de conhecimento é obrigatório';
-        if (!isFilled(data.uses_ai)) errors.uses_ai = 'Uso de IA é obrigatório';
-        if (!data.desired_ai_areas.length) errors.desired_ai_areas = 'Selecione ao menos uma área';
-        if (!isFilled(data.has_implemented)) errors.has_implemented = 'Implementação anterior é obrigatória';
+        if (!isFilled(data.ai_experience.ai_knowledge_level)) errors['ai_experience.ai_knowledge_level'] = 'Nível de conhecimento é obrigatório';
+        if (!isFilled(data.ai_experience.uses_ai)) errors['ai_experience.uses_ai'] = 'Uso de IA é obrigatório';
+        if (!hasItems(data.ai_experience.desired_ai_areas)) errors['ai_experience.desired_ai_areas'] = 'Selecione ao menos uma área';
+        if (!isFilled(data.ai_experience.has_implemented)) errors['ai_experience.has_implemented'] = 'Implementação anterior é obrigatória';
         break;
     }
 
@@ -162,7 +204,7 @@ export const useQuickOnboardingOptimized = () => {
     };
   };
 
-  // Save data
+  // Save data with structured format
   const saveData = useCallback(async (stepData?: Partial<QuickOnboardingData>) => {
     if (!user?.id) return false;
 
@@ -171,17 +213,34 @@ export const useQuickOnboardingOptimized = () => {
       
       const dataToSave = stepData ? { ...data, ...stepData } : data;
       
+      // Flatten data for database storage while maintaining structure
+      const flattenedData = {
+        // Keep structured data
+        personal_info: dataToSave.personal_info,
+        professional_info: dataToSave.professional_info,
+        ai_experience: dataToSave.ai_experience,
+        
+        // Keep flat fields for compatibility
+        name: dataToSave.personal_info.name,
+        email: dataToSave.personal_info.email,
+        whatsapp: dataToSave.personal_info.whatsapp,
+        company_name: dataToSave.professional_info.company_name,
+        role: dataToSave.professional_info.role,
+        main_goal: dataToSave.ai_experience.main_goal,
+        desired_ai_areas: dataToSave.ai_experience.desired_ai_areas
+      };
+      
       const { error } = await supabase
         .from('onboarding_progress')
         .upsert({
           user_id: user.id,
-          ...dataToSave,
+          ...flattenedData,
           updated_at: new Date().toISOString()
         });
 
       if (error) throw error;
 
-      setLastSaveTime(new Date());
+      setLastSaveTime(Date.now());
       if (stepData) setData(prev => ({ ...prev, ...stepData }));
       return true;
     } catch (error: any) {
