@@ -20,10 +20,13 @@ export const useQuickOnboardingOptimized = () => {
   
   const isInitializedRef = useRef(false);
   
-  // Normalizar lastSaveTime para number | null
+  // Normalizar lastSaveTime para number | null - corrigindo erros de tipagem
   const lastSaveTime = useMemo(() => {
+    if (autoSaveTime === null || autoSaveTime === undefined) return null;
     if (typeof autoSaveTime === 'number') return autoSaveTime;
-    if (autoSaveTime instanceof Date) return autoSaveTime.getTime();
+    if (typeof autoSaveTime === 'object' && autoSaveTime !== null && 'getTime' in autoSaveTime) {
+      return (autoSaveTime as Date).getTime();
+    }
     return null;
   }, [autoSaveTime]);
 
@@ -56,46 +59,26 @@ export const useQuickOnboardingOptimized = () => {
   // Função para atualizar campos específicos
   const updateField = useCallback((field: string, value: any) => {
     setData(prev => {
-      // Atualizar tanto a estrutura aninhada quanto os campos legados
-      let updatedData = { ...prev };
+      const updatedData = { ...prev };
       
       // Campos da etapa 1 (personal_info)
       if (['name', 'email', 'whatsapp', 'country_code', 'birth_date', 'instagram_url', 'linkedin_url', 'how_found_us', 'referred_by'].includes(field)) {
-        updatedData = {
-          ...updatedData,
-          personal_info: {
-            ...updatedData.personal_info,
-            [field]: value
-          },
-          [field]: value // Campo legado
+        updatedData.personal_info = {
+          ...updatedData.personal_info,
+          [field]: value
         };
       }
       // Campos da etapa 2 (professional_info)  
       else if (['company_name', 'role', 'company_size', 'company_segment', 'company_website', 'annual_revenue_range', 'main_challenge'].includes(field)) {
-        updatedData = {
-          ...updatedData,
-          professional_info: {
-            ...updatedData.professional_info,
-            [field]: value
-          },
-          [field]: value // Campo legado
+        updatedData.professional_info = {
+          ...updatedData.professional_info,
+          [field]: value
         };
       }
       // Campos da etapa 3 (ai_experience)
       else if (['ai_knowledge_level', 'uses_ai', 'main_goal', 'desired_ai_areas', 'has_implemented', 'previous_tools'].includes(field)) {
-        updatedData = {
-          ...updatedData,
-          ai_experience: {
-            ...updatedData.ai_experience,
-            [field]: value
-          },
-          [field]: value // Campo legado
-        };
-      }
-      // Campo direto
-      else {
-        updatedData = {
-          ...updatedData,
+        updatedData.ai_experience = {
+          ...updatedData.ai_experience,
           [field]: value
         };
       }
