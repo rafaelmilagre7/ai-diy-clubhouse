@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from 'react';
 import { QuickOnboardingData } from '@/types/quickOnboarding';
 import { supabase } from '@/lib/supabase';
@@ -11,70 +12,35 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
   const lastDataRef = useRef<string>('');
 
   // Sanitizar payload rigorosamente antes de salvar
-  const sanitizeAutoSavePayload = (payload: any) => {
+  const sanitizeAutoSavePayload = (payload: QuickOnboardingData) => {
     console.log('🧹 Auto-save: Sanitizando payload');
     
-    // Lista de campos permitidos na tabela quick_onboarding
-    const allowedFields = [
-      'user_id',
-      'email',
-      'whatsapp', 
-      'country_code',
-      'birth_date',
-      'instagram_url',
-      'linkedin_url',
-      'how_found_us',
-      'referred_by',
-      'company_name',
-      'role',
-      'company_size',
-      'company_segment',
-      'company_website',
-      'annual_revenue_range',
-      'main_challenge',
-      'ai_knowledge_level',
-      'uses_ai',
-      'main_goal',
-      'desired_ai_areas',
-      'has_implemented',
-      'previous_tools',
-      'is_completed'
-    ];
-    
-    const clean: any = {};
-    
-    // Incluir apenas campos permitidos
-    allowedFields.forEach(field => {
-      if (field === 'user_id') {
-        clean[field] = user?.id;
-      } else if (field === 'is_completed') {
-        clean[field] = false; // Manter false até conclusão manual
-      } else if (payload.hasOwnProperty(field)) {
-        const value = payload[field];
-        
-        // Tratar casos especiais
-        if (field === 'birth_date' && value === '') {
-          clean[field] = null;
-        } else if (field === 'instagram_url' && value === '') {
-          clean[field] = null;
-        } else if (field === 'linkedin_url' && value === '') {
-          clean[field] = null;
-        } else if (field === 'company_website' && value === '') {
-          clean[field] = null;
-        } else if (field === 'referred_by' && value === '') {
-          clean[field] = null;
-        } else if (['desired_ai_areas', 'previous_tools'].includes(field)) {
-          clean[field] = Array.isArray(value) ? value : [];
-        } else if (value !== undefined && value !== '') {
-          clean[field] = value;
-        }
-      }
-    });
-
-    // Garantir campos obrigatórios
-    if (!clean.email || clean.email === '') {
-      clean.email = user?.email || '';
-    }
+    const clean: any = {
+      user_id: user?.id,
+      name: payload.personal_info?.name || '',
+      email: payload.personal_info?.email || user?.email || '',
+      whatsapp: payload.personal_info?.whatsapp || '',
+      country_code: payload.personal_info?.country_code || '+55',
+      birth_date: payload.personal_info?.birth_date || null,
+      instagram_url: payload.personal_info?.instagram_url || null,
+      linkedin_url: payload.personal_info?.linkedin_url || null,
+      how_found_us: payload.personal_info?.how_found_us || '',
+      referred_by: payload.personal_info?.referred_by || null,
+      company_name: payload.professional_info?.company_name || '',
+      role: payload.professional_info?.role || '',
+      company_size: payload.professional_info?.company_size || '',
+      company_segment: payload.professional_info?.company_segment || '',
+      company_website: payload.professional_info?.company_website || null,
+      annual_revenue_range: payload.professional_info?.annual_revenue_range || '',
+      main_challenge: payload.professional_info?.main_challenge || '',
+      ai_knowledge_level: payload.ai_experience?.ai_knowledge_level || '',
+      uses_ai: payload.ai_experience?.uses_ai || '',
+      main_goal: payload.ai_experience?.main_goal || '',
+      desired_ai_areas: payload.ai_experience?.desired_ai_areas || [],
+      has_implemented: payload.ai_experience?.has_implemented || '',
+      previous_tools: payload.ai_experience?.previous_tools || [],
+      is_completed: false // Manter false até conclusão manual
+    };
 
     console.log('✅ Auto-save payload sanitizado:', JSON.stringify(clean, null, 2));
     return clean;
@@ -82,7 +48,7 @@ export const useQuickOnboardingAutoSave = (data: QuickOnboardingData) => {
 
   useEffect(() => {
     // Só salvar se o usuário estiver logado e houver dados básicos
-    if (!user || !data.name) return;
+    if (!user || !data.personal_info?.name) return;
 
     // Verificar se os dados mudaram
     const currentDataString = JSON.stringify(data);

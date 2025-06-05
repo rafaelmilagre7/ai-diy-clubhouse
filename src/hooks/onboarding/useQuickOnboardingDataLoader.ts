@@ -5,7 +5,36 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 
 const initialData: QuickOnboardingData = {
-  // Etapa 1: Informações Pessoais
+  personal_info: {
+    name: '',
+    email: '',
+    whatsapp: '',
+    country_code: '+55',
+    birth_date: '',
+    instagram_url: '',
+    linkedin_url: '',
+    how_found_us: '',
+    referred_by: ''
+  },
+  professional_info: {
+    company_name: '',
+    role: '',
+    company_size: '',
+    company_segment: '',
+    company_website: '',
+    annual_revenue_range: '',
+    main_challenge: ''
+  },
+  ai_experience: {
+    ai_knowledge_level: '',
+    uses_ai: '',
+    main_goal: '',
+    desired_ai_areas: [],
+    has_implemented: '',
+    previous_tools: []
+  },
+  
+  // Campos legados para compatibilidade
   name: '',
   email: '',
   whatsapp: '',
@@ -15,8 +44,6 @@ const initialData: QuickOnboardingData = {
   linkedin_url: '',
   how_found_us: '',
   referred_by: '',
-
-  // Etapa 2: Negócio
   company_name: '',
   role: '',
   company_size: '',
@@ -24,13 +51,9 @@ const initialData: QuickOnboardingData = {
   company_website: '',
   annual_revenue_range: '',
   main_challenge: '',
-
-  // Etapa 3: Experiência com IA
   ai_knowledge_level: '',
   uses_ai: '',
   main_goal: '',
-
-  // Campos adicionais para compatibilidade
   desired_ai_areas: [],
   has_implemented: '',
   previous_tools: []
@@ -62,7 +85,39 @@ export const useQuickOnboardingDataLoader = () => {
 
         if (quickData && !quickError) {
           console.log('✅ Dados encontrados na quick_onboarding:', quickData);
-          setData({
+          
+          // Estruturar dados no formato esperado
+          const structuredData: QuickOnboardingData = {
+            personal_info: {
+              name: quickData.name || '',
+              email: quickData.email || user.email || '',
+              whatsapp: quickData.whatsapp || '',
+              country_code: quickData.country_code || '+55',
+              birth_date: quickData.birth_date || '',
+              instagram_url: quickData.instagram_url || '',
+              linkedin_url: quickData.linkedin_url || '',
+              how_found_us: quickData.how_found_us || '',
+              referred_by: quickData.referred_by || ''
+            },
+            professional_info: {
+              company_name: quickData.company_name || '',
+              role: quickData.role || '',
+              company_size: quickData.company_size || '',
+              company_segment: quickData.company_segment || '',
+              company_website: quickData.company_website || '',
+              annual_revenue_range: quickData.annual_revenue_range || '',
+              main_challenge: quickData.main_challenge || ''
+            },
+            ai_experience: {
+              ai_knowledge_level: quickData.ai_knowledge_level || '',
+              uses_ai: quickData.uses_ai || '',
+              main_goal: quickData.main_goal || '',
+              desired_ai_areas: quickData.desired_ai_areas || [],
+              has_implemented: quickData.has_implemented || '',
+              previous_tools: quickData.previous_tools || []
+            },
+            
+            // Campos legados para compatibilidade
             name: quickData.name || '',
             email: quickData.email || user.email || '',
             whatsapp: quickData.whatsapp || '',
@@ -85,13 +140,20 @@ export const useQuickOnboardingDataLoader = () => {
             desired_ai_areas: quickData.desired_ai_areas || [],
             has_implemented: quickData.has_implemented || '',
             previous_tools: quickData.previous_tools || []
-          });
+          };
+          
+          setData(structuredData);
           setHasExistingData(true);
         } else {
           console.log('ℹ️ Nenhum dado encontrado, iniciando com dados vazios');
           // Inicializar com dados básicos do usuário
           setData(prev => ({
             ...prev,
+            personal_info: {
+              ...prev.personal_info,
+              email: user.email || '',
+              name: user.user_metadata?.name || ''
+            },
             email: user.email || '',
             name: user.user_metadata?.name || ''
           }));
