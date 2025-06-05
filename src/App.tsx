@@ -29,11 +29,6 @@ function App() {
       path: "/",
       element: <Navigate to="/dashboard" replace />
     },
-    // Redirecionamento da rota antiga /solutions para /trilha-implementacao
-    {
-      path: "/solutions",
-      element: <Navigate to="/trilha-implementacao" replace />
-    },
     ...authRoutes,
     ...memberRoutes,
     ...mainRoutes,
