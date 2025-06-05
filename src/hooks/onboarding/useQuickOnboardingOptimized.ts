@@ -20,7 +20,7 @@ export const useQuickOnboardingOptimized = () => {
   
   const isInitializedRef = useRef(false);
   
-  // Normalizar lastSaveTime para number | null - corrigindo erros de tipagem
+  // Normalizar lastSaveTime para number | null
   const lastSaveTime = useMemo(() => {
     if (autoSaveTime === null || autoSaveTime === undefined) return null;
     if (typeof autoSaveTime === 'number') return autoSaveTime;
@@ -43,7 +43,15 @@ export const useQuickOnboardingOptimized = () => {
   const step3Valid = useMemo(() => validateStep3(data), [data, validateStep3]);
   const allStepsValid = useMemo(() => validateAllSteps(data), [data, validateAllSteps]);
 
-  // Lógica para determinar se pode prosseguir
+  // Lógica sequencial - só pode estar numa etapa se as anteriores estiverem válidas
+  const canAccessStep = useMemo(() => ({
+    1: true, // Sempre pode acessar step 1
+    2: step1Valid, // Só pode acessar step 2 se step 1 estiver válido
+    3: step1Valid && step2Valid, // Só pode acessar step 3 se steps 1 e 2 estiverem válidos
+    4: step1Valid && step2Valid && step3Valid // Só pode acessar step 4 se todos estiverem válidos
+  }), [step1Valid, step2Valid, step3Valid]);
+
+  // Verificar se pode prosseguir do step atual
   const canProceed = useMemo(() => {
     switch (currentStep) {
       case 1: return step1Valid;
@@ -94,9 +102,15 @@ export const useQuickOnboardingOptimized = () => {
     }
     
     if (currentStep < 4) {
-      setCurrentStep(prev => prev + 1);
+      const nextStepNumber = currentStep + 1;
+      // Verificar se pode acessar o próximo step
+      if (canAccessStep[nextStepNumber as keyof typeof canAccessStep]) {
+        setCurrentStep(nextStepNumber);
+      } else {
+        toast.error('Complete as etapas anteriores antes de continuar');
+      }
     }
-  }, [canProceed, currentStep]);
+  }, [canProceed, currentStep, canAccessStep]);
 
   const previousStep = useCallback(() => {
     if (currentStep > 1) {
@@ -104,8 +118,22 @@ export const useQuickOnboardingOptimized = () => {
     }
   }, [currentStep]);
 
+  const goToStep = useCallback((stepNumber: number) => {
+    if (stepNumber >= 1 && stepNumber <= 4) {
+      // Verificar se pode acessar o step
+      if (canAccessStep[stepNumber as keyof typeof canAccessStep]) {
+        setCurrentStep(stepNumber);
+      } else {
+        toast.error('Complete as etapas anteriores antes de acessar esta seção');
+      }
+    }
+  }, [canAccessStep]);
+
   const completeOnboarding = useCallback(async (): Promise<boolean> => {
-    if (!user || !canFinalize) return false;
+    if (!user || !canFinalize) {
+      toast.error('Complete todos os campos obrigatórios antes de finalizar');
+      return false;
+    }
     
     setIsCompletingOnboarding(true);
     
@@ -175,10 +203,12 @@ export const useQuickOnboardingOptimized = () => {
     totalSteps: 4,
     nextStep,
     previousStep,
+    goToStep,
     
     // Validações
     canProceed,
     canFinalize,
+    canAccessStep,
     step1Valid,
     step2Valid,
     step3Valid,

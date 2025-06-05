@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { LazyStepLoader } from './steps/LazyStepLoader';
 import { ModernFinalizationScreen } from './ModernFinalizationScreen';
 import { ModernSuccessScreen } from './ModernSuccessScreen';
-import { OnboardingReadOnlyView } from './OnboardingReadOnlyView';
+import { OnboardingReviewScreen } from './OnboardingReviewScreen';
 import { Loader2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -20,6 +20,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     updateField,
     nextStep,
     previousStep,
+    goToStep,
     isLoading,
     hasExistingData,
     loadError,
@@ -30,7 +31,8 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     isCompleted,
     retryCount,
     canProceed,
-    canFinalize
+    canFinalize,
+    canAccessStep
   } = useQuickOnboardingOptimized();
 
   const handleFinish = async () => {
@@ -83,6 +85,12 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     navigate(path);
   };
 
+  const handleEditStep = (stepNumber: number) => {
+    if (canAccessStep[stepNumber]) {
+      goToStep(stepNumber);
+    }
+  };
+
   // Loading state
   if (isLoading) {
     return (
@@ -93,7 +101,7 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     );
   }
 
-  // Error state (ignorar erros de onboarding_completed)
+  // Error state
   if (loadError && !loadError.includes('onboarding_completed')) {
     return (
       <div className="text-center py-12 space-y-4">
@@ -113,14 +121,21 @@ export const UnifiedOnboardingFlow: React.FC = () => {
     );
   }
 
-  // Se onboarding está concluído, mostrar visualização readonly
-  if (isCompleted && !showSuccessScreen) {
-    return <OnboardingReadOnlyView data={data} />;
-  }
-
   // Tela de sucesso após finalização
   if (showSuccessScreen) {
     return <ModernSuccessScreen onNavigate={handleNavigateFromSuccess} />;
+  }
+
+  // Se onboarding está concluído, mostrar tela de revisão
+  if (isCompleted && !showSuccessScreen) {
+    return (
+      <OnboardingReviewScreen
+        data={data}
+        onEdit={handleEditStep}
+        onContinue={handleFinish}
+        isLoading={isCompleting}
+      />
+    );
   }
 
   // Indicador de dados carregados
@@ -156,26 +171,12 @@ export const UnifiedOnboardingFlow: React.FC = () => {
         );
       
       case 4:
-        if (!canFinalize) {
-          return (
-            <div className="text-center py-12 space-y-4">
-              <div className="flex items-center justify-center gap-2 text-yellow-400 mb-4">
-                <AlertTriangle className="h-6 w-6" />
-                <p className="text-lg font-medium">Etapas Anteriores Incompletas</p>
-              </div>
-              <p className="text-gray-300">
-                Complete todas as etapas anteriores antes de finalizar o onboarding.
-              </p>
-            </div>
-          );
-        }
-
         return (
-          <ModernFinalizationScreen
-            isCompleting={isCompleting}
-            retryCount={retryCount}
-            onFinish={handleFinish}
-            canFinalize={canFinalize}
+          <OnboardingReviewScreen
+            data={data}
+            onEdit={handleEditStep}
+            onContinue={handleFinish}
+            isLoading={isCompleting}
           />
         );
       

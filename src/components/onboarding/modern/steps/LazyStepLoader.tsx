@@ -1,26 +1,35 @@
 
-import React, { Suspense, lazy } from 'react';
-import { QuickOnboardingData } from '@/types/quickOnboarding';
+import React, { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
-import { AutoSaveFeedback } from '../AutoSaveFeedback';
-
-// Lazy load dos componentes das etapas
-const StepQuemEVoceNew = lazy(() => import('./StepQuemEVoceNew').then(module => ({ default: module.StepQuemEVoceNew })));
-const StepSeuNegocioNew = lazy(() => import('./StepSeuNegocioNew').then(module => ({ default: module.StepSeuNegocioNew })));
-const StepExperienciaIANew = lazy(() => import('./StepExperienciaIANew').then(module => ({ default: module.StepExperienciaIANew })));
+import { QuickOnboardingData } from '@/types/quickOnboarding';
+import { PersonalInfoStep } from './PersonalInfoStep';
+import { ProfessionalInfoStep } from './ProfessionalInfoStep';
+import { AIExperienceStep } from './AIExperienceStep';
+import { NavigationButtons } from '@/components/onboarding/NavigationButtons';
+import { AutoSaveFeedback } from '@/components/onboarding/modern/AutoSaveFeedback';
 
 interface LazyStepLoaderProps {
   step: number;
   data: QuickOnboardingData;
-  onUpdate: (field: keyof QuickOnboardingData, value: any) => void;
+  onUpdate: (field: string, value: any) => void;
   onNext: () => void;
   onPrevious: () => void;
   canProceed: boolean;
   currentStep: number;
   totalSteps: number;
-  isSaving?: boolean;
-  lastSaveTime?: number | null;
+  isSaving: boolean;
+  lastSaveTime: number | null;
 }
+
+const StepLoader: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <Suspense fallback={
+    <div className="flex items-center justify-center py-12">
+      <Loader2 className="h-8 w-8 animate-spin text-viverblue" />
+    </div>
+  }>
+    {children}
+  </Suspense>
+);
 
 export const LazyStepLoader: React.FC<LazyStepLoaderProps> = ({
   step,
@@ -34,74 +43,55 @@ export const LazyStepLoader: React.FC<LazyStepLoaderProps> = ({
   isSaving,
   lastSaveTime
 }) => {
-  const LoadingFallback = () => (
-    <div className="flex flex-col items-center justify-center py-12 space-y-4">
-      <Loader2 className="h-8 w-8 text-viverblue animate-spin" />
-      <p className="text-gray-300">Carregando etapa...</p>
-    </div>
-  );
-
   const renderStep = () => {
     switch (step) {
       case 1:
         return (
-          <StepQuemEVoceNew
-            data={data}
-            onUpdate={onUpdate}
-            onNext={onNext}
-            canProceed={canProceed}
-            currentStep={currentStep}
-            totalSteps={totalSteps}
-          />
+          <StepLoader>
+            <PersonalInfoStep data={data} onUpdate={onUpdate} />
+          </StepLoader>
         );
-      
       case 2:
         return (
-          <StepSeuNegocioNew
-            data={data}
-            onUpdate={onUpdate}
-            onNext={onNext}
-            onPrevious={onPrevious}
-            canProceed={canProceed}
-            currentStep={currentStep}
-            totalSteps={totalSteps}
-          />
+          <StepLoader>
+            <ProfessionalInfoStep data={data} onUpdate={onUpdate} />
+          </StepLoader>
         );
-      
       case 3:
         return (
-          <StepExperienciaIANew
-            data={data}
-            onUpdate={onUpdate}
-            onNext={onNext}
-            onPrevious={onPrevious}
-            canProceed={canProceed}
-            currentStep={currentStep}
-            totalSteps={totalSteps}
-          />
+          <StepLoader>
+            <AIExperienceStep data={data} onUpdate={onUpdate} />
+          </StepLoader>
         );
-      
       default:
-        return null;
+        return (
+          <div className="text-center py-12">
+            <p className="text-gray-400">Etapa não encontrada</p>
+          </div>
+        );
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* Feedback de auto-save */}
-      <div className="flex justify-end">
-        <AutoSaveFeedback 
-          isSaving={isSaving} 
-          lastSaveTime={lastSaveTime}
-          hasUnsavedChanges={false}
-          isOnline={navigator.onLine}
-        />
+      {renderStep()}
+      
+      {/* Feedback de salvamento */}
+      <div className="flex justify-center">
+        <AutoSaveFeedback isSaving={isSaving} lastSaveTime={lastSaveTime} />
       </div>
 
-      {/* Conteúdo da etapa */}
-      <Suspense fallback={<LoadingFallback />}>
-        {renderStep()}
-      </Suspense>
+      {/* Navegação */}
+      <NavigationButtons
+        onPrevious={currentStep > 1 ? onPrevious : undefined}
+        onNext={onNext}
+        isSubmitting={isSaving}
+        isLastStep={false}
+        showPrevious={currentStep > 1}
+        submitText={canProceed ? "Continuar" : "Complete os campos obrigatórios"}
+        loadingText="Salvando..."
+        className="pt-6"
+      />
     </div>
   );
 };
