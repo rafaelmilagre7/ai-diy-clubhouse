@@ -1,62 +1,56 @@
 
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/auth';
+import { supabase } from '@/lib/supabase';
+
+interface OnboardingCompletionData {
+  isCompleted: boolean;
+  completedAt?: string;
+  userData?: any;
+}
 
 export const useOnboardingCompletion = () => {
   const { user } = useAuth();
+  const [data, setData] = useState<OnboardingCompletionData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  return useQuery({
-    queryKey: ['onboarding-completion', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
+  useEffect(() => {
+    const fetchOnboardingStatus = async () => {
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
+      }
 
       try {
-        // Verificar primeiro na tabela quick_onboarding
-        const { data: quickData, error: quickError } = await supabase
+        const { data: onboardingData, error } = await supabase
           .from('quick_onboarding')
-          .select('is_completed')
+          .select('is_completed, updated_at, name, email')
           .eq('user_id', user.id)
-          .maybeSingle();
+          .single();
 
-        if (quickData && !quickError) {
-          console.log('📊 quick_onboarding data:', quickData);
-          return {
-            isCompleted: quickData.is_completed || false,
-            source: 'quick_onboarding'
-          };
+        if (error && error.code !== 'PGRST116') {
+          throw error;
         }
 
-        // Fallback para onboarding_progress
-        const { data: progressData, error: progressError } = await supabase
-          .from('onboarding_progress')
-          .select('is_completed')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (progressData && !progressError) {
-          console.log('📊 onboarding_progress data:', progressData);
-          return {
-            isCompleted: progressData.is_completed || false,
-            source: 'onboarding_progress'
-          };
-        }
-
-        console.log('📊 Nenhum dado encontrado - onboarding incompleto');
-        return {
-          isCompleted: false,
-          source: 'none'
+        const completionData: OnboardingCompletionData = {
+          isCompleted: onboardingData?.is_completed || false,
+          completedAt: onboardingData?.updated_at,
+          userData: onboardingData
         };
-      } catch (error) {
-        console.error('❌ Erro na query de completion:', error);
-        return {
-          isCompleted: false,
-          source: 'error'
-        };
+
+        setData(completionData);
+      } catch (err: any) {
+        console.error('Erro ao verificar status do onboarding:', err);
+        setError(err.message);
+        setData({ isCompleted: false });
+      } finally {
+        setIsLoading(false);
       }
-    },
-    enabled: !!user?.id,
-    staleTime: 30 * 1000, // 30 segundos
-    refetchOnMount: true,
-  });
+    };
+
+    fetchOnboardingStatus();
+  }, [user?.id]);
+
+  return { data, isLoading, error };
 };

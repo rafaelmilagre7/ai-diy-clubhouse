@@ -12,13 +12,15 @@ import {
   GraduationCap,
   Mail,
   User,
-  Gift
+  Gift,
+  Lock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePermissions } from "@/hooks/auth/usePermissions";
+import { useOnboardingCompletion } from "@/hooks/onboarding/useOnboardingCompletion";
 
 interface AdminSidebarNavProps {
   sidebarOpen: boolean;
@@ -27,6 +29,9 @@ interface AdminSidebarNavProps {
 export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
   const location = useLocation();
   const { hasPermission } = usePermissions();
+  const { data: completionData } = useOnboardingCompletion();
+
+  const isOnboardingComplete = completionData?.isCompleted || false;
 
   const menuItems = [
     {
@@ -175,6 +180,54 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
       </ScrollArea>
 
       <div className="px-3 py-4 border-t border-gray-700 mt-auto space-y-2">
+        {/* Botão Trilha de Implementação - com verificação de onboarding */}
+        <Button
+          variant="outline"
+          className={cn(
+            "w-full justify-start gap-2",
+            !sidebarOpen && "justify-center",
+            !isOnboardingComplete && "opacity-60"
+          )}
+          asChild={isOnboardingComplete}
+          disabled={!isOnboardingComplete}
+        >
+          {isOnboardingComplete ? (
+            <Link to="/solutions">
+              <Lightbulb className="h-4 w-4" />
+              {sidebarOpen && <span>Trilha de Implementação</span>}
+            </Link>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Lock className="h-4 w-4" />
+              {sidebarOpen && <span>Trilha de Implementação</span>}
+            </div>
+          )}
+        </Button>
+
+        {/* Botão Networking - com verificação de onboarding */}
+        <Button
+          variant="outline"
+          className={cn(
+            "w-full justify-start gap-2",
+            !sidebarOpen && "justify-center",
+            !isOnboardingComplete && "opacity-60"
+          )}
+          asChild={isOnboardingComplete}
+          disabled={!isOnboardingComplete}
+        >
+          {isOnboardingComplete ? (
+            <Link to="/networking">
+              <Users className="h-4 w-4" />
+              {sidebarOpen && <span>Networking</span>}
+            </Link>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Lock className="h-4 w-4" />
+              {sidebarOpen && <span>Networking</span>}
+            </div>
+          )}
+        </Button>
+
         <Button
           variant="outline"
           className={cn(
