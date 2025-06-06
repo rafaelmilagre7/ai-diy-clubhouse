@@ -1,12 +1,14 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/auth';
+import { isFeatureEnabledForUser, APP_FEATURES } from '@/config/features';
 
 interface SmartFeatureAccessResult {
   hasAccess: boolean;
-  blockReason: 'insufficient_role' | 'incomplete_setup' | 'none';
   hasRoleAccess: boolean;
   setupComplete: boolean;
+  blockReason: 'insufficient_role' | 'incomplete_setup' | 'feature_disabled' | 'none';
+  isLoading: boolean;
 }
 
 export const useSmartFeatureAccess = (feature: string) => {
@@ -15,31 +17,40 @@ export const useSmartFeatureAccess = (feature: string) => {
   return useQuery({
     queryKey: ['smart-feature-access', feature, user?.id, profile?.role],
     queryFn: async (): Promise<SmartFeatureAccessResult> => {
-      // Verificação simplificada baseada apenas no papel do usuário
-      const hasRoleAccess = profile?.role && ['admin', 'member', 'membro_club'].includes(profile.role);
-      
-      // Para a versão simplificada, setup sempre completo
-      const setupComplete = true;
-      
-      // Lógica de acesso simplificada
-      const hasAccess = hasRoleAccess && setupComplete;
-      
-      let blockReason: 'insufficient_role' | 'incomplete_setup' | 'none' = 'none';
-      
-      if (!hasRoleAccess) {
-        blockReason = 'insufficient_role';
-      } else if (!setupComplete) {
-        blockReason = 'incomplete_setup';
+      // Verificar se a feature existe na configuração
+      if (!(feature in APP_FEATURES)) {
+        return {
+          hasAccess: false,
+          hasRoleAccess: false,
+          setupComplete: false,
+          blockReason: 'feature_disabled',
+          isLoading: false
+        };
       }
 
+      // Verificar se a feature está habilitada globalmente
+      if (!APP_FEATURES[feature as keyof typeof APP_FEATURES].enabled) {
+        return {
+          hasAccess: false,
+          hasRoleAccess: profile?.role === 'admin',
+          setupComplete: true,
+          blockReason: 'feature_disabled',
+          isLoading: false
+        };
+      }
+
+      // Verificar acesso baseado no papel do usuário
+      const hasRoleAccess = isFeatureEnabledForUser(feature as keyof typeof APP_FEATURES, profile?.role);
+      
       return {
-        hasAccess,
-        blockReason,
-        hasRoleAccess: hasRoleAccess || false,
-        setupComplete
+        hasAccess: hasRoleAccess,
+        hasRoleAccess,
+        setupComplete: true,
+        blockReason: hasRoleAccess ? 'none' : 'insufficient_role',
+        isLoading: false
       };
     },
-    enabled: !!user,
+    enabled: !!user && !!profile,
     staleTime: 5 * 60 * 1000, // 5 minutos
     refetchOnWindowFocus: false
   });

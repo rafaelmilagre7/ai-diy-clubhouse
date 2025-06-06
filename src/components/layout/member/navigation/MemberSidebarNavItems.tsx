@@ -56,7 +56,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
     }
   ];
 
-  // Adicionar networking apenas se o usuário tem acesso
+  // Adicionar networking apenas se o usuário tem acesso (baseado na configuração central)
   if (hasNetworkingAccess) {
     menuItems.splice(5, 0, {
       title: "Networking",

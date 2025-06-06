@@ -4,11 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Lock, Sparkles, Users, Target, ArrowRight, Eye } from 'lucide-react';
+import { Lock, Sparkles, Users, Target, ArrowRight, Eye, AlertTriangle } from 'lucide-react';
+import { APP_FEATURES } from '@/config/features';
 
 interface SmartFeatureBlockProps {
   feature: string;
-  blockReason: 'insufficient_role' | 'incomplete_setup' | 'none';
+  blockReason: 'insufficient_role' | 'incomplete_setup' | 'feature_disabled' | 'none';
   hasRoleAccess: boolean;
   setupComplete: boolean;
   showPreview?: boolean;
@@ -50,7 +51,6 @@ export const SmartFeatureBlock: React.FC<SmartFeatureBlockProps> = ({
   const Icon = config.icon;
 
   const handleAction = () => {
-    // Simplificado: apenas redireciona para dashboard
     navigate('/dashboard');
   };
 
@@ -59,10 +59,23 @@ export const SmartFeatureBlock: React.FC<SmartFeatureBlockProps> = ({
   };
 
   const getBlockMessage = () => {
+    if (blockReason === 'feature_disabled') {
+      const featureConfig = APP_FEATURES[feature as keyof typeof APP_FEATURES];
+      return {
+        title: 'Funcionalidade Temporariamente Indisponível',
+        description: featureConfig 
+          ? 'Esta funcionalidade está em manutenção e será reativada em breve.'
+          : 'Esta funcionalidade não está disponível no momento.',
+        variant: 'default' as const,
+        icon: AlertTriangle
+      };
+    }
+    
     return {
       title: 'Acesso Restrito',
       description: 'Esta funcionalidade não está disponível para seu tipo de conta atual.',
-      variant: 'destructive' as const
+      variant: 'destructive' as const,
+      icon: Lock
     };
   };
 
@@ -79,7 +92,7 @@ export const SmartFeatureBlock: React.FC<SmartFeatureBlockProps> = ({
           </div>
           <CardTitle className="flex items-center justify-center gap-2">
             {config.title}
-            <Lock className="h-4 w-4 text-gray-500" />
+            <blockInfo.icon className="h-4 w-4 text-gray-500" />
           </CardTitle>
         </CardHeader>
         <CardContent className="text-center space-y-4">
@@ -90,7 +103,7 @@ export const SmartFeatureBlock: React.FC<SmartFeatureBlockProps> = ({
               variant={blockInfo.variant}
               className="gap-2"
             >
-              <Lock className="h-3 w-3" />
+              <blockInfo.icon className="h-3 w-3" />
               {blockInfo.title}
             </Badge>
           </div>
@@ -99,7 +112,7 @@ export const SmartFeatureBlock: React.FC<SmartFeatureBlockProps> = ({
             {blockInfo.description}
           </p>
 
-          {showPreview && (
+          {showPreview && blockReason !== 'feature_disabled' && (
             <div className="mt-6 p-4 bg-gray-800/50 rounded-lg border">
               <div className="flex items-center gap-2 mb-2">
                 <Eye className="h-4 w-4 text-viverblue" />

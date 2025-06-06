@@ -1,6 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/auth';
+import { isFeatureEnabledForUser } from '@/config/features';
 
 interface NetworkingAccessResult {
   hasAccess: boolean;
@@ -14,12 +15,23 @@ export const useNetworkingAccess = (): NetworkingAccessResult => {
   const { data, isLoading } = useQuery({
     queryKey: ['networking-access', user?.id, profile?.role],
     queryFn: async () => {
-      // Verificação simplificada: apenas admin e formação têm acesso
-      const hasAccess = profile?.role === 'admin' || profile?.role === 'formacao';
+      // Verificação baseada na configuração central de features
+      const hasAccess = isFeatureEnabledForUser('networking', profile?.role);
+      
+      let reason: string | undefined;
+      if (!hasAccess) {
+        if (!APP_FEATURES.networking.enabled) {
+          reason = 'O sistema de networking está temporariamente indisponível';
+        } else if (APP_FEATURES.networking.adminOnly && profile?.role !== 'admin') {
+          reason = 'Acesso restrito a administradores';
+        } else {
+          reason = 'Acesso não autorizado';
+        }
+      }
       
       return {
         hasAccess,
-        reason: hasAccess ? undefined : 'Acesso restrito a administradores e formação'
+        reason
       };
     },
     enabled: !!user && !!profile,
