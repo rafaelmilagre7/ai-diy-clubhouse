@@ -3,7 +3,6 @@ import React from 'react';
 import { SmartFeatureGuard } from '@/components/auth/SmartFeatureGuard';
 import { NetworkingHeader } from '@/components/networking/NetworkingHeader';
 import { NetworkingFeed } from '@/components/networking/NetworkingFeed';
-import { ProfileDataSync } from '@/components/networking/ProfileDataSync';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, Building } from 'lucide-react';
@@ -12,7 +11,6 @@ const NetworkingPage = () => {
   return (
     <SmartFeatureGuard feature="networking">
       <div className="p-6 space-y-6">
-        <ProfileDataSync />
         <NetworkingHeader />
         
         <Card className="p-6">
