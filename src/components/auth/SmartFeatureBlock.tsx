@@ -62,7 +62,7 @@ export const SmartFeatureBlock: React.FC<SmartFeatureBlockProps> = ({
     return {
       title: 'Acesso Restrito',
       description: 'Esta funcionalidade não está disponível para seu tipo de conta atual.',
-      variant: 'error' as const
+      variant: 'destructive' as const
     };
   };
 
@@ -87,7 +87,7 @@ export const SmartFeatureBlock: React.FC<SmartFeatureBlockProps> = ({
           
           <div className="flex justify-center">
             <Badge 
-              variant={blockInfo.variant === 'warning' ? 'secondary' : 'destructive'}
+              variant={blockInfo.variant}
               className="gap-2"
             >
               <Lock className="h-3 w-3" />
