@@ -38,7 +38,7 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
               <div className="space-y-3">
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-revenue flex items-center">
+                    <span className="text-blue-400 font-medium flex items-center">
                       <TrendingUp className="h-3.5 w-3.5 mr-1.5" />
                       Aumento de Receita
                     </span>
@@ -56,7 +56,7 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
                 </div>
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-operational flex items-center">
+                    <span className="text-cyan-400 font-medium flex items-center">
                       <Settings className="h-3.5 w-3.5 mr-1.5" />
                       Otimização Operacional
                     </span>
@@ -74,7 +74,7 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
                 </div>
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-strategy flex items-center">
+                    <span className="text-emerald-400 font-medium flex items-center">
                       <BarChart className="h-3.5 w-3.5 mr-1.5" />
                       Gestão Estratégica
                     </span>
