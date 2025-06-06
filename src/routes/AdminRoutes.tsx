@@ -12,7 +12,6 @@ import AdminSolutions from '@/pages/admin/AdminSolutions';
 import AdminSolutionCreate from '@/pages/admin/AdminSolutionCreate';
 import SolutionEditor from '@/pages/admin/SolutionEditor';
 import AdminAnalytics from '@/pages/admin/AdminAnalytics';
-import AdminOnboarding from '@/pages/admin/AdminOnboarding';
 import AdminSuggestions from '@/pages/admin/AdminSuggestions';
 import AdminEvents from '@/pages/admin/AdminEvents';
 import AdminRoles from '@/pages/admin/AdminRoles';
@@ -36,7 +35,6 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin/solutions/new", AdminSolutionCreate),
   createAdminRoute("/admin/solutions/:id", SolutionEditor),
   createAdminRoute("/admin/analytics", AdminAnalytics),
-  createAdminRoute("/admin/onboarding", AdminOnboarding),
   createAdminRoute("/admin/suggestions", AdminSuggestions),
   createAdminRoute("/admin/events", AdminEvents),
   createAdminRoute("/admin/roles", AdminRoles),

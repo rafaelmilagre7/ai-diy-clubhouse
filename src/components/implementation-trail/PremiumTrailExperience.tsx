@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, ChevronLeft, ChevronRight, Play, BookOpen, ArrowRight, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { TrailTypingText } from "../onboarding/TrailTypingText";
 import { ImplementationTrail } from "@/types/implementation-trail";
 import { supabase } from "@/lib/supabase";
 
@@ -290,12 +288,7 @@ export const PremiumTrailExperience: React.FC<PremiumTrailExperienceProps> = ({
           {/* Typing Text */}
           <Card className={`${priorityInfo.bgColor} border-2 border-transparent bg-gradient-to-r ${priorityInfo.color} p-0.5`}>
             <div className="bg-[#151823] rounded-lg p-6">
-              <TrailTypingText
-                key={`typing-${currentStep}`}
-                text={currentItem.justification}
-                onComplete={() => setTypingFinished(true)}
-                typingSpeed={25}
-              />
+              {currentItem.justification}
             </div>
           </Card>
 

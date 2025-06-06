@@ -1,35 +1,28 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { useOnboardingPersonalization } from '@/hooks/onboarding/useOnboardingPersonalization';
-import { AIPersonalizationService } from '@/services/aiPersonalization';
 
 export function usePersonalizedMatching() {
-  const { data: personalizationData, isLoading: personalizationLoading } = useOnboardingPersonalization();
-
   return useQuery({
-    queryKey: ['personalized-matching', personalizationData?.email],
+    queryKey: ['personalized-matching'],
     queryFn: async () => {
-      if (!personalizationData) return null;
-
-      const networkingPersonalization = AIPersonalizationService.generateNetworkingPersonalization(personalizationData);
-      
+      // Placeholder implementation - can be enhanced later
       return {
-        targetCustomerProfile: networkingPersonalization.targetCustomerProfile,
-        targetSupplierProfile: networkingPersonalization.targetSupplierProfile,
-        industries: networkingPersonalization.industries,
-        companySizes: networkingPersonalization.companySizes,
-        keySkills: networkingPersonalization.keySkills,
-        businessObjectives: networkingPersonalization.businessObjectives,
+        targetCustomerProfile: 'Empresas de tecnologia',
+        targetSupplierProfile: 'Fornecedores especializados',
+        industries: ['technology', 'services'],
+        companySizes: ['small', 'medium'],
+        keySkills: ['AI', 'automation'],
+        businessObjectives: ['growth', 'efficiency'],
         userProfile: {
-          name: personalizationData.name,
-          company: personalizationData.company_name,
-          role: personalizationData.role,
-          segment: personalizationData.company_segment,
-          size: personalizationData.company_size
+          name: 'Usuário',
+          company: '',
+          role: '',
+          segment: '',
+          size: 'medium'
         }
       };
     },
-    enabled: !!personalizationData && personalizationData.is_completed,
+    enabled: false, // Disabled until proper implementation
     staleTime: 10 * 60 * 1000, // 10 minutos
   });
 }

@@ -1,34 +1,27 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { useOnboardingPersonalization } from '@/hooks/onboarding/useOnboardingPersonalization';
-import { AIPersonalizationService } from '@/services/aiPersonalization';
 
 export function usePersonalizedTrail() {
-  const { data: personalizationData, isLoading: personalizationLoading } = useOnboardingPersonalization();
-
   return useQuery({
-    queryKey: ['personalized-trail', personalizationData?.email],
+    queryKey: ['personalized-trail'],
     queryFn: async () => {
-      if (!personalizationData) return null;
-
-      const trailPersonalization = AIPersonalizationService.generateTrailPersonalization(personalizationData);
-      
+      // Placeholder implementation - can be enhanced later
       return {
-        skillLevel: trailPersonalization.skillLevel,
-        focusAreas: trailPersonalization.focusAreas,
-        recommendedSolutions: trailPersonalization.recommendedSolutions,
-        learningPath: trailPersonalization.learningPath,
-        implementationPriority: trailPersonalization.implementationPriority,
+        skillLevel: 'intermediate',
+        focusAreas: ['automation', 'analytics'],
+        recommendedSolutions: [],
+        learningPath: [],
+        implementationPriority: 'high',
         userProfile: {
-          name: personalizationData.name,
-          company: personalizationData.company_name,
-          role: personalizationData.role,
-          segment: personalizationData.company_segment,
-          experience: personalizationData.ai_knowledge_level
+          name: 'Usuário',
+          company: '',
+          role: '',
+          segment: '',
+          experience: 'intermediate'
         }
       };
     },
-    enabled: !!personalizationData && personalizationData.is_completed,
+    enabled: false, // Disabled until proper implementation
     staleTime: 10 * 60 * 1000, // 10 minutos
   });
 }

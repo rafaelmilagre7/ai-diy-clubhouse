@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -21,6 +20,7 @@ const ModuloDetalhes = () => {
   const [loading, setLoading] = useState(true);
   const [loadingAulas, setLoadingAulas] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [courseTitle, setCourseTitle] = useState('Curso');
 
   useEffect(() => {
     if (profile) {
@@ -36,13 +36,26 @@ const ModuloDetalhes = () => {
     try {
       const { data, error } = await supabase
         .from('learning_modules')
-        .select('*, learning_courses(*)')
+        .select('*')
         .eq('id', id)
         .single();
       
       if (error) throw error;
       
       setModulo(data);
+      
+      // Buscar título do curso separadamente
+      if (data.course_id) {
+        const { data: courseData } = await supabase
+          .from('learning_courses')
+          .select('title')
+          .eq('id', data.course_id)
+          .single();
+          
+        if (courseData) {
+          setCourseTitle(courseData.title);
+        }
+      }
     } catch (error) {
       console.error("Erro ao buscar módulo:", error);
       toast.error("Não foi possível carregar o módulo");
@@ -145,7 +158,6 @@ const ModuloDetalhes = () => {
   }
 
   const courseId = modulo.course_id;
-  const courseTitle = modulo.learning_courses?.title || 'Curso';
 
   return (
     <div className="space-y-6">
