@@ -1,69 +1,22 @@
 
-import React, { memo, useMemo, useCallback } from "react";
-import { useAuth } from "@/contexts/auth";
-import BaseLayout from "./BaseLayout";
-import { MemberSidebar } from "./member/MemberSidebar";
-import { MemberContent } from "./member/MemberContent";
-import { toast } from "sonner";
+import React, { ReactNode } from 'react';
+import Sidebar from './Sidebar';
 
 interface MemberLayoutProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
-/**
- * MemberLayout usando BaseLayout unificado com otimizações de performance
- */
-const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
-  const { profile, signOut } = useAuth();
-
-  // Memoizar função para obter iniciais para evitar recriação
-  const getInitials = useCallback((name: string | null) => {
-    if (!name) return "U";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .substring(0, 2);
-  }, []);
-
-  // Memoizar handler de signOut para evitar recriação
-  const handleSignOut = useCallback(async () => {
-    try {
-      const result = await signOut();
-      if (result.success) {
-        toast.success("Logout realizado com sucesso");
-      } else {
-        toast.error("Erro ao fazer logout");
-      }
-    } catch (error) {
-      toast.error("Erro ao fazer logout");
-    }
-  }, [signOut]);
-
-  // Memoizar dados do perfil para evitar re-renders desnecessários
-  const profileData = useMemo(() => ({
-    name: profile?.name || null,
-    email: profile?.email || null,
-    avatar: profile?.avatar_url
-  }), [profile?.name, profile?.email, profile?.avatar_url]);
-
+const MemberLayout: React.FC<MemberLayoutProps> = ({ children }) => {
   return (
-    <BaseLayout
-      variant="member"
-      sidebarComponent={MemberSidebar}
-      contentComponent={MemberContent}
-      onSignOut={handleSignOut}
-      profileName={profileData.name}
-      profileEmail={profileData.email}
-      profileAvatar={profileData.avatar}
-      getInitials={getInitials}
-    >
-      {children}
-    </BaseLayout>
+    <div className="flex min-h-screen bg-gray-950">
+      <Sidebar />
+      <main className="flex-1 overflow-auto">
+        <div className="p-6">
+          {children}
+        </div>
+      </main>
+    </div>
   );
-});
-
-MemberLayout.displayName = 'MemberLayout';
+};
 
 export default MemberLayout;

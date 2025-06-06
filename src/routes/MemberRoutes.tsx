@@ -18,7 +18,6 @@ import Suggestions from '@/pages/member/Suggestions';
 import SuggestionDetails from '@/pages/member/SuggestionDetails';
 import NewSuggestion from '@/pages/member/NewSuggestion';
 import Events from '@/pages/member/Events';
-import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
 
 // Member Learning pages
 import LearningPage from '@/pages/member/learning/LearningPage';
@@ -30,10 +29,6 @@ import CommunityHome from '@/pages/member/community/CommunityHome';
 import TopicView from '@/pages/member/community/TopicView';
 import CategoryView from '@/pages/member/community/CategoryView';
 import NewTopic from '@/pages/member/community/NewTopic';
-
-// Member Networking pages
-import NetworkingPage from '@/pages/member/networking/NetworkingPage';
-import { ConnectionsManager } from '@/components/networking/ConnectionsManager';
 
 // Função helper para criar rotas protegidas com MemberLayout
 const createProtectedRoute = (path: string, Component: React.ComponentType<any>) => ({
@@ -47,7 +42,6 @@ console.log("Carregando rotas de membros com estrutura simplificada");
 export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/", Dashboard),
   createProtectedRoute("/dashboard", Dashboard),
-  createProtectedRoute("/implementation-trail", ImplementationTrailPage),
   createProtectedRoute("/solutions", Solutions),
   createProtectedRoute("/tools", Tools),
   createProtectedRoute("/tools/:id", ToolDetails),
@@ -75,9 +69,5 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/comunidade", CommunityHome),
   createProtectedRoute("/comunidade/topico/:topicId", TopicView),
   createProtectedRoute("/comunidade/categoria/:slug", CategoryView),
-  createProtectedRoute("/comunidade/novo-topico/:categorySlug", NewTopic),
-  
-  // Networking Routes
-  createProtectedRoute("/networking", NetworkingPage),
-  createProtectedRoute("/networking/connections", () => <ConnectionsManager />)
+  createProtectedRoute("/comunidade/novo-topico/:categorySlug", NewTopic)
 ];
