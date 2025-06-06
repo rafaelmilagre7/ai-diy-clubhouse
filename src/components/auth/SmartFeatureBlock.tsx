@@ -8,9 +8,9 @@ import { Lock, Sparkles, Users, Target, ArrowRight, Eye } from 'lucide-react';
 
 interface SmartFeatureBlockProps {
   feature: string;
-  blockReason: 'insufficient_role' | 'incomplete_onboarding' | 'none';
+  blockReason: 'insufficient_role' | 'incomplete_setup' | 'none';
   hasRoleAccess: boolean;
-  onboardingComplete: boolean;
+  setupComplete: boolean;
   showPreview?: boolean;
 }
 
@@ -42,7 +42,7 @@ export const SmartFeatureBlock: React.FC<SmartFeatureBlockProps> = ({
   feature,
   blockReason,
   hasRoleAccess,
-  onboardingComplete,
+  setupComplete,
   showPreview = true
 }) => {
   const navigate = useNavigate();
@@ -50,7 +50,7 @@ export const SmartFeatureBlock: React.FC<SmartFeatureBlockProps> = ({
   const Icon = config.icon;
 
   const handleAction = () => {
-    // Simplificado: apenas redireciona para dashboard já que não temos mais onboarding
+    // Simplificado: apenas redireciona para dashboard
     navigate('/dashboard');
   };
 

@@ -26,19 +26,20 @@ export const usePremiumTrailExperience = () => {
         .eq('id', user.id)
         .single();
 
-      const { data: onboardingData } = await supabase
-        .from('quick_onboarding')
+      // CORRIGIDO: Buscar dados de implementação em vez de onboarding antigo
+      const { data: implementationData } = await supabase
+        .from('implementation_profiles')
         .select('*')
         .eq('user_id', user.id)
         .single();
 
       // Combinar dados do perfil
       const userProfile = {
-        company_name: onboardingData?.company_name,
-        company_segment: onboardingData?.company_segment,
-        company_size: onboardingData?.company_size,
-        ai_knowledge_level: onboardingData?.ai_knowledge_level,
-        main_goal: onboardingData?.main_goal,
+        company_name: implementationData?.company_name || profile?.company_name,
+        company_sector: implementationData?.company_sector || profile?.industry,
+        company_size: implementationData?.company_size,
+        ai_knowledge_level: implementationData?.ai_knowledge_level,
+        primary_goal: implementationData?.primary_goal,
         ...profile
       };
 

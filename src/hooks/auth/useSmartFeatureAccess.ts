@@ -2,52 +2,45 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/auth';
 
-export interface FeatureAccessResult {
+interface SmartFeatureAccessResult {
   hasAccess: boolean;
+  blockReason: 'insufficient_role' | 'incomplete_setup' | 'none';
   hasRoleAccess: boolean;
-  onboardingComplete: boolean;
-  userRole: string | null;
-  feature: string;
-  blockReason: 'insufficient_role' | 'incomplete_onboarding' | 'none';
+  setupComplete: boolean;
 }
 
-export function useSmartFeatureAccess(feature: string) {
-  const { user, profile } = useAuth();
+export const useSmartFeatureAccess = (feature: string) => {
+  const { profile, user } = useAuth();
 
   return useQuery({
-    queryKey: ['smart-feature-access', user?.id, feature],
-    queryFn: async (): Promise<FeatureAccessResult> => {
-      if (!user?.id || !profile) {
-        return {
-          hasAccess: false,
-          hasRoleAccess: false,
-          onboardingComplete: false,
-          userRole: null,
-          feature,
-          blockReason: 'insufficient_role'
-        };
+    queryKey: ['smart-feature-access', feature, user?.id, profile?.role],
+    queryFn: async (): Promise<SmartFeatureAccessResult> => {
+      // Verificação simplificada baseada apenas no papel do usuário
+      const hasRoleAccess = profile?.role && ['admin', 'member', 'membro_club'].includes(profile.role);
+      
+      // Para a versão simplificada, setup sempre completo
+      const setupComplete = true;
+      
+      // Lógica de acesso simplificada
+      const hasAccess = hasRoleAccess && setupComplete;
+      
+      let blockReason: 'insufficient_role' | 'incomplete_setup' | 'none' = 'none';
+      
+      if (!hasRoleAccess) {
+        blockReason = 'insufficient_role';
+      } else if (!setupComplete) {
+        blockReason = 'incomplete_setup';
       }
 
-      // Verificação direta baseada apenas no papel do usuário
-      const userRole = profile.role || 'member';
-      const hasRoleAccess = ['admin', 'member', 'membro_club'].includes(userRole);
-      
-      // Para agora, consideramos que usuários com papel válido têm acesso completo
-      // Removemos completamente a dependência de onboarding
-      const hasAccess = hasRoleAccess;
-      const onboardingComplete = true; // Sempre true, sem verificação de onboarding
-      
       return {
         hasAccess,
-        hasRoleAccess,
-        onboardingComplete,
-        userRole,
-        feature,
-        blockReason: hasAccess ? 'none' : 'insufficient_role'
+        blockReason,
+        hasRoleAccess: hasRoleAccess || false,
+        setupComplete
       };
     },
-    enabled: !!user?.id,
-    staleTime: 30 * 1000,
-    refetchOnMount: true,
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    refetchOnWindowFocus: false
   });
-}
+};

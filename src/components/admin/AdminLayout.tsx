@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
@@ -58,7 +57,7 @@ const AdminLayout = () => {
     }
   };
 
-  // Lista de links da navegação
+  // Lista de links da navegação - CORRIGIDO: removido link quebrado de onboarding
   const navItems = [
     { 
       to: "/admin", 
@@ -100,11 +99,6 @@ const AdminLayout = () => {
       to: "/admin/suggestions", 
       icon: <Lightbulb className="h-5 w-5" />, 
       label: "Sugestões" 
-    },
-    { 
-      to: "/admin/onboarding", 
-      icon: <MessageSquare className="h-5 w-5" />, 
-      label: "Onboarding" 
     },
     { 
       to: "/admin/config", 
