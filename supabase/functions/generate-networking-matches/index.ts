@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -13,6 +12,30 @@ serve(async (req) => {
   }
 
   try {
+    // 🚫 NETWORKING PAUSADO - Fase 3 da cleanup
+    // Esta Edge Function foi pausada como parte da reorganização do sistema de networking
+    // Para reativar: remover este bloco e descomentar o código abaixo
+    
+    console.log('⏸️ Generate Networking Matches pausada - Fase 3 cleanup');
+    
+    const { target_user_id } = await req.json();
+    
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Geração de matches temporariamente pausada',
+      total_matches_generated: 0,
+      user_id: target_user_id || 'unknown',
+      status: 'paused',
+      phase: 'cleanup_phase_3',
+      timestamp: new Date().toISOString(),
+      note: 'Sistema sendo reorganizado - matches serão reativados em breve'
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
+    });
+
+    /* CÓDIGO ORIGINAL COMENTADO PARA ROLLBACK
+    
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -175,14 +198,22 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Erro na Edge Function:', error)
-    return new Response(
-      JSON.stringify({ error: 'Erro interno do servidor', details: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    console.error('💥 Erro na Edge Function pausada:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Edge Function pausada durante cleanup',
+      total_matches_generated: 0,
+      status: 'paused',
+      phase: 'cleanup_phase_3',
+      timestamp: new Date().toISOString()
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
+    });
   }
 })
 
+// Funções auxiliares originais mantidas para rollback
 function generateMatchReason(userProfile: any, candidate: any, matchType: 'customer' | 'supplier'): string {
   const userCompany = userProfile.company_name || 'sua empresa'
   const candidateCompany = candidate.company_name || 'empresa'

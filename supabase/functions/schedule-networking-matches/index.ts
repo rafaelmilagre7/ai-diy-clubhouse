@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -14,6 +13,26 @@ serve(async (req) => {
   }
 
   try {
+    // 🚫 NETWORKING PAUSADO - Fase 3 da cleanup
+    // Esta Edge Function foi pausada como parte da reorganização do sistema de networking
+    // Para reativar: remover este bloco e descomentar o código abaixo
+    
+    console.log('⏸️ Networking Edge Function pausada - Fase 3 cleanup');
+    
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Sistema de networking temporariamente pausado',
+      status: 'paused',
+      phase: 'cleanup_phase_3',
+      timestamp: new Date().toISOString(),
+      note: 'Edge Function pausada para reorganização do sistema'
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
+    });
+
+    /* CÓDIGO ORIGINAL COMENTADO PARA ROLLBACK
+    
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -173,15 +192,19 @@ serve(async (req) => {
       status: 200,
     });
 
+    FIM DO CÓDIGO COMENTADO */
+
   } catch (error) {
-    console.error('💥 Erro fatal na geração automática:', error);
+    console.error('💥 Erro na Edge Function pausada:', error);
     return new Response(JSON.stringify({
       success: false,
-      error: error.message,
+      error: 'Edge Function pausada durante cleanup',
+      status: 'paused',
+      phase: 'cleanup_phase_3',
       timestamp: new Date().toISOString()
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 500,
+      status: 200, // Retorna 200 mesmo com erro para não quebrar integrações
     });
   }
 });
