@@ -4,23 +4,23 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 export const useSyncProfileData = () => {
-  const syncPhoneFromOnboarding = useCallback(async (userId: string) => {
+  const syncPhoneFromImplementation = useCallback(async (userId: string) => {
     try {
-      // Buscar dados do onboarding
-      const { data: onboardingData, error: onboardingError } = await supabase
-        .from('onboarding_progress')
+      // Buscar dados de implementation_profiles
+      const { data: implementationData, error: implementationError } = await supabase
+        .from('implementation_profiles')
         .select('personal_info')
         .eq('user_id', userId)
         .single();
 
-      if (onboardingError || !onboardingData) {
-        console.log('Nenhum dado de onboarding encontrado para sincronizar');
+      if (implementationError || !implementationData) {
+        console.log('Nenhum dado de implementação encontrado para sincronizar');
         return;
       }
 
-      const personalInfo = onboardingData.personal_info;
+      const personalInfo = implementationData.personal_info;
       if (!personalInfo?.phone && !personalInfo?.ddi) {
-        console.log('Nenhum telefone encontrado no onboarding');
+        console.log('Nenhum telefone encontrado nos dados de implementação');
         return;
       }
 
@@ -55,16 +55,16 @@ export const useSyncProfileData = () => {
 
   const syncAllProfileData = useCallback(async (userId: string) => {
     try {
-      await syncPhoneFromOnboarding(userId);
+      await syncPhoneFromImplementation(userId);
       toast.success('Dados do perfil sincronizados com sucesso!');
     } catch (error) {
       console.error('Erro ao sincronizar dados do perfil:', error);
       toast.error('Erro ao sincronizar dados do perfil');
     }
-  }, [syncPhoneFromOnboarding]);
+  }, [syncPhoneFromImplementation]);
 
   return {
-    syncPhoneFromOnboarding,
+    syncPhoneFromImplementation,
     syncAllProfileData
   };
 };

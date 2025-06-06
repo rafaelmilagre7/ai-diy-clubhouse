@@ -90,7 +90,7 @@ export const TrailDisplayContent: React.FC<TrailDisplayContentProps> = ({
         <CardContent className="pt-6">
           <div className="text-center space-y-2">
             <p className="text-sm text-neutral-400">
-              💡 Esta trilha foi gerada com base no seu perfil e objetivos definidos no onboarding
+              💡 Esta trilha foi gerada com base no seu perfil e objetivos definidos na configuração inicial
             </p>
             <p className="text-xs text-neutral-500">
               Você pode regenerar sua trilha a qualquer momento para obter novas recomendações

@@ -28,7 +28,7 @@ export const TrailEmptyState: React.FC<TrailEmptyStateProps> = ({
             </h3>
             <p className="text-neutral-400 max-w-md">
               Não conseguimos localizar uma trilha de implementação para seu perfil. 
-              Vamos gerar uma nova trilha personalizada baseada no seu onboarding.
+              Vamos gerar uma nova trilha personalizada baseada na sua configuração inicial.
             </p>
           </div>
           <Button
