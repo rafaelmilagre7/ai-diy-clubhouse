@@ -1,4 +1,17 @@
 
+import { Database } from './types/database.types';
+
+// Tipos de tabelas
+export type LearningLesson = Database['public']['Tables']['learning_lessons']['Row'];
+export type LearningLessonVideo = Database['public']['Tables']['learning_lesson_videos']['Row'];
+export type LearningModule = Database['public']['Tables']['learning_modules']['Row'];
+export type LearningCourse = Database['public']['Tables']['learning_courses']['Row'];
+export type LearningProgress = Database['public']['Tables']['learning_progress']['Row'];
+export type LearningResource = Database['public']['Tables']['learning_resources']['Row'];
+export type LearningLessonTool = Database['public']['Tables']['learning_lesson_tools']['Row'];
+export type LearningComment = Database['public']['Tables']['learning_comments']['Row'];
+
+// Outros tipos existentes
 export * from './types/database.types';
 
 export type UserRole = 'admin' | 'formacao' | 'membro_club';
@@ -11,8 +24,8 @@ export interface UserProfile {
   company_name: string | null;
   industry: string | null;
   role: UserRole;
-  role_id?: string; // Adicionando o role_id
-  user_roles?: any; // Interface para a relação com a tabela user_roles
+  role_id?: string;
+  user_roles?: any;
   created_at: string;
 }
 
@@ -22,7 +35,6 @@ export interface Solution {
   title: string;
   description: string;
   difficulty: string;
-  // Atualizada a categoria para refletir os novos valores padronizados
   category: 'Receita' | 'Operacional' | 'Estratégia';
   image_url?: string;
   thumbnail_url?: string;
@@ -49,7 +61,7 @@ export interface Module {
   title: string;
   description?: string;
   order: number;
-  module_order?: number; // Algumas partes do código usam essa propriedade ao invés de order
+  module_order?: number;
   type: string;
   content?: any;
   created_at: string;
@@ -93,7 +105,7 @@ export interface LearningCourse {
   created_by: string | null;
   module_count?: number;
   lesson_count?: number;
-  is_restricted?: boolean; // Adicionando a propriedade is_restricted
+  is_restricted?: boolean;
 }
 
 export interface LearningModule {

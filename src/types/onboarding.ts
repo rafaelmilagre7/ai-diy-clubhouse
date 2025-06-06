@@ -1,3 +1,4 @@
+
 export interface OnboardingData {
   // 1. Dados Pessoais
   personal_info: {
@@ -37,7 +38,7 @@ export interface OnboardingData {
   business_goals: {
     primary_goal?: string;
     expected_outcomes?: string[];
-    expected_outcome_30days?: string; // Campo individual para verificação
+    expected_outcome_30days?: string;
     timeline?: string;
     priority_solution_type?: string;
     how_implement?: string;
@@ -45,7 +46,7 @@ export interface OnboardingData {
     live_interest?: number;
     content_formats?: string[];
   };
-  // 5. Experiência com IA - Agora com suporte a estruturas aninhadas
+  // 5. Experiência com IA
   ai_experience: AIExperienceData | NestedAIExperienceData;
   // 6. Personalização da experiência
   experience_personalization: {
@@ -75,9 +76,9 @@ export interface OnboardingData {
     previous_courses?: string[];
     expectations?: string;
     how_heard_about?: string;
-    custom_goal?: string; // Adicionado campo
-    preferred_content_format?: string[]; // Adicionado campo
-    preferred_study_time?: string; // Adicionado campo
+    custom_goal?: string;
+    preferred_content_format?: string[];
+    preferred_study_time?: string;
   };
   
   // Campo para identificar o tipo de onboarding
@@ -101,8 +102,8 @@ export interface OnboardingData {
 export interface AIExperienceData {
   knowledge_level?: string;
   previous_tools?: string[];
-  has_implemented?: string; // "sim" | "nao" ou "true" | "false"
-  desired_ai_areas?: string[]; // Agora array
+  has_implemented?: string;
+  desired_ai_areas?: string[];
   completed_formation?: boolean;
   is_member_for_month?: boolean;
   nps_score?: number;
@@ -119,7 +120,7 @@ export interface PersonalInfoData {
   name: string;
   email: string;
   phone: string;
-  ddi: string; // Alterado de opcional para obrigatório
+  ddi: string;
   linkedin: string;
   instagram: string;
   country: string;
@@ -157,12 +158,12 @@ export interface OnboardingProgress {
   current_position?: string;
   annual_revenue?: string;
   
-  // Adicionando campo de status de sincronização
+  // Status de sincronização
   sync_status?: string;
   last_sync_at?: string;
   last_error?: string;
 
-  // Adicionando campo para logs de debug
+  // Logs de debug
   debug_logs?: Array<{
     event: string;
     timestamp: string;
@@ -176,15 +177,14 @@ export interface OnboardingProgress {
   updated_at?: string;
 }
 
-// Atualizando o tipo de OnboardingStepProps para incluir consistência entre os nomes de campos
 export interface OnboardingStepProps {
   onSubmit: (stepId: string, data: any) => Promise<void>;
   isSubmitting: boolean;
   isLastStep?: boolean;
   onComplete?: () => void;
   initialData?: any;
-  personalInfo?: OnboardingData['personal_info']; // Adicionando personalInfo como opcional
-  onPrevious?: () => void; // Adicionando onPrevious como opcional
+  personalInfo?: OnboardingData['personal_info'];
+  onPrevious?: () => void;
 }
 
 export interface OnboardingStep {
@@ -194,7 +194,7 @@ export interface OnboardingStep {
   path: string;
 }
 
-// Tipo para ProfessionalDataInput que usa o mesmo nome de campo 'professional_info'
+// Tipo para ProfessionalDataInput
 export type ProfessionalDataInput = {
   company_name?: string;
   company_size?: string;
@@ -206,7 +206,7 @@ export type ProfessionalDataInput = {
 
 // Definição das etapas do onboarding de formação
 export interface FormationOnboardingStep extends OnboardingStep {
-  forFormation: boolean; // indica se a etapa é específica para formação
+  forFormation: boolean;
 }
 
 // Definição das etapas do onboarding completo, incluindo etapas específicas para formação
@@ -214,6 +214,3 @@ export type CompleteOnboardingStep = OnboardingStep & {
   forFormation?: boolean;
   forClub?: boolean;
 };
-
-// Adicionando referência aos tipos da trilha para integração
-import { ImplementationTrail } from './implementation-trail';
