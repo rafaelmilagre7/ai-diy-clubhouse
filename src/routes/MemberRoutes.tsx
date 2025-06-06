@@ -31,14 +31,6 @@ import TopicView from '@/pages/member/community/TopicView';
 import CategoryView from '@/pages/member/community/CategoryView';
 import NewTopic from '@/pages/member/community/NewTopic';
 
-// NETWORKING IMPORTS REMOVIDOS - Fase 3 cleanup
-// Imports diretos removidos para evitar erros de build durante o pause
-// Para rollback: descomentar as linhas abaixo
-/*
-import NetworkingPage from '@/pages/member/networking/NetworkingPage';
-import { ConnectionsManager } from '@/components/networking/ConnectionsManager';
-*/
-
 // Função helper para criar rotas protegidas com MemberLayout
 const createProtectedRoute = (path: string, Component: React.ComponentType<any>) => ({
   path,
@@ -46,7 +38,7 @@ const createProtectedRoute = (path: string, Component: React.ComponentType<any>)
 });
 
 // Log para diagnóstico
-console.log("Carregando rotas de membros com networking pausado - Fase 3");
+console.log("Carregando rotas de membros - Networking removido completamente (Fase 4)");
 
 export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/", Dashboard),
@@ -80,12 +72,4 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/comunidade/topico/:topicId", TopicView),
   createProtectedRoute("/comunidade/categoria/:slug", CategoryView),
   createProtectedRoute("/comunidade/novo-topico/:categorySlug", NewTopic),
-  
-  // NETWORKING ROUTES PAUSADAS - Fase 3 cleanup
-  // Rotas comentadas para evitar erros de build
-  // Para rollback: descomentar as linhas abaixo e reativar os imports
-  /*
-  createProtectedRoute("/networking", NetworkingPage),
-  createProtectedRoute("/networking/connections", () => <ConnectionsManager />)
-  */
 ];

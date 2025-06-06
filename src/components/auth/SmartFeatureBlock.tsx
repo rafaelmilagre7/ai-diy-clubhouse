@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Lock, Sparkles, Users, Target, ArrowRight, Eye, AlertTriangle, Clock, Star } from 'lucide-react';
+import { Lock, Sparkles, Target, ArrowRight, Eye, AlertTriangle, Clock, Star } from 'lucide-react';
 import { APP_FEATURES } from '@/config/features';
 
 interface SmartFeatureBlockProps {
@@ -16,19 +16,6 @@ interface SmartFeatureBlockProps {
 }
 
 const FEATURE_CONFIG = {
-  networking: {
-    title: 'Networking Inteligente',
-    description: 'Conecte-se com outros empreendedores através de matchmaking personalizado com IA',
-    icon: Users,
-    color: 'bg-blue-500',
-    preview: 'Receba 5 indicações mensais de potenciais clientes e 3 de fornecedores, selecionados pela nossa IA baseado no seu perfil e objetivos de negócio.',
-    benefits: [
-      '5 matches mensais de potenciais clientes',
-      '3 matches mensais de fornecedores especializados',
-      'Análise de compatibilidade com IA',
-      'Sugestões personalizadas de abordagem'
-    ]
-  },
   implementation_trail: {
     title: 'Trilha de Implementação',
     description: 'Sua jornada personalizada de implementação de IA baseada no seu perfil',
@@ -65,7 +52,7 @@ export const SmartFeatureBlock: React.FC<SmartFeatureBlockProps> = ({
   showPreview = true
 }) => {
   const navigate = useNavigate();
-  const config = FEATURE_CONFIG[feature] || FEATURE_CONFIG.networking;
+  const config = FEATURE_CONFIG[feature] || FEATURE_CONFIG.learning;
   const Icon = config.icon;
 
   const handleAction = () => {

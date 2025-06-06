@@ -12,21 +12,16 @@ export interface FeatureConfig {
 }
 
 export interface AppFeatures {
-  networking: FeatureConfig;
+  // Networking removido na Fase 4 - Frontend cleanup completo
   // Adicionar outras features aqui no futuro
 }
 
 /**
  * Configuração de features da aplicação
- * Para reativar o networking: altere enabled para true
+ * Networking foi completamente removido do frontend
  */
 export const APP_FEATURES: AppFeatures = {
-  networking: {
-    enabled: false, // NETWORKING DESABILITADO - Para reativar, altere para true
-    adminOnly: true, // Quando habilitado, apenas admins terão acesso
-    description: 'Sistema de networking inteligente com matchmaking de IA',
-    lastModified: '2025-01-06'
-  }
+  // Networking removido completamente - Fase 4 executada
 };
 
 /**
