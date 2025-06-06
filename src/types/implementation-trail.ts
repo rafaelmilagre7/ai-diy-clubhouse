@@ -17,9 +17,9 @@ export interface TrailLessonRecommendation {
   courseId: string;
   justification?: string;
   priority?: number;
-  title?: string;          // Título da aula
-  moduleTitle?: string;    // Título do módulo
-  courseTitle?: string;    // Título do curso
+  title?: string;
+  moduleTitle?: string;
+  courseTitle?: string;
 }
 
 export interface ImplementationTrail {
@@ -30,7 +30,6 @@ export interface ImplementationTrail {
   recommended_lessons?: TrailLessonRecommendation[];
 }
 
-// Interface para a solução enriquecida com detalhes da trilha
 export interface TrailSolutionEnriched extends TrailSolution {
   id: string;
   title: string;
@@ -39,10 +38,9 @@ export interface TrailSolutionEnriched extends TrailSolution {
   category: string;
   difficulty: string;
   tags?: string[];
-  solution?: any;  // Detalhes completos da solução
+  solution?: any;
 }
 
-// Interface para o curso recomendado na trilha
 export interface TrailCourseEnriched extends TrailCourseRecommendation {
   id: string;
   title: string;
@@ -51,7 +49,6 @@ export interface TrailCourseEnriched extends TrailCourseRecommendation {
   modules_count?: number;
 }
 
-// Interface para a aula recomendada na trilha
 export interface TrailLessonEnriched extends TrailLessonRecommendation {
   id: string;
   title: string;
@@ -69,7 +66,7 @@ export interface TrailLessonEnriched extends TrailLessonRecommendation {
   }
 }
 
-// Parâmetros para geração da trilha - simplificado sem dependência de onboarding
+// Parâmetros simplificados para geração da trilha
 export type TrailGenerationParams = {
   user_id: string;
   preferences?: any;

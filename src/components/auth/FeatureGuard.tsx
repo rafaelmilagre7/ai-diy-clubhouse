@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useFeatureAccess } from '@/hooks/auth/useFeatureAccess';
+import { useAuth } from '@/contexts/auth';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Lock } from 'lucide-react';
 
@@ -17,7 +17,10 @@ export const FeatureGuard: React.FC<FeatureGuardProps> = ({
   fallback,
   showUpgradeMessage = true
 }) => {
-  const { hasAccess, accessMessage } = useFeatureAccess(feature);
+  const { profile } = useAuth();
+  
+  // Verificação simplificada baseada apenas no papel do usuário
+  const hasAccess = profile?.role && ['admin', 'member', 'membro_club'].includes(profile.role);
   
   if (hasAccess) {
     return <>{children}</>;
@@ -27,13 +30,13 @@ export const FeatureGuard: React.FC<FeatureGuardProps> = ({
     return <>{fallback}</>;
   }
   
-  if (showUpgradeMessage && accessMessage) {
+  if (showUpgradeMessage) {
     return (
       <Alert variant="default" className="my-4 border-primary/40">
         <Lock className="h-4 w-4" />
         <AlertTitle className="font-semibold">Acesso Restrito</AlertTitle>
         <AlertDescription className="text-muted-foreground">
-          {accessMessage}
+          Esta funcionalidade não está disponível para seu tipo de conta atual.
         </AlertDescription>
       </Alert>
     );

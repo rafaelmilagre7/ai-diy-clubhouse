@@ -20,11 +20,11 @@ const Dashboard = () => {
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
-  // Otimização: Usar useMemo para lembrar o valor da categoria entre renderizações
+  // Categoria inicial baseada na URL
   const initialCategory = useMemo(() => searchParams.get("category") || "general", [searchParams]);
   const [category, setCategory] = useState<string>(initialCategory);
   
-  // Otimização: Adicionar configuração de staleTime mais longa para reduzir requisições
+  // Carregar soluções
   const { solutions, loading: solutionsLoading, error: solutionsError } = useSolutionsData();
   
   // Tratamento de erro para soluções
@@ -38,7 +38,7 @@ const Dashboard = () => {
     }
   }, [solutionsError, solutions]);
   
-  // Otimização: Usar useMemo para o array de soluções para evitar recálculos desnecessários
+  // Filtrar soluções por categoria
   const filteredSolutions = useMemo(() => {
     if (!solutions || solutions.length === 0) return [];
     return category !== "general" 
@@ -46,7 +46,7 @@ const Dashboard = () => {
       : solutions;
   }, [solutions, category]);
   
-  // Usar as soluções filtradas para obter o progresso
+  // Obter progresso das soluções
   const { 
     active, 
     completed, 
@@ -70,41 +70,37 @@ const Dashboard = () => {
     }
   }, [user, authLoading, navigate]);
   
-  // Função para lidar com a mudança de categoria - memoizada para evitar recriação
+  // Handlers
   const handleCategoryChange = useCallback((newCategory: string) => {
     setCategory(newCategory);
     setSearchParams({ category: newCategory });
   }, [setSearchParams]);
 
-  // Função para navegar para a página de detalhes da solução - memoizada
   const handleSolutionClick = useCallback((solution: Solution) => {
     navigate(`/solution/${solution.id}`);
   }, [navigate]);
   
-  // Função para atualizar a página em caso de erro
   const handleRetry = () => {
     setHasError(false);
     setErrorMessage(null);
     window.location.reload();
   };
 
-  // Controle para exibir toast apenas na primeira visita usando localStorage
+  // Toast de boas-vindas na primeira visita
   useEffect(() => {
     const isFirstVisit = localStorage.getItem("firstDashboardVisit") !== "false";
     
     if (isFirstVisit) {
-      // Atrasar ligeiramente o toast para evitar conflito com renderização inicial
       const timeoutId = setTimeout(() => {
         toast("Bem-vindo ao seu dashboard personalizado!");
         localStorage.setItem("firstDashboardVisit", "false");
       }, 1500);
       
-      // Limpeza do timeout quando o componente é desmontado
       return () => clearTimeout(timeoutId);
     }
   }, []);
   
-  // Se houver erro, mostrar mensagem de erro com opção de tentar novamente
+  // Se houver erro, mostrar mensagem de erro
   if (hasError) {
     return (
       <div className="container py-8 flex flex-col items-center justify-center min-h-[60vh]">
@@ -128,7 +124,6 @@ const Dashboard = () => {
     );
   }
 
-  // Renderizar o layout diretamente, sem usar um componente de carregamento bloqueante
   return (
     <DashboardLayout
       active={active}

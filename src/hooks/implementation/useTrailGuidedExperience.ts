@@ -17,7 +17,6 @@ export const useTrailGuidedExperience = () => {
   const [showMagicExperience, setShowMagicExperience] = useState(false);
   const [loadingError, setLoadingError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const generationAttemptRef = useRef(0);
   const timeoutRef = useRef<number | null>(null);
 
   // Limpeza de timeout ao desmontar o componente
@@ -45,7 +44,6 @@ export const useTrailGuidedExperience = () => {
         items.forEach((item: any) => {
           if (!item || !item.solutionId) return;
           
-          // Procura a solução completa pelo ID
           const fullSolution = allSolutions.find(s => s.id === item.solutionId);
 
           if (fullSolution) {
@@ -93,7 +91,6 @@ export const useTrailGuidedExperience = () => {
 
   // Handler para iniciar a geração da trilha
   const handleStartGeneration = useCallback(async (shouldRegenerate = true) => {
-    // Se não devemos regenerar, apenas iniciar a visualização
     if (!shouldRegenerate) {
       setStarted(true);
       return;

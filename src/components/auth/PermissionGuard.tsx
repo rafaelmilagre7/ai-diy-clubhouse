@@ -1,6 +1,5 @@
 
 import React, { useEffect, useState } from 'react';
-import { usePermissions } from '@/hooks/auth/usePermissions';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -17,31 +16,33 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
   permission,
   children,
   fallback,
-  timeoutSeconds = 1 // Reduzido para 1 segundo para experiência mais rápida
+  timeoutSeconds = 1
 }) => {
-  const { hasPermission, loading, userPermissions } = usePermissions();
-  const { isAdmin, user } = useAuth();
+  const { profile, user } = useAuth();
   const [timedOut, setTimedOut] = useState(false);
   
-  // Verificação rápida e simplificada logo no início
-  // Se é admin pelo contexto, renderiza imediatamente os filhos
+  // Verificação rápida e simplificada
+  const isAdmin = profile?.role === 'admin';
+  const isLoading = !profile && !timedOut;
+  
+  // Se é admin, renderiza imediatamente os filhos
   if (isAdmin) {
     return <>{children}</>;
   }
   
   // Efeito para timeout
   useEffect(() => {
-    if (loading && !timedOut) {
+    if (isLoading && !timedOut) {
       const timer = setTimeout(() => {
         setTimedOut(true);
       }, timeoutSeconds * 1000);
       
       return () => clearTimeout(timer);
     }
-  }, [loading, timedOut, timeoutSeconds]);
+  }, [isLoading, timedOut, timeoutSeconds]);
   
-  // Mostrar skeleton apenas durante o carregamento inicial e por tempo muito curto
-  if (loading && !timedOut) {
+  // Mostrar skeleton apenas durante o carregamento inicial
+  if (isLoading) {
     return (
       <div className="space-y-2">
         <Skeleton className="h-4 w-[250px]" />
@@ -50,17 +51,7 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
     );
   }
 
-  // Verificação de permissão específica
-  if (hasPermission(permission) || userPermissions.includes(permission)) {
-    return <>{children}</>;
-  }
-  
-  // Verificação direta de permissão admin.all em memória
-  if (userPermissions.includes('admin.all')) {
-    return <>{children}</>;
-  }
-  
-  // Última verificação por email (redundante, mas mantida como fallback extremo)
+  // Verificação por email como fallback
   if (user?.email && (
     user.email.includes('@viverdeia.ai') || 
     user.email === 'admin@teste.com' || 
@@ -69,7 +60,7 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
     return <>{children}</>;
   }
 
-  // Caso contrário, mostrar mensagem de erro ou fallback com melhor contraste
+  // Caso contrário, mostrar mensagem de erro ou fallback
   return fallback || (
     <Alert variant="destructive" className="my-4 border-destructive/40">
       <AlertCircle className="h-4 w-4" />
