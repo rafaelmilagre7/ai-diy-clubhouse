@@ -29,7 +29,7 @@ const NetworkingPage = () => {
             <TabsContent value="customers" className="space-y-4">
               <div className="mb-4">
                 <p className="text-sm text-muted-foreground">
-                  5 matches mensais selecionados pela IA baseados no seu perfil de onboarding
+                  5 matches mensais selecionados pela IA baseados no seu perfil empresarial
                 </p>
               </div>
               <NetworkingFeed matchType="customer" />

@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
@@ -57,7 +58,7 @@ const AdminLayout = () => {
     }
   };
 
-  // Lista de links da navegação - CORRIGIDO: removido link quebrado de onboarding
+  // Lista de links da navegação
   const navItems = [
     { 
       to: "/admin", 

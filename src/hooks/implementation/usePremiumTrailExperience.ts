@@ -26,7 +26,7 @@ export const usePremiumTrailExperience = () => {
         .eq('id', user.id)
         .single();
 
-      // CORRIGIDO: Buscar dados de implementação em vez de onboarding antigo
+      // Buscar dados de implementação
       const { data: implementationData } = await supabase
         .from('implementation_profiles')
         .select('*')
