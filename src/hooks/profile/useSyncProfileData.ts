@@ -19,7 +19,7 @@ export const useSyncProfileData = () => {
       setIsLoading(true);
       console.log('🔄 Iniciando sincronização de dados do perfil...');
 
-      // CORRIGIDO: Buscar dados de implementation_profiles em vez de onboarding antigo
+      // Buscar dados de implementation_profiles
       const { data: implementationProfile, error: implementationError } = await supabase
         .from('implementation_profiles')
         .select('*')
@@ -46,15 +46,9 @@ export const useSyncProfileData = () => {
           hasChanges = true;
         }
 
-        if (!profile.current_position && implementationProfile.current_position) {
-          updateData.current_position = implementationProfile.current_position;
-          hasChanges = true;
-        }
-
         console.log('📊 Dados de implementação encontrados:', {
           company_name: implementationProfile.company_name,
-          company_sector: implementationProfile.company_sector,
-          current_position: implementationProfile.current_position
+          company_sector: implementationProfile.company_sector
         });
       }
 

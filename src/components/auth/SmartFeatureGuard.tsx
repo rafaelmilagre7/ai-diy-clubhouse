@@ -38,7 +38,7 @@ export const SmartFeatureGuard: React.FC<SmartFeatureGuardProps> = ({
         feature={feature}
         blockReason={accessData?.blockReason || 'insufficient_role'}
         hasRoleAccess={accessData?.hasRoleAccess || false}
-        onboardingComplete={accessData?.onboardingComplete || false}
+        setupComplete={accessData?.setupComplete || false}
         showPreview={showPreview}
       />
     );
