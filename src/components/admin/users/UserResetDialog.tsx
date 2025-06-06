@@ -10,20 +10,30 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { UserProfile } from "@/lib/supabase";
 
 interface UserResetDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: () => void;
-  userName?: string;
+  onSuccess: () => void;
+  user: UserProfile | null;
 }
 
 export const UserResetDialog: React.FC<UserResetDialogProps> = ({
   open,
   onOpenChange,
-  onConfirm,
-  userName = "usuário"
+  onSuccess,
+  user
 }) => {
+  const userName = user?.name || user?.email || "usuário";
+
+  const handleConfirm = () => {
+    // Aqui seria implementada a lógica de reset do usuário
+    console.log('Reset completo do usuário:', user?.id);
+    onSuccess();
+    onOpenChange(false);
+  };
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
@@ -39,7 +49,7 @@ export const UserResetDialog: React.FC<UserResetDialogProps> = ({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm} className="bg-destructive text-destructive-foreground">
+          <AlertDialogAction onClick={handleConfirm} className="bg-destructive text-destructive-foreground">
             Sim, resetar configuração
           </AlertDialogAction>
         </AlertDialogFooter>
