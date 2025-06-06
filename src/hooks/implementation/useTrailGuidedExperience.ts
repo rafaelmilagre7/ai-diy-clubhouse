@@ -105,8 +105,7 @@ export const useTrailGuidedExperience = () => {
 
     try {
       if (shouldRegenerate) {
-        // Passamos null explicitamente, agora válido na tipagem
-        await generateImplementationTrail(null);
+        await generateImplementationTrail();
         toast.success("Trilha personalizada gerada com sucesso!");
       }
       

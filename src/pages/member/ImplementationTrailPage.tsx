@@ -15,7 +15,7 @@ const ImplementationTrailPage = () => {
             <CardHeader>
               <CardTitle>Trilha de Implementação Personalizada</CardTitle>
               <CardDescription>
-                Sua jornada de IA personalizada com base no seu perfil de onboarding e objetivos de negócio
+                Sua jornada de IA personalizada com soluções e cursos selecionados para acelerar seu sucesso
               </CardDescription>
             </CardHeader>
             <CardContent>

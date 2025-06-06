@@ -6,17 +6,13 @@ import { Sparkles, Target, Zap, Award } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface TrailHeroSectionProps {
-  hasOnboarding: boolean;
   hasTrail: boolean;
   onGenerateTrail: () => void;
-  onCompleteOnboarding: () => void;
 }
 
 export const TrailHeroSection: React.FC<TrailHeroSectionProps> = ({
-  hasOnboarding,
   hasTrail,
-  onGenerateTrail,
-  onCompleteOnboarding
+  onGenerateTrail
 }) => {
   return (
     <motion.div
@@ -77,9 +73,7 @@ export const TrailHeroSection: React.FC<TrailHeroSectionProps> = ({
                 >
                   {hasTrail 
                     ? "Soluções e cursos selecionados especialmente para acelerar seu sucesso com IA"
-                    : hasOnboarding 
-                      ? "Complete seu perfil para receber uma trilha 100% personalizada com as melhores soluções para seu negócio"
-                      : "Sua trilha personalizada está sendo preparada com base no seu perfil único"
+                    : "Gere sua trilha personalizada com as melhores soluções e cursos para seu negócio"
                   }
                 </motion.p>
 
@@ -88,16 +82,7 @@ export const TrailHeroSection: React.FC<TrailHeroSectionProps> = ({
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5 }}
                 >
-                  {!hasOnboarding ? (
-                    <Button
-                      onClick={onCompleteOnboarding}
-                      size="lg"
-                      className="bg-gradient-to-r from-viverblue to-emerald-400 hover:from-viverblue/90 hover:to-emerald-400/90 text-white px-8 py-6 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-                    >
-                      <Target className="mr-3 h-5 w-5" />
-                      Completar Onboarding
-                    </Button>
-                  ) : !hasTrail ? (
+                  {!hasTrail ? (
                     <Button
                       onClick={onGenerateTrail}
                       size="lg"

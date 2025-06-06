@@ -10,7 +10,7 @@ import { TrailHeroSection } from "./TrailHeroSection";
 import { TrailProgressDashboard } from "./TrailProgressDashboard";
 import { InteractiveTrailCard } from "./InteractiveTrailCard";
 import { TrailFiltersBar } from "./TrailFiltersBar";
-import { OnboardingPrompt } from "./OnboardingPrompt";
+import { TrailWelcomePrompt } from "./TrailWelcomePrompt";
 import { TrailStatsOverview } from "./TrailStatsOverview";
 import { TrailLoadingState } from "../TrailLoadingState";
 import { TrailErrorFallback } from "../TrailErrorFallback";
@@ -47,9 +47,6 @@ export const RedesignedImplementationTrailPage = () => {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
-  // Check if user has onboarding completed (simplified check)
-  const hasOnboarding = true; // For now, assume user has onboarding
-  
   // Combine all trail items
   const allTrailItems = useMemo(() => {
     const items: any[] = [];
@@ -156,10 +153,6 @@ export const RedesignedImplementationTrailPage = () => {
     }
   };
 
-  const handleCompleteOnboarding = () => {
-    navigate('/onboarding');
-  };
-
   const handleItemClick = (id: string, type: 'solution' | 'lesson') => {
     if (type === 'solution') {
       navigate(`/solution/${id}`);
@@ -204,26 +197,16 @@ export const RedesignedImplementationTrailPage = () => {
     );
   }
 
-  // No onboarding completed
-  if (!hasOnboarding) {
-    return (
-      <div className="container py-8">
-        <OnboardingPrompt 
-          onStartOnboarding={handleCompleteOnboarding}
-        />
-      </div>
-    );
-  }
-
   // No trail generated yet
   if (!hasContent) {
     return (
       <div className="container py-8 space-y-8">
         <TrailHeroSection 
-          hasOnboarding={hasOnboarding}
           hasTrail={false}
           onGenerateTrail={handleGenerateTrail}
-          onCompleteOnboarding={handleCompleteOnboarding}
+        />
+        <TrailWelcomePrompt 
+          onGenerateTrail={handleGenerateTrail}
         />
         <TrailStatsOverview stats={stats} />
       </div>
@@ -235,10 +218,8 @@ export const RedesignedImplementationTrailPage = () => {
     <div className="container py-8 space-y-8">
       {/* Hero Section */}
       <TrailHeroSection 
-        hasOnboarding={hasOnboarding}
         hasTrail={hasContent}
         onGenerateTrail={handleGenerateTrail}
-        onCompleteOnboarding={handleCompleteOnboarding}
       />
 
       {/* Progress Dashboard */}
