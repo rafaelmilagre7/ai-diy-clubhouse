@@ -1,6 +1,4 @@
 
-import { OnboardingData, OnboardingProgress } from "./onboarding";
-
 export interface TrailSolution {
   solutionId: string;
   justification?: string;
@@ -71,5 +69,8 @@ export interface TrailLessonEnriched extends TrailLessonRecommendation {
   }
 }
 
-// Parâmetros para geração da trilha
-export type TrailGenerationParams = Partial<OnboardingProgress> | null;
+// Parâmetros para geração da trilha - simplificado sem dependência de onboarding
+export type TrailGenerationParams = {
+  user_id: string;
+  preferences?: any;
+} | null;
