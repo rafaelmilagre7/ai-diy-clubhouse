@@ -1,17 +1,38 @@
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { SmartFeatureGuard } from '@/components/auth/SmartFeatureGuard';
-import { NetworkingHeader } from '@/components/networking/NetworkingHeader';
-import { NetworkingFeed } from '@/components/networking/NetworkingFeed';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Building } from 'lucide-react';
+import { Users, Building, Loader2 } from 'lucide-react';
+
+// Lazy load dos componentes de networking para melhor performance
+const NetworkingHeader = React.lazy(() => 
+  import('@/components/networking/NetworkingHeader').then(module => ({
+    default: module.NetworkingHeader
+  }))
+);
+
+const NetworkingFeed = React.lazy(() => 
+  import('@/components/networking/NetworkingFeed').then(module => ({
+    default: module.NetworkingFeed
+  }))
+);
+
+// Componente de loading personalizado
+const NetworkingLoadingFallback = () => (
+  <div className="flex items-center justify-center py-12">
+    <Loader2 className="h-8 w-8 animate-spin text-viverblue" />
+    <span className="ml-3 text-gray-600">Carregando networking...</span>
+  </div>
+);
 
 const NetworkingPage = () => {
   return (
     <SmartFeatureGuard feature="networking">
       <div className="p-6 space-y-6">
-        <NetworkingHeader />
+        <Suspense fallback={<NetworkingLoadingFallback />}>
+          <NetworkingHeader />
+        </Suspense>
         
         <Card className="p-6">
           <Tabs defaultValue="customers" className="space-y-6">
@@ -32,7 +53,9 @@ const NetworkingPage = () => {
                   5 matches mensais selecionados pela IA baseados no seu perfil empresarial
                 </p>
               </div>
-              <NetworkingFeed matchType="customer" />
+              <Suspense fallback={<NetworkingLoadingFallback />}>
+                <NetworkingFeed matchType="customer" />
+              </Suspense>
             </TabsContent>
 
             <TabsContent value="suppliers" className="space-y-4">
@@ -41,7 +64,9 @@ const NetworkingPage = () => {
                   3 matches mensais de fornecedores especializados baseados nas suas necessidades
                 </p>
               </div>
-              <NetworkingFeed matchType="supplier" />
+              <Suspense fallback={<NetworkingLoadingFallback />}>
+                <NetworkingFeed matchType="supplier" />
+              </Suspense>
             </TabsContent>
           </Tabs>
         </Card>

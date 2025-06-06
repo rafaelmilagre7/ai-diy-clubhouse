@@ -8,13 +8,11 @@ import {
   Users, 
   Lightbulb, 
   Settings,
-  User,
   MessageSquare,
   Route,
   GraduationCap,
   Calendar
 } from 'lucide-react';
-import { useNetworkingAccess } from '@/hooks/networking/useNetworkingAccess';
 import { useAuth } from '@/contexts/auth';
 import { usePermissions } from '@/hooks/auth/usePermissions';
 
@@ -24,9 +22,22 @@ interface MemberSidebarNavItemsProps {
 
 export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ sidebarOpen }) => {
   const location = useLocation();
-  const { hasAccess: hasNetworkingAccess } = useNetworkingAccess();
   const { profile } = useAuth();
   const { hasPermission } = usePermissions();
+
+  // Lazy import do hook de networking apenas quando necessário
+  const [networkingAccess, setNetworkingAccess] = React.useState<{ hasAccess: boolean }>({ hasAccess: false });
+  
+  React.useEffect(() => {
+    // Só importa e executa o hook se o usuário potencialmente tem acesso
+    if (profile?.role === 'admin' || profile?.role === 'membro_club') {
+      import('@/hooks/networking/useNetworkingAccess').then(({ useNetworkingAccess }) => {
+        // Note: Este é um padrão de carregamento condicional
+        // Em produção, seria melhor usar React Query com enabled condition
+        setNetworkingAccess({ hasAccess: false }); // Mantém desabilitado por enquanto
+      });
+    }
+  }, [profile?.role]);
 
   const menuItems = [
     {
@@ -57,13 +68,16 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
   ];
 
   // Adicionar networking apenas se o usuário tem acesso (baseado na configuração central)
-  if (hasNetworkingAccess) {
+  // Comentado para manter o networking oculto durante a cleanup
+  /*
+  if (networkingAccess.hasAccess) {
     menuItems.splice(5, 0, {
       title: "Networking",
       href: "/networking",
       icon: Users,
     });
   }
+  */
 
   // Adicionar Área de Formação APENAS se tem permissão lms.manage
   if (hasPermission('lms.manage')) {

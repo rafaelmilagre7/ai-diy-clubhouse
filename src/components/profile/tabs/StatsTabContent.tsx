@@ -96,7 +96,7 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
             <div className="bg-[#1A1E2E] p-4 rounded-lg border border-neutral-700/50 animate-fade-in">
               <h4 className="text-sm font-medium text-white mb-3 flex items-center">
                 <Clock className="h-4 w-4 mr-2 text-viverblue" />
-                Tempo Gasto
+                Tempo de Uso
               </h4>
               <div className="grid grid-cols-2 gap-4 mt-2">
                 <Card className="dark-mode-card border-viverblue/10 hover:border-viverblue/30 transition-all duration-300">
@@ -202,7 +202,7 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
                         asChild
                         className="hover:bg-viverblue/10 hover:text-viverblue"
                       >
-                        <Link to="/dashboard" className="flex items-center">
+                        <Link to="/solutions" className="flex items-center">
                           Explorar
                           <ChevronRight className="ml-1 h-4 w-4" />
                         </Link>
@@ -216,10 +216,10 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="text-sm font-medium text-high-contrast">
-                          Explore a trilha de estratégia
+                          Explore soluções estratégicas
                         </p>
                         <p className="text-xs text-medium-contrast">
-                          Ainda não implementou soluções desta trilha
+                          Ainda não implementou soluções desta categoria
                         </p>
                       </div>
                       <Button 
@@ -228,7 +228,7 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
                         asChild
                         className="hover:bg-viverblue/10 hover:text-viverblue"
                       >
-                        <Link to="/dashboard?category=strategy" className="flex items-center">
+                        <Link to="/solutions?category=strategy" className="flex items-center">
                           Explorar
                           <ChevronRight className="ml-1 h-4 w-4" />
                         </Link>
