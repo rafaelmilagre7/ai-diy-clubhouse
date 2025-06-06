@@ -1,7 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/auth';
-import { supabase } from '@/lib/supabase';
 
 export interface FeatureAccessResult {
   hasAccess: boolean;
@@ -13,12 +12,12 @@ export interface FeatureAccessResult {
 }
 
 export function useSmartFeatureAccess(feature: string) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
 
   return useQuery({
     queryKey: ['smart-feature-access', user?.id, feature],
     queryFn: async (): Promise<FeatureAccessResult> => {
-      if (!user?.id) {
+      if (!user?.id || !profile) {
         return {
           hasAccess: false,
           hasRoleAccess: false,
@@ -29,34 +28,26 @@ export function useSmartFeatureAccess(feature: string) {
         };
       }
 
-      const { data, error } = await supabase.rpc('user_can_access_feature', {
-        p_user_id: user.id,
-        p_feature: feature
-      });
-
-      if (error) {
-        console.error('Erro ao verificar acesso à funcionalidade:', error);
-        return {
-          hasAccess: false,
-          hasRoleAccess: false,
-          onboardingComplete: false,
-          userRole: null,
-          feature,
-          blockReason: 'insufficient_role'
-        };
-      }
-
+      // Verificação direta baseada apenas no papel do usuário
+      const userRole = profile.role || 'member';
+      const hasRoleAccess = ['admin', 'member', 'membro_club'].includes(userRole);
+      
+      // Para agora, consideramos que usuários com papel válido têm acesso completo
+      // Removemos completamente a dependência de onboarding
+      const hasAccess = hasRoleAccess;
+      const onboardingComplete = true; // Sempre true, sem verificação de onboarding
+      
       return {
-        hasAccess: data.has_access,
-        hasRoleAccess: data.has_role_access,
-        onboardingComplete: data.onboarding_complete,
-        userRole: data.user_role,
-        feature: data.feature,
-        blockReason: data.block_reason
+        hasAccess,
+        hasRoleAccess,
+        onboardingComplete,
+        userRole,
+        feature,
+        blockReason: hasAccess ? 'none' : 'insufficient_role'
       };
     },
     enabled: !!user?.id,
-    staleTime: 30 * 1000, // 30 segundos
+    staleTime: 30 * 1000,
     refetchOnMount: true,
   });
 }

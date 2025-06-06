@@ -50,30 +50,15 @@ export const SmartFeatureBlock: React.FC<SmartFeatureBlockProps> = ({
   const Icon = config.icon;
 
   const handleAction = () => {
-    if (blockReason === 'incomplete_onboarding') {
-      navigate('/onboarding-new');
-    } else {
-      // Para roles insuficientes, pode direcionar para upgrade ou contato
-      navigate('/dashboard');
-    }
+    // Simplificado: apenas redireciona para dashboard já que não temos mais onboarding
+    navigate('/dashboard');
   };
 
   const getActionText = () => {
-    if (blockReason === 'incomplete_onboarding') {
-      return 'Completar Onboarding';
-    }
-    return 'Saiba Mais';
+    return 'Ir para Dashboard';
   };
 
   const getBlockMessage = () => {
-    if (blockReason === 'incomplete_onboarding') {
-      return {
-        title: 'Complete seu Onboarding',
-        description: 'Para personalizar sua experiência e desbloquear todas as funcionalidades, complete primeiro seu onboarding.',
-        variant: 'warning' as const
-      };
-    }
-    
     return {
       title: 'Acesso Restrito',
       description: 'Esta funcionalidade não está disponível para seu tipo de conta atual.',
@@ -85,7 +70,6 @@ export const SmartFeatureBlock: React.FC<SmartFeatureBlockProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Cabeçalho da funcionalidade */}
       <Card className="border-2 border-dashed">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
@@ -101,7 +85,6 @@ export const SmartFeatureBlock: React.FC<SmartFeatureBlockProps> = ({
         <CardContent className="text-center space-y-4">
           <p className="text-gray-300">{config.description}</p>
           
-          {/* Status de bloqueio */}
           <div className="flex justify-center">
             <Badge 
               variant={blockInfo.variant === 'warning' ? 'secondary' : 'destructive'}
@@ -116,7 +99,6 @@ export const SmartFeatureBlock: React.FC<SmartFeatureBlockProps> = ({
             {blockInfo.description}
           </p>
 
-          {/* Preview da funcionalidade */}
           {showPreview && (
             <div className="mt-6 p-4 bg-gray-800/50 rounded-lg border">
               <div className="flex items-center gap-2 mb-2">
@@ -129,41 +111,14 @@ export const SmartFeatureBlock: React.FC<SmartFeatureBlockProps> = ({
             </div>
           )}
 
-          {/* Status do onboarding */}
-          {hasRoleAccess && (
-            <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">Status do Onboarding</p>
-                  <p className="text-xs text-gray-400">
-                    {onboardingComplete ? 'Completo ✅' : 'Pendente ⏳'}
-                  </p>
-                </div>
-                {!onboardingComplete && (
-                  <Button
-                    onClick={handleAction}
-                    size="sm"
-                    className="bg-viverblue hover:bg-viverblue/90"
-                  >
-                    <ArrowRight className="h-4 w-4 mr-2" />
-                    {getActionText()}
-                  </Button>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Botão de ação principal */}
-          {!onboardingComplete && hasRoleAccess && (
-            <Button
-              onClick={handleAction}
-              className="w-full bg-viverblue hover:bg-viverblue/90"
-              size="lg"
-            >
-              <ArrowRight className="h-5 w-5 mr-2" />
-              {getActionText()}
-            </Button>
-          )}
+          <Button
+            onClick={handleAction}
+            className="w-full bg-viverblue hover:bg-viverblue/90"
+            size="lg"
+          >
+            <ArrowRight className="h-5 w-5 mr-2" />
+            {getActionText()}
+          </Button>
         </CardContent>
       </Card>
     </div>

@@ -72,7 +72,7 @@ export const useImplementationTrail = () => {
     }
   }, [user?.id]);
 
-  // Função para gerar nova trilha usando edge function inteligente
+  // Função para gerar nova trilha usando edge function simplificada
   const generateImplementationTrail = useCallback(async () => {
     if (!user?.id) {
       toast.error('Usuário não autenticado');
@@ -84,7 +84,7 @@ export const useImplementationTrail = () => {
       setError(null);
       console.log('🚀 Gerando trilha personalizada para usuário:', user.id);
 
-      // Usar a edge function inteligente para gerar trilha
+      // Usar a edge function simplificada para gerar trilha
       const { data, error: functionError } = await supabase.functions.invoke('generate-smart-trail', {
         body: { user_id: user.id }
       });
