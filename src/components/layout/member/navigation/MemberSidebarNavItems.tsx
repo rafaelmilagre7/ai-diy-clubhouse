@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,6 @@ import {
   LayoutDashboard, 
   Users, 
   Lightbulb, 
-  BookOpen, 
   Settings,
   User,
   MessageSquare,
@@ -34,11 +32,6 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       title: "Dashboard",
       href: "/dashboard",
       icon: LayoutDashboard,
-    },
-    {
-      title: "Onboarding",
-      href: "/onboarding-new",
-      icon: BookOpen,
     },
     {
       title: "Trilha de Implementação",

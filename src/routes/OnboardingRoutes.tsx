@@ -1,34 +1,27 @@
 
 import { RouteObject } from "react-router-dom";
-import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
-import NovoOnboardingNew from '@/pages/onboarding/NovoOnboardingNew';
-import ModernOnboardingPage from '@/pages/onboarding/ModernOnboardingPage';
-import OnboardingCompletedNewPage from '@/pages/onboarding/OnboardingCompletedNew';
+import { Navigate } from "react-router-dom";
 
+// TEMPORÁRIO: Rotas de onboarding desabilitadas - redirecionam para dashboard
 export const onboardingRoutes: RouteObject[] = [
-  // Rota principal do onboarding - nova experiência moderna
   {
     path: "/onboarding",
-    element: <ProtectedRoutes><ModernOnboardingPage /></ProtectedRoutes>
+    element: <Navigate to="/dashboard" replace />
   },
-  // Rota do novo onboarding moderno
   {
     path: "/onboarding-new",
-    element: <ProtectedRoutes><ModernOnboardingPage /></ProtectedRoutes>
+    element: <Navigate to="/dashboard" replace />
   },
-  // Rota legada (compatibilidade)
   {
     path: "/onboarding-legacy",
-    element: <ProtectedRoutes><NovoOnboardingNew /></ProtectedRoutes>
+    element: <Navigate to="/dashboard" replace />
   },
-  // Rota para a página de sucesso do onboarding
   {
     path: "/onboarding-new/completed",
-    element: <ProtectedRoutes><OnboardingCompletedNewPage /></ProtectedRoutes>
+    element: <Navigate to="/dashboard" replace />
   },
-  // Compatibilidade com rotas antigas
   {
     path: "/onboarding/completed",
-    element: <ProtectedRoutes><OnboardingCompletedNewPage /></ProtectedRoutes>
+    element: <Navigate to="/dashboard" replace />
   }
 ];

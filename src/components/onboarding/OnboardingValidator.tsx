@@ -1,10 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useOnboardingCompletion } from '@/hooks/onboarding/useOnboardingCompletion';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Loader2, AlertCircle } from 'lucide-react';
+import React from 'react';
 
 interface OnboardingValidatorProps {
   children: React.ReactNode;
@@ -14,53 +9,10 @@ interface OnboardingValidatorProps {
 
 export const OnboardingValidator: React.FC<OnboardingValidatorProps> = ({
   children,
-  requireOnboarding = true,
-  redirectTo = '/onboarding-new'
+  requireOnboarding = false, // Desabilitado por padrão
+  redirectTo = '/dashboard'
 }) => {
-  const navigate = useNavigate();
-  const { data: completionData, isLoading } = useOnboardingCompletion();
-  const [validationChecked, setValidationChecked] = useState(false);
-
-  useEffect(() => {
-    if (!isLoading) {
-      setValidationChecked(true);
-    }
-  }, [isLoading]);
-
-  if (isLoading || !validationChecked) {
-    return (
-      <Card className="w-full max-w-md mx-auto mt-8">
-        <CardContent className="pt-6 flex flex-col items-center space-y-4">
-          <Loader2 className="h-8 w-8 text-viverblue animate-spin" />
-          <p className="text-neutral-300">Verificando seus dados...</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const isOnboardingComplete = completionData?.isCompleted || false;
-
-  if (!isOnboardingComplete && requireOnboarding) {
-    return (
-      <Card className="w-full max-w-md mx-auto mt-8">
-        <CardContent className="pt-6 text-center space-y-4">
-          <AlertCircle className="h-12 w-12 text-amber-500 mx-auto" />
-          <h3 className="text-lg font-semibold text-white">
-            Complete seu perfil
-          </h3>
-          <p className="text-neutral-300">
-            Para acessar esta área, você precisa completar seu onboarding primeiro.
-          </p>
-          <Button 
-            onClick={() => navigate(redirectTo)}
-            className="bg-viverblue hover:bg-viverblue/90"
-          >
-            Completar Onboarding
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
-
+  // TEMPORÁRIO: Sempre permite acesso - onboarding desabilitado
+  console.log("[OnboardingValidator] Onboarding validation disabled, allowing access");
   return <>{children}</>;
 };

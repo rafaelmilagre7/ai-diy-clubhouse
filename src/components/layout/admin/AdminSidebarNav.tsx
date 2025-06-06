@@ -1,4 +1,3 @@
-
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -64,11 +63,6 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
       title: "Sugestões",
       href: "/admin/suggestions",
       icon: MessageSquare,
-    },
-    {
-      title: "Onboarding",
-      href: "/admin/onboarding",
-      icon: BookOpen,
     },
     {
       title: "Analytics",
