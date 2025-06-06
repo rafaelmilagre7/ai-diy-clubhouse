@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/auth';
-import { isFeatureEnabledForUser } from '@/config/features';
+import { isFeatureEnabledForUser, APP_FEATURES } from '@/config/features';
 
 interface NetworkingAccessResult {
   hasAccess: boolean;
