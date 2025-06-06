@@ -29,9 +29,9 @@ export const AulaDetails = ({ aula, onEditClick, onDeleteClick }: AulaDetailsPro
     ? format(new Date(aula.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
     : "Data desconhecida";
     
-  // Calcula o total de vídeos
+  // Calcula o total de vídeos - verificando se existe a propriedade
   const totalVideos = aula.videos?.length || 0;
-  // Calcula o total de recursos
+  // Calcula o total de recursos - verificando se existe a propriedade
   const totalRecursos = aula.resources?.length || 0;
   
   // Função para gerar o caminho para a visualização de membro
