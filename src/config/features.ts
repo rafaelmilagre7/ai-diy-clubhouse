@@ -11,23 +11,19 @@ export interface FeatureConfig {
   lastModified: string;
 }
 
-export interface AppFeatures {
-  // Networking removido na Fase 4 - Frontend cleanup completo
-  // Adicionar outras features aqui no futuro
-}
-
 /**
  * Configuração de features da aplicação
- * Networking foi completamente removido do frontend
+ * Networking foi completamente removido do frontend - Fase 4 executada
  */
-export const APP_FEATURES: AppFeatures = {
-  // Networking removido completamente - Fase 4 executada
+export const APP_FEATURES: Record<string, FeatureConfig> = {
+  // Sistema preparado para futuras features
+  // Adicionar novas features aqui conforme necessário
 };
 
 /**
  * Verifica se uma feature está habilitada
  */
-export const isFeatureEnabled = (featureName: keyof AppFeatures): boolean => {
+export const isFeatureEnabled = (featureName: string): boolean => {
   const feature = APP_FEATURES[featureName];
   return feature?.enabled || false;
 };
@@ -36,7 +32,7 @@ export const isFeatureEnabled = (featureName: keyof AppFeatures): boolean => {
  * Verifica se uma feature está habilitada para um usuário específico
  */
 export const isFeatureEnabledForUser = (
-  featureName: keyof AppFeatures, 
+  featureName: string, 
   userRole?: string
 ): boolean => {
   const feature = APP_FEATURES[featureName];

@@ -29,7 +29,8 @@ export const useSmartFeatureAccess = (feature: string) => {
       }
 
       // Verificar se a feature está habilitada globalmente
-      if (!APP_FEATURES[feature as keyof typeof APP_FEATURES].enabled) {
+      const featureConfig = APP_FEATURES[feature];
+      if (!featureConfig?.enabled) {
         return {
           hasAccess: false,
           hasRoleAccess: profile?.role === 'admin',
@@ -40,7 +41,7 @@ export const useSmartFeatureAccess = (feature: string) => {
       }
 
       // Verificar acesso baseado no papel do usuário
-      const hasRoleAccess = isFeatureEnabledForUser(feature as keyof typeof APP_FEATURES, profile?.role);
+      const hasRoleAccess = isFeatureEnabledForUser(feature, profile?.role);
       
       return {
         hasAccess: hasRoleAccess,

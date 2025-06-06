@@ -5,7 +5,7 @@ import { isFeatureEnabledForUser, APP_FEATURES } from '@/config/features';
 export const useFeatureAccess = () => {
   const { profile } = useAuth();
 
-  const hasFeatureAccess = (featureName: keyof typeof APP_FEATURES) => {
+  const hasFeatureAccess = (featureName: string) => {
     return isFeatureEnabledForUser(featureName, profile?.role);
   };
 
