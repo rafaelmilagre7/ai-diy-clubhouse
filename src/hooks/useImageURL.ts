@@ -1,109 +1,66 @@
 
-import { useState, useCallback } from 'react';
-import { storageUrlManager, StorageURLOptions, StorageURLResult } from '@/services/storageUrlManager';
-import { toast } from 'sonner';
+import { useState, useEffect, useCallback } from 'react';
+
+interface ImageOptimizationOptions {
+  width?: number;
+  height?: number;
+  quality?: number;
+  format?: 'webp' | 'jpg' | 'png';
+  priority?: 'high' | 'normal' | 'low';
+}
 
 export const useImageURL = () => {
-  const [isOptimizing, setIsOptimizing] = useState(false);
-  const [lastOptimization, setLastOptimization] = useState<StorageURLResult | null>(null);
+  const [imageCache] = useState<Map<string, string>>(new Map());
 
-  /**
-   * Otimiza URL de imagem para usar o domínio personalizado
-   */
   const optimizeImageURL = useCallback(async (
-    originalUrl: string,
-    options: StorageURLOptions = {}
+    src: string, 
+    options: ImageOptimizationOptions = {}
   ): Promise<string> => {
-    if (!originalUrl) {
-      throw new Error('URL da imagem é obrigatória');
+    const cacheKey = `${src}_${JSON.stringify(options)}`;
+    
+    // Return cached version if available
+    if (imageCache.has(cacheKey)) {
+      return imageCache.get(cacheKey)!;
     }
-
-    setIsOptimizing(true);
 
     try {
-      console.log(`[useImageURL] Otimizando URL de imagem:`, originalUrl);
+      // For Supabase storage URLs, add optimization parameters
+      if (src.includes('supabase') || src.includes('lovable-uploads')) {
+        const url = new URL(src);
+        
+        if (options.width) url.searchParams.set('width', options.width.toString());
+        if (options.height) url.searchParams.set('height', options.height.toString());
+        if (options.quality) url.searchParams.set('quality', options.quality.toString());
+        if (options.format) url.searchParams.set('format', options.format);
+        
+        const optimizedUrl = url.toString();
+        imageCache.set(cacheKey, optimizedUrl);
+        return optimizedUrl;
+      }
 
-      const result = await storageUrlManager.optimizeImageURL(originalUrl, {
-        enableTracking: true,
-        priority: 'normal',
-        ...options
-      });
-      
-      setLastOptimization(result);
-
-      console.log(`[useImageURL] Otimização concluída:`, {
-        source: result.source,
-        cached: result.cached,
-        url: result.optimizedUrl.substring(0, 50) + '...'
-      });
-
-      return result.optimizedUrl;
-
+      // For external URLs, return as-is but cache the result
+      imageCache.set(cacheKey, src);
+      return src;
     } catch (error) {
-      console.error('[useImageURL] Erro na otimização:', error);
-      
-      // Fallback silencioso para imagens
-      return originalUrl;
-      
-    } finally {
-      setIsOptimizing(false);
+      console.warn('[useImageURL] Failed to optimize image URL:', error);
+      return src;
     }
-  }, []);
+  }, [imageCache]);
 
-  /**
-   * Otimiza múltiplas URLs de imagens em batch
-   */
-  const optimizeBatchImageURLs = useCallback(async (
-    urls: string[], 
-    options: StorageURLOptions = {}
-  ): Promise<Record<string, string>> => {
-    console.log(`[useImageURL] Otimizando ${urls.length} URLs de imagens em batch`);
+  const preloadImage = useCallback((src: string, priority: 'high' | 'normal' | 'low' = 'normal') => {
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
+    link.href = src;
     
-    const urlsWithType = urls.map(url => ({ url, type: 'image' as const }));
-    const results = await storageUrlManager.optimizeBatchURLs(urlsWithType, options);
-    
-    // Converter para formato simples de URL -> URL otimizada
-    const simpleResults: Record<string, string> = {};
-    Object.entries(results).forEach(([originalUrl, result]) => {
-      simpleResults[originalUrl] = result.optimizedUrl;
-    });
-    
-    console.log(`[useImageURL] Batch de imagens concluído: ${Object.keys(simpleResults).length} URLs processadas`);
-    return simpleResults;
-  }, []);
-
-  /**
-   * Valida se uma URL de imagem está acessível
-   */
-  const validateImageURL = useCallback(async (url: string): Promise<boolean> => {
-    try {
-      const response = await fetch(url, { 
-        method: 'HEAD',
-        signal: AbortSignal.timeout(3000) // 3 segundos timeout para imagens
-      });
-      
-      return response.ok && response.headers.get('content-type')?.startsWith('image/');
-    } catch (error) {
-      console.warn(`[useImageURL] Falha na validação da imagem: ${url}`, error);
-      return false;
+    if (priority === 'high') {
+      link.setAttribute('fetchpriority', 'high');
+    } else if (priority === 'low') {
+      link.setAttribute('fetchpriority', 'low');
     }
+    
+    document.head.appendChild(link);
   }, []);
 
-  /**
-   * Limpa cache de imagens
-   */
-  const clearImageCache = useCallback(() => {
-    storageUrlManager.clearCacheForType('image');
-    setLastOptimization(null);
-    toast.success('Cache de imagens limpo com sucesso');
-  }, []);
-
-  return {
-    optimizeImageURL,
-    optimizeBatchImageURLs,
-    validateImageURL,
-    clearImageCache,
-    isOptimizing,
-    lastOptimization
-  };
+  return { optimizeImageURL, preloadImage };
 };
