@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,15 +10,15 @@ import { ModuleContentMaterials } from "@/components/implementation/content/Modu
 import { ModuleContentVideos } from "@/components/implementation/content/ModuleContentVideos";
 import { ModuleContentChecklist } from "@/components/implementation/content/ModuleContentChecklist";
 import { CommentsSection } from "@/components/implementation/content/CommentsSection";
+import { ImplementationComplete } from "@/components/implementation/content/ImplementationComplete";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DifficultyBadge } from "@/components/dashboard/DifficultyBadge";
-import { CheckCircle2, ArrowLeft, Target } from "lucide-react";
+import { ArrowLeft, Target } from "lucide-react";
 import { useImplementationData } from "@/hooks/implementation/useImplementationData";
 import { useProgressTracking } from "@/hooks/implementation/useProgressTracking";
 import { useImplementationNavigation } from "@/hooks/implementation/useImplementationNavigation";
 import { useNavigate } from "react-router-dom";
-import { SolutionCertificateEligibility } from "@/components/learning/certificates/SolutionCertificateEligibility";
 
 const SolutionImplementation: React.FC = () => {
   const { id, moduleIdx } = useParams<{ id: string; moduleIdx: string }>();
@@ -35,8 +36,8 @@ const SolutionImplementation: React.FC = () => {
   } = useImplementationData();
   
   const {
-    handleMarkAsCompleted,
-    setModuleInteraction
+    handleConfirmImplementation,
+    isCompleting
   } = useProgressTracking(
     progress,
     completedModules,
@@ -68,6 +69,22 @@ const SolutionImplementation: React.FC = () => {
   }
 
   const currentModule = modules[currentModuleIndex] || null;
+
+  // Função para lidar com a conclusão da implementação
+  const handleComplete = async () => {
+    try {
+      console.log('Iniciando conclusão da implementação...');
+      const success = await handleConfirmImplementation();
+      
+      if (success) {
+        console.log('Implementação concluída com sucesso!');
+        // Redirecionar para a página do certificado após a conclusão
+        navigate(`/solution/${id}/certificate`);
+      }
+    } catch (error) {
+      console.error('Erro ao concluir implementação:', error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0A0B14] to-[#1A1E2E] text-white">
@@ -160,47 +177,12 @@ const SolutionImplementation: React.FC = () => {
                 </TabsContent>
 
                 <TabsContent value="complete" className="mt-0">
-                  <div className="space-y-8">
-                    {/* Seção de conclusão */}
-                    <div className="text-center space-y-8 py-8">
-                      <div className="max-w-md mx-auto">
-                        <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-full p-6 w-32 h-32 mx-auto flex items-center justify-center mb-6">
-                          <CheckCircle2 className="h-16 w-16 text-green-500" />
-                        </div>
-                        <h3 className="text-3xl font-bold text-white mb-4">
-                          Concluir Implementação
-                        </h3>
-                        <p className="text-gray-300 mb-8 text-lg">
-                          Parabéns! Você está pronto para marcar esta solução como concluída e celebrar seu progresso.
-                        </p>
-                        <Button
-                          onClick={handleMarkAsCompleted}
-                          className="bg-gradient-to-r from-viverblue to-viverblue-light hover:from-viverblue/90 hover:to-viverblue-light/90 text-white font-semibold px-8 py-4 rounded-lg transition-all duration-200 text-lg"
-                          size="lg"
-                        >
-                          <CheckCircle2 className="h-5 w-5 mr-2" />
-                          Marcar como Concluída
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Seção do Certificado */}
-                    <div className="border-t border-neutral-700/50 pt-8">
-                      <div className="max-w-2xl mx-auto">
-                        <div className="text-center mb-6">
-                          <h4 className="text-2xl font-bold text-white mb-2">Certificado de Implementação</h4>
-                          <p className="text-gray-300">
-                            Comprove suas habilidades com um certificado oficial da Viver de IA
-                          </p>
-                        </div>
-                        
-                        <SolutionCertificateEligibility
-                          solutionId={id!}
-                          isCompleted={completedModules.length === modules.length}
-                        />
-                      </div>
-                    </div>
-                  </div>
+                  <ImplementationComplete
+                    solution={solution}
+                    onComplete={handleComplete}
+                    isCompleting={isCompleting}
+                    isCompleted={progress?.is_completed || false}
+                  />
                 </TabsContent>
               </div>
             </Tabs>
