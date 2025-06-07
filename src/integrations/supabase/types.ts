@@ -5459,6 +5459,17 @@ export type Database = {
         }
         Returns: Json
       }
+      create_invite_hybrid: {
+        Args: {
+          p_email: string
+          p_role_id: string
+          p_phone?: string
+          p_expires_in?: unknown
+          p_notes?: string
+          p_channel_preference?: string
+        }
+        Returns: Json
+      }
       create_onboarding_backup: {
         Args: { p_user_id: string; p_backup_type?: string }
         Returns: string

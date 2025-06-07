@@ -101,11 +101,11 @@ export function useInviteCreate() {
 
       console.log("✅ Email limpo, prosseguindo com criação do convite...");
       
-      // Usar a função RPC create_invite (atualizada para suportar telefone)
+      // Usar a função RPC create_invite_hybrid com a nova ordem de parâmetros
       const { data, error } = await supabase.rpc('create_invite_hybrid', {
         p_email: email,
-        p_phone: phone || null,
         p_role_id: roleId,
+        p_phone: phone || null,
         p_expires_in: expiresIn,
         p_notes: notes,
         p_channel_preference: channelPreference
@@ -117,7 +117,7 @@ export function useInviteCreate() {
       }
       
       if (data.status === 'error') {
-        console.error("❌ Erro retornado pela função create_invite:", data.message);
+        console.error("❌ Erro retornado pela função create_invite_hybrid:", data.message);
         throw new Error(data.message);
       }
       
