@@ -1,4 +1,3 @@
-
 // Test users configuration
 export const TEST_MEMBER = {
   email: "membro@viverdeia.ai",

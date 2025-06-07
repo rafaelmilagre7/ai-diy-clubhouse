@@ -4,6 +4,7 @@ import { useAdminStats } from "./dashboard/useAdminStats";
 import { useEngagementData } from "./dashboard/useEngagementData";
 import { useCompletionRateData } from "./dashboard/useCompletionRateData";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 
 interface RecentActivity {
   id: string;
@@ -22,57 +23,50 @@ export const useAdminDashboardData = (timeRange: string) => {
   const { engagementData, loading: engagementLoading } = useEngagementData(timeRange);
   const { completionRateData, loading: completionLoading } = useCompletionRateData(timeRange);
 
-  // Carregar dados de atividades recentes
+  // Carregar atividades recentes reais do banco de dados
   useEffect(() => {
     const loadRecentActivities = async () => {
       setLoading(true);
       
       try {
-        // Dados simulados para atividades recentes
-        const mockActivities: RecentActivity[] = [
-          {
-            id: "1",
-            user_id: "joao.silva",
-            event_type: "view",
-            solution: "Integração de IA no Atendimento",
-            created_at: new Date(2023, 6, 25).toISOString()
-          },
-          {
-            id: "2",
-            user_id: "maria.oliveira",
-            event_type: "start",
-            solution: "Automação de Marketing",
-            created_at: new Date(2023, 6, 24).toISOString()
-          },
-          {
-            id: "3",
-            user_id: "pedro.santos",
-            event_type: "complete",
-            solution: "Chatbot para WhatsApp",
-            created_at: new Date(2023, 6, 24).toISOString()
-          },
-          {
-            id: "4",
-            user_id: "ana.ferreira",
-            event_type: "complete",
-            solution: "Analytics avançado",
-            created_at: new Date(2023, 6, 23).toISOString()
-          },
-          {
-            id: "5",
-            user_id: "carlos.mendes",
-            event_type: "login",
-            solution: "CRM Inteligente",
-            created_at: new Date(2023, 6, 22).toISOString()
-          }
-        ];
+        // Buscar atividades reais do banco de dados
+        const { data: analyticsData, error } = await supabase
+          .from('analytics')
+          .select(`
+            id,
+            user_id,
+            event_type,
+            solution_id,
+            created_at,
+            solutions:solution_id (
+              title
+            )
+          `)
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (error) {
+          console.error("Erro ao carregar atividades:", error);
+          setRecentActivities([]);
+          return;
+        }
+
+        // Transformar dados para o formato esperado
+        const activities: RecentActivity[] = (analyticsData || []).map(item => ({
+          id: item.id,
+          user_id: item.user_id,
+          event_type: item.event_type,
+          solution: item.solutions?.title || 'Solução não identificada',
+          created_at: item.created_at
+        }));
         
-        setRecentActivities(mockActivities);
+        setRecentActivities(activities);
       } catch (error: any) {
         console.error("Erro ao carregar atividades recentes:", error);
+        setRecentActivities([]);
         toast({
-          title: "Erro ao carregar dados",
-          description: "Ocorreu um erro ao carregar as atividades recentes.",
+          title: "Aviso",
+          description: "Não foi possível carregar as atividades recentes.",
           variant: "destructive",
         });
       } finally {

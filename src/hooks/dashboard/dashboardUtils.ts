@@ -1,72 +1,5 @@
 
 import { Solution } from "@/lib/supabase";
-import { SolutionCategory } from "@/lib/types/categoryTypes";
-
-// Fallback solutions data for when API calls fail
-export const fallbackSolutionsData: Solution[] = [
-  {
-    id: "1",
-    title: "Assistente de IA no WhatsApp",
-    description: "Implemente um assistente de IA para atendimento automatizado via WhatsApp",
-    thumbnail_url: "/images/whatsapp-ai.jpg",
-    category: "Operacional",
-    difficulty: "easy",
-    slug: "whatsapp-ai-assistant",
-    estimated_time: 45,
-    success_rate: 95,
-    tags: ["whatsapp", "automation", "ai"],
-    related_solutions: [],
-    published: true,
-    author_id: "",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  },
-  {
-    id: "2",
-    title: "Chatbot para Geração de Leads",
-    description: "Crie um chatbot para qualificar e capturar leads no seu site",
-    thumbnail_url: "/images/chatbot-leads.jpg",
-    category: "Receita",
-    difficulty: "medium",
-    slug: "chatbot-lead-generation",
-    estimated_time: 60,
-    success_rate: 80,
-    tags: ["chatbot", "lead generation", "sales"],
-    related_solutions: [],
-    published: true,
-    author_id: "",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  },
-  {
-    id: "3",
-    title: "Análise de Sentimento de Clientes",
-    description: "Analise o sentimento dos seus clientes para melhorar a satisfação e retenção",
-    thumbnail_url: "/images/sentiment-analysis.jpg",
-    category: "Operacional",
-    difficulty: "advanced",
-    slug: "customer-sentiment-analysis",
-    estimated_time: 90,
-    success_rate: 70,
-    tags: ["sentiment analysis", "customer satisfaction", "retention"],
-    related_solutions: [],
-    published: true,
-    author_id: "",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  }
-];
-
-// Function to sort solutions by difficulty
-export const sortSolutionsByDifficulty = (solutions: Solution[]): Solution[] => {
-  return [...solutions].sort((a, b) => {
-    // Sort by difficulty
-    const difficultyOrder = { "easy": 0, "medium": 1, "advanced": 2 };
-    const diffA = a.difficulty as "easy" | "medium" | "advanced";
-    const diffB = b.difficulty as "easy" | "medium" | "advanced";
-    return difficultyOrder[diffA] - difficultyOrder[diffB];
-  });
-};
 
 // Process progress data into separate solution lists
 export const processSolutionsData = (
@@ -116,4 +49,15 @@ export const processSolutionsData = (
     completedSolutions,
     availableSolutions
   };
+};
+
+// Function to sort solutions by difficulty
+export const sortSolutionsByDifficulty = (solutions: Solution[]): Solution[] => {
+  return [...solutions].sort((a, b) => {
+    // Sort by difficulty
+    const difficultyOrder = { "easy": 0, "medium": 1, "advanced": 2 };
+    const diffA = a.difficulty as "easy" | "medium" | "advanced";
+    const diffB = b.difficulty as "easy" | "medium" | "advanced";
+    return difficultyOrder[diffA] - difficultyOrder[diffB];
+  });
 };

@@ -1,119 +1,110 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
-import EmailPasswordForm from "./login/EmailPasswordForm";
-import { motion } from "framer-motion";
+import { Eye, EyeOff } from "lucide-react";
 
-const LoginForm = () => {
+interface LoginFormProps {
+  onSwitchToReset: () => void;
+}
+
+export const LoginForm = ({ onSwitchToReset }: LoginFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
-  
-  // Redirect if already logged in
-  useEffect(() => {
-    if (user) {
-      navigate('/dashboard', { replace: true });
-    }
-  }, [user, navigate]);
 
-  const handleEmailSignIn = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email || !password) {
-      const errorMessage = "Por favor, preencha todos os campos.";
-      setError(errorMessage);
-      toast.error(errorMessage, {
-        style: {
-          background: 'rgba(239, 68, 68, 0.1)',
-          border: '1px solid rgba(239, 68, 68, 0.3)',
-          color: 'white'
-        }
-      });
+      toast.error("Por favor, preencha todos os campos");
       return;
     }
+
+    setIsLoading(true);
     
     try {
-      setIsLoading(true);
-      setError(null);
-      
-      // Show immediate feedback toast
-      toast.info("Entrando...", {
-        style: {
-          background: 'rgba(0, 234, 217, 0.1)',
-          border: '1px solid rgba(0, 234, 217, 0.3)',
-          color: 'white'
-        }
-      });
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      if (error) throw error;
-      
-      if (data.user) {
-        toast.success("Login bem-sucedido! Redirecionando...", {
-          style: {
-            background: 'rgba(34, 197, 94, 0.1)',
-            border: '1px solid rgba(34, 197, 94, 0.3)',
-            color: 'white'
-          }
-        });
-        
-        // Forçar redirecionamento após autenticação bem-sucedida
-        setTimeout(() => {
-          navigate('/dashboard', { replace: true });
-        }, 500);
-      }
+      await signIn(email, password);
+      toast.success("Login realizado com sucesso!");
+      navigate("/dashboard");
     } catch (error: any) {
-      let errorMessage = "Não foi possível fazer login. Verifique suas credenciais.";
-      
-      if (error.message.includes("Invalid login credentials")) {
-        errorMessage = "Email ou senha incorretos. Verifique suas credenciais.";
-      } else if (error.message.includes("Email not confirmed")) {
-        errorMessage = "Por favor, confirme seu email antes de fazer login.";
-      } else if (error.message.includes("Too many requests")) {
-        errorMessage = "Muitas tentativas de login. Tente novamente em alguns minutos.";
-      }
-      
-      setError(errorMessage);
-      toast.error(errorMessage, {
-        style: {
-          background: 'rgba(239, 68, 68, 0.1)',
-          border: '1px solid rgba(239, 68, 68, 0.3)',
-          color: 'white'
-        }
-      });
+      console.error("Erro no login:", error);
+      toast.error(error.message || "Erro ao fazer login");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className="space-y-6"
-    >
-      <EmailPasswordForm
-        email={email}
-        setEmail={setEmail}
-        password={password}
-        setPassword={setPassword}
-        onSubmit={handleEmailSignIn}
-        isLoading={isLoading}
-        error={error}
-      />
-    </motion.div>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="email">E-mail</Label>
+        <Input
+          id="email"
+          type="email"
+          placeholder="seu@email.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          disabled={isLoading}
+          required
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="password">Senha</Label>
+        <div className="relative">
+          <Input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            placeholder="Digite sua senha"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={isLoading}
+            required
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+            onClick={() => setShowPassword(!showPassword)}
+            disabled={isLoading}
+          >
+            {showPassword ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+      </div>
+
+      <Button 
+        type="submit" 
+        className="w-full" 
+        disabled={isLoading}
+      >
+        {isLoading ? "Entrando..." : "Entrar"}
+      </Button>
+
+      <div className="text-center">
+        <Button
+          type="button"
+          variant="link"
+          onClick={onSwitchToReset}
+          className="text-sm text-muted-foreground"
+        >
+          Esqueceu sua senha?
+        </Button>
+      </div>
+    </form>
   );
 };
-
-export default LoginForm;

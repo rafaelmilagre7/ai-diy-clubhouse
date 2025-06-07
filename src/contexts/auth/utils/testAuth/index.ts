@@ -1,6 +1,3 @@
-
-// Re-export all test auth functions
-export { createTestUser } from './createTestUser';
-export { signInAsTestMember } from './signInAsTestMember';
-export { signInAsTestAdmin } from './signInAsTestAdmin';
-export { TEST_MEMBER, TEST_ADMIN } from './constants';
+// Sistema de autenticação de teste removido
+// Todas as funcionalidades de autenticação agora utilizam apenas dados reais
+export {};

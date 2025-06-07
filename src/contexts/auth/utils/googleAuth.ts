@@ -1,13 +1,11 @@
 
-import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
 
-// Esta função está completamente desativada
+// Funcionalidade de login com Google removida para produção
 export const signInWithGoogle = async (): Promise<void> => {
-  // A funcionalidade de login com Google foi removida
   toast({
     title: 'Funcionalidade indisponível',
-    description: 'O login com Google não está mais disponível na plataforma.',
+    description: 'Por favor, utilize o login com email e senha.',
     variant: 'destructive',
   });
 };
