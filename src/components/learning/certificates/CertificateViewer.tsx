@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Share2, ExternalLink } from "lucide-react";
+import { Download, Share2, ExternalLink, ExternalLinkIcon } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CERTIFICATE_LOGO_URL } from "@/lib/supabase/uploadCertificateLogo";
@@ -40,6 +40,30 @@ export const CertificateViewer = ({
     locale: ptBR
   });
 
+  const handleOpenInNewTab = () => {
+    const newWindow = window.open('', '_blank');
+    if (newWindow) {
+      newWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Certificado - ${certificate.solutions.title}</title>
+            <style>
+              body { margin: 0; padding: 20px; background: #f0f0f0; font-family: Arial, sans-serif; }
+              .certificate-container { max-width: 900px; margin: 0 auto; }
+            </style>
+          </head>
+          <body>
+            <div class="certificate-container">
+              ${document.querySelector('[data-certificate-content]')?.innerHTML || ''}
+            </div>
+          </body>
+        </html>
+      `);
+      newWindow.document.close();
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Carregar fonte Google Fonts */}
@@ -50,7 +74,7 @@ export const CertificateViewer = ({
       
       {/* Certificado Visual */}
       <Card className="bg-gradient-to-br from-viverblue/20 via-viverblue-light/20 to-viverblue-lighter/20 border-viverblue/30 overflow-hidden">
-        <CardContent className="p-10 relative">
+        <CardContent className="p-10 relative" data-certificate-content>
           {/* Padrão decorativo de fundo */}
           <div className="absolute inset-0 opacity-5">
             <div className="w-full h-full" style={{
@@ -60,9 +84,9 @@ export const CertificateViewer = ({
           </div>
           
           <div className="relative z-10 text-center space-y-8">
-            {/* Logo no topo - tamanho aumentado */}
+            {/* Logo no topo - tamanho aumentado e sem borda */}
             <div className="flex justify-center mb-8">
-              <div className="w-48 h-24 bg-white/15 rounded-2xl flex items-center justify-center p-3 backdrop-blur-sm border border-white/20 shadow-lg">
+              <div className="w-64 h-32">
                 <img 
                   src={CERTIFICATE_LOGO_URL}
                   alt="Viver de IA" 
@@ -156,6 +180,15 @@ export const CertificateViewer = ({
         >
           <Download className="h-4 w-4 mr-2" />
           Baixar PDF
+        </Button>
+        
+        <Button
+          onClick={handleOpenInNewTab}
+          variant="outline"
+          className="border-viverblue/50 text-viverblue hover:bg-viverblue/10"
+        >
+          <ExternalLinkIcon className="h-4 w-4 mr-2" />
+          Abrir em Nova Guia
         </Button>
         
         <Button
