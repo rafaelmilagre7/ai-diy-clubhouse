@@ -36,5 +36,5 @@ export const uploadCertificateLogo = async () => {
   }
 };
 
-// URL da logo para usar nos componentes
-export const CERTIFICATE_LOGO_URL = 'https://qksluomqkxcthomfvegb.supabase.co/storage/v1/object/public/certificates/logo/viver-de-ia-logo.png';
+// URL da logo local para usar nos componentes - mudando para logo local
+export const CERTIFICATE_LOGO_URL = '/lovable-uploads/a408c993-07fa-49f2-bee6-c66d0614298b.png';

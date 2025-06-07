@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -56,7 +55,7 @@ export const CertificateViewer = ({
 
       console.log('Bibliotecas carregadas');
 
-      // Converter logo para base64 - sem fallback
+      // Converter logo para base64
       console.log('Convertendo logo para base64...');
       const logoBase64 = await convertImageToBase64(CERTIFICATE_LOGO_URL);
       console.log('Logo convertida com sucesso, tamanho:', logoBase64.length);
@@ -85,7 +84,7 @@ export const CertificateViewer = ({
         scale: 2,
         useCORS: true,
         allowTaint: true,
-        backgroundColor: null,
+        backgroundColor: '#000000',
         logging: true,
         width: 900,
         height: 650
@@ -166,25 +165,17 @@ export const CertificateViewer = ({
         rel="stylesheet"
       />
       
-      {/* Certificado Visual */}
-      <Card className="bg-gradient-to-br from-viverblue/20 via-viverblue-light/20 to-viverblue-lighter/20 border-viverblue/30 overflow-hidden">
+      {/* Certificado Visual com fundo preto */}
+      <Card className="bg-black border-neutral-700 overflow-hidden">
         <CardContent className="p-10 relative" data-certificate-content>
-          {/* Padrão decorativo de fundo */}
-          <div className="absolute inset-0 opacity-5">
-            <div className="w-full h-full" style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-              backgroundRepeat: 'repeat'
-            }}></div>
-          </div>
-          
           <div className="relative z-10 text-center space-y-8">
-            {/* Logo no topo - sem fallback */}
+            {/* Logo no topo */}
             <div className="flex justify-center mb-8">
               <div className="w-64 h-32">
                 <img 
                   src={CERTIFICATE_LOGO_URL}
                   alt="Viver de IA" 
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain brightness-110"
                   crossOrigin="anonymous"
                   onLoad={() => console.log('Logo carregada com sucesso no preview')}
                 />
@@ -194,39 +185,39 @@ export const CertificateViewer = ({
             {/* Header */}
             <div className="space-y-3">
               <h1 className="text-5xl font-bold text-white mb-3 drop-shadow-lg tracking-wide">CERTIFICADO</h1>
-              <p className="text-2xl text-white/95 font-semibold">de Implementação de Solução</p>
+              <p className="text-2xl text-gray-300 font-semibold">de Implementação de Solução</p>
             </div>
 
             {/* Conteúdo principal */}
             <div className="space-y-6 py-6">
-              <p className="text-xl text-white/90 font-medium">
+              <p className="text-xl text-gray-300 font-medium">
                 Certificamos que
               </p>
               
-              <div className="py-6 px-8 bg-white/20 rounded-xl backdrop-blur-sm border border-white/30 shadow-lg">
+              <div className="py-6 px-8 bg-white/10 rounded-xl backdrop-blur-sm border border-white/20 shadow-lg">
                 <h2 className="text-3xl font-bold text-white tracking-wide">{userProfile.name}</h2>
               </div>
               
-              <p className="text-xl text-white/90 font-medium">
+              <p className="text-xl text-gray-300 font-medium">
                 concluiu com sucesso a implementação da solução
               </p>
               
-              <div className="py-6 px-8 bg-white/15 rounded-xl border border-white/25 shadow-lg">
+              <div className="py-6 px-8 bg-white/8 rounded-xl border border-white/15 shadow-lg">
                 <h3 className="text-2xl font-semibold text-white mb-2">{certificate.solutions.title}</h3>
-                <p className="text-white/85 text-lg">Categoria: {certificate.solutions.category}</p>
+                <p className="text-gray-400 text-lg">Categoria: {certificate.solutions.category}</p>
               </div>
               
-              <p className="text-xl text-white/90 font-medium">
+              <p className="text-xl text-gray-300 font-medium">
                 em <span className="font-bold text-white text-2xl">{formattedDate}</span>
               </p>
             </div>
 
             {/* Footer com código de validação e assinatura */}
-            <div className="pt-8 border-t-2 border-white/30 space-y-6 mt-8">
+            <div className="pt-8 border-t-2 border-white/20 space-y-6 mt-8">
               <div className="flex justify-between items-end">
                 {/* Código de validação */}
                 <div className="text-left">
-                  <p className="text-sm text-white/80 mb-2 font-medium">Código de Validação:</p>
+                  <p className="text-sm text-gray-400 mb-2 font-medium">Código de Validação:</p>
                   <p className="font-mono text-white text-lg font-bold tracking-wider bg-white/10 px-3 py-1 rounded">{certificate.validation_code}</p>
                 </div>
                 
@@ -239,22 +230,22 @@ export const CertificateViewer = ({
                         style={{ 
                           fontFamily: "'Dancing Script', cursive",
                           transform: 'rotate(-1deg)',
-                          textShadow: '2px 2px 4px rgba(0,0,0,0.4)',
+                          textShadow: '2px 2px 4px rgba(255,255,255,0.2)',
                           fontWeight: '700'
                         }}
                       >
                         Rafael G Milagre
                       </p>
                     </div>
-                    <div className="w-52 h-0.5 bg-white/40 mb-3"></div>
-                    <p className="text-sm text-white/80 font-medium">Founder do Viver de IA</p>
+                    <div className="w-52 h-0.5 bg-white/30 mb-3"></div>
+                    <p className="text-sm text-gray-400 font-medium">Founder do Viver de IA</p>
                   </div>
                 </div>
               </div>
               
               <div className="text-center pt-4">
-                <p className="text-sm text-white/70">
-                  Emitido por <span style={{ color: 'white', fontWeight: '700', fontSize: '16px' }}>Viver de IA</span>
+                <p className="text-sm text-gray-500">
+                  Emitido por <span className="text-white font-bold text-base">Viver de IA</span>
                 </p>
               </div>
             </div>
