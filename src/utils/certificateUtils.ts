@@ -1,4 +1,3 @@
-
 // Utilitário para converter imagem para base64
 export const convertImageToBase64 = async (imageUrl: string): Promise<string> => {
   console.log('Iniciando conversão de imagem para base64:', imageUrl);
@@ -39,7 +38,7 @@ export const convertImageToBase64 = async (imageUrl: string): Promise<string> =>
   }
 };
 
-// Função para gerar HTML do certificado com fundo preto e dimensões A4 landscape
+// Função para gerar HTML do certificado com layout responsivo
 export const generateCertificateHTML = (
   certificate: any,
   userProfile: any,
@@ -91,8 +90,8 @@ export const generateCertificateHTML = (
           }
           
           .logo {
-            width: 180px;
-            height: 90px;
+            height: 80px;
+            width: auto;
             object-fit: contain;
             filter: brightness(1.1);
           }
@@ -106,40 +105,40 @@ export const generateCertificateHTML = (
           }
           
           .certificate-title {
-            font-size: 48px;
+            font-size: 42px;
             margin-bottom: 12px;
             font-weight: bold;
             color: #ffffff;
             text-shadow: 0 4px 8px rgba(255,255,255,0.1);
-            letter-spacing: 2px;
+            letter-spacing: 3px;
           }
           
           .subtitle {
-            font-size: 20px;
-            margin-bottom: 30px;
+            font-size: 18px;
+            margin-bottom: 25px;
             color: #e5e5e5;
             font-weight: 600;
           }
           
           .certification-text {
-            font-size: 18px;
-            margin-bottom: 20px;
+            font-size: 16px;
+            margin-bottom: 15px;
             color: #d5d5d5;
             font-weight: 500;
           }
           
           .user-name-box {
             background: rgba(255,255,255,0.1);
-            padding: 20px;
+            padding: 18px;
             border-radius: 16px;
-            margin: 20px 0;
+            margin: 18px 0;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,0.2);
             box-shadow: 0 8px 16px rgba(255,255,255,0.05);
           }
           
           .user-name {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: bold;
             margin: 0;
             color: #ffffff;
@@ -148,17 +147,17 @@ export const generateCertificateHTML = (
           
           .solution-box {
             background: rgba(255,255,255,0.08);
-            padding: 20px;
+            padding: 18px;
             border-radius: 16px;
             border: 1px solid rgba(255,255,255,0.15);
-            margin: 20px 0;
+            margin: 18px 0;
             box-shadow: 0 8px 16px rgba(255,255,255,0.05);
           }
           
           .solution-title {
-            font-size: 22px;
+            font-size: 20px;
             margin: 0;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             color: #ffffff;
             font-weight: 600;
           }
@@ -166,33 +165,33 @@ export const generateCertificateHTML = (
           .solution-category {
             color: #cccccc;
             margin: 0;
-            font-size: 16px;
+            font-size: 14px;
           }
           
           .date-text {
-            font-size: 18px;
-            margin: 20px 0;
+            font-size: 16px;
+            margin: 18px 0;
             color: #d5d5d5;
             font-weight: 500;
           }
           
           .date-highlight {
             font-weight: 700;
-            font-size: 20px;
+            font-size: 18px;
             color: #ffffff;
           }
           
           .footer {
             border-top: 2px solid rgba(255,255,255,0.2);
-            padding-top: 25px;
-            margin-top: 25px;
+            padding-top: 20px;
+            margin-top: 20px;
           }
           
           .footer-content {
             display: flex;
             justify-content: space-between;
             align-items: end;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
           }
           
           .validation-section {
@@ -200,10 +199,10 @@ export const generateCertificateHTML = (
           }
           
           .validation-label {
-            font-size: 12px;
+            font-size: 11px;
             color: #cccccc;
             margin: 0;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             font-weight: 500;
           }
           
@@ -211,11 +210,11 @@ export const generateCertificateHTML = (
             font-family: monospace;
             color: #ffffff;
             margin: 0;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 700;
             letter-spacing: 2px;
             background: rgba(255,255,255,0.1);
-            padding: 3px 10px;
+            padding: 2px 8px;
             border-radius: 6px;
           }
           
@@ -228,25 +227,25 @@ export const generateCertificateHTML = (
           
           .signature-name {
             font-family: 'Dancing Script', cursive;
-            font-size: 32px;
+            font-size: 28px;
             margin: 0;
             color: #ffffff;
             transform: rotate(-1deg);
             text-shadow: 2px 2px 4px rgba(255,255,255,0.2);
             font-weight: 700;
             line-height: 1;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
           }
           
           .signature-line {
-            width: 180px;
+            width: 160px;
             height: 2px;
             background: rgba(255,255,255,0.3);
-            margin-bottom: 10px;
+            margin-bottom: 8px;
           }
           
           .signature-title {
-            font-size: 12px;
+            font-size: 11px;
             color: #cccccc;
             margin: 0;
             font-weight: 500;
@@ -254,11 +253,11 @@ export const generateCertificateHTML = (
           
           .footer-brand {
             text-align: center;
-            padding-top: 12px;
+            padding-top: 10px;
           }
           
           .footer-brand-text {
-            font-size: 12px;
+            font-size: 11px;
             color: #aaaaaa;
             margin: 0;
           }
@@ -266,7 +265,7 @@ export const generateCertificateHTML = (
           .brand-name {
             color: #ffffff;
             font-weight: 700;
-            font-size: 14px;
+            font-size: 12px;
           }
         </style>
       </head>

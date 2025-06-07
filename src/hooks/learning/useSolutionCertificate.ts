@@ -198,9 +198,7 @@ export const useSolutionCertificate = (solutionId: string) => {
       toast.loading('Gerando certificado PDF...', { id: 'download-loading' });
       
       console.log('Iniciando download do certificado...');
-      console.log('URL da logo:', CERTIFICATE_LOGO_URL);
       
-      // Importar bibliotecas dinamicamente
       const [html2canvas, jsPDF] = await Promise.all([
         import('html2canvas').then(module => module.default),
         import('jspdf').then(module => module.default)
@@ -208,12 +206,9 @@ export const useSolutionCertificate = (solutionId: string) => {
 
       console.log('Bibliotecas carregadas para download');
 
-      // Converter logo para base64 - sem fallback
-      console.log('Convertendo logo para base64...');
       const logoBase64 = await convertImageToBase64(CERTIFICATE_LOGO_URL);
-      console.log('Logo convertida com sucesso, tamanho:', logoBase64.length);
+      console.log('Logo convertida com sucesso');
 
-      // Usar a data de emissão em vez da data de implementação
       const issuedDate = certificate.issued_at || certificate.implementation_date;
       const formattedDate = new Date(issuedDate).toLocaleDateString('pt-BR', {
         day: 'numeric',
@@ -221,10 +216,8 @@ export const useSolutionCertificate = (solutionId: string) => {
         year: 'numeric'
       });
 
-      // Gerar HTML do certificado
       const htmlContent = generateCertificateHTML(certificate, userProfile, formattedDate, logoBase64);
 
-      // Criar elemento temporário
       const tempDiv = document.createElement('div');
       tempDiv.style.position = 'absolute';
       tempDiv.style.left = '-9999px';
@@ -234,26 +227,22 @@ export const useSolutionCertificate = (solutionId: string) => {
       document.body.appendChild(tempDiv);
 
       console.log('Elemento temporário criado para download, aguardando fontes...');
-      
-      // Aguardar fontes carregarem
-      await new Promise(resolve => setTimeout(resolve, 4000));
+      await new Promise(resolve => setTimeout(resolve, 3000));
 
       console.log('Capturando elemento como imagem para download...');
       
-      // Capturar como imagem com dimensões A4 landscape
       const canvas = await html2canvas(tempDiv.querySelector('.certificate-container') as HTMLElement, {
-        scale: 2,
+        scale: 1,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#000000',
-        logging: true,
+        logging: false,
         width: 1123,
         height: 794
       });
 
       console.log('Canvas gerado para download:', canvas.width, 'x', canvas.height);
 
-      // Gerar PDF com dimensões corretas
       const pdf = new jsPDF({
         orientation: 'landscape',
         unit: 'mm',
@@ -261,14 +250,10 @@ export const useSolutionCertificate = (solutionId: string) => {
       });
 
       const imgData = canvas.toDataURL('image/png', 1.0);
-      
-      // Usar toda a área do A4 landscape (297x210mm)
       pdf.addImage(imgData, 'PNG', 0, 0, 297, 210);
       
-      // Fazer download
       pdf.save(`certificado-${certificate.solutions.title.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`);
 
-      // Remover elemento temporário
       document.body.removeChild(tempDiv);
       
       toast.success('Certificado baixado com sucesso!', { id: 'download-loading' });
