@@ -47,6 +47,11 @@ const Solutions: React.FC = () => {
     setActiveCategory(category);
   }, []);
 
+  // Função wrapper para o onChange do SearchInput
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  }, [setSearchQuery]);
+
   if (!canViewSolutions) {
     return (
       <>
@@ -93,7 +98,7 @@ const Solutions: React.FC = () => {
             <div className="w-full md:w-auto md:min-w-[300px]">
               <SearchInput
                 value={searchQuery}
-                onChange={setSearchQuery}
+                onChange={handleSearchChange}
                 placeholder="Buscar soluções de IA..."
                 className="w-full"
               />
