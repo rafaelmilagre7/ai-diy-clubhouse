@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CERTIFICATE_LOGO_URL } from "@/lib/supabase/uploadCertificateLogo";
 import { toast } from "sonner";
+import { convertImageToBase64, generateCertificateHTML } from "@/utils/certificateUtils";
 
 interface CertificateViewerProps {
   certificate: {
@@ -25,7 +26,6 @@ interface CertificateViewerProps {
   };
   onDownload: () => void;
   onShare: () => void;
-  onValidate: () => void;
 }
 
 export const CertificateViewer = ({
@@ -33,7 +33,6 @@ export const CertificateViewer = ({
   userProfile,
   onDownload,
   onShare,
-  onValidate,
 }: CertificateViewerProps) => {
   // Usar a data de emissão (issued_at) em vez da data de implementação
   const issuedDate = certificate.issued_at || certificate.implementation_date;
@@ -44,97 +43,54 @@ export const CertificateViewer = ({
   // Função para gerar PDF e abrir em nova guia
   const handleOpenPDFInNewTab = async () => {
     try {
-      toast.loading('Preparando certificado...');
+      toast.loading('Preparando certificado...', { id: 'pdf-loading' });
+      
+      console.log('Iniciando geração do PDF...');
       
       // Importar bibliotecas dinamicamente
-      const html2canvas = (await import('html2canvas')).default;
-      const jsPDF = (await import('jspdf')).default;
+      const [html2canvas, jsPDF] = await Promise.all([
+        import('html2canvas').then(module => module.default),
+        import('jspdf').then(module => module.default)
+      ]);
 
-      // Criar elemento temporário com o certificado
+      console.log('Bibliotecas carregadas');
+
+      // Converter logo para base64
+      console.log('Convertendo logo para base64...');
+      const logoBase64 = await convertImageToBase64(CERTIFICATE_LOGO_URL);
+      console.log('Logo convertida com sucesso');
+
+      // Gerar HTML do certificado
+      const htmlContent = generateCertificateHTML(certificate, userProfile, formattedDate, logoBase64);
+
+      // Criar elemento temporário
       const tempDiv = document.createElement('div');
       tempDiv.style.position = 'absolute';
       tempDiv.style.left = '-9999px';
-      tempDiv.style.width = '900px';
-      tempDiv.style.height = '650px';
-      tempDiv.style.background = 'linear-gradient(135deg, #0ABAB5 0%, #00EAD9 50%, #6DF2E9 100%)';
-      tempDiv.style.color = 'white';
-      tempDiv.style.padding = '50px';
-      tempDiv.style.textAlign = 'center';
-      tempDiv.style.fontFamily = 'Arial, sans-serif';
-      tempDiv.style.position = 'relative';
-
-      tempDiv.innerHTML = `
-        <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Great+Vibes:wght@400&display=swap" rel="stylesheet">
-        <div style="text-align: center; line-height: 1.6; position: relative; height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
-          <!-- Logo no topo - sem borda -->
-          <div style="display: flex; justify-content: center; margin-bottom: 30px;">
-            <div style="width: 180px; height: 90px;">
-              <img src="${CERTIFICATE_LOGO_URL}" alt="Viver de IA" style="width: 100%; height: 100%; object-fit: contain;" crossorigin="anonymous" />
-            </div>
-          </div>
-          
-          <!-- Conteúdo principal -->
-          <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
-            <h1 style="font-size: 56px; margin-bottom: 15px; font-weight: bold; color: white; text-shadow: 0 4px 8px rgba(0,0,0,0.2); letter-spacing: 2px;">CERTIFICADO</h1>
-            <p style="font-size: 24px; margin-bottom: 40px; color: rgba(255,255,255,0.95); font-weight: 600;">de Implementação de Solução</p>
-            
-            <p style="font-size: 20px; margin-bottom: 25px; color: rgba(255,255,255,0.9); font-weight: 500;">Certificamos que</p>
-            
-            <div style="background: rgba(255,255,255,0.2); padding: 25px; border-radius: 16px; margin: 25px 0; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
-              <h2 style="font-size: 32px; font-weight: bold; margin: 0; color: white; letter-spacing: 1px;">${userProfile.name}</h2>
-            </div>
-            
-            <p style="font-size: 20px; margin: 25px 0; color: rgba(255,255,255,0.9); font-weight: 500;">concluiu com sucesso a implementação da solução</p>
-            
-            <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.25); margin: 25px 0; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
-              <h3 style="font-size: 26px; margin: 0; margin-bottom: 10px; color: white; font-weight: 600;">${certificate.solutions.title}</h3>
-              <p style="color: rgba(255,255,255,0.85); margin: 0; font-size: 18px;">Categoria: ${certificate.solutions.category}</p>
-            </div>
-            
-            <p style="font-size: 20px; margin: 25px 0; color: rgba(255,255,255,0.9); font-weight: 500;">em <span style="font-weight: 700; font-size: 24px;">${formattedDate}</span></p>
-          </div>
-          
-          <!-- Footer com código de validação e assinatura -->
-          <div style="border-top: 2px solid rgba(255,255,255,0.3); padding-top: 30px; margin-top: 30px;">
-            <div style="display: flex; justify-content: space-between; align-items: end; margin-bottom: 20px;">
-              <!-- Código de validação -->
-              <div style="text-align: left;">
-                <p style="font-size: 14px; color: rgba(255,255,255,0.8); margin: 0; margin-bottom: 8px; font-weight: 500;">Código de Validação:</p>
-                <p style="font-family: monospace; color: white; margin: 0; font-size: 16px; font-weight: 700; letter-spacing: 2px; background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 6px;">${certificate.validation_code}</p>
-              </div>
-              
-              <!-- Assinatura -->
-              <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end;">
-                <div style="position: relative; margin-bottom: 12px;">
-                  <p style="font-family: 'Dancing Script', cursive; font-size: 38px; margin: 0; color: white; transform: rotate(-1deg); text-shadow: 2px 2px 4px rgba(0,0,0,0.4); font-weight: 700; line-height: 1;">Rafael G Milagre</p>
-                </div>
-                <div style="width: 200px; height: 2px; background: rgba(255,255,255,0.4); margin-bottom: 12px;"></div>
-                <p style="font-size: 14px; color: rgba(255,255,255,0.8); margin: 0; font-weight: 500;">Founder do Viver de IA</p>
-              </div>
-            </div>
-            
-            <div style="text-align: center; padding-top: 15px;">
-              <p style="font-size: 14px; color: rgba(255,255,255,0.7); margin: 0;">
-                Emitido por <span style="color: white; font-weight: 700; font-size: 16px;">Viver de IA</span>
-              </p>
-            </div>
-          </div>
-        </div>
-      `;
-
+      tempDiv.style.top = '0';
+      tempDiv.innerHTML = htmlContent;
+      
       document.body.appendChild(tempDiv);
 
-      // Aguardar um pouco para garantir que as fontes carregaram
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('Elemento temporário criado, aguardando fontes...');
+      
+      // Aguardar fontes carregarem (tempo aumentado)
+      await new Promise(resolve => setTimeout(resolve, 4000));
 
+      console.log('Capturando elemento como imagem...');
+      
       // Capturar como imagem
-      const canvas = await html2canvas(tempDiv, {
+      const canvas = await html2canvas(tempDiv.querySelector('.certificate-container') as HTMLElement, {
         scale: 2,
         useCORS: true,
-        backgroundColor: null,
         allowTaint: true,
-        foreignObjectRendering: true
+        backgroundColor: null,
+        logging: true,
+        width: 900,
+        height: 650
       });
+
+      console.log('Canvas gerado:', canvas.width, 'x', canvas.height);
 
       // Gerar PDF
       const pdf = new jsPDF({
@@ -143,11 +99,13 @@ export const CertificateViewer = ({
         format: 'a4'
       });
 
-      const imgData = canvas.toDataURL('image/png');
-      const imgWidth = 297; // A4 landscape width
+      const imgData = canvas.toDataURL('image/png', 1.0);
+      const imgWidth = 297; // A4 landscape width in mm
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
       pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      
+      console.log('PDF gerado, criando blob...');
       
       // Criar blob URL e abrir em nova guia
       const pdfBlob = pdf.output('blob');
@@ -157,7 +115,7 @@ export const CertificateViewer = ({
       if (!newWindow) {
         toast.error('Pop-ups bloqueados. Permita pop-ups para abrir o certificado.');
       } else {
-        toast.success('Certificado aberto em nova guia!');
+        toast.success('Certificado aberto em nova guia!', { id: 'pdf-loading' });
       }
 
       // Remover elemento temporário
@@ -168,7 +126,7 @@ export const CertificateViewer = ({
       
     } catch (error) {
       console.error('Erro ao abrir certificado em nova guia:', error);
-      toast.error('Erro ao abrir certificado. Tente novamente.');
+      toast.error('Erro ao abrir certificado. Tente novamente.', { id: 'pdf-loading' });
     }
   };
 

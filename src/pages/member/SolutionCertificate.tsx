@@ -71,24 +71,29 @@ const SolutionCertificate = () => {
   };
 
   const handleShare = () => {
-    if (certificate) {
-      const shareUrl = `${window.location.origin}/certificado/validar/${certificate.validation_code}`;
-      if (navigator.share) {
-        navigator.share({
-          title: 'Meu Certificado de Implementação',
-          text: `Confira meu certificado de implementação da solução: ${solution.title}`,
-          url: shareUrl
+    const shareText = `🎉 Acabei de receber meu certificado de implementação da solução "${solution.title}" no Viver de IA!\n\nCódigo de validação: ${certificate?.validation_code}\n\n#ViverDeIA #Certificado #IA`;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: 'Meu Certificado de Implementação',
+        text: shareText,
+        url: window.location.href
+      }).then(() => {
+        console.log('Compartilhamento realizado com sucesso');
+      }).catch((error) => {
+        console.error('Erro no compartilhamento nativo:', error);
+        // Fallback para clipboard
+        navigator.clipboard.writeText(shareText).then(() => {
+          console.log('Texto copiado para clipboard como fallback');
         });
-      } else {
-        navigator.clipboard.writeText(shareUrl);
-        alert('Link do certificado copiado para a área de transferência!');
-      }
-    }
-  };
-
-  const handleValidate = () => {
-    if (certificate) {
-      window.open(`/certificado/validar/${certificate.validation_code}`, '_blank');
+      });
+    } else {
+      // Fallback para navegadores que não suportam Web Share API
+      navigator.clipboard.writeText(shareText).then(() => {
+        console.log('Texto copiado para clipboard');
+      }).catch((error) => {
+        console.error('Erro ao copiar para clipboard:', error);
+      });
     }
   };
 
@@ -125,7 +130,6 @@ const SolutionCertificate = () => {
           userProfile={profile}
           onDownload={handleDownload}
           onShare={handleShare}
-          onValidate={handleValidate}
         />
       ) : isEligible ? (
         /* Se é elegível mas não tem certificado, mostrar botão para gerar */

@@ -1,0 +1,302 @@
+
+// Utilitário para converter imagem para base64
+export const convertImageToBase64 = async (imageUrl: string): Promise<string> => {
+  try {
+    const response = await fetch(imageUrl);
+    const blob = await response.blob();
+    
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error('Erro ao converter imagem para base64:', error);
+    // Fallback para imagem local
+    try {
+      const fallbackResponse = await fetch('/lovable-uploads/a408c993-07fa-49f2-bee6-c66d0614298b.png');
+      const fallbackBlob = await fallbackResponse.blob();
+      
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(fallbackBlob);
+      });
+    } catch (fallbackError) {
+      console.error('Erro ao carregar imagem fallback:', fallbackError);
+      throw fallbackError;
+    }
+  }
+};
+
+// Função para gerar HTML do certificado com estilos sincronizados
+export const generateCertificateHTML = (
+  certificate: any,
+  userProfile: any,
+  formattedDate: string,
+  logoBase64: string
+) => {
+  return `
+    <html>
+      <head>
+        <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
+        <style>
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          
+          body {
+            font-family: Arial, sans-serif;
+          }
+          
+          .certificate-container {
+            width: 900px;
+            height: 650px;
+            background: linear-gradient(135deg, #0ABAB5 0%, #00EAD9 50%, #6DF2E9 100%);
+            color: white;
+            padding: 50px;
+            text-align: center;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+          }
+          
+          .logo-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+          }
+          
+          .logo {
+            width: 180px;
+            height: 90px;
+            object-fit: contain;
+          }
+          
+          .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+          }
+          
+          .certificate-title {
+            font-size: 56px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            letter-spacing: 2px;
+          }
+          
+          .subtitle {
+            font-size: 24px;
+            margin-bottom: 40px;
+            color: rgba(255,255,255,0.95);
+            font-weight: 600;
+          }
+          
+          .certification-text {
+            font-size: 20px;
+            margin-bottom: 25px;
+            color: rgba(255,255,255,0.9);
+            font-weight: 500;
+          }
+          
+          .user-name-box {
+            background: rgba(255,255,255,0.2);
+            padding: 25px;
+            border-radius: 16px;
+            margin: 25px 0;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+          }
+          
+          .user-name {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 0;
+            color: white;
+            letter-spacing: 1px;
+          }
+          
+          .solution-box {
+            background: rgba(255,255,255,0.15);
+            padding: 25px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.25);
+            margin: 25px 0;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+          }
+          
+          .solution-title {
+            font-size: 26px;
+            margin: 0;
+            margin-bottom: 10px;
+            color: white;
+            font-weight: 600;
+          }
+          
+          .solution-category {
+            color: rgba(255,255,255,0.85);
+            margin: 0;
+            font-size: 18px;
+          }
+          
+          .date-text {
+            font-size: 20px;
+            margin: 25px 0;
+            color: rgba(255,255,255,0.9);
+            font-weight: 500;
+          }
+          
+          .date-highlight {
+            font-weight: 700;
+            font-size: 24px;
+          }
+          
+          .footer {
+            border-top: 2px solid rgba(255,255,255,0.3);
+            padding-top: 30px;
+            margin-top: 30px;
+          }
+          
+          .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
+            margin-bottom: 20px;
+          }
+          
+          .validation-section {
+            text-align: left;
+          }
+          
+          .validation-label {
+            font-size: 14px;
+            color: rgba(255,255,255,0.8);
+            margin: 0;
+            margin-bottom: 8px;
+            font-weight: 500;
+          }
+          
+          .validation-code {
+            font-family: monospace;
+            color: white;
+            margin: 0;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            background: rgba(255,255,255,0.1);
+            padding: 4px 12px;
+            border-radius: 6px;
+          }
+          
+          .signature-section {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+          }
+          
+          .signature-name {
+            font-family: 'Dancing Script', cursive;
+            font-size: 38px;
+            margin: 0;
+            color: white;
+            transform: rotate(-1deg);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 12px;
+          }
+          
+          .signature-line {
+            width: 200px;
+            height: 2px;
+            background: rgba(255,255,255,0.4);
+            margin-bottom: 12px;
+          }
+          
+          .signature-title {
+            font-size: 14px;
+            color: rgba(255,255,255,0.8);
+            margin: 0;
+            font-weight: 500;
+          }
+          
+          .footer-brand {
+            text-align: center;
+            padding-top: 15px;
+          }
+          
+          .footer-brand-text {
+            font-size: 14px;
+            color: rgba(255,255,255,0.7);
+            margin: 0;
+          }
+          
+          .brand-name {
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="certificate-container">
+          <div class="logo-container">
+            <img src="${logoBase64}" alt="Viver de IA" class="logo" />
+          </div>
+          
+          <div class="main-content">
+            <h1 class="certificate-title">CERTIFICADO</h1>
+            <p class="subtitle">de Implementação de Solução</p>
+            
+            <p class="certification-text">Certificamos que</p>
+            
+            <div class="user-name-box">
+              <h2 class="user-name">${userProfile.name}</h2>
+            </div>
+            
+            <p class="certification-text">concluiu com sucesso a implementação da solução</p>
+            
+            <div class="solution-box">
+              <h3 class="solution-title">${certificate.solutions.title}</h3>
+              <p class="solution-category">Categoria: ${certificate.solutions.category}</p>
+            </div>
+            
+            <p class="date-text">em <span class="date-highlight">${formattedDate}</span></p>
+          </div>
+          
+          <div class="footer">
+            <div class="footer-content">
+              <div class="validation-section">
+                <p class="validation-label">Código de Validação:</p>
+                <p class="validation-code">${certificate.validation_code}</p>
+              </div>
+              
+              <div class="signature-section">
+                <div class="signature-name">Rafael G Milagre</div>
+                <div class="signature-line"></div>
+                <p class="signature-title">Founder do Viver de IA</p>
+              </div>
+            </div>
+            
+            <div class="footer-brand">
+              <p class="footer-brand-text">
+                Emitido por <span class="brand-name">Viver de IA</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+};
