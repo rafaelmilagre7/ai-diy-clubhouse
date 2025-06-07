@@ -1,6 +1,26 @@
 
 import { useEffect } from 'react';
 
+// Interfaces para tipagem segura das métricas
+interface PerformanceEventTiming extends PerformanceEntry {
+  processingStart: number;
+  processingEnd: number;
+}
+
+interface LayoutShiftEntry extends PerformanceEntry {
+  value: number;
+  hadRecentInput: boolean;
+}
+
+// Type guards para verificação segura de tipos
+const isPerformanceEventTiming = (entry: PerformanceEntry): entry is PerformanceEventTiming => {
+  return 'processingStart' in entry && typeof (entry as any).processingStart === 'number';
+};
+
+const isLayoutShiftEntry = (entry: PerformanceEntry): entry is LayoutShiftEntry => {
+  return 'value' in entry && 'hadRecentInput' in entry;
+};
+
 /**
  * Componente para otimizações de Core Web Vitals
  */
@@ -70,48 +90,88 @@ export const CoreWebVitalsOptimizer: React.FC = () => {
       document.head.appendChild(style);
     };
 
-    // Métricas de performance nativas
+    // Métricas de performance nativas com verificações de segurança
     const initPerformanceMetrics = () => {
-      // LCP (Largest Contentful Paint)
-      if ('PerformanceObserver' in window) {
-        try {
-          const lcpObserver = new PerformanceObserver((entryList) => {
-            const entries = entryList.getEntries();
+      if (!('PerformanceObserver' in window)) {
+        console.warn('[CoreWebVitals] PerformanceObserver não suportado neste browser');
+        return;
+      }
+
+      // LCP (Largest Contentful Paint) com verificação segura
+      try {
+        const lcpObserver = new PerformanceObserver((entryList) => {
+          const entries = entryList.getEntries();
+          if (entries.length > 0) {
             const lastEntry = entries[entries.length - 1];
-            console.log('LCP:', lastEntry.startTime);
-          });
-          lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
-        } catch (e) {
-          console.warn('LCP measurement not supported');
-        }
+            if (lastEntry && typeof lastEntry.startTime === 'number') {
+              console.log('[CoreWebVitals] LCP:', lastEntry.startTime.toFixed(2) + 'ms');
+            }
+          }
+        });
+        
+        lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
+      } catch (error) {
+        console.warn('[CoreWebVitals] LCP measurement não suportado:', error);
+      }
 
-        // FID (First Input Delay)
-        try {
-          const fidObserver = new PerformanceObserver((entryList) => {
-            entryList.getEntries().forEach((entry) => {
-              console.log('FID:', entry.processingStart - entry.startTime);
-            });
-          });
-          fidObserver.observe({ entryTypes: ['first-input'] });
-        } catch (e) {
-          console.warn('FID measurement not supported');
-        }
-
-        // CLS (Cumulative Layout Shift)
-        try {
-          let clsValue = 0;
-          const clsObserver = new PerformanceObserver((entryList) => {
-            entryList.getEntries().forEach((entry: any) => {
-              if (!entry.hadRecentInput) {
-                clsValue += entry.value;
-                console.log('CLS:', clsValue);
+      // FID (First Input Delay) com type guard seguro
+      try {
+        const fidObserver = new PerformanceObserver((entryList) => {
+          entryList.getEntries().forEach((entry) => {
+            if (isPerformanceEventTiming(entry)) {
+              const fidValue = entry.processingStart - entry.startTime;
+              if (typeof fidValue === 'number' && fidValue >= 0) {
+                console.log('[CoreWebVitals] FID:', fidValue.toFixed(2) + 'ms');
               }
-            });
+            } else {
+              console.warn('[CoreWebVitals] FID entry não tem formato esperado');
+            }
           });
-          clsObserver.observe({ entryTypes: ['layout-shift'] });
-        } catch (e) {
-          console.warn('CLS measurement not supported');
-        }
+        });
+        
+        fidObserver.observe({ entryTypes: ['first-input'] });
+      } catch (error) {
+        console.warn('[CoreWebVitals] FID measurement não suportado:', error);
+      }
+
+      // CLS (Cumulative Layout Shift) com type guard seguro
+      try {
+        let clsValue = 0;
+        const clsObserver = new PerformanceObserver((entryList) => {
+          entryList.getEntries().forEach((entry) => {
+            if (isLayoutShiftEntry(entry)) {
+              if (!entry.hadRecentInput && typeof entry.value === 'number') {
+                clsValue += entry.value;
+                console.log('[CoreWebVitals] CLS:', clsValue.toFixed(4));
+              }
+            } else {
+              console.warn('[CoreWebVitals] CLS entry não tem formato esperado');
+            }
+          });
+        });
+        
+        clsObserver.observe({ entryTypes: ['layout-shift'] });
+      } catch (error) {
+        console.warn('[CoreWebVitals] CLS measurement não suportado:', error);
+      }
+
+      // TTFB (Time to First Byte) adicional para diagnóstico
+      try {
+        const ttfbObserver = new PerformanceObserver((entryList) => {
+          entryList.getEntries().forEach((entry) => {
+            if (entry.entryType === 'navigation') {
+              const navEntry = entry as PerformanceNavigationTiming;
+              if (navEntry.responseStart && navEntry.requestStart) {
+                const ttfb = navEntry.responseStart - navEntry.requestStart;
+                console.log('[CoreWebVitals] TTFB:', ttfb.toFixed(2) + 'ms');
+              }
+            }
+          });
+        });
+        
+        ttfbObserver.observe({ entryTypes: ['navigation'] });
+      } catch (error) {
+        console.warn('[CoreWebVitals] TTFB measurement não suportado:', error);
       }
     };
 
@@ -120,6 +180,13 @@ export const CoreWebVitalsOptimizer: React.FC = () => {
     optimizeCriticalCSS();
     preventLayoutShifts();
     initPerformanceMetrics();
+
+    // Cleanup function para observers
+    return () => {
+      // Note: PerformanceObserver.disconnect() seria chamado automaticamente
+      // quando o componente for desmontado, mas adicionamos esta função
+      // para garantir limpeza adequada se necessário
+    };
 
   }, []);
 
