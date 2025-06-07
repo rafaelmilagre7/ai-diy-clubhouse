@@ -3,20 +3,26 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
-import { useInviteEmailService } from './useInviteEmailService';
+import { useInviteChannelService } from './useInviteChannelService';
 
 export function useInviteCreate() {
   const { user } = useAuth();
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState<Error | null>(null);
   const { 
-    sendInviteEmail, 
     getInviteLink, 
-    pendingEmails, 
-    retryAllPendingEmails 
-  } = useInviteEmailService();
+    sendHybridInvite,
+    sendingChannels
+  } = useInviteChannelService();
 
-  const createInvite = useCallback(async (email: string, roleId: string, notes?: string, expiresIn: string = '7 days') => {
+  const createInvite = useCallback(async (
+    email: string, 
+    roleId: string, 
+    notes?: string, 
+    expiresIn: string = '7 days',
+    phone?: string,
+    channelPreference: 'email' | 'whatsapp' | 'both' = 'email'
+  ) => {
     if (!user) {
       toast.error('Usuário não autenticado');
       return null;
@@ -26,7 +32,7 @@ export function useInviteCreate() {
       setIsCreating(true);
       setCreateError(null);
       
-      console.log("🚀 Iniciando criação de convite para:", email);
+      console.log("🚀 Iniciando criação de convite híbrido:", { email, phone, channelPreference });
       
       // Validações básicas
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -38,7 +44,20 @@ export function useInviteCreate() {
         throw new Error("Papel não selecionado");
       }
 
-      // ===== NOVA VERIFICAÇÃO INTELIGENTE =====
+      // Validar canal WhatsApp se necessário
+      if ((channelPreference === 'whatsapp' || channelPreference === 'both') && !phone) {
+        throw new Error("Telefone é obrigatório para envio via WhatsApp");
+      }
+
+      // Validar formato do telefone brasileiro
+      if (phone) {
+        const cleanPhone = phone.replace(/\D/g, '');
+        if (cleanPhone.length < 10 || cleanPhone.length > 13) {
+          throw new Error("Formato de telefone inválido");
+        }
+      }
+
+      // ===== VERIFICAÇÃO INTELIGENTE =====
       console.log("🔍 Verificando se email pode receber novo convite...");
       
       // Verificar se existe usuário ativo no sistema
@@ -82,12 +101,14 @@ export function useInviteCreate() {
 
       console.log("✅ Email limpo, prosseguindo com criação do convite...");
       
-      // Usar a função RPC create_invite
-      const { data, error } = await supabase.rpc('create_invite', {
+      // Usar a função RPC create_invite (atualizada para suportar telefone)
+      const { data, error } = await supabase.rpc('create_invite_hybrid', {
         p_email: email,
+        p_phone: phone || null,
         p_role_id: roleId,
         p_expires_in: expiresIn,
-        p_notes: notes
+        p_notes: notes,
+        p_channel_preference: channelPreference
       });
       
       if (error) {
@@ -131,30 +152,33 @@ export function useInviteCreate() {
         throw new Error("Erro ao gerar link do convite");
       }
       
-      console.log("📧 Enviando email (sistema profissional)...");
+      console.log("📨 Enviando via sistema híbrido...");
       
-      // Enviar email com sistema aprimorado
-      const sendResult = await sendInviteEmail({
+      // Enviar via sistema híbrido
+      const sendResult = await sendHybridInvite({
         email,
+        phone,
         inviteUrl,
         roleName,
         expiresAt: data.expires_at,
         senderName: user.user_metadata?.name || user.email,
         notes,
         inviteId: data.invite_id,
-        forceResend: true // Forçar envio para convites novos após limpeza
+        channelPreference
       });
       
-      console.log("📨 Resultado do envio:", sendResult);
+      console.log("📨 Resultado do envio híbrido:", sendResult);
       
       // Feedback baseado no resultado
       if (sendResult.success) {
+        const channelText = channelPreference === 'both' ? 'email e WhatsApp' : 
+                           channelPreference === 'whatsapp' ? 'WhatsApp' : 'email';
         toast.success('🎉 Convite criado e enviado!', {
-          description: `${sendResult.message} para ${email}. Sistema profissional ativo com alta deliverabilidade.`,
+          description: `${sendResult.message} para ${email}${phone ? ` (${phone})` : ''}. Canal: ${channelText}.`,
           duration: 6000
         });
       } else {
-        toast.warning('✅ Convite criado com sucesso', {
+        toast.warning('✅ Convite criado com aviso', {
           description: `O convite foi salvo no sistema para ${email}. ${sendResult.error || 'Tente reenviar se necessário.'}`,
           duration: 8000
         });
@@ -162,8 +186,9 @@ export function useInviteCreate() {
       
       return {
         ...data,
+        channelUsed: sendResult.channel,
         emailStatus: sendResult.success ? 'sent' : 'pending',
-        emailError: sendResult.success ? null : sendResult.error
+        sendError: sendResult.success ? null : sendResult.error
       };
       
     } catch (err: any) {
@@ -173,6 +198,10 @@ export function useInviteCreate() {
       if (err.message?.includes('Formato de email inválido')) {
         toast.error('📧 Email inválido', {
           description: 'Verifique o formato do email'
+        });
+      } else if (err.message?.includes('Formato de telefone inválido')) {
+        toast.error('📱 Telefone inválido', {
+          description: 'Verifique o formato do telefone'
         });
       } else if (err.message?.includes('já está registrado')) {
         // Erro já tratado acima
@@ -187,13 +216,12 @@ export function useInviteCreate() {
     } finally {
       setIsCreating(false);
     }
-  }, [user, sendInviteEmail, getInviteLink, retryAllPendingEmails]);
+  }, [user, getInviteLink, sendHybridInvite]);
 
   return {
     isCreating,
     createInvite,
-    pendingEmails,
-    createError,
-    retryAllPendingEmails
+    sendingChannels,
+    createError
   };
 }

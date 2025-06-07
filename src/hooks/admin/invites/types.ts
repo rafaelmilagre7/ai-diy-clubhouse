@@ -2,6 +2,7 @@
 export interface Invite {
   id: string;
   email: string;
+  phone?: string;
   role_id: string;
   token: string;
   expires_at: string;
@@ -9,6 +10,9 @@ export interface Invite {
   created_by: string;
   created_at: string;
   notes: string | null;
+  channel_preference?: 'email' | 'whatsapp' | 'both';
+  email_provider?: string;
+  email_id?: string;
   role?: {
     name: string;
   };
@@ -23,9 +27,11 @@ export interface SendInviteResponse {
   message: string;
   error?: string;
   emailId?: string;
+  whatsappId?: string;
   strategy?: string;
   method?: string;
   suggestion?: string;
+  channel?: 'email' | 'whatsapp' | 'both';
 }
 
 export interface CreateInviteResponse {
@@ -34,4 +40,15 @@ export interface CreateInviteResponse {
   expires_at: string;
   status: 'success' | 'error';
   message?: string;
+  channel_used?: 'email' | 'whatsapp' | 'both';
+}
+
+export interface WhatsAppInviteData {
+  phone: string;
+  inviteUrl: string;
+  roleName: string;
+  expiresAt: string;
+  senderName?: string;
+  notes?: string;
+  inviteId?: string;
 }
