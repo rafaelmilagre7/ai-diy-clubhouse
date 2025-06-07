@@ -162,7 +162,7 @@ export const CertificateViewer = ({
                 <img 
                   src={CERTIFICATE_LOGO_URL}
                   alt="Viver de IA" 
-                  className="h-16 w-auto object-contain brightness-110"
+                  className="h-28 w-auto object-contain brightness-110"
                   crossOrigin="anonymous"
                 />
               </div>

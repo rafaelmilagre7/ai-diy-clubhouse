@@ -1,3 +1,4 @@
+
 // Utilitário para converter imagem para base64
 export const convertImageToBase64 = async (imageUrl: string): Promise<string> => {
   console.log('Iniciando conversão de imagem para base64:', imageUrl);
@@ -90,7 +91,7 @@ export const generateCertificateHTML = (
           }
           
           .logo {
-            height: 80px;
+            height: 130px;
             width: auto;
             object-fit: contain;
             filter: brightness(1.1);
