@@ -70,21 +70,56 @@ export const CoreWebVitalsOptimizer: React.FC = () => {
       document.head.appendChild(style);
     };
 
+    // Métricas de performance nativas
+    const initPerformanceMetrics = () => {
+      // LCP (Largest Contentful Paint)
+      if ('PerformanceObserver' in window) {
+        try {
+          const lcpObserver = new PerformanceObserver((entryList) => {
+            const entries = entryList.getEntries();
+            const lastEntry = entries[entries.length - 1];
+            console.log('LCP:', lastEntry.startTime);
+          });
+          lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
+        } catch (e) {
+          console.warn('LCP measurement not supported');
+        }
+
+        // FID (First Input Delay)
+        try {
+          const fidObserver = new PerformanceObserver((entryList) => {
+            entryList.getEntries().forEach((entry) => {
+              console.log('FID:', entry.processingStart - entry.startTime);
+            });
+          });
+          fidObserver.observe({ entryTypes: ['first-input'] });
+        } catch (e) {
+          console.warn('FID measurement not supported');
+        }
+
+        // CLS (Cumulative Layout Shift)
+        try {
+          let clsValue = 0;
+          const clsObserver = new PerformanceObserver((entryList) => {
+            entryList.getEntries().forEach((entry: any) => {
+              if (!entry.hadRecentInput) {
+                clsValue += entry.value;
+                console.log('CLS:', clsValue);
+              }
+            });
+          });
+          clsObserver.observe({ entryTypes: ['layout-shift'] });
+        } catch (e) {
+          console.warn('CLS measurement not supported');
+        }
+      }
+    };
+
     // Implementar otimizações
     preloadCriticalResources();
     optimizeCriticalCSS();
     preventLayoutShifts();
-
-    // Métricas de performance
-    if ('web-vitals' in window) {
-      import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
-        getCLS(console.log);
-        getFID(console.log);
-        getFCP(console.log);
-        getLCP(console.log);
-        getTTFB(console.log);
-      });
-    }
+    initPerformanceMetrics();
 
   }, []);
 
