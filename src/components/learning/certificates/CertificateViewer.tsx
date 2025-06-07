@@ -40,67 +40,33 @@ export const CertificateViewer = ({
     locale: ptBR
   });
 
-  const openInNewTab = () => {
-    const certificateWindow = window.open('', '_blank');
-    if (certificateWindow) {
-      certificateWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Certificado - ${certificate.solutions.title}</title>
-          <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
-          <style>
-            body { margin: 0; padding: 20px; background: #f0f0f0; font-family: Arial, sans-serif; }
-            .certificate-container { max-width: 1000px; margin: 0 auto; }
-          </style>
-        </head>
-        <body>
-          <div class="certificate-container">
-            ${document.querySelector('.certificate-content')?.outerHTML || ''}
-          </div>
-        </body>
-        </html>
-      `);
-      certificateWindow.document.close();
-    }
-  };
-
   return (
     <div className="space-y-6">
       {/* Carregar fonte Google Fonts */}
       <link 
-        href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Playfair+Display:wght@400;600;700&display=swap" 
+        href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Great+Vibes:wght@400&display=swap" 
         rel="stylesheet"
       />
       
-      {/* Certificado Visual com Design Elegante e Limpo */}
-      <Card className="overflow-hidden border-none shadow-2xl relative">
-        <CardContent className="p-0 relative">
-          <div className="certificate-content relative w-full h-[600px] bg-gradient-to-br from-viverblue via-viverblue-light to-viverblue-lighter overflow-hidden">
-            
-            {/* Elementos Decorativos Sutis */}
-            <div className="absolute inset-0">
-              {/* Gradiente overlay sutil */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/15"></div>
-              
-              {/* Ornamentos dos cantos */}
-              <div className="absolute top-6 left-6 w-16 h-16 border-l-2 border-t-2 border-white/20"></div>
-              <div className="absolute top-6 right-6 w-16 h-16 border-r-2 border-t-2 border-white/20"></div>
-              <div className="absolute bottom-6 left-6 w-16 h-16 border-l-2 border-b-2 border-white/20"></div>
-              <div className="absolute bottom-6 right-6 w-16 h-16 border-r-2 border-b-2 border-white/20"></div>
-              
-              {/* Círculos decorativos sutis */}
-              <div className="absolute top-8 left-1/4 w-24 h-24 border border-white/10 rounded-full"></div>
-              <div className="absolute bottom-12 right-1/4 w-20 h-20 border border-white/8 rounded-full"></div>
-            </div>
-
-            <div className="relative z-10 p-8 h-full flex flex-col">
-              {/* Logo */}
-              <div className="flex justify-center mb-6">
+      {/* Certificado Visual */}
+      <Card className="bg-gradient-to-br from-viverblue/20 via-viverblue-light/20 to-viverblue-lighter/20 border-viverblue/30 overflow-hidden">
+        <CardContent className="p-10 relative">
+          {/* Padrão decorativo de fundo */}
+          <div className="absolute inset-0 opacity-5">
+            <div className="w-full h-full" style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+              backgroundRepeat: 'repeat'
+            }}></div>
+          </div>
+          
+          <div className="relative z-10 text-center space-y-8">
+            {/* Logo no topo - tamanho aumentado */}
+            <div className="flex justify-center mb-8">
+              <div className="w-48 h-24 bg-white/15 rounded-2xl flex items-center justify-center p-3 backdrop-blur-sm border border-white/20 shadow-lg">
                 <img 
                   src={CERTIFICATE_LOGO_URL}
                   alt="Viver de IA" 
-                  className="w-64 h-32 object-contain filter drop-shadow-lg"
+                  className="w-full h-full object-contain"
                   crossOrigin="anonymous"
                   onLoad={() => console.log('Logo carregada com sucesso')}
                   onError={(e) => {
@@ -109,86 +75,73 @@ export const CertificateViewer = ({
                   }}
                 />
               </div>
+            </div>
 
-              {/* Header */}
-              <div className="text-center mb-6">
-                <div className="flex justify-center mb-3">
-                  <div className="w-24 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
-                </div>
-                
-                <h1 className="text-5xl font-bold text-white mb-2 drop-shadow-lg tracking-wider" style={{ fontFamily: "'Playfair Display', serif" }}>
-                  CERTIFICADO
-                </h1>
-                <p className="text-xl text-white/95 font-medium">de Implementação de Solução</p>
-                
-                <div className="flex justify-center mt-3">
-                  <div className="w-24 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
-                </div>
+            {/* Header */}
+            <div className="space-y-3">
+              <h1 className="text-5xl font-bold text-white mb-3 drop-shadow-lg tracking-wide">CERTIFICADO</h1>
+              <p className="text-2xl text-white/95 font-semibold">de Implementação de Solução</p>
+            </div>
+
+            {/* Conteúdo principal */}
+            <div className="space-y-6 py-6">
+              <p className="text-xl text-white/90 font-medium">
+                Certificamos que
+              </p>
+              
+              <div className="py-6 px-8 bg-white/20 rounded-xl backdrop-blur-sm border border-white/30 shadow-lg">
+                <h2 className="text-3xl font-bold text-white tracking-wide">{userProfile.name}</h2>
               </div>
-
-              {/* Conteúdo principal */}
-              <div className="flex-1 flex flex-col justify-center space-y-4">
-                <p className="text-lg text-white/90 font-medium text-center">
-                  Certificamos que
-                </p>
-                
-                <div className="py-6 px-8 bg-white/20 rounded-xl backdrop-blur-sm border border-white/30 shadow-lg text-center">
-                  <h2 className="text-3xl font-bold text-white tracking-wide" style={{ fontFamily: "'Playfair Display', serif" }}>
-                    {userProfile.name}
-                  </h2>
-                </div>
-                
-                <p className="text-lg text-white/90 font-medium text-center">
-                  concluiu com sucesso a implementação da solução
-                </p>
-                
-                <div className="py-6 px-8 bg-white/15 rounded-xl border border-white/25 shadow-lg text-center">
-                  <h3 className="text-2xl font-semibold text-white mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
-                    {certificate.solutions.title}
-                  </h3>
-                  <p className="text-white/85 text-base">Categoria: {certificate.solutions.category}</p>
-                </div>
-                
-                <p className="text-lg text-white/90 font-medium text-center">
-                  em <span className="font-bold text-white text-xl tracking-wide">{formattedDate}</span>
-                </p>
+              
+              <p className="text-xl text-white/90 font-medium">
+                concluiu com sucesso a implementação da solução
+              </p>
+              
+              <div className="py-6 px-8 bg-white/15 rounded-xl border border-white/25 shadow-lg">
+                <h3 className="text-2xl font-semibold text-white mb-2">{certificate.solutions.title}</h3>
+                <p className="text-white/85 text-lg">Categoria: {certificate.solutions.category}</p>
               </div>
+              
+              <p className="text-xl text-white/90 font-medium">
+                em <span className="font-bold text-white text-2xl">{formattedDate}</span>
+              </p>
+            </div>
 
-              {/* Footer */}
-              <div className="pt-6 mt-6 border-t border-white/20">
-                <div className="flex justify-between items-end">
-                  {/* Código de validação */}
-                  <div className="text-left">
-                    <p className="text-sm text-white/80 mb-2 font-medium">Código de Validação:</p>
-                    <div className="bg-white/15 backdrop-blur-sm px-3 py-2 rounded-lg border border-white/20">
-                      <p className="font-mono text-white text-base font-bold tracking-wider">{certificate.validation_code}</p>
-                    </div>
-                  </div>
-                  
-                  {/* Assinatura */}
-                  <div className="text-right">
-                    <div className="flex flex-col items-end">
+            {/* Footer com código de validação e assinatura */}
+            <div className="pt-8 border-t-2 border-white/30 space-y-6 mt-8">
+              <div className="flex justify-between items-end">
+                {/* Código de validação */}
+                <div className="text-left">
+                  <p className="text-sm text-white/80 mb-2 font-medium">Código de Validação:</p>
+                  <p className="font-mono text-white text-lg font-bold tracking-wider bg-white/10 px-3 py-1 rounded">{certificate.validation_code}</p>
+                </div>
+                
+                {/* Assinatura */}
+                <div className="text-right">
+                  <div className="relative flex flex-col items-end">
+                    <div className="relative mb-3">
                       <p 
-                        className="text-white text-4xl mb-3 filter drop-shadow-md"
+                        className="text-white text-4xl leading-none"
                         style={{ 
                           fontFamily: "'Dancing Script', cursive",
                           transform: 'rotate(-1deg)',
+                          textShadow: '2px 2px 4px rgba(0,0,0,0.4)',
                           fontWeight: '700'
                         }}
                       >
                         Rafael G Milagre
                       </p>
-                      <div className="w-48 h-0.5 bg-gradient-to-r from-white/20 via-white/60 to-white/20 mb-2"></div>
-                      <p className="text-sm text-white/80 font-medium">Founder do Viver de IA</p>
                     </div>
+                    <div className="w-52 h-0.5 bg-white/40 mb-3"></div>
+                    <p className="text-sm text-white/80 font-medium">Founder do Viver de IA</p>
                   </div>
                 </div>
-                
-                <div className="text-center pt-4 mt-4 border-t border-white/10">
-                  <p className="text-sm text-white/70">
-                    Emitido por <span className="text-white font-bold" style={{ fontFamily: "'Playfair Display', serif" }}>Viver de IA</span>
-                  </p>
-                </div>
+              </div>
+              
+              <div className="text-center pt-4">
+                <p className="text-sm text-white/70">
+                  Emitido por <span style={{ color: 'white', fontWeight: '700', fontSize: '16px' }}>Viver de IA</span>
+                </p>
               </div>
             </div>
           </div>
@@ -203,15 +156,6 @@ export const CertificateViewer = ({
         >
           <Download className="h-4 w-4 mr-2" />
           Baixar PDF
-        </Button>
-        
-        <Button
-          onClick={openInNewTab}
-          variant="outline"
-          className="border-viverblue/50 text-viverblue hover:bg-viverblue/10"
-        >
-          <ExternalLink className="h-4 w-4 mr-2" />
-          Abrir em Nova Guia
         </Button>
         
         <Button
