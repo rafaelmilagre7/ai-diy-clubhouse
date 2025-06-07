@@ -11,7 +11,11 @@ import { DifficultyBadge } from '@/components/dashboard/DifficultyBadge';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { ArrowLeft, Play, Clock, Users, Target, CheckCircle } from 'lucide-react';
 import { SEOHead } from "@/components/SEO/SEOHead";
-import { SolutionStructuredData } from "@/components/SEO/StructuredData";
+import { SolutionStructuredData, WebsiteStructuredData } from "@/components/SEO/StructuredData";
+import { SolutionAdvancedSchema, BreadcrumbSchema } from "@/components/SEO/AdvancedSchema";
+import { SEOAnalytics } from "@/components/SEO/SEOAnalytics";
+import { useAdvancedSEO } from "@/hooks/useAdvancedSEO";
+import { useInternalLinking } from "@/hooks/useInternalLinking";
 import { generateSolutionSEO } from "@/utils/seoConfig";
 
 const SolutionDetails: React.FC = () => {
@@ -39,6 +43,41 @@ const SolutionDetails: React.FC = () => {
   // Gerar SEO dinâmico baseado na solução
   const solutionSEO = solution ? generateSolutionSEO(solution) : null;
 
+  // Dados dinâmicos para SEO
+  const dynamicSEOData = {
+    implementationCount: 1500,
+    successRate: solution?.success_rate || 95,
+    estimatedTime: solution?.estimated_time || 30,
+    difficultyLevel: solution?.difficulty
+  };
+
+  // Tags dinâmicas baseadas na solução
+  const dynamicTags = solution ? [
+    solution.title.toLowerCase(),
+    `solução ${solution.category.toLowerCase()}`,
+    `implementação ${solution.difficulty}`,
+    `${solution.category.toLowerCase()} IA`,
+    'automação empresarial',
+    'transformação digital'
+  ] : [];
+
+  // Hook de SEO avançado
+  const { config } = useAdvancedSEO(solutionSEO, {
+    category: solution?.category,
+    difficulty: solution?.difficulty,
+    tags: dynamicTags,
+    dynamicData: dynamicSEOData,
+    enableAnalytics: true
+  });
+
+  // Sistema de linking interno
+  const { generateBreadcrumbs } = useInternalLinking(
+    solution ? { ...solution, type: 'solution' } : null,
+    [solution].filter(Boolean)
+  );
+
+  const breadcrumbs = generateBreadcrumbs(`/solution/${id}`);
+
   const handleStartImplementation = () => {
     if (!solution) return;
     
@@ -58,6 +97,11 @@ const SolutionDetails: React.FC = () => {
           description: "Carregando detalhes da solução de IA...",
           keywords: "solução IA, implementação IA"
         }} noindex />
+        <SEOAnalytics 
+          title="Carregando Solução"
+          category="loading"
+          userRole="member"
+        />
         <div className="min-h-screen flex items-center justify-center">
           <LoadingSpinner />
         </div>
@@ -73,6 +117,11 @@ const SolutionDetails: React.FC = () => {
           description: "A solução de IA que você procura não foi encontrada.",
           keywords: "erro, solução não encontrada"
         }} noindex />
+        <SEOAnalytics 
+          title="Solução não encontrada"
+          category="error"
+          userRole="member"
+        />
         <div className="container py-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4 text-white">Solução não encontrada</h1>
@@ -91,8 +140,17 @@ const SolutionDetails: React.FC = () => {
 
   return (
     <>
-      <SEOHead customSEO={solutionSEO} />
+      <SEOHead customSEO={config} />
+      <WebsiteStructuredData />
       <SolutionStructuredData solution={solution} />
+      <SolutionAdvancedSchema solution={solution} />
+      <BreadcrumbSchema items={breadcrumbs} />
+      <SEOAnalytics 
+        title={config?.title}
+        category={solution.category}
+        tags={dynamicTags}
+        userRole="member"
+      />
       
       <div className="min-h-screen bg-gradient-to-br from-[#0A0B14] to-[#1A1E2E] text-white">
         <div className="container mx-auto px-4 py-6">
@@ -158,7 +216,7 @@ const SolutionDetails: React.FC = () => {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {[
                       { icon: Clock, label: "Implementação", value: "2-4 semanas" },
-                      { icon: Users, label: "Implementações", value: "500+" },
+                      { icon: Users, label: "Implementações", value: `${dynamicSEOData.implementationCount}+` },
                       { icon: Target, label: "Taxa de Sucesso", value: `${solution.success_rate || 95}%` },
                       { icon: CheckCircle, label: "Nível", value: solution.difficulty === 'easy' ? 'Iniciante' : solution.difficulty === 'medium' ? 'Intermediário' : 'Avançado' }
                     ].map((stat, index) => (
@@ -279,7 +337,7 @@ const SolutionDetails: React.FC = () => {
                   Pronto para Transformar seu Negócio?
                 </h3>
                 <p className="text-gray-300 mb-6">
-                  Junte-se a mais de 1.000 empresários que já implementaram esta solução com sucesso.
+                  Junte-se a mais de {dynamicSEOData.implementationCount} empresários que já implementaram esta solução com sucesso.
                 </p>
                 <Button 
                   onClick={handleStartImplementation}
