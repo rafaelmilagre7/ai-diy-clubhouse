@@ -1,109 +1,202 @@
-
-import { NavLink } from "react-router-dom";
+import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   Users,
-  Wrench,
-  BookOpen,
-  BarChart3,
   Lightbulb,
-  CalendarDays,
-  UserCog,
+  Settings,
+  MessageSquare,
+  ChevronLeft,
+  BookOpen,
+  Calendar,
+  GraduationCap,
   Mail,
-  LineChart,
-  MessageCircle
+  User,
+  Gift
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Link, useLocation } from "react-router-dom";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { usePermissions } from "@/hooks/auth/usePermissions";
 
 interface AdminSidebarNavProps {
-  sidebarOpen?: boolean;
+  sidebarOpen: boolean;
 }
 
-const AdminSidebarNav = ({ sidebarOpen = true }: AdminSidebarNavProps) => {
-  const navItems = [
+export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
+  const location = useLocation();
+  const { hasPermission } = usePermissions();
+
+  const menuItems = [
     {
-      to: "/admin",
+      title: "Dashboard",
+      href: "/admin",
       icon: LayoutDashboard,
-      label: "Dashboard",
-      end: true
     },
     {
-      to: "/admin/users",
+      title: "Eventos",
+      href: "/admin/events",
+      icon: Calendar,
+    },
+    {
+      title: "Usuários",
+      href: "/admin/users",
       icon: Users,
-      label: "Usuários"
+      permission: "users.view"
     },
     {
-      to: "/admin/invites",
-      icon: Mail,
-      label: "Convites"
-    },
-    {
-      to: "/admin/whatsapp-debug",
-      icon: MessageCircle,
-      label: "Debug WhatsApp"
-    },
-    {
-      to: "/admin/tools",
-      icon: Wrench,
-      label: "Ferramentas"
-    },
-    {
-      to: "/admin/solutions",
-      icon: BookOpen,
-      label: "Soluções"
-    },
-    {
-      to: "/admin/analytics",
-      icon: BarChart3,
-      label: "Analytics"
-    },
-    {
-      to: "/admin/benefits",
-      icon: LineChart,
-      label: "Benefícios"
-    },
-    {
-      to: "/admin/suggestions",
+      title: "Soluções",
+      href: "/admin/solutions",
       icon: Lightbulb,
-      label: "Sugestões"
     },
     {
-      to: "/admin/events",
-      icon: CalendarDays,
-      label: "Eventos"
+      title: "Ferramentas",
+      href: "/admin/tools",
+      icon: Settings,
     },
     {
-      to: "/admin/roles",
-      icon: UserCog,
-      label: "Perfis"
-    }
+      title: "Benefícios",
+      href: "/admin/benefits",
+      icon: Gift,
+    },
+    {
+      title: "Sugestões",
+      href: "/admin/suggestions",
+      icon: MessageSquare,
+    },
+    {
+      title: "Analytics",
+      href: "/admin/analytics",
+      icon: LayoutDashboard,
+    },
   ];
 
-  return (
-    <nav className="flex flex-col space-y-1 p-2">
-      {navItems.map((item) => {
-        const Icon = item.icon;
-        return (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.end}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors",
-                isActive
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-              )
-            }
-          >
-            <Icon className="h-4 w-4 flex-shrink-0" />
-            {sidebarOpen && <span>{item.label}</span>}
-          </NavLink>
-        );
-      })}
-    </nav>
-  );
-};
+  const formacaoItems = [
+    {
+      title: "LMS Dashboard",
+      href: "/formacao",
+      icon: GraduationCap,
+    },
+    {
+      title: "Cursos",
+      href: "/formacao/cursos",
+      icon: BookOpen,
+    },
+    {
+      title: "Aulas",
+      href: "/formacao/aulas",
+      icon: BookOpen,
+    },
+  ];
 
-export default AdminSidebarNav;
+  const rbacItems = [
+    {
+      title: "Papéis",
+      href: "/admin/roles",
+      icon: Settings,
+      permission: "roles.view"
+    },
+    {
+      title: "Convites",
+      href: "/admin/invites",
+      icon: Mail,
+      permission: "users.invite"
+    },
+  ];
+
+  const isActive = (href: string) => {
+    return location.pathname === href || location.pathname.startsWith(href + '/');
+  };
+
+  const renderMenuItem = (item: any) => {
+    const isAdmin = hasPermission('admin.all');
+    
+    if (item.permission && !hasPermission(item.permission) && !isAdmin) {
+      return null;
+    }
+
+    return (
+      <Button
+        key={item.href}
+        variant={isActive(item.href) ? "default" : "ghost"}
+        className={cn(
+          "w-full justify-start gap-2 mb-1",
+          !sidebarOpen && "justify-center",
+          isActive(item.href) && "bg-viverblue hover:bg-viverblue/90"
+        )}
+        asChild
+      >
+        <Link to={item.href}>
+          <item.icon className="h-4 w-4" />
+          {sidebarOpen && <span>{item.title}</span>}
+        </Link>
+      </Button>
+    );
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      <ScrollArea className="flex-1 px-3" style={{ height: "calc(100vh - 140px)" }}>
+        <div className="py-4 space-y-2">
+          <div className="space-y-1">
+            {menuItems.map(item => renderMenuItem(item))}
+          </div>
+
+          <Separator className="my-3" />
+          
+          {sidebarOpen && (
+            <div className="mb-2 px-2 text-xs font-semibold text-gray-500">
+              ÁREA DE FORMAÇÃO
+            </div>
+          )}
+          
+          <div className="space-y-1">
+            {formacaoItems.map(item => renderMenuItem(item))}
+          </div>
+
+          <Separator className="my-3" />
+          
+          {sidebarOpen && (
+            <div className="mb-2 px-2 text-xs font-semibold text-gray-500">
+              GERENCIAMENTO DE ACESSO
+            </div>
+          )}
+          
+          <div className="space-y-1">
+            {rbacItems.map(item => renderMenuItem(item))}
+          </div>
+        </div>
+      </ScrollArea>
+
+      <div className="px-3 py-4 border-t border-gray-700 mt-auto space-y-2">
+        <Button
+          variant="outline"
+          className={cn(
+            "w-full justify-start gap-2",
+            !sidebarOpen && "justify-center"
+          )}
+          asChild
+        >
+          <Link to="/dashboard">
+            <User className="h-4 w-4" />
+            {sidebarOpen && <span>Painel do Membro</span>}
+          </Link>
+        </Button>
+        
+        <Button
+          variant="outline"
+          className={cn(
+            "w-full justify-start gap-2",
+            !sidebarOpen && "justify-center"
+          )}
+          asChild
+        >
+          <Link to="/dashboard">
+            <ChevronLeft className="h-4 w-4" />
+            {sidebarOpen && <span>Voltar ao Dashboard</span>}
+          </Link>
+        </Button>
+      </div>
+    </div>
+  );
+}
