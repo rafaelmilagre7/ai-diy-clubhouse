@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
+import { CERTIFICATE_LOGO_URL } from '@/lib/supabase/uploadCertificateLogo';
 
 export const useSolutionCertificate = (solutionId: string) => {
   const { user } = useAuth();
@@ -222,8 +222,8 @@ export const useSolutionCertificate = (solutionId: string) => {
         <div style="text-align: center; line-height: 1.6; position: relative; height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
           <!-- Logo no topo -->
           <div style="display: flex; justify-content: center; margin-bottom: 20px;">
-            <div style="width: 96px; height: 96px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; padding: 16px;">
-              <img src="/lovable-uploads/b16ca23e-3c90-4de8-82a3-d6d0ad8b74de.png" alt="Viver de IA" style="width: 100%; height: 100%; object-fit: contain;" />
+            <div style="width: 128px; height: 64px; background: rgba(255,255,255,0.1); border-radius: 50px; display: flex; align-items: center; justify-content: center; padding: 8px; backdrop-filter: blur(10px);">
+              <img src="${CERTIFICATE_LOGO_URL}" alt="Viver de IA" style="width: 100%; height: 100%; object-fit: contain;" crossorigin="anonymous" />
             </div>
           </div>
           

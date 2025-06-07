@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Share2, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { CERTIFICATE_LOGO_URL } from "@/lib/supabase/uploadCertificateLogo";
 
 interface CertificateViewerProps {
   certificate: {
@@ -58,14 +59,16 @@ export const CertificateViewer = ({
           <div className="relative z-10 text-center space-y-6">
             {/* Logo no topo */}
             <div className="flex justify-center mb-6">
-              <div className="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center p-4">
+              <div className="w-32 h-16 bg-white/10 rounded-full flex items-center justify-center p-2 backdrop-blur-sm">
                 <img 
-                  src="/lovable-uploads/b16ca23e-3c90-4de8-82a3-d6d0ad8b74de.png" 
+                  src={CERTIFICATE_LOGO_URL}
                   alt="Viver de IA" 
                   className="w-full h-full object-contain"
+                  crossOrigin="anonymous"
+                  onLoad={() => console.log('Logo carregada com sucesso')}
                   onError={(e) => {
-                    console.log('Erro ao carregar logo');
-                    e.currentTarget.style.display = 'none';
+                    console.error('Erro ao carregar logo do Supabase, usando fallback');
+                    e.currentTarget.src = '/lovable-uploads/a408c993-07fa-49f2-bee6-c66d0614298b.png';
                   }}
                 />
               </div>
