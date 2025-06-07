@@ -15,7 +15,11 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const AdminSidebarNav = () => {
+interface AdminSidebarNavProps {
+  sidebarOpen?: boolean;
+}
+
+const AdminSidebarNav = ({ sidebarOpen = true }: AdminSidebarNavProps) => {
   const navItems = [
     {
       to: "/admin",
@@ -76,7 +80,7 @@ const AdminSidebarNav = () => {
   ];
 
   return (
-    <nav className="flex flex-col space-y-1">
+    <nav className="flex flex-col space-y-1 p-2">
       {navItems.map((item) => {
         const Icon = item.icon;
         return (
@@ -93,8 +97,8 @@ const AdminSidebarNav = () => {
               )
             }
           >
-            <Icon className="h-4 w-4" />
-            <span>{item.label}</span>
+            <Icon className="h-4 w-4 flex-shrink-0" />
+            {sidebarOpen && <span>{item.label}</span>}
           </NavLink>
         );
       })}
