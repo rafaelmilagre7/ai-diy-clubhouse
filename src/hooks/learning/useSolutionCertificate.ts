@@ -199,6 +199,7 @@ export const useSolutionCertificate = (solutionId: string) => {
       toast.loading('Gerando certificado PDF...', { id: 'download-loading' });
       
       console.log('Iniciando download do certificado...');
+      console.log('URL da logo:', CERTIFICATE_LOGO_URL);
       
       // Importar bibliotecas dinamicamente
       const [html2canvas, jsPDF] = await Promise.all([
@@ -208,10 +209,10 @@ export const useSolutionCertificate = (solutionId: string) => {
 
       console.log('Bibliotecas carregadas para download');
 
-      // Converter logo para base64
+      // Converter logo para base64 - sem fallback
       console.log('Convertendo logo para base64...');
       const logoBase64 = await convertImageToBase64(CERTIFICATE_LOGO_URL);
-      console.log('Logo convertida com sucesso');
+      console.log('Logo convertida com sucesso, tamanho:', logoBase64.length);
 
       // Usar a data de emissão em vez da data de implementação
       const issuedDate = certificate.issued_at || certificate.implementation_date;
@@ -235,7 +236,7 @@ export const useSolutionCertificate = (solutionId: string) => {
 
       console.log('Elemento temporário criado para download, aguardando fontes...');
       
-      // Aguardar fontes carregarem (tempo aumentado)
+      // Aguardar fontes carregarem
       await new Promise(resolve => setTimeout(resolve, 4000));
 
       console.log('Capturando elemento como imagem para download...');
@@ -276,7 +277,7 @@ export const useSolutionCertificate = (solutionId: string) => {
       console.log('Download concluído com sucesso');
     } catch (error) {
       console.error('Erro ao fazer download:', error);
-      toast.error('Erro ao fazer download do certificado. Tente novamente.', { id: 'download-loading' });
+      toast.error(`Erro ao fazer download do certificado: ${error.message}`, { id: 'download-loading' });
     }
   };
 

@@ -1,33 +1,41 @@
 
 // Utilitário para converter imagem para base64
 export const convertImageToBase64 = async (imageUrl: string): Promise<string> => {
+  console.log('Iniciando conversão de imagem para base64:', imageUrl);
+  
   try {
     const response = await fetch(imageUrl);
+    
+    if (!response.ok) {
+      console.error('Erro HTTP ao buscar imagem:', {
+        status: response.status,
+        statusText: response.statusText,
+        url: imageUrl
+      });
+      throw new Error(`Erro HTTP ${response.status}: ${response.statusText}`);
+    }
+    
     const blob = await response.blob();
+    console.log('Blob criado com sucesso:', {
+      size: blob.size,
+      type: blob.type
+    });
     
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
+      reader.onload = () => {
+        console.log('Conversão para base64 concluída com sucesso');
+        resolve(reader.result as string);
+      };
+      reader.onerror = (error) => {
+        console.error('Erro no FileReader:', error);
+        reject(new Error('Erro ao converter blob para base64'));
+      };
       reader.readAsDataURL(blob);
     });
   } catch (error) {
     console.error('Erro ao converter imagem para base64:', error);
-    // Fallback para imagem local
-    try {
-      const fallbackResponse = await fetch('/lovable-uploads/a408c993-07fa-49f2-bee6-c66d0614298b.png');
-      const fallbackBlob = await fallbackResponse.blob();
-      
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(fallbackBlob);
-      });
-    } catch (fallbackError) {
-      console.error('Erro ao carregar imagem fallback:', fallbackError);
-      throw fallbackError;
-    }
+    throw error; // Propagate o erro sem fallback
   }
 };
 
@@ -38,6 +46,13 @@ export const generateCertificateHTML = (
   formattedDate: string,
   logoBase64: string
 ) => {
+  console.log('Gerando HTML do certificado com dados:', {
+    certificateId: certificate.id,
+    userName: userProfile.name,
+    solutionTitle: certificate.solutions.title,
+    logoBase64Length: logoBase64.length
+  });
+
   return `
     <html>
       <head>

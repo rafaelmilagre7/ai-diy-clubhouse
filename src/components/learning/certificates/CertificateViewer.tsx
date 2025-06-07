@@ -46,6 +46,7 @@ export const CertificateViewer = ({
       toast.loading('Preparando certificado...', { id: 'pdf-loading' });
       
       console.log('Iniciando geração do PDF...');
+      console.log('URL da logo:', CERTIFICATE_LOGO_URL);
       
       // Importar bibliotecas dinamicamente
       const [html2canvas, jsPDF] = await Promise.all([
@@ -55,10 +56,10 @@ export const CertificateViewer = ({
 
       console.log('Bibliotecas carregadas');
 
-      // Converter logo para base64
+      // Converter logo para base64 - sem fallback
       console.log('Convertendo logo para base64...');
       const logoBase64 = await convertImageToBase64(CERTIFICATE_LOGO_URL);
-      console.log('Logo convertida com sucesso');
+      console.log('Logo convertida com sucesso, tamanho:', logoBase64.length);
 
       // Gerar HTML do certificado
       const htmlContent = generateCertificateHTML(certificate, userProfile, formattedDate, logoBase64);
@@ -74,7 +75,7 @@ export const CertificateViewer = ({
 
       console.log('Elemento temporário criado, aguardando fontes...');
       
-      // Aguardar fontes carregarem (tempo aumentado)
+      // Aguardar fontes carregarem
       await new Promise(resolve => setTimeout(resolve, 4000));
 
       console.log('Capturando elemento como imagem...');
@@ -113,10 +114,10 @@ export const CertificateViewer = ({
       
       const newWindow = window.open(pdfUrl, '_blank');
       if (!newWindow) {
-        toast.error('Pop-ups bloqueados. Permita pop-ups para abrir o certificado.');
-      } else {
-        toast.success('Certificado aberto em nova guia!', { id: 'pdf-loading' });
+        throw new Error('Pop-ups bloqueados. Permita pop-ups para abrir o certificado.');
       }
+
+      toast.success('Certificado aberto em nova guia!', { id: 'pdf-loading' });
 
       // Remover elemento temporário
       document.body.removeChild(tempDiv);
@@ -126,7 +127,7 @@ export const CertificateViewer = ({
       
     } catch (error) {
       console.error('Erro ao abrir certificado em nova guia:', error);
-      toast.error('Erro ao abrir certificado. Tente novamente.', { id: 'pdf-loading' });
+      toast.error(`Erro ao abrir certificado: ${error.message}`, { id: 'pdf-loading' });
     }
   };
 
@@ -142,13 +143,13 @@ export const CertificateViewer = ({
       }).then(() => {
         toast.success('Conteúdo compartilhado com sucesso!');
       }).catch(() => {
-        // Fallback para clipboard se o share falhar
+        // Se o share falhar, copiar para clipboard
         navigator.clipboard.writeText(shareText).then(() => {
           toast.success('Texto copiado para a área de transferência!');
         });
       });
     } else {
-      // Fallback para navegadores que não suportam Web Share API
+      // Para navegadores que não suportam Web Share API
       navigator.clipboard.writeText(shareText).then(() => {
         toast.success('Texto do certificado copiado para a área de transferência!');
       }).catch(() => {
@@ -177,7 +178,7 @@ export const CertificateViewer = ({
           </div>
           
           <div className="relative z-10 text-center space-y-8">
-            {/* Logo no topo - tamanho aumentado e sem borda */}
+            {/* Logo no topo - sem fallback */}
             <div className="flex justify-center mb-8">
               <div className="w-64 h-32">
                 <img 
@@ -185,11 +186,7 @@ export const CertificateViewer = ({
                   alt="Viver de IA" 
                   className="w-full h-full object-contain"
                   crossOrigin="anonymous"
-                  onLoad={() => console.log('Logo carregada com sucesso')}
-                  onError={(e) => {
-                    console.error('Erro ao carregar logo do Supabase, usando fallback');
-                    e.currentTarget.src = '/lovable-uploads/a408c993-07fa-49f2-bee6-c66d0614298b.png';
-                  }}
+                  onLoad={() => console.log('Logo carregada com sucesso no preview')}
                 />
               </div>
             </div>
