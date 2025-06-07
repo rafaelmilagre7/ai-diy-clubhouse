@@ -12,8 +12,17 @@
     <meta name="author" content="VIVER DE IA Hub" />
     <meta name="robots" content="index, follow" />
     
+    <!-- Performance & SEO -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//fonts.gstatic.com" />
+    
     <!-- Canonical URL -->
     <link rel="canonical" href="https://app.viverdeia.com/" />
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
     
     <!-- Favicon -->
     <link rel="icon" href="/lovable-uploads/d847c892-aafa-4cc1-92c6-110aff1d9755.png" type="image/png" />
@@ -40,6 +49,14 @@
     <meta name="theme-color" content="#0ABAB5" />
     <meta name="msapplication-TileColor" content="#0ABAB5" />
     <meta name="application-name" content="VIVER DE IA Hub" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="VIVER DE IA" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    
+    <!-- Resource Hints para Performance -->
+    <link rel="preload" href="/lovable-uploads/d847c892-aafa-4cc1-92c6-110aff1d9755.png" as="image" />
     
     <!-- Structured Data -->
     <script type="application/ld+json">
@@ -54,7 +71,13 @@
         "https://www.linkedin.com/company/viver-de-ia",
         "https://www.instagram.com/viverdeia",
         "https://www.youtube.com/@viverdeia"
-      ]
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+55-11-99999-9999",
+        "contactType": "customer service",
+        "availableLanguage": "Portuguese"
+      }
     }
     </script>
   </head>
