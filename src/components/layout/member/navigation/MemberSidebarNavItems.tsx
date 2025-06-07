@@ -8,7 +8,7 @@ import {
   Lightbulb, 
   Settings,
   MessageSquare,
-  Route,
+  // REMOVIDO: Route (icon da trilha),
   GraduationCap,
   Calendar
 } from 'lucide-react';
@@ -30,11 +30,12 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       href: "/dashboard",
       icon: LayoutDashboard,
     },
-    {
-      title: "Trilha de Implementação",
-      href: "/implementation-trail",
-      icon: Route,
-    },
+    // REMOVIDO: Trilha de Implementação (Fase 2)
+    // {
+    //   title: "Trilha de Implementação",
+    //   href: "/implementation-trail",
+    //   icon: Route,
+    // },
     {
       title: "Soluções",
       href: "/solutions",

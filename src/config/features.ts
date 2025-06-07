@@ -13,14 +13,14 @@ export interface FeatureConfig {
 
 /**
  * Configuração de features da aplicação
- * Implementation Trail preparado para remoção - Fase 1 executada
+ * Implementation Trail DESATIVADO - Fase 2 executada
  */
 export const APP_FEATURES: Record<string, FeatureConfig> = {
   implementation_trail: {
-    enabled: true, // Ainda ativo para Fase 1
+    enabled: false, // DESATIVADO na Fase 2
     adminOnly: false,
-    description: "Trilha de Implementação Personalizada - Preparado para remoção",
-    lastModified: "2024-06-07T00:00:00Z"
+    description: "Trilha de Implementação Personalizada - DESATIVADA (Fase 2)",
+    lastModified: "2024-06-07T10:00:00Z"
   }
 };
 

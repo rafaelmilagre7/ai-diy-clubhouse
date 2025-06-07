@@ -12,7 +12,6 @@ import {
   ShieldCheck,
   User,
   BookOpen,
-  Map,
   Calendar,
   Wrench,
   MessagesSquare
@@ -35,11 +34,12 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
       href: "/dashboard",
       icon: LayoutDashboard,
     },
-    {
-      title: "Trilha de Implementação",
-      href: "/implementation-trail",
-      icon: Map,
-    },
+    // REMOVIDO: Trilha de Implementação (Fase 2)
+    // {
+    //   title: "Trilha de Implementação",
+    //   href: "/implementation-trail",
+    //   icon: Map,
+    // },
     {
       title: "Soluções",
       href: "/solutions",

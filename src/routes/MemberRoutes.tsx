@@ -18,7 +18,8 @@ import Suggestions from '@/pages/member/Suggestions';
 import SuggestionDetails from '@/pages/member/SuggestionDetails';
 import NewSuggestion from '@/pages/member/NewSuggestion';
 import Events from '@/pages/member/Events';
-import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
+// IMPORT COMENTADO: ImplementationTrailPage (Fase 2)
+// import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
 
 // Member Learning pages
 import LearningPage from '@/pages/member/learning/LearningPage';
@@ -38,12 +39,13 @@ const createProtectedRoute = (path: string, Component: React.ComponentType<any>)
 });
 
 // Log para diagnóstico
-console.log("Carregando rotas de membros - Networking removido completamente (Fase 4)");
+console.log("Carregando rotas de membros - Implementation Trail DESATIVADO (Fase 2)");
 
 export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/", Dashboard),
   createProtectedRoute("/dashboard", Dashboard),
-  createProtectedRoute("/implementation-trail", ImplementationTrailPage),
+  // ROTA COMENTADA: Implementation Trail (Fase 2)
+  // createProtectedRoute("/implementation-trail", ImplementationTrailPage),
   createProtectedRoute("/solutions", Solutions),
   createProtectedRoute("/tools", Tools),
   createProtectedRoute("/tools/:id", ToolDetails),
