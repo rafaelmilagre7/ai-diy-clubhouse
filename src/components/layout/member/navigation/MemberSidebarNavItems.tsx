@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,9 +7,9 @@ import {
   Lightbulb, 
   Settings,
   MessageSquare,
-  // REMOVIDO: Route (icon da trilha),
   GraduationCap,
-  Calendar
+  Calendar,
+  Award
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
 import { usePermissions } from '@/hooks/auth/usePermissions';
@@ -30,16 +29,20 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       href: "/dashboard",
       icon: LayoutDashboard,
     },
-    // REMOVIDO: Trilha de Implementação (Fase 2)
-    // {
-    //   title: "Trilha de Implementação",
-    //   href: "/implementation-trail",
-    //   icon: Route,
-    // },
     {
       title: "Soluções",
       href: "/solutions",
       icon: Lightbulb,
+    },
+    {
+      title: "Cursos",
+      href: "/learning",
+      icon: GraduationCap,
+    },
+    {
+      title: "Certificados",
+      href: "/learning/certificates",
+      icon: Award,
     },
     {
       title: "Ferramentas",

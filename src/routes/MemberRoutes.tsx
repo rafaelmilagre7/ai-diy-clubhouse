@@ -1,4 +1,3 @@
-
 import { RouteObject } from "react-router-dom";
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import MemberLayout from '@/components/layout/MemberLayout';
@@ -25,6 +24,7 @@ import Events from '@/pages/member/Events';
 import LearningPage from '@/pages/member/learning/LearningPage';
 import CourseDetails from '@/pages/member/learning/CourseDetails';
 import LessonView from '@/pages/member/learning/LessonView';
+import MemberCertificates from '@/pages/member/learning/MemberCertificates';
 
 // Member Community pages
 import CommunityHome from '@/pages/member/community/CommunityHome';
@@ -63,6 +63,7 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/learning", LearningPage),
   createProtectedRoute("/learning/course/:id", CourseDetails),
   createProtectedRoute("/learning/course/:courseId/lesson/:lessonId", LessonView),
+  createProtectedRoute("/learning/certificates", MemberCertificates),
   
   // Sugestões Routes
   createProtectedRoute("/suggestions", Suggestions),
