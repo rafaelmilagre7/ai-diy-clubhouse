@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
@@ -199,12 +198,12 @@ export const useSolutionCertificate = (solutionId: string) => {
       const html2canvas = (await import('html2canvas')).default;
       const jsPDF = (await import('jspdf')).default;
 
-      // Criar elemento temporário com o certificado melhorado
+      // Criar elemento temporário com o certificado
       const tempDiv = document.createElement('div');
       tempDiv.style.position = 'absolute';
       tempDiv.style.left = '-9999px';
-      tempDiv.style.width = '1200px';
-      tempDiv.style.height = '850px';
+      tempDiv.style.width = '1000px';
+      tempDiv.style.height = '700px';
       tempDiv.style.fontFamily = 'Arial, sans-serif';
 
       // Usar a data de emissão em vez da data de implementação
@@ -216,7 +215,7 @@ export const useSolutionCertificate = (solutionId: string) => {
       });
 
       tempDiv.innerHTML = `
-        <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Great+Vibes:wght@400&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
         
         <div style="
           width: 100%; 
@@ -226,102 +225,87 @@ export const useSolutionCertificate = (solutionId: string) => {
           overflow: hidden;
           color: white;
         ">
-          <!-- Camada de Gradiente Adicional -->
+          <!-- Gradiente overlay sutil -->
           <div style="
             position: absolute;
             inset: 0;
-            background: linear-gradient(45deg, transparent 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.2) 100%);
+            background: linear-gradient(45deg, transparent 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.15) 100%);
           "></div>
           
-          <!-- Elementos Decorativos de Fundo -->
-          <div style="position: absolute; top: 40px; left: 40px; width: 128px; height: 128px; border: 2px solid rgba(255,255,255,0.1); border-radius: 50%;"></div>
-          <div style="position: absolute; top: 80px; right: 64px; width: 96px; height: 96px; border: 1px solid rgba(255,255,255,0.15); border-radius: 50%;"></div>
-          <div style="position: absolute; bottom: 64px; left: 80px; width: 160px; height: 160px; border: 1px solid rgba(255,255,255,0.08); border-radius: 50%;"></div>
-          <div style="position: absolute; bottom: 128px; right: 128px; width: 80px; height: 80px; border: 2px solid rgba(255,255,255,0.12); border-radius: 50%;"></div>
+          <!-- Ornamentos dos cantos -->
+          <div style="position: absolute; top: 24px; left: 24px; width: 64px; height: 64px; border-left: 2px solid rgba(255,255,255,0.2); border-top: 2px solid rgba(255,255,255,0.2);"></div>
+          <div style="position: absolute; top: 24px; right: 24px; width: 64px; height: 64px; border-right: 2px solid rgba(255,255,255,0.2); border-top: 2px solid rgba(255,255,255,0.2);"></div>
+          <div style="position: absolute; bottom: 24px; left: 24px; width: 64px; height: 64px; border-left: 2px solid rgba(255,255,255,0.2); border-bottom: 2px solid rgba(255,255,255,0.2);"></div>
+          <div style="position: absolute; bottom: 24px; right: 24px; width: 64px; height: 64px; border-right: 2px solid rgba(255,255,255,0.2); border-bottom: 2px solid rgba(255,255,255,0.2);"></div>
           
-          <!-- Linhas Decorativas -->
-          <div style="position: absolute; top: 0; left: 25%; width: 1px; height: 100%; background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.1), transparent);"></div>
-          <div style="position: absolute; top: 0; right: 25%; width: 1px; height: 100%; background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.08), transparent);"></div>
-          
-          <!-- Ornamentos dos Cantos -->
-          <div style="position: absolute; top: 32px; left: 32px; width: 80px; height: 80px; border-left: 2px solid rgba(255,255,255,0.2); border-top: 2px solid rgba(255,255,255,0.2);"></div>
-          <div style="position: absolute; top: 32px; right: 32px; width: 80px; height: 80px; border-right: 2px solid rgba(255,255,255,0.2); border-top: 2px solid rgba(255,255,255,0.2);"></div>
-          <div style="position: absolute; bottom: 32px; left: 32px; width: 80px; height: 80px; border-left: 2px solid rgba(255,255,255,0.2); border-bottom: 2px solid rgba(255,255,255,0.2);"></div>
-          <div style="position: absolute; bottom: 32px; right: 32px; width: 80px; height: 80px; border-right: 2px solid rgba(255,255,255,0.2); border-bottom: 2px solid rgba(255,255,255,0.2);"></div>
+          <!-- Círculos decorativos sutis -->
+          <div style="position: absolute; top: 32px; left: 25%; width: 96px; height: 96px; border: 1px solid rgba(255,255,255,0.1); border-radius: 50%;"></div>
+          <div style="position: absolute; bottom: 48px; right: 25%; width: 80px; height: 80px; border: 1px solid rgba(255,255,255,0.08); border-radius: 50%;"></div>
 
           <div style="
             position: relative; 
             z-index: 10; 
-            padding: 48px; 
+            padding: 32px; 
             height: 100%; 
             display: flex; 
             flex-direction: column;
             text-align: center;
           ">
-            <!-- Logo Grande sem Borda -->
-            <div style="display: flex; justify-content: center; margin-bottom: 32px;">
+            <!-- Logo -->
+            <div style="display: flex; justify-content: center; margin-bottom: 24px;">
               <img src="${CERTIFICATE_LOGO_URL}" alt="Viver de IA" style="
-                width: 320px; 
-                height: 160px; 
+                width: 256px; 
+                height: 128px; 
                 object-fit: contain;
-                filter: drop-shadow(0 20px 25px rgba(0,0,0,0.3));
+                filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
               " crossorigin="anonymous" />
             </div>
 
-            <!-- Header com Ornamentos -->
-            <div style="margin-bottom: 32px; position: relative;">
-              <!-- Ornamento Superior -->
-              <div style="display: flex; justify-content: center; margin-bottom: 16px;">
-                <div style="width: 128px; height: 1px; background: linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent);"></div>
+            <!-- Header -->
+            <div style="margin-bottom: 24px;">
+              <div style="display: flex; justify-content: center; margin-bottom: 12px;">
+                <div style="width: 96px; height: 1px; background: linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent);"></div>
               </div>
               
               <h1 style="
                 font-family: 'Playfair Display', serif; 
-                font-size: 64px; 
-                margin-bottom: 12px; 
+                font-size: 48px; 
+                margin: 0 0 8px 0; 
                 font-weight: 700; 
                 color: white; 
-                text-shadow: 0 8px 16px rgba(0,0,0,0.3); 
-                letter-spacing: 3px;
-                line-height: 1;
+                text-shadow: 0 4px 8px rgba(0,0,0,0.2); 
+                letter-spacing: 2px;
               ">CERTIFICADO</h1>
               
               <p style="
-                font-size: 24px; 
+                font-size: 20px; 
                 color: rgba(255,255,255,0.95); 
-                font-weight: 600; 
-                letter-spacing: 1px;
+                font-weight: 500; 
                 margin: 0;
               ">de Implementação de Solução</p>
               
-              <!-- Ornamento Inferior -->
-              <div style="display: flex; justify-content: center; margin-top: 16px;">
-                <div style="width: 128px; height: 1px; background: linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent);"></div>
+              <div style="display: flex; justify-content: center; margin-top: 12px;">
+                <div style="width: 96px; height: 1px; background: linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent);"></div>
               </div>
             </div>
 
             <!-- Conteúdo principal -->
-            <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 24px;">
-              <p style="font-size: 20px; color: rgba(255,255,255,0.9); font-weight: 500; margin: 0;">
+            <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 16px;">
+              <p style="font-size: 18px; color: rgba(255,255,255,0.9); font-weight: 500; margin: 0;">
                 Certificamos que
               </p>
               
               <div style="
-                padding: 32px 40px; 
+                padding: 24px 32px; 
                 background: rgba(255,255,255,0.2); 
-                border-radius: 16px; 
-                backdrop-filter: blur(10px); 
+                border-radius: 12px; 
+                backdrop-filter: blur(4px); 
                 border: 1px solid rgba(255,255,255,0.3); 
-                box-shadow: 0 20px 25px rgba(0,0,0,0.1);
-                position: relative;
-                overflow: hidden;
+                box-shadow: 0 8px 16px rgba(0,0,0,0.1);
               ">
-                <!-- Brilho de Fundo -->
-                <div style="position: absolute; inset: 0; background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);"></div>
                 <h2 style="
-                  position: relative;
                   font-family: 'Playfair Display', serif; 
-                  font-size: 36px; 
+                  font-size: 32px; 
                   font-weight: 700; 
                   margin: 0; 
                   color: white; 
@@ -329,84 +313,71 @@ export const useSolutionCertificate = (solutionId: string) => {
                 ">${userProfile.name}</h2>
               </div>
               
-              <p style="font-size: 20px; color: rgba(255,255,255,0.9); font-weight: 500; margin: 0;">
+              <p style="font-size: 18px; color: rgba(255,255,255,0.9); font-weight: 500; margin: 0;">
                 concluiu com sucesso a implementação da solução
               </p>
               
               <div style="
-                padding: 32px 40px; 
+                padding: 24px 32px; 
                 background: rgba(255,255,255,0.15); 
-                border-radius: 16px; 
+                border-radius: 12px; 
                 border: 1px solid rgba(255,255,255,0.25); 
-                box-shadow: 0 16px 20px rgba(0,0,0,0.1);
-                position: relative;
-                overflow: hidden;
+                box-shadow: 0 8px 16px rgba(0,0,0,0.1);
               ">
-                <!-- Efeito de Brilho -->
-                <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(to right, transparent, rgba(255,255,255,0.5), transparent);"></div>
                 <h3 style="
                   font-family: 'Playfair Display', serif; 
-                  font-size: 28px; 
+                  font-size: 24px; 
                   font-weight: 600; 
-                  margin: 0 0 12px 0; 
+                  margin: 0 0 8px 0; 
                   color: white;
                 ">${certificate.solutions.title}</h3>
-                <p style="color: rgba(255,255,255,0.85); margin: 0; font-size: 18px;">Categoria: ${certificate.solutions.category}</p>
+                <p style="color: rgba(255,255,255,0.85); margin: 0; font-size: 16px;">Categoria: ${certificate.solutions.category}</p>
               </div>
               
-              <p style="font-size: 20px; color: rgba(255,255,255,0.9); font-weight: 500; margin: 0;">
-                em <span style="font-weight: 700; font-size: 24px; letter-spacing: 1px;">${formattedDate}</span>
+              <p style="font-size: 18px; color: rgba(255,255,255,0.9); font-weight: 500; margin: 0;">
+                em <span style="font-weight: 700; font-size: 20px; letter-spacing: 1px;">${formattedDate}</span>
               </p>
             </div>
 
-            <!-- Footer Elegante -->
-            <div style="padding-top: 32px; margin-top: 32px; position: relative;">
-              <!-- Linha Decorativa Superior -->
-              <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent);"></div>
-              
+            <!-- Footer -->
+            <div style="padding-top: 24px; margin-top: 24px; border-top: 1px solid rgba(255,255,255,0.2);">
               <div style="display: flex; justify-content: space-between; align-items: end;">
                 <!-- Código de validação -->
                 <div style="text-align: left;">
-                  <p style="font-size: 14px; color: rgba(255,255,255,0.8); margin: 0 0 12px 0; font-weight: 500;">Código de Validação:</p>
+                  <p style="font-size: 14px; color: rgba(255,255,255,0.8); margin: 0 0 8px 0; font-weight: 500;">Código de Validação:</p>
                   <div style="
                     background: rgba(255,255,255,0.15); 
-                    backdrop-filter: blur(10px); 
-                    padding: 8px 16px; 
+                    backdrop-filter: blur(4px); 
+                    padding: 8px 12px; 
                     border-radius: 8px; 
                     border: 1px solid rgba(255,255,255,0.2);
                   ">
-                    <p style="font-family: monospace; color: white; margin: 0; font-size: 18px; font-weight: 700; letter-spacing: 2px;">${certificate.validation_code}</p>
+                    <p style="font-family: monospace; color: white; margin: 0; font-size: 16px; font-weight: 700; letter-spacing: 2px;">${certificate.validation_code}</p>
                   </div>
                 </div>
                 
-                <!-- Assinatura Elegante -->
+                <!-- Assinatura -->
                 <div style="text-align: right;">
                   <div style="display: flex; flex-direction: column; align-items: flex-end;">
-                    <div style="position: relative; margin-bottom: 16px;">
-                      <p style="
-                        font-family: 'Dancing Script', cursive; 
-                        font-size: 48px; 
-                        margin: 0; 
-                        color: white; 
-                        transform: rotate(-1deg); 
-                        filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.4)); 
-                        font-weight: 700; 
-                        line-height: 1;
-                      ">Rafael G Milagre</p>
-                    </div>
-                    <div style="width: 224px; height: 2px; background: linear-gradient(to right, rgba(255,255,255,0.2), rgba(255,255,255,0.6), rgba(255,255,255,0.2)); margin-bottom: 12px;"></div>
+                    <p style="
+                      font-family: 'Dancing Script', cursive; 
+                      font-size: 40px; 
+                      margin: 0 0 12px 0; 
+                      color: white; 
+                      transform: rotate(-1deg); 
+                      filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3)); 
+                      font-weight: 700; 
+                      line-height: 1;
+                    ">Rafael G Milagre</p>
+                    <div style="width: 192px; height: 2px; background: linear-gradient(to right, rgba(255,255,255,0.2), rgba(255,255,255,0.6), rgba(255,255,255,0.2)); margin-bottom: 8px;"></div>
                     <p style="font-size: 14px; color: rgba(255,255,255,0.8); margin: 0; font-weight: 500;">Founder do Viver de IA</p>
                   </div>
                 </div>
               </div>
               
-              <div style="text-align: center; padding-top: 24px; margin-top: 24px;">
-                <!-- Linha Decorativa -->
-                <div style="display: flex; justify-content: center; margin-bottom: 12px;">
-                  <div style="width: 192px; height: 1px; background: linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent);"></div>
-                </div>
+              <div style="text-align: center; padding-top: 16px; margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
                 <p style="font-size: 14px; color: rgba(255,255,255,0.7); margin: 0;">
-                  Emitido por <span style="font-family: 'Playfair Display', serif; color: white; font-weight: 700; font-size: 16px; letter-spacing: 1px;">Viver de IA</span>
+                  Emitido por <span style="font-family: 'Playfair Display', serif; color: white; font-weight: 700;">Viver de IA</span>
                 </p>
               </div>
             </div>
@@ -417,17 +388,17 @@ export const useSolutionCertificate = (solutionId: string) => {
       document.body.appendChild(tempDiv);
 
       // Aguardar um pouco para garantir que as fontes carregaram
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Capturar como imagem com melhor qualidade
       const canvas = await html2canvas(tempDiv, {
-        scale: 2.5,
+        scale: 2,
         useCORS: true,
         backgroundColor: null,
         allowTaint: true,
         foreignObjectRendering: true,
-        width: 1200,
-        height: 850
+        width: 1000,
+        height: 700
       });
 
       // Gerar PDF
