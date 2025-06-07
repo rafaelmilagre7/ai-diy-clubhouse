@@ -78,7 +78,7 @@ export const SolutionSidebar = ({
           <div className="space-y-3">
             <Button 
               className="w-full bg-green-600 hover:bg-green-700"
-              onClick={() => navigate(`/implementation/${solution.id}/completed`)}
+              onClick={() => navigate(`/solution/${solution.id}/certificate`)}
             >
               <Award className="mr-2 h-5 w-5" />
               Ver Certificado

@@ -1,3 +1,4 @@
+
 import { RouteObject } from "react-router-dom";
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import MemberLayout from '@/components/layout/MemberLayout';
@@ -17,6 +18,7 @@ import Suggestions from '@/pages/member/Suggestions';
 import SuggestionDetails from '@/pages/member/SuggestionDetails';
 import NewSuggestion from '@/pages/member/NewSuggestion';
 import Events from '@/pages/member/Events';
+import SolutionCertificate from '@/pages/member/SolutionCertificate';
 // IMPORT COMENTADO: ImplementationTrailPage (Fase 2)
 // import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
 
@@ -52,6 +54,7 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/profile", Profile),
   createProtectedRoute("/profile/edit", EditProfile),
   createProtectedRoute("/solution/:id", SolutionDetails),
+  createProtectedRoute("/solution/:id/certificate", SolutionCertificate),
   createProtectedRoute("/implement/:id/:moduleIdx", SolutionImplementation),
   createProtectedRoute("/implementation/:id", SolutionImplementation),
   createProtectedRoute("/implementation/:id/:moduleIdx", SolutionImplementation),
