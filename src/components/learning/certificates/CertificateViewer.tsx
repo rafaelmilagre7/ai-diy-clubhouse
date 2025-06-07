@@ -54,7 +54,7 @@ export const CertificateViewer = ({
             <div className="flex justify-center mb-6">
               <div className="w-20 h-20 flex items-center justify-center">
                 <img 
-                  src="/lovable-uploads/d847c892-aafa-4cc1-92c6-110aff1d9755.png" 
+                  src="/lovable-uploads/332ff44b-8628-4122-b080-843e65b0882f.png" 
                   alt="Viver de IA" 
                   className="w-full h-full object-contain"
                 />
@@ -102,20 +102,24 @@ export const CertificateViewer = ({
                 
                 {/* Assinatura */}
                 <div className="text-right">
-                  <div className="border-b border-white/30 pb-1 mb-1" style={{ width: '200px' }}>
-                    <p 
-                      className="text-white text-2xl" 
-                      style={{ 
-                        fontFamily: "'Dancing Script', 'Brush Script MT', cursive",
-                        transform: 'rotate(-1deg)',
-                        textShadow: '1px 1px 2px rgba(0,0,0,0.3)',
-                        letterSpacing: '1px'
-                      }}
-                    >
-                      Rafael G Milagre
-                    </p>
+                  <div className="relative" style={{ width: '240px' }}>
+                    <div className="border-b border-white/30 h-8 flex items-end">
+                      <p 
+                        className="text-white mb-1" 
+                        style={{ 
+                          fontFamily: "'Great Vibes', 'Allura', 'Dancing Script', cursive",
+                          fontSize: '32px',
+                          transform: 'rotate(-2deg)',
+                          textShadow: '2px 2px 4px rgba(0,0,0,0.4)',
+                          letterSpacing: '2px',
+                          fontWeight: '400'
+                        }}
+                      >
+                        Rafael G Milagre
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-xs text-white/70">Founder do Viver de IA</p>
+                  <p className="text-xs text-white/70 mt-2">Founder do Viver de IA</p>
                 </div>
               </div>
               
