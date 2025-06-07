@@ -208,16 +208,14 @@ export class URLManager {
       try {
         console.log(`[Analytics] URL transformada:`, {
           type,
-          source: this.config.enableRealProxy ? 'real_proxy' : 'url_rewrite',
           original: original.substring(0, 50) + '...',
           transformed: transformed.substring(0, 50) + '...',
           timestamp: new Date().toISOString()
         });
         
-        // Usar o serviço de analytics em vez de window.gtag diretamente
+        // CORRIGIDO: Usar apenas propriedades aceitas pelo analyticsService
         analyticsService.trackURLTransformation({
           type,
-          source: this.config.enableRealProxy ? 'real_proxy' : 'url_rewrite',
           original: original.substring(0, 50) + '...',
           transformed: transformed.substring(0, 50) + '...',
           timestamp: new Date().toISOString()

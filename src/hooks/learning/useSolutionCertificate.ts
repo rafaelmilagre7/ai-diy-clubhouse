@@ -16,7 +16,7 @@ import { useCertificateURL } from '@/hooks/useCertificateURL';
 export const useSolutionCertificate = (solutionId: string) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { transformCertificateURL } = useCertificateURL();
+  const { optimizeCertificateURL } = useCertificateURL();
 
   // Buscar certificado existente e verificar elegibilidade
   const { data, isLoading, error } = useQuery({
@@ -266,7 +266,7 @@ export const useSolutionCertificate = (solutionId: string) => {
       // NOVO: Otimizar URL do certificado usando o sistema de proxy
       let optimizedUrl = certificateUrl;
       try {
-        optimizedUrl = await transformCertificateURL(certificateUrl, {
+        optimizedUrl = await optimizeCertificateURL(certificateUrl, {
           enableTracking: true,
           priority: 'high',
           retryAttempts: 3
@@ -306,7 +306,7 @@ export const useSolutionCertificate = (solutionId: string) => {
           // NOVO: Otimizar URL antes de fazer o download
           let optimizedUrl = certificate.certificate_url;
           try {
-            optimizedUrl = await transformCertificateURL(certificate.certificate_url, {
+            optimizedUrl = await optimizeCertificateURL(certificate.certificate_url, {
               enableTracking: true,
               priority: 'high'
             });
@@ -375,7 +375,7 @@ export const useSolutionCertificate = (solutionId: string) => {
           // NOVO: Otimizar URL antes de abrir
           let optimizedUrl = certificate.certificate_url;
           try {
-            optimizedUrl = await transformCertificateURL(certificate.certificate_url, {
+            optimizedUrl = await optimizeCertificateURL(certificate.certificate_url, {
               enableTracking: true,
               priority: 'high'
             });

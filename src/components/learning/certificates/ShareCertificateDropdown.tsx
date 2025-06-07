@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   DropdownMenu,
@@ -28,7 +29,7 @@ export const ShareCertificateDropdown = ({
   certificate,
   userProfile,
 }: ShareCertificateDropdownProps) => {
-  const { transformCertificateURL } = useCertificateURL();
+  const { optimizeCertificateURL } = useCertificateURL();
   
   // URL base para compartilhamento
   const getCurrentUrl = () => window.location.href;
@@ -38,7 +39,7 @@ export const ShareCertificateDropdown = ({
     if (certificate.certificate_url) {
       try {
         // NOVO: Usar URL otimizada para compartilhamento
-        const optimizedUrl = await transformCertificateURL(certificate.certificate_url, {
+        const optimizedUrl = await optimizeCertificateURL(certificate.certificate_url, {
           enableTracking: true,
           priority: 'normal' // Prioridade normal para compartilhamento
         });

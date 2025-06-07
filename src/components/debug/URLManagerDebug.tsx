@@ -12,7 +12,7 @@ import { PROXY_CONFIG } from '@/config/proxyConfig';
 export const URLManagerDebug = () => {
   const [stats, setStats] = useState<any>(null);
   const [isVisible, setIsVisible] = useState(false);
-  const { getURLStats, clearCertificateCache } = useCertificateURL();
+  const { clearCertificateCache, isOptimizing, lastOptimization } = useCertificateURL();
 
   // Só mostrar em desenvolvimento ou para admins
   useEffect(() => {
@@ -22,9 +22,11 @@ export const URLManagerDebug = () => {
   }, []);
 
   const refreshStats = () => {
-    const urlStats = getURLStats();
+    const cacheStats = urlManager.getCacheStats();
     setStats({
-      ...urlStats,
+      cache: cacheStats,
+      isTransforming: isOptimizing,
+      lastTransformation: lastOptimization,
       config: PROXY_CONFIG,
       timestamp: new Date().toLocaleTimeString()
     });
@@ -36,7 +38,7 @@ export const URLManagerDebug = () => {
       const interval = setInterval(refreshStats, 5000); // Atualizar a cada 5 segundos
       return () => clearInterval(interval);
     }
-  }, [isVisible]);
+  }, [isVisible, isOptimizing, lastOptimization]);
 
   if (!isVisible || !stats) {
     return null;
