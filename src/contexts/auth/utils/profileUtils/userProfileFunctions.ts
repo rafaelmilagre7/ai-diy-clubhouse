@@ -46,8 +46,8 @@ export const createUserProfileIfNeeded = async (
   name: string = 'Usuário'
 ): Promise<UserProfile | null> => {
   try {
-    // Determine role as member by default (production setting)
-    const userRole: UserRole = 'member';
+    // Determine role as membro_club by default (production setting)
+    const userRole: UserRole = 'membro_club';
     
     console.log(`Tentando criar perfil para ${email} com papel ${userRole}`);
     
@@ -84,7 +84,7 @@ export const createUserProfileIfNeeded = async (
   } catch (error) {
     console.error('Erro inesperado ao criar perfil:', error);
     // Return minimal profile in case of error to not block application
-    const userRole: UserRole = 'member';
+    const userRole: UserRole = 'membro_club';
     return createFallbackProfile(userId, email, name, userRole);
   }
 };

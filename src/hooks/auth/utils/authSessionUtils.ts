@@ -52,7 +52,7 @@ export const processUserProfile = async (
  */
 export const initializeNewProfile = async (userId: string, email: string, name: string): Promise<UserProfile | null> => {
   try {
-    const role = 'member'; // Default role for production
+    const role = 'membro_club'; // Default role for production
     
     const { data, error } = await supabase
       .from("profiles")

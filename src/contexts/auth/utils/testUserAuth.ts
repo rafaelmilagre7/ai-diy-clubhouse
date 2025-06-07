@@ -1,18 +1,8 @@
-// This file is maintained for backward compatibility
-// It re-exports all test auth functions from the new structure
 
-import { 
-  createTestUser, 
-  signInAsTestMember, 
-  signInAsTestAdmin, 
-  TEST_MEMBER, 
-  TEST_ADMIN 
-} from './testAuth';
+// Sistema de autenticação de teste removido para produção
+// Todas as funcionalidades de autenticação agora utilizam apenas dados reais
 
-// Re-export for backward compatibility
-export { 
-  createTestUser, 
-  signInAsTestMember, 
-  signInAsTestAdmin 
-};
+// Arquivo mantido apenas para compatibilidade durante a transição
+// TODO: Remover este arquivo quando todas as referências forem atualizadas
 
+export {};
