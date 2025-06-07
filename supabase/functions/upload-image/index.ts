@@ -21,10 +21,11 @@ serve(async (req) => {
   }
 
   try {
-    // Utilizar a chave de API do ImgBB configurada
-    const apiKey = '04b796a219698057ded57d20ec1705cf';
+    // Utilizar a chave de API do ImgBB dos secrets do Supabase
+    const apiKey = Deno.env.get('IMGBB_API_KEY');
     
     if (!apiKey) {
+      console.error('IMGBB_API_KEY not configured in environment variables');
       return new Response(JSON.stringify({ error: 'ImgBB API key not configured' }), { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -41,10 +42,27 @@ serve(async (req) => {
       });
     }
 
+    // Validar tamanho do arquivo (5MB máximo)
+    if (file.size > 5 * 1024 * 1024) {
+      return new Response(JSON.stringify({ error: 'File too large. Maximum size is 5MB.' }), { 
+        status: 413, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      });
+    }
+
+    // Validar tipo de arquivo
+    if (!file.type.startsWith('image/')) {
+      return new Response(JSON.stringify({ error: 'Invalid file type. Only images are allowed.' }), { 
+        status: 400, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      });
+    }
+
     const uploadFormData = new FormData();
     uploadFormData.append('image', file);
     uploadFormData.append('key', apiKey);
 
+    console.log('Uploading image to ImgBB...');
     const imgbbResponse = await fetch('https://api.imgbb.com/1/upload', {
       method: 'POST',
       body: uploadFormData
@@ -53,12 +71,14 @@ serve(async (req) => {
     const imgbbResult = await imgbbResponse.json();
 
     if (!imgbbResult.success) {
+      console.error('ImgBB upload failed:', imgbbResult.error);
       return new Response(JSON.stringify({ error: 'Image upload failed', details: imgbbResult.error }), { 
         status: 422, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       });
     }
 
+    console.log('Image uploaded successfully to ImgBB');
     return new Response(JSON.stringify({
       publicUrl: imgbbResult.data.url,
       displayUrl: imgbbResult.data.display_url,
