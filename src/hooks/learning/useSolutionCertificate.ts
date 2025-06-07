@@ -194,6 +194,8 @@ export const useSolutionCertificate = (solutionId: string) => {
   // Download do certificado como PDF
   const downloadCertificate = async (certificate: any, userProfile: any) => {
     try {
+      toast.loading('Gerando certificado PDF...');
+      
       // Importar bibliotecas dinamicamente
       const html2canvas = (await import('html2canvas')).default;
       const jsPDF = (await import('jspdf')).default;
@@ -222,9 +224,9 @@ export const useSolutionCertificate = (solutionId: string) => {
       tempDiv.innerHTML = `
         <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Great+Vibes:wght@400&display=swap" rel="stylesheet">
         <div style="text-align: center; line-height: 1.6; position: relative; height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
-          <!-- Logo no topo - tamanho aumentado -->
+          <!-- Logo no topo - sem borda -->
           <div style="display: flex; justify-content: center; margin-bottom: 30px;">
-            <div style="width: 180px; height: 90px; background: rgba(255,255,255,0.15); border-radius: 16px; display: flex; align-items: center; justify-content: center; padding: 12px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+            <div style="width: 180px; height: 90px;">
               <img src="${CERTIFICATE_LOGO_URL}" alt="Viver de IA" style="width: 100%; height: 100%; object-fit: contain;" crossorigin="anonymous" />
             </div>
           </div>
@@ -309,10 +311,12 @@ export const useSolutionCertificate = (solutionId: string) => {
       // Remover elemento temporário
       document.body.removeChild(tempDiv);
       
+      toast.dismiss();
       toast.success('Certificado baixado com sucesso!');
     } catch (error) {
       console.error('Erro ao fazer download:', error);
-      toast.error('Erro ao fazer download do certificado');
+      toast.dismiss();
+      toast.error('Erro ao fazer download do certificado. Tente novamente.');
     }
   };
 

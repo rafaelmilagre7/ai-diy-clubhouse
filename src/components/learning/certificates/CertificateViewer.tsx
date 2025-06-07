@@ -2,10 +2,11 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Share2, ExternalLink, ExternalLinkIcon } from "lucide-react";
+import { Download, Share2, ExternalLinkIcon } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CERTIFICATE_LOGO_URL } from "@/lib/supabase/uploadCertificateLogo";
+import { toast } from "sonner";
 
 interface CertificateViewerProps {
   certificate: {
@@ -40,27 +41,161 @@ export const CertificateViewer = ({
     locale: ptBR
   });
 
-  const handleOpenInNewTab = () => {
-    const newWindow = window.open('', '_blank');
-    if (newWindow) {
-      newWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Certificado - ${certificate.solutions.title}</title>
-            <style>
-              body { margin: 0; padding: 20px; background: #f0f0f0; font-family: Arial, sans-serif; }
-              .certificate-container { max-width: 900px; margin: 0 auto; }
-            </style>
-          </head>
-          <body>
-            <div class="certificate-container">
-              ${document.querySelector('[data-certificate-content]')?.innerHTML || ''}
+  // Função para gerar PDF e abrir em nova guia
+  const handleOpenPDFInNewTab = async () => {
+    try {
+      toast.loading('Preparando certificado...');
+      
+      // Importar bibliotecas dinamicamente
+      const html2canvas = (await import('html2canvas')).default;
+      const jsPDF = (await import('jspdf')).default;
+
+      // Criar elemento temporário com o certificado
+      const tempDiv = document.createElement('div');
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-9999px';
+      tempDiv.style.width = '900px';
+      tempDiv.style.height = '650px';
+      tempDiv.style.background = 'linear-gradient(135deg, #0ABAB5 0%, #00EAD9 50%, #6DF2E9 100%)';
+      tempDiv.style.color = 'white';
+      tempDiv.style.padding = '50px';
+      tempDiv.style.textAlign = 'center';
+      tempDiv.style.fontFamily = 'Arial, sans-serif';
+      tempDiv.style.position = 'relative';
+
+      tempDiv.innerHTML = `
+        <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Great+Vibes:wght@400&display=swap" rel="stylesheet">
+        <div style="text-align: center; line-height: 1.6; position: relative; height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
+          <!-- Logo no topo - sem borda -->
+          <div style="display: flex; justify-content: center; margin-bottom: 30px;">
+            <div style="width: 180px; height: 90px;">
+              <img src="${CERTIFICATE_LOGO_URL}" alt="Viver de IA" style="width: 100%; height: 100%; object-fit: contain;" crossorigin="anonymous" />
             </div>
-          </body>
-        </html>
-      `);
-      newWindow.document.close();
+          </div>
+          
+          <!-- Conteúdo principal -->
+          <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+            <h1 style="font-size: 56px; margin-bottom: 15px; font-weight: bold; color: white; text-shadow: 0 4px 8px rgba(0,0,0,0.2); letter-spacing: 2px;">CERTIFICADO</h1>
+            <p style="font-size: 24px; margin-bottom: 40px; color: rgba(255,255,255,0.95); font-weight: 600;">de Implementação de Solução</p>
+            
+            <p style="font-size: 20px; margin-bottom: 25px; color: rgba(255,255,255,0.9); font-weight: 500;">Certificamos que</p>
+            
+            <div style="background: rgba(255,255,255,0.2); padding: 25px; border-radius: 16px; margin: 25px 0; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+              <h2 style="font-size: 32px; font-weight: bold; margin: 0; color: white; letter-spacing: 1px;">${userProfile.name}</h2>
+            </div>
+            
+            <p style="font-size: 20px; margin: 25px 0; color: rgba(255,255,255,0.9); font-weight: 500;">concluiu com sucesso a implementação da solução</p>
+            
+            <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.25); margin: 25px 0; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+              <h3 style="font-size: 26px; margin: 0; margin-bottom: 10px; color: white; font-weight: 600;">${certificate.solutions.title}</h3>
+              <p style="color: rgba(255,255,255,0.85); margin: 0; font-size: 18px;">Categoria: ${certificate.solutions.category}</p>
+            </div>
+            
+            <p style="font-size: 20px; margin: 25px 0; color: rgba(255,255,255,0.9); font-weight: 500;">em <span style="font-weight: 700; font-size: 24px;">${formattedDate}</span></p>
+          </div>
+          
+          <!-- Footer com código de validação e assinatura -->
+          <div style="border-top: 2px solid rgba(255,255,255,0.3); padding-top: 30px; margin-top: 30px;">
+            <div style="display: flex; justify-content: space-between; align-items: end; margin-bottom: 20px;">
+              <!-- Código de validação -->
+              <div style="text-align: left;">
+                <p style="font-size: 14px; color: rgba(255,255,255,0.8); margin: 0; margin-bottom: 8px; font-weight: 500;">Código de Validação:</p>
+                <p style="font-family: monospace; color: white; margin: 0; font-size: 16px; font-weight: 700; letter-spacing: 2px; background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 6px;">${certificate.validation_code}</p>
+              </div>
+              
+              <!-- Assinatura -->
+              <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end;">
+                <div style="position: relative; margin-bottom: 12px;">
+                  <p style="font-family: 'Dancing Script', cursive; font-size: 38px; margin: 0; color: white; transform: rotate(-1deg); text-shadow: 2px 2px 4px rgba(0,0,0,0.4); font-weight: 700; line-height: 1;">Rafael G Milagre</p>
+                </div>
+                <div style="width: 200px; height: 2px; background: rgba(255,255,255,0.4); margin-bottom: 12px;"></div>
+                <p style="font-size: 14px; color: rgba(255,255,255,0.8); margin: 0; font-weight: 500;">Founder do Viver de IA</p>
+              </div>
+            </div>
+            
+            <div style="text-align: center; padding-top: 15px;">
+              <p style="font-size: 14px; color: rgba(255,255,255,0.7); margin: 0;">
+                Emitido por <span style="color: white; font-weight: 700; font-size: 16px;">Viver de IA</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(tempDiv);
+
+      // Aguardar um pouco para garantir que as fontes carregaram
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Capturar como imagem
+      const canvas = await html2canvas(tempDiv, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: null,
+        allowTaint: true,
+        foreignObjectRendering: true
+      });
+
+      // Gerar PDF
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const imgWidth = 297; // A4 landscape width
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      
+      // Criar blob URL e abrir em nova guia
+      const pdfBlob = pdf.output('blob');
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      
+      const newWindow = window.open(pdfUrl, '_blank');
+      if (!newWindow) {
+        toast.error('Pop-ups bloqueados. Permita pop-ups para abrir o certificado.');
+      } else {
+        toast.success('Certificado aberto em nova guia!');
+      }
+
+      // Remover elemento temporário
+      document.body.removeChild(tempDiv);
+      
+      // Limpar URL após um tempo
+      setTimeout(() => URL.revokeObjectURL(pdfUrl), 10000);
+      
+    } catch (error) {
+      console.error('Erro ao abrir certificado em nova guia:', error);
+      toast.error('Erro ao abrir certificado. Tente novamente.');
+    }
+  };
+
+  // Função para compartilhar
+  const handleShare = () => {
+    const shareText = `🎉 Acabei de receber meu certificado de implementação da solução "${certificate.solutions.title}" no Viver de IA!\n\nCódigo de validação: ${certificate.validation_code}\n\n#ViverDeIA #Certificado #IA`;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: 'Meu Certificado de Implementação',
+        text: shareText,
+        url: window.location.href
+      }).then(() => {
+        toast.success('Conteúdo compartilhado com sucesso!');
+      }).catch(() => {
+        // Fallback para clipboard se o share falhar
+        navigator.clipboard.writeText(shareText).then(() => {
+          toast.success('Texto copiado para a área de transferência!');
+        });
+      });
+    } else {
+      // Fallback para navegadores que não suportam Web Share API
+      navigator.clipboard.writeText(shareText).then(() => {
+        toast.success('Texto do certificado copiado para a área de transferência!');
+      }).catch(() => {
+        toast.error('Erro ao copiar texto. Tente novamente.');
+      });
     }
   };
 
@@ -183,30 +318,21 @@ export const CertificateViewer = ({
         </Button>
         
         <Button
-          onClick={handleOpenInNewTab}
+          onClick={handleOpenPDFInNewTab}
           variant="outline"
           className="border-viverblue/50 text-viverblue hover:bg-viverblue/10"
         >
           <ExternalLinkIcon className="h-4 w-4 mr-2" />
-          Abrir em Nova Guia
+          Abrir PDF em Nova Guia
         </Button>
         
         <Button
-          onClick={onShare}
+          onClick={handleShare}
           variant="outline"
           className="border-viverblue/50 text-viverblue hover:bg-viverblue/10"
         >
           <Share2 className="h-4 w-4 mr-2" />
           Compartilhar
-        </Button>
-        
-        <Button
-          onClick={onValidate}
-          variant="outline"
-          className="border-neutral-600 text-gray-300 hover:bg-neutral-700"
-        >
-          <ExternalLink className="h-4 w-4 mr-2" />
-          Validar Certificado
         </Button>
       </div>
     </div>
