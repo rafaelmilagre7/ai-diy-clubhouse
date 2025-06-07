@@ -38,6 +38,12 @@ export const CertificateViewer = ({
 
   return (
     <div className="space-y-6">
+      {/* Carregar fonte Google Fonts */}
+      <link 
+        href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Great+Vibes:wght@400&display=swap" 
+        rel="stylesheet"
+      />
+      
       {/* Certificado Visual */}
       <Card className="bg-gradient-to-br from-viverblue/20 via-viverblue-light/20 to-viverblue-lighter/20 border-viverblue/30 overflow-hidden">
         <CardContent className="p-8 relative">
@@ -52,11 +58,15 @@ export const CertificateViewer = ({
           <div className="relative z-10 text-center space-y-6">
             {/* Logo no topo */}
             <div className="flex justify-center mb-6">
-              <div className="w-20 h-20 flex items-center justify-center">
+              <div className="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center p-4">
                 <img 
-                  src="/lovable-uploads/332ff44b-8628-4122-b080-843e65b0882f.png" 
+                  src="/lovable-uploads/b16ca23e-3c90-4de8-82a3-d6d0ad8b74de.png" 
                   alt="Viver de IA" 
                   className="w-full h-full object-contain"
+                  onError={(e) => {
+                    console.log('Erro ao carregar logo');
+                    e.currentTarget.style.display = 'none';
+                  }}
                 />
               </div>
             </div>
@@ -102,24 +112,23 @@ export const CertificateViewer = ({
                 
                 {/* Assinatura */}
                 <div className="text-right">
-                  <div className="relative" style={{ width: '240px' }}>
-                    <div className="border-b border-white/30 h-8 flex items-end">
+                  <div className="relative flex flex-col items-end">
+                    <div className="relative mb-2">
                       <p 
-                        className="text-white mb-1" 
+                        className="text-white text-3xl leading-none"
                         style={{ 
-                          fontFamily: "'Great Vibes', 'Allura', 'Dancing Script', cursive",
-                          fontSize: '32px',
-                          transform: 'rotate(-2deg)',
-                          textShadow: '2px 2px 4px rgba(0,0,0,0.4)',
-                          letterSpacing: '2px',
-                          fontWeight: '400'
+                          fontFamily: "'Dancing Script', cursive",
+                          transform: 'rotate(-1deg)',
+                          textShadow: '1px 1px 2px rgba(0,0,0,0.3)',
+                          fontWeight: '700'
                         }}
                       >
                         Rafael G Milagre
                       </p>
                     </div>
+                    <div className="w-48 h-px bg-white/30 mb-2"></div>
+                    <p className="text-xs text-white/70">Founder do Viver de IA</p>
                   </div>
-                  <p className="text-xs text-white/70 mt-2">Founder do Viver de IA</p>
                 </div>
               </div>
               

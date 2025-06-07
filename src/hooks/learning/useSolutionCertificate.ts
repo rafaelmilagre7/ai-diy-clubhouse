@@ -218,12 +218,12 @@ export const useSolutionCertificate = (solutionId: string) => {
       });
 
       tempDiv.innerHTML = `
-        <link href="https://fonts.googleapis.com/css2?family=Great+Vibes:wght@400&family=Dancing+Script:wght@400;700&family=Allura:wght@400&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Great+Vibes:wght@400&display=swap" rel="stylesheet">
         <div style="text-align: center; line-height: 1.6; position: relative; height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
           <!-- Logo no topo -->
           <div style="display: flex; justify-content: center; margin-bottom: 20px;">
-            <div style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
-              <img src="/lovable-uploads/332ff44b-8628-4122-b080-843e65b0882f.png" alt="Viver de IA" style="width: 100%; height: 100%; object-fit: contain;" />
+            <div style="width: 96px; height: 96px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; padding: 16px;">
+              <img src="/lovable-uploads/b16ca23e-3c90-4de8-82a3-d6d0ad8b74de.png" alt="Viver de IA" style="width: 100%; height: 100%; object-fit: contain;" />
             </div>
           </div>
           
@@ -258,11 +258,12 @@ export const useSolutionCertificate = (solutionId: string) => {
               </div>
               
               <!-- Assinatura -->
-              <div style="text-align: right;">
-                <div style="position: relative; width: 280px; height: 40px; border-bottom: 1px solid rgba(255,255,255,0.3); display: flex; align-items: end; margin-bottom: 5px;">
-                  <p style="font-family: 'Great Vibes', 'Allura', 'Dancing Script', cursive; font-size: 36px; margin: 0; color: white; transform: rotate(-2deg); text-shadow: 2px 2px 4px rgba(0,0,0,0.4); letter-spacing: 2px; font-weight: 400; margin-bottom: 4px;">Rafael G Milagre</p>
+              <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end;">
+                <div style="position: relative; margin-bottom: 8px;">
+                  <p style="font-family: 'Dancing Script', cursive; font-size: 32px; margin: 0; color: white; transform: rotate(-1deg); text-shadow: 1px 1px 2px rgba(0,0,0,0.3); font-weight: 700; line-height: 1;">Rafael G Milagre</p>
                 </div>
-                <p style="font-size: 11px; color: rgba(255,255,255,0.7); margin: 0; margin-top: 8px;">Founder do Viver de IA</p>
+                <div style="width: 192px; height: 1px; background: rgba(255,255,255,0.3); margin-bottom: 8px;"></div>
+                <p style="font-size: 11px; color: rgba(255,255,255,0.7); margin: 0;">Founder do Viver de IA</p>
               </div>
             </div>
             
@@ -278,7 +279,7 @@ export const useSolutionCertificate = (solutionId: string) => {
       document.body.appendChild(tempDiv);
 
       // Aguardar um pouco para garantir que as fontes carregaram
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Capturar como imagem
       const canvas = await html2canvas(tempDiv, {
