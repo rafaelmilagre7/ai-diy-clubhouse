@@ -74,7 +74,7 @@ export const generateCertificateHTML = (
             height: 794px;
             background: #000000;
             color: white;
-            padding: 40px;
+            padding: 30px;
             text-align: center;
             position: relative;
             display: flex;
@@ -87,11 +87,11 @@ export const generateCertificateHTML = (
           .logo-container {
             display: flex;
             justify-content: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
           }
           
           .logo {
-            height: 130px;
+            height: 110px;
             width: auto;
             object-fit: contain;
             filter: brightness(1.1);
@@ -102,12 +102,12 @@ export const generateCertificateHTML = (
             display: flex;
             flex-direction: column;
             justify-content: center;
-            padding: 20px 0;
+            padding: 15px 0;
           }
           
           .certificate-title {
             font-size: 42px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             font-weight: bold;
             color: #ffffff;
             text-shadow: 0 4px 8px rgba(255,255,255,0.1);
@@ -116,23 +116,23 @@ export const generateCertificateHTML = (
           
           .subtitle {
             font-size: 18px;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             color: #e5e5e5;
             font-weight: 600;
           }
           
           .certification-text {
             font-size: 16px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             color: #d5d5d5;
             font-weight: 500;
           }
           
           .user-name-box {
             background: rgba(255,255,255,0.1);
-            padding: 18px;
+            padding: 15px;
             border-radius: 16px;
-            margin: 18px 0;
+            margin: 15px 0;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,0.2);
             box-shadow: 0 8px 16px rgba(255,255,255,0.05);
@@ -148,10 +148,10 @@ export const generateCertificateHTML = (
           
           .solution-box {
             background: rgba(255,255,255,0.08);
-            padding: 18px;
+            padding: 15px;
             border-radius: 16px;
             border: 1px solid rgba(255,255,255,0.15);
-            margin: 18px 0;
+            margin: 15px 0;
             box-shadow: 0 8px 16px rgba(255,255,255,0.05);
           }
           
@@ -171,7 +171,7 @@ export const generateCertificateHTML = (
           
           .date-text {
             font-size: 16px;
-            margin: 18px 0;
+            margin: 15px 0;
             color: #d5d5d5;
             font-weight: 500;
           }
@@ -184,15 +184,15 @@ export const generateCertificateHTML = (
           
           .footer {
             border-top: 2px solid rgba(255,255,255,0.2);
-            padding-top: 20px;
-            margin-top: 20px;
+            padding-top: 15px;
+            margin-top: 15px;
           }
           
           .footer-content {
             display: flex;
             justify-content: space-between;
             align-items: end;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
           }
           
           .validation-section {
@@ -228,21 +228,21 @@ export const generateCertificateHTML = (
           
           .signature-name {
             font-family: 'Dancing Script', cursive;
-            font-size: 28px;
+            font-size: 26px;
             margin: 0;
             color: #ffffff;
             transform: rotate(-1deg);
             text-shadow: 2px 2px 4px rgba(255,255,255,0.2);
             font-weight: 700;
             line-height: 1;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
           }
           
           .signature-line {
             width: 160px;
             height: 2px;
             background: rgba(255,255,255,0.3);
-            margin-bottom: 8px;
+            margin-bottom: 6px;
           }
           
           .signature-title {
@@ -254,7 +254,7 @@ export const generateCertificateHTML = (
           
           .footer-brand {
             text-align: center;
-            padding-top: 10px;
+            padding-top: 8px;
           }
           
           .footer-brand-text {
