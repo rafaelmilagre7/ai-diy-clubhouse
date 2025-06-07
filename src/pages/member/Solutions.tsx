@@ -1,148 +1,146 @@
 
-import React, { useState } from 'react';
-import { useSolutionsData } from '@/hooks/useSolutionsData';
-import { SolutionCard } from '@/components/solution/SolutionCard';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Filter, ShieldAlert } from 'lucide-react';
-import LoadingScreen from '@/components/common/LoadingScreen';
-import { Solution } from '@/lib/supabase';
-import { useToolsData } from '@/hooks/useToolsData';
-import { useLogging } from '@/contexts/logging';
-import { useDocumentTitle } from '@/hooks/use-document-title';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import React, { useState, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { useSolutionsData } from "@/hooks/useSolutionsData";
+import { SolutionsGrid } from "@/components/dashboard/SolutionsGrid";
+import { SolutionsGridLoader } from "@/components/dashboard/SolutionsGridLoader";
+import { NoSolutionsPlaceholder } from "@/components/dashboard/NoSolutionsPlaceholder";
+import { SearchInput } from "@/components/ui/search-input";
+import { CategoryTabs } from "@/components/dashboard/CategoryTabs";
+import { Solution } from "@/lib/supabase";
+import { SEOHead } from "@/components/SEO/SEOHead";
+import { WebsiteStructuredData } from "@/components/SEO/StructuredData";
+import { seoConfigs } from "@/utils/seoConfig";
 
-const Solutions = () => {
-  // Definir título da página
-  useDocumentTitle('Soluções | VIVER DE IA Club');
-  
-  // Logger para depuração
-  const { log } = useLogging();
-  
-  // Garantir que as ferramentas estejam corretamente configuradas, mas ignorar erros
-  const { isLoading: toolsDataLoading } = useToolsData();
-  
-  const { 
-    filteredSolutions, 
-    loading, 
-    searchQuery, 
+const Solutions: React.FC = () => {
+  const navigate = useNavigate();
+  const [activeCategory, setActiveCategory] = useState<string>("all");
+
+  const {
+    filteredSolutions,
+    loading,
+    error,
+    searchQuery,
     setSearchQuery,
-    activeCategory,
-    setActiveCategory,
     canViewSolutions
   } = useSolutionsData();
 
-  // Log data for debugging
-  log("Solutions page loaded", { 
-    solutionsCount: filteredSolutions?.length || 0, 
-    activeCategory,
-    isLoading: loading || toolsDataLoading,
-    canViewSolutions
-  });
+  // Determinar SEO baseado na categoria ativa
+  const currentSEO = useMemo(() => {
+    switch (activeCategory) {
+      case 'Receita':
+        return seoConfigs['solutions-revenue'];
+      case 'Operacional':
+        return seoConfigs['solutions-operational'];
+      case 'Estratégia':
+        return seoConfigs['solutions-strategy'];
+      default:
+        return seoConfigs.solutions;
+    }
+  }, [activeCategory]);
 
-  // Atualizado para usar nomes de categorias em português
-  const categories = [
-    { id: 'all', name: 'Todas' },
-    { id: 'Receita', name: 'Receita' },
-    { id: 'Operacional', name: 'Operacional' },
-    { id: 'Estratégia', name: 'Estratégia' }
-  ];
+  const handleSolutionClick = useCallback((solution: Solution) => {
+    navigate(`/solution/${solution.id}`);
+  }, [navigate]);
 
-  // Se o usuário não tem permissão para ver soluções, mostrar mensagem
+  const handleCategoryChange = useCallback((category: string) => {
+    setActiveCategory(category);
+  }, []);
+
   if (!canViewSolutions) {
     return (
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-white">Soluções</h1>
-            <p className="text-neutral-300 mt-1">
-              Explore as soluções disponíveis e comece a implementá-las em seu negócio
-            </p>
+      <>
+        <SEOHead customSEO={currentSEO} noindex />
+        <div className="container py-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Acesso Negado</h1>
+            <p className="text-gray-600">Você não tem permissão para visualizar soluções.</p>
           </div>
         </div>
-
-        <Alert variant="destructive" className="my-8">
-          <ShieldAlert className="h-5 w-5" />
-          <AlertTitle className="text-white">Acesso restrito</AlertTitle>
-          <AlertDescription className="text-neutral-200">
-            <p className="mb-4">Você não tem permissão para acessar as soluções. Entre em contato com o administrador para solicitar acesso.</p>
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/dashboard">Voltar para o Dashboard</Link>
-            </Button>
-          </AlertDescription>
-        </Alert>
-      </div>
+      </>
     );
   }
 
-  // Se estiver carregando as soluções, mostrar tela de carregamento
-  // Mas não bloquear se apenas as ferramentas estiverem carregando
-  if (loading) {
-    return <LoadingScreen message="Carregando soluções..." />;
-  }
-
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-white">Soluções</h1>
-          <p className="text-neutral-300 mt-1">
-            Explore as soluções disponíveis e comece a implementá-las em seu negócio
+    <>
+      <SEOHead customSEO={currentSEO} />
+      <WebsiteStructuredData />
+      
+      <div className="container py-6 space-y-8">
+        {/* Header da página com copy otimizado */}
+        <div className="text-center space-y-4">
+          <h1 className="text-4xl font-bold text-white">
+            {activeCategory === 'Receita' && "Soluções de IA que Aumentam sua Receita"}
+            {activeCategory === 'Operacional' && "Automação Operacional que Reduz Custos"}
+            {activeCategory === 'Estratégia' && "IA Estratégica para Crescimento Exponencial"}
+            {(activeCategory === 'all' || activeCategory === 'general') && "Soluções de IA que Transformam Negócios"}
+          </h1>
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            {activeCategory === 'Receita' && "Implemente soluções focadas em vendas, marketing e atendimento. Aumente sua receita em até 40% com automação inteligente."}
+            {activeCategory === 'Operacional' && "Otimize processos, automatize tarefas repetitivas e reduza custos operacionais em até 60% com IA."}
+            {activeCategory === 'Estratégia' && "Tome decisões data-driven, analise mercados e cresça 3x mais rápido com inteligência estratégica."}
+            {(activeCategory === 'all' || activeCategory === 'general') && "Descubra soluções práticas de IA categorizadas por área. Implementações testadas por +1000 empresários."}
           </p>
         </div>
 
-        <div className="w-full sm:w-auto flex gap-2">
-          <div className="relative flex-1 sm:w-64">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-400" />
-            <Input
-              type="search"
-              placeholder="Buscar soluções..."
-              className="pl-8 bg-[#1A1E2E] text-white border-neutral-700"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+        {/* Filtros e Busca */}
+        <div className="space-y-4">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <CategoryTabs 
+              activeCategory={activeCategory}
+              onCategoryChange={handleCategoryChange}
             />
+            <div className="w-full md:w-auto md:min-w-[300px]">
+              <SearchInput
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Buscar soluções de IA..."
+                className="w-full"
+              />
+            </div>
           </div>
         </div>
+
+        {/* Conteúdo Principal */}
+        {loading ? (
+          <SolutionsGridLoader count={6} />
+        ) : error ? (
+          <div className="text-center py-12">
+            <h3 className="text-xl font-semibold text-red-400 mb-2">Erro ao carregar soluções</h3>
+            <p className="text-gray-400">{error}</p>
+          </div>
+        ) : filteredSolutions.length === 0 ? (
+          searchQuery ? (
+            <div className="text-center py-12">
+              <h3 className="text-xl font-semibold text-white mb-2">
+                Nenhuma solução encontrada para "{searchQuery}"
+              </h3>
+              <p className="text-gray-400">
+                Tente buscar por outros termos ou explore nossas categorias.
+              </p>
+            </div>
+          ) : (
+            <NoSolutionsPlaceholder />
+          )
+        ) : (
+          <>
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-semibold text-white">
+                {filteredSolutions.length} Soluções Disponíveis
+              </h2>
+              <div className="text-sm text-gray-400">
+                Implementações práticas e testadas
+              </div>
+            </div>
+            
+            <SolutionsGrid
+              solutions={filteredSolutions}
+              onSolutionClick={handleSolutionClick}
+            />
+          </>
+        )}
       </div>
-
-      <Tabs defaultValue={activeCategory} onValueChange={setActiveCategory} className="w-full">
-        <TabsList className="mb-6 flex flex-wrap bg-[#1A1E2E]/80 border border-neutral-700">
-          {categories.map((category) => (
-            <TabsTrigger 
-              key={category.id}
-              value={category.id}
-              className="flex-1 sm:flex-none text-neutral-300 data-[state=active]:bg-viverblue data-[state=active]:text-white"
-            >
-              {category.name}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-
-        {categories.map((category) => (
-          <TabsContent key={category.id} value={category.id} className="mt-0">
-            {filteredSolutions?.length === 0 ? (
-              <div className="text-center py-8 bg-[#151823] rounded-lg border border-neutral-700 border-dashed">
-                <div className="flex flex-col items-center px-4">
-                  <Filter className="h-10 w-10 text-neutral-400 mb-3" />
-                  <h3 className="text-lg font-medium text-white">Nenhuma solução encontrada</h3>
-                  <p className="text-neutral-400 text-sm mt-1 max-w-md">
-                    Não encontramos soluções com esse filtro. Tente selecionar outra categoria ou ajuste sua busca.
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredSolutions?.map((solution: Solution) => (
-                  <SolutionCard key={solution.id} solution={solution} />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        ))}
-      </Tabs>
-    </div>
+    </>
   );
 };
 

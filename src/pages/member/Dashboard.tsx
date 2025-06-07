@@ -1,4 +1,3 @@
-
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
@@ -10,6 +9,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
+import { SEOHead } from "@/components/SEO/SEOHead";
+import { OrganizationStructuredData } from "@/components/SEO/StructuredData";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -103,37 +104,44 @@ const Dashboard = () => {
   // Se houver erro, mostrar mensagem de erro
   if (hasError) {
     return (
-      <div className="container py-8 flex flex-col items-center justify-center min-h-[60vh]">
-        <Alert variant="destructive" className="mb-4 max-w-md">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Problema ao carregar o dashboard</AlertTitle>
-          <AlertDescription>
-            {errorMessage || "Ocorreu um erro inesperado. Por favor, tente novamente."}
-          </AlertDescription>
-        </Alert>
-        <Button 
-          onClick={handleRetry} 
-          className="mt-4 flex items-center gap-2"
-        >
-          <RefreshCw className="h-4 w-4" /> Tentar novamente
-        </Button>
-        <p className="mt-8 text-sm text-muted-foreground max-w-md text-center">
-          Se o problema persistir, tente sair e entrar novamente na plataforma, ou entre em contato com o suporte.
-        </p>
-      </div>
+      <>
+        <SEOHead page="dashboard" />
+        <div className="container py-8 flex flex-col items-center justify-center min-h-[60vh]">
+          <Alert variant="destructive" className="mb-4 max-w-md">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Problema ao carregar o dashboard</AlertTitle>
+            <AlertDescription>
+              {errorMessage || "Ocorreu um erro inesperado. Por favor, tente novamente."}
+            </AlertDescription>
+          </Alert>
+          <Button 
+            onClick={handleRetry} 
+            className="mt-4 flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" /> Tentar novamente
+          </Button>
+          <p className="mt-8 text-sm text-muted-foreground max-w-md text-center">
+            Se o problema persistir, tente sair e entrar novamente na plataforma, ou entre em contato com o suporte.
+          </p>
+        </div>
+      </>
     );
   }
 
   return (
-    <DashboardLayout
-      active={active}
-      completed={completed}
-      recommended={recommended}
-      category={category}
-      onCategoryChange={handleCategoryChange}
-      onSolutionClick={handleSolutionClick}
-      isLoading={solutionsLoading || progressLoading || authLoading}
-    />
+    <>
+      <SEOHead page="dashboard" />
+      <OrganizationStructuredData />
+      <DashboardLayout
+        active={active}
+        completed={completed}
+        recommended={recommended}
+        category={category}
+        onCategoryChange={handleCategoryChange}
+        onSolutionClick={handleSolutionClick}
+        isLoading={solutionsLoading || progressLoading || authLoading}
+      />
+    </>
   );
 };
 
