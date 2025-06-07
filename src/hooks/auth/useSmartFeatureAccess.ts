@@ -11,6 +11,12 @@ interface SmartFeatureAccessResult {
   isLoading: boolean;
 }
 
+/**
+ * Hook para verificar acesso a features inteligentes
+ * 
+ * Nota: Trilha de implementação foi removida na Fase 4.
+ * Este hook ainda funciona para outras features do sistema.
+ */
 export const useSmartFeatureAccess = (feature: string) => {
   const { profile, user } = useAuth();
 

@@ -5,8 +5,9 @@ import { toast } from 'sonner';
 /**
  * Utilitários administrativos para a plataforma Viver de IA
  * 
- * Nota: Funções relacionadas ao networking foram removidas na Fase 4
- * da limpeza do sistema. Para rollback futuro, consultar histórico do git.
+ * Nota: Funcionalidades relacionadas ao networking e trilha de implementação 
+ * foram removidas nas fases de limpeza do sistema. Para rollback futuro, 
+ * consultar histórico do git.
  */
 
 export const verifyUserAccess = async (userEmail: string): Promise<{ success: boolean; message: string; hasAccess: boolean }> => {
