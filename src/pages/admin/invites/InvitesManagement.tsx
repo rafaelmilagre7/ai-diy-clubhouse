@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { usePermissions } from "@/hooks/auth/usePermissions";
@@ -6,6 +5,7 @@ import { useInvitesList } from "@/hooks/admin/invites/useInvitesList";
 import SimpleCreateInviteDialog from "./components/SimpleCreateInviteDialog";
 import SimpleInvitesTab from "./components/SimpleInvitesTab";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import CompleteUserRemovalButton from "@/components/admin/CompleteUserRemovalButton";
 
 const InvitesManagement = () => {
   useDocumentTitle("Gerenciar Convites | Admin");
@@ -41,7 +41,10 @@ const InvitesManagement = () => {
             Convide novos usuários para acessar a plataforma
           </p>
         </div>
-        <SimpleCreateInviteDialog roles={roles} onInviteCreated={handleInvitesChange} />
+        <div className="flex gap-2">
+          <CompleteUserRemovalButton />
+          <SimpleCreateInviteDialog roles={roles} onInviteCreated={handleInvitesChange} />
+        </div>
       </div>
 
       <Card>
