@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,7 +19,8 @@ import {
   Loader2,
   AlertTriangle,
   Wifi,
-  MessageSquare
+  MessageSquare,
+  TestTube
 } from 'lucide-react';
 
 interface ConfigStatus {
@@ -33,6 +33,8 @@ interface ConfigStatus {
   tokenMasked: string | null;
   phoneNumberIdMasked: string | null;
   businessIdMasked: string | null;
+  currentBusinessId: string;
+  suggestedBusinessId: string;
 }
 
 const WhatsAppDebug: React.FC = () => {
@@ -40,8 +42,9 @@ const WhatsAppDebug: React.FC = () => {
   const [config, setConfig] = useState<ConfigStatus | null>(null);
   const [templates, setTemplates] = useState<any[]>([]);
   const [connectivity, setConnectivity] = useState<any>(null);
+  const [businessIdTests, setBusinessIdTests] = useState<any[]>([]);
   const [testPhone, setTestPhone] = useState('');
-  const [selectedTemplate, setSelectedTemplate] = useState('convite_acesso');
+  const [selectedTemplate, setSelectedTemplate] = useState('hello_world');
   const [testResult, setTestResult] = useState<any>(null);
   const [logs, setLogs] = useState<string[]>([]);
 
@@ -104,23 +107,57 @@ const WhatsAppDebug: React.FC = () => {
     }
   };
 
-  const listTemplates = async () => {
+  const testBusinessIds = async () => {
     setLoading(true);
-    addLog('Buscando templates do WhatsApp (usando Business ID)...');
+    addLog('Testando diferentes Business IDs para templates...');
     
     try {
       const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
-        body: { action: 'list-templates' }
+        body: { action: 'test-business-ids' }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        setBusinessIdTests(data.results);
+        addLog(`✅ Teste concluído. Business ID recomendado: ${data.recommendation || 'Nenhum funcionou'}`);
+        toast.success('Teste de Business IDs concluído');
+        
+        if (data.recommendation) {
+          toast.success(`Business ID recomendado: ${data.recommendation}`);
+        }
+      } else {
+        addLog(`❌ Erro no teste: ${data.message}`);
+        toast.error('Erro no teste de Business IDs');
+      }
+    } catch (error: any) {
+      addLog(`❌ Erro no teste: ${error.message}`);
+      toast.error('Erro ao testar Business IDs');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const listTemplates = (businessIdToTest?: string) => {
+    setLoading(true);
+    addLog(`Buscando templates${businessIdToTest ? ` usando Business ID: ${businessIdToTest}` : ''}...`);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
+        body: { 
+          action: 'list-templates',
+          businessIdToTest
+        }
       });
 
       if (error) throw error;
 
       if (data.success) {
         setTemplates(data.templates);
-        addLog(`✅ ${data.templates.length} templates encontrados`);
+        addLog(`✅ ${data.templates.length} templates encontrados (Business ID: ${data.businessIdUsed})`);
         toast.success(`${data.templates.length} templates carregados`);
       } else {
-        addLog(`❌ Erro ao buscar templates: ${data.message}`);
+        addLog(`❌ Erro ao buscar templates: ${data.message} (Business ID: ${data.businessIdUsed})`);
         toast.error(data.message || 'Erro ao carregar templates');
       }
     } catch (error: any) {
@@ -154,10 +191,10 @@ const WhatsAppDebug: React.FC = () => {
       setTestResult(data);
       
       if (data.success) {
-        addLog('✅ Mensagem enviada com sucesso');
+        addLog(`✅ Mensagem enviada com sucesso (${data.templateUsed} para ${data.phoneFormatted})`);
         toast.success('Mensagem enviada!');
       } else {
-        addLog(`❌ Erro no envio: ${data.message}`);
+        addLog(`❌ Erro no envio: ${data.message} (Template: ${data.templateUsed})`);
         toast.error(data.message || 'Erro ao enviar mensagem');
       }
     } catch (error: any) {
@@ -181,14 +218,18 @@ const WhatsAppDebug: React.FC = () => {
       </div>
 
       <Tabs defaultValue="config" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="config" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
-            Configuração
+            Config
           </TabsTrigger>
           <TabsTrigger value="connectivity" className="flex items-center gap-2">
             <Wifi className="h-4 w-4" />
             Conectividade
+          </TabsTrigger>
+          <TabsTrigger value="business-test" className="flex items-center gap-2">
+            <TestTube className="h-4 w-4" />
+            Business IDs
           </TabsTrigger>
           <TabsTrigger value="templates" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
@@ -262,15 +303,78 @@ const WhatsAppDebug: React.FC = () => {
                     </div>
                   </div>
 
-                  {!config.hasBusinessId && (
+                  {config.currentBusinessId !== config.suggestedBusinessId && (
                     <Alert>
                       <AlertTriangle className="h-4 w-4" />
                       <AlertDescription>
-                        <strong>Business ID ausente!</strong><br />
-                        Adicione a variável WHATSAPP_BUSINESS_ID com o valor: 385471239079413
+                        <strong>Business ID pode estar incorreto!</strong><br />
+                        Atual: {config.currentBusinessId}<br />
+                        Sugerido (do print): {config.suggestedBusinessId}<br />
+                        <strong>Execute o teste de Business IDs para confirmar.</strong>
                       </AlertDescription>
                     </Alert>
                   )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="business-test" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Teste de Business IDs</CardTitle>
+              <CardDescription>
+                Testa diferentes Business IDs para encontrar o correto para templates
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button 
+                onClick={testBusinessIds} 
+                disabled={loading}
+                className="w-full"
+              >
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Testar Business IDs
+              </Button>
+
+              {businessIdTests.length > 0 && (
+                <div className="space-y-3">
+                  {businessIdTests.map((test, index) => (
+                    <div key={index} className="p-3 border rounded space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{test.label}</span>
+                        <div className="flex items-center gap-2">
+                          {test.success ? (
+                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-red-500" />
+                          )}
+                          <Badge variant={test.success ? "default" : "destructive"}>
+                            {test.success ? `${test.templatesFound} templates` : 'Erro'}
+                          </Badge>
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Business ID: {test.businessId}
+                      </p>
+                      {test.error && (
+                        <p className="text-sm text-red-600">
+                          Erro: {test.error.message || test.error}
+                        </p>
+                      )}
+                      {test.success && test.templatesFound > 0 && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => listTemplates(test.businessId)}
+                          disabled={loading}
+                        >
+                          Ver Templates
+                        </Button>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
             </CardContent>
@@ -326,7 +430,7 @@ const WhatsAppDebug: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <Button 
-                onClick={listTemplates} 
+                onClick={() => listTemplates()} 
                 disabled={loading}
                 className="w-full"
               >
