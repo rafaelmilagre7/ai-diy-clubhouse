@@ -18,16 +18,20 @@ serve(async (req) => {
 
     const whatsappToken = Deno.env.get('WHATSAPP_ACCESS_TOKEN')
     const phoneNumberId = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID')
+    const businessId = Deno.env.get('WHATSAPP_BUSINESS_ID')
 
     // Verificar configuração básica
     if (action === 'check-config') {
       const config = {
         hasToken: !!whatsappToken,
         hasPhoneNumberId: !!phoneNumberId,
+        hasBusinessId: !!businessId,
         tokenLength: whatsappToken ? whatsappToken.length : 0,
         phoneNumberIdLength: phoneNumberId ? phoneNumberId.length : 0,
+        businessIdLength: businessId ? businessId.length : 0,
         tokenMasked: whatsappToken ? `${whatsappToken.substring(0, 10)}...` : null,
-        phoneNumberIdMasked: phoneNumberId ? `${phoneNumberId.substring(0, 6)}...` : null
+        phoneNumberIdMasked: phoneNumberId ? `${phoneNumberId.substring(0, 6)}...` : null,
+        businessIdMasked: businessId ? `${businessId.substring(0, 6)}...` : null
       }
 
       console.log('📋 Configuração WhatsApp:', config)
@@ -74,16 +78,21 @@ serve(async (req) => {
       })
     }
 
-    // Listar templates aprovados
+    // Listar templates aprovados (corrigido para usar Business ID)
     if (action === 'list-templates') {
       if (!whatsappToken) {
         throw new Error('Token do WhatsApp não configurado')
       }
 
-      console.log('📋 Buscando templates do WhatsApp...')
+      if (!businessId) {
+        throw new Error('Business ID do WhatsApp não configurado')
+      }
 
+      console.log('📋 Buscando templates do WhatsApp usando Business ID...')
+
+      // Usar Business ID em vez de Phone Number ID para templates
       const response = await fetch(
-        `https://graph.facebook.com/v18.0/${phoneNumberId}/message_templates`,
+        `https://graph.facebook.com/v18.0/${businessId}/message_templates`,
         {
           method: 'GET',
           headers: {
@@ -97,6 +106,18 @@ serve(async (req) => {
 
       console.log('📄 Templates encontrados:', data)
 
+      if (!response.ok) {
+        console.error('❌ Erro ao buscar templates:', data)
+        return new Response(JSON.stringify({
+          success: false,
+          error: data.error || 'Erro desconhecido',
+          message: `Erro ${response.status}: ${data.error?.message || 'Não foi possível buscar templates'}`
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: response.status,
+        })
+      }
+
       return new Response(JSON.stringify({
         success: response.ok,
         templates: data.data || [],
@@ -108,7 +129,7 @@ serve(async (req) => {
 
     // Enviar mensagem de teste
     if (action === 'send-test') {
-      const { phone, templateName = 'hello_world' } = await req.json()
+      const { phone, templateName = 'convite_acesso' } = await req.json()
 
       if (!whatsappToken || !phoneNumberId) {
         throw new Error('Configuração WhatsApp incompleta')
@@ -120,9 +141,20 @@ serve(async (req) => {
 
       console.log(`📱 Enviando teste para ${phone} com template ${templateName}`)
 
+      // Limpar e formatar número brasileiro
+      const cleanPhone = phone.replace(/\D/g, '')
+      let formattedPhone = cleanPhone
+
+      // Adicionar código do país se não tiver
+      if (!formattedPhone.startsWith('55') && formattedPhone.length === 11) {
+        formattedPhone = '55' + formattedPhone
+      } else if (!formattedPhone.startsWith('55') && formattedPhone.length === 10) {
+        formattedPhone = '55' + formattedPhone
+      }
+
       const templateData = {
         messaging_product: "whatsapp",
-        to: phone,
+        to: formattedPhone,
         type: "template",
         template: {
           name: templateName,
@@ -132,6 +164,7 @@ serve(async (req) => {
         }
       }
 
+      // Adicionar parâmetros específicos para template de convite
       if (templateName === 'convite_acesso') {
         templateData.template.components = [
           {
@@ -139,7 +172,7 @@ serve(async (req) => {
             parameters: [
               {
                 type: "text",
-                text: "https://exemplo.com/convite/teste"
+                text: "https://viverdeia.ai/convite/teste"
               }
             ]
           }
@@ -161,6 +194,19 @@ serve(async (req) => {
       const result = await response.json()
 
       console.log('📨 Resultado do envio:', result)
+
+      if (!response.ok) {
+        console.error('❌ Erro no envio:', result)
+        return new Response(JSON.stringify({
+          success: false,
+          error: result.error || 'Erro desconhecido',
+          result,
+          message: `Erro ${response.status}: ${result.error?.message || 'Não foi possível enviar mensagem'}`
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: response.status,
+        })
+      }
 
       return new Response(JSON.stringify({
         success: response.ok,

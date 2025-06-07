@@ -26,10 +26,13 @@ import {
 interface ConfigStatus {
   hasToken: boolean;
   hasPhoneNumberId: boolean;
+  hasBusinessId: boolean;
   tokenLength: number;
   phoneNumberIdLength: number;
+  businessIdLength: number;
   tokenMasked: string | null;
   phoneNumberIdMasked: string | null;
+  businessIdMasked: string | null;
 }
 
 const WhatsAppDebug: React.FC = () => {
@@ -38,6 +41,7 @@ const WhatsAppDebug: React.FC = () => {
   const [templates, setTemplates] = useState<any[]>([]);
   const [connectivity, setConnectivity] = useState<any>(null);
   const [testPhone, setTestPhone] = useState('');
+  const [selectedTemplate, setSelectedTemplate] = useState('convite_acesso');
   const [testResult, setTestResult] = useState<any>(null);
   const [logs, setLogs] = useState<string[]>([]);
 
@@ -102,7 +106,7 @@ const WhatsAppDebug: React.FC = () => {
 
   const listTemplates = async () => {
     setLoading(true);
-    addLog('Buscando templates do WhatsApp...');
+    addLog('Buscando templates do WhatsApp (usando Business ID)...');
     
     try {
       const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
@@ -116,7 +120,8 @@ const WhatsAppDebug: React.FC = () => {
         addLog(`✅ ${data.templates.length} templates encontrados`);
         toast.success(`${data.templates.length} templates carregados`);
       } else {
-        throw new Error(data.message || 'Erro ao buscar templates');
+        addLog(`❌ Erro ao buscar templates: ${data.message}`);
+        toast.error(data.message || 'Erro ao carregar templates');
       }
     } catch (error: any) {
       addLog(`❌ Erro ao buscar templates: ${error.message}`);
@@ -126,21 +131,21 @@ const WhatsAppDebug: React.FC = () => {
     }
   };
 
-  const sendTestMessage = async (templateName: string = 'hello_world') => {
+  const sendTestMessage = async () => {
     if (!testPhone) {
       toast.error('Insira um número de telefone');
       return;
     }
 
     setLoading(true);
-    addLog(`Enviando mensagem de teste para ${testPhone} com template ${templateName}...`);
+    addLog(`Enviando mensagem de teste para ${testPhone} com template ${selectedTemplate}...`);
     
     try {
       const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
         body: { 
           action: 'send-test',
           phone: testPhone,
-          templateName
+          templateName: selectedTemplate
         }
       });
 
@@ -152,8 +157,8 @@ const WhatsAppDebug: React.FC = () => {
         addLog('✅ Mensagem enviada com sucesso');
         toast.success('Mensagem enviada!');
       } else {
-        addLog(`❌ Erro no envio: ${JSON.stringify(data.result)}`);
-        toast.error('Erro ao enviar mensagem');
+        addLog(`❌ Erro no envio: ${data.message}`);
+        toast.error(data.message || 'Erro ao enviar mensagem');
       }
     } catch (error: any) {
       addLog(`❌ Erro no envio: ${error.message}`);
@@ -171,7 +176,7 @@ const WhatsAppDebug: React.FC = () => {
           WhatsApp Debug
         </h1>
         <p className="text-muted-foreground">
-          Diagnóstico e teste da integração WhatsApp
+          Diagnóstico e teste da integração WhatsApp Business API
         </p>
       </div>
 
@@ -200,7 +205,7 @@ const WhatsAppDebug: React.FC = () => {
             <CardHeader>
               <CardTitle>Verificação de Configuração</CardTitle>
               <CardDescription>
-                Verifica se as variáveis de ambiente estão configuradas
+                Verifica se as variáveis de ambiente estão configuradas corretamente
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -216,7 +221,7 @@ const WhatsAppDebug: React.FC = () => {
               {config && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between p-3 border rounded">
-                    <span>Token WhatsApp</span>
+                    <span>Access Token</span>
                     <div className="flex items-center gap-2">
                       {config.hasToken ? (
                         <CheckCircle2 className="h-4 w-4 text-green-500" />
@@ -243,11 +248,26 @@ const WhatsAppDebug: React.FC = () => {
                     </div>
                   </div>
 
-                  {config.tokenMasked && (
+                  <div className="flex items-center justify-between p-3 border rounded">
+                    <span>Business ID</span>
+                    <div className="flex items-center gap-2">
+                      {config.hasBusinessId ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-red-500" />
+                      )}
+                      <Badge variant={config.hasBusinessId ? "default" : "destructive"}>
+                        {config.hasBusinessId ? `${config.businessIdLength} chars` : 'Não configurado'}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  {!config.hasBusinessId && (
                     <Alert>
                       <AlertTriangle className="h-4 w-4" />
                       <AlertDescription>
-                        Token: {config.tokenMasked}
+                        <strong>Business ID ausente!</strong><br />
+                        Adicione a variável WHATSAPP_BUSINESS_ID com o valor: 385471239079413
                       </AlertDescription>
                     </Alert>
                   )}
@@ -301,7 +321,7 @@ const WhatsAppDebug: React.FC = () => {
             <CardHeader>
               <CardTitle>Templates do WhatsApp</CardTitle>
               <CardDescription>
-                Lista os templates aprovados no WhatsApp Business
+                Lista os templates aprovados no WhatsApp Business (usando Business ID)
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -324,7 +344,9 @@ const WhatsAppDebug: React.FC = () => {
                           {template.status}
                         </Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground">{template.language}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Idioma: {template.language} | Categoria: {template.category}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -352,23 +374,27 @@ const WhatsAppDebug: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <Button 
-                  onClick={() => sendTestMessage('hello_world')} 
-                  disabled={loading || !testPhone}
-                  variant="outline"
+              <div className="space-y-2">
+                <Label htmlFor="templateSelect">Template</Label>
+                <select 
+                  id="templateSelect"
+                  value={selectedTemplate}
+                  onChange={(e) => setSelectedTemplate(e.target.value)}
+                  className="w-full p-2 border rounded"
                 >
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Teste Hello World
-                </Button>
-                <Button 
-                  onClick={() => sendTestMessage('convite_acesso')} 
-                  disabled={loading || !testPhone}
-                >
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Teste Convite
-                </Button>
+                  <option value="convite_acesso">convite_acesso</option>
+                  <option value="hello_world">hello_world</option>
+                </select>
               </div>
+
+              <Button 
+                onClick={sendTestMessage} 
+                disabled={loading || !testPhone}
+                className="w-full"
+              >
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Enviar Teste
+              </Button>
 
               {testResult && (
                 <Alert>
