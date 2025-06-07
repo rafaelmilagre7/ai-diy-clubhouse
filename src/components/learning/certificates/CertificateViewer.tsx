@@ -39,7 +39,7 @@ export const CertificateViewer = ({
   return (
     <div className="space-y-6">
       {/* Certificado Visual */}
-      <Card className="bg-gradient-to-br from-viverblue/20 to-purple-900/20 border-viverblue/30 overflow-hidden">
+      <Card className="bg-gradient-to-br from-viverblue/20 via-viverblue-light/20 to-viverblue-lighter/20 border-viverblue/30 overflow-hidden">
         <CardContent className="p-8 relative">
           {/* Padrão decorativo de fundo */}
           <div className="absolute inset-0 opacity-5">
@@ -50,44 +50,65 @@ export const CertificateViewer = ({
           </div>
           
           <div className="relative z-10 text-center space-y-6">
+            {/* Logo no topo */}
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center border-2 border-white/30 backdrop-blur-sm">
+                <span className="text-2xl font-bold text-white">VI</span>
+              </div>
+            </div>
+
             {/* Header */}
             <div>
-              <h1 className="text-4xl font-bold text-white mb-2">CERTIFICADO</h1>
-              <p className="text-xl text-viverblue font-semibold">de Implementação de Solução</p>
+              <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-sm">CERTIFICADO</h1>
+              <p className="text-xl text-white/90 font-semibold">de Implementação de Solução</p>
             </div>
 
             {/* Conteúdo principal */}
             <div className="space-y-4">
-              <p className="text-lg text-gray-300">
+              <p className="text-lg text-white/90">
                 Certificamos que
               </p>
               
-              <div className="py-4 px-6 bg-white/10 rounded-lg backdrop-blur-sm">
+              <div className="py-4 px-6 bg-white/15 rounded-lg backdrop-blur-sm border border-white/20">
                 <h2 className="text-2xl font-bold text-white">{userProfile.name}</h2>
               </div>
               
-              <p className="text-lg text-gray-300">
+              <p className="text-lg text-white/90">
                 concluiu com sucesso a implementação da solução
               </p>
               
-              <div className="py-4 px-6 bg-viverblue/20 rounded-lg border border-viverblue/30">
+              <div className="py-4 px-6 bg-white/10 rounded-lg border border-white/20">
                 <h3 className="text-xl font-semibold text-white">{certificate.solutions.title}</h3>
-                <p className="text-viverblue text-sm mt-1">Categoria: {certificate.solutions.category}</p>
+                <p className="text-white/80 text-sm mt-1">Categoria: {certificate.solutions.category}</p>
               </div>
               
-              <p className="text-gray-300">
+              <p className="text-white/90">
                 em <span className="font-semibold text-white">{formattedDate}</span>
               </p>
             </div>
 
-            {/* Footer */}
-            <div className="pt-6 border-t border-white/20 space-y-2">
-              <p className="text-sm text-gray-400">
-                Código de Validação: <span className="font-mono text-viverblue">{certificate.validation_code}</span>
-              </p>
-              <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
-                <span>Emitido por</span>
-                <span className="font-semibold text-viverblue">Viver de IA</span>
+            {/* Footer com código de validação e assinatura */}
+            <div className="pt-6 border-t border-white/20 space-y-4">
+              <div className="flex justify-between items-end">
+                {/* Código de validação */}
+                <div className="text-left">
+                  <p className="text-xs text-white/70 mb-1">Código de Validação:</p>
+                  <p className="font-mono text-white text-sm font-semibold">{certificate.validation_code}</p>
+                </div>
+                
+                {/* Assinatura */}
+                <div className="text-right">
+                  <div className="border-b border-white/30 pb-1 mb-1" style={{ width: '160px' }}>
+                    <p className="text-white text-lg italic" style={{ fontFamily: 'cursive' }}>Rafael G Milagre</p>
+                  </div>
+                  <p className="text-xs text-white/70">Founder do Viver de IA</p>
+                </div>
+              </div>
+              
+              <div className="text-center">
+                <p className="text-xs text-white/60">
+                  Emitido por <span style={{ color: 'white', fontWeight: '600' }}>Viver de IA</span>
+                </p>
               </div>
             </div>
           </div>

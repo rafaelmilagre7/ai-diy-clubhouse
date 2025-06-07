@@ -204,11 +204,12 @@ export const useSolutionCertificate = (solutionId: string) => {
       tempDiv.style.left = '-9999px';
       tempDiv.style.width = '800px';
       tempDiv.style.height = '600px';
-      tempDiv.style.background = 'linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%)';
+      tempDiv.style.background = 'linear-gradient(135deg, #0ABAB5 0%, #00EAD9 50%, #6DF2E9 100%)';
       tempDiv.style.color = 'white';
-      tempDiv.style.padding = '60px';
+      tempDiv.style.padding = '40px';
       tempDiv.style.textAlign = 'center';
       tempDiv.style.fontFamily = 'Arial, sans-serif';
+      tempDiv.style.position = 'relative';
 
       const formattedDate = new Date(certificate.implementation_date).toLocaleDateString('pt-BR', {
         day: 'numeric',
@@ -217,32 +218,58 @@ export const useSolutionCertificate = (solutionId: string) => {
       });
 
       tempDiv.innerHTML = `
-        <div style="text-align: center; line-height: 1.6;">
-          <h1 style="font-size: 48px; margin-bottom: 10px; font-weight: bold;">CERTIFICADO</h1>
-          <p style="font-size: 24px; margin-bottom: 40px; color: #60a5fa;">de Implementação de Solução</p>
-          
-          <p style="font-size: 20px; margin-bottom: 20px;">Certificamos que</p>
-          
-          <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; margin: 20px 0;">
-            <h2 style="font-size: 32px; font-weight: bold; margin: 0;">${userProfile.name}</h2>
+        <div style="text-align: center; line-height: 1.6; position: relative; height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
+          <!-- Logo no topo -->
+          <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+            <div style="width: 60px; height: 60px; background: rgba(255,255,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255,255,255,0.3);">
+              <span style="font-size: 24px; font-weight: bold; color: white;">VI</span>
+            </div>
           </div>
           
-          <p style="font-size: 20px; margin: 20px 0;">concluiu com sucesso a implementação da solução</p>
-          
-          <div style="background: rgba(96,165,250,0.2); padding: 20px; border-radius: 10px; border: 1px solid rgba(96,165,250,0.3); margin: 20px 0;">
-            <h3 style="font-size: 24px; margin: 0; margin-bottom: 5px;">${certificate.solutions.title}</h3>
-            <p style="color: #60a5fa; margin: 0; font-size: 16px;">Categoria: ${certificate.solutions.category}</p>
+          <!-- Conteúdo principal -->
+          <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+            <h1 style="font-size: 48px; margin-bottom: 10px; font-weight: bold; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">CERTIFICADO</h1>
+            <p style="font-size: 20px; margin-bottom: 30px; color: rgba(255,255,255,0.9);">de Implementação de Solução</p>
+            
+            <p style="font-size: 18px; margin-bottom: 20px; color: rgba(255,255,255,0.9);">Certificamos que</p>
+            
+            <div style="background: rgba(255,255,255,0.15); padding: 20px; border-radius: 12px; margin: 20px 0; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);">
+              <h2 style="font-size: 28px; font-weight: bold; margin: 0; color: white;">${userProfile.name}</h2>
+            </div>
+            
+            <p style="font-size: 18px; margin: 20px 0; color: rgba(255,255,255,0.9);">concluiu com sucesso a implementação da solução</p>
+            
+            <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); margin: 20px 0;">
+              <h3 style="font-size: 22px; margin: 0; margin-bottom: 8px; color: white; font-weight: 600;">${certificate.solutions.title}</h3>
+              <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 14px;">Categoria: ${certificate.solutions.category}</p>
+            </div>
+            
+            <p style="font-size: 16px; margin: 20px 0; color: rgba(255,255,255,0.9);">em <span style="font-weight: 600;">${formattedDate}</span></p>
           </div>
           
-          <p style="font-size: 18px; margin: 30px 0;">em ${formattedDate}</p>
-          
-          <div style="border-top: 1px solid rgba(255,255,255,0.2); padding-top: 30px; margin-top: 40px;">
-            <p style="font-size: 14px; color: #9ca3af; margin-bottom: 10px;">
-              Código de Validação: <span style="font-family: monospace; color: #60a5fa;">${certificate.validation_code}</span>
-            </p>
-            <p style="font-size: 12px; color: #6b7280;">
-              Emitido por <span style="color: #60a5fa; font-weight: bold;">Viver de IA</span>
-            </p>
+          <!-- Footer com código de validação e assinatura -->
+          <div style="border-top: 1px solid rgba(255,255,255,0.2); padding-top: 25px; margin-top: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: end; margin-bottom: 15px;">
+              <!-- Código de validação -->
+              <div style="text-align: left;">
+                <p style="font-size: 12px; color: rgba(255,255,255,0.7); margin: 0; margin-bottom: 5px;">Código de Validação:</p>
+                <p style="font-family: monospace; color: white; margin: 0; font-size: 13px; font-weight: 600;">${certificate.validation_code}</p>
+              </div>
+              
+              <!-- Assinatura -->
+              <div style="text-align: right;">
+                <div style="border-bottom: 1px solid rgba(255,255,255,0.3); width: 200px; margin-bottom: 5px; padding-bottom: 5px;">
+                  <p style="font-family: 'Brush Script MT', cursive; font-size: 24px; margin: 0; color: white; font-style: italic;">Rafael G Milagre</p>
+                </div>
+                <p style="font-size: 11px; color: rgba(255,255,255,0.7); margin: 0;">Founder do Viver de IA</p>
+              </div>
+            </div>
+            
+            <div style="text-align: center;">
+              <p style="font-size: 12px; color: rgba(255,255,255,0.6); margin: 0;">
+                Emitido por <span style="color: white; font-weight: 600;">Viver de IA</span>
+              </p>
+            </div>
           </div>
         </div>
       `;
@@ -253,7 +280,8 @@ export const useSolutionCertificate = (solutionId: string) => {
       const canvas = await html2canvas(tempDiv, {
         scale: 2,
         useCORS: true,
-        backgroundColor: null
+        backgroundColor: null,
+        allowTaint: true
       });
 
       // Gerar PDF
