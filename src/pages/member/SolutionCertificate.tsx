@@ -78,31 +78,9 @@ const SolutionCertificate = () => {
     }
   };
 
+  // Função de compartilhamento simplificada (mantida para compatibilidade)
   const handleShare = () => {
-    const shareText = `🎉 Acabei de receber meu certificado de implementação da solução "${solution.title}" no Viver de IA!\n\nCódigo de validação: ${certificate?.validation_code}\n\n#ViverDeIA #Certificado #IA`;
-    
-    if (navigator.share) {
-      navigator.share({
-        title: 'Meu Certificado de Implementação',
-        text: shareText,
-        url: window.location.href
-      }).then(() => {
-        console.log('Compartilhamento realizado com sucesso');
-      }).catch((error) => {
-        console.error('Erro no compartilhamento nativo:', error);
-        // Fallback para clipboard
-        navigator.clipboard.writeText(shareText).then(() => {
-          console.log('Texto copiado para clipboard como fallback');
-        });
-      });
-    } else {
-      // Fallback para navegadores que não suportam Web Share API
-      navigator.clipboard.writeText(shareText).then(() => {
-        console.log('Texto copiado para clipboard');
-      }).catch((error) => {
-        console.error('Erro ao copiar para clipboard:', error);
-      });
-    }
+    console.log('Share function called (using new ShareCertificateDropdown component)');
   };
 
   const handleGenerate = () => {

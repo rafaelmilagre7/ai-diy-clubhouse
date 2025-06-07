@@ -4246,6 +4246,7 @@ export type Database = {
           issued_at: string | null
           solution_id: string | null
           template_id: string | null
+          updated_at: string
           user_id: string | null
           validation_code: string | null
         }
@@ -4259,6 +4260,7 @@ export type Database = {
           issued_at?: string | null
           solution_id?: string | null
           template_id?: string | null
+          updated_at?: string
           user_id?: string | null
           validation_code?: string | null
         }
@@ -4272,6 +4274,7 @@ export type Database = {
           issued_at?: string | null
           solution_id?: string | null
           template_id?: string | null
+          updated_at?: string
           user_id?: string | null
           validation_code?: string | null
         }

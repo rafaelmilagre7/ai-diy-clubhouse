@@ -2,11 +2,11 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Share2, ExternalLinkIcon, Clock } from "lucide-react";
+import { Download, ExternalLinkIcon, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CERTIFICATE_LOGO_URL } from "@/lib/supabase/uploadCertificateLogo";
-import { toast } from "sonner";
+import { ShareCertificateDropdown } from "./ShareCertificateDropdown";
 
 interface CertificateViewerProps {
   certificate: {
@@ -34,37 +34,12 @@ export const CertificateViewer = ({
   certificate,
   userProfile,
   onDownload,
-  onShare,
   onOpenInNewTab,
 }: CertificateViewerProps) => {
   const issuedDate = certificate.issued_at || certificate.implementation_date;
   const formattedDate = format(new Date(issuedDate), "dd 'de' MMMM 'de' yyyy", {
     locale: ptBR
   });
-
-  const handleShare = () => {
-    const shareText = `🎉 Acabei de receber meu certificado de implementação da solução "${certificate.solutions.title}" no Viver de IA!\n\nCódigo de validação: ${certificate.validation_code}\n\n#ViverDeIA #Certificado #IA`;
-    
-    if (navigator.share) {
-      navigator.share({
-        title: 'Meu Certificado de Implementação',
-        text: shareText,
-        url: window.location.href
-      }).then(() => {
-        toast.success('Conteúdo compartilhado com sucesso!');
-      }).catch(() => {
-        navigator.clipboard.writeText(shareText).then(() => {
-          toast.success('Texto copiado para a área de transferência!');
-        });
-      });
-    } else {
-      navigator.clipboard.writeText(shareText).then(() => {
-        toast.success('Texto do certificado copiado para a área de transferência!');
-      }).catch(() => {
-        toast.error('Erro ao copiar texto. Tente novamente.');
-      });
-    }
-  };
 
   const hasCachedPDF = certificate.certificate_url && certificate.certificate_filename;
 
@@ -191,14 +166,10 @@ export const CertificateViewer = ({
           {hasCachedPDF ? 'Abrir (Instantâneo)' : 'Abrir PDF em Nova Guia'}
         </Button>
         
-        <Button
-          onClick={onShare}
-          variant="outline"
-          className="border-viverblue/50 text-viverblue hover:bg-viverblue/10"
-        >
-          <Share2 className="h-4 w-4 mr-2" />
-          Compartilhar
-        </Button>
+        <ShareCertificateDropdown
+          certificate={certificate}
+          userProfile={userProfile}
+        />
       </div>
     </div>
   );
