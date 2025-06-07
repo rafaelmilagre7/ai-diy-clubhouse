@@ -12,6 +12,7 @@ import { ModuleContentChecklist } from "@/components/implementation/content/Modu
 import { CommentsSection } from "@/components/implementation/content/CommentsSection";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { DifficultyBadge } from "@/components/dashboard/DifficultyBadge";
 import { CheckCircle2, ArrowLeft, Target } from "lucide-react";
 import { useImplementationData } from "@/hooks/implementation/useImplementationData";
 import { useProgressTracking } from "@/hooks/implementation/useProgressTracking";
@@ -97,9 +98,7 @@ const SolutionImplementation: React.FC = () => {
                   <Badge variant="secondary" className="bg-viverblue/20 text-viverblue border-viverblue/30">
                     {solution.category}
                   </Badge>
-                  <Badge variant="outline" className="text-gray-300 border-gray-600">
-                    {solution.difficulty}
-                  </Badge>
+                  <DifficultyBadge difficulty={solution.difficulty} />
                   {solution.estimated_time && (
                     <Badge variant="outline" className="text-gray-300 border-gray-600">
                       {solution.estimated_time} min
