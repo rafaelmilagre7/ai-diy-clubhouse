@@ -11,7 +11,8 @@ import {
   GraduationCap,
   Mail,
   User,
-  Gift
+  Gift,
+  Bug
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -102,13 +103,19 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
       icon: Mail,
       permission: "users.invite"
     },
+    {
+      title: "WhatsApp Debug",
+      href: "/admin/whatsapp-debug",
+      icon: Bug,
+      permission: "admin.all"
+    },
   ];
 
-  const isActive = (href: string) => {
+  function isActive(href: string) {
     return location.pathname === href || location.pathname.startsWith(href + '/');
-  };
+  }
 
-  const renderMenuItem = (item: any) => {
+  function renderMenuItem(item: any) {
     const isAdmin = hasPermission('admin.all');
     
     if (item.permission && !hasPermission(item.permission) && !isAdmin) {
@@ -132,7 +139,7 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
         </Link>
       </Button>
     );
-  };
+  }
 
   return (
     <div className="flex flex-col h-full">
