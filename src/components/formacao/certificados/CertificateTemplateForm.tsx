@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { CertificateTemplate } from "@/types/learningTypes";
 import { Button } from "@/components/ui/button";
@@ -62,7 +61,7 @@ export const CertificateTemplateForm = ({
             <Input
               id="name"
               name="name"
-              value={formData.name}
+              value={formData.name || ""}
               onChange={handleChange}
               required
             />
@@ -103,7 +102,7 @@ export const CertificateTemplateForm = ({
         <div className="flex items-center space-x-2">
           <Switch
             id="is_default"
-            checked={formData.is_default}
+            checked={formData.is_default || false}
             onCheckedChange={handleSwitchChange}
           />
           <Label htmlFor="is_default">
@@ -123,7 +122,7 @@ export const CertificateTemplateForm = ({
             <Textarea
               id="html_template"
               name="html_template"
-              value={formData.html_template}
+              value={formData.html_template || ""}
               onChange={handleChange}
               className="font-mono h-80"
               required
@@ -138,7 +137,7 @@ export const CertificateTemplateForm = ({
             <div
               className="certificate-preview"
               dangerouslySetInnerHTML={{
-                __html: formData.html_template
+                __html: (formData.html_template || "")
                   .replace(/\{\{nome\}\}/g, "Nome do Aluno")
                   .replace(/\{\{curso\}\}/g, "Nome do Curso")
                   .replace(/\{\{data\}\}/g, new Date().toLocaleDateString("pt-BR"))
@@ -166,7 +165,7 @@ export const CertificateTemplateForm = ({
 };
 
 // Função para gerar um template padrão
-const getDefaultTemplate = (): string => {
+function getDefaultTemplate(): string {
   return `
 <!DOCTYPE html>
 <html>
@@ -237,4 +236,4 @@ const getDefaultTemplate = (): string => {
 </body>
 </html>
 `.trim();
-};
+}

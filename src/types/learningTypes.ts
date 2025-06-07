@@ -33,6 +33,30 @@ export interface CertificateTemplate {
   html_template: string;
   css_styles: string | null;
   is_active: boolean;
+  is_default?: boolean;
+  course_id?: string | null;
+  metadata?: Record<string, any>;
   created_at: string;
   updated_at: string;
+}
+
+export interface Comment {
+  id: string;
+  lesson_id: string;
+  user_id: string;
+  parent_id: string | null;
+  content: string;
+  likes_count: number;
+  is_hidden: boolean;
+  user_has_liked?: boolean;
+  created_at: string;
+  updated_at: string;
+  profiles?: {
+    id: string;
+    name: string;
+    email: string;
+    avatar_url: string;
+    role: string;
+  } | null;
+  replies?: Comment[];
 }
