@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
@@ -84,12 +83,15 @@ export const useSolutionCertificate = (solutionId: string) => {
         ).join('');
 
         try {
+          // Usar fallback seguro para a data de implementação
+          const implementationDate = progress.completed_at || progress.created_at || new Date().toISOString();
+          
           const { data: newCert, error: createError } = await supabase
             .from('solution_certificates')
             .insert({
               user_id: user.id,
               solution_id: solutionId,
-              implementation_date: progress.completed_at || progress.updated_at,
+              implementation_date: implementationDate,
               validation_code: validationCode,
               issued_at: new Date().toISOString()
             })
@@ -165,13 +167,16 @@ export const useSolutionCertificate = (solutionId: string) => {
         'ABCDEFGHJKMNPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 34)]
       ).join('');
 
+      // Usar fallback seguro para a data de implementação
+      const implementationDate = progress.completed_at || progress.created_at || new Date().toISOString();
+
       // Criar certificado
       const { data: certificate, error: createError } = await supabase
         .from('solution_certificates')
         .insert({
           user_id: user.id,
           solution_id: solutionId,
-          implementation_date: progress.completed_at || progress.updated_at,
+          implementation_date: implementationDate,
           validation_code: validationCode,
           issued_at: new Date().toISOString()
         })
