@@ -91,9 +91,6 @@ const SolutionImplementation: React.FC = () => {
                   <h1 className="text-3xl font-bold text-white mb-3">
                     {solution.title}
                   </h1>
-                  <p className="text-gray-300 text-lg leading-relaxed max-w-2xl">
-                    {solution.description}
-                  </p>
                 </div>
                 
                 <div className="flex items-center gap-4">
