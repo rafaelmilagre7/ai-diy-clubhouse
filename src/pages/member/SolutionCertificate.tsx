@@ -22,7 +22,8 @@ const SolutionCertificate = () => {
     isLoading: certificateLoading,
     generateCertificate,
     isGenerating,
-    downloadCertificate
+    downloadCertificate,
+    openCertificateInNewTab
   } = useSolutionCertificate(id || '');
 
   const loading = solutionLoading || certificateLoading;
@@ -31,7 +32,8 @@ const SolutionCertificate = () => {
     certificate: !!certificate,
     isEligible,
     loading,
-    isGenerating
+    isGenerating,
+    hasCachedPDF: !!(certificate?.certificate_url)
   });
 
   if (loading) {
@@ -67,6 +69,12 @@ const SolutionCertificate = () => {
   const handleDownload = () => {
     if (certificate && profile) {
       downloadCertificate(certificate, profile);
+    }
+  };
+
+  const handleOpenInNewTab = () => {
+    if (certificate && profile) {
+      openCertificateInNewTab(certificate, profile);
     }
   };
 
@@ -130,6 +138,7 @@ const SolutionCertificate = () => {
           userProfile={profile}
           onDownload={handleDownload}
           onShare={handleShare}
+          onOpenInNewTab={handleOpenInNewTab}
         />
       ) : isEligible ? (
         /* Se é elegível mas não tem certificado, mostrar botão para gerar */

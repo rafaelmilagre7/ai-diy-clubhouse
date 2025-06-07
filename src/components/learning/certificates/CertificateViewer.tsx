@@ -2,12 +2,11 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Share2, ExternalLinkIcon } from "lucide-react";
+import { Download, Share2, ExternalLinkIcon, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CERTIFICATE_LOGO_URL } from "@/lib/supabase/uploadCertificateLogo";
 import { toast } from "sonner";
-import { convertImageToBase64, generateCertificateHTML } from "@/utils/certificateUtils";
 
 interface CertificateViewerProps {
   certificate: {
@@ -15,6 +14,8 @@ interface CertificateViewerProps {
     validation_code: string;
     implementation_date: string;
     issued_at: string;
+    certificate_url?: string;
+    certificate_filename?: string;
     solutions: {
       title: string;
       category: string;
@@ -26,6 +27,7 @@ interface CertificateViewerProps {
   };
   onDownload: () => void;
   onShare: () => void;
+  onOpenInNewTab: () => void;
 }
 
 export const CertificateViewer = ({
@@ -33,82 +35,12 @@ export const CertificateViewer = ({
   userProfile,
   onDownload,
   onShare,
+  onOpenInNewTab,
 }: CertificateViewerProps) => {
   const issuedDate = certificate.issued_at || certificate.implementation_date;
   const formattedDate = format(new Date(issuedDate), "dd 'de' MMMM 'de' yyyy", {
     locale: ptBR
   });
-
-  const handleOpenPDFInNewTab = async () => {
-    try {
-      toast.loading('Preparando certificado...', { id: 'pdf-loading' });
-      
-      console.log('Iniciando geração do PDF...');
-      
-      const [html2canvas, jsPDF] = await Promise.all([
-        import('html2canvas').then(module => module.default),
-        import('jspdf').then(module => module.default)
-      ]);
-
-      console.log('Bibliotecas carregadas');
-
-      const logoBase64 = await convertImageToBase64(CERTIFICATE_LOGO_URL);
-      console.log('Logo convertida com sucesso');
-
-      const htmlContent = generateCertificateHTML(certificate, userProfile, formattedDate, logoBase64);
-
-      const tempDiv = document.createElement('div');
-      tempDiv.style.position = 'absolute';
-      tempDiv.style.left = '-9999px';
-      tempDiv.style.top = '0';
-      tempDiv.innerHTML = htmlContent;
-      
-      document.body.appendChild(tempDiv);
-
-      console.log('Elemento temporário criado, aguardando fontes...');
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
-      console.log('Capturando elemento como imagem...');
-      
-      const canvas = await html2canvas(tempDiv.querySelector('.certificate-container') as HTMLElement, {
-        scale: 1,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#000000',
-        logging: false,
-        width: 1123,
-        height: 794
-      });
-
-      console.log('Canvas gerado:', canvas.width, 'x', canvas.height);
-
-      const pdf = new jsPDF({
-        orientation: 'landscape',
-        unit: 'mm',
-        format: 'a4'
-      });
-
-      const imgData = canvas.toDataURL('image/png', 1.0);
-      pdf.addImage(imgData, 'PNG', 0, 0, 297, 210);
-      
-      const pdfBlob = pdf.output('blob');
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      
-      const newWindow = window.open(pdfUrl, '_blank');
-      if (!newWindow) {
-        throw new Error('Pop-ups bloqueados. Permita pop-ups para abrir o certificado.');
-      }
-
-      toast.success('Certificado aberto em nova guia!', { id: 'pdf-loading' });
-
-      document.body.removeChild(tempDiv);
-      setTimeout(() => URL.revokeObjectURL(pdfUrl), 10000);
-      
-    } catch (error) {
-      console.error('Erro ao abrir certificado em nova guia:', error);
-      toast.error(`Erro ao abrir certificado: ${error.message}`, { id: 'pdf-loading' });
-    }
-  };
 
   const handleShare = () => {
     const shareText = `🎉 Acabei de receber meu certificado de implementação da solução "${certificate.solutions.title}" no Viver de IA!\n\nCódigo de validação: ${certificate.validation_code}\n\n#ViverDeIA #Certificado #IA`;
@@ -133,6 +65,8 @@ export const CertificateViewer = ({
       });
     }
   };
+
+  const hasCachedPDF = certificate.certificate_url && certificate.certificate_filename;
 
   return (
     <div className="space-y-6">
@@ -228,6 +162,16 @@ export const CertificateViewer = ({
         </Card>
       </div>
 
+      {/* Status do Cache */}
+      {hasCachedPDF && (
+        <div className="text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-full text-green-400 text-sm">
+            <Clock className="h-4 w-4" />
+            Certificado pronto para download instantâneo
+          </div>
+        </div>
+      )}
+
       {/* Botões de Ação */}
       <div className="flex flex-col sm:flex-row gap-3 justify-center">
         <Button
@@ -235,16 +179,16 @@ export const CertificateViewer = ({
           className="bg-viverblue hover:bg-viverblue/90 text-white"
         >
           <Download className="h-4 w-4 mr-2" />
-          Baixar PDF
+          {hasCachedPDF ? 'Download Instantâneo' : 'Baixar PDF'}
         </Button>
         
         <Button
-          onClick={handleOpenPDFInNewTab}
+          onClick={onOpenInNewTab}
           variant="outline"
           className="border-viverblue/50 text-viverblue hover:bg-viverblue/10"
         >
           <ExternalLinkIcon className="h-4 w-4 mr-2" />
-          Abrir PDF em Nova Guia
+          {hasCachedPDF ? 'Abrir (Instantâneo)' : 'Abrir PDF em Nova Guia'}
         </Button>
         
         <Button

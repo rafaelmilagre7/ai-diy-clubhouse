@@ -1,10 +1,17 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
 import { CERTIFICATE_LOGO_URL } from '@/lib/supabase/uploadCertificateLogo';
-import { convertImageToBase64, generateCertificateHTML } from '@/utils/certificateUtils';
+import { 
+  convertImageToBase64, 
+  generateCertificateHTML, 
+  generateCertificateFileName,
+  uploadCertificateToStorage,
+  updateCertificateRecord
+} from '@/utils/certificateUtils';
 
 export const useSolutionCertificate = (solutionId: string) => {
   const { user } = useAuth();
@@ -192,23 +199,18 @@ export const useSolutionCertificate = (solutionId: string) => {
     }
   });
 
-  // Download do certificado como PDF
-  const downloadCertificate = async (certificate: any, userProfile: any) => {
+  // Função para gerar PDF e fazer cache
+  const generateAndCachePDF = async (certificate: any, userProfile: any) => {
     try {
-      toast.loading('Gerando certificado PDF...', { id: 'download-loading' });
-      
-      console.log('Iniciando download do certificado...');
+      console.log('Iniciando geração e cache do PDF...');
       
       const [html2canvas, jsPDF] = await Promise.all([
         import('html2canvas').then(module => module.default),
         import('jspdf').then(module => module.default)
       ]);
 
-      console.log('Bibliotecas carregadas para download');
-
       const logoBase64 = await convertImageToBase64(CERTIFICATE_LOGO_URL);
-      console.log('Logo convertida com sucesso');
-
+      
       const issuedDate = certificate.issued_at || certificate.implementation_date;
       const formattedDate = new Date(issuedDate).toLocaleDateString('pt-BR', {
         day: 'numeric',
@@ -225,12 +227,8 @@ export const useSolutionCertificate = (solutionId: string) => {
       tempDiv.innerHTML = htmlContent;
       
       document.body.appendChild(tempDiv);
-
-      console.log('Elemento temporário criado para download, aguardando fontes...');
       await new Promise(resolve => setTimeout(resolve, 3000));
 
-      console.log('Capturando elemento como imagem para download...');
-      
       const canvas = await html2canvas(tempDiv.querySelector('.certificate-container') as HTMLElement, {
         scale: 1,
         useCORS: true,
@@ -241,8 +239,6 @@ export const useSolutionCertificate = (solutionId: string) => {
         height: 794
       });
 
-      console.log('Canvas gerado para download:', canvas.width, 'x', canvas.height);
-
       const pdf = new jsPDF({
         orientation: 'landscape',
         unit: 'mm',
@@ -252,15 +248,135 @@ export const useSolutionCertificate = (solutionId: string) => {
       const imgData = canvas.toDataURL('image/png', 1.0);
       pdf.addImage(imgData, 'PNG', 0, 0, 297, 210);
       
-      pdf.save(`certificado-${certificate.solutions.title.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`);
-
+      const pdfBlob = pdf.output('blob');
+      
+      // Gerar nome personalizado
+      const fileName = generateCertificateFileName(userProfile.name, certificate.solutions.title);
+      
+      // Fazer upload para o storage
+      const certificateUrl = await uploadCertificateToStorage(pdfBlob, fileName, certificate.id);
+      
+      // Atualizar registro do certificado
+      await updateCertificateRecord(certificate.id, certificateUrl, fileName);
+      
       document.body.removeChild(tempDiv);
+      
+      console.log('PDF gerado e armazenado com sucesso');
+      
+      return { pdfBlob, certificateUrl, fileName };
+    } catch (error) {
+      console.error('Erro ao gerar e cachear PDF:', error);
+      throw error;
+    }
+  };
+
+  // Download do certificado como PDF
+  const downloadCertificate = async (certificate: any, userProfile: any) => {
+    try {
+      toast.loading('Preparando download do certificado...', { id: 'download-loading' });
+      
+      console.log('Iniciando download do certificado...');
+      
+      // Verificar se já existe cache
+      if (certificate.certificate_url && certificate.certificate_filename) {
+        console.log('Usando certificado do cache:', certificate.certificate_url);
+        
+        try {
+          // Tentar baixar do cache
+          const response = await fetch(certificate.certificate_url);
+          if (response.ok) {
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = certificate.certificate_filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            toast.success('Certificado baixado com sucesso!', { id: 'download-loading' });
+            return;
+          }
+        } catch (cacheError) {
+          console.warn('Cache não disponível, gerando novo PDF:', cacheError);
+        }
+      }
+      
+      // Se não tem cache ou cache falhou, gerar novo PDF
+      console.log('Gerando novo PDF para download...');
+      const { pdfBlob, fileName } = await generateAndCachePDF(certificate, userProfile);
+      
+      // Download do PDF
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      // Invalidar query para atualizar dados do certificado
+      queryClient.invalidateQueries({ queryKey: ['solution-certificate'] });
       
       toast.success('Certificado baixado com sucesso!', { id: 'download-loading' });
       console.log('Download concluído com sucesso');
     } catch (error) {
       console.error('Erro ao fazer download:', error);
       toast.error(`Erro ao fazer download do certificado: ${error.message}`, { id: 'download-loading' });
+    }
+  };
+
+  // Abrir certificado em nova guia
+  const openCertificateInNewTab = async (certificate: any, userProfile: any) => {
+    try {
+      toast.loading('Preparando certificado...', { id: 'pdf-loading' });
+      
+      console.log('Abrindo certificado em nova guia...');
+      
+      // Verificar se já existe cache
+      if (certificate.certificate_url) {
+        console.log('Usando certificado do cache:', certificate.certificate_url);
+        
+        try {
+          // Tentar abrir do cache
+          const response = await fetch(certificate.certificate_url);
+          if (response.ok) {
+            const newWindow = window.open(certificate.certificate_url, '_blank');
+            if (!newWindow) {
+              throw new Error('Pop-ups bloqueados. Permita pop-ups para abrir o certificado.');
+            }
+            
+            toast.success('Certificado aberto em nova guia!', { id: 'pdf-loading' });
+            return;
+          }
+        } catch (cacheError) {
+          console.warn('Cache não disponível, gerando novo PDF:', cacheError);
+        }
+      }
+      
+      // Se não tem cache ou cache falhou, gerar novo PDF
+      console.log('Gerando novo PDF para abrir em nova guia...');
+      const { pdfBlob } = await generateAndCachePDF(certificate, userProfile);
+      
+      // Abrir PDF em nova guia
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      const newWindow = window.open(pdfUrl, '_blank');
+      if (!newWindow) {
+        throw new Error('Pop-ups bloqueados. Permita pop-ups para abrir o certificado.');
+      }
+
+      toast.success('Certificado aberto em nova guia!', { id: 'pdf-loading' });
+      
+      // Invalidar query para atualizar dados do certificado
+      queryClient.invalidateQueries({ queryKey: ['solution-certificate'] });
+      
+      setTimeout(() => URL.revokeObjectURL(pdfUrl), 10000);
+      
+    } catch (error) {
+      console.error('Erro ao abrir certificado em nova guia:', error);
+      toast.error(`Erro ao abrir certificado: ${error.message}`, { id: 'pdf-loading' });
     }
   };
 
@@ -271,6 +387,7 @@ export const useSolutionCertificate = (solutionId: string) => {
     error,
     generateCertificate: generateCertificate.mutate,
     isGenerating: generateCertificate.isPending,
-    downloadCertificate
+    downloadCertificate,
+    openCertificateInNewTab
   };
 };

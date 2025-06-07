@@ -1,4 +1,6 @@
 
+import { supabase } from '@/lib/supabase';
+
 // Utilitário para converter imagem para base64
 export const convertImageToBase64 = async (imageUrl: string): Promise<string> => {
   console.log('Iniciando conversão de imagem para base64:', imageUrl);
@@ -36,6 +38,89 @@ export const convertImageToBase64 = async (imageUrl: string): Promise<string> =>
   } catch (error) {
     console.error('Erro ao converter imagem para base64:', error);
     throw error; // Propagate o erro sem fallback
+  }
+};
+
+// Função para sanitizar nomes de arquivo
+export const sanitizeFileName = (text: string): string => {
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+    .replace(/[^\w\s-]/g, '') // Remove caracteres especiais exceto espaços e hífens
+    .replace(/\s+/g, '-') // Substitui espaços por hífens
+    .replace(/-+/g, '-') // Remove hífens consecutivos
+    .trim();
+};
+
+// Função para gerar nome personalizado do certificado
+export const generateCertificateFileName = (userName: string, solutionTitle: string): string => {
+  const sanitizedUserName = sanitizeFileName(userName);
+  const sanitizedSolutionTitle = sanitizeFileName(solutionTitle);
+  
+  return `Viver-de-IA-${sanitizedUserName}-${sanitizedSolutionTitle}-Certificado.pdf`;
+};
+
+// Função para fazer upload do certificado para o Supabase Storage
+export const uploadCertificateToStorage = async (
+  pdfBlob: Blob,
+  fileName: string,
+  certificateId: string
+): Promise<string> => {
+  console.log('Iniciando upload do certificado para storage:', fileName);
+  
+  try {
+    const filePath = `${certificateId}/${fileName}`;
+    
+    const { data, error } = await supabase.storage
+      .from('certificates')
+      .upload(filePath, pdfBlob, {
+        contentType: 'application/pdf',
+        upsert: true
+      });
+
+    if (error) {
+      console.error('Erro ao fazer upload do certificado:', error);
+      throw error;
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from('certificates')
+      .getPublicUrl(filePath);
+
+    console.log('Upload do certificado concluído:', publicUrlData.publicUrl);
+    return publicUrlData.publicUrl;
+  } catch (error) {
+    console.error('Erro no upload do certificado:', error);
+    throw error;
+  }
+};
+
+// Função para atualizar o registro do certificado com a URL e nome do arquivo
+export const updateCertificateRecord = async (
+  certificateId: string,
+  certificateUrl: string,
+  certificateFilename: string
+): Promise<void> => {
+  console.log('Atualizando registro do certificado:', certificateId);
+  
+  try {
+    const { error } = await supabase
+      .from('solution_certificates')
+      .update({
+        certificate_url: certificateUrl,
+        certificate_filename: certificateFilename
+      })
+      .eq('id', certificateId);
+
+    if (error) {
+      console.error('Erro ao atualizar registro do certificado:', error);
+      throw error;
+    }
+
+    console.log('Registro do certificado atualizado com sucesso');
+  } catch (error) {
+    console.error('Erro ao atualizar registro do certificado:', error);
+    throw error;
   }
 };
 

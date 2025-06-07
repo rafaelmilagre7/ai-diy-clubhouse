@@ -4238,6 +4238,8 @@ export type Database = {
       solution_certificates: {
         Row: {
           certificate_data: Json | null
+          certificate_filename: string | null
+          certificate_url: string | null
           created_at: string | null
           id: string
           implementation_date: string
@@ -4249,6 +4251,8 @@ export type Database = {
         }
         Insert: {
           certificate_data?: Json | null
+          certificate_filename?: string | null
+          certificate_url?: string | null
           created_at?: string | null
           id?: string
           implementation_date?: string
@@ -4260,6 +4264,8 @@ export type Database = {
         }
         Update: {
           certificate_data?: Json | null
+          certificate_filename?: string | null
+          certificate_url?: string | null
           created_at?: string | null
           id?: string
           implementation_date?: string
