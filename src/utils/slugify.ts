@@ -1,30 +1,73 @@
 
+/**
+ * Utility functions for creating SEO-friendly URLs and slugs
+ */
+
+/**
+ * Converts a string to a URL-friendly slug
+ */
 export const slugify = (text: string, addTimestamp: boolean = false): string => {
-  const slug = text
+  let slug = text
     .toLowerCase()
     .trim()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_-]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+    .replace(/[\s\W-]+/g, '-') // Replace spaces and special chars with hyphens
+    .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
   
+  // Add timestamp for uniqueness if requested
   if (addTimestamp) {
-    return `${slug}-${Date.now()}`;
+    const timestamp = Date.now().toString().slice(-6); // Last 6 digits
+    slug = `${slug}-${timestamp}`;
   }
   
   return slug;
 };
 
-export const truncateSlug = (slug: string, maxLength = 60): string => {
+/**
+ * Truncates a slug to a maximum length while preserving word boundaries
+ */
+export const truncateSlug = (slug: string, maxLength: number = 60): string => {
   if (slug.length <= maxLength) return slug;
   
-  // Corta o slug mantendo o timestamp no final
-  const parts = slug.split('-');
-  const timestamp = parts[parts.length - 1];
+  // Find the last hyphen before the max length
+  const truncated = slug.substring(0, maxLength);
+  const lastHyphen = truncated.lastIndexOf('-');
   
-  // Remove o timestamp para truncar apenas a parte significativa
-  const mainSlug = slug.substring(0, slug.length - timestamp.length - 1);
+  return lastHyphen > 0 ? truncated.substring(0, lastHyphen) : truncated;
+};
+
+/**
+ * Validates if a slug is SEO-friendly
+ */
+export const isValidSlug = (slug: string): boolean => {
+  const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+  return slugRegex.test(slug) && slug.length <= 60;
+};
+
+/**
+ * Generates breadcrumb data for SEO
+ */
+export const generateBreadcrumbs = (pathname: string): Array<{name: string, url: string}> => {
+  const segments = pathname.split('/').filter(Boolean);
+  const breadcrumbs = [{ name: 'Início', url: '/' }];
   
-  // Trunca a parte principal e adiciona o timestamp de volta
-  const truncated = mainSlug.substring(0, maxLength - timestamp.length - 1);
-  return `${truncated}-${timestamp}`;
+  let currentPath = '';
+  
+  segments.forEach((segment, index) => {
+    currentPath += `/${segment}`;
+    
+    // Map segments to readable names
+    const segmentNames: Record<string, string> = {
+      'dashboard': 'Dashboard',
+      'tools': 'Ferramentas',
+      'learning': 'Aprendizado',
+      'solutions': 'Soluções',
+      'comunidade': 'Comunidade',
+      'profile': 'Perfil'
+    };
+    
+    const name = segmentNames[segment] || segment.charAt(0).toUpperCase() + segment.slice(1);
+    breadcrumbs.push({ name, url: currentPath });
+  });
+  
+  return breadcrumbs;
 };
