@@ -45,7 +45,46 @@ export const ImplementationComplete: React.FC<ImplementationCompleteProps> = ({
   }, [isCompleted]);
 
   const handleComplete = async () => {
-    await onComplete();
+    try {
+      // Primeira explosão de confetes ao clicar
+      confetti({
+        particleCount: 100,
+        spread: 60,
+        origin: { y: 0.7 },
+        colors: ['#0ABAB5', '#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1']
+      });
+      
+      await onComplete();
+      
+      // Segunda explosão de confetes após completar
+      setTimeout(() => {
+        confetti({
+          particleCount: 200,
+          spread: 80,
+          origin: { y: 0.6 },
+          colors: ['#0ABAB5', '#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1']
+        });
+        
+        // Confetes laterais
+        setTimeout(() => {
+          confetti({
+            particleCount: 50,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0 }
+          });
+          confetti({
+            particleCount: 50,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1 }
+          });
+        }, 300);
+      }, 500);
+      
+    } catch (error) {
+      console.error('Erro ao concluir implementação:', error);
+    }
   };
   
   if (isCompleted) {
