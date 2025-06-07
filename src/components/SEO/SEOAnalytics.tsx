@@ -48,8 +48,8 @@ export const SEOAnalytics: React.FC<SEOAnalyticsProps> = ({
       localStorage.setItem('seo_metrics', JSON.stringify(seoMetrics));
 
       // Simular envio para analytics (em produção, seria Google Analytics 4)
-      if (typeof gtag !== 'undefined') {
-        gtag('event', 'page_view_seo', {
+      if (typeof window.gtag === 'function') {
+        window.gtag('event', 'page_view_seo', {
           page_path: location.pathname,
           page_title: title,
           content_category: category,
