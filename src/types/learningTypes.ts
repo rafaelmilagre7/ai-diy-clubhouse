@@ -1,50 +1,38 @@
 
-export interface Comment {
-  id: string;
-  content: string;
-  created_at: string;
-  user_id: string;
-  parent_id: string | null;
-  profiles: {
-    id?: string;
-    name: string;
-    email?: string;
-    avatar_url: string;
-    role?: string;
-  };
-  likes_count: number;
-  user_has_liked?: boolean;
-  replies?: Comment[];
-}
-
 export interface Certificate {
   id: string;
   user_id: string;
-  course_id: string;
-  issued_at: string;
+  course_id?: string;
+  solution_id?: string;
+  certificate_url: string | null;
   validation_code: string;
-  template_id?: string;
-  certificate_url?: string;
   has_validation_page?: boolean;
-  profiles?: {
-    name: string;
-    email: string;
-  };
-  learning_courses?: {
-    title: string;
-    description?: string;
-  };
+  issued_at: string;
+  implementation_date?: string;
+  template_id?: string;
+  created_at: string;
+}
+
+export interface SolutionCertificate {
+  id: string;
+  user_id: string;
+  solution_id: string;
+  implementation_date: string;
+  certificate_url: string | null;
+  validation_code: string;
+  template_id: string | null;
+  issued_at: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CertificateTemplate {
   id: string;
   name: string;
-  description?: string;
+  description: string | null;
   html_template: string;
-  css_styles?: string;
+  css_styles: string | null;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
-  is_default: boolean;
-  course_id?: string | null;
-  metadata?: Record<string, any>;
 }

@@ -4202,30 +4202,72 @@ export type Database = {
         }
         Relationships: []
       }
+      solution_certificate_templates: {
+        Row: {
+          created_at: string
+          css_styles: string | null
+          description: string | null
+          html_template: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          css_styles?: string | null
+          description?: string | null
+          html_template: string
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          css_styles?: string | null
+          description?: string | null
+          html_template?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       solution_certificates: {
         Row: {
           certificate_data: Json | null
           created_at: string | null
           id: string
+          implementation_date: string
           issued_at: string | null
           solution_id: string | null
+          template_id: string | null
           user_id: string | null
+          validation_code: string | null
         }
         Insert: {
           certificate_data?: Json | null
           created_at?: string | null
           id?: string
+          implementation_date?: string
           issued_at?: string | null
           solution_id?: string | null
+          template_id?: string | null
           user_id?: string | null
+          validation_code?: string | null
         }
         Update: {
           certificate_data?: Json | null
           created_at?: string | null
           id?: string
+          implementation_date?: string
           issued_at?: string | null
           solution_id?: string | null
+          template_id?: string | null
           user_id?: string | null
+          validation_code?: string | null
         }
         Relationships: [
           {
@@ -5358,6 +5400,10 @@ export type Database = {
         Args: { p_token: string }
         Returns: Json
       }
+      check_solution_certificate_eligibility: {
+        Args: { p_user_id: string; p_solution_id: string }
+        Returns: boolean
+      }
       check_trusted_domain: {
         Args: { p_email: string }
         Returns: Json
@@ -5407,6 +5453,10 @@ export type Database = {
         }
         Returns: Json
       }
+      create_solution_certificate_if_eligible: {
+        Args: { p_user_id: string; p_solution_id: string }
+        Returns: string
+      }
       create_storage_public_policy: {
         Args: { bucket_name: string }
         Returns: boolean
@@ -5429,6 +5479,10 @@ export type Database = {
       }
       determinerolefromemail: {
         Args: { email: string }
+        Returns: string
+      }
+      generate_certificate_validation_code: {
+        Args: Record<PropertyKey, never>
         Returns: string
       }
       generate_invite_token: {
@@ -5620,6 +5674,10 @@ export type Database = {
       user_has_permission: {
         Args: { user_id: string; permission_code: string }
         Returns: boolean
+      }
+      validate_solution_certificate: {
+        Args: { p_validation_code: string }
+        Returns: Json
       }
       validateuserrole: {
         Args: { profileid: string; currentrole: string; email: string }
