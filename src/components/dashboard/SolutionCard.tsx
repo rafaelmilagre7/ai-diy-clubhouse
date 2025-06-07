@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Solution } from '@/lib/supabase';
-import { Clock } from 'lucide-react';
+import { TrendingUp, Settings, BarChart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CardContentSection } from './CardContent';
 
@@ -23,6 +23,19 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution, onClick })
         return "border-l-strategy border-l-4 bg-strategy-darker/20";
       default:
         return "border-l-viverblue border-l-4 bg-viverblue/10";
+    }
+  };
+  
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'Receita':
+        return <TrendingUp className="h-3.5 w-3.5 mr-1" />;
+      case 'Operacional':
+        return <Settings className="h-3.5 w-3.5 mr-1" />;
+      case 'Estratégia':
+        return <BarChart className="h-3.5 w-3.5 mr-1" />;
+      default:
+        return <TrendingUp className="h-3.5 w-3.5 mr-1" />;
     }
   };
   
@@ -70,8 +83,8 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution, onClick })
       
       <CardFooter className="px-4 py-3 flex items-center justify-between border-t border-neutral-800">
         <div className="flex items-center space-x-1 text-xs text-neutral-300">
-          <Clock className="h-3.5 w-3.5 mr-1" />
-          <span>30 min</span>
+          {getCategoryIcon(solution.category)}
+          <span>{solution.category}</span>
         </div>
         {getDifficultyBadge(solution.difficulty)}
       </CardFooter>

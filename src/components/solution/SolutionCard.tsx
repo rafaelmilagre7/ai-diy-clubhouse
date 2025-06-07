@@ -5,7 +5,7 @@ import { Solution } from '@/lib/supabase';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Clock, BarChart, TrendingUp, Settings, Zap } from 'lucide-react';
+import { BarChart, TrendingUp, Settings, Zap } from 'lucide-react';
 import { SolutionCategory } from '@/lib/types/categoryTypes';
 
 interface SolutionCardProps {
@@ -92,12 +92,10 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
           </ScrollArea>
         </CardContent>
         <CardFooter className="p-4 pt-0 flex gap-2 flex-wrap justify-between text-xs text-neutral-400">
-          {solution.estimated_time && solution.estimated_time > 0 && (
-            <div className="flex items-center">
-              <Clock className="h-3 w-3 mr-1" />
-              <span>{solution.estimated_time} min</span>
-            </div>
-          )}
+          <div className="flex items-center">
+            {getCategoryDetails(solution.category).icon}
+            <span className="ml-1">{getCategoryDetails(solution.category).name}</span>
+          </div>
           <Badge
             variant="outline"
             className={`font-medium ${getDifficultyBadgeStyle(solution.difficulty)}`}
