@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { uploadFileToStorage } from "@/components/ui/file/uploadUtils";
 import { useImageURL } from "@/hooks/useImageURL";
@@ -28,7 +27,7 @@ export const ImageUpload = ({
   const { toast } = useToast();
 
   // Otimizar URL quando value mudar
-  React.useEffect(() => {
+  useEffect(() => {
     if (enableOptimization && value) {
       optimizeImageURL(value, { priority: 'normal' })
         .then(url => {
