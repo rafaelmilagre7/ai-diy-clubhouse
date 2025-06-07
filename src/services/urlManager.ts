@@ -1,10 +1,12 @@
 import { APP_CONFIG } from '@/config/app';
 import { analyticsService } from '@/services/analyticsService';
+import { proxyService } from '@/services/proxyService';
 
 export interface URLManagerConfig {
   enableCache: boolean;
   enableAnalytics: boolean;
   enableFallback: boolean;
+  enableRealProxy: boolean; // Nova opção para usar proxy real
   cacheStrategy: 'aggressive' | 'balanced' | 'conservative';
 }
 
@@ -31,7 +33,7 @@ export class URLManager {
   /**
    * Transforma uma URL do Supabase para usar o domínio personalizado
    */
-  transformURL(originalUrl: string, type: 'certificate' | 'storage' | 'image' | 'document' = 'storage'): URLTransformResult {
+  async transformURL(originalUrl: string, type: 'certificate' | 'storage' | 'image' | 'document' = 'storage'): Promise<URLTransformResult> {
     console.log(`[URLManager] Transformando URL tipo: ${type}`, originalUrl);
 
     // Se não for URL do Supabase, retornar original
@@ -60,8 +62,24 @@ export class URLManager {
     }
 
     try {
-      // Transformar URL para usar o domínio personalizado
-      const transformedUrl = this.buildProxyURL(originalUrl, type);
+      let transformedUrl: string;
+      let source: 'proxy' | 'fallback';
+
+      // Usar proxy real se habilitado
+      if (this.config.enableRealProxy) {
+        const proxyResult = await proxyService.proxyURL(originalUrl, type);
+        
+        if (proxyResult.success && proxyResult.url) {
+          transformedUrl = proxyResult.url;
+          source = proxyResult.source;
+        } else {
+          throw new Error(proxyResult.error || 'Proxy service failed');
+        }
+      } else {
+        // Fallback para método antigo (URL rewrite simples)
+        transformedUrl = this.buildProxyURL(originalUrl, type);
+        source = 'proxy';
+      }
       
       // Salvar no cache
       if (this.config.enableCache) {
@@ -77,7 +95,7 @@ export class URLManager {
 
       return {
         url: transformedUrl,
-        source: 'proxy',
+        source,
         cached: false,
         analytics: this.generateAnalytics(type)
       };
@@ -99,15 +117,15 @@ export class URLManager {
   }
 
   /**
-   * Constrói a URL do proxy usando o domínio personalizado
+   * Constrói a URL do proxy usando o domínio personalizado (método antigo)
    */
   private buildProxyURL(originalUrl: string, type: string): string {
     const url = new URL(originalUrl);
     const pathParts = url.pathname.split('/').filter(Boolean);
     
     // Extrair bucket e path do arquivo
-    const bucket = pathParts[2] || 'storage'; // default bucket
-    const filePath = pathParts.slice(3).join('/');
+    const bucket = pathParts[4] || 'storage'; // storage/v1/object/public/{bucket}
+    const filePath = pathParts.slice(5).join('/');
     
     // Construir nova URL usando o domínio personalizado
     const baseUrl = APP_CONFIG.getAppDomain();
@@ -126,7 +144,6 @@ export class URLManager {
     const cached = this.cache.get(key);
     if (!cached) return null;
     
-    // Verificar se o cache expirou
     if (Date.now() > cached.timestamp + cached.ttl) {
       this.cache.delete(key);
       return null;
@@ -191,6 +208,7 @@ export class URLManager {
       try {
         console.log(`[Analytics] URL transformada:`, {
           type,
+          source: this.config.enableRealProxy ? 'real_proxy' : 'url_rewrite',
           original: original.substring(0, 50) + '...',
           transformed: transformed.substring(0, 50) + '...',
           timestamp: new Date().toISOString()
@@ -199,6 +217,7 @@ export class URLManager {
         // Usar o serviço de analytics em vez de window.gtag diretamente
         analyticsService.trackURLTransformation({
           type,
+          source: this.config.enableRealProxy ? 'real_proxy' : 'url_rewrite',
           original: original.substring(0, 50) + '...',
           transformed: transformed.substring(0, 50) + '...',
           timestamp: new Date().toISOString()
@@ -228,16 +247,25 @@ export class URLManager {
     };
   }
 
+  /**
+   * Atualiza configuração do URL Manager
+   */
   updateConfig(newConfig: Partial<URLManagerConfig>): void {
     this.config = { ...this.config, ...newConfig };
     console.log('[URLManager] Configuração atualizada:', this.config);
+    
+    // Propagar mudanças para o proxy service se necessário
+    if (newConfig.enableFallback !== undefined) {
+      proxyService.updateConfig({ enableFallback: newConfig.enableFallback });
+    }
   }
 }
 
-// Instância singleton configurada
+// Instância singleton configurada com proxy real habilitado
 export const urlManager = new URLManager({
   enableCache: true,
   enableAnalytics: true,
   enableFallback: true,
+  enableRealProxy: true, // 🚀 Proxy real habilitado!
   cacheStrategy: 'balanced'
 });
