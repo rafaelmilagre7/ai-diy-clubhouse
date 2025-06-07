@@ -5,6 +5,7 @@ import { useSolutionData } from "@/hooks/useSolutionData";
 import { useSolutionCertificate } from "@/hooks/learning/useSolutionCertificate";
 import { CertificateViewer } from "@/components/learning/certificates/CertificateViewer";
 import { SolutionCertificateEligibility } from "@/components/learning/certificates/SolutionCertificateEligibility";
+import { URLManagerDebug } from "@/components/debug/URLManagerDebug";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Award } from "lucide-react";
 import LoadingScreen from "@/components/common/LoadingScreen";
@@ -189,6 +190,9 @@ const SolutionCertificate = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Componente de debug - só aparece em dev ou para admins */}
+      <URLManagerDebug />
     </div>
   );
 };

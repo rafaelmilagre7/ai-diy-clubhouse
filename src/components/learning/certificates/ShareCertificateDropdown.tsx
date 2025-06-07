@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   DropdownMenu,
@@ -9,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Share2, MessageCircle, Mail, Linkedin, Twitter, Copy, Link } from "lucide-react";
 import { toast } from "sonner";
+import { useCertificateURL } from "@/hooks/useCertificateURL";
 
 interface ShareCertificateDropdownProps {
   certificate: {
@@ -28,109 +28,138 @@ export const ShareCertificateDropdown = ({
   certificate,
   userProfile,
 }: ShareCertificateDropdownProps) => {
+  const { transformCertificateURL } = useCertificateURL();
   
   // URL base para compartilhamento
   const getCurrentUrl = () => window.location.href;
   
-  // URL do PDF ou página do certificado
-  const getShareableUrl = () => {
+  // URL do PDF ou página do certificado - OTIMIZADA
+  const getShareableUrl = async (): Promise<string> => {
     if (certificate.certificate_url) {
-      return certificate.certificate_url;
+      try {
+        // NOVO: Usar URL otimizada para compartilhamento
+        const optimizedUrl = await transformCertificateURL(certificate.certificate_url, {
+          enableTracking: true,
+          priority: 'normal' // Prioridade normal para compartilhamento
+        });
+        
+        console.log('[ShareCertificate] URL otimizada para compartilhamento:', optimizedUrl);
+        return optimizedUrl;
+      } catch (error) {
+        console.warn('[ShareCertificate] Erro ao otimizar URL, usando original:', error);
+        return certificate.certificate_url;
+      }
     }
     return getCurrentUrl();
   };
 
   // Texto padrão para compartilhamento
-  const getShareText = (platform: string = 'default') => {
+  const getShareText = async (platform: string = 'default'): Promise<string> => {
+    const shareableUrl = await getShareableUrl();
     const baseText = `🎉 Acabei de receber meu certificado de implementação da solução "${certificate.solutions.title}" no Viver de IA!`;
     const validationText = `\n\nCódigo de validação: ${certificate.validation_code}`;
     
     switch (platform) {
       case 'whatsapp':
-        return `${baseText}${validationText}\n\n#ViverDeIA #Certificado #IA\n\n${getShareableUrl()}`;
+        return `${baseText}${validationText}\n\n#ViverDeIA #Certificado #IA\n\n${shareableUrl}`;
       
       case 'linkedin':
-        return `${baseText}${validationText}\n\nCertificado oficial de implementação de solução de IA.\n\n#ViverDeIA #InteligenciaArtificial #Certificacao #IA #Implementacao\n\n${getShareableUrl()}`;
+        return `${baseText}${validationText}\n\nCertificado oficial de implementação de solução de IA.\n\n#ViverDeIA #InteligenciaArtificial #Certificacao #IA #Implementacao\n\n${shareableUrl}`;
       
       case 'twitter':
-        return `${baseText}${validationText}\n\n#ViverDeIA #Certificado #IA\n\n${getShareableUrl()}`;
+        return `${baseText}${validationText}\n\n#ViverDeIA #Certificado #IA\n\n${shareableUrl}`;
       
       case 'email':
-        return `${baseText}${validationText}\n\nConfira meu certificado oficial: ${getShareableUrl()}\n\nViver de IA - Implementação de Soluções de Inteligência Artificial`;
+        return `${baseText}${validationText}\n\nConfira meu certificado oficial: ${shareableUrl}\n\nViver de IA - Implementação de Soluções de Inteligência Artificial`;
       
       default:
-        return `${baseText}${validationText}\n\n#ViverDeIA #Certificado #IA\n\n${getShareableUrl()}`;
+        return `${baseText}${validationText}\n\n#ViverDeIA #Certificado #IA\n\n${shareableUrl}`;
     }
   };
 
-  // Compartilhar via WhatsApp
-  const shareWhatsApp = () => {
-    const text = encodeURIComponent(getShareText('whatsapp'));
-    const url = `https://wa.me/?text=${text}`;
-    
-    // Tentar abrir WhatsApp Web ou app
+  // Compartilhar via WhatsApp - ATUALIZADO
+  const shareWhatsApp = async () => {
     try {
+      const text = encodeURIComponent(await getShareText('whatsapp'));
+      const url = `https://wa.me/?text=${text}`;
+      
       window.open(url, '_blank');
       toast.success('Abrindo WhatsApp para compartilhar!');
     } catch (error) {
-      // Fallback: copiar texto
-      copyToClipboard(getShareText('whatsapp'));
+      console.error('[ShareCertificate] Erro no WhatsApp:', error);
+      const fallbackText = await getShareText('whatsapp');
+      copyToClipboard(fallbackText);
     }
   };
 
-  // Compartilhar via Email
-  const shareEmail = () => {
-    const subject = encodeURIComponent(`Certificado de Implementação - ${certificate.solutions.title}`);
-    const body = encodeURIComponent(getShareText('email'));
-    const url = `mailto:?subject=${subject}&body=${body}`;
-    
+  // Compartilhar via Email - ATUALIZADO
+  const shareEmail = async () => {
     try {
+      const subject = encodeURIComponent(`Certificado de Implementação - ${certificate.solutions.title}`);
+      const body = encodeURIComponent(await getShareText('email'));
+      const url = `mailto:?subject=${subject}&body=${body}`;
+      
       window.location.href = url;
       toast.success('Abrindo cliente de email!');
     } catch (error) {
-      // Fallback: copiar texto
-      copyToClipboard(getShareText('email'));
+      console.error('[ShareCertificate] Erro no Email:', error);
+      const fallbackText = await getShareText('email');
+      copyToClipboard(fallbackText);
     }
   };
 
-  // Compartilhar via LinkedIn
-  const shareLinkedIn = () => {
-    const url = encodeURIComponent(getShareableUrl());
-    const text = encodeURIComponent(getShareText('linkedin'));
-    const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${url}&summary=${text}`;
-    
+  // Compartilhar via LinkedIn - ATUALIZADO
+  const shareLinkedIn = async () => {
     try {
+      const shareableUrl = await getShareableUrl();
+      const url = encodeURIComponent(shareableUrl);
+      const text = encodeURIComponent(await getShareText('linkedin'));
+      const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${url}&summary=${text}`;
+      
       window.open(linkedinUrl, '_blank', 'width=600,height=600');
       toast.success('Abrindo LinkedIn para compartilhar!');
     } catch (error) {
-      // Fallback: copiar texto
-      copyToClipboard(getShareText('linkedin'));
+      console.error('[ShareCertificate] Erro no LinkedIn:', error);
+      const fallbackText = await getShareText('linkedin');
+      copyToClipboard(fallbackText);
     }
   };
 
-  // Compartilhar via Twitter/X
-  const shareTwitter = () => {
-    const text = encodeURIComponent(getShareText('twitter'));
-    const twitterUrl = `https://twitter.com/intent/tweet?text=${text}`;
-    
+  // Compartilhar via Twitter/X - ATUALIZADO
+  const shareTwitter = async () => {
     try {
+      const text = encodeURIComponent(await getShareText('twitter'));
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${text}`;
+      
       window.open(twitterUrl, '_blank', 'width=600,height=600');
       toast.success('Abrindo Twitter/X para compartilhar!');
     } catch (error) {
-      // Fallback: copiar texto
-      copyToClipboard(getShareText('twitter'));
+      console.error('[ShareCertificate] Erro no Twitter:', error);
+      const fallbackText = await getShareText('twitter');
+      copyToClipboard(fallbackText);
     }
   };
 
-  // Copiar link do certificado
-  const copyLink = () => {
-    const url = getShareableUrl();
-    copyToClipboard(url, 'Link do certificado copiado!');
+  // Copiar link do certificado - ATUALIZADO
+  const copyLink = async () => {
+    try {
+      const url = await getShareableUrl();
+      copyToClipboard(url, 'Link do certificado copiado!');
+    } catch (error) {
+      console.error('[ShareCertificate] Erro ao copiar link:', error);
+      copyToClipboard(getCurrentUrl(), 'Link da página copiado!');
+    }
   };
 
-  // Copiar texto completo
-  const copyText = () => {
-    copyToClipboard(getShareText(), 'Texto do certificado copiado!');
+  // Copiar texto completo - ATUALIZADO
+  const copyText = async () => {
+    try {
+      const text = await getShareText();
+      copyToClipboard(text, 'Texto do certificado copiado!');
+    } catch (error) {
+      console.error('[ShareCertificate] Erro ao copiar texto:', error);
+      toast.error('Erro ao gerar texto para compartilhamento');
+    }
   };
 
   // Função auxiliar para copiar para clipboard
@@ -168,26 +197,31 @@ export const ShareCertificateDropdown = ({
     }
   };
 
-  // Compartilhamento nativo (se disponível)
-  const shareNative = () => {
+  // Compartilhamento nativo (se disponível) - ATUALIZADO
+  const shareNative = async () => {
     if (navigator.share) {
-      navigator.share({
-        title: 'Meu Certificado de Implementação',
-        text: getShareText(),
-        url: getShareableUrl()
-      }).then(() => {
+      try {
+        const shareableUrl = await getShareableUrl();
+        const shareText = await getShareText();
+        
+        await navigator.share({
+          title: 'Meu Certificado de Implementação',
+          text: shareText,
+          url: shareableUrl
+        });
+        
         toast.success('Conteúdo compartilhado com sucesso!');
-      }).catch((error) => {
+        return true;
+      } catch (error) {
         if (error.name !== 'AbortError') {
-          // Se não foi cancelado pelo usuário, usar fallback
-          copyToClipboard(getShareText());
+          console.error('[ShareCertificate] Erro no compartilhamento nativo:', error);
+          const fallbackText = await getShareText();
+          copyToClipboard(fallbackText);
         }
-      });
-    } else {
-      // Se não tem API nativa, abrir o dropdown
-      return false;
+        return false;
+      }
     }
-    return true;
+    return false;
   };
 
   return (
@@ -200,9 +234,11 @@ export const ShareCertificateDropdown = ({
             // Tentar compartilhamento nativo primeiro (mobile)
             if (navigator.share && !e.detail) {
               e.preventDefault();
-              if (shareNative()) {
-                return;
-              }
+              shareNative().then((success) => {
+                if (!success) {
+                  // Se falhar, o dropdown será aberto automaticamente
+                }
+              });
             }
             // Se não funcionar ou for desktop, abrir dropdown
           }}

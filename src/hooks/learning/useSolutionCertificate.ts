@@ -11,10 +11,12 @@ import {
   uploadCertificateToStorage,
   updateCertificateRecord
 } from '@/utils/certificateUtils';
+import { useCertificateURL } from '@/hooks/useCertificateURL';
 
 export const useSolutionCertificate = (solutionId: string) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { transformCertificateURL } = useCertificateURL();
 
   // Buscar certificado existente e verificar elegibilidade
   const { data, isLoading, error } = useQuery({
@@ -207,7 +209,7 @@ export const useSolutionCertificate = (solutionId: string) => {
   // Função para gerar PDF e fazer cache
   const generateAndCachePDF = async (certificate: any, userProfile: any) => {
     try {
-      console.log('Iniciando geração e cache do PDF...');
+      console.log('Iniciando geração e cache do PDF com URLs otimizadas...');
       
       const [html2canvas, jsPDF] = await Promise.all([
         import('html2canvas').then(module => module.default),
@@ -261,14 +263,28 @@ export const useSolutionCertificate = (solutionId: string) => {
       // Fazer upload para o storage
       const certificateUrl = await uploadCertificateToStorage(pdfBlob, fileName, certificate.id);
       
-      // Atualizar registro do certificado
-      await updateCertificateRecord(certificate.id, certificateUrl, fileName);
+      // NOVO: Otimizar URL do certificado usando o sistema de proxy
+      let optimizedUrl = certificateUrl;
+      try {
+        optimizedUrl = await transformCertificateURL(certificateUrl, {
+          enableTracking: true,
+          priority: 'high',
+          retryAttempts: 3
+        });
+        console.log('URL do certificado otimizada:', optimizedUrl);
+      } catch (error) {
+        console.warn('Erro ao otimizar URL, usando URL original:', error);
+        // Continua com a URL original se a otimização falhar
+      }
+      
+      // Atualizar registro com a URL otimizada
+      await updateCertificateRecord(certificate.id, optimizedUrl, fileName);
       
       document.body.removeChild(tempDiv);
       
-      console.log('PDF gerado e armazenado com sucesso');
+      console.log('PDF gerado e armazenado com sucesso com URL otimizada');
       
-      return { pdfBlob, certificateUrl, fileName };
+      return { pdfBlob, certificateUrl: optimizedUrl, fileName };
     } catch (error) {
       console.error('Erro ao gerar e cachear PDF:', error);
       throw error;
@@ -280,15 +296,26 @@ export const useSolutionCertificate = (solutionId: string) => {
     try {
       toast.loading('Preparando download do certificado...', { id: 'download-loading' });
       
-      console.log('Iniciando download do certificado...');
+      console.log('Iniciando download do certificado com URLs otimizadas...');
       
       // Verificar se já existe cache
       if (certificate.certificate_url && certificate.certificate_filename) {
         console.log('Usando certificado do cache:', certificate.certificate_url);
         
         try {
-          // Tentar baixar do cache
-          const response = await fetch(certificate.certificate_url);
+          // NOVO: Otimizar URL antes de fazer o download
+          let optimizedUrl = certificate.certificate_url;
+          try {
+            optimizedUrl = await transformCertificateURL(certificate.certificate_url, {
+              enableTracking: true,
+              priority: 'high'
+            });
+          } catch (urlError) {
+            console.warn('Erro ao otimizar URL para download, usando original:', urlError);
+          }
+          
+          // Tentar baixar do cache (URL otimizada)
+          const response = await fetch(optimizedUrl);
           if (response.ok) {
             const blob = await response.blob();
             const url = URL.createObjectURL(blob);
@@ -338,17 +365,28 @@ export const useSolutionCertificate = (solutionId: string) => {
     try {
       toast.loading('Preparando certificado...', { id: 'pdf-loading' });
       
-      console.log('Abrindo certificado em nova guia...');
+      console.log('Abrindo certificado em nova guia com URLs otimizadas...');
       
       // Verificar se já existe cache
       if (certificate.certificate_url) {
         console.log('Usando certificado do cache:', certificate.certificate_url);
         
         try {
-          // Tentar abrir do cache
-          const response = await fetch(certificate.certificate_url);
+          // NOVO: Otimizar URL antes de abrir
+          let optimizedUrl = certificate.certificate_url;
+          try {
+            optimizedUrl = await transformCertificateURL(certificate.certificate_url, {
+              enableTracking: true,
+              priority: 'high'
+            });
+          } catch (urlError) {
+            console.warn('Erro ao otimizar URL para abertura, usando original:', urlError);
+          }
+          
+          // Tentar abrir do cache (URL otimizada)
+          const response = await fetch(optimizedUrl);
           if (response.ok) {
-            const newWindow = window.open(certificate.certificate_url, '_blank');
+            const newWindow = window.open(optimizedUrl, '_blank');
             if (!newWindow) {
               throw new Error('Pop-ups bloqueados. Permita pop-ups para abrir o certificado.');
             }
