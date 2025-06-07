@@ -8,6 +8,6 @@ export {
 } from './profileUtils/userProfileFunctions';
 
 export { 
-  determineRoleFromEmail,
-  validateUserRole
+  validateUserRole,
+  isSuperAdmin
 } from './profileUtils/roleValidation';

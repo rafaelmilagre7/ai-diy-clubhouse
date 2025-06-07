@@ -52,13 +52,16 @@ export const useAdminDashboardData = (timeRange: string) => {
         }
 
         // Transformar dados para o formato esperado
-        const activities: RecentActivity[] = (analyticsData || []).map(item => ({
-          id: item.id,
-          user_id: item.user_id,
-          event_type: item.event_type,
-          solution: item.solutions?.title || 'Solução não identificada',
-          created_at: item.created_at
-        }));
+        const activities: RecentActivity[] = (analyticsData || []).map(item => {
+          const solutionData = item.solutions as any;
+          return {
+            id: item.id,
+            user_id: item.user_id,
+            event_type: item.event_type,
+            solution: solutionData?.title || 'Solução não identificada',
+            created_at: item.created_at
+          };
+        });
         
         setRecentActivities(activities);
       } catch (error: any) {

@@ -13,9 +13,13 @@ const resetPasswordSchema = z.object({
   email: z.string().email("E-mail inválido").min(1, "E-mail é obrigatório"),
 });
 
-type ResetPasswordForm = z.infer<typeof resetPasswordSchema>;
+type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
-export const ResetPasswordForm = () => {
+interface ResetPasswordFormProps {
+  onBackToLogin?: () => void;
+}
+
+export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,14 +29,14 @@ export const ResetPasswordForm = () => {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<ResetPasswordForm>({
+  } = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
       email: "",
     },
   });
 
-  const onSubmit = async (data: ResetPasswordForm) => {
+  const onSubmit = async (data: ResetPasswordFormData) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -103,7 +107,7 @@ export const ResetPasswordForm = () => {
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate("/login")}
+            onClick={onBackToLogin ? onBackToLogin : () => navigate("/login")}
             className="w-full text-white bg-gray-700 hover:bg-gray-600 border-gray-600"
           >
             Voltar para login
@@ -166,7 +170,7 @@ export const ResetPasswordForm = () => {
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate("/login")}
+            onClick={onBackToLogin ? onBackToLogin : () => navigate("/login")}
             className="w-full text-white bg-gray-700 hover:bg-gray-600 border-gray-600"
             disabled={isLoading}
           >

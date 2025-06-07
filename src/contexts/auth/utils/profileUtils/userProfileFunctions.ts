@@ -1,6 +1,5 @@
 
 import { supabase, UserProfile, UserRole } from '@/lib/supabase';
-import { determineRoleFromEmail } from './roleValidation';
 
 /**
  * Fetch user profile from Supabase
@@ -47,8 +46,8 @@ export const createUserProfileIfNeeded = async (
   name: string = 'Usuário'
 ): Promise<UserProfile | null> => {
   try {
-    // Determine correct role based on email
-    const userRole: UserRole = determineRoleFromEmail(email);
+    // Determine role as member by default (production setting)
+    const userRole: UserRole = 'member';
     
     console.log(`Tentando criar perfil para ${email} com papel ${userRole}`);
     
@@ -85,7 +84,7 @@ export const createUserProfileIfNeeded = async (
   } catch (error) {
     console.error('Erro inesperado ao criar perfil:', error);
     // Return minimal profile in case of error to not block application
-    const userRole: UserRole = determineRoleFromEmail(email);
+    const userRole: UserRole = 'member';
     return createFallbackProfile(userId, email, name, userRole);
   }
 };

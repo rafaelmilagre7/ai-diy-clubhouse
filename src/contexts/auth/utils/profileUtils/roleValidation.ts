@@ -42,9 +42,10 @@ export const isSuperAdmin = async (userId: string): Promise<boolean> => {
     }
 
     // Check if user has admin role or admin permissions
+    const userRoles = profile.user_roles as any;
     return profile.role === 'admin' || 
-           profile.user_roles?.permissions?.all === true ||
-           profile.user_roles?.name === 'admin';
+           (userRoles && userRoles.permissions && userRoles.permissions.all === true) ||
+           (userRoles && userRoles.name === 'admin');
   } catch (error) {
     console.error('Erro ao verificar super admin:', error);
     return false;
