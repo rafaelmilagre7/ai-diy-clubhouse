@@ -5,14 +5,13 @@ export const useSolutionSteps = (initialStep: number = 0) => {
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [activeTab, setActiveTab] = useState(getDefaultTabForStep(initialStep));
 
-  const totalSteps = 7; // Número total de etapas no fluxo
+  const totalSteps = 6; // Corrigido: 6 etapas (0-5) em vez de 7
   
   const stepTitles = [
     "Informações Básicas",
-    "Ferramentas Necessárias",
+    "Ferramentas Necessárias", 
     "Materiais de Apoio",
     "Vídeo-aulas",
-    "Módulos de Conteúdo",
     "Checklist de Implementação",
     "Publicação"
   ];
@@ -24,9 +23,8 @@ export const useSolutionSteps = (initialStep: number = 0) => {
       case 1: return "tools";
       case 2: return "resources";
       case 3: return "video";
-      case 4: return "modules";
-      case 5: return "checklist";
-      case 6: return "publish";
+      case 4: return "checklist";
+      case 5: return "publish";
       default: return "basic";
     }
   }

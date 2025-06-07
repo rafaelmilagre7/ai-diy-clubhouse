@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Solution } from "@/lib/supabase";
@@ -8,6 +9,7 @@ import ToolsTab from "../tabs/ToolsTab";
 import VideoTab from "../tabs/VideoTab";
 import ChecklistTab from "../tabs/ChecklistTab";
 import PublishTab from "../tabs/PublishTab";
+
 interface TabContentProps {
   activeTab: string;
   currentStep: number;
@@ -16,6 +18,7 @@ interface TabContentProps {
   onSubmit: (values: SolutionFormValues) => Promise<void>;
   saving: boolean;
 }
+
 const TabContent: React.FC<TabContentProps> = ({
   activeTab,
   currentStep,
@@ -97,4 +100,5 @@ const TabContent: React.FC<TabContentProps> = ({
       </AlertDescription>
     </Alert>;
 };
+
 export default TabContent;

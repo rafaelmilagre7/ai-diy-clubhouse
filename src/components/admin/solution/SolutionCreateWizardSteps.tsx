@@ -4,10 +4,9 @@ import React from "react";
 const steps = [
   "Informações Básicas",
   "Ferramentas Necessárias",
-  "Materiais de Apoio",
+  "Materiais de Apoio", 
   "Vídeo-aulas",
-  "Conteúdo Modular",
-  "Checklist",
+  "Checklist de Implementação",
   "Publicação"
 ];
 
