@@ -5,10 +5,18 @@ import { MemberCoursesList } from "@/components/learning/member/MemberCoursesLis
 import { useLearningCourses } from "@/hooks/learning/useLearningCourses";
 import { useUserProgress } from "@/hooks/learning/useUserProgress";
 import { ContinueLearning } from "@/components/learning/member/ContinueLearning";
+import { useDynamicSEO } from "@/hooks/seo/useDynamicSEO";
 
 export default function LearningPage() {
   const { courses, isLoading } = useLearningCourses();
   const { userProgress } = useUserProgress();
+  
+  // SEO otimizado para página de aprendizado
+  useDynamicSEO({
+    title: 'Cursos de IA',
+    description: 'Aprenda Inteligência Artificial através de cursos práticos e implementações reais. Desenvolva suas habilidades em IA de forma estruturada.',
+    keywords: 'cursos IA, aprendizado inteligência artificial, formação IA, educação AI'
+  });
   
   // Filtrar apenas cursos publicados
   const allCourses = courses.filter(course => course.published);

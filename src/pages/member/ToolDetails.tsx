@@ -1,4 +1,3 @@
-
 import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -10,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToolHeader } from '@/components/tools/details/ToolHeader';
 import { ToolSidebar } from '@/components/tools/details/ToolSidebar';
 import { ToolTutorials } from '@/components/tools/details/ToolTutorials';
+import { useDynamicSEO } from '@/hooks/seo/useDynamicSEO';
+import { useToolSchema } from '@/hooks/seo/useStructuredData';
 
 const ToolDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +18,16 @@ const ToolDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('about');
+
+  // SEO dinâmico baseado na ferramenta
+  useDynamicSEO({
+    title: tool ? `${tool.name} - Ferramenta IA` : 'Ferramenta IA',
+    description: tool ? tool.description : 'Detalhes da ferramenta de Inteligência Artificial',
+    keywords: tool ? `${tool.name}, ${tool.tags?.join(', ')}, ferramenta IA` : 'ferramenta IA'
+  });
+
+  // Schema estruturado para a ferramenta
+  useToolSchema(tool || { name: '', description: '', id: id || '' });
 
   useEffect(() => {
     const fetchTool = async () => {

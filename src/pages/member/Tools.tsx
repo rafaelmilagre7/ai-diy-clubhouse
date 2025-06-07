@@ -4,11 +4,19 @@ import { useTools } from '@/hooks/useTools';
 import { ToolGrid } from '@/components/tools/ToolGrid';
 import { ToolsHeader } from '@/components/tools/ToolsHeader';
 import LoadingScreen from '@/components/common/LoadingScreen';
+import { useDynamicSEO } from '@/hooks/seo/useDynamicSEO';
 
 const Tools = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { tools, isLoading, error } = useTools();
+
+  // SEO otimizado para página de ferramentas
+  useDynamicSEO({
+    title: 'Ferramentas de IA',
+    description: 'Descubra e acesse as melhores ferramentas de Inteligência Artificial para impulsionar seu negócio. Catálogo completo com análises e tutoriais.',
+    keywords: 'ferramentas IA, inteligência artificial, AI tools, automação, produtividade'
+  });
 
   if (isLoading) {
     return <LoadingScreen message="Carregando ferramentas..." />;

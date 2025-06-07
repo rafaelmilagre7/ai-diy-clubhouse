@@ -7,6 +7,7 @@ import { Toaster } from 'sonner';
 import { AuthProvider } from '@/contexts/auth';
 import { LoggingProvider } from '@/contexts/logging';
 import { AppRoutes } from '@/routes';
+import { SEOWrapper } from '@/components/seo/SEOWrapper';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -23,17 +24,19 @@ function App() {
       <AuthProvider>
         <LoggingProvider>
           <Router>
-            <div className="App">
-              <AppRoutes />
-              <Toaster 
-                position="top-right"
-                theme="dark"
-                richColors
-                expand
-                visibleToasts={3}
-              />
-              <ReactQueryDevtools initialIsOpen={false} />
-            </div>
+            <SEOWrapper>
+              <div className="App">
+                <AppRoutes />
+                <Toaster 
+                  position="top-right"
+                  theme="dark"
+                  richColors
+                  expand
+                  visibleToasts={3}
+                />
+                <ReactQueryDevtools initialIsOpen={false} />
+              </div>
+            </SEOWrapper>
           </Router>
         </LoggingProvider>
       </AuthProvider>
