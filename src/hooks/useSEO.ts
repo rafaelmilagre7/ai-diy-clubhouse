@@ -24,9 +24,9 @@ export const useSEO = (config: SEOConfig) => {
     existingMetas.forEach(meta => meta.remove());
 
     // Função helper para criar meta tags
-    const createMetaTag = (property: string, content: string, name?: string) => {
+    const createMetaTag = (property: string, content: string, isNameAttribute: boolean = false) => {
       const meta = document.createElement('meta');
-      if (name) {
+      if (isNameAttribute) {
         meta.setAttribute('name', property);
       } else {
         meta.setAttribute('property', property);
