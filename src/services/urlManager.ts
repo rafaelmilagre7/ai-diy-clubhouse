@@ -1,5 +1,5 @@
-
 import { APP_CONFIG } from '@/config/app';
+import { analyticsService } from '@/services/analyticsService';
 
 export interface URLManagerConfig {
   enableCache: boolean;
@@ -174,7 +174,7 @@ export class URLManager {
   }
 
   /**
-   * Analytics e tracking
+   * Analytics e tracking usando o serviço
    */
   private generateAnalytics(type: string) {
     if (!this.config.enableAnalytics) return undefined;
@@ -186,7 +186,7 @@ export class URLManager {
   }
 
   private trackURLTransformation(original: string, transformed: string, type: string): void {
-    // Analytics não bloqueante
+    // Analytics não bloqueante usando o serviço
     setTimeout(() => {
       try {
         console.log(`[Analytics] URL transformada:`, {
@@ -196,14 +196,14 @@ export class URLManager {
           timestamp: new Date().toISOString()
         });
         
-        // Aqui poderia integrar com Google Analytics, Mixpanel, etc.
-        if (typeof window !== 'undefined' && window.gtag) {
-          window.gtag('event', 'url_transformation', {
-            event_category: 'proxy',
-            event_label: type,
-            custom_map: { transformation_type: type }
-          });
-        }
+        // Usar o serviço de analytics em vez de window.gtag diretamente
+        analyticsService.trackURLTransformation({
+          type,
+          original: original.substring(0, 50) + '...',
+          transformed: transformed.substring(0, 50) + '...',
+          timestamp: new Date().toISOString()
+        });
+        
       } catch (error) {
         console.warn('[Analytics] Erro ao registrar transformação:', error);
       }

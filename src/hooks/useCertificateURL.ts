@@ -1,6 +1,6 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { urlManager, URLTransformResult } from '@/services/urlManager';
+import { analyticsService } from '@/services/analyticsService';
 import { toast } from 'sonner';
 
 export interface CertificateURLOptions {
@@ -40,7 +40,7 @@ export const useCertificateURL = () => {
       
       setLastTransformation(result);
 
-      // Analytics específico para certificados
+      // Analytics específico para certificados usando o serviço
       if (enableTracking && result.analytics) {
         trackCertificateURLUsage(result);
       }
@@ -106,7 +106,7 @@ export const useCertificateURL = () => {
   };
 
   /**
-   * Registra uso da URL para analytics
+   * Registra uso da URL para analytics usando o serviço
    */
   const trackCertificateURLUsage = (result: URLTransformResult): void => {
     try {
@@ -121,15 +121,8 @@ export const useCertificateURL = () => {
 
       console.log('[Analytics] Registro de uso de URL de certificado:', trackingData);
 
-      // Integração futura com analytics
-      if (typeof window !== 'undefined' && window.gtag) {
-        window.gtag('event', 'certificate_url_usage', {
-          event_category: 'certificates',
-          event_label: result.source,
-          value: result.cached ? 1 : 0,
-          custom_map: trackingData
-        });
-      }
+      // Usar o serviço de analytics
+      analyticsService.trackCertificateURLUsage(trackingData);
 
     } catch (error) {
       console.warn('[Analytics] Erro ao registrar uso:', error);
