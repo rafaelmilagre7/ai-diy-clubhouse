@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
@@ -241,20 +240,20 @@ export const useSolutionCertificate = (solutionId: string) => {
 
       console.log('Capturando elemento como imagem para download...');
       
-      // Capturar como imagem
+      // Capturar como imagem com dimensões A4 landscape
       const canvas = await html2canvas(tempDiv.querySelector('.certificate-container') as HTMLElement, {
         scale: 2,
         useCORS: true,
         allowTaint: true,
-        backgroundColor: null,
+        backgroundColor: '#000000',
         logging: true,
-        width: 900,
-        height: 650
+        width: 1123,
+        height: 794
       });
 
       console.log('Canvas gerado para download:', canvas.width, 'x', canvas.height);
 
-      // Gerar PDF
+      // Gerar PDF com dimensões corretas
       const pdf = new jsPDF({
         orientation: 'landscape',
         unit: 'mm',
@@ -262,10 +261,9 @@ export const useSolutionCertificate = (solutionId: string) => {
       });
 
       const imgData = canvas.toDataURL('image/png', 1.0);
-      const imgWidth = 297; // A4 landscape width
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      
+      // Usar toda a área do A4 landscape (297x210mm)
+      pdf.addImage(imgData, 'PNG', 0, 0, 297, 210);
       
       // Fazer download
       pdf.save(`certificado-${certificate.solutions.title.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`);
