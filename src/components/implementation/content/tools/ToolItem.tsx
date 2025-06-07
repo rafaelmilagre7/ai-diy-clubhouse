@@ -1,14 +1,15 @@
 
 import React from "react";
-import { ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ExternalLink, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToolImage } from "@/hooks/useToolImage";
-import { Avatar } from "@/components/ui/avatar";
 
 interface ToolItemProps {
   toolName: string;
   toolUrl?: string;
+  toolId?: string;
   isRequired?: boolean;
   hasBenefit?: boolean;
   benefitType?: "discount" | "free" | "special";
@@ -17,6 +18,7 @@ interface ToolItemProps {
 export const ToolItem = ({
   toolName,
   toolUrl,
+  toolId,
   isRequired = false,
   hasBenefit = false,
   benefitType,
@@ -96,7 +98,20 @@ export const ToolItem = ({
         </div>
       </div>
       
-      {toolUrl && (
+      {toolId ? (
+        <div className="mt-auto pt-3">
+          <Button 
+            asChild
+            variant="outline"
+            className="w-full bg-transparent border-viverblue/20 text-viverblue hover:bg-viverblue/10 hover:text-viverblue"
+          >
+            <Link to={`/tools/${toolId}`}>
+              <ArrowRight className="mr-2 h-4 w-4" />
+              Ver ferramenta
+            </Link>
+          </Button>
+        </div>
+      ) : toolUrl && (
         <div className="mt-auto pt-3">
           <Button 
             variant="outline"

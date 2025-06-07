@@ -110,6 +110,7 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
             key={tool.id} 
             toolName={tool.tool_name}
             toolUrl={tool.tool_url || ""}
+            toolId={tool.details?.id}
             isRequired={tool.is_required} 
             hasBenefit={tool.details?.has_member_benefit}
             benefitType={tool.details?.benefit_type as any}
