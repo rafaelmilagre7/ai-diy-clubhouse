@@ -27,6 +27,13 @@ const SolutionCertificate = () => {
 
   const loading = solutionLoading || certificateLoading;
 
+  console.log('Página do certificado - Estado atual:', {
+    certificate: !!certificate,
+    isEligible,
+    loading,
+    isGenerating
+  });
+
   if (loading) {
     return <LoadingScreen message="Carregando certificado..." />;
   }
@@ -38,6 +45,19 @@ const SolutionCertificate = () => {
           <h1 className="text-2xl font-bold text-white mb-4">Solução não encontrada</h1>
           <Button onClick={() => navigate("/solutions")}>
             Voltar para Soluções
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="container mx-auto py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-white mb-4">Perfil não encontrado</h1>
+          <Button onClick={() => navigate("/dashboard")}>
+            Voltar ao Dashboard
           </Button>
         </div>
       </div>
@@ -61,7 +81,6 @@ const SolutionCertificate = () => {
         });
       } else {
         navigator.clipboard.writeText(shareUrl);
-        // toast aqui seria ideal, mas vamos usar alert por simplicidade
         alert('Link do certificado copiado para a área de transferência!');
       }
     }
@@ -71,6 +90,10 @@ const SolutionCertificate = () => {
     if (certificate) {
       window.open(`/certificado/validar/${certificate.validation_code}`, '_blank');
     }
+  };
+
+  const handleGenerate = () => {
+    generateCertificate();
   };
 
   return (
@@ -95,17 +118,49 @@ const SolutionCertificate = () => {
         </p>
       </div>
 
+      {/* Se tem certificado, mostrar o viewer */}
       {certificate ? (
-        // Mostrar certificado visual quando já existe
         <CertificateViewer
           certificate={certificate}
-          userProfile={profile!}
+          userProfile={profile}
           onDownload={handleDownload}
           onShare={handleShare}
           onValidate={handleValidate}
         />
+      ) : isEligible ? (
+        /* Se é elegível mas não tem certificado, mostrar botão para gerar */
+        <Card className="bg-[#151823] border-neutral-700/50">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Award className="h-5 w-5 text-viverblue" />
+              Gerar Certificado
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6 text-center">
+              <div className="p-6 rounded-lg bg-green-900/20 border border-green-700/30">
+                <h3 className="font-semibold text-green-400 mb-2">Parabéns! 🎉</h3>
+                <p className="text-gray-300 mb-4">
+                  Você completou com sucesso a implementação da solução <strong>{solution.title}</strong>.
+                </p>
+                <p className="text-gray-400 text-sm mb-4">
+                  Clique no botão abaixo para gerar seu certificado de implementação.
+                </p>
+                
+                <Button 
+                  onClick={handleGenerate}
+                  disabled={isGenerating}
+                  className="bg-viverblue hover:bg-viverblue/90 text-white"
+                >
+                  <Award className="h-4 w-4 mr-2" />
+                  {isGenerating ? 'Gerando certificado...' : 'Gerar Certificado'}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       ) : (
-        // Mostrar status de elegibilidade quando não tem certificado
+        /* Se não é elegível, mostrar status */
         <Card className="bg-[#151823] border-neutral-700/50">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
