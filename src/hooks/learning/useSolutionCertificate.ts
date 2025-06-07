@@ -218,11 +218,12 @@ export const useSolutionCertificate = (solutionId: string) => {
       });
 
       tempDiv.innerHTML = `
+        <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
         <div style="text-align: center; line-height: 1.6; position: relative; height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
           <!-- Logo no topo -->
           <div style="display: flex; justify-content: center; margin-bottom: 20px;">
-            <div style="width: 60px; height: 60px; background: rgba(255,255,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255,255,255,0.3);">
-              <span style="font-size: 24px; font-weight: bold; color: white;">VI</span>
+            <div style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
+              <img src="/lovable-uploads/d847c892-aafa-4cc1-92c6-110aff1d9755.png" alt="Viver de IA" style="width: 100%; height: 100%; object-fit: contain;" />
             </div>
           </div>
           
@@ -258,8 +259,8 @@ export const useSolutionCertificate = (solutionId: string) => {
               
               <!-- Assinatura -->
               <div style="text-align: right;">
-                <div style="border-bottom: 1px solid rgba(255,255,255,0.3); width: 200px; margin-bottom: 5px; padding-bottom: 5px;">
-                  <p style="font-family: 'Brush Script MT', cursive; font-size: 24px; margin: 0; color: white; font-style: italic;">Rafael G Milagre</p>
+                <div style="border-bottom: 1px solid rgba(255,255,255,0.3); width: 240px; margin-bottom: 5px; padding-bottom: 5px;">
+                  <p style="font-family: 'Dancing Script', 'Brush Script MT', cursive; font-size: 28px; margin: 0; color: white; transform: rotate(-1deg); text-shadow: 1px 1px 2px rgba(0,0,0,0.3); letter-spacing: 1px; font-weight: 700;">Rafael G Milagre</p>
                 </div>
                 <p style="font-size: 11px; color: rgba(255,255,255,0.7); margin: 0;">Founder do Viver de IA</p>
               </div>
@@ -276,12 +277,16 @@ export const useSolutionCertificate = (solutionId: string) => {
 
       document.body.appendChild(tempDiv);
 
+      // Aguardar um pouco para garantir que as fontes carregaram
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       // Capturar como imagem
       const canvas = await html2canvas(tempDiv, {
         scale: 2,
         useCORS: true,
         backgroundColor: null,
-        allowTaint: true
+        allowTaint: true,
+        foreignObjectRendering: true
       });
 
       // Gerar PDF

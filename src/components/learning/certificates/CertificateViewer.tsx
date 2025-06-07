@@ -52,8 +52,12 @@ export const CertificateViewer = ({
           <div className="relative z-10 text-center space-y-6">
             {/* Logo no topo */}
             <div className="flex justify-center mb-6">
-              <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center border-2 border-white/30 backdrop-blur-sm">
-                <span className="text-2xl font-bold text-white">VI</span>
+              <div className="w-20 h-20 flex items-center justify-center">
+                <img 
+                  src="/lovable-uploads/d847c892-aafa-4cc1-92c6-110aff1d9755.png" 
+                  alt="Viver de IA" 
+                  className="w-full h-full object-contain"
+                />
               </div>
             </div>
 
@@ -98,8 +102,18 @@ export const CertificateViewer = ({
                 
                 {/* Assinatura */}
                 <div className="text-right">
-                  <div className="border-b border-white/30 pb-1 mb-1" style={{ width: '160px' }}>
-                    <p className="text-white text-lg italic" style={{ fontFamily: 'cursive' }}>Rafael G Milagre</p>
+                  <div className="border-b border-white/30 pb-1 mb-1" style={{ width: '200px' }}>
+                    <p 
+                      className="text-white text-2xl" 
+                      style={{ 
+                        fontFamily: "'Dancing Script', 'Brush Script MT', cursive",
+                        transform: 'rotate(-1deg)',
+                        textShadow: '1px 1px 2px rgba(0,0,0,0.3)',
+                        letterSpacing: '1px'
+                      }}
+                    >
+                      Rafael G Milagre
+                    </p>
                   </div>
                   <p className="text-xs text-white/70">Founder do Viver de IA</p>
                 </div>
