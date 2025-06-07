@@ -10,4 +10,4 @@ export interface ReviewData {
   // Podem ser adicionados conforme necessário
 }
 
-// REMOVIDO: Interface TrailSolution (Fase 5.1 - Limpeza Final)
+// Sistema de onboarding removido - Fase 5.2 completa

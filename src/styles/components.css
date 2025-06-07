@@ -183,8 +183,6 @@
     @apply bg-gray-100 text-gray-800 border-gray-300;
   }
   
-  /* REMOVIDO: Classes .trail-card* (Fase 5.1 - Limpeza Final) */
-  
   /* Melhoria para o hover das tabelas */
   .table-hover-row {
     @apply hover:bg-neutral-800/50 transition-colors;
