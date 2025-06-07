@@ -5,10 +5,10 @@ import { categoryMapping } from "@/lib/types/categoryTypes";
 
 export interface CategoryTabsProps {
   activeCategory: string;
-  onCategoryChange: (category: string) => void;
+  setActiveCategory: (category: string) => void;
 }
 
-export const CategoryTabs = ({ activeCategory, onCategoryChange }: CategoryTabsProps) => {
+export const CategoryTabs = ({ activeCategory, setActiveCategory }: CategoryTabsProps) => {
   // Mantemos as chaves antigas para IDs para compatibilidade com o resto do sistema
   const categories = [
     { id: "all", name: "Todas" },
@@ -22,7 +22,7 @@ export const CategoryTabs = ({ activeCategory, onCategoryChange }: CategoryTabsP
       {categories.map((category) => (
         <Button
           key={category.id}
-          onClick={() => onCategoryChange(category.id)}
+          onClick={() => setActiveCategory(category.id)}
           variant="ghost"
           size="sm"
           className={cn(

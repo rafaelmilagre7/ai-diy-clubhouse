@@ -1,59 +1,14 @@
-
-# Robots.txt para VIVER DE IA Hub
-# https://app.viverdeia.com/robots.txt
-
-User-agent: *
+User-agent: Googlebot
 Allow: /
 
-# Páginas específicas para indexação prioritária
-Allow: /solutions
-Allow: /tools
-Allow: /learning
-Allow: /community
-Allow: /benefits
-Allow: /events
-
-# Sitemaps
-Sitemap: https://app.viverdeia.com/sitemap.xml
-Sitemap: https://app.viverdeia.com/sitemap-solutions.xml
-Sitemap: https://app.viverdeia.com/sitemap-tools.xml
-
-# Crawl-delay para bots específicos
-User-agent: Googlebot
-Crawl-delay: 1
-
 User-agent: Bingbot
-Crawl-delay: 2
-
-User-agent: Baiduspider
-Crawl-delay: 5
-
-# Permitir acesso total para redes sociais
-User-agent: facebookexternalhit
 Allow: /
 
 User-agent: Twitterbot
 Allow: /
 
-User-agent: LinkedInBot
+User-agent: facebookexternalhit
 Allow: /
 
-User-agent: WhatsApp
+User-agent: *
 Allow: /
-
-# Bloquear arquivos administrativos e de desenvolvimento
-Disallow: /admin/
-Disallow: /.env
-Disallow: /package.json
-Disallow: /vite.config.ts
-Disallow: /tsconfig.json
-
-# Permitir arquivos de mídia
-Allow: /lovable-uploads/
-Allow: /images/
-Allow: /videos/
-Allow: /documents/
-
-# Informações adicionais
-# Contact: suporte@viverdeia.com
-# Preferred language: pt-BR
