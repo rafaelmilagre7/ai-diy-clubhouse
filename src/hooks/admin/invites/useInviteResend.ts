@@ -3,19 +3,22 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { Invite } from './types';
-import { useInviteEmailService } from './useInviteEmailService';
+import { useInviteChannelService } from './useInviteChannelService';
 
 export function useInviteResend() {
   const [isSending, setIsSending] = useState(false);
   const [resendError, setResendError] = useState<Error | null>(null);
-  const { sendInviteEmail, getInviteLink } = useInviteEmailService();
+  const { 
+    getInviteLink, 
+    sendHybridInvite
+  } = useInviteChannelService();
 
   const resendInvite = useCallback(async (invite: Invite) => {
     try {
       setIsSending(true);
       setResendError(null);
 
-      console.log("🔄 Reenviando convite:", invite.email);
+      console.log("🔄 Reenviando convite híbrido:", invite.email);
 
       // Verificar apenas se não expirou (permitir reenvio mesmo se usado)
       if (new Date(invite.expires_at) < new Date()) {
@@ -36,21 +39,28 @@ export function useInviteResend() {
         throw new Error("Erro ao gerar link do convite");
       }
 
-      console.log("📧 Reenviando email...");
+      console.log("📨 Reenviando via sistema híbrido...");
+      console.log("Canal de preferência:", invite.channel_preference);
 
-      // Reenviar email sempre (sem restrições)
-      const sendResult = await sendInviteEmail({
+      // Reenviar usando o sistema híbrido
+      const sendResult = await sendHybridInvite({
         email: invite.email,
+        phone: invite.phone,
         inviteUrl,
         roleName: roleData?.name || invite.role?.name || 'membro',
         expiresAt: invite.expires_at,
         notes: invite.notes || undefined,
-        inviteId: invite.id
+        inviteId: invite.id,
+        channelPreference: invite.channel_preference || 'email'
       });
 
+      console.log("📨 Resultado do reenvio híbrido:", sendResult);
+
       if (sendResult.success) {
+        const channelText = invite.channel_preference === 'both' ? 'email e WhatsApp' : 
+                           invite.channel_preference === 'whatsapp' ? 'WhatsApp' : 'email';
         toast.success(`Convite reenviado para ${invite.email}`, {
-          description: sendResult.message
+          description: `${sendResult.message}. Canal: ${channelText}.`
         });
       } else {
         toast.warning(`Tentativa de reenvio para ${invite.email}`, {
@@ -72,7 +82,7 @@ export function useInviteResend() {
     } finally {
       setIsSending(false);
     }
-  }, [sendInviteEmail, getInviteLink]);
+  }, [getInviteLink, sendHybridInvite]);
 
   return {
     isSending,
