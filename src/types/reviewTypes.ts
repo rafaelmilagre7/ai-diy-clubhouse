@@ -10,16 +10,4 @@ export interface ReviewData {
   // Podem ser adicionados conforme necessário
 }
 
-// Interface para soluções na trilha de implementação
-export interface TrailSolution {
-  id: string;
-  title: string;
-  description: string;
-  thumbnail_url?: string;
-  category: string;
-  difficulty: string;
-  tags?: string[];
-  priority: number;
-  justification: string;
-  solutionId: string;
-}
+// REMOVIDO: Interface TrailSolution (Fase 5.1 - Limpeza Final)

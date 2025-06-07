@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Lock, Sparkles, Target, ArrowRight, Eye, AlertTriangle, Clock, Star } from 'lucide-react';
+import { Lock, Sparkles, ArrowRight, Eye, AlertTriangle, Clock, Star } from 'lucide-react';
 import { APP_FEATURES } from '@/config/features';
 
 interface SmartFeatureBlockProps {
@@ -15,20 +15,8 @@ interface SmartFeatureBlockProps {
   showPreview?: boolean;
 }
 
+// REMOVIDO: Configuração implementation_trail (Fase 5.1 - Limpeza Final)
 const FEATURE_CONFIG = {
-  implementation_trail: {
-    title: 'Trilha de Implementação',
-    description: 'Sua jornada personalizada de implementação de IA baseada no seu perfil',
-    icon: Target,
-    color: 'bg-viverblue',
-    preview: 'Receba recomendações personalizadas de soluções e cursos, criadas especificamente para seus objetivos e experiência com IA.',
-    benefits: [
-      'Trilha personalizada baseada no seu perfil',
-      'Recomendações de soluções específicas',
-      'Cursos direcionados ao seu nível',
-      'Acompanhamento de progresso'
-    ]
-  },
   learning: {
     title: 'Área de Aprendizado',
     description: 'Cursos e aulas personalizadas para seu nível e objetivos',
