@@ -29,7 +29,8 @@ const BaseLayout: React.FC<BaseLayoutProps> = ({
   contentComponent: ContentComponent,
   children,
 }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Sidebar começa expandida por padrão (como era antes)
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   console.log('[BaseLayout] Renderizando com:', {
     sidebarOpen,
