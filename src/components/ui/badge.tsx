@@ -17,7 +17,6 @@ const badgeVariants = cva(
         info: "border-transparent bg-info text-white hover:bg-info/80",
         outline: "text-text-primary border-border",
         ghost: "hover:bg-surface-hover hover:text-text-primary",
-        // Adicionando variantes que estavam faltando
         destructive: "border-transparent bg-error text-white hover:bg-error/80",
         neutral: "border-transparent bg-surface-elevated text-text-secondary hover:bg-surface-hover",
       },

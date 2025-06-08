@@ -5,7 +5,7 @@ import { Solution } from '@/lib/supabase';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Text } from '@/components/ui/text';
-import { BarChart, TrendingUp, Settings, Zap, ImageIcon } from 'lucide-react';
+import { BarChart, TrendingUp, Settings, Zap, ImageIcon, Play, Clock, Users } from 'lucide-react';
 import { SolutionCategory, getCategoryConfig } from '@/lib/types/categoryTypes';
 import { cn } from '@/lib/utils';
 
@@ -62,10 +62,10 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
         className={cn(
           "h-full overflow-hidden transition-all duration-300",
           "hover:shadow-glow-primary hover:-translate-y-1 hover-lift",
-          "group-hover:border-primary/30"
+          "group-hover:border-primary/30 bg-gradient-to-br from-surface to-surface-elevated"
         )}
       >
-        <CardHeader className="p-0">
+        <CardHeader className="p-0 relative">
           <div className="relative h-48 bg-gradient-to-br from-primary/10 to-accent/10 overflow-hidden">
             {solution.thumbnail_url ? (
               <img 
@@ -81,11 +81,19 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
             )}
             
             {/* Overlay gradient */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            
+            {/* Play button overlay */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="bg-primary/90 backdrop-blur-sm rounded-full p-3 transform scale-90 group-hover:scale-100 transition-transform duration-300">
+                <Play className="h-6 w-6 text-white fill-current" />
+              </div>
+            </div>
             
             <Badge 
               variant={categoryConfig.badgeVariant}
               className="absolute top-3 left-3 backdrop-blur-sm shadow-sm"
+              size="sm"
             >
               <span className="flex items-center gap-1.5">
                 {getCategoryIcon()}
@@ -96,25 +104,37 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
         </CardHeader>
         
         <CardContent className="p-6 flex-1 flex flex-col space-y-4">
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Text 
               variant="card" 
               textColor="primary" 
-              className="line-clamp-2 group-hover:text-primary transition-colors"
+              className="line-clamp-2 group-hover:text-primary transition-colors font-semibold"
             >
               {solution.title}
             </Text>
             
-            <Text variant="body-small" textColor="secondary" className="line-clamp-3">
+            <Text variant="body-small" textColor="secondary" className="line-clamp-3 leading-relaxed">
               {solution.description}
             </Text>
           </div>
+
+          {/* Additional info */}
+          <div className="flex items-center gap-4 text-text-tertiary">
+            <div className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              <Text variant="caption" textColor="tertiary">5-10 min</Text>
+            </div>
+            <div className="flex items-center gap-1">
+              <Users className="h-3 w-3" />
+              <Text variant="caption" textColor="tertiary">Intermediário</Text>
+            </div>
+          </div>
         </CardContent>
         
-        <CardFooter className="p-6 pt-0 flex items-center justify-between border-t border-border-subtle">
+        <CardFooter className="p-6 pt-0 flex items-center justify-between border-t border-border-subtle bg-surface-elevated/50">
           <div className="flex items-center gap-2">
             {getCategoryIcon()}
-            <Text variant="caption" textColor="tertiary">
+            <Text variant="caption" textColor="tertiary" className="font-medium">
               {categoryConfig.name}
             </Text>
           </div>
