@@ -1,4 +1,5 @@
 
+
 /* === UTILITIES MODERNOS E OTIMIZADOS === */
 
 @layer utilities {
@@ -173,17 +174,17 @@
   
   .focus-ring {
     @apply focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-2;
-    focus:ring-offset-color: hsl(var(--background));
+    ring-offset-color: hsl(var(--background));
   }
   
   .focus-ring-error {
     @apply focus:outline-none focus:ring-2 focus:ring-error/20 focus:ring-offset-2;
-    focus:ring-offset-color: hsl(var(--background));
+    ring-offset-color: hsl(var(--background));
   }
   
   .focus-ring-success {
     @apply focus:outline-none focus:ring-2 focus:ring-success/20 focus:ring-offset-2;
-    focus:ring-offset-color: hsl(var(--background));
+    ring-offset-color: hsl(var(--background));
   }
   
   /* === TRANSITION UTILITIES === */
@@ -468,3 +469,4 @@
     resize: vertical;
   }
 }
+
