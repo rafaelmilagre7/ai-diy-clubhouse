@@ -25,7 +25,6 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
   const location = useLocation();
   const { profile } = useAuth();
 
-  // Todos os itens de navegação em uma estrutura simples
   const navigationItems = [
     {
       title: "Dashboard",
@@ -37,8 +36,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       title: "Trilha de IA",
       href: "/trilha-implementacao",
       icon: Route,
-      type: "hero",
-      description: "Guia personalizado"
+      type: "hero"
     },
     {
       title: "Soluções",
@@ -78,7 +76,6 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
     }
   ];
 
-  // Adicionar admin se for admin
   if (profile?.role === 'admin') {
     navigationItems.push({
       title: "Painel Admin",
@@ -88,7 +85,6 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
     });
   }
 
-  // Lógica de ativação mais específica
   const isActive = (href: string) => {
     const currentPath = location.pathname;
     
@@ -110,6 +106,31 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
   const renderNavButton = (item: any) => {
     const active = isActive(item.href);
     
+    // Design especial para Dashboard
+    if (item.type === "main") {
+      return (
+        <Button
+          key={item.href}
+          variant="ghost"
+          className={cn(
+            "w-full justify-start gap-4 h-14 px-4 text-base font-semibold transition-all duration-300 rounded-xl group",
+            !sidebarOpen && "justify-center px-3",
+            active 
+              ? "bg-white/15 text-white shadow-lg border border-white/30" 
+              : "text-neutral-200 hover:text-white hover:bg-white/10 hover:shadow-md"
+          )}
+          asChild
+        >
+          <Link to={item.href}>
+            <item.icon className="h-6 w-6 flex-shrink-0" />
+            {sidebarOpen && (
+              <span className="truncate">{item.title}</span>
+            )}
+          </Link>
+        </Button>
+      );
+    }
+
     // Design especial para Trilha de IA (hero)
     if (item.type === "hero") {
       return (
@@ -117,34 +138,33 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
           key={item.href}
           variant="ghost"
           className={cn(
-            "w-full justify-start gap-4 h-14 px-4 text-base font-semibold transition-all duration-300 rounded-2xl group relative overflow-hidden",
+            "w-full justify-start gap-4 h-16 px-4 text-base font-bold transition-all duration-300 rounded-2xl group relative overflow-hidden",
             !sidebarOpen && "justify-center px-3",
             active 
-              ? "bg-gradient-to-r from-viverblue via-viverblue to-purple-500 text-white shadow-2xl shadow-viverblue/40 scale-105" 
-              : "bg-gradient-to-r from-viverblue/10 to-purple-500/10 text-viverblue border-2 border-viverblue/20 hover:border-viverblue/40 hover:shadow-xl hover:shadow-viverblue/25 hover:scale-105"
+              ? "bg-gradient-to-r from-viverblue to-purple-600 text-white shadow-2xl shadow-viverblue/50 transform scale-105" 
+              : "bg-gradient-to-r from-viverblue/20 to-purple-600/20 text-viverblue border-2 border-viverblue/30 hover:border-viverblue/60 hover:shadow-xl hover:shadow-viverblue/30 hover:scale-102"
           )}
           asChild
         >
           <Link to={item.href}>
             <div className="relative z-10 flex items-center gap-4 min-w-0">
               <div className="relative">
-                <item.icon className="h-6 w-6 flex-shrink-0" />
-                {!active && <Sparkles className="h-3 w-3 text-viverblue absolute -top-1 -right-1 animate-pulse" />}
+                <item.icon className="h-7 w-7 flex-shrink-0" />
+                {!active && <Sparkles className="h-4 w-4 text-viverblue absolute -top-1 -right-1 animate-pulse" />}
               </div>
               {sidebarOpen && (
                 <div className="flex flex-col items-start min-w-0 flex-1">
-                  <span className="truncate font-bold">{item.title}</span>
+                  <span className="truncate text-lg">{item.title}</span>
                   <span className={cn(
-                    "text-xs truncate",
+                    "text-xs font-normal",
                     active ? "text-white/90" : "text-viverblue/80"
                   )}>
-                    {item.description}
+                    ✨ Guia personalizado
                   </span>
                 </div>
               )}
             </div>
-            {/* Glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-viverblue/20 via-purple-500/20 to-viverblue/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-viverblue/10 via-purple-600/10 to-viverblue/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl"></div>
           </Link>
         </Button>
       );
@@ -160,8 +180,8 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
             "w-full justify-start gap-4 h-12 px-4 text-sm font-medium transition-all duration-200 rounded-xl group",
             !sidebarOpen && "justify-center px-3",
             active 
-              ? "bg-red-500/20 text-red-400 border border-red-500/30 shadow-lg" 
-              : "text-neutral-300 hover:text-red-400 hover:bg-red-500/10 hover:border hover:border-red-500/20"
+              ? "bg-red-500/20 text-red-300 border border-red-500/40 shadow-lg" 
+              : "text-red-400/70 hover:text-red-300 hover:bg-red-500/10 hover:border hover:border-red-500/30"
           )}
           asChild
         >
@@ -175,7 +195,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       );
     }
 
-    // Design regular para outros itens
+    // Design limpo e moderno para itens regulares
     return (
       <Button
         key={item.href}
@@ -184,15 +204,15 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
           "w-full justify-start gap-4 h-12 px-4 text-sm font-medium transition-all duration-200 rounded-xl group",
           !sidebarOpen && "justify-center px-3",
           active 
-            ? "bg-white/10 text-white shadow-lg border border-white/20" 
-            : "text-neutral-300 hover:text-white hover:bg-white/8 hover:shadow-md"
+            ? "bg-white/12 text-white shadow-md border border-white/20" 
+            : "text-neutral-300 hover:text-white hover:bg-white/8 hover:shadow-sm"
         )}
         asChild
       >
         <Link to={item.href}>
           <item.icon className={cn(
-            "h-5 w-5 flex-shrink-0 transition-transform duration-200",
-            active ? "scale-110" : "group-hover:scale-105"
+            "h-5 w-5 flex-shrink-0 transition-all duration-200",
+            active ? "scale-110 text-white" : "group-hover:scale-105"
           )} />
           {sidebarOpen && (
             <span className="truncate">{item.title}</span>
@@ -203,33 +223,41 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
   };
 
   return (
-    <div className="flex flex-col h-full px-3">
-      <div className="flex flex-col space-y-3 flex-1">
-        {/* Dashboard - Item principal */}
-        <div className="mb-2">
-          {renderNavButton(navigationItems[0])}
-        </div>
-
-        {/* Trilha de IA - Item hero */}
-        <div className="mb-4">
-          {renderNavButton(navigationItems[1])}
-        </div>
-
+    <div className="flex flex-col h-full">
+      <div className="flex flex-col px-3 py-2 space-y-1">
+        {/* Dashboard - Principal */}
+        {renderNavButton(navigationItems[0])}
+        
+        {/* Espaço visual */}
+        <div className="h-4"></div>
+        
+        {/* Trilha de IA - Hero */}
+        {renderNavButton(navigationItems[1])}
+        
+        {/* Espaço visual */}
+        <div className="h-6"></div>
+        
         {/* Grupo de Aprendizado */}
-        <div className="space-y-2 mb-4">
+        <div className="space-y-1">
           {navigationItems.slice(2, 5).map(item => renderNavButton(item))}
         </div>
-
+        
+        {/* Espaço visual */}
+        <div className="h-4"></div>
+        
         {/* Grupo de Recursos */}
-        <div className="space-y-2 mb-4">
+        <div className="space-y-1">
           {navigationItems.slice(5, 8).map(item => renderNavButton(item))}
         </div>
-
+        
         {/* Admin no final se existir */}
         {profile?.role === 'admin' && (
-          <div className="mt-auto pt-4 border-t border-white/10">
-            {renderNavButton(navigationItems[navigationItems.length - 1])}
-          </div>
+          <>
+            <div className="flex-1 min-h-6"></div>
+            <div className="pt-4 border-t border-white/10">
+              {renderNavButton(navigationItems[navigationItems.length - 1])}
+            </div>
+          </>
         )}
       </div>
     </div>
