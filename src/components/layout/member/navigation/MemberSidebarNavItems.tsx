@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,8 @@ import {
   MessageSquare,
   GraduationCap,
   Calendar,
-  Award
+  Award,
+  Route
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
 import { usePermissions } from '@/hooks/auth/usePermissions';
@@ -28,6 +30,11 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       title: "Dashboard",
       href: "/dashboard",
       icon: LayoutDashboard,
+    },
+    {
+      title: "Trilha de IA",
+      href: "/trilha-implementacao",
+      icon: Route,
     },
     {
       title: "Soluções",

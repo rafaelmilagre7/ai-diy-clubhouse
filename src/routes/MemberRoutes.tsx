@@ -13,6 +13,7 @@ import EditProfile from '@/pages/member/EditProfile';
 import SolutionDetails from '@/pages/member/SolutionDetails';
 import SolutionImplementation from '@/pages/member/SolutionImplementation';
 import ImplementationCompleted from '@/pages/member/ImplementationCompleted';
+import ImplementationTrail from '@/pages/member/ImplementationTrail';
 import Benefits from '@/pages/member/Benefits';
 import Suggestions from '@/pages/member/Suggestions';
 import SuggestionDetails from '@/pages/member/SuggestionDetails';
@@ -39,15 +40,14 @@ const createProtectedRoute = (path: string, Component: React.ComponentType<any>)
 });
 
 // Log para diagnóstico
-console.log("Carregando rotas de membros - Onboarding movido para AppRoutes");
+console.log("Carregando rotas de membros - Trilha de implementação adicionada");
 
 export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/", Dashboard),
   createProtectedRoute("/dashboard", Dashboard),
   
-  // ROTA DE ONBOARDING REMOVIDA - agora está em AppRoutes.tsx
-  
   createProtectedRoute("/solutions", Solutions),
+  createProtectedRoute("/trilha-implementacao", ImplementationTrail),
   createProtectedRoute("/tools", Tools),
   createProtectedRoute("/tools/:id", ToolDetails),
   createProtectedRoute("/profile", Profile),
