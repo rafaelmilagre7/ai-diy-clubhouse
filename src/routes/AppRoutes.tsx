@@ -1,11 +1,12 @@
 
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { authRoutes } from '../../routes/AuthRoutes';
-import { adminRoutes } from '../../routes/AdminRoutes';
-import { memberRoutes } from '../../routes/MemberRoutes';
-import { formacaoRoutes } from '../../routes/FormacaoRoutes';
-import { CommunityRedirects } from './CommunityRedirects';
+import { authRoutes } from './AuthRoutes';
+import { adminRoutes } from './AdminRoutes';
+import { memberRoutes } from './MemberRoutes';
+import { formacaoRoutes } from './FormacaoRoutes';
+import { certificateRoutes } from './CertificateRoutes';
+import { CommunityRedirects } from '@/components/routing/CommunityRedirects';
 import NotFound from '@/pages/NotFound';
 import InvitePage from '@/pages/InvitePage';
 
@@ -63,6 +64,11 @@ const AppRoutes = () => {
         {/* Convite Routes - Alta prioridade e fora do sistema de autenticação */}
         <Route path="/convite/:token" element={<InvitePage />} />
         <Route path="/convite" element={<InvitePage />} />
+        
+        {/* Certificate Routes - Públicas */}
+        {certificateRoutes.map((route) => (
+          <Route key={route.path} path={route.path} element={route.element} />
+        ))}
         
         {/* Auth Routes */}
         {authRoutes.map((route) => (
