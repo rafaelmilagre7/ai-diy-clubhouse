@@ -34,7 +34,7 @@ export const useProgress = (solutionId?: string) => {
       // Buscar progresso atual
       const { data: currentProgress } = await supabase
         .from('progress')
-        .select('completed_modules')
+        .select('completed_modules, is_completed')
         .eq('user_id', user.id)
         .eq('solution_id', solutionId)
         .single();

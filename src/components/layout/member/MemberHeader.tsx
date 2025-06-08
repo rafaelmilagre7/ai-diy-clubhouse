@@ -38,7 +38,7 @@ export const MemberHeader = ({ sidebarOpen, setSidebarOpen }: MemberHeaderProps)
         {/* Right side - Notifications and user menu */}
         <div className="flex items-center gap-2">
           <NotificationDropdown />
-          <MemberUserMenu sidebarOpen={true} />
+          <MemberUserMenu />
         </div>
       </div>
     </header>

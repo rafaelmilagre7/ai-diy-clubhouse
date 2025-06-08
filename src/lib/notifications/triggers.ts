@@ -102,6 +102,9 @@ export const createLessonCompletionNotification = async (userId: string, lessonI
 
     if (!lesson) return;
 
+    const module = lesson.learning_modules;
+    const course = Array.isArray(module.learning_courses) ? module.learning_courses[0] : module.learning_courses;
+
     // Criar notificação
     await supabase
       .from('notifications')
@@ -109,12 +112,12 @@ export const createLessonCompletionNotification = async (userId: string, lessonI
         user_id: userId,
         type: 'lesson_completed',
         title: 'Aula concluída!',
-        message: `Você concluiu a aula "${lesson.title}" do curso "${lesson.learning_modules.learning_courses.title}"`,
+        message: `Você concluiu a aula "${lesson.title}" do curso "${course.title}"`,
         data: {
           lesson_id: lessonId,
           lesson_title: lesson.title,
-          course_title: lesson.learning_modules.learning_courses.title,
-          action_url: `/learning/course/${lesson.learning_modules.learning_courses.id}`
+          course_title: course.title,
+          action_url: `/learning/course/${course.id}`
         }
       });
 
