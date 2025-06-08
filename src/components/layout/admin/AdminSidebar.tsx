@@ -3,13 +3,20 @@ import { cn } from "@/lib/utils";
 import { AdminSidebarNav } from "./AdminSidebarNav";
 import { BaseSidebarProps } from "../BaseLayout";
 import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
+import { ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export const AdminSidebar = ({ 
   sidebarOpen, 
   setSidebarOpen
 }: BaseSidebarProps) => {
+  const navigate = useNavigate();
+  
   console.log('[AdminSidebar] Estado:', { sidebarOpen });
+
+  const handleBackToMember = () => {
+    navigate("/dashboard");
+  };
 
   return (
     <aside
@@ -34,9 +41,9 @@ export const AdminSidebar = ({
                   size="sm"
                   onClick={() => setSidebarOpen(!sidebarOpen)}
                   className="text-gray-400 hover:text-white p-1 h-8 w-8"
-                  title="Contrair Sidebar"
+                  title="Recolher Sidebar"
                 >
-                  <Menu className="h-4 w-4" />
+                  <ChevronLeft className="h-4 w-4" />
                 </Button>
               </>
             ) : (
@@ -48,7 +55,7 @@ export const AdminSidebar = ({
                   className="text-gray-400 hover:text-white p-1 h-8 w-8"
                   title="Expandir Sidebar"
                 >
-                  <Menu className="h-4 w-4" />
+                  <ChevronRight className="h-4 w-4" />
                 </Button>
                 <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
                   <span className="text-sm font-bold text-white">A</span>
@@ -56,6 +63,31 @@ export const AdminSidebar = ({
               </div>
             )}
           </div>
+        </div>
+
+        {/* Botão para voltar à área de membro */}
+        <div className="p-3 border-b border-gray-700">
+          {sidebarOpen ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleBackToMember}
+              className="w-full justify-start text-gray-300 border-gray-600 hover:bg-gray-700 hover:text-white"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Voltar para Membro
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleBackToMember}
+              className="w-full p-2 text-gray-300 border-gray-600 hover:bg-gray-700 hover:text-white"
+              title="Voltar para Área de Membro"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          )}
         </div>
 
         {/* Navegação */}
