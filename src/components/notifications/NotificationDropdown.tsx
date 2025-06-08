@@ -1,168 +1,239 @@
 
-import React from 'react';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/auth';
+import { supabase } from '@/lib/supabase';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Bell, Check, CheckCheck, Trash2, Megaphone, AlertCircle } from 'lucide-react';
-import { useNotifications } from '@/hooks/useNotifications';
+import { Bell, Check, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-export const NotificationDropdown = () => {
-  const {
-    notifications,
-    unreadCount,
-    markAsRead,
-    markAllAsRead,
-    deleteNotification,
-    isLoading,
-  } = useNotifications();
+interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: string;
+  is_read: boolean;
+  created_at: string;
+  data?: any;
+}
 
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case 'admin_communication':
-        return <Megaphone className="w-4 h-4 text-blue-500" />;
-      case 'urgent':
-        return <AlertCircle className="w-4 h-4 text-red-500" />;
-      default:
-        return <Bell className="w-4 h-4 text-gray-500" />;
+export const NotificationDropdown = () => {
+  const { user } = useAuth();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user?.id) {
+      loadNotifications();
+      
+      // Configurar real-time updates
+      const channel = supabase
+        .channel('notifications')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${user.id}`,
+          },
+          () => {
+            loadNotifications();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [user?.id]);
+
+  const loadNotifications = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+
+      setNotifications(data || []);
+      setUnreadCount(data?.filter(n => !n.is_read).length || 0);
+    } catch (error) {
+      console.error('Erro ao carregar notificações:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getPriorityColor = (priority?: string) => {
-    switch (priority) {
-      case 'urgent':
-        return 'border-l-red-500 bg-red-50';
-      case 'high':
-        return 'border-l-orange-500 bg-orange-50';
-      case 'normal':
-        return 'border-l-blue-500 bg-blue-50';
-      default:
-        return 'border-l-gray-500 bg-gray-50';
+  const markAsRead = async (notificationId: string) => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('id', notificationId);
+
+      if (error) throw error;
+
+      setNotifications(prev =>
+        prev.map(n =>
+          n.id === notificationId ? { ...n, is_read: true } : n
+        )
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error('Erro ao marcar como lida:', error);
+    }
+  };
+
+  const deleteNotification = async (notificationId: string) => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', notificationId);
+
+      if (error) throw error;
+
+      setNotifications(prev => prev.filter(n => n.id !== notificationId));
+      setUnreadCount(prev => {
+        const notification = notifications.find(n => n.id === notificationId);
+        return notification && !notification.is_read ? prev - 1 : prev;
+      });
+    } catch (error) {
+      console.error('Erro ao deletar notificação:', error);
+    }
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('user_id', user?.id)
+        .eq('is_read', false);
+
+      if (error) throw error;
+
+      setNotifications(prev =>
+        prev.map(n => ({ ...n, is_read: true }))
+      );
+      setUnreadCount(0);
+    } catch (error) {
+      console.error('Erro ao marcar todas como lidas:', error);
     }
   };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="relative">
-          <Bell className="w-5 h-5" />
+        <Button variant="ghost" size="icon" className="relative">
+          <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
-            <Badge 
-              variant="destructive" 
-              className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs"
+            <Badge
+              variant="destructive"
+              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
             >
-              {unreadCount > 99 ? '99+' : unreadCount}
+              {unreadCount > 9 ? '9+' : unreadCount}
             </Badge>
           )}
         </Button>
       </DropdownMenuTrigger>
-      
-      <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-y-auto">
-        <div className="flex items-center justify-between p-2 border-b">
-          <h4 className="font-semibold">Notificações</h4>
+      <DropdownMenuContent className="w-80" align="end" forceMount>
+        <DropdownMenuLabel className="flex items-center justify-between">
+          <span>Notificações</span>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => markAllAsRead()}
+              onClick={markAllAsRead}
               className="text-xs"
             >
-              <CheckCheck className="w-3 h-3 mr-1" />
               Marcar todas como lidas
             </Button>
           )}
-        </div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
 
-        {isLoading ? (
-          <div className="p-4 text-center text-sm text-muted-foreground">
-            Carregando notificações...
+        {loading ? (
+          <div className="p-4 text-center">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
           </div>
         ) : notifications.length === 0 ? (
-          <div className="p-4 text-center text-sm text-muted-foreground">
+          <div className="p-4 text-center text-muted-foreground">
             Nenhuma notificação
           </div>
         ) : (
-          <>
-            {notifications.slice(0, 10).map((notification) => (
+          <div className="max-h-96 overflow-y-auto">
+            {notifications.map((notification) => (
               <DropdownMenuItem
                 key={notification.id}
-                className={`p-3 border-l-2 cursor-pointer ${
-                  !notification.is_read ? 'bg-muted/50' : 'bg-background'
-                } ${getPriorityColor(notification.data?.priority)}`}
-                onClick={() => {
-                  if (!notification.is_read) {
-                    markAsRead(notification.id);
-                  }
-                }}
+                className="flex flex-col items-start p-3 cursor-pointer"
+                onClick={() => !notification.is_read && markAsRead(notification.id)}
               >
-                <div className="flex gap-3 w-full">
-                  <div className="flex-shrink-0 mt-1">
-                    {getNotificationIcon(notification.type)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <h5 className={`text-sm font-medium truncate ${
-                        !notification.is_read ? 'text-foreground' : 'text-muted-foreground'
-                      }`}>
+                <div className="flex items-start justify-between w-full">
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <h4 className={`text-sm font-medium ${!notification.is_read ? 'font-semibold' : ''}`}>
                         {notification.title}
-                      </h5>
-                      <div className="flex items-center gap-1">
-                        {!notification.is_read && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              markAsRead(notification.id);
-                            }}
-                            className="h-6 w-6 p-0"
-                          >
-                            <Check className="w-3 h-3" />
-                          </Button>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteNotification(notification.id);
-                          }}
-                          className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
+                      </h4>
+                      {!notification.is_read && (
+                        <div className="w-2 h-2 bg-primary rounded-full"></div>
+                      )}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                    <p className="text-xs text-muted-foreground line-clamp-2">
                       {notification.message}
                     </p>
-                    <span className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       {formatDistanceToNow(new Date(notification.created_at), {
                         addSuffix: true,
                         locale: ptBR,
                       })}
-                    </span>
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1 ml-2">
+                    {!notification.is_read && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          markAsRead(notification.id);
+                        }}
+                        className="h-6 w-6 p-0"
+                      >
+                        <Check className="h-3 w-3" />
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteNotification(notification.id);
+                      }}
+                      className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
                   </div>
                 </div>
               </DropdownMenuItem>
             ))}
-
-            {notifications.length > 10 && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-center text-sm text-muted-foreground">
-                  +{notifications.length - 10} notificações mais antigas
-                </DropdownMenuItem>
-              </>
-            )}
-          </>
+          </div>
         )}
       </DropdownMenuContent>
     </DropdownMenu>

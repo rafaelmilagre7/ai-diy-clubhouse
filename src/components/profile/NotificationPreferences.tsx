@@ -1,85 +1,104 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/auth';
+import { supabase } from '@/lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/auth';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { Bell, Mail, MessageCircle } from 'lucide-react';
+import { Bell, Mail, MessageSquare, Settings, Shield } from 'lucide-react';
+
+interface NotificationPreferences {
+  email_enabled: boolean;
+  whatsapp_enabled: boolean;
+  admin_communications_email: boolean;
+  admin_communications_inapp: boolean;
+}
 
 export const NotificationPreferences = () => {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const [preferences, setPreferences] = useState<NotificationPreferences>({
+    email_enabled: true,
+    whatsapp_enabled: false,
+    admin_communications_email: true,
+    admin_communications_inapp: true,
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const { data: preferences, isLoading } = useQuery({
-    queryKey: ['notification-preferences', user?.id],
-    queryFn: async () => {
-      if (!user) return null;
-      
+  useEffect(() => {
+    if (user?.id) {
+      loadPreferences();
+    }
+  }, [user?.id]);
+
+  const loadPreferences = async () => {
+    try {
       const { data, error } = await supabase
         .from('notification_preferences')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', user?.id)
         .single();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error && error.code !== 'PGRST116') { // Not found error
         throw error;
       }
 
-      return data || {
-        user_id: user.id,
-        email_enabled: true,
-        whatsapp_enabled: false,
-        admin_communications_email: true,
-        admin_communications_inapp: true,
-      };
-    },
-    enabled: !!user,
-  });
+      if (data) {
+        setPreferences({
+          email_enabled: data.email_enabled,
+          whatsapp_enabled: data.whatsapp_enabled,
+          admin_communications_email: data.admin_communications_email ?? true,
+          admin_communications_inapp: data.admin_communications_inapp ?? true,
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao carregar preferências:', error);
+      toast.error('Erro ao carregar configurações de notificação');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const updatePreferences = useMutation({
-    mutationFn: async (updates: Record<string, boolean>) => {
-      if (!user) throw new Error('Usuário não autenticado');
+  const updatePreference = (key: keyof NotificationPreferences, value: boolean) => {
+    setPreferences(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
 
-      const { data, error } = await supabase
+  const savePreferences = async () => {
+    if (!user?.id) return;
+
+    setSaving(true);
+    try {
+      const { error } = await supabase
         .from('notification_preferences')
         .upsert({
           user_id: user.id,
           ...preferences,
-          ...updates,
-        })
-        .select()
-        .single();
+          updated_at: new Date().toISOString(),
+        });
 
       if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notification-preferences'] });
-      toast.success('Preferências atualizadas com sucesso!');
-    },
-    onError: (error: any) => {
-      toast.error('Erro ao atualizar preferências: ' + error.message);
-    },
-  });
 
-  const handleToggle = (key: string, value: boolean) => {
-    updatePreferences.mutate({ [key]: value });
+      toast.success('Preferências de notificação salvas com sucesso!');
+    } catch (error) {
+      console.error('Erro ao salvar preferências:', error);
+      toast.error('Erro ao salvar configurações');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle>Preferências de Notificação</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-            <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+        <CardContent className="py-12">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         </CardContent>
       </Card>
@@ -87,106 +106,106 @@ export const NotificationPreferences = () => {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Bell className="w-5 h-5" />
-          Preferências de Notificação
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Notificações Gerais */}
-        <div className="space-y-4">
-          <h4 className="font-medium text-sm text-muted-foreground">GERAL</h4>
-          
+    <div className="space-y-6">
+      {/* Notificações Gerais */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bell className="w-5 h-5" />
+            Notificações Gerais
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Mail className="w-4 h-4 text-muted-foreground" />
-              <div>
-                <Label htmlFor="email_enabled" className="font-medium">
-                  Notificações por E-mail
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Receber notificações importantes por e-mail
-                </p>
+            <div className="space-y-0.5">
+              <Label className="text-base flex items-center gap-2">
+                <Mail className="w-4 h-4" />
+                Notificações por E-mail
+              </Label>
+              <div className="text-sm text-muted-foreground">
+                Receber notificações da plataforma por e-mail
               </div>
             </div>
             <Switch
-              id="email_enabled"
-              checked={preferences?.email_enabled || false}
-              onCheckedChange={(value) => handleToggle('email_enabled', value)}
+              checked={preferences.email_enabled}
+              onCheckedChange={(checked) => updatePreference('email_enabled', checked)}
             />
           </div>
 
+          <Separator />
+
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <MessageCircle className="w-4 h-4 text-muted-foreground" />
-              <div>
-                <Label htmlFor="whatsapp_enabled" className="font-medium">
-                  Notificações por WhatsApp
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Receber notificações urgentes por WhatsApp
-                </p>
+            <div className="space-y-0.5">
+              <Label className="text-base flex items-center gap-2">
+                <MessageSquare className="w-4 h-4" />
+                Notificações por WhatsApp
+              </Label>
+              <div className="text-sm text-muted-foreground">
+                Receber notificações importantes via WhatsApp
               </div>
             </div>
             <Switch
-              id="whatsapp_enabled"
-              checked={preferences?.whatsapp_enabled || false}
-              onCheckedChange={(value) => handleToggle('whatsapp_enabled', value)}
+              checked={preferences.whatsapp_enabled}
+              onCheckedChange={(checked) => updatePreference('whatsapp_enabled', checked)}
             />
           </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        {/* Comunicados Administrativos */}
-        <div className="space-y-4">
-          <h4 className="font-medium text-sm text-muted-foreground">COMUNICADOS ADMINISTRATIVOS</h4>
-          
+      {/* Comunicados Administrativos */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="w-5 h-5" />
+            Comunicados Administrativos
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Bell className="w-4 h-4 text-muted-foreground" />
-              <div>
-                <Label htmlFor="admin_communications_inapp" className="font-medium">
-                  Notificações In-App
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Receber comunicados na plataforma
-                </p>
+            <div className="space-y-0.5">
+              <Label className="text-base">
+                E-mails de Comunicados
+              </Label>
+              <div className="text-sm text-muted-foreground">
+                Receber comunicados oficiais da plataforma por e-mail
               </div>
             </div>
             <Switch
-              id="admin_communications_inapp"
-              checked={preferences?.admin_communications_inapp !== false}
-              onCheckedChange={(value) => handleToggle('admin_communications_inapp', value)}
+              checked={preferences.admin_communications_email}
+              onCheckedChange={(checked) => updatePreference('admin_communications_email', checked)}
             />
           </div>
 
+          <Separator />
+
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Mail className="w-4 h-4 text-muted-foreground" />
-              <div>
-                <Label htmlFor="admin_communications_email" className="font-medium">
-                  Comunicados por E-mail
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Receber comunicados administrativos por e-mail
-                </p>
+            <div className="space-y-0.5">
+              <Label className="text-base">
+                Notificações In-App
+              </Label>
+              <div className="text-sm text-muted-foreground">
+                Receber comunicados administrativos dentro da plataforma
               </div>
             </div>
             <Switch
-              id="admin_communications_email"
-              checked={preferences?.admin_communications_email !== false}
-              onCheckedChange={(value) => handleToggle('admin_communications_email', value)}
+              checked={preferences.admin_communications_inapp}
+              onCheckedChange={(checked) => updatePreference('admin_communications_inapp', checked)}
             />
           </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        <div className="pt-4 border-t">
-          <p className="text-xs text-muted-foreground">
-            As preferências são salvas automaticamente. Você pode alterar essas configurações a qualquer momento.
-          </p>
-        </div>
-      </CardContent>
-    </Card>
+      {/* Botão de Salvar */}
+      <div className="flex justify-end">
+        <Button 
+          onClick={savePreferences} 
+          disabled={saving}
+          className="flex items-center gap-2"
+        >
+          <Settings className="w-4 h-4" />
+          {saving ? 'Salvando...' : 'Salvar Configurações'}
+        </Button>
+      </div>
+    </div>
   );
 };
