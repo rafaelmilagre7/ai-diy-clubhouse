@@ -1,10 +1,9 @@
 
-import React, { useCallback } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { useOnboardingWizard } from '@/hooks/onboarding/useOnboardingWizard';
+import React, { useState, useCallback } from 'react';
+import { Card } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { OnboardingStepData, OnboardingStepType } from '@/types/onboardingTypes';
 import { useOnboardingData } from '@/hooks/onboarding/useOnboardingData';
-import { OnboardingWizardProps, OnboardingStepType } from '@/types/onboardingTypes';
-import { ProgressBar } from './components/ProgressBar';
 import { StepNavigation } from './components/StepNavigation';
 import { WelcomeStep } from './steps/WelcomeStep';
 import { ProfileStep } from './steps/ProfileStep';
@@ -13,121 +12,135 @@ import { GoalsStep } from './steps/GoalsStep';
 import { CompletionStep } from './steps/CompletionStep';
 import { toast } from 'sonner';
 
+interface OnboardingWizardProps {
+  onComplete: (data: OnboardingStepData) => Promise<void>;
+  onSkip?: () => void;
+}
+
+const STEPS: { id: OnboardingStepType; title: string; component: React.ComponentType<any> }[] = [
+  { id: 'welcome', title: 'Boas-vindas', component: WelcomeStep },
+  { id: 'profile', title: 'Perfil', component: ProfileStep },
+  { id: 'preferences', title: 'Preferências', component: PreferencesStep },
+  { id: 'goals', title: 'Objetivos', component: GoalsStep },
+  { id: 'completion', title: 'Finalização', component: CompletionStep }
+];
+
 /**
- * Componente principal do wizard de onboarding
- * FASE 3: Sistema completo de steps interativos
+ * Wizard principal do onboarding - FASE 5
+ * Sistema completo de personalização da experiência
  */
-export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, onSkip }) => {
-  const wizard = useOnboardingWizard();
+export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
+  onComplete,
+  onSkip
+}) => {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [data, setData] = useState<OnboardingStepData>({});
   const { saveOnboardingData, skipOnboardingData, isSaving } = useOnboardingData();
 
-  const stepTypes: OnboardingStepType[] = ['welcome', 'profile', 'preferences', 'goals', 'completion'];
-  const currentStepType = stepTypes[wizard.currentStep];
+  const currentStepData = STEPS[currentStep];
+  const CurrentStepComponent = currentStepData.component;
+  const progress = ((currentStep + 1) / STEPS.length) * 100;
 
-  // Atualizar dados do step atual
-  const handleStepDataChange = useCallback((stepData: any) => {
-    wizard.updateStepData(currentStepType, stepData);
-  }, [wizard, currentStepType]);
+  const updateStepData = useCallback((stepId: OnboardingStepType, stepData: any) => {
+    setData(prev => ({
+      ...prev,
+      [stepId]: stepData
+    }));
+  }, []);
 
-  // Próximo step
   const handleNext = useCallback(() => {
-    if (wizard.validateCurrentStep()) {
-      wizard.nextStep();
+    if (currentStep < STEPS.length - 1) {
+      setCurrentStep(currentStep + 1);
     }
-  }, [wizard]);
+  }, [currentStep]);
 
-  // Step anterior
   const handlePrevious = useCallback(() => {
-    wizard.previousStep();
-  }, [wizard]);
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  }, [currentStep]);
 
-  // Completar onboarding
-  const handleComplete = useCallback(async () => {
+  const handleComplete = async () => {
     try {
-      const success = await saveOnboardingData(wizard.data);
+      console.log('🎉 Concluindo onboarding com dados:', data);
+      
+      const success = await saveOnboardingData(data);
       if (success) {
-        wizard.completeOnboarding();
-        await onComplete(wizard.data);
-        toast.success('Setup concluído com sucesso! 🎉');
+        await onComplete(data);
       }
     } catch (error) {
-      console.error('❌ Erro ao completar onboarding:', error);
-      toast.error('Erro ao salvar configurações. Tente novamente.');
-    }
-  }, [wizard, saveOnboardingData, onComplete]);
-
-  // Pular onboarding
-  const handleSkip = useCallback(async () => {
-    try {
-      await skipOnboardingData();
-      wizard.skipOnboarding();
-      if (onSkip) {
-        await onSkip();
-      }
-      toast.info('Setup pulado. Você pode configurar depois no seu perfil.');
-    } catch (error) {
-      console.error('❌ Erro ao pular onboarding:', error);
-      toast.error('Erro ao pular setup. Tente novamente.');
-    }
-  }, [wizard, skipOnboardingData, onSkip]);
-
-  // Renderizar step atual
-  const renderCurrentStep = () => {
-    const stepData = wizard.data[currentStepType] || {};
-
-    switch (currentStepType) {
-      case 'welcome':
-        return <WelcomeStep onDataChange={handleStepDataChange} data={stepData} />;
-      case 'profile':
-        return <ProfileStep onDataChange={handleStepDataChange} data={stepData} />;
-      case 'preferences':
-        return <PreferencesStep onDataChange={handleStepDataChange} data={stepData} />;
-      case 'goals':
-        return <GoalsStep onDataChange={handleStepDataChange} data={stepData} />;
-      case 'completion':
-        return <CompletionStep onDataChange={handleStepDataChange} data={stepData} />;
-      default:
-        return <div>Step não encontrado</div>;
+      console.error('Erro ao completar onboarding:', error);
+      toast.error('Erro ao salvar seus dados. Tente novamente.');
     }
   };
 
+  const handleSkip = async () => {
+    if (onSkip) {
+      try {
+        await skipOnboardingData();
+        onSkip();
+      } catch (error) {
+        console.error('Erro ao pular onboarding:', error);
+        toast.error('Erro ao processar. Tente novamente.');
+      }
+    }
+  };
+
+  const canGoNext = currentStep < STEPS.length - 1;
+  const canGoPrevious = currentStep > 0;
+  const isLastStep = currentStep === STEPS.length - 1;
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-5xl mx-auto px-4">
+    <div className="min-h-screen bg-gradient-to-br from-viverblue/5 via-purple-50 to-white py-8">
+      <div className="container max-w-4xl mx-auto px-4">
         {/* Header com progresso */}
-        <div className="mb-8">
-          <ProgressBar 
-            currentStep={wizard.currentStep}
-            totalSteps={wizard.totalSteps}
-            className="max-w-2xl mx-auto"
-          />
-        </div>
-
-        {/* Conteúdo do step */}
-        <Card className="shadow-lg border-0">
-          <CardContent className="p-8">
-            {renderCurrentStep()}
-
-            {/* Navegação */}
-            <StepNavigation
-              canGoPrevious={wizard.canGoPrevious}
-              canGoNext={wizard.canGoNext}
-              isLastStep={wizard.currentStep === wizard.totalSteps - 1}
-              isLoading={isSaving}
-              onPrevious={handlePrevious}
-              onNext={handleNext}
-              onSkip={currentStepType !== 'completion' ? handleSkip : undefined}
-              onComplete={wizard.currentStep === wizard.totalSteps - 1 ? handleComplete : undefined}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Informações adicionais */}
-        <div className="text-center mt-6 text-sm text-gray-500">
-          <p>
-            Todas as informações são opcionais e podem ser alteradas posteriormente em seu perfil.
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-viverblue mb-2">
+            Personalizar Experiência
+          </h1>
+          <p className="text-gray-600 mb-6">
+            Etapa {currentStep + 1} de {STEPS.length}: {currentStepData.title}
           </p>
+          
+          <div className="max-w-md mx-auto">
+            <Progress value={progress} className="h-2 bg-gray-200">
+              <div 
+                className="h-full bg-gradient-to-r from-viverblue to-purple-500 transition-all duration-500 ease-out"
+                style={{ width: `${progress}%` }}
+              />
+            </Progress>
+            <div className="flex justify-between text-xs text-gray-500 mt-2">
+              {STEPS.map((step, index) => (
+                <span 
+                  key={step.id}
+                  className={index <= currentStep ? 'text-viverblue font-medium' : ''}
+                >
+                  {step.title}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
+
+        {/* Conteúdo do step atual */}
+        <Card className="p-8 shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+          <CurrentStepComponent
+            data={data[currentStepData.id] || {}}
+            onUpdate={(stepData: any) => updateStepData(currentStepData.id, stepData)}
+            allData={data}
+          />
+
+          <StepNavigation
+            canGoPrevious={canGoPrevious}
+            canGoNext={canGoNext}
+            isLastStep={isLastStep}
+            isLoading={isSaving}
+            onPrevious={handlePrevious}
+            onNext={handleNext}
+            onSkip={onSkip ? handleSkip : undefined}
+            onComplete={handleComplete}
+          />
+        </Card>
       </div>
     </div>
   );

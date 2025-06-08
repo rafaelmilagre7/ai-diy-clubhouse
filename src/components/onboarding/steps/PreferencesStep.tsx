@@ -2,113 +2,103 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Settings, BookOpen, Clock } from 'lucide-react';
+import { Settings, BookOpen, Clock, Zap } from 'lucide-react';
 
 interface PreferencesStepProps {
-  onDataChange: (data: any) => void;
-  data?: any;
+  data: any;
+  onUpdate: (data: any) => void;
 }
 
 /**
- * Step de preferências do usuário
- * FASE 3: Coleta de preferências de aprendizado e ferramentas
+ * Step de preferências - FASE 5
+ * Coleta preferências de aprendizado e interesse
  */
-export const PreferencesStep: React.FC<PreferencesStepProps> = ({ onDataChange, data = {} }) => {
+export const PreferencesStep: React.FC<PreferencesStepProps> = ({ data, onUpdate }) => {
+  const handleCategoryToggle = (category: string) => {
+    const current = data.interestedCategories || [];
+    const updated = current.includes(category)
+      ? current.filter((c: string) => c !== category)
+      : [...current, category];
+    
+    onUpdate({
+      ...data,
+      interestedCategories: updated
+    });
+  };
+
+  const handleToolToggle = (tool: string) => {
+    const current = data.priorityTools || [];
+    const updated = current.includes(tool)
+      ? current.filter((t: string) => t !== tool)
+      : [...current, tool];
+    
+    onUpdate({
+      ...data,
+      priorityTools: updated
+    });
+  };
+
   const categories = [
-    { id: 'automation', label: 'Automação de Processos' },
-    { id: 'content', label: 'Criação de Conteúdo' },
-    { id: 'analytics', label: 'Análise de Dados' },
-    { id: 'marketing', label: 'Marketing Digital' },
-    { id: 'development', label: 'Desenvolvimento/Tech' },
-    { id: 'design', label: 'Design e Criatividade' },
-    { id: 'productivity', label: 'Produtividade' },
-    { id: 'communication', label: 'Comunicação' }
+    { id: 'receita', label: 'Receita - Vendas e Marketing', description: 'Automações para gerar mais receita' },
+    { id: 'operacional', label: 'Operacional - Processos e Eficiência', description: 'Otimizar operações do dia a dia' },
+    { id: 'estrategia', label: 'Estratégia - Gestão e Planejamento', description: 'Decisões estratégicas com IA' }
   ];
 
-  const priorityTools = [
-    { id: 'chatgpt', label: 'ChatGPT' },
-    { id: 'midjourney', label: 'Midjourney' },
-    { id: 'notion', label: 'Notion AI' },
-    { id: 'zapier', label: 'Zapier' },
-    { id: 'canva', label: 'Canva AI' },
-    { id: 'claude', label: 'Claude' },
-    { id: 'github', label: 'GitHub Copilot' },
-    { id: 'others', label: 'Outras ferramentas' }
+  const tools = [
+    'ChatGPT / Claude',
+    'Automação de WhatsApp',
+    'Análise de Dados',
+    'Criação de Conteúdo',
+    'Atendimento ao Cliente',
+    'Gestão de Projetos',
+    'Marketing Digital',
+    'Vendas e CRM'
   ];
-
-  const updateCategories = (categoryId: string, checked: boolean) => {
-    const currentCategories = data.interestedCategories || [];
-    const newCategories = checked
-      ? [...currentCategories, categoryId]
-      : currentCategories.filter((id: string) => id !== categoryId);
-    
-    onDataChange({
-      ...data,
-      interestedCategories: newCategories
-    });
-  };
-
-  const updateTools = (toolId: string, checked: boolean) => {
-    const currentTools = data.priorityTools || [];
-    const newTools = checked
-      ? [...currentTools, toolId]
-      : currentTools.filter((id: string) => id !== toolId);
-    
-    onDataChange({
-      ...data,
-      priorityTools: newTools
-    });
-  };
-
-  const updateLearningStyle = (value: string) => {
-    onDataChange({
-      ...data,
-      learningStyle: value
-    });
-  };
-
-  const updateTimeAvailability = (value: string) => {
-    onDataChange({
-      ...data,
-      timeAvailability: value
-    });
-  };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-gray-900">Suas Preferências</h2>
+    <div className="space-y-6">
+      <div className="text-center mb-6">
+        <Settings className="w-12 h-12 text-viverblue mx-auto mb-4" />
+        <h2 className="text-xl font-bold text-gray-900">Suas Preferências</h2>
         <p className="text-gray-600">
-          Personalize sua experiência baseada em seus interesses
+          Vamos personalizar o conteúdo baseado nos seus interesses e necessidades
         </p>
       </div>
 
-      <div className="space-y-6">
+      <div className="grid lg:grid-cols-2 gap-6">
         {/* Categorias de Interesse */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Settings className="w-5 h-5 text-viverblue" />
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="w-5 h-5" />
               Áreas de Interesse
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-600 mb-4">
-              Selecione as áreas que mais interessam você (pode escolher várias):
+              Selecione as áreas que mais despertam seu interesse:
             </p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-3">
               {categories.map((category) => (
-                <div key={category.id} className="flex items-center space-x-2">
+                <div key={category.id} className="flex items-start space-x-3">
                   <Checkbox
                     id={category.id}
                     checked={(data.interestedCategories || []).includes(category.id)}
-                    onCheckedChange={(checked) => updateCategories(category.id, checked as boolean)}
+                    onCheckedChange={() => handleCategoryToggle(category.id)}
                   />
-                  <Label htmlFor={category.id} className="text-sm font-normal">
-                    {category.label}
-                  </Label>
+                  <div className="grid gap-1.5 leading-none">
+                    <label
+                      htmlFor={category.id}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      {category.label}
+                    </label>
+                    <p className="text-xs text-muted-foreground">
+                      {category.description}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -118,91 +108,81 @@ export const PreferencesStep: React.FC<PreferencesStepProps> = ({ onDataChange, 
         {/* Ferramentas Prioritárias */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Settings className="w-5 h-5 text-viverblue" />
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="w-5 h-5" />
               Ferramentas de Interesse
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-600 mb-4">
-              Quais ferramentas você gostaria de aprender ou se aprofundar?
+              Quais ferramentas você gostaria de aprender primeiro?
             </p>
-            <div className="grid grid-cols-2 gap-3">
-              {priorityTools.map((tool) => (
-                <div key={tool.id} className="flex items-center space-x-2">
+            <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto">
+              {tools.map((tool) => (
+                <div key={tool} className="flex items-center space-x-2">
                   <Checkbox
-                    id={tool.id}
-                    checked={(data.priorityTools || []).includes(tool.id)}
-                    onCheckedChange={(checked) => updateTools(tool.id, checked as boolean)}
+                    id={tool}
+                    checked={(data.priorityTools || []).includes(tool)}
+                    onCheckedChange={() => handleToolToggle(tool)}
                   />
-                  <Label htmlFor={tool.id} className="text-sm font-normal">
-                    {tool.label}
-                  </Label>
+                  <label
+                    htmlFor={tool}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {tool}
+                  </label>
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
-
-        {/* Estilo de Aprendizado */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <BookOpen className="w-5 h-5 text-viverblue" />
-              Como você prefere aprender?
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <RadioGroup value={data.learningStyle || ''} onValueChange={updateLearningStyle}>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="visual" id="visual" />
-                <Label htmlFor="visual">Visual - Vídeos e demonstrações</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="hands-on" id="hands-on" />
-                <Label htmlFor="hands-on">Prático - Implementando junto</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="reading" id="reading" />
-                <Label htmlFor="reading">Leitura - Tutoriais e documentação</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="mixed" id="mixed" />
-                <Label htmlFor="mixed">Misto - Combinação de formatos</Label>
-              </div>
-            </RadioGroup>
-          </CardContent>
-        </Card>
-
-        {/* Disponibilidade de Tempo */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Clock className="w-5 h-5 text-viverblue" />
-              Tempo Disponível
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600 mb-4">
-              Quanto tempo você tem disponível para aprender por semana?
-            </p>
-            <RadioGroup value={data.timeAvailability || ''} onValueChange={updateTimeAvailability}>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="low" id="low" />
-                <Label htmlFor="low">Pouco tempo - Até 2 horas por semana</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="medium" id="medium" />
-                <Label htmlFor="medium">Tempo moderado - 3-5 horas por semana</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="high" id="high" />
-                <Label htmlFor="high">Muito tempo - Mais de 5 horas por semana</Label>
-              </div>
-            </RadioGroup>
-          </CardContent>
-        </Card>
       </div>
+
+      {/* Preferências de Aprendizado */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="w-5 h-5" />
+            Estilo de Aprendizado
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="learningStyle">Como você prefere aprender?</Label>
+            <Select 
+              value={data.learningStyle || ''} 
+              onValueChange={(value) => onUpdate({ ...data, learningStyle: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione seu estilo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="visual">Visual - Vídeos e imagens</SelectItem>
+                <SelectItem value="hands-on">Prático - Fazendo na prática</SelectItem>
+                <SelectItem value="reading">Leitura - Textos e documentação</SelectItem>
+                <SelectItem value="mixed">Misto - Combinação de formatos</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="timeAvailability">Tempo disponível por semana</Label>
+            <Select 
+              value={data.timeAvailability || ''} 
+              onValueChange={(value) => onUpdate({ ...data, timeAvailability: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o tempo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Pouco - 1-2 horas</SelectItem>
+                <SelectItem value="medium">Médio - 3-5 horas</SelectItem>
+                <SelectItem value="high">Alto - 6+ horas</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
