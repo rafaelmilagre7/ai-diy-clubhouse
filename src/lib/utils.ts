@@ -6,57 +6,53 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// Re-exportar formatters para manter compatibilidade
-export { 
-  formatDate, 
-  formatDateTime, 
-  formatDistanceDate as formatDateDistance,
-  formatCurrency,
-  formatNumber,
-  formatPercentage,
-  truncateText,
-  capitalize,
-  slugify 
-} from './formatters';
+// Função para formatar texto com primeira letra maiúscula
+export function capitalize(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}
 
-/**
- * Função para delay/sleep
- */
-export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+// Função para truncar texto
+export function truncate(str: string, length: number): string {
+  return str.length > length ? `${str.substring(0, length)}...` : str
+}
 
-/**
- * Função para gerar ID único simples
- */
-export const generateId = () => Math.random().toString(36).substr(2, 9);
+// Função para formatar duração em minutos
+export function formatDuration(minutes: number): string {
+  if (minutes < 60) {
+    return `${minutes}min`
+  }
+  const hours = Math.floor(minutes / 60)
+  const remainingMinutes = minutes % 60
+  return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}min` : `${hours}h`
+}
 
-/**
- * Função para verificar se string é vazia
- */
-export const isEmpty = (str: string | null | undefined): boolean => {
-  return !str || str.trim().length === 0;
-};
-
-/**
- * Função para extrair iniciais de um nome
- */
-export const getInitials = (name: string): string => {
+// Função para gerar iniciais a partir de um nome
+export function getInitials(name: string): string {
   return name
     .split(' ')
-    .map(word => word.charAt(0))
+    .map(n => n[0])
     .join('')
     .toUpperCase()
-    .slice(0, 2);
-};
+    .substring(0, 2)
+}
 
-/**
- * Função para converter bytes em formato legível
- */
-export const bytesToSize = (bytes: number): string => {
-  if (bytes === 0) return '0 Bytes';
-  
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-};
+// Função para formatar percentual
+export function formatPercentage(value: number): string {
+  return `${Math.round(value)}%`
+}
+
+// Função para delays em async/await
+export function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+// Função para validar email
+export function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email)
+}
+
+// Função para gerar ID único
+export function generateId(): string {
+  return Math.random().toString(36).substring(2) + Date.now().toString(36)
+}
