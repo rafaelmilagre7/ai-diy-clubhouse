@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { GraduationCap, ArrowRight, Sparkles, TrendingUp, Eye, AlertCircle, ChevronUp } from 'lucide-react';
 import { EnhancedLessonCard } from '../cards/EnhancedLessonCard';
-import { useLessonImages } from '../hooks/useLessonImages';
+import { LessonImagesProvider, useLessonImages } from '../contexts/LessonImagesContext';
 import { useTopLessons } from '../hooks/useTopLessons';
 
 interface RecommendedLesson {
@@ -20,19 +20,18 @@ interface LessonsTabProps {
   lessons: RecommendedLesson[];
 }
 
-export const LessonsTab = ({ lessons }: LessonsTabProps) => {
+const LessonsTabContent = ({ lessons }: LessonsTabProps) => {
   const { topLessons, hasMoreLessons, remainingCount, totalLessons, showAll, toggleShowAll } = useTopLessons(lessons, 5);
   const { preloadLessonImages, loading } = useLessonImages();
 
-  // Memorizar os IDs das aulas para evitar recálculos desnecessários
   const lessonIds = useMemo(() => 
     topLessons.map(lesson => lesson.lessonId), 
     [topLessons]
   );
 
-  // Precarregar imagens das aulas apenas quando os IDs mudarem
   useEffect(() => {
     if (lessonIds.length > 0) {
+      console.log('[LessonsTab] Precarregando imagens para aulas:', lessonIds);
       preloadLessonImages(lessonIds);
     }
   }, [lessonIds, preloadLessonImages]);
@@ -184,5 +183,13 @@ export const LessonsTab = ({ lessons }: LessonsTabProps) => {
         </div>
       )}
     </div>
+  );
+};
+
+export const LessonsTab = ({ lessons }: LessonsTabProps) => {
+  return (
+    <LessonImagesProvider>
+      <LessonsTabContent lessons={lessons} />
+    </LessonImagesProvider>
   );
 };

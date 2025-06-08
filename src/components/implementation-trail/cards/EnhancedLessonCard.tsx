@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { GraduationCap, Clock, Zap, ArrowRight, Star } from 'lucide-react';
-import { useLessonImagesSingleton } from '../hooks/useLessonImagesSingleton';
+import { useLessonImages } from '../contexts/LessonImagesContext';
 
 interface RecommendedLesson {
   lessonId: string;
@@ -22,10 +22,17 @@ interface EnhancedLessonCardProps {
 }
 
 export const EnhancedLessonCard = ({ lesson, index }: EnhancedLessonCardProps) => {
-  const { getLessonImage, getLessonMetadata } = useLessonImagesSingleton();
+  const { getLessonImage, getLessonMetadata } = useLessonImages();
   
   const imageUrl = getLessonImage(lesson.lessonId);
   const metadata = getLessonMetadata(lesson.lessonId);
+  
+  console.log(`[EnhancedLessonCard] Renderizando aula ${lesson.lessonId}:`, {
+    title: lesson.title,
+    hasImage: !!imageUrl,
+    imageUrl: imageUrl?.substring(0, 50) + '...',
+    hasMetadata: !!metadata
+  });
   
   const getPriorityColor = (priority: number) => {
     switch (priority) {
@@ -88,7 +95,9 @@ export const EnhancedLessonCard = ({ lesson, index }: EnhancedLessonCardProps) =
               src={imageUrl} 
               alt={lesson.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              onLoad={() => console.log(`[EnhancedLessonCard] Imagem carregada: ${lesson.title}`)}
               onError={(e) => {
+                console.error(`[EnhancedLessonCard] Erro ao carregar imagem: ${lesson.title}`, imageUrl);
                 const target = e.target as HTMLImageElement;
                 target.style.display = 'none';
               }}
