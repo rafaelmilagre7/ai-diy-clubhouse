@@ -1,5 +1,4 @@
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import './typography.css';
 
 /* Sistema de cores moderno e tecnológico com contraste AAA */
 
@@ -150,49 +149,12 @@
   }
   
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
     font-feature-settings: "ss01", "ss02", "cv01", "cv02";
     font-optical-sizing: auto;
     min-height: 100vh;
     transition: background-color 0.3s ease, color 0.3s ease;
-  }
-  
-  /* === TIPOGRAFIA MODERNA === */
-  
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-display font-semibold text-foreground;
-    line-height: 1.2;
-    letter-spacing: -0.01em;
-  }
-  
-  h1 { 
-    @apply text-4xl md:text-5xl lg:text-6xl; 
-    font-weight: 700;
-  }
-  h2 { 
-    @apply text-3xl md:text-4xl lg:text-5xl; 
-    font-weight: 600;
-  }
-  h3 { 
-    @apply text-2xl md:text-3xl lg:text-4xl; 
-    font-weight: 600;
-  }
-  h4 { 
-    @apply text-xl md:text-2xl; 
-    font-weight: 600;
-  }
-  h5 { 
-    @apply text-lg md:text-xl; 
-    font-weight: 500;
-  }
-  h6 { 
-    @apply text-base md:text-lg; 
-    font-weight: 500;
-  }
-  
-  p { 
-    @apply leading-relaxed text-foreground;
-    line-height: 1.6;
   }
   
   /* === MELHORIAS DE CONTRASTE === */
@@ -209,22 +171,11 @@
     @apply text-text-tertiary;
   }
   
-  /* Links modernos */
-  a {
-    @apply text-primary hover:text-primary-hover transition-colors duration-200;
-    text-decoration: none;
-  }
-  
-  a:hover {
-    text-decoration: underline;
-    text-decoration-thickness: 2px;
-    text-underline-offset: 3px;
-  }
-  
   /* === INPUTS E FORMS MODERNOS === */
   
   input, textarea, select {
     @apply text-foreground bg-surface border-border;
+    font-family: var(--font-sans);
     transition: all 0.2s ease;
   }
   
@@ -235,10 +186,12 @@
   
   label {
     @apply text-foreground font-medium;
+    font-family: var(--font-sans);
   }
   
   .form-label {
     @apply text-foreground font-medium;
+    font-family: var(--font-sans);
   }
   
   .form-description {
