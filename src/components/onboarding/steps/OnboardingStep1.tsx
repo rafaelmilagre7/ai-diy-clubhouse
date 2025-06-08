@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { User, Mail, Phone, Instagram, Linkedin, MapPin, Heart, CalendarIcon } from 'lucide-react';
@@ -7,13 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
 import { OnboardingStepProps } from '../types/onboardingTypes';
 import { useIBGELocations } from '@/hooks/useIBGELocations';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
 export const OnboardingStep1 = ({ 
   data, 
@@ -30,29 +24,59 @@ export const OnboardingStep1 = ({
   const [linkedin, setLinkedin] = useState(data.linkedin || '');
   const [state, setState] = useState(data.state || '');
   const [city, setCity] = useState(data.city || '');
-  const [birthDate, setBirthDate] = useState<Date | undefined>(
-    data.birthDate ? new Date(data.birthDate) : undefined
-  );
+  
+  // Estados separados para data de nascimento
+  const [birthDay, setBirthDay] = useState('');
+  const [birthMonth, setBirthMonth] = useState('');
+  const [birthYear, setBirthYear] = useState('');
+  
   const [curiosity, setCuriosity] = useState(data.curiosity || '');
 
   const { estados, cidadesPorEstado, isLoading: locationsLoading, loadCidades } = useIBGELocations();
 
-  // Sincronizar dados locais com dados globais em tempo real
+  // Inicializar data de nascimento se já existir
   useEffect(() => {
-    onUpdateData({ 
-      name,
-      email,
-      phone,
-      instagram,
-      linkedin,
-      state,
-      city,
-      birthDate: birthDate ? birthDate.toISOString() : '',
-      curiosity,
-      memberType,
-      startedAt: data.startedAt || new Date().toISOString()
-    });
-  }, [name, email, phone, instagram, linkedin, state, city, birthDate, curiosity, memberType, onUpdateData, data.startedAt]);
+    if (data.birthDate) {
+      const date = new Date(data.birthDate);
+      setBirthDay(date.getDate().toString().padStart(2, '0'));
+      setBirthMonth((date.getMonth() + 1).toString().padStart(2, '0'));
+      setBirthYear(date.getFullYear().toString());
+    }
+  }, [data.birthDate]);
+
+  // Construir data de nascimento quando os campos mudarem
+  useEffect(() => {
+    if (birthDay && birthMonth && birthYear) {
+      const date = new Date(parseInt(birthYear), parseInt(birthMonth) - 1, parseInt(birthDay));
+      onUpdateData({ 
+        name,
+        email,
+        phone,
+        instagram,
+        linkedin,
+        state,
+        city,
+        birthDate: date.toISOString(),
+        curiosity,
+        memberType,
+        startedAt: data.startedAt || new Date().toISOString()
+      });
+    } else {
+      onUpdateData({ 
+        name,
+        email,
+        phone,
+        instagram,
+        linkedin,
+        state,
+        city,
+        birthDate: '',
+        curiosity,
+        memberType,
+        startedAt: data.startedAt || new Date().toISOString()
+      });
+    }
+  }, [name, email, phone, instagram, linkedin, state, city, birthDay, birthMonth, birthYear, curiosity, memberType, onUpdateData, data.startedAt]);
 
   // Carregar cidades quando estado é selecionado
   useEffect(() => {
@@ -82,6 +106,25 @@ export const OnboardingStep1 = ({
   
   // Validação local que corresponde à validação global
   const canProceed = name.trim() && email.trim() && state && city && curiosity.trim();
+
+  // Gerar arrays para os dropdowns
+  const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString().padStart(2, '0'));
+  const months = [
+    { value: '01', label: 'Janeiro' },
+    { value: '02', label: 'Fevereiro' },
+    { value: '03', label: 'Março' },
+    { value: '04', label: 'Abril' },
+    { value: '05', label: 'Maio' },
+    { value: '06', label: 'Junho' },
+    { value: '07', label: 'Julho' },
+    { value: '08', label: 'Agosto' },
+    { value: '09', label: 'Setembro' },
+    { value: '10', label: 'Outubro' },
+    { value: '11', label: 'Novembro' },
+    { value: '12', label: 'Dezembro' }
+  ];
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 100 }, (_, i) => (currentYear - i).toString());
 
   return (
     <div className="space-y-8">
@@ -203,32 +246,46 @@ export const OnboardingStep1 = ({
                     <CalendarIcon className="w-4 h-4" />
                     Data de nascimento
                   </Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "h-12 w-full justify-start text-left font-normal bg-[#181A2A] border-white/10 text-white hover:bg-[#1F2332] hover:text-white",
-                          !birthDate && "text-neutral-400"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {birthDate ? format(birthDate, "dd/MM/yyyy", { locale: ptBR }) : "Selecione sua data de nascimento"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-[#151823] border-white/10" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={birthDate}
-                        onSelect={setBirthDate}
-                        disabled={(date) =>
-                          date > new Date() || date < new Date("1900-01-01")
-                        }
-                        initialFocus
-                        className="p-3 pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Select value={birthDay} onValueChange={setBirthDay}>
+                      <SelectTrigger className="h-12 bg-[#181A2A] border-white/10 text-white">
+                        <SelectValue placeholder="Dia" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#151823] border-white/10">
+                        {days.map((day) => (
+                          <SelectItem key={day} value={day}>
+                            {day}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select value={birthMonth} onValueChange={setBirthMonth}>
+                      <SelectTrigger className="h-12 bg-[#181A2A] border-white/10 text-white">
+                        <SelectValue placeholder="Mês" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#151823] border-white/10">
+                        {months.map((month) => (
+                          <SelectItem key={month.value} value={month.value}>
+                            {month.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select value={birthYear} onValueChange={setBirthYear}>
+                      <SelectTrigger className="h-12 bg-[#181A2A] border-white/10 text-white">
+                        <SelectValue placeholder="Ano" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#151823] border-white/10 max-h-60">
+                        {years.map((year) => (
+                          <SelectItem key={year} value={year}>
+                            {year}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
             </div>
