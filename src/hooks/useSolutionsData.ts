@@ -4,38 +4,49 @@ import { supabase } from '@/lib/supabase';
 import { Solution } from '@/lib/supabase';
 import { useToast } from '@/components/ui/use-toast';
 import { useQuery } from '@tanstack/react-query';
-import { usePermissions } from '@/hooks/auth/usePermissions';
+import { useAuth } from '@/contexts/auth';
 
 // Otimização: Usar React Query para cache e gerenciamento de estado
 export function useSolutionsData(initialCategory: string | null = 'all') {
   const { toast } = useToast();
-  const { hasPermission } = usePermissions();
+  const { profile } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState(initialCategory || 'all');
 
-  // Verificar se o usuário tem permissão para visualizar soluções
-  const canViewSolutions = hasPermission('solutions.view');
+  // Simplificar verificação de permissões - todos os usuários autenticados podem ver soluções
+  const canViewSolutions = !!profile;
+
+  console.log('[useSolutionsData] Estado:', {
+    canViewSolutions,
+    profile: !!profile,
+    activeCategory,
+    searchQuery
+  });
 
   // Implementar função de fetching separadamente para melhor controle
   const fetchSolutions = useCallback(async () => {
     if (!canViewSolutions) {
-      console.log('Usuário não tem permissão para visualizar soluções');
+      console.log('[useSolutionsData] Usuário não pode visualizar soluções');
       return [];
     }
 
     try {
-      console.log('Fetching solutions from database...');
+      console.log('[useSolutionsData] Buscando soluções do banco de dados...');
       const { data, error } = await supabase
         .from('solutions')
         .select('*')
         .eq('published', true)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('[useSolutionsData] Erro na query:', error);
+        throw error;
+      }
       
+      console.log('[useSolutionsData] Soluções carregadas:', data?.length || 0);
       return data as Solution[];
     } catch (error: any) {
-      console.error('Erro ao buscar soluções:', error);
+      console.error('[useSolutionsData] Erro ao buscar soluções:', error);
       toast({
         title: 'Erro ao carregar soluções',
         description: 'Não foi possível carregar as soluções disponíveis.',
@@ -74,6 +85,13 @@ export function useSolutionsData(initialCategory: string | null = 'all') {
         ))
       );
     }
+    
+    console.log('[useSolutionsData] Soluções filtradas:', {
+      total: solutions.length,
+      filtered: filtered.length,
+      activeCategory,
+      hasSearchQuery: !!searchQuery.trim()
+    });
     
     return filtered;
   }, [solutions, activeCategory, searchQuery]);

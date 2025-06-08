@@ -16,7 +16,7 @@ export const MemberSidebar = ({
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-50 flex h-full flex-col hubla-sidebar transition-all duration-300 ease-in-out",
+        "fixed inset-y-0 left-0 z-50 flex h-full flex-col bg-[#0F111A] border-r border-white/5 transition-all duration-300 ease-in-out",
         sidebarOpen ? "w-64" : "w-[70px]",
         // Em desktops, sempre visível
         "md:translate-x-0",

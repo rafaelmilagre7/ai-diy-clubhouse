@@ -60,12 +60,13 @@ const Dashboard = () => {
     }
   }, [user, authLoading, navigate]);
   
-  // Carregar soluções
+  // Carregar soluções apenas se o usuário pode prosseguir
   const { solutions, loading: solutionsLoading, error: solutionsError } = useSolutionsData();
   
   // Tratamento de erro para soluções
   useEffect(() => {
     if (solutionsError) {
+      console.error('[Dashboard] Erro nas soluções:', solutionsError);
       setHasError(true);
       setErrorMessage("Não foi possível carregar as soluções. Verifique sua conexão com a internet.");
       toast.error("Erro ao carregar soluções", {
@@ -74,13 +75,23 @@ const Dashboard = () => {
     }
   }, [solutionsError]);
   
-  // Filtrar soluções por categoria
+  // Filtrar soluções por categoria - garantir que solutions é um array
   const filteredSolutions = useMemo(() => {
-    if (!solutions || solutions.length === 0) return [];
+    if (!solutions || !Array.isArray(solutions) || solutions.length === 0) {
+      console.log('[Dashboard] Nenhuma solução disponível para filtrar');
+      return [];
+    }
     return category !== "general" 
       ? solutions.filter(s => s.category === category)
       : solutions;
   }, [solutions, category]);
+  
+  console.log('[Dashboard] Soluções:', {
+    total: solutions?.length || 0,
+    filtered: filteredSolutions?.length || 0,
+    category,
+    solutionsLoading
+  });
   
   // Obter progresso das soluções
   const { 
@@ -94,6 +105,7 @@ const Dashboard = () => {
   // Tratamento de erro para progresso
   useEffect(() => {
     if (progressError) {
+      console.error('[Dashboard] Erro no progresso:', progressError);
       setHasError(true);
       setErrorMessage("Não foi possível carregar seu progresso. Por favor, tente novamente mais tarde.");
     }
@@ -130,6 +142,7 @@ const Dashboard = () => {
   
   // Se ainda estiver verificando onboarding ou auth, mostrar loading
   if (authLoading || onboardingLoading || !hasCheckedOnboarding || !canProceed) {
+    console.log('[Dashboard] Mostrando tela de loading');
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
         <div className="text-center space-y-4">
@@ -142,11 +155,13 @@ const Dashboard = () => {
   
   // Se onboarding for necessário, não renderizar nada (já foi redirecionado)
   if (onboardingRequired) {
+    console.log('[Dashboard] Onboarding necessário, não renderizando');
     return null;
   }
   
   // Se houver erro, mostrar mensagem de erro
   if (hasError) {
+    console.log('[Dashboard] Mostrando tela de erro');
     return (
       <div className="container py-8 flex flex-col items-center justify-center min-h-[60vh]">
         <Alert variant="destructive" className="mb-4 max-w-md">
@@ -169,11 +184,13 @@ const Dashboard = () => {
     );
   }
 
+  console.log('[Dashboard] Renderizando DashboardLayout');
+  
   return (
     <DashboardLayout
-      active={active}
-      completed={completed}
-      recommended={recommended}
+      active={active || []}
+      completed={completed || []}
+      recommended={recommended || []}
       category={category}
       onCategoryChange={handleCategoryChange}
       onSolutionClick={handleSolutionClick}

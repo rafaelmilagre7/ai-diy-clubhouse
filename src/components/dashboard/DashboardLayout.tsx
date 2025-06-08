@@ -34,33 +34,48 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
 }) => {
   const { profile } = useAuth();
 
+  console.log('[DashboardLayout] Props recebidos:', {
+    active: active?.length || 0,
+    completed: completed?.length || 0,
+    recommended: recommended?.length || 0,
+    isLoading,
+    profile: !!profile
+  });
+
   // Memoizar o cálculo do nome do usuário
   const userName = useMemo(() => 
     profile?.name?.split(" ")[0] || "Membro"
   , [profile?.name]);
 
+  // Garantir que os arrays existam e sejam válidos
+  const safeActive = Array.isArray(active) ? active : [];
+  const safeCompleted = Array.isArray(completed) ? completed : [];
+  const safeRecommended = Array.isArray(recommended) ? recommended : [];
+
   // Memoizar o estado de "sem soluções" para evitar recálculos
   const hasNoSolutions = useMemo(() => 
     !isLoading && 
-    (!active || active.length === 0) && 
-    (!completed || completed.length === 0) && 
-    (!recommended || recommended.length === 0)
-  , [isLoading, active, completed, recommended]);
-
-  // Memoizar a validação de dados para evitar recálculos
-  const hasValidData = useMemo(() => 
-    Array.isArray(active) && Array.isArray(completed) && Array.isArray(recommended)
-  , [active, completed, recommended]);
+    safeActive.length === 0 && 
+    safeCompleted.length === 0 && 
+    safeRecommended.length === 0
+  , [isLoading, safeActive.length, safeCompleted.length, safeRecommended.length]);
 
   // Memoizar os totais para o KPI Grid
   const kpiTotals = useMemo(() => ({
-    completed: completed?.length || 0,
-    inProgress: active?.length || 0,
-    total: (active?.length || 0) + (completed?.length || 0) + (recommended?.length || 0)
-  }), [active?.length, completed?.length, recommended?.length]);
+    completed: safeCompleted.length,
+    inProgress: safeActive.length,
+    total: safeActive.length + safeCompleted.length + safeRecommended.length
+  }), [safeActive.length, safeCompleted.length, safeRecommended.length]);
 
-  // Early return para dados inválidos
-  if (!hasValidData && !isLoading) {
+  console.log('[DashboardLayout] Estado calculado:', {
+    hasNoSolutions,
+    kpiTotals,
+    userName
+  });
+
+  // Se não há perfil e não está carregando, mostrar erro
+  if (!profile && !isLoading) {
+    console.log('[DashboardLayout] Sem perfil, mostrando erro de conexão');
     return <DashboardConnectionErrorState />;
   }
 
@@ -94,25 +109,25 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
       ) : (
         <div className="space-y-10">
           {/* Soluções Ativas */}
-          {active && active.length > 0 && (
+          {safeActive.length > 0 && (
             <ActiveSolutions
-              solutions={active}
+              solutions={safeActive}
               onSolutionClick={onSolutionClick}
             />
           )}
 
           {/* Soluções Completadas */}
-          {completed && completed.length > 0 && (
+          {safeCompleted.length > 0 && (
             <CompletedSolutions
-              solutions={completed}
+              solutions={safeCompleted}
               onSolutionClick={onSolutionClick}
             />
           )}
 
           {/* Soluções Recomendadas */}
-          {recommended && recommended.length > 0 && (
+          {safeRecommended.length > 0 && (
             <RecommendedSolutions
-              solutions={recommended}
+              solutions={safeRecommended}
               onSolutionClick={onSolutionClick}
             />
           )}
