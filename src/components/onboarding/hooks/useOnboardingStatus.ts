@@ -20,7 +20,7 @@ interface OnboardingActions {
 
 /**
  * Hook centralizado para gerenciar todo o estado do onboarding
- * Evita verificações duplicadas e problemas de re-render
+ * Usa apenas profiles.onboarding_completed como fonte única de verdade
  */
 export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
   const { user, profile, isLoading: authLoading } = useAuth();
@@ -29,12 +29,11 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
   const [isRequired, setIsRequired] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [hasChecked, setHasChecked] = useState(false);
 
-  // Função para verificar status do onboarding - memoizada e estável
+  // Função simplificada para verificar status do onboarding
   const checkStatus = useCallback(async () => {
-    // Evitar múltiplas verificações simultâneas
-    if (hasChecked || !user?.id || !profile || authLoading) {
+    if (!user?.id || authLoading) {
+      console.log('[OnboardingStatus] Aguardando autenticação');
       return;
     }
 
@@ -43,23 +42,14 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
       setError(null);
       
       console.log('[OnboardingStatus] Verificando status para usuário:', user.id);
+      console.log('[OnboardingStatus] Profile onboarding_completed:', profile?.onboarding_completed);
       
-      const { data, error: dbError } = await supabase
-        .from('user_onboarding')
-        .select('completed_at')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (dbError) {
-        console.error('[OnboardingStatus] Erro na consulta:', dbError);
-        throw dbError;
-      }
+      // Usar apenas o campo do perfil como fonte única de verdade
+      const needsOnboarding = !profile?.onboarding_completed;
       
-      const needsOnboarding = !data || !data.completed_at;
       console.log('[OnboardingStatus] Onboarding necessário:', needsOnboarding);
       
       setIsRequired(needsOnboarding);
-      setHasChecked(true);
     } catch (err) {
       console.error('[OnboardingStatus] Erro ao verificar:', err);
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
@@ -67,11 +57,10 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
       handleError(err, 'useOnboardingStatus.checkStatus', { showToast: false });
       // Em caso de erro, assumir que não é necessário para não travar
       setIsRequired(false);
-      setHasChecked(true);
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id, profile, authLoading, hasChecked, handleError]);
+  }, [user?.id, profile?.onboarding_completed, authLoading, handleError]);
 
   // Função para submeter dados do onboarding
   const submitData = useCallback(async (data: OnboardingData) => {
@@ -110,6 +99,7 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
         updated_at: new Date().toISOString()
       };
 
+      // Salvar na tabela user_onboarding
       const { error: saveError } = await supabase
         .from('user_onboarding')
         .upsert(onboardingRecord, { onConflict: 'user_id' });
@@ -119,7 +109,7 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
         throw saveError;
       }
 
-      // Atualizar perfil
+      // Atualizar perfil - FONTE ÚNICA DE VERDADE
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ 
@@ -130,14 +120,13 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
 
       if (profileError) {
         console.error('[OnboardingStatus] Erro ao atualizar perfil:', profileError);
-        // Não falhar aqui, pois o onboarding principal foi salvo
+        throw profileError; // Falhar se não conseguir atualizar o perfil
       }
 
       console.log('[OnboardingStatus] Onboarding salvo com sucesso');
       
       // Atualizar estado local
       setIsRequired(false);
-      setHasChecked(true);
       
     } catch (err) {
       console.error('[OnboardingStatus] Erro ao salvar onboarding:', err);
@@ -146,20 +135,21 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
     }
   }, [user?.id, handleError]);
 
-  // Verificar status automaticamente quando as condições estiverem prontas
+  // Verificar status automaticamente quando o perfil estiver disponível
   useEffect(() => {
-    if (!authLoading && user?.id && profile && !hasChecked && !isLoading) {
+    if (!authLoading && user?.id && profile !== undefined) {
+      console.log('[OnboardingStatus] Condições atendidas, verificando status');
       checkStatus();
     }
-  }, [authLoading, user?.id, profile, hasChecked, isLoading, checkStatus]);
+  }, [authLoading, user?.id, profile, checkStatus]);
 
   // Reset quando o usuário muda
   useEffect(() => {
     if (!user?.id) {
+      console.log('[OnboardingStatus] Usuário deslogado, resetando estado');
       setIsRequired(null);
       setIsLoading(false);
       setError(null);
-      setHasChecked(false);
     }
   }, [user?.id]);
 
@@ -167,7 +157,16 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
     setError(null);
   }, []);
 
-  const canProceed = !authLoading && !isLoading && hasChecked;
+  const canProceed = !authLoading && !isLoading && isRequired !== null;
+
+  console.log('[OnboardingStatus] Estado atual:', {
+    isRequired,
+    isLoading: isLoading || authLoading,
+    canProceed,
+    userExists: !!user?.id,
+    profileExists: !!profile,
+    authLoading
+  });
 
   return {
     isRequired,

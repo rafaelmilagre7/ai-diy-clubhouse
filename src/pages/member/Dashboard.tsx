@@ -24,9 +24,18 @@ const Dashboard = () => {
   const initialCategory = useMemo(() => searchParams.get("category") || "general", [searchParams]);
   const [category, setCategory] = useState<string>(initialCategory);
   
+  console.log('[Dashboard] Estado atual:', {
+    authLoading,
+    onboardingLoading,
+    onboardingRequired,
+    user: !!user,
+    profile: !!profile
+  });
+  
   // Verificar se precisa completar onboarding
   useEffect(() => {
     if (!onboardingLoading && onboardingRequired) {
+      console.log('[Dashboard] Onboarding necessário, redirecionando');
       toast.info("Complete seu onboarding para acessar o dashboard!");
       navigate('/onboarding', { replace: true });
     }
@@ -74,6 +83,7 @@ const Dashboard = () => {
   // Verificação de autenticação
   useEffect(() => {
     if (!authLoading && !user) {
+      console.log('[Dashboard] Usuário não autenticado, redirecionando');
       navigate('/login', { replace: true });
     }
   }, [user, authLoading, navigate]);
@@ -107,8 +117,8 @@ const Dashboard = () => {
     }
   }, [user, onboardingRequired]);
   
-  // Se ainda estiver verificando onboarding, mostrar loading
-  if (onboardingLoading) {
+  // Se ainda estiver verificando onboarding ou auth, mostrar loading
+  if (onboardingLoading || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
         <div className="text-center space-y-4">
@@ -157,7 +167,7 @@ const Dashboard = () => {
       category={category}
       onCategoryChange={handleCategoryChange}
       onSolutionClick={handleSolutionClick}
-      isLoading={solutionsLoading || progressLoading || authLoading}
+      isLoading={solutionsLoading || progressLoading}
     />
   );
 };

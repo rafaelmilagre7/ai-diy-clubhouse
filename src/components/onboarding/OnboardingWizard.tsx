@@ -112,15 +112,8 @@ export const OnboardingWizard = () => {
     }
   }, [data, memberType, validateCurrentStep, submitData, clearData, navigate]);
 
-  // Se onboarding não for necessário, redirecionar
-  if (isRequired === false) {
-    const redirectPath = memberType === 'formacao' ? '/formacao' : '/dashboard';
-    navigate(redirectPath, { replace: true });
-    return null;
-  }
-
-  // Mostrar loading enquanto verifica status
-  if (isLoading || isRequired === null) {
+  // Loading enquanto verifica status
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
         <div className="text-center space-y-4">
@@ -131,6 +124,14 @@ export const OnboardingWizard = () => {
     );
   }
 
+  // Se onboarding não for necessário, redirecionar
+  if (isRequired === false) {
+    const redirectPath = memberType === 'formacao' ? '/formacao' : '/dashboard';
+    navigate(redirectPath, { replace: true });
+    return null;
+  }
+
+  // Renderizar steps
   const renderStep = () => {
     const stepProps = {
       data,

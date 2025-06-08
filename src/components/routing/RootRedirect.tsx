@@ -14,32 +14,47 @@ const RootRedirect = () => {
   const [timeoutExceeded, setTimeoutExceeded] = useState(false);
   const [redirectTarget, setRedirectTarget] = useState<string | null>(null);
   
+  console.log('[RootRedirect] Estado atual:', {
+    authLoading,
+    onboardingLoading,
+    canProceed,
+    user: !!user,
+    profile: !!profile,
+    onboardingRequired
+  });
+  
   // Determinar para onde redirecionar
   useEffect(() => {
     // Aguardar até que as verificações estejam completas
-    if (!canProceed || authLoading || onboardingLoading) {
+    if (!canProceed || authLoading) {
+      console.log('[RootRedirect] Aguardando condições:', { canProceed, authLoading });
       return;
     }
     
     if (!user) {
+      console.log('[RootRedirect] Usuário não autenticado, redirecionando para login');
       setRedirectTarget('/login');
     } else if (user && profile) {
       if (onboardingRequired) {
+        console.log('[RootRedirect] Onboarding necessário, redirecionando');
         setRedirectTarget('/onboarding');
       } else if (profile.role === 'admin' || isAdmin) {
+        console.log('[RootRedirect] Usuário admin, redirecionando para admin');
         setRedirectTarget('/admin');
       } else {
+        console.log('[RootRedirect] Usuário comum, redirecionando para dashboard');
         setRedirectTarget('/dashboard');
       }
     } else if (user && !profile) {
-      // Fallback se não tiver perfil
+      console.log('[RootRedirect] Usuário sem perfil, redirecionando para dashboard');
       setRedirectTarget('/dashboard');
     }
-  }, [user, profile, isAdmin, authLoading, onboardingLoading, onboardingRequired, canProceed]);
+  }, [user, profile, isAdmin, authLoading, onboardingRequired, canProceed]);
   
   // Realizar o redirecionamento
   useEffect(() => {
     if (redirectTarget) {
+      console.log('[RootRedirect] Redirecionando para:', redirectTarget);
       const redirectTimer = setTimeout(() => {
         navigate(redirectTarget, { replace: true });
       }, 100);
@@ -52,8 +67,9 @@ const RootRedirect = () => {
   useEffect(() => {
     if ((authLoading || onboardingLoading) && !timeoutExceeded) {
       const timeout = setTimeout(() => {
+        console.log('[RootRedirect] Timeout excedido, forçando redirecionamento');
         setTimeoutExceeded(true);
-        toast("Tempo de carregamento excedido, redirecionando para dashboard");
+        toast.warning("Tempo de carregamento excedido, redirecionando para dashboard");
         setRedirectTarget('/dashboard');
       }, 8000);
       
@@ -77,6 +93,7 @@ const RootRedirect = () => {
   
   // Fallback redirect
   if (timeoutExceeded || !redirectTarget) {
+    console.log('[RootRedirect] Fallback redirect para dashboard');
     return <Navigate to="/dashboard" replace />;
   }
   
