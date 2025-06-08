@@ -1,5 +1,5 @@
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 interface RecommendedLesson {
   lessonId: string;
@@ -10,7 +10,10 @@ interface RecommendedLesson {
   priority: number;
 }
 
-export const useTopLessons = (lessons: RecommendedLesson[], maxCount: number = 5) => {
+export const useTopLessons = (lessons: RecommendedLesson[], initialMaxCount: number = 5) => {
+  const [showAll, setShowAll] = useState(false);
+  const maxCount = showAll ? lessons?.length || 0 : initialMaxCount;
+
   const topLessons = useMemo(() => {
     if (!lessons || lessons.length === 0) return [];
 
@@ -28,13 +31,17 @@ export const useTopLessons = (lessons: RecommendedLesson[], maxCount: number = 5
     return sortedLessons.slice(0, maxCount);
   }, [lessons, maxCount]);
 
-  const hasMoreLessons = lessons && lessons.length > maxCount;
-  const remainingCount = lessons ? Math.max(0, lessons.length - maxCount) : 0;
+  const hasMoreLessons = lessons && lessons.length > initialMaxCount;
+  const remainingCount = lessons ? Math.max(0, lessons.length - initialMaxCount) : 0;
+
+  const toggleShowAll = () => setShowAll(!showAll);
 
   return {
     topLessons,
     hasMoreLessons,
     remainingCount,
-    totalLessons: lessons?.length || 0
+    totalLessons: lessons?.length || 0,
+    showAll,
+    toggleShowAll
   };
 };

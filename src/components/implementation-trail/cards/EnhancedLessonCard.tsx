@@ -3,8 +3,9 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { GraduationCap, Clock, Zap, ArrowRight, Star } from 'lucide-react';
-import { useLessonImages } from '../hooks/useLessonImages';
+import { useLessonImagesSingleton } from '../hooks/useLessonImagesSingleton';
 
 interface RecommendedLesson {
   lessonId: string;
@@ -21,7 +22,7 @@ interface EnhancedLessonCardProps {
 }
 
 export const EnhancedLessonCard = ({ lesson, index }: EnhancedLessonCardProps) => {
-  const { getLessonImage, getLessonMetadata } = useLessonImages();
+  const { getLessonImage, getLessonMetadata } = useLessonImagesSingleton();
   
   const imageUrl = getLessonImage(lesson.lessonId);
   const metadata = getLessonMetadata(lesson.lessonId);
@@ -63,7 +64,7 @@ export const EnhancedLessonCard = ({ lesson, index }: EnhancedLessonCardProps) =
   };
 
   return (
-    <Card className="glass-dark border border-neutral-700/50 hover:border-viverblue/50 transition-all duration-300 group overflow-hidden">
+    <Card className="glass-dark border border-neutral-700/50 hover:border-viverblue/50 transition-all duration-300 group overflow-hidden h-full flex flex-col">
       <div className="relative">
         {/* Ranking badge */}
         <div className="absolute top-3 left-3 z-10">
@@ -80,8 +81,8 @@ export const EnhancedLessonCard = ({ lesson, index }: EnhancedLessonCardProps) =
           </Badge>
         </div>
 
-        {/* Cover image */}
-        <div className="h-48 bg-gradient-to-br from-neutral-800 to-neutral-900 relative overflow-hidden">
+        {/* Cover image with 9:16 aspect ratio */}
+        <AspectRatio ratio={9/16} className="bg-gradient-to-br from-neutral-800 to-neutral-900 relative overflow-hidden">
           {imageUrl ? (
             <img 
               src={imageUrl} 
@@ -100,10 +101,10 @@ export const EnhancedLessonCard = ({ lesson, index }: EnhancedLessonCardProps) =
           
           {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-        </div>
+        </AspectRatio>
       </div>
 
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-3 flex-1">
         <CardTitle className="text-high-contrast text-lg leading-tight line-clamp-2">
           {lesson.title}
         </CardTitle>
@@ -126,9 +127,9 @@ export const EnhancedLessonCard = ({ lesson, index }: EnhancedLessonCardProps) =
         </div>
       </CardHeader>
 
-      <CardContent className="pt-0">
+      <CardContent className="pt-0 flex flex-col flex-1">
         {/* Justification */}
-        <p className="text-medium-contrast text-sm leading-relaxed mb-4 line-clamp-3">
+        <p className="text-medium-contrast text-sm leading-relaxed mb-4 line-clamp-3 flex-1">
           {lesson.justification}
         </p>
 
@@ -141,7 +142,7 @@ export const EnhancedLessonCard = ({ lesson, index }: EnhancedLessonCardProps) =
 
         {/* Action button */}
         <Button 
-          className="w-full bg-viverblue hover:bg-viverblue-dark text-white group/btn"
+          className="w-full bg-viverblue hover:bg-viverblue-dark text-white group/btn mt-auto"
           onClick={() => {
             window.open(`/learning/lessons/${lesson.lessonId}`, '_blank');
           }}
