@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Target, TrendingUp, Clock, DollarSign } from "lucide-react";
+import { Target, TrendingUp, Clock, DollarSign, Zap } from "lucide-react";
 import { OnboardingData } from '@/components/onboarding/types/onboardingTypes';
 
 interface ObjectivesSectionProps {
