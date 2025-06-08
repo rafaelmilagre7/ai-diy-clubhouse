@@ -7,6 +7,7 @@ import { OnboardingStep2 } from './steps/OnboardingStep2';
 import { OnboardingStep3 } from './steps/OnboardingStep3';
 import { OnboardingStep4 } from './steps/OnboardingStep4';
 import { OnboardingStep5 } from './steps/OnboardingStep5';
+import { OnboardingStep6 } from './steps/OnboardingStep6';
 import { OnboardingFinal } from './steps/OnboardingFinal';
 import { OnboardingProgress } from './OnboardingProgress';
 import { OnboardingNavigation } from './OnboardingNavigation';
@@ -21,7 +22,7 @@ export const OnboardingWizard = () => {
 
   // Detectar tipo de membro baseado no perfil com tipo explícito
   const memberType: 'club' | 'formacao' = profile?.role === 'formacao' ? 'formacao' : 'club';
-  const totalSteps = 6; // 5 etapas + tela final
+  const totalSteps = 7; // 6 etapas + tela final
 
   // Títulos das etapas baseados no tipo de membro
   const stepTitles = memberType === 'club' 
@@ -31,7 +32,8 @@ export const OnboardingWizard = () => {
         'Mercado e Negócio', 
         'Experiência com IA', 
         'Objetivos', 
-        'Personalização'
+        'Personalização',
+        'Finalização'
       ]
     : [
         'Apresentação',
@@ -39,7 +41,8 @@ export const OnboardingWizard = () => {
         'Área de Atuação', 
         'Experiência com IA', 
         'Objetivos de Formação', 
-        'Personalização'
+        'Personalização',
+        'Finalização'
       ];
 
   const handleNext = () => {
@@ -94,6 +97,8 @@ export const OnboardingWizard = () => {
       case 5:
         return <OnboardingStep5 {...stepProps} />;
       case 6:
+        return <OnboardingStep6 {...stepProps} />;
+      case 7:
         return (
           <OnboardingFinal 
             data={data} 
