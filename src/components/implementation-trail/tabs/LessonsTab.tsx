@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { GraduationCap, ArrowRight, Sparkles, TrendingUp, Eye, AlertCircle } from 'lucide-react';
@@ -22,15 +22,20 @@ interface LessonsTabProps {
 
 export const LessonsTab = ({ lessons }: LessonsTabProps) => {
   const { topLessons, hasMoreLessons, remainingCount, totalLessons } = useTopLessons(lessons, 5);
-  const { fetchLessonImages, loading } = useLessonImages();
+  const { preloadLessonImages, loading } = useLessonImages();
 
-  // Precarregar imagens das top 5 aulas
+  // Memorizar os IDs das aulas para evitar recálculos desnecessários
+  const lessonIds = useMemo(() => 
+    topLessons.map(lesson => lesson.lessonId), 
+    [topLessons]
+  );
+
+  // Precarregar imagens das top 5 aulas apenas quando os IDs mudarem
   useEffect(() => {
-    if (topLessons.length > 0) {
-      const lessonIds = topLessons.map(lesson => lesson.lessonId);
-      fetchLessonImages(lessonIds);
+    if (lessonIds.length > 0) {
+      preloadLessonImages(lessonIds);
     }
-  }, [topLessons, fetchLessonImages]);
+  }, [lessonIds, preloadLessonImages]);
 
   if (!lessons || lessons.length === 0) {
     return (
