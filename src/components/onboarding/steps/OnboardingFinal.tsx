@@ -1,10 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle, Sparkles, Loader2, Zap, Trophy, Star } from 'lucide-react';
+import { CheckCircle, Sparkles, Loader2, Zap, Trophy, Star, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { OnboardingData } from '../types/onboardingTypes';
 import { AIMessageDisplay } from '../components/AIMessageDisplay';
+import { OnboardingPreview } from '../components/OnboardingPreview';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import confetti from 'canvas-confetti';
 
 interface OnboardingFinalProps {
@@ -23,6 +24,7 @@ export const OnboardingFinal = ({
   const [isProcessing, setIsProcessing] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
   const [finalAIMessage, setFinalAIMessage] = useState('');
+  const [activeTab, setActiveTab] = useState('processing');
 
   useEffect(() => {
     // Simular processamento com IA
@@ -69,6 +71,7 @@ Bem-vindo oficialmente ao VIVER DE IA Club, ${firstName}! Sua jornada de transfo
       setFinalAIMessage(aiMessage);
       setIsProcessing(false);
       setShowSuccess(true);
+      setActiveTab('success');
       
       // Disparar confete
       confetti({
@@ -222,11 +225,6 @@ Bem-vindo oficialmente ao VIVER DE IA Club, ${firstName}! Sua jornada de transfo
 
   return (
     <div className="space-y-8">
-      {/* Mensagem final da IA */}
-      {finalAIMessage && (
-        <AIMessageDisplay message={finalAIMessage} />
-      )}
-
       {/* Header de sucesso */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
@@ -269,11 +267,44 @@ Bem-vindo oficialmente ao VIVER DE IA Club, ${firstName}! Sua jornada de transfo
         </div>
       </motion.div>
 
+      {/* Tabs com conteúdo */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.8 }}
+        className="max-w-4xl mx-auto"
+      >
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 bg-[#151823] border border-white/10">
+            <TabsTrigger value="success" className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              Mensagem da IA
+            </TabsTrigger>
+            <TabsTrigger value="preview" className="flex items-center gap-2">
+              <Eye className="w-4 h-4" />
+              Resumo do Perfil
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="success" className="mt-6">
+            {finalAIMessage && (
+              <AIMessageDisplay message={finalAIMessage} />
+            )}
+          </TabsContent>
+          
+          <TabsContent value="preview" className="mt-6">
+            <div className="bg-[#151823] border border-white/10 rounded-2xl p-6">
+              <OnboardingPreview data={data} />
+            </div>
+          </TabsContent>
+        </Tabs>
+      </motion.div>
+
       {/* Botão de ação */}
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.8 }}
+        transition={{ delay: 1 }}
         className="flex justify-center pt-6"
       >
         <Button 
@@ -300,7 +331,7 @@ Bem-vindo oficialmente ao VIVER DE IA Club, ${firstName}! Sua jornada de transfo
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1 }}
+        transition={{ delay: 1.2 }}
         className="max-w-3xl mx-auto"
       >
         <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-2xl p-6">
