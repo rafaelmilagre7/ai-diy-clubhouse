@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Clock, Monitor, Users, Award, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -48,6 +48,18 @@ export const OnboardingStep5 = ({
   const [bestPeriods, setBestPeriods] = useState<string[]>(data.bestPeriods || []);
   const [acceptsCaseStudy, setAcceptsCaseStudy] = useState<'yes' | 'no' | ''>(data.acceptsCaseStudy || '');
 
+  // Atualizar dados globais sempre que o estado local mudar
+  useEffect(() => {
+    onUpdateData({ 
+      weeklyLearningTime,
+      contentPreference,
+      wantsNetworking,
+      bestDays,
+      bestPeriods,
+      acceptsCaseStudy
+    });
+  }, [weeklyLearningTime, contentPreference, wantsNetworking, bestDays, bestPeriods, acceptsCaseStudy, onUpdateData]);
+
   const handleBestDayChange = (day: string, checked: boolean) => {
     if (checked) {
       setBestDays([...bestDays, day]);
@@ -65,6 +77,19 @@ export const OnboardingStep5 = ({
   };
 
   const handleNext = () => {
+    // Verificar se todos os campos obrigatórios estão preenchidos
+    const currentData = {
+      weeklyLearningTime,
+      contentPreference,
+      wantsNetworking,
+      acceptsCaseStudy
+    };
+
+    if (!currentData.weeklyLearningTime || !currentData.contentPreference || !currentData.wantsNetworking || !currentData.acceptsCaseStudy) {
+      console.log('[OnboardingStep5] Campos obrigatórios faltando:', currentData);
+      return;
+    }
+
     // Gerar mensagem final da IA
     const firstName = data.name?.split(' ')[0] || 'Amigo';
     const timeComment = weeklyLearningTime.includes('10') ? 

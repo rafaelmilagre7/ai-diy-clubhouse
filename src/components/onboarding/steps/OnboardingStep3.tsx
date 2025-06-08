@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Bot, Brain, Wrench, Users, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -67,6 +67,17 @@ export const OnboardingStep3 = ({
   const [dailyTools, setDailyTools] = useState<string[]>(data.dailyTools || []);
   const [whoWillImplement, setWhoWillImplement] = useState<'myself' | 'team' | 'hire' | ''>(data.whoWillImplement || '');
 
+  // Atualizar dados globais sempre que o estado local mudar
+  useEffect(() => {
+    onUpdateData({ 
+      hasImplementedAI,
+      aiToolsUsed,
+      aiKnowledgeLevel,
+      dailyTools,
+      whoWillImplement
+    });
+  }, [hasImplementedAI, aiToolsUsed, aiKnowledgeLevel, dailyTools, whoWillImplement, onUpdateData]);
+
   const handleAiToolChange = (tool: string, checked: boolean) => {
     if (checked) {
       setAiToolsUsed([...aiToolsUsed, tool]);
@@ -84,6 +95,18 @@ export const OnboardingStep3 = ({
   };
 
   const handleNext = () => {
+    // Verificar se todos os campos obrigatórios estão preenchidos
+    const currentData = {
+      hasImplementedAI,
+      aiKnowledgeLevel,
+      whoWillImplement
+    };
+
+    if (!currentData.hasImplementedAI || !currentData.aiKnowledgeLevel || !currentData.whoWillImplement) {
+      console.log('[OnboardingStep3] Campos obrigatórios faltando:', currentData);
+      return;
+    }
+
     // Gerar mensagem personalizada da IA baseada nas respostas
     const firstName = data.name?.split(' ')[0] || 'Amigo';
     let experienceComment = '';
@@ -104,6 +127,7 @@ export const OnboardingStep3 = ({
 
     const aiMessage = `${firstName}, ${experienceComment}${implementationComment}Com seu nível ${aiKnowledgeLevel} e conhecendo as ferramentas que você usa, já consigo visualizar algumas oportunidades incríveis de IA para sua empresa! Agora vamos definir seus objetivos específicos! 🎯`;
 
+    // Atualizar dados finais e prosseguir
     onUpdateData({ 
       hasImplementedAI,
       aiToolsUsed,
@@ -112,6 +136,7 @@ export const OnboardingStep3 = ({
       whoWillImplement,
       aiMessage3: aiMessage
     });
+    
     onNext();
   };
 

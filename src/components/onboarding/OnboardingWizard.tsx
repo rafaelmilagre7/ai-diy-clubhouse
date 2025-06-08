@@ -46,18 +46,19 @@ export const OnboardingWizard = () => {
   ], []);
 
   const handleNext = useCallback(() => {
-    console.log('[OnboardingWizard] handleNext - step:', currentStep);
+    console.log('[OnboardingWizard] handleNext - step:', currentStep, 'dados atuais:', data);
     
     clearError();
     clearValidationErrors();
 
     if (currentStep < 5) {
-      // Usar dados atualizados para validação
+      // Validar usando os dados atuais do storage
       const validation = validateCurrentStep(currentStep, data, memberType);
       
       if (!validation.isValid) {
         console.log('[OnboardingWizard] Validação falhou:', validation.errors);
-        toast.error('Por favor, preencha todos os campos obrigatórios');
+        const errorFields = validation.errors.map(e => e.field).join(', ');
+        toast.error(`Por favor, preencha os campos obrigatórios: ${errorFields}`);
         return;
       }
     }
@@ -126,16 +127,6 @@ export const OnboardingWizard = () => {
       setIsCompleting(false);
     }
   }, [data, memberType, validateCurrentStep, submitData, clearData, navigate]);
-
-  // Validação melhorada que considera dados atualizados
-  const canProceed = useMemo(() => {
-    if (currentStep === totalSteps) return true;
-    if (currentStep >= 5) return true;
-    
-    // Validação em tempo real baseada nos dados atuais
-    const validation = validateCurrentStep(currentStep, data, memberType);
-    return validation.isValid;
-  }, [currentStep, totalSteps, validateCurrentStep, data, memberType]);
 
   const renderStep = () => {
     const stepProps = {

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Target, TrendingUp, Clock, DollarSign, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -62,7 +62,30 @@ export const OnboardingStep4 = ({
   const [expectedResult90Days, setExpectedResult90Days] = useState(data.expectedResult90Days || '');
   const [aiImplementationBudget, setAiImplementationBudget] = useState(data.aiImplementationBudget || '');
 
+  // Atualizar dados globais sempre que o estado local mudar
+  useEffect(() => {
+    onUpdateData({ 
+      mainObjective,
+      areaToImpact,
+      expectedResult90Days,
+      aiImplementationBudget
+    });
+  }, [mainObjective, areaToImpact, expectedResult90Days, aiImplementationBudget, onUpdateData]);
+
   const handleNext = () => {
+    // Verificar se todos os campos obrigatórios estão preenchidos
+    const currentData = {
+      mainObjective,
+      areaToImpact,
+      expectedResult90Days,
+      aiImplementationBudget
+    };
+
+    if (!currentData.mainObjective || !currentData.areaToImpact || !currentData.expectedResult90Days || !currentData.aiImplementationBudget) {
+      console.log('[OnboardingStep4] Campos obrigatórios faltando:', currentData);
+      return;
+    }
+
     // Gerar mensagem personalizada da IA baseada nas respostas
     const firstName = data.name?.split(' ')[0] || 'Amigo';
     const objectiveLabel = mainObjectives.find(obj => obj.value === mainObjective)?.label || '';
