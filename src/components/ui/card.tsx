@@ -4,55 +4,48 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const cardVariants = cva(
-  "rounded-xl border border-border shadow-sm transition-all duration-300",
+  "rounded-xl border transition-all duration-200",
   {
     variants: {
       variant: {
-        default: "bg-surface-elevated",
-        surface: "bg-surface",
-        elevated: "bg-surface-elevated shadow-md hover:shadow-lg",
-        interactive: "bg-surface-elevated hover:shadow-md hover:border-border-strong cursor-pointer hover:-translate-y-0.5",
-        outline: "bg-transparent border-2",
-        ghost: "bg-transparent border-0 shadow-none",
-        gradient: "bg-gradient-surface border-primary/20",
-        glow: "bg-surface-elevated hover:shadow-glow-primary",
+        default: "bg-surface-elevated border-border",
+        elevated: "bg-surface-elevated border-border shadow-lg",
+        interactive: "bg-surface-elevated border-border hover:border-border-strong hover:shadow-glow-primary cursor-pointer",
+        ghost: "bg-transparent border-transparent",
+        outline: "bg-transparent border-border",
+        gradient: "bg-gradient-surface border-border-subtle",
       },
       padding: {
         none: "",
-        sm: "p-3",
-        default: "p-4",
-        lg: "p-6",
-        xl: "p-8",
+        sm: "p-4",
+        default: "p-6",
+        lg: "p-8",
       },
-      radius: {
+      rounded: {
         none: "rounded-none",
-        sm: "rounded-sm",
+        sm: "rounded-lg",
         default: "rounded-xl",
         lg: "rounded-2xl",
-        full: "rounded-full",
       },
     },
     defaultVariants: {
       variant: "default",
       padding: "default",
-      radius: "default",
+      rounded: "default",
     },
   }
 )
 
-export interface CardProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof cardVariants> {}
-
-const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ className, variant, padding, radius, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn(cardVariants({ variant, padding, radius }), className)}
-      {...props}
-    />
-  )
-)
+const Card = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof cardVariants>
+>(({ className, variant, padding, rounded, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(cardVariants({ variant, padding, rounded }), className)}
+    {...props}
+  />
+))
 Card.displayName = "Card"
 
 const CardHeader = React.forwardRef<
@@ -73,7 +66,7 @@ const CardTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h3
     ref={ref}
-    className={cn("text-2xl font-semibold leading-none tracking-tight text-text-primary", className)}
+    className={cn("font-semibold leading-none tracking-tight text-text-primary", className)}
     {...props}
   />
 ))
@@ -105,7 +98,7 @@ const CardFooter = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex items-center", className)}
+    className={cn("flex items-center pt-6", className)}
     {...props}
   />
 ))

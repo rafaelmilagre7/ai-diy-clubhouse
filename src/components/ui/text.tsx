@@ -4,53 +4,47 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const textVariants = cva(
-  "leading-relaxed",
+  "transition-colors duration-200",
   {
     variants: {
       variant: {
-        // Headings
-        display: "text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-none",
-        page: "text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-tight",
-        section: "text-2xl md:text-3xl lg:text-4xl font-semibold tracking-tight leading-tight",
-        subsection: "text-xl md:text-2xl lg:text-3xl font-semibold tracking-tight leading-snug",
-        card: "text-lg md:text-xl font-semibold leading-snug",
-        small: "text-base md:text-lg font-medium leading-snug",
+        // Hierarquia de cabeçalhos
+        "page": "text-4xl font-bold tracking-tight",
+        "section": "text-3xl font-bold tracking-tight",
+        "subsection": "text-2xl font-semibold tracking-tight",
+        "heading": "text-xl font-semibold",
+        "subheading": "text-lg font-medium",
         
-        // Body text
-        "body-large": "text-lg md:text-xl leading-relaxed",
-        body: "text-base leading-relaxed",
-        "body-small": "text-sm leading-relaxed",
-        "body-tiny": "text-xs leading-normal",
+        // Texto de corpo
+        "body-large": "text-base font-normal leading-relaxed",
+        "body": "text-sm font-normal leading-normal",
+        "body-small": "text-xs font-normal leading-normal",
         
-        // UI elements
-        label: "text-sm font-medium leading-none",
-        caption: "text-xs text-text-muted leading-tight",
-        button: "text-sm font-medium leading-none",
-        link: "text-sm text-primary hover:text-primary-hover underline underline-offset-4 cursor-pointer",
-        
-        // Code
-        "code-inline": "text-sm font-mono bg-surface px-1.5 py-0.5 rounded border",
+        // Texto especializado
+        "caption": "text-xs font-medium uppercase tracking-wide",
+        "code": "text-sm font-mono bg-surface-elevated px-1.5 py-0.5 rounded-md",
+        "link": "text-sm font-medium underline-offset-4 hover:underline cursor-pointer",
+        "button": "text-sm font-medium",
+        "label": "text-sm font-medium leading-none",
+        "muted": "text-xs text-text-muted",
       },
       textColor: {
         primary: "text-text-primary",
         secondary: "text-text-secondary", 
         tertiary: "text-text-tertiary",
         muted: "text-text-muted",
-        inherit: "text-inherit",
+        accent: "text-primary",
         success: "text-success",
         warning: "text-warning",
         error: "text-error",
         info: "text-info",
       },
       weight: {
-        thin: "font-thin",
         light: "font-light",
         normal: "font-normal",
         medium: "font-medium",
         semibold: "font-semibold",
         bold: "font-bold",
-        extrabold: "font-extrabold",
-        black: "font-black",
       },
       align: {
         left: "text-left",
@@ -58,12 +52,17 @@ const textVariants = cva(
         right: "text-right",
         justify: "text-justify",
       },
+      truncate: {
+        true: "truncate",
+        false: "",
+      },
     },
     defaultVariants: {
       variant: "body",
       textColor: "primary",
       weight: "normal",
       align: "left",
+      truncate: false,
     },
   }
 )
@@ -71,45 +70,27 @@ const textVariants = cva(
 export interface TextProps
   extends React.HTMLAttributes<HTMLElement>,
     VariantProps<typeof textVariants> {
-  as?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "p" | "span" | "div" | "label"
+  as?: "p" | "span" | "div" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "small" | "strong" | "em"
+  gradient?: boolean
 }
 
 const Text = React.forwardRef<HTMLElement, TextProps>(
-  ({ className, variant, textColor, weight, align, as, ...props }, ref) => {
-    const Comp = as || getDefaultComponent(variant)
+  ({ className, variant, textColor, weight, align, truncate, as, gradient, ...props }, ref) => {
+    const Component = as || "p"
     
-    return React.createElement(
-      Comp,
-      {
-        className: cn(textVariants({ variant, textColor, weight, align }), className),
-        ref,
-        ...props
-      }
+    return (
+      <Component
+        className={cn(
+          textVariants({ variant, textColor, weight, align, truncate }),
+          gradient && "bg-gradient-text bg-clip-text text-transparent",
+          className
+        )}
+        ref={ref as any}
+        {...props}
+      />
     )
   }
 )
-
-function getDefaultComponent(variant?: string): keyof JSX.IntrinsicElements {
-  switch (variant) {
-    case "display":
-    case "page":
-      return "h1"
-    case "section":
-      return "h2"
-    case "subsection":
-      return "h3"
-    case "card":
-    case "small":
-      return "h4"
-    case "label":
-      return "label"
-    case "caption":
-      return "span"
-    default:
-      return "p"
-  }
-}
-
 Text.displayName = "Text"
 
 export { Text, textVariants }
