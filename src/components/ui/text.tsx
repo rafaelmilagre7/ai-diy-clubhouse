@@ -78,12 +78,13 @@ const Text = React.forwardRef<HTMLElement, TextProps>(
   ({ className, variant, textColor, weight, align, as, ...props }, ref) => {
     const Comp = as || getDefaultComponent(variant)
     
-    return (
-      <Comp
-        className={cn(textVariants({ variant, textColor, weight, align }), className)}
-        ref={ref}
-        {...props}
-      />
+    return React.createElement(
+      Comp,
+      {
+        className: cn(textVariants({ variant, textColor, weight, align }), className),
+        ref,
+        ...props
+      }
     )
   }
 )
