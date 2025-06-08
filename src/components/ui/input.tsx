@@ -13,7 +13,7 @@ const inputVariants = cva(
         outline: "border-border bg-transparent text-text-primary",
         ghost: "border-transparent bg-transparent text-text-primary hover:bg-surface-hover",
       },
-      size: {
+      inputSize: {
         default: "h-10 px-3 py-2",
         sm: "h-9 px-3 py-2",
         lg: "h-11 px-4 py-2",
@@ -27,22 +27,22 @@ const inputVariants = cva(
     },
     defaultVariants: {
       variant: "default",
-      size: "default",
+      inputSize: "default",
       state: "default",
     },
   }
 )
 
 export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement>,
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'>,
     VariantProps<typeof inputVariants> {}
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, variant, size, state, type, ...props }, ref) => {
+  ({ className, variant, inputSize, state, type, ...props }, ref) => {
     return (
       <input
         type={type}
-        className={cn(inputVariants({ variant, size, state }), className)}
+        className={cn(inputVariants({ variant, inputSize, state }), className)}
         ref={ref}
         {...props}
       />

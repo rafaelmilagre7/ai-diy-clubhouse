@@ -13,7 +13,7 @@ const tableVariants = cva(
         bordered: "border border-border rounded-lg overflow-hidden",
         minimal: "border-spacing-0",
       },
-      size: {
+      tableSize: {
         default: "",
         sm: "text-xs",
         lg: "text-base",
@@ -21,7 +21,7 @@ const tableVariants = cva(
     },
     defaultVariants: {
       variant: "default",
-      size: "default",
+      tableSize: "default",
     },
   }
 )
@@ -29,11 +29,11 @@ const tableVariants = cva(
 const Table = React.forwardRef<
   HTMLTableElement,
   React.HTMLAttributes<HTMLTableElement> & VariantProps<typeof tableVariants>
->(({ className, variant, size, ...props }, ref) => (
+>(({ className, variant, tableSize, ...props }, ref) => (
   <div className="relative w-full overflow-auto">
     <table
       ref={ref}
-      className={cn(tableVariants({ variant, size }), className)}
+      className={cn(tableVariants({ variant, tableSize }), className)}
       {...props}
     />
   </div>

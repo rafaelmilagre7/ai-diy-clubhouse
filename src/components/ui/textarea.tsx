@@ -12,7 +12,7 @@ const textareaVariants = cva(
         filled: "border-border-subtle bg-surface-elevated text-text-primary",
         outline: "border-border bg-transparent text-text-primary",
       },
-      size: {
+      textareaSize: {
         default: "min-h-[80px]",
         sm: "min-h-[60px] text-xs",
         lg: "min-h-[120px]",
@@ -25,7 +25,7 @@ const textareaVariants = cva(
     },
     defaultVariants: {
       variant: "default",
-      size: "default",
+      textareaSize: "default",
       state: "default",
     },
   }
@@ -36,10 +36,10 @@ export interface TextareaProps
     VariantProps<typeof textareaVariants> {}
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, variant, size, state, ...props }, ref) => {
+  ({ className, variant, textareaSize, state, ...props }, ref) => {
     return (
       <textarea
-        className={cn(textareaVariants({ variant, size, state }), className)}
+        className={cn(textareaVariants({ variant, textareaSize, state }), className)}
         ref={ref}
         {...props}
       />
