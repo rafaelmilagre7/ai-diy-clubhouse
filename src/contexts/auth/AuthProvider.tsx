@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { UserProfile } from '@/lib/supabase';
@@ -68,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
   
   // Extrair métodos de autenticação
-  const { signIn, signOut, signInAsMember, signInAsAdmin, signInAsTestMember, signInAsTestFormacao } = useAuthMethods({ setIsLoading });
+  const { signIn, signOut, signInAsMember, signInAsAdmin, signInAsTestMember, signInAsTestFormacao, signInAsClubTest } = useAuthMethods({ setIsLoading });
   
   // Salvar a rota autenticada quando o usuário fizer login com sucesso
   useEffect(() => {
@@ -92,13 +93,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signInAsAdmin,
     signInAsTestMember,
     signInAsTestFormacao,
+    signInAsClubTest,
     setSession,
     setUser,
     setProfile,
     setIsLoading,
   }), [
     session, user, profile, isAdmin, isFormacao, isLoading, authError,
-    signIn, signOut, signInAsMember, signInAsAdmin, signInAsTestMember, signInAsTestFormacao,
+    signIn, signOut, signInAsMember, signInAsAdmin, signInAsTestMember, signInAsTestFormacao, signInAsClubTest,
     setSession, setUser, setProfile, setIsLoading
   ]);
 

@@ -71,6 +71,13 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
   const signInAsTestFormacao = async () => {
     return signIn("formacao-teste@viverdeia.ai", "teste-formacao-2024");
   };
+
+  /**
+   * Login como usuário de teste do club (novo)
+   */
+  const signInAsClubTest = async () => {
+    return signIn("club-teste@viverdeia.ai", "12345");
+  };
   
   /**
    * Logout
@@ -114,5 +121,6 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
     signInAsAdmin,
     signInAsTestMember,
     signInAsTestFormacao,
+    signInAsClubTest,
   };
 };

@@ -16,6 +16,7 @@ export interface AuthContextType {
   signInAsAdmin: () => Promise<{ success: boolean; data?: any; error?: any }>;
   signInAsTestMember: () => Promise<{ success: boolean; data?: any; error?: any }>;
   signInAsTestFormacao: () => Promise<{ success: boolean; data?: any; error?: any }>;
+  signInAsClubTest: () => Promise<{ success: boolean; data?: any; error?: any }>;
   setSession: React.Dispatch<React.SetStateAction<Session | null>>;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   setProfile: React.Dispatch<React.SetStateAction<UserProfile | null>>;
