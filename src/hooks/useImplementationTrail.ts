@@ -45,6 +45,7 @@ export function useImplementationTrail() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [isFirstTimeGeneration, setIsFirstTimeGeneration] = useState(false);
 
   const loadTrail = async () => {
     if (!user?.id) return;
@@ -52,6 +53,8 @@ export function useImplementationTrail() {
     try {
       setIsLoading(true);
       setError(null);
+
+      console.log('🔍 Buscando trilha existente para usuário:', user.id);
 
       // Buscar trilha existente
       const { data: existingTrail, error: trailError } = await supabase
@@ -64,18 +67,21 @@ export function useImplementationTrail() {
         .maybeSingle();
 
       if (trailError) {
-        console.error('Erro ao buscar trilha:', trailError);
+        console.error('❌ Erro ao buscar trilha:', trailError);
         throw new Error('Erro ao carregar trilha de implementação');
       }
 
       if (existingTrail && existingTrail.trail_data) {
+        console.log('✅ Trilha existente encontrada');
         setTrail(existingTrail.trail_data as ImplementationTrail);
+        setIsFirstTimeGeneration(false);
       } else {
-        // Se não tem trilha, gerar uma nova
+        console.log('📝 Nenhuma trilha encontrada, gerando nova');
+        setIsFirstTimeGeneration(true);
         await generateTrail();
       }
     } catch (err: any) {
-      console.error('Erro no useImplementationTrail:', err);
+      console.error('❌ Erro no useImplementationTrail:', err);
       setError(err.message || 'Erro ao carregar trilha');
     } finally {
       setIsLoading(false);
@@ -92,7 +98,7 @@ export function useImplementationTrail() {
       setIsRegenerating(true);
       setError(null);
 
-      console.log('Gerando trilha para usuário:', user.id);
+      console.log('🚀 Gerando trilha para usuário:', user.id);
 
       // Chamar edge function para gerar trilha
       const { data, error: generateError } = await supabase.functions.invoke(
@@ -123,12 +129,12 @@ export function useImplementationTrail() {
       );
 
       if (generateError) {
-        console.error('Erro na edge function:', generateError);
+        console.error('❌ Erro na edge function:', generateError);
         throw new Error('Erro ao gerar trilha personalizada');
       }
 
       if (data?.success && data?.trail_data) {
-        console.log('Trilha gerada com sucesso:', data.trail_data);
+        console.log('✅ Trilha gerada com sucesso:', data.trail_data);
 
         // Chamar função de aprimoramento com IA
         const { error: enhanceError } = await supabase.functions.invoke(
@@ -149,7 +155,7 @@ export function useImplementationTrail() {
         );
 
         if (enhanceError) {
-          console.warn('Erro ao aprimorar trilha com IA:', enhanceError);
+          console.warn('⚠️ Erro ao aprimorar trilha com IA:', enhanceError);
         }
 
         setTrail(data.trail_data);
@@ -161,7 +167,7 @@ export function useImplementationTrail() {
         throw new Error('Falha ao gerar trilha');
       }
     } catch (err: any) {
-      console.error('Erro ao gerar trilha:', err);
+      console.error('❌ Erro ao gerar trilha:', err);
       setError(err.message || 'Erro ao gerar trilha');
       toast({
         title: 'Erro ao gerar trilha',
@@ -174,6 +180,7 @@ export function useImplementationTrail() {
   };
 
   const regenerateTrail = () => {
+    setIsFirstTimeGeneration(false);
     generateTrail();
   };
 
@@ -187,5 +194,6 @@ export function useImplementationTrail() {
     error,
     regenerateTrail,
     isRegenerating,
+    isFirstTimeGeneration,
   };
 }

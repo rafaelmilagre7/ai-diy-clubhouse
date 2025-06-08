@@ -2,7 +2,7 @@
 import React from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useImplementationTrail } from '@/hooks/useImplementationTrail';
-import LoadingScreen from '@/components/common/LoadingScreen';
+import { TrailGenerationLoader } from '@/components/implementation-trail/TrailGenerationLoader';
 import { ImplementationTrailHeader } from '@/components/implementation-trail/ImplementationTrailHeader';
 import { ImplementationTrailContent } from '@/components/implementation-trail/ImplementationTrailContent';
 import { Button } from '@/components/ui/button';
@@ -10,10 +10,23 @@ import { RefreshCw } from 'lucide-react';
 
 const ImplementationTrail = () => {
   const { user } = useAuth();
-  const { trail, isLoading, error, regenerateTrail, isRegenerating } = useImplementationTrail();
+  const { 
+    trail, 
+    isLoading, 
+    error, 
+    regenerateTrail, 
+    isRegenerating, 
+    isFirstTimeGeneration 
+  } = useImplementationTrail();
 
+  // Mostrar loader especial para primeira geração
+  if (isLoading && isFirstTimeGeneration) {
+    return <TrailGenerationLoader message="Criando sua trilha personalizada com IA..." />;
+  }
+
+  // Mostrar loader normal para outras operações
   if (isLoading) {
-    return <LoadingScreen message="Gerando sua trilha personalizada com IA..." />;
+    return <TrailGenerationLoader message="Carregando sua trilha..." />;
   }
 
   if (error) {

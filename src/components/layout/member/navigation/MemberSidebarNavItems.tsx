@@ -36,7 +36,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       title: "Trilha de IA",
       href: "/trilha-implementacao",
       icon: Route,
-      special: true, // Marcar como especial para destacar
+      special: true,
       description: "Guia personalizado com IA"
     },
     {
