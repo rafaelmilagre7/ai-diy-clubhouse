@@ -28,26 +28,26 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
   const location = useLocation();
   const { profile } = useAuth();
 
-  // Seção principal - Dashboard
+  // Dashboard principal
   const dashboardItem = {
     title: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
   };
 
-  // Seção IA & Personalização
+  // IA & Personalização
   const aiPersonalizationItems = [
     {
       title: "Trilha de IA",
       href: "/trilha-implementacao",
       icon: Route,
       special: true,
-      description: "Guia personalizado com IA"
+      description: "Guia personalizado"
     }
   ];
 
-  // Seção principal - Soluções e Aprendizado
-  const mainItems = [
+  // Aprendizado
+  const learningItems = [
     {
       title: "Soluções",
       href: "/solutions",
@@ -65,8 +65,8 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
     }
   ];
 
-  // Seção Ferramentas e Comunidade
-  const toolsAndCommunityItems = [
+  // Recursos
+  const resourceItems = [
     {
       title: "Ferramentas",
       href: "/tools",
@@ -84,9 +84,8 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
     }
   ];
 
-  // Itens administrativos (só painel admin para admins reais)
+  // Admin (só para admins)
   const adminItems = [];
-  
   if (profile?.role === 'admin') {
     adminItems.push({
       title: "Painel Admin",
@@ -95,26 +94,22 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
     });
   }
 
-  // Lógica de ativação mais específica para evitar conflitos
+  // Lógica de ativação mais específica
   const isActive = (href: string) => {
     const currentPath = location.pathname;
     
-    // Para o dashboard, deve ser exato
     if (href === '/dashboard') {
       return currentPath === href;
     }
     
-    // Para certificados, deve ser exato
     if (href === '/learning/certificates') {
       return currentPath === href;
     }
     
-    // Para cursos, não deve ativar se estivermos em certificados
     if (href === '/learning') {
       return currentPath.startsWith(href) && !currentPath.includes('/certificates');
     }
     
-    // Para outros, usar startsWith
     return currentPath.startsWith(href);
   };
 
@@ -123,34 +118,34 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       key={item.href}
       variant={isActive(item.href) ? "default" : "ghost"}
       className={cn(
-        "w-full justify-start gap-3 mb-1 h-10 px-3 py-2 transition-all",
-        !sidebarOpen && "justify-center px-2",
+        "w-full justify-start gap-2 h-8 px-2 text-sm font-normal transition-all duration-200",
+        !sidebarOpen && "justify-center px-1",
         isActive(item.href) 
-          ? "bg-viverblue text-white hover:bg-viverblue/90" 
-          : "text-neutral-300 hover:text-white hover:bg-white/10",
-        item.special && !isActive(item.href) && "hover:bg-viverblue/20 border border-viverblue/20"
+          ? "bg-viverblue text-white hover:bg-viverblue/90 shadow-sm" 
+          : "text-neutral-300 hover:text-white hover:bg-white/5",
+        item.special && !isActive(item.href) && "hover:bg-viverblue/10 border border-viverblue/20"
       )}
       asChild
     >
       <Link to={item.href}>
-        <div className="flex items-center gap-3">
-          <item.icon className="h-5 w-5 flex-shrink-0" />
+        <div className="flex items-center gap-2 min-w-0">
+          <item.icon className="h-4 w-4 flex-shrink-0" />
           {item.special && sidebarOpen && (
-            <Sparkles className="h-3 w-3 text-viverblue animate-pulse" />
+            <Sparkles className="h-3 w-3 text-viverblue animate-pulse flex-shrink-0" />
           )}
         </div>
         {sidebarOpen && (
-          <div className="flex flex-col items-start">
-            <span className="truncate">{item.title}</span>
+          <div className="flex flex-col items-start min-w-0 flex-1">
+            <span className="truncate text-sm">{item.title}</span>
             {item.special && item.description && (
-              <span className="text-xs text-viverblue opacity-80">
+              <span className="text-xs text-viverblue/80 truncate">
                 {item.description}
               </span>
             )}
           </div>
         )}
         {item.special && !sidebarOpen && (
-          <div className="absolute -top-1 -right-1 w-2 h-2 bg-viverblue rounded-full animate-pulse"></div>
+          <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-viverblue rounded-full animate-pulse"></div>
         )}
       </Link>
     </Button>
@@ -161,49 +156,59 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
     
     const IconComponent = icon;
     return (
-      <div className="flex items-center gap-2 px-3 py-3 text-xs font-semibold text-medium-contrast uppercase tracking-wider">
-        <IconComponent className="h-4 w-4" />
-        <span>{title}</span>
+      <div className="flex items-center gap-2 px-2 py-1.5 mb-1">
+        <IconComponent className="h-3.5 w-3.5 text-medium-contrast" />
+        <span className="text-xs font-semibold text-medium-contrast uppercase tracking-wide">
+          {title}
+        </span>
       </div>
     );
   };
 
+  const renderSeparator = () => (
+    <div className="py-1.5">
+      <Separator className="bg-neutral-700/30" />
+    </div>
+  );
+
   return (
-    <div className="space-y-1">
+    <div className="space-y-0.5 px-2">
       {/* Dashboard */}
-      {renderNavButton(dashboardItem)}
-      
-      <div className="py-2">
-        <Separator className="bg-neutral-700/50" />
+      <div className="mb-2">
+        {renderNavButton(dashboardItem)}
       </div>
+
+      {renderSeparator()}
 
       {/* IA & Personalização */}
       {renderSectionHeader("IA & Personalização", Brain)}
-      {aiPersonalizationItems.map(renderNavButton)}
-      
-      <div className="py-2">
-        <Separator className="bg-neutral-700/50" />
+      <div className="space-y-0.5 mb-2">
+        {aiPersonalizationItems.map(renderNavButton)}
       </div>
+      
+      {renderSeparator()}
 
-      {/* Soluções e Aprendizado */}
+      {/* Aprendizado */}
       {renderSectionHeader("Aprendizado", GraduationCap)}
-      {mainItems.map(renderNavButton)}
+      <div className="space-y-0.5 mb-2">
+        {learningItems.map(renderNavButton)}
+      </div>
       
-      <div className="py-2">
-        <Separator className="bg-neutral-700/50" />
+      {renderSeparator()}
+
+      {/* Recursos */}
+      {renderSectionHeader("Recursos", Zap)}
+      <div className="space-y-0.5 mb-2">
+        {resourceItems.map(renderNavButton)}
       </div>
 
-      {/* Ferramentas e Comunidade */}
-      {renderSectionHeader("Recursos", Zap)}
-      {toolsAndCommunityItems.map(renderNavButton)}
-
-      {/* Painel Admin (só para admins) */}
+      {/* Admin (só para admins) */}
       {adminItems.length > 0 && (
         <>
-          <div className="py-2">
-            <Separator className="bg-neutral-700/50" />
+          {renderSeparator()}
+          <div className="space-y-0.5">
+            {adminItems.map(renderNavButton)}
           </div>
-          {adminItems.map(renderNavButton)}
         </>
       )}
     </div>
