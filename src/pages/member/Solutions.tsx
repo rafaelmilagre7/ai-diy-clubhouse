@@ -8,7 +8,6 @@ import { Search, Filter, ShieldAlert } from 'lucide-react';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { Solution } from '@/lib/supabase';
 import { useToolsData } from '@/hooks/useToolsData';
-import { useLogging } from '@/contexts/logging';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -19,7 +18,6 @@ import { Link } from 'react-router-dom';
 const Solutions = () => {
   useDocumentTitle('Soluções | VIVER DE IA Club');
   
-  const { log } = useLogging();
   const { isLoading: toolsDataLoading } = useToolsData();
   
   const { 
@@ -32,7 +30,7 @@ const Solutions = () => {
     canViewSolutions
   } = useSolutionsData();
 
-  log("Solutions page loaded", { 
+  console.log("Solutions page loaded", { 
     solutionsCount: filteredSolutions?.length || 0, 
     activeCategory,
     isLoading: loading || toolsDataLoading,

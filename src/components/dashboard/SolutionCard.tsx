@@ -25,7 +25,7 @@ export const SolutionCard: FC<SolutionCardProps> = memo(({
         "group cursor-pointer overflow-hidden h-full",
         "flex flex-col",
         "transition-all duration-300 ease-out",
-        "hover:shadow-glow-primary"
+        "hover-lift"
       )}
       onClick={onClick}
     >
@@ -52,13 +52,13 @@ export const SolutionCard: FC<SolutionCardProps> = memo(({
             {solution.tags.slice(0, 3).map((tag, index) => (
               <span 
                 key={index} 
-                className="px-2 py-0.5 text-xs rounded-full bg-surface border border-border-subtle text-text-secondary"
+                className="badge-neutral"
               >
                 {tag}
               </span>
             ))}
             {solution.tags.length > 3 && (
-              <span className="px-2 py-0.5 text-xs rounded-full bg-surface border border-border-subtle text-text-secondary">
+              <span className="badge-neutral">
                 +{solution.tags.length - 3}
               </span>
             )}
