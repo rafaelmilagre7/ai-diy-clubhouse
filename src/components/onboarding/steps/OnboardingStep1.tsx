@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { User, Mail, Phone, Instagram, Linkedin, MapPin, Calendar, Heart } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -30,8 +30,25 @@ export const OnboardingStep1 = ({
 
   const { estados, cidadesPorEstado, isLoading: locationsLoading, loadCidades } = useIBGELocations();
 
+  // Sincronizar dados locais com dados globais em tempo real
+  useEffect(() => {
+    onUpdateData({ 
+      name,
+      email,
+      phone,
+      instagram,
+      linkedin,
+      state,
+      city,
+      birthDate,
+      curiosity,
+      memberType,
+      startedAt: data.startedAt || new Date().toISOString()
+    });
+  }, [name, email, phone, instagram, linkedin, state, city, birthDate, curiosity, memberType, onUpdateData, data.startedAt]);
+
   // Carregar cidades quando estado é selecionado
-  React.useEffect(() => {
+  useEffect(() => {
     if (state && !cidadesPorEstado[state]) {
       loadCidades(state);
     }
@@ -45,18 +62,7 @@ export const OnboardingStep1 = ({
     const aiMessage = `Olá ${firstName}! 🎉 É um prazer imenso ter você no VIVER DE IA Club! Vi que você é de ${city ? `${city}, ` : ''}${estadoNome} - que região incrível! ${curiosity ? `E adorei saber que ${curiosity.toLowerCase()}! ` : ''}Agora vamos conhecer melhor seu negócio para criar uma experiência totalmente personalizada que vai transformar sua empresa com IA. Bora lá? 🚀`;
 
     onUpdateData({ 
-      name,
-      email,
-      phone,
-      instagram,
-      linkedin,
-      state,
-      city,
-      birthDate,
-      curiosity,
-      aiMessage1: aiMessage,
-      memberType,
-      startedAt: data.startedAt || new Date().toISOString()
+      aiMessage1: aiMessage
     });
     onNext();
   };
@@ -67,6 +73,7 @@ export const OnboardingStep1 = ({
   const cityError = getFieldError?.('city');
   const curiosityError = getFieldError?.('curiosity');
   
+  // Validação local que corresponde à validação global
   const canProceed = name.trim() && email.trim() && state && city && curiosity.trim();
 
   // Gerar anos para select de data de nascimento

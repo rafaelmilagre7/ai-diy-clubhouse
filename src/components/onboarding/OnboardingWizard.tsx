@@ -53,6 +53,7 @@ export const OnboardingWizard = () => {
     clearValidationErrors();
 
     if (currentStep < 5) {
+      // Usar dados atualizados para validação
       const validation = validateCurrentStep(currentStep, data, memberType);
       
       if (!validation.isValid) {
@@ -127,9 +128,12 @@ export const OnboardingWizard = () => {
     }
   }, [data, memberType, validateCurrentStep, submitData, clearData, navigate]);
 
+  // Validação melhorada que considera dados atualizados
   const canProceed = useMemo(() => {
     if (currentStep === totalSteps) return true;
     if (currentStep >= 5) return true;
+    
+    // Validação em tempo real baseada nos dados atuais
     const validation = validateCurrentStep(currentStep, data, memberType);
     return validation.isValid;
   }, [currentStep, totalSteps, validateCurrentStep, data, memberType]);
@@ -170,7 +174,7 @@ export const OnboardingWizard = () => {
     <div className="min-h-screen bg-[#0F111A]">
       {/* Header com progresso */}
       <div className="sticky top-0 z-40 bg-[#0F111A]/90 backdrop-blur-sm border-b border-white/5">
-        <div className="max-w-5xl mx-auto px-6 py-3">
+        <div className="max-w-5xl mx-auto px-6 py-2">
           <OnboardingProgress 
             currentStep={currentStep} 
             totalSteps={totalSteps}
@@ -180,7 +184,7 @@ export const OnboardingWizard = () => {
       </div>
 
       {/* Conteúdo principal */}
-      <div className="flex-1 flex items-start justify-center p-6 py-6">
+      <div className="flex-1 flex items-start justify-center p-6 py-4">
         <div className="w-full max-w-5xl">
           {error && (
             <motion.div
@@ -215,7 +219,7 @@ export const OnboardingWizard = () => {
       {/* Navegação */}
       {currentStep < totalSteps && (
         <div className="sticky bottom-0 z-40 bg-[#0F111A]/90 backdrop-blur-sm border-t border-white/5">
-          <div className="max-w-5xl mx-auto px-6 py-3">
+          <div className="max-w-5xl mx-auto px-6 py-2">
             <OnboardingNavigation
               currentStep={currentStep}
               totalSteps={totalSteps - 1}
