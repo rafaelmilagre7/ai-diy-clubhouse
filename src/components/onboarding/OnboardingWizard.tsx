@@ -167,10 +167,10 @@ export const OnboardingWizard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      {/* Header com progresso redesenhado */}
-      <div className="sticky top-0 z-40 bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg border-b border-gray-200/50 dark:border-gray-700/50">
-        <div className="max-w-6xl mx-auto px-4 py-6">
+    <div className="min-h-screen bg-[#0F111A]">
+      {/* Header com progresso */}
+      <div className="sticky top-0 z-40 bg-[#0F111A]/90 backdrop-blur-sm border-b border-white/5">
+        <div className="max-w-5xl mx-auto px-6 py-6">
           <OnboardingProgress 
             currentStep={currentStep} 
             totalSteps={totalSteps}
@@ -179,9 +179,9 @@ export const OnboardingWizard = () => {
         </div>
       </div>
 
-      {/* Conteúdo principal redesenhado */}
-      <div className="flex-1 flex items-start justify-center p-4 py-8">
-        <div className="w-full max-w-6xl">
+      {/* Conteúdo principal */}
+      <div className="flex-1 flex items-start justify-center p-6 py-8">
+        <div className="w-full max-w-5xl">
           {error && (
             <motion.div
               initial={{ opacity: 0, y: -20 }}
@@ -200,13 +200,10 @@ export const OnboardingWizard = () => {
           <AnimatePresence mode="wait">
             <motion.div
               key={currentStep}
-              initial={{ opacity: 0, x: 20, scale: 0.98 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: -20, scale: 0.98 }}
-              transition={{ 
-                duration: 0.4,
-                ease: [0.23, 1, 0.32, 1]
-              }}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
               className="min-h-[600px]"
             >
               {renderStep()}
@@ -215,10 +212,10 @@ export const OnboardingWizard = () => {
         </div>
       </div>
 
-      {/* Navegação redesenhada */}
+      {/* Navegação */}
       {currentStep < totalSteps && (
-        <div className="sticky bottom-0 z-40 bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg border-t border-gray-200/50 dark:border-gray-700/50">
-          <div className="max-w-6xl mx-auto px-4 py-4">
+        <div className="sticky bottom-0 z-40 bg-[#0F111A]/90 backdrop-blur-sm border-t border-white/5">
+          <div className="max-w-5xl mx-auto px-6 py-4">
             <OnboardingNavigation
               currentStep={currentStep}
               totalSteps={totalSteps - 1}

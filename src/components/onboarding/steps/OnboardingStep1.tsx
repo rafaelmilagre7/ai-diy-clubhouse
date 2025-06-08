@@ -75,11 +75,11 @@ export const OnboardingStep1 = ({
 
   return (
     <div className="space-y-8">
-      {/* Header redesenhado com logo */}
+      {/* Header com logo */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center space-y-6"
+        className="text-center space-y-8"
       >
         {/* Logo do Club */}
         <div className="flex justify-center">
@@ -87,12 +87,12 @@ export const OnboardingStep1 = ({
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2 }}
-            className="bg-gradient-to-br from-viverblue/10 to-viverblue-light/10 p-6 rounded-2xl border border-viverblue/20 shadow-lg"
+            className="bg-[#151823] border border-white/10 p-8 rounded-2xl"
           >
             <img
-              src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
+              src="/lovable-uploads/a408c993-07fa-49f2-bee6-c66d0614298b.png"
               alt="VIVER DE IA Club"
-              className="h-16 w-auto mx-auto"
+              className="h-20 w-auto mx-auto"
             />
           </motion.div>
         </div>
@@ -102,16 +102,19 @@ export const OnboardingStep1 = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="text-4xl font-bold bg-gradient-to-r from-viverblue to-viverblue-light bg-clip-text text-transparent"
+            className="text-4xl font-heading font-bold text-white"
           >
-            Bem-vindo ao VIVER DE IA Club!
+            Bem-vindo ao{' '}
+            <span className="bg-gradient-to-r from-viverblue to-viverblue-light bg-clip-text text-transparent">
+              VIVER DE IA Club
+            </span>
           </motion.h1>
           
           <motion.p 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
-            className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed"
+            className="text-xl text-neutral-300 max-w-2xl mx-auto leading-relaxed"
           >
             Vamos personalizar sua jornada para transformar seu negócio com IA. 
             Cada informação nos ajuda a criar uma experiência única para você!
@@ -119,25 +122,27 @@ export const OnboardingStep1 = ({
         </div>
       </motion.div>
 
-      {/* Formulário redesenhado */}
+      {/* Formulário */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8 }}
         className="max-w-4xl mx-auto"
       >
-        <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-3xl p-8 border border-gray-200/50 dark:border-gray-700/50 shadow-xl">
+        <div className="bg-[#151823] border border-white/10 rounded-2xl p-8">
           <div className="space-y-8">
             {/* Seção de informações pessoais */}
             <div className="space-y-6">
-              <h3 className="text-2xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <User className="w-6 h-6 text-viverblue" />
+              <h3 className="text-xl font-heading font-semibold text-white flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-viverblue/20 flex items-center justify-center">
+                  <User className="w-4 h-4 text-viverblue" />
+                </div>
                 Informações Pessoais
               </h3>
               
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <Label htmlFor="name" className="text-sm font-medium text-white">
                     Nome completo *
                   </Label>
                   <Input
@@ -145,17 +150,15 @@ export const OnboardingStep1 = ({
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Seu nome completo"
-                    className={`h-12 ${nameError ? 'border-red-500 focus-visible:ring-red-500' : 'border-gray-300 dark:border-gray-600'}`}
+                    className={`h-12 ${nameError ? 'border-red-500' : ''}`}
                   />
                   {nameError && (
-                    <p className="text-sm text-red-500 flex items-center gap-1">
-                      {nameError}
-                    </p>
+                    <p className="text-sm text-red-400">{nameError}</p>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <Label htmlFor="email" className="text-sm font-medium text-white">
                     E-mail *
                   </Label>
                   <Input
@@ -165,15 +168,15 @@ export const OnboardingStep1 = ({
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="seu@email.com"
                     disabled={!!userProfile?.email}
-                    className={`h-12 ${emailError ? 'border-red-500 focus-visible:ring-red-500' : 'border-gray-300 dark:border-gray-600'}`}
+                    className={`h-12 ${emailError ? 'border-red-500' : ''}`}
                   />
                   {emailError && (
-                    <p className="text-sm text-red-500">{emailError}</p>
+                    <p className="text-sm text-red-400">{emailError}</p>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                  <Label htmlFor="phone" className="text-sm font-medium text-white flex items-center gap-2">
                     <Phone className="w-4 h-4" />
                     Telefone/WhatsApp
                   </Label>
@@ -182,20 +185,20 @@ export const OnboardingStep1 = ({
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="(11) 99999-9999"
-                    className="h-12 border-gray-300 dark:border-gray-600"
+                    className="h-12"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="birthDate" className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                  <Label htmlFor="birthDate" className="text-sm font-medium text-white flex items-center gap-2">
                     <Calendar className="w-4 h-4" />
                     Ano de nascimento
                   </Label>
                   <Select value={birthDate} onValueChange={setBirthDate}>
-                    <SelectTrigger className="h-12 border-gray-300 dark:border-gray-600">
+                    <SelectTrigger className="h-12">
                       <SelectValue placeholder="Selecione o ano" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-[#151823] border-white/10">
                       {years.map((year) => (
                         <SelectItem key={year} value={year.toString()}>
                           {year}
@@ -209,13 +212,13 @@ export const OnboardingStep1 = ({
 
             {/* Seção de redes sociais */}
             <div className="space-y-6">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Redes Sociais (opcional)
+              <h3 className="text-lg font-heading font-semibold text-white">
+                Redes Sociais <span className="text-neutral-400 text-sm font-normal">(opcional)</span>
               </h3>
               
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="instagram" className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                  <Label htmlFor="instagram" className="text-sm font-medium text-white flex items-center gap-2">
                     <Instagram className="w-4 h-4" />
                     Instagram
                   </Label>
@@ -224,12 +227,12 @@ export const OnboardingStep1 = ({
                     value={instagram}
                     onChange={(e) => setInstagram(e.target.value)}
                     placeholder="@seuusuario"
-                    className="h-12 border-gray-300 dark:border-gray-600"
+                    className="h-12"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="linkedin" className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                  <Label htmlFor="linkedin" className="text-sm font-medium text-white flex items-center gap-2">
                     <Linkedin className="w-4 h-4" />
                     LinkedIn
                   </Label>
@@ -238,7 +241,7 @@ export const OnboardingStep1 = ({
                     value={linkedin}
                     onChange={(e) => setLinkedin(e.target.value)}
                     placeholder="linkedin.com/in/seuperfil"
-                    className="h-12 border-gray-300 dark:border-gray-600"
+                    className="h-12"
                   />
                 </div>
               </div>
@@ -246,21 +249,23 @@ export const OnboardingStep1 = ({
 
             {/* Seção de localização */}
             <div className="space-y-6">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-viverblue" />
+              <h3 className="text-lg font-heading font-semibold text-white flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-viverblue/20 flex items-center justify-center">
+                  <MapPin className="w-4 h-4 text-viverblue" />
+                </div>
                 Localização
               </h3>
               
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <Label className="text-sm font-medium text-white">
                     Estado *
                   </Label>
                   <Select value={state} onValueChange={setState} disabled={locationsLoading}>
-                    <SelectTrigger className={`h-12 ${stateError ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}>
+                    <SelectTrigger className={`h-12 ${stateError ? 'border-red-500' : ''}`}>
                       <SelectValue placeholder={locationsLoading ? "Carregando..." : "Selecione seu estado"} />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-[#151823] border-white/10">
                       {estados.map((estado) => (
                         <SelectItem key={estado.code} value={estado.code}>
                           {estado.name}
@@ -269,19 +274,19 @@ export const OnboardingStep1 = ({
                     </SelectContent>
                   </Select>
                   {stateError && (
-                    <p className="text-sm text-red-500">{stateError}</p>
+                    <p className="text-sm text-red-400">{stateError}</p>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <Label className="text-sm font-medium text-white">
                     Cidade *
                   </Label>
                   <Select value={city} onValueChange={setCity} disabled={!state || locationsLoading}>
-                    <SelectTrigger className={`h-12 ${cityError ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}>
+                    <SelectTrigger className={`h-12 ${cityError ? 'border-red-500' : ''}`}>
                       <SelectValue placeholder={!state ? "Selecione primeiro o estado" : "Selecione sua cidade"} />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-[#151823] border-white/10">
                       {state && cidadesPorEstado[state]?.map((cidade) => (
                         <SelectItem key={cidade.name} value={cidade.name}>
                           {cidade.name}
@@ -290,7 +295,7 @@ export const OnboardingStep1 = ({
                     </SelectContent>
                   </Select>
                   {cityError && (
-                    <p className="text-sm text-red-500">{cityError}</p>
+                    <p className="text-sm text-red-400">{cityError}</p>
                   )}
                 </div>
               </div>
@@ -298,13 +303,15 @@ export const OnboardingStep1 = ({
 
             {/* Seção sobre você */}
             <div className="space-y-6">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <Heart className="w-5 h-5 text-viverblue" />
+              <h3 className="text-lg font-heading font-semibold text-white flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-viverblue/20 flex items-center justify-center">
+                  <Heart className="w-4 h-4 text-viverblue" />
+                </div>
                 Sobre Você
               </h3>
               
               <div className="space-y-2">
-                <Label htmlFor="curiosity" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <Label htmlFor="curiosity" className="text-sm font-medium text-white">
                   Conte uma curiosidade sobre você *
                 </Label>
                 <Textarea
@@ -312,12 +319,12 @@ export const OnboardingStep1 = ({
                   value={curiosity}
                   onChange={(e) => setCuriosity(e.target.value)}
                   placeholder="Algo interessante sobre você, seus hobbies, paixões..."
-                  className={`min-h-[100px] ${curiosityError ? 'border-red-500 focus-visible:ring-red-500' : 'border-gray-300 dark:border-gray-600'}`}
+                  className={`min-h-[100px] bg-[#181A2A] border-white/10 text-white ${curiosityError ? 'border-red-500' : ''}`}
                 />
                 {curiosityError && (
-                  <p className="text-sm text-red-500">{curiosityError}</p>
+                  <p className="text-sm text-red-400">{curiosityError}</p>
                 )}
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-neutral-400">
                   Isso nos ajuda a tornar nossa conversa mais humana e personalizada ✨
                 </p>
               </div>
@@ -334,7 +341,7 @@ export const OnboardingStep1 = ({
                 onClick={handleNext}
                 disabled={!canProceed}
                 size="lg"
-                className="w-full h-14 bg-gradient-to-r from-viverblue to-viverblue-light hover:from-viverblue-dark hover:to-viverblue text-white text-lg font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="w-full h-14 bg-viverblue hover:bg-viverblue-dark text-[#0F111A] text-lg font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
               >
                 Vamos falar do seu negócio! 💼
               </Button>
@@ -343,15 +350,15 @@ export const OnboardingStep1 = ({
         </div>
       </motion.div>
 
-      {/* Dica redesenhada */}
+      {/* Dica */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.2 }}
-        className="bg-gradient-to-r from-viverblue/5 to-viverblue-light/5 border border-viverblue/20 rounded-2xl p-6 text-center max-w-2xl mx-auto"
+        className="bg-viverblue/5 border border-viverblue/20 rounded-xl p-4 text-center max-w-2xl mx-auto"
       >
-        <p className="text-sm text-gray-600 dark:text-gray-300">
-          💡 <strong>Etapa 1 de 5:</strong> Quanto mais você nos contar, 
+        <p className="text-sm text-neutral-300">
+          💡 <strong className="text-white">Etapa 1 de 5:</strong> Quanto mais você nos contar, 
           melhor nossa IA personalizada poderá ajudar você! 🚀
         </p>
       </motion.div>
