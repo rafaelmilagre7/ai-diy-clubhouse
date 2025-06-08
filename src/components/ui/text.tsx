@@ -35,7 +35,7 @@ const textVariants = cva(
         "gradient": "text-gradient",
         "glow": "text-glow",
       },
-      color: {
+      textColor: {
         default: "text-foreground",
         primary: "text-primary",
         secondary: "text-text-secondary",
@@ -61,7 +61,7 @@ const textVariants = cva(
     },
     defaultVariants: {
       variant: "body",
-      color: "default",
+      textColor: "default",
       align: "left",
       weight: "normal",
     },
@@ -69,7 +69,7 @@ const textVariants = cva(
 )
 
 export interface TextProps
-  extends React.HTMLAttributes<HTMLElement>,
+  extends Omit<React.HTMLAttributes<HTMLElement>, 'color'>,
     VariantProps<typeof textVariants> {
   as?: keyof JSX.IntrinsicElements
   truncate?: boolean
@@ -77,7 +77,7 @@ export interface TextProps
 }
 
 const Text = React.forwardRef<HTMLElement, TextProps>(
-  ({ className, variant, color, align, weight, as, truncate, responsive, children, ...props }, ref) => {
+  ({ className, variant, textColor, align, weight, as, truncate, responsive, children, ...props }, ref) => {
     const Component = as || 
       (variant?.includes('heading') || variant === 'display' || variant === 'page' || variant === 'section' || variant === 'subsection' || variant === 'card' || variant === 'small' ? 'h2' : 'p')
 
@@ -85,7 +85,7 @@ const Text = React.forwardRef<HTMLElement, TextProps>(
       Component,
       {
         className: cn(
-          textVariants({ variant, color, align, weight }),
+          textVariants({ variant, textColor, align, weight }),
           truncate && "truncate",
           responsive && "text-responsive-base",
           className

@@ -1,160 +1,98 @@
 
-/* === SISTEMA DE TIPOGRAFIA MODERNO === */
+/* === TYPOGRAPHY SYSTEM === */
 
 @layer components {
   
-  /* === HIERARCHY DE HEADINGS === */
+  /* === HEADINGS HIERARCHY === */
   
   .heading-display {
-    @apply text-5xl sm:text-6xl font-bold text-foreground;
-    @apply leading-tight tracking-tighter;
-    @apply mb-6;
+    @apply text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-none;
   }
   
   .heading-page {
-    @apply text-4xl sm:text-5xl font-bold text-foreground;
-    @apply leading-tight tracking-tight;
-    @apply mb-4;
+    @apply text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-tight;
   }
   
   .heading-section {
-    @apply text-3xl sm:text-4xl font-semibold text-foreground;
-    @apply leading-tight tracking-tight;
-    @apply mb-3;
+    @apply text-2xl md:text-3xl lg:text-4xl font-semibold tracking-tight leading-tight;
   }
   
   .heading-subsection {
-    @apply text-2xl sm:text-3xl font-semibold text-foreground;
-    @apply leading-snug tracking-normal;
-    @apply mb-3;
+    @apply text-xl md:text-2xl lg:text-3xl font-semibold tracking-tight leading-snug;
   }
   
   .heading-card {
-    @apply text-xl sm:text-2xl font-medium text-foreground;
-    @apply leading-snug tracking-normal;
-    @apply mb-2;
+    @apply text-lg md:text-xl font-semibold leading-snug;
   }
   
   .heading-small {
-    @apply text-lg font-medium text-foreground;
-    @apply leading-normal tracking-normal;
-    @apply mb-2;
+    @apply text-base md:text-lg font-medium leading-snug;
   }
   
-  /* === BODY TEXT HIERARCHY === */
+  /* === BODY TEXT === */
   
   .body-large {
-    @apply text-lg text-foreground;
-    @apply leading-relaxed tracking-normal;
-    @apply mb-4;
+    @apply text-lg md:text-xl leading-relaxed;
   }
   
   .body-default {
-    @apply text-base text-foreground;
-    @apply leading-normal tracking-normal;
-    @apply mb-3;
+    @apply text-base leading-relaxed;
   }
   
   .body-small {
-    @apply text-sm text-text-secondary;
-    @apply leading-normal tracking-normal;
-    @apply mb-2;
+    @apply text-sm leading-relaxed;
   }
   
   .body-tiny {
-    @apply text-xs text-text-tertiary;
-    @apply leading-normal tracking-wide;
-    @apply mb-1;
+    @apply text-xs leading-normal;
   }
   
-  /* === UI TEXT ELEMENTS === */
+  /* === UI ELEMENTS === */
   
   .ui-label {
-    @apply text-sm font-medium text-foreground;
-    @apply leading-normal tracking-normal;
+    @apply text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70;
   }
   
   .ui-caption {
-    @apply text-xs text-text-secondary;
-    @apply leading-normal tracking-wide;
+    @apply text-xs text-text-muted leading-tight;
   }
   
   .ui-button {
-    @apply text-sm font-medium;
-    @apply leading-none tracking-normal;
+    @apply text-sm font-medium leading-none;
   }
   
   .ui-link {
-    @apply text-sm text-primary;
-    @apply leading-normal tracking-normal;
-    @apply hover:text-primary-hover transition-colors duration-200;
-    @apply underline-offset-2 hover:underline;
+    @apply text-sm text-primary hover:text-primary-hover underline underline-offset-4 cursor-pointer;
   }
   
-  /* === CODE TYPOGRAPHY === */
+  /* === CODE === */
   
   .code-inline {
-    @apply text-sm font-mono;
-    @apply bg-surface-elevated px-1.5 py-0.5 rounded;
-    @apply text-foreground border border-border;
-  }
-  
-  .code-block {
-    @apply text-sm font-mono;
-    @apply bg-surface-elevated p-4 rounded-lg;
-    @apply text-foreground border border-border;
-    @apply overflow-x-auto;
+    @apply text-sm font-mono bg-surface px-1.5 py-0.5 rounded border;
   }
   
   /* === SPECIAL EFFECTS === */
   
   .text-gradient {
-    @apply bg-gradient-primary bg-clip-text text-transparent;
-    @apply bg-size-200 animate-gradient-shift;
+    @apply bg-gradient-primary bg-clip-text text-transparent bg-size-200 animate-gradient-shift;
   }
   
   .text-glow {
     @apply text-primary;
-    text-shadow: 0 0 10px hsl(var(--primary) / 0.5);
+    text-shadow: 0 0 20px hsl(var(--primary) / 0.5);
   }
   
-  /* === RESPONSIVE ADJUSTMENTS === */
+  /* === RESPONSIVE UTILITIES === */
   
-  @media (max-width: 640px) {
-    .heading-display {
-      @apply text-4xl;
-    }
-    
-    .heading-page {
-      @apply text-3xl;
-    }
-    
-    .heading-section {
-      @apply text-2xl;
-    }
-    
-    .heading-subsection {
-      @apply text-xl;
-    }
-    
-    .heading-card {
-      @apply text-lg;
-    }
+  .text-responsive-base {
+    @apply text-sm md:text-base;
   }
   
-  /* === ACCESSIBILITY === */
-  
-  @media (prefers-reduced-motion: reduce) {
-    .text-gradient {
-      @apply animate-none;
-    }
+  .text-responsive-lg {
+    @apply text-base md:text-lg;
   }
   
-  @media (prefers-contrast: high) {
-    .text-glow {
-      text-shadow: none;
-      @apply text-foreground;
-    }
+  .text-responsive-xl {
+    @apply text-lg md:text-xl;
   }
 }
-

@@ -42,7 +42,7 @@ export const ModernDashboardHeader: FC<ModernDashboardHeaderProps> = memo(({ use
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-6 w-6 text-primary animate-pulse" />
-                <Text variant="small" color="secondary" className="animate-fade-in">
+                <Text variant="small" textColor="secondary" className="animate-fade-in">
                   {getGreeting()}, {userName}! 👋
                 </Text>
               </div>
@@ -51,7 +51,7 @@ export const ModernDashboardHeader: FC<ModernDashboardHeaderProps> = memo(({ use
                 Seu Hub de IA
               </Text>
               
-              <Text variant="body" color="secondary" className="animate-fade-in max-w-lg" style={{ animationDelay: '0.2s' }}>
+              <Text variant="body" textColor="secondary" className="animate-fade-in max-w-lg" style={{ animationDelay: '0.2s' }}>
                 {getMotivationalMessage()}
               </Text>
             </div>
@@ -61,16 +61,16 @@ export const ModernDashboardHeader: FC<ModernDashboardHeaderProps> = memo(({ use
               <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-surface-elevated/50 border border-border-subtle">
                 <Target className="h-5 w-5 text-success" />
                 <div>
-                  <Text variant="caption" color="tertiary">Status</Text>
-                  <Text variant="body-small" weight="medium" color="secondary">Ativo</Text>
+                  <Text variant="caption" textColor="tertiary">Status</Text>
+                  <Text variant="body-small" weight="medium" textColor="secondary">Ativo</Text>
                 </div>
               </div>
               
               <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-surface-elevated/50 border border-border-subtle">
                 <Zap className="h-5 w-5 text-primary" />
                 <div>
-                  <Text variant="caption" color="tertiary">Nível</Text>
-                  <Text variant="body-small" weight="medium" color="secondary">Implementador</Text>
+                  <Text variant="caption" textColor="tertiary">Nível</Text>
+                  <Text variant="body-small" weight="medium" textColor="secondary">Implementador</Text>
                 </div>
               </div>
             </div>

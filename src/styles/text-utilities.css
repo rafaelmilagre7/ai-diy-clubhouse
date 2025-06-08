@@ -1,207 +1,110 @@
 
-/* === TEXT UTILITIES AVANÇADOS === */
+/* === TEXT UTILITIES === */
 
 @layer utilities {
   
-  /* === TEXT SIZING RESPONSIVE === */
-  
-  .text-responsive-xs {
-    @apply text-xs sm:text-sm;
-  }
-  
-  .text-responsive-sm {
-    @apply text-sm sm:text-base;
-  }
-  
-  .text-responsive-base {
-    @apply text-base sm:text-lg;
-  }
-  
-  .text-responsive-lg {
-    @apply text-lg sm:text-xl;
-  }
-  
-  .text-responsive-xl {
-    @apply text-xl sm:text-2xl;
-  }
-  
   /* === TEXT TRUNCATION === */
   
-  .text-truncate {
-    @apply truncate;
+  .truncate-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
   }
   
-  .text-truncate-2 {
+  .truncate-2 {
+    overflow: hidden;
     display: -webkit-box;
+    -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
   }
   
-  .text-truncate-3 {
+  .truncate-3 {
+    overflow: hidden;
     display: -webkit-box;
+    -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  
-  .text-truncate-4 {
-    display: -webkit-box;
-    -webkit-line-clamp: 4;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  
-  /* === TEXT ALIGNMENT RESPONSIVE === */
-  
-  .text-center-mobile {
-    @apply text-center sm:text-left;
-  }
-  
-  .text-left-mobile {
-    @apply text-left sm:text-center;
   }
   
   /* === TEXT DECORATION === */
   
-  .text-underline-animated {
-    @apply relative;
+  .text-underline-gradient {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+    background-size: 100% 2px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
   }
   
-  .text-underline-animated::after {
-    @apply absolute bottom-0 left-0 w-0 h-0.5 bg-primary;
-    @apply transition-all duration-300 ease-out;
-    content: '';
+  .text-strike {
+    text-decoration: line-through;
+    text-decoration-color: hsl(var(--text-muted));
   }
   
-  .text-underline-animated:hover::after {
-    @apply w-full;
+  /* === TEXT SELECTION === */
+  
+  .select-none {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
   }
   
-  /* === TEXT EMPHASIS === */
-  
-  .text-highlight {
-    @apply bg-primary/20 px-1 py-0.5 rounded;
+  .select-text {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    user-select: text;
   }
   
-  .text-mark {
-    @apply bg-warning/30 px-1 py-0.5 rounded;
+  .select-all {
+    -webkit-user-select: all;
+    -moz-user-select: all;
+    user-select: all;
   }
   
-  .text-code {
-    @apply code-inline;
+  /* === TEXT TRANSFORM === */
+  
+  .text-balance {
+    text-wrap: balance;
   }
   
-  /* === TEXT STYLING === */
-  
-  .text-uppercase-spaced {
-    @apply uppercase tracking-widest;
+  .text-pretty {
+    text-wrap: pretty;
   }
   
-  .text-lowercase-spaced {
-    @apply lowercase tracking-wide;
+  /* === READING EXPERIENCE === */
+  
+  .text-readable {
+    @apply leading-relaxed tracking-wide max-w-prose;
   }
   
-  .text-capitalize-spaced {
-    @apply capitalize tracking-normal;
+  .text-compact {
+    @apply leading-tight tracking-tight;
   }
   
-  /* === SELECTION STYLES === */
+  /* === EMPHASIS === */
   
-  .text-select-primary {
-    @apply selection:bg-primary/30 selection:text-primary-foreground;
+  .text-emphasis {
+    @apply font-medium text-foreground;
   }
   
-  .text-select-accent {
-    @apply selection:bg-accent/30 selection:text-accent-foreground;
+  .text-de-emphasis {
+    @apply text-text-tertiary;
   }
   
-  .text-no-select {
-    @apply select-none;
+  /* === STATUS COLORS === */
+  
+  .text-success-emphasis {
+    @apply text-success font-medium;
   }
   
-  /* === WRITING MODE === */
-  
-  .text-vertical {
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
+  .text-warning-emphasis {
+    @apply text-warning font-medium;
   }
   
-  .text-vertical-upright {
-    writing-mode: vertical-rl;
-    text-orientation: upright;
+  .text-error-emphasis {
+    @apply text-error font-medium;
   }
   
-  /* === TEXT EFFECTS === */
-  
-  .text-shadow-soft {
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-  }
-  
-  .text-shadow-medium {
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  }
-  
-  .text-shadow-strong {
-    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-  }
-  
-  /* === COUNTER STYLES === */
-  
-  .text-counter {
-    counter-increment: item;
-  }
-  
-  .text-counter::before {
-    content: counter(item) ". ";
-    @apply font-medium text-primary;
-  }
-  
-  .text-counter-reset {
-    counter-reset: item;
-  }
-  
-  /* === TEXT ANIMATION === */
-  
-  .text-fade-in {
-    @apply animate-fade-in;
-  }
-  
-  .text-slide-in {
-    @apply animate-slide-in;
-  }
-  
-  .text-scale-in {
-    @apply animate-scale-in;
-  }
-  
-  /* === ACCESSIBILITY === */
-  
-  .text-screen-reader {
-    @apply sr-only;
-  }
-  
-  .text-high-contrast {
-    @apply text-foreground;
-    text-shadow: none;
-  }
-  
-  /* === DARK MODE UTILITIES === */
-  
-  .text-dark-primary {
-    @apply text-foreground;
-  }
-  
-  .text-dark-secondary {
-    @apply text-text-secondary;
-  }
-  
-  .text-light-primary {
-    @apply dark:text-foreground;
-  }
-  
-  .text-light-secondary {
-    @apply dark:text-text-secondary;
+  .text-info-emphasis {
+    @apply text-info font-medium;
   }
 }
-
