@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SolutionRecommendationCard } from './SolutionRecommendationCard';
+import { Sparkles } from 'lucide-react';
 
 interface Recommendation {
   solutionId: string;
@@ -31,26 +32,52 @@ export const PrioritySection = ({
     return null;
   }
 
+  const getPriorityGradient = () => {
+    const gradients = {
+      1: "bg-gradient-to-r from-green-500/20 via-emerald-500/10 to-transparent",
+      2: "bg-gradient-to-r from-blue-500/20 via-cyan-500/10 to-transparent", 
+      3: "bg-gradient-to-r from-purple-500/20 via-violet-500/10 to-transparent"
+    };
+    return gradients[priority as keyof typeof gradients] || gradients[3];
+  };
+
   return (
-    <Card className={`glass-dark border-2 ${accentColor}`}>
-      <CardHeader>
-        <CardTitle className="text-high-contrast text-xl">
-          {title}
-        </CardTitle>
-        <p className="text-medium-contrast">{subtitle}</p>
-      </CardHeader>
-      <CardContent>
-        <div className="grid gap-4">
-          {recommendations.map((recommendation, index) => (
+    <div className="space-y-6">
+      {/* Header da seção no estilo Netflix */}
+      <div className="relative">
+        <div className={`absolute inset-0 ${getPriorityGradient()} rounded-2xl blur-xl opacity-50`} />
+        <Card className={`glass-dark border-2 ${accentColor} relative overflow-hidden backdrop-blur-sm`}>
+          <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent" />
+          <CardHeader className="relative z-10">
+            <div className="flex items-center gap-3">
+              <Sparkles className={`h-6 w-6 ${iconColor} animate-pulse`} />
+              <div>
+                <CardTitle className="text-high-contrast text-2xl font-bold">
+                  {title}
+                </CardTitle>
+                <p className="text-medium-contrast text-lg mt-1">{subtitle}</p>
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
+      </div>
+
+      {/* Grid de cards no estilo Netflix */}
+      <div className="space-y-4">
+        {recommendations.map((recommendation, index) => (
+          <div
+            key={`${priority}-${index}`}
+            className="animate-fade-in"
+            style={{ animationDelay: `${index * 100}ms` }}
+          >
             <SolutionRecommendationCard
-              key={`${priority}-${index}`}
               recommendation={recommendation}
               priority={priority}
               iconColor={iconColor}
             />
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 };
