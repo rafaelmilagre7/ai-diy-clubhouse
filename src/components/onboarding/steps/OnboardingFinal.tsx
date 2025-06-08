@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { CheckCircle, Sparkles, Users, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { OnboardingData } from '../types/onboardingTypes';
-import { useOnboardingSubmit } from '../hooks/useOnboardingSubmit';
 
 interface OnboardingFinalProps {
   data: OnboardingData;
@@ -19,21 +18,11 @@ export const OnboardingFinal = ({
   isCompleting, 
   memberType 
 }: OnboardingFinalProps) => {
-  const { submitOnboarding, isSubmitting } = useOnboardingSubmit();
-  
   const isClubMember = memberType === 'club';
 
   const handleComplete = async () => {
-    try {
-      await submitOnboarding(data, memberType);
-      onComplete();
-    } catch (error) {
-      // Erro já tratado no hook
-      console.error('Falha no onboarding:', error);
-    }
+    onComplete();
   };
-
-  const loading = isCompleting || isSubmitting;
 
   return (
     <div className="space-y-8 text-center">
@@ -136,11 +125,11 @@ export const OnboardingFinal = ({
       >
         <Button 
           onClick={handleComplete}
-          disabled={loading}
+          disabled={isCompleting}
           className="bg-viverblue hover:bg-viverblue-dark text-white text-lg py-6 px-12 rounded-xl"
           size="lg"
         >
-          {loading ? (
+          {isCompleting ? (
             <>
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
               Finalizando...
