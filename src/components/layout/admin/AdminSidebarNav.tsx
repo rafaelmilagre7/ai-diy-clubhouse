@@ -1,3 +1,4 @@
+
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -17,7 +18,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePermissions } from "@/hooks/auth/usePermissions";
 
 interface AdminSidebarNavProps {
@@ -127,7 +127,7 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
         key={item.href}
         variant={isActive(item.href) ? "default" : "ghost"}
         className={cn(
-          "w-full justify-start gap-2 mb-1",
+          "w-full justify-start gap-2 h-9 text-sm font-medium",
           !sidebarOpen && "justify-center",
           isActive(item.href) && "bg-viverblue hover:bg-viverblue/90"
         )}
@@ -142,58 +142,44 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <ScrollArea className="flex-1 px-3" style={{ height: "calc(100vh - 140px)" }}>
-        <div className="py-4 space-y-2">
-          <div className="space-y-1">
-            {menuItems.map(item => renderMenuItem(item))}
-          </div>
-
-          <Separator className="my-3" />
-          
-          {sidebarOpen && (
-            <div className="mb-2 px-2 text-xs font-semibold text-gray-500">
-              ÁREA DE FORMAÇÃO
-            </div>
-          )}
-          
-          <div className="space-y-1">
-            {formacaoItems.map(item => renderMenuItem(item))}
-          </div>
-
-          <Separator className="my-3" />
-          
-          {sidebarOpen && (
-            <div className="mb-2 px-2 text-xs font-semibold text-gray-500">
-              GERENCIAMENTO DE ACESSO
-            </div>
-          )}
-          
-          <div className="space-y-1">
-            {rbacItems.map(item => renderMenuItem(item))}
-          </div>
+    <div className="flex flex-col h-full px-3 py-2">
+      <div className="flex-1 space-y-1">
+        {/* Menu Principal */}
+        <div className="space-y-1">
+          {menuItems.map(item => renderMenuItem(item))}
         </div>
-      </ScrollArea>
 
-      <div className="px-3 py-4 border-t border-gray-700 mt-auto space-y-2">
-        <Button
-          variant="outline"
-          className={cn(
-            "w-full justify-start gap-2",
-            !sidebarOpen && "justify-center"
-          )}
-          asChild
-        >
-          <Link to="/dashboard">
-            <User className="h-4 w-4" />
-            {sidebarOpen && <span>Painel do Membro</span>}
-          </Link>
-        </Button>
+        <div className="h-2"></div>
         
+        {sidebarOpen && (
+          <div className="px-2 text-xs font-semibold text-gray-500">
+            ÁREA DE FORMAÇÃO
+          </div>
+        )}
+        
+        <div className="space-y-1">
+          {formacaoItems.map(item => renderMenuItem(item))}
+        </div>
+
+        <div className="h-2"></div>
+        
+        {sidebarOpen && (
+          <div className="px-2 text-xs font-semibold text-gray-500">
+            GERENCIAMENTO DE ACESSO
+          </div>
+        )}
+        
+        <div className="space-y-1">
+          {rbacItems.map(item => renderMenuItem(item))}
+        </div>
+      </div>
+
+      {/* Botão fixo no rodapé */}
+      <div className="mt-auto pt-3 border-t border-gray-700">
         <Button
           variant="outline"
           className={cn(
-            "w-full justify-start gap-2",
+            "w-full justify-start gap-2 h-9",
             !sidebarOpen && "justify-center"
           )}
           asChild
