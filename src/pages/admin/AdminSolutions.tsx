@@ -4,6 +4,9 @@ import { useSolutionsAdmin } from '@/hooks/admin/useSolutionsAdmin';
 import { SolutionsHeader } from '@/components/admin/solutions/SolutionsHeader';
 import { SolutionsTable } from '@/components/admin/solutions/SolutionsTable';
 import { DeleteSolutionDialog } from '@/components/admin/solutions/DeleteSolutionDialog';
+import { Container } from '@/components/ui/container';
+import { Text } from '@/components/ui/text';
+import { Card } from '@/components/ui/card';
 
 const AdminSolutions = () => {
   const {
@@ -17,18 +20,20 @@ const AdminSolutions = () => {
   } = useSolutionsAdmin();
 
   return (
-    <div className="space-y-6">
+    <Container className="space-y-6">
       <SolutionsHeader />
       
-      <div className="border rounded-lg border-neutral-700 bg-[#151823] overflow-hidden">
+      <Card className="overflow-hidden">
         {loading ? (
           <div className="text-center py-10">
-            <p className="text-neutral-300">Carregando soluções...</p>
+            <Text variant="body" textColor="secondary">Carregando soluções...</Text>
           </div>
         ) : solutions.length === 0 ? (
           <div className="text-center py-10">
-            <p className="text-neutral-300">Nenhuma solução encontrada.</p>
-            <p className="text-neutral-300 mt-2">Crie uma nova solução para começar.</p>
+            <Text variant="body" textColor="secondary">Nenhuma solução encontrada.</Text>
+            <Text variant="body-small" textColor="tertiary" className="mt-2">
+              Crie uma nova solução para começar.
+            </Text>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -41,14 +46,14 @@ const AdminSolutions = () => {
             />
           </div>
         )}
-      </div>
+      </Card>
 
       <DeleteSolutionDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         onConfirm={handleDeleteConfirm}
       />
-    </div>
+    </Container>
   );
 };
 

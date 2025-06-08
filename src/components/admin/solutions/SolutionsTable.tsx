@@ -5,6 +5,7 @@ import { Solution } from '@/types/solutionTypes';
 import { SolutionDifficultyBadge } from './SolutionDifficultyBadge';
 import { TableActions } from './TableActions';
 import { PublishStatus } from './PublishStatus';
+import { Text } from '@/components/ui/text';
 import { formatDateDistance } from './utils/dateFormatter';
 
 interface SolutionsTableProps {
@@ -30,28 +31,52 @@ export const SolutionsTable: React.FC<SolutionsTableProps> = ({
 
   return (
     <Table className="border-collapse">
-      <TableHeader className="bg-[#151823]">
+      <TableHeader className="bg-surface">
         <TableRow>
-          <TableHead className="text-white font-medium">Título</TableHead>
-          <TableHead className="text-white font-medium">Categoria</TableHead>
-          <TableHead className="text-white font-medium">Dificuldade</TableHead>
-          <TableHead className="text-white font-medium">Status</TableHead>
-          <TableHead className="text-white font-medium">Criada em</TableHead>
-          <TableHead className="text-right text-white font-medium">Ações</TableHead>
+          <TableHead>
+            <Text variant="body-small" weight="medium" textColor="primary">Título</Text>
+          </TableHead>
+          <TableHead>
+            <Text variant="body-small" weight="medium" textColor="primary">Categoria</Text>
+          </TableHead>
+          <TableHead>
+            <Text variant="body-small" weight="medium" textColor="primary">Dificuldade</Text>
+          </TableHead>
+          <TableHead>
+            <Text variant="body-small" weight="medium" textColor="primary">Status</Text>
+          </TableHead>
+          <TableHead>
+            <Text variant="body-small" weight="medium" textColor="primary">Criada em</Text>
+          </TableHead>
+          <TableHead className="text-right">
+            <Text variant="body-small" weight="medium" textColor="primary">Ações</Text>
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {solutions.map((solution) => (
-          <TableRow key={solution.id} className="bg-[#1A1E2E] border-neutral-700">
-            <TableCell className="font-medium text-white">{solution.title}</TableCell>
-            <TableCell className="text-white">{getCategoryText(solution.category)}</TableCell>
+          <TableRow key={solution.id} className="bg-surface-elevated border-border">
+            <TableCell>
+              <Text variant="body-small" weight="medium" textColor="primary">
+                {solution.title}
+              </Text>
+            </TableCell>
+            <TableCell>
+              <Text variant="body-small" textColor="secondary">
+                {getCategoryText(solution.category)}
+              </Text>
+            </TableCell>
             <TableCell>
               <SolutionDifficultyBadge difficulty={solution.difficulty} />
             </TableCell>
             <TableCell>
               <PublishStatus published={solution.published} />
             </TableCell>
-            <TableCell className="text-white">{formatDateDistance(solution.created_at)}</TableCell>
+            <TableCell>
+              <Text variant="body-small" textColor="secondary">
+                {formatDateDistance(solution.created_at)}
+              </Text>
+            </TableCell>
             <TableCell className="text-right">
               <TableActions 
                 solutionId={solution.id} 
