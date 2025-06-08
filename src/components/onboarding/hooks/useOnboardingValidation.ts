@@ -83,15 +83,15 @@ export const useOnboardingValidation = () => {
   const validateStep3 = useCallback((data: OnboardingData): StepValidation => {
     const errors: ValidationError[] = [];
 
-    if (!data.hasImplementedAI || data.hasImplementedAI === '') {
+    if (!data.hasImplementedAI) {
       errors.push({ field: 'hasImplementedAI', message: 'Experiência com IA é obrigatória' });
     }
 
-    if (!data.aiKnowledgeLevel || data.aiKnowledgeLevel === '') {
+    if (!data.aiKnowledgeLevel) {
       errors.push({ field: 'aiKnowledgeLevel', message: 'Nível de conhecimento em IA é obrigatório' });
     }
 
-    if (!data.whoWillImplement || data.whoWillImplement === '') {
+    if (!data.whoWillImplement) {
       errors.push({ field: 'whoWillImplement', message: 'Quem vai implementar é obrigatório' });
     }
 
@@ -104,7 +104,7 @@ export const useOnboardingValidation = () => {
   const validateStep4 = useCallback((data: OnboardingData): StepValidation => {
     const errors: ValidationError[] = [];
 
-    if (!data.mainObjective || data.mainObjective === '') {
+    if (!data.mainObjective) {
       errors.push({ field: 'mainObjective', message: 'Objetivo principal é obrigatório' });
     }
 
@@ -133,15 +133,15 @@ export const useOnboardingValidation = () => {
       errors.push({ field: 'weeklyLearningTime', message: 'Tempo semanal é obrigatório' });
     }
 
-    if (!data.contentPreference || data.contentPreference === '') {
+    if (!data.contentPreference) {
       errors.push({ field: 'contentPreference', message: 'Preferência de conteúdo é obrigatória' });
     }
 
-    if (!data.wantsNetworking || data.wantsNetworking === '') {
+    if (!data.wantsNetworking) {
       errors.push({ field: 'wantsNetworking', message: 'Preferência de networking é obrigatória' });
     }
 
-    if (!data.acceptsCaseStudy || data.acceptsCaseStudy === '') {
+    if (!data.acceptsCaseStudy) {
       errors.push({ field: 'acceptsCaseStudy', message: 'Aceitar case de sucesso é obrigatório' });
     }
 

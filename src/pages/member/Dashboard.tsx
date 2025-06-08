@@ -16,11 +16,14 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, profile, isLoading: authLoading } = useAuth();
-  const { isRequired: onboardingRequired, isLoading: onboardingLoading, canProceed } = useOnboardingStatus();
+  const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingStatus();
   
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [hasCheckedOnboarding, setHasCheckedOnboarding] = useState(false);
+  
+  // Determinar se pode prosseguir (autenticação e onboarding carregados)
+  const canProceed = !authLoading && !onboardingLoading;
   
   const initialCategory = useMemo(() => searchParams.get("category") || "general", [searchParams]);
   const [category, setCategory] = useState<string>(initialCategory);

@@ -9,11 +9,14 @@ import { toast } from "sonner";
 
 const RootRedirect = () => {
   const { user, profile, isAdmin, isLoading: authLoading } = useAuth();
-  const { isRequired: onboardingRequired, isLoading: onboardingLoading, canProceed } = useOnboardingStatus();
+  const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingStatus();
   const navigate = useNavigate();
   const [timeoutExceeded, setTimeoutExceeded] = useState(false);
   const [redirectTarget, setRedirectTarget] = useState<string | null>(null);
   const [hasRedirected, setHasRedirected] = useState(false);
+  
+  // Determinar se pode prosseguir (autenticação e onboarding carregados)
+  const canProceed = !authLoading && !onboardingLoading;
   
   console.log('[RootRedirect] Estado atual:', {
     authLoading,
