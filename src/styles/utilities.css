@@ -1,295 +1,470 @@
-/* Utilitários extras, gradientes, animações customizadas para responsividade, glass, hover, efeitos */
 
-.bg-size-200 {
-  background-size: 200% 200%;
-}
-.bg-size-300 {
-  background-size: 300% 300%;
-}
+/* === UTILITIES MODERNOS E OTIMIZADOS === */
 
 @layer utilities {
-  /* Responsividade para cartões glass e outros */
-  @media (max-width: 600px) {
-    .glass-card, .glassmorphism, .glass-effect {
-      @apply rounded-lg shadow;
+  
+  /* === SPACING SYSTEM === */
+  
+  .space-modern > * + * {
+    margin-top: 1.5rem;
+  }
+  
+  .space-tight > * + * {
+    margin-top: 0.75rem;
+  }
+  
+  .space-loose > * + * {
+    margin-top: 2.5rem;
+  }
+  
+  /* === FLEXBOX UTILITIES MODERNOS === */
+  
+  .flex-center {
+    @apply flex items-center justify-center;
+  }
+  
+  .flex-between {
+    @apply flex items-center justify-between;
+  }
+  
+  .flex-start {
+    @apply flex items-center justify-start;
+  }
+  
+  .flex-end {
+    @apply flex items-center justify-end;
+  }
+  
+  .flex-col-center {
+    @apply flex flex-col items-center justify-center;
+  }
+  
+  .flex-col-start {
+    @apply flex flex-col items-start justify-start;
+  }
+  
+  /* === GRID UTILITIES === */
+  
+  .grid-auto-fit {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+  
+  .grid-auto-fill {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+  
+  .grid-responsive {
+    @apply grid gap-6;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+  
+  /* === TEXT UTILITIES MODERNOS === */
+  
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .text-pretty {
+    text-wrap: pretty;
+  }
+  
+  .text-gradient {
+    @apply bg-gradient-primary bg-clip-text text-transparent;
+  }
+  
+  .text-gradient-secondary {
+    @apply bg-gradient-secondary bg-clip-text text-transparent;
+  }
+  
+  .text-shadow-sm {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+  
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  }
+  
+  .text-shadow-lg {
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* === BACKGROUND UTILITIES === */
+  
+  .bg-noise {
+    background-image: 
+      radial-gradient(circle at 1px 1px, rgba(0,0,0,0.15) 1px, transparent 0);
+    background-size: 20px 20px;
+  }
+  
+  .bg-grid {
+    background-image: 
+      linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+  
+  .bg-dots {
+    background-image: radial-gradient(circle, rgba(0,0,0,0.1) 1px, transparent 1px);
+    background-size: 15px 15px;
+  }
+  
+  /* === BORDER UTILITIES === */
+  
+  .border-gradient {
+    position: relative;
+    background: hsl(var(--surface));
+  }
+  
+  .border-gradient::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+    border-radius: inherit;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: xor;
+    -webkit-mask-composite: xor;
+  }
+  
+  .border-glow {
+    box-shadow: 0 0 0 1px hsl(var(--primary) / 0.2);
+  }
+  
+  .border-glow-strong {
+    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.3);
+  }
+  
+  /* === VISIBILITY UTILITIES === */
+  
+  .show-on-hover {
+    @apply opacity-0 transition-opacity duration-200;
+  }
+  
+  .group:hover .show-on-hover {
+    @apply opacity-100;
+  }
+  
+  .hide-on-hover {
+    @apply opacity-100 transition-opacity duration-200;
+  }
+  
+  .group:hover .hide-on-hover {
+    @apply opacity-0;
+  }
+  
+  /* === INTERACTION UTILITIES === */
+  
+  .clickable {
+    @apply cursor-pointer select-none;
+    @apply transition-all duration-200 ease-out;
+    @apply hover:scale-105 active:scale-95;
+  }
+  
+  .non-clickable {
+    @apply cursor-default select-none;
+  }
+  
+  .draggable {
+    @apply cursor-grab active:cursor-grabbing;
+  }
+  
+  /* === FOCUS UTILITIES === */
+  
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-2;
+    focus:ring-offset-color: hsl(var(--background));
+  }
+  
+  .focus-ring-error {
+    @apply focus:outline-none focus:ring-2 focus:ring-error/20 focus:ring-offset-2;
+    focus:ring-offset-color: hsl(var(--background));
+  }
+  
+  .focus-ring-success {
+    @apply focus:outline-none focus:ring-2 focus:ring-success/20 focus:ring-offset-2;
+    focus:ring-offset-color: hsl(var(--background));
+  }
+  
+  /* === TRANSITION UTILITIES === */
+  
+  .transition-fast {
+    @apply transition-all duration-150 ease-out;
+  }
+  
+  .transition-normal {
+    @apply transition-all duration-200 ease-out;
+  }
+  
+  .transition-slow {
+    @apply transition-all duration-300 ease-out;
+  }
+  
+  .transition-bounce {
+    transition-timing-function: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+  
+  .transition-expo {
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  /* === SIZE UTILITIES === */
+  
+  .size-4 {
+    @apply w-4 h-4;
+  }
+  
+  .size-5 {
+    @apply w-5 h-5;
+  }
+  
+  .size-6 {
+    @apply w-6 h-6;
+  }
+  
+  .size-8 {
+    @apply w-8 h-8;
+  }
+  
+  .size-10 {
+    @apply w-10 h-10;
+  }
+  
+  .size-12 {
+    @apply w-12 h-12;
+  }
+  
+  .size-16 {
+    @apply w-16 h-16;
+  }
+  
+  .size-20 {
+    @apply w-20 h-20;
+  }
+  
+  /* === ASPECT RATIO UTILITIES === */
+  
+  .aspect-square {
+    aspect-ratio: 1;
+  }
+  
+  .aspect-video {
+    aspect-ratio: 16/9;
+  }
+  
+  .aspect-photo {
+    aspect-ratio: 4/3;
+  }
+  
+  .aspect-portrait {
+    aspect-ratio: 3/4;
+  }
+  
+  /* === POSITIONING UTILITIES === */
+  
+  .center-absolute {
+    @apply absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
+  }
+  
+  .center-x {
+    @apply absolute left-1/2 transform -translate-x-1/2;
+  }
+  
+  .center-y {
+    @apply absolute top-1/2 transform -translate-y-1/2;
+  }
+  
+  /* === OVERLAY UTILITIES === */
+  
+  .overlay {
+    @apply absolute inset-0 bg-black/50;
+  }
+  
+  .overlay-light {
+    @apply absolute inset-0 bg-black/20;
+  }
+  
+  .overlay-dark {
+    @apply absolute inset-0 bg-black/70;
+  }
+  
+  .overlay-gradient {
+    @apply absolute inset-0;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(0, 0, 0, 0.1) 50%,
+      rgba(0, 0, 0, 0.8) 100%
+    );
+  }
+  
+  /* === CLIPPING AND MASKING === */
+  
+  .clip-corner {
+    clip-path: polygon(0 0, calc(100% - 1rem) 0, 100% 1rem, 100% 100%, 0 100%);
+  }
+  
+  .clip-triangle {
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  }
+  
+  .clip-circle {
+    clip-path: circle(50%);
+  }
+  
+  /* === SCROLLING UTILITIES === */
+  
+  .scroll-smooth {
+    scroll-behavior: smooth;
+  }
+  
+  .scroll-auto {
+    scroll-behavior: auto;
+  }
+  
+  .overscroll-contain {
+    overscroll-behavior: contain;
+  }
+  
+  .overscroll-none {
+    overscroll-behavior: none;
+  }
+  
+  /* === PRINT UTILITIES === */
+  
+  .print-hidden {
+    @media print {
+      display: none !important;
     }
   }
-
-  /* Novo highlight/flash de conquista */
-  .highlight-flash {
-    animation: highlight-flash 1.2s cubic-bezier(0.9,0,0.2,1);
-  }
-  @keyframes highlight-flash {
-    0% { box-shadow: 0 0 0 0px #00EAD977, 0 0 16px 8px #00EAD988 inset; }
-    50% { box-shadow: 0 0 0 16px #F8F8F833, 0 0 32px 16px #00EAD944 inset; }
-    90% { box-shadow: 0 0 0 0 #F8F8F833, 0 0 0 0 #00EAD900 inset; }
-    100% { box-shadow: none; }
-  }
-
-  .item-pop {
-    animation: item-pop 0.6s cubic-bezier(0.17, 0.67, 0.83, 0.67);
-  }
-  @keyframes item-pop {
-    0% { transform: scale(0.95); opacity:0.5;}
-    55% { transform: scale(1.12); opacity:1;}
-    100% { transform: scale(1);}
-  }
-
-  /* Barrinha underline animada das abas de implementação */
-  .after\:animate-enter::after {
-    content: "";
-    animation: underline-grow 0.35s cubic-bezier(0.45,1,0.39,0.96); 
-    display: block;
-  }
-  @keyframes underline-grow {
-    0% { width: 0%; opacity: 0.3;}
-    80% { opacity: 0.9;}
-    100% { width: 100%; opacity: 1;}
-  }
-
-  /* Esconde o scroll horizontal das abas em mobile */
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
   
-  /* Novas animações */
-  .tab-slide-in {
-    animation: tab-slide-in 0.4s ease-out forwards;
-  }
-  @keyframes tab-slide-in {
-    0% { opacity: 0; transform: translateY(10px); }
-    100% { opacity: 1; transform: translateY(0); }
-  }
-  
-  .tab-fade-in {
-    animation: tab-fade-in 0.3s ease-out forwards;
-  }
-  @keyframes tab-fade-in {
-    0% { opacity: 0; }
-    100% { opacity: 1; }
-  }
-  
-  /* Efeito de pulso suave para highlights */
-  .pulse-subtle {
-    animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-  @keyframes pulse-subtle {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
-  }
-  
-  /* Novas utilitários para o estilo Hubla */
-  .hubla-active-nav {
-    @apply relative bg-[#181A2A] text-viverblue border-l-2 border-viverblue;
-  }
-  
-  .hubla-shadow {
-    @apply shadow-[0_4px_20px_-2px_rgba(0,0,0,0.3)];
-  }
-  
-  .hubla-glow {
-    @apply shadow-[0_0_15px_rgba(0,234,217,0.3)];
-  }
-  
-  /* Novas animações de transição de página */
-  .page-enter {
-    animation: page-enter 0.5s ease-out forwards;
-  }
-  @keyframes page-enter {
-    0% { opacity: 0; transform: translateY(10px); }
-    100% { opacity: 1; transform: translateY(0); }
-  }
-  
-  .page-exit {
-    animation: page-exit 0.3s ease-in forwards;
-  }
-  @keyframes page-exit {
-    0% { opacity: 1; transform: translateY(0); }
-    100% { opacity: 0; transform: translateY(-10px); }
-  }
-  
-  /* Animações para cards de conquista */
-  .success-appear {
-    animation: success-appear 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-  @keyframes success-appear {
-    0% { opacity: 0; transform: scale(0.8) translateY(10px); }
-    70% { opacity: 1; transform: scale(1.05) translateY(-5px); }
-    100% { opacity: 1; transform: scale(1) translateY(0); }
-  }
-  
-  /* Efeito de shimmer/skeleton para carregamento */
-  .shimmer {
-    background: linear-gradient(90deg, 
-      rgba(255,255,255,0.05) 0%, 
-      rgba(255,255,255,0.1) 50%, 
-      rgba(255,255,255,0.05) 100%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-  }
-  @keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-  }
-  
-  /* Novas utilidades para o tema escuro */
-  .bg-gradient-dark {
-    background: linear-gradient(to bottom, #1A1E2E 0%, #151823 100%);
-  }
-  
-  .hover-glow-viverblue {
-    transition: all 0.3s ease;
-  }
-  
-  .hover-glow-viverblue:hover {
-    box-shadow: 0 0 10px 0 rgba(0, 234, 217, 0.3);
-    border-color: rgba(0, 234, 217, 0.5);
-  }
-  
-  /* Efeitos de foco e hover melhorados para modo escuro */
-  .focus-ring-dark {
-    @apply focus:outline-none focus:ring-2 focus:ring-viverblue focus:ring-offset-0;
-  }
-  
-  .hover-bg-dark {
-    @apply hover:bg-[#1A1E2E];
-  }
-  
-  .text-gradient-viverblue {
-    @apply bg-gradient-to-r from-viverblue to-viverblue-light bg-clip-text text-transparent;
-  }
-  
-  /* Melhorar os efeitos de transição */
-  .smooth-transition {
-    @apply transition-all duration-300 ease-in-out;
-  }
-  
-  /* Melhoria para a acessibilidade - foco visível melhorado */
-  .focus-visible-improved:focus-visible {
-    @apply outline-none ring-2 ring-viverblue ring-offset-1;
-  }
-  
-  /* Efeito de pulsação suave para elementos destacados */
-  .pulse-viverblue {
-    animation: pulse-viverblue 2s infinite;
-  }
-  
-  @keyframes pulse-viverblue {
-    0% {
-      box-shadow: 0 0 0 0 rgba(0, 234, 217, 0.4);
-    }
-    70% {
-      box-shadow: 0 0 0 10px rgba(0, 234, 217, 0);
-    }
-    100% {
-      box-shadow: 0 0 0 0 rgba(0, 234, 217, 0);
+  .print-visible {
+    @media print {
+      display: block !important;
     }
   }
-}
-
-/* Efeitos para estados de interação */
-.hover-lift {
-  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
-}
-.hover-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* Animação de entrada para as estatísticas na tela de conclusão */
-.stat-item-enter {
-  opacity: 0;
-  transform: translateY(20px);
-  animation: stat-item-enter 0.5s forwards;
-  animation-delay: calc(var(--delay, 0) * 0.1s);
-}
-@keyframes stat-item-enter {
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Animações e efeitos para o onboarding */
-.onboarding-step-enter {
-  animation: step-enter 0.3s ease-out;
-}
-
-@keyframes step-enter {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
+  
+  /* === ACCESSIBILITY UTILITIES === */
+  
+  .sr-only-focusable {
+    @apply sr-only;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  
+  .sr-only-focusable:focus {
+    @apply not-sr-only;
   }
-}
-
-.onboarding-fade-in {
-  animation: fade-in 0.2s ease-out;
-}
-
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-/* Efeito de borda iluminada ao estilo Hubla */
-.hubla-border-glow {
-  @apply border border-white/5 relative;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-}
-.hubla-border-glow:hover {
-  @apply border-viverblue/30;
-  box-shadow: 
-    inset 0 0 0 1px rgba(0, 234, 217, 0.2),
-    0 0 10px rgba(0, 234, 217, 0.1);
-}
-
-/* Efeito de gradiente sutil para cards */
-.hubla-card-gradient {
-  background: linear-gradient(180deg, rgba(30, 32, 47, 0.6) 0%, rgba(15, 17, 26, 0.8) 100%);
-}
-
-/* Novas animações de pulsação para elementos de sucesso */
-.success-pulse {
-  animation: success-pulse 2s infinite;
-}
-@keyframes success-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(0,234,217,0.4); }
-  50% { box-shadow: 0 0 0 10px rgba(0,234,217,0); }
-}
-
-/* Animações para cards de etapas concluídas */
-.step-complete-animation {
-  animation: step-complete 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-}
-@keyframes step-complete {
-  0% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-  70% { transform: translateY(5px); }
-  100% { transform: translateY(0); }
-}
-
-/* Efeito de foco em elementos importantes */
-.focus-highlight {
-  position: relative;
-}
-.focus-highlight::after {
-  content: '';
-  position: absolute;
-  top: -4px;
-  left: -4px;
-  right: -4px;
-  bottom: -4px;
-  border-radius: inherit;
-  border: 2px solid rgba(0,234,217,0.6);
-  opacity: 0;
-  animation: focus-highlight 2s infinite;
-}
-@keyframes focus-highlight {
-  0%, 100% { opacity: 0; transform: scale(1.02); }
-  50% { opacity: 1; transform: scale(1); }
+  
+  .reduced-motion {
+    @media (prefers-reduced-motion: reduce) {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+  
+  /* === HIGH CONTRAST MODE === */
+  
+  @media (prefers-contrast: high) {
+    .high-contrast {
+      border: 2px solid currentColor !important;
+    }
+    
+    .high-contrast-bg {
+      background: Canvas !important;
+      color: CanvasText !important;
+    }
+  }
+  
+  /* === DARK MODE UTILITIES === */
+  
+  .dark-hidden {
+    @apply dark:hidden;
+  }
+  
+  .dark-visible {
+    @apply hidden dark:block;
+  }
+  
+  .light-hidden {
+    @apply hidden dark:block;
+  }
+  
+  .light-visible {
+    @apply block dark:hidden;
+  }
+  
+  /* === RESPONSIVE TEXT === */
+  
+  .text-responsive {
+    @apply text-sm sm:text-base lg:text-lg;
+  }
+  
+  .text-responsive-large {
+    @apply text-lg sm:text-xl lg:text-2xl xl:text-3xl;
+  }
+  
+  .text-responsive-small {
+    @apply text-xs sm:text-sm lg:text-base;
+  }
+  
+  /* === BACKDROP EFFECTS === */
+  
+  .backdrop-blur-xs {
+    backdrop-filter: blur(2px);
+  }
+  
+  .backdrop-blur-sm {
+    backdrop-filter: blur(4px);
+  }
+  
+  .backdrop-blur-base {
+    backdrop-filter: blur(8px);
+  }
+  
+  .backdrop-blur-lg {
+    backdrop-filter: blur(16px);
+  }
+  
+  .backdrop-blur-xl {
+    backdrop-filter: blur(24px);
+  }
+  
+  .backdrop-blur-2xl {
+    backdrop-filter: blur(40px);
+  }
+  
+  /* === SELECTION UTILITIES === */
+  
+  .select-all {
+    user-select: all;
+  }
+  
+  .select-auto {
+    user-select: auto;
+  }
+  
+  .select-text {
+    user-select: text;
+  }
+  
+  .select-none {
+    user-select: none;
+  }
+  
+  /* === RESIZE UTILITIES === */
+  
+  .resize-none {
+    resize: none;
+  }
+  
+  .resize-both {
+    resize: both;
+  }
+  
+  .resize-horizontal {
+    resize: horizontal;
+  }
+  
+  .resize-vertical {
+    resize: vertical;
+  }
 }

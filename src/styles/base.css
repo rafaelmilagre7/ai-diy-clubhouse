@@ -1,156 +1,339 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-/* Estilos globais e temas base (cores, fontes, headings, body, responsividade base) */
+/* Sistema de cores moderno e tecnológico com contraste AAA */
 
 @layer base {
   :root {
-    /* Dark mode por padrão */
-    --background: 222 33% 7%;
-    --foreground: 210 22% 96%;
-    --card: 226 25% 10%;
-    --card-foreground: 210 22% 96%;
-    --popover: 222 33% 7%;
-    --popover-foreground: 210 22% 96%;
-    --primary: 174 100% 46%;
-    --primary-foreground: 222.2 90% 95%;
-    --secondary: 222 23% 16%;
-    --secondary-foreground: 222.2 80% 88%;
-    --muted: 222 23% 16%;
-    --muted-foreground: 215 20% 75%;
-    --accent: 174 100% 36%;
-    --accent-foreground: 174 100% 92%;
-    --destructive: 2 75% 39%;
-    --destructive-foreground: 210 40% 92%;
-    --border: 222 16% 24%;
-    --input: 222 16% 24%;
-    --ring: 174 100% 46%;
+    /* === SISTEMA DE CORES MODERNO === */
+    
+    /* Paleta Principal Tecnológica */
+    --primary: 220 100% 50%;           /* #0066FF - Azul vibrante moderno */
+    --primary-foreground: 0 0% 100%;   /* #FFFFFF - Contraste perfeito */
+    --primary-hover: 220 100% 45%;     /* Hover state */
+    --primary-active: 220 100% 40%;    /* Active state */
+    
+    /* Paleta Secundária */
+    --secondary: 251 91% 65%;          /* #6C5CE7 - Roxo tecnológico */
+    --secondary-foreground: 0 0% 100%; 
+    --secondary-hover: 251 91% 60%;
+    
+    /* Accent Colors */
+    --accent: 192 100% 50%;            /* #00D9FF - Ciano para destaques */
+    --accent-foreground: 220 26% 14%; /* Texto escuro para contraste */
+    
+    /* === SISTEMA DE GRAYS MODERNOS === */
+    
+    /* Backgrounds - Tons frios tecnológicos */
+    --background: 220 26% 14%;         /* #1A1F2E - Fundo principal escuro */
+    --surface: 220 20% 18%;            /* #252B3B - Superfícies elevadas */
+    --surface-elevated: 220 16% 22%;   /* #2D3648 - Cards e elementos */
+    --surface-hover: 220 12% 26%;      /* #353E55 - Hover states */
+    
+    /* Borders - Sistema de profundidade */
+    --border: 220 13% 32%;             /* #454E62 - Bordas principais */
+    --border-subtle: 220 16% 28%;      /* #3A4356 - Bordas sutis */
+    --border-strong: 220 10% 40%;      /* #5A6175 - Bordas de destaque */
+    
+    /* Text Colors - Hierarquia clara */
+    --foreground: 0 0% 98%;            /* #FAFAFA - Texto principal */
+    --text-secondary: 220 9% 75%;      /* #B8BCC8 - Texto secundário */
+    --text-tertiary: 220 9% 60%;       /* #8B92A5 - Texto terciário */
+    --text-disabled: 220 9% 45%;       /* #65728A - Texto desabilitado */
+    
+    /* === CORES DE ESTADO MODERNAS === */
+    
+    /* Success */
+    --success: 152 69% 39%;            /* #00C896 */
+    --success-foreground: 0 0% 100%;
+    --success-background: 152 69% 8%;   /* Fundo sutil */
+    
+    /* Warning */
+    --warning: 35 95% 56%;             /* #FFB020 */
+    --warning-foreground: 220 26% 14%;
+    --warning-background: 35 95% 10%;
+    
+    /* Error */
+    --error: 348 86% 61%;              /* #FF4757 */
+    --error-foreground: 0 0% 100%;
+    --error-background: 348 86% 12%;
+    
+    /* Info */
+    --info: 231 97% 59%;               /* #3742FA */
+    --info-foreground: 0 0% 100%;
+    --info-background: 231 97% 12%;
+    
+    /* === COMPONENTES ESPECÍFICOS === */
+    
+    --card: var(--surface-elevated);
+    --card-foreground: var(--foreground);
+    
+    --popover: var(--surface-elevated);
+    --popover-foreground: var(--foreground);
+    
+    --muted: var(--surface);
+    --muted-foreground: var(--text-secondary);
+    
+    --destructive: var(--error);
+    --destructive-foreground: var(--error-foreground);
+    
+    --input: var(--surface);
+    --ring: var(--primary);
+    
     --radius: 0.75rem;
   }
   
   .light {
-    /* Light mode com melhor contraste */
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 174 100% 32%; /* Mais escuro para melhor contraste */
+    /* === MODO CLARO SOFISTICADO === */
+    
+    /* Paleta Principal */
+    --primary: 220 100% 48%;           /* Azul mais escuro para contraste */
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 92%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    /* Melhoria de contraste: mudança significativa da cor do muted para um tom muito mais escuro */
-    --muted: 210 40% 92%;
-    --muted-foreground: 215 25% 20%; /* Escurecido para contraste muito melhor (AAA) */
-    --accent: 210 40% 92%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 50%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 75%; /* Escurecido um pouco para melhor contraste */
-    --input: 214.3 31.8% 85%;
-    --ring: 174 100% 32%;
-    --radius: 0.75rem;
+    --primary-hover: 220 100% 43%;
+    
+    /* Secundária */
+    --secondary: 251 91% 55%;          /* Roxo mais escuro */
+    --secondary-foreground: 0 0% 100%;
+    
+    /* Accent */
+    --accent: 192 100% 45%;
+    --accent-foreground: 0 0% 100%;
+    
+    /* Backgrounds - Off-white sofisticado */
+    --background: 0 0% 99%;            /* #FCFCFC - Quase branco */
+    --surface: 0 0% 100%;              /* #FFFFFF - Branco puro */
+    --surface-elevated: 220 14% 98%;   /* #F8F9FA - Elevado sutil */
+    --surface-hover: 220 14% 95%;      /* #F1F3F4 - Hover */
+    
+    /* Borders */
+    --border: 220 13% 87%;             /* #D1D5DB - Principal */
+    --border-subtle: 220 13% 91%;      /* #E5E7EB - Sutil */
+    --border-strong: 220 13% 83%;      /* #C4C9D1 - Forte */
+    
+    /* Text Colors */
+    --foreground: 220 26% 14%;         /* #1A1F2E - Texto principal */
+    --text-secondary: 220 13% 45%;     /* #65728A - Secundário */
+    --text-tertiary: 220 9% 60%;       /* #8B92A5 - Terciário */
+    --text-disabled: 220 9% 75%;       /* #B8BCC8 - Desabilitado */
+    
+    /* Estados */
+    --success: 152 69% 35%;            /* Verde mais escuro */
+    --success-background: 152 69% 95%;
+    
+    --warning: 35 95% 50%;
+    --warning-background: 35 95% 95%;
+    
+    --error: 348 86% 55%;
+    --error-background: 348 86% 95%;
+    
+    --info: 231 97% 53%;
+    --info-background: 231 97% 95%;
+    
+    /* Componentes */
+    --card: var(--surface);
+    --card-foreground: var(--foreground);
+    
+    --popover: var(--surface);
+    --popover-foreground: var(--foreground);
+    
+    --muted: var(--surface-elevated);
+    --muted-foreground: var(--text-secondary);
+    
+    --input: var(--surface);
+    --ring: var(--primary);
   }
 }
 
 @layer base {
   * {
-    @apply border-border selection:bg-viverblue/30 selection:text-white;
+    @apply border-border selection:bg-primary/20 selection:text-primary-foreground;
   }
+  
   body {
-    @apply bg-background text-foreground font-sans antialiased dark:bg-[#0F111A];
+    @apply bg-background text-foreground font-sans antialiased;
     font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+    font-optical-sizing: auto;
     min-height: 100vh;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
+  
+  /* === TIPOGRAFIA MODERNA === */
+  
   h1, h2, h3, h4, h5, h6 {
-    @apply font-heading font-semibold text-neutral-800 dark:text-white;
-  }
-  h1 { @apply text-3xl md:text-4xl tracking-tight; }
-  h2 { @apply text-2xl md:text-3xl tracking-tight; }
-  h3 { @apply text-xl md:text-2xl; }
-  p { @apply leading-relaxed text-neutral-700 dark:text-neutral-200; }
-  
-  /* Melhorias de contraste para tabelas */
-  .table td {
-    @apply text-neutral-800 dark:text-white;
+    @apply font-display font-semibold text-foreground;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
   }
   
-  /* Melhorias de contraste para texto secundário */
-  .text-muted-foreground {
-    @apply text-neutral-600 dark:text-neutral-300;
+  h1 { 
+    @apply text-4xl md:text-5xl lg:text-6xl; 
+    font-weight: 700;
   }
-
-  /* Link styles */
+  h2 { 
+    @apply text-3xl md:text-4xl lg:text-5xl; 
+    font-weight: 600;
+  }
+  h3 { 
+    @apply text-2xl md:text-3xl lg:text-4xl; 
+    font-weight: 600;
+  }
+  h4 { 
+    @apply text-xl md:text-2xl; 
+    font-weight: 600;
+  }
+  h5 { 
+    @apply text-lg md:text-xl; 
+    font-weight: 500;
+  }
+  h6 { 
+    @apply text-base md:text-lg; 
+    font-weight: 500;
+  }
+  
+  p { 
+    @apply leading-relaxed text-foreground;
+    line-height: 1.6;
+  }
+  
+  /* === MELHORIAS DE CONTRASTE === */
+  
+  .text-high-contrast {
+    @apply text-foreground;
+  }
+  
+  .text-medium-contrast {
+    @apply text-text-secondary;
+  }
+  
+  .text-low-contrast {
+    @apply text-text-tertiary;
+  }
+  
+  /* Links modernos */
   a {
-    @apply text-viverblue hover:text-viverblue-light transition-colors;
+    @apply text-primary hover:text-primary-hover transition-colors duration-200;
+    text-decoration: none;
   }
-
-  /* Input styles para garantir legibilidade */
+  
+  a:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+  }
+  
+  /* === INPUTS E FORMS MODERNOS === */
+  
   input, textarea, select {
-    @apply text-neutral-800 dark:text-white bg-white dark:bg-[#181A2A] border-neutral-300 dark:border-white/10;
+    @apply text-foreground bg-surface border-border;
+    transition: all 0.2s ease;
   }
-
-  /* Labels para melhor contraste */
+  
+  input:focus, textarea:focus, select:focus {
+    @apply border-primary ring-2 ring-primary/20;
+    outline: none;
+  }
+  
   label {
-    @apply text-neutral-800 dark:text-white;
+    @apply text-foreground font-medium;
   }
   
-  /* Card */
-  .card-description {
-    @apply text-neutral-600 dark:text-neutral-300;
-  }
-  
-  /* Form */
   .form-label {
-    @apply text-neutral-800 dark:text-white;
+    @apply text-foreground font-medium;
   }
   
   .form-description {
-    @apply text-neutral-600 dark:text-neutral-300;
+    @apply text-text-secondary;
   }
-
-  /* Pattern background for decorative elements */
+  
+  /* === PATTERN BACKGROUNDS === */
+  
   .bg-dot-pattern {
-    background-image: radial-gradient(circle, rgba(0, 234, 217, 0.1) 1px, transparent 1px);
+    background-image: radial-gradient(circle, hsl(var(--primary)) 1px, transparent 1px);
     background-size: 20px 20px;
+    opacity: 0.1;
+  }
+  
+  .bg-grid-pattern {
+    background-image: 
+      linear-gradient(hsl(var(--border)) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px);
+    background-size: 20px 20px;
+    opacity: 0.3;
   }
 }
 
-/* Responsividade (breakpoints de headings, container, cards) */
-@media (max-width: 900px) {
-  .container { @apply px-3; }
-  h1 { @apply text-2xl; }
-  h2 { @apply text-xl; }
-  h3 { @apply text-lg; }
-}
-@media (max-width: 600px) {
-  .container { @apply px-2; }
+/* === RESPONSIVIDADE === */
+
+@media (max-width: 768px) {
+  .container { 
+    @apply px-4; 
+  }
+  
+  h1 { @apply text-3xl; }
+  h2 { @apply text-2xl; }
+  h3 { @apply text-xl; }
 }
 
-/* Smooth scrolling */
+@media (max-width: 640px) {
+  .container { 
+    @apply px-3; 
+  }
+}
+
+/* === SMOOTH SCROLLING === */
 html {
   scroll-behavior: smooth;
 }
 
-/* Focus styles for accessibility */
+/* === FOCUS STYLES MODERNOS === */
 *:focus-visible {
-  @apply outline-none ring-2 ring-viverblue ring-offset-2 ring-offset-transparent;
+  @apply outline-none ring-2 ring-primary ring-offset-2;
+  ring-offset-color: hsl(var(--background));
 }
 
-/* Custom scrollbar */
+/* === SCROLLBAR MODERNO === */
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-neutral-800;
+  @apply bg-surface;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-viverblue rounded-full;
+  @apply bg-border rounded-full;
+  transition: background-color 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-viverblue-dark;
+  @apply bg-border-strong;
+}
+
+/* === ANIMAÇÕES SUAVES === */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out;
 }

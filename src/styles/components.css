@@ -1,360 +1,427 @@
 
-/* Componentes reutilizáveis (cards, glass, badges, progress, etc) */
+/* === COMPONENTES MODERNOS E SOFISTICADOS === */
 
 @layer components {
-  .glass-card, .glassmorphism {
-    @apply bg-white/5 backdrop-blur-sm border border-white/10 shadow-md;
-  }
-  .glass-effect {
-    @apply glassmorphism bg-white/5 backdrop-blur-xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.5)];
-  }
-  .container {
-    @apply max-w-7xl mx-auto px-4 md:px-8;
-  }
-  .progress-step {
-    @apply relative flex items-center justify-center w-8 h-8 rounded-full bg-neutral-800 text-neutral-400 transition-colors;
-  }
-  .progress-step.active {
-    @apply bg-viverblue text-white shadow-lg;
-  }
-  .progress-step.completed {
-    @apply bg-green-600 text-white shadow-md;
-  }
-  .progress-line {
-    @apply flex-1 h-1 bg-neutral-800 transition-all;
-  }
-  .progress-line.completed {
-    @apply bg-green-600;
-  }
-  .solution-card {
-    @apply relative overflow-hidden rounded-xl border bg-card text-white shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-1;
-  }
-  .solution-card.revenue {
-    @apply border-l-4 border-l-revenue shadow-revenue/10;
-  }
-  .solution-card.operational {
-    @apply border-l-4 border-l-operational shadow-operational/10;
-  }
-  .solution-card.strategy {
-    @apply border-l-4 border-l-strategy shadow-strategy/10;
+  
+  /* === SISTEMA DE CARDS MODERNO === */
+  
+  .card-modern {
+    @apply bg-surface-elevated border border-border rounded-xl shadow-md;
+    @apply transition-all duration-200 ease-out;
+    @apply hover:shadow-lg hover:border-border-strong;
   }
   
-  /* Badge classes com melhor contraste */
-  .badge-revenue {
-    @apply bg-revenue/30 text-revenue border-revenue/50;
-  }
-  .badge-operational {
-    @apply bg-operational/30 text-operational border-operational/50;
-  }
-  .badge-strategy {
-    @apply bg-strategy/30 text-strategy border-strategy/50;
+  .card-elevated {
+    @apply card-modern shadow-lg;
+    @apply hover:shadow-xl hover:-translate-y-1;
   }
   
-  .card-hover-effect {
-    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  .card-interactive {
+    @apply card-modern cursor-pointer;
+    @apply hover:bg-surface-hover hover:scale-[1.02];
+    @apply active:scale-[0.98] active:shadow-sm;
   }
+  
+  .card-glow {
+    @apply card-modern;
+    box-shadow: 
+      0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -1px rgba(0, 0, 0, 0.06),
+      0 0 0 1px hsl(var(--primary) / 0.1);
+  }
+  
+  .card-glow:hover {
+    box-shadow: 
+      0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -2px rgba(0, 0, 0, 0.05),
+      0 0 20px hsl(var(--primary) / 0.2);
+  }
+  
+  /* === SISTEMA DE BOTÕES MODERNOS === */
+  
+  .btn-primary {
+    @apply bg-primary text-primary-foreground font-medium;
+    @apply px-6 py-3 rounded-lg shadow-sm;
+    @apply transition-all duration-200 ease-out;
+    @apply hover:bg-primary-hover hover:shadow-md hover:scale-105;
+    @apply active:scale-95 active:shadow-sm;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary/20;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground font-medium;
+    @apply px-6 py-3 rounded-lg shadow-sm;
+    @apply transition-all duration-200 ease-out;
+    @apply hover:bg-secondary-hover hover:shadow-md hover:scale-105;
+    @apply active:scale-95 active:shadow-sm;
+    @apply focus:outline-none focus:ring-2 focus:ring-secondary/20;
+  }
+  
+  .btn-outline {
+    @apply bg-transparent text-foreground font-medium;
+    @apply px-6 py-3 rounded-lg border-2 border-border;
+    @apply transition-all duration-200 ease-out;
+    @apply hover:bg-surface-hover hover:border-border-strong hover:scale-105;
+    @apply active:scale-95 active:bg-surface;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary/20;
+  }
+  
+  .btn-ghost {
+    @apply bg-transparent text-foreground font-medium;
+    @apply px-6 py-3 rounded-lg;
+    @apply transition-all duration-200 ease-out;
+    @apply hover:bg-surface-hover hover:scale-105;
+    @apply active:scale-95 active:bg-surface;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary/20;
+  }
+  
+  .btn-success {
+    @apply bg-success text-success-foreground font-medium;
+    @apply px-6 py-3 rounded-lg shadow-sm;
+    @apply transition-all duration-200 ease-out;
+    @apply hover:shadow-md hover:scale-105 hover:brightness-110;
+    @apply active:scale-95 active:shadow-sm;
+    @apply focus:outline-none focus:ring-2 focus:ring-success/20;
+  }
+  
+  .btn-warning {
+    @apply bg-warning text-warning-foreground font-medium;
+    @apply px-6 py-3 rounded-lg shadow-sm;
+    @apply transition-all duration-200 ease-out;
+    @apply hover:shadow-md hover:scale-105 hover:brightness-110;
+    @apply active:scale-95 active:shadow-sm;
+    @apply focus:outline-none focus:ring-2 focus:ring-warning/20;
+  }
+  
+  .btn-error {
+    @apply bg-error text-error-foreground font-medium;
+    @apply px-6 py-3 rounded-lg shadow-sm;
+    @apply transition-all duration-200 ease-out;
+    @apply hover:shadow-md hover:scale-105 hover:brightness-110;
+    @apply active:scale-95 active:shadow-sm;
+    @apply focus:outline-none focus:ring-2 focus:ring-error/20;
+  }
+  
+  /* Tamanhos de botões */
+  .btn-xs {
+    @apply px-3 py-1.5 text-xs;
+  }
+  
+  .btn-sm {
+    @apply px-4 py-2 text-sm;
+  }
+  
+  .btn-lg {
+    @apply px-8 py-4 text-lg;
+  }
+  
+  .btn-xl {
+    @apply px-10 py-5 text-xl;
+  }
+  
+  /* === SISTEMA DE BADGES MODERNOS === */
+  
+  .badge-base {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+    @apply transition-all duration-200 ease-out;
+  }
+  
+  .badge-primary {
+    @apply badge-base bg-primary/10 text-primary border border-primary/20;
+    @apply hover:bg-primary/20;
+  }
+  
+  .badge-secondary {
+    @apply badge-base bg-secondary/10 text-secondary border border-secondary/20;
+    @apply hover:bg-secondary/20;
+  }
+  
+  .badge-success {
+    @apply badge-base bg-success/10 text-success border border-success/20;
+    @apply hover:bg-success/20;
+  }
+  
+  .badge-warning {
+    @apply badge-base bg-warning/10 text-warning border border-warning/20;
+    @apply hover:bg-warning/20;
+  }
+  
+  .badge-error {
+    @apply badge-base bg-error/10 text-error border border-error/20;
+    @apply hover:bg-error/20;
+  }
+  
+  .badge-info {
+    @apply badge-base bg-info/10 text-info border border-info/20;
+    @apply hover:bg-info/20;
+  }
+  
+  .badge-neutral {
+    @apply badge-base bg-surface text-text-secondary border border-border;
+    @apply hover:bg-surface-hover;
+  }
+  
+  /* === SISTEMA DE INPUTS MODERNOS === */
+  
+  .input-modern {
+    @apply w-full px-4 py-3 rounded-lg;
+    @apply bg-surface border border-border;
+    @apply text-foreground placeholder:text-text-tertiary;
+    @apply transition-all duration-200 ease-out;
+    @apply focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none;
+    @apply hover:border-border-strong;
+  }
+  
+  .input-error {
+    @apply input-modern border-error focus:border-error focus:ring-error/20;
+  }
+  
+  .input-success {
+    @apply input-modern border-success focus:border-success focus:ring-success/20;
+  }
+  
+  .textarea-modern {
+    @apply input-modern resize-none min-h-[120px];
+  }
+  
+  .select-modern {
+    @apply input-modern cursor-pointer;
+    @apply appearance-none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+    background-position: right 12px center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+    padding-right: 48px;
+  }
+  
+  /* === LAYOUT CONTAINERS === */
+  
+  .container-modern {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .container-narrow {
+    @apply max-w-4xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .container-wide {
+    @apply max-w-full mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12;
+  }
+  
+  /* === GLASSMORPHISM MODERNO === */
+  
+  .glass-card {
+    @apply bg-surface/80 backdrop-blur-xl border border-border/50;
+    @apply shadow-lg;
+  }
+  
+  .glass-strong {
+    @apply bg-surface/90 backdrop-blur-2xl border border-border/60;
+    @apply shadow-xl;
+  }
+  
+  .glass-subtle {
+    @apply bg-surface/60 backdrop-blur-lg border border-border/30;
+    @apply shadow-md;
+  }
+  
+  /* === GRADIENT BACKGROUNDS === */
+  
+  .gradient-primary {
+    @apply bg-gradient-primary;
+  }
+  
+  .gradient-secondary {
+    @apply bg-gradient-secondary;
+  }
+  
+  .gradient-surface {
+    @apply bg-gradient-surface;
+  }
+  
   .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-viverblue to-viverblue-light;
-  }
-  .gradient-border {
-    @apply relative before:absolute before:inset-0 before:p-[1px] before:rounded-lg before:bg-gradient-to-r before:from-viverblue before:to-viverblue-light before:-z-10;
-  }
-  .glassmorphism {
-    @apply backdrop-blur-xl bg-white/5 border border-white/10 shadow-xl;
-  }
-  .glass-effect {
-    @apply glassmorphism bg-white/3 backdrop-blur-xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.5)];
-  }
-  .section-title {
-    @apply font-heading text-2xl md:text-3xl font-bold text-white mb-6;
-  }
-  .gradient-card {
-    @apply bg-gradient-to-br from-neutral-900 to-neutral-950 rounded-2xl shadow-md border border-neutral-800;
-  }
-  .gradient-card-revenue {
-    @apply bg-gradient-to-br from-revenue-darker to-black rounded-2xl shadow-md border-l-4 border-l-revenue border-t border-r border-b border-neutral-800;
-  }
-  .gradient-card-operational {
-    @apply bg-gradient-to-br from-operational-darker to-black rounded-2xl shadow-md border-l-4 border-l-operational border-t border-r border-b border-neutral-800;
-  }
-  .gradient-card-strategy {
-    @apply bg-gradient-to-br from-strategy-darker to-black rounded-2xl shadow-md border-l-4 border-l-strategy border-t border-r border-b border-neutral-800;
-  }
-  .dot-bg {
-    @apply bg-dot-pattern bg-[length:20px_20px];
-  }
-  .animated-gradient {
-    @apply bg-gradient-to-r from-viverblue via-viverblue-light to-viverblue bg-size-200 animate-gradient-shift;
-  }
-
-  .depth-effect {
-    box-shadow: 
-      0 1px 1px rgba(0,0,0,0.05), 
-      0 2px 2px rgba(0,0,0,0.05), 
-      0 4px 4px rgba(0,0,0,0.05), 
-      0 8px 8px rgba(0,0,0,0.05),
-      0 16px 16px rgba(0,0,0,0.05);
-    transition: all 0.3s ease;
-  }
-  .depth-effect:hover {
-    box-shadow: 
-      0 1px 1px rgba(0,0,0,0.1), 
-      0 2px 2px rgba(0,0,0,0.1), 
-      0 4px 4px rgba(0,0,0,0.1), 
-      0 8px 8px rgba(0,0,0,0.1),
-      0 16px 16px rgba(0,0,0,0.1);
-    transform: translateY(-5px);
-  }
-
-  /* Destaque extra para badges e cards desbloqueados recentemente */
-  .badge-highlight {
-    @apply shadow-lg ring-2 ring-viverblue/60;
-    animation: highlight-flash 1.3s cubic-bezier(0.24,0.7,0.75,0.67);
-  }
-
-  .achievement-flash {
-    @apply ring-2 ring-viverblue/50 shadow-viverblue/20;
-    animation: highlight-flash 1.2s linear;
-  }
-
-  /* Feedback visual para conquista/implementação */
-  .badge-pop {
-    @apply scale-105 z-10 border-2 border-viverblue;
-    animation: item-pop 0.7s cubic-bezier(0.21,0.67,0.71,0.85);
+    @apply bg-gradient-primary bg-clip-text text-transparent;
   }
   
-  /* Nova classe para o menu lateral com estilo Hubla */
-  .hubla-sidebar {
-    @apply bg-[#0F111A] border-r border-white/5 shadow-xl;
+  /* === ANIMATION UTILITIES === */
+  
+  .animate-entrance {
+    @apply animate-fade-in;
   }
   
-  /* Nova classe para botões com o estilo Hubla */
-  .hubla-button {
-    @apply bg-viverblue hover:bg-viverblue-dark text-white rounded-lg transition-all;
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
   }
   
-  /* Nova classe para cards com o estilo Hubla */
-  .hubla-card {
-    @apply bg-[#151823] border border-white/10 rounded-xl shadow-lg;
+  .animate-slide-down {
+    animation: slideDown 0.3s ease-out;
   }
-
-  /* Adicionando estilo para navegação ativa */
-  .hubla-active-nav {
-    @apply bg-[#1A1E2E] border-l-2 border-viverblue text-viverblue font-medium;
+  
+  .animate-pulse-soft {
+    animation: pulseSoft 2s ease-in-out infinite;
   }
-
-  /* Adicionar efeito de brilho nas bordas dos cards */
-  .hubla-border-glow {
+  
+  /* === HOVER EFFECTS === */
+  
+  .hover-lift {
+    @apply transition-transform duration-200 ease-out;
+    @apply hover:-translate-y-1 hover:shadow-lg;
+  }
+  
+  .hover-glow {
+    @apply transition-all duration-200 ease-out;
+    @apply hover:shadow-glow-primary;
+  }
+  
+  .hover-scale {
+    @apply transition-transform duration-200 ease-out;
+    @apply hover:scale-105 active:scale-95;
+  }
+  
+  /* === STATUS INDICATORS === */
+  
+  .status-online {
     @apply relative;
-    box-shadow: 0 0 15px 1px rgba(0, 234, 217, 0.1);
   }
   
-  /* Novos estilos para badges para melhor contraste */
-  .badge-dark-success {
-    @apply bg-green-900/40 text-green-300 border-green-700;
+  .status-online::after {
+    @apply absolute -top-1 -right-1 w-3 h-3 bg-success rounded-full border-2 border-background;
+    content: '';
   }
   
-  .badge-dark-warning {
-    @apply bg-amber-900/40 text-amber-300 border-amber-700;
+  .status-offline {
+    @apply relative;
   }
   
-  .badge-dark-info {
-    @apply bg-blue-900/40 text-blue-300 border-blue-700;
+  .status-offline::after {
+    @apply absolute -top-1 -right-1 w-3 h-3 bg-text-disabled rounded-full border-2 border-background;
+    content: '';
   }
   
-  .badge-dark-neutral {
-    @apply bg-gray-800/60 text-gray-300 border-gray-700;
+  .status-busy {
+    @apply relative;
   }
   
-  /* Badges com cores melhoradas para o modo claro */
-  .badge-light-success {
-    @apply bg-green-100 text-green-800 border-green-300;
+  .status-busy::after {
+    @apply absolute -top-1 -right-1 w-3 h-3 bg-warning rounded-full border-2 border-background;
+    content: '';
   }
   
-  .badge-light-warning {
-    @apply bg-amber-100 text-amber-800 border-amber-300;
+  /* === LOADING STATES === */
+  
+  .skeleton {
+    @apply bg-surface-hover rounded animate-pulse;
   }
   
-  .badge-light-info {
-    @apply bg-blue-100 text-blue-800 border-blue-300;
+  .skeleton-text {
+    @apply skeleton h-4 w-full;
   }
   
-  .badge-light-neutral {
-    @apply bg-gray-100 text-gray-800 border-gray-300;
+  .skeleton-title {
+    @apply skeleton h-6 w-3/4;
   }
   
-  /* Melhoria para o hover das tabelas */
-  .table-hover-row {
-    @apply hover:bg-neutral-800/50 transition-colors;
+  .skeleton-circle {
+    @apply skeleton rounded-full;
   }
   
-  /* Estilo consistente para badges de status */
-  .status-badge {
-    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium;
-  }
-  .status-badge-active {
-    @apply bg-green-900/30 text-green-300 border border-green-700;
-  }
-  .status-badge-inactive {
-    @apply bg-gray-800/50 text-gray-300 border border-gray-700;
+  /* === DIVIDERS === */
+  
+  .divider {
+    @apply border-t border-border;
   }
   
-  /* Melhorias para legibilidade no modo escuro */
-  .text-high-contrast {
-    @apply text-white;
-  }
-  .text-medium-contrast {
-    @apply text-neutral-100;
-  }
-  .text-low-contrast {
-    @apply text-neutral-300;
+  .divider-strong {
+    @apply border-t border-border-strong;
   }
   
-  /* Melhorar contraste para textos em badges */
-  .badge-high-contrast {
-    @apply font-medium;
+  .divider-vertical {
+    @apply border-l border-border h-full;
   }
   
-  /* Estilo para headers de tabela */
-  .table-header-sortable {
-    @apply cursor-pointer hover:text-viverblue transition-colors;
+  /* === SCROLLBAR STYLING === */
+  
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) hsl(var(--surface));
   }
   
-  /* Estilo para menu dropdown consistente */
-  .dropdown-menu-item {
-    @apply cursor-pointer flex w-full items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50;
-  }
-
-  /* Melhorar a visibilidade das linhas da tabela no modo escuro */
-  .table-border-enhanced {
-    @apply border-neutral-700;
-  }
-
-  /* Melhorar o contraste dos badges para acessibilidade */
-  .badge-admin {
-    @apply bg-blue-900/30 text-blue-300 border border-blue-700;
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
   }
   
-  .badge-formacao {
-    @apply bg-amber-900/30 text-amber-300 border border-amber-700;
+  .scrollbar-thin::-webkit-scrollbar-track {
+    @apply bg-surface;
   }
   
-  .badge-membro {
-    @apply bg-gray-800/50 text-gray-300 border border-gray-700;
-  }
-
-  /* Classes especiais para tooltip e estados de alerta */
-  .tooltip {
-    @apply bg-[#151823] text-white border border-white/10 shadow-lg py-1.5 px-3 rounded text-sm z-50;
-  }
-
-  /* Estilo para separadores com melhor visibilidade */
-  .separator {
-    @apply border-t border-white/10 my-4;
-  }
-
-  /* Contraste melhorado para elementos de interface */
-  .input-label {
-    @apply text-white text-sm mb-1.5;
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
   }
   
-  .input-field {
-    @apply bg-[#181A2A] border border-white/10 text-white rounded-md px-3 py-2 placeholder:text-neutral-500;
-  }
-
-  /* Redefinição dos elementos de interface principal para garantir legibilidade */
-  .page-title {
-    @apply text-3xl font-bold text-white mb-2;
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    @apply bg-border-strong;
   }
   
-  .page-description {
-    @apply text-neutral-300 text-lg mb-6;
-  }
-
-  /* Estilo para notificações e alertas */
-  .alert-success {
-    @apply bg-green-900/20 border border-green-700 text-green-300 px-4 py-3 rounded;
-  }
-  
-  .alert-warning {
-    @apply bg-amber-900/20 border border-amber-700 text-amber-300 px-4 py-3 rounded;
-  }
-  
-  .alert-error {
-    @apply bg-red-900/20 border border-red-700 text-red-300 px-4 py-3 rounded;
-  }
-  
-  .alert-info {
-    @apply bg-blue-900/20 border border-blue-700 text-blue-300 px-4 py-3 rounded;
-  }
-
-  /* Estado vazio consistente */
-  .empty-state {
-    @apply flex flex-col items-center justify-center py-12 px-4 text-center;
-  }
-  
-  .empty-state-icon {
-    @apply text-neutral-500 mb-3 h-12 w-12;
-  }
-  
-  .empty-state-title {
-    @apply text-white text-lg font-medium mb-1;
-  }
-  
-  .empty-state-description {
-    @apply text-neutral-400 max-w-sm mx-auto;
-  }
-
-  /* Novas classes para melhorar a visualização no modo escuro */
-  .dark-mode-card {
-    @apply bg-gradient-to-br from-[#1A1E2E] to-[#151823] border-neutral-700;
-  }
-
-  .dark-mode-input {
-    @apply bg-[#1A1E2E] border-neutral-700 text-white placeholder:text-neutral-500;
-  }
-
-  .dark-mode-badge {
-    @apply bg-[#252842] text-white border-neutral-600;
-  }
-  
-  /* Melhoria para hover dos cards no tema escuro */
-  .card-hover-dark {
-    @apply hover:shadow-[0_5px_15px_rgba(0,234,217,0.1)] hover:border-viverblue/30;
-  }
-
-  /* Melhorar ainda mais o contraste para badges no modo escuro */
-  .badge-high-contrast-dark {
-    @apply font-medium shadow-sm;
-  }
-  
-  /* Classe para scrollbar escondida */
-  .scrollbar-hide {
+  .scrollbar-hidden {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
   
-  .scrollbar-hide::-webkit-scrollbar {
+  .scrollbar-hidden::-webkit-scrollbar {
     display: none;
   }
+}
 
-  /* Efeito de gradiente vibrante para destaques */
-  .vibrant-gradient {
-    @apply bg-gradient-to-r from-viverblue via-viverblue-light to-viverblue-dark bg-size-200 animate-gradient-shift;
+/* === CUSTOM ANIMATIONS === */
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
-  /* Efeito de glassmorphism aprimorado para o tema escuro */
-  .glass-dark {
-    @apply bg-[#151823]/90 backdrop-blur-lg border border-white/5;
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseSoft {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* === RESPONSIVE HELPERS === */
+
+@media (max-width: 640px) {
+  .btn-primary,
+  .btn-secondary,
+  .btn-outline,
+  .btn-ghost {
+    @apply px-4 py-2 text-sm;
   }
   
-  /* Efeito de cartão elevado para destacar elementos importantes */
-  .elevated-card {
-    @apply shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1;
+  .card-modern {
+    @apply rounded-lg;
   }
   
-  /* Melhoria para inputs no tema escuro com foco em viverblue */
-  .input-focus-viverblue {
-    @apply focus:border-viverblue focus:ring-2 focus:ring-viverblue/20;
+  .input-modern {
+    @apply px-3 py-2;
   }
 }
