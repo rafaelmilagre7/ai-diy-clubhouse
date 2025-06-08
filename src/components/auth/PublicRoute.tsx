@@ -19,9 +19,9 @@ const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
     );
   }
   
-  // Se o usuário estiver autenticado, redireciona para o dashboard
+  // Se o usuário estiver autenticado, redireciona para o RootRedirect (/) para decidir o destino
   if (user) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/" replace />;
   }
   
   // Se não estiver autenticado, permite o acesso à rota pública

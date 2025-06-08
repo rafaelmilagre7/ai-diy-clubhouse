@@ -1,7 +1,7 @@
 
 import { Navigate } from 'react-router-dom';
 import AuthLayout from '@/components/auth/AuthLayout';
-import AuthProtectedRoutes from '@/components/auth/AuthProtectedRoutes';
+import PublicRoute from '@/components/auth/PublicRoute';
 import RootRedirect from '@/components/routing/RootRedirect';
 import { lazy } from 'react';
 
@@ -15,11 +15,11 @@ export const authRoutes = [
   {
     path: '/login',
     element: (
-      <AuthProtectedRoutes>
+      <PublicRoute>
         <AuthLayout>
           <LoginPage />
         </AuthLayout>
-      </AuthProtectedRoutes>
+      </PublicRoute>
     )
   },
   {
