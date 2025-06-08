@@ -19,8 +19,8 @@ export const OnboardingWizard = () => {
   const [isCompleting, setIsCompleting] = useState(false);
   const { data, updateData, clearData } = useOnboardingStorage();
 
-  // Detectar tipo de membro baseado no perfil
-  const memberType = profile?.role === 'formacao' ? 'formacao' : 'club';
+  // Detectar tipo de membro baseado no perfil com tipo explícito
+  const memberType: 'club' | 'formacao' = profile?.role === 'formacao' ? 'formacao' : 'club';
   const totalSteps = 6; // 5 etapas + tela final
 
   // Títulos das etapas baseados no tipo de membro
