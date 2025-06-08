@@ -5,6 +5,7 @@ import { authRoutes } from '../../routes/AuthRoutes';
 import { adminRoutes } from '../../routes/AdminRoutes';
 import { memberRoutes } from '../../routes/MemberRoutes';
 import { formacaoRoutes } from '../../routes/FormacaoRoutes';
+import { certificateRoutes } from '../../routes/CertificateRoutes';
 import { CommunityRedirects } from './CommunityRedirects';
 import NotFound from '@/pages/NotFound';
 import InvitePage from '@/pages/InvitePage';
@@ -68,6 +69,11 @@ const AppRoutes = () => {
         
         {/* Nova rota de onboarding */}
         <Route path="/onboarding" element={<OnboardingPage />} />
+        
+        {/* Certificate Routes - Públicas */}
+        {certificateRoutes.map((route) => (
+          <Route key={route.path} path={route.path} element={route.element} />
+        ))}
         
         {/* Auth Routes */}
         {authRoutes.map((route) => (
