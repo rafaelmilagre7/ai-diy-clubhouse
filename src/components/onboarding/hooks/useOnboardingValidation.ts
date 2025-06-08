@@ -25,32 +25,49 @@ export const useOnboardingValidation = () => {
       errors.push({ field: 'name', message: 'Nome deve ter pelo menos 2 caracteres' });
     }
 
+    if (!data.email?.trim()) {
+      errors.push({ field: 'email', message: 'E-mail é obrigatório' });
+    }
+
+    if (!data.state?.trim()) {
+      errors.push({ field: 'state', message: 'Estado é obrigatório' });
+    }
+
+    if (!data.city?.trim()) {
+      errors.push({ field: 'city', message: 'Cidade é obrigatória' });
+    }
+
+    if (!data.curiosity?.trim()) {
+      errors.push({ field: 'curiosity', message: 'Curiosidade é obrigatória' });
+    }
+
     return {
       isValid: errors.length === 0,
       errors
     };
   }, []);
 
-  const validateStep2 = useCallback((data: OnboardingData, memberType: 'club' | 'formacao'): StepValidation => {
+  const validateStep2 = useCallback((data: OnboardingData): StepValidation => {
     const errors: ValidationError[] = [];
 
-    if (memberType === 'club') {
-      if (!data.businessStage) {
-        errors.push({ field: 'businessStage', message: 'Estágio do negócio é obrigatório' });
-      }
-      if (!data.businessArea?.trim()) {
-        errors.push({ field: 'businessArea', message: 'Área do negócio é obrigatória' });
-      }
-      if (!data.teamSize) {
-        errors.push({ field: 'teamSize', message: 'Tamanho da equipe é obrigatório' });
-      }
-    } else {
-      if (!data.educationLevel) {
-        errors.push({ field: 'educationLevel', message: 'Nível educacional é obrigatório' });
-      }
-      if (!data.studyArea?.trim()) {
-        errors.push({ field: 'studyArea', message: 'Área de estudo é obrigatória' });
-      }
+    if (!data.companyName?.trim()) {
+      errors.push({ field: 'companyName', message: 'Nome da empresa é obrigatório' });
+    }
+
+    if (!data.businessSector?.trim()) {
+      errors.push({ field: 'businessSector', message: 'Setor de atuação é obrigatório' });
+    }
+
+    if (!data.companySize?.trim()) {
+      errors.push({ field: 'companySize', message: 'Tamanho da empresa é obrigatório' });
+    }
+
+    if (!data.annualRevenue?.trim()) {
+      errors.push({ field: 'annualRevenue', message: 'Faturamento anual é obrigatório' });
+    }
+
+    if (!data.position?.trim()) {
+      errors.push({ field: 'position', message: 'Cargo/posição é obrigatório' });
     }
 
     return {
@@ -62,12 +79,16 @@ export const useOnboardingValidation = () => {
   const validateStep3 = useCallback((data: OnboardingData): StepValidation => {
     const errors: ValidationError[] = [];
 
-    if (!data.targetMarket?.trim()) {
-      errors.push({ field: 'targetMarket', message: 'Campo obrigatório' });
+    if (!data.hasImplementedAI) {
+      errors.push({ field: 'hasImplementedAI', message: 'Experiência com IA é obrigatória' });
     }
 
-    if (!data.mainChallenges || data.mainChallenges.length === 0) {
-      errors.push({ field: 'mainChallenges', message: 'Descreva pelo menos um desafio' });
+    if (!data.aiKnowledgeLevel) {
+      errors.push({ field: 'aiKnowledgeLevel', message: 'Nível de conhecimento em IA é obrigatório' });
+    }
+
+    if (!data.whoWillImplement) {
+      errors.push({ field: 'whoWillImplement', message: 'Quem vai implementar é obrigatório' });
     }
 
     return {
@@ -79,8 +100,20 @@ export const useOnboardingValidation = () => {
   const validateStep4 = useCallback((data: OnboardingData): StepValidation => {
     const errors: ValidationError[] = [];
 
-    if (!data.aiExperience) {
-      errors.push({ field: 'aiExperience', message: 'Nível de experiência com IA é obrigatório' });
+    if (!data.mainObjective) {
+      errors.push({ field: 'mainObjective', message: 'Objetivo principal é obrigatório' });
+    }
+
+    if (!data.areaToImpact?.trim()) {
+      errors.push({ field: 'areaToImpact', message: 'Área para impactar é obrigatória' });
+    }
+
+    if (!data.expectedResult90Days?.trim()) {
+      errors.push({ field: 'expectedResult90Days', message: 'Resultado esperado em 90 dias é obrigatório' });
+    }
+
+    if (!data.aiImplementationBudget?.trim()) {
+      errors.push({ field: 'aiImplementationBudget', message: 'Orçamento para IA é obrigatório' });
     }
 
     return {
@@ -92,33 +125,20 @@ export const useOnboardingValidation = () => {
   const validateStep5 = useCallback((data: OnboardingData): StepValidation => {
     const errors: ValidationError[] = [];
 
-    if (!data.primaryGoals || data.primaryGoals.length === 0) {
-      errors.push({ field: 'primaryGoals', message: 'Selecione pelo menos um objetivo' });
+    if (!data.weeklyLearningTime?.trim()) {
+      errors.push({ field: 'weeklyLearningTime', message: 'Tempo semanal é obrigatório' });
     }
 
-    if (!data.timeframe) {
-      errors.push({ field: 'timeframe', message: 'Prazo é obrigatório' });
+    if (!data.contentPreference) {
+      errors.push({ field: 'contentPreference', message: 'Preferência de conteúdo é obrigatória' });
     }
 
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
-  }, []);
-
-  const validateStep6 = useCallback((data: OnboardingData): StepValidation => {
-    const errors: ValidationError[] = [];
-
-    if (!data.communicationStyle) {
-      errors.push({ field: 'communicationStyle', message: 'Estilo de comunicação é obrigatório' });
+    if (!data.wantsNetworking) {
+      errors.push({ field: 'wantsNetworking', message: 'Preferência de networking é obrigatória' });
     }
 
-    if (!data.learningPreference) {
-      errors.push({ field: 'learningPreference', message: 'Preferência de aprendizado é obrigatória' });
-    }
-
-    if (!data.contentTypes || data.contentTypes.length === 0) {
-      errors.push({ field: 'contentTypes', message: 'Selecione pelo menos um tipo de conteúdo' });
+    if (!data.acceptsCaseStudy) {
+      errors.push({ field: 'acceptsCaseStudy', message: 'Aceitar case de sucesso é obrigatório' });
     }
 
     return {
@@ -141,7 +161,7 @@ export const useOnboardingValidation = () => {
         result = validateStep1(data);
         break;
       case 2:
-        result = validateStep2(data, memberType);
+        result = validateStep2(data);
         break;
       case 3:
         result = validateStep3(data);
@@ -152,9 +172,6 @@ export const useOnboardingValidation = () => {
       case 5:
         result = validateStep5(data);
         break;
-      case 6:
-        result = validateStep6(data);
-        break;
       default:
         result = { isValid: true, errors: [] };
     }
@@ -163,7 +180,7 @@ export const useOnboardingValidation = () => {
     setIsValidating(false);
     
     return result;
-  }, [validateStep1, validateStep2, validateStep3, validateStep4, validateStep5, validateStep6]);
+  }, [validateStep1, validateStep2, validateStep3, validateStep4, validateStep5]);
 
   const clearValidationErrors = useCallback(() => {
     setValidationErrors([]);
