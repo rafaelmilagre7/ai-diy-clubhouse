@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -50,6 +49,7 @@ export const CommunicationEditor: React.FC<CommunicationEditorProps> = ({
     target_roles: [] as string[],
     delivery_channels: ['notification'] as string[],
     scheduled_for: '',
+    status: 'draft' as const,
   });
   const [preview, setPreview] = useState(false);
   const [estimatedReach, setEstimatedReach] = useState(0);
@@ -65,6 +65,7 @@ export const CommunicationEditor: React.FC<CommunicationEditorProps> = ({
         target_roles: communication.target_roles,
         delivery_channels: communication.delivery_channels,
         scheduled_for: communication.scheduled_for || '',
+        status: communication.status as 'draft',
       });
     }
   }, [communication]);

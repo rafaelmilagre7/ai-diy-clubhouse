@@ -100,6 +100,24 @@ export const useCommunications = () => {
     },
   });
 
+  const deleteCommunication = useMutation({
+    mutationFn: async (communicationId: string) => {
+      const { error } = await supabase
+        .from('admin_communications')
+        .delete()
+        .eq('id', communicationId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-communications'] });
+      toast.success('Comunicado deletado com sucesso!');
+    },
+    onError: (error: any) => {
+      toast.error('Erro ao deletar comunicado: ' + error.message);
+    },
+  });
+
   const sendCommunication = useMutation({
     mutationFn: async (communicationId: string) => {
       const { data, error } = await supabase.functions.invoke('send-communication', {
@@ -153,6 +171,7 @@ export const useCommunications = () => {
     availableRoles,
     createCommunication,
     updateCommunication,
+    deleteCommunication,
     sendCommunication,
     getDeliveryStats,
   };

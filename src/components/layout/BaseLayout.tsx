@@ -13,7 +13,7 @@ export interface BaseContentProps {
 }
 
 interface BaseLayoutProps {
-  variant: 'member' | 'admin';
+  variant: 'member' | 'admin' | 'formacao';
   sidebarComponent: React.ComponentType<BaseSidebarProps>;
   contentComponent: React.ComponentType<BaseContentProps>;
   onSignOut: () => void;
