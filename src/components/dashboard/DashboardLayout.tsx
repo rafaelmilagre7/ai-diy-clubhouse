@@ -4,6 +4,7 @@ import { ActiveSolutions } from "./ActiveSolutions";
 import { CompletedSolutions } from "./CompletedSolutions";
 import { RecommendedSolutions } from "./RecommendedSolutions";
 import { NoSolutionsPlaceholder } from "./NoSolutionsPlaceholder";
+import { ImplementationTrailCard } from "./ImplementationTrailCard";
 import { Solution } from "@/lib/supabase";
 import { ModernDashboardHeader } from "./ModernDashboardHeader";
 import { KpiGrid } from "./KpiGrid";
@@ -75,6 +76,11 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
         total={kpiTotals.total}
         isLoading={isLoading}
       />
+
+      {/* TRILHA DE IMPLEMENTAÇÃO PERSONALIZADA */}
+      <div className="grid gap-6">
+        <ImplementationTrailCard />
+      </div>
 
       {/* Mostrar loaders enquanto carrega, ou conteúdo quando pronto */}
       {isLoading ? (
