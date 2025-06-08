@@ -85,7 +85,6 @@ export const useSolutionData = (id: string | undefined) => {
         } else {
           console.log("Nenhuma solução encontrada com ID", { id });
           setError("Solução não encontrada");
-          // Não redirecionamos automaticamente para dar chance ao usuário de ver a mensagem
           toast({
             title: "Solução não encontrada",
             description: "Não foi possível encontrar a solução solicitada.",

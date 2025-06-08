@@ -11,8 +11,8 @@ export const categoryColorMap: Record<SolutionCategory, string> = {
 
 // Configuração de categorias com ícones e cores
 export interface CategoryConfig {
-  name: string;
-  color: keyof typeof categoryColorMap;
+  name: SolutionCategory;
+  color: string;
   icon: string;
   description?: string;
   badgeVariant: 'success' | 'info' | 'secondary';
