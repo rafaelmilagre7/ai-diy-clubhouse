@@ -1,4 +1,3 @@
-
 import { Database } from './types/database.types';
 
 // Tipos de tabelas expandidos
@@ -40,10 +39,12 @@ export interface UserProfile {
   role_id?: string;
   user_roles?: any;
   created_at: string;
+  onboarding_completed: boolean;
+  onboarding_completed_at: string | null;
 }
 
 // Interface expandida para incluir todas as propriedades utilizadas no código
-export interface Solution {
+export interface Solution extends Omit<SupabaseSolution, 'author_id'> {
   id: string;
   title: string;
   description: string;
