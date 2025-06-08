@@ -1,35 +1,45 @@
 
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Menu } from 'lucide-react';
-import { MemberUserMenu } from './MemberUserMenu';
-import { NotificationDropdown } from '@/components/notifications/NotificationDropdown';
+import { Bell, Menu, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { MemberUserMenu } from "./MemberUserMenu";
+import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
+import { cn } from "@/lib/utils";
 
 interface MemberHeaderProps {
-  onToggleSidebar: () => void;
+  sidebarOpen: boolean;
+  setSidebarOpen: (open: boolean) => void;
 }
 
-export const MemberHeader = ({ onToggleSidebar }: MemberHeaderProps) => {
+export const MemberHeader = ({ sidebarOpen, setSidebarOpen }: MemberHeaderProps) => {
   return (
-    <header className="h-16 border-b bg-background flex items-center justify-between px-4 lg:px-6">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onToggleSidebar}
-          className="lg:hidden"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-        
-        <div className="hidden lg:block">
-          <h1 className="text-xl font-semibold">Viver de IA</h1>
+    <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="flex h-14 items-center justify-between px-4">
+        {/* Left side - Menu toggle and search */}
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="md:hidden"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+          
+          <div className="relative max-w-sm">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar..."
+              className="pl-8 h-9"
+            />
+          </div>
         </div>
-      </div>
 
-      <div className="flex items-center gap-2">
-        <NotificationDropdown />
-        <MemberUserMenu />
+        {/* Right side - Notifications and user menu */}
+        <div className="flex items-center gap-2">
+          <NotificationDropdown />
+          <MemberUserMenu sidebarOpen={true} />
+        </div>
       </div>
     </header>
   );

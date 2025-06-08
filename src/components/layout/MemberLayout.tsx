@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/auth";
 import BaseLayout from "./BaseLayout";
 import { MemberSidebar } from "./member/MemberSidebar";
 import { MemberContent } from "./member/MemberContent";
+import { useForumNotifications } from "@/hooks/community/useForumNotifications";
 import { toast } from "sonner";
 
 interface MemberLayoutProps {
@@ -16,9 +17,12 @@ interface MemberLayoutProps {
 const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
   const { profile, signOut } = useAuth();
 
+  // Inicializar notificações do fórum
+  useForumNotifications();
+
   // Memoizar função para obter iniciais para evitar recriação
   const getInitials = useCallback((name: string | null) => {
-    if (!name) return "U";
+    if (!name) return "M";
     return name
       .split(" ")
       .map((n) => n[0])
