@@ -19,19 +19,22 @@ interface CommunicationEditorProps {
 }
 
 const TEMPLATE_TYPES = [
-  { value: 'announcement', label: 'Anúncio', description: 'Novidades e atualizações gerais' },
-  { value: 'maintenance', label: 'Manutenção', description: 'Avisos de manutenção programada' },
-  { value: 'event', label: 'Evento', description: 'Convites para webinars, lives, etc.' },
-  { value: 'educational', label: 'Educacional', description: 'Dicas e conteúdo educativo' },
-  { value: 'urgent', label: 'Urgente', description: 'Comunicados críticos e importantes' },
+  { value: 'announcement' as const, label: 'Anúncio', description: 'Novidades e atualizações gerais' },
+  { value: 'maintenance' as const, label: 'Manutenção', description: 'Avisos de manutenção programada' },
+  { value: 'event' as const, label: 'Evento', description: 'Convites para webinars, lives, etc.' },
+  { value: 'educational' as const, label: 'Educacional', description: 'Dicas e conteúdo educativo' },
+  { value: 'urgent' as const, label: 'Urgente', description: 'Comunicados críticos e importantes' },
 ];
 
 const PRIORITY_OPTIONS = [
-  { value: 'low', label: 'Baixa', color: 'bg-gray-100 text-gray-800' },
-  { value: 'normal', label: 'Normal', color: 'bg-blue-100 text-blue-800' },
-  { value: 'high', label: 'Alta', color: 'bg-yellow-100 text-yellow-800' },
-  { value: 'urgent', label: 'Urgente', color: 'bg-red-100 text-red-800' },
+  { value: 'low' as const, label: 'Baixa', color: 'bg-gray-100 text-gray-800' },
+  { value: 'normal' as const, label: 'Normal', color: 'bg-blue-100 text-blue-800' },
+  { value: 'high' as const, label: 'Alta', color: 'bg-yellow-100 text-yellow-800' },
+  { value: 'urgent' as const, label: 'Urgente', color: 'bg-red-100 text-red-800' },
 ];
+
+type TemplateType = 'announcement' | 'maintenance' | 'event' | 'educational' | 'urgent';
+type Priority = 'low' | 'normal' | 'high' | 'urgent';
 
 export const CommunicationEditor: React.FC<CommunicationEditorProps> = ({
   communication,
@@ -42,8 +45,8 @@ export const CommunicationEditor: React.FC<CommunicationEditorProps> = ({
     title: '',
     content: '',
     email_subject: '',
-    template_type: 'announcement',
-    priority: 'normal',
+    template_type: 'announcement' as TemplateType,
+    priority: 'normal' as Priority,
     target_roles: [] as string[],
     delivery_channels: ['notification'] as string[],
     scheduled_for: '',
@@ -57,8 +60,8 @@ export const CommunicationEditor: React.FC<CommunicationEditorProps> = ({
         title: communication.title,
         content: communication.content,
         email_subject: communication.email_subject || '',
-        template_type: communication.template_type,
-        priority: communication.priority,
+        template_type: communication.template_type as TemplateType,
+        priority: communication.priority as Priority,
         target_roles: communication.target_roles,
         delivery_channels: communication.delivery_channels,
         scheduled_for: communication.scheduled_for || '',
@@ -163,7 +166,7 @@ export const CommunicationEditor: React.FC<CommunicationEditorProps> = ({
                     <Label htmlFor="template_type">Tipo de Template</Label>
                     <Select
                       value={formData.template_type}
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, template_type: value }))}
+                      onValueChange={(value: TemplateType) => setFormData(prev => ({ ...prev, template_type: value }))}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -185,7 +188,7 @@ export const CommunicationEditor: React.FC<CommunicationEditorProps> = ({
                     <Label htmlFor="priority">Prioridade</Label>
                     <Select
                       value={formData.priority}
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}
+                      onValueChange={(value: Priority) => setFormData(prev => ({ ...prev, priority: value }))}
                     >
                       <SelectTrigger>
                         <SelectValue />

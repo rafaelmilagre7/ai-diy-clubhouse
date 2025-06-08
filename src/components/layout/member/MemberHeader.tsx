@@ -1,59 +1,35 @@
 
-import { Button } from "@/components/ui/button";
-import { Menu, Bell, Search } from "lucide-react";
-import { Link } from "react-router-dom";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Menu } from 'lucide-react';
+import { MemberUserMenu } from './MemberUserMenu';
+import { NotificationDropdown } from '@/components/notifications/NotificationDropdown';
 
 interface MemberHeaderProps {
-  sidebarOpen: boolean;
-  setSidebarOpen: (open: boolean) => void;
+  onToggleSidebar: () => void;
 }
 
-export const MemberHeader = ({ sidebarOpen, setSidebarOpen }: MemberHeaderProps) => {
-  const handleToggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
+export const MemberHeader = ({ onToggleSidebar }: MemberHeaderProps) => {
   return (
-    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-white/5 bg-[#0F111A] px-4">
-      <div className="flex items-center">
+    <header className="h-16 border-b bg-background flex items-center justify-between px-4 lg:px-6">
+      <div className="flex items-center gap-4">
         <Button
           variant="ghost"
-          size="icon"
-          onClick={handleToggleSidebar}
-          className="mr-2 md:hidden text-neutral-300 hover:bg-[#181A2A]"
-          aria-label={sidebarOpen ? "Fechar menu" : "Abrir menu"}
+          size="sm"
+          onClick={onToggleSidebar}
+          className="lg:hidden"
         >
           <Menu className="h-5 w-5" />
         </Button>
         
-        <div className="md:hidden">
-          <Link to="/dashboard">
-            <img 
-              src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif" 
-              alt="VIVER DE IA Club" 
-              className="h-8 w-auto" 
-            />
-          </Link>
+        <div className="hidden lg:block">
+          <h1 className="text-xl font-semibold">Viver de IA</h1>
         </div>
       </div>
-      
-      <div className="flex items-center space-x-2">
-        <Button 
-          variant="ghost" 
-          size="icon"
-          className="text-neutral-300 hover:bg-[#181A2A]"
-          aria-label="Pesquisar"
-        >
-          <Search className="h-5 w-5" />
-        </Button>
-        <Button 
-          variant="ghost" 
-          size="icon"
-          className="text-neutral-300 hover:bg-[#181A2A]"
-          aria-label="Notificações"
-        >
-          <Bell className="h-5 w-5" />
-        </Button>
+
+      <div className="flex items-center gap-2">
+        <NotificationDropdown />
+        <MemberUserMenu />
       </div>
     </header>
   );
