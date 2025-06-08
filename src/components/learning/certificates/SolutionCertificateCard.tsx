@@ -33,6 +33,12 @@ export const SolutionCertificateCard = ({
     }
   };
   
+  const handleOpenCertificate = () => {
+    if (certificate.certificate_url) {
+      window.open(certificate.certificate_url, '_blank');
+    }
+  };
+  
   return (
     <Card className="overflow-hidden bg-[#151823] border-neutral-700/50 hover:border-viverblue/30 transition-all duration-200">
       <div className="bg-gradient-to-r from-viverblue/20 to-viverblue/5 pb-2 pt-6">
@@ -66,9 +72,6 @@ export const SolutionCertificateCard = ({
           <div className="text-sm text-gray-400">
             Certificado emitido em: {issuedDate}
           </div>
-          <div className="text-xs text-gray-500 font-mono">
-            Código: {certificate.validation_code}
-          </div>
         </div>
         
         {solution?.description && (
@@ -93,12 +96,11 @@ export const SolutionCertificateCard = ({
           variant="ghost" 
           size="sm"
           className="flex gap-1 text-gray-400 hover:text-white"
-          asChild
+          onClick={handleOpenCertificate}
+          disabled={!certificate.certificate_url}
         >
-          <a href={`/certificado/validar/${certificate.validation_code}`} target="_blank" rel="noopener noreferrer">
-            <ExternalLink className="h-4 w-4" />
-            Validar
-          </a>
+          <ExternalLink className="h-4 w-4" />
+          Abrir Certificado
         </Button>
       </CardFooter>
     </Card>

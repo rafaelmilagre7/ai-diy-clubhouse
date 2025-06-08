@@ -6,7 +6,6 @@ import { Download, ExternalLink, Award } from "lucide-react";
 import { Certificate } from "@/types/learningTypes";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { APP_CONFIG } from "@/config/app";
 
 interface CertificateCardProps {
   certificate: Certificate;
@@ -20,9 +19,10 @@ export const CertificateCard = ({
   const course = (certificate as any).learning_courses;
   const formattedDate = format(new Date(certificate.issued_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
   
-  const handleOpenCertificateForm = () => {
-    const certificateUrl = APP_CONFIG.getAppUrl('/certificado/validar');
-    window.open(certificateUrl, '_blank');
+  const handleOpenCertificate = () => {
+    if (certificate.certificate_url) {
+      window.open(certificate.certificate_url, '_blank');
+    }
   };
   
   return (
@@ -42,7 +42,6 @@ export const CertificateCard = ({
       <CardContent>
         <div className="text-sm text-muted-foreground">
           <p>Emitido em: {formattedDate}</p>
-          <p className="mt-1">Código de validação: {certificate.validation_code}</p>
         </div>
       </CardContent>
       
@@ -61,7 +60,8 @@ export const CertificateCard = ({
           variant="ghost" 
           size="sm"
           className="flex gap-1"
-          onClick={handleOpenCertificateForm}
+          onClick={handleOpenCertificate}
+          disabled={!certificate.certificate_url}
         >
           <ExternalLink className="h-4 w-4" />
           Abrir Certificado
