@@ -35,7 +35,7 @@ const textVariants = cva(
         "gradient": "text-gradient",
         "glow": "text-glow",
       },
-      color: {
+      textColor: {
         primary: "text-foreground",
         secondary: "text-text-secondary",
         tertiary: "text-text-tertiary", 
@@ -49,23 +49,23 @@ const textVariants = cva(
     },
     defaultVariants: {
       variant: "body",
-      color: "primary",
+      textColor: "primary",
     },
   }
 )
 
 export interface TextProps
-  extends React.HTMLAttributes<HTMLElement>,
+  extends Omit<React.HTMLAttributes<HTMLElement>, 'color'>,
     VariantProps<typeof textVariants> {
   as?: React.ElementType
 }
 
 const Text = React.forwardRef<HTMLElement, TextProps>(
-  ({ className, variant, color, as: Component = "p", ...props }, ref) => {
+  ({ className, variant, textColor, as: Component = "p", ...props }, ref) => {
     return (
       <Component
         ref={ref}
-        className={cn(textVariants({ variant, color }), className)}
+        className={cn(textVariants({ variant, textColor }), className)}
         {...props}
       />
     )

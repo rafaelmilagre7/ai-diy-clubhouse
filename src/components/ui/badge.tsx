@@ -15,6 +15,7 @@ const badgeVariants = cva(
         warning: "badge-warning",
         info: "badge-info",
         outline: "badge-neutral",
+        neutral: "badge-neutral",
       },
     },
     defaultVariants: {
