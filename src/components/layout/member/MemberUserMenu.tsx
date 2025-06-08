@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/auth";
-import { LogOut, Settings, User } from "lucide-react";
+import { LogOut, Settings, User, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface MemberUserMenuProps {
@@ -63,6 +63,14 @@ export const MemberUserMenu = ({
             <Link to="/dashboard" className="cursor-pointer w-full flex items-center">
               <Settings className="mr-2 h-4 w-4" />
               <span>Configurações</span>
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          {/* NOVO ITEM: Refazer Onboarding */}
+          <DropdownMenuItem asChild>
+            <Link to="/onboarding" className="cursor-pointer w-full flex items-center text-viverblue hover:text-viverblue-dark">
+              <Sparkles className="mr-2 h-4 w-4" />
+              <span>Refazer Onboarding</span>
             </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />

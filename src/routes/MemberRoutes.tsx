@@ -19,8 +19,6 @@ import SuggestionDetails from '@/pages/member/SuggestionDetails';
 import NewSuggestion from '@/pages/member/NewSuggestion';
 import Events from '@/pages/member/Events';
 import SolutionCertificate from '@/pages/member/SolutionCertificate';
-// IMPORT COMENTADO: ImplementationTrailPage (Fase 2)
-// import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
 
 // Member Learning pages
 import LearningPage from '@/pages/member/learning/LearningPage';
@@ -34,20 +32,31 @@ import TopicView from '@/pages/member/community/TopicView';
 import CategoryView from '@/pages/member/community/CategoryView';
 import NewTopic from '@/pages/member/community/NewTopic';
 
+// NOVA PÁGINA: Onboarding Page
+import OnboardingPage from '@/pages/OnboardingPage';
+
 // Função helper para criar rotas protegidas com MemberLayout
 const createProtectedRoute = (path: string, Component: React.ComponentType<any>) => ({
   path,
   element: <ProtectedRoutes><MemberLayout><Component /></MemberLayout></ProtectedRoutes>
 });
 
+// Função helper para criar rota protegida SEM MemberLayout (onboarding)
+const createProtectedRouteNoLayout = (path: string, Component: React.ComponentType<any>) => ({
+  path,
+  element: <ProtectedRoutes><Component /></ProtectedRoutes>
+});
+
 // Log para diagnóstico
-console.log("Carregando rotas de membros - Implementation Trail DESATIVADO (Fase 2)");
+console.log("Carregando rotas de membros - Onboarding ADICIONADO com segurança");
 
 export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/", Dashboard),
   createProtectedRoute("/dashboard", Dashboard),
-  // ROTA COMENTADA: Implementation Trail (Fase 2)
-  // createProtectedRoute("/implementation-trail", ImplementationTrailPage),
+  
+  // NOVA ROTA: Onboarding (sem layout para experiência imersiva)
+  createProtectedRouteNoLayout("/onboarding", OnboardingPage),
+  
   createProtectedRoute("/solutions", Solutions),
   createProtectedRoute("/tools", Tools),
   createProtectedRoute("/tools/:id", ToolDetails),
