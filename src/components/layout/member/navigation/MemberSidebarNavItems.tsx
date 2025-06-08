@@ -84,22 +84,15 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
     }
   ];
 
-  // Itens administrativos (só para admins reais)
+  // Itens administrativos (só painel admin para admins reais)
   const adminItems = [];
   
   if (profile?.role === 'admin') {
-    adminItems.push(
-      {
-        title: "Painel Admin",
-        href: "/admin",
-        icon: Shield,
-      },
-      {
-        title: "Área de Formação",
-        href: "/formacao",
-        icon: GraduationCap,
-      }
-    );
+    adminItems.push({
+      title: "Painel Admin",
+      href: "/admin",
+      icon: Shield,
+    });
   }
 
   // Lógica de ativação mais específica para evitar conflitos
@@ -204,7 +197,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       {renderSectionHeader("Recursos", Zap)}
       {toolsAndCommunityItems.map(renderNavButton)}
 
-      {/* Área Administrativa (só para admins) */}
+      {/* Painel Admin (só para admins) */}
       {adminItems.length > 0 && (
         <>
           <div className="py-2">
