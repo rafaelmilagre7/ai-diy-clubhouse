@@ -10,6 +10,7 @@ import {
   FormProvider,
   useFormContext,
 } from "react-hook-form"
+
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 
@@ -133,7 +134,7 @@ const FormDescription = React.forwardRef<
     <p
       ref={ref}
       id={formDescriptionId}
-      className={cn("text-sm text-text-muted", className)}
+      className={cn("text-sm text-text-tertiary", className)}
       {...props}
     />
   )

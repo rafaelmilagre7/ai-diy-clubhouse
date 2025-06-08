@@ -4,47 +4,45 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const inputVariants = cva(
-  "flex w-full rounded-lg border bg-surface px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200",
+  "flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
   {
     variants: {
       variant: {
-        default: "border-border focus-visible:ring-primary/20 hover:border-border-strong",
-        success: "border-success focus-visible:ring-success/20 hover:border-success/70",
-        warning: "border-warning focus-visible:ring-warning/20 hover:border-warning/70",
-        error: "border-error focus-visible:ring-error/20 hover:border-error/70",
-        ghost: "border-transparent bg-transparent hover:bg-surface-hover focus-visible:bg-surface",
+        default: "border-border bg-surface text-text-primary",
+        filled: "border-border-subtle bg-surface-elevated text-text-primary",
+        outline: "border-border bg-transparent text-text-primary",
+        ghost: "border-transparent bg-transparent text-text-primary hover:bg-surface-hover",
       },
-      inputSize: {
-        sm: "h-8 px-2 text-xs",
-        default: "h-10 px-3 text-sm",
-        lg: "h-12 px-4 text-base",
+      size: {
+        default: "h-10 px-3 py-2",
+        sm: "h-9 px-3 py-2",
+        lg: "h-11 px-4 py-2",
+      },
+      state: {
+        default: "",
+        error: "border-error focus-visible:ring-error/20",
+        success: "border-success focus-visible:ring-success/20",
+        warning: "border-warning focus-visible:ring-warning/20",
       },
     },
     defaultVariants: {
       variant: "default",
-      inputSize: "default",
+      size: "default",
+      state: "default",
     },
   }
 )
 
 export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement>,
-    VariantProps<typeof inputVariants> {
-  error?: boolean
-  success?: boolean
-}
+    VariantProps<typeof inputVariants> {}
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, variant, inputSize, error, success, ...props }, ref) => {
-    // Determinar a variante baseada nos props
-    let finalVariant = variant
-    if (error) finalVariant = "error"
-    if (success) finalVariant = "success"
-
+  ({ className, variant, size, state, type, ...props }, ref) => {
     return (
       <input
         type={type}
-        className={cn(inputVariants({ variant: finalVariant, inputSize }), className)}
+        className={cn(inputVariants({ variant, size, state }), className)}
         ref={ref}
         {...props}
       />
