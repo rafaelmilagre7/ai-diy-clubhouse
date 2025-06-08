@@ -83,7 +83,7 @@ export const LoginForm = ({ onSwitchToReset }: LoginFormProps) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email" className="text-gray-200">Email</Label>
         <Input
           id="email"
           type="email"
@@ -92,17 +92,18 @@ export const LoginForm = ({ onSwitchToReset }: LoginFormProps) => {
           onChange={(e) => setEmail(e.target.value)}
           disabled={isLoading}
           required
+          className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
       
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label htmlFor="password">Senha</Label>
+          <Label htmlFor="password" className="text-gray-200">Senha</Label>
           <Button
             type="button"
             variant="link"
             onClick={onSwitchToReset}
-            className="text-xs text-primary hover:underline p-0 h-auto"
+            className="text-xs text-blue-400 hover:text-blue-300 p-0 h-auto"
           >
             Esqueceu a senha?
           </Button>
@@ -116,12 +117,13 @@ export const LoginForm = ({ onSwitchToReset }: LoginFormProps) => {
             onChange={(e) => setPassword(e.target.value)}
             disabled={isLoading}
             required
+            className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
           />
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-gray-400 hover:text-gray-300"
             onClick={() => setShowPassword(!showPassword)}
             disabled={isLoading}
           >
@@ -136,7 +138,7 @@ export const LoginForm = ({ onSwitchToReset }: LoginFormProps) => {
 
       <Button 
         type="submit" 
-        className="w-full" 
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white" 
         disabled={isLoading}
       >
         {isLoading ? (
