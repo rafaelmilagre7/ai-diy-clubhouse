@@ -1,5 +1,5 @@
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
 import { OnboardingData } from '../types/onboardingTypes';
@@ -8,33 +8,41 @@ export const useOnboardingSubmit = () => {
   const { user } = useAuth();
 
   const checkOnboardingStatus = useCallback(async () => {
-    if (!user) return null;
+    if (!user?.id) {
+      console.log('useOnboardingSubmit: Usuário não encontrado');
+      return null;
+    }
     
     try {
+      console.log('useOnboardingSubmit: Verificando status para usuário:', user.id);
+      
       const { data, error } = await supabase
         .from('user_onboarding')
         .select('*')
         .eq('user_id', user.id)
-        .single();
-      
-      if (error && error.code !== 'PGRST116') {
-        console.error('Erro ao verificar onboarding:', error);
-        return null; // Retorna null em caso de erro para permitir que o usuário continue
+        .maybeSingle(); // Usar maybeSingle() ao invés de single() para evitar erro se não existir
+
+      if (error) {
+        console.error('useOnboardingSubmit: Erro na consulta:', error);
+        return null;
       }
       
+      console.log('useOnboardingSubmit: Dados encontrados:', data);
       return data;
     } catch (error) {
-      console.error('Erro inesperado ao verificar onboarding:', error);
-      return null; // Graceful fallback
+      console.error('useOnboardingSubmit: Erro inesperado:', error);
+      return null;
     }
-  }, [user]);
+  }, [user?.id]);
 
   const submitOnboardingData = useCallback(async (data: OnboardingData) => {
-    if (!user) {
+    if (!user?.id) {
       throw new Error('Usuário não autenticado');
     }
 
     try {
+      console.log('useOnboardingSubmit: Salvando dados do onboarding');
+      
       // Preparar dados para o banco
       const onboardingRecord = {
         user_id: user.id,
@@ -66,7 +74,6 @@ export const useOnboardingSubmit = () => {
         
         started_at: data.startedAt,
         completed_at: data.completedAt,
-        created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
 
@@ -78,7 +85,7 @@ export const useOnboardingSubmit = () => {
         });
 
       if (error) {
-        console.error('Erro ao salvar onboarding:', error);
+        console.error('useOnboardingSubmit: Erro ao salvar:', error);
         throw error;
       }
 
@@ -92,19 +99,21 @@ export const useOnboardingSubmit = () => {
         .eq('id', user.id);
 
       if (profileError) {
-        console.error('Erro ao atualizar perfil:', profileError);
+        console.error('useOnboardingSubmit: Erro ao atualizar perfil:', profileError);
         // Não falhar aqui, pois o onboarding principal foi salvo
       }
 
+      console.log('useOnboardingSubmit: Onboarding salvo com sucesso');
       return onboardingRecord;
     } catch (error) {
-      console.error('Erro ao salvar onboarding:', error);
+      console.error('useOnboardingSubmit: Erro ao salvar onboarding:', error);
       throw error;
     }
-  }, [user]);
+  }, [user?.id]);
 
-  return {
+  // Memoizar o retorno para evitar recriações desnecessárias
+  return useMemo(() => ({
     checkOnboardingStatus,
     submitOnboardingData
-  };
+  }), [checkOnboardingStatus, submitOnboardingData]);
 };

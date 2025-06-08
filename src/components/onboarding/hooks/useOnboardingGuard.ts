@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useOnboardingSubmit } from './useOnboardingSubmit';
 
@@ -9,33 +9,44 @@ export const useOnboardingGuard = () => {
   const [isOnboardingRequired, setIsOnboardingRequired] = useState<boolean | null>(null);
   const [isChecking, setIsChecking] = useState(true);
 
-  useEffect(() => {
-    const checkOnboardingRequired = async () => {
-      // Aguardar auth estar carregado
-      if (isLoading || !user || !profile) {
-        return;
-      }
+  // Memoizar a função de verificação para evitar loops infinitos
+  const checkOnboardingRequired = useCallback(async () => {
+    // Aguardar auth estar carregado
+    if (isLoading || !user || !profile) {
+      return;
+    }
 
-      try {
-        const onboardingData = await checkOnboardingStatus();
-        
-        // Se não tem dados de onboarding, é necessário completar
-        setIsOnboardingRequired(!onboardingData);
-      } catch (error) {
-        console.error('Erro ao verificar onboarding:', error);
-        // Em caso de erro, assumir que não é necessário completar para não travar o fluxo
-        setIsOnboardingRequired(false);
-      } finally {
-        setIsChecking(false);
-      }
-    };
-
-    checkOnboardingRequired();
+    try {
+      console.log('Verificando status do onboarding para usuário:', user.id);
+      const onboardingData = await checkOnboardingStatus();
+      
+      // Se não tem dados de onboarding, é necessário completar
+      const needsOnboarding = !onboardingData || !onboardingData.completed_at;
+      console.log('Onboarding necessário:', needsOnboarding);
+      
+      setIsOnboardingRequired(needsOnboarding);
+    } catch (error) {
+      console.error('Erro ao verificar onboarding:', error);
+      // Em caso de erro, assumir que não é necessário completar para não travar o fluxo
+      setIsOnboardingRequired(false);
+    } finally {
+      setIsChecking(false);
+    }
   }, [user, profile, isLoading, checkOnboardingStatus]);
 
-  const redirectToOnboarding = () => {
+  useEffect(() => {
+    // Apenas executar se ainda estiver verificando ou se os dados mudaram
+    if (isChecking && user && profile && !isLoading) {
+      checkOnboardingRequired();
+    } else if (!user || (!isLoading && !profile)) {
+      setIsChecking(false);
+      setIsOnboardingRequired(false);
+    }
+  }, [checkOnboardingRequired, isChecking, user, profile, isLoading]);
+
+  const redirectToOnboarding = useCallback(() => {
     window.location.href = '/onboarding';
-  };
+  }, []);
 
   return {
     isOnboardingRequired,

@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/auth';
 import { OnboardingStep1 } from './steps/OnboardingStep1';
@@ -53,36 +52,42 @@ export const OnboardingWizard = () => {
         'Finalização'
       ];
 
-  // Verificar se onboarding já foi completado
-  useEffect(() => {
-    const checkStatus = async () => {
-      if (!user) {
-        setIsCheckingStatus(false);
+  // Verificar se onboarding já foi completado - memoizar para evitar loops
+  const checkCompletionStatus = useCallback(async () => {
+    if (!user) {
+      setIsCheckingStatus(false);
+      return;
+    }
+    
+    try {
+      console.log('OnboardingWizard: Verificando status de conclusão');
+      const onboardingData = await checkOnboardingStatus();
+      
+      if (onboardingData && onboardingData.completed_at) {
+        // Onboarding já foi completado, redirecionar
+        console.log('OnboardingWizard: Onboarding já completado, redirecionando');
+        toast.info('Onboarding já foi completado! Redirecionando...');
+        setTimeout(() => {
+          window.location.href = memberType === 'formacao' ? '/formacao' : '/dashboard';
+        }, 1000);
         return;
       }
-      
-      try {
-        const onboardingData = await checkOnboardingStatus();
-        if (onboardingData && onboardingData.completed_at) {
-          // Onboarding já foi completado, redirecionar
-          toast.info('Onboarding já foi completado! Redirecionando...');
-          setTimeout(() => {
-            window.location.href = memberType === 'formacao' ? '/formacao' : '/dashboard';
-          }, 1000);
-          return;
-        }
-      } catch (error) {
-        console.error('Erro ao verificar status do onboarding:', error);
-        // Não falhar aqui, permitir que o usuário continue
-      } finally {
-        setIsCheckingStatus(false);
-      }
-    };
-
-    checkStatus();
+    } catch (error) {
+      console.error('OnboardingWizard: Erro ao verificar status:', error);
+      // Não falhar aqui, permitir que o usuário continue
+    } finally {
+      setIsCheckingStatus(false);
+    }
   }, [user, memberType, checkOnboardingStatus]);
 
-  const handleNext = () => {
+  useEffect(() => {
+    // Apenas verificar uma vez quando o componente montar
+    if (isCheckingStatus && user) {
+      checkCompletionStatus();
+    }
+  }, [checkCompletionStatus, isCheckingStatus, user]);
+
+  const handleNext = useCallback(() => {
     // Limpar erros anteriores
     setSubmitError(null);
     clearValidationErrors();
@@ -103,25 +108,25 @@ export const OnboardingWizard = () => {
         toast.success('Ótimo! Vamos para a próxima etapa 🎉');
       }
     }
-  };
+  }, [currentStep, totalSteps, data, memberType, validateCurrentStep, clearValidationErrors]);
 
-  const handlePrev = () => {
+  const handlePrev = useCallback(() => {
     if (currentStep > 1) {
       setCurrentStep(prev => prev - 1);
       // Limpar erros ao voltar
       setSubmitError(null);
       clearValidationErrors();
     }
-  };
+  }, [currentStep, clearValidationErrors]);
 
-  const handleStepData = (stepData: Partial<OnboardingData>) => {
+  const handleStepData = useCallback((stepData: Partial<OnboardingData>) => {
     updateData(stepData);
     // Limpar erros ao atualizar dados
     setSubmitError(null);
     clearValidationErrors();
-  };
+  }, [updateData, clearValidationErrors]);
 
-  const handleComplete = async () => {
+  const handleComplete = useCallback(async () => {
     setIsCompleting(true);
     setSubmitError(null);
     
@@ -164,7 +169,7 @@ export const OnboardingWizard = () => {
       }, 1500);
       
     } catch (error) {
-      console.error('Erro ao finalizar onboarding:', error);
+      console.error('OnboardingWizard: Erro ao finalizar:', error);
       setSubmitError(
         error instanceof Error 
           ? error.message 
@@ -174,7 +179,7 @@ export const OnboardingWizard = () => {
     } finally {
       setIsCompleting(false);
     }
-  };
+  }, [data, memberType, validateCurrentStep, submitOnboardingData, clearData]);
 
   // Mostrar loading enquanto verifica status
   if (isCheckingStatus) {
