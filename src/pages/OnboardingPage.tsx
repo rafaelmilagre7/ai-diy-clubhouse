@@ -2,7 +2,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/auth';
 import { useQuery } from '@tanstack/react-query';
 
 export const OnboardingPage: React.FC = () => {
@@ -44,3 +44,5 @@ export const OnboardingPage: React.FC = () => {
     />
   );
 };
+
+export default OnboardingPage;

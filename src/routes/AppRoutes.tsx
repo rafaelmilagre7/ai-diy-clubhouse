@@ -9,6 +9,7 @@ import { certificateRoutes } from './CertificateRoutes';
 import { CommunityRedirects } from '@/components/routing/CommunityRedirects';
 import NotFound from '@/pages/NotFound';
 import InvitePage from '@/pages/InvitePage';
+import { OnboardingPage } from '@/pages/OnboardingPage';
 
 const AppRoutes = () => {
   const location = useLocation();
@@ -53,7 +54,8 @@ const AppRoutes = () => {
     location.pathname.startsWith('/comunidade') || 
     location.pathname.startsWith('/login') ||
     location.pathname.startsWith('/auth') ||
-    location.pathname.startsWith('/convite');
+    location.pathname.startsWith('/convite') ||
+    location.pathname.startsWith('/onboarding');
   
   return (
     <>
@@ -64,6 +66,9 @@ const AppRoutes = () => {
         {/* Convite Routes - Alta prioridade e fora do sistema de autenticação */}
         <Route path="/convite/:token" element={<InvitePage />} />
         <Route path="/convite" element={<InvitePage />} />
+        
+        {/* Nova rota de onboarding */}
+        <Route path="/onboarding" element={<OnboardingPage />} />
         
         {/* Certificate Routes - Públicas */}
         {certificateRoutes.map((route) => (
