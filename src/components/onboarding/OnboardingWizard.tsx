@@ -21,14 +21,14 @@ import { toast } from 'sonner';
 
 export const OnboardingWizard = () => {
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
-  const { isRequired, isLoading, error, submitData, clearError } = useOnboardingStatus();
+  const { profile } = useAuth();
+  const { submitData, clearError, error } = useOnboardingStatus();
   const [currentStep, setCurrentStep] = useState(1);
   const [isCompleting, setIsCompleting] = useState(false);
   const { data, updateData, clearData } = useOnboardingStorage();
   const { validateCurrentStep, validationErrors, clearValidationErrors } = useOnboardingValidation();
 
-  // Detectar tipo de membro baseado no perfil
+  // Todos os hooks são executados sempre na mesma ordem
   const memberType: 'club' | 'formacao' = useMemo(() => 
     profile?.role === 'formacao' ? 'formacao' : 'club'
   , [profile?.role]);
@@ -103,7 +103,6 @@ export const OnboardingWizard = () => {
       
       toast.success('Onboarding concluído com sucesso! 🎉');
       
-      // Usar React Router para navegação
       const redirectPath = memberType === 'formacao' ? '/formacao' : '/dashboard';
       setTimeout(() => {
         navigate(redirectPath, { replace: true });
@@ -117,24 +116,11 @@ export const OnboardingWizard = () => {
     }
   }, [data, memberType, validateCurrentStep, submitData, clearData, navigate]);
 
-  // Loading enquanto verifica status
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-viverblue mx-auto"></div>
-          <p className="text-gray-600 dark:text-gray-300">Verificando seu progresso...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Se onboarding não for necessário, redirecionar
-  if (isRequired === false) {
-    const redirectPath = memberType === 'formacao' ? '/formacao' : '/dashboard';
-    navigate(redirectPath, { replace: true });
-    return null;
-  }
+  const canProceed = useMemo(() => {
+    if (currentStep === totalSteps) return true;
+    const validation = validateCurrentStep(currentStep, data, memberType);
+    return validation.isValid;
+  }, [currentStep, totalSteps, validateCurrentStep, data, memberType]);
 
   // Renderizar steps
   const renderStep = () => {
@@ -167,12 +153,6 @@ export const OnboardingWizard = () => {
       default: return <OnboardingStep1 {...stepProps} />;
     }
   };
-
-  const canProceed = useMemo(() => {
-    if (currentStep === totalSteps) return true;
-    const validation = validateCurrentStep(currentStep, data, memberType);
-    return validation.isValid;
-  }, [currentStep, totalSteps, validateCurrentStep, data, memberType]);
 
   return (
     <div className="min-h-screen flex flex-col">

@@ -22,7 +22,8 @@ const RootRedirect = () => {
     user: !!user,
     profile: !!profile,
     onboardingRequired,
-    hasRedirected
+    hasRedirected,
+    redirectTarget
   });
   
   // Determinar para onde redirecionar (apenas uma vez)

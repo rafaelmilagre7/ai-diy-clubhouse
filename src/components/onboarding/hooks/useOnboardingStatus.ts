@@ -25,6 +25,7 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
   const [isRequired, setIsRequired] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasChecked, setHasChecked] = useState(false);
 
   // Memoizar se o onboarding é necessário baseado no perfil
   const onboardingNeeded = useMemo(() => {
@@ -33,7 +34,7 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
   }, [profile?.onboarding_completed]);
 
   const checkStatus = useCallback(async () => {
-    if (!user?.id || authLoading) {
+    if (!user?.id || authLoading || hasChecked) {
       return;
     }
 
@@ -49,16 +50,18 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
       console.log('[OnboardingStatus] Onboarding necessário:', needsOnboarding);
       
       setIsRequired(needsOnboarding);
+      setHasChecked(true);
     } catch (err) {
       console.error('[OnboardingStatus] Erro ao verificar:', err);
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
       setError(errorMessage);
       handleError(err, 'useOnboardingStatus.checkStatus', { showToast: false });
       setIsRequired(false);
+      setHasChecked(true);
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id, onboardingNeeded, authLoading, handleError]);
+  }, [user?.id, onboardingNeeded, authLoading, handleError, hasChecked]);
 
   const submitData = useCallback(async (data: OnboardingData) => {
     if (!user?.id) {
@@ -132,10 +135,10 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
 
   // Verificar status automaticamente quando as condições estiverem prontas
   useEffect(() => {
-    if (!authLoading && user?.id && profile !== undefined && onboardingNeeded !== null) {
+    if (!authLoading && user?.id && profile !== undefined && onboardingNeeded !== null && !hasChecked) {
       checkStatus();
     }
-  }, [authLoading, user?.id, profile, onboardingNeeded, checkStatus]);
+  }, [authLoading, user?.id, profile, onboardingNeeded, hasChecked, checkStatus]);
 
   // Reset quando o usuário muda
   useEffect(() => {
@@ -143,6 +146,7 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
       setIsRequired(null);
       setIsLoading(false);
       setError(null);
+      setHasChecked(false);
     }
   }, [user?.id]);
 
@@ -150,7 +154,7 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
     setError(null);
   }, []);
 
-  const canProceed = !authLoading && !isLoading && isRequired !== null;
+  const canProceed = !authLoading && !isLoading && isRequired !== null && hasChecked;
 
   return {
     isRequired,

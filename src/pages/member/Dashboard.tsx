@@ -16,7 +16,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, profile, isLoading: authLoading } = useAuth();
-  const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingStatus();
+  const { isRequired: onboardingRequired, isLoading: onboardingLoading, canProceed } = useOnboardingStatus();
   
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -31,12 +31,13 @@ const Dashboard = () => {
     onboardingRequired,
     user: !!user,
     profile: !!profile,
-    hasCheckedOnboarding
+    hasCheckedOnboarding,
+    canProceed
   });
   
   // Verificar se precisa completar onboarding (apenas uma vez)
   useEffect(() => {
-    if (!onboardingLoading && !hasCheckedOnboarding) {
+    if (canProceed && !hasCheckedOnboarding) {
       setHasCheckedOnboarding(true);
       
       if (onboardingRequired) {
@@ -46,7 +47,7 @@ const Dashboard = () => {
         return;
       }
     }
-  }, [onboardingRequired, onboardingLoading, navigate, hasCheckedOnboarding]);
+  }, [onboardingRequired, canProceed, navigate, hasCheckedOnboarding]);
   
   // Verificação de autenticação
   useEffect(() => {
@@ -125,7 +126,7 @@ const Dashboard = () => {
   }, [user, onboardingRequired, hasCheckedOnboarding]);
   
   // Se ainda estiver verificando onboarding ou auth, mostrar loading
-  if (onboardingLoading || authLoading || !hasCheckedOnboarding) {
+  if (authLoading || onboardingLoading || !hasCheckedOnboarding || !canProceed) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
         <div className="text-center space-y-4">
