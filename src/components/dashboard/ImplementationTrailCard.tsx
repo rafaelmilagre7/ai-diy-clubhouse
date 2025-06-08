@@ -1,122 +1,151 @@
 
-import { FC } from "react";
+import { FC, memo } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { 
-  Target, 
-  ArrowRight, 
-  Sparkles,
-  TrendingUp,
-  Calendar
-} from "lucide-react";
+import { Route, ArrowRight, Sparkles, Target, TrendingUp, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 
-export const ImplementationTrailCard: FC = () => {
-  const currentPhase = "Estruturação Inicial";
-  const progress = 65;
-  const nextMilestone = "Automação de Processos";
-  const estimatedCompletion = "15 dias";
+export const ImplementationTrailCard: FC = memo(() => {
+  const currentProgress = 65; // Mock progress - em um app real viria do backend
+  const currentStep = "Automação de Vendas";
+  const nextStep = "Analytics Avançado";
+  const estimatedTime = "2-3 semanas";
 
   return (
-    <Card variant="gradient" className="group overflow-hidden relative">
-      {/* Background decoration */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5"></div>
-      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl -translate-y-16 translate-x-16"></div>
-      
-      <div className="relative z-10">
-        <CardHeader className="pb-4">
-          <div className="flex items-start justify-between">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-primary/10 rounded-lg">
-                  <Target className="h-5 w-5 text-primary" />
-                </div>
-                <Text variant="subheading" textColor="primary" className="font-semibold">
-                  Trilha de Implementação Personalizada
+    <Card 
+      variant="elevated" 
+      className="overflow-hidden bg-gradient-to-br from-primary/5 via-surface to-accent/5 border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-glow-primary group"
+    >
+      <CardHeader className="pb-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-primary/10 rounded-2xl">
+              <Route className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <div className="flex items-center gap-3 mb-1">
+                <Text variant="subsection" textColor="primary" className="font-bold">
+                  Sua Trilha de Implementação
                 </Text>
+                <Badge variant="accent" size="sm">
+                  <Sparkles className="h-3 w-3 mr-1" />
+                  Personalizada
+                </Badge>
               </div>
               <Text variant="body" textColor="secondary">
-                Seu caminho estruturado para transformar seu negócio com IA
+                Jornada guiada baseada no seu perfil de negócio
               </Text>
             </div>
-            
-            <Badge variant="accent" size="sm" className="backdrop-blur-sm">
-              <Sparkles className="h-3 w-3 mr-1" />
-              Ativa
+          </div>
+          
+          <div className="hidden md:flex items-center gap-2 text-primary">
+            <Target className="h-5 w-5" />
+            <Text variant="caption" textColor="secondary" className="font-medium">
+              {currentProgress}% completo
+            </Text>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="space-y-6">
+        {/* Progress Section */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Text variant="body-small" textColor="secondary" className="font-medium">
+              Progresso Geral
+            </Text>
+            <Text variant="body-small" textColor="primary" className="font-bold">
+              {currentProgress}%
+            </Text>
+          </div>
+          
+          <Progress 
+            value={currentProgress} 
+            className="h-3 bg-surface-elevated"
+          />
+          
+          <div className="flex items-center justify-between text-xs">
+            <Text variant="caption" textColor="tertiary">
+              Iniciante
+            </Text>
+            <Text variant="caption" textColor="tertiary">
+              Especialista
+            </Text>
+          </div>
+        </div>
+
+        {/* Current Step */}
+        <div className="p-4 bg-surface-elevated/50 rounded-xl border border-border-subtle">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-warning rounded-full animate-pulse"></div>
+              <Text variant="body-small" textColor="secondary" className="font-medium">
+                Etapa Atual
+              </Text>
+            </div>
+            <Badge variant="warning" size="xs">
+              Em Andamento
             </Badge>
           </div>
-        </CardHeader>
-
-        <CardContent className="space-y-6">
-          {/* Progresso atual */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Text variant="body" textColor="primary" weight="medium">
-                Fase Atual: {currentPhase}
-              </Text>
-              <Text variant="caption" textColor="secondary">
-                {progress}% concluído
-              </Text>
+          
+          <Text variant="body" textColor="primary" className="font-semibold mb-2">
+            {currentStep}
+          </Text>
+          
+          <div className="flex items-center gap-4 text-text-tertiary">
+            <div className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              <Text variant="caption" textColor="tertiary">{estimatedTime}</Text>
             </div>
-            
-            <Progress 
-              value={progress} 
-              className="h-2"
-              indicatorClassName="bg-gradient-to-r from-primary to-accent"
-            />
-          </div>
-
-          {/* Próximo marco */}
-          <div className="bg-surface-elevated/50 backdrop-blur-sm rounded-lg p-4 border border-border-subtle">
-            <div className="flex items-center gap-3 mb-3">
-              <TrendingUp className="h-4 w-4 text-accent" />
-              <Text variant="body" textColor="primary" weight="medium">
-                Próximo Marco
-              </Text>
-            </div>
-            
-            <div className="space-y-2">
-              <Text variant="body-large" textColor="primary" weight="semibold">
-                {nextMilestone}
-              </Text>
-              
-              <div className="flex items-center gap-4 text-sm">
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-3 w-3 text-text-tertiary" />
-                  <Text variant="caption" textColor="tertiary">
-                    {estimatedCompletion}
-                  </Text>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Target className="h-3 w-3 text-text-tertiary" />
-                  <Text variant="caption" textColor="tertiary">
-                    3 soluções
-                  </Text>
-                </div>
-              </div>
+            <div className="flex items-center gap-1">
+              <TrendingUp className="h-3 w-3" />
+              <Text variant="caption" textColor="tertiary">Alto impacto</Text>
             </div>
           </div>
+        </div>
 
-          {/* Call to action */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button asChild className="flex-1 hover-scale">
-              <Link to="/implementation-trail">
-                Ver trilha completa
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Link>
-            </Button>
-            
-            <Button variant="outline" asChild className="hover-scale">
-              <Link to="/solutions?category=recommended">
-                Explorar soluções
-              </Link>
-            </Button>
+        {/* Next Step Preview */}
+        <div className="p-4 bg-primary/5 rounded-xl border border-primary/20">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-primary/50 rounded-full"></div>
+              <Text variant="body-small" textColor="secondary" className="font-medium">
+                Próxima Etapa
+              </Text>
+            </div>
+            <Badge variant="accent" size="xs">
+              Recomendado
+            </Badge>
           </div>
-        </CardContent>
-      </div>
+          
+          <Text variant="body" textColor="primary" className="font-semibold mb-2">
+            {nextStep}
+          </Text>
+          
+          <Text variant="caption" textColor="tertiary">
+            Melhore suas decisões com dados em tempo real
+          </Text>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-3 pt-2">
+          <Button asChild className="flex-1 group-hover:shadow-glow-primary transition-all">
+            <Link to="/trilha-implementacao">
+              <Route className="h-4 w-4 mr-2" />
+              Continuar Trilha
+            </Link>
+          </Button>
+          
+          <Button variant="outline" size="icon" className="hover:bg-primary hover:text-white transition-colors">
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </CardContent>
     </Card>
   );
-};
+});
+
+ImplementationTrailCard.displayName = 'ImplementationTrailCard';
