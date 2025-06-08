@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle, Sparkles, Loader2, Zap } from 'lucide-react';
+import { CheckCircle, Sparkles, Loader2, Zap, Trophy, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { OnboardingData } from '../types/onboardingTypes';
 import { AIMessageDisplay } from '../components/AIMessageDisplay';
@@ -103,110 +103,218 @@ Bem-vindo oficialmente ao VIVER DE IA Club, ${firstName}! Sua jornada de transfo
 
   if (isProcessing) {
     return (
-      <div className="space-y-8 text-center">
+      <div className="space-y-8">
+        {/* Header */}
         <motion.div 
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="space-y-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center space-y-6"
         >
           <div className="flex justify-center">
-            <div className="bg-gradient-to-br from-viverblue/20 to-viverblue-light/20 p-6 rounded-full">
-              <Loader2 className="w-12 h-12 text-viverblue animate-spin" />
-            </div>
+            <motion.div 
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="w-20 h-20 rounded-full bg-gradient-to-br from-viverblue/20 to-viverblue-light/20 flex items-center justify-center"
+            >
+              <Loader2 className="w-10 h-10 text-viverblue animate-spin" />
+            </motion.div>
           </div>
           
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
-            Processando suas informações com IA... 🤖
-          </h1>
-          
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Nossa Inteligência Artificial está analisando seu perfil e criando 
-            uma experiência totalmente personalizada para você!
-          </p>
+          <div className="space-y-4">
+            <motion.h1 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="text-4xl font-heading font-bold text-white"
+            >
+              Processando suas informações{' '}
+              <span className="bg-gradient-to-r from-viverblue to-viverblue-light bg-clip-text text-transparent">
+                com IA... 🤖
+              </span>
+            </motion.h1>
+            
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="text-xl text-neutral-300 max-w-2xl mx-auto leading-relaxed"
+            >
+              Nossa Inteligência Artificial está analisando seu perfil e criando 
+              uma experiência totalmente personalizada para você!
+            </motion.p>
+          </div>
+        </motion.div>
 
-          <div className="bg-gradient-to-r from-viverblue/10 to-viverblue-light/10 rounded-2xl p-8 space-y-4">
-            <div className="flex items-center justify-center gap-2">
-              <Zap className="w-5 h-5 text-viverblue animate-pulse" />
-              <span className="text-viverblue font-semibold">IA trabalhando...</span>
-            </div>
-            <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-              <p>✨ Analisando seu perfil empresarial...</p>
-              <p>🎯 Personalizando soluções de IA...</p>
-              <p>📊 Criando métricas de sucesso...</p>
-              <p>🚀 Preparando sua jornada...</p>
+        {/* Cartão de processamento */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          className="max-w-4xl mx-auto"
+        >
+          <div className="bg-[#151823] border border-white/10 rounded-2xl p-8">
+            <div className="space-y-6">
+              <div className="flex items-center justify-center gap-3 mb-6">
+                <Zap className="w-6 h-6 text-viverblue animate-pulse" />
+                <span className="text-xl font-semibold text-viverblue">IA trabalhando...</span>
+              </div>
+              
+              <div className="grid md:grid-cols-2 gap-4 text-sm text-neutral-300">
+                <motion.div 
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 1 }}
+                  className="flex items-center gap-3 p-3 bg-[#181A2A] rounded-lg"
+                >
+                  <div className="w-2 h-2 bg-viverblue rounded-full animate-pulse"></div>
+                  <span>✨ Analisando seu perfil empresarial...</span>
+                </motion.div>
+                
+                <motion.div 
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 1.2 }}
+                  className="flex items-center gap-3 p-3 bg-[#181A2A] rounded-lg"
+                >
+                  <div className="w-2 h-2 bg-viverblue rounded-full animate-pulse"></div>
+                  <span>🎯 Personalizando soluções de IA...</span>
+                </motion.div>
+                
+                <motion.div 
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 1.4 }}
+                  className="flex items-center gap-3 p-3 bg-[#181A2A] rounded-lg"
+                >
+                  <div className="w-2 h-2 bg-viverblue rounded-full animate-pulse"></div>
+                  <span>📊 Criando métricas de sucesso...</span>
+                </motion.div>
+                
+                <motion.div 
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 1.6 }}
+                  className="flex items-center gap-3 p-3 bg-[#181A2A] rounded-lg"
+                >
+                  <div className="w-2 h-2 bg-viverblue rounded-full animate-pulse"></div>
+                  <span>🚀 Preparando sua jornada...</span>
+                </motion.div>
+              </div>
             </div>
           </div>
+        </motion.div>
+
+        {/* Dica */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 2 }}
+          className="bg-viverblue/5 border border-viverblue/20 rounded-xl p-4 text-center max-w-2xl mx-auto"
+        >
+          <p className="text-sm text-neutral-300">
+            💡 <strong className="text-white">Quase pronto:</strong> Estamos criando sua experiência personalizada! 🎯
+          </p>
         </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 text-center">
+    <div className="space-y-8">
       {/* Mensagem final da IA */}
       {finalAIMessage && (
         <AIMessageDisplay message={finalAIMessage} />
       )}
 
+      {/* Header de sucesso */}
       <motion.div 
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="space-y-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center space-y-6"
       >
         <div className="flex justify-center">
-          <div className="bg-gradient-to-br from-green-100 to-emerald-100 p-6 rounded-full">
-            <CheckCircle className="w-12 h-12 text-green-600" />
-          </div>
+          <motion.div 
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2 }}
+            className="w-20 h-20 rounded-full bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center"
+          >
+            <Trophy className="w-10 h-10 text-green-500" />
+          </motion.div>
         </div>
         
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
-          ONBOARDING CONCLUÍDO! 🎉
-        </h1>
-        
-        <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-          Sua experiência está 100% personalizada e você está pronto para 
-          transformar seu negócio com Inteligência Artificial!
-        </p>
+        <div className="space-y-4">
+          <motion.h1 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="text-4xl font-heading font-bold text-white"
+          >
+            ONBOARDING{' '}
+            <span className="bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+              CONCLUÍDO! 🎉
+            </span>
+          </motion.h1>
+          
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="text-xl text-neutral-300 max-w-2xl mx-auto leading-relaxed"
+          >
+            Sua experiência está 100% personalizada e você está pronto para 
+            transformar seu negócio com Inteligência Artificial!
+          </motion.p>
+        </div>
       </motion.div>
 
+      {/* Botão de ação */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.6 }}
-        className="pt-6"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.8 }}
+        className="flex justify-center pt-6"
       >
         <Button 
           onClick={handleComplete}
           disabled={isCompleting}
-          className="bg-viverblue hover:bg-viverblue-dark text-white text-xl py-8 px-16 rounded-xl text-2xl font-bold shadow-lg hover:shadow-xl transition-all duration-300"
           size="lg"
+          className="h-16 px-12 bg-viverblue hover:bg-viverblue-dark text-[#0F111A] text-xl font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
         >
           {isCompleting ? (
             <>
-              <Loader2 className="animate-spin mr-2 h-6 w-6" />
+              <Loader2 className="animate-spin mr-3 h-6 w-6" />
               Finalizando...
             </>
           ) : (
             <>
+              <Star className="mr-3 h-6 w-6" />
               ACESSAR MEU DASHBOARD! 🚀
             </>
           )}
         </Button>
       </motion.div>
 
+      {/* Card de boas-vindas */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.8 }}
-        className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl p-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1 }}
+        className="max-w-3xl mx-auto"
       >
-        <p className="text-lg font-semibold text-gray-800 mb-2">
-          🏆 Sua transformação com IA começa AGORA!
-        </p>
-        <p className="text-gray-600">
-          Prepare-se para descobrir soluções incríveis, implementar IA no seu negócio 
-          e fazer parte de uma comunidade de empresários visionários!
-        </p>
+        <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-2xl p-6">
+          <div className="text-center space-y-3">
+            <h3 className="text-xl font-heading font-semibold text-white flex items-center justify-center gap-2">
+              <Trophy className="w-5 h-5 text-green-400" />
+              Sua transformação com IA começa AGORA!
+            </h3>
+            <p className="text-neutral-300 leading-relaxed">
+              Prepare-se para descobrir soluções incríveis, implementar IA no seu negócio 
+              e fazer parte de uma comunidade de empresários visionários!
+            </p>
+          </div>
+        </div>
       </motion.div>
     </div>
   );
