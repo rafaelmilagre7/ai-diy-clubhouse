@@ -5,9 +5,8 @@ import { Solution } from '@/lib/supabase';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Text } from '@/components/ui/text';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { BarChart, TrendingUp, Settings, Zap } from 'lucide-react';
-import { SolutionCategory } from '@/lib/types/categoryTypes';
+import { SolutionCategory, getCategoryConfig } from '@/lib/types/categoryTypes';
 import { cn } from '@/lib/utils';
 
 interface SolutionCardProps {
@@ -41,36 +40,20 @@ const getDifficultyLabel = (difficulty: string) => {
 };
 
 export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
-  const getCategoryDetails = (category: SolutionCategory) => {
-    switch (category) {
-      case 'Receita':
-        return {
-          name: 'Receita',
-          icon: <TrendingUp className="h-4 w-4" />,
-          variant: 'success' as const
-        };
-      case 'Operacional':
-        return {
-          name: 'Operacional',
-          icon: <Settings className="h-4 w-4" />,
-          variant: 'info' as const
-        };
-      case 'Estratégia':
-        return {
-          name: 'Estratégia',
-          icon: <BarChart className="h-4 w-4" />,
-          variant: 'secondary' as const
-        };
+  const categoryConfig = getCategoryConfig(solution.category as SolutionCategory);
+  
+  const getCategoryIcon = () => {
+    switch (categoryConfig.icon) {
+      case 'TrendingUp':
+        return <TrendingUp className="h-4 w-4" />;
+      case 'Settings':
+        return <Settings className="h-4 w-4" />;
+      case 'BarChart':
+        return <BarChart className="h-4 w-4" />;
       default:
-        return {
-          name: 'Geral',
-          icon: <Zap className="h-4 w-4" />,
-          variant: 'neutral' as const
-        };
+        return <Zap className="h-4 w-4" />;
     }
   };
-
-  const categoryDetails = getCategoryDetails(solution.category);
 
   return (
     <Link to={`/solution/${solution.id}`} className="block group">
@@ -78,7 +61,8 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
         variant="interactive" 
         className={cn(
           "h-full overflow-hidden transition-all duration-300",
-          "hover:shadow-glow-primary hover:-translate-y-1"
+          "hover:shadow-glow-primary hover:-translate-y-1",
+          "group-hover:border-primary/30"
         )}
       >
         <CardHeader className="p-0">
@@ -98,12 +82,12 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent"></div>
             <Badge 
-              variant={categoryDetails.variant}
+              variant={categoryConfig.badgeVariant}
               className="absolute top-3 left-3 backdrop-blur-sm"
             >
               <span className="flex items-center gap-1.5">
-                {categoryDetails.icon}
-                <span>{categoryDetails.name}</span>
+                {getCategoryIcon()}
+                <span>{categoryConfig.name}</span>
               </span>
             </Badge>
           </div>
@@ -118,31 +102,31 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
             {solution.title}
           </Text>
           
-          <ScrollArea className="h-14 w-full flex-1">
+          <div className="h-14 w-full flex-1">
             <Text variant="body-small" textColor="secondary" className="line-clamp-2">
               {solution.description}
             </Text>
-          </ScrollArea>
+          </div>
         </CardContent>
         
         <CardFooter className="p-4 pt-0 flex gap-2 flex-wrap justify-between">
           <div className="flex items-center gap-1.5">
-            {categoryDetails.icon}
+            {getCategoryIcon()}
             <Text variant="caption" textColor="tertiary">
-              {categoryDetails.name}
+              {categoryConfig.name}
             </Text>
           </div>
           
           <div className="flex items-center gap-2">
             <Badge
               variant={getDifficultyBadgeVariant(solution.difficulty)}
-              className="text-xs"
+              size="sm"
             >
               {getDifficultyLabel(solution.difficulty)}
             </Badge>
             
             {typeof solution.success_rate === "number" && solution.success_rate > 0 && (
-              <Badge variant="info" className="text-xs">
+              <Badge variant="info" size="sm">
                 {solution.success_rate}% sucesso
               </Badge>
             )}

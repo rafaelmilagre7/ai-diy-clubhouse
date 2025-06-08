@@ -8,42 +8,40 @@ interface DifficultyBadgeProps {
 }
 
 export const DifficultyBadge = ({ difficulty, className }: DifficultyBadgeProps) => {
-  const getDifficultyConfig = () => {
-    switch (difficulty?.toLowerCase()) {
-      case 'easy':
-      case 'fácil':
+  const getDifficultyConfig = (diff: string) => {
+    switch (diff.toLowerCase()) {
+      case "easy":
         return {
-          label: 'Fácil',
-          variant: 'success' as const
+          variant: "success" as const,
+          label: "Fácil"
         };
-      case 'medium':
-      case 'médio':
+      case "medium":
         return {
-          label: 'Médio',
-          variant: 'warning' as const
+          variant: "warning" as const,
+          label: "Médio"
         };
-      case 'advanced':
-      case 'avançado':
+      case "advanced":
         return {
-          label: 'Avançado',
-          variant: 'destructive' as const
+          variant: "destructive" as const,
+          label: "Avançado"
         };
       default:
         return {
-          label: difficulty || 'Indefinido',
-          variant: 'neutral' as const
+          variant: "neutral" as const,
+          label: diff
         };
     }
   };
 
-  const { label, variant } = getDifficultyConfig();
+  const config = getDifficultyConfig(difficulty);
 
   return (
     <Badge 
-      variant={variant}
-      className={cn("text-xs font-medium", className)}
+      variant={config.variant}
+      size="sm"
+      className={cn("font-medium", className)}
     >
-      {label}
+      {config.label}
     </Badge>
   );
 };

@@ -6,7 +6,7 @@
   /* === CARDS === */
   
   .card-modern {
-    @apply bg-surface-elevated border border-border rounded-xl shadow-sm;
+    @apply bg-surface-elevated border border-border rounded-xl shadow-sm transition-all duration-300;
   }
   
   .card-elevated {
@@ -14,7 +14,7 @@
   }
   
   .card-interactive {
-    @apply bg-surface-elevated border border-border rounded-xl shadow-sm hover:shadow-md hover:border-border-strong transition-all duration-300 cursor-pointer;
+    @apply bg-surface-elevated border border-border rounded-xl shadow-sm hover:shadow-md hover:border-border-strong hover:-translate-y-0.5 transition-all duration-300 cursor-pointer;
   }
   
   .card-glow {
@@ -24,93 +24,105 @@
   /* === BUTTONS === */
   
   .btn-primary {
-    @apply bg-primary hover:bg-primary-hover active:bg-primary-active text-primary-foreground border-0;
+    @apply bg-primary hover:bg-primary-hover active:bg-primary-active text-primary-foreground border-0 font-medium transition-colors duration-200;
   }
   
   .btn-secondary {
-    @apply bg-secondary hover:bg-secondary-hover text-secondary-foreground border border-border;
+    @apply bg-secondary hover:bg-secondary-hover text-secondary-foreground border border-border transition-colors duration-200;
   }
   
   .btn-outline {
-    @apply bg-transparent hover:bg-surface-hover text-foreground border border-border hover:border-border-strong;
+    @apply bg-transparent hover:bg-surface-hover text-foreground border border-border hover:border-border-strong transition-colors duration-200;
   }
   
   .btn-ghost {
-    @apply bg-transparent hover:bg-surface-hover text-foreground border-0;
+    @apply bg-transparent hover:bg-surface-hover text-foreground border-0 transition-colors duration-200;
   }
   
   .btn-success {
-    @apply bg-success hover:bg-success/90 text-success-foreground border-0;
+    @apply bg-success hover:bg-success/90 text-success-foreground border-0 transition-colors duration-200;
   }
   
   .btn-warning {
-    @apply bg-warning hover:bg-warning/90 text-warning-foreground border-0;
+    @apply bg-warning hover:bg-warning/90 text-warning-foreground border-0 transition-colors duration-200;
   }
   
   .btn-error {
-    @apply bg-error hover:bg-error/90 text-error-foreground border-0;
+    @apply bg-error hover:bg-error/90 text-error-foreground border-0 transition-colors duration-200;
   }
   
   .btn-info {
-    @apply bg-info hover:bg-info/90 text-info-foreground border-0;
+    @apply bg-info hover:bg-info/90 text-info-foreground border-0 transition-colors duration-200;
   }
   
   /* === BUTTON SIZES === */
   
   .btn-xs {
-    @apply h-7 px-2 text-xs;
+    @apply h-7 px-2 text-xs rounded-md;
   }
   
   .btn-sm {
-    @apply h-8 px-3 text-sm;
+    @apply h-8 px-3 text-sm rounded-lg;
+  }
+  
+  .btn-md {
+    @apply h-10 px-4 text-sm rounded-lg;
   }
   
   .btn-lg {
-    @apply h-12 px-6 text-base;
+    @apply h-12 px-6 text-base rounded-xl;
   }
   
   .btn-xl {
-    @apply h-14 px-8 text-lg;
+    @apply h-14 px-8 text-lg rounded-xl;
   }
   
   /* === BADGES === */
   
   .badge-base {
-    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors;
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors duration-200;
   }
   
   .badge-primary {
-    @apply bg-primary/10 text-primary border border-primary/20;
+    @apply bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20;
   }
   
   .badge-secondary {
-    @apply bg-secondary/10 text-text-secondary border border-border;
+    @apply bg-secondary/10 text-text-secondary border border-border hover:bg-secondary/20;
   }
   
   .badge-success {
-    @apply bg-success/10 text-success border border-success/20;
+    @apply bg-success/10 text-success border border-success/20 hover:bg-success/20;
   }
   
   .badge-warning {
-    @apply bg-warning/10 text-warning border border-warning/20;
+    @apply bg-warning/10 text-warning border border-warning/20 hover:bg-warning/20;
   }
   
   .badge-error {
-    @apply bg-error/10 text-error border border-error/20;
+    @apply bg-error/10 text-error border border-error/20 hover:bg-error/20;
   }
   
   .badge-info {
-    @apply bg-info/10 text-info border border-info/20;
+    @apply bg-info/10 text-info border border-info/20 hover:bg-info/20;
   }
   
   .badge-neutral {
-    @apply bg-surface border border-border text-text-secondary;
+    @apply bg-surface border border-border text-text-secondary hover:bg-surface-hover;
+  }
+  
+  .badge-accent {
+    @apply bg-accent/10 text-accent border border-accent/20 hover:bg-accent/20;
+  }
+  
+  .badge-gradient {
+    @apply bg-gradient-primary text-primary-foreground border-0 hover:opacity-90;
   }
   
   /* === INPUTS === */
   
   .input-modern {
-    @apply flex h-10 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-colors;
+    @apply flex h-10 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-colors duration-200;
   }
   
   .input-error {
@@ -119,5 +131,112 @@
   
   .input-success {
     @apply border-success focus-visible:ring-success/20;
+  }
+  
+  .input-large {
+    @apply h-12 px-4 text-base;
+  }
+  
+  .input-small {
+    @apply h-8 px-2 text-sm;
+  }
+  
+  /* === CONTAINERS === */
+  
+  .container-page {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .container-content {
+    @apply max-w-5xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .container-narrow {
+    @apply max-w-4xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .container-wide {
+    @apply max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  /* === SURFACES === */
+  
+  .surface-base {
+    @apply bg-surface border border-border;
+  }
+  
+  .surface-elevated {
+    @apply bg-surface-elevated border border-border shadow-sm;
+  }
+  
+  .surface-interactive {
+    @apply bg-surface-elevated border border-border shadow-sm hover:shadow-md hover:border-border-strong transition-all duration-300 cursor-pointer;
+  }
+  
+  .surface-glass {
+    @apply bg-surface/80 backdrop-blur-sm border border-border/50;
+  }
+}
+
+/* === ANIMATION UTILITIES === */
+
+@layer utilities {
+  .hover-lift {
+    @apply transition-transform duration-200 hover:-translate-y-0.5;
+  }
+  
+  .hover-scale {
+    @apply transition-transform duration-200 hover:scale-105;
+  }
+  
+  .hover-glow {
+    @apply transition-shadow duration-300 hover:shadow-glow-primary;
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out forwards;
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.2s ease-out forwards;
+  }
+}
+
+/* === KEYFRAMES === */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }

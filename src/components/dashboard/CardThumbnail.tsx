@@ -1,31 +1,30 @@
 
 import { cn } from "@/lib/utils";
+import { Text } from "@/components/ui/text";
 
 interface CardThumbnailProps {
   thumbnailUrl?: string | null;
+  title?: string;
+  className?: string;
 }
 
-export const CardThumbnail = ({ thumbnailUrl }: CardThumbnailProps) => {
+export const CardThumbnail = ({ thumbnailUrl, title, className }: CardThumbnailProps) => {
   return (
-    <div className={cn(
-      "w-full h-40 overflow-hidden rounded-t-xl relative",
-    )}>
-      {thumbnailUrl ? (
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent z-10" />
-      ) : null}
-      
+    <div className={cn("aspect-video bg-surface-elevated relative overflow-hidden", className)}>
       {thumbnailUrl ? (
         <img 
           src={thumbnailUrl} 
-          alt="Miniatura da solução" 
-          className="w-full h-full object-cover transition-all duration-300 hover:scale-105"
-          loading="lazy"
+          alt={title || "Thumbnail"} 
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
       ) : (
-        <div className="w-full h-full flex items-center justify-center bg-[#151823]">
-          <span className="text-neutral-600 text-base">Sem imagem</span>
+        <div className="w-full h-full flex items-center justify-center bg-gradient-surface">
+          <Text variant="section" textColor="primary" className="text-gradient">
+            {title ? title.charAt(0).toUpperCase() : "?"}
+          </Text>
         </div>
       )}
+      <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent"></div>
     </div>
   );
 };
