@@ -6,7 +6,6 @@ interface TestLoginButtonsProps {
   onAdminLogin: () => void;
   onTestMemberLogin: () => void;
   onTestFormacaoLogin: () => void;
-  onClubTestLogin: () => void;
   isLoading: boolean;
 }
 
@@ -15,7 +14,6 @@ const TestLoginButtons = ({
   onAdminLogin, 
   onTestMemberLogin,
   onTestFormacaoLogin,
-  onClubTestLogin,
   isLoading 
 }: TestLoginButtonsProps) => {
   return (
@@ -60,16 +58,6 @@ const TestLoginButtons = ({
           disabled={isLoading}
         >
           Formação
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onClubTestLogin}
-          className="bg-teal-600/30 border-teal-800 hover:bg-teal-700/50 text-white text-xs col-span-2"
-          disabled={isLoading}
-        >
-          🎯 Club Teste (Onboarding)
         </Button>
       </div>
     </div>

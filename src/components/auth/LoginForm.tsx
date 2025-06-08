@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -21,7 +20,7 @@ export const LoginForm = ({ onSwitchToReset }: LoginFormProps) => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn, signInAsMember, signInAsAdmin, signInAsTestMember, signInAsTestFormacao, signInAsClubTest } = useAuth();
+  const { signIn, signInAsMember, signInAsAdmin, signInAsTestMember, signInAsTestFormacao } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,15 +122,6 @@ export const LoginForm = ({ onSwitchToReset }: LoginFormProps) => {
     }
   };
 
-  const handleClubTestLogin = async () => {
-    setIsLoading(true);
-    try {
-      await signInAsClubTest();
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
@@ -209,7 +199,6 @@ export const LoginForm = ({ onSwitchToReset }: LoginFormProps) => {
         onAdminLogin={handleAdminLogin}
         onTestMemberLogin={handleTestMemberLogin}
         onTestFormacaoLogin={handleTestFormacaoLogin}
-        onClubTestLogin={handleClubTestLogin}
         isLoading={isLoading}
       />
     </form>
