@@ -9,11 +9,7 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
 import { cleanupAuthState } from "@/utils/authUtils";
 
-interface LoginFormProps {
-  onSwitchToReset: () => void;
-}
-
-export const LoginForm = ({ onSwitchToReset }: LoginFormProps) => {
+export const LoginForm = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -102,7 +98,7 @@ export const LoginForm = ({ onSwitchToReset }: LoginFormProps) => {
           <Button
             type="button"
             variant="link"
-            onClick={onSwitchToReset}
+            onClick={() => navigate('/reset-password')}
             className="text-xs text-blue-400 hover:text-blue-300 p-0 h-auto"
           >
             Esqueceu a senha?
@@ -138,7 +134,7 @@ export const LoginForm = ({ onSwitchToReset }: LoginFormProps) => {
 
       <Button 
         type="submit" 
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white" 
+        className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold uppercase tracking-wide" 
         disabled={isLoading}
       >
         {isLoading ? (
@@ -147,7 +143,7 @@ export const LoginForm = ({ onSwitchToReset }: LoginFormProps) => {
             Entrando...
           </>
         ) : (
-          "Entrar"
+          "ENTRAR"
         )}
       </Button>
     </form>

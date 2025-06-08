@@ -1,15 +1,9 @@
 
-import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import LoginForm from "./login/LoginForm";
-import RegisterForm from "./RegisterForm";
-import { ResetPasswordForm } from "./ResetPasswordForm";
 
 const AuthLayout = () => {
-  const [currentTab, setCurrentTab] = useState("login");
-
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-b from-gray-900 to-black p-4">
       <motion.div
@@ -19,6 +13,7 @@ const AuthLayout = () => {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
+        {/* Logo */}
         <div className="mb-8 text-center">
           <img
             src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
@@ -27,44 +22,44 @@ const AuthLayout = () => {
           />
         </div>
 
-        <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-xl p-6">
+        {/* Título Principal */}
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-bold text-white mb-2">
+            Potencialize com IA
+          </h1>
+          <p className="text-gray-300 text-lg">
+            Transforme seu negócio com inteligência artificial
+          </p>
+        </div>
+
+        {/* Card de Login */}
+        <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-xl p-6 mb-8">
           <CardHeader className="text-center pb-4">
             <CardTitle className="text-2xl text-white">
-              {currentTab === "login" && "Entrar"}
-              {currentTab === "register" && "Registrar"}
-              {currentTab === "reset" && "Recuperar senha"}
+              Acesse sua conta
             </CardTitle>
             <CardDescription className="text-gray-300">
-              {currentTab === "login" && "Acesse sua conta para continuar"}
-              {currentTab === "register" && "Crie sua conta para começar"}
-              {currentTab === "reset" && "Recupere o acesso à sua conta"}
+              Entre para acessar suas soluções de IA exclusivas
             </CardDescription>
           </CardHeader>
           
           <CardContent>
-            <Tabs value={currentTab} onValueChange={setCurrentTab}>
-              <TabsList className="grid w-full grid-cols-2 mb-6 bg-gray-700">
-                <TabsTrigger value="login" className="text-gray-300 data-[state=active]:text-white data-[state=active]:bg-gray-600">
-                  Entrar
-                </TabsTrigger>
-                <TabsTrigger value="register" className="text-gray-300 data-[state=active]:text-white data-[state=active]:bg-gray-600">
-                  Registrar
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="login" className="space-y-4 mt-0">
-                <LoginForm onSwitchToReset={() => setCurrentTab("reset")} />
-              </TabsContent>
-              
-              <TabsContent value="register" className="space-y-4 mt-0">
-                <RegisterForm />
-              </TabsContent>
-              
-              <TabsContent value="reset" className="space-y-4 mt-0">
-                <ResetPasswordForm onBackToLogin={() => setCurrentTab("login")} />
-              </TabsContent>
-            </Tabs>
+            <LoginForm />
           </CardContent>
+        </div>
+
+        {/* Seção Inferior - Acesso Exclusivo */}
+        <div className="text-center bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <span className="text-xl">🔒</span>
+            <span className="text-white font-semibold">
+              Acesso exclusivo para membros convidados
+            </span>
+          </div>
+          <p className="text-gray-400 text-sm">
+            Esta plataforma é restrita apenas para membros que receberam um convite oficial. 
+            Entre em contato conosco se precisar de acesso.
+          </p>
         </div>
       </motion.div>
     </div>
