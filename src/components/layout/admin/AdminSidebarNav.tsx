@@ -1,4 +1,5 @@
 
+
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -127,7 +128,7 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
         key={item.href}
         variant={isActive(item.href) ? "default" : "ghost"}
         className={cn(
-          "w-full justify-start gap-2 h-9 text-sm font-medium",
+          "w-full justify-start gap-2 h-8 text-xs font-medium",
           !sidebarOpen && "justify-center",
           isActive(item.href) && "bg-viverblue hover:bg-viverblue/90"
         )}
@@ -142,44 +143,44 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
   }
 
   return (
-    <div className="flex flex-col h-full px-3 py-2">
+    <div className="flex flex-col h-full px-3 py-1">
       <div className="flex-1 space-y-1">
         {/* Menu Principal */}
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           {menuItems.map(item => renderMenuItem(item))}
         </div>
 
-        <div className="h-2"></div>
+        <div className="h-1"></div>
         
         {sidebarOpen && (
-          <div className="px-2 text-xs font-semibold text-gray-500">
+          <div className="px-2 text-[10px] font-semibold text-gray-500">
             ÁREA DE FORMAÇÃO
           </div>
         )}
         
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           {formacaoItems.map(item => renderMenuItem(item))}
         </div>
 
-        <div className="h-2"></div>
+        <div className="h-1"></div>
         
         {sidebarOpen && (
-          <div className="px-2 text-xs font-semibold text-gray-500">
+          <div className="px-2 text-[10px] font-semibold text-gray-500">
             GERENCIAMENTO DE ACESSO
           </div>
         )}
         
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           {rbacItems.map(item => renderMenuItem(item))}
         </div>
       </div>
 
       {/* Botão fixo no rodapé */}
-      <div className="mt-auto pt-3 border-t border-gray-700">
+      <div className="mt-auto pt-2 border-t border-gray-700">
         <Button
           variant="outline"
           className={cn(
-            "w-full justify-start gap-2 h-9",
+            "w-full justify-start gap-2 h-8 text-xs",
             !sidebarOpen && "justify-center"
           )}
           asChild
@@ -193,3 +194,4 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
     </div>
   );
 }
+
