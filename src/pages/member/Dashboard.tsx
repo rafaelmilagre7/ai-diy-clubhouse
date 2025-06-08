@@ -1,3 +1,4 @@
+
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
@@ -27,6 +28,7 @@ const Dashboard = () => {
   
   // Verificar se precisa completar onboarding
   useEffect(() => {
+    // Só redirecionar se não estiver mais verificando e o onboarding for necessário
     if (!isChecking && isOnboardingRequired) {
       toast.info("Complete seu onboarding para acessar o dashboard!");
       redirectToOnboarding();
@@ -99,7 +101,7 @@ const Dashboard = () => {
   useEffect(() => {
     const isFirstVisit = localStorage.getItem("firstDashboardVisit") !== "false";
     
-    if (isFirstVisit) {
+    if (isFirstVisit && user && !isOnboardingRequired) {
       const timeoutId = setTimeout(() => {
         toast("Bem-vindo ao seu dashboard personalizado!");
         localStorage.setItem("firstDashboardVisit", "false");
@@ -107,7 +109,7 @@ const Dashboard = () => {
       
       return () => clearTimeout(timeoutId);
     }
-  }, []);
+  }, [user, isOnboardingRequired]);
   
   // Se ainda estiver verificando onboarding, mostrar loading
   if (isChecking) {
@@ -116,6 +118,20 @@ const Dashboard = () => {
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-viverblue mx-auto"></div>
           <p className="text-gray-600 dark:text-gray-300">Verificando seu progresso...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Se onboarding for necessário, mostrar mensagem (não deveria chegar aqui devido ao useEffect)
+  if (isOnboardingRequired) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="text-center space-y-4">
+          <p className="text-gray-600 dark:text-gray-300">Redirecionando para o onboarding...</p>
+          <Button onClick={redirectToOnboarding}>
+            Ir para Onboarding
+          </Button>
         </div>
       </div>
     );

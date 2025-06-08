@@ -23,8 +23,8 @@ export const useOnboardingGuard = () => {
         setIsOnboardingRequired(!onboardingData);
       } catch (error) {
         console.error('Erro ao verificar onboarding:', error);
-        // Em caso de erro, assumir que é necessário completar
-        setIsOnboardingRequired(true);
+        // Em caso de erro, assumir que não é necessário completar para não travar o fluxo
+        setIsOnboardingRequired(false);
       } finally {
         setIsChecking(false);
       }

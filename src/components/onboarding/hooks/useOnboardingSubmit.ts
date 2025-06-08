@@ -18,13 +18,14 @@ export const useOnboardingSubmit = () => {
         .single();
       
       if (error && error.code !== 'PGRST116') {
-        throw error;
+        console.error('Erro ao verificar onboarding:', error);
+        return null; // Retorna null em caso de erro para permitir que o usuário continue
       }
       
       return data;
     } catch (error) {
-      console.error('Erro ao verificar onboarding:', error);
-      throw error;
+      console.error('Erro inesperado ao verificar onboarding:', error);
+      return null; // Graceful fallback
     }
   }, [user]);
 
@@ -51,17 +52,17 @@ export const useOnboardingSubmit = () => {
         
         // Dados gerais
         target_market: data.targetMarket,
-        main_challenges: data.mainChallenges,
-        current_tools: data.currentTools,
+        main_challenges: data.mainChallenges || [],
+        current_tools: data.currentTools || [],
         ai_experience: data.aiExperience,
-        ai_tools_used: data.aiToolsUsed,
-        ai_challenges: data.aiChallenges,
-        primary_goals: data.primaryGoals,
+        ai_tools_used: data.aiToolsUsed || [],
+        ai_challenges: data.aiChallenges || [],
+        primary_goals: data.primaryGoals || [],
         timeframe: data.timeframe,
-        success_metrics: data.successMetrics,
+        success_metrics: data.successMetrics || [],
         communication_style: data.communicationStyle,
         learning_preference: data.learningPreference,
-        content_types: data.contentTypes,
+        content_types: data.contentTypes || [],
         
         started_at: data.startedAt,
         completed_at: data.completedAt,
@@ -69,12 +70,17 @@ export const useOnboardingSubmit = () => {
         updated_at: new Date().toISOString()
       };
 
-      // Salvar no banco
+      // Salvar no banco usando upsert para evitar conflitos
       const { error } = await supabase
         .from('user_onboarding')
-        .upsert(onboardingRecord);
+        .upsert(onboardingRecord, {
+          onConflict: 'user_id'
+        });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao salvar onboarding:', error);
+        throw error;
+      }
 
       // Atualizar o perfil do usuário para marcar onboarding como completo
       const { error: profileError } = await supabase
@@ -85,7 +91,10 @@ export const useOnboardingSubmit = () => {
         })
         .eq('id', user.id);
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Erro ao atualizar perfil:', profileError);
+        // Não falhar aqui, pois o onboarding principal foi salvo
+      }
 
       return onboardingRecord;
     } catch (error) {

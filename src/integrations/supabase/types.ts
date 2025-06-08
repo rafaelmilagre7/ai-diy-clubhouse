@@ -5233,6 +5233,96 @@ export type Database = {
           },
         ]
       }
+      user_onboarding: {
+        Row: {
+          ai_challenges: Json | null
+          ai_experience: string | null
+          ai_tools_used: Json | null
+          business_area: string | null
+          business_stage: string | null
+          communication_style: string | null
+          completed_at: string | null
+          content_types: Json | null
+          created_at: string | null
+          current_tools: Json | null
+          education_level: string | null
+          id: string
+          institution: string | null
+          learning_preference: string | null
+          main_challenges: Json | null
+          member_type: string | null
+          name: string | null
+          nickname: string | null
+          primary_goals: Json | null
+          started_at: string | null
+          study_area: string | null
+          success_metrics: Json | null
+          target_market: string | null
+          team_size: string | null
+          timeframe: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          ai_challenges?: Json | null
+          ai_experience?: string | null
+          ai_tools_used?: Json | null
+          business_area?: string | null
+          business_stage?: string | null
+          communication_style?: string | null
+          completed_at?: string | null
+          content_types?: Json | null
+          created_at?: string | null
+          current_tools?: Json | null
+          education_level?: string | null
+          id?: string
+          institution?: string | null
+          learning_preference?: string | null
+          main_challenges?: Json | null
+          member_type?: string | null
+          name?: string | null
+          nickname?: string | null
+          primary_goals?: Json | null
+          started_at?: string | null
+          study_area?: string | null
+          success_metrics?: Json | null
+          target_market?: string | null
+          team_size?: string | null
+          timeframe?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          ai_challenges?: Json | null
+          ai_experience?: string | null
+          ai_tools_used?: Json | null
+          business_area?: string | null
+          business_stage?: string | null
+          communication_style?: string | null
+          completed_at?: string | null
+          content_types?: Json | null
+          created_at?: string | null
+          current_tools?: Json | null
+          education_level?: string | null
+          id?: string
+          institution?: string | null
+          learning_preference?: string | null
+          main_challenges?: Json | null
+          member_type?: string | null
+          name?: string | null
+          nickname?: string | null
+          primary_goals?: Json | null
+          started_at?: string | null
+          study_area?: string | null
+          success_metrics?: Json | null
+          target_market?: string | null
+          team_size?: string | null
+          timeframe?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null

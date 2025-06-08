@@ -30,6 +30,9 @@ const RootRedirect = () => {
       } else {
         setRedirectTarget('/dashboard');
       }
+    } else if (user && !profile) {
+      // Se tem usuário mas não tem perfil, redirecionar para dashboard mesmo assim
+      setRedirectTarget('/dashboard');
     }
   }, [user, profile, isAdmin, isLoading, isChecking, isOnboardingRequired, timeoutExceeded]);
   
@@ -45,13 +48,14 @@ const RootRedirect = () => {
     }
   }, [redirectTarget, navigate]);
   
-  // Handle timing out the loading state
+  // Handle timing out the loading state com timeout mais longo para onboarding
   useEffect(() => {
     if ((isLoading || isChecking) && !timeoutExceeded) {
       const timeout = setTimeout(() => {
         setTimeoutExceeded(true);
-        toast("Tempo de carregamento excedido, redirecionando para tela de login");
-      }, 5000); // 5 segundos de timeout para dar tempo do onboarding carregar
+        toast("Tempo de carregamento excedido, redirecionando para dashboard");
+        setRedirectTarget('/dashboard'); // Fallback direto para dashboard
+      }, 8000); // 8 segundos de timeout
       
       return () => clearTimeout(timeout);
     }
@@ -73,7 +77,7 @@ const RootRedirect = () => {
   
   // Fallback redirect se algo deu errado
   if (timeoutExceeded || !redirectTarget) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
   
   // Retornar null porque o useEffect cuida do redirecionamento

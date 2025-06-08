@@ -23,7 +23,6 @@ export const OnboardingWizard = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isCompleting, setIsCompleting] = useState(false);
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const { data, updateData, clearData } = useOnboardingStorage();
   const { checkOnboardingStatus, submitOnboardingData } = useOnboardingSubmit();
@@ -64,7 +63,7 @@ export const OnboardingWizard = () => {
       
       try {
         const onboardingData = await checkOnboardingStatus();
-        if (onboardingData) {
+        if (onboardingData && onboardingData.completed_at) {
           // Onboarding já foi completado, redirecionar
           toast.info('Onboarding já foi completado! Redirecionando...');
           setTimeout(() => {
@@ -74,7 +73,7 @@ export const OnboardingWizard = () => {
         }
       } catch (error) {
         console.error('Erro ao verificar status do onboarding:', error);
-        setSubmitError('Erro ao verificar status. Tente novamente.');
+        // Não falhar aqui, permitir que o usuário continue
       } finally {
         setIsCheckingStatus(false);
       }
@@ -141,8 +140,15 @@ export const OnboardingWizard = () => {
         throw new Error('Dados incompletos. Por favor, revise todas as etapas.');
       }
 
-      // Simular submissão
-      await submitOnboardingData(data);
+      // Marcar como completado
+      const completedData = {
+        ...data,
+        completedAt: new Date().toISOString(),
+        memberType
+      };
+
+      // Submeter dados
+      await submitOnboardingData(completedData);
       
       // Limpar dados temporários do localStorage
       clearData();
@@ -252,13 +258,6 @@ export const OnboardingWizard = () => {
             onClose={() => setSubmitError(null)}
           />
 
-          {/* Feedback de loading para submissão */}
-          <OnboardingFeedback
-            type="loading"
-            message="Salvando seus dados..."
-            show={isSubmitting}
-          />
-
           <AnimatePresence mode="wait">
             <motion.div
               key={currentStep}
@@ -284,7 +283,7 @@ export const OnboardingWizard = () => {
               onNext={handleNext}
               onPrev={handlePrev}
               canProceed={canProceed()}
-              isLoading={isSubmitting}
+              isLoading={isCompleting}
             />
           </div>
         </div>
