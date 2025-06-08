@@ -5,7 +5,7 @@ import { Solution } from '@/lib/supabase';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Text } from '@/components/ui/text';
-import { BarChart, TrendingUp, Settings, Zap } from 'lucide-react';
+import { BarChart, TrendingUp, Settings, Zap, ImageIcon } from 'lucide-react';
 import { SolutionCategory, getCategoryConfig } from '@/lib/types/categoryTypes';
 import { cn } from '@/lib/utils';
 
@@ -20,9 +20,9 @@ const getDifficultyBadgeVariant = (difficulty: string) => {
     case "medium":
       return "warning";
     case "advanced":
-      return "destructive";
+      return "error";
     default:
-      return "neutral";
+      return "secondary";
   }
 };
 
@@ -58,32 +58,34 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
   return (
     <Link to={`/solution/${solution.id}`} className="block group">
       <Card 
-        variant="interactive" 
+        variant="elevated" 
         className={cn(
           "h-full overflow-hidden transition-all duration-300",
-          "hover:shadow-glow-primary hover:-translate-y-1",
+          "hover:shadow-glow-primary hover:-translate-y-1 hover-lift",
           "group-hover:border-primary/30"
         )}
       >
         <CardHeader className="p-0">
-          <div className="aspect-video bg-surface-elevated relative overflow-hidden">
+          <div className="relative h-48 bg-gradient-to-br from-primary/10 to-accent/10 overflow-hidden">
             {solution.thumbnail_url ? (
               <img 
                 src={solution.thumbnail_url} 
                 alt={solution.title} 
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                loading="lazy"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-surface">
-                <Text variant="section" textColor="primary" className="text-gradient">
-                  {solution.title.charAt(0)}
-                </Text>
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-surface-elevated to-surface-hover">
+                <ImageIcon className="h-12 w-12 text-text-muted" />
               </div>
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent"></div>
+            
+            {/* Overlay gradient */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            
             <Badge 
               variant={categoryConfig.badgeVariant}
-              className="absolute top-3 left-3 backdrop-blur-sm"
+              className="absolute top-3 left-3 backdrop-blur-sm shadow-sm"
             >
               <span className="flex items-center gap-1.5">
                 {getCategoryIcon()}
@@ -93,24 +95,24 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
           </div>
         </CardHeader>
         
-        <CardContent className="p-4 flex-1 flex flex-col">
-          <Text 
-            variant="card" 
-            textColor="primary" 
-            className="mb-2 line-clamp-1 group-hover:text-primary transition-colors"
-          >
-            {solution.title}
-          </Text>
-          
-          <div className="h-14 w-full flex-1">
-            <Text variant="body-small" textColor="secondary" className="line-clamp-2">
+        <CardContent className="p-6 flex-1 flex flex-col space-y-4">
+          <div className="space-y-2">
+            <Text 
+              variant="card" 
+              textColor="primary" 
+              className="line-clamp-2 group-hover:text-primary transition-colors"
+            >
+              {solution.title}
+            </Text>
+            
+            <Text variant="body-small" textColor="secondary" className="line-clamp-3">
               {solution.description}
             </Text>
           </div>
         </CardContent>
         
-        <CardFooter className="p-4 pt-0 flex gap-2 flex-wrap justify-between">
-          <div className="flex items-center gap-1.5">
+        <CardFooter className="p-6 pt-0 flex items-center justify-between border-t border-border-subtle">
+          <div className="flex items-center gap-2">
             {getCategoryIcon()}
             <Text variant="caption" textColor="tertiary">
               {categoryConfig.name}
