@@ -5,7 +5,7 @@ import { ProgressIndicator } from './ProgressIndicator';
 import { useOnboardingState } from '@/hooks/onboarding/useOnboardingState';
 import { OnboardingType } from '@/types/onboarding';
 
-// Import dos steps (serão criados na próxima etapa)
+// Import dos steps
 import { WelcomeStep } from './steps/WelcomeStep';
 import { BusinessProfileStep } from './steps/BusinessProfileStep';
 import { AIMaturityStep } from './steps/AIMaturityStep';
@@ -32,14 +32,25 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     previousStep,
     setLoading,
     completeOnboarding,
+    overallScore,
+    forceSave,
   } = useOnboardingState();
 
-  const handleStepNext = () => {
+  const handleStepNext = async () => {
+    // Forçar salvamento antes de avançar
+    forceSave();
+    
     if (currentStep < 5) {
+      setLoading(true);
+      
+      // Simular processamento da IA
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       nextStep();
+      setLoading(false);
     } else {
       // Última etapa - processar conclusão
-      handleComplete();
+      await handleComplete();
     }
   };
 
@@ -47,8 +58,8 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     setLoading(true);
     
     try {
-      // Simular processamento por enquanto
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Simular processamento final
+      await new Promise(resolve => setTimeout(resolve, 3000));
       
       completeOnboarding();
       
@@ -90,11 +101,13 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   // Se completado, mostrar tela de sucesso
   if (completed) {
     return (
-      <CompletionStep
-        data={data}
-        type={type}
-        onFinish={onComplete}
-      />
+      <OnboardingLayout currentStep={currentStep} showProgress={false}>
+        <CompletionStep
+          data={data}
+          type={type}
+          onFinish={onComplete}
+        />
+      </OnboardingLayout>
     );
   }
 
@@ -104,6 +117,18 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       onBack={currentStep > 1 ? previousStep : undefined}
     >
       <ProgressIndicator currentStep={currentStep} />
+      
+      {/* Score indicator */}
+      {overallScore > 0 && (
+        <div className="max-w-2xl mx-auto mb-4">
+          <div className="bg-muted/50 rounded-lg p-3 text-center">
+            <p className="text-sm text-muted-foreground">
+              Qualidade do perfil: <span className="font-semibold text-primary">{overallScore}%</span>
+            </p>
+          </div>
+        </div>
+      )}
+      
       {renderCurrentStep()}
     </OnboardingLayout>
   );

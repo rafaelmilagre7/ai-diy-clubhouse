@@ -3,7 +3,9 @@ import React from 'react';
 import { OnboardingStepProps } from '@/types/onboarding';
 import { FormField } from '../FormField';
 import { NavigationButtons } from '../NavigationButtons';
+import { AIMessage } from '../AIMessage';
 import { BRAZILIAN_STATES } from '@/constants/onboarding';
+import { validateWelcomeStep } from '@/utils/onboardingValidation';
 
 export const WelcomeStep: React.FC<OnboardingStepProps> = ({
   data,
@@ -12,7 +14,8 @@ export const WelcomeStep: React.FC<OnboardingStepProps> = ({
   onPrevious,
   isLoading
 }) => {
-  const isFormValid = data.fullName && data.preferredName && data.email && data.state && data.city;
+  const validation = validateWelcomeStep(data);
+  const isFormValid = validation.isValid;
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -26,20 +29,24 @@ export const WelcomeStep: React.FC<OnboardingStepProps> = ({
         </p>
       </div>
 
-      {/* AI Message Placeholder */}
-      <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-6">
-        <div className="flex items-start gap-3">
-          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-bold">
-            IA
+      {/* AI Message */}
+      <AIMessage step={1} data={data} />
+
+      {/* Progress indicator */}
+      {validation.score > 0 && (
+        <div className="mb-6">
+          <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
+            <span>Completude do perfil</span>
+            <span>{validation.score}%</span>
           </div>
-          <div className="flex-1">
-            <p className="text-sm">
-              Olá! Sou sua assistente de IA. Estou aqui para tornar sua jornada no Viver de IA única e personalizada. 
-              Vamos começar com algumas informações básicas sobre você.
-            </p>
+          <div className="w-full bg-muted rounded-full h-2">
+            <div 
+              className="bg-primary rounded-full h-2 transition-all duration-300"
+              style={{ width: `${validation.score}%` }}
+            />
           </div>
         </div>
-      </div>
+      )}
 
       {/* Form */}
       <div className="space-y-6">
@@ -52,6 +59,7 @@ export const WelcomeStep: React.FC<OnboardingStepProps> = ({
             onChange={(value) => onDataChange({ fullName: value })}
             placeholder="Seu nome completo"
             required
+            error={validation.errors.fullName}
           />
           <FormField
             label="Como prefere ser chamado(a)?"
@@ -60,6 +68,7 @@ export const WelcomeStep: React.FC<OnboardingStepProps> = ({
             onChange={(value) => onDataChange({ preferredName: value })}
             placeholder="Nome de preferência"
             required
+            error={validation.errors.preferredName}
           />
         </div>
 
@@ -71,6 +80,7 @@ export const WelcomeStep: React.FC<OnboardingStepProps> = ({
             onChange={(value) => onDataChange({ email: value })}
             placeholder="seu@email.com"
             required
+            error={validation.errors.email}
           />
           <FormField
             label="Telefone/WhatsApp"
@@ -109,6 +119,7 @@ export const WelcomeStep: React.FC<OnboardingStepProps> = ({
             options={BRAZILIAN_STATES}
             placeholder="Selecione seu estado"
             required
+            error={validation.errors.state}
           />
           <FormField
             label="Cidade"
@@ -117,6 +128,7 @@ export const WelcomeStep: React.FC<OnboardingStepProps> = ({
             onChange={(value) => onDataChange({ city: value })}
             placeholder="Sua cidade"
             required
+            error={validation.errors.city}
           />
         </div>
 
