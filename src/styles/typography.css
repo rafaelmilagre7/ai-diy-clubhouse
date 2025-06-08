@@ -74,7 +74,12 @@
   /* === SPECIAL EFFECTS === */
   
   .text-gradient {
-    @apply bg-gradient-primary bg-clip-text text-transparent bg-size-200 animate-gradient-shift;
+    background: var(--gradient-primary);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% 200%;
+    animation: gradient-shift 3s ease infinite;
   }
   
   .text-glow {
@@ -94,5 +99,15 @@
   
   .text-responsive-xl {
     @apply text-lg md:text-xl;
+  }
+}
+
+/* === GRADIENT ANIMATION === */
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
   }
 }

@@ -1,36 +1,39 @@
 
-// Define os novos tipos de categoria padronizados
-export type SolutionCategory = "Receita" | "Operacional" | "Estratégia";
+// Tipos de categorias de soluções
+export type SolutionCategory = 'Receita' | 'Operacional' | 'Estratégia';
 
-// Mapeamento de categorias antigas para novas (para compatibilidade)
-export const categoryMapping: Record<string, SolutionCategory> = {
-  'revenue': 'Receita',
-  'operational': 'Operacional',
-  'strategy': 'Estratégia'
+// Mapeamento de cores por categoria
+export const categoryColorMap: Record<SolutionCategory, string> = {
+  'Receita': 'success',
+  'Operacional': 'info', 
+  'Estratégia': 'secondary'
 };
 
-// Função de utilidade para converter categorias antigas para novas
-export const mapLegacyCategory = (category: string): SolutionCategory => {
-  return categoryMapping[category] || 'Operacional'; // Valor padrão caso a categoria não seja reconhecida
-};
+// Configuração de categorias com ícones e cores
+export interface CategoryConfig {
+  name: string;
+  color: string;
+  icon: string;
+  description?: string;
+}
 
-// Função de utilidade para obter o nome amigável das categorias
-export const getCategoryDisplayName = (category: SolutionCategory | string): string => {
-  switch (category) {
-    case 'Receita':
-      return 'Receita';
-    case 'Operacional':
-      return 'Otimização Operacional';
-    case 'Estratégia':
-      return 'Gestão Estratégica';
-    // Compatibilidade com valores antigos
-    case 'revenue':
-      return 'Receita';
-    case 'operational':
-      return 'Otimização Operacional';
-    case 'strategy':
-      return 'Gestão Estratégica';
-    default:
-      return String(category);
+export const solutionCategories: Record<SolutionCategory, CategoryConfig> = {
+  'Receita': {
+    name: 'Receita',
+    color: 'success',
+    icon: 'TrendingUp',
+    description: 'Soluções focadas em aumentar receita e vendas'
+  },
+  'Operacional': {
+    name: 'Operacional', 
+    color: 'info',
+    icon: 'Settings',
+    description: 'Soluções para otimizar processos e operações'
+  },
+  'Estratégia': {
+    name: 'Estratégia',
+    color: 'secondary', 
+    icon: 'BarChart',
+    description: 'Soluções estratégicas e de planejamento'
   }
 };
