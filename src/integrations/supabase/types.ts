@@ -9,6 +9,63 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_communications: {
+        Row: {
+          content: string
+          content_type: string | null
+          created_at: string | null
+          created_by: string
+          delivery_channels: string[]
+          email_subject: string | null
+          id: string
+          metadata: Json | null
+          priority: string | null
+          scheduled_for: string | null
+          sent_at: string | null
+          status: string | null
+          target_roles: string[]
+          template_type: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          content_type?: string | null
+          created_at?: string | null
+          created_by: string
+          delivery_channels?: string[]
+          email_subject?: string | null
+          id?: string
+          metadata?: Json | null
+          priority?: string | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string | null
+          target_roles: string[]
+          template_type?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          content_type?: string | null
+          created_at?: string | null
+          created_by?: string
+          delivery_channels?: string[]
+          email_subject?: string | null
+          id?: string
+          metadata?: Json | null
+          priority?: string | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string | null
+          target_roles?: string[]
+          template_type?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       analytics: {
         Row: {
           created_at: string
@@ -145,6 +202,53 @@ export type Database = {
             columns: ["tool_id"]
             isOneToOne: false
             referencedRelation: "tools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communication_deliveries: {
+        Row: {
+          clicked_at: string | null
+          communication_id: string
+          delivered_at: string | null
+          delivery_channel: string
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          opened_at: string | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          clicked_at?: string | null
+          communication_id: string
+          delivered_at?: string | null
+          delivery_channel: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          opened_at?: string | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          clicked_at?: string | null
+          communication_id?: string
+          delivered_at?: string | null
+          delivery_channel?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          opened_at?: string | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_deliveries_communication_id_fkey"
+            columns: ["communication_id"]
+            isOneToOne: false
+            referencedRelation: "admin_communications"
             referencedColumns: ["id"]
           },
         ]
@@ -2032,6 +2136,8 @@ export type Database = {
       }
       notification_preferences: {
         Row: {
+          admin_communications_email: boolean | null
+          admin_communications_inapp: boolean | null
           created_at: string
           email_enabled: boolean
           id: string
@@ -2040,6 +2146,8 @@ export type Database = {
           whatsapp_enabled: boolean
         }
         Insert: {
+          admin_communications_email?: boolean | null
+          admin_communications_inapp?: boolean | null
           created_at?: string
           email_enabled?: boolean
           id?: string
@@ -2048,6 +2156,8 @@ export type Database = {
           whatsapp_enabled?: boolean
         }
         Update: {
+          admin_communications_email?: boolean | null
+          admin_communications_inapp?: boolean | null
           created_at?: string
           email_enabled?: boolean
           id?: string
