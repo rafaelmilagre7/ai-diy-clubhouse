@@ -17,12 +17,12 @@ export const AdminHeader = ({ onToggleSidebar }: AdminHeaderProps) => {
           variant="ghost"
           size="sm"
           onClick={onToggleSidebar}
-          className="md:hidden"
+          className="lg:hidden"
         >
           <Menu className="h-5 w-5" />
         </Button>
         
-        <div className="hidden md:block">
+        <div className="hidden lg:block">
           <h1 className="text-xl font-semibold">Painel Administrativo</h1>
         </div>
       </div>
