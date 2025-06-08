@@ -25,12 +25,12 @@ function App() {
           <Routes>
             {/* Rotas de membros */}
             {memberRoutes.map((route, index) => (
-              <Route key={`member-${index}`} {...route} />
+              <Route key={`member-${index}`} path={route.path} element={route.element} />
             ))}
             
             {/* Rotas de admin */}
             {adminRoutes.map((route, index) => (
-              <Route key={`admin-${index}`} {...route} />
+              <Route key={`admin-${index}`} path={route.path} element={route.element} />
             ))}
           </Routes>
           <Toaster />
