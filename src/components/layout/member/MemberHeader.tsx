@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MemberUserMenu } from "./MemberUserMenu";
 import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
-import { cn } from "@/lib/utils";
 
 interface MemberHeaderProps {
   sidebarOpen: boolean;
@@ -13,7 +12,7 @@ interface MemberHeaderProps {
 
 export const MemberHeader = ({ sidebarOpen, setSidebarOpen }: MemberHeaderProps) => {
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center justify-between px-4">
         {/* Left side - Menu toggle and search */}
         <div className="flex items-center gap-4">

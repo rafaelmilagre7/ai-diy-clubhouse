@@ -29,10 +29,11 @@ const BaseLayout: React.FC<BaseLayoutProps> = ({
   contentComponent: ContentComponent,
   children,
 }) => {
+  // Iniciar com sidebar fechada no mobile, aberta no desktop
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex min-h-screen bg-background">
       <SidebarComponent 
         sidebarOpen={sidebarOpen} 
         setSidebarOpen={setSidebarOpen} 
