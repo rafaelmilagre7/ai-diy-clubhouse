@@ -19,6 +19,9 @@ import { OnboardingData } from './types/onboardingTypes';
 import { toast } from 'sonner';
 
 export const OnboardingWizard = () => {
+  console.log('[OnboardingWizard] Renderizando componente');
+  
+  // TODOS OS HOOKS DEVEM SER EXECUTADOS SEMPRE NA MESMA ORDEM
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { submitData, clearError, error } = useOnboardingStatus();
@@ -27,10 +30,12 @@ export const OnboardingWizard = () => {
   const { data, updateData, clearData } = useOnboardingStorage();
   const { validateCurrentStep, validationErrors, clearValidationErrors } = useOnboardingValidation();
 
-  // Todos os hooks são executados sempre na mesma ordem
-  const memberType: 'club' | 'formacao' = useMemo(() => 
-    profile?.role === 'formacao' ? 'formacao' : 'club'
-  , [profile?.role]);
+  // Determinar tipo de membro após todos os hooks principais
+  const memberType: 'club' | 'formacao' = useMemo(() => {
+    const type = profile?.role === 'formacao' ? 'formacao' : 'club';
+    console.log('[OnboardingWizard] Member type:', type);
+    return type;
+  }, [profile?.role]);
   
   const totalSteps = 6; // 5 etapas + final
 
@@ -44,6 +49,8 @@ export const OnboardingWizard = () => {
   ], []);
 
   const handleNext = useCallback(() => {
+    console.log('[OnboardingWizard] handleNext - step atual:', currentStep);
+    
     clearError();
     clearValidationErrors();
 
@@ -51,6 +58,7 @@ export const OnboardingWizard = () => {
       const validation = validateCurrentStep(currentStep, data, memberType);
       
       if (!validation.isValid) {
+        console.log('[OnboardingWizard] Validação falhou:', validation.errors);
         toast.error('Por favor, preencha todos os campos obrigatórios antes de continuar');
         return;
       }
@@ -65,6 +73,8 @@ export const OnboardingWizard = () => {
   }, [currentStep, totalSteps, data, memberType, validateCurrentStep, clearValidationErrors, clearError]);
 
   const handlePrev = useCallback(() => {
+    console.log('[OnboardingWizard] handlePrev - step atual:', currentStep);
+    
     if (currentStep > 1) {
       setCurrentStep(prev => prev - 1);
       clearError();
@@ -73,12 +83,14 @@ export const OnboardingWizard = () => {
   }, [currentStep, clearValidationErrors, clearError]);
 
   const handleStepData = useCallback((stepData: Partial<OnboardingData>) => {
+    console.log('[OnboardingWizard] Atualizando dados do step:', stepData);
     updateData(stepData);
     clearError();
     clearValidationErrors();
   }, [updateData, clearValidationErrors, clearError]);
 
   const handleComplete = useCallback(async () => {
+    console.log('[OnboardingWizard] Iniciando finalização');
     setIsCompleting(true);
     
     try {
@@ -87,6 +99,7 @@ export const OnboardingWizard = () => {
       for (let step = 1; step <= 5; step++) {
         const validation = validateCurrentStep(step, data, memberType);
         if (!validation.isValid) {
+          console.log('[OnboardingWizard] Validação final falhou no step:', step, validation.errors);
           allValid = false;
           break;
         }
@@ -102,6 +115,7 @@ export const OnboardingWizard = () => {
         memberType
       };
 
+      console.log('[OnboardingWizard] Enviando dados:', completedData);
       await submitData(completedData);
       clearData();
       
@@ -127,7 +141,7 @@ export const OnboardingWizard = () => {
     return validation.isValid;
   }, [currentStep, totalSteps, validateCurrentStep, data, memberType]);
 
-  // Renderizar steps
+  // Renderizar steps - sempre após todos os hooks
   const renderStep = () => {
     const stepProps = {
       data,
@@ -139,6 +153,8 @@ export const OnboardingWizard = () => {
       validationErrors,
       getFieldError: (field: string) => validationErrors.find(e => e.field === field)?.message
     };
+
+    console.log('[OnboardingWizard] Renderizando step:', currentStep);
 
     switch (currentStep) {
       case 1: return <OnboardingStep1 {...stepProps} />;
@@ -157,6 +173,8 @@ export const OnboardingWizard = () => {
       default: return <OnboardingStep1 {...stepProps} />;
     }
   };
+
+  console.log('[OnboardingWizard] Renderizando UI - step:', currentStep);
 
   return (
     <div className="min-h-screen flex flex-col">
