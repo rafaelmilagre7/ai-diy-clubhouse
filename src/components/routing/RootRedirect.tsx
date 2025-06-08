@@ -2,31 +2,37 @@
 import { useState, useEffect } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
+import { useOnboardingStatus } from "@/hooks/onboarding/useOnboardingStatus";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { PageTransitionWithFallback } from "@/components/transitions/PageTransitionWithFallback";
 import { toast } from "sonner";
 
 const RootRedirect = () => {
   const { user, profile, isAdmin, isLoading } = useAuth();
+  const { onboardingAction, isChecking } = useOnboardingStatus();
   const navigate = useNavigate();
   const [timeoutExceeded, setTimeoutExceeded] = useState(false);
   const [redirectTarget, setRedirectTarget] = useState<string | null>(null);
   
-  // Determinar para onde redirecionar com base no estado da autenticação
+  // Determinar para onde redirecionar com base no estado da autenticação e onboarding
   useEffect(() => {
     // Não fazer nada enquanto carrega
-    if (isLoading && !timeoutExceeded) return;
+    if ((isLoading || isChecking) && !timeoutExceeded) return;
     
     if (!user) {
       setRedirectTarget('/login');
     } else if (user && profile) {
-      if (profile.role === 'admin' || isAdmin) {
+      // Verificar se precisa fazer onboarding antes de redirecionar
+      if (onboardingAction === 'required') {
+        console.log('🎯 Usuário precisa fazer onboarding, redirecionando...');
+        setRedirectTarget('/onboarding');
+      } else if (profile.role === 'admin' || isAdmin) {
         setRedirectTarget('/admin');
       } else {
         setRedirectTarget('/dashboard');
       }
     }
-  }, [user, profile, isAdmin, isLoading, timeoutExceeded]);
+  }, [user, profile, isAdmin, isLoading, isChecking, timeoutExceeded, onboardingAction]);
   
   // Realizar o redirecionamento quando o alvo for definido
   useEffect(() => {
@@ -42,18 +48,18 @@ const RootRedirect = () => {
   
   // Handle timing out the loading state
   useEffect(() => {
-    if (isLoading && !timeoutExceeded) {
+    if ((isLoading || isChecking) && !timeoutExceeded) {
       const timeout = setTimeout(() => {
         setTimeoutExceeded(true);
         toast("Tempo de carregamento excedido, redirecionando para tela de login");
-      }, 3000); // 3 segundos de timeout
+      }, 5000); // 5 segundos de timeout para dar tempo do onboarding carregar
       
       return () => clearTimeout(timeout);
     }
-  }, [isLoading, timeoutExceeded]);
+  }, [isLoading, isChecking, timeoutExceeded]);
   
   // Mostrar tela de carregamento enquanto decide para onde redirecionar
-  if ((isLoading && !timeoutExceeded) || (!redirectTarget && !timeoutExceeded)) {
+  if (((isLoading || isChecking) && !timeoutExceeded) || (!redirectTarget && !timeoutExceeded)) {
     return (
       <PageTransitionWithFallback
         isVisible={true}

@@ -1,7 +1,6 @@
-
 import { supabase } from '@/lib/supabase';
 import { toast } from "sonner";
-import { cleanupAuthState, redirectToDomain } from "@/utils/authUtils";
+import { cleanupAuthState } from "@/utils/authUtils";
 
 interface UseAuthMethodsProps {
   setIsLoading: (isLoading: boolean) => void;
@@ -27,8 +26,8 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
       
       toast.success("Login realizado com sucesso");
       
-      // Redirecionar para o domínio correto
-      redirectToDomain('/dashboard');
+      // Não redirecionar diretamente aqui - deixar o RootRedirect decidir
+      // baseado no perfil do usuário e status do onboarding
       
       return { success: true, data };
     } catch (error: any) {
