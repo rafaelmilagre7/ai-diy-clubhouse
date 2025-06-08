@@ -1,3 +1,4 @@
+
 import { Database } from './types/database.types';
 
 // Tipos de tabelas expandidos
@@ -43,11 +44,8 @@ export interface UserProfile {
   onboarding_completed_at: string | null;
 }
 
-// Tipo base para Solution do Supabase
-type SupabaseSolution = Database['public']['Tables']['solutions']['Row'];
-
-// Interface expandida para incluir todas as propriedades utilizadas no código
-export interface Solution extends Omit<SupabaseSolution, 'author_id'> {
+// Interface para Solution (sem dependência de tabela inexistente)
+export interface Solution {
   id: string;
   title: string;
   description: string;

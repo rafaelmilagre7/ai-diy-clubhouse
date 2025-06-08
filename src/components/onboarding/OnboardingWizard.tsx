@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
@@ -29,12 +29,17 @@ export const OnboardingWizard = () => {
   const { validateCurrentStep, validationErrors, clearValidationErrors } = useOnboardingValidation();
 
   // Detectar tipo de membro baseado no perfil
-  const memberType: 'club' | 'formacao' = profile?.role === 'formacao' ? 'formacao' : 'club';
+  const memberType: 'club' | 'formacao' = useMemo(() => 
+    profile?.role === 'formacao' ? 'formacao' : 'club'
+  , [profile?.role]);
+  
   const totalSteps = 7;
 
-  const stepTitles = memberType === 'club' 
-    ? ['Apresentação', 'Perfil Pessoal', 'Mercado e Negócio', 'Experiência com IA', 'Objetivos', 'Personalização', 'Finalização']
-    : ['Apresentação', 'Perfil Educacional', 'Área de Atuação', 'Experiência com IA', 'Objetivos de Formação', 'Personalização', 'Finalização'];
+  const stepTitles = useMemo(() => 
+    memberType === 'club' 
+      ? ['Apresentação', 'Perfil Pessoal', 'Mercado e Negócio', 'Experiência com IA', 'Objetivos', 'Personalização', 'Finalização']
+      : ['Apresentação', 'Perfil Educacional', 'Área de Atuação', 'Experiência com IA', 'Objetivos de Formação', 'Personalização', 'Finalização']
+  , [memberType]);
 
   const handleNext = useCallback(() => {
     clearError();
@@ -163,11 +168,11 @@ export const OnboardingWizard = () => {
     }
   };
 
-  const canProceed = () => {
+  const canProceed = useMemo(() => {
     if (currentStep === totalSteps) return true;
     const validation = validateCurrentStep(currentStep, data, memberType);
     return validation.isValid;
-  };
+  }, [currentStep, totalSteps, validateCurrentStep, data, memberType]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -216,7 +221,7 @@ export const OnboardingWizard = () => {
               totalSteps={totalSteps - 1}
               onNext={handleNext}
               onPrev={handlePrev}
-              canProceed={canProceed()}
+              canProceed={canProceed}
               isLoading={isCompleting}
             />
           </div>

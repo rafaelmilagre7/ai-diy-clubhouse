@@ -13,6 +13,7 @@ const RootRedirect = () => {
   const navigate = useNavigate();
   const [timeoutExceeded, setTimeoutExceeded] = useState(false);
   const [redirectTarget, setRedirectTarget] = useState<string | null>(null);
+  const [hasRedirected, setHasRedirected] = useState(false);
   
   console.log('[RootRedirect] Estado atual:', {
     authLoading,
@@ -20,14 +21,13 @@ const RootRedirect = () => {
     canProceed,
     user: !!user,
     profile: !!profile,
-    onboardingRequired
+    onboardingRequired,
+    hasRedirected
   });
   
-  // Determinar para onde redirecionar
+  // Determinar para onde redirecionar (apenas uma vez)
   useEffect(() => {
-    // Aguardar até que as verificações estejam completas
-    if (!canProceed || authLoading) {
-      console.log('[RootRedirect] Aguardando condições:', { canProceed, authLoading });
+    if (hasRedirected || !canProceed || authLoading || redirectTarget) {
       return;
     }
     
@@ -49,23 +49,25 @@ const RootRedirect = () => {
       console.log('[RootRedirect] Usuário sem perfil, redirecionando para dashboard');
       setRedirectTarget('/dashboard');
     }
-  }, [user, profile, isAdmin, authLoading, onboardingRequired, canProceed]);
+  }, [user, profile, isAdmin, authLoading, onboardingRequired, canProceed, hasRedirected, redirectTarget]);
   
-  // Realizar o redirecionamento
+  // Realizar o redirecionamento (apenas uma vez)
   useEffect(() => {
-    if (redirectTarget) {
+    if (redirectTarget && !hasRedirected) {
       console.log('[RootRedirect] Redirecionando para:', redirectTarget);
+      setHasRedirected(true);
+      
       const redirectTimer = setTimeout(() => {
         navigate(redirectTarget, { replace: true });
       }, 100);
       
       return () => clearTimeout(redirectTimer);
     }
-  }, [redirectTarget, navigate]);
+  }, [redirectTarget, navigate, hasRedirected]);
   
   // Timeout para evitar loading infinito
   useEffect(() => {
-    if ((authLoading || onboardingLoading) && !timeoutExceeded) {
+    if ((authLoading || onboardingLoading) && !timeoutExceeded && !hasRedirected) {
       const timeout = setTimeout(() => {
         console.log('[RootRedirect] Timeout excedido, forçando redirecionamento');
         setTimeoutExceeded(true);
@@ -75,10 +77,10 @@ const RootRedirect = () => {
       
       return () => clearTimeout(timeout);
     }
-  }, [authLoading, onboardingLoading, timeoutExceeded]);
+  }, [authLoading, onboardingLoading, timeoutExceeded, hasRedirected]);
   
   // Mostrar loading
-  if (((authLoading || onboardingLoading) && !timeoutExceeded) || (!redirectTarget && !timeoutExceeded)) {
+  if (((authLoading || onboardingLoading) && !timeoutExceeded) || (!redirectTarget && !timeoutExceeded && !hasRedirected)) {
     const message = onboardingLoading ? "Verificando seu progresso..." : "Preparando sua experiência...";
     
     return (
@@ -92,7 +94,7 @@ const RootRedirect = () => {
   }
   
   // Fallback redirect
-  if (timeoutExceeded || !redirectTarget) {
+  if (timeoutExceeded || (!redirectTarget && hasRedirected)) {
     console.log('[RootRedirect] Fallback redirect para dashboard');
     return <Navigate to="/dashboard" replace />;
   }

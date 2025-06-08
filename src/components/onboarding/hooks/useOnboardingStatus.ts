@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
 import { OnboardingData } from '../types/onboardingTypes';
@@ -18,10 +18,6 @@ interface OnboardingActions {
   clearError: () => void;
 }
 
-/**
- * Hook centralizado para gerenciar todo o estado do onboarding
- * Usa apenas profiles.onboarding_completed como fonte única de verdade
- */
 export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
   const { user, profile, isLoading: authLoading } = useAuth();
   const { handleError } = useErrorHandler();
@@ -30,10 +26,14 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Função simplificada para verificar status do onboarding
+  // Memoizar se o onboarding é necessário baseado no perfil
+  const onboardingNeeded = useMemo(() => {
+    if (!profile) return null;
+    return !profile.onboarding_completed;
+  }, [profile?.onboarding_completed]);
+
   const checkStatus = useCallback(async () => {
     if (!user?.id || authLoading) {
-      console.log('[OnboardingStatus] Aguardando autenticação');
       return;
     }
 
@@ -42,10 +42,9 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
       setError(null);
       
       console.log('[OnboardingStatus] Verificando status para usuário:', user.id);
-      console.log('[OnboardingStatus] Profile onboarding_completed:', profile?.onboarding_completed);
       
       // Usar apenas o campo do perfil como fonte única de verdade
-      const needsOnboarding = !profile?.onboarding_completed;
+      const needsOnboarding = onboardingNeeded;
       
       console.log('[OnboardingStatus] Onboarding necessário:', needsOnboarding);
       
@@ -55,14 +54,12 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
       setError(errorMessage);
       handleError(err, 'useOnboardingStatus.checkStatus', { showToast: false });
-      // Em caso de erro, assumir que não é necessário para não travar
       setIsRequired(false);
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id, profile?.onboarding_completed, authLoading, handleError]);
+  }, [user?.id, onboardingNeeded, authLoading, handleError]);
 
-  // Função para submeter dados do onboarding
   const submitData = useCallback(async (data: OnboardingData) => {
     if (!user?.id) {
       throw new Error('Usuário não autenticado');
@@ -120,12 +117,10 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
 
       if (profileError) {
         console.error('[OnboardingStatus] Erro ao atualizar perfil:', profileError);
-        throw profileError; // Falhar se não conseguir atualizar o perfil
+        throw profileError;
       }
 
       console.log('[OnboardingStatus] Onboarding salvo com sucesso');
-      
-      // Atualizar estado local
       setIsRequired(false);
       
     } catch (err) {
@@ -135,18 +130,16 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
     }
   }, [user?.id, handleError]);
 
-  // Verificar status automaticamente quando o perfil estiver disponível
+  // Verificar status automaticamente quando as condições estiverem prontas
   useEffect(() => {
-    if (!authLoading && user?.id && profile !== undefined) {
-      console.log('[OnboardingStatus] Condições atendidas, verificando status');
+    if (!authLoading && user?.id && profile !== undefined && onboardingNeeded !== null) {
       checkStatus();
     }
-  }, [authLoading, user?.id, profile, checkStatus]);
+  }, [authLoading, user?.id, profile, onboardingNeeded, checkStatus]);
 
   // Reset quando o usuário muda
   useEffect(() => {
     if (!user?.id) {
-      console.log('[OnboardingStatus] Usuário deslogado, resetando estado');
       setIsRequired(null);
       setIsLoading(false);
       setError(null);
@@ -158,15 +151,6 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
   }, []);
 
   const canProceed = !authLoading && !isLoading && isRequired !== null;
-
-  console.log('[OnboardingStatus] Estado atual:', {
-    isRequired,
-    isLoading: isLoading || authLoading,
-    canProceed,
-    userExists: !!user?.id,
-    profileExists: !!profile,
-    authLoading
-  });
 
   return {
     isRequired,

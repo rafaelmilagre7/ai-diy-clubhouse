@@ -20,6 +20,7 @@ const Dashboard = () => {
   
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [hasCheckedOnboarding, setHasCheckedOnboarding] = useState(false);
   
   const initialCategory = useMemo(() => searchParams.get("category") || "general", [searchParams]);
   const [category, setCategory] = useState<string>(initialCategory);
@@ -29,17 +30,31 @@ const Dashboard = () => {
     onboardingLoading,
     onboardingRequired,
     user: !!user,
-    profile: !!profile
+    profile: !!profile,
+    hasCheckedOnboarding
   });
   
-  // Verificar se precisa completar onboarding
+  // Verificar se precisa completar onboarding (apenas uma vez)
   useEffect(() => {
-    if (!onboardingLoading && onboardingRequired) {
-      console.log('[Dashboard] Onboarding necessário, redirecionando');
-      toast.info("Complete seu onboarding para acessar o dashboard!");
-      navigate('/onboarding', { replace: true });
+    if (!onboardingLoading && !hasCheckedOnboarding) {
+      setHasCheckedOnboarding(true);
+      
+      if (onboardingRequired) {
+        console.log('[Dashboard] Onboarding necessário, redirecionando');
+        toast.info("Complete seu onboarding para acessar o dashboard!");
+        navigate('/onboarding', { replace: true });
+        return;
+      }
     }
-  }, [onboardingRequired, onboardingLoading, navigate]);
+  }, [onboardingRequired, onboardingLoading, navigate, hasCheckedOnboarding]);
+  
+  // Verificação de autenticação
+  useEffect(() => {
+    if (!authLoading && !user) {
+      console.log('[Dashboard] Usuário não autenticado, redirecionando');
+      navigate('/login', { replace: true });
+    }
+  }, [user, authLoading, navigate]);
   
   // Carregar soluções
   const { solutions, loading: solutionsLoading, error: solutionsError } = useSolutionsData();
@@ -53,7 +68,7 @@ const Dashboard = () => {
         description: "Tente atualizar a página"
       });
     }
-  }, [solutionsError, solutions]);
+  }, [solutionsError]);
   
   // Filtrar soluções por categoria
   const filteredSolutions = useMemo(() => {
@@ -80,14 +95,6 @@ const Dashboard = () => {
     }
   }, [progressError]);
   
-  // Verificação de autenticação
-  useEffect(() => {
-    if (!authLoading && !user) {
-      console.log('[Dashboard] Usuário não autenticado, redirecionando');
-      navigate('/login', { replace: true });
-    }
-  }, [user, authLoading, navigate]);
-  
   const handleCategoryChange = useCallback((newCategory: string) => {
     setCategory(newCategory);
     setSearchParams({ category: newCategory });
@@ -107,7 +114,7 @@ const Dashboard = () => {
   useEffect(() => {
     const isFirstVisit = localStorage.getItem("firstDashboardVisit") !== "false";
     
-    if (isFirstVisit && user && !onboardingRequired) {
+    if (isFirstVisit && user && !onboardingRequired && hasCheckedOnboarding) {
       const timeoutId = setTimeout(() => {
         toast("Bem-vindo ao seu dashboard personalizado!");
         localStorage.setItem("firstDashboardVisit", "false");
@@ -115,10 +122,10 @@ const Dashboard = () => {
       
       return () => clearTimeout(timeoutId);
     }
-  }, [user, onboardingRequired]);
+  }, [user, onboardingRequired, hasCheckedOnboarding]);
   
   // Se ainda estiver verificando onboarding ou auth, mostrar loading
-  if (onboardingLoading || authLoading) {
+  if (onboardingLoading || authLoading || !hasCheckedOnboarding) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
         <div className="text-center space-y-4">
@@ -129,9 +136,8 @@ const Dashboard = () => {
     );
   }
   
-  // Se onboarding for necessário, redirecionar (não deveria chegar aqui)
+  // Se onboarding for necessário, não renderizar nada (já foi redirecionado)
   if (onboardingRequired) {
-    navigate('/onboarding', { replace: true });
     return null;
   }
   
