@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,11 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
 import { cleanupAuthState } from "@/utils/authUtils";
 
-export const LoginForm = () => {
+interface LoginFormProps {
+  onSwitchToReset: () => void;
+}
+
+export const LoginForm = ({ onSwitchToReset }: LoginFormProps) => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -82,7 +87,7 @@ export const LoginForm = () => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email" className="text-white">Email</Label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
             <Mail 
@@ -97,13 +102,13 @@ export const LoginForm = () => {
             placeholder="seu@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="pl-11 bg-gray-800 border-gray-700 text-white text-base font-medium antialiased"
+            className="pl-11 bg-gray-800 border-gray-700 text-white text-base font-medium antialiased placeholder:text-gray-400 focus:border-viverblue focus:ring-viverblue"
           />
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Senha</Label>
+        <Label htmlFor="password" className="text-white">Senha</Label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
             <Lock 
@@ -118,7 +123,7 @@ export const LoginForm = () => {
             placeholder="********"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="pl-11 pr-12 bg-gray-800 border-gray-700 text-white text-base font-medium antialiased"
+            className="pl-11 pr-12 bg-gray-800 border-gray-700 text-white text-base font-medium antialiased placeholder:text-gray-400 focus:border-viverblue focus:ring-viverblue"
           />
           <button
             type="button"
@@ -128,13 +133,13 @@ export const LoginForm = () => {
           >
             {showPassword ? (
               <EyeOff 
-                className="w-5 h-5 text-gray-400" 
+                className="w-5 h-5 text-gray-400 hover:text-viverblue transition-colors" 
                 strokeWidth={1.5} 
                 aria-hidden="true" 
               />
             ) : (
               <Eye 
-                className="w-5 h-5 text-gray-400" 
+                className="w-5 h-5 text-gray-400 hover:text-viverblue transition-colors" 
                 strokeWidth={1.5} 
                 aria-hidden="true" 
               />
@@ -143,9 +148,19 @@ export const LoginForm = () => {
         </div>
       </div>
 
+      <div className="text-center">
+        <button
+          type="button"
+          onClick={onSwitchToReset}
+          className="text-sm text-viverblue hover:text-viverblue-light underline hover:no-underline transition-colors"
+        >
+          Esqueceu sua senha?
+        </button>
+      </div>
+
       <Button
         type="submit"
-        className="w-full bg-viverblue hover:bg-viverblue/90"
+        className="w-full bg-viverblue hover:bg-viverblue/90 focus:bg-viverblue/90 text-white font-semibold"
         disabled={isLoading}
       >
         {isLoading ? "Entrando..." : "Entrar"}

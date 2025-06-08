@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LoginForm } from "./LoginForm";
+import LoginForm from "./login/LoginForm";
 import RegisterForm from "./RegisterForm";
 import { ResetPasswordForm } from "./ResetPasswordForm";
 
@@ -10,11 +10,11 @@ const AuthLayout = () => {
   const [currentTab, setCurrentTab] = useState("login");
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
+      <Card className="w-full max-w-md bg-gray-800/50 backdrop-blur-lg border-gray-700/50">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Viver de IA</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-2xl font-bold text-white">Viver de IA</CardTitle>
+          <CardDescription className="text-gray-300">
             {currentTab === "login" && "Entre na sua conta"}
             {currentTab === "register" && "Crie sua conta"}
             {currentTab === "reset" && "Recupere sua senha"}
@@ -22,9 +22,9 @@ const AuthLayout = () => {
         </CardHeader>
         <CardContent>
           <Tabs value={currentTab} onValueChange={setCurrentTab}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Entrar</TabsTrigger>
-              <TabsTrigger value="register">Registrar</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 bg-gray-700/50">
+              <TabsTrigger value="login" className="text-gray-300 data-[state=active]:text-white data-[state=active]:bg-viverblue">Entrar</TabsTrigger>
+              <TabsTrigger value="register" className="text-gray-300 data-[state=active]:text-white data-[state=active]:bg-viverblue">Registrar</TabsTrigger>
             </TabsList>
             
             <TabsContent value="login" className="space-y-4">
