@@ -87,7 +87,7 @@ const AppRoutes = () => {
           } 
         />
         
-        {/* Member Routes */}
+        {/* Member Routes - Agora incluindo a rota raiz com RootRedirect */}
         {memberRoutes.map((route) => (
           <Route key={route.path} path={route.path} element={route.element} />
         ))}
