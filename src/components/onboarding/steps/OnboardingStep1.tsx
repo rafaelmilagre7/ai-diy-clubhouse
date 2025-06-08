@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { User, Mail, Phone, Instagram, Linkedin, MapPin, Calendar, Heart, CalendarIcon } from 'lucide-react';
+import { User, Mail, Phone, Instagram, Linkedin, MapPin, Heart, CalendarIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -200,7 +200,7 @@ export const OnboardingStep1 = ({
 
                 <div className="space-y-2">
                   <Label className="text-sm font-medium text-white flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
+                    <CalendarIcon className="w-4 h-4" />
                     Data de nascimento
                   </Label>
                   <Popover>
