@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, Monitor, Users, Award } from 'lucide-react';
+import { Clock, Monitor, Users, Award, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -36,8 +36,10 @@ const bestPeriodsList = [
 export const OnboardingStep5 = ({ 
   data, 
   onUpdateData, 
-  onNext, 
-  memberType 
+  onNext,
+  onPrev,
+  memberType,
+  getFieldError
 }: OnboardingStepProps) => {
   const [weeklyLearningTime, setWeeklyLearningTime] = useState(data.weeklyLearningTime || '');
   const [contentPreference, setContentPreference] = useState<'theoretical' | 'hands-on' | ''>(data.contentPreference || '');
@@ -93,6 +95,15 @@ export const OnboardingStep5 = ({
     onNext();
   };
 
+  const handlePrev = () => {
+    onPrev();
+  };
+
+  const weeklyTimeError = getFieldError?.('weeklyLearningTime');
+  const contentPreferenceError = getFieldError?.('contentPreference');
+  const networkingError = getFieldError?.('wantsNetworking');
+  const caseStudyError = getFieldError?.('acceptsCaseStudy');
+
   const canProceed = weeklyLearningTime && contentPreference && wantsNetworking && acceptsCaseStudy;
 
   return (
@@ -102,164 +113,246 @@ export const OnboardingStep5 = ({
         <AIMessageDisplay message={data.aiMessage4} />
       )}
 
+      {/* Header */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center space-y-4"
+        className="text-center space-y-6"
       >
         <div className="flex justify-center">
-          <div className="bg-gradient-to-br from-viverblue/20 to-viverblue-light/20 p-4 rounded-full">
-            <Award className="w-8 h-8 text-viverblue" />
+          <motion.div 
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2 }}
+            className="w-20 h-20 rounded-full bg-gradient-to-br from-viverblue/20 to-viverblue-light/20 flex items-center justify-center"
+          >
+            <Award className="w-10 h-10 text-viverblue" />
+          </motion.div>
+        </div>
+        
+        <div className="space-y-4">
+          <motion.h1 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="text-4xl font-heading font-bold text-white"
+          >
+            Personalização final da{' '}
+            <span className="bg-gradient-to-r from-viverblue to-viverblue-light bg-clip-text text-transparent">
+              experiência! ✨
+            </span>
+          </motion.h1>
+          
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="text-xl text-neutral-300 max-w-2xl mx-auto leading-relaxed"
+          >
+            Últimos detalhes para criar uma experiência única e personalizada para você!
+          </motion.p>
+        </div>
+      </motion.div>
+
+      {/* Formulário */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.8 }}
+        className="max-w-4xl mx-auto"
+      >
+        <div className="bg-[#151823] border border-white/10 rounded-2xl p-8">
+          <div className="space-y-8">
+            {/* Seção de tempo e conteúdo */}
+            <div className="space-y-6">
+              <h3 className="text-xl font-heading font-semibold text-white flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-viverblue/20 flex items-center justify-center">
+                  <Clock className="w-4 h-4 text-viverblue" />
+                </div>
+                Preferências de Aprendizado
+              </h3>
+              
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-white">
+                    Quanto tempo semanal você pode dedicar? *
+                  </Label>
+                  <Select value={weeklyLearningTime} onValueChange={setWeeklyLearningTime}>
+                    <SelectTrigger className={`h-12 bg-[#181A2A] border-white/10 text-white ${weeklyTimeError ? 'border-red-500' : ''}`}>
+                      <SelectValue placeholder="Selecione o tempo disponível" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#151823] border-white/10">
+                      {weeklyLearningTimes.map((time) => (
+                        <SelectItem key={time} value={time}>
+                          {time}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {weeklyTimeError && (
+                    <p className="text-sm text-red-400">{weeklyTimeError}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-white flex items-center gap-2">
+                    <Monitor className="w-4 h-4" />
+                    Que tipo de conteúdo prefere? *
+                  </Label>
+                  <Select value={contentPreference} onValueChange={(value: 'theoretical' | 'hands-on') => setContentPreference(value)}>
+                    <SelectTrigger className={`h-12 bg-[#181A2A] border-white/10 text-white ${contentPreferenceError ? 'border-red-500' : ''}`}>
+                      <SelectValue placeholder="Selecione sua preferência" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#151823] border-white/10">
+                      <SelectItem value="theoretical">📚 Mais teórico e conceitual</SelectItem>
+                      <SelectItem value="hands-on">⚡ Mais prático e mão na massa</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {contentPreferenceError && (
+                    <p className="text-sm text-red-400">{contentPreferenceError}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Seção de networking */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-heading font-semibold text-white flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-viverblue/20 flex items-center justify-center">
+                  <Users className="w-4 h-4 text-viverblue" />
+                </div>
+                Networking e Comunidade
+              </h3>
+              
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-white">
+                  Quer participar de networking com outros membros? *
+                </Label>
+                <Select value={wantsNetworking} onValueChange={(value: 'yes' | 'no') => setWantsNetworking(value)}>
+                  <SelectTrigger className={`h-12 bg-[#181A2A] border-white/10 text-white ${networkingError ? 'border-red-500' : ''}`}>
+                    <SelectValue placeholder="Selecione sua preferência" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#151823] border-white/10">
+                    <SelectItem value="yes">✅ Sim, quero conhecer outros membros</SelectItem>
+                    <SelectItem value="no">❌ Não, prefiro focar nos estudos</SelectItem>
+                  </SelectContent>
+                </Select>
+                {networkingError && (
+                  <p className="text-sm text-red-400">{networkingError}</p>
+                )}
+              </div>
+
+              {wantsNetworking === 'yes' && (
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium text-white">
+                      Melhores dias para eventos/networking (opcional):
+                    </Label>
+                    <div className="grid grid-cols-2 gap-2 p-4 border border-white/10 rounded-lg bg-[#181A2A] max-h-40 overflow-y-auto">
+                      {bestDaysList.map((day) => (
+                        <div key={day} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={day}
+                            checked={bestDays.includes(day)}
+                            onCheckedChange={(checked) => handleBestDayChange(day, checked as boolean)}
+                            className="border-white/20"
+                          />
+                          <Label htmlFor={day} className="text-sm text-white cursor-pointer">
+                            {day}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium text-white">
+                      Melhores horários (opcional):
+                    </Label>
+                    <div className="space-y-2 p-4 border border-white/10 rounded-lg bg-[#181A2A]">
+                      {bestPeriodsList.map((period) => (
+                        <div key={period} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={period}
+                            checked={bestPeriods.includes(period)}
+                            onCheckedChange={(checked) => handleBestPeriodChange(period, checked as boolean)}
+                            className="border-white/20"
+                          />
+                          <Label htmlFor={period} className="text-sm text-white cursor-pointer">
+                            {period}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Seção de case study */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-heading font-semibold text-white flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-viverblue/20 flex items-center justify-center">
+                  <Award className="w-4 h-4 text-viverblue" />
+                </div>
+                Inspiração para Outros
+              </h3>
+              
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-white">
+                  Aceita que usemos seu case de sucesso como exemplo? *
+                </Label>
+                <Select value={acceptsCaseStudy} onValueChange={(value: 'yes' | 'no') => setAcceptsCaseStudy(value)}>
+                  <SelectTrigger className={`h-12 bg-[#181A2A] border-white/10 text-white ${caseStudyError ? 'border-red-500' : ''}`}>
+                    <SelectValue placeholder="Selecione sua preferência" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#151823] border-white/10">
+                    <SelectItem value="yes">✅ Sim, adoraria inspirar outros</SelectItem>
+                    <SelectItem value="no">❌ Não, prefiro privacidade</SelectItem>
+                  </SelectContent>
+                </Select>
+                {caseStudyError && (
+                  <p className="text-sm text-red-400">{caseStudyError}</p>
+                )}
+                <p className="text-xs text-neutral-400">
+                  Casos de sucesso ajudam outros membros a se inspirarem na jornada
+                </p>
+              </div>
+            </div>
+
+            {/* Navegação */}
+            <div className="flex items-center justify-between pt-6">
+              <Button
+                variant="outline"
+                onClick={handlePrev}
+                className="flex items-center gap-2 h-12 px-6 bg-transparent border-white/20 text-white hover:bg-white/5 hover:border-white/30"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Voltar
+              </Button>
+
+              <Button 
+                onClick={handleNext}
+                disabled={!canProceed}
+                size="lg"
+                className="h-12 px-8 bg-viverblue hover:bg-viverblue-dark text-[#0F111A] text-lg font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+              >
+                Finalizar onboarding! 🎉
+              </Button>
+            </div>
           </div>
         </div>
-        
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Personalização final da experiência! ✨
-        </h1>
-        
-        <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-          Últimos detalhes para criar uma experiência única e personalizada para você!
-        </p>
       </motion.div>
 
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="space-y-6 max-w-2xl mx-auto"
-      >
-        <div className="space-y-2">
-          <Label className="flex items-center gap-2">
-            <Clock className="w-4 h-4" />
-            Quanto tempo semanal você pode dedicar? *
-          </Label>
-          <Select value={weeklyLearningTime} onValueChange={setWeeklyLearningTime}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione o tempo disponível" />
-            </SelectTrigger>
-            <SelectContent>
-              {weeklyLearningTimes.map((time) => (
-                <SelectItem key={time} value={time}>
-                  {time}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label className="flex items-center gap-2">
-            <Monitor className="w-4 h-4" />
-            Que tipo de conteúdo prefere? *
-          </Label>
-          <Select value={contentPreference} onValueChange={(value: 'theoretical' | 'hands-on') => setContentPreference(value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione sua preferência" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="theoretical">📚 Mais teórico e conceitual</SelectItem>
-              <SelectItem value="hands-on">⚡ Mais prático e mão na massa</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label className="flex items-center gap-2">
-            <Users className="w-4 h-4" />
-            Quer participar de networking com outros membros? *
-          </Label>
-          <Select value={wantsNetworking} onValueChange={(value: 'yes' | 'no') => setWantsNetworking(value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione sua preferência" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="yes">✅ Sim, quero conhecer outros membros</SelectItem>
-              <SelectItem value="no">❌ Não, prefiro focar nos estudos</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {wantsNetworking === 'yes' && (
-          <>
-            <div className="space-y-3">
-              <Label>Melhores dias para eventos/networking (opcional):</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {bestDaysList.map((day) => (
-                  <div key={day} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={day}
-                      checked={bestDays.includes(day)}
-                      onCheckedChange={(checked) => handleBestDayChange(day, checked as boolean)}
-                    />
-                    <Label htmlFor={day} className="text-sm cursor-pointer">
-                      {day}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <Label>Melhores horários (opcional):</Label>
-              <div className="grid grid-cols-1 gap-2">
-                {bestPeriodsList.map((period) => (
-                  <div key={period} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={period}
-                      checked={bestPeriods.includes(period)}
-                      onCheckedChange={(checked) => handleBestPeriodChange(period, checked as boolean)}
-                    />
-                    <Label htmlFor={period} className="text-sm cursor-pointer">
-                      {period}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
-
-        <div className="space-y-2">
-          <Label className="flex items-center gap-2">
-            <Award className="w-4 h-4" />
-            Aceita que usemos seu case de sucesso como exemplo? *
-          </Label>
-          <Select value={acceptsCaseStudy} onValueChange={(value: 'yes' | 'no') => setAcceptsCaseStudy(value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione sua preferência" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="yes">✅ Sim, adoraria inspirar outros</SelectItem>
-              <SelectItem value="no">❌ Não, prefiro privacidade</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="pt-6"
-        >
-          <Button 
-            onClick={handleNext}
-            disabled={!canProceed}
-            className="w-full bg-viverblue hover:bg-viverblue-dark text-lg py-6 disabled:opacity-50"
-          >
-            Finalizar onboarding! 🎉
-          </Button>
-        </motion.div>
-      </motion.div>
-
-      {/* Dica com progresso */}
+      {/* Dica */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.6 }}
-        className="bg-gradient-to-r from-viverblue/10 to-viverblue-light/10 border border-viverblue/20 rounded-lg p-4 text-center"
+        transition={{ delay: 1.2 }}
+        className="bg-viverblue/5 border border-viverblue/20 rounded-xl p-4 text-center max-w-2xl mx-auto"
       >
-        <p className="text-sm text-gray-600 dark:text-gray-300">
-          💡 <strong>Última etapa:</strong> Quase lá! Vamos finalizar sua jornada personalizada! 🚀
+        <p className="text-sm text-neutral-300">
+          💡 <strong className="text-white">Última etapa:</strong> Quase lá! Vamos finalizar sua jornada personalizada! 🚀
         </p>
       </motion.div>
     </div>
