@@ -1,5 +1,4 @@
 
-import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -8,47 +7,32 @@ export interface AdminCommunication {
   id: string;
   title: string;
   content: string;
-  content_type: 'html' | 'markdown' | 'text';
+  email_subject?: string;
+  template_type: string;
+  priority: string;
   target_roles: string[];
   delivery_channels: string[];
+  status: string;
   scheduled_for?: string;
+  created_at: string;
   sent_at?: string;
   created_by: string;
-  created_at: string;
-  updated_at: string;
-  status: 'draft' | 'scheduled' | 'sent' | 'cancelled';
-  template_type: 'announcement' | 'maintenance' | 'event' | 'educational' | 'urgent';
-  priority: 'low' | 'normal' | 'high' | 'urgent';
-  email_subject?: string;
-  metadata: Record<string, any>;
 }
 
-export interface CommunicationDelivery {
+export interface Role {
   id: string;
-  communication_id: string;
-  user_id: string;
-  delivery_channel: string;
-  delivered_at: string;
-  opened_at?: string;
-  clicked_at?: string;
-  status: 'pending' | 'delivered' | 'failed' | 'bounced';
-  error_message?: string;
-  metadata: Record<string, any>;
+  name: string;
 }
 
 export const useCommunications = () => {
   const queryClient = useQueryClient();
 
-  // Buscar todas as comunicações
-  const { data: communications, isLoading } = useQuery({
+  const { data: communications = [], isLoading } = useQuery({
     queryKey: ['admin-communications'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('admin_communications')
-        .select(`
-          *,
-          profiles!admin_communications_created_by_fkey(name, email)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -56,57 +40,35 @@ export const useCommunications = () => {
     },
   });
 
-  // Buscar roles disponíveis
-  const { data: availableRoles } = useQuery({
-    queryKey: ['user-roles'],
+  const { data: availableRoles = [] } = useQuery({
+    queryKey: ['available-roles'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('user_roles')
-        .select('*')
+        .select('id, name')
         .order('name');
 
       if (error) throw error;
-      return data;
+      return data as Role[];
     },
   });
 
-  // Buscar estatísticas de uma comunicação
-  const getDeliveryStats = useCallback(async (communicationId: string) => {
-    const { data, error } = await supabase
-      .from('communication_deliveries')
-      .select('delivery_channel, status')
-      .eq('communication_id', communicationId);
-
-    if (error) throw error;
-
-    const stats = data.reduce((acc, delivery) => {
-      const channel = delivery.delivery_channel;
-      const status = delivery.status;
-      
-      if (!acc[channel]) {
-        acc[channel] = { total: 0, delivered: 0, failed: 0, pending: 0 };
-      }
-      
-      acc[channel].total++;
-      acc[channel][status as keyof typeof acc[typeof channel]]++;
-      
-      return acc;
-    }, {} as Record<string, any>);
-
-    return stats;
-  }, []);
-
-  // Criar nova comunicação
   const createCommunication = useMutation({
-    mutationFn: async (data: Partial<AdminCommunication>) => {
-      const { data: result, error } = await supabase
+    mutationFn: async (communication: Omit<AdminCommunication, 'id' | 'created_at' | 'created_by'>) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+
+      const { data, error } = await supabase
         .from('admin_communications')
-        .insert([data])
+        .insert({
+          ...communication,
+          created_by: user.id,
+        })
         .select()
         .single();
 
       if (error) throw error;
-      return result;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-communications'] });
@@ -117,18 +79,17 @@ export const useCommunications = () => {
     },
   });
 
-  // Atualizar comunicação
   const updateCommunication = useMutation({
-    mutationFn: async ({ id, ...data }: Partial<AdminCommunication> & { id: string }) => {
-      const { data: result, error } = await supabase
+    mutationFn: async ({ id, ...updates }: Partial<AdminCommunication> & { id: string }) => {
+      const { data, error } = await supabase
         .from('admin_communications')
-        .update(data)
+        .update(updates)
         .eq('id', id)
         .select()
         .single();
 
       if (error) throw error;
-      return result;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-communications'] });
@@ -139,30 +100,10 @@ export const useCommunications = () => {
     },
   });
 
-  // Deletar comunicação
-  const deleteCommunication = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('admin_communications')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-communications'] });
-      toast.success('Comunicado deletado com sucesso!');
-    },
-    onError: (error: any) => {
-      toast.error('Erro ao deletar comunicado: ' + error.message);
-    },
-  });
-
-  // Enviar comunicação
   const sendCommunication = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (communicationId: string) => {
       const { data, error } = await supabase.functions.invoke('send-communication', {
-        body: { communicationId: id }
+        body: { communicationId },
       });
 
       if (error) throw error;
@@ -177,13 +118,41 @@ export const useCommunications = () => {
     },
   });
 
+  const getDeliveryStats = async (communicationId: string) => {
+    const { data, error } = await supabase
+      .from('communication_deliveries')
+      .select('delivery_channel, status')
+      .eq('communication_id', communicationId);
+
+    if (error) throw error;
+
+    const stats: Record<string, any> = {};
+    
+    data.forEach((delivery) => {
+      const channel = delivery.delivery_channel;
+      if (!stats[channel]) {
+        stats[channel] = { total: 0, delivered: 0, pending: 0, failed: 0 };
+      }
+      
+      stats[channel].total++;
+      if (delivery.status === 'delivered') {
+        stats[channel].delivered++;
+      } else if (delivery.status === 'pending') {
+        stats[channel].pending++;
+      } else if (delivery.status === 'failed') {
+        stats[channel].failed++;
+      }
+    });
+
+    return stats;
+  };
+
   return {
     communications,
-    availableRoles,
     isLoading,
+    availableRoles,
     createCommunication,
     updateCommunication,
-    deleteCommunication,
     sendCommunication,
     getDeliveryStats,
   };
