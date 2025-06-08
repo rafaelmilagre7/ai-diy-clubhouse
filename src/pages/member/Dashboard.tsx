@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
 import { useDashboardProgress } from "@/hooks/useDashboardProgress";
-import { useOnboardingGuard } from "@/components/onboarding/hooks/useOnboardingGuard";
+import { useOnboardingStatus } from "@/components/onboarding/hooks/useOnboardingStatus";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Solution } from "@/lib/supabase";
@@ -16,24 +16,21 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, profile, isLoading: authLoading } = useAuth();
-  const { isOnboardingRequired, isChecking, redirectToOnboarding } = useOnboardingGuard();
+  const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingStatus();
   
-  // Estado para controle de erros
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
-  // Categoria inicial baseada na URL
   const initialCategory = useMemo(() => searchParams.get("category") || "general", [searchParams]);
   const [category, setCategory] = useState<string>(initialCategory);
   
   // Verificar se precisa completar onboarding
   useEffect(() => {
-    // Só redirecionar se não estiver mais verificando e o onboarding for necessário
-    if (!isChecking && isOnboardingRequired) {
+    if (!onboardingLoading && onboardingRequired) {
       toast.info("Complete seu onboarding para acessar o dashboard!");
-      redirectToOnboarding();
+      navigate('/onboarding', { replace: true });
     }
-  }, [isOnboardingRequired, isChecking, redirectToOnboarding]);
+  }, [onboardingRequired, onboardingLoading, navigate]);
   
   // Carregar soluções
   const { solutions, loading: solutionsLoading, error: solutionsError } = useSolutionsData();
@@ -81,7 +78,6 @@ const Dashboard = () => {
     }
   }, [user, authLoading, navigate]);
   
-  // Handlers
   const handleCategoryChange = useCallback((newCategory: string) => {
     setCategory(newCategory);
     setSearchParams({ category: newCategory });
@@ -97,11 +93,11 @@ const Dashboard = () => {
     window.location.reload();
   };
 
-  // Toast de boas-vindas na primeira visita
+  // Toast de boas-vindas
   useEffect(() => {
     const isFirstVisit = localStorage.getItem("firstDashboardVisit") !== "false";
     
-    if (isFirstVisit && user && !isOnboardingRequired) {
+    if (isFirstVisit && user && !onboardingRequired) {
       const timeoutId = setTimeout(() => {
         toast("Bem-vindo ao seu dashboard personalizado!");
         localStorage.setItem("firstDashboardVisit", "false");
@@ -109,10 +105,10 @@ const Dashboard = () => {
       
       return () => clearTimeout(timeoutId);
     }
-  }, [user, isOnboardingRequired]);
+  }, [user, onboardingRequired]);
   
   // Se ainda estiver verificando onboarding, mostrar loading
-  if (isChecking) {
+  if (onboardingLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
         <div className="text-center space-y-4">
@@ -123,18 +119,10 @@ const Dashboard = () => {
     );
   }
   
-  // Se onboarding for necessário, mostrar mensagem (não deveria chegar aqui devido ao useEffect)
-  if (isOnboardingRequired) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-        <div className="text-center space-y-4">
-          <p className="text-gray-600 dark:text-gray-300">Redirecionando para o onboarding...</p>
-          <Button onClick={redirectToOnboarding}>
-            Ir para Onboarding
-          </Button>
-        </div>
-      </div>
-    );
+  // Se onboarding for necessário, redirecionar (não deveria chegar aqui)
+  if (onboardingRequired) {
+    navigate('/onboarding', { replace: true });
+    return null;
   }
   
   // Se houver erro, mostrar mensagem de erro

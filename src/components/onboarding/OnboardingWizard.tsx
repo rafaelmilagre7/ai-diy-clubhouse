@@ -1,7 +1,11 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
+import { useOnboardingStatus } from './hooks/useOnboardingStatus';
+import { useOnboardingStorage } from './hooks/useOnboardingStorage';
+import { useOnboardingValidation } from './hooks/useOnboardingValidation';
 import { OnboardingStep1 } from './steps/OnboardingStep1';
 import { OnboardingStep2 } from './steps/OnboardingStep2';
 import { OnboardingStep3 } from './steps/OnboardingStep3';
@@ -12,86 +16,30 @@ import { OnboardingFinal } from './steps/OnboardingFinal';
 import { OnboardingProgress } from './OnboardingProgress';
 import { OnboardingNavigation } from './OnboardingNavigation';
 import { OnboardingFeedback } from './components/OnboardingFeedback';
-import { useOnboardingStorage } from './hooks/useOnboardingStorage';
-import { useOnboardingSubmit } from './hooks/useOnboardingSubmit';
-import { useOnboardingValidation } from './hooks/useOnboardingValidation';
 import { OnboardingData } from './types/onboardingTypes';
 import { toast } from 'sonner';
 
 export const OnboardingWizard = () => {
+  const navigate = useNavigate();
   const { user, profile } = useAuth();
+  const { isRequired, isLoading, error, submitData, clearError } = useOnboardingStatus();
   const [currentStep, setCurrentStep] = useState(1);
   const [isCompleting, setIsCompleting] = useState(false);
-  const [isCheckingStatus, setIsCheckingStatus] = useState(true);
-  const [submitError, setSubmitError] = useState<string | null>(null);
   const { data, updateData, clearData } = useOnboardingStorage();
-  const { checkOnboardingStatus, submitOnboardingData } = useOnboardingSubmit();
   const { validateCurrentStep, validationErrors, clearValidationErrors } = useOnboardingValidation();
 
-  // Detectar tipo de membro baseado no perfil com tipo explícito
+  // Detectar tipo de membro baseado no perfil
   const memberType: 'club' | 'formacao' = profile?.role === 'formacao' ? 'formacao' : 'club';
-  const totalSteps = 7; // 6 etapas + tela final
+  const totalSteps = 7;
 
-  // Títulos das etapas baseados no tipo de membro
   const stepTitles = memberType === 'club' 
-    ? [
-        'Apresentação', 
-        'Perfil Pessoal', 
-        'Mercado e Negócio', 
-        'Experiência com IA', 
-        'Objetivos', 
-        'Personalização',
-        'Finalização'
-      ]
-    : [
-        'Apresentação',
-        'Perfil Educacional', 
-        'Área de Atuação', 
-        'Experiência com IA', 
-        'Objetivos de Formação', 
-        'Personalização',
-        'Finalização'
-      ];
-
-  // Verificar se onboarding já foi completado - usar useEffect simples sem dependências complexas
-  useEffect(() => {
-    if (!user?.id) {
-      setIsCheckingStatus(false);
-      return;
-    }
-    
-    const checkCompletion = async () => {
-      try {
-        console.log('OnboardingWizard: Verificando status de conclusão');
-        const onboardingData = await checkOnboardingStatus();
-        
-        if (onboardingData && onboardingData.completed_at) {
-          // Onboarding já foi completado, redirecionar
-          console.log('OnboardingWizard: Onboarding já completado, redirecionando');
-          toast.info('Onboarding já foi completado! Redirecionando...');
-          setTimeout(() => {
-            window.location.href = memberType === 'formacao' ? '/formacao' : '/dashboard';
-          }, 1000);
-          return;
-        }
-      } catch (error) {
-        console.error('OnboardingWizard: Erro ao verificar status:', error);
-        // Não falhar aqui, permitir que o usuário continue
-      } finally {
-        setIsCheckingStatus(false);
-      }
-    };
-
-    // Executar apenas uma vez quando o componente montar
-    checkCompletion();
-  }, [user?.id]); // Dependência simples e estável
+    ? ['Apresentação', 'Perfil Pessoal', 'Mercado e Negócio', 'Experiência com IA', 'Objetivos', 'Personalização', 'Finalização']
+    : ['Apresentação', 'Perfil Educacional', 'Área de Atuação', 'Experiência com IA', 'Objetivos de Formação', 'Personalização', 'Finalização'];
 
   const handleNext = useCallback(() => {
-    // Limpar erros anteriores
-    setSubmitError(null);
+    clearError();
     clearValidationErrors();
 
-    // Validar etapa atual
     const validation = validateCurrentStep(currentStep, data, memberType);
     
     if (!validation.isValid) {
@@ -101,36 +49,31 @@ export const OnboardingWizard = () => {
 
     if (currentStep < totalSteps) {
       setCurrentStep(prev => prev + 1);
-      
-      // Feedback positivo ao avançar
       if (currentStep < 6) {
         toast.success('Ótimo! Vamos para a próxima etapa 🎉');
       }
     }
-  }, [currentStep, totalSteps, data, memberType, validateCurrentStep, clearValidationErrors]);
+  }, [currentStep, totalSteps, data, memberType, validateCurrentStep, clearValidationErrors, clearError]);
 
   const handlePrev = useCallback(() => {
     if (currentStep > 1) {
       setCurrentStep(prev => prev - 1);
-      // Limpar erros ao voltar
-      setSubmitError(null);
+      clearError();
       clearValidationErrors();
     }
-  }, [currentStep, clearValidationErrors]);
+  }, [currentStep, clearValidationErrors, clearError]);
 
   const handleStepData = useCallback((stepData: Partial<OnboardingData>) => {
     updateData(stepData);
-    // Limpar erros ao atualizar dados
-    setSubmitError(null);
+    clearError();
     clearValidationErrors();
-  }, [updateData, clearValidationErrors]);
+  }, [updateData, clearValidationErrors, clearError]);
 
   const handleComplete = useCallback(async () => {
     setIsCompleting(true);
-    setSubmitError(null);
     
     try {
-      // Validação final de todos os dados
+      // Validação final
       let allValid = true;
       for (let step = 1; step <= 6; step++) {
         const validation = validateCurrentStep(step, data, memberType);
@@ -144,44 +87,40 @@ export const OnboardingWizard = () => {
         throw new Error('Dados incompletos. Por favor, revise todas as etapas.');
       }
 
-      // Marcar como completado
       const completedData = {
         ...data,
         completedAt: new Date().toISOString(),
         memberType
       };
 
-      // Submeter dados
-      await submitOnboardingData(completedData);
-      
-      // Limpar dados temporários do localStorage
+      await submitData(completedData);
       clearData();
       
-      // Feedback de sucesso
       toast.success('Onboarding concluído com sucesso! 🎉');
       
-      // Redirecionar baseado no tipo de membro
-      const redirectUrl = memberType === 'formacao' ? '/formacao' : '/dashboard';
-      
+      // Usar React Router para navegação
+      const redirectPath = memberType === 'formacao' ? '/formacao' : '/dashboard';
       setTimeout(() => {
-        window.location.href = redirectUrl;
+        navigate(redirectPath, { replace: true });
       }, 1500);
       
     } catch (error) {
-      console.error('OnboardingWizard: Erro ao finalizar:', error);
-      setSubmitError(
-        error instanceof Error 
-          ? error.message 
-          : 'Erro ao finalizar onboarding. Tente novamente.'
-      );
+      console.error('[OnboardingWizard] Erro ao finalizar:', error);
       toast.error('Erro ao finalizar onboarding');
     } finally {
       setIsCompleting(false);
     }
-  }, [data, memberType, validateCurrentStep, submitOnboardingData, clearData]);
+  }, [data, memberType, validateCurrentStep, submitData, clearData, navigate]);
+
+  // Se onboarding não for necessário, redirecionar
+  if (isRequired === false) {
+    const redirectPath = memberType === 'formacao' ? '/formacao' : '/dashboard';
+    navigate(redirectPath, { replace: true });
+    return null;
+  }
 
   // Mostrar loading enquanto verifica status
-  if (isCheckingStatus) {
+  if (isLoading || isRequired === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
         <div className="text-center space-y-4">
@@ -205,33 +144,24 @@ export const OnboardingWizard = () => {
     };
 
     switch (currentStep) {
-      case 1:
-        return <OnboardingStep1 {...stepProps} />;
-      case 2:
-        return <OnboardingStep2 {...stepProps} />;
-      case 3:
-        return <OnboardingStep3 {...stepProps} />;
-      case 4:
-        return <OnboardingStep4 {...stepProps} />;
-      case 5:
-        return <OnboardingStep5 {...stepProps} />;
-      case 6:
-        return <OnboardingStep6 {...stepProps} />;
-      case 7:
-        return (
-          <OnboardingFinal 
-            data={data} 
-            onComplete={handleComplete}
-            isCompleting={isCompleting}
-            memberType={memberType}
-          />
-        );
-      default:
-        return <OnboardingStep1 {...stepProps} />;
+      case 1: return <OnboardingStep1 {...stepProps} />;
+      case 2: return <OnboardingStep2 {...stepProps} />;
+      case 3: return <OnboardingStep3 {...stepProps} />;
+      case 4: return <OnboardingStep4 {...stepProps} />;
+      case 5: return <OnboardingStep5 {...stepProps} />;
+      case 6: return <OnboardingStep6 {...stepProps} />;
+      case 7: return (
+        <OnboardingFinal 
+          data={data} 
+          onComplete={handleComplete}
+          isCompleting={isCompleting}
+          memberType={memberType}
+        />
+      );
+      default: return <OnboardingStep1 {...stepProps} />;
     }
   };
 
-  // Verificar se pode prosseguir
   const canProceed = () => {
     if (currentStep === totalSteps) return true;
     const validation = validateCurrentStep(currentStep, data, memberType);
@@ -254,12 +184,11 @@ export const OnboardingWizard = () => {
       {/* Conteúdo principal */}
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-4xl">
-          {/* Feedback de erro geral */}
           <OnboardingFeedback
             type="error"
-            message={submitError || 'Erro no onboarding'}
-            show={!!submitError}
-            onClose={() => setSubmitError(null)}
+            message={error || 'Erro no onboarding'}
+            show={!!error}
+            onClose={clearError}
           />
 
           <AnimatePresence mode="wait">
@@ -277,13 +206,13 @@ export const OnboardingWizard = () => {
         </div>
       </div>
 
-      {/* Navegação (apenas se não estiver na tela final) */}
+      {/* Navegação */}
       {currentStep < totalSteps && (
         <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-6">
           <div className="max-w-4xl mx-auto">
             <OnboardingNavigation
               currentStep={currentStep}
-              totalSteps={totalSteps - 1} // Excluir tela final da contagem
+              totalSteps={totalSteps - 1}
               onNext={handleNext}
               onPrev={handlePrev}
               canProceed={canProceed()}
