@@ -16,7 +16,7 @@ export const OnboardingStep5 = ({
   memberType 
 }: OnboardingStepProps) => {
   const [primaryGoals, setPrimaryGoals] = useState<string[]>(data.primaryGoals || []);
-  const [timeframe, setTimeframe] = useState(data.timeframe || '');
+  const [timeframe, setTimeframe] = useState<'1month' | '3months' | '6months' | '1year' | ''>(data.timeframe || '');
   const [successMetrics, setSuccessMetrics] = useState(data.successMetrics?.join(', ') || '');
 
   const clubGoals = [

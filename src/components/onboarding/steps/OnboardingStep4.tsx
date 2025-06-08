@@ -15,7 +15,7 @@ export const OnboardingStep4 = ({
   onNext, 
   memberType 
 }: OnboardingStepProps) => {
-  const [aiExperience, setAiExperience] = useState(data.aiExperience || '');
+  const [aiExperience, setAiExperience] = useState<'none' | 'basic' | 'intermediate' | 'advanced' | ''>(data.aiExperience || '');
   const [aiToolsUsed, setAiToolsUsed] = useState(data.aiToolsUsed?.join(', ') || '');
   const [aiChallenges, setAiChallenges] = useState(data.aiChallenges?.join(', ') || '');
 

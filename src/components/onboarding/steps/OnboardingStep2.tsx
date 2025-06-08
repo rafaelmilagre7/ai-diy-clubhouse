@@ -14,10 +14,10 @@ export const OnboardingStep2 = ({
   onNext, 
   memberType 
 }: OnboardingStepProps) => {
-  const [businessStage, setBusinessStage] = useState(data.businessStage || '');
+  const [businessStage, setBusinessStage] = useState<'idea' | 'startup' | 'growth' | 'established' | ''>(data.businessStage || '');
   const [businessArea, setBusinessArea] = useState(data.businessArea || '');
-  const [teamSize, setTeamSize] = useState(data.teamSize || '');
-  const [educationLevel, setEducationLevel] = useState(data.educationLevel || '');
+  const [teamSize, setTeamSize] = useState<'solo' | 'small' | 'medium' | 'large' | ''>(data.teamSize || '');
+  const [educationLevel, setEducationLevel] = useState<'student' | 'graduate' | 'postgraduate' | 'professional' | ''>(data.educationLevel || '');
   const [studyArea, setStudyArea] = useState(data.studyArea || '');
   const [institution, setInstitution] = useState(data.institution || '');
 
