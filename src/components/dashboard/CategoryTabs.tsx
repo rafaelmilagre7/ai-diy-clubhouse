@@ -1,7 +1,6 @@
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { categoryMapping } from "@/lib/types/categoryTypes";
 
 export interface CategoryTabsProps {
   activeCategory: string;
@@ -9,12 +8,12 @@ export interface CategoryTabsProps {
 }
 
 export const CategoryTabs = ({ activeCategory, setActiveCategory }: CategoryTabsProps) => {
-  // Mantemos as chaves antigas para IDs para compatibilidade com o resto do sistema
+  // Categorias atualizadas para o novo sistema
   const categories = [
     { id: "all", name: "Todas" },
     { id: "Receita", name: "Receita" },
-    { id: "Operacional", name: "Otimização Operacional" },
-    { id: "Estratégia", name: "Gestão Estratégica" }
+    { id: "Operacional", name: "Operacional" },
+    { id: "Estratégia", name: "Estratégia" }
   ];
 
   return (
@@ -28,8 +27,8 @@ export const CategoryTabs = ({ activeCategory, setActiveCategory }: CategoryTabs
           className={cn(
             "text-sm whitespace-nowrap",
             activeCategory === category.id
-              ? "bg-[#0ABAB5]/10 text-[#0ABAB5] hover:bg-[#0ABAB5]/20 hover:text-[#0ABAB5]"
-              : "text-gray-600 hover:text-gray-900"
+              ? "bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary"
+              : "text-text-secondary hover:text-text-primary"
           )}
         >
           {category.name}
