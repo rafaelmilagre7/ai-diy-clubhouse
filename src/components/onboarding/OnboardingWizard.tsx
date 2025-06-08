@@ -13,7 +13,6 @@ import { OnboardingStep4 } from './steps/OnboardingStep4';
 import { OnboardingStep5 } from './steps/OnboardingStep5';
 import { OnboardingFinal } from './steps/OnboardingFinal';
 import { OnboardingProgress } from './OnboardingProgress';
-import { OnboardingNavigation } from './OnboardingNavigation';
 import { OnboardingFeedback } from './components/OnboardingFeedback';
 import { OnboardingData } from './types/onboardingTypes';
 import { toast } from 'sonner';
@@ -215,22 +214,6 @@ export const OnboardingWizard = () => {
           </AnimatePresence>
         </div>
       </div>
-
-      {/* Navegação */}
-      {currentStep < totalSteps && (
-        <div className="sticky bottom-0 z-40 bg-[#0F111A]/90 backdrop-blur-sm border-t border-white/5">
-          <div className="max-w-5xl mx-auto px-6 py-2">
-            <OnboardingNavigation
-              currentStep={currentStep}
-              totalSteps={totalSteps - 1}
-              onNext={handleNext}
-              onPrev={handlePrev}
-              canProceed={canProceed}
-              isLoading={isCompleting}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 };
