@@ -10,9 +10,9 @@ import {
   Mail,
   LogOut,
   Boxes,
-  MessageSquare,
   Lightbulb,
-  UserCog
+  UserCog,
+  Megaphone
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -67,6 +67,11 @@ const AdminLayout = () => {
       isExact: true
     },
     { 
+      to: "/admin/users", 
+      icon: <Users className="h-5 w-5" />, 
+      label: "Usuários" 
+    },
+    { 
       to: "/admin/solutions", 
       icon: <Boxes className="h-5 w-5" />, 
       label: "Soluções" 
@@ -75,11 +80,6 @@ const AdminLayout = () => {
       to: "/admin/courses", 
       icon: <BookOpen className="h-5 w-5" />, 
       label: "Cursos" 
-    },
-    { 
-      to: "/admin/users", 
-      icon: <Users className="h-5 w-5" />, 
-      label: "Usuários" 
     },
     { 
       to: "/admin/invites", 
@@ -102,9 +102,9 @@ const AdminLayout = () => {
       label: "Sugestões" 
     },
     { 
-      to: "/admin/config", 
-      icon: <Settings className="h-5 w-5" />, 
-      label: "Configurações" 
+      to: "/admin/communications", 
+      icon: <Megaphone className="h-5 w-5" />, 
+      label: "Comunicações" 
     }
   ];
 

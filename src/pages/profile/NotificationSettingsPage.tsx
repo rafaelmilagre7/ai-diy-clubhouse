@@ -4,11 +4,11 @@ import { NotificationPreferences } from '@/components/profile/NotificationPrefer
 
 const NotificationSettingsPage = () => {
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <div className="mb-6">
+    <div className="container mx-auto py-8 px-4 max-w-4xl">
+      <div className="mb-8">
         <h1 className="text-2xl font-bold">Configurações de Notificação</h1>
-        <p className="text-muted-foreground">
-          Gerencie como você deseja receber notificações e comunicados
+        <p className="text-muted-foreground mt-2">
+          Gerencie como você recebe notificações da plataforma
         </p>
       </div>
       

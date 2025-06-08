@@ -12,7 +12,8 @@ import {
   Mail,
   MessageSquare,
   Zap,
-  Wrench
+  Wrench,
+  Megaphone
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -75,7 +76,7 @@ const navigationItems = [
   {
     title: "Comunicações",
     href: "/admin/communications",
-    icon: MessageSquare
+    icon: Megaphone
   }
 ];
 

@@ -17,11 +17,13 @@ export interface AdminCommunication {
   created_at: string;
   sent_at?: string;
   created_by: string;
+  updated_at?: string;
 }
 
 export interface Role {
   id: string;
   name: string;
+  description?: string;
 }
 
 export const useCommunications = () => {
@@ -45,7 +47,7 @@ export const useCommunications = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('user_roles')
-        .select('id, name')
+        .select('id, name, description')
         .order('name');
 
       if (error) throw error;
@@ -54,7 +56,7 @@ export const useCommunications = () => {
   });
 
   const createCommunication = useMutation({
-    mutationFn: async (communication: Omit<AdminCommunication, 'id' | 'created_at' | 'created_by'>) => {
+    mutationFn: async (communication: Omit<AdminCommunication, 'id' | 'created_at' | 'created_by' | 'updated_at'>) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
 
