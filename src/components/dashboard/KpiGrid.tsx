@@ -2,7 +2,9 @@
 import { FC, memo } from "react";
 import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
+import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Clock, Target, TrendingUp } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface KpiGridProps {
   completed: number;
@@ -11,94 +13,118 @@ interface KpiGridProps {
   isLoading?: boolean;
 }
 
+interface KpiCardProps {
+  title: string;
+  value: number;
+  icon: React.ReactNode;
+  variant: "success" | "warning" | "info" | "accent";
+  description: string;
+  isLoading?: boolean;
+}
+
+const KpiCard: FC<KpiCardProps> = memo(({ 
+  title, 
+  value, 
+  icon, 
+  variant, 
+  description, 
+  isLoading 
+}) => {
+  return (
+    <Card 
+      variant="elevated" 
+      className={cn(
+        "p-6 hover-lift transition-all duration-300",
+        "hover:shadow-glow-primary border-border-subtle"
+      )}
+    >
+      <div className="flex items-start justify-between">
+        <div className="space-y-3 flex-1">
+          <div className="flex items-center gap-2">
+            <div className={cn(
+              "p-2 rounded-lg",
+              variant === "success" && "bg-success/10",
+              variant === "warning" && "bg-warning/10", 
+              variant === "info" && "bg-info/10",
+              variant === "accent" && "bg-accent/10"
+            )}>
+              {icon}
+            </div>
+            <Text variant="label" textColor="secondary" className="uppercase tracking-wide">
+              {title}
+            </Text>
+          </div>
+          
+          <div className="space-y-1">
+            {isLoading ? (
+              <div className="h-8 bg-surface animate-pulse rounded"></div>
+            ) : (
+              <Text variant="section" textColor="primary" weight="bold">
+                {value}
+              </Text>
+            )}
+            <Text variant="caption" textColor="tertiary">
+              {description}
+            </Text>
+          </div>
+        </div>
+        
+        <Badge variant={variant} size="sm">
+          <TrendingUp className="h-3 w-3 mr-1" />
+          Ativo
+        </Badge>
+      </div>
+    </Card>
+  );
+});
+
+KpiCard.displayName = 'KpiCard';
+
 export const KpiGrid: FC<KpiGridProps> = memo(({ 
   completed, 
   inProgress, 
   total, 
-  isLoading = false 
+  isLoading 
 }) => {
   const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-  const kpis = [
-    {
-      title: "Implementações Concluídas",
-      value: completed,
-      icon: CheckCircle,
-      color: "text-success",
-      bgColor: "bg-success/10",
-      borderColor: "border-success/20"
-    },
-    {
-      title: "Em Andamento",
-      value: inProgress,
-      icon: Clock,
-      color: "text-warning",
-      bgColor: "bg-warning/10",
-      borderColor: "border-warning/20"
-    },
-    {
-      title: "Taxa de Conclusão",
-      value: `${completionRate}%`,
-      icon: TrendingUp,
-      color: "text-info",
-      bgColor: "bg-info/10",
-      borderColor: "border-info/20"
-    },
-    {
-      title: "Total de Soluções",
-      value: total,
-      icon: Target,
-      color: "text-primary",
-      bgColor: "bg-primary/10",
-      borderColor: "border-primary/20"
-    }
-  ];
-
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <Card key={index} className="p-6 animate-pulse">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-surface-hover rounded-lg" />
-              <div className="space-y-2 flex-1">
-                <div className="h-4 bg-surface-hover rounded w-3/4" />
-                <div className="h-6 bg-surface-hover rounded w-1/2" />
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
-    );
-  }
-
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in">
-      {kpis.map((kpi, index) => (
-        <Card
-          key={kpi.title}
-          variant="interactive"
-          className="p-6 hover:scale-105 transition-transform duration-200"
-          style={{ animationDelay: `${index * 0.1}s` }}
-        >
-          <div className="flex items-center space-x-4">
-            <div className={`
-              w-12 h-12 rounded-lg flex items-center justify-center
-              ${kpi.bgColor} ${kpi.borderColor} border
-            `}>
-              <kpi.icon className={`h-6 w-6 ${kpi.color}`} />
-            </div>
-            <div className="space-y-1">
-              <Text variant="caption" textColor="tertiary">
-                {kpi.title}
-              </Text>
-              <Text variant="card" textColor="primary" weight="bold">
-                {kpi.value}
-              </Text>
-            </div>
-          </div>
-        </Card>
-      ))}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in">
+      <KpiCard
+        title="Concluídas"
+        value={completed}
+        icon={<CheckCircle className="h-5 w-5 text-success" />}
+        variant="success"
+        description="Soluções implementadas"
+        isLoading={isLoading}
+      />
+      
+      <KpiCard
+        title="Em andamento"
+        value={inProgress}
+        icon={<Clock className="h-5 w-5 text-warning" />}
+        variant="warning"
+        description="Implementações ativas"
+        isLoading={isLoading}
+      />
+      
+      <KpiCard
+        title="Total"
+        value={total}
+        icon={<Target className="h-5 w-5 text-info" />}
+        variant="info"
+        description="Soluções disponíveis"
+        isLoading={isLoading}
+      />
+      
+      <KpiCard
+        title="Taxa de sucesso"
+        value={completionRate}
+        icon={<TrendingUp className="h-5 w-5 text-accent" />}
+        variant="accent"
+        description="% de conclusão"
+        isLoading={isLoading}
+      />
     </div>
   );
 });
