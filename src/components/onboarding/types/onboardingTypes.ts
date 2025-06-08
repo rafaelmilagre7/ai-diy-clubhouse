@@ -1,43 +1,57 @@
+
 export interface OnboardingData {
-  // Etapa 1 - Informações básicas
+  // Etapa 1 - Informações pessoais
   name?: string;
-  nickname?: string;
+  email?: string;
+  phone?: string;
+  instagram?: string;
+  linkedin?: string;
+  state?: string;
+  city?: string;
+  birthDate?: string;
+  curiosity?: string;
   
-  // Etapa 2 - Perfil (Club/Formação específico)
-  // Para Club Members
-  businessStage?: 'idea' | 'startup' | 'growth' | 'established' | '';
-  businessArea?: string;
-  teamSize?: 'solo' | 'small' | 'medium' | 'large' | '';
+  // Etapa 2 - Perfil Empresarial
+  companyName?: string;
+  companyWebsite?: string;
+  businessSector?: string;
+  companySize?: string;
+  annualRevenue?: string;
+  position?: string;
   
-  // Para Formação Members
-  educationLevel?: 'student' | 'graduate' | 'postgraduate' | 'professional' | '';
-  studyArea?: string;
-  institution?: string;
-  
-  // Etapa 3 - Mercado/Área de Atuação
-  targetMarket?: string;
-  mainChallenges?: string[];
-  currentTools?: string[];
-  
-  // Etapa 4 - Experiência com IA
-  aiExperience?: 'none' | 'basic' | 'intermediate' | 'advanced' | '';
+  // Etapa 3 - Maturidade em IA
+  hasImplementedAI?: 'yes' | 'no' | 'tried-failed' | '';
   aiToolsUsed?: string[];
-  aiChallenges?: string[];
+  aiKnowledgeLevel?: 'beginner' | 'intermediate' | 'advanced' | 'expert' | '';
+  dailyTools?: string[];
+  whoWillImplement?: 'myself' | 'team' | 'hire' | '';
   
-  // Etapa 5 - Objetivos
-  primaryGoals?: string[];
-  timeframe?: '1month' | '3months' | '6months' | '1year' | '';
-  successMetrics?: string[];
+  // Etapa 4 - Objetivos e Expectativas
+  mainObjective?: 'reduce-costs' | 'increase-sales' | 'automate-processes' | 'innovate-products' | '';
+  areaToImpact?: string;
+  expectedResult90Days?: string;
+  aiImplementationBudget?: string;
   
-  // Etapa 6 - Personalização
-  communicationStyle?: 'formal' | 'casual' | 'technical' | 'creative';
-  learningPreference?: 'visual' | 'hands-on' | 'reading' | 'video';
-  contentTypes?: string[];
+  // Etapa 5 - Personalização da Experiência
+  weeklyLearningTime?: string;
+  contentPreference?: 'theoretical' | 'hands-on' | '';
+  wantsNetworking?: 'yes' | 'no' | '';
+  bestDays?: string[];
+  bestPeriods?: string[];
+  acceptsCaseStudy?: 'yes' | 'no' | '';
   
   // Metadados
   memberType?: 'club' | 'formacao';
   completedAt?: string;
   startedAt?: string;
+  
+  // IA Interativa - mensagens personalizadas para cada etapa
+  aiMessage1?: string;
+  aiMessage2?: string;
+  aiMessage3?: string;
+  aiMessage4?: string;
+  aiMessage5?: string;
+  aiFinalMessage?: string;
 }
 
 export interface OnboardingStepProps {

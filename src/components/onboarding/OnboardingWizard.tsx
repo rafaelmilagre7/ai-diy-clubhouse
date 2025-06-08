@@ -11,7 +11,6 @@ import { OnboardingStep2 } from './steps/OnboardingStep2';
 import { OnboardingStep3 } from './steps/OnboardingStep3';
 import { OnboardingStep4 } from './steps/OnboardingStep4';
 import { OnboardingStep5 } from './steps/OnboardingStep5';
-import { OnboardingStep6 } from './steps/OnboardingStep6';
 import { OnboardingFinal } from './steps/OnboardingFinal';
 import { OnboardingProgress } from './OnboardingProgress';
 import { OnboardingNavigation } from './OnboardingNavigation';
@@ -33,28 +32,33 @@ export const OnboardingWizard = () => {
     profile?.role === 'formacao' ? 'formacao' : 'club'
   , [profile?.role]);
   
-  const totalSteps = 7;
+  const totalSteps = 6; // 5 etapas + final
 
-  const stepTitles = useMemo(() => 
-    memberType === 'club' 
-      ? ['Apresentação', 'Perfil Pessoal', 'Mercado e Negócio', 'Experiência com IA', 'Objetivos', 'Personalização', 'Finalização']
-      : ['Apresentação', 'Perfil Educacional', 'Área de Atuação', 'Experiência com IA', 'Objetivos de Formação', 'Personalização', 'Finalização']
-  , [memberType]);
+  const stepTitles = useMemo(() => [
+    'Informações Pessoais',
+    'Perfil Empresarial', 
+    'Maturidade em IA',
+    'Objetivos e Expectativas',
+    'Personalização da Experiência',
+    'Finalização'
+  ], []);
 
   const handleNext = useCallback(() => {
     clearError();
     clearValidationErrors();
 
-    const validation = validateCurrentStep(currentStep, data, memberType);
-    
-    if (!validation.isValid) {
-      toast.error('Por favor, corrija os erros antes de continuar');
-      return;
+    if (currentStep < 5) {
+      const validation = validateCurrentStep(currentStep, data, memberType);
+      
+      if (!validation.isValid) {
+        toast.error('Por favor, preencha todos os campos obrigatórios antes de continuar');
+        return;
+      }
     }
 
     if (currentStep < totalSteps) {
       setCurrentStep(prev => prev + 1);
-      if (currentStep < 6) {
+      if (currentStep < 5) {
         toast.success('Ótimo! Vamos para a próxima etapa 🎉');
       }
     }
@@ -80,7 +84,7 @@ export const OnboardingWizard = () => {
     try {
       // Validação final
       let allValid = true;
-      for (let step = 1; step <= 6; step++) {
+      for (let step = 1; step <= 5; step++) {
         const validation = validateCurrentStep(step, data, memberType);
         if (!validation.isValid) {
           allValid = false;
@@ -103,7 +107,7 @@ export const OnboardingWizard = () => {
       
       toast.success('Onboarding concluído com sucesso! 🎉');
       
-      const redirectPath = memberType === 'formacao' ? '/formacao' : '/dashboard';
+      const redirectPath = '/dashboard';
       setTimeout(() => {
         navigate(redirectPath, { replace: true });
       }, 1500);
@@ -118,6 +122,7 @@ export const OnboardingWizard = () => {
 
   const canProceed = useMemo(() => {
     if (currentStep === totalSteps) return true;
+    if (currentStep >= 5) return true; // Etapas finais
     const validation = validateCurrentStep(currentStep, data, memberType);
     return validation.isValid;
   }, [currentStep, totalSteps, validateCurrentStep, data, memberType]);
@@ -141,8 +146,7 @@ export const OnboardingWizard = () => {
       case 3: return <OnboardingStep3 {...stepProps} />;
       case 4: return <OnboardingStep4 {...stepProps} />;
       case 5: return <OnboardingStep5 {...stepProps} />;
-      case 6: return <OnboardingStep6 {...stepProps} />;
-      case 7: return (
+      case 6: return (
         <OnboardingFinal 
           data={data} 
           onComplete={handleComplete}
