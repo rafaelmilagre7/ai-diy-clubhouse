@@ -4,38 +4,55 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const cardVariants = cva(
-  "rounded-lg border bg-surface-elevated text-text-primary shadow-sm transition-all duration-200",
+  "rounded-xl border border-border shadow-sm transition-all duration-300",
   {
     variants: {
       variant: {
-        default: "border-border",
-        elevated: "border-border shadow-md hover:shadow-lg", 
-        interactive: "border-border hover:border-border-strong hover:shadow-md cursor-pointer hover:-translate-y-0.5",
-        glow: "border-primary/20 shadow-glow-primary hover:shadow-glow-strong",
+        default: "bg-surface-elevated",
+        surface: "bg-surface",
+        elevated: "bg-surface-elevated shadow-md hover:shadow-lg",
+        interactive: "bg-surface-elevated hover:shadow-md hover:border-border-strong cursor-pointer hover:-translate-y-0.5",
+        outline: "bg-transparent border-2",
+        ghost: "bg-transparent border-0 shadow-none",
+        gradient: "bg-gradient-surface border-primary/20",
+        glow: "bg-surface-elevated hover:shadow-glow-primary",
       },
-      size: {
-        sm: "p-4",
-        default: "p-6",
-        lg: "p-8",
+      padding: {
+        none: "",
+        sm: "p-3",
+        default: "p-4",
+        lg: "p-6",
+        xl: "p-8",
+      },
+      radius: {
+        none: "rounded-none",
+        sm: "rounded-sm",
+        default: "rounded-xl",
+        lg: "rounded-2xl",
+        full: "rounded-full",
       },
     },
     defaultVariants: {
       variant: "default",
-      size: "default",
+      padding: "default",
+      radius: "default",
     },
   }
 )
 
-const Card = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof cardVariants>
->(({ className, variant, size, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(cardVariants({ variant, size }), className)}
-    {...props}
-  />
-))
+export interface CardProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof cardVariants> {}
+
+const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ className, variant, padding, radius, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn(cardVariants({ variant, padding, radius }), className)}
+      {...props}
+    />
+  )
+)
 Card.displayName = "Card"
 
 const CardHeader = React.forwardRef<
@@ -44,7 +61,7 @@ const CardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex flex-col space-y-1.5 p-6 pb-0", className)}
+    className={cn("flex flex-col space-y-1.5", className)}
     {...props}
   />
 ))
@@ -53,14 +70,12 @@ CardHeader.displayName = "CardHeader"
 const CardTitle = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLHeadingElement>
->(({ className, children, ...props }, ref) => (
+>(({ className, ...props }, ref) => (
   <h3
     ref={ref}
-    className={cn("text-lg font-semibold leading-none tracking-tight text-text-primary", className)}
+    className={cn("text-2xl font-semibold leading-none tracking-tight text-text-primary", className)}
     {...props}
-  >
-    {children}
-  </h3>
+  />
 ))
 CardTitle.displayName = "CardTitle"
 
@@ -80,7 +95,7 @@ const CardContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+  <div ref={ref} className={cn("", className)} {...props} />
 ))
 CardContent.displayName = "CardContent"
 
@@ -90,10 +105,10 @@ const CardFooter = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex items-center p-6 pt-0", className)}
+    className={cn("flex items-center", className)}
     {...props}
   />
 ))
 CardFooter.displayName = "CardFooter"
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent, cardVariants }
