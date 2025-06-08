@@ -1,9 +1,17 @@
 
 import { FC, memo } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
-import { Container } from "@/components/ui/container";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, TrendingUp } from "lucide-react";
+import { AnimatedCounter } from "@/components/ui/animated-counter";
+import { 
+  Sparkles, 
+  TrendingUp, 
+  Calendar,
+  Zap,
+  Target,
+  Clock
+} from "lucide-react";
 
 interface ModernDashboardHeaderProps {
   userName: string;
@@ -11,48 +19,119 @@ interface ModernDashboardHeaderProps {
 
 export const ModernDashboardHeader: FC<ModernDashboardHeaderProps> = memo(({ userName }) => {
   const currentHour = new Date().getHours();
-  
-  const getGreeting = () => {
-    if (currentHour < 12) return "Bom dia";
-    if (currentHour < 18) return "Boa tarde";
-    return "Boa noite";
-  };
+  const greeting = currentHour < 12 ? "Bom dia" : currentHour < 18 ? "Boa tarde" : "Boa noite";
+  const currentDate = new Date().toLocaleDateString('pt-BR', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
 
   return (
-    <div className="relative overflow-hidden bg-gradient-surface border border-border rounded-2xl p-8">
-      {/* Background decoration */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5"></div>
-      <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-y-32 translate-x-32"></div>
-      
-      <Container size="full" spacing="none" className="relative z-10">
-        <div className="flex flex-col space-y-4">
-          {/* Greeting */}
-          <div className="flex items-center gap-3">
-            <Sparkles className="h-6 w-6 text-primary" />
-            <Text variant="subsection" textColor="primary" className="text-gradient">
-              {getGreeting()}, {userName}!
-            </Text>
+    <Card 
+      variant="elevated" 
+      className="mb-8 overflow-hidden bg-gradient-to-br from-primary/10 via-surface to-accent/10 border-primary/20"
+    >
+      <CardContent className="p-8 relative">
+        {/* Background decoration */}
+        <div className="absolute top-0 right-0 w-32 h-32 opacity-10 transform translate-x-8 -translate-y-8">
+          <Sparkles className="w-full h-full text-primary" />
+        </div>
+        
+        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+          {/* Welcome Section */}
+          <div className="lg:col-span-2 space-y-4">
+            <div className="flex items-center gap-3 mb-2">
+              <Badge variant="accent" size="sm">
+                <Zap className="h-3 w-3 mr-1" />
+                Ativo
+              </Badge>
+              <div className="flex items-center gap-1 text-text-tertiary">
+                <Calendar className="h-4 w-4" />
+                <Text variant="caption" textColor="tertiary">
+                  {currentDate}
+                </Text>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Text variant="page" textColor="primary" className="font-bold">
+                {greeting}, {userName}! 👋
+              </Text>
+              <Text variant="body-large" textColor="secondary" className="max-w-2xl">
+                Bem-vindo de volta ao seu painel de implementações. Vamos continuar 
+                transformando suas ideias em resultados concretos.
+              </Text>
+            </div>
+            
+            {/* Quick Stats */}
+            <div className="flex items-center gap-6 pt-2">
+              <div className="flex items-center gap-2">
+                <Target className="h-5 w-5 text-success" />
+                <div>
+                  <Text variant="body-small" textColor="primary" className="font-semibold">
+                    <AnimatedCounter to={12} />
+                  </Text>
+                  <Text variant="caption" textColor="tertiary">
+                    Implementações
+                  </Text>
+                </div>
+              </div>
+              
+              <div className="w-px h-8 bg-border-subtle"></div>
+              
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-primary" />
+                <div>
+                  <Text variant="body-small" textColor="primary" className="font-semibold">
+                    <AnimatedCounter to={85} suffix="%" />
+                  </Text>
+                  <Text variant="caption" textColor="tertiary">
+                    Progresso
+                  </Text>
+                </div>
+              </div>
+              
+              <div className="w-px h-8 bg-border-subtle"></div>
+              
+              <div className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-info" />
+                <div>
+                  <Text variant="body-small" textColor="primary" className="font-semibold">
+                    <AnimatedCounter to={47} />h
+                  </Text>
+                  <Text variant="caption" textColor="tertiary">
+                    Economizadas
+                  </Text>
+                </div>
+              </div>
+            </div>
           </div>
           
-          {/* Main message */}
-          <div className="space-y-2">
-            <Text variant="body-large" textColor="secondary">
-              Continue implementando soluções que transformam seu negócio
-            </Text>
-            
-            <div className="flex items-center gap-2">
-              <Badge variant="accent" size="sm" className="backdrop-blur-sm">
-                <TrendingUp className="h-3 w-3 mr-1" />
-                Em crescimento
-              </Badge>
-              <Text variant="caption" textColor="tertiary">
-                Acelerando resultados com IA
+          {/* Achievement Section */}
+          <div className="flex justify-center lg:justify-end">
+            <div className="text-center p-6 bg-success/10 rounded-2xl border border-success/20">
+              <div className="flex justify-center mb-3">
+                <div className="p-3 bg-success/20 rounded-xl">
+                  <Target className="h-8 w-8 text-success" />
+                </div>
+              </div>
+              
+              <Text variant="subheading" textColor="primary" className="font-bold mb-1">
+                Implementador
               </Text>
+              <Text variant="body-small" textColor="secondary" className="mb-3">
+                Nível atual
+              </Text>
+              
+              <Badge variant="success" size="sm">
+                ⭐ Próximo: Expert
+              </Badge>
             </div>
           </div>
         </div>
-      </Container>
-    </div>
+      </CardContent>
+    </Card>
   );
 });
 
