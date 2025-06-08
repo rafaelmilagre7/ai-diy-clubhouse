@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { GraduationCap, Clock, Zap, ArrowRight, Star } from 'lucide-react';
 import { useLessonImages } from '../contexts/LessonImagesContext';
+import { APP_CONFIG } from '@/config/app';
 
 interface RecommendedLesson {
   lessonId: string;
@@ -70,8 +71,31 @@ export const EnhancedLessonCard = ({ lesson, index }: EnhancedLessonCardProps) =
     }
   };
 
+  const handleLessonClick = () => {
+    const lessonUrl = APP_CONFIG.getAppUrl(`/learning/course/${lesson.courseId}/lesson/${lesson.lessonId}`);
+    console.log(`[EnhancedLessonCard] Abrindo aula: ${lessonUrl}`);
+    window.open(lessonUrl, '_blank');
+  };
+
+  const handleButtonClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Evita duplo clique quando o botão é clicado
+    handleLessonClick();
+  };
+
   return (
-    <Card className="glass-dark border border-neutral-700/50 hover:border-viverblue/50 transition-all duration-300 group overflow-hidden h-full flex flex-col">
+    <Card 
+      className="glass-dark border border-neutral-700/50 hover:border-viverblue/50 transition-all duration-300 group overflow-hidden h-full flex flex-col cursor-pointer hover:scale-[1.02] hover:shadow-lg" 
+      onClick={handleLessonClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleLessonClick();
+        }
+      }}
+      aria-label={`Acessar aula: ${lesson.title}`}
+    >
       <div className="relative">
         {/* Ranking badge */}
         <div className="absolute top-3 left-3 z-10">
@@ -152,9 +176,7 @@ export const EnhancedLessonCard = ({ lesson, index }: EnhancedLessonCardProps) =
         {/* Action button */}
         <Button 
           className="w-full bg-viverblue hover:bg-viverblue-dark text-white group/btn mt-auto"
-          onClick={() => {
-            window.open(`/learning/lessons/${lesson.lessonId}`, '_blank');
-          }}
+          onClick={handleButtonClick}
         >
           <GraduationCap className="mr-2 h-4 w-4" />
           Começar Aula
