@@ -2,6 +2,8 @@
 import { FC } from "react";
 import { Solution } from "@/lib/supabase";
 import { SolutionsGrid } from "./SolutionsGrid";
+import { Text } from "@/components/ui/text";
+import { PlayCircle } from "lucide-react";
 
 interface ActiveSolutionsProps {
   solutions: Solution[];
@@ -13,11 +15,20 @@ export const ActiveSolutions: FC<ActiveSolutionsProps> = ({
   onSolutionClick 
 }) => {
   return (
-    <div className="mb-8 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-      <h2 className="text-2xl font-bold mb-2 text-white">Projetos em andamento</h2>
-      <p className="text-neutral-400 mb-6">
-        Continue implementando esses projetos em seu negócio
-      </p>
+    <div className="space-y-6 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+      <div className="flex items-center gap-3">
+        <div className="p-2 bg-warning/10 rounded-lg">
+          <PlayCircle className="h-5 w-5 text-warning" />
+        </div>
+        <div>
+          <Text variant="subsection" textColor="primary" className="mb-1">
+            Projetos em andamento
+          </Text>
+          <Text variant="body" textColor="secondary">
+            Continue implementando esses projetos em seu negócio
+          </Text>
+        </div>
+      </div>
       <SolutionsGrid solutions={solutions} onSolutionClick={onSolutionClick} />
     </div>
   );
