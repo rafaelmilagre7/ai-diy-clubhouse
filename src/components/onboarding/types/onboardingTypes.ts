@@ -6,12 +6,12 @@ export interface OnboardingData {
   
   // Etapa 2 - Perfil (Club/Formação específico)
   // Para Club Members
-  businessStage?: 'idea' | 'startup' | 'growth' | 'established';
+  businessStage?: 'idea' | 'startup' | 'growth' | 'established' | '';
   businessArea?: string;
-  teamSize?: 'solo' | 'small' | 'medium' | 'large';
+  teamSize?: 'solo' | 'small' | 'medium' | 'large' | '';
   
   // Para Formação Members
-  educationLevel?: 'student' | 'graduate' | 'postgraduate' | 'professional';
+  educationLevel?: 'student' | 'graduate' | 'postgraduate' | 'professional' | '';
   studyArea?: string;
   institution?: string;
   
@@ -21,13 +21,13 @@ export interface OnboardingData {
   currentTools?: string[];
   
   // Etapa 4 - Experiência com IA
-  aiExperience?: 'none' | 'basic' | 'intermediate' | 'advanced';
+  aiExperience?: 'none' | 'basic' | 'intermediate' | 'advanced' | '';
   aiToolsUsed?: string[];
   aiChallenges?: string[];
   
   // Etapa 5 - Objetivos
   primaryGoals?: string[];
-  timeframe?: '1month' | '3months' | '6months' | '1year';
+  timeframe?: '1month' | '3months' | '6months' | '1year' | '';
   successMetrics?: string[];
   
   // Etapa 6 - Personalização
