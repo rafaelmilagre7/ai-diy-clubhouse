@@ -1,6 +1,5 @@
 
 import { cn } from "@/lib/utils";
-import { FormacaoUserMenu } from "./FormacaoUserMenu";
 import { FormacaoSidebarNav } from "./FormacaoSidebarNav";
 import { BaseSidebarProps } from "../BaseLayout";
 
@@ -33,11 +32,6 @@ export const FormacaoSidebar = ({
 
         {/* Navegação */}
         <FormacaoSidebarNav sidebarOpen={sidebarOpen} />
-
-        {/* Menu do usuário no rodapé */}
-        <div className="mt-auto border-t border-border">
-          <FormacaoUserMenu sidebarOpen={sidebarOpen} />
-        </div>
       </div>
     </aside>
   );

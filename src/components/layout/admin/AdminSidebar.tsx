@@ -1,6 +1,5 @@
 
 import { cn } from "@/lib/utils";
-import { AdminUserMenu } from "./AdminUserMenu";
 import { AdminSidebarNav } from "./AdminSidebarNav";
 import { BaseSidebarProps } from "../BaseLayout";
 
@@ -33,11 +32,6 @@ export const AdminSidebar = ({
 
         {/* Navegação */}
         <AdminSidebarNav sidebarOpen={sidebarOpen} />
-
-        {/* Menu do usuário no rodapé */}
-        <div className="mt-auto border-t border-gray-700 p-4">
-          <AdminUserMenu />
-        </div>
       </div>
     </aside>
   );

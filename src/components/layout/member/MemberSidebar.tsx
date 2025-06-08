@@ -1,6 +1,5 @@
 
 import { cn } from "@/lib/utils";
-import { MemberUserMenu } from "./MemberUserMenu";
 import { SidebarLogo } from "./navigation/SidebarLogo";
 import { MemberSidebarNav } from "./MemberSidebarNav";
 import { BaseSidebarProps } from "../BaseLayout";
@@ -30,16 +29,6 @@ export const MemberSidebar = ({
 
         {/* Navegação */}
         <MemberSidebarNav sidebarOpen={sidebarOpen} />
-
-        {/* Menu do usuário no rodapé da barra lateral */}
-        <div className="mt-auto">
-          <div className="my-1 px-3">
-            <div className="h-px bg-white/5"></div>
-          </div>
-          <div className="p-4">
-            <MemberUserMenu />
-          </div>
-        </div>
       </div>
     </aside>
   );
