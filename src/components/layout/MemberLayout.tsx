@@ -10,13 +10,16 @@ interface MemberLayoutProps {
   children: React.ReactNode;
 }
 
-/**
- * MemberLayout usando BaseLayout unificado com otimizações de performance
- */
 const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
   const { profile, signOut } = useAuth();
 
-  // Memoizar função para obter iniciais para evitar recriação
+  console.log('[MemberLayout] Renderizando com:', {
+    profile: !!profile,
+    profileName: profile?.name,
+    hasChildren: !!children
+  });
+
+  // Memoizar função para obter iniciais
   const getInitials = useCallback((name: string | null) => {
     if (!name) return "U";
     return name
@@ -27,7 +30,7 @@ const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
       .substring(0, 2);
   }, []);
 
-  // Memoizar handler de signOut para evitar recriação
+  // Memoizar handler de signOut
   const handleSignOut = useCallback(async () => {
     try {
       const result = await signOut();
@@ -37,31 +40,50 @@ const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
         toast.error("Erro ao fazer logout");
       }
     } catch (error) {
+      console.error('[MemberLayout] Erro no signOut:', error);
       toast.error("Erro ao fazer logout");
     }
   }, [signOut]);
 
-  // Memoizar dados do perfil para evitar re-renders desnecessários
+  // Memoizar dados do perfil
   const profileData = useMemo(() => ({
     name: profile?.name || null,
     email: profile?.email || null,
     avatar: profile?.avatar_url
   }), [profile?.name, profile?.email, profile?.avatar_url]);
 
-  return (
-    <BaseLayout
-      variant="member"
-      sidebarComponent={MemberSidebar}
-      contentComponent={MemberContent}
-      onSignOut={handleSignOut}
-      profileName={profileData.name}
-      profileEmail={profileData.email}
-      profileAvatar={profileData.avatar}
-      getInitials={getInitials}
-    >
-      {children}
-    </BaseLayout>
-  );
+  try {
+    return (
+      <BaseLayout
+        variant="member"
+        sidebarComponent={MemberSidebar}
+        contentComponent={MemberContent}
+        onSignOut={handleSignOut}
+        profileName={profileData.name}
+        profileEmail={profileData.email}
+        profileAvatar={profileData.avatar}
+        getInitials={getInitials}
+      >
+        {children}
+      </BaseLayout>
+    );
+  } catch (error) {
+    console.error('[MemberLayout] Erro ao renderizar:', error);
+    return (
+      <div className="flex h-screen bg-background items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Erro no Layout do Membro</h2>
+          <p className="text-muted-foreground">Ocorreu um erro ao carregar a interface.</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded"
+          >
+            Recarregar Página
+          </button>
+        </div>
+      </div>
+    );
+  }
 });
 
 MemberLayout.displayName = 'MemberLayout';

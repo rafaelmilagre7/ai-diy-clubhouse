@@ -20,10 +20,6 @@ const Dashboard = () => {
   
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [hasCheckedOnboarding, setHasCheckedOnboarding] = useState(false);
-  
-  // Determinar se pode prosseguir (autenticação e onboarding carregados)
-  const canProceed = !authLoading && !onboardingLoading;
   
   const initialCategory = useMemo(() => searchParams.get("category") || "general", [searchParams]);
   const [category, setCategory] = useState<string>(initialCategory);
@@ -33,24 +29,18 @@ const Dashboard = () => {
     onboardingLoading,
     onboardingRequired,
     user: !!user,
-    profile: !!profile,
-    hasCheckedOnboarding,
-    canProceed
+    profile: !!profile
   });
   
-  // Verificar se precisa completar onboarding (apenas uma vez)
+  // Verificar se precisa completar onboarding
   useEffect(() => {
-    if (canProceed && !hasCheckedOnboarding) {
-      setHasCheckedOnboarding(true);
-      
-      if (onboardingRequired) {
-        console.log('[Dashboard] Onboarding necessário, redirecionando');
-        toast.info("Complete seu onboarding para acessar o dashboard!");
-        navigate('/onboarding', { replace: true });
-        return;
-      }
+    if (!authLoading && !onboardingLoading && onboardingRequired) {
+      console.log('[Dashboard] Onboarding necessário, redirecionando');
+      toast.info("Complete seu onboarding para acessar o dashboard!");
+      navigate('/onboarding', { replace: true });
+      return;
     }
-  }, [onboardingRequired, canProceed, navigate, hasCheckedOnboarding]);
+  }, [onboardingRequired, authLoading, onboardingLoading, navigate]);
   
   // Verificação de autenticação
   useEffect(() => {
@@ -69,29 +59,18 @@ const Dashboard = () => {
       console.error('[Dashboard] Erro nas soluções:', solutionsError);
       setHasError(true);
       setErrorMessage("Não foi possível carregar as soluções. Verifique sua conexão com a internet.");
-      toast.error("Erro ao carregar soluções", {
-        description: "Tente atualizar a página"
-      });
     }
   }, [solutionsError]);
   
-  // Filtrar soluções por categoria - garantir que solutions é um array
+  // Filtrar soluções por categoria
   const filteredSolutions = useMemo(() => {
     if (!solutions || !Array.isArray(solutions) || solutions.length === 0) {
-      console.log('[Dashboard] Nenhuma solução disponível para filtrar');
       return [];
     }
     return category !== "general" 
       ? solutions.filter(s => s.category === category)
       : solutions;
   }, [solutions, category]);
-  
-  console.log('[Dashboard] Soluções:', {
-    total: solutions?.length || 0,
-    filtered: filteredSolutions?.length || 0,
-    category,
-    solutionsLoading
-  });
   
   // Obter progresso das soluções
   const { 
@@ -126,28 +105,13 @@ const Dashboard = () => {
     window.location.reload();
   };
 
-  // Toast de boas-vindas
-  useEffect(() => {
-    const isFirstVisit = localStorage.getItem("firstDashboardVisit") !== "false";
-    
-    if (isFirstVisit && user && !onboardingRequired && hasCheckedOnboarding) {
-      const timeoutId = setTimeout(() => {
-        toast("Bem-vindo ao seu dashboard personalizado!");
-        localStorage.setItem("firstDashboardVisit", "false");
-      }, 1500);
-      
-      return () => clearTimeout(timeoutId);
-    }
-  }, [user, onboardingRequired, hasCheckedOnboarding]);
-  
-  // Se ainda estiver verificando onboarding ou auth, mostrar loading
-  if (authLoading || onboardingLoading || !hasCheckedOnboarding || !canProceed) {
-    console.log('[Dashboard] Mostrando tela de loading');
+  // Se ainda estiver verificando auth ou onboarding
+  if (authLoading || onboardingLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-viverblue mx-auto"></div>
-          <p className="text-gray-600 dark:text-gray-300">Verificando seu progresso...</p>
+          <p className="text-gray-600 dark:text-gray-300">Carregando...</p>
         </div>
       </div>
     );
@@ -155,13 +119,11 @@ const Dashboard = () => {
   
   // Se onboarding for necessário, não renderizar nada (já foi redirecionado)
   if (onboardingRequired) {
-    console.log('[Dashboard] Onboarding necessário, não renderizando');
     return null;
   }
   
   // Se houver erro, mostrar mensagem de erro
   if (hasError) {
-    console.log('[Dashboard] Mostrando tela de erro');
     return (
       <div className="container py-8 flex flex-col items-center justify-center min-h-[60vh]">
         <Alert variant="destructive" className="mb-4 max-w-md">
@@ -177,15 +139,11 @@ const Dashboard = () => {
         >
           <RefreshCw className="h-4 w-4" /> Tentar novamente
         </Button>
-        <p className="mt-8 text-sm text-muted-foreground max-w-md text-center">
-          Se o problema persistir, tente sair e entrar novamente na plataforma, ou entre em contato com o suporte.
-        </p>
       </div>
     );
   }
 
-  console.log('[Dashboard] Renderizando DashboardLayout');
-  
+  // Renderizar dashboard
   return (
     <DashboardLayout
       active={active || []}

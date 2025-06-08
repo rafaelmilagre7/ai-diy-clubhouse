@@ -31,20 +31,39 @@ const BaseLayout: React.FC<BaseLayoutProps> = ({
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  return (
-    <div className="flex h-screen bg-background">
-      <SidebarComponent 
-        sidebarOpen={sidebarOpen} 
-        setSidebarOpen={setSidebarOpen} 
-      />
-      <ContentComponent 
-        sidebarOpen={sidebarOpen} 
-        setSidebarOpen={setSidebarOpen}
-      >
-        {children}
-      </ContentComponent>
-    </div>
-  );
+  console.log('[BaseLayout] Renderizando com:', {
+    sidebarOpen,
+    hasChildren: !!children,
+    SidebarComponent: !!SidebarComponent,
+    ContentComponent: !!ContentComponent
+  });
+
+  try {
+    return (
+      <div className="flex h-screen bg-background">
+        <SidebarComponent 
+          sidebarOpen={sidebarOpen} 
+          setSidebarOpen={setSidebarOpen} 
+        />
+        <ContentComponent 
+          sidebarOpen={sidebarOpen} 
+          setSidebarOpen={setSidebarOpen}
+        >
+          {children}
+        </ContentComponent>
+      </div>
+    );
+  } catch (error) {
+    console.error('[BaseLayout] Erro ao renderizar:', error);
+    return (
+      <div className="flex h-screen bg-background items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Erro no Layout</h2>
+          <p className="text-muted-foreground">Ocorreu um erro ao carregar a interface.</p>
+        </div>
+      </div>
+    );
+  }
 };
 
 export default BaseLayout;
