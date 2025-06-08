@@ -11,7 +11,6 @@ import {
   UserCog, 
   Mail,
   MessageSquare,
-  Zap,
   Wrench,
   Megaphone
 } from "lucide-react";
@@ -42,11 +41,6 @@ const navigationItems = [
     title: "Soluções",
     href: "/admin/solutions",
     icon: Boxes
-  },
-  {
-    title: "Benefícios",
-    href: "/admin/benefits",
-    icon: Zap
   },
   {
     title: "Analytics",

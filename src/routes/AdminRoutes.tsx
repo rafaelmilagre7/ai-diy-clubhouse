@@ -13,7 +13,7 @@ import AdminSuggestions from '@/pages/admin/AdminSuggestions';
 import AdminCommunications from '@/pages/admin/AdminCommunications';
 import AdminAnalytics from '@/pages/admin/AdminAnalytics';
 import AdminTools from '@/pages/admin/AdminTools';
-import AdminBenefits from '@/pages/admin/AdminBenefits';
+import AdminToolEdit from '@/pages/admin/AdminToolEdit';
 import AdminInvites from '@/pages/admin/AdminInvites';
 
 // Função helper para criar rotas protegidas com AdminLayout
@@ -32,8 +32,9 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin", AdminDashboard),
   createAdminRoute("/admin/users", AdminUsers),
   createAdminRoute("/admin/tools", AdminTools),
+  createAdminRoute("/admin/tools/new", AdminToolEdit),
+  createAdminRoute("/admin/tools/:id", AdminToolEdit),
   createAdminRoute("/admin/solutions", AdminSolutions),
-  createAdminRoute("/admin/benefits", AdminBenefits),
   createAdminRoute("/admin/analytics", AdminAnalytics),
   createAdminRoute("/admin/suggestions", AdminSuggestions),
   createAdminRoute("/admin/events", AdminEvents),
