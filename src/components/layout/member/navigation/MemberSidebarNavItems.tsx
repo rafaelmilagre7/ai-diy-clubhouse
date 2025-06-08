@@ -2,7 +2,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { 
   LayoutDashboard, 
@@ -113,39 +112,45 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
     return currentPath.startsWith(href);
   };
 
-  const renderNavButton = (item: any) => (
+  const renderNavButton = (item: any, isSpecial = false) => (
     <Button
       key={item.href}
       variant={isActive(item.href) ? "default" : "ghost"}
       className={cn(
-        "w-full justify-start gap-2 h-8 px-2 text-sm font-normal transition-all duration-200",
-        !sidebarOpen && "justify-center px-1",
+        "w-full justify-start gap-3 h-11 px-4 text-sm font-medium transition-all duration-200 rounded-xl group",
+        !sidebarOpen && "justify-center px-3",
         isActive(item.href) 
-          ? "bg-viverblue text-white hover:bg-viverblue/90 shadow-sm" 
-          : "text-neutral-300 hover:text-white hover:bg-white/5",
-        item.special && !isActive(item.href) && "hover:bg-viverblue/10 border border-viverblue/20"
+          ? "bg-gradient-to-r from-viverblue to-viverblue/80 text-white shadow-lg shadow-viverblue/25 hover:shadow-viverblue/40" 
+          : "text-neutral-300 hover:text-white hover:bg-gradient-to-r hover:from-white/8 hover:to-white/4 hover:shadow-md",
+        isSpecial && !isActive(item.href) && "relative overflow-hidden border border-viverblue/30 hover:border-viverblue/50 bg-gradient-to-r from-viverblue/5 to-transparent"
       )}
       asChild
     >
       <Link to={item.href}>
-        <div className="flex items-center gap-2 min-w-0">
-          <item.icon className="h-4 w-4 flex-shrink-0" />
-          {item.special && sidebarOpen && (
-            <Sparkles className="h-3 w-3 text-viverblue animate-pulse flex-shrink-0" />
+        <div className="flex items-center gap-3 min-w-0">
+          <item.icon className={cn(
+            "h-5 w-5 flex-shrink-0 transition-transform duration-200",
+            isActive(item.href) ? "scale-110" : "group-hover:scale-105"
+          )} />
+          {isSpecial && sidebarOpen && (
+            <Sparkles className="h-4 w-4 text-viverblue animate-pulse flex-shrink-0" />
           )}
         </div>
         {sidebarOpen && (
           <div className="flex flex-col items-start min-w-0 flex-1">
-            <span className="truncate text-sm">{item.title}</span>
-            {item.special && item.description && (
-              <span className="text-xs text-viverblue/80 truncate">
+            <span className="truncate font-medium">{item.title}</span>
+            {isSpecial && item.description && (
+              <span className="text-xs text-viverblue/90 truncate">
                 {item.description}
               </span>
             )}
           </div>
         )}
-        {item.special && !sidebarOpen && (
-          <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-viverblue rounded-full animate-pulse"></div>
+        {isSpecial && !sidebarOpen && (
+          <div className="absolute -top-1 -right-1 w-2 h-2 bg-viverblue rounded-full animate-pulse"></div>
+        )}
+        {isSpecial && (
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-viverblue/5 to-viverblue/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
         )}
       </Link>
     </Button>
@@ -156,9 +161,11 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
     
     const IconComponent = icon;
     return (
-      <div className="flex items-center gap-2 px-2 py-1.5 mb-1">
-        <IconComponent className="h-3.5 w-3.5 text-medium-contrast" />
-        <span className="text-xs font-semibold text-medium-contrast uppercase tracking-wide">
+      <div className="flex items-center gap-3 px-4 py-3 mb-2">
+        <div className="p-1.5 rounded-lg bg-gradient-to-r from-neutral-700/50 to-neutral-600/30">
+          <IconComponent className="h-4 w-4 text-neutral-300" />
+        </div>
+        <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider">
           {title}
         </span>
       </div>
@@ -166,48 +173,54 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
   };
 
   const renderSeparator = () => (
-    <div className="py-1.5">
-      <Separator className="bg-neutral-700/30" />
+    <div className="my-6 mx-4">
+      <div className="h-px bg-gradient-to-r from-transparent via-neutral-700/60 to-transparent"></div>
     </div>
   );
 
   return (
-    <div className="space-y-0.5 px-2">
-      {/* Dashboard */}
-      <div className="mb-2">
+    <div className="flex flex-col h-full">
+      {/* Dashboard Principal */}
+      <div className="px-3 mb-4">
         {renderNavButton(dashboardItem)}
       </div>
 
       {renderSeparator()}
 
       {/* IA & Personalização */}
-      {renderSectionHeader("IA & Personalização", Brain)}
-      <div className="space-y-0.5 mb-2">
-        {aiPersonalizationItems.map(renderNavButton)}
+      <div className="mb-6">
+        {renderSectionHeader("IA & Personalização", Brain)}
+        <div className="px-3 space-y-2">
+          {aiPersonalizationItems.map(item => renderNavButton(item, true))}
+        </div>
       </div>
       
       {renderSeparator()}
 
       {/* Aprendizado */}
-      {renderSectionHeader("Aprendizado", GraduationCap)}
-      <div className="space-y-0.5 mb-2">
-        {learningItems.map(renderNavButton)}
+      <div className="mb-6">
+        {renderSectionHeader("Aprendizado", GraduationCap)}
+        <div className="px-3 space-y-2">
+          {learningItems.map(item => renderNavButton(item))}
+        </div>
       </div>
       
       {renderSeparator()}
 
       {/* Recursos */}
-      {renderSectionHeader("Recursos", Zap)}
-      <div className="space-y-0.5 mb-2">
-        {resourceItems.map(renderNavButton)}
+      <div className="mb-6">
+        {renderSectionHeader("Recursos", Zap)}
+        <div className="px-3 space-y-2">
+          {resourceItems.map(item => renderNavButton(item))}
+        </div>
       </div>
 
       {/* Admin (só para admins) */}
       {adminItems.length > 0 && (
         <>
           {renderSeparator()}
-          <div className="space-y-0.5">
-            {adminItems.map(renderNavButton)}
+          <div className="px-3 space-y-2 mt-auto">
+            {adminItems.map(item => renderNavButton(item))}
           </div>
         </>
       )}
