@@ -10,7 +10,7 @@ const textVariants = cva(
       variant: {
         // Display headings
         "display": "heading-display",
-        "page": "heading-page",
+        "page": "heading-page", 
         "section": "heading-section",
         "subsection": "heading-subsection",
         "card": "heading-card",
@@ -37,7 +37,7 @@ const textVariants = cva(
       },
       textColor: {
         default: "text-foreground",
-        primary: "text-primary",
+        primary: "text-text-primary",
         secondary: "text-text-secondary",
         tertiary: "text-text-tertiary",
         muted: "text-text-muted",
@@ -45,6 +45,7 @@ const textVariants = cva(
         warning: "text-warning",
         error: "text-error",
         info: "text-info",
+        accent: "text-primary",
       },
       align: {
         left: "text-left",
@@ -79,7 +80,7 @@ export interface TextProps
 const Text = React.forwardRef<HTMLElement, TextProps>(
   ({ className, variant, textColor, align, weight, as, truncate, responsive, children, ...props }, ref) => {
     const Component = as || 
-      (variant?.includes('heading') || variant === 'display' || variant === 'page' || variant === 'section' || variant === 'subsection' || variant === 'card' || variant === 'small' ? 'h2' : 'p')
+      (variant?.includes('display') || variant?.includes('page') || variant?.includes('section') || variant?.includes('subsection') || variant?.includes('card') || variant?.includes('small') ? 'h2' : 'p')
 
     return React.createElement(
       Component,

@@ -4,14 +4,14 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const cardVariants = cva(
-  "card-modern",
+  "rounded-lg border bg-surface-elevated text-text-primary shadow-sm transition-all duration-200",
   {
     variants: {
       variant: {
-        default: "card-modern",
-        elevated: "card-elevated", 
-        interactive: "card-interactive",
-        glow: "card-glow",
+        default: "border-border",
+        elevated: "border-border shadow-md hover:shadow-lg", 
+        interactive: "border-border hover:border-border-strong hover:shadow-md cursor-pointer hover:-translate-y-0.5",
+        glow: "border-primary/20 shadow-glow-primary hover:shadow-glow-strong",
       },
       size: {
         sm: "p-4",
@@ -44,7 +44,7 @@ const CardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex flex-col space-y-1.5", className)}
+    className={cn("flex flex-col space-y-1.5 p-6 pb-0", className)}
     {...props}
   />
 ))
@@ -56,7 +56,7 @@ const CardTitle = React.forwardRef<
 >(({ className, children, ...props }, ref) => (
   <h3
     ref={ref}
-    className={cn("heading-card", className)}
+    className={cn("text-lg font-semibold leading-none tracking-tight text-text-primary", className)}
     {...props}
   >
     {children}
@@ -70,7 +70,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("body-small text-text-secondary", className)}
+    className={cn("text-sm text-text-secondary", className)}
     {...props}
   />
 ))
@@ -80,7 +80,7 @@ const CardContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("pt-0", className)} {...props} />
+  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
 ))
 CardContent.displayName = "CardContent"
 
@@ -90,7 +90,7 @@ const CardFooter = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex items-center pt-6", className)}
+    className={cn("flex items-center p-6 pt-0", className)}
     {...props}
   />
 ))

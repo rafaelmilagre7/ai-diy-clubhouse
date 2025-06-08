@@ -1,10 +1,11 @@
-
 import React, { memo, useMemo, useCallback } from "react";
 import { useAuth } from "@/contexts/auth";
 import BaseLayout from "../BaseLayout";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminContent } from "./AdminContent";
 import { toast } from "sonner";
+import { Text } from "@/components/ui/text";
+import { Button } from "@/components/ui/button";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
