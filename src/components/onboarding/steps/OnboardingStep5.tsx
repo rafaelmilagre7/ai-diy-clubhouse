@@ -50,14 +50,15 @@ export const OnboardingStep5 = ({
 
   // Atualizar dados globais sempre que o estado local mudar
   useEffect(() => {
-    onUpdateData({ 
+    const currentData = { 
       weeklyLearningTime,
       contentPreference,
       wantsNetworking,
       bestDays,
       bestPeriods,
       acceptsCaseStudy
-    });
+    };
+    onUpdateData(currentData);
   }, [weeklyLearningTime, contentPreference, wantsNetworking, bestDays, bestPeriods, acceptsCaseStudy, onUpdateData]);
 
   const handleBestDayChange = (day: string, checked: boolean) => {
@@ -77,7 +78,7 @@ export const OnboardingStep5 = ({
   };
 
   const handleNext = () => {
-    // Verificar se todos os campos obrigatórios estão preenchidos
+    // Usar os dados locais atuais para validação
     const currentData = {
       weeklyLearningTime,
       contentPreference,
@@ -108,7 +109,7 @@ export const OnboardingStep5 = ({
 
     const aiFinalMessage = `${firstName}, ESTOU MUITO EMPOLGADO! 🎉 ${timeComment}${contentComment}${networkingComment}Agora vou criar um plano de implementação 100% personalizado para você baseado em tudo que conversamos. Prepare-se para uma jornada transformadora! 🚀✨`;
 
-    onUpdateData({ 
+    const finalData = { 
       weeklyLearningTime,
       contentPreference,
       wantsNetworking,
@@ -116,7 +117,9 @@ export const OnboardingStep5 = ({
       bestPeriods,
       acceptsCaseStudy,
       aiFinalMessage
-    });
+    };
+    
+    onUpdateData(finalData);
     onNext();
   };
 
@@ -266,52 +269,60 @@ export const OnboardingStep5 = ({
                   <p className="text-sm text-red-400">{networkingError}</p>
                 )}
               </div>
+            </div>
 
-              {wantsNetworking === 'yes' && (
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium text-white">
-                      Melhores dias para eventos/networking (opcional):
-                    </Label>
-                    <div className="grid grid-cols-2 gap-2 p-4 border border-white/10 rounded-lg bg-[#181A2A] max-h-40 overflow-y-auto">
-                      {bestDaysList.map((day) => (
-                        <div key={day} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={day}
-                            checked={bestDays.includes(day)}
-                            onCheckedChange={(checked) => handleBestDayChange(day, checked as boolean)}
-                            className="border-white/20"
-                          />
-                          <Label htmlFor={day} className="text-sm text-white cursor-pointer">
-                            {day}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium text-white">
-                      Melhores horários (opcional):
-                    </Label>
-                    <div className="space-y-2 p-4 border border-white/10 rounded-lg bg-[#181A2A]">
-                      {bestPeriodsList.map((period) => (
-                        <div key={period} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={period}
-                            checked={bestPeriods.includes(period)}
-                            onCheckedChange={(checked) => handleBestPeriodChange(period, checked as boolean)}
-                            className="border-white/20"
-                          />
-                          <Label htmlFor={period} className="text-sm text-white cursor-pointer">
-                            {period}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
+            {/* Seção de dias e horários - sempre visível */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-heading font-semibold text-white flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-viverblue/20 flex items-center justify-center">
+                  <Clock className="w-4 h-4 text-viverblue" />
+                </div>
+                Encontros ao Vivo
+              </h3>
+              
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium text-white">
+                    Melhores dias para encontros ao vivo (opcional):
+                  </Label>
+                  <div className="grid grid-cols-2 gap-2 p-4 border border-white/10 rounded-lg bg-[#181A2A] max-h-40 overflow-y-auto">
+                    {bestDaysList.map((day) => (
+                      <div key={day} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={day}
+                          checked={bestDays.includes(day)}
+                          onCheckedChange={(checked) => handleBestDayChange(day, checked as boolean)}
+                          className="border-white/20"
+                        />
+                        <Label htmlFor={day} className="text-sm text-white cursor-pointer">
+                          {day}
+                        </Label>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              )}
+
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium text-white">
+                    Melhores horários para encontros ao vivo (opcional):
+                  </Label>
+                  <div className="space-y-2 p-4 border border-white/10 rounded-lg bg-[#181A2A]">
+                    {bestPeriodsList.map((period) => (
+                      <div key={period} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={period}
+                          checked={bestPeriods.includes(period)}
+                          onCheckedChange={(checked) => handleBestPeriodChange(period, checked as boolean)}
+                          className="border-white/20"
+                        />
+                        <Label htmlFor={period} className="text-sm text-white cursor-pointer">
+                          {period}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Seção de case study */}
