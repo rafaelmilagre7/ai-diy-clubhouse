@@ -138,7 +138,7 @@ const WhatsAppDebug: React.FC = () => {
     }
   };
 
-  const listTemplates = async (businessIdToTest?: string) => {
+  const listTemplates = (businessIdToTest?: string) => {
     setLoading(true);
     addLog(`Buscando templates${businessIdToTest ? ` usando Business ID: ${businessIdToTest}` : ''}...`);
     
