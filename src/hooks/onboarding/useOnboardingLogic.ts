@@ -1,81 +1,53 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
-import { useOnboardingStatus } from './useOnboardingStatus';
 
 /**
  * Hook isolado para lógica do onboarding
- * FASE 4: Integração com sistema refinado de status
+ * FASE 2: Integração com bypass e mais dados
  */
 export const useOnboardingLogic = () => {
   const { user, profile } = useAuth();
-  const { 
-    onboardingAction, 
-    isChecking, 
-    stats, 
-    userName, 
-    userEmail, 
-    accountAge,
-    isNewUser,
-    hasCompleted,
-    hasSkipped
-  } = useOnboardingStatus();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!isChecking) {
-      const timer = setTimeout(() => {
-        setIsLoading(false);
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [isChecking]);
+    // Simular carregamento inicial
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 500);
 
-  // Log para debug em desenvolvimento
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Log para debug (apenas em desenvolvimento)
   useEffect(() => {
-    if (!isLoading && user && onboardingAction) {
-      console.log('🚀 Onboarding FASE 4 - Status calculado:', {
+    if (!isLoading && user) {
+      console.log('🚀 Onboarding acessado por:', {
         userId: user.id,
         email: user.email,
-        action: onboardingAction,
-        stats,
-        isNewUser,
-        hasCompleted,
-        hasSkipped,
-        accountAge
+        role: profile?.role || 'não definido',
+        createdAt: profile?.created_at
       });
     }
-  }, [isLoading, user, onboardingAction, stats, isNewUser, hasCompleted, hasSkipped, accountAge]);
+  }, [isLoading, user, profile]);
 
   return {
-    isLoading: isLoading || isChecking,
+    isLoading,
     user,
     profile,
-    
-    // Status do onboarding
-    onboardingAction,
-    canAccessOnboarding: !!user && !!profile && (profile.role === 'membro_club' || profile.role === 'member'),
-    
-    // Informações do usuário
-    userName,
-    userEmail,
-    userRole: profile?.role || 'membro_club',
-    accountAge,
-    isNewUser,
-    
-    // Status específicos
-    hasCompleted,
-    hasSkipped,
-    isRequired: onboardingAction === 'required',
-    isSuggested: onboardingAction === 'suggested',
-    shouldBypass: onboardingAction === 'bypass',
-    
-    // Estatísticas
-    stats,
-    
-    // Verificações de acesso
+    // Informações de acesso
+    canAccessOnboarding: true, // Por enquanto todos podem acessar
     isAdmin: profile?.role === 'admin',
     isMasterAdmin: user?.email === 'rafael@viverdeia.ai',
-    isFormacao: profile?.role === 'formacao'
+    isFormacao: profile?.role === 'formacao',
+    
+    // Informações do usuário
+    userName: profile?.name || user?.user_metadata?.name || 'Usuário',
+    userEmail: user?.email || null,
+    userRole: profile?.role || 'member',
+    
+    // Status da conta
+    isNewUser: profile ? (new Date().getTime() - new Date(profile.created_at).getTime() < 24 * 60 * 60 * 1000) : false,
+    accountAge: profile ? Math.floor((new Date().getTime() - new Date(profile.created_at).getTime()) / (24 * 60 * 60 * 1000)) : 0
   };
 };

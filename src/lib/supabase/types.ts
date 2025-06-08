@@ -1,3 +1,4 @@
+
 import { Database } from './types/database.types';
 
 // Tipos de tabelas expandidos
@@ -26,7 +27,7 @@ export type LearningComment = Database['public']['Tables']['learning_comments'][
 // Outros tipos existentes
 export * from './types/database.types';
 
-export type UserRole = 'admin' | 'formacao' | 'membro_club' | 'member';
+export type UserRole = 'admin' | 'formacao' | 'membro_club';
 
 export interface UserProfile {
   id: string;
@@ -39,9 +40,6 @@ export interface UserProfile {
   role_id?: string;
   user_roles?: any;
   created_at: string;
-  onboarding_completed_at?: string | null;
-  onboarding_skipped_at?: string | null;
-  onboarding_data?: any | null;
 }
 
 // Interface expandida para incluir todas as propriedades utilizadas no código

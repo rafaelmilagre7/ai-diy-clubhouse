@@ -9,7 +9,7 @@ import { getOnboardingAction, logOnboardingDecision } from './utils/onboardingUt
  */
 export const useOnboardingBypass = () => {
   const { user, profile, isLoading } = useAuth();
-  const [bypassAction, setBypassAction] = useState<'bypass' | 'required' | 'suggested' | 'optional' | null>(null);
+  const [bypassAction, setBypassAction] = useState<'bypass' | 'show' | 'optional' | null>(null);
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
@@ -35,9 +35,8 @@ export const useOnboardingBypass = () => {
     bypassAction,
     isChecking,
     shouldBypass: bypassAction === 'bypass',
-    shouldShow: bypassAction === 'required',
+    shouldShow: bypassAction === 'show',
     isOptional: bypassAction === 'optional',
-    isSuggested: bypassAction === 'suggested',
     user,
     profile
   };
