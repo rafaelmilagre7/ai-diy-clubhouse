@@ -6,10 +6,10 @@ import { useLogging } from '@/hooks/useLogging';
 interface LessonImageData {
   id: string;
   cover_image_url?: string;
-  thumbnail_url?: string;
   title: string;
-  duration?: number;
-  difficulty?: string;
+  estimated_time_minutes?: number;
+  difficulty_level?: string;
+  description?: string;
 }
 
 export const useLessonImages = () => {
@@ -25,9 +25,10 @@ export const useLessonImages = () => {
       setLoading(true);
       log('Buscando imagens e metadados das aulas', { lessonIds });
 
+      // Corrigido: usar learning_lessons e campos corretos
       const { data, error } = await supabase
-        .from('lessons')
-        .select('id, cover_image_url, thumbnail_url, title, duration, difficulty')
+        .from('learning_lessons')
+        .select('id, cover_image_url, title, estimated_time_minutes, difficulty_level, description')
         .in('id', lessonIds);
 
       if (error) {
@@ -35,10 +36,9 @@ export const useLessonImages = () => {
       }
 
       const imagesMap = data?.reduce((acc, lesson: LessonImageData) => {
-        // Priorizar cover_image_url, depois thumbnail_url
-        const imageUrl = lesson.cover_image_url || lesson.thumbnail_url;
-        if (imageUrl) {
-          acc[lesson.id] = imageUrl;
+        // Usar apenas cover_image_url
+        if (lesson.cover_image_url) {
+          acc[lesson.id] = lesson.cover_image_url;
         }
         return acc;
       }, {} as Record<string, string>) || {};
@@ -69,7 +69,7 @@ export const useLessonImages = () => {
 
   const preloadLessonImages = (lessonIds: string[]) => {
     // Verificar quais imagens ainda não foram carregadas
-    const missingIds = lessonIds.filter(id => !lessonImages[id]);
+    const missingIds = lessonIds.filter(id => !lessonMetadata[id]);
     if (missingIds.length > 0) {
       fetchLessonImages(missingIds);
     }

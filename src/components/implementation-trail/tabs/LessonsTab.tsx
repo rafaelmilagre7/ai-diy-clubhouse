@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { GraduationCap, ArrowRight, Sparkles, TrendingUp, Eye } from 'lucide-react';
+import { GraduationCap, ArrowRight, Sparkles, TrendingUp, Eye, AlertCircle } from 'lucide-react';
 import { EnhancedLessonCard } from '../cards/EnhancedLessonCard';
 import { useLessonImages } from '../hooks/useLessonImages';
 import { useTopLessons } from '../hooks/useTopLessons';
@@ -36,16 +36,24 @@ export const LessonsTab = ({ lessons }: LessonsTabProps) => {
     return (
       <div className="text-center py-16">
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-viverblue/10 via-green-500/5 to-transparent rounded-2xl blur-xl opacity-50" />
+          <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 via-orange-500/5 to-transparent rounded-2xl blur-xl opacity-50" />
           <Card className="glass-dark border border-neutral-700/50 relative backdrop-blur-sm max-w-md mx-auto">
             <CardContent className="p-8 text-center">
-              <GraduationCap className="h-16 w-16 mx-auto text-medium-contrast mb-4" />
+              <AlertCircle className="h-16 w-16 mx-auto text-yellow-500 mb-4" />
               <h3 className="text-lg font-semibold text-high-contrast mb-2">
-                Nenhuma aula recomendada
+                Nenhuma aula recomendada ainda
               </h3>
-              <p className="text-medium-contrast">
-                Não há aulas personalizadas para sua trilha no momento.
+              <p className="text-medium-contrast mb-4">
+                As aulas personalizadas estão sendo processadas. Tente regenerar sua trilha ou aguarde alguns instantes.
               </p>
+              <Button 
+                variant="outline" 
+                className="border-yellow-500/50 text-yellow-500 hover:bg-yellow-500/10"
+                onClick={() => window.location.reload()}
+              >
+                <ArrowRight className="mr-2 h-4 w-4" />
+                Atualizar Página
+              </Button>
             </CardContent>
           </Card>
         </div>
