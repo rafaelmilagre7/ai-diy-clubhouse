@@ -87,12 +87,11 @@ export const OnboardingStep1 = ({
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2 }}
-            className="bg-[#151823] border border-white/10 p-8 rounded-2xl"
           >
             <img
               src="/lovable-uploads/a408c993-07fa-49f2-bee6-c66d0614298b.png"
               alt="VIVER DE IA Club"
-              className="h-20 w-auto mx-auto"
+              className="h-40 w-auto mx-auto"
             />
           </motion.div>
         </div>
@@ -150,7 +149,7 @@ export const OnboardingStep1 = ({
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Seu nome completo"
-                    className={`h-12 ${nameError ? 'border-red-500' : ''}`}
+                    className={`h-12 bg-[#181A2A] border-white/10 text-white ${nameError ? 'border-red-500' : ''}`}
                   />
                   {nameError && (
                     <p className="text-sm text-red-400">{nameError}</p>
@@ -168,7 +167,7 @@ export const OnboardingStep1 = ({
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="seu@email.com"
                     disabled={!!userProfile?.email}
-                    className={`h-12 ${emailError ? 'border-red-500' : ''}`}
+                    className={`h-12 bg-[#181A2A] border-white/10 text-white ${emailError ? 'border-red-500' : ''}`}
                   />
                   {emailError && (
                     <p className="text-sm text-red-400">{emailError}</p>
@@ -185,7 +184,7 @@ export const OnboardingStep1 = ({
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="(11) 99999-9999"
-                    className="h-12"
+                    className="h-12 bg-[#181A2A] border-white/10 text-white"
                   />
                 </div>
 
@@ -195,7 +194,7 @@ export const OnboardingStep1 = ({
                     Ano de nascimento
                   </Label>
                   <Select value={birthDate} onValueChange={setBirthDate}>
-                    <SelectTrigger className="h-12">
+                    <SelectTrigger className="h-12 bg-[#181A2A] border-white/10 text-white">
                       <SelectValue placeholder="Selecione o ano" />
                     </SelectTrigger>
                     <SelectContent className="bg-[#151823] border-white/10">
@@ -227,7 +226,7 @@ export const OnboardingStep1 = ({
                     value={instagram}
                     onChange={(e) => setInstagram(e.target.value)}
                     placeholder="@seuusuario"
-                    className="h-12"
+                    className="h-12 bg-[#181A2A] border-white/10 text-white"
                   />
                 </div>
 
@@ -241,7 +240,7 @@ export const OnboardingStep1 = ({
                     value={linkedin}
                     onChange={(e) => setLinkedin(e.target.value)}
                     placeholder="linkedin.com/in/seuperfil"
-                    className="h-12"
+                    className="h-12 bg-[#181A2A] border-white/10 text-white"
                   />
                 </div>
               </div>
@@ -262,7 +261,7 @@ export const OnboardingStep1 = ({
                     Estado *
                   </Label>
                   <Select value={state} onValueChange={setState} disabled={locationsLoading}>
-                    <SelectTrigger className={`h-12 ${stateError ? 'border-red-500' : ''}`}>
+                    <SelectTrigger className={`h-12 bg-[#181A2A] border-white/10 text-white ${stateError ? 'border-red-500' : ''}`}>
                       <SelectValue placeholder={locationsLoading ? "Carregando..." : "Selecione seu estado"} />
                     </SelectTrigger>
                     <SelectContent className="bg-[#151823] border-white/10">
@@ -283,7 +282,7 @@ export const OnboardingStep1 = ({
                     Cidade *
                   </Label>
                   <Select value={city} onValueChange={setCity} disabled={!state || locationsLoading}>
-                    <SelectTrigger className={`h-12 ${cityError ? 'border-red-500' : ''}`}>
+                    <SelectTrigger className={`h-12 bg-[#181A2A] border-white/10 text-white ${cityError ? 'border-red-500' : ''}`}>
                       <SelectValue placeholder={!state ? "Selecione primeiro o estado" : "Selecione sua cidade"} />
                     </SelectTrigger>
                     <SelectContent className="bg-[#151823] border-white/10">

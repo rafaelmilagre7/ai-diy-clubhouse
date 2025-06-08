@@ -16,7 +16,7 @@ export const OnboardingProgress = ({
   stepTitles 
 }: OnboardingProgressProps) => {
   return (
-    <div className="w-full space-y-8">
+    <div className="w-full space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -33,44 +33,12 @@ export const OnboardingProgress = ({
           </span>
         </div>
       </div>
-      
-      {/* Barra de progresso principal */}
-      <div className="space-y-3">
-        <div className="relative">
-          <div className="w-full bg-[#151823] border border-white/10 rounded-full h-2 overflow-hidden">
-            <motion.div 
-              initial={{ width: "0%" }}
-              animate={{ width: `${(currentStep / totalSteps) * 100}%` }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-              className="bg-gradient-to-r from-viverblue to-viverblue-light h-full rounded-full"
-            />
-          </div>
-        </div>
-        
-        <div className="flex justify-between text-xs">
-          <span className="text-neutral-400">
-            {Math.round((currentStep / totalSteps) * 100)}% concluído
-          </span>
-          <span className="text-neutral-400">
-            {stepTitles[currentStep - 1]}
-          </span>
-        </div>
-      </div>
 
       {/* Indicadores de etapas para desktop */}
       <div className="hidden lg:block">
         <div className="relative">
-          {/* Linha de conexão */}
-          <div className="absolute top-6 left-0 right-0 h-px bg-white/10" />
-          <motion.div 
-            initial={{ width: "0%" }}
-            animate={{ width: `${((currentStep - 1) / (stepTitles.length - 1)) * 100}%` }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="absolute top-6 left-0 h-px bg-viverblue"
-          />
-          
           {/* Steps */}
-          <div className="relative flex items-start justify-between">
+          <div className="flex items-start justify-between">
             {stepTitles.map((title, index) => {
               const stepNumber = index + 1;
               const isCompleted = stepNumber < currentStep;

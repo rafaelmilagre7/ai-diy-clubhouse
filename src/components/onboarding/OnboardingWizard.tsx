@@ -170,7 +170,7 @@ export const OnboardingWizard = () => {
     <div className="min-h-screen bg-[#0F111A]">
       {/* Header com progresso */}
       <div className="sticky top-0 z-40 bg-[#0F111A]/90 backdrop-blur-sm border-b border-white/5">
-        <div className="max-w-5xl mx-auto px-6 py-6">
+        <div className="max-w-5xl mx-auto px-6 py-4">
           <OnboardingProgress 
             currentStep={currentStep} 
             totalSteps={totalSteps}
