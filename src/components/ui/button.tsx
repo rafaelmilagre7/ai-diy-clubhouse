@@ -10,32 +10,32 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: 
-          "bg-primary text-primary-foreground shadow-sm hover:bg-primary-hover hover:shadow-md hover:scale-105 active:scale-95",
+          "btn-primary",
         destructive:
-          "bg-error text-error-foreground shadow-sm hover:shadow-md hover:scale-105 hover:brightness-110 active:scale-95",
+          "btn-error",
         outline:
-          "border-2 border-border bg-transparent text-foreground shadow-sm hover:bg-surface-hover hover:border-border-strong hover:scale-105 active:scale-95",
+          "btn-outline",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary-hover hover:shadow-md hover:scale-105 active:scale-95",
+          "btn-secondary",
         ghost: 
-          "text-foreground hover:bg-surface-hover hover:scale-105 active:scale-95",
+          "btn-ghost",
         link: 
-          "text-primary underline-offset-4 hover:underline hover:text-primary-hover",
+          "text-primary underline-offset-4 hover:underline hover:text-primary-hover transition-colors duration-200",
         success:
-          "bg-success text-success-foreground shadow-sm hover:shadow-md hover:scale-105 hover:brightness-110 active:scale-95",
+          "btn-success",
         warning:
-          "bg-warning text-warning-foreground shadow-sm hover:shadow-md hover:scale-105 hover:brightness-110 active:scale-95",
+          "btn-warning",
         info:
-          "bg-info text-info-foreground shadow-sm hover:shadow-md hover:scale-105 hover:brightness-110 active:scale-95",
+          "btn-info",
         accent:
-          "bg-accent text-accent-foreground shadow-sm hover:shadow-md hover:scale-105 hover:brightness-110 active:scale-95",
+          "bg-accent text-accent-foreground shadow-sm hover:shadow-md hover:scale-105 hover:brightness-110 active:scale-95 focus-visible:ring-accent/20",
       },
       size: {
         default: "h-10 px-6 py-2",
-        xs: "h-7 px-3 py-1 text-xs",
-        sm: "h-8 px-4 py-1.5 text-xs",
-        lg: "h-12 px-8 py-3 text-base",
-        xl: "h-14 px-10 py-4 text-lg",
+        xs: "btn-xs",
+        sm: "btn-sm", 
+        lg: "btn-lg",
+        xl: "btn-xl",
         icon: "h-10 w-10",
         "icon-sm": "h-8 w-8",
         "icon-lg": "h-12 w-12",
