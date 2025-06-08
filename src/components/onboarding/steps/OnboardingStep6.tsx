@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { OnboardingStepProps } from '../types/onboardingTypes';
 
 export const OnboardingStep6 = ({ 
@@ -17,6 +18,7 @@ export const OnboardingStep6 = ({
   const [communicationStyle, setCommunicationStyle] = useState<'formal' | 'casual' | 'technical' | 'creative'>(data.communicationStyle || 'casual');
   const [learningPreference, setLearningPreference] = useState<'visual' | 'hands-on' | 'reading' | 'video'>(data.learningPreference || 'video');
   const [contentTypes, setContentTypes] = useState<string[]>(data.contentTypes || []);
+  const [showValidation, setShowValidation] = useState(false);
 
   const clubContentTypes = [
     'Tutoriais práticos em vídeo',
@@ -43,10 +45,12 @@ export const OnboardingStep6 = ({
   // Wrapper functions para resolver incompatibilidade de tipos com Radix UI Select
   const handleCommunicationStyleChange = (value: string) => {
     setCommunicationStyle(value as typeof communicationStyle);
+    setShowValidation(false);
   };
 
   const handleLearningPreferenceChange = (value: string) => {
     setLearningPreference(value as typeof learningPreference);
+    setShowValidation(false);
   };
 
   const handleContentTypeChange = (contentType: string, checked: boolean) => {
@@ -55,9 +59,16 @@ export const OnboardingStep6 = ({
     } else {
       setContentTypes(contentTypes.filter(type => type !== contentType));
     }
+    setShowValidation(false);
   };
 
   const handleNext = () => {
+    // Validação
+    if (!communicationStyle || !learningPreference || contentTypes.length === 0) {
+      setShowValidation(true);
+      return;
+    }
+
     onUpdateData({ 
       communicationStyle,
       learningPreference,
@@ -101,13 +112,21 @@ export const OnboardingStep6 = ({
         transition={{ delay: 0.2 }}
         className="space-y-6 max-w-md mx-auto"
       >
+        {showValidation && (
+          <Alert variant="destructive">
+            <AlertDescription>
+              Por favor, preencha todos os campos obrigatórios antes de continuar.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="space-y-2">
           <Label className="flex items-center gap-2">
             <MessageCircle className="w-4 h-4" />
-            Como você prefere se comunicar?
+            Como você prefere se comunicar? *
           </Label>
           <Select value={communicationStyle} onValueChange={handleCommunicationStyleChange}>
-            <SelectTrigger>
+            <SelectTrigger className={!communicationStyle && showValidation ? "border-red-500" : ""}>
               <SelectValue placeholder="Selecione seu estilo" />
             </SelectTrigger>
             <SelectContent>
@@ -122,10 +141,10 @@ export const OnboardingStep6 = ({
         <div className="space-y-2">
           <Label className="flex items-center gap-2">
             <BookOpen className="w-4 h-4" />
-            Como você prefere aprender?
+            Como você prefere aprender? *
           </Label>
           <Select value={learningPreference} onValueChange={handleLearningPreferenceChange}>
-            <SelectTrigger>
+            <SelectTrigger className={!learningPreference && showValidation ? "border-red-500" : ""}>
               <SelectValue placeholder="Selecione sua preferência" />
             </SelectTrigger>
             <SelectContent>
@@ -140,9 +159,9 @@ export const OnboardingStep6 = ({
         <div className="space-y-3">
           <Label className="flex items-center gap-2">
             <Video className="w-4 h-4" />
-            Que tipos de conteúdo mais te interessam? (escolha quantos quiser)
+            Que tipos de conteúdo mais te interessam? * (escolha pelo menos um)
           </Label>
-          <div className="space-y-2 max-h-48 overflow-y-auto">
+          <div className={`space-y-2 max-h-48 overflow-y-auto p-2 rounded-md ${contentTypes.length === 0 && showValidation ? "border border-red-500" : "border border-gray-200"}`}>
             {availableContentTypes.map((contentType) => (
               <div key={contentType} className="flex items-center space-x-2">
                 <Checkbox
@@ -159,6 +178,9 @@ export const OnboardingStep6 = ({
               </div>
             ))}
           </div>
+          {contentTypes.length === 0 && showValidation && (
+            <p className="text-sm text-red-500">Selecione pelo menos um tipo de conteúdo</p>
+          )}
         </div>
 
         <motion.div
@@ -169,7 +191,6 @@ export const OnboardingStep6 = ({
         >
           <Button 
             onClick={handleNext}
-            disabled={!canProceed}
             className="w-full bg-viverblue hover:bg-viverblue-dark text-lg py-6"
           >
             Finalizar Onboarding! 🎉

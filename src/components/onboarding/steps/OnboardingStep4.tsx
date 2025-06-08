@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { OnboardingStepProps } from '../types/onboardingTypes';
 
 export const OnboardingStep4 = ({ 
@@ -18,13 +19,21 @@ export const OnboardingStep4 = ({
   const [aiExperience, setAiExperience] = useState<'none' | 'basic' | 'intermediate' | 'advanced' | ''>(data.aiExperience || '');
   const [aiToolsUsed, setAiToolsUsed] = useState(data.aiToolsUsed?.join(', ') || '');
   const [aiChallenges, setAiChallenges] = useState(data.aiChallenges?.join(', ') || '');
+  const [showValidation, setShowValidation] = useState(false);
 
   // Wrapper function para resolver incompatibilidade de tipos com Radix UI Select
   const handleAiExperienceChange = (value: string) => {
     setAiExperience(value as typeof aiExperience);
+    setShowValidation(false);
   };
 
   const handleNext = () => {
+    // Validação
+    if (!aiExperience) {
+      setShowValidation(true);
+      return;
+    }
+
     onUpdateData({ 
       aiExperience,
       aiToolsUsed: aiToolsUsed.split(',').map(s => s.trim()).filter(Boolean),
@@ -67,13 +76,21 @@ export const OnboardingStep4 = ({
         transition={{ delay: 0.2 }}
         className="space-y-6 max-w-md mx-auto"
       >
+        {showValidation && (
+          <Alert variant="destructive">
+            <AlertDescription>
+              Por favor, selecione seu nível de experiência com IA antes de continuar.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="space-y-2">
           <Label className="flex items-center gap-2">
             <Brain className="w-4 h-4" />
-            Qual seu nível de experiência com IA?
+            Qual seu nível de experiência com IA? *
           </Label>
           <Select value={aiExperience} onValueChange={handleAiExperienceChange}>
-            <SelectTrigger>
+            <SelectTrigger className={!aiExperience && showValidation ? "border-red-500" : ""}>
               <SelectValue placeholder="Selecione seu nível" />
             </SelectTrigger>
             <SelectContent>

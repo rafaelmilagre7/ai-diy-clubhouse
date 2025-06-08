@@ -32,30 +32,20 @@ import TopicView from '@/pages/member/community/TopicView';
 import CategoryView from '@/pages/member/community/CategoryView';
 import NewTopic from '@/pages/member/community/NewTopic';
 
-// NOVA PÁGINA: Onboarding Page
-import OnboardingPage from '@/pages/OnboardingPage';
-
 // Função helper para criar rotas protegidas com MemberLayout
 const createProtectedRoute = (path: string, Component: React.ComponentType<any>) => ({
   path,
   element: <ProtectedRoutes><MemberLayout><Component /></MemberLayout></ProtectedRoutes>
 });
 
-// Função helper para criar rota protegida SEM MemberLayout (onboarding)
-const createProtectedRouteNoLayout = (path: string, Component: React.ComponentType<any>) => ({
-  path,
-  element: <ProtectedRoutes><Component /></ProtectedRoutes>
-});
-
 // Log para diagnóstico
-console.log("Carregando rotas de membros - Onboarding ADICIONADO com segurança");
+console.log("Carregando rotas de membros - Onboarding movido para AppRoutes");
 
 export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/", Dashboard),
   createProtectedRoute("/dashboard", Dashboard),
   
-  // NOVA ROTA: Onboarding (sem layout para experiência imersiva)
-  createProtectedRouteNoLayout("/onboarding", OnboardingPage),
+  // ROTA DE ONBOARDING REMOVIDA - agora está em AppRoutes.tsx
   
   createProtectedRoute("/solutions", Solutions),
   createProtectedRoute("/tools", Tools),

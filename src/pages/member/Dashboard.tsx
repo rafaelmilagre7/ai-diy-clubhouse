@@ -1,8 +1,8 @@
-
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
 import { useDashboardProgress } from "@/hooks/useDashboardProgress";
+import { useOnboardingGuard } from "@/components/onboarding/hooks/useOnboardingGuard";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Solution } from "@/lib/supabase";
@@ -15,6 +15,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, profile, isLoading: authLoading } = useAuth();
+  const { isOnboardingRequired, isChecking, redirectToOnboarding } = useOnboardingGuard();
   
   // Estado para controle de erros
   const [hasError, setHasError] = useState(false);
@@ -23,6 +24,14 @@ const Dashboard = () => {
   // Categoria inicial baseada na URL
   const initialCategory = useMemo(() => searchParams.get("category") || "general", [searchParams]);
   const [category, setCategory] = useState<string>(initialCategory);
+  
+  // Verificar se precisa completar onboarding
+  useEffect(() => {
+    if (!isChecking && isOnboardingRequired) {
+      toast.info("Complete seu onboarding para acessar o dashboard!");
+      redirectToOnboarding();
+    }
+  }, [isOnboardingRequired, isChecking, redirectToOnboarding]);
   
   // Carregar soluções
   const { solutions, loading: solutionsLoading, error: solutionsError } = useSolutionsData();
@@ -99,6 +108,18 @@ const Dashboard = () => {
       return () => clearTimeout(timeoutId);
     }
   }, []);
+  
+  // Se ainda estiver verificando onboarding, mostrar loading
+  if (isChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-viverblue mx-auto"></div>
+          <p className="text-gray-600 dark:text-gray-300">Verificando seu progresso...</p>
+        </div>
+      </div>
+    );
+  }
   
   // Se houver erro, mostrar mensagem de erro
   if (hasError) {
