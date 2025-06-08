@@ -6,8 +6,8 @@ import SetNewPassword from '@/pages/auth/SetNewPassword';
 
 export const authRoutes: RouteObject[] = [
   { path: "/login", element: <Login /> },
-  // Removido o registro direto, acesso apenas por convite
-  { path: "/register", element: <Login /> }, // Redireciona para login
+  { path: "/auth", element: <Login /> }, // Redireciona para o mesmo design
+  { path: "/register", element: <Login /> }, // Redireciona para login (acesso por convite)
   { path: "/reset-password", element: <ResetPassword /> },
   { path: "/set-new-password", element: <SetNewPassword /> },
 ];

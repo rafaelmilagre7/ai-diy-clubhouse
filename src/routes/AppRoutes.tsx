@@ -70,7 +70,7 @@ const AppRoutes = () => {
           <Route key={route.path} path={route.path} element={route.element} />
         ))}
         
-        {/* Auth Routes */}
+        {/* Auth Routes - Todas usando o design escuro */}
         {authRoutes.map((route) => (
           <Route key={route.path} path={route.path} element={route.element} />
         ))}
