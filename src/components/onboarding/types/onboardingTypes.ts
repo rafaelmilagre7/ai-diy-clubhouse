@@ -1,4 +1,3 @@
-
 export interface OnboardingData {
   // Etapa 1 - Informações básicas
   name?: string;
@@ -45,7 +44,9 @@ export interface OnboardingStepProps {
   data: OnboardingData;
   onUpdateData: (stepData: Partial<OnboardingData>) => void;
   onNext: () => void;
-  onPrev: () => void;
+  onPrev?: () => void;
   memberType: 'club' | 'formacao';
   userProfile?: any;
+  validationErrors?: Array<{ field: string; message: string }>;
+  getFieldError?: (field: string) => string | undefined;
 }

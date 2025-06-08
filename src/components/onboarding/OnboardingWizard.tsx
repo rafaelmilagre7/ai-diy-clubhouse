@@ -11,8 +11,10 @@ import { OnboardingStep6 } from './steps/OnboardingStep6';
 import { OnboardingFinal } from './steps/OnboardingFinal';
 import { OnboardingProgress } from './OnboardingProgress';
 import { OnboardingNavigation } from './OnboardingNavigation';
+import { OnboardingFeedback } from './components/OnboardingFeedback';
 import { useOnboardingStorage } from './hooks/useOnboardingStorage';
 import { useOnboardingSubmit } from './hooks/useOnboardingSubmit';
+import { useOnboardingValidation } from './hooks/useOnboardingValidation';
 import { OnboardingData } from './types/onboardingTypes';
 import { toast } from 'sonner';
 
@@ -21,8 +23,11 @@ export const OnboardingWizard = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isCompleting, setIsCompleting] = useState(false);
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const { data, updateData, clearData } = useOnboardingStorage();
   const { checkOnboardingStatus } = useOnboardingSubmit();
+  const { validateCurrentStep, validationErrors, clearValidationErrors } = useOnboardingValidation();
 
   // Detectar tipo de membro baseado no perfil com tipo explícito
   const memberType: 'club' | 'formacao' = profile?.role === 'formacao' ? 'formacao' : 'club';
@@ -66,6 +71,7 @@ export const OnboardingWizard = () => {
         }
       } catch (error) {
         console.error('Erro ao verificar status do onboarding:', error);
+        setSubmitError('Erro ao verificar status. Tente novamente.');
       } finally {
         setIsCheckingStatus(false);
       }
@@ -75,38 +81,87 @@ export const OnboardingWizard = () => {
   }, [user, memberType, checkOnboardingStatus]);
 
   const handleNext = () => {
+    // Limpar erros anteriores
+    setSubmitError(null);
+    clearValidationErrors();
+
+    // Validar etapa atual
+    const validation = validateCurrentStep(currentStep, data, memberType);
+    
+    if (!validation.isValid) {
+      toast.error('Por favor, corrija os erros antes de continuar');
+      return;
+    }
+
     if (currentStep < totalSteps) {
       setCurrentStep(prev => prev + 1);
+      
+      // Feedback positivo ao avançar
+      if (currentStep < 6) {
+        toast.success('Ótimo! Vamos para a próxima etapa 🎉');
+      }
     }
   };
 
   const handlePrev = () => {
     if (currentStep > 1) {
       setCurrentStep(prev => prev - 1);
+      // Limpar erros ao voltar
+      setSubmitError(null);
+      clearValidationErrors();
     }
   };
 
   const handleStepData = (stepData: Partial<OnboardingData>) => {
     updateData(stepData);
+    // Limpar erros ao atualizar dados
+    setSubmitError(null);
+    clearValidationErrors();
   };
 
   const handleComplete = async () => {
     setIsCompleting(true);
+    setSubmitError(null);
     
     try {
+      // Validação final de todos os dados
+      let allValid = true;
+      for (let step = 1; step <= 6; step++) {
+        const validation = validateCurrentStep(step, data, memberType);
+        if (!validation.isValid) {
+          allValid = false;
+          break;
+        }
+      }
+
+      if (!allValid) {
+        throw new Error('Dados incompletos. Por favor, revise todas as etapas.');
+      }
+
       // Simular um pequeno delay para UX
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Limpar dados temporários do localStorage
       clearData();
       
+      // Feedback de sucesso
+      toast.success('Onboarding concluído com sucesso! 🎉');
+      
       // Redirecionar baseado no tipo de membro
       const redirectUrl = memberType === 'formacao' ? '/formacao' : '/dashboard';
-      window.location.href = redirectUrl;
+      
+      setTimeout(() => {
+        window.location.href = redirectUrl;
+      }, 1500);
       
     } catch (error) {
       console.error('Erro ao finalizar onboarding:', error);
-      toast.error('Erro ao finalizar onboarding. Tente novamente.');
+      setSubmitError(
+        error instanceof Error 
+          ? error.message 
+          : 'Erro ao finalizar onboarding. Tente novamente.'
+      );
+      toast.error('Erro ao finalizar onboarding');
     } finally {
       setIsCompleting(false);
     }
@@ -131,7 +186,9 @@ export const OnboardingWizard = () => {
       onNext: handleNext,
       onPrev: handlePrev,
       memberType,
-      userProfile: profile
+      userProfile: profile,
+      validationErrors,
+      getFieldError: (field: string) => validationErrors.find(e => e.field === field)?.message
     };
 
     switch (currentStep) {
@@ -161,6 +218,13 @@ export const OnboardingWizard = () => {
     }
   };
 
+  // Verificar se pode prosseguir
+  const canProceed = () => {
+    if (currentStep === totalSteps) return true;
+    const validation = validateCurrentStep(currentStep, data, memberType);
+    return validation.isValid;
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header com progresso */}
@@ -177,6 +241,21 @@ export const OnboardingWizard = () => {
       {/* Conteúdo principal */}
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-4xl">
+          {/* Feedback de erro geral */}
+          <OnboardingFeedback
+            type="error"
+            message={submitError || 'Erro no onboarding'}
+            show={!!submitError}
+            onClose={() => setSubmitError(null)}
+          />
+
+          {/* Feedback de loading para submissão */}
+          <OnboardingFeedback
+            type="loading"
+            message="Salvando seus dados..."
+            show={isSubmitting}
+          />
+
           <AnimatePresence mode="wait">
             <motion.div
               key={currentStep}
@@ -201,7 +280,8 @@ export const OnboardingWizard = () => {
               totalSteps={totalSteps - 1} // Excluir tela final da contagem
               onNext={handleNext}
               onPrev={handlePrev}
-              canProceed={true} // Por enquanto sempre true, depois validaremos
+              canProceed={canProceed()}
+              isLoading={isSubmitting}
             />
           </div>
         </div>

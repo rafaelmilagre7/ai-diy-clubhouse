@@ -12,7 +12,8 @@ export const OnboardingStep1 = ({
   onUpdateData, 
   onNext, 
   memberType,
-  userProfile 
+  userProfile,
+  getFieldError
 }: OnboardingStepProps) => {
   const [name, setName] = useState(data.name || userProfile?.full_name || '');
   const [nickname, setNickname] = useState(data.nickname || '');
@@ -28,6 +29,7 @@ export const OnboardingStep1 = ({
   };
 
   const isClubMember = memberType === 'club';
+  const nameError = getFieldError?.('name');
 
   return (
     <div className="space-y-8">
@@ -65,15 +67,18 @@ export const OnboardingStep1 = ({
         <div className="space-y-2">
           <Label htmlFor="name" className="flex items-center gap-2">
             <User className="w-4 h-4" />
-            Como você gostaria de ser chamado?
+            Como você gostaria de ser chamado? *
           </Label>
           <Input
             id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Seu nome completo"
-            className="text-center"
+            className={`text-center ${nameError ? 'border-red-500' : ''}`}
           />
+          {nameError && (
+            <p className="text-sm text-red-500">{nameError}</p>
+          )}
           <p className="text-xs text-gray-500 dark:text-gray-400">
             Este será seu nome oficial na plataforma
           </p>
@@ -105,7 +110,7 @@ export const OnboardingStep1 = ({
           <Button 
             onClick={handleNext}
             disabled={!name.trim()}
-            className="w-full bg-viverblue hover:bg-viverblue-dark text-lg py-6"
+            className="w-full bg-viverblue hover:bg-viverblue-dark text-lg py-6 disabled:opacity-50"
           >
             {isClubMember ? 'Vamos falar de negócios! 💼' : 'Vamos começar a aprender! 📚'}
           </Button>
