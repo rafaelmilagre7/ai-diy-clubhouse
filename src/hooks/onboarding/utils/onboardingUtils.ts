@@ -61,8 +61,8 @@ export const shouldShowOnboarding = (
 ): boolean => {
   if (!profile) return false;
 
-  // Apenas para membros (role 'member')
-  if (profile.role !== 'member') {
+  // Apenas para membros (role 'membro_club' ou 'member')
+  if (profile.role !== 'membro_club' && profile.role !== 'member') {
     return false;
   }
 
@@ -91,7 +91,7 @@ export const shouldShowOnboarding = (
 export const shouldSuggestOnboarding = (
   profile: UserProfile | null
 ): boolean => {
-  if (!profile || profile.role !== 'member') return false;
+  if (!profile || (profile.role !== 'membro_club' && profile.role !== 'member')) return false;
   
   // Se já completou ou pulou, não sugerir
   if (profile.onboarding_completed_at || profile.onboarding_skipped_at) {
@@ -157,7 +157,7 @@ export const logOnboardingDecision = (
  * FASE 4: Para uso em dashboards e sugestões
  */
 export const hasOnboardingPending = (profile: UserProfile | null): boolean => {
-  if (!profile || profile.role !== 'member') return false;
+  if (!profile || (profile.role !== 'membro_club' && profile.role !== 'member')) return false;
   return !profile.onboarding_completed_at && !profile.onboarding_skipped_at;
 };
 

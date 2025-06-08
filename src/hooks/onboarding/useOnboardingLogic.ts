@@ -54,12 +54,12 @@ export const useOnboardingLogic = () => {
     
     // Status do onboarding
     onboardingAction,
-    canAccessOnboarding: !!user && !!profile && profile.role === 'member',
+    canAccessOnboarding: !!user && !!profile && (profile.role === 'membro_club' || profile.role === 'member'),
     
     // Informações do usuário
     userName,
     userEmail,
-    userRole: profile?.role || 'member',
+    userRole: profile?.role || 'membro_club',
     accountAge,
     isNewUser,
     

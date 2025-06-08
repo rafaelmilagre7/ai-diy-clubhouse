@@ -57,7 +57,7 @@ export const useOnboardingStatus = () => {
     
     // Verificações úteis
     isPending: hasOnboardingPending(profile),
-    canAccessOnboarding: user && profile && profile.role === 'member',
+    canAccessOnboarding: user && profile && (profile.role === 'membro_club' || profile.role === 'member'),
     
     // Estatísticas
     stats,
