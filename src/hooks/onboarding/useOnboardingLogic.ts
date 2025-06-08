@@ -1,53 +1,81 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
+import { useOnboardingStatus } from './useOnboardingStatus';
 
 /**
  * Hook isolado para lógica do onboarding
- * FASE 2: Integração com bypass e mais dados
+ * FASE 4: Integração com sistema refinado de status
  */
 export const useOnboardingLogic = () => {
   const { user, profile } = useAuth();
+  const { 
+    onboardingAction, 
+    isChecking, 
+    stats, 
+    userName, 
+    userEmail, 
+    accountAge,
+    isNewUser,
+    hasCompleted,
+    hasSkipped
+  } = useOnboardingStatus();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simular carregamento inicial
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
+    if (!isChecking) {
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isChecking]);
 
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Log para debug (apenas em desenvolvimento)
+  // Log para debug em desenvolvimento
   useEffect(() => {
-    if (!isLoading && user) {
-      console.log('🚀 Onboarding acessado por:', {
+    if (!isLoading && user && onboardingAction) {
+      console.log('🚀 Onboarding FASE 4 - Status calculado:', {
         userId: user.id,
         email: user.email,
-        role: profile?.role || 'não definido',
-        createdAt: profile?.created_at
+        action: onboardingAction,
+        stats,
+        isNewUser,
+        hasCompleted,
+        hasSkipped,
+        accountAge
       });
     }
-  }, [isLoading, user, profile]);
+  }, [isLoading, user, onboardingAction, stats, isNewUser, hasCompleted, hasSkipped, accountAge]);
 
   return {
-    isLoading,
+    isLoading: isLoading || isChecking,
     user,
     profile,
-    // Informações de acesso
-    canAccessOnboarding: true, // Por enquanto todos podem acessar
-    isAdmin: profile?.role === 'admin',
-    isMasterAdmin: user?.email === 'rafael@viverdeia.ai',
-    isFormacao: profile?.role === 'formacao',
+    
+    // Status do onboarding
+    onboardingAction,
+    canAccessOnboarding: !!user && !!profile && profile.role === 'member',
     
     // Informações do usuário
-    userName: profile?.name || user?.user_metadata?.name || 'Usuário',
-    userEmail: user?.email || null,
+    userName,
+    userEmail,
     userRole: profile?.role || 'member',
+    accountAge,
+    isNewUser,
     
-    // Status da conta
-    isNewUser: profile ? (new Date().getTime() - new Date(profile.created_at).getTime() < 24 * 60 * 60 * 1000) : false,
-    accountAge: profile ? Math.floor((new Date().getTime() - new Date(profile.created_at).getTime()) / (24 * 60 * 60 * 1000)) : 0
+    // Status específicos
+    hasCompleted,
+    hasSkipped,
+    isRequired: onboardingAction === 'required',
+    isSuggested: onboardingAction === 'suggested',
+    shouldBypass: onboardingAction === 'bypass',
+    
+    // Estatísticas
+    stats,
+    
+    // Verificações de acesso
+    isAdmin: profile?.role === 'admin',
+    isMasterAdmin: user?.email === 'rafael@viverdeia.ai',
+    isFormacao: profile?.role === 'formacao'
   };
 };
