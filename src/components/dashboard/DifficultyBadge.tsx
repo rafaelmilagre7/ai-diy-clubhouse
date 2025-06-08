@@ -4,46 +4,46 @@ import { cn } from "@/lib/utils";
 
 interface DifficultyBadgeProps {
   difficulty: string;
+  className?: string;
 }
 
-export const DifficultyBadge = ({ difficulty }: DifficultyBadgeProps) => {
-  // Função para obter label em português
-  const getLabel = () => {
-    switch (difficulty) {
+export const DifficultyBadge = ({ difficulty, className }: DifficultyBadgeProps) => {
+  const getDifficultyConfig = () => {
+    switch (difficulty?.toLowerCase()) {
       case 'easy':
-        return 'Fácil';
+      case 'fácil':
+        return {
+          label: 'Fácil',
+          variant: 'success' as const
+        };
       case 'medium':
-        return 'Médio';
+      case 'médio':
+        return {
+          label: 'Médio',
+          variant: 'warning' as const
+        };
       case 'advanced':
-        return 'Avançado';
+      case 'avançado':
+        return {
+          label: 'Avançado',
+          variant: 'destructive' as const
+        };
       default:
-        return difficulty;
+        return {
+          label: difficulty || 'Indefinido',
+          variant: 'neutral' as const
+        };
     }
   };
-  
-  // Função para obter classe de estilo com melhor contraste
-  const getStyleClass = () => {
-    switch (difficulty) {
-      case 'easy':
-        return 'bg-neutral-800/60 text-emerald-400 border-0';
-      case 'medium':
-        return 'bg-neutral-800/60 text-amber-400 border-0';
-      case 'advanced':
-        return 'bg-neutral-800/60 text-rose-400 border-0';
-      default:
-        return 'bg-neutral-800/60 text-neutral-300 border-0';
-    }
-  };
-  
+
+  const { label, variant } = getDifficultyConfig();
+
   return (
     <Badge 
-      variant="outline" 
-      className={cn(
-        "px-2 py-0.5 text-xs rounded-full",
-        getStyleClass()
-      )}
+      variant={variant}
+      className={cn("text-xs font-medium", className)}
     >
-      {getLabel()}
+      {label}
     </Badge>
   );
 };

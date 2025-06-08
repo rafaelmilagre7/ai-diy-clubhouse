@@ -1,45 +1,68 @@
 
-import { Card, CardContent } from "@/components/ui/card";
-import { BookOpen, Lightbulb, Zap } from "lucide-react";
+import { FC } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Text } from "@/components/ui/text";
+import { Container } from "@/components/ui/container";
+import { BookOpen, Lightbulb, Rocket } from "lucide-react";
+import { Link } from "react-router-dom";
 
-export const NoSolutionsPlaceholder = () => {
+export const NoSolutionsPlaceholder: FC = () => {
   return (
-    <div className="text-center py-12">
-      <div className="mb-8">
-        <div className="flex justify-center space-x-4 mb-6">
-          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-            <BookOpen className="w-8 h-8 text-blue-600" />
+    <Container className="py-12">
+      <Card className="p-8 text-center max-w-2xl mx-auto">
+        <div className="space-y-6">
+          <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+            <Rocket className="h-8 w-8 text-primary" />
           </div>
-          <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center">
-            <Lightbulb className="w-8 h-8 text-purple-600" />
+          
+          <div className="space-y-3">
+            <Text variant="section" textColor="primary">
+              Comece sua jornada com IA
+            </Text>
+            <Text variant="body" textColor="secondary" className="max-w-lg mx-auto">
+              Você ainda não começou nenhuma implementação. Explore nossas soluções 
+              e encontre as melhores oportunidades para seu negócio.
+            </Text>
           </div>
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-            <Zap className="w-8 h-8 text-green-600" />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
+            <div className="p-4 rounded-lg bg-surface-elevated border border-border-subtle">
+              <BookOpen className="h-6 w-6 text-info mb-2 mx-auto" />
+              <Text variant="body-small" weight="medium" textColor="secondary">
+                Explore Soluções
+              </Text>
+              <Text variant="caption" textColor="tertiary">
+                Descubra implementações prontas
+              </Text>
+            </div>
+            <div className="p-4 rounded-lg bg-surface-elevated border border-border-subtle">
+              <Lightbulb className="h-6 w-6 text-warning mb-2 mx-auto" />
+              <Text variant="body-small" weight="medium" textColor="secondary">
+                Trilha Personalizada
+              </Text>
+              <Text variant="caption" textColor="tertiary">
+                IA recomenda por você
+              </Text>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
+            <Button asChild>
+              <Link to="/solutions">
+                <BookOpen className="mr-2 h-4 w-4" />
+                Ver Soluções
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/implementation-trail">
+                <Lightbulb className="mr-2 h-4 w-4" />
+                Gerar Trilha
+              </Link>
+            </Button>
           </div>
         </div>
-        
-        <h3 className="text-2xl font-bold text-gray-900 mb-3">
-          Bem-vindo à plataforma!
-        </h3>
-        <p className="text-gray-600 max-w-md mx-auto">
-          Suas soluções de IA aparecerão aqui assim que estiverem disponíveis. 
-          Em breve você terá acesso a conteúdos personalizados para transformar seu negócio.
-        </p>
-      </div>
-
-      <Card className="max-w-lg mx-auto">
-        <CardContent className="p-6">
-          <h4 className="font-semibold text-gray-900 mb-2">
-            O que você pode fazer enquanto isso:
-          </h4>
-          <ul className="text-sm text-gray-600 space-y-2 text-left">
-            <li>• Complete seu perfil para receber recomendações personalizadas</li>
-            <li>• Explore a comunidade e conecte-se com outros membros</li>
-            <li>• Acesse ferramentas disponíveis na seção Tools</li>
-            <li>• Participe de eventos e webinars</li>
-          </ul>
-        </CardContent>
       </Card>
-    </div>
+    </Container>
   );
 };

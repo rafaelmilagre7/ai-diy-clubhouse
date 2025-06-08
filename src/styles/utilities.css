@@ -1,237 +1,59 @@
 
-/* === UTILITIES AVANÇADOS === */
+/* === UTILITIES MODERNAS === */
 
 @layer utilities {
   
-  /* === SPACING UTILITIES === */
+  /* === CONTAINER SYSTEM === */
   
-  .space-y-fluid > * + * {
-    @apply mt-4 sm:mt-6 md:mt-8;
+  .container-modern {
+    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
   }
   
-  .space-x-fluid > * + * {
-    @apply ml-4 sm:ml-6 md:ml-8;
+  .container-narrow {
+    @apply w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8;
   }
   
-  /* === GRID UTILITIES === */
-  
-  .grid-auto-fit {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  .container-wide {
+    @apply w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8;
   }
   
-  .grid-auto-fill {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  }
-  
-  .grid-responsive {
-    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
-  }
-  
-  /* === FLEXBOX UTILITIES === */
-  
-  .flex-center {
-    @apply flex items-center justify-center;
-  }
-  
-  .flex-between {
-    @apply flex items-center justify-between;
-  }
-  
-  .flex-start {
-    @apply flex items-center justify-start;
-  }
-  
-  .flex-end {
-    @apply flex items-center justify-end;
-  }
-  
-  /* === POSITIONING UTILITIES === */
-  
-  .absolute-center {
-    @apply absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
-  }
-  
-  .absolute-full {
-    @apply absolute inset-0;
-  }
-  
-  /* === SIZING UTILITIES === */
-  
-  .size-full {
-    @apply w-full h-full;
-  }
-  
-  .size-screen {
-    @apply w-screen h-screen;
-  }
-  
-  .min-size-full {
-    @apply min-w-full min-h-full;
-  }
-  
-  /* === ASPECT RATIO UTILITIES === */
-  
-  .aspect-square {
-    aspect-ratio: 1 / 1;
-  }
-  
-  .aspect-video {
-    aspect-ratio: 16 / 9;
-  }
-  
-  .aspect-photo {
-    aspect-ratio: 4 / 3;
-  }
-  
-  .aspect-golden {
-    aspect-ratio: 1.618 / 1;
-  }
-  
-  /* === INTERACTIVE UTILITIES === */
-  
-  .interactive {
-    @apply transition-all duration-200 ease-out;
-    @apply hover:scale-105 hover:shadow-md;
-    @apply active:scale-95;
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20;
-  }
-  
-  .clickable {
-    @apply cursor-pointer transition-colors duration-200 ease-out;
-    @apply hover:text-primary-hover active:text-primary-active;
-  }
-  
-  .disabled {
-    @apply pointer-events-none opacity-50 cursor-not-allowed;
-  }
-  
-  /* === BORDER UTILITIES === */
-  
-  .border-gradient {
-    border-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent))) 1;
-  }
-  
-  .border-dashed-modern {
-    @apply border-2 border-dashed border-border-subtle;
-  }
-  
-  /* === SHADOW UTILITIES === */
+  /* === SHADOW SYSTEM === */
   
   .shadow-soft {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 8px hsl(var(--background) / 0.1);
   }
   
   .shadow-medium {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 4px 12px hsl(var(--background) / 0.15);
   }
   
   .shadow-strong {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.16);
+    box-shadow: 0 8px 24px hsl(var(--background) / 0.2);
   }
   
-  /* === BACKDROP UTILITIES === */
+  /* === BACKDROP EFFECTS === */
   
-  .backdrop-blur-soft {
-    backdrop-filter: blur(8px);
+  .backdrop-modern {
+    @apply backdrop-blur-sm bg-background/80;
   }
   
-  .backdrop-blur-medium {
-    backdrop-filter: blur(16px);
+  .backdrop-glass {
+    @apply backdrop-blur-md bg-surface/60 border border-border-subtle;
   }
   
-  .backdrop-blur-strong {
-    backdrop-filter: blur(24px);
+  /* === FOCUS UTILITIES === */
+  
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   }
   
-  /* === SCROLL UTILITIES === */
+  /* === HOVER EFFECTS === */
   
-  .scroll-smooth {
-    scroll-behavior: smooth;
+  .hover-lift {
+    @apply transition-transform duration-200 hover:-translate-y-1;
   }
   
-  .scroll-snap-x {
-    scroll-snap-type: x mandatory;
-  }
-  
-  .scroll-snap-y {
-    scroll-snap-type: y mandatory;
-  }
-  
-  .scroll-snap-start {
-    scroll-snap-align: start;
-  }
-  
-  .scroll-snap-center {
-    scroll-snap-align: center;
-  }
-  
-  /* === OVERFLOW UTILITIES === */
-  
-  .overflow-fade {
-    position: relative;
-  }
-  
-  .overflow-fade::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 2rem;
-    background: linear-gradient(transparent, hsl(var(--background)));
-    pointer-events: none;
-  }
-  
-  /* === STATE UTILITIES === */
-  
-  .loading {
-    @apply animate-pulse pointer-events-none;
-  }
-  
-  .error-state {
-    @apply text-error border-error bg-error/5;
-  }
-  
-  .success-state {
-    @apply text-success border-success bg-success/5;
-  }
-  
-  .warning-state {
-    @apply text-warning border-warning bg-warning/5;
-  }
-  
-  /* === RESPONSIVE SHOW/HIDE === */
-  
-  .mobile-only {
-    @apply block sm:hidden;
-  }
-  
-  .tablet-up {
-    @apply hidden sm:block;
-  }
-  
-  .desktop-only {
-    @apply hidden lg:block;
-  }
-  
-  /* === ACCESSIBILITY === */
-  
-  .sr-only-focusable {
-    @apply sr-only focus:not-sr-only focus:absolute focus:z-50;
-    @apply focus:px-2 focus:py-1 focus:bg-surface focus:text-foreground;
-  }
-  
-  .reduced-motion {
-    @apply motion-reduce:transition-none motion-reduce:animate-none;
-  }
-  
-  /* === PRINT UTILITIES === */
-  
-  .print-hidden {
-    @apply print:hidden;
-  }
-  
-  .print-only {
-    @apply hidden print:block;
+  .hover-glow {
+    @apply transition-shadow duration-300 hover:shadow-glow-primary;
   }
 }

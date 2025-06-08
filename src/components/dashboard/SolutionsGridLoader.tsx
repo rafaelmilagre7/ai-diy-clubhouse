@@ -1,29 +1,36 @@
 
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card } from "@/components/ui/card";
+import { Text } from "@/components/ui/text";
 
 interface SolutionsGridLoaderProps {
-  title?: string;
+  title: string;
   count?: number;
 }
 
-export const SolutionsGridLoader = ({ title = "Carregando", count = 6 }: SolutionsGridLoaderProps) => {
+export const SolutionsGridLoader = ({ title, count = 3 }: SolutionsGridLoaderProps) => {
   return (
-    <div className="space-y-4">
-      {title && <h2 className="text-2xl font-bold mb-4">{title}</h2>}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="space-y-4 animate-fade-in">
+      <Text variant="section" textColor="primary">{title}</Text>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {Array.from({ length: count }).map((_, index) => (
-          <div key={index} className="border rounded-lg shadow-sm overflow-hidden">
-            <Skeleton className="h-[160px] w-full" />
+          <Card key={index} className="animate-pulse">
+            <div className="h-40 bg-surface rounded-t-xl" />
             <div className="p-4 space-y-3">
-              <Skeleton className="h-5 w-3/4" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-full" />
-              <div className="flex justify-between pt-2">
-                <Skeleton className="h-3 w-[80px]" />
-                <Skeleton className="h-3 w-[60px]" />
+              <div className="flex justify-between items-center">
+                <div className="h-4 bg-surface-hover rounded w-20" />
+                <div className="h-4 bg-surface-hover rounded w-16" />
+              </div>
+              <div className="space-y-2">
+                <div className="h-5 bg-surface-hover rounded w-3/4" />
+                <div className="h-4 bg-surface-hover rounded w-full" />
+                <div className="h-4 bg-surface-hover rounded w-2/3" />
+              </div>
+              <div className="flex justify-between items-center pt-2">
+                <div className="h-3 bg-surface-hover rounded w-24" />
+                <div className="h-6 bg-surface-hover rounded w-16" />
               </div>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
     </div>

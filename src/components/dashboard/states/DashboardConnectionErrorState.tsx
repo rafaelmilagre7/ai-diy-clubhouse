@@ -1,52 +1,49 @@
 
-import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Container } from "@/components/ui/container";
+import { Text } from "@/components/ui/text";
 import { AlertCircle, RefreshCw } from "lucide-react";
-import { useAuth } from "@/contexts/auth";
 
 export const DashboardConnectionErrorState = () => {
-  const { signOut } = useAuth();
-
   const handleRefresh = () => {
     window.location.reload();
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    window.location.href = '/login';
-  };
-
   return (
-    <div className="container flex flex-col items-center justify-center py-12 text-center">
-      <div className="max-w-md mx-auto">
-        <Alert variant="destructive" className="mb-6">
+    <Container className="min-h-screen flex items-center justify-center">
+      <div className="max-w-md w-full space-y-6 text-center">
+        <div className="mx-auto w-16 h-16 rounded-full bg-error/10 flex items-center justify-center">
+          <AlertCircle className="h-8 w-8 text-error" />
+        </div>
+        
+        <div className="space-y-2">
+          <Text variant="section" textColor="primary">
+            Erro de Conexão
+          </Text>
+          <Text variant="body" textColor="secondary">
+            Não foi possível conectar com o servidor. Verifique sua conexão e tente novamente.
+          </Text>
+        </div>
+
+        <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Problema de conexão</AlertTitle>
+          <AlertTitle>Problema de autenticação</AlertTitle>
           <AlertDescription>
-            Não foi possível carregar os dados do seu dashboard. Isso pode ser causado por um problema temporário de conexão.
+            Sua sessão pode ter expirado. Tente fazer login novamente.
           </AlertDescription>
         </Alert>
-          
-        <div className="flex flex-col md:flex-row gap-4 justify-center mt-4">
-          <Button onClick={handleRefresh} className="flex items-center gap-2">
-            <RefreshCw className="h-4 w-4" /> Atualizar página
-          </Button>
-          
-          <Button variant="outline" onClick={handleSignOut}>
-            Sair e entrar novamente
-          </Button>
-        </div>
 
-        <div className="mt-8 text-sm text-muted-foreground">
-          <p>Sugestões de solução:</p>
-          <ul className="list-disc text-left ml-6 mt-2 space-y-1">
-            <li>Verifique sua conexão com a internet</li>
-            <li>Limpe o cache do navegador</li>
-            <li>Tente usar outro navegador</li>
-            <li>Se o problema persistir, contate o suporte</li>
-          </ul>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Button onClick={handleRefresh} variant="outline">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Tentar Novamente
+          </Button>
+          <Button asChild>
+            <a href="/auth">Fazer Login</a>
+          </Button>
         </div>
       </div>
-    </div>
+    </Container>
   );
 };

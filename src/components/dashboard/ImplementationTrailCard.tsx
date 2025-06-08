@@ -1,45 +1,74 @@
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Brain, ArrowRight, Sparkles } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { FC, memo } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Text } from "@/components/ui/text";
+import { Badge } from "@/components/ui/badge";
+import { ArrowRight, Sparkles, Target, Zap } from "lucide-react";
+import { Link } from "react-router-dom";
 
-export const ImplementationTrailCard = () => {
-  const navigate = useNavigate();
-
-  const handleNavigateToTrail = () => {
-    navigate('/trilha-implementacao');
-  };
-
+export const ImplementationTrailCard: FC = memo(() => {
   return (
-    <Card className="glass-dark border-2 bg-gradient-to-br from-viverblue/20 to-purple-500/20 border-viverblue/30 hover:border-viverblue/50 transition-all duration-300 hover:shadow-lg hover:shadow-viverblue/25">
-      <CardHeader className="pb-4">
+    <Card variant="glow" className="relative overflow-hidden">
+      {/* Background Effects */}
+      <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
+      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-accent/10 rounded-full blur-3xl"></div>
+      
+      <CardHeader className="relative z-10 pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-viverblue/20 rounded-lg">
-              <Brain className="h-5 w-5 text-viverblue" />
+            <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <Sparkles className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-high-contrast text-lg flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-viverblue animate-pulse" />
-                Trilha Personalizada
+              <CardTitle className="text-gradient">
+                Trilha de Implementação IA
               </CardTitle>
-              <p className="text-medium-contrast text-sm">
-                Guia inteligente criado especialmente para você
-              </p>
+              <Text variant="caption" textColor="secondary">
+                Personalizada para seu perfil de negócio
+              </Text>
             </div>
           </div>
-          <Button 
-            onClick={handleNavigateToTrail}
-            size="sm"
-            className="bg-viverblue hover:bg-viverblue/90 text-white"
-          >
-            Acessar
-            <ArrowRight className="ml-1 h-4 w-4" />
-          </Button>
+          <Badge variant="info" className="animate-pulse-subtle">
+            Beta
+          </Badge>
         </div>
       </CardHeader>
+
+      <CardContent className="relative z-10 pt-0">
+        <div className="space-y-4">
+          <Text variant="body" textColor="secondary">
+            Nossa IA analisou seu perfil e criou uma trilha personalizada de implementação. 
+            Siga estas etapas para maximizar seus resultados.
+          </Text>
+
+          <div className="flex items-center gap-4 p-4 rounded-lg bg-surface-elevated/50 border border-border-subtle">
+            <div className="flex items-center gap-2">
+              <Target className="h-4 w-4 text-success" />
+              <Text variant="body-small" weight="medium" textColor="secondary">
+                3 soluções priorizadas
+              </Text>
+            </div>
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4 text-warning" />
+              <Text variant="body-small" weight="medium" textColor="secondary">
+                Impacto estimado: +40% eficiência
+              </Text>
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <Button asChild>
+              <Link to="/implementation-trail">
+                Ver Trilha Completa
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </CardContent>
     </Card>
   );
-};
+});
+
+ImplementationTrailCard.displayName = 'ImplementationTrailCard';

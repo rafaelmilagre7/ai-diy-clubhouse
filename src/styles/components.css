@@ -1,108 +1,64 @@
 
-/* === SISTEMA DE COMPONENTES MODERNOS === */
+/* === COMPONENTS MODERNOS === */
 
 @layer components {
   
-  /* === CONTAINER SYSTEM === */
-  
-  .container-modern {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
-  }
-  
-  .container-narrow {
-    @apply max-w-4xl mx-auto px-4 sm:px-6 lg:px-8;
-  }
-  
-  .container-wide {
-    @apply max-w-full mx-auto px-4 sm:px-6 lg:px-8;
-  }
-  
-  /* === CARD SYSTEM === */
+  /* === CARDS === */
   
   .card-modern {
-    @apply bg-surface-elevated border border-border rounded-lg shadow-sm;
-    @apply transition-all duration-200 ease-out;
+    @apply bg-surface-elevated border border-border rounded-xl shadow-soft;
   }
   
   .card-elevated {
-    @apply bg-surface-elevated border border-border-subtle rounded-lg shadow-md;
-    @apply transition-all duration-300 ease-out;
+    @apply bg-surface-elevated border border-border rounded-xl shadow-medium hover:shadow-strong transition-shadow duration-300;
   }
   
   .card-interactive {
-    @apply bg-surface-elevated border border-border rounded-lg shadow-sm;
-    @apply transition-all duration-300 ease-out cursor-pointer;
-    @apply hover:shadow-md hover:border-border-strong hover:-translate-y-0.5;
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20;
+    @apply bg-surface-elevated border border-border rounded-xl shadow-soft hover:shadow-medium hover:border-border-strong transition-all duration-300 cursor-pointer;
   }
   
   .card-glow {
-    @apply bg-surface-elevated border border-border rounded-lg;
-    @apply transition-all duration-300 ease-out;
-    @apply hover:shadow-glow-primary hover:border-primary/30;
+    @apply bg-surface-elevated border border-border rounded-xl shadow-soft hover:shadow-glow-primary transition-all duration-300;
   }
   
-  /* === BUTTON SYSTEM === */
+  /* === BUTTONS === */
   
   .btn-primary {
-    @apply bg-primary text-primary-foreground shadow-sm;
-    @apply hover:bg-primary-hover hover:shadow-md hover:scale-105;
-    @apply active:scale-95 active:bg-primary-active;
-    @apply focus-visible:ring-primary/20;
+    @apply bg-primary hover:bg-primary-hover active:bg-primary-active text-primary-foreground border-0;
   }
   
   .btn-secondary {
-    @apply bg-secondary text-secondary-foreground shadow-sm;
-    @apply hover:bg-secondary-hover hover:shadow-md hover:scale-105;
-    @apply active:scale-95;
-    @apply focus-visible:ring-secondary/20;
+    @apply bg-secondary hover:bg-secondary-hover text-secondary-foreground border border-border;
   }
   
   .btn-outline {
-    @apply border border-border bg-transparent text-foreground;
-    @apply hover:bg-surface-hover hover:border-border-strong;
-    @apply active:bg-surface-elevated;
-    @apply focus-visible:ring-primary/20;
+    @apply bg-transparent hover:bg-surface-hover text-foreground border border-border hover:border-border-strong;
   }
   
   .btn-ghost {
-    @apply text-foreground bg-transparent;
-    @apply hover:bg-surface-hover hover:text-foreground;
-    @apply active:bg-surface-elevated;
-    @apply focus-visible:ring-primary/20;
+    @apply bg-transparent hover:bg-surface-hover text-foreground border-0;
   }
   
   .btn-success {
-    @apply bg-success text-success-foreground shadow-sm;
-    @apply hover:bg-success/90 hover:shadow-md hover:scale-105;
-    @apply active:scale-95;
-    @apply focus-visible:ring-success/20;
+    @apply bg-success hover:bg-success/90 text-success-foreground border-0;
   }
   
   .btn-warning {
-    @apply bg-warning text-warning-foreground shadow-sm;
-    @apply hover:bg-warning/90 hover:shadow-md hover:scale-105;
-    @apply active:scale-95;
-    @apply focus-visible:ring-warning/20;
+    @apply bg-warning hover:bg-warning/90 text-warning-foreground border-0;
   }
   
   .btn-error {
-    @apply bg-error text-error-foreground shadow-sm;
-    @apply hover:bg-error/90 hover:shadow-md hover:scale-105;
-    @apply active:scale-95;
-    @apply focus-visible:ring-error/20;
+    @apply bg-error hover:bg-error/90 text-error-foreground border-0;
   }
   
   .btn-info {
-    @apply bg-info text-info-foreground shadow-sm;
-    @apply hover:bg-info/90 hover:shadow-md hover:scale-105;
-    @apply active:scale-95;
-    @apply focus-visible:ring-info/20;
+    @apply bg-info hover:bg-info/90 text-info-foreground border-0;
   }
   
-  /* Button Sizes */
+  /* === BUTTON SIZES === */
+  
   .btn-xs {
-    @apply h-6 px-2 text-xs;
+    @apply h-7 px-2 text-xs;
   }
   
   .btn-sm {
@@ -110,18 +66,17 @@
   }
   
   .btn-lg {
-    @apply h-12 px-8 text-base;
+    @apply h-12 px-6 text-base;
   }
   
   .btn-xl {
-    @apply h-14 px-10 text-lg;
+    @apply h-14 px-8 text-lg;
   }
   
-  /* === BADGE SYSTEM === */
+  /* === BADGES === */
   
   .badge-base {
-    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
-    @apply transition-all duration-200 ease-out;
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors;
   }
   
   .badge-primary {
@@ -129,7 +84,7 @@
   }
   
   .badge-secondary {
-    @apply bg-secondary/10 text-secondary border border-secondary/20;
+    @apply bg-secondary/10 text-text-secondary border border-border;
   }
   
   .badge-success {
@@ -149,68 +104,20 @@
   }
   
   .badge-neutral {
-    @apply bg-surface-hover text-text-secondary border border-border;
+    @apply bg-surface border border-border text-text-secondary;
   }
   
-  /* === INPUT SYSTEM === */
+  /* === INPUTS === */
   
   .input-modern {
-    @apply flex h-10 w-full rounded-lg border border-border;
-    @apply bg-surface px-3 py-2 text-sm text-foreground;
-    @apply ring-offset-background file:border-0 file:bg-transparent;
-    @apply file:text-sm file:font-medium placeholder:text-text-tertiary;
-    @apply transition-all duration-200 ease-out;
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20;
-    @apply focus-visible:ring-offset-2 focus-visible:border-primary;
-    @apply disabled:cursor-not-allowed disabled:opacity-50;
+    @apply flex h-10 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-colors;
   }
   
   .input-error {
-    @apply border-error focus-visible:ring-error/20 focus-visible:border-error;
+    @apply border-error focus-visible:ring-error/20;
   }
   
   .input-success {
-    @apply border-success focus-visible:ring-success/20 focus-visible:border-success;
-  }
-  
-  /* === SKELETON SYSTEM === */
-  
-  .skeleton {
-    @apply animate-pulse rounded-lg bg-surface-hover;
-  }
-  
-  /* === UTILITY CLASSES === */
-  
-  .glass-effect {
-    @apply bg-surface/80 backdrop-blur-sm border border-border/60;
-  }
-  
-  .gradient-border {
-    @apply border border-transparent bg-gradient-primary bg-clip-border;
-  }
-  
-  .hover-lift {
-    @apply transition-transform duration-200 ease-out hover:-translate-y-1;
-  }
-  
-  .focus-ring {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-2;
-  }
-  
-  /* === RESPONSIVE UTILITIES === */
-  
-  @media (max-width: 640px) {
-    .card-modern,
-    .card-elevated,
-    .card-interactive,
-    .card-glow {
-      @apply rounded-lg;
-    }
-    
-    .container-modern,
-    .container-narrow,
-    .container-wide {
-      @apply px-3;
-    }
+    @apply border-success focus-visible:ring-success/20;
   }
 }
