@@ -11,7 +11,8 @@ import {
   UserCog, 
   Mail,
   MessageSquare,
-  Zap
+  Zap,
+  Wrench
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,11 @@ const navigationItems = [
     title: "Usuários",
     href: "/admin/users",
     icon: Users
+  },
+  {
+    title: "Ferramentas",
+    href: "/admin/tools",
+    icon: Wrench
   },
   {
     title: "Soluções",
