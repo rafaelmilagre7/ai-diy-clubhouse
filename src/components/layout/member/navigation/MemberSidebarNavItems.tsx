@@ -13,8 +13,6 @@ import {
   Award,
   Route,
   Sparkles,
-  Brain,
-  Zap,
   Shield
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
@@ -27,69 +25,66 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
   const location = useLocation();
   const { profile } = useAuth();
 
-  // Dashboard principal
-  const dashboardItem = {
-    title: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-  };
-
-  // IA & Personalização
-  const aiPersonalizationItems = [
+  // Todos os itens de navegação em uma estrutura simples
+  const navigationItems = [
+    {
+      title: "Dashboard",
+      href: "/dashboard",
+      icon: LayoutDashboard,
+      type: "main"
+    },
     {
       title: "Trilha de IA",
       href: "/trilha-implementacao",
       icon: Route,
-      special: true,
+      type: "hero",
       description: "Guia personalizado"
-    }
-  ];
-
-  // Aprendizado
-  const learningItems = [
+    },
     {
       title: "Soluções",
       href: "/solutions",
       icon: Lightbulb,
+      type: "regular"
     },
     {
       title: "Cursos",
       href: "/learning",
       icon: GraduationCap,
+      type: "regular"
     },
     {
       title: "Certificados",
       href: "/learning/certificates",
       icon: Award,
-    }
-  ];
-
-  // Recursos
-  const resourceItems = [
+      type: "regular"
+    },
     {
       title: "Ferramentas",
       href: "/tools",
       icon: Settings,
+      type: "regular"
     },
     {
       title: "Comunidade",
       href: "/comunidade",
       icon: MessageSquare,
+      type: "regular"
     },
     {
       title: "Eventos",
       href: "/events",
       icon: Calendar,
+      type: "regular"
     }
   ];
 
-  // Admin (só para admins)
-  const adminItems = [];
+  // Adicionar admin se for admin
   if (profile?.role === 'admin') {
-    adminItems.push({
+    navigationItems.push({
       title: "Painel Admin",
       href: "/admin",
       icon: Shield,
+      type: "admin"
     });
   }
 
@@ -112,118 +107,131 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
     return currentPath.startsWith(href);
   };
 
-  const renderNavButton = (item: any, isSpecial = false) => (
-    <Button
-      key={item.href}
-      variant={isActive(item.href) ? "default" : "ghost"}
-      className={cn(
-        "w-full justify-start gap-3 h-11 px-4 text-sm font-medium transition-all duration-200 rounded-xl group",
-        !sidebarOpen && "justify-center px-3",
-        isActive(item.href) 
-          ? "bg-gradient-to-r from-viverblue to-viverblue/80 text-white shadow-lg shadow-viverblue/25 hover:shadow-viverblue/40" 
-          : "text-neutral-300 hover:text-white hover:bg-gradient-to-r hover:from-white/8 hover:to-white/4 hover:shadow-md",
-        isSpecial && !isActive(item.href) && "relative overflow-hidden border border-viverblue/30 hover:border-viverblue/50 bg-gradient-to-r from-viverblue/5 to-transparent"
-      )}
-      asChild
-    >
-      <Link to={item.href}>
-        <div className="flex items-center gap-3 min-w-0">
+  const renderNavButton = (item: any) => {
+    const active = isActive(item.href);
+    
+    // Design especial para Trilha de IA (hero)
+    if (item.type === "hero") {
+      return (
+        <Button
+          key={item.href}
+          variant="ghost"
+          className={cn(
+            "w-full justify-start gap-4 h-14 px-4 text-base font-semibold transition-all duration-300 rounded-2xl group relative overflow-hidden",
+            !sidebarOpen && "justify-center px-3",
+            active 
+              ? "bg-gradient-to-r from-viverblue via-viverblue to-purple-500 text-white shadow-2xl shadow-viverblue/40 scale-105" 
+              : "bg-gradient-to-r from-viverblue/10 to-purple-500/10 text-viverblue border-2 border-viverblue/20 hover:border-viverblue/40 hover:shadow-xl hover:shadow-viverblue/25 hover:scale-105"
+          )}
+          asChild
+        >
+          <Link to={item.href}>
+            <div className="relative z-10 flex items-center gap-4 min-w-0">
+              <div className="relative">
+                <item.icon className="h-6 w-6 flex-shrink-0" />
+                {!active && <Sparkles className="h-3 w-3 text-viverblue absolute -top-1 -right-1 animate-pulse" />}
+              </div>
+              {sidebarOpen && (
+                <div className="flex flex-col items-start min-w-0 flex-1">
+                  <span className="truncate font-bold">{item.title}</span>
+                  <span className={cn(
+                    "text-xs truncate",
+                    active ? "text-white/90" : "text-viverblue/80"
+                  )}>
+                    {item.description}
+                  </span>
+                </div>
+              )}
+            </div>
+            {/* Glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-viverblue/20 via-purple-500/20 to-viverblue/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl"></div>
+          </Link>
+        </Button>
+      );
+    }
+
+    // Design para Admin
+    if (item.type === "admin") {
+      return (
+        <Button
+          key={item.href}
+          variant="ghost"
+          className={cn(
+            "w-full justify-start gap-4 h-12 px-4 text-sm font-medium transition-all duration-200 rounded-xl group",
+            !sidebarOpen && "justify-center px-3",
+            active 
+              ? "bg-red-500/20 text-red-400 border border-red-500/30 shadow-lg" 
+              : "text-neutral-300 hover:text-red-400 hover:bg-red-500/10 hover:border hover:border-red-500/20"
+          )}
+          asChild
+        >
+          <Link to={item.href}>
+            <item.icon className="h-5 w-5 flex-shrink-0" />
+            {sidebarOpen && (
+              <span className="truncate">{item.title}</span>
+            )}
+          </Link>
+        </Button>
+      );
+    }
+
+    // Design regular para outros itens
+    return (
+      <Button
+        key={item.href}
+        variant="ghost"
+        className={cn(
+          "w-full justify-start gap-4 h-12 px-4 text-sm font-medium transition-all duration-200 rounded-xl group",
+          !sidebarOpen && "justify-center px-3",
+          active 
+            ? "bg-white/10 text-white shadow-lg border border-white/20" 
+            : "text-neutral-300 hover:text-white hover:bg-white/8 hover:shadow-md"
+        )}
+        asChild
+      >
+        <Link to={item.href}>
           <item.icon className={cn(
             "h-5 w-5 flex-shrink-0 transition-transform duration-200",
-            isActive(item.href) ? "scale-110" : "group-hover:scale-105"
+            active ? "scale-110" : "group-hover:scale-105"
           )} />
-          {isSpecial && sidebarOpen && (
-            <Sparkles className="h-4 w-4 text-viverblue animate-pulse flex-shrink-0" />
+          {sidebarOpen && (
+            <span className="truncate">{item.title}</span>
           )}
-        </div>
-        {sidebarOpen && (
-          <div className="flex flex-col items-start min-w-0 flex-1">
-            <span className="truncate font-medium">{item.title}</span>
-            {isSpecial && item.description && (
-              <span className="text-xs text-viverblue/90 truncate">
-                {item.description}
-              </span>
-            )}
-          </div>
-        )}
-        {isSpecial && !sidebarOpen && (
-          <div className="absolute -top-1 -right-1 w-2 h-2 bg-viverblue rounded-full animate-pulse"></div>
-        )}
-        {isSpecial && (
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-viverblue/5 to-viverblue/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
-        )}
-      </Link>
-    </Button>
-  );
-
-  const renderSectionHeader = (title: string, icon: React.ElementType) => {
-    if (!sidebarOpen) return null;
-    
-    const IconComponent = icon;
-    return (
-      <div className="flex items-center gap-3 px-4 py-3 mb-2">
-        <div className="p-1.5 rounded-lg bg-gradient-to-r from-neutral-700/50 to-neutral-600/30">
-          <IconComponent className="h-4 w-4 text-neutral-300" />
-        </div>
-        <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider">
-          {title}
-        </span>
-      </div>
+        </Link>
+      </Button>
     );
   };
 
-  const renderSeparator = () => (
-    <div className="my-6 mx-4">
-      <div className="h-px bg-gradient-to-r from-transparent via-neutral-700/60 to-transparent"></div>
-    </div>
-  );
-
   return (
-    <div className="flex flex-col h-full">
-      {/* Dashboard Principal */}
-      <div className="px-3 mb-4">
-        {renderNavButton(dashboardItem)}
-      </div>
-
-      {renderSeparator()}
-
-      {/* IA & Personalização */}
-      <div className="mb-6">
-        {renderSectionHeader("IA & Personalização", Brain)}
-        <div className="px-3 space-y-2">
-          {aiPersonalizationItems.map(item => renderNavButton(item, true))}
+    <div className="flex flex-col h-full px-3">
+      <div className="flex flex-col space-y-3 flex-1">
+        {/* Dashboard - Item principal */}
+        <div className="mb-2">
+          {renderNavButton(navigationItems[0])}
         </div>
-      </div>
-      
-      {renderSeparator()}
 
-      {/* Aprendizado */}
-      <div className="mb-6">
-        {renderSectionHeader("Aprendizado", GraduationCap)}
-        <div className="px-3 space-y-2">
-          {learningItems.map(item => renderNavButton(item))}
+        {/* Trilha de IA - Item hero */}
+        <div className="mb-4">
+          {renderNavButton(navigationItems[1])}
         </div>
-      </div>
-      
-      {renderSeparator()}
 
-      {/* Recursos */}
-      <div className="mb-6">
-        {renderSectionHeader("Recursos", Zap)}
-        <div className="px-3 space-y-2">
-          {resourceItems.map(item => renderNavButton(item))}
+        {/* Grupo de Aprendizado */}
+        <div className="space-y-2 mb-4">
+          {navigationItems.slice(2, 5).map(item => renderNavButton(item))}
         </div>
-      </div>
 
-      {/* Admin (só para admins) */}
-      {adminItems.length > 0 && (
-        <>
-          {renderSeparator()}
-          <div className="px-3 space-y-2 mt-auto">
-            {adminItems.map(item => renderNavButton(item))}
+        {/* Grupo de Recursos */}
+        <div className="space-y-2 mb-4">
+          {navigationItems.slice(5, 8).map(item => renderNavButton(item))}
+        </div>
+
+        {/* Admin no final se existir */}
+        {profile?.role === 'admin' && (
+          <div className="mt-auto pt-4 border-t border-white/10">
+            {renderNavButton(navigationItems[navigationItems.length - 1])}
           </div>
-        </>
-      )}
+        )}
+      </div>
     </div>
   );
 };

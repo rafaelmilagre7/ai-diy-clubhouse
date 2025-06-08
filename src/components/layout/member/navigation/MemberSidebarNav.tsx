@@ -8,7 +8,7 @@ interface MemberSidebarNavProps {
 
 export const MemberSidebarNav: React.FC<MemberSidebarNavProps> = ({ sidebarOpen }) => {
   return (
-    <nav className="flex-1 py-6 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-neutral-600">
+    <nav className="flex-1 py-4 overflow-hidden">
       <MemberSidebarNavItems sidebarOpen={sidebarOpen} />
     </nav>
   );
