@@ -8,9 +8,9 @@ const textVariants = cva(
   {
     variants: {
       variant: {
-        // Headings
+        // Display headings
         "display": "heading-display",
-        "page": "heading-page", 
+        "page": "heading-page",
         "section": "heading-section",
         "subsection": "heading-subsection",
         "card": "heading-card",
@@ -19,10 +19,10 @@ const textVariants = cva(
         // Body text
         "body-large": "body-large",
         "body": "body-default",
-        "body-small": "body-small", 
+        "body-small": "body-small",
         "body-tiny": "body-tiny",
         
-        // UI text
+        // UI elements
         "label": "ui-label",
         "caption": "ui-caption",
         "button": "ui-button",
@@ -31,43 +31,69 @@ const textVariants = cva(
         // Code
         "code": "code-inline",
         
-        // Effects
+        // Special effects
         "gradient": "text-gradient",
         "glow": "text-glow",
       },
-      textColor: {
-        primary: "text-foreground",
+      color: {
+        default: "text-foreground",
+        primary: "text-primary",
         secondary: "text-text-secondary",
-        tertiary: "text-text-tertiary", 
-        disabled: "text-text-disabled",
-        accent: "text-primary",
+        tertiary: "text-text-tertiary",
+        muted: "text-text-muted",
         success: "text-success",
-        warning: "text-warning", 
+        warning: "text-warning",
         error: "text-error",
         info: "text-info",
+      },
+      align: {
+        left: "text-left",
+        center: "text-center",
+        right: "text-right",
+        justify: "text-justify",
+      },
+      weight: {
+        normal: "font-normal",
+        medium: "font-medium",
+        semibold: "font-semibold",
+        bold: "font-bold",
       },
     },
     defaultVariants: {
       variant: "body",
-      textColor: "primary",
+      color: "default",
+      align: "left",
+      weight: "normal",
     },
   }
 )
 
 export interface TextProps
-  extends Omit<React.HTMLAttributes<HTMLElement>, 'color'>,
+  extends React.HTMLAttributes<HTMLElement>,
     VariantProps<typeof textVariants> {
-  as?: React.ElementType
+  as?: keyof JSX.IntrinsicElements
+  truncate?: boolean
+  responsive?: boolean
 }
 
 const Text = React.forwardRef<HTMLElement, TextProps>(
-  ({ className, variant, textColor, as: Component = "p", ...props }, ref) => {
-    return (
-      <Component
-        ref={ref}
-        className={cn(textVariants({ variant, textColor }), className)}
-        {...props}
-      />
+  ({ className, variant, color, align, weight, as, truncate, responsive, children, ...props }, ref) => {
+    const Component = as || 
+      (variant?.includes('heading') || variant === 'display' || variant === 'page' || variant === 'section' || variant === 'subsection' || variant === 'card' || variant === 'small' ? 'h2' : 'p')
+
+    return React.createElement(
+      Component,
+      {
+        className: cn(
+          textVariants({ variant, color, align, weight }),
+          truncate && "truncate",
+          responsive && "text-responsive-base",
+          className
+        ),
+        ref,
+        ...props,
+      },
+      children
     )
   }
 )
