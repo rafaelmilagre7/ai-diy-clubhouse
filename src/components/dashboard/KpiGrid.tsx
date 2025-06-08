@@ -1,10 +1,18 @@
 
 import { FC, memo } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, CheckCircle, Clock, Target, Zap, Award } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
+import { 
+  CheckCircle, 
+  Clock, 
+  Target, 
+  TrendingUp,
+  PlayCircle,
+  Award,
+  Zap
+} from "lucide-react";
 
 interface KpiGridProps {
   completed: number;
@@ -16,77 +24,26 @@ interface KpiGridProps {
 export const KpiGrid: FC<KpiGridProps> = memo(({ 
   completed, 
   inProgress, 
-  total,
+  total, 
   isLoading = false 
 }) => {
-  const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
-  const progressRate = total > 0 ? Math.round((inProgress / total) * 100) : 0;
-
-  const kpiCards = [
-    {
-      title: "Soluções Completadas",
-      value: completed,
-      icon: CheckCircle,
-      color: "success",
-      bgGradient: "from-success/10 to-success/5",
-      borderColor: "border-success/20",
-      iconBg: "bg-success/10",
-      iconColor: "text-success",
-      badge: `${completionRate}% concluído`,
-      badgeVariant: "success" as const
-    },
-    {
-      title: "Em Andamento",
-      value: inProgress,
-      icon: Clock,
-      color: "warning",
-      bgGradient: "from-warning/10 to-warning/5",
-      borderColor: "border-warning/20",
-      iconBg: "bg-warning/10",
-      iconColor: "text-warning",
-      badge: `${progressRate}% ativo`,
-      badgeVariant: "warning" as const
-    },
-    {
-      title: "Total de Soluções",
-      value: total,
-      icon: Target,
-      color: "primary",
-      bgGradient: "from-primary/10 to-accent/10",
-      borderColor: "border-primary/20",
-      iconBg: "bg-primary/10",
-      iconColor: "text-primary",
-      badge: "Disponível",
-      badgeVariant: "accent" as const
-    },
-    {
-      title: "Taxa de Sucesso",
-      value: `${completionRate}%`,
-      icon: Award,
-      color: "info",
-      bgGradient: "from-info/10 to-info/5",
-      borderColor: "border-info/20",
-      iconBg: "bg-info/10",
-      iconColor: "text-info",
-      badge: "Crescendo",
-      badgeVariant: "info" as const
-    }
-  ];
-
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <Card key={index} variant="elevated" className="animate-pulse">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-surface-elevated rounded-2xl"></div>
-                <div className="w-16 h-6 bg-surface-elevated rounded-full"></div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Card key={i} variant="elevated" className="animate-pulse">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-12 w-12 rounded-xl" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
               </div>
-              <div className="space-y-2">
-                <div className="w-24 h-8 bg-surface-elevated rounded"></div>
-                <div className="w-32 h-4 bg-surface-elevated rounded"></div>
-              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Skeleton className="h-8 w-16" />
+              <Skeleton className="h-6 w-20" />
             </CardContent>
           </Card>
         ))}
@@ -94,59 +51,122 @@ export const KpiGrid: FC<KpiGridProps> = memo(({
     );
   }
 
+  const kpis = [
+    {
+      title: "Projetos Concluídos",
+      value: completed,
+      icon: CheckCircle,
+      variant: "success" as const,
+      description: "Implementações finalizadas",
+      gradient: "from-success/10 to-success/5",
+      iconBg: "bg-success/10",
+      iconColor: "text-success"
+    },
+    {
+      title: "Em Andamento",
+      value: inProgress,
+      icon: PlayCircle,
+      variant: "warning" as const,
+      description: "Projetos ativos",
+      gradient: "from-warning/10 to-warning/5",
+      iconBg: "bg-warning/10",
+      iconColor: "text-warning"
+    },
+    {
+      title: "Total Disponível",
+      value: total,
+      icon: Target,
+      variant: "info" as const,
+      description: "Soluções na plataforma",
+      gradient: "from-primary/10 to-accent/10",
+      iconBg: "bg-primary/10",
+      iconColor: "text-primary"
+    }
+  ];
+
+  const getCompletionRate = () => {
+    if (total === 0) return 0;
+    return Math.round((completed / total) * 100);
+  };
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in">
-      {kpiCards.map((card, index) => (
-        <Card 
-          key={card.title}
-          variant="elevated" 
-          className={cn(
-            "overflow-hidden transition-all duration-300 hover:shadow-glow-primary group cursor-pointer",
-            `bg-gradient-to-br ${card.bgGradient}`,
-            card.borderColor
-          )}
-          style={{ animationDelay: `${index * 0.1}s` }}
-        >
-          <CardContent className="p-6 relative">
-            {/* Background decoration */}
-            <div className="absolute top-0 right-0 w-20 h-20 opacity-10 transform translate-x-6 -translate-y-6">
-              <card.icon className="w-full h-full" />
+    <div className="space-y-6">
+      {/* Grid principal de KPIs */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {kpis.map((kpi, index) => {
+          const Icon = kpi.icon;
+          
+          return (
+            <Card 
+              key={kpi.title}
+              variant="elevated" 
+              className={`overflow-hidden hover-lift transition-all duration-300 bg-gradient-to-br ${kpi.gradient} border-l-4 border-l-${kpi.variant}`}
+              style={{ animationDelay: `${index * 0.1}s` }}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-3 rounded-xl transition-all group-hover:scale-110 ${kpi.iconBg}`}>
+                      <Icon className={`h-6 w-6 ${kpi.iconColor}`} />
+                    </div>
+                    <div>
+                      <Text variant="caption" textColor="secondary" className="font-medium uppercase tracking-wide">
+                        {kpi.title}
+                      </Text>
+                      <Text variant="body-small" textColor="tertiary">
+                        {kpi.description}
+                      </Text>
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+              
+              <CardContent className="space-y-3">
+                <div className="flex items-baseline gap-2">
+                  <Text variant="display" textColor="primary" className="font-bold">
+                    {kpi.value}
+                  </Text>
+                  
+                  {kpi.title === "Projetos Concluídos" && total > 0 && (
+                    <Badge variant={kpi.variant} size="sm">
+                      <TrendingUp className="h-3 w-3 mr-1" />
+                      {getCompletionRate()}%
+                    </Badge>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Card de resumo da performance */}
+      {total > 0 && (
+        <Card variant="elevated" className="p-6 bg-gradient-to-r from-accent/5 to-primary/5 border-accent/20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-accent/10 rounded-2xl">
+                <Award className="h-6 w-6 text-accent" />
+              </div>
+              <div>
+                <Text variant="card" textColor="primary" className="font-semibold mb-1">
+                  Sua Performance
+                </Text>
+                <Text variant="body" textColor="secondary">
+                  Você completou {getCompletionRate()}% das soluções disponíveis
+                </Text>
+              </div>
             </div>
             
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <div className={cn("p-3 rounded-2xl", card.iconBg)}>
-                  <card.icon className={cn("h-6 w-6", card.iconColor)} />
-                </div>
-                <Badge variant={card.badgeVariant} size="sm">
-                  {card.badge}
-                </Badge>
-              </div>
-              
-              <div className="space-y-2">
-                <Text 
-                  variant="display-small" 
-                  textColor="primary" 
-                  className="font-bold group-hover:scale-105 transition-transform"
-                >
-                  {card.value}
-                </Text>
-                <Text variant="body-small" textColor="secondary" className="font-medium">
-                  {card.title}
-                </Text>
-              </div>
-              
-              {/* Trend indicator */}
-              <div className="flex items-center gap-1 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                <TrendingUp className="h-3 w-3 text-success" />
-                <Text variant="caption" textColor="tertiary">
-                  {index === 0 ? "+12%" : index === 1 ? "+8%" : index === 2 ? "+5%" : "+15%"} este mês
-                </Text>
-              </div>
+            <div className="hidden md:flex items-center gap-2">
+              <Badge variant="accent" size="lg">
+                <Zap className="h-4 w-4 mr-2" />
+                {completed > 0 ? "Ativo" : "Iniciante"}
+              </Badge>
             </div>
-          </CardContent>
+          </div>
         </Card>
-      ))}
+      )}
     </div>
   );
 });

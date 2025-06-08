@@ -28,7 +28,10 @@ export const StatsOverview = ({ data, loading }: StatsOverviewProps) => {
             <CardHeader className="pb-3">
               <div className="flex items-center gap-3">
                 <Skeleton className="h-10 w-10 rounded-lg" />
-                <Skeleton className="h-4 w-24" />
+                <div className="space-y-1">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-2">
@@ -48,7 +51,8 @@ export const StatsOverview = ({ data, loading }: StatsOverviewProps) => {
       icon: Users,
       variant: "primary" as const,
       change: "+12%",
-      description: "Membros ativos na plataforma"
+      description: "Membros ativos na plataforma",
+      gradient: "from-primary/10 to-primary/5"
     },
     {
       title: "Novos Membros",
@@ -56,7 +60,8 @@ export const StatsOverview = ({ data, loading }: StatsOverviewProps) => {
       icon: UserPlus,
       variant: "success" as const,
       change: "+8%",
-      description: "Registros este mês"
+      description: "Registros este mês",
+      gradient: "from-success/10 to-success/5"
     },
     {
       title: "Soluções Ativas",
@@ -64,7 +69,8 @@ export const StatsOverview = ({ data, loading }: StatsOverviewProps) => {
       icon: BookOpen,
       variant: "info" as const,
       change: "+5%",
-      description: "Projetos disponíveis"
+      description: "Projetos disponíveis",
+      gradient: "from-info/10 to-info/5"
     },
     {
       title: "Taxa de Engajamento",
@@ -72,7 +78,8 @@ export const StatsOverview = ({ data, loading }: StatsOverviewProps) => {
       icon: Activity,
       variant: "accent" as const,
       change: "+15%",
-      description: "Interações por usuário"
+      description: "Interações por usuário",
+      gradient: "from-accent/10 to-accent/5"
     },
     {
       title: "Implementações",
@@ -80,7 +87,8 @@ export const StatsOverview = ({ data, loading }: StatsOverviewProps) => {
       icon: CheckCircle,
       variant: "success" as const,
       change: "+23%",
-      description: "Projetos finalizados"
+      description: "Projetos finalizados",
+      gradient: "from-success/10 to-success/5"
     },
     {
       title: "Tempo Médio",
@@ -88,7 +96,8 @@ export const StatsOverview = ({ data, loading }: StatsOverviewProps) => {
       icon: Clock,
       variant: "warning" as const,
       change: "-8%",
-      description: "Para completar projeto"
+      description: "Para completar projeto",
+      gradient: "from-warning/10 to-warning/5"
     },
     {
       title: "Satisfação",
@@ -96,7 +105,8 @@ export const StatsOverview = ({ data, loading }: StatsOverviewProps) => {
       icon: Star,
       variant: "accent" as const,
       change: "+0.3",
-      description: "Avaliação média"
+      description: "Avaliação média",
+      gradient: "from-accent/10 to-accent/5"
     },
     {
       title: "Crescimento",
@@ -104,7 +114,8 @@ export const StatsOverview = ({ data, loading }: StatsOverviewProps) => {
       icon: TrendingUp,
       variant: "success" as const,
       change: "+18%",
-      description: "Crescimento mensal"
+      description: "Crescimento mensal",
+      gradient: "from-success/10 to-success/5"
     }
   ];
 
@@ -130,6 +141,8 @@ export const StatsOverview = ({ data, loading }: StatsOverviewProps) => {
     }
   };
 
+  const isPositiveChange = (change: string) => !change.startsWith('-');
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {stats.map((stat, index) => {
@@ -140,7 +153,7 @@ export const StatsOverview = ({ data, loading }: StatsOverviewProps) => {
           <Card 
             key={stat.title} 
             variant="elevated" 
-            className="group hover-lift transition-all duration-300"
+            className={`group hover-lift transition-all duration-300 bg-gradient-to-br ${stat.gradient} border-l-4 border-l-${stat.variant}`}
             style={{ animationDelay: `${index * 0.05}s` }}
           >
             <CardHeader className="pb-3">
@@ -149,12 +162,15 @@ export const StatsOverview = ({ data, loading }: StatsOverviewProps) => {
                   <div className={`p-2 rounded-lg transition-colors group-hover:scale-110 ${iconColorClass}`}>
                     <Icon className="h-5 w-5" />
                   </div>
-                  <Text variant="caption" textColor="secondary" className="font-medium">
+                  <Text variant="caption" textColor="secondary" className="font-medium uppercase tracking-wide">
                     {stat.title}
                   </Text>
                 </div>
                 
-                <Badge variant={getBadgeVariant(stat.variant)} size="xs">
+                <Badge 
+                  variant={isPositiveChange(stat.change) ? getBadgeVariant(stat.variant) : "destructive"} 
+                  size="xs"
+                >
                   {stat.change}
                 </Badge>
               </div>
