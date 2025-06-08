@@ -62,7 +62,9 @@ export const createUserProfileIfNeeded = async (
         created_at: new Date().toISOString(),
         avatar_url: null,
         company_name: null,
-        industry: null
+        industry: null,
+        onboarding_completed: false,
+        onboarding_completed_at: null
       })
       .select()
       .single();
@@ -107,6 +109,8 @@ const createFallbackProfile = (
     avatar_url: null,
     company_name: null,
     industry: null,
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
+    onboarding_completed: false,
+    onboarding_completed_at: null
   };
 };

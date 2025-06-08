@@ -17,7 +17,7 @@ export const useUsers = () => {
   const { roles: availableRoles, loading: rolesLoading } = useRoles();
 
   // Criar usuário de teste automaticamente (apenas para desenvolvimento)
-  const createTestUser = async () => {
+  const createTestUser = async (): Promise<UserProfile> => {
     const testUser: UserProfile = {
       id: 'test-user-id',
       email: 'teste@exemplo.com',
@@ -27,6 +27,8 @@ export const useUsers = () => {
       company_name: 'Empresa Teste',
       industry: 'Tecnologia',
       created_at: new Date().toISOString(),
+      onboarding_completed: true,
+      onboarding_completed_at: new Date().toISOString(),
     };
     
     return testUser;
@@ -50,6 +52,8 @@ export const useUsers = () => {
           company_name,
           industry,
           created_at,
+          onboarding_completed,
+          onboarding_completed_at,
           user_roles (
             id,
             name,
@@ -84,6 +88,8 @@ export const useUsers = () => {
         company_name: profile.company_name,
         industry: profile.industry,
         created_at: profile.created_at || new Date().toISOString(),
+        onboarding_completed: profile.onboarding_completed || false,
+        onboarding_completed_at: profile.onboarding_completed_at,
       }));
 
       console.log('📊 Usuários mapeados:', {
@@ -126,7 +132,6 @@ export const useUsers = () => {
     );
   }, [users, searchQuery]);
 
-  // Verificar permissões baseadas no papel do usuário
   const isAdmin = user?.email === 'rafael@viverdeia.ai' || user?.email === 'admin@teste.com' || user?.email === 'admin@viverdeia.ai';
   const canManageUsers = isAdmin;
   const canAssignRoles = isAdmin;

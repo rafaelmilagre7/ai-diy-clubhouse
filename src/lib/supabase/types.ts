@@ -43,6 +43,9 @@ export interface UserProfile {
   onboarding_completed_at: string | null;
 }
 
+// Tipo base para Solution do Supabase
+type SupabaseSolution = Database['public']['Tables']['solutions']['Row'];
+
 // Interface expandida para incluir todas as propriedades utilizadas no código
 export interface Solution extends Omit<SupabaseSolution, 'author_id'> {
   id: string;
@@ -83,7 +86,6 @@ export interface Module {
   completed?: boolean;
 }
 
-// Adicionando interfaces faltantes
 export interface Progress {
   id: string;
   user_id: string;
@@ -114,7 +116,6 @@ export interface LearningCertificate {
   issued_at: string;
 }
 
-// Interface específica para formulários que lidam com vídeos
 export interface VideoFormValues {
   id?: string;
   title?: string;
