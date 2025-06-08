@@ -39,6 +39,11 @@ export const OnboardingStep5 = ({
 
   const goals = memberType === 'club' ? clubGoals : formacaoGoals;
 
+  // Wrapper function para resolver incompatibilidade de tipos com Radix UI Select
+  const handleTimeframeChange = (value: string) => {
+    setTimeframe(value as typeof timeframe);
+  };
+
   const handleGoalChange = (goal: string, checked: boolean) => {
     if (checked) {
       setPrimaryGoals([...primaryGoals, goal]);
@@ -119,7 +124,7 @@ export const OnboardingStep5 = ({
             <Clock className="w-4 h-4" />
             Em quanto tempo quer alcançar esses objetivos?
           </Label>
-          <Select value={timeframe} onValueChange={setTimeframe}>
+          <Select value={timeframe} onValueChange={handleTimeframeChange}>
             <SelectTrigger>
               <SelectValue placeholder="Selecione o prazo" />
             </SelectTrigger>

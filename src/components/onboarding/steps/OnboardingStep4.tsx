@@ -19,6 +19,11 @@ export const OnboardingStep4 = ({
   const [aiToolsUsed, setAiToolsUsed] = useState(data.aiToolsUsed?.join(', ') || '');
   const [aiChallenges, setAiChallenges] = useState(data.aiChallenges?.join(', ') || '');
 
+  // Wrapper function para resolver incompatibilidade de tipos com Radix UI Select
+  const handleAiExperienceChange = (value: string) => {
+    setAiExperience(value as typeof aiExperience);
+  };
+
   const handleNext = () => {
     onUpdateData({ 
       aiExperience,
@@ -67,7 +72,7 @@ export const OnboardingStep4 = ({
             <Brain className="w-4 h-4" />
             Qual seu nível de experiência com IA?
           </Label>
-          <Select value={aiExperience} onValueChange={setAiExperience}>
+          <Select value={aiExperience} onValueChange={handleAiExperienceChange}>
             <SelectTrigger>
               <SelectValue placeholder="Selecione seu nível" />
             </SelectTrigger>

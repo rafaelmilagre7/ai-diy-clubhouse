@@ -21,6 +21,19 @@ export const OnboardingStep2 = ({
   const [studyArea, setStudyArea] = useState(data.studyArea || '');
   const [institution, setInstitution] = useState(data.institution || '');
 
+  // Wrapper functions para resolver incompatibilidade de tipos com Radix UI Select
+  const handleBusinessStageChange = (value: string) => {
+    setBusinessStage(value as typeof businessStage);
+  };
+
+  const handleTeamSizeChange = (value: string) => {
+    setTeamSize(value as typeof teamSize);
+  };
+
+  const handleEducationLevelChange = (value: string) => {
+    setEducationLevel(value as typeof educationLevel);
+  };
+
   const handleNext = () => {
     if (memberType === 'club') {
       onUpdateData({ businessStage, businessArea, teamSize });
@@ -77,7 +90,7 @@ export const OnboardingStep2 = ({
                 <Briefcase className="w-4 h-4" />
                 Em que estágio está seu negócio?
               </Label>
-              <Select value={businessStage} onValueChange={setBusinessStage}>
+              <Select value={businessStage} onValueChange={handleBusinessStageChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o estágio" />
                 </SelectTrigger>
@@ -104,7 +117,7 @@ export const OnboardingStep2 = ({
                 <Users className="w-4 h-4" />
                 Qual o tamanho da sua equipe?
               </Label>
-              <Select value={teamSize} onValueChange={setTeamSize}>
+              <Select value={teamSize} onValueChange={handleTeamSizeChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o tamanho" />
                 </SelectTrigger>
@@ -124,7 +137,7 @@ export const OnboardingStep2 = ({
                 <GraduationCap className="w-4 h-4" />
                 Qual seu nível educacional atual?
               </Label>
-              <Select value={educationLevel} onValueChange={setEducationLevel}>
+              <Select value={educationLevel} onValueChange={handleEducationLevelChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione seu nível" />
                 </SelectTrigger>
