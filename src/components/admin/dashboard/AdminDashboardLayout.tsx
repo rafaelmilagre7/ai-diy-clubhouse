@@ -4,6 +4,8 @@ import { DashboardHeader } from "./DashboardHeader";
 import { StatsOverview } from "./StatsOverview";
 import { DashboardCharts } from "./DashboardCharts";
 import { RecentActivity } from "./RecentActivity";
+import { Container } from "@/components/ui/container";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 interface AdminDashboardLayoutProps {
   timeRange: string;
@@ -25,21 +27,28 @@ export const AdminDashboardLayout = ({
   loading
 }: AdminDashboardLayoutProps) => {
   return (
-    <div className="space-y-6">
-      <DashboardHeader 
-        timeRange={timeRange}
-        setTimeRange={setTimeRange}
+    <div className="space-y-8">
+      <PageHeader
+        title="Dashboard Administrativo"
+        description="Visão geral completa da plataforma e métricas de desempenho"
       />
 
-      <StatsOverview data={statsData} loading={loading} />
-      
-      <DashboardCharts 
-        engagementData={engagementData} 
-        completionRateData={completionRateData}
-        loading={loading}
-      />
-      
-      <RecentActivity activities={recentActivities} loading={loading} />
+      <div className="space-y-6">
+        <DashboardHeader 
+          timeRange={timeRange}
+          setTimeRange={setTimeRange}
+        />
+
+        <StatsOverview data={statsData} loading={loading} />
+        
+        <DashboardCharts 
+          engagementData={engagementData} 
+          completionRateData={completionRateData}
+          loading={loading}
+        />
+        
+        <RecentActivity activities={recentActivities} loading={loading} />
+      </div>
     </div>
   );
 };

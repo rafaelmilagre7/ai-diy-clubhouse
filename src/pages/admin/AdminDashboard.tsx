@@ -27,7 +27,7 @@ const AdminDashboard = () => {
       logger.debug('AdminDashboard loading state', { timeRange });
       
       return (
-        <Container size="6xl" spacing="lg" className="py-8">
+        <Container size="6xl" padding="lg" className="py-8">
           <div className="space-y-8">
             <div className="flex justify-between items-center">
               <div className="space-y-2">
@@ -78,7 +78,7 @@ const AdminDashboard = () => {
     });
 
     return (
-      <Container size="6xl" spacing="lg" className="py-8">
+      <Container size="6xl" padding="lg" className="py-8">
         <AdminDashboardLayout
           timeRange={timeRange}
           setTimeRange={setTimeRange}
@@ -94,7 +94,7 @@ const AdminDashboard = () => {
     logger.error("Erro crítico no AdminDashboard", error, 'ADMIN_DASHBOARD');
     
     return (
-      <Container size="6xl" spacing="lg" className="py-8">
+      <Container size="6xl" padding="lg" className="py-8">
         <div className="min-h-[60vh] flex items-center justify-center">
           <Card variant="outline" className="max-w-md mx-auto text-center">
             <CardContent className="p-8 space-y-6">
