@@ -27,6 +27,8 @@ export const useOnboardingValidation = () => {
 
     if (!data.email?.trim()) {
       errors.push({ field: 'email', message: 'E-mail é obrigatório' });
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+      errors.push({ field: 'email', message: 'E-mail inválido' });
     }
 
     if (!data.state?.trim()) {
@@ -39,6 +41,8 @@ export const useOnboardingValidation = () => {
 
     if (!data.curiosity?.trim()) {
       errors.push({ field: 'curiosity', message: 'Curiosidade é obrigatória' });
+    } else if (data.curiosity.trim().length < 10) {
+      errors.push({ field: 'curiosity', message: 'Conte um pouco mais sobre você (mínimo 10 caracteres)' });
     }
 
     return {
@@ -79,15 +83,15 @@ export const useOnboardingValidation = () => {
   const validateStep3 = useCallback((data: OnboardingData): StepValidation => {
     const errors: ValidationError[] = [];
 
-    if (!data.hasImplementedAI) {
+    if (!data.hasImplementedAI || data.hasImplementedAI === '') {
       errors.push({ field: 'hasImplementedAI', message: 'Experiência com IA é obrigatória' });
     }
 
-    if (!data.aiKnowledgeLevel) {
+    if (!data.aiKnowledgeLevel || data.aiKnowledgeLevel === '') {
       errors.push({ field: 'aiKnowledgeLevel', message: 'Nível de conhecimento em IA é obrigatório' });
     }
 
-    if (!data.whoWillImplement) {
+    if (!data.whoWillImplement || data.whoWillImplement === '') {
       errors.push({ field: 'whoWillImplement', message: 'Quem vai implementar é obrigatório' });
     }
 
@@ -100,7 +104,7 @@ export const useOnboardingValidation = () => {
   const validateStep4 = useCallback((data: OnboardingData): StepValidation => {
     const errors: ValidationError[] = [];
 
-    if (!data.mainObjective) {
+    if (!data.mainObjective || data.mainObjective === '') {
       errors.push({ field: 'mainObjective', message: 'Objetivo principal é obrigatório' });
     }
 
@@ -129,15 +133,15 @@ export const useOnboardingValidation = () => {
       errors.push({ field: 'weeklyLearningTime', message: 'Tempo semanal é obrigatório' });
     }
 
-    if (!data.contentPreference) {
+    if (!data.contentPreference || data.contentPreference === '') {
       errors.push({ field: 'contentPreference', message: 'Preferência de conteúdo é obrigatória' });
     }
 
-    if (!data.wantsNetworking) {
+    if (!data.wantsNetworking || data.wantsNetworking === '') {
       errors.push({ field: 'wantsNetworking', message: 'Preferência de networking é obrigatória' });
     }
 
-    if (!data.acceptsCaseStudy) {
+    if (!data.acceptsCaseStudy || data.acceptsCaseStudy === '') {
       errors.push({ field: 'acceptsCaseStudy', message: 'Aceitar case de sucesso é obrigatório' });
     }
 
@@ -152,6 +156,8 @@ export const useOnboardingValidation = () => {
     data: OnboardingData, 
     memberType: 'club' | 'formacao'
   ): StepValidation => {
+    console.log('[useOnboardingValidation] Validando step:', step, 'dados:', data);
+    
     setIsValidating(true);
     
     let result: StepValidation;
@@ -175,6 +181,8 @@ export const useOnboardingValidation = () => {
       default:
         result = { isValid: true, errors: [] };
     }
+    
+    console.log('[useOnboardingValidation] Resultado da validação:', result);
     
     setValidationErrors(result.errors);
     setIsValidating(false);

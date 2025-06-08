@@ -1,101 +1,144 @@
 
 import { useState, useEffect } from 'react';
-import { getCities, getStates } from '@brazilian-utils/brazilian-utils';
 
-// Criando interfaces já que a biblioteca não as exporta
-export interface State {
+interface Estado {
   code: string;
   name: string;
 }
 
-export interface City {
+interface Cidade {
   name: string;
-  code: string;
+}
+
+interface IBGELocationsState {
+  estados: Estado[];
+  cidadesPorEstado: Record<string, Cidade[]>;
+  isLoading: boolean;
+  error: string | null;
 }
 
 export const useIBGELocations = () => {
-  const [estados, setEstados] = useState<State[]>([]);
-  const [cidadesPorEstado, setCidadesPorEstado] = useState<Record<string, City[]>>({});
-  const [isLoading, setIsLoading] = useState(true);
+  const [data, setData] = useState<IBGELocationsState>({
+    estados: [],
+    cidadesPorEstado: {},
+    isLoading: true,
+    error: null
+  });
 
   useEffect(() => {
-    try {
-      // Carrega todos os estados
-      const todosEstados = getStates();
-      setEstados(todosEstados);
-
-      // Cria um objeto com todas as cidades por estado
-      const todasCidades: Record<string, City[]> = {};
-      
-      todosEstados.forEach(estado => {
-        // A função getCities retorna um array de strings, precisamos converter para City[]
-        const cidadesDoEstado = getCities(estado.code);
+    const loadEstados = async () => {
+      try {
+        setData(prev => ({ ...prev, isLoading: true, error: null }));
         
-        if (cidadesDoEstado && cidadesDoEstado.length > 0) {
-          todasCidades[estado.code] = cidadesDoEstado.map(nomeCidade => ({
-            name: nomeCidade,
-            code: nomeCidade.replace(/\s+/g, '-').toLowerCase() // Gerando um code baseado no nome da cidade
-          }));
-        } else {
-          // Caso a API não retorne cidades, adicionamos algumas cidades grandes para cada estado
-          const cidadesGrandes = obterCidadesGrandes(estado.code);
-          todasCidades[estado.code] = cidadesGrandes.map(nome => ({
-            name: nome,
-            code: nome.replace(/\s+/g, '-').toLowerCase()
-          }));
+        console.log('[useIBGELocations] Carregando estados...');
+        
+        const response = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome');
+        
+        if (!response.ok) {
+          throw new Error('Erro ao carregar estados');
         }
-      });
-      
-      console.log("Cidades carregadas:", Object.keys(todasCidades).map(uf => 
-        `${uf}: ${todasCidades[uf]?.length || 0} cidades`
-      ));
-      
-      setCidadesPorEstado(todasCidades);
-    } catch (error) {
-      console.error("Erro ao carregar estados e cidades:", error);
-    } finally {
-      setIsLoading(false);
-    }
+        
+        const estados = await response.json();
+        
+        const estadosFormatados = estados.map((estado: any) => ({
+          code: estado.sigla,
+          name: estado.nome
+        }));
+        
+        console.log('[useIBGELocations] Estados carregados:', estadosFormatados.length);
+        
+        setData(prev => ({
+          ...prev,
+          estados: estadosFormatados,
+          isLoading: false
+        }));
+        
+      } catch (error) {
+        console.error('[useIBGELocations] Erro ao carregar estados:', error);
+        
+        // Fallback com estados principais
+        const estadosFallback = [
+          { code: 'SP', name: 'São Paulo' },
+          { code: 'RJ', name: 'Rio de Janeiro' },
+          { code: 'MG', name: 'Minas Gerais' },
+          { code: 'RS', name: 'Rio Grande do Sul' },
+          { code: 'PR', name: 'Paraná' },
+          { code: 'SC', name: 'Santa Catarina' },
+          { code: 'BA', name: 'Bahia' },
+          { code: 'GO', name: 'Goiás' },
+          { code: 'PE', name: 'Pernambuco' },
+          { code: 'CE', name: 'Ceará' }
+        ];
+        
+        setData(prev => ({
+          ...prev,
+          estados: estadosFallback,
+          isLoading: false,
+          error: 'Usando lista simplificada de estados'
+        }));
+      }
+    };
+
+    loadEstados();
   }, []);
 
-  // Função para obter grandes cidades de cada estado como fallback
-  const obterCidadesGrandes = (ufCode: string): string[] => {
-    const cidadesFallback: Record<string, string[]> = {
-      'AC': ['Rio Branco', 'Cruzeiro do Sul', 'Sena Madureira'],
-      'AL': ['Maceió', 'Arapiraca', 'Rio Largo'],
-      'AM': ['Manaus', 'Parintins', 'Itacoatiara'],
-      'AP': ['Macapá', 'Santana', 'Laranjal do Jari'],
-      'BA': ['Salvador', 'Feira de Santana', 'Vitória da Conquista'],
-      'CE': ['Fortaleza', 'Caucaia', 'Juazeiro do Norte'],
-      'DF': ['Brasília', 'Ceilândia', 'Taguatinga'],
-      'ES': ['Vitória', 'Vila Velha', 'Cariacica'],
-      'GO': ['Goiânia', 'Aparecida de Goiânia', 'Anápolis'],
-      'MA': ['São Luís', 'Imperatriz', 'Timon'],
-      'MG': ['Belo Horizonte', 'Uberlândia', 'Contagem'],
-      'MS': ['Campo Grande', 'Dourados', 'Três Lagoas'],
-      'MT': ['Cuiabá', 'Várzea Grande', 'Rondonópolis'],
-      'PA': ['Belém', 'Ananindeua', 'Santarém'],
-      'PB': ['João Pessoa', 'Campina Grande', 'Santa Rita'],
-      'PE': ['Recife', 'Jaboatão dos Guararapes', 'Olinda'],
-      'PI': ['Teresina', 'Parnaíba', 'Picos'],
-      'PR': ['Curitiba', 'Londrina', 'Maringá'],
-      'RJ': ['Rio de Janeiro', 'São Gonçalo', 'Duque de Caxias'],
-      'RN': ['Natal', 'Mossoró', 'Parnamirim'],
-      'RO': ['Porto Velho', 'Ji-Paraná', 'Ariquemes'],
-      'RR': ['Boa Vista', 'Rorainópolis', 'Caracaraí'],
-      'RS': ['Porto Alegre', 'Caxias do Sul', 'Pelotas'],
-      'SC': ['Florianópolis', 'Joinville', 'Blumenau'],
-      'SE': ['Aracaju', 'Nossa Senhora do Socorro', 'Lagarto'],
-      'SP': ['São Paulo', 'Guarulhos', 'Campinas'],
-      'TO': ['Palmas', 'Araguaína', 'Gurupi']
-    };
-    
-    return cidadesFallback[ufCode] || ['Cidade principal'];
+  const loadCidades = async (estadoCode: string) => {
+    if (data.cidadesPorEstado[estadoCode]) {
+      return; // Já carregado
+    }
+
+    try {
+      console.log('[useIBGELocations] Carregando cidades para:', estadoCode);
+      
+      const response = await fetch(
+        `https://servicodados.ibge.gov.br/api/v1/localidades/estados/${estadoCode}/municipios?orderBy=nome`
+      );
+      
+      if (!response.ok) {
+        throw new Error('Erro ao carregar cidades');
+      }
+      
+      const cidades = await response.json();
+      
+      const cidadesFormatadas = cidades.map((cidade: any) => ({
+        name: cidade.nome
+      }));
+      
+      console.log('[useIBGELocations] Cidades carregadas para', estadoCode, ':', cidadesFormatadas.length);
+      
+      setData(prev => ({
+        ...prev,
+        cidadesPorEstado: {
+          ...prev.cidadesPorEstado,
+          [estadoCode]: cidadesFormatadas
+        }
+      }));
+      
+    } catch (error) {
+      console.error('[useIBGELocations] Erro ao carregar cidades:', error);
+      
+      // Fallback com cidades principais do estado
+      const cidadesFallback = [
+        { name: 'Capital' },
+        { name: 'Região Metropolitana' },
+        { name: 'Interior' }
+      ];
+      
+      setData(prev => ({
+        ...prev,
+        cidadesPorEstado: {
+          ...prev.cidadesPorEstado,
+          [estadoCode]: cidadesFallback
+        }
+      }));
+    }
   };
 
   return {
-    estados,
-    cidadesPorEstado,
-    isLoading
+    estados: data.estados,
+    cidadesPorEstado: data.cidadesPorEstado,
+    isLoading: data.isLoading,
+    error: data.error,
+    loadCidades
   };
 };

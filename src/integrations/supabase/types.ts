@@ -5235,26 +5235,51 @@ export type Database = {
       }
       user_onboarding: {
         Row: {
+          accepts_case_study: string | null
           ai_challenges: Json | null
           ai_experience: string | null
+          ai_implementation_budget: string | null
+          ai_knowledge_level: string | null
           ai_tools_used: Json | null
+          annual_revenue: string | null
+          area_to_impact: string | null
+          best_days: string[] | null
+          best_periods: string[] | null
+          birth_date: string | null
           business_area: string | null
+          business_sector: string | null
           business_stage: string | null
+          city: string | null
           communication_style: string | null
+          company_name: string | null
+          company_size: string | null
+          company_website: string | null
           completed_at: string | null
+          content_preference: string | null
           content_types: Json | null
           created_at: string | null
+          curiosity: string | null
           current_tools: Json | null
+          daily_tools: string[] | null
           education_level: string | null
+          email: string | null
+          expected_result_90_days: string | null
+          has_implemented_ai: string | null
           id: string
+          instagram: string | null
           institution: string | null
           learning_preference: string | null
+          linkedin: string | null
           main_challenges: Json | null
+          main_objective: string | null
           member_type: string | null
           name: string | null
           nickname: string | null
+          phone: string | null
+          position: string | null
           primary_goals: Json | null
           started_at: string | null
+          state: string | null
           study_area: string | null
           success_metrics: Json | null
           target_market: string | null
@@ -5262,28 +5287,56 @@ export type Database = {
           timeframe: string | null
           updated_at: string | null
           user_id: string
+          wants_networking: string | null
+          weekly_learning_time: string | null
+          who_will_implement: string | null
         }
         Insert: {
+          accepts_case_study?: string | null
           ai_challenges?: Json | null
           ai_experience?: string | null
+          ai_implementation_budget?: string | null
+          ai_knowledge_level?: string | null
           ai_tools_used?: Json | null
+          annual_revenue?: string | null
+          area_to_impact?: string | null
+          best_days?: string[] | null
+          best_periods?: string[] | null
+          birth_date?: string | null
           business_area?: string | null
+          business_sector?: string | null
           business_stage?: string | null
+          city?: string | null
           communication_style?: string | null
+          company_name?: string | null
+          company_size?: string | null
+          company_website?: string | null
           completed_at?: string | null
+          content_preference?: string | null
           content_types?: Json | null
           created_at?: string | null
+          curiosity?: string | null
           current_tools?: Json | null
+          daily_tools?: string[] | null
           education_level?: string | null
+          email?: string | null
+          expected_result_90_days?: string | null
+          has_implemented_ai?: string | null
           id?: string
+          instagram?: string | null
           institution?: string | null
           learning_preference?: string | null
+          linkedin?: string | null
           main_challenges?: Json | null
+          main_objective?: string | null
           member_type?: string | null
           name?: string | null
           nickname?: string | null
+          phone?: string | null
+          position?: string | null
           primary_goals?: Json | null
           started_at?: string | null
+          state?: string | null
           study_area?: string | null
           success_metrics?: Json | null
           target_market?: string | null
@@ -5291,28 +5344,56 @@ export type Database = {
           timeframe?: string | null
           updated_at?: string | null
           user_id: string
+          wants_networking?: string | null
+          weekly_learning_time?: string | null
+          who_will_implement?: string | null
         }
         Update: {
+          accepts_case_study?: string | null
           ai_challenges?: Json | null
           ai_experience?: string | null
+          ai_implementation_budget?: string | null
+          ai_knowledge_level?: string | null
           ai_tools_used?: Json | null
+          annual_revenue?: string | null
+          area_to_impact?: string | null
+          best_days?: string[] | null
+          best_periods?: string[] | null
+          birth_date?: string | null
           business_area?: string | null
+          business_sector?: string | null
           business_stage?: string | null
+          city?: string | null
           communication_style?: string | null
+          company_name?: string | null
+          company_size?: string | null
+          company_website?: string | null
           completed_at?: string | null
+          content_preference?: string | null
           content_types?: Json | null
           created_at?: string | null
+          curiosity?: string | null
           current_tools?: Json | null
+          daily_tools?: string[] | null
           education_level?: string | null
+          email?: string | null
+          expected_result_90_days?: string | null
+          has_implemented_ai?: string | null
           id?: string
+          instagram?: string | null
           institution?: string | null
           learning_preference?: string | null
+          linkedin?: string | null
           main_challenges?: Json | null
+          main_objective?: string | null
           member_type?: string | null
           name?: string | null
           nickname?: string | null
+          phone?: string | null
+          position?: string | null
           primary_goals?: Json | null
           started_at?: string | null
+          state?: string | null
           study_area?: string | null
           success_metrics?: Json | null
           target_market?: string | null
@@ -5320,6 +5401,9 @@ export type Database = {
           timeframe?: string | null
           updated_at?: string | null
           user_id?: string
+          wants_networking?: string | null
+          weekly_learning_time?: string | null
+          who_will_implement?: string | null
         }
         Relationships: []
       }

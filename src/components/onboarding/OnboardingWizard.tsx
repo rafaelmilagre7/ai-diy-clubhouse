@@ -19,9 +19,8 @@ import { OnboardingData } from './types/onboardingTypes';
 import { toast } from 'sonner';
 
 export const OnboardingWizard = () => {
-  console.log('[OnboardingWizard] Renderizando componente');
+  console.log('[OnboardingWizard] Renderizando');
   
-  // TODOS OS HOOKS DEVEM SER EXECUTADOS SEMPRE NA MESMA ORDEM
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { submitData, clearError, error } = useOnboardingStatus();
@@ -30,14 +29,13 @@ export const OnboardingWizard = () => {
   const { data, updateData, clearData } = useOnboardingStorage();
   const { validateCurrentStep, validationErrors, clearValidationErrors } = useOnboardingValidation();
 
-  // Determinar tipo de membro após todos os hooks principais
   const memberType: 'club' | 'formacao' = useMemo(() => {
     const type = profile?.role === 'formacao' ? 'formacao' : 'club';
     console.log('[OnboardingWizard] Member type:', type);
     return type;
   }, [profile?.role]);
   
-  const totalSteps = 6; // 5 etapas + final
+  const totalSteps = 6;
 
   const stepTitles = useMemo(() => [
     'Informações Pessoais',
@@ -49,7 +47,7 @@ export const OnboardingWizard = () => {
   ], []);
 
   const handleNext = useCallback(() => {
-    console.log('[OnboardingWizard] handleNext - step atual:', currentStep);
+    console.log('[OnboardingWizard] handleNext - step:', currentStep);
     
     clearError();
     clearValidationErrors();
@@ -59,7 +57,7 @@ export const OnboardingWizard = () => {
       
       if (!validation.isValid) {
         console.log('[OnboardingWizard] Validação falhou:', validation.errors);
-        toast.error('Por favor, preencha todos os campos obrigatórios antes de continuar');
+        toast.error('Por favor, preencha todos os campos obrigatórios');
         return;
       }
     }
@@ -73,7 +71,7 @@ export const OnboardingWizard = () => {
   }, [currentStep, totalSteps, data, memberType, validateCurrentStep, clearValidationErrors, clearError]);
 
   const handlePrev = useCallback(() => {
-    console.log('[OnboardingWizard] handlePrev - step atual:', currentStep);
+    console.log('[OnboardingWizard] handlePrev - step:', currentStep);
     
     if (currentStep > 1) {
       setCurrentStep(prev => prev - 1);
@@ -83,7 +81,7 @@ export const OnboardingWizard = () => {
   }, [currentStep, clearValidationErrors, clearError]);
 
   const handleStepData = useCallback((stepData: Partial<OnboardingData>) => {
-    console.log('[OnboardingWizard] Atualizando dados do step:', stepData);
+    console.log('[OnboardingWizard] Atualizando dados:', stepData);
     updateData(stepData);
     clearError();
     clearValidationErrors();
@@ -94,19 +92,15 @@ export const OnboardingWizard = () => {
     setIsCompleting(true);
     
     try {
-      // Validação final
-      let allValid = true;
+      // Validação final de todas as etapas
       for (let step = 1; step <= 5; step++) {
         const validation = validateCurrentStep(step, data, memberType);
         if (!validation.isValid) {
-          console.log('[OnboardingWizard] Validação final falhou no step:', step, validation.errors);
-          allValid = false;
-          break;
+          console.log('[OnboardingWizard] Validação final falhou no step:', step);
+          toast.error(`Dados incompletos na etapa ${step}. Por favor, revise.`);
+          setCurrentStep(step);
+          return;
         }
-      }
-
-      if (!allValid) {
-        throw new Error('Dados incompletos. Por favor, revise todas as etapas.');
       }
 
       const completedData = {
@@ -115,15 +109,14 @@ export const OnboardingWizard = () => {
         memberType
       };
 
-      console.log('[OnboardingWizard] Enviando dados:', completedData);
+      console.log('[OnboardingWizard] Enviando dados finais:', completedData);
       await submitData(completedData);
       clearData();
       
       toast.success('Onboarding concluído com sucesso! 🎉');
       
-      const redirectPath = '/dashboard';
       setTimeout(() => {
-        navigate(redirectPath, { replace: true });
+        navigate('/dashboard', { replace: true });
       }, 1500);
       
     } catch (error) {
@@ -136,12 +129,11 @@ export const OnboardingWizard = () => {
 
   const canProceed = useMemo(() => {
     if (currentStep === totalSteps) return true;
-    if (currentStep >= 5) return true; // Etapas finais
+    if (currentStep >= 5) return true;
     const validation = validateCurrentStep(currentStep, data, memberType);
     return validation.isValid;
   }, [currentStep, totalSteps, validateCurrentStep, data, memberType]);
 
-  // Renderizar steps - sempre após todos os hooks
   const renderStep = () => {
     const stepProps = {
       data,
@@ -174,8 +166,6 @@ export const OnboardingWizard = () => {
     }
   };
 
-  console.log('[OnboardingWizard] Renderizando UI - step:', currentStep);
-
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header com progresso */}
@@ -192,12 +182,14 @@ export const OnboardingWizard = () => {
       {/* Conteúdo principal */}
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-4xl">
-          <OnboardingFeedback
-            type="error"
-            message={error || 'Erro no onboarding'}
-            show={!!error}
-            onClose={clearError}
-          />
+          {error && (
+            <OnboardingFeedback
+              type="error"
+              message={error}
+              show={true}
+              onClose={clearError}
+            />
+          )}
 
           <AnimatePresence mode="wait">
             <motion.div
