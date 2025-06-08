@@ -22,7 +22,7 @@ export const DifficultyBadge = ({ difficulty, className }: DifficultyBadgeProps)
         };
       case "advanced":
         return {
-          variant: "destructive" as const,
+          variant: "error" as const,
           label: "Avançado"
         };
       default:

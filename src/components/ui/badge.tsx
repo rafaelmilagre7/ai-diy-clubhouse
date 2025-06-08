@@ -14,11 +14,13 @@ const badgeVariants = cva(
         success: "border-success/20 bg-success/10 text-success hover:bg-success/20",
         warning: "border-warning/20 bg-warning/10 text-warning hover:bg-warning/20",
         error: "border-error/20 bg-error/10 text-error hover:bg-error/20",
+        destructive: "border-error/20 bg-error/10 text-error hover:bg-error/20",
         info: "border-info/20 bg-info/10 text-info hover:bg-info/20",
         accent: "border-accent/20 bg-accent/10 text-accent hover:bg-accent/20",
         outline: "border-border text-text-secondary hover:bg-surface-hover hover:text-text-primary",
         ghost: "border-transparent text-text-secondary hover:bg-surface-hover hover:text-text-primary",
         gradient: "border-transparent bg-gradient-primary text-primary-foreground hover:opacity-90",
+        neutral: "border-border/50 bg-surface-elevated text-text-secondary hover:bg-surface-hover",
       },
       size: {
         xs: "px-1.5 py-0.5 text-xs h-5",
