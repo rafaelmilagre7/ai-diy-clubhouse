@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { cleanupAuthState } from "@/utils/authUtils";
 
 export const LoginForm = () => {
@@ -19,11 +20,7 @@ export const LoginForm = () => {
     e.preventDefault();
     
     if (!email || !password) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Por favor, preencha email e senha.",
-        variant: "destructive",
-      });
+      toast.error("Por favor, preencha todos os campos");
       return;
     }
     
@@ -51,10 +48,7 @@ export const LoginForm = () => {
       
       // Redirecionamento completo após login bem-sucedido
       if (data.user) {
-        toast({
-          title: "Login realizado com sucesso",
-          description: "Bem-vindo de volta!",
-        });
+        toast.success("Login realizado com sucesso!");
         
         // Forçar redirecionamento completo para o domínio correto
         const redirectUrl = window.location.origin.includes('localhost')
@@ -65,11 +59,7 @@ export const LoginForm = () => {
       }
     } catch (error: any) {
       console.error("Erro ao fazer login:", error);
-      toast({
-        title: "Erro de autenticação",
-        description: error.message || "Não foi possível fazer login. Verifique suas credenciais.",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Não foi possível fazer login. Verifique suas credenciais.");
     } finally {
       setIsLoading(false);
     }
@@ -82,7 +72,7 @@ export const LoginForm = () => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email" className="text-white">Email</Label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
             <Mail 
@@ -97,13 +87,15 @@ export const LoginForm = () => {
             placeholder="seu@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="pl-11 bg-gray-800 border-gray-700 text-white text-base font-medium antialiased"
+            className="pl-11 bg-gray-700/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-viverblue focus:ring-viverblue"
+            disabled={isLoading}
+            required
           />
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Senha</Label>
+        <Label htmlFor="password" className="text-white">Senha</Label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
             <Lock 
@@ -115,10 +107,12 @@ export const LoginForm = () => {
           <Input
             id="password"
             type={showPassword ? "text" : "password"}
-            placeholder="********"
+            placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="pl-11 pr-12 bg-gray-800 border-gray-700 text-white text-base font-medium antialiased"
+            className="pl-11 pr-12 bg-gray-700/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-viverblue focus:ring-viverblue"
+            disabled={isLoading}
+            required
           />
           <button
             type="button"
@@ -128,13 +122,13 @@ export const LoginForm = () => {
           >
             {showPassword ? (
               <EyeOff 
-                className="w-5 h-5 text-gray-400" 
+                className="w-5 h-5 text-gray-400 hover:text-viverblue transition-colors" 
                 strokeWidth={1.5} 
                 aria-hidden="true" 
               />
             ) : (
               <Eye 
-                className="w-5 h-5 text-gray-400" 
+                className="w-5 h-5 text-gray-400 hover:text-viverblue transition-colors" 
                 strokeWidth={1.5} 
                 aria-hidden="true" 
               />
@@ -145,7 +139,7 @@ export const LoginForm = () => {
 
       <Button
         type="submit"
-        className="w-full bg-viverblue hover:bg-viverblue/90"
+        className="w-full bg-viverblue hover:bg-viverblue/90 text-white font-medium"
         disabled={isLoading}
       >
         {isLoading ? "Entrando..." : "Entrar"}
