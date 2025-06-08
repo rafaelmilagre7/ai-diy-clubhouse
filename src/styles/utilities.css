@@ -1,23 +1,33 @@
 
-/* === UTILITIES MODERNOS E OTIMIZADOS === */
+/* === UTILITIES AVANÇADOS === */
 
 @layer utilities {
   
-  /* === SPACING SYSTEM === */
+  /* === SPACING UTILITIES === */
   
-  .space-modern > * + * {
-    margin-top: 1.5rem;
+  .space-y-fluid > * + * {
+    @apply mt-4 sm:mt-6 md:mt-8;
   }
   
-  .space-tight > * + * {
-    margin-top: 0.75rem;
+  .space-x-fluid > * + * {
+    @apply ml-4 sm:ml-6 md:ml-8;
   }
   
-  .space-loose > * + * {
-    margin-top: 2.5rem;
+  /* === GRID UTILITIES === */
+  
+  .grid-auto-fit {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   }
   
-  /* === FLEXBOX UTILITIES MODERNOS === */
+  .grid-auto-fill {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+  
+  .grid-responsive {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+  }
+  
+  /* === FLEXBOX UTILITIES === */
   
   .flex-center {
     @apply flex items-center justify-center;
@@ -35,436 +45,193 @@
     @apply flex items-center justify-end;
   }
   
-  .flex-col-center {
-    @apply flex flex-col items-center justify-center;
+  /* === POSITIONING UTILITIES === */
+  
+  .absolute-center {
+    @apply absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
   }
   
-  .flex-col-start {
-    @apply flex flex-col items-start justify-start;
+  .absolute-full {
+    @apply absolute inset-0;
   }
   
-  /* === GRID UTILITIES === */
+  /* === SIZING UTILITIES === */
   
-  .grid-auto-fit {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  .size-full {
+    @apply w-full h-full;
   }
   
-  .grid-auto-fill {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  .size-screen {
+    @apply w-screen h-screen;
   }
   
-  .grid-responsive {
-    @apply grid gap-6;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  }
-  
-  /* === TEXT UTILITIES MODERNOS === */
-  
-  .text-balance {
-    text-wrap: balance;
-  }
-  
-  .text-pretty {
-    text-wrap: pretty;
-  }
-  
-  .text-gradient {
-    @apply bg-gradient-primary bg-clip-text text-transparent;
-  }
-  
-  .text-gradient-secondary {
-    @apply bg-gradient-secondary bg-clip-text text-transparent;
-  }
-  
-  .text-shadow-sm {
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  }
-  
-  .text-shadow {
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-  }
-  
-  .text-shadow-lg {
-    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  }
-  
-  /* === BACKGROUND UTILITIES === */
-  
-  .bg-noise {
-    background-image: 
-      radial-gradient(circle at 1px 1px, rgba(0,0,0,0.15) 1px, transparent 0);
-    background-size: 20px 20px;
-  }
-  
-  .bg-grid {
-    background-image: 
-      linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px);
-    background-size: 20px 20px;
-  }
-  
-  .bg-dots {
-    background-image: radial-gradient(circle, rgba(0,0,0,0.1) 1px, transparent 1px);
-    background-size: 15px 15px;
-  }
-  
-  /* === BORDER UTILITIES === */
-  
-  .border-gradient {
-    position: relative;
-    background: hsl(var(--surface));
-  }
-  
-  .border-gradient::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    padding: 1px;
-    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
-    border-radius: inherit;
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask-composite: xor;
-    -webkit-mask-composite: xor;
-  }
-  
-  .border-glow {
-    box-shadow: 0 0 0 1px hsl(var(--primary) / 0.2);
-  }
-  
-  .border-glow-strong {
-    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.3);
-  }
-  
-  /* === VISIBILITY UTILITIES === */
-  
-  .show-on-hover {
-    @apply opacity-0 transition-opacity duration-200;
-  }
-  
-  .group:hover .show-on-hover {
-    @apply opacity-100;
-  }
-  
-  .hide-on-hover {
-    @apply opacity-100 transition-opacity duration-200;
-  }
-  
-  .group:hover .hide-on-hover {
-    @apply opacity-0;
-  }
-  
-  /* === INTERACTION UTILITIES === */
-  
-  .clickable {
-    @apply cursor-pointer select-none;
-    @apply transition-all duration-200 ease-out;
-    @apply hover:scale-105 active:scale-95;
-  }
-  
-  .non-clickable {
-    @apply cursor-default select-none;
-  }
-  
-  .draggable {
-    @apply cursor-grab active:cursor-grabbing;
-  }
-  
-  /* === FOCUS UTILITIES === */
-  
-  .focus-ring {
-    @apply focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-2;
-    ring-offset-color: hsl(var(--background));
-  }
-  
-  .focus-ring-error {
-    @apply focus:outline-none focus:ring-2 focus:ring-error/20 focus:ring-offset-2;
-    ring-offset-color: hsl(var(--background));
-  }
-  
-  .focus-ring-success {
-    @apply focus:outline-none focus:ring-2 focus:ring-success/20 focus:ring-offset-2;
-    ring-offset-color: hsl(var(--background));
-  }
-  
-  /* === TRANSITION UTILITIES === */
-  
-  .transition-fast {
-    @apply transition-all duration-150 ease-out;
-  }
-  
-  .transition-normal {
-    @apply transition-all duration-200 ease-out;
-  }
-  
-  .transition-slow {
-    @apply transition-all duration-300 ease-out;
-  }
-  
-  .transition-bounce {
-    transition-timing-function: cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  }
-  
-  .transition-expo {
-    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  
-  /* === SIZE UTILITIES === */
-  
-  .size-4 {
-    @apply w-4 h-4;
-  }
-  
-  .size-5 {
-    @apply w-5 h-5;
-  }
-  
-  .size-6 {
-    @apply w-6 h-6;
-  }
-  
-  .size-8 {
-    @apply w-8 h-8;
-  }
-  
-  .size-10 {
-    @apply w-10 h-10;
-  }
-  
-  .size-12 {
-    @apply w-12 h-12;
-  }
-  
-  .size-16 {
-    @apply w-16 h-16;
-  }
-  
-  .size-20 {
-    @apply w-20 h-20;
+  .min-size-full {
+    @apply min-w-full min-h-full;
   }
   
   /* === ASPECT RATIO UTILITIES === */
   
   .aspect-square {
-    aspect-ratio: 1;
+    aspect-ratio: 1 / 1;
   }
   
   .aspect-video {
-    aspect-ratio: 16/9;
+    aspect-ratio: 16 / 9;
   }
   
   .aspect-photo {
-    aspect-ratio: 4/3;
+    aspect-ratio: 4 / 3;
   }
   
-  .aspect-portrait {
-    aspect-ratio: 3/4;
+  .aspect-golden {
+    aspect-ratio: 1.618 / 1;
   }
   
-  /* === POSITIONING UTILITIES === */
+  /* === INTERACTIVE UTILITIES === */
   
-  .center-absolute {
-    @apply absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
+  .interactive {
+    @apply transition-all duration-200 ease-out;
+    @apply hover:scale-105 hover:shadow-md;
+    @apply active:scale-95;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20;
   }
   
-  .center-x {
-    @apply absolute left-1/2 transform -translate-x-1/2;
+  .clickable {
+    @apply cursor-pointer transition-colors duration-200 ease-out;
+    @apply hover:text-primary-hover active:text-primary-active;
   }
   
-  .center-y {
-    @apply absolute top-1/2 transform -translate-y-1/2;
+  .disabled {
+    @apply pointer-events-none opacity-50 cursor-not-allowed;
   }
   
-  /* === OVERLAY UTILITIES === */
+  /* === BORDER UTILITIES === */
   
-  .overlay {
-    @apply absolute inset-0 bg-black/50;
+  .border-gradient {
+    border-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent))) 1;
   }
   
-  .overlay-light {
-    @apply absolute inset-0 bg-black/20;
+  .border-dashed-modern {
+    @apply border-2 border-dashed border-border-subtle;
   }
   
-  .overlay-dark {
-    @apply absolute inset-0 bg-black/70;
+  /* === SHADOW UTILITIES === */
+  
+  .shadow-soft {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.08);
   }
   
-  .overlay-gradient {
-    @apply absolute inset-0;
-    background: linear-gradient(
-      180deg,
-      transparent 0%,
-      rgba(0, 0, 0, 0.1) 50%,
-      rgba(0, 0, 0, 0.8) 100%
-    );
+  .shadow-medium {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.12);
   }
   
-  /* === CLIPPING AND MASKING === */
-  
-  .clip-corner {
-    clip-path: polygon(0 0, calc(100% - 1rem) 0, 100% 1rem, 100% 100%, 0 100%);
+  .shadow-strong {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.16);
   }
   
-  .clip-triangle {
-    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  /* === BACKDROP UTILITIES === */
+  
+  .backdrop-blur-soft {
+    backdrop-filter: blur(8px);
   }
   
-  .clip-circle {
-    clip-path: circle(50%);
+  .backdrop-blur-medium {
+    backdrop-filter: blur(16px);
   }
   
-  /* === SCROLLING UTILITIES === */
+  .backdrop-blur-strong {
+    backdrop-filter: blur(24px);
+  }
+  
+  /* === SCROLL UTILITIES === */
   
   .scroll-smooth {
     scroll-behavior: smooth;
   }
   
-  .scroll-auto {
-    scroll-behavior: auto;
+  .scroll-snap-x {
+    scroll-snap-type: x mandatory;
   }
   
-  .overscroll-contain {
-    overscroll-behavior: contain;
+  .scroll-snap-y {
+    scroll-snap-type: y mandatory;
   }
   
-  .overscroll-none {
-    overscroll-behavior: none;
+  .scroll-snap-start {
+    scroll-snap-align: start;
+  }
+  
+  .scroll-snap-center {
+    scroll-snap-align: center;
+  }
+  
+  /* === OVERFLOW UTILITIES === */
+  
+  .overflow-fade {
+    position: relative;
+  }
+  
+  .overflow-fade::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2rem;
+    background: linear-gradient(transparent, hsl(var(--background)));
+    pointer-events: none;
+  }
+  
+  /* === STATE UTILITIES === */
+  
+  .loading {
+    @apply animate-pulse pointer-events-none;
+  }
+  
+  .error-state {
+    @apply text-error border-error bg-error/5;
+  }
+  
+  .success-state {
+    @apply text-success border-success bg-success/5;
+  }
+  
+  .warning-state {
+    @apply text-warning border-warning bg-warning/5;
+  }
+  
+  /* === RESPONSIVE SHOW/HIDE === */
+  
+  .mobile-only {
+    @apply block sm:hidden;
+  }
+  
+  .tablet-up {
+    @apply hidden sm:block;
+  }
+  
+  .desktop-only {
+    @apply hidden lg:block;
+  }
+  
+  /* === ACCESSIBILITY === */
+  
+  .sr-only-focusable {
+    @apply sr-only focus:not-sr-only focus:absolute focus:z-50;
+    @apply focus:px-2 focus:py-1 focus:bg-surface focus:text-foreground;
+  }
+  
+  .reduced-motion {
+    @apply motion-reduce:transition-none motion-reduce:animate-none;
   }
   
   /* === PRINT UTILITIES === */
   
   .print-hidden {
-    @media print {
-      display: none !important;
-    }
+    @apply print:hidden;
   }
   
-  .print-visible {
-    @media print {
-      display: block !important;
-    }
-  }
-  
-  /* === ACCESSIBILITY UTILITIES === */
-  
-  .sr-only-focusable {
-    @apply sr-only;
-  }
-  
-  .sr-only-focusable:focus {
-    @apply not-sr-only;
-  }
-  
-  .reduced-motion {
-    @media (prefers-reduced-motion: reduce) {
-      animation: none !important;
-      transition: none !important;
-    }
-  }
-  
-  /* === HIGH CONTRAST MODE === */
-  
-  @media (prefers-contrast: high) {
-    .high-contrast {
-      border: 2px solid currentColor !important;
-    }
-    
-    .high-contrast-bg {
-      background: Canvas !important;
-      color: CanvasText !important;
-    }
-  }
-  
-  /* === DARK MODE UTILITIES === */
-  
-  .dark-hidden {
-    @apply dark:hidden;
-  }
-  
-  .dark-visible {
-    @apply hidden dark:block;
-  }
-  
-  .light-hidden {
-    @apply hidden dark:block;
-  }
-  
-  .light-visible {
-    @apply block dark:hidden;
-  }
-  
-  /* === RESPONSIVE TEXT === */
-  
-  .text-responsive {
-    @apply text-sm sm:text-base lg:text-lg;
-  }
-  
-  .text-responsive-large {
-    @apply text-lg sm:text-xl lg:text-2xl xl:text-3xl;
-  }
-  
-  .text-responsive-small {
-    @apply text-xs sm:text-sm lg:text-base;
-  }
-  
-  /* === BACKDROP EFFECTS === */
-  
-  .backdrop-blur-xs {
-    backdrop-filter: blur(2px);
-  }
-  
-  .backdrop-blur-sm {
-    backdrop-filter: blur(4px);
-  }
-  
-  .backdrop-blur-base {
-    backdrop-filter: blur(8px);
-  }
-  
-  .backdrop-blur-lg {
-    backdrop-filter: blur(16px);
-  }
-  
-  .backdrop-blur-xl {
-    backdrop-filter: blur(24px);
-  }
-  
-  .backdrop-blur-2xl {
-    backdrop-filter: blur(40px);
-  }
-  
-  /* === SELECTION UTILITIES === */
-  
-  .select-all {
-    user-select: all;
-  }
-  
-  .select-auto {
-    user-select: auto;
-  }
-  
-  .select-text {
-    user-select: text;
-  }
-  
-  .select-none {
-    user-select: none;
-  }
-  
-  /* === RESIZE UTILITIES === */
-  
-  .resize-none {
-    resize: none;
-  }
-  
-  .resize-both {
-    resize: both;
-  }
-  
-  .resize-horizontal {
-    resize: horizontal;
-  }
-  
-  .resize-vertical {
-    resize: vertical;
+  .print-only {
+    @apply hidden print:block;
   }
 }

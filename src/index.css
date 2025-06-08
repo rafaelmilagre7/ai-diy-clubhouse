@@ -2,9 +2,34 @@
 /* Modularização dos estilos em arquivos separados para facilitar manutenção */
 
 @import './styles/base.css';
+@import './styles/typography.css';
+@import './styles/text-utilities.css';
+@import './styles/utilities.css';
+@import './styles/components.css';
 
 @tailwind base;
 @tailwind components; 
 @tailwind utilities;
 
-/* --- DEMAIS customizações, plugins, ou pequenas regras que necessitem ficar aqui podem ser adicionadas abaixo --- */
+/* --- Customizações globais específicas --- */
+
+/* Remove outline padrão e usa sistema de focus moderno */
+*:focus {
+  outline: none;
+}
+
+/* Melhora a renderização de texto */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Melhora o comportamento de scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Remove margin padrão */
+body {
+  margin: 0;
+}
