@@ -2,9 +2,10 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Lightbulb, ArrowRight, Clock, Target, Sparkles, Zap } from 'lucide-react';
+import { Lightbulb, ArrowRight, Clock, Target, Sparkles, Zap, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useSolutionData } from '@/hooks/implementation-trail/useSolutionData';
+import { useImageURL } from '@/hooks/useImageURL';
 
 interface Recommendation {
   solutionId: string;
@@ -26,6 +27,7 @@ export const SolutionRecommendationCard = ({
 }: SolutionRecommendationCardProps) => {
   const navigate = useNavigate();
   const { solutions, loading } = useSolutionData([recommendation.solutionId]);
+  const { optimizeImageURL } = useImageURL();
   
   const solutionData = solutions[recommendation.solutionId];
 
@@ -40,6 +42,13 @@ export const SolutionRecommendationCard = ({
       3: { text: "Baixa Prioridade", color: "bg-purple-500/20 text-purple-400 border-purple-500/30" }
     };
     return badges[priority as keyof typeof badges] || badges[3];
+  };
+
+  const getPriorityStars = () => {
+    const starCount = priority === 1 ? 3 : priority === 2 ? 2 : 1;
+    return Array.from({ length: starCount }, (_, i) => (
+      <Star key={i} className="h-3 w-3 fill-current text-yellow-400" />
+    ));
   };
 
   const badge = getPriorityBadge();
@@ -71,7 +80,7 @@ export const SolutionRecommendationCard = ({
       
       <CardContent className="p-0 relative z-10">
         <div className="flex h-48">
-          {/* Seção da imagem - estilo Netflix */}
+          {/* Seção da imagem - estilo Netflix melhorado */}
           <div className="w-80 relative overflow-hidden rounded-l-xl bg-gradient-to-br from-neutral-800 to-neutral-900">
             {solutionData?.thumbnail_url ? (
               <>
@@ -79,6 +88,7 @@ export const SolutionRecommendationCard = ({
                   src={solutionData.thumbnail_url} 
                   alt={solutionData.title || 'Solução'}
                   className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
+                  loading="lazy"
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-black/60"></div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
@@ -86,7 +96,7 @@ export const SolutionRecommendationCard = ({
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-viverblue/20 to-purple-500/20">
                 <div className="text-center">
-                  <Zap className={`h-12 w-12 mx-auto mb-2 ${iconColor} group-hover:scale-110 transition-transform duration-300`} />
+                  <Zap className={`h-16 w-16 mx-auto mb-2 ${iconColor} group-hover:scale-110 transition-transform duration-300`} />
                   <p className="text-xs text-medium-contrast">Solução IA</p>
                 </div>
               </div>
@@ -97,6 +107,11 @@ export const SolutionRecommendationCard = ({
               <span className={`text-xs px-3 py-1.5 rounded-full border font-medium ${badge.color} backdrop-blur-sm`}>
                 {badge.text}
               </span>
+            </div>
+
+            {/* Indicador de estrelas */}
+            <div className="absolute bottom-4 left-4 flex gap-1">
+              {getPriorityStars()}
             </div>
           </div>
 
@@ -110,9 +125,12 @@ export const SolutionRecommendationCard = ({
                     {solutionData?.title || 'Carregando...'}
                   </h3>
                   {solutionData?.category && (
-                    <p className="text-sm text-medium-contrast mt-1 capitalize">
-                      {solutionData.category} • {solutionData.difficulty}
-                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-sm text-medium-contrast capitalize">
+                        {solutionData.category} • {solutionData.difficulty}
+                      </p>
+                      <Lightbulb className="h-3 w-3 text-viverblue" />
+                    </div>
                   )}
                 </div>
                 
