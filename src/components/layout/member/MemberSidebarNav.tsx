@@ -8,7 +8,7 @@ interface MemberSidebarNavProps {
 
 export const MemberSidebarNav: React.FC<MemberSidebarNavProps> = ({ sidebarOpen }) => {
   return (
-    <nav className="flex-1 px-3 py-4 overflow-y-auto">
+    <nav className="flex-1">
       <MemberSidebarNavItems sidebarOpen={sidebarOpen} />
     </nav>
   );

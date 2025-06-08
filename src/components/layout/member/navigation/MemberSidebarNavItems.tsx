@@ -113,7 +113,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
           key={item.href}
           variant="ghost"
           className={cn(
-            "w-full justify-start gap-4 h-14 px-4 text-base font-semibold transition-all duration-300 rounded-xl group",
+            "w-full justify-start gap-4 h-12 px-4 text-base font-semibold transition-all duration-300 rounded-xl group",
             !sidebarOpen && "justify-center px-3",
             active 
               ? "bg-white/15 text-white shadow-lg border border-white/30" 
@@ -138,7 +138,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
           key={item.href}
           variant="ghost"
           className={cn(
-            "w-full justify-start gap-4 h-16 px-4 text-base font-bold transition-all duration-300 rounded-2xl group relative overflow-hidden",
+            "w-full justify-start gap-4 h-14 px-4 text-base font-bold transition-all duration-300 rounded-2xl group relative overflow-hidden",
             !sidebarOpen && "justify-center px-3",
             active 
               ? "bg-gradient-to-r from-viverblue to-purple-600 text-white shadow-2xl shadow-viverblue/50 transform scale-105" 
@@ -177,7 +177,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
           key={item.href}
           variant="ghost"
           className={cn(
-            "w-full justify-start gap-4 h-12 px-4 text-sm font-medium transition-all duration-200 rounded-xl group",
+            "w-full justify-start gap-4 h-10 px-4 text-sm font-medium transition-all duration-200 rounded-xl group",
             !sidebarOpen && "justify-center px-3",
             active 
               ? "bg-red-500/20 text-red-300 border border-red-500/40 shadow-lg" 
@@ -201,7 +201,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
         key={item.href}
         variant="ghost"
         className={cn(
-          "w-full justify-start gap-4 h-12 px-4 text-sm font-medium transition-all duration-200 rounded-xl group",
+          "w-full justify-start gap-4 h-10 px-4 text-sm font-medium transition-all duration-200 rounded-xl group",
           !sidebarOpen && "justify-center px-3",
           active 
             ? "bg-white/12 text-white shadow-md border border-white/20" 
@@ -223,43 +223,40 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex flex-col px-3 py-2 space-y-1">
+    <div className="flex flex-col h-full px-3 py-2">
+      <div className="flex flex-col space-y-1">
         {/* Dashboard - Principal */}
         {renderNavButton(navigationItems[0])}
         
-        {/* Espaço visual */}
-        <div className="h-4"></div>
+        {/* Espaço visual reduzido */}
+        <div className="h-2"></div>
         
         {/* Trilha de IA - Hero */}
         {renderNavButton(navigationItems[1])}
         
-        {/* Espaço visual */}
-        <div className="h-6"></div>
+        {/* Espaço visual reduzido */}
+        <div className="h-3"></div>
         
         {/* Grupo de Aprendizado */}
         <div className="space-y-1">
           {navigationItems.slice(2, 5).map(item => renderNavButton(item))}
         </div>
         
-        {/* Espaço visual */}
-        <div className="h-4"></div>
+        {/* Espaço visual reduzido */}
+        <div className="h-2"></div>
         
         {/* Grupo de Recursos */}
         <div className="space-y-1">
           {navigationItems.slice(5, 8).map(item => renderNavButton(item))}
         </div>
-        
-        {/* Admin no final se existir */}
-        {profile?.role === 'admin' && (
-          <>
-            <div className="flex-1 min-h-6"></div>
-            <div className="pt-4 border-t border-white/10">
-              {renderNavButton(navigationItems[navigationItems.length - 1])}
-            </div>
-          </>
-        )}
       </div>
+      
+      {/* Admin no final se existir */}
+      {profile?.role === 'admin' && (
+        <div className="mt-auto pt-3 border-t border-white/10">
+          {renderNavButton(navigationItems[navigationItems.length - 1])}
+        </div>
+      )}
     </div>
   );
 };
