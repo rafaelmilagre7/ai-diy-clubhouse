@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, User, Heart } from 'lucide-react';
+import { Sparkles, User } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -16,12 +16,10 @@ export const OnboardingStep1 = ({
   getFieldError
 }: OnboardingStepProps) => {
   const [name, setName] = useState(data.name || userProfile?.full_name || '');
-  const [nickname, setNickname] = useState(data.nickname || '');
 
   const handleNext = () => {
     onUpdateData({ 
-      name, 
-      nickname,
+      name,
       memberType,
       startedAt: data.startedAt || new Date().toISOString()
     });
@@ -84,23 +82,6 @@ export const OnboardingStep1 = ({
           </p>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="nickname" className="flex items-center gap-2">
-            <Heart className="w-4 h-4" />
-            E como prefere ser chamado no dia a dia?
-          </Label>
-          <Input
-            id="nickname"
-            value={nickname}
-            onChange={(e) => setNickname(e.target.value)}
-            placeholder="Apelido ou como os amigos te chamam"
-            className="text-center"
-          />
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            Usaremos este nome para tornar nossa conversa mais pessoal ✨
-          </p>
-        </div>
-
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -125,7 +106,7 @@ export const OnboardingStep1 = ({
         className="bg-gradient-to-r from-viverblue/10 to-viverblue-light/10 border border-viverblue/20 rounded-lg p-4 text-center"
       >
         <p className="text-sm text-gray-600 dark:text-gray-300">
-          💡 <strong>Dica da IA:</strong> {nickname || 'Amigo'}, quanto mais você nos contar sobre si, 
+          💡 <strong>Dica da IA:</strong> Quanto mais você nos contar sobre si, 
           melhor poderemos personalizar sua experiência. Vamos juntos nessa jornada! 
           {isClubMember ? '🚀' : '🎯'}
         </p>
