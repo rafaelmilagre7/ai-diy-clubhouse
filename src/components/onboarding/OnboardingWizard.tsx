@@ -12,13 +12,17 @@ import { OnboardingFinal } from './steps/OnboardingFinal';
 import { OnboardingProgress } from './OnboardingProgress';
 import { OnboardingNavigation } from './OnboardingNavigation';
 import { useOnboardingStorage } from './hooks/useOnboardingStorage';
+import { useOnboardingSubmit } from './hooks/useOnboardingSubmit';
 import { OnboardingData } from './types/onboardingTypes';
+import { toast } from 'sonner';
 
 export const OnboardingWizard = () => {
   const { user, profile } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(true);
   const { data, updateData, clearData } = useOnboardingStorage();
+  const { checkOnboardingStatus } = useOnboardingSubmit();
 
   // Detectar tipo de membro baseado no perfil com tipo explícito
   const memberType: 'club' | 'formacao' = profile?.role === 'formacao' ? 'formacao' : 'club';
@@ -45,6 +49,31 @@ export const OnboardingWizard = () => {
         'Finalização'
       ];
 
+  // Verificar se onboarding já foi completado
+  useEffect(() => {
+    const checkStatus = async () => {
+      if (!user) return;
+      
+      try {
+        const onboardingData = await checkOnboardingStatus();
+        if (onboardingData) {
+          // Onboarding já foi completado, redirecionar
+          toast.info('Onboarding já foi completado! Redirecionando...');
+          setTimeout(() => {
+            window.location.href = memberType === 'formacao' ? '/formacao' : '/dashboard';
+          }, 1000);
+          return;
+        }
+      } catch (error) {
+        console.error('Erro ao verificar status do onboarding:', error);
+      } finally {
+        setIsCheckingStatus(false);
+      }
+    };
+
+    checkStatus();
+  }, [user, memberType, checkOnboardingStatus]);
+
   const handleNext = () => {
     if (currentStep < totalSteps) {
       setCurrentStep(prev => prev + 1);
@@ -63,17 +92,37 @@ export const OnboardingWizard = () => {
 
   const handleComplete = async () => {
     setIsCompleting(true);
-    // Simular processamento
-    await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // Por enquanto, apenas limpar dados temporários
-    // Na Fase 3, aqui será onde enviaremos para o backend
-    clearData();
-    setIsCompleting(false);
-    
-    // Redirecionar para dashboard
-    window.location.href = '/dashboard';
+    try {
+      // Simular um pequeno delay para UX
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Limpar dados temporários do localStorage
+      clearData();
+      
+      // Redirecionar baseado no tipo de membro
+      const redirectUrl = memberType === 'formacao' ? '/formacao' : '/dashboard';
+      window.location.href = redirectUrl;
+      
+    } catch (error) {
+      console.error('Erro ao finalizar onboarding:', error);
+      toast.error('Erro ao finalizar onboarding. Tente novamente.');
+    } finally {
+      setIsCompleting(false);
+    }
   };
+
+  // Mostrar loading enquanto verifica status
+  if (isCheckingStatus) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-viverblue mx-auto"></div>
+          <p className="text-gray-600 dark:text-gray-300">Verificando seu progresso...</p>
+        </div>
+      </div>
+    );
+  }
 
   const renderStep = () => {
     const stepProps = {
