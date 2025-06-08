@@ -48,3 +48,15 @@ export const getInitials = (name: string): string => {
     .slice(0, 2);
 };
 
+/**
+ * Função para converter bytes em formato legível
+ */
+export const bytesToSize = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes';
+  
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
