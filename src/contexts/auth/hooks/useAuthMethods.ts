@@ -57,20 +57,6 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
   const signInAsAdmin = async () => {
     return signIn("admin@teste.com", "123456");
   };
-
-  /**
-   * Login como membro do club (novo usuário de teste)
-   */
-  const signInAsTestMember = async () => {
-    return signIn("membro-teste@viverdeia.ai", "teste-membro-2024");
-  };
-
-  /**
-   * Login como usuário da formação (novo usuário de teste)
-   */
-  const signInAsTestFormacao = async () => {
-    return signIn("formacao-teste@viverdeia.ai", "teste-formacao-2024");
-  };
   
   /**
    * Logout
@@ -112,7 +98,5 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
     signOut,
     signInAsMember,
     signInAsAdmin,
-    signInAsTestMember,
-    signInAsTestFormacao,
   };
 };

@@ -2,143 +2,128 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { CheckCircle, Mail, Users, MessageSquare, Sparkles } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { CheckCircle, Mail, Users, MessageSquare } from 'lucide-react';
 
 interface CompletionStepProps {
-  data: any;
-  onUpdate: (data: any) => void;
-  allData: any;
+  onDataChange: (data: any) => void;
+  data?: any;
 }
 
 /**
- * Step de finalização - FASE 5
- * Confirmação final e preferências de comunicação
+ * Step de finalização do onboarding
+ * FASE 3: Conclusão e próximos passos
  */
-export const CompletionStep: React.FC<CompletionStepProps> = ({ data, onUpdate, allData }) => {
-  const handleChange = (field: string, value: any) => {
-    onUpdate({
+export const CompletionStep: React.FC<CompletionStepProps> = ({ onDataChange, data = {} }) => {
+  const updateField = (field: string, value: any) => {
+    onDataChange({
       ...data,
       [field]: value
     });
   };
 
-  // Resumo das preferências selecionadas
-  const getSelectionSummary = () => {
-    const summary = [];
-    
-    if (allData.profile?.experience) {
-      const experienceLabels: Record<string, string> = {
-        beginner: 'Iniciante em IA',
-        intermediate: 'Intermediário em IA',
-        advanced: 'Avançado em IA',
-        expert: 'Expert em IA'
-      };
-      summary.push(experienceLabels[allData.profile.experience]);
+  const nextSteps = [
+    {
+      icon: <CheckCircle className="w-5 h-5 text-green-500" />,
+      title: "Explore as Soluções",
+      description: "Veja implementações práticas baseadas no seu perfil"
+    },
+    {
+      icon: <Users className="w-5 h-5 text-blue-500" />,
+      title: "Conecte-se à Comunidade",
+      description: "Participe de discussões e compartilhe experiências"
+    },
+    {
+      icon: <Mail className="w-5 h-5 text-purple-500" />,
+      title: "Acompanhe seu Progresso",
+      description: "Use o dashboard para monitorar suas implementações"
     }
-
-    if (allData.preferences?.interestedCategories?.length) {
-      summary.push(`${allData.preferences.interestedCategories.length} área(s) de interesse`);
-    }
-
-    if (allData.goals?.primaryGoal) {
-      const goalLabels: Record<string, string> = {
-        automation: 'Foco em automação',
-        growth: 'Foco em crescimento',
-        efficiency: 'Foco em eficiência',
-        learning: 'Foco em aprendizado',
-        innovation: 'Foco em inovação'
-      };
-      summary.push(goalLabels[allData.goals.primaryGoal]);
-    }
-
-    return summary;
-  };
+  ];
 
   return (
-    <div className="space-y-6">
-      <div className="text-center mb-6">
-        <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-viverblue rounded-full flex items-center justify-center mx-auto mb-4">
-          <CheckCircle className="w-8 h-8 text-white" />
+    <div className="max-w-3xl mx-auto space-y-6">
+      <div className="text-center space-y-4">
+        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+          <CheckCircle className="w-8 h-8 text-green-600" />
         </div>
-        <h2 className="text-xl font-bold text-gray-900">Quase pronto! 🎉</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Setup Quase Concluído!</h2>
         <p className="text-gray-600">
-          Últimos detalhes para personalizarmos completamente sua experiência
+          Parabéns! Você está pronto para aproveitar ao máximo a plataforma
         </p>
       </div>
 
-      {/* Resumo das Escolhas */}
-      <Card className="border-green-200 bg-green-50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-green-800">
-            <Sparkles className="w-5 h-5" />
-            Seu Perfil Personalizado
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {getSelectionSummary().map((item, index) => (
-              <div key={index} className="flex items-center gap-2 text-sm text-green-700">
-                <CheckCircle className="w-4 h-4" />
-                {item}
-              </div>
-            ))}
-          </div>
-          {getSelectionSummary().length === 0 && (
-            <p className="text-sm text-green-600">
-              Configuração básica - você pode personalizar mais detalhes depois!
+      <div className="space-y-6">
+        {/* Resumo Personalizado */}
+        <Card className="border-green-200 bg-green-50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+              Sua Experiência Personalizada
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-green-800 mb-4">
+              Com base nas suas respostas, preparamos uma experiência personalizada para você:
             </p>
-          )}
-        </CardContent>
-      </Card>
+            <ul className="text-sm text-green-700 space-y-2">
+              <li>• Dashboard otimizado para seu nível de experiência</li>
+              <li>• Soluções priorizadas baseadas nos seus interesses</li>
+              <li>• Ferramentas recomendadas para seus objetivos</li>
+              <li>• Conteúdo adaptado ao seu estilo de aprendizado</li>
+            </ul>
+          </CardContent>
+        </Card>
 
-      <div className="grid md:grid-cols-2 gap-6">
+        {/* Próximos Passos */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Próximos Passos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {nextSteps.map((step, index) => (
+                <div key={index} className="flex items-start gap-4 p-3 rounded-lg border border-gray-200">
+                  {step.icon}
+                  <div>
+                    <h4 className="font-medium text-gray-900">{step.title}</h4>
+                    <p className="text-sm text-gray-600">{step.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Preferências de Comunicação */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Mail className="w-5 h-5" />
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Mail className="w-5 h-5 text-viverblue" />
               Comunicação
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-start space-x-3">
+            <div className="flex items-center space-x-2">
               <Checkbox
-                id="wantsNewsletter"
+                id="newsletter"
                 checked={data.wantsNewsletter || false}
-                onCheckedChange={(checked) => handleChange('wantsNewsletter', !!checked)}
+                onCheckedChange={(checked) => updateField('wantsNewsletter', checked)}
               />
-              <div className="grid gap-1.5 leading-none">
-                <label
-                  htmlFor="wantsNewsletter"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Receber newsletter personalizada
-                </label>
-                <p className="text-xs text-muted-foreground">
-                  Conteúdo selecionado baseado no seu perfil, enviado semanalmente
-                </p>
-              </div>
+              <Label htmlFor="newsletter" className="text-sm">
+                Quero receber newsletter com novidades e dicas
+              </Label>
             </div>
 
-            <div className="flex items-start space-x-3">
+            <div className="flex items-center space-x-2">
               <Checkbox
-                id="interestedInMentoring"
+                id="mentoring"
                 checked={data.interestedInMentoring || false}
-                onCheckedChange={(checked) => handleChange('interestedInMentoring', !!checked)}
+                onCheckedChange={(checked) => updateField('interestedInMentoring', checked)}
               />
-              <div className="grid gap-1.5 leading-none">
-                <label
-                  htmlFor="interestedInMentoring"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Interesse em mentoria
-                </label>
-                <p className="text-xs text-muted-foreground">
-                  Conectar-se com outros membros para trocar experiências
-                </p>
-              </div>
+              <Label htmlFor="mentoring" className="text-sm">
+                Tenho interesse em programa de mentoria
+              </Label>
             </div>
           </CardContent>
         </Card>
@@ -146,58 +131,40 @@ export const CompletionStep: React.FC<CompletionStepProps> = ({ data, onUpdate, 
         {/* Feedback Adicional */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="w-5 h-5" />
-              Feedback Adicional
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <MessageSquare className="w-5 h-5 text-viverblue" />
+              Feedback (Opcional)
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Label htmlFor="additionalFeedback">
-              Algo mais que gostaria de compartilhar? (Opcional)
+            <Label htmlFor="feedback">
+              Alguma expectativa específica ou sugestão para melhorarmos sua experiência?
             </Label>
             <Textarea
-              id="additionalFeedback"
-              placeholder="Conte-nos sobre seus desafios específicos, expectativas ou qualquer coisa que possa nos ajudar a personalizar melhor sua experiência..."
+              id="feedback"
               value={data.additionalFeedback || ''}
-              onChange={(e) => handleChange('additionalFeedback', e.target.value)}
-              className="min-h-[100px] mt-2"
+              onChange={(e) => updateField('additionalFeedback', e.target.value)}
+              placeholder="Compartilhe suas expectativas, dúvidas ou sugestões..."
+              className="mt-2"
+              rows={4}
             />
-            <p className="text-xs text-gray-500 mt-2">
-              Este feedback nos ajuda a entender melhor suas necessidades e melhorar continuamente a plataforma.
-            </p>
+          </CardContent>
+        </Card>
+
+        {/* Chamada para Ação */}
+        <Card className="border-viverblue bg-viverblue/5">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <h3 className="font-semibold text-viverblue mb-2">
+                Tudo pronto para começar!
+              </h3>
+              <p className="text-sm text-gray-700">
+                Clique em "Concluir Setup" para salvar suas preferências e começar sua jornada na plataforma.
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
-
-      {/* Próximos Passos */}
-      <Card className="border-viverblue/30 bg-viverblue/5">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-viverblue">
-            <Users className="w-5 h-5" />
-            Próximos Passos
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2 text-sm">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-viverblue" />
-              <span>Dashboard personalizado com conteúdo relevante</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-viverblue" />
-              <span>Recomendações de soluções baseadas no seu perfil</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-viverblue" />
-              <span>Conexões com membros do seu segmento</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-viverblue" />
-              <span>Conteúdo priorizado por seus objetivos</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };

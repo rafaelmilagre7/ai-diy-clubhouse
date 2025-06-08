@@ -1,44 +1,43 @@
 
 import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Building, Briefcase, Award } from 'lucide-react';
+import { User, Building, TrendingUp } from 'lucide-react';
 
 interface ProfileStepProps {
-  data: any;
-  onUpdate: (data: any) => void;
+  onDataChange: (data: any) => void;
+  data?: any;
 }
 
 /**
- * Step de perfil profissional - FASE 5
- * Coleta informações básicas do usuário
+ * Step de perfil profissional do onboarding
+ * FASE 3: Coleta de informações básicas do usuário
  */
-export const ProfileStep: React.FC<ProfileStepProps> = ({ data, onUpdate }) => {
-  const handleInputChange = (field: string, value: string) => {
-    onUpdate({
+export const ProfileStep: React.FC<ProfileStepProps> = ({ onDataChange, data = {} }) => {
+  const updateField = (field: string, value: string) => {
+    onDataChange({
       ...data,
       [field]: value
     });
   };
 
   return (
-    <div className="space-y-6">
-      <div className="text-center mb-6">
-        <User className="w-12 h-12 text-viverblue mx-auto mb-4" />
-        <h2 className="text-xl font-bold text-gray-900">Conte-nos sobre você</h2>
+    <div className="max-w-2xl mx-auto space-y-6">
+      <div className="text-center space-y-2">
+        <h2 className="text-2xl font-bold text-gray-900">Conte-nos sobre você</h2>
         <p className="text-gray-600">
-          Essas informações nos ajudam a personalizar sua experiência na plataforma
+          Essas informações nos ajudam a personalizar sua experiência
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="space-y-6">
         {/* Informações Pessoais */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <User className="w-5 h-5" />
+              <User className="w-5 h-5 text-viverblue" />
               Informações Pessoais
             </CardTitle>
           </CardHeader>
@@ -47,113 +46,122 @@ export const ProfileStep: React.FC<ProfileStepProps> = ({ data, onUpdate }) => {
               <Label htmlFor="name">Nome completo</Label>
               <Input
                 id="name"
-                placeholder="Seu nome completo"
                 value={data.name || ''}
-                onChange={(e) => handleInputChange('name', e.target.value)}
+                onChange={(e) => updateField('name', e.target.value)}
+                placeholder="Como você gostaria de ser chamado?"
+                className="mt-1"
               />
             </div>
 
             <div>
-              <Label htmlFor="currentPosition">Cargo atual</Label>
+              <Label htmlFor="currentPosition">Cargo/Posição atual</Label>
               <Input
                 id="currentPosition"
-                placeholder="Ex: CEO, Gerente de Marketing, Consultor..."
                 value={data.currentPosition || ''}
-                onChange={(e) => handleInputChange('currentPosition', e.target.value)}
+                onChange={(e) => updateField('currentPosition', e.target.value)}
+                placeholder="Ex: CEO, Diretor de Marketing, Freelancer..."
+                className="mt-1"
               />
-            </div>
-
-            <div>
-              <Label htmlFor="experience">Nível de experiência com IA</Label>
-              <Select 
-                value={data.experience || ''} 
-                onValueChange={(value) => handleInputChange('experience', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione seu nível" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="beginner">Iniciante - Nunca usei IA</SelectItem>
-                  <SelectItem value="intermediate">Intermediário - Uso básico (ChatGPT, etc)</SelectItem>
-                  <SelectItem value="advanced">Avançado - Integro IA no trabalho</SelectItem>
-                  <SelectItem value="expert">Expert - Desenvolvo soluções de IA</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </CardContent>
         </Card>
 
-        {/* Informações da Empresa */}
+        {/* Informações Profissionais */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Building className="w-5 h-5" />
-              Informações da Empresa
+              <Building className="w-5 h-5 text-viverblue" />
+              Informações Profissionais
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="companyName">Nome da empresa</Label>
+              <Label htmlFor="companyName">Nome da empresa (opcional)</Label>
               <Input
                 id="companyName"
-                placeholder="Nome da sua empresa"
                 value={data.companyName || ''}
-                onChange={(e) => handleInputChange('companyName', e.target.value)}
+                onChange={(e) => updateField('companyName', e.target.value)}
+                placeholder="Sua empresa ou 'Autônomo/Freelancer'"
+                className="mt-1"
               />
             </div>
 
             <div>
-              <Label htmlFor="companySize">Tamanho da empresa</Label>
-              <Select 
-                value={data.companySize || ''} 
-                onValueChange={(value) => handleInputChange('companySize', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o tamanho" />
+              <Label>Tamanho da empresa</Label>
+              <Select value={data.companySize || ''} onValueChange={(value) => updateField('companySize', value)}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Selecione o porte da empresa" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="startup">Startup (1-10 funcionários)</SelectItem>
-                  <SelectItem value="small">Pequena (11-50 funcionários)</SelectItem>
-                  <SelectItem value="medium">Média (51-200 funcionários)</SelectItem>
-                  <SelectItem value="large">Grande (201-1000 funcionários)</SelectItem>
-                  <SelectItem value="enterprise">Enterprise (1000+ funcionários)</SelectItem>
+                  <SelectItem value="startup">Startup (1-10 pessoas)</SelectItem>
+                  <SelectItem value="small">Pequena (11-50 pessoas)</SelectItem>
+                  <SelectItem value="medium">Média (51-200 pessoas)</SelectItem>
+                  <SelectItem value="large">Grande (201-1000 pessoas)</SelectItem>
+                  <SelectItem value="enterprise">Corporação (1000+ pessoas)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </CardContent>
         </Card>
+
+        {/* Nível de Experiência */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <TrendingUp className="w-5 h-5 text-viverblue" />
+              Experiência com IA
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div>
+              <Label>Qual seu nível de experiência com IA?</Label>
+              <Select value={data.experience || ''} onValueChange={(value) => updateField('experience', value)}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Selecione seu nível" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="beginner">Iniciante - Novo no assunto</SelectItem>
+                  <SelectItem value="intermediate">Intermediário - Já uso algumas ferramentas</SelectItem>
+                  <SelectItem value="advanced">Avançado - Experiente em várias áreas</SelectItem>
+                  <SelectItem value="expert">Expert - Implemento soluções complexas</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Redes Sociais (Opcional) */}
+        <Card className="border-gray-200 bg-gray-50">
+          <CardHeader>
+            <CardTitle className="text-base text-gray-700">
+              Redes Sociais (Opcional)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="linkedin">LinkedIn</Label>
+              <Input
+                id="linkedin"
+                value={data.linkedin || ''}
+                onChange={(e) => updateField('linkedin', e.target.value)}
+                placeholder="https://linkedin.com/in/seuperfil"
+                className="mt-1"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="instagram">Instagram</Label>
+              <Input
+                id="instagram"
+                value={data.instagram || ''}
+                onChange={(e) => updateField('instagram', e.target.value)}
+                placeholder="@seuinstagram"
+                className="mt-1"
+              />
+            </div>
+          </CardContent>
+        </Card>
       </div>
-
-      {/* Redes Sociais (Opcional) */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Award className="w-5 h-5" />
-            Redes Sociais <span className="text-sm font-normal text-gray-500">(Opcional)</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="linkedin">LinkedIn</Label>
-            <Input
-              id="linkedin"
-              placeholder="https://linkedin.com/in/seuperfil"
-              value={data.linkedin || ''}
-              onChange={(e) => handleInputChange('linkedin', e.target.value)}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="instagram">Instagram</Label>
-            <Input
-              id="instagram"
-              placeholder="@seuusuario"
-              value={data.instagram || ''}
-              onChange={(e) => handleInputChange('instagram', e.target.value)}
-            />
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };

@@ -1,19 +1,14 @@
-
 import { Button } from "@/components/ui/button";
 
 interface TestLoginButtonsProps {
   onMemberLogin: () => void;
   onAdminLogin: () => void;
-  onTestMemberLogin: () => void;
-  onTestFormacaoLogin: () => void;
   isLoading: boolean;
 }
 
 const TestLoginButtons = ({ 
   onMemberLogin, 
   onAdminLogin, 
-  onTestMemberLogin,
-  onTestFormacaoLogin,
   isLoading 
 }: TestLoginButtonsProps) => {
   return (
@@ -38,26 +33,6 @@ const TestLoginButtons = ({
           disabled={isLoading}
         >
           Login Admin (Teste)
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onTestMemberLogin}
-          className="bg-green-600/30 border-green-800 hover:bg-green-700/50 text-white text-xs"
-          disabled={isLoading}
-        >
-          Membro Club
-        </Button>
-        
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onTestFormacaoLogin}
-          className="bg-orange-600/30 border-orange-800 hover:bg-orange-700/50 text-white text-xs"
-          disabled={isLoading}
-        >
-          Formação
         </Button>
       </div>
     </div>

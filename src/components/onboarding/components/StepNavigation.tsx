@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, SkipForward, CheckCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, SkipForward } from 'lucide-react';
 
 interface StepNavigationProps {
   canGoPrevious: boolean;
@@ -16,7 +16,7 @@ interface StepNavigationProps {
 
 /**
  * Componente de navegação entre steps do onboarding
- * FASE 5: Navegação aprimorada com validações
+ * FASE 3: Controles de navegação do wizard
  */
 export const StepNavigation: React.FC<StepNavigationProps> = ({
   canGoPrevious,
@@ -29,7 +29,7 @@ export const StepNavigation: React.FC<StepNavigationProps> = ({
   onComplete
 }) => {
   return (
-    <div className="flex justify-between items-center pt-8 border-t border-gray-200 mt-8">
+    <div className="flex justify-between items-center pt-6 border-t border-gray-200">
       {/* Botão Anterior */}
       <Button
         variant="outline"
@@ -42,46 +42,38 @@ export const StepNavigation: React.FC<StepNavigationProps> = ({
       </Button>
 
       {/* Botão Pular (opcional) */}
-      <div className="flex items-center gap-3">
-        {onSkip && (
-          <Button
-            variant="ghost"
-            onClick={onSkip}
-            disabled={isLoading}
-            className="flex items-center gap-2 text-gray-500 hover:text-gray-700"
-          >
-            <SkipForward className="w-4 h-4" />
-            Pular Setup
-          </Button>
-        )}
+      {onSkip && !isLastStep && (
+        <Button
+          variant="ghost"
+          onClick={onSkip}
+          disabled={isLoading}
+          className="flex items-center gap-2 text-gray-500 hover:text-gray-700"
+        >
+          <SkipForward className="w-4 h-4" />
+          Pular Setup
+        </Button>
+      )}
 
-        {/* Botão Próximo/Concluir */}
-        {isLastStep ? (
-          <Button
-            onClick={onComplete}
-            disabled={isLoading}
-            className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-viverblue hover:from-green-600 hover:to-viverblue/90 text-white px-8"
-          >
-            {isLoading ? (
-              'Salvando...'
-            ) : (
-              <>
-                <CheckCircle className="w-4 h-4" />
-                Concluir Setup
-              </>
-            )}
-          </Button>
-        ) : (
-          <Button
-            onClick={onNext}
-            disabled={!canGoNext || isLoading}
-            className="flex items-center gap-2 bg-viverblue hover:bg-viverblue/90 px-6"
-          >
-            Próximo
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        )}
-      </div>
+      {/* Botão Próximo/Concluir */}
+      {isLastStep ? (
+        <Button
+          onClick={onComplete}
+          disabled={isLoading}
+          className="flex items-center gap-2 bg-viverblue hover:bg-viverblue/90"
+        >
+          {isLoading ? 'Salvando...' : 'Concluir Setup'}
+          <ChevronRight className="w-4 h-4" />
+        </Button>
+      ) : (
+        <Button
+          onClick={onNext}
+          disabled={!canGoNext || isLoading}
+          className="flex items-center gap-2 bg-viverblue hover:bg-viverblue/90"
+        >
+          Próximo
+          <ChevronRight className="w-4 h-4" />
+        </Button>
+      )}
     </div>
   );
 };
