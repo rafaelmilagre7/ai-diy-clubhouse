@@ -7,20 +7,23 @@ import { OnboardingData } from '../types/onboardingTypes';
 export const useOnboardingSubmit = () => {
   const { user } = useAuth();
 
+  // Memoizar o user.id separadamente para evitar dependências instáveis
+  const userId = useMemo(() => user?.id, [user?.id]);
+
   const checkOnboardingStatus = useCallback(async () => {
-    if (!user?.id) {
+    if (!userId) {
       console.log('useOnboardingSubmit: Usuário não encontrado');
       return null;
     }
     
     try {
-      console.log('useOnboardingSubmit: Verificando status para usuário:', user.id);
+      console.log('useOnboardingSubmit: Verificando status para usuário:', userId);
       
       const { data, error } = await supabase
         .from('user_onboarding')
         .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle(); // Usar maybeSingle() ao invés de single() para evitar erro se não existir
+        .eq('user_id', userId)
+        .maybeSingle();
 
       if (error) {
         console.error('useOnboardingSubmit: Erro na consulta:', error);
@@ -33,10 +36,10 @@ export const useOnboardingSubmit = () => {
       console.error('useOnboardingSubmit: Erro inesperado:', error);
       return null;
     }
-  }, [user?.id]);
+  }, [userId]); // Usar userId estável ao invés de user?.id
 
   const submitOnboardingData = useCallback(async (data: OnboardingData) => {
-    if (!user?.id) {
+    if (!userId) {
       throw new Error('Usuário não autenticado');
     }
 
@@ -45,7 +48,7 @@ export const useOnboardingSubmit = () => {
       
       // Preparar dados para o banco
       const onboardingRecord = {
-        user_id: user.id,
+        user_id: userId,
         name: data.name,
         nickname: data.nickname,
         member_type: data.memberType,
@@ -96,7 +99,7 @@ export const useOnboardingSubmit = () => {
           onboarding_completed: true,
           onboarding_completed_at: new Date().toISOString()
         })
-        .eq('id', user.id);
+        .eq('id', userId);
 
       if (profileError) {
         console.error('useOnboardingSubmit: Erro ao atualizar perfil:', profileError);
@@ -109,9 +112,9 @@ export const useOnboardingSubmit = () => {
       console.error('useOnboardingSubmit: Erro ao salvar onboarding:', error);
       throw error;
     }
-  }, [user?.id]);
+  }, [userId]);
 
-  // Memoizar o retorno para evitar recriações desnecessárias
+  // Retornar objeto estável
   return useMemo(() => ({
     checkOnboardingStatus,
     submitOnboardingData

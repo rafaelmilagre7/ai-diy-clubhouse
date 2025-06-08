@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/auth';
@@ -52,40 +53,38 @@ export const OnboardingWizard = () => {
         'Finalização'
       ];
 
-  // Verificar se onboarding já foi completado - memoizar para evitar loops
-  const checkCompletionStatus = useCallback(async () => {
-    if (!user) {
+  // Verificar se onboarding já foi completado - usar useEffect simples sem dependências complexas
+  useEffect(() => {
+    if (!user?.id) {
       setIsCheckingStatus(false);
       return;
     }
     
-    try {
-      console.log('OnboardingWizard: Verificando status de conclusão');
-      const onboardingData = await checkOnboardingStatus();
-      
-      if (onboardingData && onboardingData.completed_at) {
-        // Onboarding já foi completado, redirecionar
-        console.log('OnboardingWizard: Onboarding já completado, redirecionando');
-        toast.info('Onboarding já foi completado! Redirecionando...');
-        setTimeout(() => {
-          window.location.href = memberType === 'formacao' ? '/formacao' : '/dashboard';
-        }, 1000);
-        return;
+    const checkCompletion = async () => {
+      try {
+        console.log('OnboardingWizard: Verificando status de conclusão');
+        const onboardingData = await checkOnboardingStatus();
+        
+        if (onboardingData && onboardingData.completed_at) {
+          // Onboarding já foi completado, redirecionar
+          console.log('OnboardingWizard: Onboarding já completado, redirecionando');
+          toast.info('Onboarding já foi completado! Redirecionando...');
+          setTimeout(() => {
+            window.location.href = memberType === 'formacao' ? '/formacao' : '/dashboard';
+          }, 1000);
+          return;
+        }
+      } catch (error) {
+        console.error('OnboardingWizard: Erro ao verificar status:', error);
+        // Não falhar aqui, permitir que o usuário continue
+      } finally {
+        setIsCheckingStatus(false);
       }
-    } catch (error) {
-      console.error('OnboardingWizard: Erro ao verificar status:', error);
-      // Não falhar aqui, permitir que o usuário continue
-    } finally {
-      setIsCheckingStatus(false);
-    }
-  }, [user, memberType, checkOnboardingStatus]);
+    };
 
-  useEffect(() => {
-    // Apenas verificar uma vez quando o componente montar
-    if (isCheckingStatus && user) {
-      checkCompletionStatus();
-    }
-  }, [checkCompletionStatus, isCheckingStatus, user]);
+    // Executar apenas uma vez quando o componente montar
+    checkCompletion();
+  }, [user?.id]); // Dependência simples e estável
 
   const handleNext = useCallback(() => {
     // Limpar erros anteriores

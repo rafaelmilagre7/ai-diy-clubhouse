@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useOnboardingSubmit } from './useOnboardingSubmit';
 
@@ -9,15 +9,19 @@ export const useOnboardingGuard = () => {
   const [isOnboardingRequired, setIsOnboardingRequired] = useState<boolean | null>(null);
   const [isChecking, setIsChecking] = useState(true);
 
-  // Memoizar a função de verificação para evitar loops infinitos
+  // Memoizar IDs estáveis
+  const userId = useMemo(() => user?.id, [user?.id]);
+  const hasProfile = useMemo(() => !!profile, [profile]);
+
+  // Memoizar a função de verificação com dependências estáveis
   const checkOnboardingRequired = useCallback(async () => {
     // Aguardar auth estar carregado
-    if (isLoading || !user || !profile) {
+    if (isLoading || !userId || !hasProfile) {
       return;
     }
 
     try {
-      console.log('Verificando status do onboarding para usuário:', user.id);
+      console.log('Verificando status do onboarding para usuário:', userId);
       const onboardingData = await checkOnboardingStatus();
       
       // Se não tem dados de onboarding, é necessário completar
@@ -32,25 +36,25 @@ export const useOnboardingGuard = () => {
     } finally {
       setIsChecking(false);
     }
-  }, [user, profile, isLoading, checkOnboardingStatus]);
+  }, [userId, hasProfile, isLoading, checkOnboardingStatus]);
 
   useEffect(() => {
-    // Apenas executar se ainda estiver verificando ou se os dados mudaram
-    if (isChecking && user && profile && !isLoading) {
+    // Apenas executar se ainda estiver verificando e tiver os dados necessários
+    if (isChecking && userId && hasProfile && !isLoading) {
       checkOnboardingRequired();
-    } else if (!user || (!isLoading && !profile)) {
+    } else if (!userId || (!isLoading && !hasProfile)) {
       setIsChecking(false);
       setIsOnboardingRequired(false);
     }
-  }, [checkOnboardingRequired, isChecking, user, profile, isLoading]);
+  }, [checkOnboardingRequired, isChecking, userId, hasProfile, isLoading]);
 
   const redirectToOnboarding = useCallback(() => {
     window.location.href = '/onboarding';
   }, []);
 
-  return {
+  return useMemo(() => ({
     isOnboardingRequired,
     isChecking,
     redirectToOnboarding
-  };
+  }), [isOnboardingRequired, isChecking, redirectToOnboarding]);
 };
