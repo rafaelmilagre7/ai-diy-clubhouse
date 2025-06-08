@@ -1,13 +1,13 @@
 
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/auth/AuthProvider';
+import { useAuth } from '@/contexts/auth';
 
 interface PublicRouteProps {
   children: React.ReactNode;
 }
 
-export const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
+const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
   const { user, isLoading } = useAuth();
   
   // Se estiver carregando, mostra nada ou um indicador de carregamento
@@ -19,11 +19,13 @@ export const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
     );
   }
   
-  // Se o usuário estiver autenticado, redireciona para o RootRedirect (/) para decidir o destino
+  // Se o usuário estiver autenticado, redireciona para o dashboard
   if (user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
   
   // Se não estiver autenticado, permite o acesso à rota pública
   return <>{children}</>;
 };
+
+export default PublicRoute;

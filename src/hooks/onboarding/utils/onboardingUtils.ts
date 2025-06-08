@@ -1,100 +1,181 @@
 
 import { UserProfile } from '@/lib/supabase';
 
-// Lista de emails que devem fazer onboarding obrigatório
-const ONBOARDING_REQUIRED_EMAILS = [
-  'club-teste@viverdeia.ai',
-  'membro-teste@viverdeia.ai',
-  'formacao-teste@viverdeia.ai'
-];
+/**
+ * Utilitários para sistema de onboarding - FASE 4
+ * Sistema inteligente de decisão com critérios refinados
+ */
 
-// Lista de emails que devem pular onboarding
-const ONBOARDING_BYPASS_EMAILS = [
-  'admin@teste.com',
-  'user@teste.com',
-  'admin@viverdeia.ai',
+// Lista de usuários com bypass total (super admins)
+const BYPASS_USERS = [
   'rafael@viverdeia.ai'
 ];
 
 /**
- * Determina a ação do onboarding baseada no email e perfil do usuário
+ * Verifica se o usuário deve fazer bypass total do onboarding
+ * FASE 4: Critérios mais específicos
+ */
+export const shouldBypassOnboarding = (
+  email: string | null | undefined,
+  profile: UserProfile | null
+): boolean => {
+  // Bypass para super admins
+  if (email && BYPASS_USERS.includes(email)) {
+    console.log('🚀 Bypass total para super admin:', email);
+    return true;
+  }
+
+  // Bypass para admins da plataforma
+  if (profile?.role === 'admin') {
+    console.log('🔑 Bypass total para admin:', email);
+    return true;
+  }
+
+  // Bypass para usuários formacao (eles têm área própria)
+  if (profile?.role === 'formacao') {
+    console.log('📚 Bypass para usuário formacao:', email);
+    return true;
+  }
+
+  // Bypass se já completou onboarding
+  if (profile?.onboarding_completed_at) {
+    console.log('✅ Bypass - onboarding já concluído:', email);
+    return true;
+  }
+
+  // Bypass se pulou onboarding (respeitando escolha do usuário)
+  if (profile?.onboarding_skipped_at) {
+    console.log('⏭️ Bypass - usuário pulou onboarding:', email);
+    return true;
+  }
+
+  return false;
+};
+
+/**
+ * Verifica se o usuário é considerado "novo" e DEVE ver o onboarding
+ * FASE 4: Critérios mais refinados para novos usuários
+ */
+export const shouldShowOnboarding = (
+  profile: UserProfile | null
+): boolean => {
+  if (!profile) return false;
+
+  // Apenas para membros (role 'membro_club' ou 'member')
+  if (profile.role !== 'membro_club' && profile.role !== 'member') {
+    return false;
+  }
+
+  // Se já completou ou pulou, não mostrar
+  if (profile.onboarding_completed_at || profile.onboarding_skipped_at) {
+    return false;
+  }
+
+  // Critério: usuário criado nos últimos 7 dias
+  const accountAge = new Date().getTime() - new Date(profile.created_at).getTime();
+  const daysSinceCreation = Math.floor(accountAge / (24 * 60 * 60 * 1000));
+  
+  if (daysSinceCreation <= 7) {
+    console.log(`📋 Novo usuário (${daysSinceCreation} dias) - mostrar onboarding:`, profile.email);
+    return true;
+  }
+
+  console.log(`👤 Usuário existente (${daysSinceCreation} dias) - onboarding opcional:`, profile.email);
+  return false;
+};
+
+/**
+ * Verifica se deve sugerir onboarding (usuário pode escolher)
+ * FASE 4: Para usuários que podem se beneficiar mas não são obrigatórios
+ */
+export const shouldSuggestOnboarding = (
+  profile: UserProfile | null
+): boolean => {
+  if (!profile || (profile.role !== 'membro_club' && profile.role !== 'member')) return false;
+  
+  // Se já completou ou pulou, não sugerir
+  if (profile.onboarding_completed_at || profile.onboarding_skipped_at) {
+    return false;
+  }
+
+  // Sugerir para usuários entre 7-30 dias
+  const accountAge = new Date().getTime() - new Date(profile.created_at).getTime();
+  const daysSinceCreation = Math.floor(accountAge / (24 * 60 * 60 * 1000));
+  
+  return daysSinceCreation > 7 && daysSinceCreation <= 30;
+};
+
+/**
+ * Determina a ação do onboarding baseada no perfil do usuário
+ * FASE 4: Sistema refinado de decisão
  */
 export const getOnboardingAction = (
-  email?: string, 
-  profile?: UserProfile | null
-): 'bypass' | 'required' | 'suggested' | 'optional' | null => {
-  if (!email || !profile) return null;
-
-  // Verificar se deve pular onboarding
-  if (ONBOARDING_BYPASS_EMAILS.includes(email)) {
+  email: string | null | undefined,
+  profile: UserProfile | null
+): 'bypass' | 'required' | 'suggested' | 'optional' => {
+  if (shouldBypassOnboarding(email, profile)) {
     return 'bypass';
   }
 
-  // Verificar se onboarding é obrigatório
-  if (ONBOARDING_REQUIRED_EMAILS.includes(email)) {
+  if (shouldShowOnboarding(profile)) {
     return 'required';
   }
 
-  // Verificar se já completou onboarding
-  if (profile.onboarding_completed_at) {
-    return 'bypass';
+  if (shouldSuggestOnboarding(profile)) {
+    return 'suggested';
   }
 
-  // Para membros club que não completaram onboarding
-  if (profile.role === 'membro_club' || profile.role === 'member') {
-    return 'required';
-  }
-
-  // Para outros casos, sugerir onboarding
-  return 'suggested';
+  return 'optional';
 };
 
 /**
- * Verifica se há onboarding pendente
- */
-export const hasOnboardingPending = (profile?: UserProfile | null): boolean => {
-  if (!profile) return false;
-  
-  // Se já completou, não está pendente
-  if (profile.onboarding_completed_at) return false;
-  
-  // Se é membro club e não completou, está pendente
-  return profile.role === 'membro_club' || profile.role === 'member';
-};
-
-/**
- * Calcula estatísticas do onboarding
- */
-export const getOnboardingStats = (profile?: UserProfile | null) => {
-  if (!profile) return null;
-
-  const now = new Date();
-  const createdAt = new Date(profile.created_at);
-  const accountAgeDays = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
-
-  return {
-    accountAgeDays,
-    isNewUser: accountAgeDays < 7,
-    hasCompleted: !!profile.onboarding_completed_at,
-    hasSkipped: false // Placeholder, pode ser expandido futuramente
-  };
-};
-
-/**
- * Log da decisão de onboarding para debug
+ * Log de diagnóstico para debug - FASE 4
  */
 export const logOnboardingDecision = (
-  email?: string,
-  profile?: UserProfile | null,
-  action?: string | null
+  email: string | null | undefined,
+  profile: UserProfile | null,
+  action: string
 ) => {
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🎯 Decisão de Onboarding:', {
-      email,
-      role: profile?.role,
-      action,
-      completedAt: profile?.onboarding_completed_at,
-      createdAt: profile?.created_at
-    });
-  }
+  const accountAge = profile ? 
+    Math.floor((new Date().getTime() - new Date(profile.created_at).getTime()) / (24 * 60 * 60 * 1000)) : 
+    null;
+
+  console.log('🎯 Decisão de Onboarding FASE 4:', {
+    email,
+    role: profile?.role,
+    createdAt: profile?.created_at,
+    accountAgeDays: accountAge,
+    hasCompletedOnboarding: !!profile?.onboarding_completed_at,
+    hasSkippedOnboarding: !!profile?.onboarding_skipped_at,
+    action,
+    timestamp: new Date().toISOString()
+  });
+};
+
+/**
+ * Verifica se o usuário tem onboarding pendente
+ * FASE 4: Para uso em dashboards e sugestões
+ */
+export const hasOnboardingPending = (profile: UserProfile | null): boolean => {
+  if (!profile || (profile.role !== 'membro_club' && profile.role !== 'member')) return false;
+  return !profile.onboarding_completed_at && !profile.onboarding_skipped_at;
+};
+
+/**
+ * Calcula estatísticas do onboarding para analytics
+ * FASE 4: Para admin e métricas
+ */
+export const getOnboardingStats = (profile: UserProfile | null) => {
+  if (!profile) return null;
+
+  const accountAge = Math.floor((new Date().getTime() - new Date(profile.created_at).getTime()) / (24 * 60 * 60 * 1000));
+  
+  return {
+    accountAgeDays: accountAge,
+    isNewUser: accountAge <= 7,
+    hasCompleted: !!profile.onboarding_completed_at,
+    hasSkipped: !!profile.onboarding_skipped_at,
+    isPending: hasOnboardingPending(profile),
+    shouldSuggest: shouldSuggestOnboarding(profile)
+  };
 };
