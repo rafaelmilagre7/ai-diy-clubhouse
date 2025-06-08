@@ -27,5 +27,3 @@ export const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
   // Se não estiver autenticado, permite o acesso à rota pública
   return <>{children}</>;
 };
-
-export default PublicRoute;
