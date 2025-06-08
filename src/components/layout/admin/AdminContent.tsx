@@ -15,7 +15,7 @@ export const AdminContent = ({
         sidebarOpen ? "md:ml-64" : "md:ml-[70px]"
       )}
     >
-      <AdminHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <AdminHeader onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
       <main className="flex-1 overflow-auto max-w-7xl mx-auto p-8 w-full">
         {children}
       </main>

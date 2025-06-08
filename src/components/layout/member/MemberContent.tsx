@@ -15,7 +15,7 @@ export const MemberContent = ({
         sidebarOpen ? "md:ml-64" : "md:ml-[70px]"
       )}
     >
-      <MemberHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <MemberHeader onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
       <main className="flex-1 overflow-auto">
         {children}
       </main>
