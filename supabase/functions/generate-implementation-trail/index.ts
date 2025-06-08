@@ -84,8 +84,38 @@ serve(async (req) => {
 
     console.log(`✅ ${solutions?.length || 0} soluções encontradas`);
 
+    // Fetch available lessons (usando a tabela correta: learning_lessons)
+    console.log('📚 Buscando aulas disponíveis...');
+    const { data: lessons, error: lessonsError } = await supabase
+      .from('learning_lessons')
+      .select(`
+        id,
+        title,
+        description,
+        difficulty_level,
+        estimated_time_minutes,
+        cover_image_url,
+        learning_modules(
+          id,
+          title,
+          learning_courses(
+            id,
+            title
+          )
+        )
+      `)
+      .eq('published', true)
+      .limit(20); // Limitar para ter uma seleção inicial
+
+    if (lessonsError) {
+      console.error('❌ Erro ao buscar aulas:', lessonsError);
+      console.log('⚠️ Continuando sem aulas...');
+    }
+
+    console.log(`✅ ${lessons?.length || 0} aulas encontradas`);
+
     // Generate trail based on profile
-    const trail = generateTrailForProfile(onboarding_data, solutions || []);
+    const trail = generateTrailForProfile(onboarding_data, solutions || [], lessons || []);
     
     console.log('🎯 Trilha gerada:', trail);
 
@@ -155,7 +185,7 @@ serve(async (req) => {
   }
 });
 
-function generateTrailForProfile(onboardingData: OnboardingData, solutions: any[]) {
+function generateTrailForProfile(onboardingData: OnboardingData, solutions: any[], lessons: any[]) {
   console.log('🎯 Gerando trilha para perfil:', {
     company_size: onboardingData.professional_info.company_size,
     knowledge_level: onboardingData.ai_experience.knowledge_level,
@@ -164,7 +194,6 @@ function generateTrailForProfile(onboardingData: OnboardingData, solutions: any[
 
   // Filter solutions by relevance
   const relevantSolutions = solutions.filter(solution => {
-    // Basic filtering logic - can be enhanced
     return solution.published === undefined || solution.published === true;
   });
 
@@ -172,11 +201,35 @@ function generateTrailForProfile(onboardingData: OnboardingData, solutions: any[
 
   // Sort by relevance (simplified logic)
   const sortedSolutions = relevantSolutions.sort((a, b) => {
-    // Prioritize based on knowledge level and company size
     const aScore = calculateRelevanceScore(a, onboardingData);
     const bScore = calculateRelevanceScore(b, onboardingData);
     return bScore - aScore;
   });
+
+  // Filter and select relevant lessons based on user profile
+  const relevantLessons = lessons.filter(lesson => {
+    // Filtrar baseado no nível de conhecimento
+    const knowledgeLevel = onboardingData.ai_experience.knowledge_level;
+    if (knowledgeLevel === 'beginner' && lesson.difficulty_level === 'advanced') return false;
+    if (knowledgeLevel === 'expert' && lesson.difficulty_level === 'beginner') return false;
+    
+    return true;
+  });
+
+  // Selecionar as primeiras 6-8 aulas mais relevantes
+  const selectedLessons = relevantLessons
+    .sort((a, b) => calculateLessonRelevanceScore(b, onboardingData) - calculateLessonRelevanceScore(a, onboardingData))
+    .slice(0, 8)
+    .map((lesson, index) => ({
+      lessonId: lesson.id,
+      moduleId: lesson.learning_modules?.id,
+      courseId: lesson.learning_modules?.learning_courses?.id,
+      title: lesson.title,
+      justification: generateLessonJustification(lesson, onboardingData),
+      priority: Math.floor(index / 3) + 1 // Distribui em prioridades 1, 2, 3
+    }));
+
+  console.log(`📚 ${selectedLessons.length} aulas selecionadas para recomendação`);
 
   // Distribute solutions across priorities
   const trail = {
@@ -192,14 +245,14 @@ function generateTrailForProfile(onboardingData: OnboardingData, solutions: any[
       solutionId: s.id,
       justification: `Solução complementar para otimização avançada`
     })),
-    recommended_courses: [],
-    recommended_lessons: []
+    recommended_lessons: selectedLessons
   };
 
   console.log('✅ Trilha estruturada:', {
     priority1_count: trail.priority1.length,
     priority2_count: trail.priority2.length,
-    priority3_count: trail.priority3.length
+    priority3_count: trail.priority3.length,
+    lessons_count: trail.recommended_lessons.length
   });
 
   return trail;
@@ -223,9 +276,50 @@ function calculateRelevanceScore(solution: any, onboardingData: OnboardingData):
   // Company size considerations
   const companySize = onboardingData.professional_info.company_size;
   if (companySize === 'startup' || companySize === '1-5') {
-    // Prefer easier implementations for smaller companies
     if (solution.difficulty === 'easy') score += 1;
   }
 
   return score;
+}
+
+function calculateLessonRelevanceScore(lesson: any, onboardingData: OnboardingData): number {
+  let score = 0;
+
+  // Knowledge level matching
+  const knowledgeLevel = onboardingData.ai_experience.knowledge_level;
+  if (knowledgeLevel === 'beginner' && lesson.difficulty_level === 'beginner') score += 3;
+  if (knowledgeLevel === 'intermediate' && lesson.difficulty_level === 'intermediate') score += 3;
+  if (knowledgeLevel === 'expert' && lesson.difficulty_level === 'advanced') score += 3;
+
+  // Lesson duration preference (shorter for beginners)
+  if (lesson.estimated_time_minutes) {
+    if (knowledgeLevel === 'beginner' && lesson.estimated_time_minutes <= 15) score += 2;
+    if (knowledgeLevel === 'expert' && lesson.estimated_time_minutes >= 20) score += 1;
+  }
+
+  // Boost score if lesson has cover image (better visual appeal)
+  if (lesson.cover_image_url) score += 1;
+
+  return score;
+}
+
+function generateLessonJustification(lesson: any, onboardingData: OnboardingData): string {
+  const knowledgeLevel = onboardingData.ai_experience.knowledge_level;
+  const mainGoal = onboardingData.ai_experience.main_goal;
+  const companyName = onboardingData.professional_info.company_name;
+
+  // Justificativas baseadas no perfil
+  if (knowledgeLevel === 'beginner') {
+    return `Aula fundamental para iniciantes em IA, ideal para ${companyName} começar sua jornada de implementação`;
+  }
+  
+  if (mainGoal === 'increase-sales') {
+    return `Esta aula mostra como usar IA para aumentar vendas, perfeita para o objetivo da ${companyName}`;
+  }
+  
+  if (mainGoal === 'reduce-costs') {
+    return `Aprenda a usar IA para reduzir custos operacionais, alinhado com os objetivos da ${companyName}`;
+  }
+
+  return `Aula essencial para aprofundar conhecimentos em IA e acelerar a implementação na ${companyName}`;
 }
