@@ -8,6 +8,8 @@ export const AdminContent = ({
   setSidebarOpen, 
   children 
 }: BaseContentProps) => {
+  console.log('[AdminContent] Estado:', { sidebarOpen, hasChildren: !!children });
+
   return (
     <div 
       className={cn(

@@ -60,6 +60,12 @@ const BaseLayout: React.FC<BaseLayoutProps> = ({
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-2">Erro no Layout</h2>
           <p className="text-muted-foreground">Ocorreu um erro ao carregar a interface.</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded"
+          >
+            Recarregar Página
+          </button>
         </div>
       </div>
     );

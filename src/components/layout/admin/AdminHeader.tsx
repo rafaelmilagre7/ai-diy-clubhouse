@@ -17,7 +17,18 @@ export const AdminHeader = ({ onToggleSidebar }: AdminHeaderProps) => {
           variant="ghost"
           size="sm"
           onClick={onToggleSidebar}
-          className="lg:hidden"
+          className="md:hidden"
+          title="Abrir/Fechar Menu"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onToggleSidebar}
+          className="hidden md:flex"
+          title="Expandir/Contrair Sidebar"
         >
           <Menu className="h-5 w-5" />
         </Button>
