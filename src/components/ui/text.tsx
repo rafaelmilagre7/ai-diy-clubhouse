@@ -28,8 +28,9 @@ const textVariants = cva(
         "label": "text-sm font-medium leading-none",
         "muted": "text-xs text-text-muted",
         
-        // Adicionar variante card que estava faltando
+        // Adicionar variantes que estavam faltando
         "card": "text-lg font-semibold leading-tight",
+        "display-small": "text-3xl font-bold tracking-tight",
       },
       textColor: {
         primary: "text-text-primary",
