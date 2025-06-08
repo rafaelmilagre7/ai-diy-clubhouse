@@ -16,19 +16,19 @@ export const OnboardingProgress = ({
   stepTitles 
 }: OnboardingProgressProps) => {
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-heading font-bold text-white">
+          <h1 className="text-xl font-heading font-bold text-white">
             Configuração da Conta
           </h1>
-          <p className="text-neutral-400 text-sm mt-1">
+          <p className="text-neutral-400 text-xs mt-0.5">
             Personalize sua experiência no VIVER DE IA Club
           </p>
         </div>
-        <div className="bg-[#151823] border border-white/10 rounded-lg px-4 py-2">
-          <span className="text-viverblue font-semibold text-sm">
+        <div className="bg-[#151823] border border-white/10 rounded-lg px-3 py-1.5">
+          <span className="text-viverblue font-semibold text-xs">
             {currentStep} de {totalSteps}
           </span>
         </div>
@@ -51,7 +51,7 @@ export const OnboardingProgress = ({
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: index * 0.1 }}
                     className={cn(
-                      "relative w-12 h-12 rounded-full border-2 flex items-center justify-center text-sm font-semibold transition-all duration-300 z-10",
+                      "relative w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-semibold transition-all duration-300 z-10",
                       isCompleted 
                         ? "bg-viverblue border-viverblue text-[#0F111A]"
                         : isCurrent 
@@ -60,7 +60,7 @@ export const OnboardingProgress = ({
                     )}
                   >
                     {isCompleted ? (
-                      <CheckIcon className="w-5 h-5" />
+                      <CheckIcon className="w-3 h-3" />
                     ) : (
                       stepNumber
                     )}
@@ -70,7 +70,7 @@ export const OnboardingProgress = ({
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 + 0.2 }}
-                    className="mt-3 text-center"
+                    className="mt-2 text-center"
                   >
                     <span className={cn(
                       "text-xs font-medium leading-tight",
@@ -90,16 +90,16 @@ export const OnboardingProgress = ({
 
       {/* Indicador simplificado para mobile/tablet */}
       <div className="lg:hidden">
-        <div className="bg-[#151823] border border-white/10 rounded-xl p-4">
-          <div className="flex items-center gap-3">
+        <div className="bg-[#151823] border border-white/10 rounded-xl p-3">
+          <div className="flex items-center gap-2">
             <div className={cn(
-              "w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-semibold",
+              "w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-semibold",
               "bg-viverblue border-viverblue text-[#0F111A]"
             )}>
               {currentStep}
             </div>
             <div>
-              <h3 className="text-white font-semibold text-sm">
+              <h3 className="text-white font-semibold text-xs">
                 {stepTitles[currentStep - 1]}
               </h3>
               <p className="text-neutral-400 text-xs">

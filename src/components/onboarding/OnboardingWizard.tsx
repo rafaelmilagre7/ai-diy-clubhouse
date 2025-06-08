@@ -170,7 +170,7 @@ export const OnboardingWizard = () => {
     <div className="min-h-screen bg-[#0F111A]">
       {/* Header com progresso */}
       <div className="sticky top-0 z-40 bg-[#0F111A]/90 backdrop-blur-sm border-b border-white/5">
-        <div className="max-w-5xl mx-auto px-6 py-4">
+        <div className="max-w-5xl mx-auto px-6 py-3">
           <OnboardingProgress 
             currentStep={currentStep} 
             totalSteps={totalSteps}
@@ -180,7 +180,7 @@ export const OnboardingWizard = () => {
       </div>
 
       {/* Conteúdo principal */}
-      <div className="flex-1 flex items-start justify-center p-6 py-8">
+      <div className="flex-1 flex items-start justify-center p-6 py-6">
         <div className="w-full max-w-5xl">
           {error && (
             <motion.div
@@ -215,7 +215,7 @@ export const OnboardingWizard = () => {
       {/* Navegação */}
       {currentStep < totalSteps && (
         <div className="sticky bottom-0 z-40 bg-[#0F111A]/90 backdrop-blur-sm border-t border-white/5">
-          <div className="max-w-5xl mx-auto px-6 py-4">
+          <div className="max-w-5xl mx-auto px-6 py-3">
             <OnboardingNavigation
               currentStep={currentStep}
               totalSteps={totalSteps - 1}
