@@ -1,3 +1,4 @@
+
 import { RouteObject } from "react-router-dom";
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import MemberLayout from '@/components/layout/MemberLayout';
@@ -38,13 +39,13 @@ const createProtectedRoute = (path: string, Component: React.ComponentType<any>)
   element: <ProtectedRoutes><MemberLayout><Component /></MemberLayout></ProtectedRoutes>
 });
 
-// Log para diagnóstico - FASE 2 atualizado
-console.log("Carregando rotas de membros - Onboarding FASE 2 integrado com MemberLayout");
+// Log para diagnóstico
+console.log("Carregando rotas de membros - Onboarding FASE 1 adicionado");
 
 export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/", Dashboard),
   createProtectedRoute("/dashboard", Dashboard),
-  createProtectedRoute("/onboarding", Onboarding), // FASE 2 - Integrado com MemberLayout
+  createProtectedRoute("/onboarding", Onboarding), // NOVA ROTA - FASE 1
   createProtectedRoute("/solutions", Solutions),
   createProtectedRoute("/tools", Tools),
   createProtectedRoute("/tools/:id", ToolDetails),
