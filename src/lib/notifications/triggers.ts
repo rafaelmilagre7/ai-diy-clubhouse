@@ -87,23 +87,32 @@ export const createForumReplyNotification = async (topicId: string, postId: stri
  */
 export const createLessonCompletionNotification = async (userId: string, lessonId: string) => {
   try {
-    // Buscar dados da aula e módulo
+    // Buscar dados da aula, módulo e curso separadamente
     const { data: lesson } = await supabase
       .from('learning_lessons')
-      .select(`
-        title,
-        learning_modules!inner(
-          title,
-          learning_courses!inner(title)
-        )
-      `)
+      .select('title, module_id')
       .eq('id', lessonId)
       .single();
 
     if (!lesson) return;
 
-    const module = lesson.learning_modules;
-    const course = Array.isArray(module.learning_courses) ? module.learning_courses[0] : module.learning_courses;
+    // Buscar módulo
+    const { data: module } = await supabase
+      .from('learning_modules')
+      .select('title, course_id')
+      .eq('id', lesson.module_id)
+      .single();
+
+    if (!module) return;
+
+    // Buscar curso
+    const { data: course } = await supabase
+      .from('learning_courses')
+      .select('title, id')
+      .eq('id', module.course_id)
+      .single();
+
+    if (!course) return;
 
     // Criar notificação
     await supabase
