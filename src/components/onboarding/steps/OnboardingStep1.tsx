@@ -31,6 +31,7 @@ export const OnboardingStep1 = ({
   const [birthYear, setBirthYear] = useState('');
   
   const [curiosity, setCuriosity] = useState(data.curiosity || '');
+  const [loadingCities, setLoadingCities] = useState(false);
 
   const { estados, cidadesPorEstado, isLoading: locationsLoading, loadCidades } = useIBGELocations();
 
@@ -81,9 +82,19 @@ export const OnboardingStep1 = ({
   // Carregar cidades quando estado é selecionado
   useEffect(() => {
     if (state && !cidadesPorEstado[state]) {
-      loadCidades(state);
+      setLoadingCities(true);
+      loadCidades(state).finally(() => {
+        setLoadingCities(false);
+      });
     }
   }, [state, cidadesPorEstado, loadCidades]);
+
+  // Limpar cidade quando estado mudar
+  useEffect(() => {
+    if (state && city && !cidadesPorEstado[state]?.find(c => c.name === city)) {
+      setCity('');
+    }
+  }, [state, cidadesPorEstado, city]);
 
   const handleNext = () => {
     // Gerar mensagem personalizada da IA baseada nas respostas
@@ -362,9 +373,15 @@ export const OnboardingStep1 = ({
                   <Label className="text-sm font-medium text-white">
                     Cidade *
                   </Label>
-                  <Select value={city} onValueChange={setCity} disabled={!state || locationsLoading}>
+                  <Select value={city} onValueChange={setCity} disabled={!state || loadingCities}>
                     <SelectTrigger className={`h-12 bg-[#181A2A] border-white/10 text-white ${cityError ? 'border-red-500' : ''}`}>
-                      <SelectValue placeholder={!state ? "Selecione primeiro o estado" : "Selecione sua cidade"} />
+                      <SelectValue placeholder={
+                        !state 
+                          ? "Selecione primeiro o estado" 
+                          : loadingCities 
+                            ? "Carregando cidades..." 
+                            : "Selecione sua cidade"
+                      } />
                     </SelectTrigger>
                     <SelectContent className="bg-[#151823] border-white/10">
                       {state && cidadesPorEstado[state]?.map((cidade) => (
@@ -376,6 +393,11 @@ export const OnboardingStep1 = ({
                   </Select>
                   {cityError && (
                     <p className="text-sm text-red-400">{cityError}</p>
+                  )}
+                  {loadingCities && (
+                    <p className="text-xs text-viverblue">
+                      Carregando cidades do estado selecionado...
+                    </p>
                   )}
                 </div>
               </div>
