@@ -6,11 +6,7 @@ import { BaseSidebarProps } from "../BaseLayout";
 
 export const AdminSidebar = ({ 
   sidebarOpen, 
-  setSidebarOpen, 
-  profileName,
-  profileEmail,
-  profileAvatar,
-  getInitials
+  setSidebarOpen
 }: BaseSidebarProps) => {
   return (
     <aside
@@ -39,14 +35,8 @@ export const AdminSidebar = ({
         <AdminSidebarNav sidebarOpen={sidebarOpen} />
 
         {/* Menu do usuário no rodapé */}
-        <div className="mt-auto border-t border-gray-700">
-          <AdminUserMenu 
-            sidebarOpen={sidebarOpen} 
-            profileName={profileName}
-            profileEmail={profileEmail}
-            profileAvatar={profileAvatar}
-            getInitials={getInitials || (() => "A")}
-          />
+        <div className="mt-auto border-t border-gray-700 p-4">
+          <AdminUserMenu />
         </div>
       </div>
     </aside>

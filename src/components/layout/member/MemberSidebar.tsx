@@ -7,11 +7,7 @@ import { BaseSidebarProps } from "../BaseLayout";
 
 export const MemberSidebar = ({ 
   sidebarOpen, 
-  setSidebarOpen, 
-  profileName,
-  profileEmail,
-  profileAvatar,
-  getInitials
+  setSidebarOpen
 }: BaseSidebarProps) => {
   return (
     <aside
@@ -40,13 +36,9 @@ export const MemberSidebar = ({
           <div className="my-1 px-3">
             <div className="h-px bg-white/5"></div>
           </div>
-          <MemberUserMenu 
-            sidebarOpen={sidebarOpen} 
-            profileName={profileName}
-            profileEmail={profileEmail}
-            profileAvatar={profileAvatar}
-            getInitials={getInitials || (() => "U")}
-          />
+          <div className="p-4">
+            <MemberUserMenu />
+          </div>
         </div>
       </div>
     </aside>
