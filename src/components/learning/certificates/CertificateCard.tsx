@@ -6,6 +6,7 @@ import { Download, ExternalLink, Award } from "lucide-react";
 import { Certificate } from "@/types/learningTypes";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { toast } from "sonner";
 
 interface CertificateCardProps {
   certificate: Certificate;
@@ -22,6 +23,8 @@ export const CertificateCard = ({
   const handleOpenCertificate = () => {
     if (certificate.certificate_url) {
       window.open(certificate.certificate_url, '_blank');
+    } else {
+      toast.error("Certificado não disponível para visualização");
     }
   };
   
@@ -45,12 +48,12 @@ export const CertificateCard = ({
         </div>
       </CardContent>
       
-      <CardFooter className="flex justify-between">
+      <CardFooter className="flex flex-col gap-2 sm:flex-row sm:gap-2">
         <Button
           variant="outline"
           size="sm"
           onClick={() => onDownload(certificate.id)}
-          className="flex gap-1"
+          className="flex gap-1 w-full sm:w-auto"
         >
           <Download className="h-4 w-4" />
           Download
@@ -59,7 +62,7 @@ export const CertificateCard = ({
         <Button 
           variant="ghost" 
           size="sm"
-          className="flex gap-1"
+          className="flex gap-1 w-full sm:w-auto"
           onClick={handleOpenCertificate}
           disabled={!certificate.certificate_url}
         >

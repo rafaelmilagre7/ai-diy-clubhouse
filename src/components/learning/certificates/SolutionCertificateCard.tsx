@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Download, ExternalLink, Award, Calendar, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { toast } from "sonner";
 
 interface SolutionCertificateCardProps {
   certificate: any;
@@ -36,6 +37,8 @@ export const SolutionCertificateCard = ({
   const handleOpenCertificate = () => {
     if (certificate.certificate_url) {
       window.open(certificate.certificate_url, '_blank');
+    } else {
+      toast.error("Certificado não disponível para visualização");
     }
   };
   
@@ -81,12 +84,12 @@ export const SolutionCertificateCard = ({
         )}
       </CardContent>
       
-      <CardFooter className="flex justify-between gap-2">
+      <CardFooter className="flex flex-col gap-2 sm:flex-row sm:gap-2">
         <Button
           variant="outline"
           size="sm"
           onClick={() => onDownload(certificate.id)}
-          className="flex gap-1 bg-transparent border-viverblue/20 text-viverblue hover:bg-viverblue/10 hover:text-viverblue"
+          className="flex gap-1 bg-transparent border-viverblue/20 text-viverblue hover:bg-viverblue/10 hover:text-viverblue w-full sm:w-auto"
         >
           <Download className="h-4 w-4" />
           Download
@@ -95,7 +98,7 @@ export const SolutionCertificateCard = ({
         <Button 
           variant="ghost" 
           size="sm"
-          className="flex gap-1 text-gray-400 hover:text-white"
+          className="flex gap-1 text-gray-400 hover:text-white w-full sm:w-auto"
           onClick={handleOpenCertificate}
           disabled={!certificate.certificate_url}
         >
