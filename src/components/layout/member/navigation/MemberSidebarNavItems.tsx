@@ -15,10 +15,10 @@ import {
   Route,
   Sparkles,
   Brain,
-  Zap
+  Zap,
+  Shield
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
-import { usePermissions } from '@/hooks/auth/usePermissions';
 
 interface MemberSidebarNavItemsProps {
   sidebarOpen: boolean;
@@ -27,7 +27,6 @@ interface MemberSidebarNavItemsProps {
 export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ sidebarOpen }) => {
   const location = useLocation();
   const { profile } = useAuth();
-  const { hasPermission } = usePermissions();
 
   // Seção principal - Dashboard
   const dashboardItem = {
@@ -77,33 +76,53 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       title: "Comunidade",
       href: "/comunidade",
       icon: MessageSquare,
-    }
-  ];
-
-  // Itens administrativos
-  const adminItems = [];
-  
-  if (hasPermission('lms.manage')) {
-    adminItems.push({
-      title: "Área de Formação",
-      href: "/formacao",
-      icon: GraduationCap,
-    });
-  }
-
-  if (profile?.role === 'admin') {
-    adminItems.push({
+    },
+    {
       title: "Eventos",
       href: "/events",
       icon: Calendar,
-    });
+    }
+  ];
+
+  // Itens administrativos (só para admins reais)
+  const adminItems = [];
+  
+  if (profile?.role === 'admin') {
+    adminItems.push(
+      {
+        title: "Painel Admin",
+        href: "/admin",
+        icon: Shield,
+      },
+      {
+        title: "Área de Formação",
+        href: "/formacao",
+        icon: GraduationCap,
+      }
+    );
   }
 
+  // Lógica de ativação mais específica para evitar conflitos
   const isActive = (href: string) => {
+    const currentPath = location.pathname;
+    
+    // Para o dashboard, deve ser exato
     if (href === '/dashboard') {
-      return location.pathname === href;
+      return currentPath === href;
     }
-    return location.pathname.startsWith(href);
+    
+    // Para certificados, deve ser exato
+    if (href === '/learning/certificates') {
+      return currentPath === href;
+    }
+    
+    // Para cursos, não deve ativar se estivermos em certificados
+    if (href === '/learning') {
+      return currentPath.startsWith(href) && !currentPath.includes('/certificates');
+    }
+    
+    // Para outros, usar startsWith
+    return currentPath.startsWith(href);
   };
 
   const renderNavButton = (item: any) => (
@@ -111,23 +130,25 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       key={item.href}
       variant={isActive(item.href) ? "default" : "ghost"}
       className={cn(
-        "w-full justify-start gap-2 mb-1 relative",
+        "w-full justify-start gap-3 mb-1 h-10 px-3 py-2 transition-all",
         !sidebarOpen && "justify-center px-2",
-        isActive(item.href) && "bg-viverblue hover:bg-viverblue/90",
+        isActive(item.href) 
+          ? "bg-viverblue text-white hover:bg-viverblue/90" 
+          : "text-neutral-300 hover:text-white hover:bg-white/10",
         item.special && !isActive(item.href) && "hover:bg-viverblue/20 border border-viverblue/20"
       )}
       asChild
     >
       <Link to={item.href}>
-        <div className="flex items-center gap-2">
-          <item.icon className="h-4 w-4" />
+        <div className="flex items-center gap-3">
+          <item.icon className="h-5 w-5 flex-shrink-0" />
           {item.special && sidebarOpen && (
             <Sparkles className="h-3 w-3 text-viverblue animate-pulse" />
           )}
         </div>
         {sidebarOpen && (
           <div className="flex flex-col items-start">
-            <span>{item.title}</span>
+            <span className="truncate">{item.title}</span>
             {item.special && item.description && (
               <span className="text-xs text-viverblue opacity-80">
                 {item.description}
@@ -147,7 +168,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
     
     const IconComponent = icon;
     return (
-      <div className="flex items-center gap-2 px-2 py-3 text-xs font-semibold text-medium-contrast uppercase tracking-wider">
+      <div className="flex items-center gap-2 px-3 py-3 text-xs font-semibold text-medium-contrast uppercase tracking-wider">
         <IconComponent className="h-4 w-4" />
         <span>{title}</span>
       </div>
@@ -183,13 +204,12 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       {renderSectionHeader("Recursos", Zap)}
       {toolsAndCommunityItems.map(renderNavButton)}
 
-      {/* Área Administrativa (se aplicável) */}
+      {/* Área Administrativa (só para admins) */}
       {adminItems.length > 0 && (
         <>
           <div className="py-2">
             <Separator className="bg-neutral-700/50" />
           </div>
-          {renderSectionHeader("Administração", Settings)}
           {adminItems.map(renderNavButton)}
         </>
       )}
