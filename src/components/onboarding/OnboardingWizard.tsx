@@ -26,7 +26,7 @@ export const OnboardingWizard = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const { data, updateData, clearData } = useOnboardingStorage();
-  const { checkOnboardingStatus } = useOnboardingSubmit();
+  const { checkOnboardingStatus, submitOnboardingData } = useOnboardingSubmit();
   const { validateCurrentStep, validationErrors, clearValidationErrors } = useOnboardingValidation();
 
   // Detectar tipo de membro baseado no perfil com tipo explícito
@@ -57,7 +57,10 @@ export const OnboardingWizard = () => {
   // Verificar se onboarding já foi completado
   useEffect(() => {
     const checkStatus = async () => {
-      if (!user) return;
+      if (!user) {
+        setIsCheckingStatus(false);
+        return;
+      }
       
       try {
         const onboardingData = await checkOnboardingStatus();
@@ -138,8 +141,8 @@ export const OnboardingWizard = () => {
         throw new Error('Dados incompletos. Por favor, revise todas as etapas.');
       }
 
-      // Simular um pequeno delay para UX
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Simular submissão
+      await submitOnboardingData(data);
       
       // Limpar dados temporários do localStorage
       clearData();
