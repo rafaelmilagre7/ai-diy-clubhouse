@@ -1,30 +1,39 @@
 
+import { FC } from "react";
+import { ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Text } from "@/components/ui/text";
 
 interface CardThumbnailProps {
   thumbnailUrl?: string | null;
-  title?: string;
+  title: string;
   className?: string;
 }
 
-export const CardThumbnail = ({ thumbnailUrl, title, className }: CardThumbnailProps) => {
+export const CardThumbnail: FC<CardThumbnailProps> = ({ 
+  thumbnailUrl, 
+  title, 
+  className 
+}) => {
   return (
-    <div className={cn("aspect-video bg-surface-elevated relative overflow-hidden", className)}>
+    <div className={cn(
+      "relative h-48 bg-gradient-to-br from-primary/10 to-accent/10 rounded-t-xl overflow-hidden",
+      className
+    )}>
       {thumbnailUrl ? (
-        <img 
-          src={thumbnailUrl} 
-          alt={title || "Thumbnail"} 
+        <img
+          src={thumbnailUrl}
+          alt={title}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          loading="lazy"
         />
       ) : (
-        <div className="w-full h-full flex items-center justify-center bg-gradient-surface">
-          <Text variant="section" textColor="primary" className="text-gradient">
-            {title ? title.charAt(0).toUpperCase() : "?"}
-          </Text>
+        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-surface-elevated to-surface-hover">
+          <ImageIcon className="h-12 w-12 text-text-muted" />
         </div>
       )}
-      <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent"></div>
+      
+      {/* Overlay gradient */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
     </div>
   );
 };

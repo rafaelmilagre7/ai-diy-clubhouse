@@ -1,4 +1,5 @@
 
+import { FC } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -7,29 +8,19 @@ interface DifficultyBadgeProps {
   className?: string;
 }
 
-export const DifficultyBadge = ({ difficulty, className }: DifficultyBadgeProps) => {
-  const getDifficultyConfig = (diff: string) => {
-    switch (diff.toLowerCase()) {
-      case "easy":
-        return {
-          variant: "success" as const,
-          label: "Fácil"
-        };
-      case "medium":
-        return {
-          variant: "warning" as const,
-          label: "Médio"
-        };
-      case "advanced":
-        return {
-          variant: "error" as const,
-          label: "Avançado"
-        };
+export const DifficultyBadge: FC<DifficultyBadgeProps> = ({ difficulty, className }) => {
+  const getDifficultyConfig = (level: string) => {
+    switch (level.toLowerCase()) {
+      case 'iniciante':
+        return { variant: 'success' as const, label: 'Iniciante' };
+      case 'intermediario':
+      case 'intermediário':
+        return { variant: 'warning' as const, label: 'Intermediário' };
+      case 'avancado':
+      case 'avançado':
+        return { variant: 'error' as const, label: 'Avançado' };
       default:
-        return {
-          variant: "neutral" as const,
-          label: diff
-        };
+        return { variant: 'secondary' as const, label: difficulty };
     }
   };
 
@@ -37,7 +28,7 @@ export const DifficultyBadge = ({ difficulty, className }: DifficultyBadgeProps)
 
   return (
     <Badge 
-      variant={config.variant}
+      variant={config.variant} 
       size="sm"
       className={cn("font-medium", className)}
     >

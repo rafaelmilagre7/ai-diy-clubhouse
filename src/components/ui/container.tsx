@@ -4,38 +4,31 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const containerVariants = cva(
-  "w-full mx-auto",
+  "w-full",
   {
     variants: {
       size: {
-        sm: "max-w-screen-sm",
-        md: "max-w-screen-md", 
-        lg: "max-w-screen-lg",
-        xl: "max-w-screen-xl",
-        "2xl": "max-w-screen-2xl",
+        sm: "max-w-sm mx-auto",
+        md: "max-w-md mx-auto",
+        lg: "max-w-lg mx-auto",
+        xl: "max-w-xl mx-auto",
+        "2xl": "max-w-2xl mx-auto",
+        "4xl": "max-w-4xl mx-auto",
+        "6xl": "max-w-6xl mx-auto",
         full: "max-w-full",
-        content: "max-w-5xl",
-        narrow: "max-w-4xl",
-        wide: "max-w-7xl",
-      },
-      padding: {
-        none: "",
-        sm: "px-4 sm:px-6",
-        default: "px-4 sm:px-6 lg:px-8",
-        lg: "px-6 sm:px-8 lg:px-12",
+        screen: "w-screen",
       },
       spacing: {
         none: "",
-        sm: "py-4",
-        default: "py-6",
-        lg: "py-8",
-        xl: "py-12",
+        sm: "px-4",
+        md: "px-6",
+        lg: "px-8",
+        xl: "px-12",
       },
     },
     defaultVariants: {
-      size: "wide",
-      padding: "default",
-      spacing: "none",
+      size: "6xl",
+      spacing: "md",
     },
   }
 )
@@ -45,11 +38,11 @@ export interface ContainerProps
     VariantProps<typeof containerVariants> {}
 
 const Container = React.forwardRef<HTMLDivElement, ContainerProps>(
-  ({ className, size, padding, spacing, ...props }, ref) => {
+  ({ className, size, spacing, ...props }, ref) => {
     return (
       <div
         ref={ref}
-        className={cn(containerVariants({ size, padding, spacing }), className)}
+        className={cn(containerVariants({ size, spacing }), className)}
         {...props}
       />
     )
