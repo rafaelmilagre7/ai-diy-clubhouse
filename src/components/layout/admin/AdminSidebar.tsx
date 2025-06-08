@@ -2,6 +2,8 @@
 import { cn } from "@/lib/utils";
 import { AdminSidebarNav } from "./AdminSidebarNav";
 import { BaseSidebarProps } from "../BaseLayout";
+import { Button } from "@/components/ui/button";
+import { Menu } from "lucide-react";
 
 export const AdminSidebar = ({ 
   sidebarOpen, 
@@ -21,14 +23,36 @@ export const AdminSidebar = ({
       )}
     >
       <div className="flex flex-col h-full">
-        {/* Logo/Header */}
+        {/* Logo/Header com botão de toggle */}
         <div className="p-4 border-b border-gray-700">
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-between">
             {sidebarOpen ? (
-              <h1 className="text-xl font-bold text-white">Admin Panel</h1>
+              <>
+                <h1 className="text-xl font-bold text-white">Admin Panel</h1>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className="text-gray-400 hover:text-white p-1 h-8 w-8"
+                  title="Contrair Sidebar"
+                >
+                  <Menu className="h-4 w-4" />
+                </Button>
+              </>
             ) : (
-              <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
-                <span className="text-sm font-bold text-white">A</span>
+              <div className="flex flex-col items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className="text-gray-400 hover:text-white p-1 h-8 w-8"
+                  title="Expandir Sidebar"
+                >
+                  <Menu className="h-4 w-4" />
+                </Button>
+                <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
+                  <span className="text-sm font-bold text-white">A</span>
+                </div>
               </div>
             )}
           </div>

@@ -1,115 +1,104 @@
 
 import { NavLink } from "react-router-dom";
-import { cn } from "@/lib/utils";
 import { 
   LayoutDashboard, 
   Users, 
-  Wrench, 
-  Lightbulb, 
+  Boxes, 
+  BookOpen, 
   BarChart3, 
+  Lightbulb, 
+  CalendarDays, 
+  UserCog, 
+  Mail,
   MessageSquare,
-  Calendar,
-  Shield,
-  UserPlus,
-  TrendingUp,
-  MessageCircle,
-  Megaphone
+  Zap
 } from "lucide-react";
-
-const adminNavItems = [
-  {
-    title: "Dashboard",
-    href: "/admin",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "Usuários",
-    href: "/admin/users",
-    icon: Users,
-  },
-  {
-    title: "Comunicações", 
-    href: "/admin/communications",
-    icon: Megaphone,
-  },
-  {
-    title: "Ferramentas",
-    href: "/admin/tools",
-    icon: Wrench,
-  },
-  {
-    title: "Soluções",
-    href: "/admin/solutions", 
-    icon: Lightbulb,
-  },
-  {
-    title: "Analytics",
-    href: "/admin/analytics",
-    icon: BarChart3,
-  },
-  {
-    title: "Sugestões",
-    href: "/admin/suggestions",
-    icon: MessageSquare,
-  },
-  {
-    title: "Eventos",
-    href: "/admin/events",
-    icon: Calendar,
-  },
-  {
-    title: "Papéis",
-    href: "/admin/roles",
-    icon: Shield,
-  },
-  {
-    title: "Convites",
-    href: "/admin/invites",
-    icon: UserPlus,
-  },
-  {
-    title: "Benefícios",
-    href: "/admin/benefits",
-    icon: TrendingUp,
-  },
-  {
-    title: "WhatsApp Debug",
-    href: "/admin/whatsapp-debug",
-    icon: MessageCircle,
-  },
-];
+import { cn } from "@/lib/utils";
 
 interface AdminSidebarNavProps {
   sidebarOpen: boolean;
 }
 
+const navigationItems = [
+  {
+    title: "Dashboard",
+    href: "/admin",
+    icon: LayoutDashboard,
+    end: true // Para marcar ativo apenas na rota exata
+  },
+  {
+    title: "Usuários",
+    href: "/admin/users",
+    icon: Users
+  },
+  {
+    title: "Soluções",
+    href: "/admin/solutions",
+    icon: Boxes
+  },
+  {
+    title: "Benefícios",
+    href: "/admin/benefits",
+    icon: Zap
+  },
+  {
+    title: "Analytics",
+    href: "/admin/analytics",
+    icon: BarChart3
+  },
+  {
+    title: "Sugestões",
+    href: "/admin/suggestions",
+    icon: Lightbulb
+  },
+  {
+    title: "Eventos",
+    href: "/admin/events",
+    icon: CalendarDays
+  },
+  {
+    title: "Perfis",
+    href: "/admin/roles",
+    icon: UserCog
+  },
+  {
+    title: "Convites",
+    href: "/admin/invites",
+    icon: Mail
+  },
+  {
+    title: "Comunicações",
+    href: "/admin/communications",
+    icon: MessageSquare
+  }
+];
+
 export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
   return (
-    <nav className="flex-1 px-3 space-y-1">
-      {adminNavItems.map((item) => (
-        <NavLink
-          key={item.href}
-          to={item.href}
-          className={({ isActive }) =>
-            cn(
-              "group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
-              "text-gray-300 hover:bg-white/5 hover:text-white",
-              isActive && "bg-white/10 text-white",
-              !sidebarOpen && "justify-center px-2"
-            )
-          }
-        >
-          <item.icon
-            className={cn(
-              "h-5 w-5 flex-shrink-0",
-              sidebarOpen ? "mr-3" : "mx-auto"
-            )}
-          />
-          {sidebarOpen && (
-            <span className="truncate">{item.title}</span>
-          )}
-        </NavLink>
-      ))}
+    <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
+      {navigationItems.map((item) => {
+        const Icon = item.icon;
+        return (
+          <NavLink
+            key={item.href}
+            to={item.href}
+            end={item.end}
+            className={({ isActive }) =>
+              cn(
+                "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                isActive
+                  ? "bg-gray-800 text-white"
+                  : "text-gray-300 hover:bg-gray-700 hover:text-white",
+                !sidebarOpen && "justify-center px-2"
+              )
+            }
+            title={!sidebarOpen ? item.title : undefined}
+          >
+            <Icon className={cn("h-5 w-5", sidebarOpen && "mr-3")} />
+            {sidebarOpen && <span>{item.title}</span>}
+          </NavLink>
+        );
+      })}
     </nav>
   );
 };
