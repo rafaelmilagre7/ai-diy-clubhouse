@@ -108,15 +108,6 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
     }
   };
 
-  const getChannelDescription = (channel: string) => {
-    switch (channel) {
-      case 'email': return 'Enviar convite apenas por email';
-      case 'whatsapp': return 'Enviar convite apenas via WhatsApp';
-      case 'both': return 'Enviar convite por email E WhatsApp';
-      default: return '';
-    }
-  };
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -125,18 +116,18 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
           Novo Convite
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSubmit}>
-          <DialogHeader>
+          <DialogHeader className="pb-3">
             <DialogTitle>Criar Convite</DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-sm">
               Convide um novo usuário via email e/ou WhatsApp.
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-sm">Email *</Label>
               <Input
                 id="email"
                 type="email"
@@ -144,11 +135,12 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="h-9"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="phone">
+            <div className="space-y-1.5">
+              <Label htmlFor="phone" className="text-sm">
                 Telefone {(channelPreference === 'whatsapp' || channelPreference === 'both') && '*'}
               </Label>
               <Input
@@ -158,16 +150,17 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
                 value={phone}
                 onChange={handlePhoneChange}
                 maxLength={15}
+                className="h-9"
               />
               <p className="text-xs text-muted-foreground">
-                Formato: (XX) XXXXX-XXXX - Necessário para WhatsApp
+                Necessário para WhatsApp
               </p>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="role">Papel *</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="role" className="text-sm">Papel *</Label>
               <Select value={roleId} onValueChange={setRoleId} required>
-                <SelectTrigger>
+                <SelectTrigger className="h-9">
                   <SelectValue placeholder="Selecione o papel" />
                 </SelectTrigger>
                 <SelectContent>
@@ -180,24 +173,21 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
               </Select>
             </div>
 
-            <div className="space-y-3">
-              <Label>Canal de Envio *</Label>
+            <div className="space-y-2">
+              <Label className="text-sm">Canal de Envio *</Label>
               <RadioGroup 
                 value={channelPreference} 
                 onValueChange={(value: 'email' | 'whatsapp' | 'both') => setChannelPreference(value)}
-                className="grid grid-cols-1 gap-2"
+                className="grid grid-cols-1 gap-1.5"
               >
                 {(['email', 'whatsapp', 'both'] as const).map((channel) => (
-                  <div key={channel} className="flex items-center space-x-2 border rounded-lg p-3 hover:bg-muted/50">
+                  <div key={channel} className="flex items-center space-x-2 border rounded-md p-2 hover:bg-muted/50">
                     <RadioGroupItem value={channel} id={channel} />
-                    <Label htmlFor={channel} className="flex items-center gap-2 cursor-pointer flex-1">
+                    <Label htmlFor={channel} className="flex items-center gap-2 cursor-pointer flex-1 text-sm">
                       {getChannelIcon(channel)}
                       <div>
-                        <div className="font-medium capitalize">
+                        <div className="font-medium">
                           {channel === 'both' ? 'Email + WhatsApp' : channel === 'whatsapp' ? 'WhatsApp' : 'Email'}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {getChannelDescription(channel)}
                         </div>
                       </div>
                     </Label>
@@ -206,39 +196,42 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
               </RadioGroup>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="expiration">Válido por</Label>
-              <Select value={expiration} onValueChange={setExpiration}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1 day">1 dia</SelectItem>
-                  <SelectItem value="3 days">3 dias</SelectItem>
-                  <SelectItem value="7 days">7 dias</SelectItem>
-                  <SelectItem value="14 days">14 dias</SelectItem>
-                  <SelectItem value="30 days">30 dias</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="expiration" className="text-sm">Válido por</Label>
+                <Select value={expiration} onValueChange={setExpiration}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1 day">1 dia</SelectItem>
+                    <SelectItem value="3 days">3 dias</SelectItem>
+                    <SelectItem value="7 days">7 dias</SelectItem>
+                    <SelectItem value="14 days">14 dias</SelectItem>
+                    <SelectItem value="30 days">30 dias</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="notes">Observações (opcional)</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="notes" className="text-sm">Observações (opcional)</Label>
               <Textarea
                 id="notes"
-                placeholder="Informações extras sobre o convite"
+                placeholder="Informações extras..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                rows={3}
+                rows={2}
+                className="resize-none text-sm"
               />
             </div>
           </div>
           
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+          <DialogFooter className="pt-3">
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="h-9">
               Cancelar
             </Button>
-            <Button type="submit" disabled={isCreating}>
+            <Button type="submit" disabled={isCreating} className="h-9">
               {isCreating ? "Criando..." : "Criar Convite"}
             </Button>
           </DialogFooter>
