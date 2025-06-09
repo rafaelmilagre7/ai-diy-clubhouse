@@ -1,465 +1,337 @@
 
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/contexts/auth";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle, CheckCircle, Eye, EyeOff, LogOut } from "lucide-react";
-import LoadingScreen from "@/components/common/LoadingScreen";
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/auth';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle, CheckCircle, LogOut, UserCheck, Mail, Clock, Shield } from 'lucide-react';
+import { toast } from 'sonner';
+import LoadingScreen from '@/components/common/LoadingScreen';
+import { validateInviteToken } from '@/utils/inviteValidationUtils';
+import { useInviteValidation } from '@/hooks/admin/invites/useInviteValidation';
 
 interface InviteData {
   id: string;
   email: string;
   expires_at: string;
   used_at: string | null;
-  role: { name: string } | null;
+  role: {
+    name: string;
+  };
 }
 
-interface ValidationResult {
-  isValid: boolean;
-  error?: string;
-  needsLogout?: boolean;
-  inviteData?: InviteData;
-}
-
-const InvitePage = () => {
+export default function InvitePage() {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
-  
-  const [inviteData, setInviteData] = useState<InviteData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
-  const [processing, setProcessing] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  
-  // Form state
-  const [formData, setFormData] = useState({
-    name: '',
-    password: '',
-    confirmPassword: ''
-  });
+  const { user, signUp, signIn, signOut } = useAuth();
+  const { validateInviteTokenAsync } = useInviteValidation();
 
-  // Validar convite e verificar conflitos
-  const validateInvite = async (): Promise<ValidationResult> => {
-    if (!token) {
-      return { isValid: false, error: "Token de convite não fornecido" };
-    }
+  const [isLoading, setIsLoading] = useState(true);
+  const [invite, setInvite] = useState<InviteData | null>(null);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [validationResult, setValidationResult] = useState<any>(null);
 
-    try {
-      console.log("🔍 Validando convite:", token.substring(0, 8) + "***");
-
-      // Buscar dados do convite
-      const { data: invite, error: inviteError } = await supabase
-        .from('invites')
-        .select(`
-          id,
-          email,
-          expires_at,
-          used_at,
-          role:role_id(name)
-        `)
-        .eq('token', token)
-        .maybeSingle();
-
-      if (inviteError) {
-        console.error("❌ Erro ao buscar convite:", inviteError);
-        return { isValid: false, error: "Erro ao verificar convite" };
-      }
-
-      if (!invite) {
-        console.log("❌ Convite não encontrado");
-        return { isValid: false, error: "Convite não encontrado ou inválido" };
-      }
-
-      // Verificar se já foi usado
-      if (invite.used_at) {
-        console.log("❌ Convite já utilizado em:", invite.used_at);
-        return { 
-          isValid: false, 
-          error: `Este convite já foi utilizado em ${new Date(invite.used_at).toLocaleString('pt-BR')}` 
-        };
-      }
-
-      // Verificar se expirou
-      if (new Date(invite.expires_at) < new Date()) {
-        console.log("❌ Convite expirado em:", invite.expires_at);
-        return { 
-          isValid: false, 
-          error: `Este convite expirou em ${new Date(invite.expires_at).toLocaleString('pt-BR')}` 
-        };
-      }
-
-      // ✨ NOVA VALIDAÇÃO: Verificar se usuário está logado com email diferente
-      if (user && user.email && user.email !== invite.email) {
-        console.log("⚠️ Usuário logado com email diferente:", {
-          usuarioLogado: user.email,
-          convitePara: invite.email
-        });
-        
-        return {
-          isValid: false,
-          error: `Você está logado como ${user.email}, mas este convite é para ${invite.email}`,
-          needsLogout: true,
-          inviteData: invite
-        };
-      }
-
-      // Verificar se já existe perfil ativo
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id, email, name')
-        .eq('email', invite.email)
-        .maybeSingle();
-
-      if (existingProfile) {
-        console.log("⚠️ Perfil já existe:", existingProfile);
-        return {
-          isValid: false,
-          error: `Já existe uma conta ativa para ${invite.email}. Use a opção de login.`,
-          inviteData: invite
-        };
-      }
-
-      console.log("✅ Convite válido para:", invite.email);
-      return { isValid: true, inviteData: invite };
-
-    } catch (error) {
-      console.error("❌ Erro na validação:", error);
-      return { isValid: false, error: "Erro interno ao validar convite" };
-    }
-  };
-
-  // Carregar e validar convite
   useEffect(() => {
-    const loadInvite = async () => {
-      setLoading(true);
-      const result = await validateInvite();
+    if (token) {
+      validateInvite();
+    }
+  }, [token]);
+
+  const validateInvite = async () => {
+    if (!token) {
+      toast.error('Token de convite não fornecido');
+      navigate('/');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      console.log("🔍 Validando convite para token:", token.substring(0, 8) + "***");
+
+      // Usar nosso utilitário de validação
+      const result = await validateInviteTokenAsync(token, user?.email);
       setValidationResult(result);
-      
-      if (result.isValid && result.inviteData) {
-        setInviteData(result.inviteData);
-      }
-      
-      setLoading(false);
-    };
 
-    loadInvite();
-  }, [token, user]);
-
-  // Fazer logout e recarregar página
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      toast.success("Logout realizado", {
-        description: "Você foi desconectado. Agora pode usar o convite."
-      });
-      // Recarregar a página após um pequeno delay
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
-    } catch (error) {
-      console.error("Erro no logout:", error);
-      toast.error("Erro ao fazer logout");
-    }
-  };
-
-  // Processar criação da conta
-  const handleCreateAccount = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!inviteData || !validationResult?.isValid) {
-      toast.error("Convite inválido");
-      return;
-    }
-
-    // Validações do formulário
-    if (!formData.name.trim()) {
-      toast.error("Nome é obrigatório");
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      toast.error("Senha deve ter pelo menos 6 caracteres");
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      toast.error("Senhas não coincidem");
-      return;
-    }
-
-    setProcessing(true);
-
-    try {
-      console.log("🚀 Criando conta para:", inviteData.email);
-
-      // ✨ NOVA VERIFICAÇÃO: Validar novamente antes de criar
-      const revalidation = await validateInvite();
-      if (!revalidation.isValid) {
-        toast.error("Convite não é mais válido", {
-          description: revalidation.error
-        });
-        setProcessing(false);
+      if (!result.isValid) {
+        console.log("❌ Convite inválido:", result);
+        toast.error(result.error || 'Convite inválido');
         return;
       }
 
-      // Tentar criar conta
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: inviteData.email,
-        password: formData.password,
-        options: {
-          data: {
-            name: formData.name,
-            invite_token: token
+      // Se chegou aqui, o convite é válido
+      if (result.invite) {
+        // Corrigir o acesso à propriedade role
+        const inviteData: InviteData = {
+          id: result.invite.id,
+          email: result.invite.email,
+          expires_at: result.invite.expires_at,
+          used_at: result.invite.used_at,
+          role: {
+            name: result.invite.role?.name || 'membro'
           }
-        }
-      });
+        };
+        setInvite(inviteData);
+        console.log("✅ Convite válido para:", inviteData.email);
+      }
 
-      if (authError) {
-        console.error("❌ Erro na criação:", authError);
+    } catch (error: any) {
+      console.error('❌ Erro ao validar convite:', error);
+      toast.error('Erro ao validar convite: ' + error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success('Logout realizado com sucesso');
+      // Revalidar após logout
+      setTimeout(() => {
+        validateInvite();
+      }, 1000);
+    } catch (error) {
+      console.error('Erro no logout:', error);
+      toast.error('Erro ao fazer logout');
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!invite || !token) {
+      toast.error('Dados do convite não encontrados');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      toast.error('As senhas não coincidem');
+      return;
+    }
+
+    if (password.length < 6) {
+      toast.error('A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+
+    try {
+      setIsRegistering(true);
+      console.log('🚀 Iniciando registro para:', invite.email);
+
+      // Tentar registrar
+      const { user: newUser, error: signUpError } = await signUp(invite.email, password);
+      
+      if (signUpError) {
+        console.error('❌ Erro no signUp:', signUpError);
         
-        // ✨ MELHOR TRATAMENTO DE ERRO
-        if (authError.message.includes('already registered')) {
-          toast.error("Email já cadastrado", {
-            description: `O email ${inviteData.email} já possui uma conta. Tente fazer login ou recuperar sua senha.`,
+        // Se o erro indica que o usuário já existe, sugerir login
+        if (signUpError.message?.includes('already registered') || 
+            signUpError.message?.includes('já está cadastrado') ||
+            signUpError.message?.includes('User already registered')) {
+          
+          toast.error('Este email já possui uma conta', {
+            description: 'Tente fazer login em vez de criar uma nova conta.',
             duration: 8000,
             action: {
               label: 'Ir para Login',
               onClick: () => navigate('/login')
             }
           });
-        } else {
-          toast.error("Erro ao criar conta", {
-            description: authError.message,
-            duration: 6000
-          });
+          return;
         }
+
+        // Para outros erros, mostrar mensagem específica
+        throw new Error(signUpError.message);
+      }
+
+      if (newUser) {
+        console.log('✅ Usuário criado:', newUser.id);
         
-        setProcessing(false);
-        return;
-      }
-
-      if (!authData.user) {
-        toast.error("Erro na criação da conta");
-        setProcessing(false);
-        return;
-      }
-
-      console.log("✅ Conta criada, processando convite...");
-
-      // Processar convite via RPC
-      const { data: acceptResult, error: acceptError } = await supabase.rpc('accept_invite', {
-        invite_token: token,
-        user_name: formData.name
-      });
-
-      if (acceptError) {
-        console.error("❌ Erro ao aceitar convite:", acceptError);
-        toast.error("Erro ao processar convite", {
-          description: acceptError.message
+        // Usar o convite
+        const { data: useResult, error: useError } = await supabase.rpc('use_invite', {
+          invite_token: token,
+          user_id: newUser.id
         });
-        setProcessing(false);
-        return;
+
+        if (useError) {
+          console.error('❌ Erro ao usar convite:', useError);
+          throw new Error('Erro ao processar convite: ' + useError.message);
+        }
+
+        if (useResult?.status === 'success') {
+          console.log('✅ Convite usado com sucesso');
+          toast.success('Conta criada com sucesso!', {
+            description: 'Bem-vindo(a) à plataforma!',
+            duration: 5000
+          });
+          navigate('/onboarding');
+        } else {
+          console.error('❌ Falha ao usar convite:', useResult);
+          throw new Error(useResult?.message || 'Falha ao processar convite');
+        }
       }
 
-      if (acceptResult.status === 'error') {
-        console.error("❌ RPC retornou erro:", acceptResult.message);
-        toast.error("Erro ao processar convite", {
-          description: acceptResult.message
-        });
-        setProcessing(false);
-        return;
-      }
-
-      console.log("🎉 Convite aceito com sucesso!");
-      
-      toast.success("🎉 Conta criada com sucesso!", {
-        description: `Bem-vindo(a), ${formData.name}! Você será redirecionado em alguns segundos.`,
-        duration: 4000
+    } catch (error: any) {
+      console.error('❌ Erro no registro:', error);
+      toast.error('Erro ao criar conta', {
+        description: error.message,
+        duration: 8000
       });
-
-      // Redirecionar após sucesso
-      setTimeout(() => {
-        navigate('/');
-      }, 2000);
-
-    } catch (error) {
-      console.error("❌ Erro inesperado:", error);
-      toast.error("Erro inesperado", {
-        description: "Tente novamente ou entre em contato com o suporte"
-      });
-      setProcessing(false);
+    } finally {
+      setIsRegistering(false);
     }
   };
 
-  if (loading) {
-    return <LoadingScreen message="Verificando convite..." />;
+  if (isLoading) {
+    return <LoadingScreen message="Validando convite..." />;
   }
 
-  // Caso de erro de validação
-  if (!validationResult?.isValid) {
+  // Mostrar erro de validação se necessário
+  if (validationResult && !validationResult.isValid) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
-              <AlertTriangle className="w-6 h-6 text-red-600" />
+            <div className="mx-auto mb-4 w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+              <AlertTriangle className="h-6 w-6 text-red-600" />
             </div>
-            <CardTitle className="text-xl">Convite Inválido</CardTitle>
-            <CardDescription>
-              {validationResult?.error}
-            </CardDescription>
+            <CardTitle className="text-red-700">Convite Inválido</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {validationResult?.needsLogout && (
-              <Alert>
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
-                  <div className="space-y-3">
-                    <p>Para usar este convite, você precisa fazer logout da conta atual.</p>
-                    <Button
-                      onClick={handleLogout}
-                      variant="outline"
-                      className="w-full"
-                    >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Fazer Logout e Continuar
-                    </Button>
-                  </div>
-                </AlertDescription>
-              </Alert>
+            <Alert className="border-red-200 bg-red-50">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
+              <AlertDescription className="text-red-800">
+                {validationResult.error}
+              </AlertDescription>
+            </Alert>
+
+            {validationResult.needsLogout && (
+              <div className="space-y-3">
+                <Alert className="border-amber-200 bg-amber-50">
+                  <LogOut className="h-4 w-4 text-amber-600" />
+                  <AlertDescription className="text-amber-800">
+                    Você precisa fazer logout antes de usar este convite.
+                  </AlertDescription>
+                </Alert>
+                <Button onClick={handleLogout} className="w-full" variant="outline">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Fazer Logout
+                </Button>
+              </div>
             )}
-            
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => navigate('/login')}
-                className="flex-1"
-              >
-                Ir para Login
-              </Button>
-              <Button
-                onClick={() => navigate('/')}
-                className="flex-1"
-              >
-                Página Inicial
-              </Button>
-            </div>
+
+            {validationResult.suggestions && validationResult.suggestions.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-700">Sugestões:</p>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  {validationResult.suggestions.map((suggestion: string, index: number) => (
+                    <li key={index} className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>{suggestion}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <Button 
+              onClick={() => navigate('/')} 
+              className="w-full"
+              variant="default"
+            >
+              Voltar ao Início
+            </Button>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  // Caso de sucesso - mostrar formulário de criação de conta
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-            <CheckCircle className="w-6 h-6 text-green-600" />
-          </div>
-          <CardTitle className="text-xl">Criar Sua Conta</CardTitle>
-          <CardDescription>
-            Você foi convidado para se juntar como{' '}
-            <span className="font-semibold">{inviteData?.role?.name || 'membro'}</span>
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-            <p className="text-sm text-blue-800">
-              <strong>Email:</strong> {inviteData?.email}
-            </p>
-          </div>
-
-          <form onSubmit={handleCreateAccount} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome Completo</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="Seu nome completo"
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                required
-                disabled={processing}
-              />
+  // Mostrar formulário de registro se convite é válido
+  if (invite) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+              <UserCheck className="h-6 w-6 text-green-600" />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Mínimo 6 caracteres"
-                  value={formData.password}
-                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                  required
-                  minLength={6}
-                  disabled={processing}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
-                  disabled={processing}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Button>
+            <CardTitle className="text-green-700">Convite Válido!</CardTitle>
+            <CardDescription>
+              Complete seu cadastro para acessar a plataforma
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4 mb-6">
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <Mail className="h-4 w-4" />
+                <span>Email: {invite.email}</span>
+              </div>
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <Shield className="h-4 w-4" />
+                <span>Papel: {invite.role.name}</span>
+              </div>
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <Clock className="h-4 w-4" />
+                <span>Expira em: {new Date(invite.expires_at).toLocaleString('pt-BR')}</span>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="Digite a senha novamente"
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                required
-                disabled={processing}
-              />
-            </div>
-
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={processing}
-            >
-              {processing ? "Criando conta..." : "Criar Conta"}
-            </Button>
-          </form>
-
-          <div className="mt-4 text-center">
-            <p className="text-sm text-muted-foreground">
-              Já tem uma conta?{' '}
-              <Button
-                variant="link"
-                className="p-0 h-auto"
-                onClick={() => navigate('/login')}
+            <form onSubmit={handleRegister} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="password">Senha</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Digite sua senha"
+                  required
+                  minLength={6}
+                  disabled={isRegistering}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirme sua senha"
+                  required
+                  minLength={6}
+                  disabled={isRegistering}
+                />
+              </div>
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isRegistering || !password || password !== confirmPassword}
               >
-                Fazer login
+                {isRegistering ? 'Criando conta...' : 'Criar Conta'}
               </Button>
-            </p>
-          </div>
-        </CardContent>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle>Processando Convite</CardTitle>
+          <CardDescription>Aguarde enquanto validamos seu convite...</CardDescription>
+        </CardHeader>
       </Card>
     </div>
   );
-};
-
-export default InvitePage;
+}

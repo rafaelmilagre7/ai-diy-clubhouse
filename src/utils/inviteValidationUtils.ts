@@ -23,7 +23,7 @@ export const validateInviteToken = async (
       };
     }
 
-    // Buscar convite
+    // Buscar convite - corrigir a consulta para evitar array na propriedade role
     const { data: invite, error: inviteError } = await supabase
       .from('invites')
       .select(`
@@ -31,8 +31,9 @@ export const validateInviteToken = async (
         email,
         expires_at,
         used_at,
-        role:role_id(name),
-        created_at
+        role_id,
+        created_at,
+        role:user_roles!role_id(name)
       `)
       .eq('token', token)
       .maybeSingle();
