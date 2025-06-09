@@ -49,7 +49,8 @@ export const extractPandaVideoInfo = (url: string) => {
   return {
     videoId: url,
     thumbnailUrl: '',
-    duration: 0
+    duration: 0,
+    url: url // Adicionando a propriedade url que estava faltando
   };
 };
 

@@ -1,8 +1,8 @@
 
 // Re-exportação centralizada para garantir compatibilidade com importações existentes
-export * from './client';
-export * from './types';
-export * from './config';
+export * from './supabase/client';
+export * from './supabase/types';
+export * from './supabase/config';
 
 // Exportação explícita das funções de storage
 export { 
@@ -13,7 +13,7 @@ export {
   ensureBucketExists,
   extractPandaVideoInfo,
   uploadFileWithFallback
-} from './storage';
+} from './supabase/storage';
 
 // Exportação explícita das funções de RPC
 export {
@@ -22,21 +22,7 @@ export {
   incrementTopicReplies,
   deleteForumTopic,
   deleteForumPost
-} from './rpc';
+} from './supabase/rpc';
 
 // Exportação explícita do cliente Supabase
-export { supabase } from './client';
-
-// Exportação da interface UserProfile para compatibilidade
-export interface UserProfile {
-  id: string;
-  email?: string;
-  name?: string;
-  role?: string;
-  avatar_url?: string;
-  company_name?: string;
-  industry?: string;
-  created_at?: string;
-  onboarding_completed?: boolean;
-  onboarding_completed_at?: string;
-}
+export { supabase } from './supabase/client';
