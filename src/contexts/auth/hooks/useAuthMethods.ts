@@ -5,15 +5,12 @@ import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 import { sanitizeForLogging } from '@/utils/securityUtils';
 import { loginRateLimiter, getClientIdentifier } from '@/utils/rateLimiting';
-import { useNavigate } from 'react-router-dom';
 
 interface UseAuthMethodsProps {
   setIsLoading: (loading: boolean) => void;
 }
 
 export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
-  const navigate = useNavigate();
-
   // Função segura de limpeza de estado de autenticação
   const cleanupAuthState = useCallback(() => {
     try {
@@ -120,8 +117,8 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
         
         toast.success('Login realizado com sucesso!');
         
-        // Usar navigate ao invés de window.location.href para evitar refresh
-        navigate('/dashboard', { replace: true });
+        // Usar window.location.href para redirecionamento após login
+        window.location.href = '/dashboard';
       }
 
       return { error: undefined };
@@ -138,7 +135,7 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
     } finally {
       setIsLoading(false);
     }
-  }, [setIsLoading, cleanupAuthState, navigate]);
+  }, [setIsLoading, cleanupAuthState]);
 
   const signOut = useCallback(async () => {
     setIsLoading(true);
@@ -161,8 +158,8 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
       
       toast.success('Logout realizado com sucesso');
       
-      // Usar navigate ao invés de window.location.href
-      navigate('/login', { replace: true });
+      // Usar window.location.href para redirecionamento após logout
+      window.location.href = '/login';
       
       return { success: true, error: null };
       
@@ -183,7 +180,7 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
     } finally {
       setIsLoading(false);
     }
-  }, [setIsLoading, cleanupAuthState, navigate]);
+  }, [setIsLoading, cleanupAuthState]);
 
   // Método específico para login de membro (pode ter lógica adicional)
   const signInAsMember = useCallback(async (email: string, password: string) => {
