@@ -6,9 +6,11 @@ import { supabase } from '@/lib/supabase';
 import { useAuthMethods } from './hooks/useAuthMethods';
 import { AuthStateManager, AuthState } from './managers/AuthStateManager';
 import { AuthContextType } from './types';
-import { SecurityProvider } from './SecurityContext';
+import { SecurityProvider } from '@/components/security/SecurityProvider';
 import { SecurityMonitor } from '@/components/security/SecurityMonitor';
 import { logger } from '@/utils/logger';
+import { auditLogger } from '@/utils/auditLogger';
+import { securityHeaders } from '@/utils/securityHeaders';
 
 // Criação do contexto com valor padrão undefined
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -74,33 +76,117 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Extrair métodos de autenticação com rate limiting integrado
   const { signIn, signOut, signInAsMember, signInAsAdmin } = useAuthMethods({ setIsLoading });
   
-  // Salvar a rota autenticada quando o usuário fizer login com sucesso
+  // Log de eventos de autenticação para auditoria
   useEffect(() => {
-    if (user && profile && !isLoading) {
-      localStorage.setItem('lastAuthRoute', window.location.pathname);
-    }
-  }, [user, profile, isLoading]);
-
-  // Handler de eventos de segurança
-  const handleSecurityEvent = useCallback((event: string, details: any) => {
-    logger.warn(`Evento de segurança: ${event}`, {
-      component: 'AUTH_PROVIDER',
-      event,
-      details,
-      userId: user?.id?.substring(0, 8) + '***' || 'anonymous'
-    });
-    
-    // Eventos críticos que requerem ação imediata
-    const criticalEvents = ['suspicious_scripts', 'console_access', 'devtools_detected'];
-    if (criticalEvents.includes(event)) {
-      // Log crítico e possível logout em casos extremos
-      if (event === 'suspicious_scripts') {
-        logger.error("Scripts maliciosos detectados, considerando logout", {
-          component: 'AUTH_PROVIDER'
+    const logAuthEvents = async () => {
+      if (user && profile && !isLoading) {
+        // Log de sessão ativa
+        await auditLogger.logAuthEvent('session_active', {
+          userRole: profile.role,
+          isAdmin,
+          isFormacao,
+          timestamp: new Date().toISOString()
+        }, user.id);
+        
+        // Salvar a rota autenticada
+        localStorage.setItem('lastAuthRoute', window.location.pathname);
+        
+        logger.info("Sessão de usuário ativa com auditoria", {
+          component: 'AUTH_PROVIDER',
+          userId: user.id.substring(0, 8) + '***',
+          role: profile.role
         });
       }
+    };
+    
+    logAuthEvents();
+  }, [user, profile, isLoading, isAdmin, isFormacao]);
+
+  // Handler de eventos de segurança aprimorado
+  const handleSecurityEvent = useCallback(async (event: string, details: any) => {
+    try {
+      // Log estruturado do evento
+      logger.warn(`Evento de segurança detectado: ${event}`, {
+        component: 'AUTH_PROVIDER',
+        event,
+        details: typeof details === 'object' ? details : { raw: details },
+        userId: user?.id?.substring(0, 8) + '***' || 'anonymous',
+        timestamp: new Date().toISOString()
+      });
+      
+      // Auditoria do evento de segurança
+      await auditLogger.logSecurityEvent(event, 'medium', {
+        ...details,
+        context: 'auth_provider',
+        userAgent: navigator.userAgent.substring(0, 100),
+        url: window.location.pathname
+      });
+      
+      // Eventos críticos que requerem ação imediata
+      const criticalEvents = ['suspicious_scripts', 'script_injection_detected', 'excessive_dom_mutations'];
+      if (criticalEvents.includes(event)) {
+        logger.error("Evento crítico de segurança detectado", {
+          component: 'AUTH_PROVIDER',
+          event,
+          details
+        });
+        
+        // Log crítico para análise posterior
+        await auditLogger.logSecurityEvent(`critical_${event}`, 'critical', {
+          ...details,
+          action_taken: 'logged_for_analysis',
+          requires_review: true
+        });
+      }
+      
+      // Eventos que podem indicar tentativa de manipulação
+      const manipulationEvents = ['console_access', 'devtools_detected'];
+      if (manipulationEvents.includes(event) && process.env.NODE_ENV === 'production') {
+        await auditLogger.logSecurityEvent('potential_manipulation', 'high', {
+          original_event: event,
+          ...details,
+          production_environment: true
+        });
+      }
+      
+    } catch (error) {
+      logger.error("Erro ao processar evento de segurança", {
+        component: 'AUTH_PROVIDER',
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        originalEvent: event
+      });
     }
   }, [user]);
+
+  // Verificar ambiente seguro na inicialização
+  useEffect(() => {
+    const checkSecureEnvironment = async () => {
+      const isSecure = securityHeaders.validateOrigin(window.location.origin);
+      const protocol = window.location.protocol;
+      
+      if (!isSecure || (process.env.NODE_ENV === 'production' && protocol !== 'https:')) {
+        await auditLogger.logSecurityEvent('insecure_environment', 'high', {
+          origin: window.location.origin,
+          protocol,
+          environment: process.env.NODE_ENV
+        });
+        
+        logger.warn("Ambiente inseguro detectado", {
+          component: 'AUTH_PROVIDER',
+          origin: window.location.origin,
+          protocol
+        });
+      } else {
+        logger.info("Ambiente seguro verificado", {
+          component: 'AUTH_PROVIDER',
+          protocol,
+          environment: process.env.NODE_ENV
+        });
+      }
+    };
+    
+    checkSecureEnvironment();
+  }, []);
 
   // Montar objeto de contexto memoizado
   const contextValue: AuthContextType = React.useMemo(() => ({
