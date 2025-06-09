@@ -1,197 +1,170 @@
 
-import { supabase, UserProfile } from "@/lib/supabase";
-import { createUserProfileIfNeeded, fetchUserProfile } from "@/contexts/auth/utils/profileUtils";
-import { validateUserRole } from "@/contexts/auth/utils/profileUtils/roleValidation";
-
-// Cache otimizado com controle de loading
-const profileCache = new Map<string, { 
-  profile: UserProfile | null; 
-  timestamp: number; 
-  promise?: Promise<UserProfile | null>;
-  isLoading: boolean;
-}>();
-const CACHE_DURATION = 15 * 60 * 1000; // 15 minutos aumentado
+import { supabase } from '@/lib/supabase';
+import { UserProfile } from '@/lib/supabase';
+import { logger } from '@/utils/logger';
+import { sanitizeForLogging } from '@/utils/securityUtils';
 
 /**
- * Processa o perfil do usuário de forma otimizada com cache melhorado
+ * Processa e valida o perfil do usuário com segurança
  */
 export const processUserProfile = async (
   userId: string,
-  email: string | undefined | null,
-  name: string | undefined | null
+  email?: string | null,
+  name?: string | null
 ): Promise<UserProfile | null> => {
-  try {
-    if (!userId) {
-      console.error("ID de usuário não fornecido para processamento de perfil");
-      return null;
-    }
-    
-    // Verificar cache primeiro
-    const cached = profileCache.get(userId);
-    const now = Date.now();
-    
-    // Retornar cache válido e não em loading
-    if (cached && !cached.isLoading && (now - cached.timestamp) < CACHE_DURATION) {
-      return cached.profile;
-    }
-    
-    // Se há uma promise em andamento, aguardar ela
-    if (cached?.promise && cached.isLoading) {
-      try {
-        return await cached.promise;
-      } catch (error) {
-        // Se a promise falhar, continuar com nova tentativa
-        console.warn("Promise em cache falhou, tentando novamente");
-      }
-    }
-    
-    // Marcar como carregando
-    profileCache.set(userId, { 
-      profile: cached?.profile || null, 
-      timestamp: now, 
-      isLoading: true 
+  if (!userId || typeof userId !== 'string') {
+    logger.warn("ID de usuário inválido para busca de perfil", {
+      component: 'AUTH_SESSION_UTILS'
     });
-    
-    // Criar nova promise e cachear ela
-    const profilePromise = fetchUserProfileOptimized(userId, email, name);
-    profileCache.set(userId, { 
-      profile: cached?.profile || null, 
-      timestamp: now, 
-      promise: profilePromise,
-      isLoading: true 
-    });
-    
-    const profile = await profilePromise;
-    
-    // Atualizar cache com resultado
-    profileCache.set(userId, { 
-      profile, 
-      timestamp: now,
-      isLoading: false 
-    });
-    
-    return profile;
-  } catch (error) {
-    console.error("Erro ao processar perfil do usuário:", error);
-    
-    // Remover do cache em caso de erro
-    profileCache.delete(userId);
-    
-    // Retornar perfil fallback para não bloquear o login
-    return createFallbackProfile(userId, email, name);
+    return null;
   }
-};
 
-/**
- * Função otimizada para buscar perfil com upsert melhorado
- */
-const fetchUserProfileOptimized = async (
-  userId: string, 
-  email: string | undefined | null, 
-  name: string | undefined | null
-): Promise<UserProfile | null> => {
   try {
-    // Tentar buscar perfil existente primeiro com timeout
-    const fetchPromise = fetchUserProfile(userId);
-    const timeoutPromise = new Promise<UserProfile | null>((_, reject) => 
-      setTimeout(() => reject(new Error('Fetch profile timeout')), 3000)
-    );
-    
-    let profile = await Promise.race([fetchPromise, timeoutPromise]);
-    
-    // Se não encontrou, criar usando upsert
-    if (!profile && email) {
-      profile = await createUserProfileIfNeeded(userId, email, name || "Usuário");
-    }
-    
-    // Verificar role apenas em desenvolvimento
-    if (profile?.role && process.env.NODE_ENV === 'development') {
-      try {
-        const validatedRole = await validateUserRole(profile.id);
-        if (validatedRole !== profile.role) {
-          profile.role = validatedRole as any;
-        }
-      } catch (roleError) {
-        console.warn("Erro ao validar role do usuário:", roleError);
-      }
-    }
-    
-    return profile;
-  } catch (error) {
-    console.error("Erro ao buscar perfil otimizado:", error);
-    
-    // Em caso de erro, retornar fallback
-    return createFallbackProfile(userId, email, name);
-  }
-};
-
-/**
- * Cria perfil fallback melhorado
- */
-const createFallbackProfile = (
-  userId: string, 
-  email: string | undefined | null, 
-  name: string | undefined | null
-): UserProfile => {
-  console.log(`Criando perfil fallback para ${email || userId}`);
-  return {
-    id: userId,
-    email: email || '',
-    name: name || 'Usuário',
-    role: 'membro_club',
-    avatar_url: null,
-    company_name: null,
-    industry: null,
-    created_at: new Date().toISOString(),
-    onboarding_completed: false,
-    onboarding_completed_at: null
-  };
-};
-
-/**
- * Inicializa perfil com upsert otimizado
- */
-export const initializeNewProfile = async (userId: string, email: string, name: string): Promise<UserProfile | null> => {
-  try {
-    const role = 'membro_club';
-    
-    // Usar upsert com timeout
-    const upsertPromise = supabase
-      .from("profiles")
-      .upsert({
-        id: userId,
-        email,
-        name,
-        role,
-        created_at: new Date().toISOString(),
-      }, {
-        onConflict: 'id',
-        ignoreDuplicates: false
-      })
-      .select()
+    // Buscar perfil existente
+    const { data: existingProfile, error: fetchError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
       .single();
-    
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Upsert timeout')), 3000)
-    );
-    
-    const { data, error } = await Promise.race([upsertPromise, timeoutPromise]) as any;
-    
-    if (error) {
-      console.error("Erro ao inicializar novo perfil:", error);
-      return createFallbackProfile(userId, email, name);
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      logger.error("Erro ao buscar perfil existente", {
+        error: sanitizeForLogging({ message: fetchError.message }),
+        component: 'AUTH_SESSION_UTILS'
+      });
+      throw fetchError;
     }
-    
-    return data as UserProfile;
+
+    if (existingProfile) {
+      logger.info("Perfil existente encontrado", {
+        userId: userId.substring(0, 8) + '***',
+        role: existingProfile.role,
+        component: 'AUTH_SESSION_UTILS'
+      });
+      return existingProfile;
+    }
+
+    // Criar novo perfil se não existir
+    if (email) {
+      const newProfile: Partial<UserProfile> = {
+        id: userId,
+        email: email.toLowerCase().trim(),
+        name: name || 'Usuário',
+        role: 'membro_club', // Role padrão seguro
+        avatar_url: null,
+        company_name: null,
+        industry: null,
+        onboarding_completed: false,
+        onboarding_completed_at: null
+      };
+
+      const { data: createdProfile, error: createError } = await supabase
+        .from('profiles')
+        .insert(newProfile)
+        .select()
+        .single();
+
+      if (createError) {
+        logger.error("Erro ao criar novo perfil", {
+          error: sanitizeForLogging({ message: createError.message }),
+          component: 'AUTH_SESSION_UTILS'
+        });
+        throw createError;
+      }
+
+      logger.info("Novo perfil criado com sucesso", {
+        userId: userId.substring(0, 8) + '***',
+        component: 'AUTH_SESSION_UTILS'
+      });
+
+      return createdProfile;
+    }
+
+    // Fallback: retornar perfil mínimo
+    logger.warn("Criando perfil mínimo como fallback", {
+      userId: userId.substring(0, 8) + '***',
+      component: 'AUTH_SESSION_UTILS'
+    });
+
+    return {
+      id: userId,
+      email: email || '',
+      name: name || 'Usuário',
+      role: 'membro_club',
+      avatar_url: null,
+      company_name: null,
+      industry: null,
+      created_at: new Date().toISOString(),
+      onboarding_completed: false,
+      onboarding_completed_at: null
+    };
+
   } catch (error) {
-    console.error("Erro inesperado ao inicializar perfil:", error);
-    return createFallbackProfile(userId, email, name);
+    logger.error("Erro crítico ao processar perfil do usuário", {
+      error: error instanceof Error ? error.message : 'Erro desconhecido',
+      component: 'AUTH_SESSION_UTILS'
+    });
+    return null;
   }
 };
 
 /**
- * Limpa o cache de perfis
+ * Valida a integridade de uma sessão
  */
-export const clearProfileCache = () => {
-  profileCache.clear();
+export const validateSessionIntegrity = (session: any): boolean => {
+  if (!session || typeof session !== 'object') {
+    return false;
+  }
+
+  // Verificar campos obrigatórios
+  if (!session.access_token || !session.user || !session.user.id) {
+    logger.warn("Sessão com campos obrigatórios ausentes", {
+      component: 'AUTH_SESSION_UTILS'
+    });
+    return false;
+  }
+
+  // Verificar expiração
+  if (session.expires_at && session.expires_at < Math.floor(Date.now() / 1000)) {
+    logger.warn("Sessão expirada detectada", {
+      component: 'AUTH_SESSION_UTILS'
+    });
+    return false;
+  }
+
+  // Verificar formato básico do token
+  if (typeof session.access_token !== 'string' || session.access_token.length < 20) {
+    logger.warn("Token com formato inválido", {
+      component: 'AUTH_SESSION_UTILS'
+    });
+    return false;
+  }
+
+  return true;
+};
+
+/**
+ * Limpa dados sensíveis da memória (best effort)
+ */
+export const secureDataCleanup = (data: any): void => {
+  if (!data || typeof data !== 'object') {
+    return;
+  }
+
+  try {
+    Object.keys(data).forEach(key => {
+      if (typeof data[key] === 'string') {
+        // Substituir strings por valores vazios
+        data[key] = '';
+      } else if (typeof data[key] === 'object' && data[key] !== null) {
+        // Recursivamente limpar objetos aninhados
+        secureDataCleanup(data[key]);
+      }
+    });
+  } catch (error) {
+    // Falhar silenciosamente se não conseguir limpar
+    logger.warn("Erro na limpeza segura de dados", {
+      component: 'AUTH_SESSION_UTILS'
+    });
+  }
 };
