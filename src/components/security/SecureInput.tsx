@@ -163,17 +163,18 @@ export const SecureInput: React.FC<SecureInputProps> = ({
               onClick={togglePasswordVisibility}
               className="h-6 w-6 p-0 hover:bg-transparent"
               tabIndex={-1}
+              aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </Button>
           )}
           
           {isFocused && (
-            <Shield className="h-4 w-4 text-green-500" title="Entrada protegida" />
+            <Shield className="h-4 w-4 text-green-500" aria-label="Entrada protegida" />
           )}
           
           {hasError && (
-            <AlertTriangle className="h-4 w-4 text-red-500" title="Erro de validação" />
+            <AlertTriangle className="h-4 w-4 text-red-500" aria-label="Erro de validação" />
           )}
         </div>
       </div>
