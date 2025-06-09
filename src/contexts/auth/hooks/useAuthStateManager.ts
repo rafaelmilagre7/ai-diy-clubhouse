@@ -2,7 +2,7 @@
 import { useCallback, useRef } from "react";
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
-import { processUserProfile } from './utils/authSessionUtils';
+import { processUserProfile } from '@/hooks/auth/utils/authSessionUtils';
 
 export const useAuthStateManager = () => {
   const setupInProgress = useRef(false);

@@ -27,6 +27,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authError, setAuthError] = useState<Error | null>(null);
   
   const authListenerRef = useRef<any>(null);
   const isInitialized = useRef(false);
@@ -96,6 +97,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                   await setupAuthSession();
                 } catch (error) {
                   console.error('❌ [AUTH DEBUG] Erro no setup pós-login:', error);
+                  setAuthError(error instanceof Error ? error : new Error('Erro no setup pós-login'));
                 }
               }, 100);
             } else if (event === 'SIGNED_OUT') {
@@ -104,6 +106,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               setUser(null);
               setProfile(null);
               setSession(null);
+              setAuthError(null);
               setIsLoading(false);
             }
           }
@@ -114,6 +117,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
       } catch (error) {
         console.error('❌ [AUTH DEBUG] Erro na inicialização:', error);
+        setAuthError(error instanceof Error ? error : new Error('Erro na inicialização'));
         setIsLoading(false);
       }
     };
@@ -141,6 +145,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAdmin,
     isFormacao,
     isLoading,
+    authError,
     signIn,
     signOut,
     signInAsMember,
