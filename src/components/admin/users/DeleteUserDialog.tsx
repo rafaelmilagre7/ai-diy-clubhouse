@@ -32,7 +32,7 @@ export const DeleteUserDialog: React.FC<DeleteUserDialogProps> = ({
   onSuccess
 }) => {
   const { deleteUser, isDeleting, deleteResult } = useDeleteUser();
-  const [softDelete, setSoftDelete] = useState(true);
+  const [softDelete, setSoftDelete] = useState(false); // Hard delete por padrão
 
   const handleDeleteUser = async () => {
     if (!user) return;
@@ -66,7 +66,7 @@ export const DeleteUserDialog: React.FC<DeleteUserDialogProps> = ({
                 onCheckedChange={setSoftDelete}
               />
               <Label htmlFor="soft-delete" className="text-sm font-medium">
-                Usar soft delete (recomendado para testes)
+                Usar soft delete (apenas para testes)
               </Label>
             </div>
 
@@ -87,19 +87,19 @@ export const DeleteUserDialog: React.FC<DeleteUserDialogProps> = ({
                 </ul>
               </div>
             ) : (
-              <div className="bg-orange-50 dark:bg-orange-950/20 p-4 rounded-md border border-orange-200 dark:border-orange-800">
+              <div className="bg-red-50 dark:bg-red-950/20 p-4 rounded-md border border-red-200 dark:border-red-800">
                 <div className="flex items-center gap-2 mb-2">
-                  <AlertTriangle className="h-4 w-4 text-orange-600" />
-                  <p className="text-sm text-orange-800 dark:text-orange-200 font-medium">
-                    ⚠️ Exclusão Completa (Hard Delete)
+                  <AlertTriangle className="h-4 w-4 text-red-600" />
+                  <p className="text-sm text-red-800 dark:text-red-200 font-medium">
+                    💥 Exclusão Completa (Hard Delete) - RECOMENDADO
                   </p>
                 </div>
-                <ul className="text-xs text-orange-700 dark:text-orange-300 space-y-1">
+                <ul className="text-xs text-red-700 dark:text-red-300 space-y-1">
                   <li>• 💥 Remove completamente do sistema de autenticação</li>
                   <li>• 🗑️ Limpa todos os dados associados</li>
+                  <li>• 📧 Permite reutilizar o email para novos convites</li>
                   <li>• ⚡ Ação irreversível</li>
-                  <li>• ⚠️ Pode falhar em casos específicos do Supabase</li>
-                  <li>• 🐌 Mais lento que soft delete</li>
+                  <li>• ✅ Solução definitiva para reutilizar emails</li>
                 </ul>
               </div>
             )}
@@ -108,12 +108,12 @@ export const DeleteUserDialog: React.FC<DeleteUserDialogProps> = ({
               <div className="flex items-center gap-2 mb-2">
                 <Info className="h-4 w-4 text-blue-600" />
                 <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                  💡 Dica para Desenvolvimento
+                    💡 Recomendação
                 </p>
               </div>
               <p className="text-xs text-blue-700 dark:text-blue-300">
-                <strong>Use soft delete</strong> se você quer apenas permitir o reenvio de convites. 
-                É mais seguro, mais rápido e resolve o problema de "usuário já registrado" perfeitamente.
+                <strong>Use hard delete</strong> se você quer poder convidar este email novamente. 
+                É a única forma de liberar completamente o email para reutilização.
               </p>
             </div>
 
