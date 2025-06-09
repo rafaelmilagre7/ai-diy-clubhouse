@@ -19,12 +19,20 @@ export class AuditLogger {
   // Tipos de eventos auditáveis
   private eventTypes = {
     AUTH: 'authentication',
-    ACCESS: 'access_control',
+    ACCESS: 'access_control', 
     DATA: 'data_modification',
     ADMIN: 'admin_action',
     SECURITY: 'security_event',
     SYSTEM: 'system_event'
   } as const;
+  
+  // Lista de eventos válidos para analytics
+  private validAnalyticsEvents = [
+    'login_attempt', 'login_success', 'login_failure',
+    'logout', 'session_start', 'session_end',
+    'page_view', 'solution_start', 'solution_complete',
+    'security_warning', 'error_logged'
+  ];
   
   // Log de evento de auditoria
   async logAuditEvent(
@@ -47,9 +55,13 @@ export class AuditLogger {
         session_id: await this.getSessionId()
       };
       
-      // Tentar salvar no banco (se conectado)
+      // Tentar salvar no banco (se conectado) com fallback
       try {
-        await supabase.from('audit_logs').insert(auditEntry);
+        // Apenas inserir se temos user_id válido
+        if (userId) {
+          await supabase.from('audit_logs').insert(auditEntry);
+        }
+        
         logger.info("Evento de auditoria registrado", {
           component: 'AUDIT_LOGGER',
           eventType,
@@ -75,7 +87,6 @@ export class AuditLogger {
   // Obter IP do cliente (simulado)
   private async getClientIP(): Promise<string> {
     try {
-      // Em produção, usar serviço real de IP
       if (process.env.NODE_ENV === 'production') {
         const response = await fetch('https://api.ipify.org?format=json');
         const data = await response.json();
@@ -103,17 +114,46 @@ export class AuditLogger {
       const existing = JSON.parse(localStorage.getItem('audit_logs_fallback') || '[]');
       existing.push(auditEntry);
       
-      // Manter apenas últimos 100 registros
-      const limited = existing.slice(-100);
+      // Manter apenas últimos 50 registros para não sobrecarregar
+      const limited = existing.slice(-50);
       localStorage.setItem('audit_logs_fallback', JSON.stringify(limited));
     } catch {
       // Falhar silenciosamente se não conseguir salvar
     }
   }
   
+  // Log seguro para analytics - apenas eventos válidos
+  private async logToAnalytics(eventType: string, details: Record<string, any>, userId?: string): Promise<void> {
+    if (!userId || !this.validAnalyticsEvents.includes(eventType)) {
+      return; // Não logar se não tem usuário ou evento inválido
+    }
+    
+    try {
+      await supabase.from('analytics').insert({
+        user_id: userId,
+        event_type: eventType,
+        solution_id: details.solution_id || null,
+        module_id: details.module_id || null,
+        event_data: sanitizeForLogging(details)
+      });
+    } catch (error) {
+      // Falhar silenciosamente para não quebrar o fluxo
+      console.warn('Erro ao salvar analytics:', error);
+    }
+  }
+  
   // Métodos específicos para diferentes tipos de eventos
   async logAuthEvent(action: string, details: Record<string, any> = {}, userId?: string): Promise<void> {
     await this.logAuditEvent('AUTH', action, details, userId);
+    
+    // Log específico para analytics se for evento válido
+    const analyticsEvent = action.includes('login') ? 'login_attempt' : 
+                          action.includes('logout') ? 'logout' :
+                          action.includes('session') ? 'session_start' : null;
+    
+    if (analyticsEvent && userId) {
+      await this.logToAnalytics(analyticsEvent, details, userId);
+    }
   }
   
   async logAccessEvent(action: string, resource: string, details: Record<string, any> = {}, userId?: string): Promise<void> {
@@ -130,6 +170,11 @@ export class AuditLogger {
   
   async logSecurityEvent(action: string, severity: 'low' | 'medium' | 'high' | 'critical', details: Record<string, any> = {}): Promise<void> {
     await this.logAuditEvent('SECURITY', action, { ...details, severity });
+    
+    // Log para analytics apenas em casos críticos
+    if (severity === 'critical') {
+      await this.logToAnalytics('security_warning', { severity, action, ...details });
+    }
   }
   
   async logSystemEvent(action: string, details: Record<string, any> = {}): Promise<void> {
@@ -186,42 +231,6 @@ export class AuditLogger {
       } catch {
         return [];
       }
-    }
-  }
-  
-  // Estatísticas de auditoria
-  async getAuditStats(): Promise<{
-    totalEvents: number;
-    eventsByType: Record<string, number>;
-    recentEvents: number;
-  }> {
-    try {
-      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-      const logs = await this.getAuditLogs(1000);
-      
-      const eventsByType: Record<string, number> = {};
-      let recentEvents = 0;
-      
-      logs.forEach(log => {
-        const eventType = log.event_type || 'unknown';
-        eventsByType[eventType] = (eventsByType[eventType] || 0) + 1;
-        
-        if (new Date(log.timestamp) > oneDayAgo) {
-          recentEvents++;
-        }
-      });
-      
-      return {
-        totalEvents: logs.length,
-        eventsByType,
-        recentEvents
-      };
-    } catch {
-      return {
-        totalEvents: 0,
-        eventsByType: {},
-        recentEvents: 0
-      };
     }
   }
 }

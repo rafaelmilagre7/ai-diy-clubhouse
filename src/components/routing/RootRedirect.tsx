@@ -10,21 +10,34 @@ const RootRedirect = () => {
   const { user, profile, isAdmin, isLoading: authLoading } = useAuth();
   const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingStatus();
   const [timeoutExceeded, setTimeoutExceeded] = useState(false);
+  const [fallbackUsed, setFallbackUsed] = useState(false);
   
-  // Timeout aumentado para 8 segundos para permitir carregamento do perfil
+  // Timeout reduzido para 5 segundos
   useEffect(() => {
     const timeout = setTimeout(() => {
       logger.warn("RootRedirect timeout excedido", { 
         component: 'ROOT_REDIRECT',
-        timeoutDuration: '8000ms',
+        timeoutDuration: '5000ms',
         hasUser: !!user,
         hasProfile: !!profile
       });
       setTimeoutExceeded(true);
-    }, 8000);
+    }, 5000);
 
     return () => clearTimeout(timeout);
   }, [user, profile]);
+  
+  // Fallback adicional para casos extremos
+  useEffect(() => {
+    const fallbackTimeout = setTimeout(() => {
+      if (!user && !profile && authLoading) {
+        logger.warn("Fallback ativado - redirecionando para login");
+        setFallbackUsed(true);
+      }
+    }, 3000);
+
+    return () => clearTimeout(fallbackTimeout);
+  }, [user, profile, authLoading]);
   
   if (process.env.NODE_ENV === 'development') {
     logger.debug('RootRedirect estado atual', {
@@ -36,18 +49,24 @@ const RootRedirect = () => {
       onboardingRequired,
       isAdmin,
       timeoutExceeded,
+      fallbackUsed,
       component: 'ROOT_REDIRECT'
     });
   }
   
-  // Se timeout excedido, usar fallback mais inteligente
+  // Fallback de emergência
+  if (fallbackUsed) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  // Se timeout excedido, usar fallback inteligente
   if (timeoutExceeded) {
     if (!user) {
       logger.warn("Timeout sem usuário, redirecionando para login");
       return <Navigate to="/login" replace />;
     }
     
-    // Se há usuário mas não há perfil, criar perfil mínimo e continuar
+    // Se há usuário mas não há perfil, ir para dashboard
     if (user && !profile) {
       logger.warn("Timeout com usuário mas sem perfil, usando fallback para dashboard");
       return <Navigate to="/dashboard" replace />;
@@ -64,7 +83,7 @@ const RootRedirect = () => {
   }
   
   // Se ainda estiver carregando autenticação (mas não muito tempo)
-  if (authLoading) {
+  if (authLoading && !timeoutExceeded) {
     return <LoadingScreen message="Verificando sua sessão..." showProgress={true} />;
   }
   
@@ -74,17 +93,17 @@ const RootRedirect = () => {
   }
   
   // Se há usuário mas não há perfil ainda (e não excedeu timeout)
-  if (!profile) {
+  if (!profile && !timeoutExceeded) {
     return <LoadingScreen message="Carregando seu perfil..." showProgress={true} />;
   }
   
   // Se ainda está carregando onboarding
-  if (onboardingLoading) {
+  if (onboardingLoading && !timeoutExceeded) {
     return <LoadingScreen message="Verificando seu progresso..." />;
   }
   
   // Se precisa de onboarding
-  if (onboardingRequired) {
+  if (onboardingRequired && !timeoutExceeded) {
     return <Navigate to="/onboarding" replace />;
   }
   

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { PageTransitionWithFallback } from "@/components/transitions/PageTransitionWithFallback";
+import { logger } from "@/utils/logger";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -17,30 +18,51 @@ export const ProtectedRoute = ({
   const { user, isAdmin, isLoading } = useAuth();
   const navigate = useNavigate();
   const [accessChecked, setAccessChecked] = useState(false);
+  const [fallbackTriggered, setFallbackTriggered] = useState(false);
   const timeoutRef = useRef<number | null>(null);
   
-  // Verificar acesso apenas quando o estado de autenticação estiver pronto
+  // Verificar acesso com fallbacks seguros
   useEffect(() => {
     // Limpar timeout existente
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
     
-    // Se estiver carregando, configurar timeout
-    if (isLoading) {
+    // Se estiver carregando, configurar timeout menor
+    if (isLoading && !accessChecked) {
       timeoutRef.current = window.setTimeout(() => {
-        // Redirecionar para login se timeout excedido
-        navigate('/login', { replace: true });
-      }, 2000); // 2 segundos de timeout
+        logger.warn("ProtectedRoute timeout - usando fallback", {
+          component: 'PROTECTED_ROUTE',
+          hasUser: !!user,
+          requireAdmin
+        });
+        setFallbackTriggered(true);
+        
+        // Fallback baseado no estado atual
+        if (!user) {
+          navigate('/login', { replace: true });
+        } else if (requireAdmin && !isAdmin) {
+          navigate('/dashboard', { replace: true });
+        } else {
+          setAccessChecked(true);
+        }
+      }, 1500); // 1.5 segundos de timeout
     }
     // Se não estiver carregando, verificar acesso
-    else if (!accessChecked) {
+    else if (!isLoading && !accessChecked && !fallbackTriggered) {
       if (!user) {
-        navigate('/auth', { replace: true });
+        logger.info("ProtectedRoute - usuário não autenticado", {
+          component: 'PROTECTED_ROUTE'
+        });
+        navigate('/login', { replace: true });
         return;
       }
       
       if (requireAdmin && !isAdmin) {
+        logger.info("ProtectedRoute - acesso admin negado", {
+          component: 'PROTECTED_ROUTE',
+          userRole: user?.user_metadata?.role
+        });
         navigate('/dashboard', { replace: true });
         return;
       }
@@ -54,10 +76,10 @@ export const ProtectedRoute = ({
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [user, isAdmin, isLoading, accessChecked, requireAdmin, navigate]);
+  }, [user, isAdmin, isLoading, accessChecked, requireAdmin, navigate, fallbackTriggered]);
 
   // Mostrar loading enquanto verifica acesso
-  if (isLoading || !accessChecked) {
+  if ((isLoading || !accessChecked) && !fallbackTriggered) {
     return (
       <PageTransitionWithFallback isVisible={true}>
         <LoadingScreen message="Verificando sua autenticação..." />
@@ -65,7 +87,7 @@ export const ProtectedRoute = ({
     );
   }
 
-  // Renderizar apenas se acesso foi verificado
+  // Renderizar apenas se acesso foi verificado ou fallback ativado
   return <>{children}</>;
 };
 
