@@ -17,11 +17,11 @@ export const AdminSidebar = ({
       )}
     >
       <div className="flex flex-col h-full">
-        {/* Logo/Header - altura fixa otimizada */}
-        <div className="p-3 border-b border-gray-700 flex-shrink-0">
+        {/* Logo/Header */}
+        <div className="p-4 border-b border-gray-700 flex-shrink-0">
           <div className="flex items-center justify-center">
             {sidebarOpen ? (
-              <h1 className="text-lg font-bold text-white">Admin Panel</h1>
+              <h1 className="text-xl font-bold text-white">Admin Panel</h1>
             ) : (
               <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
                 <span className="text-sm font-bold">A</span>
@@ -30,7 +30,7 @@ export const AdminSidebar = ({
           </div>
         </div>
 
-        {/* Navegação com ScrollArea */}
+        {/* Navegação */}
         <AdminSidebarNav sidebarOpen={sidebarOpen} />
       </div>
     </aside>
