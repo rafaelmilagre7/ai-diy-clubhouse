@@ -11,23 +11,23 @@ interface AdminHeaderProps {
 
 export const AdminHeader = ({ onToggleSidebar }: AdminHeaderProps) => {
   return (
-    <header className="h-16 border-b bg-background flex items-center justify-between px-4 lg:px-6">
-      <div className="flex items-center gap-4">
+    <header className="h-14 border-b bg-background flex items-center justify-between px-3 lg:px-4 flex-shrink-0">
+      <div className="flex items-center gap-3">
         <Button
           variant="ghost"
           size="sm"
           onClick={onToggleSidebar}
-          className="lg:hidden"
+          className="lg:hidden p-1.5"
         >
-          <Menu className="h-5 w-5" />
+          <Menu className="h-4 w-4" />
         </Button>
         
         <div className="hidden lg:block">
-          <h1 className="text-xl font-semibold">Painel Administrativo</h1>
+          <h1 className="text-lg font-semibold">Painel Administrativo</h1>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         <NotificationDropdown />
         <AdminUserMenu />
       </div>

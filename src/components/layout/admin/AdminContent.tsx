@@ -11,13 +11,15 @@ export const AdminContent = ({
   return (
     <div 
       className={cn(
-        "flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden",
+        "flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden min-h-screen",
         sidebarOpen ? "md:ml-64" : "md:ml-[70px]"
       )}
     >
       <AdminHeader onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-      <main className="flex-1 overflow-auto max-w-7xl mx-auto p-8 w-full">
-        {children}
+      <main className="flex-1 overflow-auto">
+        <div className="max-w-7xl mx-auto p-4 lg:p-6 w-full">
+          {children}
+        </div>
       </main>
     </div>
   );
