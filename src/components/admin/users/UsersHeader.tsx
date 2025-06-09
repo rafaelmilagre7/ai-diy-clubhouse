@@ -1,53 +1,84 @@
 
-import { Input } from "@/components/ui/input";
-import { Search, RefreshCw } from "lucide-react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search, RefreshCw, UserPlus, Trash2 } from "lucide-react";
+import { ManualCleanupDialog } from "./ManualCleanupDialog";
 
 interface UsersHeaderProps {
   searchQuery: string;
-  onSearchChange: (value: string) => void;
-  onRefresh?: () => void;
-  isRefreshing?: boolean;
+  onSearchChange: (query: string) => void;
+  onRefresh: () => void;
+  isRefreshing: boolean;
 }
 
-export const UsersHeader = ({
+export const UsersHeader: React.FC<UsersHeaderProps> = ({
   searchQuery,
   onSearchChange,
   onRefresh,
-  isRefreshing = false
-}: UsersHeaderProps) => {
+  isRefreshing,
+}) => {
+  const [cleanupDialogOpen, setCleanupDialogOpen] = useState(false);
+
   return (
     <>
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Usuários</h1>
-        <p className="text-muted-foreground">
-          Gerencie os usuários da plataforma.
-        </p>
-      </div>
-      
-      <div className="flex flex-col sm:flex-row justify-between gap-4">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar usuário..."
-            className="pl-8 w-full md:w-[300px]"
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-          />
+      <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Gerenciamento de Usuários</h1>
+          <p className="text-muted-foreground">
+            Gerencie usuários, papéis e permissões do sistema
+          </p>
         </div>
         
-        {onRefresh && (
-          <Button 
-            variant="outline" 
-            onClick={onRefresh} 
-            disabled={isRefreshing}
-            className="flex items-center gap-2"
+        <div className="flex items-center space-x-2">
+          <Button
+            onClick={() => setCleanupDialogOpen(true)}
+            variant="outline"
+            size="sm"
+            className="text-red-600 border-red-200 hover:bg-red-50"
           >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            {isRefreshing ? 'Atualizando...' : 'Atualizar Lista'}
+            <Trash2 className="mr-2 h-4 w-4" />
+            Limpeza Manual
           </Button>
-        )}
+          
+          <Button
+            onClick={onRefresh}
+            variant="outline"
+            size="sm"
+            disabled={isRefreshing}
+          >
+            {isRefreshing ? (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                Atualizando...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Atualizar
+              </>
+            )}
+          </Button>
+        </div>
       </div>
+
+      <div className="flex items-center space-x-2">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por nome, email ou empresa..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="pl-8"
+          />
+        </div>
+      </div>
+
+      <ManualCleanupDialog
+        open={cleanupDialogOpen}
+        onOpenChange={setCleanupDialogOpen}
+        onSuccess={onRefresh}
+      />
     </>
   );
 };

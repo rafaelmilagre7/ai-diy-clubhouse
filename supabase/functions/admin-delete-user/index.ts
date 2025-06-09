@@ -114,6 +114,9 @@ const handler = async (req: Request): Promise<Response> => {
         'forum_posts',
         'forum_topics',
         'learning_progress',
+        'learning_lesson_nps',
+        'learning_comment_likes',
+        'learning_comments',
         'progress',
         'user_checklists',
         'analytics'
@@ -126,7 +129,6 @@ const handler = async (req: Request): Promise<Response> => {
         try {
           console.log(`🗑️ Limpando tabela: ${table}`);
           
-          let deleteQuery;
           if (table === 'direct_messages') {
             await supabaseAdmin.from(table).delete().eq('sender_id', userId);
             await supabaseAdmin.from(table).delete().eq('recipient_id', userId);
@@ -201,36 +203,78 @@ const handler = async (req: Request): Promise<Response> => {
     // === HARD DELETE ===
     console.log("💥 === EXECUTANDO HARD DELETE ===");
     
-    // 1. Limpar dados relacionados
+    // 1. Limpar dados relacionados - LISTA COMPLETA E ATUALIZADA
     console.log("🧹 Limpando dados relacionados...");
     const tables = [
+      // Analytics e auditoria
       'analytics',
+      'audit_logs',
+      
+      // Onboarding e configuração inicial
       'onboarding_progress',
       'onboarding_history', 
       'onboarding_ai_conversations',
       'onboarding_chat_messages',
       'onboarding_complementary_info',
+      'user_onboarding',
+      
+      // Trilhas de implementação
       'implementation_trails',
+      'implementation_profiles',
+      
+      // Sistema de convites
       'invites',
+      
+      // Comunicações e mensagens
       'direct_messages',
+      'whatsapp_messages',
+      'communication_deliveries',
+      
+      // Conexões e networking
       'member_connections',
       'network_connections',
       'network_matches',
+      'connection_notifications',
+      'connection_recommendations',
+      'networking_preferences',
+      
+      // Sistema de notificações
       'notifications',
+      'notification_preferences',
+      
+      // Fórum e comunidade
       'forum_posts',
       'forum_topics',
       'forum_notifications',
+      'forum_mentions',
+      'forum_reactions',
+      'community_reports',
+      
+      // Sistema de aprendizado - CRÍTICO: inclui learning_lesson_nps
       'learning_progress',
+      'learning_lesson_nps',
+      'learning_comment_likes', 
       'learning_comments',
+      'learning_certificates',
+      
+      // Progresso e checklists
       'progress',
       'user_checklists',
+      
+      // Benefícios e ferramentas
       'benefit_clicks',
       'solution_comments',
       'tool_comments',
+      
+      // Sistema de indicações
       'referrals',
+      
+      // Sugestões e votações
       'suggestion_votes',
       'suggestion_comments',
-      'whatsapp_messages'
+      
+      // Moderação
+      'moderation_actions'
     ];
 
     let clearedTables = 0;
@@ -253,10 +297,21 @@ const handler = async (req: Request): Promise<Response> => {
           await supabaseAdmin.from(table).delete().eq('created_by', userId);
         } else if (table === 'referrals') {
           await supabaseAdmin.from(table).delete().eq('referrer_id', userId);
+        } else if (table === 'community_reports') {
+          await supabaseAdmin.from(table).delete().eq('reporter_id', userId);
+          await supabaseAdmin.from(table).delete().eq('reported_user_id', userId);
+          await supabaseAdmin.from(table).delete().eq('reviewed_by', userId);
+        } else if (table === 'moderation_actions') {
+          await supabaseAdmin.from(table).delete().eq('moderator_id', userId);
+          await supabaseAdmin.from(table).delete().eq('target_user_id', userId);
         } else {
           const { error } = await supabaseAdmin.from(table).delete().eq('user_id', userId);
           if (error && !forceDelete) {
-            throw error;
+            console.warn(`⚠️ Erro ao limpar ${table}:`, error.message);
+            errors.push({ table, error: error.message });
+          } else if (error) {
+            console.warn(`⚠️ Erro ignorado (forceDelete=true) ao limpar ${table}:`, error.message);
+            errors.push({ table, error: error.message });
           }
         }
         
@@ -274,7 +329,26 @@ const handler = async (req: Request): Promise<Response> => {
 
     result.details.relatedDataCleared = clearedTables > 0;
 
-    // 2. Remover perfil
+    // 2. Limpar convites pendentes para o email
+    console.log("📧 Limpando convites pendentes para o email...");
+    try {
+      const { error: inviteError } = await supabaseAdmin
+        .from('invites')
+        .delete()
+        .eq('email', userEmail);
+
+      if (inviteError) {
+        console.warn("⚠️ Erro ao limpar convites por email:", inviteError);
+        errors.push({ table: 'invites_by_email', error: inviteError.message });
+      } else {
+        console.log("✅ Convites por email limpos");
+      }
+    } catch (error: any) {
+      console.warn("⚠️ Erro ao limpar convites por email:", error);
+      errors.push({ table: 'invites_by_email', error: error.message });
+    }
+
+    // 3. Remover perfil
     console.log("👤 Removendo perfil...");
     try {
       const { error: profileError } = await supabaseAdmin
@@ -297,7 +371,7 @@ const handler = async (req: Request): Promise<Response> => {
       result.details.errors.push(error);
     }
 
-    // 3. Excluir usuário do Auth
+    // 4. Excluir usuário do Auth
     console.log("🔐 Removendo usuário do sistema de autenticação...");
     try {
       const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
@@ -317,19 +391,53 @@ const handler = async (req: Request): Promise<Response> => {
       result.details.errors.push(error);
     }
 
+    // 5. Verificação final: testar se email pode receber novo convite
+    console.log("🔍 Verificando se email foi liberado...");
+    try {
+      // Verificar se ainda existe algum registro com este email
+      const { data: remainingProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('email', userEmail)
+        .maybeSingle();
+
+      const { data: remainingInvite } = await supabaseAdmin
+        .from('invites')
+        .select('id')
+        .eq('email', userEmail)
+        .maybeSingle();
+
+      if (remainingProfile || remainingInvite) {
+        console.warn("⚠️ Email ainda não foi completamente liberado", {
+          hasProfile: !!remainingProfile,
+          hasInvite: !!remainingInvite
+        });
+        errors.push({ 
+          table: 'verification', 
+          error: `Email ${userEmail} ainda tem registros: profile=${!!remainingProfile}, invite=${!!remainingInvite}` 
+        });
+      } else {
+        console.log("✅ Email completamente liberado para novos convites");
+      }
+    } catch (error: any) {
+      console.warn("⚠️ Erro na verificação final:", error);
+      errors.push({ table: 'verification', error: error.message });
+    }
+
     // Determinar sucesso
     const hasErrors = result.details.errors.length > 0;
     const criticalSuccess = result.details.profileDeleted || result.details.authUserDeleted;
     
     result.success = forceDelete ? true : (!hasErrors && criticalSuccess);
     result.message = result.success 
-      ? `Usuário ${userEmail} removido completamente (${clearedTables} tabelas limpas)`
+      ? `Usuário ${userEmail} removido completamente (${clearedTables} tabelas limpas, ${errors.length} avisos)`
       : `Falha parcial na remoção. ${result.details.errors.length} erros encontrados.`;
 
     console.log("🎉 === HARD DELETE CONCLUÍDO ===", {
       sucesso: result.success,
       tabelas_limpas: clearedTables,
       erros: result.details.errors.length,
+      avisos: errors.length,
       perfil_removido: result.details.profileDeleted,
       auth_removido: result.details.authUserDeleted,
       usuario: userEmail
