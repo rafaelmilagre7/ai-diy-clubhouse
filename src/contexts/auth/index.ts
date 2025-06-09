@@ -5,5 +5,5 @@ export { signOutUser } from './utils';
 export { validateUserRole, isSuperAdmin } from './utils';
 
 // Export auth components and hooks from the main index file
-export { AuthProvider, useAuth, useIsAdmin } from './index';
+export { AuthProvider, useAuth, useIsAdmin } from './index.tsx';
 export type { AuthContextType } from './types';
