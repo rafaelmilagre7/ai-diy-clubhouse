@@ -3,6 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { MemberUserMenu } from "./MemberUserMenu";
+import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 
 interface MemberHeaderProps {
   onSignOut: () => void;
@@ -38,8 +39,14 @@ export const MemberHeader: React.FC<MemberHeaderProps> = ({
       {/* Spacer para desktop */}
       <div className="hidden md:block" />
 
-      {/* Menu do usuário */}
-      <MemberUserMenu />
+      {/* Área de ações do usuário */}
+      <div className="flex items-center gap-2">
+        {/* Notificações */}
+        <NotificationDropdown />
+        
+        {/* Menu do usuário */}
+        <MemberUserMenu />
+      </div>
     </header>
   );
 };
