@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useAuth } from '@/contexts/auth';
-import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,10 +10,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogOut, Settings, User } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import { User, Settings, Bell, LogOut } from 'lucide-react';
 
 export const MemberUserMenu = () => {
   const { profile, signOut } = useAuth();
@@ -30,63 +29,43 @@ export const MemberUserMenu = () => {
   };
 
   const handleSignOut = async () => {
-    try {
-      const result = await signOut();
-      if (result.success) {
-        toast.success("Logout realizado com sucesso");
-        navigate('/login');
-      } else {
-        toast.error("Erro ao fazer logout");
-      }
-    } catch (error) {
-      console.error('Erro no signOut:', error);
-      toast.error("Erro ao fazer logout");
-    }
+    await signOut();
   };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-          <Avatar className="h-10 w-10">
+        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+          <Avatar className="h-8 w-8">
             <AvatarImage src={profile?.avatar_url} alt={profile?.name || ''} />
-            <AvatarFallback className="bg-primary text-primary-foreground">
-              {getInitials(profile?.name)}
-            </AvatarFallback>
+            <AvatarFallback>{getInitials(profile?.name)}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56 bg-surface-elevated border-border" align="end" forceMount>
+      <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none text-text-primary">
-              {profile?.name || 'Usuário'}
-            </p>
-            <p className="text-xs leading-none text-text-muted">
+            <p className="text-sm font-medium leading-none">{profile?.name}</p>
+            <p className="text-xs leading-none text-muted-foreground">
               {profile?.email}
             </p>
           </div>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator className="bg-border" />
-        <DropdownMenuItem 
-          onClick={() => navigate('/profile')}
-          className="text-text-secondary hover:text-text-primary hover:bg-surface-hover"
-        >
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => navigate('/profile')}>
           <User className="mr-2 h-4 w-4" />
           <span>Perfil</span>
         </DropdownMenuItem>
-        <DropdownMenuItem 
-          onClick={() => navigate('/settings')}
-          className="text-text-secondary hover:text-text-primary hover:bg-surface-hover"
-        >
+        <DropdownMenuItem onClick={() => navigate('/settings/notifications')}>
+          <Bell className="mr-2 h-4 w-4" />
+          <span>Notificações</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate('/profile/edit')}>
           <Settings className="mr-2 h-4 w-4" />
           <span>Configurações</span>
         </DropdownMenuItem>
-        <DropdownMenuSeparator className="bg-border" />
-        <DropdownMenuItem 
-          onClick={handleSignOut}
-          className="text-error hover:text-error hover:bg-error/10"
-        >
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleSignOut}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Sair</span>
         </DropdownMenuItem>

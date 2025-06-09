@@ -8,7 +8,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MoreVertical, FileEdit, Eye, Trash2 } from 'lucide-react';
-import { Text } from '@/components/ui/text';
 import { Link } from 'react-router-dom';
 
 interface TableActionsProps {
@@ -23,32 +22,32 @@ export const TableActions: React.FC<TableActionsProps> = ({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="text-text-secondary hover:text-primary">
+        <Button variant="ghost" size="icon" className="text-neutral-300 hover:text-white">
           <MoreVertical className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="bg-surface-elevated border-border">
+      <DropdownMenuContent align="end" className="bg-[#1A1E2E] border-neutral-700 text-white">
         <Link to={`/admin/solutions/${solutionId}`}>
-          <DropdownMenuItem className="hover:bg-surface-hover cursor-pointer">
+          <DropdownMenuItem className="hover:bg-neutral-800 text-white cursor-pointer">
             <FileEdit className="mr-2 h-4 w-4" />
-            <Text variant="body-small" textColor="primary">Editar</Text>
+            <span>Editar</span>
           </DropdownMenuItem>
         </Link>
         <Link to={`/solution/${solutionId}`} target="_blank">
-          <DropdownMenuItem className="hover:bg-surface-hover cursor-pointer">
+          <DropdownMenuItem className="hover:bg-neutral-800 text-white cursor-pointer">
             <Eye className="mr-2 h-4 w-4" />
-            <Text variant="body-small" textColor="primary">Visualizar</Text>
+            <span>Visualizar</span>
           </DropdownMenuItem>
         </Link>
         <DropdownMenuItem 
-          className="hover:bg-surface-hover cursor-pointer"
+          className="hover:bg-neutral-800 text-white cursor-pointer"
           onClick={(e) => {
             e.preventDefault();
             onDeleteClick(solutionId);
           }}
         >
           <Trash2 className="mr-2 h-4 w-4" />
-          <Text variant="body-small" textColor="primary">Excluir</Text>
+          <span>Excluir</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

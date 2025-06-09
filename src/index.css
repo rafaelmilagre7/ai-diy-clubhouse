@@ -2,103 +2,11 @@
 /* Modularização dos estilos em arquivos separados para facilitar manutenção */
 
 @import './styles/base.css';
-@import './styles/typography.css';
-@import './styles/text-utilities.css';
-@import './styles/utilities.css';
 @import './styles/components.css';
+@import './styles/utilities.css';
 
 @tailwind base;
-@tailwind components; 
+@tailwind components;
 @tailwind utilities;
 
-/* --- Customizações globais específicas --- */
-
-/* Remove outline padrão e usa sistema de focus moderno */
-*:focus {
-  outline: none;
-}
-
-/* Melhora a renderização de texto */
-* {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Melhora o comportamento de scroll */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Remove margin padrão */
-body {
-  margin: 0;
-}
-
-/* === LEGACY COLOR COMPATIBILITY === */
-/* Mantém compatibilidade com cores antigas enquanto migra */
-:root {
-  /* Cores legadas mapeadas para o novo sistema */
-  --viverblue: hsl(var(--primary));
-  --viverblue-dark: hsl(var(--primary-hover));
-  --viverblue-light: hsl(var(--primary) / 0.1);
-  
-  /* Cores de fundo legadas */
-  --dark-bg: hsl(var(--background));
-  --card-bg: hsl(var(--surface-elevated));
-  --hover-bg: hsl(var(--surface-hover));
-  
-  /* Cores de texto legadas */
-  --text-light: hsl(var(--text-primary));
-  --text-muted: hsl(var(--text-muted));
-  --text-secondary: hsl(var(--text-secondary));
-}
-
-/* Classes utilitárias legadas para transição suave */
-.text-viverblue {
-  @apply text-primary;
-}
-
-.bg-viverblue {
-  @apply bg-primary;
-}
-
-.border-viverblue {
-  @apply border-primary;
-}
-
-.hover\:bg-viverblue-dark:hover {
-  @apply hover:bg-primary-hover;
-}
-
-.bg-\[var\(--viverblue\)\] {
-  @apply bg-primary;
-}
-
-.text-\[\#00EAD9\] {
-  @apply text-primary;
-}
-
-.bg-\[\#00EAD9\] {
-  @apply bg-primary;
-}
-
-.bg-\[\#1A1E2E\] {
-  @apply bg-surface;
-}
-
-.bg-\[\#151823\] {
-  @apply bg-surface-elevated;
-}
-
-/* Classes de transição para cores específicas */
-.text-\[\#F8FAFC\] {
-  @apply text-text-primary;
-}
-
-.text-\[\#CDD5E0\] {
-  @apply text-text-secondary;
-}
-
-.text-\[\#657084\] {
-  @apply text-text-muted;
-}
+/* --- DEMAIS customizações, plugins, ou pequenas regras que necessitem ficar aqui podem ser adicionadas abaixo --- */

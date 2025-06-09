@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { useAuth } from "@/contexts/auth";
 import { PageTransitionWithFallback } from "@/components/transitions/PageTransitionWithFallback";
-import { Container } from "@/components/ui/container";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -57,72 +56,67 @@ const Index = () => {
     <PageTransitionWithFallback
       isVisible={true}
       fallbackMessage="Preparando seu ambiente..."
-      className="min-h-screen bg-gradient-to-br from-background via-surface to-surface-elevated"
+      className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800"
     >
-      <Container className="min-h-screen flex flex-col items-center justify-center py-12">
+      <div className="min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8 animate-fade-in">
           <div className="text-center">
-            <div className="mx-auto h-28 w-28 relative group">
-              <div className="absolute inset-0 rounded-full bg-gradient-primary opacity-20 animate-pulse-subtle group-hover:opacity-30 transition-opacity duration-300"></div>
-              <div className="absolute inset-0 rounded-full bg-gradient-primary opacity-10 animate-ping"></div>
+            <div className="mx-auto h-28 w-28 relative">
+              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-viverblue/20 to-viverblue-dark/10 animate-pulse-subtle"></div>
               <img
-                className="mx-auto h-full w-auto relative z-10 drop-shadow-lg transition-transform duration-300 group-hover:scale-105"
+                className="mx-auto h-full w-auto relative z-10 drop-shadow-md"
                 src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
                 alt="VIVER DE IA Hub"
                 loading="eager" 
               />
             </div>
             
-            <h1 className="mt-8 text-center heading-display text-gradient animate-gradient-shift">
+            <h1 className="mt-6 text-center text-4xl sm:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-viverblue via-indigo-600 to-viverblue-dark animate-gradient-shift bg-size-200">
               VIVER DE IA Hub
             </h1>
             
-            <p className="mt-4 text-center body-large text-text-secondary max-w-sm mx-auto">
+            <p className="mt-3 text-center text-lg text-gray-600 dark:text-gray-300 max-w-sm mx-auto">
               Implemente soluções de IA com autonomia e sucesso
             </p>
           </div>
 
-          <div className="relative pt-2 w-full max-w-xs mx-auto">
-            <div className="overflow-hidden h-2 rounded-full bg-surface-elevated border border-border-subtle shadow-inner">
+          <div className="relative pt-1 w-full max-w-xs mx-auto mt-8">
+            <div className="overflow-hidden h-2 mb-4 text-xs flex rounded-full bg-gray-200 dark:bg-gray-700">
               <div 
                 style={{ width: `${progress}%` }} 
-                className="h-full bg-gradient-primary shadow-sm transition-all duration-300 ease-out"
+                className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-viverblue to-viverblue-light transition-all duration-300"
               ></div>
             </div>
           </div>
 
           <div className="mt-8 flex justify-center">
-            <div className="card-modern px-6 py-4 text-center shadow-soft hover:shadow-medium transition-all duration-300">
-              <span className="body-default font-medium text-foreground">
-                {isLoading ? 'Verificando autenticação...' : 
-                 isRedirecting ? 'Redirecionando...' : 
-                 'Bem-vindo ao VIVER DE IA Hub'
-                }
-              </span>
+            <div className="inline-flex items-center px-5 py-3 border border-transparent text-base font-medium rounded-full shadow-md text-white bg-gradient-to-r from-viverblue to-viverblue-light hover:from-viverblue-dark hover:to-viverblue transition-all">
+              {isLoading ? 'Verificando autenticação...' : 
+               isRedirecting ? 'Redirecionando...' : 
+               'Bem-vindo ao VIVER DE IA Hub'
+              }
             </div>
           </div>
 
           {isLoading && (
-            <div className="mt-4 text-center animate-fade-in" style={{ animationDelay: '0.2s' }}>
-              <p className="body-small text-text-tertiary animate-pulse">
+            <div className="mt-4 text-center">
+              <p className="text-sm text-gray-500 dark:text-gray-400 animate-pulse">
                 Carregando suas informações...
               </p>
             </div>
           )}
           
-          <div className="text-center mt-6">
-            <p className="body-small text-text-muted">
+          <div className="text-center mt-4">
+            <p className="text-gray-500 dark:text-gray-400">
               {isRedirecting ? "Redirecionando automaticamente..." : "Preparando sua experiência..."}
             </p>
           </div>
         </div>
         
-        <div className="absolute bottom-4 left-0 w-full flex justify-center">
-          <p className="ui-caption text-text-tertiary">
-            © {new Date().getFullYear()} VIVER DE IA Hub • Todos os direitos reservados
-          </p>
+        <div className="absolute bottom-4 left-0 w-full flex justify-center text-xs text-gray-400">
+          © {new Date().getFullYear()} VIVER DE IA Hub • Todos os direitos reservados
         </div>
-      </Container>
+      </div>
     </PageTransitionWithFallback>
   );
 };

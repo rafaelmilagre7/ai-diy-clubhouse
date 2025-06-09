@@ -32,7 +32,7 @@ export const CardHeader = ({ category, difficulty }: CardHeaderProps) => {
     <div className="flex justify-between items-center mb-2">
       <Badge variant="outline" className={cn(
         "px-2.5 py-0.5 text-xs font-medium rounded-full flex items-center",
-        "bg-surface border-border-subtle text-text-secondary"
+        "bg-neutral-800/60 text-neutral-200 border-0"
       )}>
         {getCategoryIcon()}
         {getCategoryLabel()}

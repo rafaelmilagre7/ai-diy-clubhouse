@@ -1,242 +1,360 @@
 
-/* === COMPONENTS MODERNOS === */
+/* Componentes reutilizáveis (cards, glass, badges, progress, etc) */
 
 @layer components {
-  
-  /* === CARDS === */
-  
-  .card-modern {
-    @apply bg-surface-elevated border border-border rounded-xl shadow-sm transition-all duration-300;
+  .glass-card, .glassmorphism {
+    @apply bg-white/5 backdrop-blur-sm border border-white/10 shadow-md;
+  }
+  .glass-effect {
+    @apply glassmorphism bg-white/5 backdrop-blur-xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.5)];
+  }
+  .container {
+    @apply max-w-7xl mx-auto px-4 md:px-8;
+  }
+  .progress-step {
+    @apply relative flex items-center justify-center w-8 h-8 rounded-full bg-neutral-800 text-neutral-400 transition-colors;
+  }
+  .progress-step.active {
+    @apply bg-viverblue text-white shadow-lg;
+  }
+  .progress-step.completed {
+    @apply bg-green-600 text-white shadow-md;
+  }
+  .progress-line {
+    @apply flex-1 h-1 bg-neutral-800 transition-all;
+  }
+  .progress-line.completed {
+    @apply bg-green-600;
+  }
+  .solution-card {
+    @apply relative overflow-hidden rounded-xl border bg-card text-white shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-1;
+  }
+  .solution-card.revenue {
+    @apply border-l-4 border-l-revenue shadow-revenue/10;
+  }
+  .solution-card.operational {
+    @apply border-l-4 border-l-operational shadow-operational/10;
+  }
+  .solution-card.strategy {
+    @apply border-l-4 border-l-strategy shadow-strategy/10;
   }
   
-  .card-elevated {
-    @apply bg-surface-elevated border border-border rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300;
+  /* Badge classes com melhor contraste */
+  .badge-revenue {
+    @apply bg-revenue/30 text-revenue border-revenue/50;
+  }
+  .badge-operational {
+    @apply bg-operational/30 text-operational border-operational/50;
+  }
+  .badge-strategy {
+    @apply bg-strategy/30 text-strategy border-strategy/50;
   }
   
-  .card-interactive {
-    @apply bg-surface-elevated border border-border rounded-xl shadow-sm hover:shadow-md hover:border-border-strong hover:-translate-y-0.5 transition-all duration-300 cursor-pointer;
+  .card-hover-effect {
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
   }
-  
-  .card-glow {
-    @apply bg-surface-elevated border border-border rounded-xl shadow-sm hover:shadow-glow-primary transition-all duration-300;
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-viverblue to-viverblue-light;
   }
-  
-  /* === BUTTONS === */
-  
-  .btn-primary {
-    @apply bg-primary hover:bg-primary-hover active:bg-primary-active text-primary-foreground border-0 font-medium transition-colors duration-200;
+  .gradient-border {
+    @apply relative before:absolute before:inset-0 before:p-[1px] before:rounded-lg before:bg-gradient-to-r before:from-viverblue before:to-viverblue-light before:-z-10;
   }
-  
-  .btn-secondary {
-    @apply bg-secondary hover:bg-secondary-hover text-secondary-foreground border border-border transition-colors duration-200;
+  .glassmorphism {
+    @apply backdrop-blur-xl bg-white/5 border border-white/10 shadow-xl;
   }
-  
-  .btn-outline {
-    @apply bg-transparent hover:bg-surface-hover text-foreground border border-border hover:border-border-strong transition-colors duration-200;
+  .glass-effect {
+    @apply glassmorphism bg-white/3 backdrop-blur-xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.5)];
   }
-  
-  .btn-ghost {
-    @apply bg-transparent hover:bg-surface-hover text-foreground border-0 transition-colors duration-200;
+  .section-title {
+    @apply font-heading text-2xl md:text-3xl font-bold text-white mb-6;
   }
-  
-  .btn-success {
-    @apply bg-success hover:bg-success/90 text-success-foreground border-0 transition-colors duration-200;
+  .gradient-card {
+    @apply bg-gradient-to-br from-neutral-900 to-neutral-950 rounded-2xl shadow-md border border-neutral-800;
   }
-  
-  .btn-warning {
-    @apply bg-warning hover:bg-warning/90 text-warning-foreground border-0 transition-colors duration-200;
+  .gradient-card-revenue {
+    @apply bg-gradient-to-br from-revenue-darker to-black rounded-2xl shadow-md border-l-4 border-l-revenue border-t border-r border-b border-neutral-800;
   }
-  
-  .btn-error {
-    @apply bg-error hover:bg-error/90 text-error-foreground border-0 transition-colors duration-200;
+  .gradient-card-operational {
+    @apply bg-gradient-to-br from-operational-darker to-black rounded-2xl shadow-md border-l-4 border-l-operational border-t border-r border-b border-neutral-800;
   }
-  
-  .btn-info {
-    @apply bg-info hover:bg-info/90 text-info-foreground border-0 transition-colors duration-200;
+  .gradient-card-strategy {
+    @apply bg-gradient-to-br from-strategy-darker to-black rounded-2xl shadow-md border-l-4 border-l-strategy border-t border-r border-b border-neutral-800;
   }
-  
-  /* === BUTTON SIZES === */
-  
-  .btn-xs {
-    @apply h-7 px-2 text-xs rounded-md;
+  .dot-bg {
+    @apply bg-dot-pattern bg-[length:20px_20px];
   }
-  
-  .btn-sm {
-    @apply h-8 px-3 text-sm rounded-lg;
+  .animated-gradient {
+    @apply bg-gradient-to-r from-viverblue via-viverblue-light to-viverblue bg-size-200 animate-gradient-shift;
   }
-  
-  .btn-md {
-    @apply h-10 px-4 text-sm rounded-lg;
-  }
-  
-  .btn-lg {
-    @apply h-12 px-6 text-base rounded-xl;
-  }
-  
-  .btn-xl {
-    @apply h-14 px-8 text-lg rounded-xl;
-  }
-  
-  /* === BADGES === */
-  
-  .badge-base {
-    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors duration-200;
-  }
-  
-  .badge-primary {
-    @apply bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20;
-  }
-  
-  .badge-secondary {
-    @apply bg-secondary/10 text-text-secondary border border-border hover:bg-secondary/20;
-  }
-  
-  .badge-success {
-    @apply bg-success/10 text-success border border-success/20 hover:bg-success/20;
-  }
-  
-  .badge-warning {
-    @apply bg-warning/10 text-warning border border-warning/20 hover:bg-warning/20;
-  }
-  
-  .badge-error {
-    @apply bg-error/10 text-error border border-error/20 hover:bg-error/20;
-  }
-  
-  .badge-info {
-    @apply bg-info/10 text-info border border-info/20 hover:bg-info/20;
-  }
-  
-  .badge-neutral {
-    @apply bg-surface border border-border text-text-secondary hover:bg-surface-hover;
-  }
-  
-  .badge-accent {
-    @apply bg-accent/10 text-accent border border-accent/20 hover:bg-accent/20;
-  }
-  
-  .badge-gradient {
-    @apply bg-gradient-primary text-primary-foreground border-0 hover:opacity-90;
-  }
-  
-  /* === INPUTS === */
-  
-  .input-modern {
-    @apply flex h-10 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-colors duration-200;
-  }
-  
-  .input-error {
-    @apply border-error focus-visible:ring-error/20;
-  }
-  
-  .input-success {
-    @apply border-success focus-visible:ring-success/20;
-  }
-  
-  .input-large {
-    @apply h-12 px-4 text-base;
-  }
-  
-  .input-small {
-    @apply h-8 px-2 text-sm;
-  }
-  
-  /* === CONTAINERS === */
-  
-  .container-page {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
-  }
-  
-  .container-content {
-    @apply max-w-5xl mx-auto px-4 sm:px-6 lg:px-8;
-  }
-  
-  .container-narrow {
-    @apply max-w-4xl mx-auto px-4 sm:px-6 lg:px-8;
-  }
-  
-  .container-wide {
-    @apply max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8;
-  }
-  
-  /* === SURFACES === */
-  
-  .surface-base {
-    @apply bg-surface border border-border;
-  }
-  
-  .surface-elevated {
-    @apply bg-surface-elevated border border-border shadow-sm;
-  }
-  
-  .surface-interactive {
-    @apply bg-surface-elevated border border-border shadow-sm hover:shadow-md hover:border-border-strong transition-all duration-300 cursor-pointer;
-  }
-  
-  .surface-glass {
-    @apply bg-surface/80 backdrop-blur-sm border border-border/50;
-  }
-}
 
-/* === ANIMATION UTILITIES === */
+  .depth-effect {
+    box-shadow: 
+      0 1px 1px rgba(0,0,0,0.05), 
+      0 2px 2px rgba(0,0,0,0.05), 
+      0 4px 4px rgba(0,0,0,0.05), 
+      0 8px 8px rgba(0,0,0,0.05),
+      0 16px 16px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+  }
+  .depth-effect:hover {
+    box-shadow: 
+      0 1px 1px rgba(0,0,0,0.1), 
+      0 2px 2px rgba(0,0,0,0.1), 
+      0 4px 4px rgba(0,0,0,0.1), 
+      0 8px 8px rgba(0,0,0,0.1),
+      0 16px 16px rgba(0,0,0,0.1);
+    transform: translateY(-5px);
+  }
 
-@layer utilities {
-  .hover-lift {
-    @apply transition-transform duration-200 hover:-translate-y-0.5;
+  /* Destaque extra para badges e cards desbloqueados recentemente */
+  .badge-highlight {
+    @apply shadow-lg ring-2 ring-viverblue/60;
+    animation: highlight-flash 1.3s cubic-bezier(0.24,0.7,0.75,0.67);
+  }
+
+  .achievement-flash {
+    @apply ring-2 ring-viverblue/50 shadow-viverblue/20;
+    animation: highlight-flash 1.2s linear;
+  }
+
+  /* Feedback visual para conquista/implementação */
+  .badge-pop {
+    @apply scale-105 z-10 border-2 border-viverblue;
+    animation: item-pop 0.7s cubic-bezier(0.21,0.67,0.71,0.85);
   }
   
-  .hover-scale {
-    @apply transition-transform duration-200 hover:scale-105;
+  /* Nova classe para o menu lateral com estilo Hubla */
+  .hubla-sidebar {
+    @apply bg-[#0F111A] border-r border-white/5 shadow-xl;
   }
   
-  .hover-glow {
-    @apply transition-shadow duration-300 hover:shadow-glow-primary;
+  /* Nova classe para botões com o estilo Hubla */
+  .hubla-button {
+    @apply bg-viverblue hover:bg-viverblue-dark text-white rounded-lg transition-all;
   }
   
-  .animate-fade-in {
-    animation: fadeIn 0.3s ease-out forwards;
+  /* Nova classe para cards com o estilo Hubla */
+  .hubla-card {
+    @apply bg-[#151823] border border-white/10 rounded-xl shadow-lg;
+  }
+
+  /* Adicionando estilo para navegação ativa */
+  .hubla-active-nav {
+    @apply bg-[#1A1E2E] border-l-2 border-viverblue text-viverblue font-medium;
+  }
+
+  /* Adicionar efeito de brilho nas bordas dos cards */
+  .hubla-border-glow {
+    @apply relative;
+    box-shadow: 0 0 15px 1px rgba(0, 234, 217, 0.1);
   }
   
-  .animate-slide-up {
-    animation: slideUp 0.3s ease-out forwards;
+  /* Novos estilos para badges para melhor contraste */
+  .badge-dark-success {
+    @apply bg-green-900/40 text-green-300 border-green-700;
   }
   
-  .animate-scale-in {
-    animation: scaleIn 0.2s ease-out forwards;
+  .badge-dark-warning {
+    @apply bg-amber-900/40 text-amber-300 border-amber-700;
   }
-}
+  
+  .badge-dark-info {
+    @apply bg-blue-900/40 text-blue-300 border-blue-700;
+  }
+  
+  .badge-dark-neutral {
+    @apply bg-gray-800/60 text-gray-300 border-gray-700;
+  }
+  
+  /* Badges com cores melhoradas para o modo claro */
+  .badge-light-success {
+    @apply bg-green-100 text-green-800 border-green-300;
+  }
+  
+  .badge-light-warning {
+    @apply bg-amber-100 text-amber-800 border-amber-300;
+  }
+  
+  .badge-light-info {
+    @apply bg-blue-100 text-blue-800 border-blue-300;
+  }
+  
+  .badge-light-neutral {
+    @apply bg-gray-100 text-gray-800 border-gray-300;
+  }
+  
+  /* Melhoria para o hover das tabelas */
+  .table-hover-row {
+    @apply hover:bg-neutral-800/50 transition-colors;
+  }
+  
+  /* Estilo consistente para badges de status */
+  .status-badge {
+    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium;
+  }
+  .status-badge-active {
+    @apply bg-green-900/30 text-green-300 border border-green-700;
+  }
+  .status-badge-inactive {
+    @apply bg-gray-800/50 text-gray-300 border border-gray-700;
+  }
+  
+  /* Melhorias para legibilidade no modo escuro */
+  .text-high-contrast {
+    @apply text-white;
+  }
+  .text-medium-contrast {
+    @apply text-neutral-100;
+  }
+  .text-low-contrast {
+    @apply text-neutral-300;
+  }
+  
+  /* Melhorar contraste para textos em badges */
+  .badge-high-contrast {
+    @apply font-medium;
+  }
+  
+  /* Estilo para headers de tabela */
+  .table-header-sortable {
+    @apply cursor-pointer hover:text-viverblue transition-colors;
+  }
+  
+  /* Estilo para menu dropdown consistente */
+  .dropdown-menu-item {
+    @apply cursor-pointer flex w-full items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50;
+  }
 
-/* === KEYFRAMES === */
+  /* Melhorar a visibilidade das linhas da tabela no modo escuro */
+  .table-border-enhanced {
+    @apply border-neutral-700;
+  }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
+  /* Melhorar o contraste dos badges para acessibilidade */
+  .badge-admin {
+    @apply bg-blue-900/30 text-blue-300 border border-blue-700;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  
+  .badge-formacao {
+    @apply bg-amber-900/30 text-amber-300 border border-amber-700;
   }
-}
+  
+  .badge-membro {
+    @apply bg-gray-800/50 text-gray-300 border border-gray-700;
+  }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+  /* Classes especiais para tooltip e estados de alerta */
+  .tooltip {
+    @apply bg-[#151823] text-white border border-white/10 shadow-lg py-1.5 px-3 rounded text-sm z-50;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
+  /* Estilo para separadores com melhor visibilidade */
+  .separator {
+    @apply border-t border-white/10 my-4;
   }
-  to {
-    opacity: 1;
-    transform: scale(1);
+
+  /* Contraste melhorado para elementos de interface */
+  .input-label {
+    @apply text-white text-sm mb-1.5;
+  }
+  
+  .input-field {
+    @apply bg-[#181A2A] border border-white/10 text-white rounded-md px-3 py-2 placeholder:text-neutral-500;
+  }
+
+  /* Redefinição dos elementos de interface principal para garantir legibilidade */
+  .page-title {
+    @apply text-3xl font-bold text-white mb-2;
+  }
+  
+  .page-description {
+    @apply text-neutral-300 text-lg mb-6;
+  }
+
+  /* Estilo para notificações e alertas */
+  .alert-success {
+    @apply bg-green-900/20 border border-green-700 text-green-300 px-4 py-3 rounded;
+  }
+  
+  .alert-warning {
+    @apply bg-amber-900/20 border border-amber-700 text-amber-300 px-4 py-3 rounded;
+  }
+  
+  .alert-error {
+    @apply bg-red-900/20 border border-red-700 text-red-300 px-4 py-3 rounded;
+  }
+  
+  .alert-info {
+    @apply bg-blue-900/20 border border-blue-700 text-blue-300 px-4 py-3 rounded;
+  }
+
+  /* Estado vazio consistente */
+  .empty-state {
+    @apply flex flex-col items-center justify-center py-12 px-4 text-center;
+  }
+  
+  .empty-state-icon {
+    @apply text-neutral-500 mb-3 h-12 w-12;
+  }
+  
+  .empty-state-title {
+    @apply text-white text-lg font-medium mb-1;
+  }
+  
+  .empty-state-description {
+    @apply text-neutral-400 max-w-sm mx-auto;
+  }
+
+  /* Novas classes para melhorar a visualização no modo escuro */
+  .dark-mode-card {
+    @apply bg-gradient-to-br from-[#1A1E2E] to-[#151823] border-neutral-700;
+  }
+
+  .dark-mode-input {
+    @apply bg-[#1A1E2E] border-neutral-700 text-white placeholder:text-neutral-500;
+  }
+
+  .dark-mode-badge {
+    @apply bg-[#252842] text-white border-neutral-600;
+  }
+  
+  /* Melhoria para hover dos cards no tema escuro */
+  .card-hover-dark {
+    @apply hover:shadow-[0_5px_15px_rgba(0,234,217,0.1)] hover:border-viverblue/30;
+  }
+
+  /* Melhorar ainda mais o contraste para badges no modo escuro */
+  .badge-high-contrast-dark {
+    @apply font-medium shadow-sm;
+  }
+  
+  /* Classe para scrollbar escondida */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Efeito de gradiente vibrante para destaques */
+  .vibrant-gradient {
+    @apply bg-gradient-to-r from-viverblue via-viverblue-light to-viverblue-dark bg-size-200 animate-gradient-shift;
+  }
+
+  /* Efeito de glassmorphism aprimorado para o tema escuro */
+  .glass-dark {
+    @apply bg-[#151823]/90 backdrop-blur-lg border border-white/5;
+  }
+  
+  /* Efeito de cartão elevado para destacar elementos importantes */
+  .elevated-card {
+    @apply shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1;
+  }
+  
+  /* Melhoria para inputs no tema escuro com foco em viverblue */
+  .input-focus-viverblue {
+    @apply focus:border-viverblue focus:ring-2 focus:ring-viverblue/20;
   }
 }

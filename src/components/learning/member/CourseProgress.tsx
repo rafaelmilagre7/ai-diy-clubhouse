@@ -29,7 +29,7 @@ export const CourseProgress: React.FC<CourseProgressProps> = ({
       <Progress
         value={percentage}
         className="h-2"
-        indicatorVariant={isCompleted ? "success" : "default"}
+        indicatorClassName={isCompleted ? "bg-green-500" : undefined}
       />
       
       <p className="text-sm text-muted-foreground mt-2">

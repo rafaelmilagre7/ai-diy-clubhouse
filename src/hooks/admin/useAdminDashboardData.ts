@@ -5,7 +5,6 @@ import { useEngagementData } from "./dashboard/useEngagementData";
 import { useCompletionRateData } from "./dashboard/useCompletionRateData";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
-import { logger } from "@/utils/logger";
 
 interface RecentActivity {
   id: string;
@@ -24,17 +23,13 @@ export const useAdminDashboardData = (timeRange: string) => {
   const { engagementData, loading: engagementLoading } = useEngagementData(timeRange);
   const { completionRateData, loading: completionLoading } = useCompletionRateData(timeRange);
 
-  // Carregar atividades recentes com tratamento de erro melhorado
+  // Carregar atividades recentes reais do banco de dados
   useEffect(() => {
     const loadRecentActivities = async () => {
-      if (!timeRange) return;
-      
       setLoading(true);
       
       try {
-        logger.debug('Carregando atividades recentes', { timeRange });
-        
-        // Buscar atividades reais do banco de dados com join otimizado
+        // Buscar atividades reais do banco de dados
         const { data: analyticsData, error } = await supabase
           .from('analytics')
           .select(`
@@ -48,12 +43,11 @@ export const useAdminDashboardData = (timeRange: string) => {
             )
           `)
           .order('created_at', { ascending: false })
-          .limit(15); // Aumentamos para 15 para ter mais dados
+          .limit(10);
 
         if (error) {
-          logger.error("Erro ao carregar atividades:", error);
-          // Fallback para dados mockados em caso de erro
-          setRecentActivities(getMockActivities());
+          console.error("Erro ao carregar atividades:", error);
+          setRecentActivities([]);
           return;
         }
 
@@ -69,20 +63,15 @@ export const useAdminDashboardData = (timeRange: string) => {
           };
         });
         
-        logger.info('Atividades carregadas com sucesso', { count: activities.length });
         setRecentActivities(activities);
       } catch (error: any) {
-        logger.error("Erro crítico ao carregar atividades recentes:", error);
-        setRecentActivities(getMockActivities());
-        
-        // Toast apenas para erros críticos
-        if (error.message?.includes('network') || error.message?.includes('fetch')) {
-          toast({
-            title: "Problema de conexão",
-            description: "Usando dados em cache. Verifique sua conexão.",
-            variant: "destructive",
-          });
-        }
+        console.error("Erro ao carregar atividades recentes:", error);
+        setRecentActivities([]);
+        toast({
+          title: "Aviso",
+          description: "Não foi possível carregar as atividades recentes.",
+          variant: "destructive",
+        });
       } finally {
         setLoading(false);
       }
@@ -99,21 +88,3 @@ export const useAdminDashboardData = (timeRange: string) => {
     loading: loading || statsLoading || engagementLoading || completionLoading
   };
 };
-
-// Função auxiliar para dados mockados em caso de falha
-const getMockActivities = (): RecentActivity[] => [
-  {
-    id: 'mock-1',
-    user_id: 'user-1',
-    event_type: 'solution_completed',
-    solution: 'IA para Atendimento ao Cliente',
-    created_at: new Date().toISOString()
-  },
-  {
-    id: 'mock-2',
-    user_id: 'user-2',
-    event_type: 'solution_started',
-    solution: 'Automação de Vendas',
-    created_at: new Date(Date.now() - 3600000).toISOString()
-  }
-];

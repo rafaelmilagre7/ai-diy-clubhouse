@@ -1,39 +1,16 @@
 
 import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
-import { cn } from "@/lib/utils"
 
-const tableVariants = cva(
-  "w-full caption-bottom text-sm",
-  {
-    variants: {
-      variant: {
-        default: "",
-        elevated: "bg-surface-elevated rounded-lg overflow-hidden shadow-sm",
-        bordered: "border border-border rounded-lg overflow-hidden",
-        minimal: "border-spacing-0",
-      },
-      tableSize: {
-        default: "",
-        sm: "text-xs",
-        lg: "text-base",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      tableSize: "default",
-    },
-  }
-)
+import { cn } from "@/lib/utils"
 
 const Table = React.forwardRef<
   HTMLTableElement,
-  React.HTMLAttributes<HTMLTableElement> & VariantProps<typeof tableVariants>
->(({ className, variant, tableSize, ...props }, ref) => (
+  React.HTMLAttributes<HTMLTableElement>
+>(({ className, ...props }, ref) => (
   <div className="relative w-full overflow-auto">
     <table
       ref={ref}
-      className={cn(tableVariants({ variant, tableSize }), className)}
+      className={cn("w-full caption-bottom text-sm", className)}
       {...props}
     />
   </div>
@@ -44,7 +21,7 @@ const TableHeader = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
 >(({ className, ...props }, ref) => (
-  <thead ref={ref} className={cn("border-b border-border", className)} {...props} />
+  <thead ref={ref} className={cn("[&_tr]:border-b border-neutral-700", className)} {...props} />
 ))
 TableHeader.displayName = "TableHeader"
 
@@ -67,7 +44,7 @@ const TableFooter = React.forwardRef<
   <tfoot
     ref={ref}
     className={cn(
-      "border-t border-border bg-surface-hover/50 font-medium",
+      "border-t bg-muted/50 font-medium [&>tr]:last:border-b-0",
       className
     )}
     {...props}
@@ -82,7 +59,7 @@ const TableRow = React.forwardRef<
   <tr
     ref={ref}
     className={cn(
-      "border-b border-border transition-colors hover:bg-surface-hover/50 data-[state=selected]:bg-surface-elevated",
+      "border-b border-neutral-700 transition-colors hover:bg-neutral-800/70 data-[state=selected]:bg-muted",
       className
     )}
     {...props}
@@ -97,7 +74,7 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      "h-12 px-4 text-left align-middle font-medium text-text-secondary [&:has([role=checkbox])]:pr-0",
+      "h-12 px-4 text-left align-middle font-medium text-white [&:has([role=checkbox])]:pr-0 hover:text-viverblue transition-colors",
       className
     )}
     {...props}
@@ -111,7 +88,7 @@ const TableCell = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <td
     ref={ref}
-    className={cn("p-4 align-middle [&:has([role=checkbox])]:pr-0", className)}
+    className={cn("p-4 align-middle [&:has([role=checkbox])]:pr-0 text-white", className)}
     {...props}
   />
 ))
@@ -123,7 +100,7 @@ const TableCaption = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <caption
     ref={ref}
-    className={cn("mt-4 text-sm text-text-tertiary", className)}
+    className={cn("mt-4 text-sm text-neutral-300", className)}
     {...props}
   />
 ))
@@ -138,5 +115,4 @@ export {
   TableRow,
   TableCell,
   TableCaption,
-  tableVariants,
 }

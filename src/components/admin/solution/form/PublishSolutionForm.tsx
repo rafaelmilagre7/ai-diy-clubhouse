@@ -9,8 +9,6 @@ import ImplementationStatus from "./publish/ImplementationStatus";
 import PublishToggle from "./publish/PublishToggle";
 import ActionButtons from "./publish/ActionButtons";
 import { Button } from "@/components/ui/button";
-import { Text } from "@/components/ui/text";
-import { Container } from "@/components/ui/container";
 import { useNavigate } from "react-router-dom";
 
 interface PublishSolutionFormProps {
@@ -39,18 +37,18 @@ const PublishSolutionForm: React.FC<PublishSolutionFormProps> = ({
   } = usePublishSolution(solutionId, solution, onSave, saving);
 
   return (
-    <Container className="space-y-6">
-      <div className="space-y-2">
-        <Text variant="section" textColor="primary">Revisão e Publicação</Text>
-        <Text variant="body" textColor="secondary">
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-medium">Revisão e Publicação</h3>
+        <p className="text-sm text-muted-foreground">
           Revise todos os detalhes da solução antes de publicá-la para os membros.
-        </Text>
+        </p>
       </div>
       
-      <Card variant="elevated" className="overflow-hidden">
+      <Card>
         <SolutionHeaderInfo solution={solution} formatDate={formatDate} />
         
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4">
           <ImplementationStatus isPublished={isPublished} />
           
           <PublishToggle 
@@ -60,7 +58,7 @@ const PublishSolutionForm: React.FC<PublishSolutionFormProps> = ({
           />
         </CardContent>
         
-        <CardFooter className="flex gap-3 border-t border-border pt-6">
+        <CardFooter className="flex gap-3 border-t pt-6">
           <ActionButtons 
             solutionId={solutionId}
             handleViewSolution={handleViewSolution}
@@ -73,12 +71,11 @@ const PublishSolutionForm: React.FC<PublishSolutionFormProps> = ({
           variant="outline"
           onClick={() => navigate("/admin/solutions")}
           disabled={saving}
-          className="hover-lift"
         >
-          <Text variant="button">Voltar para Lista de Soluções</Text>
+          Voltar para Lista de Soluções
         </Button>
       </div>
-    </Container>
+    </div>
   );
 };
 

@@ -1,5 +1,4 @@
 
-import { Text } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
 
 interface CardContentProps {
@@ -10,23 +9,15 @@ interface CardContentProps {
 export const CardContentSection = ({ title, description }: CardContentProps) => {
   return (
     <div className="space-y-2">
-      <Text 
-        variant="card" 
-        textColor="primary"
-        className={cn(
-          "line-clamp-2",
-          "group-hover:text-primary transition-colors duration-300"
-        )}
-      >
+      <h3 className={cn(
+        "font-medium text-lg line-clamp-2 text-white",
+        "group-hover:text-white transition-colors duration-300"
+      )}>
         {title}
-      </Text>
-      <Text 
-        variant="body-small" 
-        textColor="secondary" 
-        className="line-clamp-2 leading-relaxed"
-      >
+      </h3>
+      <p className="text-neutral-300 text-sm line-clamp-2 leading-relaxed">
         {description}
-      </Text>
+      </p>
     </div>
   );
 };

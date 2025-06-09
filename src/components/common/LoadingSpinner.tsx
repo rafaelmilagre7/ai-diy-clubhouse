@@ -1,30 +1,28 @@
 
 import React from "react";
-import { LoadingSpinner as BaseLoadingSpinner } from "@/components/ui/loading-spinner";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface LoadingSpinnerProps {
-  size?: "xs" | "sm" | "default" | "lg" | "xl" | "2xl";
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
   className?: string;
-  text?: string;
-  variant?: "default" | "secondary" | "accent" | "success" | "warning" | "error";
-  centered?: boolean;
 }
 
 export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ 
-  size = "default", 
-  className,
-  text,
-  variant = "default",
-  centered = false
+  size = "md", 
+  className 
 }) => {
+  const sizeClasses = {
+    xs: "h-3 w-3",
+    sm: "h-4 w-4",
+    md: "h-6 w-6",
+    lg: "h-8 w-8",
+    xl: "h-12 w-12",
+  };
+  
   return (
-    <BaseLoadingSpinner
-      size={size}
-      variant={variant}
-      text={text}
-      centered={centered}
-      className={cn("transition-all duration-200", className)}
+    <Loader2 
+      className={cn("animate-spin text-primary", sizeClasses[size], className)}
     />
   );
 };

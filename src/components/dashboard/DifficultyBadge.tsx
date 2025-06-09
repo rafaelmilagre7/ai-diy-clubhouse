@@ -1,38 +1,49 @@
 
-import { FC } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 interface DifficultyBadgeProps {
   difficulty: string;
-  className?: string;
 }
 
-export const DifficultyBadge: FC<DifficultyBadgeProps> = ({ difficulty, className }) => {
-  const getDifficultyConfig = (level: string) => {
-    switch (level.toLowerCase()) {
-      case 'iniciante':
-        return { variant: 'success' as const, label: 'Iniciante' };
-      case 'intermediario':
-      case 'intermediário':
-        return { variant: 'warning' as const, label: 'Intermediário' };
-      case 'avancado':
-      case 'avançado':
-        return { variant: 'error' as const, label: 'Avançado' };
+export const DifficultyBadge = ({ difficulty }: DifficultyBadgeProps) => {
+  // Função para obter label em português
+  const getLabel = () => {
+    switch (difficulty) {
+      case 'easy':
+        return 'Fácil';
+      case 'medium':
+        return 'Médio';
+      case 'advanced':
+        return 'Avançado';
       default:
-        return { variant: 'secondary' as const, label: difficulty };
+        return difficulty;
     }
   };
-
-  const config = getDifficultyConfig(difficulty);
-
+  
+  // Função para obter classe de estilo com melhor contraste
+  const getStyleClass = () => {
+    switch (difficulty) {
+      case 'easy':
+        return 'bg-neutral-800/60 text-emerald-400 border-0';
+      case 'medium':
+        return 'bg-neutral-800/60 text-amber-400 border-0';
+      case 'advanced':
+        return 'bg-neutral-800/60 text-rose-400 border-0';
+      default:
+        return 'bg-neutral-800/60 text-neutral-300 border-0';
+    }
+  };
+  
   return (
     <Badge 
-      variant={config.variant} 
-      size="sm"
-      className={cn("font-medium", className)}
+      variant="outline" 
+      className={cn(
+        "px-2 py-0.5 text-xs rounded-full",
+        getStyleClass()
+      )}
     >
-      {config.label}
+      {getLabel()}
     </Badge>
   );
 };

@@ -1,6 +1,5 @@
 
 import { Button } from "@/components/ui/button";
-import { Text } from "@/components/ui/text";
 import { formatDate } from "@/lib/utils";
 import { ArrowRight } from "lucide-react";
 
@@ -11,10 +10,10 @@ interface CardFooterProps {
 
 export const CardFooterSection = ({ createdAt, onSelect }: CardFooterProps) => {
   return (
-    <div className="flex items-center justify-between w-full pt-3 border-t border-border-subtle">
-      <Text variant="caption" textColor="tertiary">
+    <div className="flex items-center justify-between w-full px-4 py-3 border-t border-neutral-800/30">
+      <div className="text-xs text-neutral-500">
         {createdAt ? formatDate(new Date(createdAt)) : "Data não disponível"}
-      </Text>
+      </div>
       
       <Button 
         variant="ghost" 
@@ -23,9 +22,9 @@ export const CardFooterSection = ({ createdAt, onSelect }: CardFooterProps) => {
           e.stopPropagation();
           onSelect();
         }}
-        className="p-0 h-6 text-text-tertiary hover:text-primary hover:bg-transparent transition-colors"
+        className="p-0 h-6 text-neutral-400 hover:text-white hover:bg-transparent transition-colors"
       >
-        <Text variant="caption" className="mr-1">Detalhes</Text>
+        <span className="mr-1 text-xs">Detalhes</span>
         <ArrowRight className="h-3.5 w-3.5" />
       </Button>
     </div>

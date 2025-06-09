@@ -9,22 +9,21 @@ export const MemberContent = ({ sidebarOpen, setSidebarOpen, children }: BaseCon
     <main
       className={cn(
         "flex flex-col flex-1 transition-all duration-300 ease-in-out min-h-screen",
-        "bg-gradient-to-br from-background via-surface-subtle to-surface-elevated",
         sidebarOpen ? "md:ml-64" : "md:ml-[70px]"
       )}
     >
-      <MemberHeader 
-        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
-        sidebarOpen={sidebarOpen}
-      />
+      <MemberHeader onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
       
-      {/* Content area with improved spacing and animation */}
-      <div className="flex-1 overflow-auto">
-        <div className="container mx-auto p-6 max-w-7xl">
-          <div className="animate-fade-in">
-            {children}
-          </div>
-        </div>
+      {/* Overlay para mobile quando sidebar está aberto */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
+      <div className="flex-1 p-6 overflow-auto">
+        {children}
       </div>
     </main>
   );

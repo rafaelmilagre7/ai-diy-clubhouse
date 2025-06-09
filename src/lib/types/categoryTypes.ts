@@ -1,53 +1,36 @@
 
-// Tipos de categorias de soluções
-export type SolutionCategory = 'Receita' | 'Operacional' | 'Estratégia';
+// Define os novos tipos de categoria padronizados
+export type SolutionCategory = "Receita" | "Operacional" | "Estratégia";
 
-// Mapeamento de cores por categoria usando o novo design system
-export const categoryColorMap: Record<SolutionCategory, string> = {
-  'Receita': 'success',
-  'Operacional': 'info', 
-  'Estratégia': 'secondary'
+// Mapeamento de categorias antigas para novas (para compatibilidade)
+export const categoryMapping: Record<string, SolutionCategory> = {
+  'revenue': 'Receita',
+  'operational': 'Operacional',
+  'strategy': 'Estratégia'
 };
 
-// Configuração de categorias com ícones e cores
-export interface CategoryConfig {
-  name: SolutionCategory;
-  color: string;
-  icon: string;
-  description?: string;
-  badgeVariant: 'success' | 'info' | 'secondary';
-}
+// Função de utilidade para converter categorias antigas para novas
+export const mapLegacyCategory = (category: string): SolutionCategory => {
+  return categoryMapping[category] || 'Operacional'; // Valor padrão caso a categoria não seja reconhecida
+};
 
-export const solutionCategories: Record<SolutionCategory, CategoryConfig> = {
-  'Receita': {
-    name: 'Receita',
-    color: 'success',
-    icon: 'TrendingUp',
-    description: 'Soluções focadas em aumentar receita e vendas',
-    badgeVariant: 'success'
-  },
-  'Operacional': {
-    name: 'Operacional', 
-    color: 'info',
-    icon: 'Settings',
-    description: 'Soluções para otimizar processos e operações',
-    badgeVariant: 'info'
-  },
-  'Estratégia': {
-    name: 'Estratégia',
-    color: 'secondary', 
-    icon: 'BarChart',
-    description: 'Soluções estratégicas e de planejamento',
-    badgeVariant: 'secondary'
+// Função de utilidade para obter o nome amigável das categorias
+export const getCategoryDisplayName = (category: SolutionCategory | string): string => {
+  switch (category) {
+    case 'Receita':
+      return 'Receita';
+    case 'Operacional':
+      return 'Otimização Operacional';
+    case 'Estratégia':
+      return 'Gestão Estratégica';
+    // Compatibilidade com valores antigos
+    case 'revenue':
+      return 'Receita';
+    case 'operational':
+      return 'Otimização Operacional';
+    case 'strategy':
+      return 'Gestão Estratégica';
+    default:
+      return String(category);
   }
 };
-
-// Função utilitária para obter configuração da categoria
-export function getCategoryConfig(category: SolutionCategory): CategoryConfig {
-  return solutionCategories[category] || solutionCategories['Receita'];
-}
-
-// Função para validar categoria
-export function isValidCategory(category: string): category is SolutionCategory {
-  return Object.keys(solutionCategories).includes(category);
-}

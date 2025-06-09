@@ -11,13 +11,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Text } from '@/components/ui/text';
 import { Bell, CheckCheck, Trash2, Settings } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils';
 
 export const NotificationDropdown = () => {
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
@@ -63,11 +61,11 @@ export const NotificationDropdown = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative hover-scale">
+        <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <Badge 
-              variant="error" 
+              variant="destructive" 
               className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
             >
               {unreadCount > 9 ? '9+' : unreadCount}
@@ -75,28 +73,26 @@ export const NotificationDropdown = () => {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-80 max-h-96" align="end">
-        <DropdownMenuLabel className="flex items-center justify-between p-4">
-          <Text variant="subheading" textColor="primary">
-            Notificações
-          </Text>
+      <DropdownMenuContent className="w-80" align="end">
+        <DropdownMenuLabel className="flex items-center justify-between">
+          <span>Notificações</span>
           <div className="flex items-center gap-2">
             {unreadCount > 0 && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleMarkAllAsRead}
-                className="h-6 px-2 text-xs hover-scale"
+                className="h-6 px-2 text-xs"
               >
                 <CheckCheck className="h-3 w-3 mr-1" />
-                Marcar todas
+                Marcar todas como lidas
               </Button>
             )}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate('/settings/notifications')}
-              className="h-6 px-2 text-xs hover-scale"
+              className="h-6 px-2 text-xs"
             >
               <Settings className="h-3 w-3" />
             </Button>
@@ -104,47 +100,34 @@ export const NotificationDropdown = () => {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         
-        <ScrollArea className="max-h-80">
+        <ScrollArea className="h-96">
           {notifications.length === 0 ? (
-            <div className="p-8 text-center">
-              <div className="mb-3">
-                <Bell className="h-8 w-8 text-text-muted mx-auto" />
-              </div>
-              <Text variant="body" textColor="tertiary">
-                Nenhuma notificação
-              </Text>
+            <div className="p-4 text-center text-muted-foreground">
+              Nenhuma notificação
             </div>
           ) : (
             notifications.map((notification) => (
-              <DropdownMenuItem key={notification.id} className="p-0 focus:bg-transparent">
-                <div className={cn(
-                  "w-full p-4 border-b border-border-subtle last:border-b-0 transition-colors hover:bg-surface-hover",
-                  !notification.is_read && "bg-primary/5 border-l-4 border-l-primary"
-                )}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0 space-y-2">
-                      <div className="flex items-center gap-2">
+              <DropdownMenuItem key={notification.id} className="p-0">
+                <div className={`w-full p-3 border-b border-border last:border-b-0 ${!notification.is_read ? 'bg-muted/50' : ''}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
                         <span className="text-sm">{getNotificationIcon(notification.type)}</span>
-                        <Text variant="body" textColor="primary" weight="medium" className="truncate">
-                          {notification.title}
-                        </Text>
+                        <h4 className="text-sm font-medium truncate">{notification.title}</h4>
                         {!notification.is_read && (
                           <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
                         )}
                       </div>
-                      
-                      <Text variant="body-small" textColor="secondary" className="line-clamp-2">
+                      <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
                         {notification.message}
-                      </Text>
-                      
+                      </p>
                       <div className="flex items-center justify-between">
-                        <Text variant="caption" textColor="tertiary">
+                        <span className="text-xs text-muted-foreground">
                           {formatDistanceToNow(new Date(notification.created_at), {
                             addSuffix: true,
                             locale: ptBR,
                           })}
-                        </Text>
-                        
+                        </span>
                         <div className="flex items-center gap-1">
                           {!notification.is_read && (
                             <Button
@@ -154,7 +137,7 @@ export const NotificationDropdown = () => {
                                 e.stopPropagation();
                                 handleMarkAsRead(notification.id);
                               }}
-                              className="h-6 w-6 p-0 hover-scale"
+                              className="h-6 w-6 p-0"
                             >
                               <CheckCheck className="h-3 w-3" />
                             </Button>
@@ -166,7 +149,7 @@ export const NotificationDropdown = () => {
                               e.stopPropagation();
                               handleDeleteNotification(notification.id);
                             }}
-                            className="h-6 w-6 p-0 text-text-tertiary hover:text-error hover-scale"
+                            className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>

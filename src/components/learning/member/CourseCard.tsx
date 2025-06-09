@@ -88,7 +88,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
                   <Progress 
                     value={progress} 
                     className="h-1 bg-white/30" 
-                    indicatorVariant={isCompleted ? "success" : "default"}
+                    indicatorClassName={isCompleted ? "bg-green-500" : "bg-primary"}
                   />
                   <div className="flex justify-between text-xs mt-1">
                     <span>{progress}% completo</span>

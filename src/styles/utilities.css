@@ -1,189 +1,295 @@
+/* Utilitários extras, gradientes, animações customizadas para responsividade, glass, hover, efeitos */
 
-/* === Utility Classes === */
-
-/* Layout utilities */
-.flex-center {
-  @apply flex items-center justify-center;
+.bg-size-200 {
+  background-size: 200% 200%;
+}
+.bg-size-300 {
+  background-size: 300% 300%;
 }
 
-.flex-between {
-  @apply flex items-center justify-between;
-}
-
-.grid-auto-fit {
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-}
-
-.grid-auto-fill {
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-}
-
-/* Animation utilities */
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-out;
-}
-
-.animate-slide-up {
-  animation: slideUp 0.3s ease-out;
-}
-
-.animate-slide-down {
-  animation: slideDown 0.3s ease-out;
-}
-
-.animate-scale-in {
-  animation: scaleIn 0.2s ease-out;
-}
-
-.hover-lift {
-  @apply transition-transform duration-200 hover:-translate-y-1;
-}
-
-.hover-glow {
-  @apply transition-shadow duration-200 hover:shadow-glow-primary;
-}
-
-/* Text utilities */
-.text-gradient {
-  @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
-}
-
-.text-glow {
-  text-shadow: 0 0 20px hsl(var(--primary) / 0.5);
-}
-
-.text-responsive-base {
-  @apply text-sm sm:text-base;
-}
-
-.text-responsive-lg {
-  @apply text-base sm:text-lg lg:text-xl;
-}
-
-/* Line clamp utilities */
-.line-clamp-1 {
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 1;
-}
-
-.line-clamp-2 {
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-.line-clamp-3 {
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-}
-
-/* Focus utilities */
-.focus-ring {
-  @apply focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-2 focus:ring-offset-background;
-}
-
-.focus-visible-ring {
-  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
-}
-
-/* State utilities */
-.disabled-state {
-  @apply opacity-50 cursor-not-allowed pointer-events-none;
-}
-
-.loading-state {
-  @apply opacity-75 cursor-wait pointer-events-none;
-}
-
-/* Interactive utilities */
-.interactive-card {
-  @apply transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-pointer;
-}
-
-.interactive-scale {
-  @apply transition-transform duration-200 hover:scale-105 active:scale-95;
-}
-
-/* Backdrop utilities */
-.backdrop-blur-glass {
-  backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.backdrop-blur-heavy {
-  backdrop-filter: blur(20px) saturate(180%);
-}
-
-/* Keyframe animations */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
+@layer utilities {
+  /* Responsividade para cartões glass e outros */
+  @media (max-width: 600px) {
+    .glass-card, .glassmorphism, .glass-effect {
+      @apply rounded-lg shadow;
+    }
   }
-  to {
-    opacity: 1;
-  }
-}
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+  /* Novo highlight/flash de conquista */
+  .highlight-flash {
+    animation: highlight-flash 1.2s cubic-bezier(0.9,0,0.2,1);
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  @keyframes highlight-flash {
+    0% { box-shadow: 0 0 0 0px #00EAD977, 0 0 16px 8px #00EAD988 inset; }
+    50% { box-shadow: 0 0 0 16px #F8F8F833, 0 0 32px 16px #00EAD944 inset; }
+    90% { box-shadow: 0 0 0 0 #F8F8F833, 0 0 0 0 #00EAD900 inset; }
+    100% { box-shadow: none; }
   }
-}
 
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
+  .item-pop {
+    animation: item-pop 0.6s cubic-bezier(0.17, 0.67, 0.83, 0.67);
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  @keyframes item-pop {
+    0% { transform: scale(0.95); opacity:0.5;}
+    55% { transform: scale(1.12); opacity:1;}
+    100% { transform: scale(1);}
   }
-}
 
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
+  /* Barrinha underline animada das abas de implementação */
+  .after\:animate-enter::after {
+    content: "";
+    animation: underline-grow 0.35s cubic-bezier(0.45,1,0.39,0.96); 
+    display: block;
   }
-  to {
-    opacity: 1;
-    transform: scale(1);
+  @keyframes underline-grow {
+    0% { width: 0%; opacity: 0.3;}
+    80% { opacity: 0.9;}
+    100% { width: 100%; opacity: 1;}
   }
-}
 
-@keyframes pulse-glow {
-  0%, 100% {
-    box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+  /* Esconde o scroll horizontal das abas em mobile */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
-  50% {
-    box-shadow: 0 0 40px hsl(var(--primary) / 0.6);
-  }
-}
-
-/* Responsive utilities */
-@media (max-width: 768px) {
-  .mobile-hidden {
-    @apply hidden;
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
   
-  .mobile-full {
-    @apply w-full;
+  /* Novas animações */
+  .tab-slide-in {
+    animation: tab-slide-in 0.4s ease-out forwards;
+  }
+  @keyframes tab-slide-in {
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  
+  .tab-fade-in {
+    animation: tab-fade-in 0.3s ease-out forwards;
+  }
+  @keyframes tab-fade-in {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  
+  /* Efeito de pulso suave para highlights */
+  .pulse-subtle {
+    animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  @keyframes pulse-subtle {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+  
+  /* Novas utilitários para o estilo Hubla */
+  .hubla-active-nav {
+    @apply relative bg-[#181A2A] text-viverblue border-l-2 border-viverblue;
+  }
+  
+  .hubla-shadow {
+    @apply shadow-[0_4px_20px_-2px_rgba(0,0,0,0.3)];
+  }
+  
+  .hubla-glow {
+    @apply shadow-[0_0_15px_rgba(0,234,217,0.3)];
+  }
+  
+  /* Novas animações de transição de página */
+  .page-enter {
+    animation: page-enter 0.5s ease-out forwards;
+  }
+  @keyframes page-enter {
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  
+  .page-exit {
+    animation: page-exit 0.3s ease-in forwards;
+  }
+  @keyframes page-exit {
+    0% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-10px); }
+  }
+  
+  /* Animações para cards de conquista */
+  .success-appear {
+    animation: success-appear 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes success-appear {
+    0% { opacity: 0; transform: scale(0.8) translateY(10px); }
+    70% { opacity: 1; transform: scale(1.05) translateY(-5px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  
+  /* Efeito de shimmer/skeleton para carregamento */
+  .shimmer {
+    background: linear-gradient(90deg, 
+      rgba(255,255,255,0.05) 0%, 
+      rgba(255,255,255,0.1) 50%, 
+      rgba(255,255,255,0.05) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  
+  /* Novas utilidades para o tema escuro */
+  .bg-gradient-dark {
+    background: linear-gradient(to bottom, #1A1E2E 0%, #151823 100%);
+  }
+  
+  .hover-glow-viverblue {
+    transition: all 0.3s ease;
+  }
+  
+  .hover-glow-viverblue:hover {
+    box-shadow: 0 0 10px 0 rgba(0, 234, 217, 0.3);
+    border-color: rgba(0, 234, 217, 0.5);
+  }
+  
+  /* Efeitos de foco e hover melhorados para modo escuro */
+  .focus-ring-dark {
+    @apply focus:outline-none focus:ring-2 focus:ring-viverblue focus:ring-offset-0;
+  }
+  
+  .hover-bg-dark {
+    @apply hover:bg-[#1A1E2E];
+  }
+  
+  .text-gradient-viverblue {
+    @apply bg-gradient-to-r from-viverblue to-viverblue-light bg-clip-text text-transparent;
+  }
+  
+  /* Melhorar os efeitos de transição */
+  .smooth-transition {
+    @apply transition-all duration-300 ease-in-out;
+  }
+  
+  /* Melhoria para a acessibilidade - foco visível melhorado */
+  .focus-visible-improved:focus-visible {
+    @apply outline-none ring-2 ring-viverblue ring-offset-1;
+  }
+  
+  /* Efeito de pulsação suave para elementos destacados */
+  .pulse-viverblue {
+    animation: pulse-viverblue 2s infinite;
+  }
+  
+  @keyframes pulse-viverblue {
+    0% {
+      box-shadow: 0 0 0 0 rgba(0, 234, 217, 0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(0, 234, 217, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(0, 234, 217, 0);
+    }
   }
 }
 
-@media (min-width: 769px) {
-  .desktop-hidden {
-    @apply hidden;
+/* Efeitos para estados de interação */
+.hover-lift {
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Animação de entrada para as estatísticas na tela de conclusão */
+.stat-item-enter {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: stat-item-enter 0.5s forwards;
+  animation-delay: calc(var(--delay, 0) * 0.1s);
+}
+@keyframes stat-item-enter {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Animações e efeitos para o onboarding */
+.onboarding-step-enter {
+  animation: step-enter 0.3s ease-out;
+}
+
+@keyframes step-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.onboarding-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Efeito de borda iluminada ao estilo Hubla */
+.hubla-border-glow {
+  @apply border border-white/5 relative;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+.hubla-border-glow:hover {
+  @apply border-viverblue/30;
+  box-shadow: 
+    inset 0 0 0 1px rgba(0, 234, 217, 0.2),
+    0 0 10px rgba(0, 234, 217, 0.1);
+}
+
+/* Efeito de gradiente sutil para cards */
+.hubla-card-gradient {
+  background: linear-gradient(180deg, rgba(30, 32, 47, 0.6) 0%, rgba(15, 17, 26, 0.8) 100%);
+}
+
+/* Novas animações de pulsação para elementos de sucesso */
+.success-pulse {
+  animation: success-pulse 2s infinite;
+}
+@keyframes success-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0,234,217,0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(0,234,217,0); }
+}
+
+/* Animações para cards de etapas concluídas */
+.step-complete-animation {
+  animation: step-complete 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes step-complete {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+  70% { transform: translateY(5px); }
+  100% { transform: translateY(0); }
+}
+
+/* Efeito de foco em elementos importantes */
+.focus-highlight {
+  position: relative;
+}
+.focus-highlight::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border-radius: inherit;
+  border: 2px solid rgba(0,234,217,0.6);
+  opacity: 0;
+  animation: focus-highlight 2s infinite;
+}
+@keyframes focus-highlight {
+  0%, 100% { opacity: 0; transform: scale(1.02); }
+  50% { opacity: 1; transform: scale(1); }
 }

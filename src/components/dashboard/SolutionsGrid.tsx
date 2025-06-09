@@ -6,38 +6,20 @@ import { SolutionCard } from "./SolutionCard";
 interface SolutionsGridProps {
   solutions: Solution[];
   onSolutionClick: (solution: Solution) => void;
-  variant?: 'default' | 'compact' | 'featured';
-  columns?: 1 | 2 | 3 | 4;
 }
 
+// Otimização: Usar memo para evitar re-renderizações desnecessárias
 export const SolutionsGrid: FC<SolutionsGridProps> = memo(({ 
   solutions, 
-  onSolutionClick,
-  variant = 'default',
-  columns = 3
+  onSolutionClick 
 }) => {
-  const getGridClasses = () => {
-    const baseClasses = "grid gap-6 animate-fade-in";
-    switch (columns) {
-      case 1:
-        return `${baseClasses} grid-cols-1`;
-      case 2:
-        return `${baseClasses} grid-cols-1 lg:grid-cols-2`;
-      case 4:
-        return `${baseClasses} grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`;
-      default:
-        return `${baseClasses} grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`;
-    }
-  };
-
   return (
-    <div className={getGridClasses()}>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
       {solutions.map((solution) => (
         <SolutionCard
           key={solution.id}
           solution={solution}
           onClick={() => onSolutionClick(solution)}
-          variant={variant}
         />
       ))}
     </div>
