@@ -1,369 +1,308 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Building2, Globe, Briefcase, Users, DollarSign, Crown, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
+import { Building2, Briefcase, Target } from 'lucide-react';
 import { OnboardingStepProps } from '../types/onboardingTypes';
 import { AIMessageDisplay } from '../components/AIMessageDisplay';
+import { generateAIMessage } from '../utils/aiMessageGenerator';
 
 const businessSectors = [
-  'Tecnologia e Software',
-  'E-commerce e Marketplace',
-  'Educação e Cursos Online',
-  'Saúde e Bem-estar',
-  'Consultoria Empresarial',
-  'Marketing Digital',
-  'Serviços Financeiros',
-  'Imobiliário',
-  'Alimentação e Bebidas',
-  'Moda e Beleza',
-  'Turismo e Hotelaria',
-  'Construção Civil',
-  'Agronegócio',
-  'Indústria e Manufatura',
-  'Logística e Transporte',
-  'Energia e Sustentabilidade',
-  'Mídia e Entretenimento',
   'Inteligência Artificial',
-  'Outros'
-];
-
-const companySizes = [
-  '1-5 funcionários',
-  '6-20 funcionários',
-  '21-50 funcionários',
-  '51-100 funcionários',
-  '101-500 funcionários',
-  '500+ funcionários'
-];
-
-const annualRevenues = [
-  'Até R$ 100 mil',
-  'R$ 100 mil - R$ 500 mil',
-  'R$ 500 mil - R$ 1 milhão',
-  'R$ 1 milhão - R$ 5 milhões',
-  'R$ 5 milhões - R$ 20 milhões',
-  'R$ 20 milhões - R$ 100 milhões',
-  'Acima de R$ 100 milhões'
+  'Tecnologia da Informação',
+  'E-commerce',
+  'Marketing Digital',
+  'Consultoria Empresarial',
+  'Educação',
+  'Saúde e Medicina',
+  'Varejo',
+  'Serviços Financeiros',
+  'Manufatura',
+  'Agronegócio',
+  'Construção Civil',
+  'Alimentação',
+  'Turismo e Hospitalidade',
+  'Logística e Transporte',
+  'Imobiliário',
+  'Jurídico',
+  'Recursos Humanos',
+  'Contabilidade',
+  'Design e Criatividade',
+  'Outro'
 ];
 
 const positions = [
   'CEO/Fundador',
-  'Diretor Executivo',
-  'Diretor/VP',
+  'Diretor',
   'Gerente',
   'Coordenador',
-  'Supervisor',
-  'Analista/Especialista',
+  'Analista',
   'Consultor',
-  'Empreendedor Individual',
-  'Sócio',
-  'Outros'
+  'Especialista',
+  'Desenvolvedor',
+  'Designer',
+  'Profissional Liberal',
+  'Estudante',
+  'Empreendedor',
+  'Freelancer',
+  'Outro'
+];
+
+const areasToImpact = [
+  'Marketing e Vendas',
+  'Atendimento ao Cliente',
+  'Recursos Humanos',
+  'Finanças',
+  'Operações',
+  'Produção',
+  'Logística',
+  'Desenvolvimento de Produtos',
+  'Pesquisa e Desenvolvimento',
+  'Educação e Treinamento',
+  'Análise de Dados',
+  'Automação de Processos',
+  'Outro'
 ];
 
 export const OnboardingStep2 = ({ 
   data, 
   onUpdateData, 
-  onNext,
-  onPrev,
-  getFieldError
+  onNext, 
+  onPrev, 
+  memberType,
+  getFieldError 
 }: OnboardingStepProps) => {
-  const [companyName, setCompanyName] = useState(data.companyName || '');
-  const [companyWebsite, setCompanyWebsite] = useState(data.companyWebsite || '');
-  const [businessSector, setBusinessSector] = useState(data.businessSector || '');
-  const [companySize, setCompanySize] = useState(data.companySize || '');
-  const [annualRevenue, setAnnualRevenue] = useState(data.annualRevenue || '');
-  const [position, setPosition] = useState(data.position || '');
+  const [formData, setFormData] = useState({
+    businessSector: data.businessSector || '',
+    position: data.position || '',
+    areaToImpact: data.areaToImpact || ''
+  });
+
+  const [showAIMessage, setShowAIMessage] = useState(false);
 
   useEffect(() => {
-    onUpdateData({ 
-      companyName,
-      companyWebsite,
-      businessSector,
-      companySize,
-      annualRevenue,
-      position
-    });
-  }, [companyName, companyWebsite, businessSector, companySize, annualRevenue, position, onUpdateData]);
+    // Mostrar mensagem da IA após preenchimento
+    const hasBasicInfo = formData.businessSector && formData.position;
+    if (hasBasicInfo && !showAIMessage) {
+      const timer = setTimeout(() => {
+        setShowAIMessage(true);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [formData.businessSector, formData.position, showAIMessage]);
 
-  const handleNext = () => {
-    // Gerar mensagem personalizada da IA baseada nas respostas
-    const firstName = data.name?.split(' ')[0] || 'Amigo';
-    const revenueComment = annualRevenue.includes('milhão') ? 'Impressionante! ' : '';
-    const sectorComment = businessSector === 'Inteligência Artificial' ? 'Que coincidência incrível - você já está no futuro! ' : '';
-    
-    const aiMessage = `${firstName}, agora entendi melhor seu perfil! ${revenueComment}${sectorComment}Uma empresa de ${businessSector.toLowerCase()} com ${companySize.toLowerCase()} tem um potencial GIGANTE para implementar IA! Como ${position.toLowerCase()}, você está na posição perfeita para liderar essa transformação. Vamos descobrir agora onde você está na jornada da IA! 🤖✨`;
-
-    onUpdateData({ 
-      aiMessage2: aiMessage
-    });
-    onNext();
+  const handleInputChange = (field: string, value: string) => {
+    const newData = { ...formData, [field]: value };
+    setFormData(newData);
+    onUpdateData(newData);
   };
 
-  const handlePrev = () => {
-    onPrev();
+  const getTitle = () => {
+    if (memberType === 'formacao') {
+      return (
+        <>
+          Seu{' '}
+          <span className="bg-gradient-to-r from-viverblue to-viverblue-light bg-clip-text text-transparent">
+            Perfil de Mercado 💼
+          </span>
+        </>
+      );
+    }
+    return (
+      <>
+        Seu{' '}
+        <span className="bg-gradient-to-r from-viverblue to-viverblue-light bg-clip-text text-transparent">
+          Perfil Empresarial 💼
+        </span>
+      </>
+    );
   };
 
-  const companyNameError = getFieldError?.('companyName');
-  const businessSectorError = getFieldError?.('businessSector');
-  const companySizeError = getFieldError?.('companySize');
-  const annualRevenueError = getFieldError?.('annualRevenue');
-  const positionError = getFieldError?.('position');
-
-  const canProceed = companyName.trim() && businessSector && companySize && annualRevenue && position;
+  const getSubtitle = () => {
+    if (memberType === 'formacao') {
+      return "Vamos entender sua área de atuação para personalizar sua formação em IA!";
+    }
+    return "Vamos entender sua empresa para criar soluções de IA personalizadas!";
+  };
 
   return (
     <div className="space-y-8">
-      {/* Mensagem da IA da etapa anterior */}
-      {data.aiMessage1 && (
-        <AIMessageDisplay message={data.aiMessage1} />
-      )}
-
       {/* Header */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center space-y-6"
+        className="text-center space-y-4"
       >
-        <div className="flex justify-center">
-          <motion.div 
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2 }}
-            className="w-20 h-20 rounded-full bg-gradient-to-br from-viverblue/20 to-viverblue-light/20 flex items-center justify-center"
-          >
-            <Building2 className="w-10 h-10 text-viverblue" />
-          </motion.div>
-        </div>
-        
-        <div className="space-y-4">
-          <motion.h1 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="text-4xl font-heading font-bold text-white"
-          >
-            Conte-nos sobre seu{' '}
-            <span className="bg-gradient-to-r from-viverblue to-viverblue-light bg-clip-text text-transparent">
-              negócio! 💼
-            </span>
-          </motion.h1>
-          
-          <motion.p 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="text-xl text-neutral-300 max-w-2xl mx-auto leading-relaxed"
-          >
-            Agora vamos entender melhor sua empresa para personalizar as soluções de IA 
-            mais adequadas para seu perfil empresarial!
-          </motion.p>
-        </div>
+        <h1 className="text-4xl font-heading font-bold text-white">
+          {getTitle()}
+        </h1>
+        <p className="text-xl text-neutral-300 max-w-2xl mx-auto leading-relaxed">
+          {getSubtitle()}
+        </p>
       </motion.div>
 
-      {/* Formulário */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8 }}
-        className="max-w-4xl mx-auto"
-      >
-        <div className="bg-[#151823] border border-white/10 rounded-2xl p-8">
-          <div className="space-y-8">
-            {/* Seção de informações básicas da empresa */}
-            <div className="space-y-6">
-              <h3 className="text-xl font-heading font-semibold text-white flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-viverblue/20 flex items-center justify-center">
-                  <Building2 className="w-4 h-4 text-viverblue" />
-                </div>
-                Informações da Empresa
-              </h3>
-              
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="companyName" className="text-sm font-medium text-white">
-                    Nome da empresa *
-                  </Label>
-                  <Input
-                    id="companyName"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                    placeholder="Nome da sua empresa"
-                    className={`h-12 bg-[#181A2A] border-white/10 text-white ${companyNameError ? 'border-red-500' : ''}`}
-                  />
-                  {companyNameError && (
-                    <p className="text-sm text-red-400">{companyNameError}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="companyWebsite" className="text-sm font-medium text-white flex items-center gap-2">
-                    <Globe className="w-4 h-4" />
-                    Site da empresa
-                  </Label>
-                  <Input
-                    id="companyWebsite"
-                    value={companyWebsite}
-                    onChange={(e) => setCompanyWebsite(e.target.value)}
-                    placeholder="www.suaempresa.com"
-                    className="h-12 bg-[#181A2A] border-white/10 text-white"
-                  />
-                  <p className="text-xs text-neutral-400">
-                    Opcional - nos ajuda a entender melhor seu negócio
-                  </p>
-                </div>
-
-                <div className="md:col-span-2 space-y-2">
-                  <Label className="text-sm font-medium text-white flex items-center gap-2">
-                    <Briefcase className="w-4 h-4" />
-                    Setor/Segmento de atuação *
-                  </Label>
-                  <Select value={businessSector} onValueChange={setBusinessSector}>
-                    <SelectTrigger className={`h-12 bg-[#181A2A] border-white/10 text-white ${businessSectorError ? 'border-red-500' : ''}`}>
-                      <SelectValue placeholder="Selecione o setor da sua empresa" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#151823] border-white/10 max-h-60">
-                      {businessSectors.map((sector) => (
-                        <SelectItem key={sector} value={sector}>
-                          {sector}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {businessSectorError && (
-                    <p className="text-sm text-red-400">{businessSectorError}</p>
-                  )}
-                </div>
+      <div className="grid lg:grid-cols-2 gap-8">
+        {/* Formulário */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+          className="space-y-6"
+        >
+          <div className="bg-[#151823] border border-white/10 rounded-2xl p-6 space-y-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-viverblue/20 flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-viverblue" />
               </div>
+              <h3 className="text-xl font-heading font-semibold text-white">
+                {memberType === 'formacao' ? 'Perfil de Mercado' : 'Perfil Empresarial'}
+              </h3>
             </div>
 
-            {/* Seção de tamanho e faturamento */}
-            <div className="space-y-6">
-              <h3 className="text-lg font-heading font-semibold text-white flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-viverblue/20 flex items-center justify-center">
-                  <Users className="w-4 h-4 text-viverblue" />
-                </div>
-                Porte da Empresa
-              </h3>
-              
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-white">
-                    Tamanho da empresa *
-                  </Label>
-                  <Select value={companySize} onValueChange={setCompanySize}>
-                    <SelectTrigger className={`h-12 bg-[#181A2A] border-white/10 text-white ${companySizeError ? 'border-red-500' : ''}`}>
-                      <SelectValue placeholder="Número de funcionários" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#151823] border-white/10">
-                      {companySizes.map((size) => (
-                        <SelectItem key={size} value={size}>
-                          {size}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {companySizeError && (
-                    <p className="text-sm text-red-400">{companySizeError}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-white flex items-center gap-2">
-                    <DollarSign className="w-4 h-4" />
-                    Faturamento anual *
-                  </Label>
-                  <Select value={annualRevenue} onValueChange={setAnnualRevenue}>
-                    <SelectTrigger className={`h-12 bg-[#181A2A] border-white/10 text-white ${annualRevenueError ? 'border-red-500' : ''}`}>
-                      <SelectValue placeholder="Selecione o faturamento" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#151823] border-white/10">
-                      {annualRevenues.map((revenue) => (
-                        <SelectItem key={revenue} value={revenue}>
-                          {revenue}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {annualRevenueError && (
-                    <p className="text-sm text-red-400">{annualRevenueError}</p>
-                  )}
-                </div>
-              </div>
+            {/* Setor/Segmento */}
+            <div className="space-y-2">
+              <Label className="text-neutral-300 flex items-center gap-2">
+                <Briefcase className="w-4 h-4" />
+                Setor/segmento de atuação *
+              </Label>
+              <Select value={formData.businessSector} onValueChange={(value) => handleInputChange('businessSector', value)}>
+                <SelectTrigger className="bg-[#0F111A] border-white/20 text-white">
+                  <SelectValue placeholder="Selecione seu setor de atuação" />
+                </SelectTrigger>
+                <SelectContent>
+                  {businessSectors.map((sector) => (
+                    <SelectItem key={sector} value={sector}>
+                      {sector}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {getFieldError?.('businessSector') && (
+                <p className="text-red-400 text-sm">{getFieldError('businessSector')}</p>
+              )}
             </div>
 
-            {/* Seção de posição */}
-            <div className="space-y-6">
-              <h3 className="text-lg font-heading font-semibold text-white flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-viverblue/20 flex items-center justify-center">
-                  <Crown className="w-4 h-4 text-viverblue" />
-                </div>
-                Sua Posição
-              </h3>
-              
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-white">
-                  Seu cargo/posição na empresa *
-                </Label>
-                <Select value={position} onValueChange={setPosition}>
-                  <SelectTrigger className={`h-12 bg-[#181A2A] border-white/10 text-white ${positionError ? 'border-red-500' : ''}`}>
-                    <SelectValue placeholder="Selecione seu cargo" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#151823] border-white/10">
-                    {positions.map((pos) => (
-                      <SelectItem key={pos} value={pos}>
-                        {pos}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {positionError && (
-                  <p className="text-sm text-red-400">{positionError}</p>
-                )}
-                <p className="text-xs text-neutral-400">
-                  Isso nos ajuda a personalizar as recomendações de IA para seu nível de decisão
-                </p>
-              </div>
+            {/* Cargo/Posição */}
+            <div className="space-y-2">
+              <Label className="text-neutral-300">
+                Seu cargo/posição *
+              </Label>
+              <Select value={formData.position} onValueChange={(value) => handleInputChange('position', value)}>
+                <SelectTrigger className="bg-[#0F111A] border-white/20 text-white">
+                  <SelectValue placeholder="Selecione seu cargo/posição" />
+                </SelectTrigger>
+                <SelectContent>
+                  {positions.map((position) => (
+                    <SelectItem key={position} value={position}>
+                      {position}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {getFieldError?.('position') && (
+                <p className="text-red-400 text-sm">{getFieldError('position')}</p>
+              )}
             </div>
 
-            {/* Navegação */}
-            <div className="flex items-center justify-between pt-6">
-              <Button
-                variant="outline"
-                onClick={handlePrev}
-                className="flex items-center gap-2 h-12 px-6 bg-transparent border-white/20 text-white hover:bg-white/5 hover:border-white/30"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                Voltar
-              </Button>
-
-              <Button 
-                onClick={handleNext}
-                disabled={!canProceed}
-                size="lg"
-                className="h-12 px-8 bg-viverblue hover:bg-viverblue-dark text-[#0F111A] text-lg font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
-              >
-                Vamos falar sobre IA! 🤖
-              </Button>
+            {/* Área para implementar IA */}
+            <div className="space-y-2">
+              <Label className="text-neutral-300 flex items-center gap-2">
+                <Target className="w-4 h-4" />
+                Qual área você gostaria de implementar IA? *
+              </Label>
+              <Select value={formData.areaToImpact} onValueChange={(value) => handleInputChange('areaToImpact', value)}>
+                <SelectTrigger className="bg-[#0F111A] border-white/20 text-white">
+                  <SelectValue placeholder="Selecione a área de interesse" />
+                </SelectTrigger>
+                <SelectContent>
+                  {areasToImpact.map((area) => (
+                    <SelectItem key={area} value={area}>
+                      {area}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {getFieldError?.('areaToImpact') && (
+                <p className="text-red-400 text-sm">{getFieldError('areaToImpact')}</p>
+              )}
             </div>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
 
-      {/* Dica */}
+        {/* Mensagem da IA */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.4 }}
+          className="space-y-6"
+        >
+          {showAIMessage && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.6 }}
+            >
+              <AIMessageDisplay 
+                message={generateAIMessage(2, { ...data, ...formData }, memberType)}
+              />
+            </motion.div>
+          )}
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            className="bg-viverblue/10 border border-viverblue/30 rounded-xl p-6"
+          >
+            <h4 className="font-semibold text-viverblue mb-3">
+              {memberType === 'formacao' ? '🎯 Como personalizamos sua formação:' : '🎯 Como personalizamos para você:'}
+            </h4>
+            <ul className="space-y-2 text-sm text-neutral-300">
+              {memberType === 'formacao' ? (
+                <>
+                  <li>• Conteúdo específico para sua área de atuação</li>
+                  <li>• Projetos práticos do seu setor</li>
+                  <li>• Casos de sucesso similares ao seu perfil</li>
+                  <li>• Mentoria direcionada para seus objetivos</li>
+                </>
+              ) : (
+                <>
+                  <li>• Soluções de IA específicas para seu setor</li>
+                  <li>• Cases de sucesso da sua área</li>
+                  <li>• Estratégias personalizadas para seu cargo</li>
+                  <li>• ROI calculado para sua realidade</li>
+                </>
+              )}
+            </ul>
+          </motion.div>
+        </motion.div>
+      </div>
+
+      {/* Navegação */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.2 }}
-        className="bg-viverblue/5 border border-viverblue/20 rounded-xl p-4 text-center max-w-2xl mx-auto"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1 }}
+        className="flex justify-between pt-6"
       >
-        <p className="text-sm text-neutral-300">
-          💡 <strong className="text-white">Etapa 2 de 5:</strong> Perfeito! Agora nossa IA já consegue visualizar 
-          o potencial da sua empresa! 🚀
-        </p>
+        <Button 
+          onClick={onPrev}
+          variant="outline"
+          size="lg"
+          className="px-8 py-3 text-lg"
+        >
+          ← Voltar
+        </Button>
+        
+        <Button 
+          onClick={onNext}
+          size="lg"
+          className="bg-viverblue hover:bg-viverblue-dark text-[#0F111A] px-8 py-3 text-lg font-semibold rounded-xl"
+        >
+          Continuar →
+        </Button>
       </motion.div>
     </div>
   );
