@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 import { sanitizeForLogging } from '@/utils/securityUtils';
+import { loginRateLimiter, getClientIdentifier } from '@/utils/rateLimiting';
 
 interface UseAuthMethodsProps {
   setIsLoading: (loading: boolean) => void;
@@ -51,6 +52,22 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
       return { error };
     }
 
+    // Verificar rate limiting
+    const clientId = getClientIdentifier();
+    const emailId = email.toLowerCase().trim();
+    const rateLimitCheck = loginRateLimiter.canAttempt(`${clientId}_${emailId}`);
+    
+    if (!rateLimitCheck.allowed) {
+      const error = new Error(rateLimitCheck.reason || 'Muitas tentativas de login');
+      toast.error(error.message);
+      logger.warn("Login bloqueado por rate limiting", {
+        email: emailId.substring(0, 3) + '***',
+        waitTime: rateLimitCheck.waitTime,
+        component: 'AUTH_METHODS'
+      });
+      return { error };
+    }
+
     setIsLoading(true);
     
     try {
@@ -65,7 +82,7 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
       }
 
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.toLowerCase().trim(),
+        email: emailId,
         password
       });
 
@@ -90,6 +107,9 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
       }
 
       if (data.user) {
+        // Reset rate limiting após sucesso
+        loginRateLimiter.reset(`${clientId}_${emailId}`);
+        
         logger.info("Login realizado com sucesso", {
           userId: data.user.id.substring(0, 8) + '***',
           component: 'AUTH_METHODS'

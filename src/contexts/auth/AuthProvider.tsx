@@ -6,6 +6,9 @@ import { supabase } from '@/lib/supabase';
 import { useAuthMethods } from './hooks/useAuthMethods';
 import { AuthStateManager, AuthState } from './managers/AuthStateManager';
 import { AuthContextType } from './types';
+import { SecurityProvider } from './SecurityContext';
+import { SecurityMonitor } from '@/components/security/SecurityMonitor';
+import { logger } from '@/utils/logger';
 
 // Criação do contexto com valor padrão undefined
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -68,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
   
-  // Extrair métodos de autenticação
+  // Extrair métodos de autenticação com rate limiting integrado
   const { signIn, signOut, signInAsMember, signInAsAdmin } = useAuthMethods({ setIsLoading });
   
   // Salvar a rota autenticada quando o usuário fizer login com sucesso
@@ -77,6 +80,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('lastAuthRoute', window.location.pathname);
     }
   }, [user, profile, isLoading]);
+
+  // Handler de eventos de segurança
+  const handleSecurityEvent = useCallback((event: string, details: any) => {
+    logger.warn(`Evento de segurança: ${event}`, {
+      component: 'AUTH_PROVIDER',
+      event,
+      details,
+      userId: user?.id?.substring(0, 8) + '***' || 'anonymous'
+    });
+    
+    // Eventos críticos que requerem ação imediata
+    const criticalEvents = ['suspicious_scripts', 'console_access', 'devtools_detected'];
+    if (criticalEvents.includes(event)) {
+      // Log crítico e possível logout em casos extremos
+      if (event === 'suspicious_scripts') {
+        logger.error("Scripts maliciosos detectados, considerando logout", {
+          component: 'AUTH_PROVIDER'
+        });
+      }
+    }
+  }, [user]);
 
   // Montar objeto de contexto memoizado
   const contextValue: AuthContextType = React.useMemo(() => ({
@@ -103,8 +127,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={contextValue}>
-      <AuthStateManager onStateChange={handleAuthStateChange} />
-      {children}
+      <SecurityProvider>
+        <SecurityMonitor onSecurityEvent={handleSecurityEvent} />
+        <AuthStateManager onStateChange={handleAuthStateChange} />
+        {children}
+      </SecurityProvider>
     </AuthContext.Provider>
   );
 }
