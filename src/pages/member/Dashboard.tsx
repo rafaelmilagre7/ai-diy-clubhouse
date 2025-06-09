@@ -12,8 +12,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import { Container } from "@/components/ui/container";
-import { AlertCircle, RefreshCw, Wifi, Activity } from "lucide-react";
+import { AlertCircle, RefreshCw, Wifi, Activity, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -112,20 +113,29 @@ const Dashboard = () => {
   if (authLoading || onboardingLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-surface-subtle to-surface-elevated">
-        <Card variant="elevated" className="p-8 max-w-sm text-center animate-fade-in">
+        <Card variant="modern" className="p-8 max-w-sm text-center animate-fade-in shadow-2xl backdrop-blur-sm">
           <CardContent className="space-y-6">
-            <div className="p-4 bg-primary/10 rounded-2xl w-fit mx-auto">
-              <Activity className="h-8 w-8 text-primary animate-pulse" />
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 rounded-2xl blur-xl"></div>
+              <div className="relative p-4 bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl w-fit mx-auto border border-primary/20">
+                <Sparkles className="h-8 w-8 text-primary animate-pulse" />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Text variant="card" textColor="primary" className="font-semibold">
+            <div className="space-y-3">
+              <Text variant="card" textColor="primary" className="font-bold">
                 Carregando sua experiência
               </Text>
               <Text variant="body" textColor="secondary">
                 Preparando seu dashboard personalizado...
               </Text>
             </div>
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <LoadingSpinner 
+              variant="accent" 
+              size="lg" 
+              text="Inicializando..." 
+              icon="activity"
+              centered
+            />
           </CardContent>
         </Card>
       </div>
@@ -141,17 +151,20 @@ const Dashboard = () => {
   if (hasError) {
     return (
       <Container size="md" className="py-8 flex flex-col items-center justify-center min-h-[60vh]">
-        <Card variant="elevated" className="max-w-md mx-auto text-center overflow-hidden">
-          <div className="bg-gradient-to-r from-error/10 to-warning/10 p-1">
+        <Card variant="modern" className="max-w-md mx-auto text-center overflow-hidden shadow-2xl">
+          <div className="bg-gradient-to-r from-error/10 to-warning/10 p-1 rounded-xl">
             <CardContent className="p-8 space-y-6 bg-background m-1 rounded-lg">
               <div className="flex justify-center">
-                <div className="p-4 bg-error/10 rounded-2xl">
-                  <Wifi className="h-12 w-12 text-error" />
+                <div className="relative">
+                  <div className="absolute inset-0 bg-error/20 rounded-2xl blur-lg"></div>
+                  <div className="relative p-4 bg-gradient-to-br from-error/10 to-warning/10 rounded-2xl border border-error/20">
+                    <Wifi className="h-12 w-12 text-error" />
+                  </div>
                 </div>
               </div>
               
-              <div className="space-y-2">
-                <Text variant="subsection" textColor="primary">
+              <div className="space-y-3">
+                <Text variant="subsection" textColor="primary" className="font-bold">
                   Problema de Conexão
                 </Text>
                 <Text variant="body" textColor="secondary">
@@ -160,12 +173,12 @@ const Dashboard = () => {
               </div>
               
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button onClick={handleRetry} className="hover-scale">
+                <Button onClick={handleRetry} className="hover-scale shadow-lg">
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Tentar Novamente
                 </Button>
                 
-                <Button variant="outline" onClick={() => window.location.href = '/dashboard'}>
+                <Button variant="outline" onClick={() => window.location.href = '/dashboard'} className="hover-scale">
                   <AlertCircle className="h-4 w-4 mr-2" />
                   Recarregar Página
                 </Button>

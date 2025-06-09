@@ -127,7 +127,7 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
 
       {/* INSIGHTS E ESTATÍSTICAS RÁPIDAS */}
       <div className="grid gap-6 md:grid-cols-3">
-        <Card variant="modern" className="p-6 bg-gradient-to-br from-success/5 to-success/10 border-success/20">
+        <Card variant="elevated" className="p-6 bg-gradient-to-br from-success/5 to-success/10 border-success/20">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2 bg-success/10 rounded-lg">
               <Target className="h-5 w-5 text-success" />
@@ -144,7 +144,7 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
           </Text>
         </Card>
 
-        <Card variant="modern" className="p-6 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+        <Card variant="elevated" className="p-6 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2 bg-primary/10 rounded-lg">
               <TrendingUp className="h-5 w-5 text-primary" />
@@ -161,7 +161,7 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
           </Text>
         </Card>
 
-        <Card variant="modern" className="p-6 bg-gradient-to-br from-accent/5 to-accent/10 border-accent/20">
+        <Card variant="elevated" className="p-6 bg-gradient-to-br from-accent/5 to-accent/10 border-accent/20">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2 bg-accent/10 rounded-lg">
               <Sparkles className="h-5 w-5 text-accent" />
