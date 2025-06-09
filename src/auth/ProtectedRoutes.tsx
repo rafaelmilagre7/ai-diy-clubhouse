@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, ReactNode } from "react";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "sonner";
+import { logger } from "@/utils/logger";
 
 interface ProtectedRoutesProps {
   children: ReactNode;
@@ -18,7 +19,7 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   const toastShownRef = useRef(false);
   const mountedRef = useRef(false);
   
-  // Rastrear tentativas de acesso para segurança
+  // Rastrear tentativas de acesso para segurança (sem dados sensíveis)
   const accessAttemptRef = useRef<{
     count: number;
     lastAttempt: number;
@@ -50,9 +51,11 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
       timeoutRef.current = window.setTimeout(() => {
         if (mountedRef.current) {
           setLoadingTimeout(true);
-          console.warn("[SECURITY] Auth loading timeout exceeded");
+          logger.warn("Auth loading timeout exceeded", {
+            component: 'PROTECTED_ROUTES'
+          });
         }
-      }, 6000); // 6 segundos de timeout
+      }, 6000);
     }
     
     return () => {
@@ -74,7 +77,9 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
       attempt.count++;
       if (attempt.count > 10) {
         attempt.blocked = true;
-        console.error("[SECURITY] Too many access attempts - temporarily blocked");
+        logger.error("Too many access attempts - temporarily blocked", {
+          component: 'PROTECTED_ROUTES'
+        });
         toast.error("Muitas tentativas de acesso. Aguarde um momento.");
         return;
       }
@@ -90,9 +95,9 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
       
       if (!user) {
         // Log de tentativa de acesso não autorizada (sem dados sensíveis)
-        console.warn("[SECURITY] Unauthorized access attempt", {
+        logger.warn("Unauthorized access attempt", {
           path: location.pathname,
-          timestamp: new Date().toISOString(),
+          component: 'PROTECTED_ROUTES',
           referrer: document.referrer || 'direct'
         });
       }

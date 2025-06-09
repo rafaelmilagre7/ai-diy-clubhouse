@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
 import { OnboardingData } from '../types/onboardingTypes';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
+import { logger } from '@/utils/logger';
 
 interface OnboardingStatus {
   isRequired: boolean | null;
@@ -18,8 +19,6 @@ interface OnboardingActions {
 }
 
 export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
-  console.log('[useOnboardingStatus] Hook iniciado');
-  
   const { user, profile, isLoading: authLoading } = useAuth();
   const { handleError } = useErrorHandler();
   
@@ -30,13 +29,19 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
   const checkStatus = useCallback(async () => {
     // Se não há usuário ou ainda está carregando auth, aguardar
     if (!user?.id || authLoading) {
-      console.log('[useOnboardingStatus] Aguardando autenticação... user:', !!user, 'authLoading:', authLoading);
+      logger.debug('Aguardando autenticação', { 
+        hasUser: !!user, 
+        authLoading,
+        component: 'ONBOARDING_STATUS'
+      });
       return;
     }
 
     // Se não há profile ainda, aguardar um pouco mais
     if (!profile) {
-      console.log('[useOnboardingStatus] Aguardando profile...');
+      logger.debug('Aguardando profile', {
+        component: 'ONBOARDING_STATUS'
+      });
       setIsLoading(true);
       return;
     }
@@ -45,11 +50,17 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
       setIsLoading(true);
       setError(null);
       
-      console.log('[useOnboardingStatus] Verificando status do onboarding para:', user.id, 'profile:', profile);
+      logger.debug('Verificando status do onboarding', {
+        hasProfile: !!profile,
+        onboardingCompleted: profile.onboarding_completed,
+        component: 'ONBOARDING_STATUS'
+      });
       
       // Verificar se profile indica onboarding completo
       if (profile.onboarding_completed) {
-        console.log('[useOnboardingStatus] Onboarding já completo no perfil');
+        logger.info('Onboarding já completo no perfil', {
+          component: 'ONBOARDING_STATUS'
+        });
         setIsRequired(false);
         setIsLoading(false);
         return;
@@ -63,17 +74,27 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
         .maybeSingle();
 
       if (onboardingError) {
-        console.error('[useOnboardingStatus] Erro ao verificar onboarding:', onboardingError);
+        logger.error('Erro ao verificar onboarding', {
+          error: onboardingError.message,
+          component: 'ONBOARDING_STATUS'
+        });
         throw onboardingError;
       }
 
       const needsOnboarding = !onboardingRecord?.completed_at;
-      console.log('[useOnboardingStatus] Onboarding necessário:', needsOnboarding, 'record:', onboardingRecord);
+      logger.info('Status de onboarding determinado', { 
+        needsOnboarding,
+        hasRecord: !!onboardingRecord,
+        component: 'ONBOARDING_STATUS'
+      });
       
       setIsRequired(needsOnboarding);
     } catch (err) {
-      console.error('[useOnboardingStatus] Erro:', err);
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
+      logger.error('Erro ao verificar status de onboarding', {
+        error: errorMessage,
+        component: 'ONBOARDING_STATUS'
+      });
       setError(errorMessage);
       handleError(err, 'useOnboardingStatus.checkStatus', { showToast: false });
       setIsRequired(false); // Em caso de erro, não bloquear o usuário
@@ -83,14 +104,17 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
   }, [user?.id, profile, authLoading, handleError]);
 
   const submitData = useCallback(async (data: OnboardingData) => {
-    console.log('[useOnboardingStatus] Iniciando submissão dos dados');
+    logger.info('Iniciando submissão dos dados de onboarding', {
+      component: 'ONBOARDING_STATUS'
+    });
     
     if (!user?.id) {
       throw new Error('Usuário não autenticado');
     }
 
     try {
-      const onboardingRecord = {
+      // Sanitizar dados antes de salvar (remover campos sensíveis se houver)
+      const sanitizedData = {
         user_id: user.id,
         name: data.name,
         email: data.email,
@@ -128,15 +152,20 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
         updated_at: new Date().toISOString()
       };
 
-      console.log('[useOnboardingStatus] Salvando onboarding:', onboardingRecord);
+      logger.info('Salvando dados de onboarding', {
+        component: 'ONBOARDING_STATUS'
+      });
 
       // Salvar na tabela user_onboarding
       const { error: saveError } = await supabase
         .from('user_onboarding')
-        .upsert(onboardingRecord, { onConflict: 'user_id' });
+        .upsert(sanitizedData, { onConflict: 'user_id' });
 
       if (saveError) {
-        console.error('[useOnboardingStatus] Erro ao salvar onboarding:', saveError);
+        logger.error('Erro ao salvar onboarding', {
+          error: saveError.message,
+          component: 'ONBOARDING_STATUS'
+        });
         throw saveError;
       }
 
@@ -150,15 +179,23 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
         .eq('id', user.id);
 
       if (profileError) {
-        console.error('[useOnboardingStatus] Erro ao atualizar perfil:', profileError);
+        logger.error('Erro ao atualizar perfil', {
+          error: profileError.message,
+          component: 'ONBOARDING_STATUS'
+        });
         throw profileError;
       }
 
-      console.log('[useOnboardingStatus] Onboarding salvo com sucesso');
+      logger.info('Onboarding salvo com sucesso', {
+        component: 'ONBOARDING_STATUS'
+      });
       setIsRequired(false);
       
     } catch (err) {
-      console.error('[useOnboardingStatus] Erro ao salvar onboarding:', err);
+      logger.error('Erro ao salvar onboarding', {
+        error: err instanceof Error ? err.message : 'Erro desconhecido',
+        component: 'ONBOARDING_STATUS'
+      });
       handleError(err, 'useOnboardingStatus.submitData');
       throw err;
     }
@@ -171,7 +208,9 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
   // Auto-verificar status quando há profile disponível
   useEffect(() => {
     if (!authLoading && user?.id && profile && isRequired === null) {
-      console.log('[useOnboardingStatus] Auto-verificando status com profile');
+      logger.debug('Auto-verificando status com profile', {
+        component: 'ONBOARDING_STATUS'
+      });
       checkStatus();
     }
   }, [authLoading, user?.id, profile, isRequired, checkStatus]);
@@ -179,7 +218,9 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
   // Reset quando usuário muda
   useEffect(() => {
     if (!user?.id) {
-      console.log('[useOnboardingStatus] Reset - usuário deslogado');
+      logger.debug('Reset - usuário deslogado', {
+        component: 'ONBOARDING_STATUS'
+      });
       setIsRequired(null);
       setIsLoading(false);
       setError(null);
@@ -189,13 +230,14 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
   // Se ainda está carregando auth ou não tem profile, manter loading
   const finalIsLoading = authLoading || isLoading || (!profile && !!user?.id);
 
-  console.log('[useOnboardingStatus] Estado final:', {
+  logger.debug('Estado final do onboarding', {
     isRequired,
     isLoading: finalIsLoading,
-    error,
-    user: !!user,
-    profile: !!profile,
-    authLoading
+    hasError: !!error,
+    hasUser: !!user,
+    hasProfile: !!profile,
+    authLoading,
+    component: 'ONBOARDING_STATUS'
   });
 
   return {

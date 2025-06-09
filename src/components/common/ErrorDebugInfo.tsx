@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Bug, Copy, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
+import { logger } from '@/utils/logger';
 
 interface ErrorDebugInfoProps {
   error: Error | null;
@@ -26,12 +27,36 @@ export const ErrorDebugInfo: React.FC<ErrorDebugInfoProps> = ({
     return null;
   }
 
+  const sanitizeErrorData = (data: any) => {
+    if (!data || typeof data !== 'object') return data;
+    
+    const sanitized = { ...data };
+    const sensitiveFields = ['password', 'token', 'email', 'phone', 'api_key'];
+    
+    sensitiveFields.forEach(field => {
+      if (sanitized[field]) {
+        sanitized[field] = '[REDACTED]';
+      }
+    });
+    
+    return sanitized;
+  };
+
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
       toast.success('Informações copiadas para a área de transferência');
+      
+      logger.info("Debug info copiado", {
+        component: 'ERROR_DEBUG_INFO',
+        context: context || 'unknown'
+      });
     } catch (err) {
       toast.error('Erro ao copiar informações');
+      logger.error("Erro ao copiar debug info", {
+        error: err instanceof Error ? err.message : 'Erro desconhecido',
+        component: 'ERROR_DEBUG_INFO'
+      });
     }
   };
 
@@ -42,14 +67,15 @@ export const ErrorDebugInfo: React.FC<ErrorDebugInfoProps> = ({
       error: {
         name: error.name,
         message: error.message,
-        stack: error.stack
+        // Stack trace apenas em desenvolvimento
+        stack: import.meta.env.DEV ? error.stack : '[HIDDEN_IN_PRODUCTION]'
       },
       errorInfo: errorInfo ? {
-        componentStack: errorInfo.componentStack
+        componentStack: import.meta.env.DEV ? errorInfo.componentStack : '[HIDDEN_IN_PRODUCTION]'
       } : null,
       url: window.location.href,
-      userAgent: navigator.userAgent,
-      additionalData: additionalData || {}
+      userAgent: navigator.userAgent.substring(0, 100), // Limitar tamanho
+      additionalData: sanitizeErrorData(additionalData || {})
     };
 
     return JSON.stringify(debugInfo, null, 2);
@@ -78,7 +104,7 @@ export const ErrorDebugInfo: React.FC<ErrorDebugInfoProps> = ({
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm text-red-800 flex items-center gap-2">
               <Bug className="w-4 h-4" />
-              Error Debug Info
+              Error Debug Info (DEV)
             </CardTitle>
             <Button
               size="sm"
@@ -109,12 +135,7 @@ export const ErrorDebugInfo: React.FC<ErrorDebugInfoProps> = ({
             <p className="text-red-700">{error.name}</p>
           </div>
 
-          <div>
-            <strong className="text-red-800">URL:</strong>
-            <p className="text-red-700 text-xs break-all">{window.location.href}</p>
-          </div>
-
-          {error.stack && (
+          {import.meta.env.DEV && error.stack && (
             <div>
               <div className="flex items-center justify-between">
                 <strong className="text-red-800">Stack Trace:</strong>
@@ -132,15 +153,6 @@ export const ErrorDebugInfo: React.FC<ErrorDebugInfoProps> = ({
                   {error.stack}
                 </pre>
               )}
-            </div>
-          )}
-
-          {errorInfo && (
-            <div>
-              <strong className="text-red-800">Component Stack:</strong>
-              <pre className="text-xs text-red-600 bg-red-100 p-2 rounded overflow-auto max-h-20">
-                {errorInfo.componentStack}
-              </pre>
             </div>
           )}
 

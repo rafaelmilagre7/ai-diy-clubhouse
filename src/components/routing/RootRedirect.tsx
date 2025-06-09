@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/auth";
 import { useOnboardingStatus } from "@/components/onboarding/hooks/useOnboardingStatus";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { useEffect, useState } from "react";
+import { logger } from "@/utils/logger";
 
 const RootRedirect = () => {
   const { user, profile, isAdmin, isLoading: authLoading } = useAuth();
@@ -13,27 +14,33 @@ const RootRedirect = () => {
   // Timeout de segurança para evitar carregamento infinito
   useEffect(() => {
     const timeout = setTimeout(() => {
-      console.warn("[RootRedirect] Timeout excedido, forçando redirecionamento");
+      logger.warn("RootRedirect timeout excedido", { 
+        component: 'ROOT_REDIRECT',
+        timeoutDuration: '8000ms'
+      });
       setTimeoutExceeded(true);
-    }, 8000); // 8 segundos
+    }, 8000);
 
     return () => clearTimeout(timeout);
   }, []);
   
-  console.log('[RootRedirect] Estado atual:', {
+  logger.debug('RootRedirect estado atual', {
     authLoading,
     onboardingLoading,
-    user: !!user,
-    profile: !!profile,
+    hasUser: !!user,
+    hasProfile: !!profile,
     profileRole: profile?.role,
     onboardingRequired,
     isAdmin,
-    timeoutExceeded
+    timeoutExceeded,
+    component: 'ROOT_REDIRECT'
   });
   
   // Se timeout excedido, redirecionar para fallback seguro
   if (timeoutExceeded) {
-    console.log('[RootRedirect] Timeout - redirecionando para fallback');
+    logger.info('RootRedirect timeout - redirecionando para fallback', {
+      component: 'ROOT_REDIRECT'
+    });
     if (!user) {
       return <Navigate to="/login" replace />;
     }
@@ -42,48 +49,55 @@ const RootRedirect = () => {
   
   // Se ainda estiver carregando autenticação
   if (authLoading) {
-    console.log('[RootRedirect] Carregando autenticação...');
     return <LoadingScreen message="Verificando sua sessão..." />;
   }
   
   // Se não há usuário, vai para login
   if (!user) {
-    console.log('[RootRedirect] Sem usuário - redirecionando para login');
+    logger.info('RootRedirect sem usuário - redirecionando para login', {
+      component: 'ROOT_REDIRECT'
+    });
     return <Navigate to="/login" replace />;
   }
   
   // Se há usuário mas ainda está carregando o profile
   if (!profile && !timeoutExceeded) {
-    console.log('[RootRedirect] Carregando profile...');
     return <LoadingScreen message="Carregando seu perfil..." />;
   }
   
   // Se ainda está carregando onboarding
   if (onboardingLoading) {
-    console.log('[RootRedirect] Carregando status de onboarding...');
     return <LoadingScreen message="Verificando seu progresso..." />;
   }
   
   // Se precisa de onboarding
   if (onboardingRequired) {
-    console.log('[RootRedirect] Onboarding necessário');
+    logger.info('RootRedirect onboarding necessário', {
+      component: 'ROOT_REDIRECT'
+    });
     return <Navigate to="/onboarding" replace />;
   }
   
   // Se é admin (verificar por múltiplas fontes)
   if (isAdmin || profile?.role === 'admin') {
-    console.log('[RootRedirect] Usuário admin - redirecionando para admin');
+    logger.info('RootRedirect usuário admin - redirecionando', {
+      component: 'ROOT_REDIRECT'
+    });
     return <Navigate to="/admin" replace />;
   }
   
   // Se é formação
   if (profile?.role === 'formacao') {
-    console.log('[RootRedirect] Usuário formação - redirecionando para formacao');
+    logger.info('RootRedirect usuário formação - redirecionando', {
+      component: 'ROOT_REDIRECT'
+    });
     return <Navigate to="/formacao" replace />;
   }
   
   // Caso padrão: dashboard
-  console.log('[RootRedirect] Redirecionando para dashboard (padrão)');
+  logger.info('RootRedirect redirecionando para dashboard (padrão)', {
+    component: 'ROOT_REDIRECT'
+  });
   return <Navigate to="/dashboard" replace />;
 };
 

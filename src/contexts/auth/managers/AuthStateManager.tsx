@@ -29,14 +29,18 @@ export const AuthStateManager: FC<AuthStateManagerProps> = ({ onStateChange }) =
       // Iniciar com carregando = true
       onStateChange({ isLoading: true });
 
-      logger.debug("Configurando listener de autenticação");
-      console.log("[AuthStateManager] Iniciando configuração de autenticação");
+      logger.debug("Configurando listener de autenticação", {
+        component: 'AUTH_STATE_MANAGER'
+      });
 
       // Configurar listener para mudanças de autenticação
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         async (event, session) => {
-          logger.debug("Evento de autenticação", { event, userId: session?.user?.id });
-          console.log("[AuthStateManager] Evento de auth:", event, session?.user?.id);
+          logger.debug("Evento de autenticação", { 
+            event, 
+            hasUser: !!session?.user,
+            component: 'AUTH_STATE_MANAGER'
+          });
 
           if (event === 'SIGNED_IN') {
             onStateChange({ session, user: session?.user || null });
@@ -58,17 +62,23 @@ export const AuthStateManager: FC<AuthStateManagerProps> = ({ onStateChange }) =
               }
             }
 
-            // Processar perfil do usuário imediatamente (sem timeout)
+            // Processar perfil do usuário imediatamente
             if (session?.user) {
               try {
-                console.log("[AuthStateManager] Processando profile para:", session.user.id);
+                logger.info("Processando profile do usuário", {
+                  component: 'AUTH_STATE_MANAGER'
+                });
                 const profile = await processUserProfile(
                   session.user.id,
                   session.user.email,
                   session.user.user_metadata?.name
                 );
 
-                console.log("[AuthStateManager] Profile processado:", profile);
+                logger.info("Profile processado com sucesso", {
+                  hasProfile: !!profile,
+                  role: profile?.role,
+                  component: 'AUTH_STATE_MANAGER'
+                });
                 onStateChange({
                   profile,
                   isAdmin: profile?.role === 'admin',
@@ -76,16 +86,19 @@ export const AuthStateManager: FC<AuthStateManagerProps> = ({ onStateChange }) =
                   isLoading: false
                 });
               } catch (error) {
-                logger.error("Erro ao processar perfil", error);
-                console.error("[AuthStateManager] Erro ao processar profile:", error);
+                logger.error("Erro ao processar perfil", {
+                  error: error instanceof Error ? error.message : 'Erro desconhecido',
+                  component: 'AUTH_STATE_MANAGER'
+                });
                 onStateChange({ isLoading: false });
               }
             } else {
               onStateChange({ isLoading: false });
             }
           } else if (event === 'SIGNED_OUT') {
-            logger.debug("Usuário desconectado, limpando estado");
-            console.log("[AuthStateManager] Usuário desconectado");
+            logger.info("Usuário desconectado, limpando estado", {
+              component: 'AUTH_STATE_MANAGER'
+            });
             onStateChange({
               session: null,
               user: null,
@@ -95,7 +108,9 @@ export const AuthStateManager: FC<AuthStateManagerProps> = ({ onStateChange }) =
               isLoading: false
             });
           } else if (event === 'USER_UPDATED') {
-            logger.debug("Dados do usuário atualizados");
+            logger.debug("Dados do usuário atualizados", {
+              component: 'AUTH_STATE_MANAGER'
+            });
             onStateChange({ session, user: session?.user || null });
           }
         }
@@ -103,31 +118,44 @@ export const AuthStateManager: FC<AuthStateManagerProps> = ({ onStateChange }) =
 
       // Verificar sessão atual imediatamente
       try {
-        console.log("[AuthStateManager] Verificando sessão atual");
+        logger.info("Verificando sessão atual", {
+          component: 'AUTH_STATE_MANAGER'
+        });
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error("[AuthStateManager] Erro ao verificar sessão:", error);
+          logger.error("Erro ao verificar sessão", {
+            error: error.message,
+            component: 'AUTH_STATE_MANAGER'
+          });
           onStateChange({ isLoading: false, authError: error });
           return;
         }
 
-        logger.debug("Verificando sessão atual", { userId: session?.user?.id });
-        console.log("[AuthStateManager] Sessão atual:", session?.user?.id);
+        logger.debug("Sessão verificada", { 
+          hasSession: !!session,
+          component: 'AUTH_STATE_MANAGER'
+        });
 
         onStateChange({ session, user: session?.user || null });
 
         // Processar perfil do usuário se houver sessão ativa
         if (session?.user) {
           try {
-            console.log("[AuthStateManager] Processando profile na inicialização para:", session.user.id);
+            logger.info("Processando profile na inicialização", {
+              component: 'AUTH_STATE_MANAGER'
+            });
             const profile = await processUserProfile(
               session.user.id,
               session.user.email,
               session.user.user_metadata?.name
             );
 
-            console.log("[AuthStateManager] Profile carregado na inicialização:", profile);
+            logger.info("Profile carregado na inicialização", {
+              hasProfile: !!profile,
+              role: profile?.role,
+              component: 'AUTH_STATE_MANAGER'
+            });
             onStateChange({
               profile,
               isAdmin: profile?.role === 'admin',
@@ -135,23 +163,34 @@ export const AuthStateManager: FC<AuthStateManagerProps> = ({ onStateChange }) =
               isLoading: false
             });
           } catch (error) {
-            logger.error("Erro ao processar perfil na inicialização", error);
-            console.error("[AuthStateManager] Erro ao processar profile na inicialização:", error);
+            logger.error("Erro ao processar perfil na inicialização", {
+              error: error instanceof Error ? error.message : 'Erro desconhecido',
+              component: 'AUTH_STATE_MANAGER'
+            });
             onStateChange({ isLoading: false });
           }
         } else {
-          console.log("[AuthStateManager] Nenhuma sessão ativa, finalizando loading");
+          logger.info("Nenhuma sessão ativa, finalizando loading", {
+            component: 'AUTH_STATE_MANAGER'
+          });
           onStateChange({ isLoading: false });
         }
       } catch (error) {
-        logger.error("Erro ao verificar sessão", error);
-        console.error("[AuthStateManager] Erro crítico ao verificar sessão:", error);
-        onStateChange({ isLoading: false, authError: error instanceof Error ? error : new Error('Erro desconhecido') });
+        logger.error("Erro crítico ao verificar sessão", {
+          error: error instanceof Error ? error.message : 'Erro desconhecido',
+          component: 'AUTH_STATE_MANAGER'
+        });
+        onStateChange({ 
+          isLoading: false, 
+          authError: error instanceof Error ? error : new Error('Erro desconhecido') 
+        });
       }
 
       // Limpeza ao desmontar
       return () => {
-        logger.debug("Limpando listener de autenticação");
+        logger.debug("Limpando listener de autenticação", {
+          component: 'AUTH_STATE_MANAGER'
+        });
         subscription.unsubscribe();
       };
     };
