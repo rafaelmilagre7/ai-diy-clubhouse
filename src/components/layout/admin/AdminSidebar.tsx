@@ -1,38 +1,28 @@
 
-import { cn } from "@/lib/utils";
+import { AdminUserProfile } from "./AdminUserProfile";
 import { AdminSidebarNav } from "./AdminSidebarNav";
-import { BaseSidebarProps } from "../BaseLayout";
+import { AdminSidebarFooter } from "./AdminSidebarFooter";
 
-export const AdminSidebar = ({ 
-  sidebarOpen, 
-  setSidebarOpen
-}: BaseSidebarProps) => {
+export const AdminSidebar = () => {
   return (
-    <aside
-      className={cn(
-        "fixed inset-y-0 left-0 z-50 flex h-full flex-col bg-gray-800 border-r border-gray-700 transition-all duration-300 ease-in-out",
-        sidebarOpen ? "w-64" : "w-[70px]",
-        "md:translate-x-0",
-        sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-      )}
-    >
-      <div className="flex flex-col h-full">
+    <div className="w-64 bg-[#0F111A] border-r border-white/5 flex flex-col">
+      <div className="p-4">
         {/* Logo/Header */}
-        <div className="p-4 border-b border-gray-700">
-          <div className="flex items-center justify-center">
-            {sidebarOpen ? (
-              <h1 className="text-xl font-bold text-white">Admin Panel</h1>
-            ) : (
-              <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
-                <span className="text-sm font-bold">A</span>
-              </div>
-            )}
-          </div>
+        <div className="flex items-center justify-center mb-6">
+          <h1 className="text-xl font-bold text-white">Admin Panel</h1>
         </div>
-
+        
+        {/* Perfil do usuário */}
+        <AdminUserProfile />
+        
+        <div className="h-px bg-white/5 my-4"></div>
+        
         {/* Navegação */}
-        <AdminSidebarNav sidebarOpen={sidebarOpen} />
+        <AdminSidebarNav />
       </div>
-    </aside>
+      
+      {/* Footer */}
+      <AdminSidebarFooter />
+    </div>
   );
 };

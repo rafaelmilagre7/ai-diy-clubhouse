@@ -1,14 +1,19 @@
 
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { 
-  LayoutDashboard, 
-  Users, 
-  Wrench, 
-  Lightbulb, 
-  BarChart3, 
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Users,
+  LayoutDashboard,
+  BookOpen,
+  CalendarDays,
+  Mail,
+  Boxes,
   MessageSquare,
-  Calendar,
+  Lightbulb,
+  UserCog,
+  Wrench,
+  BarChart3,
   Shield,
   UserPlus,
   TrendingUp,
@@ -16,100 +21,91 @@ import {
   Megaphone
 } from "lucide-react";
 
-const adminNavItems = [
-  {
-    title: "Dashboard",
-    href: "/admin",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "Usuários",
-    href: "/admin/users",
-    icon: Users,
-  },
-  {
-    title: "Comunicações", 
-    href: "/admin/communications",
-    icon: Megaphone,
-  },
-  {
-    title: "Ferramentas",
-    href: "/admin/tools",
-    icon: Wrench,
-  },
-  {
-    title: "Soluções",
-    href: "/admin/solutions", 
-    icon: Lightbulb,
-  },
-  {
-    title: "Analytics",
-    href: "/admin/analytics",
-    icon: BarChart3,
-  },
-  {
-    title: "Sugestões",
-    href: "/admin/suggestions",
-    icon: MessageSquare,
-  },
-  {
-    title: "Eventos",
-    href: "/admin/events",
-    icon: Calendar,
-  },
-  {
-    title: "Papéis",
-    href: "/admin/roles",
-    icon: Shield,
-  },
-  {
-    title: "Convites",
-    href: "/admin/invites",
-    icon: UserPlus,
-  },
-  {
-    title: "Benefícios",
-    href: "/admin/benefits",
-    icon: TrendingUp,
-  },
-  {
-    title: "WhatsApp Debug",
-    href: "/admin/whatsapp-debug",
-    icon: MessageCircle,
-  },
-];
+export const AdminSidebarNav = () => {
+  const navItems = [
+    { 
+      to: "/admin", 
+      icon: <LayoutDashboard className="h-5 w-5" />, 
+      label: "Dashboard",
+      isExact: true
+    },
+    { 
+      to: "/admin/users", 
+      icon: <Users className="h-5 w-5" />, 
+      label: "Usuários" 
+    },
+    { 
+      to: "/admin/communications", 
+      icon: <Megaphone className="h-5 w-5" />, 
+      label: "Comunicações" 
+    },
+    { 
+      to: "/admin/tools", 
+      icon: <Wrench className="h-5 w-5" />, 
+      label: "Ferramentas" 
+    },
+    { 
+      to: "/admin/solutions", 
+      icon: <Lightbulb className="h-5 w-5" />, 
+      label: "Soluções" 
+    },
+    { 
+      to: "/admin/analytics", 
+      icon: <BarChart3 className="h-5 w-5" />, 
+      label: "Analytics" 
+    },
+    { 
+      to: "/admin/suggestions", 
+      icon: <MessageSquare className="h-5 w-5" />, 
+      label: "Sugestões" 
+    },
+    { 
+      to: "/admin/events", 
+      icon: <CalendarDays className="h-5 w-5" />, 
+      label: "Eventos" 
+    },
+    { 
+      to: "/admin/roles", 
+      icon: <Shield className="h-5 w-5" />, 
+      label: "Papéis" 
+    },
+    { 
+      to: "/admin/invites", 
+      icon: <UserPlus className="h-5 w-5" />, 
+      label: "Convites" 
+    },
+    { 
+      to: "/admin/benefits", 
+      icon: <TrendingUp className="h-5 w-5" />, 
+      label: "Benefícios" 
+    },
+    { 
+      to: "/admin/whatsapp-debug", 
+      icon: <MessageCircle className="h-5 w-5" />, 
+      label: "WhatsApp Debug" 
+    }
+  ];
 
-interface AdminSidebarNavProps {
-  sidebarOpen: boolean;
-}
-
-export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
   return (
-    <nav className="flex-1 px-3 space-y-1">
-      {adminNavItems.map((item) => (
-        <NavLink
-          key={item.href}
-          to={item.href}
-          className={({ isActive }) =>
-            cn(
-              "group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
-              "text-gray-300 hover:bg-white/5 hover:text-white",
-              isActive && "bg-white/10 text-white",
-              !sidebarOpen && "justify-center px-2"
-            )
-          }
-        >
-          <item.icon
-            className={cn(
-              "h-5 w-5 flex-shrink-0",
-              sidebarOpen ? "mr-3" : "mx-auto"
+    <ScrollArea className="flex-1 px-1" style={{ height: "calc(100vh - 280px)" }}>
+      <div className="space-y-1">
+        {navItems.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.isExact}
+            className={({ isActive }) => cn(
+              "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+              isActive 
+                ? "bg-white/10 text-white" 
+                : "text-white/70 hover:text-white hover:bg-white/5"
             )}
-          />
-          {sidebarOpen && (
-            <span className="truncate">{item.title}</span>
-          )}
-        </NavLink>
-      ))}
-    </nav>
+          >
+            {item.icon}
+            {item.label}
+          </NavLink>
+        ))}
+      </div>
+    </ScrollArea>
   );
 };
