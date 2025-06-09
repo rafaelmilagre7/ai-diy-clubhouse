@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
-import { cleanupAuthState } from "@/utils/authUtils";
 import { motion } from "framer-motion";
 
 const AuthLayout = () => {
@@ -32,18 +31,7 @@ const AuthLayout = () => {
     try {
       setIsLoading(true);
       
-      // Limpar estado de autenticação anterior para evitar conflitos
-      cleanupAuthState();
-      
-      // Tentativa de logout global para garantir um estado limpo
-      try {
-        await supabase.auth.signOut({ scope: 'global' });
-      } catch (err) {
-        // Continuar mesmo se falhar
-        console.log("Erro ao limpar sessão anterior:", err);
-      }
-      
-      // Login com redirecionamento explícito
+      // Login direto sem limpeza desnecessária de estado
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -51,19 +39,15 @@ const AuthLayout = () => {
       
       if (error) throw error;
       
-      // Redirecionamento completo após login bem-sucedido
+      // Navegação otimizada usando React Router
       if (data.user) {
         toast({
           title: "Login realizado com sucesso",
-          description: "Bem-vindo de volta!",
+          description: "Redirecionando...",
         });
         
-        // Forçar redirecionamento completo para o domínio correto
-        const redirectUrl = window.location.origin.includes('localhost')
-          ? 'http://localhost:3000/dashboard'
-          : 'https://app.viverdeia.ai/dashboard';
-          
-        window.location.href = redirectUrl;
+        // Usar navigate para redirecionamento mais rápido
+        navigate('/dashboard', { replace: true });
       }
     } catch (error: any) {
       console.error("Erro ao fazer login:", error);

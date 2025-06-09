@@ -1,59 +1,63 @@
 
-import React, { Suspense, memo } from "react";
-import { LoadingState } from "./LoadingState";
-
-// Import dinâmico da versão otimizada
-const OptimizedLoadingScreen = React.lazy(() => import("./OptimizedLoadingScreen"));
+import React from "react";
+import { Loader2 } from "lucide-react";
 
 interface LoadingScreenProps {
   message?: string;
-  useOptimized?: boolean;
-  variant?: "spinner" | "skeleton" | "dots";
-  size?: "sm" | "md" | "lg";
   showProgress?: boolean;
-  progressValue?: number;
 }
 
-const LoadingScreen = memo<LoadingScreenProps>(({ 
-  message = "Carregando",
-  useOptimized = true,
-  variant = "spinner",
-  size = "lg",
-  showProgress = false,
-  progressValue = 0
+const LoadingScreen: React.FC<LoadingScreenProps> = ({ 
+  message = "Carregando...",
+  showProgress = false 
 }) => {
-  // Fallback para versão simples se a otimizada falhar
-  const SimpleFallback = () => (
-    <div className="min-h-screen bg-background">
-      <LoadingState
-        variant={variant}
-        size={size}
-        message={`${message} - Estamos preparando sua experiência personalizada do VIVER DE IA Club...`}
-        fullScreen
-      />
+  const [progress, setProgress] = React.useState(0);
+  
+  // Simular progresso para melhor UX
+  React.useEffect(() => {
+    if (!showProgress) return;
+    
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 90) return prev; // Parar em 90% até terminar de fato
+        return prev + Math.random() * 15;
+      });
+    }, 200);
+    
+    return () => clearInterval(interval);
+  }, [showProgress]);
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background">
+      <div className="text-center space-y-4">
+        <div className="flex items-center justify-center">
+          <img
+            src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
+            alt="VIVER DE IA Club"
+            className="h-16 w-auto mb-4"
+          />
+        </div>
+        
+        <div className="flex items-center justify-center space-x-2">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <span className="text-lg font-medium text-foreground">{message}</span>
+        </div>
+        
+        {showProgress && (
+          <div className="w-64 bg-secondary rounded-full h-2">
+            <div 
+              className="bg-primary h-2 rounded-full transition-all duration-300 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        )}
+        
+        <p className="text-sm text-muted-foreground max-w-sm">
+          Configurando sua experiência personalizada...
+        </p>
+      </div>
     </div>
   );
-
-  // Se não quiser usar a versão otimizada, usar a simples
-  if (!useOptimized) {
-    return <SimpleFallback />;
-  }
-
-  // Usar versão otimizada com fallback
-  return (
-    <Suspense fallback={<SimpleFallback />}>
-      <OptimizedLoadingScreen
-        message={message}
-        variant={variant}
-        size={size}
-        showProgress={showProgress}
-        progressValue={progressValue}
-        fullScreen={true}
-      />
-    </Suspense>
-  );
-});
-
-LoadingScreen.displayName = 'LoadingScreen';
+};
 
 export default LoadingScreen;

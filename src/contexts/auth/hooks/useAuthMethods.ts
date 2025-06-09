@@ -1,7 +1,7 @@
 
 import { supabase } from '@/lib/supabase';
 import { toast } from "sonner";
-import { cleanupAuthState, redirectToDomain } from "@/utils/authUtils";
+import { clearProfileCache } from "@/hooks/auth/utils/authSessionUtils";
 
 interface UseAuthMethodsProps {
   setIsLoading: (isLoading: boolean) => void;
@@ -9,14 +9,11 @@ interface UseAuthMethodsProps {
 
 export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
   /**
-   * Login com email e senha
+   * Login otimizado com email e senha
    */
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      
-      // Limpar estado de autenticação anterior
-      cleanupAuthState();
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -26,9 +23,6 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
       if (error) throw error;
       
       toast.success("Login realizado com sucesso");
-      
-      // Redirecionar para o domínio correto
-      redirectToDomain('/dashboard');
       
       return { success: true, data };
     } catch (error: any) {
@@ -59,33 +53,26 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
   };
   
   /**
-   * Logout
+   * Logout otimizado
    */
   const signOut = async () => {
     try {
       setIsLoading(true);
       
-      // Limpar estado de autenticação
-      cleanupAuthState();
+      // Limpar cache de perfis
+      clearProfileCache();
       
-      // Tentar logout global para garantir limpeza completa
+      // Logout do Supabase
       await supabase.auth.signOut({ scope: 'global' });
       
       toast.success("Logout realizado com sucesso");
       
-      // Redirecionamento forçado para garantir limpeza completa do estado
-      window.location.href = window.location.origin.includes('localhost')
-        ? 'http://localhost:3000/login'
-        : 'https://app.viverdeia.ai/login';
-        
       return { success: true };
     } catch (error: any) {
       console.error('Erro ao fazer logout:', error);
       
-      // Mesmo em caso de erro, forçar redirecionamento para login
-      window.location.href = window.location.origin.includes('localhost')
-        ? 'http://localhost:3000/login'
-        : 'https://app.viverdeia.ai/login';
+      // Mesmo em caso de erro, limpar estado local
+      clearProfileCache();
       
       return { success: false, error };
     } finally {

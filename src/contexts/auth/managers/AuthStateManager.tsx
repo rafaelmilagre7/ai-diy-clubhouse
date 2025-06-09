@@ -1,5 +1,5 @@
 
-import { FC, useEffect } from 'react';
+import { FC, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { User, Session } from '@supabase/supabase-js';
 import { UserProfile } from '@/lib/supabase';
@@ -22,38 +22,96 @@ interface AuthStateManagerProps {
   onStateChange: (newState: Partial<AuthState>) => void;
 }
 
-export const AuthStateManager: FC<AuthStateManagerProps> = ({ onStateChange }) => {
-  // Configurar listener de mudanças de estado de autenticação
-  useEffect(() => {
-    const setupAuthListener = async () => {
-      // Iniciar com carregando = true
-      onStateChange({ isLoading: true });
+// Cache de perfil para evitar re-fetch desnecessários
+const profileCache = new Map<string, { profile: UserProfile | null; timestamp: number }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 
-      logger.debug("Configurando listener de autenticação", {
+export const AuthStateManager: FC<AuthStateManagerProps> = ({ onStateChange }) => {
+  const isInitializing = useRef(false);
+  
+  // Função otimizada para buscar perfil com cache
+  const getCachedProfile = async (userId: string, email?: string | null, name?: string): Promise<UserProfile | null> => {
+    const cached = profileCache.get(userId);
+    const now = Date.now();
+    
+    // Retornar cache se válido
+    if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+      return cached.profile;
+    }
+    
+    try {
+      // Buscar perfil com timeout de 2 segundos
+      const profilePromise = processUserProfile(userId, email, name);
+      const timeoutPromise = new Promise<null>((_, reject) => 
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 2000)
+      );
+      
+      const profile = await Promise.race([profilePromise, timeoutPromise]) as UserProfile | null;
+      
+      // Cachear resultado
+      profileCache.set(userId, { profile, timestamp: now });
+      
+      return profile;
+    } catch (error) {
+      logger.warn("Erro ao buscar perfil, usando fallback", {
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
         component: 'AUTH_STATE_MANAGER'
       });
+      
+      // Fallback: criar perfil mínimo para não bloquear o login
+      const fallbackProfile: UserProfile = {
+        id: userId,
+        email: email || '',
+        name: name || 'Usuário',
+        role: 'membro_club',
+        avatar_url: null,
+        company_name: null,
+        industry: null,
+        created_at: new Date().toISOString(),
+        onboarding_completed: false,
+        onboarding_completed_at: null
+      };
+      
+      profileCache.set(userId, { profile: fallbackProfile, timestamp: now });
+      return fallbackProfile;
+    }
+  };
+
+  useEffect(() => {
+    const setupAuthListener = async () => {
+      if (isInitializing.current) return;
+      isInitializing.current = true;
+      
+      // Iniciar com carregando = true
+      onStateChange({ isLoading: true });
 
       // Configurar listener para mudanças de autenticação
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         async (event, session) => {
-          logger.debug("Evento de autenticação", { 
-            event, 
-            hasUser: !!session?.user,
-            component: 'AUTH_STATE_MANAGER'
-          });
+          if (process.env.NODE_ENV === 'development') {
+            logger.debug("Evento de autenticação", { 
+              event, 
+              hasUser: !!session?.user,
+              component: 'AUTH_STATE_MANAGER'
+            });
+          }
 
-          if (event === 'SIGNED_IN') {
-            onStateChange({ session, user: session?.user || null });
+          if (event === 'SIGNED_IN' && session?.user) {
+            // Atualizar estado imediatamente
+            onStateChange({ 
+              session, 
+              user: session.user,
+              isLoading: true // Manter loading até perfil carregar
+            });
 
-            // Verificar se é um login inicial ou apenas uma atualização de sessão
+            // Verificar se é um login inicial
             const isInitialLogin = !localStorage.getItem('lastAuthRoute');
             
-            // Apenas redirecionar para o domínio correto em logins iniciais
+            // Redirecionar apenas se necessário
             if (isInitialLogin) {
               const currentOrigin = window.location.origin;
               const targetDomain = 'https://app.viverdeia.ai';
 
-              // Redirecionar apenas se for um domínio de produção diferente do alvo
               if (!currentOrigin.includes('localhost') && currentOrigin !== targetDomain) {
                 toast.info("Redirecionando para o domínio principal...");
                 const currentPath = window.location.pathname;
@@ -62,23 +120,15 @@ export const AuthStateManager: FC<AuthStateManagerProps> = ({ onStateChange }) =
               }
             }
 
-            // Processar perfil do usuário imediatamente
-            if (session?.user) {
+            // Buscar perfil em paralelo com outras operações
+            setTimeout(async () => {
               try {
-                logger.info("Processando profile do usuário", {
-                  component: 'AUTH_STATE_MANAGER'
-                });
-                const profile = await processUserProfile(
+                const profile = await getCachedProfile(
                   session.user.id,
                   session.user.email,
                   session.user.user_metadata?.name
                 );
 
-                logger.info("Profile processado com sucesso", {
-                  hasProfile: !!profile,
-                  role: profile?.role,
-                  component: 'AUTH_STATE_MANAGER'
-                });
                 onStateChange({
                   profile,
                   isAdmin: profile?.role === 'admin',
@@ -92,13 +142,11 @@ export const AuthStateManager: FC<AuthStateManagerProps> = ({ onStateChange }) =
                 });
                 onStateChange({ isLoading: false });
               }
-            } else {
-              onStateChange({ isLoading: false });
-            }
+            }, 0);
           } else if (event === 'SIGNED_OUT') {
-            logger.info("Usuário desconectado, limpando estado", {
-              component: 'AUTH_STATE_MANAGER'
-            });
+            // Limpar cache
+            profileCache.clear();
+            
             onStateChange({
               session: null,
               user: null,
@@ -108,20 +156,22 @@ export const AuthStateManager: FC<AuthStateManagerProps> = ({ onStateChange }) =
               isLoading: false
             });
           } else if (event === 'USER_UPDATED') {
-            logger.debug("Dados do usuário atualizados", {
-              component: 'AUTH_STATE_MANAGER'
-            });
             onStateChange({ session, user: session?.user || null });
           }
         }
       );
 
-      // Verificar sessão atual imediatamente
+      // Verificar sessão atual com timeout reduzido
       try {
-        logger.info("Verificando sessão atual", {
-          component: 'AUTH_STATE_MANAGER'
-        });
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Session check timeout')), 1000)
+        );
+        
+        const { data: { session }, error } = await Promise.race([
+          sessionPromise,
+          timeoutPromise
+        ]) as { data: { session: Session | null }, error: any };
         
         if (error) {
           logger.error("Erro ao verificar sessão", {
@@ -132,30 +182,17 @@ export const AuthStateManager: FC<AuthStateManagerProps> = ({ onStateChange }) =
           return;
         }
 
-        logger.debug("Sessão verificada", { 
-          hasSession: !!session,
-          component: 'AUTH_STATE_MANAGER'
-        });
-
         onStateChange({ session, user: session?.user || null });
 
-        // Processar perfil do usuário se houver sessão ativa
+        // Processar perfil se houver sessão ativa
         if (session?.user) {
           try {
-            logger.info("Processando profile na inicialização", {
-              component: 'AUTH_STATE_MANAGER'
-            });
-            const profile = await processUserProfile(
+            const profile = await getCachedProfile(
               session.user.id,
               session.user.email,
               session.user.user_metadata?.name
             );
 
-            logger.info("Profile carregado na inicialização", {
-              hasProfile: !!profile,
-              role: profile?.role,
-              component: 'AUTH_STATE_MANAGER'
-            });
             onStateChange({
               profile,
               isAdmin: profile?.role === 'admin',
@@ -170,9 +207,6 @@ export const AuthStateManager: FC<AuthStateManagerProps> = ({ onStateChange }) =
             onStateChange({ isLoading: false });
           }
         } else {
-          logger.info("Nenhuma sessão ativa, finalizando loading", {
-            component: 'AUTH_STATE_MANAGER'
-          });
           onStateChange({ isLoading: false });
         }
       } catch (error) {
@@ -188,10 +222,8 @@ export const AuthStateManager: FC<AuthStateManagerProps> = ({ onStateChange }) =
 
       // Limpeza ao desmontar
       return () => {
-        logger.debug("Limpando listener de autenticação", {
-          component: 'AUTH_STATE_MANAGER'
-        });
         subscription.unsubscribe();
+        isInitializing.current = false;
       };
     };
 

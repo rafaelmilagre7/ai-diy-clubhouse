@@ -19,18 +19,7 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   const toastShownRef = useRef(false);
   const mountedRef = useRef(false);
   
-  // Rastrear tentativas de acesso para segurança (sem dados sensíveis)
-  const accessAttemptRef = useRef<{
-    count: number;
-    lastAttempt: number;
-    blocked: boolean;
-  }>({
-    count: 0,
-    lastAttempt: 0,
-    blocked: false
-  });
-
-  // Montar componente
+  // Sistema de timeout de segurança reduzido
   useEffect(() => {
     mountedRef.current = true;
     return () => {
@@ -41,13 +30,13 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
     };
   }, []);
   
-  // Sistema de timeout de segurança
   useEffect(() => {
     if (isLoading && !loadingTimeout && mountedRef.current) {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
       
+      // Timeout reduzido para 3 segundos
       timeoutRef.current = window.setTimeout(() => {
         if (mountedRef.current) {
           setLoadingTimeout(true);
@@ -55,7 +44,7 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
             component: 'PROTECTED_ROUTES'
           });
         }
-      }, 6000);
+      }, 3000);
     }
     
     return () => {
@@ -65,30 +54,9 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
     };
   }, [isLoading, loadingTimeout]);
 
-  // Verificação de segurança e controle de acesso
+  // Verificação de segurança otimizada
   useEffect(() => {
     if (!mountedRef.current) return;
-
-    const now = Date.now();
-    const attempt = accessAttemptRef.current;
-    
-    // Verificar se há muitas tentativas de acesso (proteção contra ataques)
-    if (now - attempt.lastAttempt < 1000) {
-      attempt.count++;
-      if (attempt.count > 10) {
-        attempt.blocked = true;
-        logger.error("Too many access attempts - temporarily blocked", {
-          component: 'PROTECTED_ROUTES'
-        });
-        toast.error("Muitas tentativas de acesso. Aguarde um momento.");
-        return;
-      }
-    } else {
-      attempt.count = 0;
-      attempt.blocked = false;
-    }
-    
-    attempt.lastAttempt = now;
 
     if (!isLoading && !securityChecked) {
       setSecurityChecked(true);
@@ -105,8 +73,8 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   }, [user, isLoading, location.pathname, securityChecked]);
 
   // Mostrar loading enquanto verifica autenticação
-  if ((isLoading && !loadingTimeout) || accessAttemptRef.current.blocked) {
-    return <LoadingScreen message="Verificando credenciais de segurança..." />;
+  if (isLoading && !loadingTimeout) {
+    return <LoadingScreen message="Verificando credenciais..." showProgress={true} />;
   }
 
   // Timeout de carregamento excedido
