@@ -14,27 +14,12 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const { user, isAdmin, isLoading } = useAuth();
   const navigate = useNavigate();
   const [isMounted, setIsMounted] = useState(false);
-  const [authTimeout, setAuthTimeout] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 3;
 
-  // Timeout de segurança para evitar carregamento infinito
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (isLoading) {
-        setAuthTimeout(true);
-        console.warn("[SECURITY] Auth timeout - redirecting to login");
-        navigate("/login", { replace: true });
-      }
-    }, 8000); // 8 segundos de timeout
-
-    return () => clearTimeout(timeoutId);
-  }, [isLoading, navigate]);
-
-  // Verificar autenticação e permissões
+  // Verificar autenticação e permissões com retry logic
   useEffect(() => {
     setIsMounted(true);
-    
-    // Se timeout de auth ativado, não continuar
-    if (authTimeout) return;
     
     if (!isLoading) {
       if (!user) {
@@ -52,15 +37,37 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
       // Log de acesso administrativo (sem dados sensíveis)
       console.info("[SECURITY] Admin access granted", {
-        userId: user.id,
+        userId: user.id?.substring(0, 8) + '***',
         timestamp: new Date().toISOString(),
-        userAgent: navigator.userAgent.substring(0, 50) // Apenas parte do user agent
+        userAgent: navigator.userAgent.substring(0, 50)
       });
+      
+      // Reset retry count em caso de sucesso
+      setRetryCount(0);
     }
-  }, [user, isAdmin, isLoading, navigate, authTimeout]);
+  }, [user, isAdmin, isLoading, navigate]);
+
+  // Timeout com retry mais inteligente (sem redirecionamento forçado)
+  useEffect(() => {
+    if (isLoading && isMounted) {
+      const timeoutId = setTimeout(() => {
+        if (isLoading && retryCount < maxRetries) {
+          console.warn(`[SECURITY] Auth timeout - retry ${retryCount + 1}/${maxRetries}`);
+          setRetryCount(prev => prev + 1);
+          toast.warning(`Verificando credenciais... (tentativa ${retryCount + 1})`);
+        } else if (isLoading && retryCount >= maxRetries) {
+          console.error("[SECURITY] Auth timeout after retries - redirecting to login");
+          toast.error("Timeout na verificação de credenciais");
+          navigate("/login", { replace: true });
+        }
+      }, 15000); // Aumentado para 15 segundos
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isLoading, isMounted, retryCount, navigate]);
 
   // Renderização com loading mais seguro
-  if (!isMounted || isLoading || authTimeout) {
+  if (!isMounted || isLoading) {
     return (
       <div className="flex min-h-screen bg-[#0F111A] text-white">
         <div className="w-64 bg-[#0F111A] border-r border-white/5 p-4 flex flex-col">
@@ -82,6 +89,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           <div className="space-y-4">
             <Skeleton className="h-8 w-64 bg-white/10" />
             <Skeleton className="h-64 w-full bg-white/10" />
+            {retryCount > 0 && (
+              <div className="text-center text-yellow-400 text-sm">
+                Verificando credenciais... (tentativa {retryCount}/{maxRetries})
+              </div>
+            )}
           </div>
         </div>
       </div>

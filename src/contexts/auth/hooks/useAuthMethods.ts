@@ -5,12 +5,15 @@ import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 import { sanitizeForLogging } from '@/utils/securityUtils';
 import { loginRateLimiter, getClientIdentifier } from '@/utils/rateLimiting';
+import { useNavigate } from 'react-router-dom';
 
 interface UseAuthMethodsProps {
   setIsLoading: (loading: boolean) => void;
 }
 
 export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
+  const navigate = useNavigate();
+
   // Função segura de limpeza de estado de autenticação
   const cleanupAuthState = useCallback(() => {
     try {
@@ -117,10 +120,8 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
         
         toast.success('Login realizado com sucesso!');
         
-        // Forçar recarregamento da página para estado limpo
-        setTimeout(() => {
-          window.location.href = '/dashboard';
-        }, 100);
+        // Usar navigate ao invés de window.location.href para evitar refresh
+        navigate('/dashboard', { replace: true });
       }
 
       return { error: undefined };
@@ -137,7 +138,7 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
     } finally {
       setIsLoading(false);
     }
-  }, [setIsLoading, cleanupAuthState]);
+  }, [setIsLoading, cleanupAuthState, navigate]);
 
   const signOut = useCallback(async () => {
     setIsLoading(true);
@@ -160,10 +161,8 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
       
       toast.success('Logout realizado com sucesso');
       
-      // Forçar redirecionamento para limpeza completa
-      setTimeout(() => {
-        window.location.href = '/login';
-      }, 100);
+      // Usar navigate ao invés de window.location.href
+      navigate('/login', { replace: true });
       
       return { success: true, error: null };
       
@@ -173,18 +172,18 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
         component: 'AUTH_METHODS'
       });
       
-      toast.error('Erro ao fazer logout. Limpando sessão...');
+      toast.error('Erro ao fazer logout. Redirecionando...');
       
-      // Mesmo com erro, redirecionar para limpeza
+      // Em caso de erro crítico, usar window.location como fallback
       setTimeout(() => {
         window.location.href = '/login';
-      }, 500);
+      }, 1000);
       
       return { success: false, error: error instanceof Error ? error : new Error('Erro desconhecido') };
     } finally {
       setIsLoading(false);
     }
-  }, [setIsLoading, cleanupAuthState]);
+  }, [setIsLoading, cleanupAuthState, navigate]);
 
   // Método específico para login de membro (pode ter lógica adicional)
   const signInAsMember = useCallback(async (email: string, password: string) => {

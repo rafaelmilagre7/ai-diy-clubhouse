@@ -8,9 +8,10 @@ export const useLayoutAuthentication = () => {
   const { user, profile, isAdmin, isLoading, setIsLoading } = useAuth();
   const navigate = useNavigate();
   const [redirectChecked, setRedirectChecked] = useState(false);
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
-  const timeoutRef = useRef<number | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const isMounted = useRef(true);
+  const maxRetries = 3;
+  const authTimeout = 10000; // 10 segundos ao invés de 3
 
   // Setup component lifecycle
   useEffect(() => {
@@ -18,65 +19,55 @@ export const useLayoutAuthentication = () => {
     
     return () => {
       isMounted.current = false;
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
     };
-  }, [user, profile, isAdmin, isLoading]);
+  }, []);
   
-  // Setup loading timeout effect com tempo mais curto
+  // Setup loading timeout effect com retry logic mais inteligente
   useEffect(() => {
     if (isLoading && isMounted.current) {
-      // Clear any existing timeout
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      
-      timeoutRef.current = window.setTimeout(() => {
-        if (isMounted.current) {
-          setLoadingTimeout(true);
-          // Force isLoading to false to break out of loading state
-          setIsLoading(false);
+      const timeoutId = setTimeout(() => {
+        if (isMounted.current && isLoading) {
+          if (retryCount < maxRetries) {
+            console.warn(`[AUTH] Loading timeout - retry ${retryCount + 1}/${maxRetries}`);
+            setRetryCount(prev => prev + 1);
+            toast.warning(`Verificando autenticação... (${retryCount + 1}/${maxRetries})`);
+          } else {
+            console.error("[AUTH] Auth timeout after retries");
+            setIsLoading(false);
+            toast.error("Timeout na autenticação. Redirecionando...");
+            navigate('/login', { replace: true });
+          }
         }
-      }, 3000); // Reduzir para 3 segundos
+      }, authTimeout);
+      
+      return () => clearTimeout(timeoutId);
     }
-    
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [isLoading, setIsLoading]);
-  
-  // Handle timeout and redirect to auth if needed
-  useEffect(() => {
-    if (loadingTimeout && isLoading && isMounted.current) {
-      setIsLoading(false);
-      toast("Tempo limite excedido, redirecionando para login");
-      navigate('/login', { replace: true });
-    }
-  }, [loadingTimeout, isLoading, navigate, setIsLoading]);
+  }, [isLoading, retryCount, setIsLoading, navigate]);
 
-  // Check user role when profile is loaded
+  // Check user role when profile is loaded (apenas uma vez)
   useEffect(() => {
-    if (!profile || redirectChecked || !isMounted.current || !user) {
+    if (!profile || redirectChecked || !isMounted.current || !user || isLoading) {
       return;
     }
     
+    // Reset retry count quando conseguimos carregar o perfil
+    setRetryCount(0);
+    
     if (profile.role === 'admin') {
-      toast("Redirecionando para área admin");
+      console.info("[AUTH] Admin user detected, redirecting to admin area");
+      toast.success("Redirecionando para área administrativa");
       navigate('/admin', { replace: true });
     }
     
     setRedirectChecked(true);
-  }, [profile, navigate, redirectChecked, user]);
+  }, [profile, navigate, redirectChecked, user, isLoading]);
 
   return {
     user,
     profile,
     isAdmin,
-    isLoading,
-    loadingTimeout,
+    isLoading: isLoading && retryCount < maxRetries,
+    retryCount,
     redirectChecked
   };
 };

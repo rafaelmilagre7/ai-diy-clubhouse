@@ -12,9 +12,9 @@ interface SessionSecurityOptions {
 
 export const useSecureSession = (options: SessionSecurityOptions = {}) => {
   const {
-    maxIdleTime = 30, // 30 minutos de inatividade
-    checkInterval = 60, // verificar a cada 60 segundos
-    autoLogoutWarning = 5 // avisar 5 minutos antes
+    maxIdleTime = 45, // Aumentado para 45 minutos
+    checkInterval = 120, // Verificar a cada 2 minutos ao invés de 1
+    autoLogoutWarning = 10 // Avisar 10 minutos antes
   } = options;
 
   const { user, signOut } = useAuth();
@@ -22,6 +22,7 @@ export const useSecureSession = (options: SessionSecurityOptions = {}) => {
   const [warningShown, setWarningShown] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout>();
   const timeoutRef = useRef<NodeJS.Timeout>();
+  const validationInProgress = useRef(false);
 
   // Atualizar última atividade
   const updateActivity = useCallback(() => {
@@ -29,11 +30,13 @@ export const useSecureSession = (options: SessionSecurityOptions = {}) => {
     setWarningShown(false);
   }, []);
 
-  // Verificar se a sessão ainda é válida
+  // Verificar se a sessão ainda é válida (com throttling)
   const validateSession = useCallback(async () => {
-    if (!user) return true;
+    if (!user || validationInProgress.current) return true;
 
     try {
+      validationInProgress.current = true;
+      
       const { data: { session }, error } = await supabase.auth.getSession();
       
       if (error || !session) {
@@ -46,11 +49,12 @@ export const useSecureSession = (options: SessionSecurityOptions = {}) => {
       const now = Math.floor(Date.now() / 1000);
       const expiresAt = session.expires_at || 0;
       
-      if (expiresAt - now < 300) { // 5 minutos para expirar
-        console.warn('[SECURITY] Token próximo da expiração');
+      if (expiresAt - now < 600) { // 10 minutos para expirar
+        console.info('[SECURITY] Token próximo da expiração, renovando...');
         try {
           const { error: refreshError } = await supabase.auth.refreshSession();
           if (refreshError) {
+            console.warn('[SECURITY] Erro ao renovar token:', refreshError.message);
             await signOut();
             return false;
           }
@@ -63,12 +67,14 @@ export const useSecureSession = (options: SessionSecurityOptions = {}) => {
       return true;
     } catch (error) {
       console.error('[SECURITY] Erro na validação de sessão:', error);
-      await signOut();
-      return false;
+      // Não fazer logout automático em caso de erro de rede
+      return true;
+    } finally {
+      validationInProgress.current = false;
     }
   }, [user, signOut]);
 
-  // Verificar inatividade
+  // Verificar inatividade (menos agressivo)
   const checkInactivity = useCallback(async () => {
     if (!user) return;
 
@@ -91,7 +97,7 @@ export const useSecureSession = (options: SessionSecurityOptions = {}) => {
       );
     }
 
-    // Logout automático por inatividade
+    // Logout automático por inatividade (menos frequente)
     if (inactiveMinutes >= maxIdleTime) {
       console.warn('[SECURITY] Logout automático por inatividade');
       toast.error('Sessão expirada por inatividade');
@@ -99,8 +105,10 @@ export const useSecureSession = (options: SessionSecurityOptions = {}) => {
       return;
     }
 
-    // Validar sessão periodicamente
-    await validateSession();
+    // Validar sessão apenas se necessário
+    if (inactiveMinutes < (maxIdleTime - autoLogoutWarning)) {
+      await validateSession();
+    }
   }, [user, lastActivity, maxIdleTime, autoLogoutWarning, warningShown, updateActivity, validateSession, signOut]);
 
   // Configurar listeners de atividade
@@ -120,7 +128,7 @@ export const useSecureSession = (options: SessionSecurityOptions = {}) => {
     };
   }, [user, updateActivity]);
 
-  // Configurar verificação periódica
+  // Configurar verificação periódica (menos frequente)
   useEffect(() => {
     if (!user) {
       if (intervalRef.current) {
