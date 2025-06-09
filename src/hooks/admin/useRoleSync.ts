@@ -36,17 +36,29 @@ export const useRoleSync = () => {
   const validateRoles = async () => {
     try {
       setIsLoading(true);
+      
+      console.log('Iniciando validação de roles...');
       const { data, error } = await supabase.rpc('validate_profile_roles');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Erro na validação de roles:', error);
+        throw error;
+      }
       
+      console.log('Resultado da validação:', data);
       setIssues(data || []);
-      toast.success(`Validação concluída: ${data?.length || 0} inconsistências encontradas`);
+      
+      const issueCount = data?.length || 0;
+      if (issueCount === 0) {
+        toast.success('✅ Validação concluída: Nenhuma inconsistência encontrada!');
+      } else {
+        toast.warning(`⚠️ Validação concluída: ${issueCount} inconsistência(s) encontrada(s)`);
+      }
       
       return data || [];
     } catch (error) {
       console.error('Erro ao validar roles:', error);
-      toast.error('Erro ao validar roles');
+      toast.error('Erro ao validar roles do sistema');
       throw error;
     } finally {
       setIsLoading(false);
@@ -56,19 +68,29 @@ export const useRoleSync = () => {
   const auditRoles = async () => {
     try {
       setIsLoading(true);
+      
+      console.log('Iniciando auditoria de roles...');
       const { data, error } = await supabase.rpc('audit_role_assignments');
       
-      if (error) throw error;
-      
-      if (data && data.length > 0) {
-        setAuditData(data[0]);
-        toast.success('Auditoria de roles concluída');
+      if (error) {
+        console.error('Erro na auditoria de roles:', error);
+        throw error;
       }
       
-      return data?.[0] || null;
+      console.log('Resultado da auditoria:', data);
+      
+      if (data && data.length > 0) {
+        const auditResult = data[0];
+        setAuditData(auditResult);
+        toast.success('📊 Auditoria de roles concluída com sucesso');
+        return auditResult;
+      }
+      
+      toast.info('Auditoria executada, mas nenhum dado retornado');
+      return null;
     } catch (error) {
       console.error('Erro ao auditar roles:', error);
-      toast.error('Erro ao auditar roles');
+      toast.error('Erro ao executar auditoria do sistema');
       throw error;
     } finally {
       setIsLoading(false);
@@ -78,21 +100,64 @@ export const useRoleSync = () => {
   const syncRoles = async () => {
     try {
       setIsLoading(true);
+      
+      console.log('Iniciando sincronização de roles...');
       const { data, error } = await supabase.rpc('sync_profile_roles');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Erro na sincronização de roles:', error);
+        throw error;
+      }
+      
+      console.log('Resultado da sincronização:', data);
       
       if (data) {
-        toast.success(data.message);
-        // Revalidar após sincronização
-        await validateRoles();
-        await auditRoles();
+        toast.success(`🔄 ${data.message}`);
+        
+        // Revalidar após sincronização para atualizar dados
+        console.log('Revalidando após sincronização...');
+        await Promise.all([validateRoles(), auditRoles()]);
       }
       
       return data as SyncResult;
     } catch (error) {
       console.error('Erro ao sincronizar roles:', error);
-      toast.error('Erro ao sincronizar roles');
+      toast.error('Erro ao sincronizar roles do sistema');
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const runFullDiagnostic = async () => {
+    try {
+      setIsLoading(true);
+      toast.info('🔍 Executando diagnóstico completo do sistema...');
+      
+      // Executar auditoria e validação em paralelo
+      const [auditResult, validationResult] = await Promise.all([
+        auditRoles(),
+        validateRoles()
+      ]);
+      
+      const hasIssues = validationResult.length > 0;
+      
+      if (hasIssues) {
+        toast.warning(
+          `⚠️ Diagnóstico concluído: ${validationResult.length} inconsistência(s) detectada(s)`
+        );
+      } else {
+        toast.success('✅ Diagnóstico concluído: Sistema de roles está íntegro!');
+      }
+      
+      return {
+        audit: auditResult,
+        issues: validationResult,
+        hasIssues
+      };
+    } catch (error) {
+      console.error('Erro no diagnóstico completo:', error);
+      toast.error('Erro ao executar diagnóstico completo');
       throw error;
     } finally {
       setIsLoading(false);
@@ -105,6 +170,7 @@ export const useRoleSync = () => {
     auditData,
     validateRoles,
     auditRoles,
-    syncRoles
+    syncRoles,
+    runFullDiagnostic
   };
 };

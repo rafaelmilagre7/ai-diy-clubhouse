@@ -5725,7 +5725,7 @@ export type Database = {
           user_count_by_role: Json
           inconsistencies_count: number
           total_users: number
-          roles_without_users: Json
+          roles_without_users: string[]
           users_without_roles: number
         }[]
       }

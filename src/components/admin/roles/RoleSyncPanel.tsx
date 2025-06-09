@@ -10,7 +10,9 @@ import {
   CheckCircle, 
   Users, 
   Shield,
-  AlertCircle
+  AlertCircle,
+  PlayCircle,
+  Activity
 } from 'lucide-react';
 import { useRoleSync } from '@/hooks/admin/useRoleSync';
 
@@ -21,32 +23,42 @@ export const RoleSyncPanel = () => {
     auditData, 
     validateRoles, 
     auditRoles, 
-    syncRoles 
+    syncRoles,
+    runFullDiagnostic
   } = useRoleSync();
 
   const [hasRunInitialCheck, setHasRunInitialCheck] = useState(false);
 
   useEffect(() => {
-    // Executar verificação inicial automaticamente
+    // Executar diagnóstico inicial automaticamente
     if (!hasRunInitialCheck) {
       const runInitialCheck = async () => {
         try {
-          await Promise.all([validateRoles(), auditRoles()]);
+          await runFullDiagnostic();
           setHasRunInitialCheck(true);
         } catch (error) {
           console.error('Erro na verificação inicial:', error);
+          setHasRunInitialCheck(true); // Marcar como executado mesmo com erro
         }
       };
       
       runInitialCheck();
     }
-  }, [hasRunInitialCheck, validateRoles, auditRoles]);
+  }, [hasRunInitialCheck, runFullDiagnostic]);
 
   const handleSyncRoles = async () => {
     try {
       await syncRoles();
     } catch (error) {
       console.error('Erro ao sincronizar:', error);
+    }
+  };
+
+  const handleRunDiagnostic = async () => {
+    try {
+      await runFullDiagnostic();
+    } catch (error) {
+      console.error('Erro ao executar diagnóstico:', error);
     }
   };
 
@@ -81,7 +93,7 @@ export const RoleSyncPanel = () => {
 
   return (
     <div className="space-y-6">
-      {/* Painel de Status */}
+      {/* Painel de Status do Sistema */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -133,13 +145,25 @@ export const RoleSyncPanel = () => {
         </CardContent>
       </Card>
 
-      {/* Ações de Correção */}
+      {/* Painel de Ações */}
       <Card>
         <CardHeader>
-          <CardTitle>Correção Sistêmica</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5" />
+            Ferramentas de Diagnóstico e Correção
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-3">
+            <Button 
+              onClick={handleRunDiagnostic} 
+              disabled={isLoading}
+              variant="default"
+            >
+              <PlayCircle className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              Diagnóstico Completo
+            </Button>
+
             <Button 
               onClick={validateRoles} 
               disabled={isLoading}
@@ -170,11 +194,22 @@ export const RoleSyncPanel = () => {
             )}
           </div>
 
-          {issues.length === 0 && hasRunInitialCheck && (
+          {/* Status do Sistema */}
+          {issues.length === 0 && hasRunInitialCheck && !isLoading && (
             <Alert>
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>
                 ✅ Sistema de roles está íntegro! Nenhuma inconsistência encontrada.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Indicador de carregamento */}
+          {isLoading && (
+            <Alert>
+              <RefreshCw className="h-4 w-4 animate-spin" />
+              <AlertDescription>
+                Executando operações no sistema de roles...
               </AlertDescription>
             </Alert>
           )}
@@ -203,6 +238,11 @@ export const RoleSyncPanel = () => {
                       Role atual: {issue.user_role || 'Nenhum'} | 
                       Role esperado: {issue.expected_role_name || 'Nenhum'}
                     </div>
+                    {issue.user_role_id && (
+                      <div className="text-xs text-muted-foreground">
+                        ID: {issue.user_role_id}
+                      </div>
+                    )}
                   </div>
                   <Badge variant={getIssueVariant(issue.issue_type)}>
                     {getIssueTypeLabel(issue.issue_type)}
