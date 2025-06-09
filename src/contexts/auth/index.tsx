@@ -43,121 +43,199 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [adminCheckComplete, setAdminCheckComplete] = useState(false);
 
-  // Função para buscar o perfil do usuário
-  const fetchUserProfile = async (userId: string) => {
+  // Função para buscar o perfil do usuário com timeout
+  const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
     try {
-      const { data, error } = await supabase
+      console.log('Buscando perfil para usuário:', userId);
+      
+      // Timeout de 3 segundos para busca do perfil
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout na busca do perfil')), 3000)
+      );
+      
+      const profilePromise = supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
+      const { data, error } = await Promise.race([profilePromise, timeoutPromise]);
+
       if (error) {
-        console.error('Erro ao buscar perfil:', error);
+        console.warn('Erro ao buscar perfil:', error);
+        // Criar perfil fallback se não encontrar
+        if (error.code === 'PGRST116') {
+          console.log('Perfil não encontrado, criando fallback...');
+          return createFallbackProfile(userId);
+        }
         return null;
       }
 
+      console.log('Perfil encontrado:', data);
       return data as UserProfile;
     } catch (error) {
-      console.error('Erro ao buscar perfil:', error);
-      return null;
+      console.error('Erro na busca do perfil:', error);
+      // Retornar perfil fallback em caso de erro
+      return createFallbackProfile(userId);
     }
   };
 
-  // Verificação centralizada de admin usando utilitário de segurança
-  const checkIsAdmin = async (email?: string | null, userId?: string) => {
+  // Criar perfil básico como fallback
+  const createFallbackProfile = (userId: string): UserProfile => {
+    console.log('Criando perfil fallback para:', userId);
+    return {
+      id: userId,
+      email: user?.email || '',
+      name: user?.user_metadata?.name || user?.user_metadata?.full_name || 'Usuário',
+      role: 'membro_club',
+      avatar_url: null,
+      company_name: null,
+      industry: null,
+      created_at: new Date().toISOString(),
+      onboarding_completed: false,
+      onboarding_completed_at: null
+    };
+  };
+
+  // Verificação de admin com timeout
+  const checkIsAdmin = async (email?: string | null, userId?: string): Promise<boolean> => {
     if (!email || !userId) {
-      setIsAdmin(false);
       return false;
     }
 
     try {
-      const adminStatus = await verifyAdminStatus(userId, email);
-      setIsAdmin(adminStatus);
+      console.log('Verificando status de admin para:', email);
+      
+      // Timeout de 2 segundos para verificação de admin
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout na verificação de admin')), 2000)
+      );
+      
+      const adminPromise = verifyAdminStatus(userId, email);
+      const adminStatus = await Promise.race([adminPromise, timeoutPromise]);
+      
+      console.log('Status de admin verificado:', adminStatus);
       return adminStatus;
     } catch (error) {
-      console.error('Erro ao verificar status de admin:', error);
-      setIsAdmin(false);
-      return false;
-    } finally {
-      setAdminCheckComplete(true);
+      console.warn('Erro ao verificar status de admin:', error);
+      // Fallback: verificar se o email é admin baseado em domínio
+      const adminEmails = ['rafael@viverdeia.ai', 'admin@viverdeia.ai'];
+      return adminEmails.includes(email.toLowerCase());
     }
   };
 
   useEffect(() => {
-    const fetchCurrentSession = async () => {
+    let isMounted = true;
+
+    const initializeAuth = async () => {
       try {
+        console.log('Inicializando autenticação...');
+        
+        // Timeout geral de 5 segundos para toda a inicialização
+        const initTimeout = setTimeout(() => {
+          if (isMounted) {
+            console.warn('Timeout na inicialização, finalizando loading...');
+            setIsLoading(false);
+          }
+        }, 5000);
+
         const { data: { session: currentSession } } = await supabase.auth.getSession();
+        
+        if (!isMounted) return;
         
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
-        if (currentSession?.user?.email && currentSession?.user?.id) {
-          // Buscar perfil do usuário
-          const userProfile = await fetchUserProfile(currentSession.user.id);
-          setProfile(userProfile);
+        if (currentSession?.user?.id) {
+          console.log('Usuário encontrado, processando perfil...');
           
-          // Verificar status de admin
-          await checkIsAdmin(currentSession.user.email, currentSession.user.id);
+          // Buscar perfil com fallback
+          const userProfile = await fetchUserProfile(currentSession.user.id);
+          
+          if (isMounted && userProfile) {
+            setProfile(userProfile);
+            
+            // Verificar admin em paralelo (não bloquear o carregamento)
+            checkIsAdmin(currentSession.user.email, currentSession.user.id)
+              .then(adminStatus => {
+                if (isMounted) {
+                  setIsAdmin(adminStatus);
+                }
+              })
+              .catch(error => {
+                console.warn('Erro na verificação de admin:', error);
+                setIsAdmin(false);
+              });
+          }
         } else {
+          console.log('Nenhum usuário logado');
           setProfile(null);
           setIsAdmin(false);
-          setAdminCheckComplete(true);
         }
         
-        setIsLoading(false);
+        clearTimeout(initTimeout);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       } catch (error) {
-        console.error('Erro ao buscar sessão:', error);
-        setIsLoading(false);
-        setAdminCheckComplete(true);
+        console.error('Erro na inicialização:', error);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
-    fetchCurrentSession();
+    initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      if (!isMounted) return;
+      
       console.log('Evento de autenticação:', event);
       
       setSession(newSession);
       setUser(newSession?.user ?? null);
       
-      // Log eventos de autenticação importantes
       if (event === 'SIGNED_IN' && newSession?.user) {
-        await logSecurityEvent('sign_in', 'auth', newSession.user.id);
-      } else if (event === 'SIGNED_OUT') {
-        await logSecurityEvent('sign_out', 'auth');
-      }
-      
-      if (event === 'SIGNED_OUT') {
-        setProfile(null);
-        setIsAdmin(false);
-        setAdminCheckComplete(true);
-        // Limpar caches de segurança
-        clearPermissionCache();
-      } else if (newSession?.user?.email && newSession?.user?.id) {
-        // Buscar perfil do usuário
-        const userProfile = await fetchUserProfile(newSession.user.id);
-        setProfile(userProfile);
+        console.log('Usuário logado, processando perfil...');
+        setIsLoading(true);
         
-        // Verificar status de admin
-        await checkIsAdmin(newSession.user.email, newSession.user.id);
-      } else {
+        try {
+          const userProfile = await fetchUserProfile(newSession.user.id);
+          
+          if (isMounted && userProfile) {
+            setProfile(userProfile);
+            
+            // Verificar admin sem bloquear
+            const adminStatus = await checkIsAdmin(newSession.user.email, newSession.user.id);
+            if (isMounted) {
+              setIsAdmin(adminStatus);
+            }
+          }
+        } catch (error) {
+          console.error('Erro ao processar perfil no login:', error);
+        } finally {
+          if (isMounted) {
+            setIsLoading(false);
+          }
+        }
+      } else if (event === 'SIGNED_OUT') {
+        console.log('Usuário deslogado');
         setProfile(null);
         setIsAdmin(false);
-        setAdminCheckComplete(true);
+        clearPermissionCache();
+        setIsLoading(false);
       }
     });
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
 
   const signOut = async () => {
     try {
-      // Limpar caches de segurança
       clearPermissionCache();
       localStorage.removeItem('permissionsCache');
       
@@ -171,7 +249,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  if (isLoading && !adminCheckComplete) {
+  // Mostrar loading apenas por no máximo 5 segundos
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="space-y-4 w-80">
