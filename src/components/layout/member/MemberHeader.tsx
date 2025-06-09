@@ -1,36 +1,51 @@
 
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Menu } from 'lucide-react';
-import { MemberUserMenu } from './MemberUserMenu';
-import { NotificationDropdown } from '@/components/notifications/NotificationDropdown';
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { Menu } from "lucide-react";
+import { MemberUserMenu } from "./MemberUserMenu";
 
 interface MemberHeaderProps {
-  onToggleSidebar: () => void;
+  onSignOut: () => void;
+  profileName: string | null;
+  profileEmail: string | null;
+  profileAvatar?: string;
+  getInitials: (name: string | null) => string;
+  sidebarOpen: boolean;
+  setSidebarOpen: (open: boolean) => void;
 }
 
-export const MemberHeader = ({ onToggleSidebar }: MemberHeaderProps) => {
+export const MemberHeader: React.FC<MemberHeaderProps> = ({
+  onSignOut,
+  profileName,
+  profileEmail,
+  profileAvatar,
+  getInitials,
+  sidebarOpen,
+  setSidebarOpen,
+}) => {
   return (
-    <header className="h-16 border-b bg-background flex items-center justify-between px-4 lg:px-6">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onToggleSidebar}
-          className="lg:hidden"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-        
-        <div className="hidden lg:block">
-          <h1 className="text-xl font-semibold">Viver de IA</h1>
-        </div>
-      </div>
+    <header className="flex h-16 items-center justify-between border-b bg-background px-6">
+      {/* Botão de menu mobile */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="md:hidden"
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+      >
+        <Menu className="h-5 w-5" />
+      </Button>
 
-      <div className="flex items-center gap-2">
-        <NotificationDropdown />
-        <MemberUserMenu />
-      </div>
+      {/* Spacer para desktop */}
+      <div className="hidden md:block" />
+
+      {/* Menu do usuário */}
+      <MemberUserMenu
+        onSignOut={onSignOut}
+        profileName={profileName}
+        profileEmail={profileEmail}
+        profileAvatar={profileAvatar}
+        getInitials={getInitials}
+      />
     </header>
   );
 };

@@ -1,22 +1,41 @@
 
-import { cn } from "@/lib/utils";
+import React from "react";
 import { MemberHeader } from "./MemberHeader";
-import { BaseContentProps } from "../BaseLayout";
 
-export const MemberContent = ({ 
-  sidebarOpen, 
-  setSidebarOpen, 
-  children 
-}: BaseContentProps) => {
+interface MemberContentProps {
+  children: React.ReactNode;
+  onSignOut: () => void;
+  profileName: string | null;
+  profileEmail: string | null;
+  profileAvatar?: string;
+  getInitials: (name: string | null) => string;
+  sidebarOpen: boolean;
+  setSidebarOpen: (open: boolean) => void;
+}
+
+export const MemberContent: React.FC<MemberContentProps> = ({
+  children,
+  onSignOut,
+  profileName,
+  profileEmail,
+  profileAvatar,
+  getInitials,
+  sidebarOpen,
+  setSidebarOpen,
+}) => {
   return (
-    <div 
-      className={cn(
-        "flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden",
-        sidebarOpen ? "md:ml-64" : "md:ml-[70px]"
-      )}
-    >
-      <MemberHeader onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-      <main className="flex-1 overflow-auto">
+    <div className="flex flex-col min-h-screen">
+      <MemberHeader
+        onSignOut={onSignOut}
+        profileName={profileName}
+        profileEmail={profileEmail}
+        profileAvatar={profileAvatar}
+        getInitials={getInitials}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+      />
+      
+      <main className="flex-1 p-6">
         {children}
       </main>
     </div>

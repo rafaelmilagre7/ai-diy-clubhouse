@@ -1,5 +1,4 @@
-
-import React, { memo, useMemo, useCallback } from "react";
+import React, { memo, useMemo, useCallback, useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import BaseLayout from "./BaseLayout";
 import { MemberSidebar } from "./member/MemberSidebar";
@@ -12,11 +11,15 @@ interface MemberLayoutProps {
 
 const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
   const { profile, signOut } = useAuth();
+  
+  // Estado do sidebar iniciando como aberto (true)
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   console.log('[MemberLayout] Renderizando com:', {
     profile: !!profile,
     profileName: profile?.name,
-    hasChildren: !!children
+    hasChildren: !!children,
+    sidebarOpen
   });
 
   // Memoizar função para obter iniciais
@@ -63,6 +66,8 @@ const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
         profileEmail={profileData.email}
         profileAvatar={profileData.avatar}
         getInitials={getInitials}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
       >
         {children}
       </BaseLayout>
