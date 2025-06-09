@@ -19,7 +19,7 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   const toastShownRef = useRef(false);
   const mountedRef = useRef(false);
   
-  // Sistema de timeout de segurança reduzido
+  // Sistema de timeout ajustado para 5 segundos
   useEffect(() => {
     mountedRef.current = true;
     return () => {
@@ -36,15 +36,16 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
         clearTimeout(timeoutRef.current);
       }
       
-      // Timeout reduzido para 3 segundos
+      // Timeout ajustado para 5 segundos
       timeoutRef.current = window.setTimeout(() => {
         if (mountedRef.current) {
           setLoadingTimeout(true);
           logger.warn("Auth loading timeout exceeded", {
-            component: 'PROTECTED_ROUTES'
+            component: 'PROTECTED_ROUTES',
+            timeoutDuration: '5000ms'
           });
         }
-      }, 3000);
+      }, 5000);
     }
     
     return () => {
@@ -62,7 +63,6 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
       setSecurityChecked(true);
       
       if (!user) {
-        // Log de tentativa de acesso não autorizada (sem dados sensíveis)
         logger.warn("Unauthorized access attempt", {
           path: location.pathname,
           component: 'PROTECTED_ROUTES',
@@ -77,10 +77,10 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
     return <LoadingScreen message="Verificando credenciais..." showProgress={true} />;
   }
 
-  // Timeout de carregamento excedido
+  // Timeout de carregamento excedido - fallback mais suave
   if (loadingTimeout) {
     if (!toastShownRef.current) {
-      toast.error("Tempo limite de autenticação excedido. Redirecionando para login.");
+      toast.error("Carregamento demorou mais que o esperado. Redirecionando para login.");
       toastShownRef.current = true;
     }
     return <Navigate to="/login" replace />;
@@ -91,7 +91,7 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
     const returnPath = location.pathname !== "/login" ? location.pathname : "/dashboard";
     
     if (!toastShownRef.current) {
-      toast.warning("Por favor, faça login para acessar esta página");
+      toast.info("Por favor, faça login para acessar esta página");
       toastShownRef.current = true;
     }
     

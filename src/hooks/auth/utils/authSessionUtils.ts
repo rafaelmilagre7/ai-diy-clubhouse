@@ -3,16 +3,17 @@ import { supabase, UserProfile } from "@/lib/supabase";
 import { createUserProfileIfNeeded, fetchUserProfile } from "@/contexts/auth/utils/profileUtils";
 import { validateUserRole } from "@/contexts/auth/utils/profileUtils/roleValidation";
 
-// Cache otimizado para perfis
+// Cache otimizado com controle de loading
 const profileCache = new Map<string, { 
   profile: UserProfile | null; 
   timestamp: number; 
-  promise?: Promise<UserProfile | null> 
+  promise?: Promise<UserProfile | null>;
+  isLoading: boolean;
 }>();
-const CACHE_DURATION = 10 * 60 * 1000; // 10 minutos
+const CACHE_DURATION = 15 * 60 * 1000; // 15 minutos aumentado
 
 /**
- * Processa o perfil do usuário de forma otimizada com cache
+ * Processa o perfil do usuário de forma otimizada com cache melhorado
  */
 export const processUserProfile = async (
   userId: string,
@@ -29,22 +30,35 @@ export const processUserProfile = async (
     const cached = profileCache.get(userId);
     const now = Date.now();
     
-    // Retornar cache válido
-    if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+    // Retornar cache válido e não em loading
+    if (cached && !cached.isLoading && (now - cached.timestamp) < CACHE_DURATION) {
       return cached.profile;
     }
     
     // Se há uma promise em andamento, aguardar ela
-    if (cached?.promise) {
-      return await cached.promise;
+    if (cached?.promise && cached.isLoading) {
+      try {
+        return await cached.promise;
+      } catch (error) {
+        // Se a promise falhar, continuar com nova tentativa
+        console.warn("Promise em cache falhou, tentando novamente");
+      }
     }
+    
+    // Marcar como carregando
+    profileCache.set(userId, { 
+      profile: cached?.profile || null, 
+      timestamp: now, 
+      isLoading: true 
+    });
     
     // Criar nova promise e cachear ela
     const profilePromise = fetchUserProfileOptimized(userId, email, name);
     profileCache.set(userId, { 
-      profile: null, 
+      profile: cached?.profile || null, 
       timestamp: now, 
-      promise: profilePromise 
+      promise: profilePromise,
+      isLoading: true 
     });
     
     const profile = await profilePromise;
@@ -52,7 +66,8 @@ export const processUserProfile = async (
     // Atualizar cache com resultado
     profileCache.set(userId, { 
       profile, 
-      timestamp: now 
+      timestamp: now,
+      isLoading: false 
     });
     
     return profile;
@@ -68,7 +83,7 @@ export const processUserProfile = async (
 };
 
 /**
- * Função otimizada para buscar perfil com upsert
+ * Função otimizada para buscar perfil com upsert melhorado
  */
 const fetchUserProfileOptimized = async (
   userId: string, 
@@ -76,15 +91,20 @@ const fetchUserProfileOptimized = async (
   name: string | undefined | null
 ): Promise<UserProfile | null> => {
   try {
-    // Tentar buscar perfil existente primeiro
-    let profile = await fetchUserProfile(userId);
+    // Tentar buscar perfil existente primeiro com timeout
+    const fetchPromise = fetchUserProfile(userId);
+    const timeoutPromise = new Promise<UserProfile | null>((_, reject) => 
+      setTimeout(() => reject(new Error('Fetch profile timeout')), 3000)
+    );
     
-    // Se não encontrou, criar usando upsert para evitar race conditions
-    if (!profile) {
-      profile = await createUserProfileIfNeeded(userId, email || "", name || "Usuário");
+    let profile = await Promise.race([fetchPromise, timeoutPromise]);
+    
+    // Se não encontrou, criar usando upsert
+    if (!profile && email) {
+      profile = await createUserProfileIfNeeded(userId, email, name || "Usuário");
     }
     
-    // Verificar e atualizar o papel do usuário se necessário (apenas se não estiver em produção)
+    // Verificar role apenas em desenvolvimento
     if (profile?.role && process.env.NODE_ENV === 'development') {
       try {
         const validatedRole = await validateUserRole(profile.id);
@@ -92,7 +112,6 @@ const fetchUserProfileOptimized = async (
           profile.role = validatedRole as any;
         }
       } catch (roleError) {
-        // Ignorar erros de validação de role para não bloquear o login
         console.warn("Erro ao validar role do usuário:", roleError);
       }
     }
@@ -100,18 +119,21 @@ const fetchUserProfileOptimized = async (
     return profile;
   } catch (error) {
     console.error("Erro ao buscar perfil otimizado:", error);
-    return null;
+    
+    // Em caso de erro, retornar fallback
+    return createFallbackProfile(userId, email, name);
   }
 };
 
 /**
- * Cria perfil fallback para não bloquear o login
+ * Cria perfil fallback melhorado
  */
 const createFallbackProfile = (
   userId: string, 
   email: string | undefined | null, 
   name: string | undefined | null
 ): UserProfile => {
+  console.log(`Criando perfil fallback para ${email || userId}`);
   return {
     id: userId,
     email: email || '',
@@ -127,14 +149,14 @@ const createFallbackProfile = (
 };
 
 /**
- * Inicializa um novo perfil com valores padrão (versão otimizada)
+ * Inicializa perfil com upsert otimizado
  */
 export const initializeNewProfile = async (userId: string, email: string, name: string): Promise<UserProfile | null> => {
   try {
     const role = 'membro_club';
     
-    // Usar upsert para evitar conflitos
-    const { data, error } = await supabase
+    // Usar upsert com timeout
+    const upsertPromise = supabase
       .from("profiles")
       .upsert({
         id: userId,
@@ -149,6 +171,12 @@ export const initializeNewProfile = async (userId: string, email: string, name: 
       .select()
       .single();
     
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Upsert timeout')), 3000)
+    );
+    
+    const { data, error } = await Promise.race([upsertPromise, timeoutPromise]) as any;
+    
     if (error) {
       console.error("Erro ao inicializar novo perfil:", error);
       return createFallbackProfile(userId, email, name);
@@ -162,7 +190,7 @@ export const initializeNewProfile = async (userId: string, email: string, name: 
 };
 
 /**
- * Limpa o cache de perfis (útil para logout)
+ * Limpa o cache de perfis
  */
 export const clearProfileCache = () => {
   profileCache.clear();

@@ -22,34 +22,61 @@ interface AuthStateManagerProps {
   onStateChange: (newState: Partial<AuthState>) => void;
 }
 
-// Cache de perfil para evitar re-fetch desnecessários
-const profileCache = new Map<string, { profile: UserProfile | null; timestamp: number }>();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+// Cache melhorado para perfis
+const profileCache = new Map<string, { 
+  profile: UserProfile | null; 
+  timestamp: number;
+  isLoading: boolean;
+}>();
+const CACHE_DURATION = 10 * 60 * 1000; // 10 minutos
 
 export const AuthStateManager: FC<AuthStateManagerProps> = ({ onStateChange }) => {
   const isInitializing = useRef(false);
+  const profileLoadingRef = useRef<Set<string>>(new Set());
   
-  // Função otimizada para buscar perfil com cache
+  // Função otimizada para buscar perfil com cache melhorado
   const getCachedProfile = async (userId: string, email?: string | null, name?: string): Promise<UserProfile | null> => {
+    // Verificar se já está carregando para evitar duplicatas
+    if (profileLoadingRef.current.has(userId)) {
+      // Aguardar um pouco e tentar novamente
+      await new Promise(resolve => setTimeout(resolve, 100));
+      const cached = profileCache.get(userId);
+      if (cached && !cached.isLoading) {
+        return cached.profile;
+      }
+    }
+
     const cached = profileCache.get(userId);
     const now = Date.now();
     
-    // Retornar cache se válido
-    if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+    // Retornar cache se válido e não está carregando
+    if (cached && !cached.isLoading && (now - cached.timestamp) < CACHE_DURATION) {
       return cached.profile;
     }
     
+    // Marcar como carregando
+    profileLoadingRef.current.add(userId);
+    profileCache.set(userId, { 
+      profile: cached?.profile || null, 
+      timestamp: now, 
+      isLoading: true 
+    });
+
     try {
-      // Buscar perfil com timeout de 2 segundos
+      // Buscar perfil com timeout de 4 segundos
       const profilePromise = processUserProfile(userId, email, name);
       const timeoutPromise = new Promise<null>((_, reject) => 
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 2000)
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 4000)
       );
       
       const profile = await Promise.race([profilePromise, timeoutPromise]) as UserProfile | null;
       
       // Cachear resultado
-      profileCache.set(userId, { profile, timestamp: now });
+      profileCache.set(userId, { 
+        profile, 
+        timestamp: now, 
+        isLoading: false 
+      });
       
       return profile;
     } catch (error) {
@@ -58,7 +85,7 @@ export const AuthStateManager: FC<AuthStateManagerProps> = ({ onStateChange }) =
         component: 'AUTH_STATE_MANAGER'
       });
       
-      // Fallback: criar perfil mínimo para não bloquear o login
+      // Fallback: criar perfil mínimo
       const fallbackProfile: UserProfile = {
         id: userId,
         email: email || '',
@@ -72,8 +99,15 @@ export const AuthStateManager: FC<AuthStateManagerProps> = ({ onStateChange }) =
         onboarding_completed_at: null
       };
       
-      profileCache.set(userId, { profile: fallbackProfile, timestamp: now });
+      profileCache.set(userId, { 
+        profile: fallbackProfile, 
+        timestamp: now, 
+        isLoading: false 
+      });
+      
       return fallbackProfile;
+    } finally {
+      profileLoadingRef.current.delete(userId);
     }
   };
 
@@ -104,48 +138,43 @@ export const AuthStateManager: FC<AuthStateManagerProps> = ({ onStateChange }) =
               isLoading: true // Manter loading até perfil carregar
             });
 
-            // Verificar se é um login inicial
+            // Verificar redirecionamento de domínio (apenas se necessário)
+            const currentOrigin = window.location.origin;
+            const targetDomain = 'https://app.viverdeia.ai';
             const isInitialLogin = !localStorage.getItem('lastAuthRoute');
-            
-            // Redirecionar apenas se necessário
-            if (isInitialLogin) {
-              const currentOrigin = window.location.origin;
-              const targetDomain = 'https://app.viverdeia.ai';
 
-              if (!currentOrigin.includes('localhost') && currentOrigin !== targetDomain) {
-                toast.info("Redirecionando para o domínio principal...");
-                const currentPath = window.location.pathname;
-                redirectToDomain(currentPath);
-                return;
-              }
+            if (isInitialLogin && !currentOrigin.includes('localhost') && currentOrigin !== targetDomain) {
+              toast.info("Redirecionando para o domínio principal...");
+              const currentPath = window.location.pathname;
+              redirectToDomain(currentPath);
+              return;
             }
 
-            // Buscar perfil em paralelo com outras operações
-            setTimeout(async () => {
-              try {
-                const profile = await getCachedProfile(
-                  session.user.id,
-                  session.user.email,
-                  session.user.user_metadata?.name
-                );
+            // Buscar perfil de forma otimizada
+            try {
+              const profile = await getCachedProfile(
+                session.user.id,
+                session.user.email,
+                session.user.user_metadata?.name
+              );
 
-                onStateChange({
-                  profile,
-                  isAdmin: profile?.role === 'admin',
-                  isFormacao: profile?.role === 'formacao',
-                  isLoading: false
-                });
-              } catch (error) {
-                logger.error("Erro ao processar perfil", {
-                  error: error instanceof Error ? error.message : 'Erro desconhecido',
-                  component: 'AUTH_STATE_MANAGER'
-                });
-                onStateChange({ isLoading: false });
-              }
-            }, 0);
+              onStateChange({
+                profile,
+                isAdmin: profile?.role === 'admin',
+                isFormacao: profile?.role === 'formacao',
+                isLoading: false
+              });
+            } catch (error) {
+              logger.error("Erro ao processar perfil", {
+                error: error instanceof Error ? error.message : 'Erro desconhecido',
+                component: 'AUTH_STATE_MANAGER'
+              });
+              onStateChange({ isLoading: false });
+            }
           } else if (event === 'SIGNED_OUT') {
             // Limpar cache
             profileCache.clear();
+            profileLoadingRef.current.clear();
             
             onStateChange({
               session: null,
@@ -165,7 +194,7 @@ export const AuthStateManager: FC<AuthStateManagerProps> = ({ onStateChange }) =
       try {
         const sessionPromise = supabase.auth.getSession();
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Session check timeout')), 1000)
+          setTimeout(() => reject(new Error('Session check timeout')), 2000)
         );
         
         const { data: { session }, error } = await Promise.race([
