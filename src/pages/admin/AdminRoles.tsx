@@ -2,12 +2,14 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus } from 'lucide-react';
 import { RolesList } from '@/components/admin/roles/RolesList';
 import { RoleForm } from '@/components/admin/roles/RoleForm';
 import { DeleteRoleDialog } from '@/components/admin/roles/DeleteRoleDialog';
 import { RolePermissions } from '@/components/admin/roles/RolePermissions';
 import { RoleCourseAccess } from '@/components/admin/roles/RoleCourseAccess';
+import { RoleSyncPanel } from '@/components/admin/roles/RoleSyncPanel';
 import { useRoles, Role } from '@/hooks/admin/useRoles';
 
 const AdminRoles: React.FC = () => {
@@ -60,7 +62,7 @@ const AdminRoles: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Gerenciar Papéis</h1>
           <p className="text-muted-foreground">
-            Configure papéis e permissões do sistema
+            Configure papéis, permissões e corrija inconsistências do sistema
           </p>
         </div>
         <Button onClick={handleCreateRole}>
@@ -69,21 +71,34 @@ const AdminRoles: React.FC = () => {
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Papéis do Sistema</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <RolesList
-            roles={roles}
-            isLoading={loading}
-            onEditRole={handleEditRole}
-            onDeleteRole={handleDeleteRole}
-            onManagePermissions={handleManagePermissions}
-            onManageCourseAccess={handleManageCourseAccess}
-          />
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="roles" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="roles">Papéis do Sistema</TabsTrigger>
+          <TabsTrigger value="sync">Correção Sistêmica</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="roles" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Papéis do Sistema</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <RolesList
+                roles={roles}
+                isLoading={loading}
+                onEditRole={handleEditRole}
+                onDeleteRole={handleDeleteRole}
+                onManagePermissions={handleManagePermissions}
+                onManageCourseAccess={handleManageCourseAccess}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="sync" className="space-y-6">
+          <RoleSyncPanel />
+        </TabsContent>
+      </Tabs>
 
       <RoleForm
         open={formOpen}

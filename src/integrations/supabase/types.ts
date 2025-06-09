@@ -5719,6 +5719,16 @@ export type Database = {
         Args: { user_email: string }
         Returns: Json
       }
+      audit_role_assignments: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          user_count_by_role: Json
+          inconsistencies_count: number
+          total_users: number
+          roles_without_users: Json
+          users_without_roles: number
+        }[]
+      }
       backup_all_onboarding_data: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -6044,7 +6054,7 @@ export type Database = {
       }
       sync_profile_roles: {
         Args: Record<PropertyKey, never>
-        Returns: undefined
+        Returns: Json
       }
       unmark_topic_as_solved: {
         Args: { topic_id: string }
@@ -6069,6 +6079,18 @@ export type Database = {
       validate_password_strength: {
         Args: { password: string }
         Returns: boolean
+      }
+      validate_profile_roles: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          user_id: string
+          email: string
+          user_role: string
+          user_role_id: string
+          expected_role_name: string
+          expected_role_id: string
+          issue_type: string
+        }[]
       }
       validate_solution_certificate: {
         Args: { p_validation_code: string }
