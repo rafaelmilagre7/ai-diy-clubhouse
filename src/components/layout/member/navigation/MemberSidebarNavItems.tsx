@@ -100,6 +100,10 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       return currentPath.startsWith(href) && !currentPath.includes('/certificates');
     }
     
+    if (href === '/comunidade') {
+      return currentPath.startsWith('/comunidade') || currentPath.startsWith('/community');
+    }
+    
     return currentPath.startsWith(href);
   };
 

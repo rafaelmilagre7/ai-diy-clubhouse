@@ -9,6 +9,10 @@ export const forumRouteMapping: Record<string, string> = {
   '/forum/category': '/comunidade/categoria',
   '/forum/topic': '/comunidade/topico',
   '/forum/new-topic': '/comunidade/novo-topico',
+  '/community': '/comunidade',
+  '/community/category': '/comunidade/categoria',
+  '/community/topic': '/comunidade/topico',
+  '/community/new-topic': '/comunidade/novo-topico',
 };
 
 /**
@@ -23,10 +27,12 @@ export const isActiveRoute = (currentPath: string, routeToCheck: string): boolea
     return currentPath === "/";
   }
   
-  // Tratamento especial para comunidade
+  // Tratamento especial para comunidade (aceita tanto /comunidade quanto /community)
   if (routeToCheck === "/comunidade") {
     const isCommunityRoute = currentPath === "/comunidade" || 
-                             currentPath.startsWith("/comunidade/");
+                             currentPath.startsWith("/comunidade/") ||
+                             currentPath === "/community" || 
+                             currentPath.startsWith("/community/");
     console.log(`isActiveRoute: Verificando '${currentPath}' para comunidade, resultado: ${isCommunityRoute}`);
     return isCommunityRoute;
   }

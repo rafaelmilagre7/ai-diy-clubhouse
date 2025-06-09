@@ -41,11 +41,23 @@ const createProtectedRoute = (path: string, Component: React.ComponentType<any>)
   element: <ProtectedRoutes><MemberLayout><Component /></MemberLayout></ProtectedRoutes>
 });
 
+// Componente de redirecionamento para rotas da comunidade
+const CommunityRedirect = () => {
+  const { useNavigate } = require('react-router-dom');
+  const navigate = useNavigate();
+  
+  React.useEffect(() => {
+    navigate('/comunidade', { replace: true });
+  }, [navigate]);
+  
+  return null;
+};
+
 // Log para diagnóstico
-console.log("Carregando rotas de membros com RootRedirect corrigido");
+console.log("Carregando rotas de membros com correções aplicadas");
 
 export const memberRoutes: RouteObject[] = [
-  // Rota raiz agora usa RootRedirect em vez de Dashboard direto
+  // Rota raiz
   { 
     path: "/", 
     element: <RootRedirect />
@@ -74,14 +86,26 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/learning/course/:courseId/lesson/:lessonId", LessonView),
   createProtectedRoute("/learning/certificates", MemberCertificates),
   
+  // Redirecionamento de /courses para /learning
+  {
+    path: "/courses",
+    element: <ProtectedRoutes><MemberLayout><LearningPage /></MemberLayout></ProtectedRoutes>
+  },
+  
   // Sugestões Routes
   createProtectedRoute("/suggestions", Suggestions),
   createProtectedRoute("/suggestions/:id", SuggestionDetails),
   createProtectedRoute("/suggestions/new", NewSuggestion),
   
-  // Comunidade Routes
+  // Comunidade Routes (principais - portugueses)
   createProtectedRoute("/comunidade", CommunityHome),
   createProtectedRoute("/comunidade/topico/:topicId", TopicView),
   createProtectedRoute("/comunidade/categoria/:slug", CategoryView),
   createProtectedRoute("/comunidade/novo-topico/:categorySlug", NewTopic),
+  
+  // Comunidade Routes (redirecionamentos inglês -> português)
+  createProtectedRoute("/community", CommunityHome),
+  createProtectedRoute("/community/topic/:topicId", TopicView),
+  createProtectedRoute("/community/category/:slug", CategoryView),
+  createProtectedRoute("/community/new-topic/:categorySlug", NewTopic),
 ];
