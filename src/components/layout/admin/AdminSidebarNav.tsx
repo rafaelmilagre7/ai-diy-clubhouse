@@ -112,30 +112,33 @@ export const AdminSidebarNav = () => {
   };
 
   return (
-    <div className="flex flex-col flex-1">
-      <ScrollArea className="flex-1 px-1" style={{ height: "calc(100vh - 350px)" }}>
-        <div className="space-y-1">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.isExact}
-              className={({ isActive }) => cn(
-                "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
-                isActive 
-                  ? "bg-white/10 text-white" 
-                  : "text-white/70 hover:text-white hover:bg-white/5"
-              )}
-            >
-              {item.icon}
-              {item.label}
-            </NavLink>
-          ))}
-        </div>
-      </ScrollArea>
+    <div className="flex flex-col h-full px-1">
+      {/* Área de navegação com scroll */}
+      <div className="flex-1 min-h-0">
+        <ScrollArea className="h-full">
+          <div className="space-y-1 pr-3">
+            {navItems.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.isExact}
+                className={({ isActive }) => cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                  isActive 
+                    ? "bg-white/10 text-white" 
+                    : "text-white/70 hover:text-white hover:bg-white/5"
+                )}
+              >
+                {item.icon}
+                {item.label}
+              </NavLink>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
 
-      {/* Botões fixos sempre visíveis */}
-      <div className="px-1 pt-4 pb-4 space-y-2">
+      {/* Botões fixos sempre visíveis na parte inferior */}
+      <div className="flex-shrink-0 pt-4 pb-4 space-y-2">
         <Separator className="bg-white/5 mb-4" />
         
         {/* Botão destacado para voltar à área de membro */}
