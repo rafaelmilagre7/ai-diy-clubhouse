@@ -1,260 +1,192 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
-import { secureLogger } from '@/utils/secureLogger';
-import { isSafeString } from '@/utils/securityUtils';
+import { Button } from '@/components/ui/button';
+import { Eye, EyeOff, Shield, AlertTriangle } from 'lucide-react';
+import { logger } from '@/utils/logger';
+import { auditLogger } from '@/utils/auditLogger';
 
-interface SecureInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  onSecureChange?: (value: string) => void;
-  preventCopy?: boolean;
-  preventPaste?: boolean;
-  hideValue?: boolean;
+interface SecureInputProps {
+  type?: 'text' | 'email' | 'password' | 'tel';
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  className?: string;
   maxLength?: number;
-  sanitizeInput?: boolean;
-  validateInput?: (value: string) => { isValid: boolean; message?: string };
-  securityLevel?: 'low' | 'medium' | 'high' | 'critical';
+  required?: boolean;
+  autoComplete?: string;
+  name?: string;
+  disabled?: boolean;
+  validateInput?: (value: string) => { isValid: boolean; error?: string };
 }
 
 export const SecureInput: React.FC<SecureInputProps> = ({
-  onSecureChange,
-  preventCopy = false,
-  preventPaste = false,
-  hideValue = false,
-  maxLength,
-  sanitizeInput = true,
-  validateInput,
-  securityLevel = 'medium',
+  type = 'text',
+  value,
+  onChange,
+  placeholder,
   className,
-  ...props
+  maxLength = 255,
+  required,
+  autoComplete,
+  name,
+  disabled,
+  validateInput
 }) => {
-  const [internalValue, setInternalValue] = useState(props.value || '');
-  const [validationError, setValidationError] = useState<string>('');
-  const [attemptCount, setAttemptCount] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const lastValidationRef = useRef<string>('');
 
-  // Função para sanitizar entrada com níveis de segurança
-  const sanitizeValue = useCallback((value: string): string => {
-    if (!sanitizeInput) return value;
+  // Sanitizar entrada para prevenir XSS
+  const sanitizeInput = useCallback((input: string): string => {
+    if (!input) return '';
     
-    let sanitized = value;
-    
-    // Nível básico - remover scripts óbvios
-    if (securityLevel === 'low') {
-      sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-    }
-    
-    // Nível médio - sanitização padrão
-    if (securityLevel === 'medium') {
-      sanitized = sanitized
-        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-        .replace(/javascript:/gi, '')
-        .replace(/on\w+\s*=/gi, '')
-        .replace(/data:text\/html/gi, '');
-    }
-    
-    // Nível alto - sanitização agressiva
-    if (securityLevel === 'high') {
-      sanitized = sanitized
-        .replace(/<[^>]*>/g, '') // Remove todas as tags HTML
-        .replace(/[<>\"'`]/g, '') // Remove caracteres potencialmente perigosos
-        .replace(/javascript:/gi, '')
-        .replace(/vbscript:/gi, '')
-        .replace(/data:/gi, '');
-    }
-    
-    // Nível crítico - apenas alfanumérico e alguns caracteres especiais
-    if (securityLevel === 'critical') {
-      sanitized = sanitized.replace(/[^a-zA-Z0-9\s@._-]/g, '');
-    }
-    
-    return sanitized;
-  }, [sanitizeInput, securityLevel]);
+    return input
+      .replace(/[<>'"]/g, '') // Remover caracteres perigosos
+      .substring(0, maxLength) // Limitar comprimento
+      .trim();
+  }, [maxLength]);
 
-  // Validação de segurança
-  const performSecurityValidation = useCallback((value: string): boolean => {
-    // Verificar se o valor é seguro
-    if (!isSafeString(value)) {
-      secureLogger.security({
-        type: 'data',
-        severity: 'medium',
-        description: 'Tentativa de input inseguro detectada',
-        details: { 
-          inputLength: value.length,
-          securityLevel,
-          fieldType: props.type || 'text'
-        }
-      }, 'SECURE_INPUT');
-      
-      setValidationError('Conteúdo não permitido detectado');
-      return false;
-    }
-    
-    // Validação customizada
-    if (validateInput) {
-      const validation = validateInput(value);
-      if (!validation.isValid) {
-        setValidationError(validation.message || 'Valor inválido');
-        return false;
-      }
-    }
-    
-    setValidationError('');
-    return true;
-  }, [validateInput, props.type, securityLevel]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value;
-    
-    // Aplicar limite de caracteres se especificado
-    if (maxLength && value.length > maxLength) {
-      value = value.substring(0, maxLength);
-    }
-    
-    // Sanitizar entrada se habilitado
-    if (sanitizeInput) {
-      const originalValue = value;
-      value = sanitizeValue(value);
-      
-      // Log se houve sanitização
-      if (originalValue !== value) {
-        secureLogger.warn("Input sanitizado", "SECURE_INPUT", {
-          originalLength: originalValue.length,
-          sanitizedLength: value.length,
-          securityLevel
-        });
-      }
-    }
-    
-    // Validar segurança
-    const isValid = performSecurityValidation(value);
-    
-    if (isValid) {
-      setInternalValue(value);
-      onSecureChange?.(value);
-      
-      // Criar novo evento com valor sanitizado
-      const sanitizedEvent = {
-        ...e,
-        target: {
-          ...e.target,
-          value: value
-        }
-      };
-      
-      props.onChange?.(sanitizedEvent as React.ChangeEvent<HTMLInputElement>);
-    } else {
-      // Incrementar contador de tentativas suspeitas
-      setAttemptCount(prev => prev + 1);
-      
-      if (attemptCount > 3) {
-        secureLogger.security({
-          type: 'data',
-          severity: 'high',
-          description: 'Múltiplas tentativas de input malicioso',
-          details: { attempts: attemptCount + 1, securityLevel }
-        }, 'SECURE_INPUT');
-      }
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Prevenir copy/paste se configurado
-    if (preventCopy && (e.ctrlKey || e.metaKey)) {
-      if (e.key === 'c' || e.key === 'x') {
-        e.preventDefault();
-        secureLogger.info("Tentativa de cópia bloqueada", "SECURE_INPUT");
-        return;
-      }
-    }
-    
-    if (preventPaste && (e.ctrlKey || e.metaKey) && e.key === 'v') {
-      e.preventDefault();
-      secureLogger.info("Tentativa de cola bloqueada", "SECURE_INPUT");
-      return;
-    }
-
-    props.onKeyDown?.(e);
-  };
-
-  const handleContextMenu = (e: React.MouseEvent<HTMLInputElement>) => {
-    if (preventCopy || preventPaste) {
-      e.preventDefault();
-      secureLogger.info("Menu de contexto bloqueado", "SECURE_INPUT");
-    }
-  };
-
-  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    if (preventPaste) {
-      e.preventDefault();
-      secureLogger.info("Cola bloqueada por política de segurança", "SECURE_INPUT");
-      return;
-    }
-
-    // Sanitizar dados colados se habilitado
-    if (sanitizeInput) {
-      e.preventDefault();
-      const pastedData = e.clipboardData.getData('text');
-      const sanitizedData = sanitizeValue(pastedData);
-      
-      if (sanitizedData !== pastedData) {
-        secureLogger.warn("Dados colados foram sanitizados", "SECURE_INPUT", {
-          originalLength: pastedData.length,
-          sanitizedLength: sanitizedData.length
-        });
-      }
-      
-      const newValue = maxLength 
-        ? sanitizedData.substring(0, maxLength)
-        : sanitizedData;
-      
-      if (performSecurityValidation(newValue)) {
-        setInternalValue(newValue);
-        onSecureChange?.(newValue);
-      }
-    }
-  };
-
-  // Limpar valor do componente quando desmontado (para campos sensíveis)
+  // Validação em tempo real com debounce
   useEffect(() => {
-    return () => {
-      if (hideValue) {
-        setInternalValue('');
+    if (!validateInput || value === lastValidationRef.current) return;
+    
+    const timeoutId = setTimeout(() => {
+      try {
+        const result = validateInput(value);
+        setValidationError(result.isValid ? null : result.error || 'Entrada inválida');
+        lastValidationRef.current = value;
+      } catch (error) {
+        logger.warn("Erro na validação de entrada", {
+          component: 'SECURE_INPUT',
+          error: error instanceof Error ? error.message : 'Erro desconhecido'
+        });
       }
-    };
-  }, [hideValue]);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [value, validateInput]);
+
+  // Detectar tentativas de injeção
+  useEffect(() => {
+    const suspiciousPatterns = [
+      /<script/i,
+      /javascript:/i,
+      /on\w+\s*=/i,
+      /data:text\/html/i,
+      /vbscript:/i
+    ];
+
+    const hasSuspiciousContent = suspiciousPatterns.some(pattern => pattern.test(value));
+    
+    if (hasSuspiciousContent && value.length > 0) {
+      logger.warn("Tentativa de injeção detectada", {
+        component: 'SECURE_INPUT',
+        inputName: name,
+        inputType: type
+      });
+      
+      auditLogger.logSecurityEvent('input_injection_attempt', 'high', {
+        inputName: name,
+        inputType: type,
+        suspiciousValue: value.substring(0, 50) + '...'
+      });
+    }
+  }, [value, name, type]);
+
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value;
+    const sanitizedValue = sanitizeInput(rawValue);
+    
+    // Log tentativas de entrada de dados maliciosos
+    if (rawValue !== sanitizedValue && rawValue.length > 0) {
+      logger.warn("Entrada sanitizada", {
+        component: 'SECURE_INPUT',
+        original: rawValue.substring(0, 20) + '...',
+        sanitized: sanitizedValue.substring(0, 20) + '...'
+      });
+    }
+    
+    onChange(sanitizedValue);
+  }, [onChange, sanitizeInput]);
+
+  const handleFocus = useCallback(() => {
+    setIsFocused(true);
+  }, []);
+
+  const handleBlur = useCallback(() => {
+    setIsFocused(false);
+  }, []);
+
+  const togglePasswordVisibility = useCallback(() => {
+    setShowPassword(prev => !prev);
+  }, []);
+
+  const inputType = type === 'password' && showPassword ? 'text' : type;
+  const hasError = validationError !== null;
 
   return (
     <div className="relative">
-      <Input
-        {...props}
-        value={internalValue}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
-        onContextMenu={handleContextMenu}
-        onPaste={handlePaste}
-        className={cn(
-          hideValue && 'select-none',
-          preventCopy && 'user-select-none',
-          validationError && 'border-red-500',
-          className
-        )}
-        autoComplete={hideValue ? 'off' : props.autoComplete}
-        data-security-level={securityLevel}
-        data-security-critical={securityLevel === 'critical' ? 'true' : undefined}
-        style={{
-          ...(hideValue && {
-            WebkitUserSelect: 'none',
-            MozUserSelect: 'none',
-            msUserSelect: 'none',
-            userSelect: 'none'
-          }),
-          ...props.style
-        }}
-      />
-      {validationError && (
-        <div className="text-xs text-red-500 mt-1">
-          {validationError}
+      <div className="relative">
+        <Input
+          ref={inputRef}
+          type={inputType}
+          value={value}
+          onChange={handleChange}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          placeholder={placeholder}
+          className={`
+            ${className}
+            ${hasError ? 'border-red-500 focus:border-red-500' : ''}
+            ${isFocused ? 'ring-2 ring-blue-500/20' : ''}
+            ${type === 'password' ? 'pr-20' : 'pr-10'}
+          `}
+          maxLength={maxLength}
+          required={required}
+          autoComplete={autoComplete}
+          name={name}
+          disabled={disabled}
+          aria-invalid={hasError}
+          aria-describedby={hasError ? `${name}-error` : undefined}
+        />
+        
+        {/* Indicador de segurança */}
+        <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+          {type === 'password' && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={togglePasswordVisibility}
+              className="h-6 w-6 p-0 hover:bg-transparent"
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </Button>
+          )}
+          
+          {isFocused && (
+            <Shield className="h-4 w-4 text-green-500" title="Entrada protegida" />
+          )}
+          
+          {hasError && (
+            <AlertTriangle className="h-4 w-4 text-red-500" title="Erro de validação" />
+          )}
         </div>
+      </div>
+      
+      {/* Mensagem de erro */}
+      {hasError && (
+        <p 
+          id={`${name}-error`}
+          className="mt-1 text-sm text-red-600"
+          role="alert"
+        >
+          {validationError}
+        </p>
       )}
     </div>
   );
