@@ -1,45 +1,113 @@
 
 import { supabase } from '@/lib/supabase';
 
-// Centralizada função de verificação de admin
+/**
+ * Utilitários de segurança centralizados com melhorias
+ */
+
+// Cache de verificações admin com TTL curto para segurança
+const adminCache = new Map<string, { isAdmin: boolean; timestamp: number; attempts: number }>();
+const ADMIN_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+const MAX_VERIFICATION_ATTEMPTS = 5;
+
+/**
+ * Verificação robusta de status de admin com múltiplas camadas de segurança
+ */
 export const verifyAdminStatus = async (userId: string, email?: string): Promise<boolean> => {
+  if (!userId || typeof userId !== 'string') {
+    console.warn('[SECURITY] Invalid userId for admin verification');
+    return false;
+  }
+
+  // Verificar cache e controlar tentativas
+  const cached = adminCache.get(userId);
+  const now = Date.now();
+  
+  if (cached) {
+    // Verificar se ainda está no TTL
+    if (now - cached.timestamp < ADMIN_CACHE_TTL) {
+      return cached.isAdmin;
+    }
+    
+    // Verificar rate limiting
+    if (cached.attempts >= MAX_VERIFICATION_ATTEMPTS) {
+      console.warn('[SECURITY] Too many admin verification attempts for user:', userId.substring(0, 8));
+      return false;
+    }
+  }
+
   try {
-    // Verificação rápida por email para domínios confiáveis
+    // Incrementar contador de tentativas
+    const currentAttempts = (cached?.attempts || 0) + 1;
+    adminCache.set(userId, { 
+      isAdmin: false, 
+      timestamp: now, 
+      attempts: currentAttempts 
+    });
+
+    // Primeira camada: verificação por email para domínios confiáveis
     if (email) {
-      const isAdminByEmail = email.includes('@viverdeia.ai') || 
-                           email === 'admin@teste.com' || 
-                           email === 'admin@viverdeia.ai';
+      const trustedEmails = [
+        'rafael@viverdeia.ai',
+        'admin@viverdeia.ai', 
+        'admin@teste.com'
+      ];
       
-      if (isAdminByEmail) {
+      if (trustedEmails.includes(email.toLowerCase())) {
+        adminCache.set(userId, { isAdmin: true, timestamp: now, attempts: currentAttempts });
+        console.info('[SECURITY] Admin verified by trusted email');
         return true;
       }
     }
 
-    // Verificação no banco de dados usando função RPC otimizada
+    // Segunda camada: verificação no banco com função RPC segura
     const { data, error } = await supabase.rpc('is_user_admin', {
       user_id: userId
     });
     
     if (error) {
-      console.error('Erro ao verificar status de admin:', error);
+      console.error('[SECURITY] Admin verification RPC error:', error.message);
       return false;
     }
     
-    return !!data;
+    const isAdmin = !!data;
+    
+    // Atualizar cache com resultado
+    adminCache.set(userId, { 
+      isAdmin, 
+      timestamp: now, 
+      attempts: currentAttempts 
+    });
+    
+    if (isAdmin) {
+      console.info('[SECURITY] Admin verified by database');
+    }
+    
+    return isAdmin;
+    
   } catch (error) {
-    console.error('Erro na verificação de admin:', error);
+    console.error('[SECURITY] Admin verification error:', error);
     return false;
   }
 };
 
-// Cache de permissões com TTL reduzido
+// Cache de permissões com TTL mais curto para segurança
 const permissionCache = new Map<string, { permissions: string[], timestamp: number }>();
-const CACHE_TTL = 60 * 60 * 1000; // 1 hora
+const PERMISSION_CACHE_TTL = 3 * 60 * 1000; // 3 minutos
 
+/**
+ * Busca permissões do usuário com cache seguro
+ */
 export const getUserPermissions = async (userId: string): Promise<string[]> => {
+  if (!userId || typeof userId !== 'string') {
+    console.warn('[SECURITY] Invalid userId for permissions');
+    return [];
+  }
+
   const cached = permissionCache.get(userId);
+  const now = Date.now();
   
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+  if (cached && (now - cached.timestamp) < PERMISSION_CACHE_TTL) {
     return cached.permissions;
   }
 
@@ -48,28 +116,48 @@ export const getUserPermissions = async (userId: string): Promise<string[]> => {
       user_id: userId
     });
     
-    if (error) throw error;
+    if (error) {
+      console.error('[SECURITY] Permissions fetch error:', error.message);
+      return [];
+    }
     
-    const permissions = data || [];
-    permissionCache.set(userId, { permissions, timestamp: Date.now() });
+    const permissions = Array.isArray(data) ? data : [];
+    
+    // Cache apenas se bem-sucedido
+    permissionCache.set(userId, { 
+      permissions, 
+      timestamp: now 
+    });
     
     return permissions;
   } catch (error) {
-    console.error('Erro ao buscar permissões:', error);
+    console.error('[SECURITY] Permissions error:', error);
     return [];
   }
 };
 
-// Função para limpar cache de permissões
+/**
+ * Limpa cache de permissões de forma segura
+ */
 export const clearPermissionCache = (userId?: string) => {
-  if (userId) {
-    permissionCache.delete(userId);
-  } else {
-    permissionCache.clear();
+  try {
+    if (userId) {
+      permissionCache.delete(userId);
+      adminCache.delete(userId);
+      console.info('[SECURITY] Permission cache cleared for user');
+    } else {
+      permissionCache.clear();
+      adminCache.clear();
+      console.info('[SECURITY] All permission caches cleared');
+    }
+  } catch (error) {
+    console.error('[SECURITY] Cache clear error:', error);
   }
 };
 
-// Logging de eventos de segurança
+/**
+ * Logging seguro de eventos (sem dados sensíveis)
+ */
 export const logSecurityEvent = async (
   actionType: string,
   resourceType: string,
@@ -78,14 +166,92 @@ export const logSecurityEvent = async (
   newValues?: any
 ) => {
   try {
+    // Sanitizar dados antes do log para remover informações sensíveis
+    const sanitizeData = (data: any) => {
+      if (!data) return null;
+      
+      const sanitized = { ...data };
+      
+      // Remover campos sensíveis
+      const sensitiveFields = ['password', 'token', 'email', 'phone', 'api_key', 'secret'];
+      sensitiveFields.forEach(field => {
+        if (sanitized[field]) {
+          sanitized[field] = '[REDACTED]';
+        }
+      });
+      
+      return sanitized;
+    };
+
     await supabase.rpc('log_security_event', {
       p_action_type: actionType,
       p_resource_type: resourceType,
       p_resource_id: resourceId,
-      p_old_values: oldValues ? JSON.stringify(oldValues) : null,
-      p_new_values: newValues ? JSON.stringify(newValues) : null
+      p_old_values: oldValues ? JSON.stringify(sanitizeData(oldValues)) : null,
+      p_new_values: newValues ? JSON.stringify(sanitizeData(newValues)) : null
     });
+    
   } catch (error) {
-    console.error('Erro ao registrar evento de segurança:', error);
+    // Não loggar o erro completo para evitar vazamento de dados
+    console.error('[SECURITY] Security event logging failed');
   }
+};
+
+/**
+ * Validar integridade da sessão
+ */
+export const validateSessionIntegrity = (session: any): boolean => {
+  try {
+    if (!session || typeof session !== 'object') return false;
+    
+    // Verificar campos obrigatórios
+    if (!session.access_token || !session.user || !session.user.id) {
+      console.warn('[SECURITY] Session missing required fields');
+      return false;
+    }
+    
+    // Verificar expiração
+    if (session.expires_at && session.expires_at < Math.floor(Date.now() / 1000)) {
+      console.warn('[SECURITY] Session expired');
+      return false;
+    }
+    
+    // Verificar formato do token (básico)
+    if (typeof session.access_token !== 'string' || session.access_token.length < 20) {
+      console.warn('[SECURITY] Invalid token format');
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('[SECURITY] Session validation error:', error);
+    return false;
+  }
+};
+
+/**
+ * Rate limiting para operações sensíveis
+ */
+const operationLimits = new Map<string, { count: number; resetTime: number }>();
+
+export const checkRateLimit = (operation: string, maxAttempts: number = 10, windowMs: number = 60000): boolean => {
+  const now = Date.now();
+  const key = `${operation}`;
+  
+  let limit = operationLimits.get(key);
+  
+  // Reset se janela expirou
+  if (!limit || now > limit.resetTime) {
+    limit = { count: 0, resetTime: now + windowMs };
+  }
+  
+  limit.count++;
+  operationLimits.set(key, limit);
+  
+  if (limit.count > maxAttempts) {
+    console.warn(`[SECURITY] Rate limit exceeded for operation: ${operation}`);
+    return false;
+  }
+  
+  return true;
 };

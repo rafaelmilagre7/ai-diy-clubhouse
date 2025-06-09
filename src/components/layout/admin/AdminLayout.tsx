@@ -11,31 +11,73 @@ interface AdminLayoutProps {
 }
 
 const AdminLayout = ({ children }: AdminLayoutProps) => {
-  const { user, profile } = useAuth();
+  const { user, profile, isLoading } = useAuth();
   const navigate = useNavigate();
   const [isMounted, setIsMounted] = useState(false);
+  const [authTimeout, setAuthTimeout] = useState(false);
 
-  // Verificar se o usuário está autenticado e é admin
+  // Verificação segura de admin usando múltiplas camadas
+  const isAdminUser = () => {
+    if (!user || !profile) return false;
+    
+    // Verificação por role no perfil (principal)
+    if (profile.role === "admin") return true;
+    
+    // Verificação adicional por email para domínios confiáveis
+    const trustedEmails = [
+      'rafael@viverdeia.ai',
+      'admin@viverdeia.ai', 
+      'admin@teste.com'
+    ];
+    
+    return trustedEmails.includes(user.email || '');
+  };
+
+  // Timeout de segurança para evitar carregamento infinito
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (isLoading) {
+        setAuthTimeout(true);
+        console.warn("[SECURITY] Auth timeout - redirecting to login");
+        navigate("/login", { replace: true });
+      }
+    }, 8000); // 8 segundos de timeout
+
+    return () => clearTimeout(timeoutId);
+  }, [isLoading, navigate]);
+
+  // Verificar autenticação e permissões
   useEffect(() => {
     setIsMounted(true);
     
-    if (!user) {
-      console.log("Usuário não autenticado, redirecionando para login");
-      navigate("/auth/login");
-      return;
-    }
-
-    const isAdmin = profile?.role === "admin";
+    // Se timeout de auth ativado, não continuar
+    if (authTimeout) return;
     
-    if (!isAdmin) {
-      console.log("Usuário não é administrador, redirecionando para dashboard");
-      toast.error("Você não tem permissão para acessar a área administrativa");
-      navigate("/dashboard");
-    }
-  }, [user, profile, navigate]);
+    if (!isLoading) {
+      if (!user) {
+        console.warn("[SECURITY] No authenticated user - redirecting to login");
+        navigate("/login", { replace: true });
+        return;
+      }
 
-  // Renderização condicional enquanto verifica permissões
-  if (!isMounted || !user) {
+      if (!isAdminUser()) {
+        console.warn("[SECURITY] Unauthorized admin access attempt");
+        toast.error("Acesso negado. Você não tem permissão para acessar a área administrativa.");
+        navigate("/dashboard", { replace: true });
+        return;
+      }
+
+      // Log de acesso administrativo (sem dados sensíveis)
+      console.info("[SECURITY] Admin access granted", {
+        userId: user.id,
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent.substring(0, 50) // Apenas parte do user agent
+      });
+    }
+  }, [user, profile, isLoading, navigate, authTimeout]);
+
+  // Renderização com loading mais seguro
+  if (!isMounted || isLoading || authTimeout) {
     return (
       <div className="flex min-h-screen bg-[#0F111A] text-white">
         <div className="w-64 bg-[#0F111A] border-r border-white/5 p-4 flex flex-col">
@@ -63,12 +105,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     );
   }
 
+  // Renderização final apenas para usuários autorizados
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Sidebar - sempre aberto com 264px de largura fixo */}
       <AdminSidebar />
       
-      {/* Conteúdo principal - sempre com margin-left para compensar o sidebar fixo */}
       <div className="flex-1 overflow-auto">
         <main className="max-w-7xl mx-auto p-8">
           {children || <Outlet />}

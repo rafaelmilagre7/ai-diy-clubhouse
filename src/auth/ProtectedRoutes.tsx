@@ -13,47 +13,46 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   const { user, isLoading } = useAuth();
   const location = useLocation();
   const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const [securityChecked, setSecurityChecked] = useState(false);
   const timeoutRef = useRef<number | null>(null);
-  const hasToastShown = useRef(false);
-  const navigationCountRef = useRef<Record<string, number>>({});
-  const routeTransitionRef = useRef<string | null>(null);
+  const toastShownRef = useRef(false);
+  const mountedRef = useRef(false);
   
-  // Rastrear transições de rota para diagnóstico
+  // Rastrear tentativas de acesso para segurança
+  const accessAttemptRef = useRef<{
+    count: number;
+    lastAttempt: number;
+    blocked: boolean;
+  }>({
+    count: 0,
+    lastAttempt: 0,
+    blocked: false
+  });
+
+  // Montar componente
   useEffect(() => {
-    // Registrar transição de rota
-    routeTransitionRef.current = location.pathname;
-    
-    // Incrementar contador para este caminho
-    navigationCountRef.current[location.pathname] = 
-      (navigationCountRef.current[location.pathname] || 0) + 1;
-    
-    // Verificar possíveis loops
-    if (navigationCountRef.current[location.pathname] > 5) {
-      // Limpar contador após detectar um possível loop
-      navigationCountRef.current = {};
-    }
-    
-    // Limpar contadores antigos após 10 segundos
-    const cleanupTimeout = setTimeout(() => {
-      navigationCountRef.current = {};
-    }, 10000);
-    
+    mountedRef.current = true;
     return () => {
-      clearTimeout(cleanupTimeout);
+      mountedRef.current = false;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
-  }, [location.pathname]);
+  }, []);
   
-  // Configurar timeout de carregamento
+  // Sistema de timeout de segurança
   useEffect(() => {
-    if (isLoading && !loadingTimeout) {
-      // Limpar qualquer timeout existente
+    if (isLoading && !loadingTimeout && mountedRef.current) {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
       
       timeoutRef.current = window.setTimeout(() => {
-        setLoadingTimeout(true);
-      }, 5000); // Mantido em 5 segundos
+        if (mountedRef.current) {
+          setLoadingTimeout(true);
+          console.warn("[SECURITY] Auth loading timeout exceeded");
+        }
+      }, 6000); // 6 segundos de timeout
     }
     
     return () => {
@@ -63,26 +62,69 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
     };
   }, [isLoading, loadingTimeout]);
 
-  // Mostrar tela de carregamento enquanto verifica autenticação
-  if (isLoading && !loadingTimeout) {
-    return <LoadingScreen message="Verificando autenticação..." />;
-  }
+  // Verificação de segurança e controle de acesso
+  useEffect(() => {
+    if (!mountedRef.current) return;
 
-  // Se o usuário não estiver autenticado, redireciona para a página de login
-  if (!user) {
-    // Salvar a rota atual para redirecionamento após login
-    const returnPath = location.pathname !== "/login" ? location.pathname : "/dashboard";
+    const now = Date.now();
+    const attempt = accessAttemptRef.current;
     
-    // Exibir toast apenas uma vez
-    if (!hasToastShown.current) {
-      toast("Por favor, faça login para acessar esta página");
-      hasToastShown.current = true;
+    // Verificar se há muitas tentativas de acesso (proteção contra ataques)
+    if (now - attempt.lastAttempt < 1000) {
+      attempt.count++;
+      if (attempt.count > 10) {
+        attempt.blocked = true;
+        console.error("[SECURITY] Too many access attempts - temporarily blocked");
+        toast.error("Muitas tentativas de acesso. Aguarde um momento.");
+        return;
+      }
+    } else {
+      attempt.count = 0;
+      attempt.blocked = false;
     }
     
-    // Passar a rota atual como estado para redirecionamento após login
+    attempt.lastAttempt = now;
+
+    if (!isLoading && !securityChecked) {
+      setSecurityChecked(true);
+      
+      if (!user) {
+        // Log de tentativa de acesso não autorizada (sem dados sensíveis)
+        console.warn("[SECURITY] Unauthorized access attempt", {
+          path: location.pathname,
+          timestamp: new Date().toISOString(),
+          referrer: document.referrer || 'direct'
+        });
+      }
+    }
+  }, [user, isLoading, location.pathname, securityChecked]);
+
+  // Mostrar loading enquanto verifica autenticação
+  if ((isLoading && !loadingTimeout) || attempt.blocked) {
+    return <LoadingScreen message="Verificando credenciais de segurança..." />;
+  }
+
+  // Timeout de carregamento excedido
+  if (loadingTimeout) {
+    if (!toastShownRef.current) {
+      toast.error("Tempo limite de autenticação excedido. Redirecionando para login.");
+      toastShownRef.current = true;
+    }
+    return <Navigate to="/login" replace />;
+  }
+
+  // Redirecionar para login se não autenticado
+  if (!user) {
+    const returnPath = location.pathname !== "/login" ? location.pathname : "/dashboard";
+    
+    if (!toastShownRef.current) {
+      toast.warning("Por favor, faça login para acessar esta página");
+      toastShownRef.current = true;
+    }
+    
     return <Navigate to="/login" state={{ from: returnPath }} replace />;
   }
 
-  // Usuário está autenticado, renderizar as rotas protegidas
+  // Usuário autenticado - renderizar conteúdo protegido
   return <>{children}</>;
 };
