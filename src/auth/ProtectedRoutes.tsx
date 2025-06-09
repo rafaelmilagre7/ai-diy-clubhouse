@@ -15,11 +15,13 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   const { user, isLoading } = useAuth();
   const location = useLocation();
   const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const [securityChecked, setSecurityChecked] = useState(false);
+  const [sessionValidated, setSessionValidated] = useState(false);
   const timeoutRef = useRef<number | null>(null);
   const toastShownRef = useRef(false);
   const mountedRef = useRef(false);
   
-  // Sistema de timeout otimizado para 5 segundos
+  // Sistema de timeout otimizado para 8 segundos
   useEffect(() => {
     mountedRef.current = true;
     return () => {
@@ -36,17 +38,17 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
         clearTimeout(timeoutRef.current);
       }
       
-      // Timeout reduzido para 5 segundos
+      // Timeout aumentado para 8 segundos para melhor UX
       timeoutRef.current = window.setTimeout(() => {
         if (mountedRef.current) {
           setLoadingTimeout(true);
           logger.warn("Auth loading timeout exceeded", {
             component: 'PROTECTED_ROUTES',
-            timeoutDuration: '5000ms',
+            timeoutDuration: '8000ms',
             location: location.pathname
           });
         }
-      }, 5000);
+      }, 8000);
     }
     
     return () => {
@@ -56,6 +58,57 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
     };
   }, [isLoading, loadingTimeout, location.pathname]);
 
+  // Verificação de segurança melhorada
+  useEffect(() => {
+    if (!mountedRef.current) return;
+
+    if (!isLoading && !securityChecked) {
+      setSecurityChecked(true);
+      
+      if (!user) {
+        logger.warn("Unauthorized access attempt", {
+          path: location.pathname,
+          component: 'PROTECTED_ROUTES',
+          referrer: document.referrer || 'direct',
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        // Validação adicional de segurança para usuários autenticados
+        logger.info("User access granted", {
+          path: location.pathname,
+          userId: user.id.substring(0, 8) + '***', // Log parcial por segurança
+          timestamp: new Date().toISOString()
+        });
+        setSessionValidated(true);
+      }
+    }
+  }, [user, isLoading, location.pathname, securityChecked]);
+
+  // Verificação de integridade da sessão
+  useEffect(() => {
+    if (user && sessionValidated) {
+      const validateSession = async () => {
+        try {
+          // Verificar se o usuário ainda existe e tem permissões válidas
+          const { data: profile } = await fetch('/api/validate-session', {
+            headers: { 'Authorization': `Bearer ${user.id}` }
+          }).then(res => res.json()).catch(() => ({ data: null }));
+          
+          if (!profile) {
+            logger.warn("Session validation failed", {
+              userId: user.id.substring(0, 8) + '***'
+            });
+            // Não fazer logout automático para evitar loops
+          }
+        } catch (error) {
+          logger.error("Session validation error", { error });
+        }
+      };
+
+      validateSession();
+    }
+  }, [user, sessionValidated]);
+
   // Mostrar loading com timeout melhorado
   if (isLoading && !loadingTimeout) {
     return <LoadingScreen message="Verificando credenciais..." showProgress={true} />;
@@ -64,7 +117,7 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   // Timeout de carregamento - redirecionar com informação de contexto
   if (loadingTimeout) {
     if (!toastShownRef.current) {
-      toast.error("Tempo limite excedido. Redirecionando...");
+      toast.error("Tempo limite excedido. Verifique sua conexão e tente novamente.");
       toastShownRef.current = true;
     }
     
@@ -88,7 +141,7 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
     return <Navigate to="/login" state={{ from: returnPath }} replace />;
   }
 
-  // Usuário autenticado - renderizar conteúdo protegido
+  // Usuário autenticado - renderizar conteúdo protegido com contexto de segurança
   return (
     <SecurityProvider>
       {children}

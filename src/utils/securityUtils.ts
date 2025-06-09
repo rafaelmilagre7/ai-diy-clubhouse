@@ -1,5 +1,5 @@
 
-import { logger } from './logger';
+// Utilitários de segurança para o frontend - versão segura
 
 // Sanitizar dados para logs (remover informações sensíveis)
 export const sanitizeForLogging = (data: any): any => {
@@ -7,94 +7,203 @@ export const sanitizeForLogging = (data: any): any => {
     return data;
   }
 
+  if (Array.isArray(data)) {
+    return data.map(sanitizeForLogging);
+  }
+
   const sensitiveFields = [
-    'password', 'token', 'secret', 'key', 'auth', 'credential',
-    'email', 'phone', 'cpf', 'rg', 'api_key', 'access_token',
-    'refresh_token', 'session_id'
+    'password', 'token', 'secret', 'key', 'email', 'phone', 
+    'cpf', 'cnpj', 'api_key', 'access_token', 'refresh_token',
+    'authorization', 'bearer', 'session'
   ];
 
-  const sanitized = { ...data };
+  const sanitized: any = {};
 
-  const sanitizeObject = (obj: any): any => {
-    if (!obj || typeof obj !== 'object') return obj;
+  Object.keys(data).forEach(key => {
+    const lowerKey = key.toLowerCase();
     
-    if (Array.isArray(obj)) {
-      return obj.map(item => sanitizeObject(item));
+    if (sensitiveFields.some(field => lowerKey.includes(field))) {
+      sanitized[key] = '[REDACTED]';
+    } else if (typeof data[key] === 'object' && data[key] !== null) {
+      sanitized[key] = sanitizeForLogging(data[key]);
+    } else {
+      sanitized[key] = data[key];
     }
+  });
 
-    const result: any = {};
-    for (const [key, value] of Object.entries(obj)) {
-      const keyLower = key.toLowerCase();
-      
-      if (sensitiveFields.some(field => keyLower.includes(field))) {
-        result[key] = '[REDACTED]';
-      } else if (typeof value === 'object') {
-        result[key] = sanitizeObject(value);
-      } else if (typeof value === 'string' && value.length > 100) {
-        // Truncar strings muito longas
-        result[key] = value.substring(0, 100) + '...';
-      } else {
-        result[key] = value;
+  return sanitized;
+};
+
+// Validar se uma string contém apenas caracteres seguros
+export const isSafeString = (str: string): boolean => {
+  if (!str || typeof str !== 'string') return false;
+  
+  // Regex para detectar possíveis ataques XSS básicos
+  const dangerousPatterns = [
+    /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+    /javascript:/gi,
+    /on\w+\s*=/gi,
+    /<iframe\b/gi,
+    /<object\b/gi,
+    /<embed\b/gi,
+    /data:text\/html/gi,
+    /vbscript:/gi
+  ];
+
+  return !dangerousPatterns.some(pattern => pattern.test(str));
+};
+
+// Escape de HTML para prevenir XSS
+export const escapeHtml = (unsafe: string): string => {
+  if (typeof unsafe !== 'string') return '';
+  
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;")
+    .replace(/\//g, "&#x2F;");
+};
+
+// Validar formato de email de forma segura
+export const isValidEmail = (email: string): boolean => {
+  if (!email || typeof email !== 'string') return false;
+  
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email) && email.length <= 254 && email.length >= 5;
+};
+
+// Gerar hash simples para identificação (não criptográfico)
+export const generateSimpleHash = (input: string): string => {
+  if (!input || typeof input !== 'string') return '0';
+  
+  let hash = 0;
+  for (let i = 0; i < input.length; i++) {
+    const char = input.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  
+  return Math.abs(hash).toString(36);
+};
+
+// Limpar dados sensíveis da memória (best effort)
+export const clearSensitiveData = (obj: any): void => {
+  if (obj && typeof obj === 'object') {
+    Object.keys(obj).forEach(key => {
+      try {
+        if (typeof obj[key] === 'string') {
+          obj[key] = '';
+        } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+          clearSensitiveData(obj[key]);
+        }
+      } catch {
+        // Silenciosamente falhar se não conseguir limpar
+      }
+    });
+  }
+};
+
+// Rate limiting simples no frontend com segurança aprimorada
+const rateLimitMap = new Map<string, number[]>();
+
+export const checkRateLimit = (
+  identifier: string, 
+  maxRequests: number = 10, 
+  windowMs: number = 60000
+): boolean => {
+  if (!identifier || typeof identifier !== 'string') return false;
+  
+  const now = Date.now();
+  const windowStart = now - windowMs;
+  
+  if (!rateLimitMap.has(identifier)) {
+    rateLimitMap.set(identifier, []);
+  }
+  
+  const requests = rateLimitMap.get(identifier)!;
+  
+  // Remover requisições antigas
+  const validRequests = requests.filter(time => time > windowStart);
+  
+  if (validRequests.length >= maxRequests) {
+    return false; // Rate limit excedido
+  }
+  
+  // Adicionar nova requisição
+  validRequests.push(now);
+  rateLimitMap.set(identifier, validRequests);
+  
+  return true; // OK para prosseguir
+};
+
+// Detectar ambiente suspeito com proteção adicional
+export const detectSuspiciousEnvironment = (): string[] => {
+  const warnings: string[] = [];
+  
+  try {
+    // Verificar se está em desenvolvimento mas com dados de produção
+    if (process.env.NODE_ENV === 'development') {
+      if (window.location.hostname !== 'localhost' && 
+          window.location.hostname !== '127.0.0.1' &&
+          !window.location.hostname.includes('localhost')) {
+        warnings.push('Development mode em ambiente não local');
       }
     }
-    return result;
-  };
-
-  return sanitizeObject(sanitized);
+    
+    // Verificar extensões suspeitas do navegador
+    if (typeof (window as any).chrome !== 'undefined' && (window as any).chrome.runtime) {
+      warnings.push('Extensões do Chrome detectadas');
+    }
+    
+    // Verificar se DevTools estão abertas (apenas em produção)
+    if (process.env.NODE_ENV === 'production') {
+      const threshold = 160;
+      if (window.outerHeight - window.innerHeight > threshold || 
+          window.outerWidth - window.innerWidth > threshold) {
+        warnings.push('DevTools potencialmente abertas');
+      }
+    }
+  } catch {
+    // Silenciosamente falhar se não conseguir detectar
+  }
+  
+  return warnings;
 };
 
-// Detectar tentativas de injeção
-export const detectInjectionAttempts = (input: string): boolean => {
-  const suspiciousPatterns = [
-    /<script/i,
-    /javascript:/i,
-    /on\w+\s*=/i,
-    /data:text\/html/i,
-    /vbscript:/i,
-    /<iframe/i,
-    /<object/i,
-    /<embed/i,
-    /eval\s*\(/i,
-    /expression\s*\(/i
-  ];
-
-  return suspiciousPatterns.some(pattern => pattern.test(input));
-};
-
-// Validar origem da requisição
-export const isValidOrigin = (origin: string): boolean => {
-  const allowedOrigins = [
-    'https://app.viverdeia.ai',
-    'https://viverdeia.ai',
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:5173'
-  ];
-
-  return allowedOrigins.includes(origin) || 
-         (process.env.NODE_ENV === 'development' && origin.includes('localhost'));
-};
-
-// Gerar hash simples para identificadores
-export const hashIdentifier = (identifier: string): string => {
-  return identifier.substring(0, 8) + '***';
-};
-
-// Verificar se está em ambiente de produção
-export const isProduction = (): boolean => {
-  return process.env.NODE_ENV === 'production' || 
-         window.location.hostname.includes('viverdeia.ai');
-};
-
-// Verificar se recursos de teste devem estar disponíveis
-export const canShowTestFeatures = (): boolean => {
-  if (isProduction()) {
-    logger.warn("Tentativa de usar features de teste em produção", {
-      component: 'SECURITY_UTILS',
-      hostname: window.location.hostname
-    });
+// Verificar integridade da URL
+export const isValidURL = (url: string): boolean => {
+  if (!url || typeof url !== 'string') return false;
+  
+  try {
+    const urlObj = new URL(url);
+    return ['http:', 'https:'].includes(urlObj.protocol);
+  } catch {
     return false;
   }
-  return true;
 };
+
+// Função para limpeza automática de dados temporários
+export const cleanupTemporaryData = (): void => {
+  try {
+    // Limpar rate limit cache antigo (manter apenas últimos 10 minutos)
+    const tenMinutesAgo = Date.now() - (10 * 60 * 1000);
+    
+    rateLimitMap.forEach((timestamps, key) => {
+      const validTimestamps = timestamps.filter(time => time > tenMinutesAgo);
+      if (validTimestamps.length === 0) {
+        rateLimitMap.delete(key);
+      } else {
+        rateLimitMap.set(key, validTimestamps);
+      }
+    });
+  } catch {
+    // Silenciosamente falhar se não conseguir limpar
+  }
+};
+
+// Executar limpeza automática a cada 5 minutos
+if (typeof window !== 'undefined') {
+  setInterval(cleanupTemporaryData, 5 * 60 * 1000);
+}

@@ -23,16 +23,7 @@ interface MemberSidebarNavItemsProps {
 
 export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ sidebarOpen }) => {
   const location = useLocation();
-  const { profile, isAdmin, user, isLoading } = useAuth();
-
-  // Debug: Log de verificação de admin
-  console.log('[SIDEBAR DEBUG]', {
-    hasUser: !!user,
-    hasProfile: !!profile,
-    profileRole: profile?.role,
-    isAdmin: isAdmin,
-    userEmail: user?.email
-  });
+  const { profile } = useAuth();
 
   const navigationItems = [
     {
@@ -85,17 +76,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
     }
   ];
 
-  // Verificação simplificada de admin - usar apenas uma fonte de verdade
-  const userIsAdmin = profile?.role === 'admin';
-  
-  console.log('[ADMIN CHECK]', {
-    userIsAdmin,
-    profileRole: profile?.role,
-    willShowAdminButton: userIsAdmin
-  });
-
-  // Adicionar item de admin se usuário for admin
-  if (userIsAdmin) {
+  if (profile?.role === 'admin') {
     navigationItems.push({
       title: "Painel Admin",
       href: "/admin",
@@ -271,7 +252,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       </div>
       
       {/* Admin no final se existir */}
-      {userIsAdmin && (
+      {profile?.role === 'admin' && (
         <div className="mt-auto pt-3 border-t border-white/10">
           {renderNavButton(navigationItems[navigationItems.length - 1])}
         </div>

@@ -1,11 +1,19 @@
+
 import { supabase } from '@/lib/supabase';
+import { sanitizeForLogging } from './securityUtils';
 import { logger } from './logger';
 
-// Sistema de auditoria de logs seguros
+// Sistema de auditoria robusto para ações críticas
 export class AuditLogger {
   private static instance: AuditLogger;
+  private retryQueue: Array<{ entry: any; retries: number }> = [];
+  private maxRetries = 3;
+  private isProcessingQueue = false;
   
-  private constructor() {}
+  private constructor() {
+    // Processar fila de retry a cada 30 segundos
+    setInterval(() => this.processRetryQueue(), 30000);
+  }
   
   static getInstance(): AuditLogger {
     if (!AuditLogger.instance) {
@@ -13,315 +21,338 @@ export class AuditLogger {
     }
     return AuditLogger.instance;
   }
-
-  // Log de eventos de autenticação
-  async logAuthEvent(
-    action: string, 
-    details: Record<string, any> = {},
-    userId?: string
-  ): Promise<void> {
-    try {
-      await this.insertAuditLog({
-        event_type: 'authentication',
-        action,
-        user_id: userId || null,
-        details: this.sanitizeDetails(details),
-        severity: this.determineSeverity('authentication', action)
-      });
-    } catch (error) {
-      logger.error("Erro ao registrar evento de autenticação", {
-        component: 'AUDIT_LOGGER',
-        action,
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
-    }
-  }
-
-  // Log de eventos de segurança
-  async logSecurityEvent(
-    action: string,
-    severity: 'low' | 'medium' | 'high' | 'critical',
-    details: Record<string, any> = {},
-    userId?: string
-  ): Promise<void> {
-    try {
-      await this.insertAuditLog({
-        event_type: 'security_event',
-        action,
-        user_id: userId || null,
-        details: this.sanitizeDetails(details),
-        severity
-      });
-    } catch (error) {
-      logger.error("Erro ao registrar evento de segurança", {
-        component: 'AUDIT_LOGGER',
-        action,
-        severity,
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
-    }
-  }
-
-  // Log de eventos de acesso
-  async logAccessEvent(
-    action: string,
-    resource: string,
-    details: Record<string, any> = {},
-    userId?: string
-  ): Promise<void> {
-    try {
-      await this.insertAuditLog({
-        event_type: 'access_control',
-        action,
-        user_id: userId || null,
-        resource_id: resource,
-        details: this.sanitizeDetails(details),
-        severity: 'low'
-      });
-    } catch (error) {
-      logger.error("Erro ao registrar evento de acesso", {
-        component: 'AUDIT_LOGGER',
-        action,
-        resource,
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
-    }
-  }
-
-  // Log de modificações de dados
-  async logDataEvent(
-    action: string,
-    resourceType: string,
-    resourceId: string,
-    details: Record<string, any> = {},
-    userId?: string
-  ): Promise<void> {
-    try {
-      await this.insertAuditLog({
-        event_type: 'data_modification',
-        action,
-        user_id: userId || null,
-        resource_id: resourceId,
-        details: {
-          ...this.sanitizeDetails(details),
-          resource_type: resourceType
-        },
-        severity: this.determineSeverity('data_modification', action)
-      });
-    } catch (error) {
-      logger.error("Erro ao registrar evento de dados", {
-        component: 'AUDIT_LOGGER',
-        action,
-        resourceType,
-        resourceId,
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
-    }
-  }
-
-  // Log de ações administrativas
-  async logAdminEvent(
+  
+  // Tipos de eventos auditáveis
+  private eventTypes = {
+    AUTH: 'authentication',
+    ACCESS: 'access_control', 
+    DATA: 'data_modification',
+    ADMIN: 'admin_action',
+    SECURITY: 'security_event',
+    SYSTEM: 'system_event'
+  } as const;
+  
+  // Lista de eventos válidos para analytics
+  private validAnalyticsEvents = [
+    'login_attempt', 'login_success', 'login_failure',
+    'logout', 'session_start', 'session_end', 'session_active',
+    'page_view', 'solution_start', 'solution_complete',
+    'security_warning', 'error_logged'
+  ];
+  
+  // Log de evento de auditoria principal
+  async logAuditEvent(
+    eventType: keyof typeof this.eventTypes,
     action: string,
     details: Record<string, any> = {},
-    userId?: string
+    userId?: string,
+    resourceId?: string
   ): Promise<void> {
     try {
-      await this.insertAuditLog({
-        event_type: 'admin_action',
+      const auditEntry = {
+        event_type: this.eventTypes[eventType],
         action,
         user_id: userId || null,
-        details: this.sanitizeDetails(details),
-        severity: 'medium'
-      });
-    } catch (error) {
-      logger.error("Erro ao registrar evento administrativo", {
+        resource_id: resourceId || null,
+        details: sanitizeForLogging(details),
+        timestamp: new Date().toISOString(),
+        ip_address: await this.getClientIP(),
+        user_agent: this.sanitizeUserAgent(navigator.userAgent),
+        session_id: await this.getSessionId()
+      };
+      
+      // Tentar salvar no banco principal
+      const success = await this.saveToDatabase(auditEntry);
+      
+      if (!success) {
+        // Adicionar à fila de retry
+        this.retryQueue.push({
+          entry: auditEntry,
+          retries: 0
+        });
+        
+        // Fallback para localStorage apenas em caso de falha
+        this.saveToLocalStorage(auditEntry);
+      }
+      
+      logger.info("Evento de auditoria registrado", {
         component: 'AUDIT_LOGGER',
+        eventType,
         action,
+        saved: success ? 'database' : 'fallback'
+      });
+      
+    } catch (error) {
+      logger.error("Erro crítico no sistema de auditoria", {
+        component: 'AUDIT_LOGGER',
         error: error instanceof Error ? error.message : 'Erro desconhecido'
       });
     }
   }
-
-  // Log de eventos do sistema
-  async logSystemEvent(
-    action: string,
-    details: Record<string, any> = {},
-    userId?: string
-  ): Promise<void> {
-    try {
-      await this.insertAuditLog({
-        event_type: 'system_event',
-        action,
-        user_id: userId || null,
-        details: this.sanitizeDetails(details),
-        severity: 'low'
-      });
-    } catch (error) {
-      logger.error("Erro ao registrar evento do sistema", {
-        component: 'AUDIT_LOGGER',
-        action,
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
-    }
-  }
-
-  // Inserir log de auditoria no banco
-  private async insertAuditLog(logData: {
-    event_type: string;
-    action: string;
-    user_id: string | null;
-    resource_id?: string;
-    details: Record<string, any>;
-    severity: string;
-  }): Promise<void> {
+  
+  // Salvar no banco de dados com tratamento robusto de erros
+  private async saveToDatabase(auditEntry: any): Promise<boolean> {
     try {
       const { error } = await supabase
         .from('audit_logs')
-        .insert({
-          ...logData,
-          ip_address: this.getClientIP(),
-          user_agent: this.getUserAgent(),
-          session_id: this.getSessionId()
-        });
-
+        .insert(auditEntry);
+      
       if (error) {
-        throw error;
+        logger.warn("Erro ao salvar audit log no banco", {
+          component: 'AUDIT_LOGGER',
+          error: error.message
+        });
+        return false;
       }
+      
+      return true;
     } catch (error) {
-      // Log local se falhar no banco
-      logger.error("Falha ao inserir log de auditoria", {
+      logger.error("Falha na conexão com banco para audit", {
         component: 'AUDIT_LOGGER',
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
-        logData
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
       });
+      return false;
     }
   }
-
-  // Sanitizar detalhes para remover informações sensíveis
-  private sanitizeDetails(details: Record<string, any>): Record<string, any> {
-    const sensitiveFields = [
-      'password', 'token', 'secret', 'key', 'auth', 'credential',
-      'email', 'phone', 'cpf', 'rg', 'api_key', 'access_token',
-      'refresh_token', 'session_id'
-    ];
-
-    const sanitized = { ...details };
-
-    const sanitizeValue = (obj: any): any => {
-      if (!obj || typeof obj !== 'object') return obj;
+  
+  // Processar fila de retry
+  private async processRetryQueue(): Promise<void> {
+    if (this.isProcessingQueue || this.retryQueue.length === 0) return;
+    
+    this.isProcessingQueue = true;
+    
+    try {
+      const toRetry = [...this.retryQueue];
+      this.retryQueue = [];
       
-      if (Array.isArray(obj)) {
-        return obj.map(item => sanitizeValue(item));
-      }
-
-      const result: any = {};
-      for (const [key, value] of Object.entries(obj)) {
-        const keyLower = key.toLowerCase();
-        
-        if (sensitiveFields.some(field => keyLower.includes(field))) {
-          result[key] = '[REDACTED]';
-        } else if (typeof value === 'object') {
-          result[key] = sanitizeValue(value);
+      for (const item of toRetry) {
+        if (item.retries < this.maxRetries) {
+          const success = await this.saveToDatabase(item.entry);
+          
+          if (!success) {
+            item.retries++;
+            this.retryQueue.push(item);
+          } else {
+            logger.info("Audit log recuperado da fila", {
+              component: 'AUDIT_LOGGER',
+              retries: item.retries
+            });
+          }
         } else {
-          result[key] = value;
+          logger.warn("Audit log descartado após max retries", {
+            component: 'AUDIT_LOGGER',
+            action: item.entry.action
+          });
         }
       }
-      return result;
-    };
-
-    return sanitizeValue(sanitized);
-  }
-
-  // Determinar severidade baseada no tipo e ação
-  private determineSeverity(eventType: string, action: string): string {
-    const highRiskActions = ['login_failure', 'permission_denied', 'injection_attempt', 'rate_limit_exceeded'];
-    const mediumRiskActions = ['login_success', 'permission_change', 'data_delete'];
-    
-    if (highRiskActions.some(risk => action.includes(risk))) {
-      return 'high';
+    } finally {
+      this.isProcessingQueue = false;
     }
-    
-    if (mediumRiskActions.some(risk => action.includes(risk))) {
-      return 'medium';
-    }
-    
-    return 'low';
   }
-
-  // Obter IP do cliente (simulado)
-  private getClientIP(): string {
-    return 'hidden_for_privacy';
+  
+  // Sanitizar User Agent
+  private sanitizeUserAgent(userAgent: string): string {
+    return userAgent.substring(0, 255).replace(/[<>'"]/g, '');
   }
-
-  // Obter user agent
-  private getUserAgent(): string {
-    return typeof window !== 'undefined' ? 
-      window.navigator.userAgent.substring(0, 200) : 
-      'server';
-  }
-
-  // Obter ID da sessão
-  private getSessionId(): string {
+  
+  // Obter IP do cliente de forma segura
+  private async getClientIP(): Promise<string> {
     try {
-      const sessionData = localStorage.getItem('supabase.auth.token');
-      if (sessionData) {
-        const parsed = JSON.parse(sessionData);
-        return parsed.access_token?.substring(0, 16) + '***' || 'unknown';
+      if (process.env.NODE_ENV === 'production') {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
+        
+        const response = await fetch('https://api.ipify.org?format=json', {
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+          const data = await response.json();
+          return data.ip || 'unknown';
+        }
       }
+      return 'localhost';
     } catch {
-      // Ignorar erro
+      return 'unknown';
     }
-    return 'unknown';
   }
-
-  // Buscar logs (apenas para admins)
-  async getLogs(filters: {
-    eventType?: string;
-    severity?: string;
-    userId?: string;
-    limit?: number;
-    offset?: number;
-  } = {}): Promise<any[]> {
+  
+  // Obter ID da sessão de forma segura
+  private async getSessionId(): Promise<string | null> {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      return session?.access_token?.substring(0, 16) + '***' || null;
+    } catch {
+      return null;
+    }
+  }
+  
+  // Salvar no localStorage como último recurso
+  private saveToLocalStorage(auditEntry: any): void {
+    try {
+      const existing = JSON.parse(localStorage.getItem('audit_logs_fallback') || '[]');
+      existing.push({
+        ...auditEntry,
+        fallback: true,
+        fallback_timestamp: new Date().toISOString()
+      });
+      
+      // Manter apenas últimos 25 registros para não sobrecarregar
+      const limited = existing.slice(-25);
+      localStorage.setItem('audit_logs_fallback', JSON.stringify(limited));
+    } catch {
+      // Falhar silenciosamente se não conseguir salvar
+    }
+  }
+  
+  // Log para analytics apenas de eventos válidos
+  private async logToAnalytics(eventType: string, details: Record<string, any>, userId?: string): Promise<void> {
+    if (!userId || !this.validAnalyticsEvents.includes(eventType)) {
+      return;
+    }
+    
+    try {
+      const { error } = await supabase.from('analytics').insert({
+        user_id: userId,
+        event_type: eventType,
+        solution_id: details.solution_id || null,
+        module_id: details.module_id || null,
+        event_data: sanitizeForLogging(details)
+      });
+      
+      if (error) {
+        logger.warn("Erro ao salvar analytics", {
+          component: 'AUDIT_LOGGER',
+          error: error.message
+        });
+      }
+    } catch (error) {
+      // Falhar silenciosamente para não quebrar o fluxo
+    }
+  }
+  
+  // Métodos específicos para diferentes tipos de eventos
+  async logAuthEvent(action: string, details: Record<string, any> = {}, userId?: string): Promise<void> {
+    await this.logAuditEvent('AUTH', action, details, userId);
+    
+    // Log específico para analytics se for evento válido
+    const analyticsEvent = action.includes('login') ? 'login_attempt' : 
+                          action.includes('logout') ? 'logout' :
+                          action.includes('session') ? 'session_start' : null;
+    
+    if (analyticsEvent && userId) {
+      await this.logToAnalytics(analyticsEvent, details, userId);
+    }
+  }
+  
+  async logSecurityEvent(action: string, severity: 'low' | 'medium' | 'high' | 'critical', details: Record<string, any> = {}): Promise<void> {
+    await this.logAuditEvent('SECURITY', action, { ...details, severity });
+    
+    // Log para analytics apenas em casos críticos ou de alto risco
+    if (['critical', 'high'].includes(severity)) {
+      await this.logToAnalytics('security_warning', { severity, action, ...details });
+    }
+  }
+  
+  async logAccessEvent(action: string, resource: string, details: Record<string, any> = {}, userId?: string): Promise<void> {
+    await this.logAuditEvent('ACCESS', action, { ...details, resource }, userId, resource);
+  }
+  
+  async logDataEvent(action: string, table: string, recordId?: string, details: Record<string, any> = {}, userId?: string): Promise<void> {
+    await this.logAuditEvent('DATA', action, { ...details, table }, userId, recordId);
+  }
+  
+  async logAdminEvent(action: string, details: Record<string, any> = {}, userId?: string): Promise<void> {
+    await this.logAuditEvent('ADMIN', action, details, userId);
+  }
+  
+  async logSystemEvent(action: string, details: Record<string, any> = {}): Promise<void> {
+    await this.logAuditEvent('SYSTEM', action, details);
+  }
+  
+  // Obter logs de auditoria para dashboard admin
+  async getAuditLogs(
+    limit: number = 50,
+    eventType?: string,
+    userId?: string,
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<any[]> {
     try {
       let query = supabase
         .from('audit_logs')
         .select('*')
-        .order('timestamp', { ascending: false });
-
-      if (filters.eventType) {
-        query = query.eq('event_type', filters.eventType);
+        .order('timestamp', { ascending: false })
+        .limit(Math.min(limit, 100)); // Máximo 100 por segurança
+      
+      if (eventType) {
+        query = query.eq('event_type', eventType);
       }
-
-      if (filters.severity) {
-        query = query.eq('severity', filters.severity);
+      
+      if (userId) {
+        query = query.eq('user_id', userId);
       }
-
-      if (filters.userId) {
-        query = query.eq('user_id', filters.userId);
+      
+      if (startDate) {
+        query = query.gte('timestamp', startDate.toISOString());
       }
-
-      if (filters.limit) {
-        query = query.limit(filters.limit);
+      
+      if (endDate) {
+        query = query.lte('timestamp', endDate.toISOString());
       }
-
-      if (filters.offset) {
-        query = query.range(filters.offset, filters.offset + (filters.limit || 50) - 1);
-      }
-
+      
       const { data, error } = await query;
-
+      
       if (error) {
         throw error;
       }
-
+      
       return data || [];
     } catch (error) {
       logger.error("Erro ao buscar logs de auditoria", {
         component: 'AUDIT_LOGGER',
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
-        filters
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
       });
-      return [];
+      
+      // Fallback para logs locais se necessário
+      try {
+        const localLogs = JSON.parse(localStorage.getItem('audit_logs_fallback') || '[]');
+        return localLogs.slice(0, limit);
+      } catch {
+        return [];
+      }
+    }
+  }
+  
+  // Limpar logs antigos (para ser chamado periodicamente)
+  async cleanupOldLogs(daysToKeep: number = 90): Promise<void> {
+    try {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
+      
+      const { error } = await supabase
+        .from('audit_logs')
+        .delete()
+        .lt('timestamp', cutoffDate.toISOString());
+      
+      if (error) {
+        logger.warn("Erro na limpeza de logs antigos", {
+          component: 'AUDIT_LOGGER',
+          error: error.message
+        });
+      } else {
+        logger.info("Limpeza de logs antigos concluída", {
+          component: 'AUDIT_LOGGER',
+          cutoffDate: cutoffDate.toISOString()
+        });
+      }
+    } catch (error) {
+      logger.error("Falha na limpeza de logs", {
+        component: 'AUDIT_LOGGER',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
     }
   }
 }

@@ -1,22 +1,47 @@
 
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
+import { supabase } from '@/lib/supabase';
+import { processUserProfile } from '@/hooks/auth/utils/authSessionUtils';
 import LoadingScreen from '@/components/common/LoadingScreen';
-import { logger } from '@/utils/logger';
 
 const AuthSession = () => {
-  const { user, isLoading, profile } = useAuth();
+  const { 
+    user, 
+    isLoading, 
+    setProfile, 
+    setIsLoading 
+  } = useAuth();
 
-  // Log de debug para monitorar o estado
+  // Carrega o perfil do usuário quando o usuário é autenticado
   useEffect(() => {
-    logger.info('[AuthSession] Estado atual', {
-      hasUser: !!user,
-      hasProfile: !!profile,
-      profileRole: profile?.role,
-      isLoading: isLoading,
-      component: 'AUTH_SESSION'
-    });
-  }, [user, profile, isLoading]);
+    const loadUserProfile = async () => {
+      if (!user) return;
+      
+      try {
+        console.log("Carregando perfil para usuário:", user.id);
+        
+        const profile = await processUserProfile(
+          user.id,
+          user.email,
+          user.user_metadata?.name || user.user_metadata?.full_name
+        );
+        
+        if (profile) {
+          console.log("Perfil carregado:", profile);
+          setProfile(profile);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar perfil:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    if (user) {
+      loadUserProfile();
+    }
+  }, [user, setProfile, setIsLoading]);
   
   if (isLoading) {
     return <LoadingScreen />;
