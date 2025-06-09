@@ -1,256 +1,202 @@
 
-import { useEffect, useRef } from 'react';
-import { logger } from '@/utils/logger';
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Shield, AlertTriangle, Activity, Lock } from 'lucide-react';
 import { auditLogger } from '@/utils/auditLogger';
 import { environmentSecurity } from '@/utils/environmentSecurity';
+import { loginRateLimiter } from '@/utils/secureRateLimiting';
+import { logger } from '@/utils/logger';
+import { useAuth } from '@/contexts/auth';
 
-interface SecurityMonitorProps {
-  onSecurityEvent?: (event: string, details: any) => void;
+interface SecurityStatus {
+  environment: 'production' | 'development';
+  httpsEnabled: boolean;
+  rateLimitStatus: any;
+  recentSecurityEvents: number;
+  lastSecurityCheck: Date;
 }
 
-export const SecurityMonitor: React.FC<SecurityMonitorProps> = ({ 
-  onSecurityEvent 
-}) => {
-  const monitoringRef = useRef(false);
-  const warningsShown = useRef(new Set<string>());
-  const mutationCountRef = useRef(0);
-  const lastResetRef = useRef(Date.now());
+export const SecurityMonitor: React.FC = () => {
+  const { user, isAdmin } = useAuth();
+  const [securityStatus, setSecurityStatus] = useState<SecurityStatus | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (monitoringRef.current) return;
-    monitoringRef.current = true;
-
-    logger.info("Security Monitor iniciado", {
-      component: 'SECURITY_MONITOR',
-      environment: environmentSecurity.isProduction() ? 'production' : 'development'
-    });
-
-    // Verificações de segurança básicas otimizadas
-    const basicSecurityCheck = async () => {
+    const checkSecurityStatus = async () => {
       try {
-        // Verificar ambiente de desenvolvimento em produção
-        if (!environmentSecurity.isDevelopment() && 
-            process.env.NODE_ENV === 'development') {
-          
-          const warning = 'Development mode em ambiente não local';
-          if (!warningsShown.current.has(warning)) {
-            warningsShown.current.add(warning);
-            
-            logger.warn("Aviso de segurança detectado", {
+        // Verificar status do ambiente
+        const envValidation = environmentSecurity.validateEnvironment();
+        
+        // Obter estatísticas de rate limiting
+        const rateLimitStats = loginRateLimiter.getStats();
+        
+        // Buscar eventos de segurança recentes (apenas para admins)
+        let recentEvents = 0;
+        if (isAdmin && user) {
+          try {
+            const events = await auditLogger.getLogs({
+              eventType: 'security_event',
+              limit: 100
+            });
+            recentEvents = events.length;
+          } catch (error) {
+            logger.warn("Erro ao buscar eventos de segurança", {
               component: 'SECURITY_MONITOR',
-              warning
-            });
-            
-            await auditLogger.logSecurityEvent('dev_mode_production', 'high', {
-              hostname: window.location.hostname,
-              timestamp: new Date().toISOString(),
-              userAgent: navigator.userAgent.substring(0, 100)
-            });
-            
-            onSecurityEvent?.(warning, {
-              timestamp: new Date().toISOString(),
-              userAgent: navigator.userAgent.substring(0, 100)
+              error: error instanceof Error ? error.message : 'Erro desconhecido'
             });
           }
         }
 
-        // Verificar conexão segura
-        if (!environmentSecurity.isSecureConnection() && environmentSecurity.isProduction()) {
-          const warning = 'Conexão insegura em produção';
-          if (!warningsShown.current.has(warning)) {
-            warningsShown.current.add(warning);
-            
-            await auditLogger.logSecurityEvent('insecure_connection', 'critical', {
-              protocol: window.location.protocol,
-              hostname: window.location.hostname
-            });
-            
-            onSecurityEvent?.(warning, {
-              protocol: window.location.protocol,
-              hostname: window.location.hostname
-            });
-          }
-        }
+        setSecurityStatus({
+          environment: environmentSecurity.isProduction() ? 'production' : 'development',
+          httpsEnabled: window.location.protocol === 'https:',
+          rateLimitStatus: rateLimitStats,
+          recentSecurityEvents: recentEvents,
+          lastSecurityCheck: new Date()
+        });
 
-        // Verificar uso alto de memória (se disponível)
-        if ('memory' in performance && (performance as any).memory) {
-          const memory = (performance as any).memory;
-          const memoryUsage = memory.usedJSHeapSize / memory.totalJSHeapSize;
-          
-          if (memoryUsage > 0.9) {
-            const warning = 'Alto uso de memória detectado';
-            if (!warningsShown.current.has(warning)) {
-              warningsShown.current.add(warning);
-              
-              logger.warn(warning, {
-                component: 'SECURITY_MONITOR',
-                memoryUsage: Math.round(memoryUsage * 100) + '%',
-                usedJSHeapSize: Math.round(memory.usedJSHeapSize / 1024 / 1024) + 'MB',
-                totalJSHeapSize: Math.round(memory.totalJSHeapSize / 1024 / 1024) + 'MB'
-              });
-            }
-          }
-        }
-
-        // Verificar domínio confiável
-        if (!environmentSecurity.isTrustedDomain()) {
-          const warning = 'Domínio não confiável detectado';
-          if (!warningsShown.current.has(warning)) {
-            warningsShown.current.add(warning);
-            
-            await auditLogger.logSecurityEvent('untrusted_domain', 'critical', {
-              hostname: window.location.hostname,
-              referrer: document.referrer || 'direct'
-            });
-            
-            onSecurityEvent?.(warning, {
-              hostname: window.location.hostname
-            });
-          }
-        }
+        // Log da verificação de segurança
+        await auditLogger.logSecurityEvent('security_status_check', 'low', {
+          environment: environmentSecurity.isProduction() ? 'production' : 'development',
+          httpsEnabled: window.location.protocol === 'https:',
+          rateLimitActiveBlocks: rateLimitStats.blockedEntries
+        }, user?.id);
 
       } catch (error) {
-        // Falhar silenciosamente para não quebrar a aplicação
-        logger.debug("Erro nas verificações de segurança", {
+        logger.error("Erro ao verificar status de segurança", {
           component: 'SECURITY_MONITOR',
           error: error instanceof Error ? error.message : 'Erro desconhecido'
         });
+      } finally {
+        setLoading(false);
       }
     };
 
-    // Monitorar tentativas de manipulação da página
-    const observer = new MutationObserver((mutations) => {
-      const now = Date.now();
+    if (isAdmin) {
+      checkSecurityStatus();
       
-      // Reset contador a cada 30 segundos
-      if (now - lastResetRef.current > 30000) {
-        mutationCountRef.current = 0;
-        lastResetRef.current = now;
-      }
-      
-      mutationCountRef.current += mutations.length;
-      
-      // Detectar atividade suspeita
-      if (mutationCountRef.current > 200) { // Aumentado limite
-        const warning = 'excessive_dom_mutations';
-        if (!warningsShown.current.has(warning)) {
-          warningsShown.current.add(warning);
-          
-          logger.warn("Atividade DOM suspeita detectada", {
-            component: 'SECURITY_MONITOR',
-            mutationCount: mutationCountRef.current
-          });
-          
-          auditLogger.logSecurityEvent(warning, 'medium', {
-            mutationCount: mutationCountRef.current,
-            timeWindow: '30s'
-          });
-          
-          onSecurityEvent?.(warning, {
-            mutationCount: mutationCountRef.current
-          });
-          
-          // Reset para evitar spam
-          mutationCountRef.current = 0;
-        }
-      }
-      
-      // Detectar inserção de scripts maliciosos
-      mutations.forEach(mutation => {
-        if (mutation.type === 'childList') {
-          mutation.addedNodes.forEach(node => {
-            if (node.nodeType === Node.ELEMENT_NODE) {
-              const element = node as Element;
-              
-              // Detectar scripts
-              if (element.tagName === 'SCRIPT') {
-                const warning = 'script_injection_detected';
-                
-                logger.warn("Script injection detectado", {
-                  component: 'SECURITY_MONITOR',
-                  scriptSrc: element.getAttribute('src') || 'inline',
-                  scriptContent: element.textContent?.substring(0, 50) || ''
-                });
-                
-                auditLogger.logSecurityEvent(warning, 'high', {
-                  scriptSrc: element.getAttribute('src') || 'inline',
-                  scriptContent: element.textContent?.substring(0, 100) || '',
-                  timestamp: new Date().toISOString()
-                });
-                
-                onSecurityEvent?.(warning, {
-                  scriptSrc: element.getAttribute('src') || 'inline',
-                  scriptContent: element.textContent?.substring(0, 50) || ''
-                });
-              }
-              
-              // Detectar iframes suspeitos
-              if (element.tagName === 'IFRAME') {
-                const src = element.getAttribute('src');
-                if (src && !src.startsWith(window.location.origin)) {
-                  logger.warn("Iframe externo detectado", {
-                    component: 'SECURITY_MONITOR',
-                    iframeSrc: src.substring(0, 100)
-                  });
-                  
-                  auditLogger.logSecurityEvent('external_iframe_detected', 'medium', {
-                    iframeSrc: src.substring(0, 100)
-                  });
-                }
-              }
-            }
-          });
-        }
-        
-        // Detectar modificações em atributos críticos
-        if (mutation.type === 'attributes') {
-          const target = mutation.target as Element;
-          const attributeName = mutation.attributeName;
-          
-          if (attributeName && ['onclick', 'onload', 'onerror', 'onmouseover'].includes(attributeName)) {
-            logger.warn("Atributo de evento modificado", {
-              component: 'SECURITY_MONITOR',
-              element: target.tagName,
-              attribute: attributeName,
-              value: target.getAttribute(attributeName)?.substring(0, 50) || ''
-            });
-            
-            auditLogger.logSecurityEvent('event_attribute_modified', 'medium', {
-              element: target.tagName,
-              attribute: attributeName,
-              value: target.getAttribute(attributeName)?.substring(0, 100) || ''
-            });
-          }
-        }
-      });
-    });
-    
-    // Iniciar observação
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ['onclick', 'onload', 'onerror', 'onmouseover', 'src', 'href']
-    });
+      // Verificar a cada 5 minutos
+      const interval = setInterval(checkSecurityStatus, 5 * 60 * 1000);
+      return () => clearInterval(interval);
+    } else {
+      setLoading(false);
+    }
+  }, [user, isAdmin]);
 
-    // Executar verificação inicial
-    basicSecurityCheck();
+  // Não mostrar para usuários não-admin
+  if (!isAdmin) {
+    return null;
+  }
 
-    // Monitoramento com intervalo otimizado (3 minutos)
-    const securityInterval = setInterval(basicSecurityCheck, 180000);
+  if (loading) {
+    return (
+      <Card className="w-full">
+        <CardContent className="flex items-center justify-center p-6">
+          <Activity className="h-6 w-6 animate-spin text-blue-600" />
+          <span className="ml-2">Verificando status de segurança...</span>
+        </CardContent>
+      </Card>
+    );
+  }
 
-    // Limpeza
-    return () => {
-      clearInterval(securityInterval);
-      observer.disconnect();
-      monitoringRef.current = false;
-      
-      logger.info("Security Monitor desativado", {
-        component: 'SECURITY_MONITOR'
-      });
-    };
-  }, [onSecurityEvent]);
+  if (!securityStatus) {
+    return (
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>
+          Erro ao carregar status de segurança
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
-  // Este componente não renderiza nada visualmente
-  return null;
+  const getEnvironmentBadge = () => {
+    return securityStatus.environment === 'production' ? (
+      <Badge className="bg-green-100 text-green-800">
+        <Lock className="h-3 w-3 mr-1" />
+        Produção
+      </Badge>
+    ) : (
+      <Badge variant="secondary">
+        <AlertTriangle className="h-3 w-3 mr-1" />
+        Desenvolvimento
+      </Badge>
+    );
+  };
+
+  const getHttpsBadge = () => {
+    return securityStatus.httpsEnabled ? (
+      <Badge className="bg-green-100 text-green-800">
+        <Shield className="h-3 w-3 mr-1" />
+        HTTPS Ativo
+      </Badge>
+    ) : (
+      <Badge variant="destructive">
+        <AlertTriangle className="h-3 w-3 mr-1" />
+        HTTP Inseguro
+      </Badge>
+    );
+  };
+
+  return (
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle className="flex items-center">
+          <Shield className="h-5 w-5 mr-2 text-green-600" />
+          Monitor de Segurança
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <h4 className="font-medium text-sm text-gray-600">Ambiente</h4>
+            {getEnvironmentBadge()}
+          </div>
+          
+          <div className="space-y-2">
+            <h4 className="font-medium text-sm text-gray-600">Conexão</h4>
+            {getHttpsBadge()}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="text-center p-3 bg-blue-50 rounded-lg">
+            <div className="text-2xl font-bold text-blue-600">
+              {securityStatus.rateLimitStatus.totalEntries}
+            </div>
+            <div className="text-sm text-gray-600">Tentativas Monitoradas</div>
+          </div>
+          
+          <div className="text-center p-3 bg-red-50 rounded-lg">
+            <div className="text-2xl font-bold text-red-600">
+              {securityStatus.rateLimitStatus.blockedEntries}
+            </div>
+            <div className="text-sm text-gray-600">IPs Bloqueados</div>
+          </div>
+          
+          <div className="text-center p-3 bg-yellow-50 rounded-lg">
+            <div className="text-2xl font-bold text-yellow-600">
+              {securityStatus.recentSecurityEvents}
+            </div>
+            <div className="text-sm text-gray-600">Eventos de Segurança</div>
+          </div>
+        </div>
+
+        {securityStatus.rateLimitStatus.suspiciousIPs > 0 && (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              {securityStatus.rateLimitStatus.suspiciousIPs} IPs suspeitos detectados
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <div className="text-xs text-gray-500 text-center">
+          Última verificação: {securityStatus.lastSecurityCheck.toLocaleString()}
+        </div>
+      </CardContent>
+    </Card>
+  );
 };

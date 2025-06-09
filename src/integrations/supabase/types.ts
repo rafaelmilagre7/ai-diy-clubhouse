@@ -111,6 +111,48 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action: string
+          details: Json | null
+          event_type: string
+          id: string
+          ip_address: string | null
+          resource_id: string | null
+          session_id: string | null
+          severity: string | null
+          timestamp: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          details?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          resource_id?: string | null
+          session_id?: string | null
+          severity?: string | null
+          timestamp?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          details?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          resource_id?: string | null
+          session_id?: string | null
+          severity?: string | null
+          timestamp?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       badges: {
         Row: {
           category: string
@@ -5821,7 +5863,7 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
-      get_user_permissions: {
+      get_user_security_permissions: {
         Args: { user_id: string }
         Returns: string[]
       }
@@ -5918,14 +5960,22 @@ export type Database = {
         Returns: string
       }
       log_security_event: {
-        Args: {
-          p_action_type: string
-          p_resource_type: string
-          p_resource_id?: string
-          p_old_values?: Json
-          p_new_values?: Json
-        }
-        Returns: string
+        Args:
+          | {
+              p_action_type: string
+              p_resource_type: string
+              p_resource_id?: string
+              p_old_values?: Json
+              p_new_values?: Json
+            }
+          | {
+              p_action_type: string
+              p_resource_type: string
+              p_resource_id?: string
+              p_old_values?: string
+              p_new_values?: string
+            }
+        Returns: undefined
       }
       mark_topic_as_solved: {
         Args: { topic_id: string; post_id: string }
