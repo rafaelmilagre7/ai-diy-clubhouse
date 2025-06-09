@@ -15,7 +15,7 @@ const inputVariants = cva(
         minimal: "h-10 px-0 py-2 border-0 border-b border-border-subtle bg-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none",
         ghost: "h-10 px-3 py-2 border-0 bg-transparent hover:bg-surface-hover focus-visible:bg-surface-elevated focus-visible:ring-1"
       },
-      size: {
+      inputSize: {
         sm: "h-8 px-2 text-xs",
         default: "",
         lg: "h-12 px-4 text-base"
@@ -29,14 +29,14 @@ const inputVariants = cva(
     },
     defaultVariants: {
       variant: "default",
-      size: "default",
+      inputSize: "default",
       state: "default"
     },
   }
 )
 
 export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement>,
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'>,
     VariantProps<typeof inputVariants> {
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
@@ -44,7 +44,7 @@ export interface InputProps
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, variant, size, state, type, leftIcon, rightIcon, isPassword, ...props }, ref) => {
+  ({ className, variant, inputSize, state, type, leftIcon, rightIcon, isPassword, ...props }, ref) => {
     const [showPassword, setShowPassword] = React.useState(false)
     const [isFocused, setIsFocused] = React.useState(false)
     
@@ -54,7 +54,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <input
         type={inputType}
         className={cn(
-          inputVariants({ variant, size, state }),
+          inputVariants({ variant, inputSize, state }),
           leftIcon && "pl-10",
           (rightIcon || isPassword) && "pr-10",
           variant === "floating" && isFocused && "pt-7 pb-1",

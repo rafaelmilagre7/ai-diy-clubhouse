@@ -43,7 +43,7 @@ export const MemberHeader = ({ onToggleSidebar, sidebarOpen = false }: MemberHea
             <Input
               placeholder="Buscar soluções..."
               className="pl-10 w-64 bg-surface-elevated border-border-subtle"
-              variant="filled"
+              variant="modern"
               inputSize="sm"
             />
           </div>
