@@ -100,7 +100,7 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   }, [user, isLoading, location.pathname, securityChecked]);
 
   // Mostrar loading enquanto verifica autenticação
-  if ((isLoading && !loadingTimeout) || attempt.blocked) {
+  if ((isLoading && !loadingTimeout) || accessAttemptRef.current.blocked) {
     return <LoadingScreen message="Verificando credenciais de segurança..." />;
   }
 
