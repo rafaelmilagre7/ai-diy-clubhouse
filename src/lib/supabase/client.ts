@@ -11,3 +11,11 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
   }
 });
+
+// Re-exportar funções de storage para compatibilidade
+export { 
+  ensureBucketExists,
+  ensureStorageBucketExists,
+  uploadFileWithFallback,
+  setupLearningStorageBuckets
+} from './storage';

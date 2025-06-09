@@ -33,7 +33,7 @@ export const setupLearningStorageBuckets = async () => {
   }
 };
 
-export const ensureBucketExists = async (bucketName: string) => {
+export const ensureBucketExists = async (bucketName: string): Promise<boolean> => {
   try {
     const { data, error } = await supabase.rpc('create_storage_public_policy', { bucket_name: bucketName });
     if (error) throw error;
@@ -57,16 +57,20 @@ export const extractPandaVideoInfo = (url: string) => {
   };
 };
 
-// Tipo de retorno para funções de upload
-interface UploadResult {
+// Tipos para as funções de upload
+interface UploadSuccess {
   publicUrl: string;
   path: string;
-  error: null;
+  error?: never;
 }
 
 interface UploadError {
   error: Error;
+  publicUrl?: never;
+  path?: never;
 }
+
+export type UploadResult = UploadSuccess | UploadError;
 
 export const uploadFileWithFallback = async (
   file: File,
@@ -74,7 +78,7 @@ export const uploadFileWithFallback = async (
   folderPath: string,
   onProgress?: (progress: number) => void,
   fallbackBucket?: string
-): Promise<UploadResult | UploadError> => {
+): Promise<UploadResult> => {
   try {
     // Gerar nome único para o arquivo
     const timestamp = Date.now();
@@ -110,8 +114,7 @@ export const uploadFileWithFallback = async (
         
         return {
           publicUrl: urlData.publicUrl,
-          path: fallbackResult.data.path,
-          error: null
+          path: fallbackResult.data.path
         };
       }
       throw error;
@@ -128,8 +131,7 @@ export const uploadFileWithFallback = async (
 
     return {
       publicUrl: urlData.publicUrl,
-      path: data.path,
-      error: null
+      path: data.path
     };
   } catch (error) {
     console.error('Error uploading file:', error);
