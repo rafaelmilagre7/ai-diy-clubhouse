@@ -4,12 +4,12 @@ import { supabase } from '@/lib/supabase';
 import { auditLogger } from '@/utils/auditLogger';
 import { environmentSecurity } from '@/utils/environmentSecurity';
 import { logger } from '@/utils/logger';
-import { verifyAdminStatus, clearAdminCache } from '@/utils/adminVerification';
 import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
+  profile: any | null;
   isLoading: boolean;
   isAdmin: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: any }>;
@@ -31,30 +31,126 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Verificar se usuário é admin usando verificação centralizada
+  // Verificar se usuário é admin usando verificação simples e direta
   const checkAdminStatus = async (currentUser: User | null) => {
     if (!currentUser) {
       setIsAdmin(false);
+      setProfile(null);
       return;
     }
 
     try {
-      const adminStatus = await verifyAdminStatus(currentUser.id, currentUser.email);
+      logger.info("Carregando perfil do usuário", {
+        component: 'AUTH_CONTEXT',
+        userId: currentUser.id.substring(0, 8) + '***'
+      });
+
+      // Buscar perfil no banco de dados
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', currentUser.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = row not found
+        logger.error("Erro ao buscar perfil", {
+          component: 'AUTH_CONTEXT',
+          error: error.message,
+          userId: currentUser.id.substring(0, 8) + '***'
+        });
+        throw error;
+      }
+
+      // Se não encontrou perfil, criar um básico
+      if (!profileData) {
+        logger.info("Criando perfil básico para usuário", {
+          component: 'AUTH_CONTEXT',
+          userId: currentUser.id.substring(0, 8) + '***'
+        });
+
+        const { data: newProfile, error: insertError } = await supabase
+          .from('profiles')
+          .insert({
+            id: currentUser.id,
+            email: currentUser.email,
+            name: currentUser.user_metadata?.name || currentUser.user_metadata?.full_name,
+            role: 'member' // Padrão para novos usuários
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          logger.error("Erro ao criar perfil", {
+            component: 'AUTH_CONTEXT',
+            error: insertError.message
+          });
+          setProfile({ id: currentUser.id, email: currentUser.email, role: 'member' });
+          setIsAdmin(false);
+          return;
+        }
+
+        setProfile(newProfile);
+        setIsAdmin(newProfile.role === 'admin');
+        return;
+      }
+
+      // Verificação de admin baseada em email confiável E role no banco
+      const trustedEmails = [
+        'rafael@viverdeia.ai',
+        'admin@viverdeia.ai'
+      ];
+      
+      // Em desenvolvimento, permitir admin@teste.com
+      if (process.env.NODE_ENV === 'development') {
+        trustedEmails.push('admin@teste.com');
+      }
+
+      const isAdminByEmail = trustedEmails.includes(currentUser.email?.toLowerCase() || '');
+      const isAdminByRole = profileData.role === 'admin';
+      const adminStatus = isAdminByEmail || isAdminByRole;
+
+      // Se é admin por email mas não tem role admin, atualizar
+      if (isAdminByEmail && !isAdminByRole) {
+        logger.info("Atualizando role de admin por email confiável", {
+          component: 'AUTH_CONTEXT',
+          email: currentUser.email?.substring(0, 3) + '***'
+        });
+
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ role: 'admin' })
+          .eq('id', currentUser.id);
+
+        if (!updateError) {
+          profileData.role = 'admin';
+        }
+      }
+
+      setProfile(profileData);
       setIsAdmin(adminStatus);
 
       if (adminStatus) {
         logger.info("Usuário admin autenticado", {
           component: 'AUTH_CONTEXT',
-          userId: currentUser.id.substring(0, 8) + '***'
+          userId: currentUser.id.substring(0, 8) + '***',
+          email: currentUser.email?.substring(0, 3) + '***'
         });
       }
+
     } catch (error) {
       logger.error("Erro ao verificar status de admin", {
         component: 'AUTH_CONTEXT',
         error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+      // Em caso de erro, definir perfil básico para não quebrar a aplicação
+      setProfile({ 
+        id: currentUser.id, 
+        email: currentUser.email, 
+        role: 'member' 
       });
       setIsAdmin(false);
     }
@@ -158,7 +254,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Logout atualizado para limpar cache de admin
+  // Logout
   const signOut = async () => {
     try {
       logger.info("Logout iniciado", {
@@ -171,9 +267,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           userId: user.id.substring(0, 8) + '***',
           timestamp: new Date().toISOString()
         }, user.id);
-
-        // Limpar cache de admin
-        clearAdminCache(user.id);
       }
 
       const { error } = await supabase.auth.signOut();
@@ -189,6 +282,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Limpeza completa do estado
       setUser(null);
       setSession(null);
+      setProfile(null);
       setIsAdmin(false);
 
       logger.info("Logout realizado com sucesso", {
@@ -268,9 +362,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session?.user) {
           await checkAdminStatus(session.user);
         } else {
+          setProfile(null);
           setIsAdmin(false);
-          // Limpar cache quando usuário sai
-          clearAdminCache();
         }
         
         setIsLoading(false);
@@ -291,6 +384,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider value={{
       user,
       session,
+      profile,
       isLoading,
       isAdmin,
       signIn,

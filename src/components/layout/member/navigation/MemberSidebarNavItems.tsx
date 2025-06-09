@@ -16,6 +16,7 @@ import {
   Shield
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
+import { logger } from '@/utils/logger';
 
 interface MemberSidebarNavItemsProps {
   sidebarOpen: boolean;
@@ -23,7 +24,20 @@ interface MemberSidebarNavItemsProps {
 
 export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ sidebarOpen }) => {
   const location = useLocation();
-  const { profile } = useAuth();
+  const { profile, isAdmin, user, isLoading } = useAuth();
+
+  // Log de debug para identificar problemas
+  React.useEffect(() => {
+    logger.info('[MemberSidebarNavItems] Estado do usuário', {
+      hasUser: !!user,
+      hasProfile: !!profile,
+      profileRole: profile?.role,
+      isAdmin: isAdmin,
+      isLoading: isLoading,
+      userEmail: user?.email?.substring(0, 3) + '***',
+      component: 'MEMBER_SIDEBAR_NAV'
+    });
+  }, [user, profile, isAdmin, isLoading]);
 
   const navigationItems = [
     {
@@ -76,12 +90,17 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
     }
   ];
 
-  if (profile?.role === 'admin') {
+  // Adicionar item de admin se usuário for admin
+  if (isAdmin && profile?.role === 'admin') {
     navigationItems.push({
       title: "Painel Admin",
       href: "/admin",
       icon: Shield,
       type: "admin"
+    });
+    
+    logger.info('[MemberSidebarNavItems] Item de admin adicionado', {
+      component: 'MEMBER_SIDEBAR_NAV'
     });
   }
 
@@ -252,7 +271,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       </div>
       
       {/* Admin no final se existir */}
-      {profile?.role === 'admin' && (
+      {isAdmin && profile?.role === 'admin' && (
         <div className="mt-auto pt-3 border-t border-white/10">
           {renderNavButton(navigationItems[navigationItems.length - 1])}
         </div>
