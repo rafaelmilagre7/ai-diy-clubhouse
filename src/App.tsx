@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { AuthProvider } from "@/contexts/auth";
+import { LoggingProvider } from "@/hooks/useLogging";
 import { Toaster } from "@/components/ui/sonner";
 import { memberRoutes } from "@/routes/MemberRoutes";
 import { adminRoutes } from "@/routes/AdminRoutes";
@@ -20,22 +21,24 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Router>
-          <Routes>
-            {/* Rotas de membros */}
-            {memberRoutes.map((route, index) => (
-              <Route key={`member-${index}`} path={route.path} element={route.element} />
-            ))}
-            
-            {/* Rotas de admin */}
-            {adminRoutes.map((route, index) => (
-              <Route key={`admin-${index}`} path={route.path} element={route.element} />
-            ))}
-          </Routes>
-          <Toaster />
-        </Router>
-      </AuthProvider>
+      <LoggingProvider>
+        <AuthProvider>
+          <Router>
+            <Routes>
+              {/* Rotas de membros */}
+              {memberRoutes.map((route, index) => (
+                <Route key={`member-${index}`} path={route.path} element={route.element} />
+              ))}
+              
+              {/* Rotas de admin */}
+              {adminRoutes.map((route, index) => (
+                <Route key={`admin-${index}`} path={route.path} element={route.element} />
+              ))}
+            </Routes>
+            <Toaster />
+          </Router>
+        </AuthProvider>
+      </LoggingProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
