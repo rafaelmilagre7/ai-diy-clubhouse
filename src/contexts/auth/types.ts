@@ -11,7 +11,7 @@ export interface AuthContextType {
   isLoading: boolean;
   authError: Error | null;
   signIn: (email: string, password: string) => Promise<{ error?: Error }>;
-  signOut: () => Promise<{ success: boolean; error?: Error | null }>;
+  signOut: () => Promise<{ success: boolean; error?: Error }>;
   signInAsMember: (email: string, password: string) => Promise<{ error?: Error }>;
   signInAsAdmin: (email: string, password: string) => Promise<{ error?: Error }>;
   setSession: React.Dispatch<React.SetStateAction<Session | null>>;

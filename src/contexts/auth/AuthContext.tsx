@@ -23,21 +23,56 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const isAdmin = profile?.role === 'admin';
   const isFormacao = profile?.role === 'formacao';
 
+  // Function to load user profile
+  const loadUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error loading profile:', error);
+        return;
+      }
+
+      if (data) {
+        setProfile(data);
+      }
+    } catch (error) {
+      console.error('Error in loadUserProfile:', error);
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         log('Auth state changed', { event, userId: session?.user?.id });
         setSession(session);
         setUser(session?.user ?? null);
+        
+        // Load profile when user signs in
+        if (session?.user) {
+          await loadUserProfile(session.user.id);
+        } else {
+          setProfile(null);
+        }
+        
         setLoading(false);
       }
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        await loadUserProfile(session.user.id);
+      }
+      
       setLoading(false);
     });
 
@@ -46,23 +81,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
+      setAuthError(null);
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      return { error: undefined };
+      return {};
     } catch (error) {
-      return { error: error instanceof Error ? error : new Error('Unknown error') };
+      const authError = error instanceof Error ? error : new Error('Unknown error');
+      setAuthError(authError);
+      return { error: authError };
     }
   };
 
   const signOut = async () => {
     try {
+      setAuthError(null);
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      
+      // Clear local state
+      setProfile(null);
+      
       log('User signed out successfully');
-      return { success: true, error: undefined };
+      return { success: true };
     } catch (error) {
+      const authError = error instanceof Error ? error : new Error('Unknown error');
+      setAuthError(authError);
       logError('Error signing out', error);
-      return { success: false, error: error instanceof Error ? error : new Error('Unknown error') };
+      return { success: false, error: authError };
     }
   };
 

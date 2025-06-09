@@ -8,6 +8,7 @@ import { AuthProvider } from '@/contexts/auth';
 import { LoggingProvider } from '@/contexts/logging';
 import { AppRoutes } from '@/routes';
 import { SEOWrapper } from '@/components/seo/SEOWrapper';
+import AppErrorBoundary from '@/components/common/AppErrorBoundary';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,27 +21,29 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
+    <AppErrorBoundary>
+      <QueryClientProvider client={queryClient}>
         <LoggingProvider>
-          <Router>
-            <SEOWrapper>
-              <div className="App">
-                <AppRoutes />
-                <Toaster 
-                  position="top-right"
-                  theme="dark"
-                  richColors
-                  expand
-                  visibleToasts={3}
-                />
-                <ReactQueryDevtools initialIsOpen={false} />
-              </div>
-            </SEOWrapper>
-          </Router>
+          <AuthProvider>
+            <Router>
+              <SEOWrapper>
+                <div className="App">
+                  <AppRoutes />
+                  <Toaster 
+                    position="top-right"
+                    theme="dark"
+                    richColors
+                    expand
+                    visibleToasts={3}
+                  />
+                  <ReactQueryDevtools initialIsOpen={false} />
+                </div>
+              </SEOWrapper>
+            </Router>
+          </AuthProvider>
         </LoggingProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </AppErrorBoundary>
   );
 }
 
