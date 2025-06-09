@@ -5743,14 +5743,6 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Json
       }
-      check_rate_limit: {
-        Args: {
-          action_type: string
-          max_attempts?: number
-          window_minutes?: number
-        }
-        Returns: boolean
-      }
       check_referral: {
         Args: { p_token: string }
         Returns: Json
@@ -5847,6 +5839,10 @@ export type Database = {
         Args: { post_id: string }
         Returns: Json
       }
+      determinerolefromemail: {
+        Args: { email: string }
+        Returns: string
+      }
       generate_certificate_validation_code: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -5864,10 +5860,6 @@ export type Database = {
         Returns: Json
       }
       generate_referral_token: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
@@ -5915,10 +5907,6 @@ export type Database = {
           start_time: string
           title: string
         }[]
-      }
-      has_role: {
-        Args: { role_name: string }
-        Returns: boolean
       }
       increment: {
         Args: { row_id: string; table_name: string; column_name: string }
@@ -5989,15 +5977,6 @@ export type Database = {
             }
         Returns: undefined
       }
-      log_security_violation: {
-        Args: {
-          violation_type: string
-          resource_type: string
-          resource_id?: string
-          details?: Json
-        }
-        Returns: undefined
-      }
       mark_topic_as_solved: {
         Args: { topic_id: string; post_id: string }
         Returns: Json
@@ -6066,13 +6045,13 @@ export type Database = {
         Args: { user_id: string; permission_code: string }
         Returns: boolean
       }
-      validate_password_strength: {
-        Args: { password: string }
-        Returns: boolean
-      }
       validate_solution_certificate: {
         Args: { p_validation_code: string }
         Returns: Json
+      }
+      validateuserrole: {
+        Args: { profileid: string; currentrole: string; email: string }
+        Returns: string
       }
     }
     Enums: {

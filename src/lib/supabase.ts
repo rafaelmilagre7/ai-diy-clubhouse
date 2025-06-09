@@ -1,29 +1,6 @@
 
-// Re-exportação centralizada para garantir compatibilidade com importações existentes
-export * from './supabase/client';
-export * from './supabase/types';
-export * from './supabase/config';
+// Re-exportação centralizada de todos os módulos do Supabase
+export * from './supabase/index';
 
-// Exportação explícita das funções de storage
-export { 
-  getYoutubeVideoId, 
-  getYoutubeThumbnailUrl, 
-  formatVideoDuration,
-  setupLearningStorageBuckets,
-  ensureBucketExists,
-  ensureStorageBucketExists,
-  extractPandaVideoInfo,
-  uploadFileWithFallback
-} from './supabase/storage';
-
-// Exportação explícita das funções de RPC
-export {
-  createStoragePublicPolicy,
-  incrementTopicViews,
-  incrementTopicReplies,
-  deleteForumTopic,
-  deleteForumPost
-} from './supabase/rpc';
-
-// Exportação explícita do cliente Supabase
-export { supabase } from './supabase/client';
+// Aviso de depreciação para este arquivo
+console.warn('O arquivo src/lib/supabase.ts está depreciado. Importe diretamente de @/lib/supabase/index.ts');
