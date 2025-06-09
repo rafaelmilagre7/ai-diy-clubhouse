@@ -1,18 +1,16 @@
+
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Shield, AlertTriangle, Activity, Lock } from 'lucide-react';
 import { auditLogger } from '@/utils/auditLogger';
-import { environmentSecurity } from '@/utils/environmentSecurity';
-import { loginRateLimiter } from '@/utils/secureRateLimiting';
 import { logger } from '@/utils/logger';
 import { useAuth } from '@/contexts/auth';
 
 interface SecurityStatus {
   environment: 'production' | 'development';
   httpsEnabled: boolean;
-  rateLimitStatus: any;
   recentSecurityEvents: number;
   lastSecurityCheck: Date;
   environmentValidation: { isValid: boolean; errors: string[]; warnings: string[] };
@@ -30,12 +28,20 @@ export const SecurityMonitor: React.FC<SecurityMonitorProps> = ({ onSecurityEven
   useEffect(() => {
     const checkSecurityStatus = async () => {
       try {
-        // Verificar status do ambiente com validação aprimorada
-        const envValidation = environmentSecurity.validateEnvironment();
-        
-        // Obter estatísticas de rate limiting
-        const rateLimitStats = loginRateLimiter.getStats();
-        
+        // Verificação básica de ambiente
+        const isProduction = process.env.NODE_ENV === 'production';
+        const envValidation = {
+          isValid: true,
+          errors: [] as string[],
+          warnings: [] as string[]
+        };
+
+        // Verificar HTTPS em produção
+        if (isProduction && window.location.protocol !== 'https:') {
+          envValidation.errors.push('HTTPS não está habilitado em produção');
+          envValidation.isValid = false;
+        }
+
         // Buscar eventos de segurança recentes (apenas para admins)
         let recentEvents = 0;
         if (isAdmin && user) {
@@ -54,9 +60,8 @@ export const SecurityMonitor: React.FC<SecurityMonitorProps> = ({ onSecurityEven
         }
 
         setSecurityStatus({
-          environment: environmentSecurity.isProduction() ? 'production' : 'development',
+          environment: isProduction ? 'production' : 'development',
           httpsEnabled: window.location.protocol === 'https:',
-          rateLimitStatus: rateLimitStats,
           recentSecurityEvents: recentEvents,
           lastSecurityCheck: new Date(),
           environmentValidation: envValidation
@@ -64,9 +69,8 @@ export const SecurityMonitor: React.FC<SecurityMonitorProps> = ({ onSecurityEven
 
         // Log da verificação de segurança
         await auditLogger.logSecurityEvent('security_status_check', 'low', {
-          environment: environmentSecurity.isProduction() ? 'production' : 'development',
+          environment: isProduction ? 'production' : 'development',
           httpsEnabled: window.location.protocol === 'https:',
-          rateLimitActiveBlocks: rateLimitStats.blockedEntries,
           environmentValid: envValidation.isValid,
           environmentWarnings: envValidation.warnings.length,
           environmentErrors: envValidation.errors.length
@@ -75,9 +79,8 @@ export const SecurityMonitor: React.FC<SecurityMonitorProps> = ({ onSecurityEven
         // Reportar evento de segurança se callback fornecido
         if (onSecurityEvent) {
           onSecurityEvent('security_check_completed', {
-            environment: environmentSecurity.isProduction() ? 'production' : 'development',
-            httpsEnabled: window.location.protocol === 'https:',
-            rateLimitStats
+            environment: isProduction ? 'production' : 'development',
+            httpsEnabled: window.location.protocol === 'https:'
           });
         }
 
@@ -207,37 +210,21 @@ export const SecurityMonitor: React.FC<SecurityMonitorProps> = ({ onSecurityEven
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="text-center p-3 bg-blue-50 rounded-lg">
-            <div className="text-2xl font-bold text-blue-600">
-              {securityStatus.rateLimitStatus.totalEntries}
-            </div>
-            <div className="text-sm text-gray-600">Tentativas Monitoradas</div>
-          </div>
-          
-          <div className="text-center p-3 bg-red-50 rounded-lg">
-            <div className="text-2xl font-bold text-red-600">
-              {securityStatus.rateLimitStatus.blockedEntries}
-            </div>
-            <div className="text-sm text-gray-600">IPs Bloqueados</div>
-          </div>
-          
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="text-center p-3 bg-yellow-50 rounded-lg">
             <div className="text-2xl font-bold text-yellow-600">
               {securityStatus.recentSecurityEvents}
             </div>
             <div className="text-sm text-gray-600">Eventos de Segurança</div>
           </div>
+          
+          <div className="text-center p-3 bg-blue-50 rounded-lg">
+            <div className="text-2xl font-bold text-blue-600">
+              ✓
+            </div>
+            <div className="text-sm text-gray-600">Sistema Ativo</div>
+          </div>
         </div>
-
-        {securityStatus.rateLimitStatus.suspiciousIPs > 0 && (
-          <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              {securityStatus.rateLimitStatus.suspiciousIPs} IPs suspeitos detectados
-            </AlertDescription>
-          </Alert>
-        )}
 
         <div className="text-xs text-gray-500 text-center">
           Última verificação: {securityStatus.lastSecurityCheck.toLocaleString()}

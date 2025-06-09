@@ -2,7 +2,6 @@
 import { useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { auditLogger } from '@/utils/auditLogger';
-import { environmentSecurity } from '@/utils/environmentSecurity';
 import { validateSecureInput } from '@/utils/validation';
 import { detectInjectionAttempts } from '@/utils/securityUtils';
 import { logger } from '@/utils/logger';
@@ -55,7 +54,18 @@ export const useSecurityValidation = () => {
   // Verificar integridade do ambiente
   const validateEnvironment = useCallback(async () => {
     try {
-      const validation = environmentSecurity.validateEnvironment();
+      const isProduction = process.env.NODE_ENV === 'production';
+      const validation = {
+        isValid: true,
+        errors: [] as string[],
+        warnings: [] as string[]
+      };
+      
+      // Verificar HTTPS em produção
+      if (isProduction && window.location.protocol !== 'https:') {
+        validation.errors.push('HTTPS não está habilitado em produção');
+        validation.isValid = false;
+      }
       
       if (!validation.isValid) {
         await auditLogger.logSecurityEvent('environment_validation_failed', 'critical', {
@@ -90,9 +100,6 @@ export const useSecurityValidation = () => {
         return false;
       }
 
-      // Aqui você pode adicionar lógica adicional de validação de admin
-      // Por exemplo, verificar permissões específicas
-      
       await auditLogger.logAdminEvent(`admin_action_${action}`, {
         action,
         timestamp: new Date().toISOString()
