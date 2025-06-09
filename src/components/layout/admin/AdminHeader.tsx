@@ -11,7 +11,7 @@ interface AdminHeaderProps {
 
 export const AdminHeader = ({ onToggleSidebar }: AdminHeaderProps) => {
   return (
-    <header className="h-16 border-b bg-background flex items-center justify-between px-4 lg:px-6 flex-shrink-0">
+    <header className="h-16 border-b bg-background flex items-center justify-between px-4 lg:px-6">
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
