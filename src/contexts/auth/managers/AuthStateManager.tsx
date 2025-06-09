@@ -25,16 +25,18 @@ interface AuthStateManagerProps {
 export const AuthStateManager: FC<AuthStateManagerProps> = ({ onStateChange }) => {
   // Configurar listener de mudanças de estado de autenticação
   useEffect(() => {
-    const setupAuthListener = () => {
+    const setupAuthListener = async () => {
       // Iniciar com carregando = true
       onStateChange({ isLoading: true });
 
       logger.debug("Configurando listener de autenticação");
+      console.log("[AuthStateManager] Iniciando configuração de autenticação");
 
       // Configurar listener para mudanças de autenticação
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         async (event, session) => {
           logger.debug("Evento de autenticação", { event, userId: session?.user?.id });
+          console.log("[AuthStateManager] Evento de auth:", event, session?.user?.id);
 
           if (event === 'SIGNED_IN') {
             onStateChange({ session, user: session?.user || null });
@@ -56,34 +58,41 @@ export const AuthStateManager: FC<AuthStateManagerProps> = ({ onStateChange }) =
               }
             }
 
-            // Processar perfil do usuário em segundo plano
+            // Processar perfil do usuário imediatamente (sem timeout)
             if (session?.user) {
-              setTimeout(async () => {
-                try {
-                  const profile = await processUserProfile(
-                    session.user.id,
-                    session.user.email,
-                    session.user.user_metadata?.name
-                  );
+              try {
+                console.log("[AuthStateManager] Processando profile para:", session.user.id);
+                const profile = await processUserProfile(
+                  session.user.id,
+                  session.user.email,
+                  session.user.user_metadata?.name
+                );
 
-                  onStateChange({
-                    profile,
-                    isAdmin: profile?.role === 'admin',
-                    isFormacao: profile?.role === 'formacao'
-                  });
-                } catch (error) {
-                  logger.error("Erro ao processar perfil", error);
-                }
-              }, 0);
+                console.log("[AuthStateManager] Profile processado:", profile);
+                onStateChange({
+                  profile,
+                  isAdmin: profile?.role === 'admin',
+                  isFormacao: profile?.role === 'formacao',
+                  isLoading: false
+                });
+              } catch (error) {
+                logger.error("Erro ao processar perfil", error);
+                console.error("[AuthStateManager] Erro ao processar profile:", error);
+                onStateChange({ isLoading: false });
+              }
+            } else {
+              onStateChange({ isLoading: false });
             }
           } else if (event === 'SIGNED_OUT') {
             logger.debug("Usuário desconectado, limpando estado");
+            console.log("[AuthStateManager] Usuário desconectado");
             onStateChange({
               session: null,
               user: null,
               profile: null,
               isAdmin: false,
-              isFormacao: false
+              isFormacao: false,
+              isLoading: false
             });
           } else if (event === 'USER_UPDATED') {
             logger.debug("Dados do usuário atualizados");
@@ -92,37 +101,53 @@ export const AuthStateManager: FC<AuthStateManagerProps> = ({ onStateChange }) =
         }
       );
 
-      // Verificar sessão atual
-      supabase.auth.getSession().then(async ({ data: { session } }) => {
+      // Verificar sessão atual imediatamente
+      try {
+        console.log("[AuthStateManager] Verificando sessão atual");
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("[AuthStateManager] Erro ao verificar sessão:", error);
+          onStateChange({ isLoading: false, authError: error });
+          return;
+        }
+
         logger.debug("Verificando sessão atual", { userId: session?.user?.id });
+        console.log("[AuthStateManager] Sessão atual:", session?.user?.id);
 
         onStateChange({ session, user: session?.user || null });
 
         // Processar perfil do usuário se houver sessão ativa
         if (session?.user) {
           try {
+            console.log("[AuthStateManager] Processando profile na inicialização para:", session.user.id);
             const profile = await processUserProfile(
               session.user.id,
               session.user.email,
               session.user.user_metadata?.name
             );
 
+            console.log("[AuthStateManager] Profile carregado na inicialização:", profile);
             onStateChange({
               profile,
               isAdmin: profile?.role === 'admin',
-              isFormacao: profile?.role === 'formacao'
+              isFormacao: profile?.role === 'formacao',
+              isLoading: false
             });
           } catch (error) {
-            logger.error("Erro ao processar perfil", error);
+            logger.error("Erro ao processar perfil na inicialização", error);
+            console.error("[AuthStateManager] Erro ao processar profile na inicialização:", error);
+            onStateChange({ isLoading: false });
           }
+        } else {
+          console.log("[AuthStateManager] Nenhuma sessão ativa, finalizando loading");
+          onStateChange({ isLoading: false });
         }
-
-        // Marcar carregamento como concluído
-        onStateChange({ isLoading: false });
-      }).catch(error => {
+      } catch (error) {
         logger.error("Erro ao verificar sessão", error);
+        console.error("[AuthStateManager] Erro crítico ao verificar sessão:", error);
         onStateChange({ isLoading: false, authError: error instanceof Error ? error : new Error('Erro desconhecido') });
-      });
+      }
 
       // Limpeza ao desmontar
       return () => {
@@ -132,7 +157,13 @@ export const AuthStateManager: FC<AuthStateManagerProps> = ({ onStateChange }) =
     };
 
     // Inicializar listener
-    setupAuthListener();
+    const cleanup = setupAuthListener();
+    
+    return () => {
+      cleanup.then(cleanupFn => {
+        if (cleanupFn) cleanupFn();
+      });
+    };
   }, [onStateChange]);
 
   // Este componente não renderiza nada, apenas gerencia o estado

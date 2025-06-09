@@ -28,8 +28,16 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
   const [error, setError] = useState<string | null>(null);
 
   const checkStatus = useCallback(async () => {
+    // Se não há usuário ou ainda está carregando auth, aguardar
     if (!user?.id || authLoading) {
-      console.log('[useOnboardingStatus] Aguardando autenticação...');
+      console.log('[useOnboardingStatus] Aguardando autenticação... user:', !!user, 'authLoading:', authLoading);
+      return;
+    }
+
+    // Se não há profile ainda, aguardar um pouco mais
+    if (!profile) {
+      console.log('[useOnboardingStatus] Aguardando profile...');
+      setIsLoading(true);
       return;
     }
 
@@ -37,12 +45,13 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
       setIsLoading(true);
       setError(null);
       
-      console.log('[useOnboardingStatus] Verificando status do onboarding para:', user.id);
+      console.log('[useOnboardingStatus] Verificando status do onboarding para:', user.id, 'profile:', profile);
       
       // Verificar se profile indica onboarding completo
-      if (profile?.onboarding_completed) {
+      if (profile.onboarding_completed) {
         console.log('[useOnboardingStatus] Onboarding já completo no perfil');
         setIsRequired(false);
+        setIsLoading(false);
         return;
       }
 
@@ -59,7 +68,7 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
       }
 
       const needsOnboarding = !onboardingRecord?.completed_at;
-      console.log('[useOnboardingStatus] Onboarding necessário:', needsOnboarding);
+      console.log('[useOnboardingStatus] Onboarding necessário:', needsOnboarding, 'record:', onboardingRecord);
       
       setIsRequired(needsOnboarding);
     } catch (err) {
@@ -71,7 +80,7 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id, profile?.onboarding_completed, authLoading, handleError]);
+  }, [user?.id, profile, authLoading, handleError]);
 
   const submitData = useCallback(async (data: OnboardingData) => {
     console.log('[useOnboardingStatus] Iniciando submissão dos dados');
@@ -159,13 +168,13 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
     setError(null);
   }, []);
 
-  // Auto-verificar status quando necessário
+  // Auto-verificar status quando há profile disponível
   useEffect(() => {
-    if (!authLoading && user?.id && isRequired === null) {
-      console.log('[useOnboardingStatus] Auto-verificando status');
+    if (!authLoading && user?.id && profile && isRequired === null) {
+      console.log('[useOnboardingStatus] Auto-verificando status com profile');
       checkStatus();
     }
-  }, [authLoading, user?.id, isRequired, checkStatus]);
+  }, [authLoading, user?.id, profile, isRequired, checkStatus]);
 
   // Reset quando usuário muda
   useEffect(() => {
@@ -177,14 +186,16 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
     }
   }, [user?.id]);
 
-  const finalIsLoading = authLoading || isLoading;
+  // Se ainda está carregando auth ou não tem profile, manter loading
+  const finalIsLoading = authLoading || isLoading || (!profile && !!user?.id);
 
   console.log('[useOnboardingStatus] Estado final:', {
     isRequired,
     isLoading: finalIsLoading,
     error,
     user: !!user,
-    profile: !!profile
+    profile: !!profile,
+    authLoading
   });
 
   return {
