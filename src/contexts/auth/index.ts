@@ -1,3 +1,3 @@
 
-export { AuthProvider, useAuth } from './AuthProvider';
+export { AuthProvider, useAuth, useIsAdmin } from './index';
 export type { AuthContextType } from './types';
