@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
@@ -12,10 +13,13 @@ interface AuthContextType {
   profile: any | null;
   isLoading: boolean;
   isAdmin: boolean;
+  isFormacao: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: any }>;
   signInAsMember: (email: string, password: string) => Promise<{ error?: any }>;
-  signOut: () => Promise<void>;
+  signOut: () => Promise<{ success: boolean; error?: any }>;
   refreshSession: () => Promise<void>;
+  setProfile: React.Dispatch<React.SetStateAction<any | null>>;
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -34,6 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isFormacao, setIsFormacao] = useState(false);
 
   // Função para carregar perfil do usuário
   const loadUserProfile = async (currentUser: User) => {
@@ -84,11 +89,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
           setProfile({ id: currentUser.id, email: currentUser.email, role: 'member' });
           setIsAdmin(false);
+          setIsFormacao(false);
           return;
         }
 
         setProfile(newProfile);
         setIsAdmin(newProfile.role === 'admin');
+        setIsFormacao(newProfile.role === 'formacao');
         return;
       }
 
@@ -126,6 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       setProfile(profileData);
       setIsAdmin(adminStatus);
+      setIsFormacao(profileData.role === 'formacao');
 
       if (adminStatus) {
         logger.info("Usuário admin autenticado", {
@@ -147,6 +155,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         role: 'member' 
       });
       setIsAdmin(false);
+      setIsFormacao(false);
     }
   };
 
@@ -249,7 +258,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Logout
-  const signOut = async () => {
+  const signOut = async (): Promise<{ success: boolean; error?: any }> => {
     try {
       logger.info("Logout iniciado", {
         component: 'AUTH_CONTEXT',
@@ -270,7 +279,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           component: 'AUTH_CONTEXT',
           error: error.message
         });
-        throw error;
+        return { success: false, error };
       }
 
       // Limpeza completa do estado
@@ -278,17 +287,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(null);
       setProfile(null);
       setIsAdmin(false);
+      setIsFormacao(false);
 
       logger.info("Logout realizado com sucesso", {
         component: 'AUTH_CONTEXT'
       });
+
+      return { success: true };
 
     } catch (error) {
       logger.error("Erro no processo de logout", {
         component: 'AUTH_CONTEXT',
         error: error instanceof Error ? error.message : 'Erro desconhecido'
       });
-      toast.error('Erro ao fazer logout');
+      return { success: false, error };
     }
   };
 
@@ -358,6 +370,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else {
           setProfile(null);
           setIsAdmin(false);
+          setIsFormacao(false);
         }
         
         setIsLoading(false);
@@ -381,10 +394,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       profile,
       isLoading,
       isAdmin,
+      isFormacao,
       signIn,
       signInAsMember,
       signOut,
-      refreshSession
+      refreshSession,
+      setProfile,
+      setIsLoading
     }}>
       {children}
     </AuthContext.Provider>
