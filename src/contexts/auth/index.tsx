@@ -6,9 +6,23 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { verifyAdminStatus, clearPermissionCache, logSecurityEvent } from '@/contexts/auth/utils/securityUtils';
 
+interface UserProfile {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  avatar_url?: string;
+  company_name?: string;
+  industry?: string;
+  created_at: string;
+  onboarding_completed: boolean;
+  onboarding_completed_at?: string;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
+  profile: UserProfile | null;
   isLoading: boolean;
   isAdmin: boolean;
   signOut: () => Promise<void>;
@@ -17,6 +31,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
+  profile: null,
   isLoading: true,
   isAdmin: false,
   signOut: async () => {}
@@ -25,9 +40,31 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminCheckComplete, setAdminCheckComplete] = useState(false);
+
+  // Função para buscar o perfil do usuário
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Erro ao buscar perfil:', error);
+        return null;
+      }
+
+      return data as UserProfile;
+    } catch (error) {
+      console.error('Erro ao buscar perfil:', error);
+      return null;
+    }
+  };
 
   // Verificação centralizada de admin usando utilitário de segurança
   const checkIsAdmin = async (email?: string | null, userId?: string) => {
@@ -58,8 +95,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(currentSession?.user ?? null);
         
         if (currentSession?.user?.email && currentSession?.user?.id) {
+          // Buscar perfil do usuário
+          const userProfile = await fetchUserProfile(currentSession.user.id);
+          setProfile(userProfile);
+          
+          // Verificar status de admin
           await checkIsAdmin(currentSession.user.email, currentSession.user.id);
         } else {
+          setProfile(null);
           setIsAdmin(false);
           setAdminCheckComplete(true);
         }
@@ -88,13 +131,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       if (event === 'SIGNED_OUT') {
+        setProfile(null);
         setIsAdmin(false);
         setAdminCheckComplete(true);
         // Limpar caches de segurança
         clearPermissionCache();
       } else if (newSession?.user?.email && newSession?.user?.id) {
+        // Buscar perfil do usuário
+        const userProfile = await fetchUserProfile(newSession.user.id);
+        setProfile(userProfile);
+        
+        // Verificar status de admin
         await checkIsAdmin(newSession.user.email, newSession.user.id);
       } else {
+        setProfile(null);
         setIsAdmin(false);
         setAdminCheckComplete(true);
       }
@@ -112,6 +162,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.removeItem('permissionsCache');
       
       await supabase.auth.signOut();
+      setProfile(null);
       setIsAdmin(false);
       toast.success('Você saiu com sucesso');
     } catch (error) {
@@ -133,7 +184,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, isAdmin, signOut }}>
+    <AuthContext.Provider value={{ user, session, profile, isLoading, isAdmin, signOut }}>
       {children}
     </AuthContext.Provider>
   );
