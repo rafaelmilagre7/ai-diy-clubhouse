@@ -39,13 +39,7 @@ export const MemberHeader: React.FC<MemberHeaderProps> = ({
       <div className="hidden md:block" />
 
       {/* Menu do usuário */}
-      <MemberUserMenu
-        onSignOut={onSignOut}
-        profileName={profileName}
-        profileEmail={profileEmail}
-        profileAvatar={profileAvatar}
-        getInitials={getInitials}
-      />
+      <MemberUserMenu />
     </header>
   );
 };

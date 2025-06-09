@@ -10,8 +10,7 @@ export const FormacaoContent = ({
   return (
     <div 
       className={cn(
-        "flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden",
-        sidebarOpen ? "md:ml-64" : "md:ml-[70px]"
+        "flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
       )}
     >
       {/* Header simples para Formação */}

@@ -7,19 +7,21 @@ export interface BaseSidebarProps {
   setSidebarOpen: (open: boolean) => void;
 }
 
+export interface BaseContentProps {
+  children: React.ReactNode;
+  onSignOut: () => void;
+  profileName: string | null;
+  profileEmail: string | null;
+  profileAvatar?: string;
+  getInitials: (name: string | null) => string;
+  sidebarOpen: boolean;
+  setSidebarOpen: (open: boolean) => void;
+}
+
 interface BaseLayoutProps {
   variant: "member" | "admin" | "formacao";
   sidebarComponent: React.ComponentType<BaseSidebarProps>;
-  contentComponent: React.ComponentType<{
-    children: React.ReactNode;
-    onSignOut: () => void;
-    profileName: string | null;
-    profileEmail: string | null;
-    profileAvatar?: string;
-    getInitials: (name: string | null) => string;
-    sidebarOpen: boolean;
-    setSidebarOpen: (open: boolean) => void;
-  }>;
+  contentComponent: React.ComponentType<BaseContentProps>;
   children: React.ReactNode;
   onSignOut: () => void;
   profileName: string | null;
@@ -43,7 +45,7 @@ const BaseLayout: React.FC<BaseLayoutProps> = ({
   setSidebarOpen: propSetSidebarOpen,
 }) => {
   // Estado local como fallback se não for passado como prop
-  const [localSidebarOpen, setLocalSidebarOpen] = useState(false);
+  const [localSidebarOpen, setLocalSidebarOpen] = useState(true);
   
   // Usar props se fornecidas, senão usar estado local
   const sidebarOpen = propSidebarOpen ?? localSidebarOpen;
