@@ -5717,6 +5717,10 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Json
       }
+      cleanup_expired_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       clear_all_networking_data: {
         Args: Record<PropertyKey, never>
         Returns: Json
