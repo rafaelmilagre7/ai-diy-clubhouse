@@ -4,15 +4,15 @@ import { LoadingSpinner as BaseLoadingSpinner } from "@/components/ui/loading-sp
 import { cn } from "@/lib/utils";
 
 interface LoadingSpinnerProps {
-  size?: "xs" | "sm" | "md" | "lg" | "xl";
+  size?: "xs" | "sm" | "default" | "lg" | "xl" | "2xl";
   className?: string;
   text?: string;
-  variant?: "default" | "accent" | "primary";
+  variant?: "default" | "secondary" | "accent" | "success" | "warning" | "error";
   centered?: boolean;
 }
 
 export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ 
-  size = "md", 
+  size = "default", 
   className,
   text,
   variant = "default",
