@@ -13,26 +13,8 @@ export const useUsers = () => {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [error, setError] = useState<Error | null>(null);
   
-  const { user } = useAuth();
+  const { isAdmin } = useAuth();
   const { roles: availableRoles, loading: rolesLoading } = useRoles();
-
-  // Criar usuário de teste automaticamente (apenas para desenvolvimento)
-  const createTestUser = async (): Promise<UserProfile> => {
-    const testUser: UserProfile = {
-      id: 'test-user-id',
-      email: 'teste@exemplo.com',
-      name: 'Usuário de Teste',
-      role: 'membro_club',
-      avatar_url: null,
-      company_name: 'Empresa Teste',
-      industry: 'Tecnologia',
-      created_at: new Date().toISOString(),
-      onboarding_completed: true,
-      onboarding_completed_at: new Date().toISOString(),
-    };
-    
-    return testUser;
-  };
 
   const fetchUsers = async () => {
     try {
@@ -70,9 +52,8 @@ export const useUsers = () => {
       console.log('✅ Profiles encontrados:', profiles?.length || 0);
 
       if (!profiles || profiles.length === 0) {
-        console.log('🔧 Nenhum usuário encontrado, criando usuário de teste...');
-        const testUser = await createTestUser();
-        setUsers([testUser]);
+        console.log('ℹ️ Nenhum usuário encontrado');
+        setUsers([]);
         return;
       }
 
@@ -105,10 +86,7 @@ export const useUsers = () => {
     } catch (error: any) {
       console.error('❌ Erro geral ao buscar usuários:', error);
       setError(error);
-      
-      // Em caso de erro, mostrar pelo menos um usuário de teste
-      const testUser = await createTestUser();
-      setUsers([testUser]);
+      setUsers([]);
     } finally {
       setLoading(false);
       setIsRefreshing(false);
@@ -132,7 +110,7 @@ export const useUsers = () => {
     );
   }, [users, searchQuery]);
 
-  const isAdmin = user?.email === 'rafael@viverdeia.ai' || user?.email === 'admin@teste.com' || user?.email === 'admin@viverdeia.ai';
+  // Usar o contexto de auth para verificar permissões
   const canManageUsers = isAdmin;
   const canAssignRoles = isAdmin;
   const canDeleteUsers = isAdmin;

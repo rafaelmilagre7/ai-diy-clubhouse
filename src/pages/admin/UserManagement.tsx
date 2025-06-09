@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useUsers } from "@/hooks/admin/useUsers";
 import { UsersHeader } from "@/components/admin/users/UsersHeader";
 import { UsersTable } from "@/components/admin/users/UsersTable";
@@ -7,7 +7,7 @@ import { UserRoleManager } from "@/components/admin/users/UserRoleManager";
 import { UserResetDialog } from "@/components/admin/users/UserResetDialog";
 import { UserProfile } from "@/lib/supabase";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, RefreshCw, ShieldCheck } from "lucide-react";
+import { AlertCircle, RefreshCw } from "lucide-react";
 import { DeleteUserDialog } from "@/components/admin/users/DeleteUserDialog";
 import { ResetPasswordDialog } from "@/components/admin/users/ResetPasswordDialog";
 import { toast } from "sonner";
@@ -15,7 +15,6 @@ import { useAuth } from "@/contexts/auth";
 import { Button } from "@/components/ui/button";
 
 const UserManagement = () => {
-  // Usando o hook useUsers com as otimizações implementadas
   const {
     users,
     availableRoles,
@@ -33,44 +32,12 @@ const UserManagement = () => {
     error
   } = useUsers();
 
-  const { user } = useAuth();
+  const { isAdmin } = useAuth();
   
   const [roleManagerOpen, setRoleManagerOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
   const [resetUserDialogOpen, setResetUserDialogOpen] = useState(false);
-  const [showAdminInfo, setShowAdminInfo] = useState(false);
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
-
-  // Verificar se é admin baseado no email
-  const isAdmin = user?.email === 'rafael@viverdeia.ai' || user?.email === 'admin@teste.com' || user?.email === 'admin@viverdeia.ai';
-
-  // Efeito para detectar quando o admin foi determinado pelo email
-  useEffect(() => {
-    if (isAdmin) {
-      setShowAdminInfo(true);
-      // Esconder após 5 segundos
-      const timer = setTimeout(() => {
-        setShowAdminInfo(false);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [isAdmin]);
-
-  // Efeito para timeout de carregamento
-  useEffect(() => {
-    let timeoutId: number | null = null;
-    if (loading && !loadingTimeout) {
-      timeoutId = window.setTimeout(() => {
-        setLoadingTimeout(true);
-      }, 5000); // 5 segundos de timeout
-    }
-    return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-    };
-  }, [loading, loadingTimeout]);
 
   const handleEditRole = (user: UserProfile) => {
     setSelectedUser(user);
@@ -102,49 +69,45 @@ const UserManagement = () => {
     window.location.reload();
   };
 
-  // Verificação simplificada de acesso administrativo usando o contexto
+  // Verificação de acesso usando o contexto de auth
   if (!isAdmin) {
     return (
-      <Alert variant="destructive" className="my-4 border-destructive/40">
+      <Alert variant="destructive" className="my-4">
         <AlertCircle className="h-4 w-4" />
-        <AlertTitle className="font-semibold">Acesso restrito</AlertTitle>
-        <AlertDescription className="text-destructive-foreground/90">
+        <AlertTitle>Acesso restrito</AlertTitle>
+        <AlertDescription>
           Você não tem permissão para visualizar a lista de usuários.
         </AlertDescription>
       </Alert>
     );
   }
 
-  // Se o carregamento demorar demais, mostrar feedback mais informativo
+  // Loading state
   if (loading && !users.length) {
     return (
       <div className="flex flex-col items-center justify-center p-8 space-y-4">
         <div className="animate-spin w-8 h-8 border-4 border-viverblue border-t-transparent rounded-full"></div>
         <div className="text-foreground font-medium">Carregando usuários...</div>
-        <div className="text-sm text-neutral-600 dark:text-neutral-400">
-          {loadingTimeout ? "O carregamento está demorando mais que o esperado." : "Isso pode levar alguns instantes."}
+        <div className="text-sm text-muted-foreground">
+          Isso pode levar alguns instantes.
         </div>
-        
-        {loadingTimeout && (
-          <Button onClick={handleForceRefresh} variant="outline" className="mt-4">
-            <RefreshCw className="mr-2 h-4 w-4" /> Forçar atualização
-          </Button>
-        )}
       </div>
     );
   }
 
-  // Exibir mensagem de erro quando aplicável
+  // Error state
   if (error && !users.length) {
     return (
-      <Alert variant="destructive" className="my-4 border-destructive/40">
+      <Alert variant="destructive" className="my-4">
         <AlertCircle className="h-4 w-4" />
-        <AlertTitle className="font-semibold">Erro ao carregar usuários</AlertTitle>
-        <AlertDescription className="space-y-2 text-destructive-foreground/90">
+        <AlertTitle>Erro ao carregar usuários</AlertTitle>
+        <AlertDescription className="space-y-2">
           <p>Ocorreu um problema ao carregar a lista de usuários:</p>
-          <p className="font-mono text-sm bg-destructive/10 p-2 rounded text-destructive-foreground/90">{error.message}</p>
+          <p className="font-mono text-sm bg-destructive/10 p-2 rounded">
+            {error.message}
+          </p>
           <div className="flex gap-2 mt-4">
-            <Button onClick={handleRefresh} variant="outline" className="px-4 py-2" disabled={isRefreshing}>
+            <Button onClick={handleRefresh} variant="outline" disabled={isRefreshing}>
               {isRefreshing ? (
                 <>
                   <RefreshCw className="animate-spin mr-2 h-4 w-4" /> Atualizando...
@@ -167,16 +130,6 @@ const UserManagement = () => {
 
   return (
     <div className="space-y-6">
-      {/* Banner informativo quando o admin foi verificado por email */}
-      {showAdminInfo && (
-        <div className="flex items-center gap-2 py-2 px-4 border border-blue-200 rounded-md mb-4 animate-fade-in bg-gray-800">
-          <ShieldCheck className="h-5 w-5 text-blue-600" />
-          <p className="text-sm text-blue-700">
-            Acesso de administrador concedido. Você tem acesso completo ao gerenciamento de usuários.
-          </p>
-        </div>
-      )}
-      
       <UsersHeader 
         searchQuery={searchQuery} 
         onSearchChange={setSearchQuery}
@@ -199,14 +152,13 @@ const UserManagement = () => {
         />
       </div>
       
-      {/* Mostrar informação sobre quantidade de usuários carregados */}
       {users.length > 0 && !isRefreshing && (
-        <div className="text-sm text-neutral-600 dark:text-muted-foreground text-right">
+        <div className="text-sm text-muted-foreground text-right">
           {users.length} usuários carregados
         </div>
       )}
       
-      {/* Componentes de diálogo */}
+      {/* Diálogos */}
       {canAssignRoles && (
         <UserRoleManager 
           open={roleManagerOpen}
@@ -214,7 +166,6 @@ const UserManagement = () => {
           user={selectedUser}
           availableRoles={availableRoles}
           onSuccess={() => {
-            // Atualizar lista após alterar papel
             setTimeout(() => fetchUsers(), 500);
           }}
         />
@@ -237,13 +188,11 @@ const UserManagement = () => {
         />
       )}
 
-      {/* Novo diálogo de reset de usuário */}
       <UserResetDialog 
         open={resetUserDialogOpen}
         onOpenChange={setResetUserDialogOpen}
         user={selectedUser}
         onSuccess={() => {
-          // Atualizar lista após reset
           setTimeout(() => fetchUsers(), 500);
         }}
       />

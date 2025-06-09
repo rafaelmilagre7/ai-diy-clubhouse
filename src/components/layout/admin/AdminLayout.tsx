@@ -11,27 +11,10 @@ interface AdminLayoutProps {
 }
 
 const AdminLayout = ({ children }: AdminLayoutProps) => {
-  const { user, profile, isLoading } = useAuth();
+  const { user, isAdmin, isLoading } = useAuth();
   const navigate = useNavigate();
   const [isMounted, setIsMounted] = useState(false);
   const [authTimeout, setAuthTimeout] = useState(false);
-
-  // Verificação segura de admin usando múltiplas camadas
-  const isAdminUser = () => {
-    if (!user || !profile) return false;
-    
-    // Verificação por role no perfil (principal)
-    if (profile.role === "admin") return true;
-    
-    // Verificação adicional por email para domínios confiáveis
-    const trustedEmails = [
-      'rafael@viverdeia.ai',
-      'admin@viverdeia.ai', 
-      'admin@teste.com'
-    ];
-    
-    return trustedEmails.includes(user.email || '');
-  };
 
   // Timeout de segurança para evitar carregamento infinito
   useEffect(() => {
@@ -60,7 +43,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         return;
       }
 
-      if (!isAdminUser()) {
+      if (!isAdmin) {
         console.warn("[SECURITY] Unauthorized admin access attempt");
         toast.error("Acesso negado. Você não tem permissão para acessar a área administrativa.");
         navigate("/dashboard", { replace: true });
@@ -74,7 +57,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         userAgent: navigator.userAgent.substring(0, 50) // Apenas parte do user agent
       });
     }
-  }, [user, profile, isLoading, navigate, authTimeout]);
+  }, [user, isAdmin, isLoading, navigate, authTimeout]);
 
   // Renderização com loading mais seguro
   if (!isMounted || isLoading || authTimeout) {
