@@ -16,7 +16,6 @@ import {
   Shield
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
-import { logger } from '@/utils/logger';
 
 interface MemberSidebarNavItemsProps {
   sidebarOpen: boolean;
@@ -26,18 +25,14 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
   const location = useLocation();
   const { profile, isAdmin, user, isLoading } = useAuth();
 
-  // Log de debug para identificar problemas
-  React.useEffect(() => {
-    logger.info('[MemberSidebarNavItems] Estado do usuário', {
-      hasUser: !!user,
-      hasProfile: !!profile,
-      profileRole: profile?.role,
-      isAdmin: isAdmin,
-      isLoading: isLoading,
-      userEmail: user?.email?.substring(0, 3) + '***',
-      component: 'MEMBER_SIDEBAR_NAV'
-    });
-  }, [user, profile, isAdmin, isLoading]);
+  // Debug: Log de verificação de admin
+  console.log('[SIDEBAR DEBUG]', {
+    hasUser: !!user,
+    hasProfile: !!profile,
+    profileRole: profile?.role,
+    isAdmin: isAdmin,
+    userEmail: user?.email
+  });
 
   const navigationItems = [
     {
@@ -90,17 +85,22 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
     }
   ];
 
+  // Verificação simplificada de admin - usar apenas uma fonte de verdade
+  const userIsAdmin = profile?.role === 'admin';
+  
+  console.log('[ADMIN CHECK]', {
+    userIsAdmin,
+    profileRole: profile?.role,
+    willShowAdminButton: userIsAdmin
+  });
+
   // Adicionar item de admin se usuário for admin
-  if (isAdmin && profile?.role === 'admin') {
+  if (userIsAdmin) {
     navigationItems.push({
       title: "Painel Admin",
       href: "/admin",
       icon: Shield,
       type: "admin"
-    });
-    
-    logger.info('[MemberSidebarNavItems] Item de admin adicionado', {
-      component: 'MEMBER_SIDEBAR_NAV'
     });
   }
 
@@ -271,7 +271,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       </div>
       
       {/* Admin no final se existir */}
-      {isAdmin && profile?.role === 'admin' && (
+      {userIsAdmin && (
         <div className="mt-auto pt-3 border-t border-white/10">
           {renderNavButton(navigationItems[navigationItems.length - 1])}
         </div>

@@ -35,14 +35,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Verificar se usuário é admin usando verificação simples e direta
-  const checkAdminStatus = async (currentUser: User | null) => {
-    if (!currentUser) {
-      setIsAdmin(false);
-      setProfile(null);
-      return;
-    }
-
+  // Função para carregar perfil do usuário
+  const loadUserProfile = async (currentUser: User) => {
     try {
       logger.info("Carregando perfil do usuário", {
         component: 'AUTH_CONTEXT',
@@ -56,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('id', currentUser.id)
         .single();
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 = row not found
+      if (error && error.code !== 'PGRST116') {
         logger.error("Erro ao buscar perfil", {
           component: 'AUTH_CONTEXT',
           error: error.message,
@@ -78,7 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             id: currentUser.id,
             email: currentUser.email,
             name: currentUser.user_metadata?.name || currentUser.user_metadata?.full_name,
-            role: 'member' // Padrão para novos usuários
+            role: 'member'
           })
           .select()
           .single();
@@ -334,7 +328,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          await checkAdminStatus(session.user);
+          await loadUserProfile(session.user);
         }
       } catch (error) {
         logger.error("Erro ao obter sessão inicial", {
@@ -360,7 +354,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          await checkAdminStatus(session.user);
+          await loadUserProfile(session.user);
         } else {
           setProfile(null);
           setIsAdmin(false);
