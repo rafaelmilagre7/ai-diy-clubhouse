@@ -64,7 +64,10 @@ const AdminDashboard = () => {
       />
     );
   } catch (error) {
-    logger.error("Erro crítico no AdminDashboard", error, 'ADMIN_DASHBOARD');
+    logger.error("Erro crítico no AdminDashboard", { 
+      error: error instanceof Error ? error.message : 'Erro desconhecido',
+      component: 'ADMIN_DASHBOARD' 
+    });
     
     return (
       <div className="space-y-6">
