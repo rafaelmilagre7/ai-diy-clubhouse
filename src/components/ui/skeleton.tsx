@@ -9,7 +9,7 @@ function Skeleton({
   return (
     <div
       className={cn(
-        "animate-pulse rounded-md bg-surface-elevated/60 backdrop-blur-sm",
+        "animate-pulse rounded-md bg-gradient-to-r from-surface-elevated/60 to-surface-hover/40 backdrop-blur-sm",
         className
       )}
       {...props}

@@ -123,7 +123,7 @@ export const KpiGrid: FC<KpiGridProps> = memo(({
               
               <CardContent className="space-y-3">
                 <div className="flex items-baseline gap-2">
-                  <Text variant="display" textColor="primary" className="font-bold">
+                  <Text variant="display-small" textColor="primary" className="font-bold">
                     {kpi.value}
                   </Text>
                   

@@ -18,7 +18,7 @@ export const MemberContent = ({ sidebarOpen, setSidebarOpen, children }: BaseCon
         sidebarOpen={sidebarOpen}
       />
       
-      {/* Content area with better spacing and styling */}
+      {/* Content area with improved spacing and animation */}
       <div className="flex-1 overflow-auto">
         <div className="container mx-auto p-6 max-w-7xl">
           <div className="animate-fade-in">

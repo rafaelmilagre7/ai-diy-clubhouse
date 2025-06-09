@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import { Container } from "@/components/ui/container";
-import { AlertCircle, RefreshCw, Wifi } from "lucide-react";
+import { AlertCircle, RefreshCw, Wifi, Activity } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
 
 const Dashboard = () => {
@@ -112,12 +112,20 @@ const Dashboard = () => {
   if (authLoading || onboardingLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-surface-subtle to-surface-elevated">
-        <Card variant="elevated" className="p-8 max-w-sm text-center">
-          <CardContent className="space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <Text variant="body" textColor="secondary">
-              Carregando sua experiência...
-            </Text>
+        <Card variant="elevated" className="p-8 max-w-sm text-center animate-fade-in">
+          <CardContent className="space-y-6">
+            <div className="p-4 bg-primary/10 rounded-2xl w-fit mx-auto">
+              <Activity className="h-8 w-8 text-primary animate-pulse" />
+            </div>
+            <div className="space-y-2">
+              <Text variant="card" textColor="primary" className="font-semibold">
+                Carregando sua experiência
+              </Text>
+              <Text variant="body" textColor="secondary">
+                Preparando seu dashboard personalizado...
+              </Text>
+            </div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
           </CardContent>
         </Card>
       </div>
@@ -129,39 +137,41 @@ const Dashboard = () => {
     return null;
   }
   
-  // Se houver erro, mostrar mensagem de erro
+  // Se houver erro, mostrar mensagem de erro modernizada
   if (hasError) {
     return (
       <Container size="md" className="py-8 flex flex-col items-center justify-center min-h-[60vh]">
-        <Card variant="outline" className="max-w-md mx-auto text-center">
-          <CardContent className="p-8 space-y-6">
-            <div className="flex justify-center">
-              <div className="p-4 bg-error/10 rounded-2xl">
-                <Wifi className="h-12 w-12 text-error" />
+        <Card variant="elevated" className="max-w-md mx-auto text-center overflow-hidden">
+          <div className="bg-gradient-to-r from-error/10 to-warning/10 p-1">
+            <CardContent className="p-8 space-y-6 bg-background m-1 rounded-lg">
+              <div className="flex justify-center">
+                <div className="p-4 bg-error/10 rounded-2xl">
+                  <Wifi className="h-12 w-12 text-error" />
+                </div>
               </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Text variant="subsection" textColor="primary">
-                Problema de Conexão
-              </Text>
-              <Text variant="body" textColor="secondary">
-                {errorMessage || "Ocorreu um erro inesperado. Por favor, tente novamente."}
-              </Text>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button onClick={handleRetry} className="hover-scale">
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Tentar Novamente
-              </Button>
               
-              <Button variant="outline" onClick={() => window.location.href = '/dashboard'}>
-                <AlertCircle className="h-4 w-4 mr-2" />
-                Recarregar Página
-              </Button>
-            </div>
-          </CardContent>
+              <div className="space-y-2">
+                <Text variant="subsection" textColor="primary">
+                  Problema de Conexão
+                </Text>
+                <Text variant="body" textColor="secondary">
+                  {errorMessage || "Ocorreu um erro inesperado. Por favor, tente novamente."}
+                </Text>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button onClick={handleRetry} className="hover-scale">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Tentar Novamente
+                </Button>
+                
+                <Button variant="outline" onClick={() => window.location.href = '/dashboard'}>
+                  <AlertCircle className="h-4 w-4 mr-2" />
+                  Recarregar Página
+                </Button>
+              </div>
+            </CardContent>
+          </div>
         </Card>
       </Container>
     );

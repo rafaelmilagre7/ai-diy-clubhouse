@@ -28,9 +28,10 @@ const textVariants = cva(
         "label": "text-sm font-medium leading-none",
         "muted": "text-xs text-text-muted",
         
-        // Adicionar variantes que estavam faltando
+        // Variantes adicionais para dashboards
         "card": "text-lg font-semibold leading-tight",
         "display-small": "text-3xl font-bold tracking-tight",
+        "display": "text-4xl font-bold tracking-tight", // Adicionado para compatibilidade
       },
       textColor: {
         primary: "text-text-primary",
