@@ -4,15 +4,14 @@ import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { Bell, Check, CheckCheck, Trash2, Megaphone, AlertCircle } from 'lucide-react';
+import { Bell, Megaphone, AlertCircle, Clock, Trash2 } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 export const NotificationDropdown = () => {
   const {
@@ -27,36 +26,40 @@ export const NotificationDropdown = () => {
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'admin_communication':
-        return <Megaphone className="w-4 h-4 text-blue-500" />;
+        return <Megaphone className="w-4 h-4 text-primary" />;
       case 'urgent':
-        return <AlertCircle className="w-4 h-4 text-red-500" />;
+        return <AlertCircle className="w-4 h-4 text-destructive" />;
       default:
-        return <Bell className="w-4 h-4 text-gray-500" />;
+        return <Bell className="w-4 h-4 text-muted-foreground" />;
     }
   };
 
-  const getPriorityColor = (priority?: string) => {
+  const getPriorityStyles = (priority?: string) => {
     switch (priority) {
       case 'urgent':
-        return 'border-l-red-500 bg-red-50';
+        return 'border-l-destructive bg-destructive/5';
       case 'high':
-        return 'border-l-orange-500 bg-orange-50';
+        return 'border-l-orange-500 bg-orange-500/5';
       case 'normal':
-        return 'border-l-blue-500 bg-blue-50';
+        return 'border-l-primary bg-primary/5';
       default:
-        return 'border-l-gray-500 bg-gray-50';
+        return 'border-l-muted bg-muted/20';
     }
   };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="relative">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="relative hover:bg-muted/50 transition-colors"
+        >
           <Bell className="w-5 h-5" />
           {unreadCount > 0 && (
             <Badge 
               variant="destructive" 
-              className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs"
+              className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs font-medium"
             >
               {unreadCount > 99 ? '99+' : unreadCount}
             </Badge>
@@ -64,69 +67,102 @@ export const NotificationDropdown = () => {
         </Button>
       </DropdownMenuTrigger>
       
-      <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-y-auto">
-        <div className="flex items-center justify-between p-2 border-b">
-          <h4 className="font-semibold">Notificações</h4>
-          {unreadCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => markAllAsRead()}
-              className="text-xs"
-            >
-              <CheckCheck className="w-3 h-3 mr-1" />
-              Marcar todas como lidas
-            </Button>
-          )}
+      <DropdownMenuContent 
+        align="end" 
+        className="w-96 max-h-[80vh] overflow-hidden bg-background border shadow-lg"
+      >
+        {/* Header */}
+        <div className="sticky top-0 bg-background border-b px-4 py-3 z-10">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Bell className="w-4 h-4 text-muted-foreground" />
+              <h4 className="font-semibold text-foreground">Notificações</h4>
+              {unreadCount > 0 && (
+                <Badge variant="secondary" className="h-5 px-2 text-xs">
+                  {unreadCount} nova{unreadCount !== 1 ? 's' : ''}
+                </Badge>
+              )}
+            </div>
+            {unreadCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => markAllAsRead()}
+                className="text-xs text-muted-foreground hover:text-foreground h-7 px-2"
+              >
+                Marcar todas como lidas
+              </Button>
+            )}
+          </div>
         </div>
 
-        {isLoading ? (
-          <div className="p-4 text-center text-sm text-muted-foreground">
-            Carregando notificações...
-          </div>
-        ) : notifications.length === 0 ? (
-          <div className="p-4 text-center text-sm text-muted-foreground">
-            Nenhuma notificação
-          </div>
-        ) : (
-          <>
-            {notifications.slice(0, 10).map((notification) => (
-              <DropdownMenuItem
-                key={notification.id}
-                className={`p-3 border-l-2 cursor-pointer ${
-                  !notification.is_read ? 'bg-muted/50' : 'bg-background'
-                } ${getPriorityColor(notification.data?.priority)}`}
-                onClick={() => {
-                  if (!notification.is_read) {
-                    markAsRead(notification.id);
-                  }
-                }}
-              >
-                <div className="flex gap-3 w-full">
-                  <div className="flex-shrink-0 mt-1">
-                    {getNotificationIcon(notification.type)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <h5 className={`text-sm font-medium truncate ${
-                        !notification.is_read ? 'text-foreground' : 'text-muted-foreground'
-                      }`}>
-                        {notification.title}
-                      </h5>
-                      <div className="flex items-center gap-1">
+        {/* Content */}
+        <div className="max-h-96 overflow-y-auto">
+          {isLoading ? (
+            <div className="p-8 text-center">
+              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">Carregando notificações...</p>
+            </div>
+          ) : notifications.length === 0 ? (
+            <div className="p-8 text-center">
+              <Bell className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
+              <h5 className="font-medium text-foreground mb-1">Nenhuma notificação</h5>
+              <p className="text-sm text-muted-foreground">
+                Você está em dia! Não há notificações no momento.
+              </p>
+            </div>
+          ) : (
+            <div className="p-2">
+              {notifications.slice(0, 10).map((notification) => (
+                <div
+                  key={notification.id}
+                  className={cn(
+                    "group relative p-3 mb-2 rounded-lg border-l-2 cursor-pointer transition-all duration-200",
+                    !notification.is_read 
+                      ? "bg-muted/30 hover:bg-muted/50" 
+                      : "bg-background hover:bg-muted/20",
+                    getPriorityStyles(notification.data?.priority)
+                  )}
+                  onClick={() => {
+                    if (!notification.is_read) {
+                      markAsRead(notification.id);
+                    }
+                  }}
+                >
+                  <div className="flex gap-3">
+                    {/* Icon */}
+                    <div className="flex-shrink-0 mt-0.5">
+                      {getNotificationIcon(notification.type)}
+                    </div>
+                    
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <h5 className={cn(
+                          "text-sm font-medium leading-tight",
+                          !notification.is_read ? "text-foreground" : "text-muted-foreground"
+                        )}>
+                          {notification.title}
+                        </h5>
                         {!notification.is_read && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              markAsRead(notification.id);
-                            }}
-                            className="h-6 w-6 p-0"
-                          >
-                            <Check className="w-3 h-3" />
-                          </Button>
+                          <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-1" />
                         )}
+                      </div>
+                      
+                      <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
+                        {notification.message}
+                      </p>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Clock className="w-3 h-3" />
+                          {formatDistanceToNow(new Date(notification.created_at), {
+                            addSuffix: true,
+                            locale: ptBR,
+                          })}
+                        </div>
+                        
+                        {/* Actions */}
                         <Button
                           variant="ghost"
                           size="sm"
@@ -134,36 +170,26 @@ export const NotificationDropdown = () => {
                             e.stopPropagation();
                             deleteNotification(notification.id);
                           }}
-                          className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
                         >
                           <Trash2 className="w-3 h-3" />
                         </Button>
                       </div>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                      {notification.message}
-                    </p>
-                    <span className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(notification.created_at), {
-                        addSuffix: true,
-                        locale: ptBR,
-                      })}
-                    </span>
                   </div>
                 </div>
-              </DropdownMenuItem>
-            ))}
+              ))}
 
-            {notifications.length > 10 && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-center text-sm text-muted-foreground">
-                  +{notifications.length - 10} notificações mais antigas
-                </DropdownMenuItem>
-              </>
-            )}
-          </>
-        )}
+              {notifications.length > 10 && (
+                <div className="text-center py-3 border-t">
+                  <p className="text-xs text-muted-foreground">
+                    +{notifications.length - 10} notificações mais antigas
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );

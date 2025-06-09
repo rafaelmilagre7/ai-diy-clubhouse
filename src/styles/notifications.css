@@ -1,0 +1,132 @@
+
+/* Estilos específicos para notificações */
+
+@layer components {
+  /* Container das notificações */
+  .notification-container {
+    @apply bg-background border border-border shadow-lg rounded-lg overflow-hidden;
+  }
+
+  /* Header das notificações */
+  .notification-header {
+    @apply sticky top-0 bg-background/95 backdrop-blur-sm border-b border-border px-4 py-3 z-10;
+  }
+
+  /* Item de notificação */
+  .notification-item {
+    @apply group relative p-3 rounded-lg border-l-2 cursor-pointer transition-all duration-200;
+  }
+
+  .notification-item:hover {
+    @apply bg-muted/20;
+  }
+
+  .notification-item.unread {
+    @apply bg-muted/30;
+  }
+
+  .notification-item.unread:hover {
+    @apply bg-muted/50;
+  }
+
+  /* Estados de prioridade */
+  .notification-priority-urgent {
+    @apply border-l-destructive bg-destructive/5;
+  }
+
+  .notification-priority-high {
+    @apply border-l-orange-500 bg-orange-500/5;
+  }
+
+  .notification-priority-normal {
+    @apply border-l-primary bg-primary/5;
+  }
+
+  .notification-priority-low {
+    @apply border-l-muted bg-muted/20;
+  }
+
+  /* Badge de notificações não lidas */
+  .notification-badge {
+    @apply absolute -top-1 -right-1 h-5 w-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center text-xs font-medium;
+  }
+
+  /* Indicador de não lida */
+  .notification-unread-dot {
+    @apply w-2 h-2 bg-primary rounded-full flex-shrink-0;
+  }
+
+  /* Botões de ação */
+  .notification-action-btn {
+    @apply opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 text-muted-foreground hover:text-foreground;
+  }
+
+  /* Estado vazio */
+  .notification-empty-state {
+    @apply p-8 text-center;
+  }
+
+  /* Loading state */
+  .notification-loading {
+    @apply p-8 text-center;
+  }
+
+  .notification-spinner {
+    @apply w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2;
+  }
+
+  /* Scrollbar customizada para área de notificações */
+  .notification-scroll::-webkit-scrollbar {
+    @apply w-1;
+  }
+
+  .notification-scroll::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .notification-scroll::-webkit-scrollbar-thumb {
+    @apply bg-muted rounded-full;
+  }
+
+  .notification-scroll::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
+  }
+
+  /* Animações para notificações */
+  @keyframes notification-slide-in {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .notification-animate-in {
+    animation: notification-slide-in 0.3s ease-out;
+  }
+
+  /* Efeito de hover para o trigger */
+  .notification-trigger {
+    @apply relative hover:bg-muted/50 transition-colors;
+  }
+
+  /* Estilos para diferentes tipos de notificação */
+  .notification-type-admin {
+    @apply border-l-primary;
+  }
+
+  .notification-type-system {
+    @apply border-l-blue-500;
+  }
+
+  .notification-type-urgent {
+    @apply border-l-destructive;
+  }
+
+  .notification-type-info {
+    @apply border-l-muted;
+  }
+}
