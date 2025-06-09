@@ -1,7 +1,7 @@
 
 import { logger } from './logger';
 
-// Criptografia avançada para dados sensíveis
+// Sistema de criptografia avançada para dados sensíveis
 export class AdvancedEncryption {
   private static instance: AdvancedEncryption;
   
@@ -13,165 +13,214 @@ export class AdvancedEncryption {
     }
     return AdvancedEncryption.instance;
   }
-  
-  // Gerar chave derivada do userId e contexto
-  private async deriveKey(userId: string, context: string = 'default'): Promise<string> {
+
+  // Gerar chave de criptografia baseada no contexto
+  private async generateKey(userId: string, context: string): Promise<CryptoKey> {
     try {
-      const baseKey = `${userId}-${context}-${window.location.hostname}`;
+      const keyMaterial = `${userId}-${context}-${window.location.hostname}`;
+      const encoder = new TextEncoder();
+      const keyData = encoder.encode(keyMaterial);
       
-      if (crypto.subtle) {
-        // Usar Web Crypto API quando disponível
-        const encoder = new TextEncoder();
-        const data = encoder.encode(baseKey);
-        const hash = await crypto.subtle.digest('SHA-256', data);
-        return Array.from(new Uint8Array(hash))
-          .map(b => b.toString(16).padStart(2, '0'))
-          .join('');
-      } else {
-        // Fallback simples
-        return btoa(baseKey).substring(0, 32);
-      }
+      // Usar WebCrypto API para gerar chave real
+      const key = await window.crypto.subtle.importKey(
+        'raw',
+        keyData.slice(0, 32), // Usar apenas 32 bytes
+        { name: 'AES-GCM' },
+        false,
+        ['encrypt', 'decrypt']
+      );
+      
+      return key;
     } catch (error) {
-      logger.warn("Erro na derivação de chave, usando fallback", {
+      logger.error("Erro ao gerar chave de criptografia", {
         component: 'ADVANCED_ENCRYPTION',
         error: error instanceof Error ? error.message : 'Erro desconhecido'
       });
-      return btoa(`${userId}-${context}`).substring(0, 32);
+      throw new Error('Falha na geração da chave de criptografia');
     }
   }
-  
+
   // Criptografar dados sensíveis
-  async encryptSensitiveData(data: any, userId: string, context: string = 'storage'): Promise<string> {
+  async encryptSensitiveData(
+    data: any,
+    userId: string,
+    context: string = 'default'
+  ): Promise<string> {
     try {
-      const key = await this.deriveKey(userId, context);
-      const jsonData = JSON.stringify(data);
-      const timestamp = Date.now();
-      
-      // Adicionar timestamp para invalidação automática
-      const dataWithTimestamp = JSON.stringify({
-        data: jsonData,
-        timestamp,
-        userId: userId.substring(0, 8) // Parcial por segurança
-      });
-      
-      // Criptografia simples mas efetiva
-      const encrypted = btoa(encodeURIComponent(key + ':' + dataWithTimestamp));
-      
-      logger.info("Dados sensíveis criptografados", {
-        component: 'ADVANCED_ENCRYPTION',
-        context,
-        dataSize: jsonData.length
-      });
-      
-      return encrypted;
-    } catch (error) {
-      logger.error("Erro na criptografia", {
-        component: 'ADVANCED_ENCRYPTION',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
-      throw new Error('Falha na criptografia de dados');
-    }
-  }
-  
-  // Descriptografar dados sensíveis
-  async decryptSensitiveData(encryptedData: string, userId: string, context: string = 'storage'): Promise<any> {
-    try {
-      const key = await this.deriveKey(userId, context);
-      const decoded = decodeURIComponent(atob(encryptedData));
-      const [storedKey, dataWithTimestamp] = decoded.split(':', 2);
-      
-      if (storedKey !== key) {
-        logger.warn("Chave de descriptografia inválida", {
-          component: 'ADVANCED_ENCRYPTION',
-          userId: userId.substring(0, 8)
-        });
-        throw new Error('Chave inválida');
-      }
-      
-      const parsed = JSON.parse(dataWithTimestamp);
-      const { data, timestamp, userId: storedUserId } = parsed;
-      
-      // Verificar integridade do userId (parcial)
-      if (storedUserId !== userId.substring(0, 8)) {
-        logger.warn("UserId inválido na descriptografia", {
+      if (!window.crypto || !window.crypto.subtle) {
+        // Fallback para encoding simples se WebCrypto não estiver disponível
+        logger.warn("WebCrypto não disponível, usando fallback", {
           component: 'ADVANCED_ENCRYPTION'
         });
-        throw new Error('Dados corrompidos');
+        return this.simpleFallbackEncrypt(data, userId, context);
       }
+
+      const key = await this.generateKey(userId, context);
+      const jsonData = JSON.stringify(data);
+      const encoder = new TextEncoder();
+      const dataBuffer = encoder.encode(jsonData);
       
-      // Verificar expiração (24 horas)
-      const now = Date.now();
-      const maxAge = 24 * 60 * 60 * 1000; // 24 horas
+      // Gerar IV aleatório
+      const iv = window.crypto.getRandomValues(new Uint8Array(12));
       
-      if (now - timestamp > maxAge) {
-        logger.warn("Dados expirados encontrados", {
-          component: 'ADVANCED_ENCRYPTION',
-          age: Math.round((now - timestamp) / 1000 / 60 / 60) + ' horas'
-        });
-        throw new Error('Dados expirados');
-      }
+      // Criptografar
+      const encryptedBuffer = await window.crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv },
+        key,
+        dataBuffer
+      );
       
-      return JSON.parse(data);
+      // Combinar IV + dados criptografados
+      const combined = new Uint8Array(iv.length + encryptedBuffer.byteLength);
+      combined.set(iv);
+      combined.set(new Uint8Array(encryptedBuffer), iv.length);
+      
+      // Converter para base64
+      return btoa(String.fromCharCode(...combined));
+      
     } catch (error) {
-      logger.error("Erro na descriptografia", {
+      logger.error("Erro na criptografia de dados", {
+        component: 'ADVANCED_ENCRYPTION',
+        context,
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+      
+      // Fallback em caso de erro
+      return this.simpleFallbackEncrypt(data, userId, context);
+    }
+  }
+
+  // Descriptografar dados sensíveis
+  async decryptSensitiveData(
+    encryptedData: string,
+    userId: string,
+    context: string = 'default'
+  ): Promise<any> {
+    try {
+      if (!window.crypto || !window.crypto.subtle) {
+        // Fallback para decoding simples
+        return this.simpleFallbackDecrypt(encryptedData, userId, context);
+      }
+
+      // Verificar se é dados do fallback
+      if (encryptedData.includes(':')) {
+        return this.simpleFallbackDecrypt(encryptedData, userId, context);
+      }
+
+      const key = await this.generateKey(userId, context);
+      
+      // Converter de base64
+      const combined = new Uint8Array(
+        atob(encryptedData).split('').map(char => char.charCodeAt(0))
+      );
+      
+      // Extrair IV e dados
+      const iv = combined.slice(0, 12);
+      const encryptedBuffer = combined.slice(12);
+      
+      // Descriptografar
+      const decryptedBuffer = await window.crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv },
+        key,
+        encryptedBuffer
+      );
+      
+      // Converter de volta para string e parsing JSON
+      const decoder = new TextDecoder();
+      const jsonData = decoder.decode(decryptedBuffer);
+      
+      return JSON.parse(jsonData);
+      
+    } catch (error) {
+      logger.error("Erro na descriptografia de dados", {
+        component: 'ADVANCED_ENCRYPTION',
+        context,
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+      
+      // Tentar fallback se falhar
+      try {
+        return this.simpleFallbackDecrypt(encryptedData, userId, context);
+      } catch {
+        return null;
+      }
+    }
+  }
+
+  // Fallback simples para ambientes sem WebCrypto
+  private simpleFallbackEncrypt(data: any, userId: string, context: string): string {
+    try {
+      const keyMaterial = `${userId}-${context}`;
+      const jsonData = JSON.stringify(data);
+      const encoded = btoa(keyMaterial + ':' + jsonData);
+      return encoded;
+    } catch (error) {
+      logger.error("Erro no fallback de criptografia", {
+        component: 'ADVANCED_ENCRYPTION',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+      throw error;
+    }
+  }
+
+  // Fallback simples para descriptografia
+  private simpleFallbackDecrypt(encryptedData: string, userId: string, context: string): any {
+    try {
+      const decoded = atob(encryptedData);
+      const [storedKey, jsonData] = decoded.split(':');
+      const expectedKey = `${userId}-${context}`;
+      
+      if (storedKey !== expectedKey) {
+        logger.warn("Chave de descriptografia não confere", {
+          component: 'ADVANCED_ENCRYPTION'
+        });
+        return null;
+      }
+      
+      return JSON.parse(jsonData);
+    } catch (error) {
+      logger.error("Erro no fallback de descriptografia", {
         component: 'ADVANCED_ENCRYPTION',
         error: error instanceof Error ? error.message : 'Erro desconhecido'
       });
       return null;
     }
   }
-  
-  // Gerar token temporário seguro
-  generateSecureToken(length: number = 32): string {
+
+  // Gerar hash seguro para verificação
+  async generateSecureHash(data: string): Promise<string> {
     try {
-      if (crypto.getRandomValues) {
-        const array = new Uint8Array(length);
-        crypto.getRandomValues(array);
-        return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
-      } else {
-        // Fallback menos seguro
-        return Array.from({ length }, () => 
-          Math.floor(Math.random() * 16).toString(16)
-        ).join('');
-      }
-    } catch {
-      // Fallback simples
-      return Math.random().toString(36).substring(2, 15) + 
-             Math.random().toString(36).substring(2, 15);
-    }
-  }
-  
-  // Hash seguro para validação
-  async secureHash(input: string, salt?: string): Promise<string> {
-    try {
-      const saltToUse = salt || this.generateSecureToken(16);
-      const combined = input + saltToUse;
-      
-      if (crypto.subtle) {
-        const encoder = new TextEncoder();
-        const data = encoder.encode(combined);
-        const hash = await crypto.subtle.digest('SHA-256', data);
-        const hashArray = Array.from(new Uint8Array(hash));
-        return saltToUse + ':' + hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-      } else {
+      if (!window.crypto || !window.crypto.subtle) {
         // Fallback simples
-        return saltToUse + ':' + btoa(combined);
+        return btoa(data).substring(0, 16);
       }
-    } catch {
-      // Fallback básico
-      return btoa(input + (salt || 'defaultsalt'));
+
+      const encoder = new TextEncoder();
+      const dataBuffer = encoder.encode(data);
+      const hashBuffer = await window.crypto.subtle.digest('SHA-256', dataBuffer);
+      const hashArray = new Uint8Array(hashBuffer);
+      
+      return btoa(String.fromCharCode(...hashArray)).substring(0, 16);
+    } catch (error) {
+      logger.error("Erro ao gerar hash seguro", {
+        component: 'ADVANCED_ENCRYPTION',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+      return btoa(data).substring(0, 16);
     }
   }
-  
-  // Verificar hash
-  async verifyHash(input: string, hash: string): Promise<boolean> {
+
+  // Verificar integridade dos dados
+  async verifyDataIntegrity(data: any, expectedHash: string): Promise<boolean> {
     try {
-      const [salt, expectedHash] = hash.split(':', 2);
-      if (!salt || !expectedHash) return false;
-      
-      const newHash = await this.secureHash(input, salt);
-      return newHash === hash;
-    } catch {
+      const dataString = JSON.stringify(data);
+      const actualHash = await this.generateSecureHash(dataString);
+      return actualHash === expectedHash;
+    } catch (error) {
+      logger.error("Erro na verificação de integridade", {
+        component: 'ADVANCED_ENCRYPTION',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
       return false;
     }
   }
