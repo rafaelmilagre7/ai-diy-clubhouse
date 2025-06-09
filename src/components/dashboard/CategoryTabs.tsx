@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { Badge } from "@/components/ui/badge";
@@ -136,7 +135,7 @@ export const CategoryTabs = ({
                 </Text>
               </div>
               {counts[category.id] > 0 && (
-                <Badge variant="primary" className="ml-auto">
+                <Badge variant="accent" className="ml-auto">
                   {counts[category.id]} soluções
                 </Badge>
               )}

@@ -13,6 +13,8 @@ import {
 
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
+import { Text } from "@/components/ui/text"
+import { AlertCircle, CheckCircle, Info } from "lucide-react"
 
 const Form = FormProvider
 
@@ -73,13 +75,24 @@ const FormItemContext = React.createContext<FormItemContextValue>(
 
 const FormItem = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => {
+  React.HTMLAttributes<HTMLDivElement> & {
+    variant?: 'default' | 'floating' | 'modern';
+  }
+>(({ className, variant = 'default', ...props }, ref) => {
   const id = React.useId()
 
   return (
     <FormItemContext.Provider value={{ id }}>
-      <div ref={ref} className={cn("space-y-2", className)} {...props} />
+      <div 
+        ref={ref} 
+        className={cn(
+          "space-y-2 group transition-all duration-200",
+          variant === 'floating' && "relative",
+          variant === 'modern' && "space-y-3 p-4 bg-surface-elevated rounded-xl border border-border-subtle hover:border-border-hover transition-colors",
+          className
+        )} 
+        {...props} 
+      />
     </FormItemContext.Provider>
   )
 })
@@ -87,17 +100,40 @@ FormItem.displayName = "FormItem"
 
 const FormLabel = React.forwardRef<
   React.ElementRef<typeof LabelPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
->(({ className, ...props }, ref) => {
+  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> & {
+    variant?: 'default' | 'modern' | 'floating';
+    required?: boolean;
+  }
+>(({ className, variant = 'default', required, children, ...props }, ref) => {
   const { error, formItemId } = useFormField()
 
   return (
     <Label
       ref={ref}
-      className={cn(error && "text-error", className)}
+      className={cn(
+        "transition-colors duration-200",
+        variant === 'modern' && "font-semibold text-text-primary flex items-center gap-2",
+        variant === 'floating' && "absolute left-3 top-2 text-sm text-text-secondary pointer-events-none transition-all duration-200 origin-left group-focus-within:transform group-focus-within:scale-75 group-focus-within:-translate-y-3 group-focus-within:translate-x-1",
+        error && "text-error",
+        className
+      )}
       htmlFor={formItemId}
       {...props}
-    />
+    >
+      {children}
+      {required && (
+        <span className="text-error ml-1" aria-label="required">*</span>
+      )}
+      {variant === 'modern' && (
+        <div className="ml-auto">
+          {error ? (
+            <AlertCircle className="h-4 w-4 text-error" />
+          ) : (
+            <CheckCircle className="h-4 w-4 text-success opacity-0 group-focus-within:opacity-100 transition-opacity" />
+          )}
+        </div>
+      )}
+    </Label>
   )
 })
 FormLabel.displayName = "FormLabel"
@@ -126,25 +162,38 @@ FormControl.displayName = "FormControl"
 
 const FormDescription = React.forwardRef<
   HTMLParagraphElement,
-  React.HTMLAttributes<HTMLParagraphElement>
->(({ className, ...props }, ref) => {
+  React.HTMLAttributes<HTMLParagraphElement> & {
+    variant?: 'default' | 'modern';
+  }
+>(({ className, variant = 'default', ...props }, ref) => {
   const { formDescriptionId } = useFormField()
 
   return (
-    <p
+    <Text
       ref={ref}
       id={formDescriptionId}
-      className={cn("text-sm text-text-tertiary", className)}
+      variant="caption"
+      textColor="secondary"
+      className={cn(
+        "transition-colors duration-200",
+        variant === 'modern' && "flex items-center gap-2 bg-info/5 p-3 rounded-lg border border-info/10",
+        className
+      )}
       {...props}
-    />
+    >
+      {variant === 'modern' && <Info className="h-4 w-4 text-info flex-shrink-0" />}
+      {props.children}
+    </Text>
   )
 })
 FormDescription.displayName = "FormDescription"
 
 const FormMessage = React.forwardRef<
   HTMLParagraphElement,
-  React.HTMLAttributes<HTMLParagraphElement>
->(({ className, children, ...props }, ref) => {
+  React.HTMLAttributes<HTMLParagraphElement> & {
+    variant?: 'default' | 'modern';
+  }
+>(({ className, variant = 'default', children, ...props }, ref) => {
   const { error, formMessageId } = useFormField()
   const body = error ? String(error?.message) : children
 
@@ -153,14 +202,21 @@ const FormMessage = React.forwardRef<
   }
 
   return (
-    <p
+    <Text
       ref={ref}
       id={formMessageId}
-      className={cn("text-sm font-medium text-error", className)}
+      variant="caption"
+      textColor="error"
+      className={cn(
+        "animate-fade-in transition-all duration-200",
+        variant === 'modern' && "flex items-center gap-2 bg-error/5 p-3 rounded-lg border border-error/10",
+        className
+      )}
       {...props}
     >
+      {variant === 'modern' && <AlertCircle className="h-4 w-4 text-error flex-shrink-0" />}
       {body}
-    </p>
+    </Text>
   )
 })
 FormMessage.displayName = "FormMessage"
