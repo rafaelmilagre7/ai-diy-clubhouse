@@ -37,7 +37,7 @@ const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
       .substring(0, 2);
   }, []);
 
-  // Memoizar handler de signOut
+  // Memoizar handler de signOut com tratamento seguro
   const handleSignOut = useCallback(async () => {
     try {
       const result = await signOut();

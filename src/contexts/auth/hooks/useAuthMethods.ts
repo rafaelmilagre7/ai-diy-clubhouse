@@ -145,6 +145,8 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
         window.location.href = '/login';
       }, 100);
       
+      return { success: true, error: null };
+      
     } catch (error) {
       logger.error("Erro crítico no logout", {
         error: error instanceof Error ? error.message : 'Erro desconhecido',
@@ -157,6 +159,8 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
       setTimeout(() => {
         window.location.href = '/login';
       }, 500);
+      
+      return { success: false, error: error instanceof Error ? error : new Error('Erro desconhecido') };
     } finally {
       setIsLoading(false);
     }

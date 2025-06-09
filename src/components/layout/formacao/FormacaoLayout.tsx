@@ -23,7 +23,7 @@ const FormacaoLayout = ({ children }: { children: React.ReactNode }) => {
       .substring(0, 2);
   };
 
-  // Handler para signOut
+  // Handler para signOut com tratamento seguro
   const handleSignOut = async () => {
     try {
       const result = await signOut();
