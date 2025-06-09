@@ -1,10 +1,10 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { auditLogger } from '@/utils/auditLogger';
 import { environmentSecurity } from '@/utils/environmentSecurity';
 import { logger } from '@/utils/logger';
+import { verifyAdminStatus, clearAdminCache } from '@/utils/adminVerification';
 import { toast } from 'sonner';
 
 interface AuthContextType {
@@ -34,7 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Verificar se usuário é admin
+  // Verificar se usuário é admin usando verificação centralizada
   const checkAdminStatus = async (currentUser: User | null) => {
     if (!currentUser) {
       setIsAdmin(false);
@@ -42,13 +42,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', currentUser.id)
-        .single();
-
-      const adminStatus = profile?.role === 'admin';
+      const adminStatus = await verifyAdminStatus(currentUser.id, currentUser.email);
       setIsAdmin(adminStatus);
 
       if (adminStatus) {
@@ -164,7 +158,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Logout
+  // Logout atualizado para limpar cache de admin
   const signOut = async () => {
     try {
       logger.info("Logout iniciado", {
@@ -177,6 +171,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           userId: user.id.substring(0, 8) + '***',
           timestamp: new Date().toISOString()
         }, user.id);
+
+        // Limpar cache de admin
+        clearAdminCache(user.id);
       }
 
       const { error } = await supabase.auth.signOut();
@@ -272,6 +269,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           await checkAdminStatus(session.user);
         } else {
           setIsAdmin(false);
+          // Limpar cache quando usuário sai
+          clearAdminCache();
         }
         
         setIsLoading(false);

@@ -1,193 +1,131 @@
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Eye, EyeOff, Shield, AlertTriangle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
+import { detectInjectionAttempts } from '@/utils/securityUtils';
+import { validateSecureInput } from '@/utils/validation';
 import { logger } from '@/utils/logger';
-import { auditLogger } from '@/utils/auditLogger';
 
 interface SecureInputProps {
-  type?: 'text' | 'email' | 'password' | 'tel';
+  type?: 'text' | 'email' | 'password' | 'tel' | 'url';
+  name: string;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  className?: string;
-  maxLength?: number;
   required?: boolean;
   autoComplete?: string;
-  name?: string;
+  validateInput?: (input: string) => { isValid: boolean; error?: string };
+  maxLength?: number;
+  className?: string;
   disabled?: boolean;
-  validateInput?: (value: string) => { isValid: boolean; error?: string };
 }
 
 export const SecureInput: React.FC<SecureInputProps> = ({
   type = 'text',
+  name,
   value,
   onChange,
   placeholder,
-  className,
-  maxLength = 255,
-  required,
+  required = false,
   autoComplete,
-  name,
-  disabled,
-  validateInput
+  validateInput,
+  maxLength = 255,
+  className,
+  disabled = false
 }) => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [isFocused, setIsFocused] = useState(false);
-  const [validationError, setValidationError] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const lastValidationRef = useRef<string>('');
+  const [error, setError] = useState<string | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
 
-  // Sanitizar entrada para prevenir XSS
-  const sanitizeInput = useCallback((input: string): string => {
-    if (!input) return '';
+  const handleChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value;
     
-    return input
-      .replace(/[<>'"]/g, '') // Remover caracteres perigosos
-      .substring(0, maxLength) // Limitar comprimento
-      .trim();
-  }, [maxLength]);
-
-  // Validação em tempo real com debounce
-  useEffect(() => {
-    if (!validateInput || value === lastValidationRef.current) return;
+    // Limitar comprimento
+    if (inputValue.length > maxLength) {
+      setError(`Máximo de ${maxLength} caracteres permitidos`);
+      return;
+    }
     
-    const timeoutId = setTimeout(() => {
-      try {
-        const result = validateInput(value);
-        setValidationError(result.isValid ? null : result.error || 'Entrada inválida');
-        lastValidationRef.current = value;
-      } catch (error) {
-        logger.warn("Erro na validação de entrada", {
+    setIsValidating(true);
+    setError(null);
+    
+    try {
+      // Detectar tentativas de injeção
+      if (detectInjectionAttempts(inputValue)) {
+        setError('Entrada contém conteúdo potencialmente perigoso');
+        logger.warn('Tentativa de injeção detectada', {
           component: 'SECURE_INPUT',
-          error: error instanceof Error ? error.message : 'Erro desconhecido'
+          inputName: name,
+          inputLength: inputValue.length
         });
+        setIsValidating(false);
+        return;
       }
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [value, validateInput]);
-
-  // Detectar tentativas de injeção
-  useEffect(() => {
-    const suspiciousPatterns = [
-      /<script/i,
-      /javascript:/i,
-      /on\w+\s*=/i,
-      /data:text\/html/i,
-      /vbscript:/i
-    ];
-
-    const hasSuspiciousContent = suspiciousPatterns.some(pattern => pattern.test(value));
-    
-    if (hasSuspiciousContent && value.length > 0) {
-      logger.warn("Tentativa de injeção detectada", {
-        component: 'SECURE_INPUT',
-        inputName: name,
-        inputType: type
-      });
       
-      auditLogger.logSecurityEvent('input_injection_attempt', 'high', {
-        inputName: name,
-        inputType: type,
-        suspiciousValue: value.substring(0, 50) + '...'
-      });
-    }
-  }, [value, name, type]);
-
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = e.target.value;
-    const sanitizedValue = sanitizeInput(rawValue);
-    
-    // Log tentativas de entrada de dados maliciosos
-    if (rawValue !== sanitizedValue && rawValue.length > 0) {
-      logger.warn("Entrada sanitizada", {
+      // Validação customizada se fornecida
+      if (validateInput) {
+        const validation = validateInput(inputValue);
+        if (!validation.isValid) {
+          setError(validation.error || 'Entrada inválida');
+          setIsValidating(false);
+          return;
+        }
+      } else {
+        // Validação padrão baseada no tipo
+        let validationType: 'email' | 'password' | 'name' | 'text' = 'text';
+        
+        if (type === 'email') validationType = 'email';
+        else if (type === 'password') validationType = 'password';
+        else if (name.toLowerCase().includes('name')) validationType = 'name';
+        
+        const validation = validateSecureInput(inputValue, validationType);
+        if (!validation.isValid) {
+          setError(validation.error || 'Entrada inválida');
+          setIsValidating(false);
+          return;
+        }
+      }
+      
+      // Se chegou até aqui, a entrada é válida
+      onChange(inputValue);
+      
+    } catch (error) {
+      logger.error('Erro na validação de entrada segura', {
         component: 'SECURE_INPUT',
-        original: rawValue.substring(0, 20) + '...',
-        sanitized: sanitizedValue.substring(0, 20) + '...'
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
       });
+      setError('Erro interno de validação');
+    } finally {
+      setIsValidating(false);
     }
-    
-    onChange(sanitizedValue);
-  }, [onChange, sanitizeInput]);
-
-  const handleFocus = useCallback(() => {
-    setIsFocused(true);
-  }, []);
-
-  const handleBlur = useCallback(() => {
-    setIsFocused(false);
-  }, []);
-
-  const togglePasswordVisibility = useCallback(() => {
-    setShowPassword(prev => !prev);
-  }, []);
-
-  const inputType = type === 'password' && showPassword ? 'text' : type;
-  const hasError = validationError !== null;
+  }, [name, maxLength, validateInput, onChange, type]);
 
   return (
-    <div className="relative">
-      <div className="relative">
-        <Input
-          ref={inputRef}
-          type={inputType}
-          value={value}
-          onChange={handleChange}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          placeholder={placeholder}
-          className={`
-            ${className}
-            ${hasError ? 'border-red-500 focus:border-red-500' : ''}
-            ${isFocused ? 'ring-2 ring-blue-500/20' : ''}
-            ${type === 'password' ? 'pr-20' : 'pr-10'}
-          `}
-          maxLength={maxLength}
-          required={required}
-          autoComplete={autoComplete}
-          name={name}
-          disabled={disabled}
-          aria-invalid={hasError}
-          aria-describedby={hasError ? `${name}-error` : undefined}
-        />
-        
-        {/* Indicador de segurança */}
-        <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
-          {type === 'password' && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={togglePasswordVisibility}
-              className="h-6 w-6 p-0 hover:bg-transparent"
-              tabIndex={-1}
-              aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-            >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </Button>
-          )}
-          
-          {isFocused && (
-            <Shield className="h-4 w-4 text-green-500" aria-label="Entrada protegida" />
-          )}
-          
-          {hasError && (
-            <AlertTriangle className="h-4 w-4 text-red-500" aria-label="Erro de validação" />
-          )}
-        </div>
-      </div>
+    <div className="space-y-2">
+      <Input
+        type={type}
+        name={name}
+        value={value}
+        onChange={handleChange}
+        placeholder={placeholder}
+        required={required}
+        autoComplete={autoComplete}
+        className={className}
+        disabled={disabled || isValidating}
+        maxLength={maxLength}
+      />
       
-      {/* Mensagem de erro */}
-      {hasError && (
-        <p 
-          id={`${name}-error`}
-          className="mt-1 text-sm text-red-600"
-          role="alert"
-        >
-          {validationError}
-        </p>
+      {error && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      
+      {isValidating && (
+        <div className="text-sm text-gray-500">
+          Validando entrada...
+        </div>
       )}
     </div>
   );

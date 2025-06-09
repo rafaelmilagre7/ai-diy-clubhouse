@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -81,7 +80,7 @@ export const SecureLoginForm: React.FC = () => {
       return;
     }
 
-    // Verificar rate limiting
+    // Verificar rate limiting com identificador seguro
     const identifier = createSecureIdentifier(email, 'login');
     const rateLimitCheck = await loginRateLimiter.canAttempt(identifier, 'login_form');
     
@@ -153,10 +152,13 @@ export const SecureLoginForm: React.FC = () => {
     }
   };
 
-  // Função para login de teste (apenas em desenvolvimento)
+  // Função para login de teste (apenas em desenvolvimento) - com segurança aprimorada
   const handleTestLogin = async (testEmail: string, testPassword: string) => {
     if (!canShowTestFeatures()) {
       toast.error('Recursos de teste não disponíveis em produção');
+      logger.warn('Tentativa de usar recursos de teste em produção', {
+        component: 'SECURE_LOGIN_FORM'
+      });
       return;
     }
     
@@ -258,7 +260,7 @@ export const SecureLoginForm: React.FC = () => {
           </Button>
         </form>
         
-        {/* Botões de teste apenas em desenvolvimento */}
+        {/* Botões de teste apenas em desenvolvimento - com verificação de segurança aprimorada */}
         {canShowTestFeatures() && (
           <div className="mt-6 pt-4 border-t border-gray-200">
             <p className="text-sm text-gray-600 mb-3 text-center">

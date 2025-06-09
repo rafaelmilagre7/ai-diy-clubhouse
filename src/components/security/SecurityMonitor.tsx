@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +15,7 @@ interface SecurityStatus {
   rateLimitStatus: any;
   recentSecurityEvents: number;
   lastSecurityCheck: Date;
+  environmentValidation: { isValid: boolean; errors: string[]; warnings: string[] };
 }
 
 interface SecurityMonitorProps {
@@ -30,7 +30,7 @@ export const SecurityMonitor: React.FC<SecurityMonitorProps> = ({ onSecurityEven
   useEffect(() => {
     const checkSecurityStatus = async () => {
       try {
-        // Verificar status do ambiente
+        // Verificar status do ambiente com validação aprimorada
         const envValidation = environmentSecurity.validateEnvironment();
         
         // Obter estatísticas de rate limiting
@@ -58,15 +58,28 @@ export const SecurityMonitor: React.FC<SecurityMonitorProps> = ({ onSecurityEven
           httpsEnabled: window.location.protocol === 'https:',
           rateLimitStatus: rateLimitStats,
           recentSecurityEvents: recentEvents,
-          lastSecurityCheck: new Date()
+          lastSecurityCheck: new Date(),
+          environmentValidation: envValidation
         });
 
         // Log da verificação de segurança
         await auditLogger.logSecurityEvent('security_status_check', 'low', {
           environment: environmentSecurity.isProduction() ? 'production' : 'development',
           httpsEnabled: window.location.protocol === 'https:',
-          rateLimitActiveBlocks: rateLimitStats.blockedEntries
+          rateLimitActiveBlocks: rateLimitStats.blockedEntries,
+          environmentValid: envValidation.isValid,
+          environmentWarnings: envValidation.warnings.length,
+          environmentErrors: envValidation.errors.length
         }, user?.id);
+
+        // Reportar evento de segurança se callback fornecido
+        if (onSecurityEvent) {
+          onSecurityEvent('security_check_completed', {
+            environment: environmentSecurity.isProduction() ? 'production' : 'development',
+            httpsEnabled: window.location.protocol === 'https:',
+            rateLimitStats
+          });
+        }
 
       } catch (error) {
         logger.error("Erro ao verificar status de segurança", {
@@ -87,7 +100,7 @@ export const SecurityMonitor: React.FC<SecurityMonitorProps> = ({ onSecurityEven
     } else {
       setLoading(false);
     }
-  }, [user, isAdmin]);
+  }, [user, isAdmin, onSecurityEvent]);
 
   // Não mostrar para usuários não-admin
   if (!isAdmin) {
@@ -153,6 +166,35 @@ export const SecurityMonitor: React.FC<SecurityMonitorProps> = ({ onSecurityEven
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Alertas de ambiente */}
+        {securityStatus.environmentValidation.errors.length > 0 && (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              Problemas críticos de segurança detectados:
+              <ul className="mt-2 list-disc list-inside">
+                {securityStatus.environmentValidation.errors.map((error, index) => (
+                  <li key={index} className="text-sm">{error}</li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {securityStatus.environmentValidation.warnings.length > 0 && (
+          <Alert>
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              Avisos de segurança:
+              <ul className="mt-2 list-disc list-inside">
+                {securityStatus.environmentValidation.warnings.map((warning, index) => (
+                  <li key={index} className="text-sm">{warning}</li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <h4 className="font-medium text-sm text-gray-600">Ambiente</h4>
@@ -199,6 +241,9 @@ export const SecurityMonitor: React.FC<SecurityMonitorProps> = ({ onSecurityEven
 
         <div className="text-xs text-gray-500 text-center">
           Última verificação: {securityStatus.lastSecurityCheck.toLocaleString()}
+          {securityStatus.environmentValidation.isValid && (
+            <span className="ml-2 text-green-600">✓ Ambiente Seguro</span>
+          )}
         </div>
       </CardContent>
     </Card>
