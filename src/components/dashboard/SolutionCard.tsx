@@ -5,10 +5,10 @@ import { Solution } from '@/lib/supabase';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Text } from '@/components/ui/text';
-import { BarChart, TrendingUp, Settings, Zap, ImageIcon, Play, Clock, Users, ArrowRight, Bookmark, Star } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { BarChart, TrendingUp, Settings, Zap, ImageIcon, Play, Clock, Users, ArrowRight, Bookmark, Star, Sparkles } from 'lucide-react';
 import { SolutionCategory, getCategoryConfig } from '@/lib/types/categoryTypes';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 
 interface SolutionCardProps {
   solution: Solution;
@@ -72,21 +72,23 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
   if (variant === 'compact') {
     return (
       <Card 
-        variant="interactive" 
-        className="h-full overflow-hidden transition-all duration-300 hover:shadow-glow-primary group cursor-pointer"
+        variant="elevated" 
+        className="h-full overflow-hidden transition-all duration-300 hover:shadow-glow-primary group cursor-pointer border-border-subtle hover:border-primary/30"
         onClick={handleClick}
       >
         <CardContent className="p-4">
           <div className="flex items-start gap-4">
-            <div className="relative w-16 h-16 bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl flex items-center justify-center flex-shrink-0">
+            <div className="relative w-16 h-16 bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
               {solution.thumbnail_url ? (
                 <img 
                   src={solution.thumbnail_url} 
                   alt={solution.title} 
-                  className="w-full h-full object-cover rounded-xl"
+                  className="w-full h-full object-cover rounded-xl transition-transform duration-300 group-hover:scale-110"
                 />
               ) : (
-                <ImageIcon className="h-8 w-8 text-text-muted" />
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  {getCategoryIcon()}
+                </div>
               )}
             </div>
             
@@ -104,7 +106,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
                 </Badge>
               </div>
               
-              <Text variant="caption" textColor="secondary" className="line-clamp-2 mb-2">
+              <Text variant="body-small" textColor="secondary" className="line-clamp-2 mb-3">
                 {solution.description}
               </Text>
               
@@ -118,7 +120,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
                   </Badge>
                 </div>
                 
-                <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-primary transition-colors" />
+                <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-primary transition-all duration-300 group-hover:translate-x-1" />
               </div>
             </div>
           </div>
@@ -132,42 +134,45 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
       <Card 
         variant="elevated" 
         className={cn(
-          "h-full overflow-hidden transition-all duration-300 group cursor-pointer",
+          "h-full overflow-hidden transition-all duration-500 group cursor-pointer",
           "bg-gradient-to-br from-primary/5 via-surface to-accent/5",
-          "border-primary/20 hover:border-primary/40 hover:shadow-glow-primary"
+          "border-primary/20 hover:border-primary/40 hover:shadow-glow-primary hover:-translate-y-2"
         )}
         onClick={handleClick}
       >
         <CardHeader className="p-0 relative">
           <div className="relative h-56 bg-gradient-to-br from-primary/10 to-accent/10 overflow-hidden">
             {solution.thumbnail_url ? (
-              <img 
-                src={solution.thumbnail_url} 
-                alt={solution.title} 
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-              />
+              <>
+                <img 
+                  src={solution.thumbnail_url} 
+                  alt={solution.title} 
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-125"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 group-hover:from-black/40 transition-all duration-500" />
+              </>
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-surface-elevated to-surface-hover">
-                <ImageIcon className="h-16 w-16 text-text-muted" />
+                <div className="p-4 bg-primary/10 rounded-2xl">
+                  <ImageIcon className="h-16 w-16 text-primary" />
+                </div>
               </div>
             )}
-            
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
             
             <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
               <Badge 
                 variant="accent"
-                className="backdrop-blur-sm bg-accent/90 text-white border-0"
+                className="backdrop-blur-sm bg-accent/90 text-white border-0 shadow-lg"
                 size="sm"
               >
-                <Star className="h-3 w-3 mr-1" />
+                <Star className="h-3 w-3 mr-1.5 fill-current" />
                 Destaque
               </Badge>
               
               <Button
                 variant="ghost"
-                size="icon-sm"
-                className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border-0"
+                size="sm"
+                className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border-0 h-8 w-8 p-0"
               >
                 <Bookmark className="h-4 w-4" />
               </Button>
@@ -176,7 +181,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
             <div className="absolute bottom-4 left-4 right-4">
               <Badge 
                 variant={categoryConfig.badgeVariant}
-                className="backdrop-blur-sm shadow-sm mb-2"
+                className="backdrop-blur-sm shadow-lg mb-2"
                 size="sm"
               >
                 <span className="flex items-center gap-1.5">
@@ -184,6 +189,12 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
                   <span>{categoryConfig.name}</span>
                 </span>
               </Badge>
+            </div>
+
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500">
+              <div className="bg-primary/90 backdrop-blur-sm rounded-full p-4 transform scale-75 group-hover:scale-100 transition-transform duration-500 shadow-2xl">
+                <Play className="h-8 w-8 text-white fill-current" />
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -204,18 +215,22 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
           </div>
 
           <div className="flex items-center gap-4 text-text-tertiary">
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <Clock className="h-4 w-4" />
               <Text variant="caption" textColor="tertiary">10-15 min</Text>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <Users className="h-4 w-4" />
               <Text variant="caption" textColor="tertiary">Avançado</Text>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Sparkles className="h-3 w-3 text-accent" />
+              <Text variant="caption" textColor="accent">Premium</Text>
             </div>
           </div>
         </CardContent>
         
-        <CardFooter className="p-6 pt-0 flex items-center justify-between border-t border-border-subtle bg-surface-elevated/50">
+        <CardFooter className="p-6 pt-0 flex items-center justify-between border-t border-border-subtle bg-gradient-to-r from-surface-elevated/50 to-surface/50">
           <div className="flex items-center gap-2">
             <Badge
               variant={getDifficultyBadgeVariant(solution.difficulty)}
@@ -231,7 +246,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
             )}
           </div>
           
-          <Button variant="ghost" size="sm" className="group-hover:bg-primary group-hover:text-white transition-all">
+          <Button variant="default" size="sm" className="group-hover:bg-primary group-hover:text-white transition-all hover-scale shadow-lg">
             <Play className="h-4 w-4 mr-2" />
             Começar
           </Button>
@@ -247,7 +262,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
         className={cn(
           "h-full overflow-hidden transition-all duration-300",
           "hover:shadow-glow-primary hover:-translate-y-1",
-          "group-hover:border-primary/30 bg-gradient-to-br from-surface to-surface-elevated"
+          "group-hover:border-primary/30 bg-gradient-to-br from-surface to-surface-elevated/50"
         )}
       >
         <CardHeader className="p-0 relative">
@@ -261,7 +276,9 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-surface-elevated to-surface-hover">
-                <ImageIcon className="h-12 w-12 text-text-muted" />
+                <div className="p-3 bg-primary/10 rounded-xl">
+                  <ImageIcon className="h-12 w-12 text-primary" />
+                </div>
               </div>
             )}
             
@@ -313,7 +330,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
           </div>
         </CardContent>
         
-        <CardFooter className="p-6 pt-0 flex items-center justify-between border-t border-border-subtle bg-surface-elevated/50">
+        <CardFooter className="p-6 pt-0 flex items-center justify-between border-t border-border-subtle bg-surface-elevated/30">
           <div className="flex items-center gap-2">
             {getCategoryIcon()}
             <Text variant="caption" textColor="tertiary" className="font-medium">
