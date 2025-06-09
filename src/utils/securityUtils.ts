@@ -1,5 +1,5 @@
 
-// Utilitários de segurança para o frontend
+// Utilitários de segurança para o frontend - versão segura
 
 // Sanitizar dados para logs (remover informações sensíveis)
 export const sanitizeForLogging = (data: any): any => {
@@ -13,7 +13,8 @@ export const sanitizeForLogging = (data: any): any => {
 
   const sensitiveFields = [
     'password', 'token', 'secret', 'key', 'email', 'phone', 
-    'cpf', 'cnpj', 'api_key', 'access_token', 'refresh_token'
+    'cpf', 'cnpj', 'api_key', 'access_token', 'refresh_token',
+    'authorization', 'bearer', 'session'
   ];
 
   const sanitized: any = {};
@@ -44,7 +45,9 @@ export const isSafeString = (str: string): boolean => {
     /on\w+\s*=/gi,
     /<iframe\b/gi,
     /<object\b/gi,
-    /<embed\b/gi
+    /<embed\b/gi,
+    /data:text\/html/gi,
+    /vbscript:/gi
   ];
 
   return !dangerousPatterns.some(pattern => pattern.test(str));
@@ -52,12 +55,15 @@ export const isSafeString = (str: string): boolean => {
 
 // Escape de HTML para prevenir XSS
 export const escapeHtml = (unsafe: string): string => {
+  if (typeof unsafe !== 'string') return '';
+  
   return unsafe
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+    .replace(/'/g, "&#039;")
+    .replace(/\//g, "&#x2F;");
 };
 
 // Validar formato de email de forma segura
@@ -65,14 +71,14 @@ export const isValidEmail = (email: string): boolean => {
   if (!email || typeof email !== 'string') return false;
   
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email) && email.length <= 254; // RFC 5322 limit
+  return emailRegex.test(email) && email.length <= 254 && email.length >= 5;
 };
 
 // Gerar hash simples para identificação (não criptográfico)
 export const generateSimpleHash = (input: string): string => {
-  let hash = 0;
-  if (input.length === 0) return hash.toString();
+  if (!input || typeof input !== 'string') return '0';
   
+  let hash = 0;
   for (let i = 0; i < input.length; i++) {
     const char = input.charCodeAt(i);
     hash = ((hash << 5) - hash) + char;
@@ -86,16 +92,20 @@ export const generateSimpleHash = (input: string): string => {
 export const clearSensitiveData = (obj: any): void => {
   if (obj && typeof obj === 'object') {
     Object.keys(obj).forEach(key => {
-      if (typeof obj[key] === 'string') {
-        obj[key] = '';
-      } else if (typeof obj[key] === 'object') {
-        clearSensitiveData(obj[key]);
+      try {
+        if (typeof obj[key] === 'string') {
+          obj[key] = '';
+        } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+          clearSensitiveData(obj[key]);
+        }
+      } catch {
+        // Silenciosamente falhar se não conseguir limpar
       }
     });
   }
 };
 
-// Rate limiting simples no frontend
+// Rate limiting simples no frontend com segurança aprimorada
 const rateLimitMap = new Map<string, number[]>();
 
 export const checkRateLimit = (
@@ -103,6 +113,8 @@ export const checkRateLimit = (
   maxRequests: number = 10, 
   windowMs: number = 60000
 ): boolean => {
+  if (!identifier || typeof identifier !== 'string') return false;
+  
   const now = Date.now();
   const windowStart = now - windowMs;
   
@@ -126,30 +138,72 @@ export const checkRateLimit = (
   return true; // OK para prosseguir
 };
 
-// Detectar ambiente suspeito
+// Detectar ambiente suspeito com proteção adicional
 export const detectSuspiciousEnvironment = (): string[] => {
   const warnings: string[] = [];
   
-  // Verificar se está em desenvolvimento mas com dados de produção
-  if (process.env.NODE_ENV === 'development') {
-    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-      warnings.push('Development mode em ambiente não local');
+  try {
+    // Verificar se está em desenvolvimento mas com dados de produção
+    if (process.env.NODE_ENV === 'development') {
+      if (window.location.hostname !== 'localhost' && 
+          window.location.hostname !== '127.0.0.1' &&
+          !window.location.hostname.includes('localhost')) {
+        warnings.push('Development mode em ambiente não local');
+      }
     }
-  }
-  
-  // Verificar extensões suspeitas do navegador
-  if (typeof (window as any).chrome !== 'undefined' && (window as any).chrome.runtime) {
-    warnings.push('Extensões do Chrome detectadas');
-  }
-  
-  // Verificar se DevTools estão abertas (apenas em produção)
-  if (process.env.NODE_ENV === 'production') {
-    const threshold = 160;
-    if (window.outerHeight - window.innerHeight > threshold || 
-        window.outerWidth - window.innerWidth > threshold) {
-      warnings.push('DevTools potencialmente abertas');
+    
+    // Verificar extensões suspeitas do navegador
+    if (typeof (window as any).chrome !== 'undefined' && (window as any).chrome.runtime) {
+      warnings.push('Extensões do Chrome detectadas');
     }
+    
+    // Verificar se DevTools estão abertas (apenas em produção)
+    if (process.env.NODE_ENV === 'production') {
+      const threshold = 160;
+      if (window.outerHeight - window.innerHeight > threshold || 
+          window.outerWidth - window.innerWidth > threshold) {
+        warnings.push('DevTools potencialmente abertas');
+      }
+    }
+  } catch {
+    // Silenciosamente falhar se não conseguir detectar
   }
   
   return warnings;
 };
+
+// Verificar integridade da URL
+export const isValidURL = (url: string): boolean => {
+  if (!url || typeof url !== 'string') return false;
+  
+  try {
+    const urlObj = new URL(url);
+    return ['http:', 'https:'].includes(urlObj.protocol);
+  } catch {
+    return false;
+  }
+};
+
+// Função para limpeza automática de dados temporários
+export const cleanupTemporaryData = (): void => {
+  try {
+    // Limpar rate limit cache antigo (manter apenas últimos 10 minutos)
+    const tenMinutesAgo = Date.now() - (10 * 60 * 1000);
+    
+    rateLimitMap.forEach((timestamps, key) => {
+      const validTimestamps = timestamps.filter(time => time > tenMinutesAgo);
+      if (validTimestamps.length === 0) {
+        rateLimitMap.delete(key);
+      } else {
+        rateLimitMap.set(key, validTimestamps);
+      }
+    });
+  } catch {
+    // Silenciosamente falhar se não conseguir limpar
+  }
+};
+
+// Executar limpeza automática a cada 5 minutos
+if (typeof window !== 'undefined') {
+  setInterval(cleanupTemporaryData, 5 * 60 * 1000);
+}

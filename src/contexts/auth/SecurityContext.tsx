@@ -48,46 +48,68 @@ export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) 
     // Log de início de sessão segura
     logSecurityEvent('session_start');
 
-    // Detectar tentativas de manipulação do console
-    const originalConsole = { ...console };
+    // Detectar tentativas de manipulação do console com type safety
+    const originalConsole = {
+      log: console.log,
+      warn: console.warn,
+      error: console.error,
+      info: console.info,
+      debug: console.debug
+    };
+    
     let consoleWarningShown = false;
 
-    Object.keys(console).forEach(key => {
-      const original = console[key as keyof Console];
+    // Override console methods com verificação de tipo
+    const overrideConsoleMethod = (methodName: keyof typeof originalConsole) => {
+      const original = originalConsole[methodName];
       if (typeof original === 'function') {
-        (console as any)[key] = (...args: any[]) => {
+        (console as any)[methodName] = (...args: any[]) => {
           if (!consoleWarningShown && process.env.NODE_ENV === 'production') {
             consoleWarningShown = true;
-            original.warn('[SECURITY] Detectada atividade no console em produção');
+            original.call(console, '[SECURITY] Detectada atividade no console em produção');
             logSecurityEvent('console_access');
           }
           return original.apply(console, args);
         };
       }
-    });
+    };
+
+    // Aplicar override apenas para métodos que existem
+    if (process.env.NODE_ENV === 'production') {
+      overrideConsoleMethod('log');
+      overrideConsoleMethod('warn');
+      overrideConsoleMethod('error');
+      overrideConsoleMethod('info');
+      overrideConsoleMethod('debug');
+    }
 
     return () => {
-      // Restaurar console original
+      // Restaurar console original de forma segura
       Object.assign(console, originalConsole);
     };
   }, [user]);
 
-  // Detectar DevTools abertas
+  // Detectar DevTools abertas com proteção adicional
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production') return;
 
     let devToolsOpen = false;
+    
     const detectDevTools = () => {
-      const threshold = 160;
-      
-      if (window.outerHeight - window.innerHeight > threshold || 
-          window.outerWidth - window.innerWidth > threshold) {
-        if (!devToolsOpen) {
-          devToolsOpen = true;
-          console.warn('[SECURITY] DevTools detectadas');
+      try {
+        const threshold = 160;
+        
+        if (window.outerHeight - window.innerHeight > threshold || 
+            window.outerWidth - window.innerWidth > threshold) {
+          if (!devToolsOpen) {
+            devToolsOpen = true;
+            console.warn('[SECURITY] DevTools detectadas');
+          }
+        } else {
+          devToolsOpen = false;
         }
-      } else {
-        devToolsOpen = false;
+      } catch (error) {
+        // Silenciosamente falhar se não conseguir detectar
       }
     };
 

@@ -9,6 +9,7 @@ interface SecureInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   preventPaste?: boolean;
   hideValue?: boolean;
   maxLength?: number;
+  sanitizeInput?: boolean;
 }
 
 export const SecureInput: React.FC<SecureInputProps> = ({
@@ -17,13 +18,31 @@ export const SecureInput: React.FC<SecureInputProps> = ({
   preventPaste = false,
   hideValue = false,
   maxLength,
+  sanitizeInput = true,
   className,
   ...props
 }) => {
   const [internalValue, setInternalValue] = useState(props.value || '');
 
+  // Função para sanitizar entrada
+  const sanitizeValue = (value: string): string => {
+    if (!sanitizeInput) return value;
+    
+    // Remover caracteres potencialmente perigosos
+    return value
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/javascript:/gi, '')
+      .replace(/on\w+\s*=/gi, '')
+      .replace(/data:text\/html/gi, '');
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value;
+    
+    // Sanitizar entrada se habilitado
+    if (sanitizeInput) {
+      value = sanitizeValue(value);
+    }
     
     // Aplicar limite de caracteres se especificado
     if (maxLength && value.length > maxLength) {
@@ -32,7 +51,17 @@ export const SecureInput: React.FC<SecureInputProps> = ({
     
     setInternalValue(value);
     onSecureChange?.(value);
-    props.onChange?.(e);
+    
+    // Criar novo evento com valor sanitizado
+    const sanitizedEvent = {
+      ...e,
+      target: {
+        ...e.target,
+        value: value
+      }
+    };
+    
+    props.onChange?.(sanitizedEvent as React.ChangeEvent<HTMLInputElement>);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -58,6 +87,27 @@ export const SecureInput: React.FC<SecureInputProps> = ({
     }
   };
 
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    if (preventPaste) {
+      e.preventDefault();
+      return;
+    }
+
+    // Sanitizar dados colados se habilitado
+    if (sanitizeInput) {
+      e.preventDefault();
+      const pastedData = e.clipboardData.getData('text');
+      const sanitizedData = sanitizeValue(pastedData);
+      
+      const newValue = maxLength 
+        ? sanitizedData.substring(0, maxLength)
+        : sanitizedData;
+      
+      setInternalValue(newValue);
+      onSecureChange?.(newValue);
+    }
+  };
+
   // Limpar valor do componente quando desmontado (para campos sensíveis)
   useEffect(() => {
     return () => {
@@ -74,6 +124,7 @@ export const SecureInput: React.FC<SecureInputProps> = ({
       onChange={handleChange}
       onKeyDown={handleKeyDown}
       onContextMenu={handleContextMenu}
+      onPaste={handlePaste}
       className={cn(
         hideValue && 'select-none',
         preventCopy && 'user-select-none',
