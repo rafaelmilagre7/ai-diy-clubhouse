@@ -43,9 +43,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       log('User signed out successfully');
+      return { success: true, error: null };
     } catch (error) {
       logError('Error signing out', error);
-      throw error;
+      return { success: false, error: error instanceof Error ? error : new Error('Unknown error') };
     }
   };
 
