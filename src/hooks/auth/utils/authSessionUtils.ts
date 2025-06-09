@@ -1,170 +1,184 @@
 
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/lib/supabase';
-import { logger } from '@/utils/logger';
-import { sanitizeForLogging } from '@/utils/securityUtils';
+
+// Cache para perfis com TTL
+const profileCache = new Map<string, { profile: UserProfile; timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 
 /**
- * Processa e valida o perfil do usuário com segurança
+ * Processa o perfil do usuário com cache otimizado
  */
 export const processUserProfile = async (
   userId: string,
   email?: string | null,
   name?: string | null
 ): Promise<UserProfile | null> => {
-  if (!userId || typeof userId !== 'string') {
-    logger.warn("ID de usuário inválido para busca de perfil", {
-      component: 'AUTH_SESSION_UTILS'
-    });
+  if (!userId) {
+    console.warn('[AUTH] processUserProfile: userId é obrigatório');
     return null;
   }
 
+  // Verificar cache primeiro
+  const cached = profileCache.get(userId);
+  const now = Date.now();
+  
+  if (cached && (now - cached.timestamp) < CACHE_TTL) {
+    console.log(`🎯 [AUTH] Usando perfil do cache para: ${userId.substring(0, 8)}***`);
+    return cached.profile;
+  }
+
   try {
-    // Buscar perfil existente
-    const { data: existingProfile, error: fetchError } = await supabase
+    console.log(`🔍 [AUTH] Buscando perfil no banco para: ${userId.substring(0, 8)}***`);
+    
+    const { data: profile, error } = await supabase
       .from('profiles')
-      .select('*')
+      .select(`
+        id,
+        email,
+        name,
+        role,
+        role_id,
+        avatar_url,
+        company_name,
+        industry,
+        created_at,
+        onboarding_completed,
+        onboarding_completed_at,
+        user_roles (
+          id,
+          name,
+          description,
+          permissions
+        )
+      `)
       .eq('id', userId)
       .single();
 
-    if (fetchError && fetchError.code !== 'PGRST116') {
-      logger.error("Erro ao buscar perfil existente", {
-        error: sanitizeForLogging({ message: fetchError.message }),
-        component: 'AUTH_SESSION_UTILS'
-      });
-      throw fetchError;
-    }
-
-    if (existingProfile) {
-      logger.info("Perfil existente encontrado", {
-        userId: userId.substring(0, 8) + '***',
-        role: existingProfile.role,
-        component: 'AUTH_SESSION_UTILS'
-      });
-      return existingProfile;
-    }
-
-    // Criar novo perfil se não existir
-    if (email) {
-      const newProfile: Partial<UserProfile> = {
-        id: userId,
-        email: email.toLowerCase().trim(),
-        name: name || 'Usuário',
-        role: 'membro_club', // Role padrão seguro
-        avatar_url: null,
-        company_name: null,
-        industry: null,
-        onboarding_completed: false,
-        onboarding_completed_at: null
-      };
-
-      const { data: createdProfile, error: createError } = await supabase
-        .from('profiles')
-        .insert(newProfile)
-        .select()
-        .single();
-
-      if (createError) {
-        logger.error("Erro ao criar novo perfil", {
-          error: sanitizeForLogging({ message: createError.message }),
-          component: 'AUTH_SESSION_UTILS'
-        });
-        throw createError;
+    if (error) {
+      console.error('[AUTH] Erro ao buscar perfil:', error);
+      
+      // Se perfil não existe, tentar criar um básico
+      if (error.code === 'PGRST116') {
+        console.log('[AUTH] Perfil não encontrado, criando perfil básico...');
+        return await createBasicProfile(userId, email, name);
       }
-
-      logger.info("Novo perfil criado com sucesso", {
-        userId: userId.substring(0, 8) + '***',
-        component: 'AUTH_SESSION_UTILS'
-      });
-
-      return createdProfile;
+      
+      return null;
     }
 
-    // Fallback: retornar perfil mínimo
-    logger.warn("Criando perfil mínimo como fallback", {
-      userId: userId.substring(0, 8) + '***',
-      component: 'AUTH_SESSION_UTILS'
-    });
+    if (!profile) {
+      console.warn('[AUTH] Perfil não encontrado no banco');
+      return null;
+    }
 
-    return {
-      id: userId,
-      email: email || '',
-      name: name || 'Usuário',
-      role: 'membro_club',
-      avatar_url: null,
-      company_name: null,
-      industry: null,
-      created_at: new Date().toISOString(),
-      onboarding_completed: false,
-      onboarding_completed_at: null
+    // Mapear para o formato esperado
+    const userProfile: UserProfile = {
+      id: profile.id,
+      email: profile.email || email || '',
+      name: profile.name || name || null,
+      role: profile.role || 'membro_club',
+      role_id: profile.role_id,
+      user_roles: profile.user_roles,
+      avatar_url: profile.avatar_url,
+      company_name: profile.company_name,
+      industry: profile.industry,
+      created_at: profile.created_at || new Date().toISOString(),
+      onboarding_completed: profile.onboarding_completed || false,
+      onboarding_completed_at: profile.onboarding_completed_at,
     };
 
-  } catch (error) {
-    logger.error("Erro crítico ao processar perfil do usuário", {
-      error: error instanceof Error ? error.message : 'Erro desconhecido',
-      component: 'AUTH_SESSION_UTILS'
+    // Atualizar cache
+    profileCache.set(userId, {
+      profile: userProfile,
+      timestamp: now
     });
+
+    console.log(`✅ [AUTH] Perfil processado com sucesso: ${userProfile.role}`);
+    return userProfile;
+
+  } catch (error) {
+    console.error('[AUTH] Erro inesperado ao processar perfil:', error);
     return null;
   }
 };
 
 /**
- * Valida a integridade de uma sessão
+ * Cria um perfil básico para usuário sem perfil
  */
-export const validateSessionIntegrity = (session: any): boolean => {
-  if (!session || typeof session !== 'object') {
-    return false;
-  }
+const createBasicProfile = async (
+  userId: string,
+  email?: string | null,
+  name?: string | null
+): Promise<UserProfile | null> => {
+  try {
+    console.log(`🆕 [AUTH] Criando perfil básico para: ${userId.substring(0, 8)}***`);
+    
+    const profileData = {
+      id: userId,
+      email: email || '',
+      name: name || null,
+      role: 'membro_club', // Role padrão
+      onboarding_completed: false,
+      created_at: new Date().toISOString(),
+    };
 
-  // Verificar campos obrigatórios
-  if (!session.access_token || !session.user || !session.user.id) {
-    logger.warn("Sessão com campos obrigatórios ausentes", {
-      component: 'AUTH_SESSION_UTILS'
-    });
-    return false;
-  }
+    const { data: newProfile, error } = await supabase
+      .from('profiles')
+      .insert([profileData])
+      .select()
+      .single();
 
-  // Verificar expiração
-  if (session.expires_at && session.expires_at < Math.floor(Date.now() / 1000)) {
-    logger.warn("Sessão expirada detectada", {
-      component: 'AUTH_SESSION_UTILS'
-    });
-    return false;
-  }
+    if (error) {
+      console.error('[AUTH] Erro ao criar perfil básico:', error);
+      return null;
+    }
 
-  // Verificar formato básico do token
-  if (typeof session.access_token !== 'string' || session.access_token.length < 20) {
-    logger.warn("Token com formato inválido", {
-      component: 'AUTH_SESSION_UTILS'
-    });
-    return false;
-  }
+    const userProfile: UserProfile = {
+      id: newProfile.id,
+      email: newProfile.email || '',
+      name: newProfile.name,
+      role: newProfile.role || 'membro_club',
+      role_id: newProfile.role_id,
+      user_roles: null,
+      avatar_url: newProfile.avatar_url,
+      company_name: newProfile.company_name,
+      industry: newProfile.industry,
+      created_at: newProfile.created_at,
+      onboarding_completed: newProfile.onboarding_completed || false,
+      onboarding_completed_at: newProfile.onboarding_completed_at,
+    };
 
-  return true;
+    console.log(`✅ [AUTH] Perfil básico criado com sucesso`);
+    return userProfile;
+
+  } catch (error) {
+    console.error('[AUTH] Erro inesperado ao criar perfil básico:', error);
+    return null;
+  }
 };
 
 /**
- * Limpa dados sensíveis da memória (best effort)
+ * Limpa o cache de perfil para um usuário específico
  */
-export const secureDataCleanup = (data: any): void => {
-  if (!data || typeof data !== 'object') {
-    return;
+export const clearProfileCache = (userId?: string) => {
+  if (userId) {
+    profileCache.delete(userId);
+    console.log(`🧹 [AUTH] Cache de perfil limpo para: ${userId.substring(0, 8)}***`);
+  } else {
+    profileCache.clear();
+    console.log('🧹 [AUTH] Cache de perfil limpo completamente');
   }
+};
 
-  try {
-    Object.keys(data).forEach(key => {
-      if (typeof data[key] === 'string') {
-        // Substituir strings por valores vazios
-        data[key] = '';
-      } else if (typeof data[key] === 'object' && data[key] !== null) {
-        // Recursivamente limpar objetos aninhados
-        secureDataCleanup(data[key]);
-      }
-    });
-  } catch (error) {
-    // Falhar silenciosamente se não conseguir limpar
-    logger.warn("Erro na limpeza segura de dados", {
-      component: 'AUTH_SESSION_UTILS'
-    });
-  }
+/**
+ * Valida se o perfil tem dados mínimos necessários
+ */
+export const validateProfile = (profile: any): boolean => {
+  return !!(
+    profile &&
+    profile.id &&
+    profile.email &&
+    profile.role
+  );
 };

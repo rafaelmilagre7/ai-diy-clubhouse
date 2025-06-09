@@ -10,8 +10,8 @@ export const useLayoutAuthentication = () => {
   const [redirectChecked, setRedirectChecked] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const isMounted = useRef(true);
-  const maxRetries = 3;
-  const authTimeout = 10000; // 10 segundos ao invés de 3
+  const maxRetries = 2; // Reduzido para evitar loops
+  const authTimeout = 8000; // 8 segundos
 
   // Setup component lifecycle
   useEffect(() => {
@@ -22,39 +22,46 @@ export const useLayoutAuthentication = () => {
     };
   }, []);
   
-  // Setup loading timeout effect com retry logic mais inteligente
+  // Setup loading timeout com proteção melhorada
   useEffect(() => {
     if (isLoading && isMounted.current) {
       const timeoutId = setTimeout(() => {
         if (isMounted.current && isLoading) {
           if (retryCount < maxRetries) {
-            console.warn(`[AUTH] Loading timeout - retry ${retryCount + 1}/${maxRetries}`);
+            console.warn(`⚠️ [AUTH] Timeout na autenticação - retry ${retryCount + 1}/${maxRetries}`);
             setRetryCount(prev => prev + 1);
             toast.warning(`Verificando autenticação... (${retryCount + 1}/${maxRetries})`);
           } else {
-            console.error("[AUTH] Auth timeout after retries");
+            console.error("❌ [AUTH] Timeout final na autenticação");
             setIsLoading(false);
-            toast.error("Timeout na autenticação. Redirecionando...");
-            navigate('/login', { replace: true });
+            // Não redirecionar automaticamente para evitar loops
+            toast.error("Problema na verificação de autenticação");
           }
         }
       }, authTimeout);
       
       return () => clearTimeout(timeoutId);
     }
-  }, [isLoading, retryCount, setIsLoading, navigate]);
+  }, [isLoading, retryCount, setIsLoading]);
 
-  // Check user role when profile is loaded (apenas uma vez)
+  // Check user role quando profile carrega (com proteções)
   useEffect(() => {
     if (!profile || redirectChecked || !isMounted.current || !user || isLoading) {
+      return;
+    }
+    
+    // Validar se o perfil tem dados mínimos
+    if (!profile.id || !profile.role) {
+      console.warn("⚠️ [AUTH] Perfil inválido detectado");
       return;
     }
     
     // Reset retry count quando conseguimos carregar o perfil
     setRetryCount(0);
     
-    if (profile.role === 'admin') {
-      console.info("[AUTH] Admin user detected, redirecting to admin area");
+    // Apenas redirecionar admin se estiver em página não-admin
+    if (profile.role === 'admin' && !window.location.pathname.startsWith('/admin')) {
+      console.info("🔄 [AUTH] Admin detectado, redirecionando para área administrativa");
       toast.success("Redirecionando para área administrativa");
       navigate('/admin', { replace: true });
     }
