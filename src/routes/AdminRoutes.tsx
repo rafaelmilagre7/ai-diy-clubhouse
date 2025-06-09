@@ -1,7 +1,7 @@
 
 import { RouteObject } from "react-router-dom";
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
-import AdminLayout from '@/components/layout/AdminLayout';
+import AdminLayout from '@/components/admin/AdminLayout';
 
 // Admin pages
 import AdminDashboard from '@/pages/admin/AdminDashboard';
@@ -20,7 +20,7 @@ import BenefitStats from '@/pages/admin/BenefitStats';
 import WhatsAppDebug from '@/pages/admin/WhatsAppDebug';
 import AdminCommunications from '@/pages/admin/AdminCommunications';
 
-// Função helper para criar rotas protegidas com AdminLayout
+// Função helper para criar rotas protegidas com AdminLayout (sempre aberto)
 const createAdminRoute = (path: string, Component: React.ComponentType<any>) => ({
   path,
   element: <ProtectedRoutes><AdminLayout><Component /></AdminLayout></ProtectedRoutes>
