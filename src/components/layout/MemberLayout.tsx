@@ -1,8 +1,10 @@
-import React, { memo, useMemo, useCallback, useState } from "react";
+
+import React, { memo, useMemo, useCallback } from "react";
 import { useAuth } from "@/contexts/auth";
 import BaseLayout from "./BaseLayout";
 import { MemberSidebar } from "./member/MemberSidebar";
 import { MemberContent } from "./member/MemberContent";
+import { useSidebarControl } from "@/hooks/useSidebarControl";
 import { toast } from "sonner";
 
 interface MemberLayoutProps {
@@ -11,16 +13,18 @@ interface MemberLayoutProps {
 
 const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
   const { profile, signOut } = useAuth();
-  
-  // Estado do sidebar iniciando como aberto (true)
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const { sidebarOpen, setSidebarOpen, toggleSidebar, isMobile } = useSidebarControl();
 
-  console.log('[MemberLayout] Renderizando com:', {
-    profile: !!profile,
-    profileName: profile?.name,
-    hasChildren: !!children,
-    sidebarOpen
-  });
+  // Log apenas em desenvolvimento
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[MemberLayout] Renderizando com:', {
+      profile: !!profile,
+      profileName: profile?.name,
+      hasChildren: !!children,
+      sidebarOpen,
+      isMobile
+    });
+  }
 
   // Memoizar função para obter iniciais
   const getInitials = useCallback((name: string | null) => {
@@ -43,7 +47,9 @@ const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
         toast.error("Erro ao fazer logout");
       }
     } catch (error) {
-      console.error('[MemberLayout] Erro no signOut:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[MemberLayout] Erro no signOut:', error);
+      }
       toast.error("Erro ao fazer logout");
     }
   }, [signOut]);
@@ -57,23 +63,36 @@ const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
 
   try {
     return (
-      <BaseLayout
-        variant="member"
-        sidebarComponent={MemberSidebar}
-        contentComponent={MemberContent}
-        onSignOut={handleSignOut}
-        profileName={profileData.name}
-        profileEmail={profileData.email}
-        profileAvatar={profileData.avatar}
-        getInitials={getInitials}
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-      >
-        {children}
-      </BaseLayout>
+      <>
+        {/* Backdrop para mobile quando sidebar aberto */}
+        {isMobile && sidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Fechar menu"
+          />
+        )}
+        
+        <BaseLayout
+          variant="member"
+          sidebarComponent={MemberSidebar}
+          contentComponent={MemberContent}
+          onSignOut={handleSignOut}
+          profileName={profileData.name}
+          profileEmail={profileData.email}
+          profileAvatar={profileData.avatar}
+          getInitials={getInitials}
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+        >
+          {children}
+        </BaseLayout>
+      </>
     );
   } catch (error) {
-    console.error('[MemberLayout] Erro ao renderizar:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[MemberLayout] Erro ao renderizar:', error);
+    }
     return (
       <div className="flex h-screen bg-background items-center justify-center">
         <div className="text-center">

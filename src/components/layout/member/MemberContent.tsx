@@ -1,6 +1,7 @@
 
 import React from "react";
 import { MemberHeader } from "./MemberHeader";
+import { cn } from "@/lib/utils";
 
 interface MemberContentProps {
   children: React.ReactNode;
@@ -24,7 +25,13 @@ export const MemberContent: React.FC<MemberContentProps> = ({
   setSidebarOpen,
 }) => {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className={cn(
+      "flex flex-col min-h-screen transition-all duration-300 ease-in-out",
+      // Ajustar margem baseado no estado do sidebar
+      sidebarOpen ? "md:ml-64" : "md:ml-16",
+      // Em mobile, ocupar toda a largura sempre
+      "ml-0"
+    )}>
       <MemberHeader
         onSignOut={onSignOut}
         profileName={profileName}
@@ -35,7 +42,7 @@ export const MemberContent: React.FC<MemberContentProps> = ({
         setSidebarOpen={setSidebarOpen}
       />
       
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-6 overflow-auto">
         {children}
       </main>
     </div>

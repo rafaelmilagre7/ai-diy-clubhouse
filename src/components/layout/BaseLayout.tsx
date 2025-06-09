@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -52,16 +51,13 @@ const BaseLayout: React.FC<BaseLayoutProps> = ({
   const setSidebarOpen = propSetSidebarOpen ?? setLocalSidebarOpen;
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-background w-full">
       <SidebarComponent 
         sidebarOpen={sidebarOpen} 
         setSidebarOpen={setSidebarOpen} 
       />
       
-      <div className={cn(
-        "flex-1 transition-all duration-300 ease-in-out",
-        sidebarOpen ? "md:ml-64" : "md:ml-[70px]"
-      )}>
+      <div className="flex-1 flex flex-col min-w-0">
         <ContentComponent
           onSignOut={onSignOut}
           profileName={profileName}

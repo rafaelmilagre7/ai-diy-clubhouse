@@ -34,13 +34,16 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
 }) => {
   const { profile } = useAuth();
 
-  console.log('[DashboardLayout] Props recebidos:', {
-    active: active?.length || 0,
-    completed: completed?.length || 0,
-    recommended: recommended?.length || 0,
-    isLoading,
-    profile: !!profile
-  });
+  // Log apenas em desenvolvimento
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[DashboardLayout] Props recebidos:', {
+      active: active?.length || 0,
+      completed: completed?.length || 0,
+      recommended: recommended?.length || 0,
+      isLoading,
+      profile: !!profile
+    });
+  }
 
   // Memoizar o cálculo do nome do usuário
   const userName = useMemo(() => 
@@ -67,15 +70,20 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
     total: safeActive.length + safeCompleted.length + safeRecommended.length
   }), [safeActive.length, safeCompleted.length, safeRecommended.length]);
 
-  console.log('[DashboardLayout] Estado calculado:', {
-    hasNoSolutions,
-    kpiTotals,
-    userName
-  });
+  // Log apenas em desenvolvimento
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[DashboardLayout] Estado calculado:', {
+      hasNoSolutions,
+      kpiTotals,
+      userName
+    });
+  }
 
   // Se não há perfil e não está carregando, mostrar erro
   if (!profile && !isLoading) {
-    console.log('[DashboardLayout] Sem perfil, mostrando erro de conexão');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[DashboardLayout] Sem perfil, mostrando erro de conexão');
+    }
     return <DashboardConnectionErrorState />;
   }
 
