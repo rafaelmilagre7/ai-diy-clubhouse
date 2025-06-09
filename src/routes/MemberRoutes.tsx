@@ -21,7 +21,6 @@ import SuggestionDetails from '@/pages/member/SuggestionDetails';
 import NewSuggestion from '@/pages/member/NewSuggestion';
 import Events from '@/pages/member/Events';
 import SolutionCertificate from '@/pages/member/SolutionCertificate';
-import NotificationSettingsPage from '@/pages/profile/NotificationSettingsPage';
 
 // Member Learning pages
 import LearningPage from '@/pages/member/learning/LearningPage';
@@ -58,7 +57,6 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/tools/:id", ToolDetails),
   createProtectedRoute("/profile", Profile),
   createProtectedRoute("/profile/edit", EditProfile),
-  createProtectedRoute("/settings/notifications", NotificationSettingsPage),
   createProtectedRoute("/solution/:id", SolutionDetails),
   createProtectedRoute("/solution/:id/certificate", SolutionCertificate),
   createProtectedRoute("/implement/:id/:moduleIdx", SolutionImplementation),

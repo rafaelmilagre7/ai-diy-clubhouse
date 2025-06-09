@@ -1,5 +1,7 @@
 
 import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Menu } from 'lucide-react';
 import { AdminUserMenu } from './AdminUserMenu';
 import { NotificationDropdown } from '@/components/notifications/NotificationDropdown';
 
@@ -11,7 +13,16 @@ export const AdminHeader = ({ onToggleSidebar }: AdminHeaderProps) => {
   return (
     <header className="h-16 border-b bg-background flex items-center justify-between px-4 lg:px-6">
       <div className="flex items-center gap-4">
-        <div className="lg:block">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onToggleSidebar}
+          className="lg:hidden"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+        
+        <div className="hidden lg:block">
           <h1 className="text-xl font-semibold">Painel Administrativo</h1>
         </div>
       </div>

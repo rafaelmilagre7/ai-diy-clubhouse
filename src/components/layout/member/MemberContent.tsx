@@ -1,30 +1,24 @@
 
-import React from "react";
 import { cn } from "@/lib/utils";
-import { BaseContentProps } from "../BaseLayout";
 import { MemberHeader } from "./MemberHeader";
+import { BaseContentProps } from "../BaseLayout";
 
-export const MemberContent = ({ sidebarOpen, setSidebarOpen, children }: BaseContentProps) => {
+export const MemberContent = ({ 
+  sidebarOpen, 
+  setSidebarOpen, 
+  children 
+}: BaseContentProps) => {
   return (
-    <main
+    <div 
       className={cn(
-        "flex flex-col flex-1 transition-all duration-300 ease-in-out min-h-screen",
+        "flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden",
         sidebarOpen ? "md:ml-64" : "md:ml-[70px]"
       )}
     >
       <MemberHeader onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-      
-      {/* Overlay para mobile quando sidebar está aberto */}
-      {sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-      
-      <div className="flex-1 p-6 overflow-auto">
+      <main className="flex-1 overflow-auto">
         {children}
-      </div>
-    </main>
+      </main>
+    </div>
   );
 };
