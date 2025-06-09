@@ -1,581 +1,461 @@
 
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/auth';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Loader2, Mail, Lock, User, Eye, EyeOff, CheckCircle2, AlertCircle } from 'lucide-react';
-import { Label } from '@/components/ui/label';
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/auth";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle, CheckCircle, Eye, EyeOff, LogOut } from "lucide-react";
+import LoadingScreen from "@/components/common/LoadingScreen";
 
 interface InviteData {
   id: string;
   email: string;
-  role_id: string;
-  token: string;
   expires_at: string;
+  used_at: string | null;
+  role: { name: string } | null;
+}
+
+interface ValidationResult {
+  isValid: boolean;
+  error?: string;
+  needsLogout?: boolean;
+  inviteData?: InviteData;
 }
 
 const InvitePage = () => {
-  const { token: tokenFromUrl } = useParams<{ token: string }>();
-  const [token, setToken] = useState<string>(tokenFromUrl || '');
-  const [loading, setLoading] = useState<boolean>(false);
-  const [checkingToken, setCheckingToken] = useState<boolean>(!!tokenFromUrl);
-  const [processingInvite, setProcessingInvite] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [inviteData, setInviteData] = useState<InviteData | null>(null);
-  const [registerSuccess, setRegisterSuccess] = useState<boolean>(false);
-  const [inviteProcessed, setInviteProcessed] = useState<boolean>(false);
+  const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
-  const { user, session } = useAuth();
+  const { user, signOut } = useAuth();
   
-  // Estados para cadastro de usuário
-  const [name, setName] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [passwordStrength, setPasswordStrength] = useState<'fraca' | 'média' | 'forte' | null>(null);
+  const [inviteData, setInviteData] = useState<InviteData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
+  const [processing, setProcessing] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   
-  // Verificar token na URL e buscar dados do convite
-  useEffect(() => {
-    if (tokenFromUrl) {
-      checkInviteToken(tokenFromUrl);
+  // Form state
+  const [formData, setFormData] = useState({
+    name: '',
+    password: '',
+    confirmPassword: ''
+  });
+
+  // Validar convite e verificar conflitos
+  const validateInvite = async (): Promise<ValidationResult> => {
+    if (!token) {
+      return { isValid: false, error: "Token de convite não fornecido" };
     }
-  }, [tokenFromUrl]);
-  
-  // Se o usuário já está autenticado e temos dados do convite, processar automaticamente
-  useEffect(() => {
-    const processIfReady = async () => {
-      // Verificar se temos um usuário e sessão válida e um convite válido para processar
-      if (user && session && inviteData && tokenFromUrl && !inviteProcessed) {
-        console.log("Condições atendidas para processar convite automaticamente:", {
-          userId: user.id,
-          hasSession: !!session,
-          hasInviteData: !!inviteData,
-          token: tokenFromUrl
+
+    try {
+      console.log("🔍 Validando convite:", token.substring(0, 8) + "***");
+
+      // Buscar dados do convite
+      const { data: invite, error: inviteError } = await supabase
+        .from('invites')
+        .select(`
+          id,
+          email,
+          expires_at,
+          used_at,
+          role:role_id(name)
+        `)
+        .eq('token', token)
+        .maybeSingle();
+
+      if (inviteError) {
+        console.error("❌ Erro ao buscar convite:", inviteError);
+        return { isValid: false, error: "Erro ao verificar convite" };
+      }
+
+      if (!invite) {
+        console.log("❌ Convite não encontrado");
+        return { isValid: false, error: "Convite não encontrado ou inválido" };
+      }
+
+      // Verificar se já foi usado
+      if (invite.used_at) {
+        console.log("❌ Convite já utilizado em:", invite.used_at);
+        return { 
+          isValid: false, 
+          error: `Este convite já foi utilizado em ${new Date(invite.used_at).toLocaleString('pt-BR')}` 
+        };
+      }
+
+      // Verificar se expirou
+      if (new Date(invite.expires_at) < new Date()) {
+        console.log("❌ Convite expirado em:", invite.expires_at);
+        return { 
+          isValid: false, 
+          error: `Este convite expirou em ${new Date(invite.expires_at).toLocaleString('pt-BR')}` 
+        };
+      }
+
+      // ✨ NOVA VALIDAÇÃO: Verificar se usuário está logado com email diferente
+      if (user && user.email && user.email !== invite.email) {
+        console.log("⚠️ Usuário logado com email diferente:", {
+          usuarioLogado: user.email,
+          convitePara: invite.email
         });
         
-        try {
-          setProcessingInvite(true);
-          await processInvite(tokenFromUrl);
-          setInviteProcessed(true);
-        } catch (err) {
-          console.error("Erro ao processar convite automaticamente:", err);
-        } finally {
-          setProcessingInvite(false);
-        }
+        return {
+          isValid: false,
+          error: `Você está logado como ${user.email}, mas este convite é para ${invite.email}`,
+          needsLogout: true,
+          inviteData: invite
+        };
       }
-    };
-    
-    processIfReady();
-  }, [user, session, inviteData, tokenFromUrl, inviteProcessed]);
 
-  // Função para avaliar a força da senha
-  const evaluatePasswordStrength = (pass: string) => {
-    if (!pass) {
-      setPasswordStrength(null);
-      return;
-    }
-    
-    const hasLetters = /[a-zA-Z]/.test(pass);
-    const hasNumbers = /[0-9]/.test(pass);
-    const hasSpecialChars = /[!@#$%^&*(),.?":{}|<>]/.test(pass);
-    
-    if (pass.length < 6) {
-      setPasswordStrength('fraca');
-    } else if (pass.length >= 8 && hasLetters && hasNumbers && hasSpecialChars) {
-      setPasswordStrength('forte');
-    } else if (pass.length >= 6 && ((hasLetters && hasNumbers) || (hasLetters && hasSpecialChars) || (hasNumbers && hasSpecialChars))) {
-      setPasswordStrength('média');
-    } else {
-      setPasswordStrength('fraca');
+      // Verificar se já existe perfil ativo
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id, email, name')
+        .eq('email', invite.email)
+        .maybeSingle();
+
+      if (existingProfile) {
+        console.log("⚠️ Perfil já existe:", existingProfile);
+        return {
+          isValid: false,
+          error: `Já existe uma conta ativa para ${invite.email}. Use a opção de login.`,
+          inviteData: invite
+        };
+      }
+
+      console.log("✅ Convite válido para:", invite.email);
+      return { isValid: true, inviteData: invite };
+
+    } catch (error) {
+      console.error("❌ Erro na validação:", error);
+      return { isValid: false, error: "Erro interno ao validar convite" };
     }
   };
 
-  const normalizeToken = (inputToken: string): string => {
-    return inputToken.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-  };
-  
-  // Função para verificar o token sem necessidade de autenticação
-  const checkInviteToken = async (inviteToken: string) => {
-    try {
-      setCheckingToken(true);
-      setError(null);
-      
-      const normalizedToken = normalizeToken(inviteToken);
-      console.log("Verificando token de convite:", normalizedToken);
-      
-      // Chamar a função RPC check_invite_token
-      const { data, error } = await supabase.rpc('check_invite_token', {
-        invite_token: normalizedToken
-      });
-      
-      if (error) {
-        console.error("Erro ao verificar token:", error);
-        throw new Error(error.message || 'Erro ao verificar convite');
-      }
-      
-      if (data.status === 'error') {
-        console.error("Erro retornado pela função:", data);
-        throw new Error(data.message || 'Token inválido ou expirado');
-      }
-      
-      console.log("Dados do convite:", data);
-      
-      // Definir dados do convite e email para registro
-      setInviteData({
-        id: data.invite_id,
-        email: data.email,
-        role_id: data.role_id,
-        token: data.token,
-        expires_at: data.expires_at
-      });
-            
-    } catch (err: any) {
-      console.error('Erro ao verificar token:', err);
-      setError(err.message || 'Token de convite inválido');
-    } finally {
-      setCheckingToken(false);
-    }
-  };
-
-  const processInvite = async (inviteToken: string) => {
-    if (!user) {
-      toast.error('Você precisa estar logado para aceitar um convite');
-      return;
-    }
-
-    try {
+  // Carregar e validar convite
+  useEffect(() => {
+    const loadInvite = async () => {
       setLoading(true);
-      setError(null);
+      const result = await validateInvite();
+      setValidationResult(result);
       
-      const normalizedToken = normalizeToken(inviteToken);
-      console.log("Processando convite com token normalizado:", normalizedToken);
+      if (result.isValid && result.inviteData) {
+        setInviteData(result.inviteData);
+      }
       
-      if (!normalizedToken) {
-        throw new Error('Token de convite inválido');
-      }
-
-      // Chama a função RPC use_invite para processar o convite
-      const { data, error } = await supabase.rpc('use_invite', {
-        invite_token: normalizedToken,
-        user_id: user.id
-      });
-
-      console.log("Resposta da função use_invite:", data);
-
-      if (error) {
-        console.error("Erro ao processar convite:", error);
-        throw new Error(error.message || 'Erro ao processar convite');
-      }
-
-      if (data.status === 'error') {
-        console.error("Erro retornado pela função:", data);
-        throw new Error(data.message || 'Token inválido ou expirado');
-      }
-
-      // Atualizar informações de estado
-      setInviteProcessed(true);
-      
-      toast.success('Bem-vindo ao VIVER DE IA Club!', {
-        description: 'Seu acesso foi configurado com sucesso.'
-      });
-
-      // Redirecionar para a página principal após sucesso
-      setTimeout(() => navigate('/dashboard'), 2000);
-
-    } catch (err: any) {
-      console.error('Erro ao processar convite:', err);
-      setError(err.message || 'Ocorreu um erro ao processar o convite');
-      toast.error('Erro ao processar convite', {
-        description: err.message || 'Por favor, verifique o token e tente novamente'
-      });
-    } finally {
       setLoading(false);
+    };
+
+    loadInvite();
+  }, [token, user]);
+
+  // Fazer logout e recarregar página
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success("Logout realizado", {
+        description: "Você foi desconectado. Agora pode usar o convite."
+      });
+      // Recarregar a página após um pequeno delay
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (error) {
+      console.error("Erro no logout:", error);
+      toast.error("Erro ao fazer logout");
     }
   };
 
-  const handleSubmitToken = (e: React.FormEvent) => {
-    e.preventDefault();
-    checkInviteToken(token);
-  };
-  
-  // Função para registrar e processar convite em um só passo
+  // Processar criação da conta
   const handleCreateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!inviteData || !inviteData.email) {
-      toast.error('Dados do convite inválidos');
+    if (!inviteData || !validationResult?.isValid) {
+      toast.error("Convite inválido");
       return;
     }
-    
-    if (!name) {
-      toast.error('Por favor, informe seu nome completo');
+
+    // Validações do formulário
+    if (!formData.name.trim()) {
+      toast.error("Nome é obrigatório");
       return;
     }
-    
-    if (!password || password.length < 6) {
-      toast.error('A senha deve ter pelo menos 6 caracteres');
+
+    if (formData.password.length < 6) {
+      toast.error("Senha deve ter pelo menos 6 caracteres");
       return;
     }
-    
+
+    if (formData.password !== formData.confirmPassword) {
+      toast.error("Senhas não coincidem");
+      return;
+    }
+
+    setProcessing(true);
+
     try {
-      setLoading(true);
-      setError(null);
-      
-      // Tenta realizar o cadastro do usuário
-      const { data: signupData, error: signupError } = await supabase.auth.signUp({
+      console.log("🚀 Criando conta para:", inviteData.email);
+
+      // ✨ NOVA VERIFICAÇÃO: Validar novamente antes de criar
+      const revalidation = await validateInvite();
+      if (!revalidation.isValid) {
+        toast.error("Convite não é mais válido", {
+          description: revalidation.error
+        });
+        setProcessing(false);
+        return;
+      }
+
+      // Tentar criar conta
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: inviteData.email,
-        password,
+        password: formData.password,
         options: {
-          data: { name }
+          data: {
+            name: formData.name,
+            invite_token: token
+          }
         }
       });
-      
-      // Verificar se houve erro no cadastro
-      if (signupError) {
-        // Se o erro indicar que o usuário já existe, orientar a fazer login
-        if (signupError.message.includes('already registered') || 
-            signupError.message.includes('already exists') || 
-            signupError.message.toLowerCase().includes('já cadastrado')) {
-          
-          // Tentar fazer login com as credenciais fornecidas
-          toast.info('Este email já está cadastrado. Tentando fazer login...');
-          
-          const { data: signinData, error: signinError } = await supabase.auth.signInWithPassword({
-            email: inviteData.email,
-            password
+
+      if (authError) {
+        console.error("❌ Erro na criação:", authError);
+        
+        // ✨ MELHOR TRATAMENTO DE ERRO
+        if (authError.message.includes('already registered')) {
+          toast.error("Email já cadastrado", {
+            description: `O email ${inviteData.email} já possui uma conta. Tente fazer login ou recuperar sua senha.`,
+            duration: 8000,
+            action: {
+              label: 'Ir para Login',
+              onClick: () => navigate('/login')
+            }
           });
-          
-          if (signinError) {
-            throw new Error('Senha incorreta. Se você já possui conta, use a senha correta.');
-          }
-          
-          // Login bem sucedido
-          if (signinData.user) {
-            toast.success('Login realizado com sucesso!');
-            setRegisterSuccess(true);
-            
-            // Processar o convite após o login bem-sucedido
-            console.log("Usuário logado, processando convite:", inviteData.token);
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Esperar 1 segundo para garantir que a sessão está disponível
-            await processInvite(inviteData.token);
-          }
-          
         } else {
-          // Outros erros de cadastro
-          throw signupError;
+          toast.error("Erro ao criar conta", {
+            description: authError.message,
+            duration: 6000
+          });
         }
-      } else if (signupData.user) {
-        // Cadastro bem sucedido
-        toast.success('Conta criada com sucesso!');
-        setRegisterSuccess(true);
         
-        // Esperar um pouco para garantir que a sessão está disponível
-        console.log("Usuário registrado, aguardando para processar convite");
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // Se autorização de email não for necessária, processar o convite
-        if (!signupData.session) {
-          console.log("Sem sessão após cadastro - verificando se é necessário confirmar email");
-          toast.info('Verifique seu email para confirmar seu cadastro e então acesse a plataforma.');
-        } else {
-          console.log("Sessão disponível após cadastro, processando convite");
-          await processInvite(inviteData.token);
-        }
-      } else {
-        // Caso especial: cadastro iniciado mas precisa confirmar email
-        toast.info(
-          'Verifique seu email', 
-          { description: 'Enviamos um link de confirmação para o seu email.' }
-        );
+        setProcessing(false);
+        return;
       }
+
+      if (!authData.user) {
+        toast.error("Erro na criação da conta");
+        setProcessing(false);
+        return;
+      }
+
+      console.log("✅ Conta criada, processando convite...");
+
+      // Processar convite via RPC
+      const { data: acceptResult, error: acceptError } = await supabase.rpc('accept_invite', {
+        invite_token: token,
+        user_name: formData.name
+      });
+
+      if (acceptError) {
+        console.error("❌ Erro ao aceitar convite:", acceptError);
+        toast.error("Erro ao processar convite", {
+          description: acceptError.message
+        });
+        setProcessing(false);
+        return;
+      }
+
+      if (acceptResult.status === 'error') {
+        console.error("❌ RPC retornou erro:", acceptResult.message);
+        toast.error("Erro ao processar convite", {
+          description: acceptResult.message
+        });
+        setProcessing(false);
+        return;
+      }
+
+      console.log("🎉 Convite aceito com sucesso!");
       
-    } catch (err: any) {
-      console.error("Erro de autenticação:", err);
-      
-      let errorMsg = err.message || 'Erro ao processar a solicitação';
-      setError(errorMsg);
-      toast.error('Erro no processo', { description: errorMsg });
-    } finally {
-      setLoading(false);
+      toast.success("🎉 Conta criada com sucesso!", {
+        description: `Bem-vindo(a), ${formData.name}! Você será redirecionado em alguns segundos.`,
+        duration: 4000
+      });
+
+      // Redirecionar após sucesso
+      setTimeout(() => {
+        navigate('/');
+      }, 2000);
+
+    } catch (error) {
+      console.error("❌ Erro inesperado:", error);
+      toast.error("Erro inesperado", {
+        description: "Tente novamente ou entre em contato com o suporte"
+      });
+      setProcessing(false);
     }
   };
 
-  // Função para determinar qual componente exibir com base no estado atual
-  const renderContent = () => {
-    // Se estiver verificando o token
-    if (checkingToken) {
-      return (
-        <div className="flex flex-col items-center justify-center py-8">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          <p className="mt-4 text-center text-muted-foreground">Verificando seu convite...</p>
-        </div>
-      );
-    }
-    
-    // Se estiver processando o convite
-    if (processingInvite) {
-      return (
-        <div className="flex flex-col items-center justify-center py-8">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          <p className="mt-4 text-center text-muted-foreground">Configurando seu acesso...</p>
-        </div>
-      );
-    }
-    
-    // Se o convite foi processado com sucesso
-    if (inviteProcessed) {
-      return (
-        <div className="flex flex-col items-center justify-center py-8 space-y-4">
-          <CheckCircle2 className="h-16 w-16 text-green-500" />
-          <h2 className="text-2xl font-bold text-center">Convite Aceito com Sucesso!</h2>
-          <p className="text-center text-muted-foreground">
-            Seu acesso foi configurado corretamente. Você será redirecionado para a plataforma em alguns segundos.
-          </p>
-          <Button 
-            onClick={() => navigate('/dashboard')} 
-            className="mt-4"
-          >
-            Acessar a Plataforma
-          </Button>
-        </div>
-      );
-    }
-    
-    // Se o usuário já estiver logado e tiver dados do convite
-    if (user && inviteData) {
-      return (
-        <div className="flex flex-col items-center justify-center py-8">
-          {loading ? (
-            <>
-              <Loader2 className="h-12 w-12 animate-spin text-primary" />
-              <p className="mt-4 text-center text-muted-foreground">Processando seu convite...</p>
-            </>
-          ) : (
-            <>
-              <p className="text-xl font-semibold text-center">Bem-vindo!</p>
-              <p className="mt-2 text-center text-muted-foreground">
-                Você está prestes a aceitar um convite para {inviteData.email}
-              </p>
-              <Button 
-                onClick={() => processInvite(tokenFromUrl || inviteData.token)} 
-                className="mt-4 w-full"
-                disabled={loading}
-              >
-                Aceitar Convite
-              </Button>
-            </>
-          )}
-        </div>
-      );
-    }
-    
-    // Se temos o convite mas o usuário não está logado
-    if (inviteData && !user) {
-      return (
-        <div className="space-y-6">
-          <div className="mb-6">
-            <p className="text-lg font-medium text-center mb-1">Ative seu convite para o VIVER DE IA Club</p>
-            <p className="text-sm text-center text-muted-foreground">
-              Crie sua senha para acessar a plataforma com o email: <strong>{inviteData.email}</strong>
-            </p>
-          </div>
-          
-          {registerSuccess ? (
-            <div className="flex flex-col items-center justify-center py-4 space-y-4">
-              <CheckCircle2 className="h-12 w-12 text-green-500" />
-              <p className="text-center font-medium">Conta criada com sucesso!</p>
-              <p className="text-sm text-center text-muted-foreground">
-                Configurando seu acesso à plataforma...
-              </p>
-              <div className="w-full max-w-xs bg-gray-100 rounded-full h-2.5 mt-2">
-                <div className="bg-primary h-2.5 rounded-full animate-pulse w-full"></div>
-              </div>
-            </div>
-          ) : (
-            <form onSubmit={handleCreateAccount} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nome completo</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-                  <Input
-                    id="name"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="pl-10"
-                    placeholder="Seu nome completo"
-                    required
-                    autoFocus
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-                  <Input
-                    id="email"
-                    type="email"
-                    value={inviteData.email}
-                    readOnly
-                    className="pl-10 bg-muted"
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="password">Crie sua senha</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      evaluatePasswordStrength(e.target.value);
-                    }}
-                    className="pl-10 pr-10"
-                    placeholder="Senha segura com pelo menos 6 caracteres"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-500" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-gray-500" />
-                    )}
-                  </button>
-                </div>
-                
-                {/* Indicador de força da senha */}
-                {passwordStrength && (
-                  <div className="flex items-center mt-1">
-                    <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full ${
-                          passwordStrength === 'forte' 
-                            ? 'bg-green-500 w-full' 
-                            : passwordStrength === 'média' 
-                              ? 'bg-yellow-500 w-2/3' 
-                              : 'bg-red-500 w-1/3'
-                        }`}
-                      />
-                    </div>
-                    <span className={`ml-2 text-xs ${
-                      passwordStrength === 'forte' 
-                        ? 'text-green-500' 
-                        : passwordStrength === 'média' 
-                          ? 'text-yellow-500' 
-                          : 'text-red-500'
-                    }`}>
-                      {passwordStrength === 'forte' ? 'Forte' : passwordStrength === 'média' ? 'Média' : 'Fraca'}
-                    </span>
-                  </div>
-                )}
-                
-                <p className="text-xs text-muted-foreground">
-                  A senha deve ter pelo menos 6 caracteres
-                </p>
-              </div>
-              
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={loading || !password || !name}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Criando sua conta...
-                  </>
-                ) : (
-                  'Criar conta e acessar'
-                )}
-              </Button>
-              
-              <p className="text-xs text-center text-muted-foreground mt-4">
-                Já possui conta com este email? Digite sua senha atual para fazer login.
-              </p>
-            </form>
-          )}
-          
-          {error && (
-            <div className="bg-red-50 p-4 rounded-md border border-red-100 flex items-start mt-4">
-              <AlertCircle className="h-5 w-5 text-red-500 mr-2 mt-0.5" />
-              <p className="text-sm text-red-700">{error}</p>
-            </div>
-          )}
-        </div>
-      );
-    }
-    
-    // Se não temos token ou o token é inválido
+  if (loading) {
+    return <LoadingScreen message="Verificando convite..." />;
+  }
+
+  // Caso de erro de validação
+  if (!validationResult?.isValid) {
     return (
-      <>
-        <form onSubmit={handleSubmitToken}>
-          <div className="space-y-2">
-            <Input
-              placeholder="Código do convite (ex: ABCDEF123456)"
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              className="text-center tracking-wide text-lg font-mono"
-              autoFocus
-            />
-            {error && (
-              <div className="bg-red-50 p-3 rounded-md border border-red-100">
-                <p className="text-destructive text-sm text-center flex items-center justify-center">
-                  <AlertCircle className="h-4 w-4 mr-1" /> {error}
-                </p>
-              </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
+              <AlertTriangle className="w-6 h-6 text-red-600" />
+            </div>
+            <CardTitle className="text-xl">Convite Inválido</CardTitle>
+            <CardDescription>
+              {validationResult?.error}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {validationResult?.needsLogout && (
+              <Alert>
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  <div className="space-y-3">
+                    <p>Para usar este convite, você precisa fazer logout da conta atual.</p>
+                    <Button
+                      onClick={handleLogout}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Fazer Logout e Continuar
+                    </Button>
+                  </div>
+                </AlertDescription>
+              </Alert>
             )}
-          </div>
-          <Button 
-            type="submit" 
-            className="w-full mt-4" 
-            disabled={loading || !token.trim()}
-          >
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processando...
-              </>
-            ) : (
-              'Verificar Convite'
-            )}
-          </Button>
-        </form>
-        
-        <div className="mt-6 text-center">
-          <p className="text-muted-foreground text-sm">
-            Já tem uma conta? <a href="/login" className="text-primary hover:underline">Faça login</a>
-          </p>
-        </div>
-      </>
+            
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => navigate('/login')}
+                className="flex-1"
+              >
+                Ir para Login
+              </Button>
+              <Button
+                onClick={() => navigate('/')}
+                className="flex-1"
+              >
+                Página Inicial
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
-  };
+  }
 
+  // Caso de sucesso - mostrar formulário de criação de conta
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">VIVER DE IA Club</CardTitle>
+          <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
+            <CheckCircle className="w-6 h-6 text-green-600" />
+          </div>
+          <CardTitle className="text-xl">Criar Sua Conta</CardTitle>
           <CardDescription>
-            {inviteData 
-              ? `Ative seu acesso à plataforma` 
-              : 'Insira seu código de convite'}
+            Você foi convidado para se juntar como{' '}
+            <span className="font-semibold">{inviteData?.role?.name || 'membro'}</span>
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {renderContent()}
+          <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+            <p className="text-sm text-blue-800">
+              <strong>Email:</strong> {inviteData?.email}
+            </p>
+          </div>
+
+          <form onSubmit={handleCreateAccount} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome Completo</Label>
+              <Input
+                id="name"
+                type="text"
+                placeholder="Seu nome completo"
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                required
+                disabled={processing}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Senha</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Mínimo 6 caracteres"
+                  value={formData.password}
+                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                  required
+                  minLength={6}
+                  disabled={processing}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                  disabled={processing}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="Digite a senha novamente"
+                value={formData.confirmPassword}
+                onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                required
+                disabled={processing}
+              />
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={processing}
+            >
+              {processing ? "Criando conta..." : "Criar Conta"}
+            </Button>
+          </form>
+
+          <div className="mt-4 text-center">
+            <p className="text-sm text-muted-foreground">
+              Já tem uma conta?{' '}
+              <Button
+                variant="link"
+                className="p-0 h-auto"
+                onClick={() => navigate('/login')}
+              >
+                Fazer login
+              </Button>
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>
