@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { logger } from './logger';
 
@@ -136,6 +135,29 @@ export class AuditLogger {
       });
     } catch (error) {
       logger.error("Erro ao registrar evento administrativo", {
+        component: 'AUDIT_LOGGER',
+        action,
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  }
+
+  // Log de eventos do sistema
+  async logSystemEvent(
+    action: string,
+    details: Record<string, any> = {},
+    userId?: string
+  ): Promise<void> {
+    try {
+      await this.insertAuditLog({
+        event_type: 'system_event',
+        action,
+        user_id: userId || null,
+        details: this.sanitizeDetails(details),
+        severity: 'low'
+      });
+    } catch (error) {
+      logger.error("Erro ao registrar evento do sistema", {
         component: 'AUDIT_LOGGER',
         action,
         error: error instanceof Error ? error.message : 'Erro desconhecido'

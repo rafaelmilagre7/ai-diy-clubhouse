@@ -37,6 +37,11 @@ export class SecurityHeaders {
     }
   }
 
+  // Novo método para obter diretivas CSP
+  getCSPDirectives(): string {
+    return this.getCSPHeader();
+  }
+
   // Aplicar headers a uma requisição fetch
   enhanceFetch(url: string, options: RequestInit = {}): RequestInit {
     const headers = {

@@ -18,7 +18,11 @@ interface SecurityStatus {
   lastSecurityCheck: Date;
 }
 
-export const SecurityMonitor: React.FC = () => {
+interface SecurityMonitorProps {
+  onSecurityEvent?: (event: string, details: any) => void;
+}
+
+export const SecurityMonitor: React.FC<SecurityMonitorProps> = ({ onSecurityEvent }) => {
   const { user, isAdmin } = useAuth();
   const [securityStatus, setSecurityStatus] = useState<SecurityStatus | null>(null);
   const [loading, setLoading] = useState(true);
