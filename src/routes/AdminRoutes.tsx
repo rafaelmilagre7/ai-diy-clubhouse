@@ -23,7 +23,13 @@ import AdminCommunications from '@/pages/admin/AdminCommunications';
 // Função helper para criar rotas protegidas com AdminLayout (sempre aberto)
 const createAdminRoute = (path: string, Component: React.ComponentType<any>) => ({
   path,
-  element: <ProtectedRoutes><AdminLayout><Component /></AdminLayout></ProtectedRoutes>
+  element: (
+    <ProtectedRoutes>
+      <AdminLayout>
+        <Component />
+      </AdminLayout>
+    </ProtectedRoutes>
+  )
 });
 
 export const adminRoutes: RouteObject[] = [

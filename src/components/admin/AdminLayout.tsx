@@ -30,7 +30,11 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
-const AdminLayout = () => {
+interface AdminLayoutProps {
+  children?: React.ReactNode;
+}
+
+const AdminLayout = ({ children }: AdminLayoutProps) => {
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -222,7 +226,7 @@ const AdminLayout = () => {
       {/* Conteúdo principal - sempre com margin-left para compensar o sidebar fixo */}
       <div className="flex-1 overflow-auto">
         <main className="max-w-7xl mx-auto p-8">
-          <Outlet />
+          {children || <Outlet />}
         </main>
       </div>
     </div>
