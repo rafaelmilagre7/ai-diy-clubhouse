@@ -11,6 +11,7 @@ export {
   formatVideoDuration,
   setupLearningStorageBuckets,
   ensureBucketExists,
+  ensureStorageBucketExists,
   extractPandaVideoInfo,
   uploadFileWithFallback
 } from './supabase/storage';

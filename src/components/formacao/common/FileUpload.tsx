@@ -77,7 +77,7 @@ export const FileUpload = ({
         bucketName,
         folderPath,
         (progress) => setUploadProgress(progress),
-        STORAGE_BUCKETS.FALLBACK // Usar bucket de fallback
+        STORAGE_BUCKETS.FALLBACK
       );
       
       // Verificar se há erro e tratar corretamente
@@ -85,11 +85,9 @@ export const FileUpload = ({
         throw result.error;
       }
       
-      // Caso de sucesso - definindo uma variável com tipo explícito
-      const successResult = result as { publicUrl: string; path: string; error: null };
-      
+      // Caso de sucesso
       setFileName(file.name);
-      onChange(successResult.publicUrl, file.type, file.size);
+      onChange(result.publicUrl, file.type, file.size);
       
       toast.success("Upload realizado com sucesso!");
       

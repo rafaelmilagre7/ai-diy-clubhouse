@@ -7,7 +7,8 @@ export const STORAGE_BUCKETS = {
   LEARNING_MATERIALS: 'learning_materials',
   COURSE_IMAGES: 'course_images',
   LEARNING_VIDEOS: 'learning_videos',
-  SOLUTION_FILES: 'solution_files'
+  SOLUTION_FILES: 'solution_files',
+  FALLBACK: 'learning_materials' // Bucket de fallback padrão
 } as const;
 
 // Limites de upload

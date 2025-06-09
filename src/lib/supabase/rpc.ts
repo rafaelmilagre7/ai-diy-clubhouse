@@ -36,9 +36,10 @@ export const deleteForumTopic = async (topicId: string) => {
   try {
     const { error } = await supabase.rpc('deleteforumtopic', { topic_id: topicId });
     if (error) throw error;
+    return { success: true };
   } catch (error) {
     console.error('Error deleting forum topic:', error);
-    throw error;
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 };
 
@@ -46,8 +47,9 @@ export const deleteForumPost = async (postId: string) => {
   try {
     const { error } = await supabase.rpc('deleteforumpost', { post_id: postId });
     if (error) throw error;
+    return { success: true };
   } catch (error) {
     console.error('Error deleting forum post:', error);
-    throw error;
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 };

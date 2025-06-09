@@ -44,6 +44,9 @@ export const ensureBucketExists = async (bucketName: string) => {
   }
 };
 
+// Alias para compatibilidade
+export const ensureStorageBucketExists = ensureBucketExists;
+
 export const extractPandaVideoInfo = (url: string) => {
   // Implementação para extrair informações de vídeo do Panda
   return {
@@ -54,20 +57,84 @@ export const extractPandaVideoInfo = (url: string) => {
   };
 };
 
+// Tipo de retorno para funções de upload
+interface UploadResult {
+  publicUrl: string;
+  path: string;
+  error: null;
+}
+
+interface UploadError {
+  error: Error;
+}
+
 export const uploadFileWithFallback = async (
   file: File,
-  path: string,
-  bucket: string = 'learning_materials'
-) => {
+  bucket: string,
+  folderPath: string,
+  onProgress?: (progress: number) => void,
+  fallbackBucket?: string
+): Promise<UploadResult | UploadError> => {
   try {
+    // Gerar nome único para o arquivo
+    const timestamp = Date.now();
+    const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const fileName = `${timestamp}_${safeName}`;
+    const fullPath = folderPath ? `${folderPath}/${fileName}` : fileName;
+
+    if (onProgress) onProgress(10);
+
+    // Tentar upload principal
     const { data, error } = await supabase.storage
       .from(bucket)
-      .upload(path, file);
+      .upload(fullPath, file);
 
-    if (error) throw error;
-    return data;
+    if (error) {
+      // Tentar com bucket de fallback se especificado
+      if (fallbackBucket && fallbackBucket !== bucket) {
+        console.log(`Tentando upload com fallback bucket: ${fallbackBucket}`);
+        const fallbackResult = await supabase.storage
+          .from(fallbackBucket)
+          .upload(fullPath, file);
+          
+        if (fallbackResult.error) {
+          throw fallbackResult.error;
+        }
+        
+        // Obter URL pública do fallback
+        const { data: urlData } = supabase.storage
+          .from(fallbackBucket)
+          .getPublicUrl(fallbackResult.data.path);
+          
+        if (onProgress) onProgress(100);
+        
+        return {
+          publicUrl: urlData.publicUrl,
+          path: fallbackResult.data.path,
+          error: null
+        };
+      }
+      throw error;
+    }
+
+    if (onProgress) onProgress(50);
+
+    // Obter URL pública
+    const { data: urlData } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(data.path);
+
+    if (onProgress) onProgress(100);
+
+    return {
+      publicUrl: urlData.publicUrl,
+      path: data.path,
+      error: null
+    };
   } catch (error) {
     console.error('Error uploading file:', error);
-    throw error;
+    return {
+      error: error instanceof Error ? error : new Error('Unknown upload error')
+    };
   }
 };
