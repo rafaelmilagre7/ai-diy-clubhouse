@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -27,7 +26,7 @@ interface InviteData {
 export default function InvitePage() {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
-  const { user, signUp, signIn, signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const { validateInviteTokenAsync } = useInviteValidation();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -124,8 +123,14 @@ export default function InvitePage() {
       setIsRegistering(true);
       console.log('🚀 Iniciando registro para:', invite.email);
 
-      // Tentar registrar
-      const { user: newUser, error: signUpError } = await signUp(invite.email, password);
+      // Usar o método signUp do Supabase diretamente
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: invite.email,
+        password: password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`
+        }
+      });
       
       if (signUpError) {
         console.error('❌ Erro no signUp:', signUpError);
@@ -150,13 +155,13 @@ export default function InvitePage() {
         throw new Error(signUpError.message);
       }
 
-      if (newUser) {
-        console.log('✅ Usuário criado:', newUser.id);
+      if (data.user) {
+        console.log('✅ Usuário criado:', data.user.id);
         
         // Usar o convite
         const { data: useResult, error: useError } = await supabase.rpc('use_invite', {
           invite_token: token,
-          user_id: newUser.id
+          user_id: data.user.id
         });
 
         if (useError) {
