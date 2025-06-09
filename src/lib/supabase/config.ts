@@ -1,20 +1,3 @@
 
-// Definição dos buckets de armazenamento
-export const STORAGE_BUCKETS = {
-  // Buckets para o LMS
-  LEARNING_MATERIALS: 'learning_materials',
-  COURSE_IMAGES: 'course_images',
-  LEARNING_VIDEOS: 'learning_videos',
-  SOLUTION_FILES: 'solution_files',
-  
-  // Bucket de fallback para emergências
-  FALLBACK: 'general_storage'
-};
-
-// Limites de tamanho de upload (em MB)
-export const MAX_UPLOAD_SIZES = {
-  IMAGE: 5,       // 5MB para imagens
-  DOCUMENT: 25,   // 25MB para documentos
-  VIDEO: 200,     // 200MB para vídeos
-  AVATAR: 2       // 2MB para avatares
-};
+export const supabaseUrl = 'https://zotzvtepvpnkcoobdubt.supabase.co';
+export const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvdHp2dGVwdnBua2Nvb2JkdWJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNzgzODAsImV4cCI6MjA1OTk1NDM4MH0.dxjPkqTPnK8gjjxJbooPX5_kpu3INciLeDpuU8dszHQ';
