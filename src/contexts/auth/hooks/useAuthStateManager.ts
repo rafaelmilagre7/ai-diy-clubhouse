@@ -1,37 +1,37 @@
 
 import { useCallback, useRef } from "react";
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/auth';
 import { processUserProfile } from '@/hooks/auth/utils/authSessionUtils';
 
-export const useAuthStateManager = () => {
+interface AuthStateManagerParams {
+  setSession: (session: any) => void;
+  setUser: (user: any) => void;
+  setProfile: (profile: any) => void;
+  setIsLoading: (loading: boolean) => void;
+}
+
+export const useAuthStateManager = (params?: AuthStateManagerParams) => {
   const setupInProgress = useRef(false);
   const lastSetupTimestamp = useRef(0);
-  const DEBOUNCE_TIME = 1000; // 1 segundo de debounce
+  const DEBOUNCE_TIME = 1000;
+  const MAX_SETUP_TIME = 8000; // 8 segundos máximo
   
-  // Safe access to useAuth, use default implementation if not in context
-  let authContext;
-  try {
-    authContext = useAuth();
-  } catch (error) {
-    console.error("useAuthStateManager error:", error);
+  // Se não temos parâmetros, retornar função mock
+  if (!params) {
     return { 
-      setupAuthSession: async () => ({ success: false, error: new Error("Authentication provider not found") }) 
+      setupAuthSession: async () => ({ 
+        success: false, 
+        error: new Error("Authentication state manager not properly initialized") 
+      }) 
     };
   }
   
-  const {
-    setSession,
-    setUser,
-    setProfile,
-    setIsLoading,
-  } = authContext;
+  const { setSession, setUser, setProfile, setIsLoading } = params;
   
-  // Setup auth session function with debounce and race condition protection
   const setupAuthSession = useCallback(async () => {
     const now = Date.now();
     
-    // Implementar debounce para evitar múltiplas chamadas
+    // Implementar debounce
     if (now - lastSetupTimestamp.current < DEBOUNCE_TIME) {
       console.log("🔄 [AUTH] Setup ignorado por debounce");
       return { success: true, error: null };
@@ -43,16 +43,23 @@ export const useAuthStateManager = () => {
       return { success: true, error: null };
     }
     
+    // Timeout absoluto para evitar loading infinito
+    const timeoutId = setTimeout(() => {
+      console.warn("⚠️ [AUTH] Timeout absoluto atingido, forçando fim do loading");
+      setupInProgress.current = false;
+      setIsLoading(false);
+    }, MAX_SETUP_TIME);
+    
     try {
       setupInProgress.current = true;
       lastSetupTimestamp.current = now;
       
       console.log("🔄 [AUTH] Iniciando setup da sessão");
       
-      // Tentar obter sessão com timeout otimizado
+      // Tentar obter sessão com timeout
       const sessionPromise = supabase.auth.getSession();
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Session fetch timeout")), 3000) // 3 segundos
+        setTimeout(() => reject(new Error("Session fetch timeout")), 3000)
       );
       
       let sessionResult;
@@ -62,7 +69,7 @@ export const useAuthStateManager = () => {
           timeoutPromise
         ]) as { data: { session: any } };
       } catch (timeoutError) {
-        console.warn("⚠️ [AUTH] Timeout na busca da sessão, tentando novamente...");
+        console.warn("⚠️ [AUTH] Timeout na busca da sessão, tentando sem timeout...");
         sessionResult = await supabase.auth.getSession();
       }
       
@@ -74,6 +81,7 @@ export const useAuthStateManager = () => {
         setSession(null);
         setUser(null);
         setProfile(null);
+        clearTimeout(timeoutId);
         return { success: true, error: null };
       }
       
@@ -86,13 +94,22 @@ export const useAuthStateManager = () => {
         console.log(`✅ [AUTH] Sessão válida encontrada: ${userId.substring(0, 8)}***`);
         setUser(session.user);
         
-        // Processar perfil com cache melhorado
+        // Processar perfil com timeout próprio
         try {
-          const profile = await processUserProfile(
+          const profilePromise = processUserProfile(
             userId,
             userEmail,
             session.user.user_metadata?.name
           );
+          
+          const profileTimeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error("Profile fetch timeout")), 4000)
+          );
+          
+          const profile = await Promise.race([
+            profilePromise,
+            profileTimeoutPromise
+          ]) as any;
           
           if (profile) {
             console.log(`📊 [AUTH] Perfil carregado: ${profile.role}`);
@@ -118,6 +135,7 @@ export const useAuthStateManager = () => {
         setProfile(null);
       }
       
+      clearTimeout(timeoutId);
       return { success: true, error: null };
       
     } catch (error) {
@@ -128,6 +146,7 @@ export const useAuthStateManager = () => {
       setUser(null);
       setProfile(null);
       
+      clearTimeout(timeoutId);
       return { 
         success: false, 
         error: error instanceof Error ? error : new Error('Erro desconhecido de autenticação')

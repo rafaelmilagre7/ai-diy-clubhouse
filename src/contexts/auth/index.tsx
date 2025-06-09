@@ -32,11 +32,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const authListenerRef = useRef<any>(null);
   const isInitialized = useRef(false);
   const lastUserId = useRef<string | null>(null);
+  const initTimeoutRef = useRef<number | null>(null);
 
-  const { setupAuthSession } = useAuthStateManager();
+  // Inicializar useAuthStateManager com os setters
+  const { setupAuthSession } = useAuthStateManager({
+    setSession,
+    setUser,
+    setProfile,
+    setIsLoading,
+  });
+
   const { signIn, signOut, signInAsMember, signInAsAdmin } = useAuthMethods({
     setIsLoading,
   });
+
+  // Timeout absoluto para inicialização
+  useEffect(() => {
+    initTimeoutRef.current = window.setTimeout(() => {
+      if (isLoading) {
+        console.warn("⚠️ [AUTH] Timeout absoluto de inicialização - forçando fim do loading");
+        setIsLoading(false);
+      }
+    }, 10000); // 10 segundos máximo para inicialização
+
+    return () => {
+      if (initTimeoutRef.current) {
+        clearTimeout(initTimeoutRef.current);
+      }
+    };
+  }, [isLoading]);
 
   // Função para debug do estado atual
   const logCurrentState = useCallback(() => {
@@ -55,8 +79,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Computar isAdmin com cache
   const isAdmin = React.useMemo(() => {
-    const adminStatus = profile?.role === 'admin';
-    return adminStatus;
+    return profile?.role === 'admin';
   }, [profile?.role]);
 
   // Computar isFormacao

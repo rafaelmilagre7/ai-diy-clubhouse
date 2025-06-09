@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
 import { OnboardingData } from '../types/onboardingTypes';
@@ -25,6 +25,25 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
   const [isRequired, setIsRequired] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const timeoutRef = useRef<number | null>(null);
+  const checkInProgress = useRef(false);
+
+  // Timeout absoluto para verificação de onboarding
+  useEffect(() => {
+    timeoutRef.current = window.setTimeout(() => {
+      if (isLoading && checkInProgress.current) {
+        console.warn("⚠️ [ONBOARDING] Timeout na verificação, assumindo não necessário");
+        setIsRequired(false);
+        setIsLoading(false);
+      }
+    }, 8000); // 8 segundos máximo
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [isLoading]);
 
   const checkStatus = useCallback(async () => {
     // Se não há usuário ou ainda está carregando auth, aguardar
@@ -37,16 +56,23 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
       return;
     }
 
-    // Se não há profile ainda, aguardar um pouco mais
+    // Se já está verificando, não duplicar
+    if (checkInProgress.current) {
+      return;
+    }
+
+    // Se não há profile ainda, usar fallback rápido
     if (!profile) {
-      logger.debug('Aguardando profile', {
+      logger.debug('Profile não disponível, assumindo onboarding necessário', {
         component: 'ONBOARDING_STATUS'
       });
-      setIsLoading(true);
+      setIsRequired(true);
+      setIsLoading(false);
       return;
     }
 
     try {
+      checkInProgress.current = true;
       setIsLoading(true);
       setError(null);
       
@@ -63,17 +89,27 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
         });
         setIsRequired(false);
         setIsLoading(false);
+        clearTimeout(timeoutRef.current!);
         return;
       }
 
-      // Verificar se existe registro de onboarding completo
-      const { data: onboardingRecord, error: onboardingError } = await supabase
+      // Verificar se existe registro de onboarding completo com timeout
+      const onboardingPromise = supabase
         .from('user_onboarding')
         .select('completed_at')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      if (onboardingError) {
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Onboarding check timeout")), 4000)
+      );
+
+      const { data: onboardingRecord, error: onboardingError } = await Promise.race([
+        onboardingPromise,
+        timeoutPromise
+      ]) as any;
+
+      if (onboardingError && !onboardingError.message.includes('timeout')) {
         logger.error('Erro ao verificar onboarding', {
           error: onboardingError.message,
           component: 'ONBOARDING_STATUS'
@@ -89,16 +125,20 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
       });
       
       setIsRequired(needsOnboarding);
+      clearTimeout(timeoutRef.current!);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
       logger.error('Erro ao verificar status de onboarding', {
         error: errorMessage,
         component: 'ONBOARDING_STATUS'
       });
+      
+      // Em caso de erro, assumir que não precisa para não bloquear
       setError(errorMessage);
+      setIsRequired(false);
       handleError(err, 'useOnboardingStatus.checkStatus', { showToast: false });
-      setIsRequired(false); // Em caso de erro, não bloquear o usuário
     } finally {
+      checkInProgress.current = false;
       setIsLoading(false);
     }
   }, [user?.id, profile, authLoading, handleError]);
@@ -207,8 +247,9 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
 
   // Auto-verificar status quando há profile disponível
   useEffect(() => {
-    if (!authLoading && user?.id && profile && isRequired === null) {
-      logger.debug('Auto-verificando status com profile', {
+    if (!authLoading && user?.id && isRequired === null) {
+      logger.debug('Auto-verificando status', {
+        hasProfile: !!profile,
         component: 'ONBOARDING_STATUS'
       });
       checkStatus();
@@ -224,11 +265,12 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
       setIsRequired(null);
       setIsLoading(false);
       setError(null);
+      checkInProgress.current = false;
     }
   }, [user?.id]);
 
-  // Se ainda está carregando auth ou não tem profile, manter loading
-  const finalIsLoading = authLoading || isLoading || (!profile && !!user?.id);
+  // Se ainda está carregando auth, manter loading
+  const finalIsLoading = authLoading || (isLoading && !error);
 
   logger.debug('Estado final do onboarding', {
     isRequired,

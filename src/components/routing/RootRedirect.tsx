@@ -3,10 +3,42 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { useOnboardingStatus } from "@/components/onboarding/hooks/useOnboardingStatus";
 import LoadingScreen from "@/components/common/LoadingScreen";
+import { useEffect, useState, useRef } from "react";
 
 const RootRedirect = () => {
   const { user, profile, isAdmin, isLoading: authLoading } = useAuth();
   const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingStatus();
+  const [forceRedirect, setForceRedirect] = useState(false);
+  const timeoutRef = useRef<number | null>(null);
+  
+  // Timeout absoluto para evitar loading infinito
+  useEffect(() => {
+    timeoutRef.current = window.setTimeout(() => {
+      console.warn("⚠️ [ROOT REDIRECT] Timeout atingido, forçando redirecionamento");
+      setForceRedirect(true);
+    }, 12000); // 12 segundos máximo
+    
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+  
+  // Se timeout foi atingido, redirecionar baseado no que temos
+  if (forceRedirect) {
+    console.log("🚨 [ROOT REDIRECT] Redirecionamento forçado por timeout");
+    if (user && profile) {
+      if (isAdmin || profile.role === 'admin') {
+        return <Navigate to="/admin" replace />;
+      }
+      if (profile.role === 'formacao') {
+        return <Navigate to="/formacao" replace />;
+      }
+      return <Navigate to="/dashboard" replace />;
+    }
+    return <Navigate to="/login" replace />;
+  }
   
   // Se ainda está carregando autenticação
   if (authLoading) {
@@ -18,12 +50,12 @@ const RootRedirect = () => {
     return <Navigate to="/login" replace />;
   }
   
-  // Se há usuário mas não há perfil, não pode acessar (problema de dados)
+  // Se há usuário mas não há perfil, aguardar um pouco mais ou ir para login
   if (!profile) {
     return <Navigate to="/login" replace />;
   }
   
-  // Se ainda está carregando onboarding
+  // Se ainda está carregando onboarding (mas não por muito tempo)
   if (onboardingLoading) {
     return <LoadingScreen message="Verificando seu progresso..." />;
   }
