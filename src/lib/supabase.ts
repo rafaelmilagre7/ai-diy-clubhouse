@@ -24,6 +24,9 @@ export {
   deleteForumPost
 } from './rpc';
 
+// Exportação explícita do cliente Supabase
+export { supabase } from './client';
+
 // Exportação da interface UserProfile para compatibilidade
 export interface UserProfile {
   id: string;
