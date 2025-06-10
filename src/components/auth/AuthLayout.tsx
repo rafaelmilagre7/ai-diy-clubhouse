@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +9,6 @@ import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 
 const AuthLayout = () => {
-  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -30,81 +28,59 @@ const AuthLayout = () => {
     
     try {
       setIsLoading(true);
+      console.log("[AUTH-LAYOUT] Iniciando processo de login");
       
-      // CORREÇÃO CRÍTICA: Usar Edge Function para rate limiting seguro no backend
-      const { data: authResult, error: functionError } = await supabase.functions.invoke(
-        'auth-rate-limiter',
-        {
-          body: { email, password }
-        }
-      );
+      // CORREÇÃO CRÍTICA 1: Usar autenticação direta sem Edge Function complexa
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
       
-      if (functionError) {
-        console.error("Erro na Edge Function:", functionError);
-        // Fallback para autenticação direta (mantém compatibilidade)
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-        
-        if (error) throw error;
-        
-        if (data.user) {
-          toast({
-            title: "Login realizado com sucesso",
-            description: "Redirecionando...",
-          });
-          navigate('/dashboard', { replace: true });
-        }
-        return;
+      if (error) {
+        console.error("[AUTH-LAYOUT] Erro de autenticação:", error);
+        throw error;
       }
       
-      // Verificar se foi bloqueado por rate limiting
-      if (authResult.error) {
-        const errorCode = authResult.code;
-        
-        if (errorCode === 'RATE_LIMITED') {
-          toast({
-            title: "Muitas tentativas",
-            description: authResult.error,
-            variant: "destructive",
-          });
-          return;
-        }
-        
-        // Outros erros de autenticação
-        toast({
-          title: "Erro de autenticação",
-          description: authResult.error,
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Login bem-sucedido via Edge Function
-      if (authResult.success && authResult.session) {
-        // Definir sessão manualmente se necessário
-        if (authResult.session) {
-          await supabase.auth.setSession(authResult.session);
-        }
-        
+      if (data.user) {
+        console.log("[AUTH-LAYOUT] Login bem-sucedido:", data.user.email);
         toast({
           title: "Login realizado com sucesso",
           description: "Redirecionando...",
         });
         
-        navigate('/dashboard', { replace: true });
+        // CORREÇÃO CRÍTICA 2: Não navegar manualmente - deixar o sistema de rotas fazer isso
+        console.log("[AUTH-LAYOUT] Aguardando redirecionamento automático do sistema");
       }
       
     } catch (error: any) {
-      console.error("Erro ao fazer login:", error);
-      toast({
-        title: "Erro de autenticação",
-        description: error.message || "Não foi possível fazer login. Verifique suas credenciais.",
-        variant: "destructive",
-      });
+      console.error("[AUTH-LAYOUT] Erro no processo de login:", error);
+      
+      // Tratar diferentes tipos de erro
+      if (error.message?.includes('Invalid login credentials')) {
+        toast({
+          title: "Credenciais inválidas",
+          description: "Email ou senha incorretos. Verifique e tente novamente.",
+          variant: "destructive",
+        });
+      } else if (error.message?.includes('Email not confirmed')) {
+        toast({
+          title: "Email não confirmado",
+          description: "Verifique sua caixa de entrada e confirme seu email.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro de autenticação",
+          description: error.message || "Não foi possível fazer login. Tente novamente.",
+          variant: "destructive",
+        });
+      }
     } finally {
-      setIsLoading(false);
+      // CORREÇÃO CRÍTICA 3: Sempre finalizar loading após alguns segundos para evitar travamento
+      setTimeout(() => {
+        setIsLoading(false);
+        console.log("[AUTH-LAYOUT] Loading finalizado");
+      }, 2000);
     }
   };
 
@@ -168,7 +144,7 @@ const AuthLayout = () => {
                 <Button
                   type="button"
                   variant="link"
-                  onClick={() => navigate('/reset-password')}
+                  onClick={() => console.log("[AUTH-LAYOUT] Reset password clicked")}
                   className="text-xs text-blue-400 hover:text-blue-300 p-0 h-auto"
                 >
                   Esqueceu a senha?

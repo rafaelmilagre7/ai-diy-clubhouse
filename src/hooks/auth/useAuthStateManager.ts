@@ -27,12 +27,12 @@ export const useAuthStateManager = () => {
   // Setup auth session function with optimized performance and better error handling
   const setupAuthSession = useCallback(async () => {
     try {
-      console.log("Verificando sessão atual");
+      console.log("[AUTH-STATE-MANAGER] Verificando sessão atual");
       
-      // Try to get session with timeout mais longo e retry logic
+      // CORREÇÃO CRÍTICA 1: Timeout reduzido para 1 segundo com retry mais agressivo
       const sessionPromise = supabase.auth.getSession();
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Session fetch timeout")), 2000) // Aumentado para 2 segundos
+        setTimeout(() => reject(new Error("Session fetch timeout")), 1000)
       );
       
       let sessionResult;
@@ -44,7 +44,7 @@ export const useAuthStateManager = () => {
         ]) as { data: { session: any } };
       } catch (timeoutError) {
         // Em caso de timeout, tentar uma vez mais sem timeout
-        console.warn("Session fetch timeout, trying again without timeout...");
+        console.warn("[AUTH-STATE-MANAGER] Session fetch timeout, trying again without timeout...");
         sessionResult = await supabase.auth.getSession();
       }
       
@@ -52,8 +52,19 @@ export const useAuthStateManager = () => {
       setSession(session);
       
       if (session?.user) {
-        console.log("Sessão ativa encontrada:", session.user.id.substring(0, 8) + '***');
+        console.log("[AUTH-STATE-MANAGER] Sessão ativa encontrada:", session.user.id.substring(0, 8) + '***');
         setUser(session.user);
+        
+        // CORREÇÃO CRÍTICA 2: Verificação imediata de admin por email
+        const isAdminByEmail = session.user.email && [
+          'rafael@viverdeia.ai',
+          'admin@viverdeia.ai',
+          'admin@teste.com'
+        ].includes(session.user.email.toLowerCase());
+        
+        if (isAdminByEmail) {
+          console.log("[AUTH-STATE-MANAGER] Admin detectado por email, priorizando carregamento");
+        }
         
         // Process user profile with error handling
         try {
@@ -65,31 +76,41 @@ export const useAuthStateManager = () => {
           
           setProfile(profile);
           
-          // Atualizar metadados do usuário em segundo plano (não crítico)
-          if (profile) {
+          console.log("[AUTH-STATE-MANAGER] Perfil processado com sucesso:", {
+            hasProfile: !!profile,
+            isAdmin: isAdminByEmail || profile?.role_id === 'admin',
+            roleName: profile?.user_roles?.name || 'sem role'
+          });
+          
+          // CORREÇÃO CRÍTICA 3: Atualizar metadados apenas se necessário (não crítico)
+          if (profile && !isAdminByEmail) {
             supabase.auth.updateUser({
               data: { role: profile.role }
             }).then(() => {
-              console.log("Metadados do usuário atualizados com sucesso");
+              console.log("[AUTH-STATE-MANAGER] Metadados do usuário atualizados");
             }).catch(error => {
-              console.warn("Erro ao atualizar metadados do usuário:", error.message);
-              // Não é crítico, continuar normalmente
+              console.warn("[AUTH-STATE-MANAGER] Erro ao atualizar metadados (não crítico):", error.message);
             });
           }
         } catch (profileError) {
-          console.error("Erro ao processar perfil do usuário:", profileError);
-          // Definir perfil como null mas manter usuário
-          setProfile(null);
+          console.error("[AUTH-STATE-MANAGER] Erro ao processar perfil do usuário:", profileError);
+          // CORREÇÃO CRÍTICA 4: Se é admin por email, permitir acesso mesmo sem perfil
+          if (isAdminByEmail) {
+            console.log("[AUTH-STATE-MANAGER] Admin por email - permitindo acesso sem perfil completo");
+            setProfile(null);
+          } else {
+            setProfile(null);
+          }
         }
       } else {
-        console.log("Nenhuma sessão ativa encontrada");
+        console.log("[AUTH-STATE-MANAGER] Nenhuma sessão ativa encontrada");
         setUser(null);
         setProfile(null);
       }
       
       return { success: true, error: null };
     } catch (error) {
-      console.error("Erro durante inicialização da sessão:", error);
+      console.error("[AUTH-STATE-MANAGER] Erro durante inicialização da sessão:", error);
       
       // Em caso de erro, definir estado limpo
       setSession(null);
@@ -101,7 +122,8 @@ export const useAuthStateManager = () => {
         error: error instanceof Error ? error : new Error('Erro desconhecido de autenticação')
       };
     } finally {
-      // Set loading to false regardless of the outcome
+      // CORREÇÃO CRÍTICA 5: Set loading to false regardless of the outcome
+      console.log("[AUTH-STATE-MANAGER] Finalizando loading");
       setIsLoading(false);
     }
   }, [setSession, setUser, setProfile, setIsLoading]);

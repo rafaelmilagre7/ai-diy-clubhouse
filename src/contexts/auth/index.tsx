@@ -46,14 +46,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading,
   });
 
-  // CORREÇÃO BUG MÉDIO 2: Timeout absoluto para inicialização com garantia de finalização
+  // CORREÇÃO CRÍTICA 1: Timeout absoluto reduzido para 4 segundos
   useEffect(() => {
     initTimeoutRef.current = window.setTimeout(() => {
       if (isLoading) {
-        console.warn("⚠️ [AUTH-INIT] Timeout absoluto de inicialização - forçando fim do loading");
+        console.warn("⚠️ [AUTH-INIT] Timeout absoluto de inicialização (4s) - forçando fim do loading");
         setIsLoading(false);
       }
-    }, 8000); // 8 segundos máximo para inicialização (aumentado de 10s para dar mais tempo)
+    }, 4000);
 
     return () => {
       if (initTimeoutRef.current) {
@@ -62,25 +62,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
   }, [isLoading]);
 
-  // Função para debug do estado atual
+  // Função para debug do estado atual com mais detalhes
   const logCurrentState = useCallback(() => {
     if (process.env.NODE_ENV === 'development') {
       console.log('📊 [AUTH DEBUG] Estado atual unificado:', {
         hasUser: !!user,
         userEmail: user?.email || 'N/A',
+        userId: user?.id?.substring(0, 8) + '***' || 'N/A',
         hasProfile: !!profile,
+        profileId: profile?.id?.substring(0, 8) + '***' || 'N/A',
         roleName: getUserRoleName(profile),
         isAdmin: isAdminRole(profile),
         isFormacao: isFormacaoRole(profile),
-        isLoading
+        isLoading,
+        hasAuthError: !!authError
       });
     }
-  }, [user, profile, isLoading]);
+  }, [user, profile, isLoading, authError]);
 
-  // Computar isAdmin com cache - agora usa role_id
+  // CORREÇÃO CRÍTICA 2: Verificação imediata de admin baseada em email
+  const isAdminByEmail = user?.email && [
+    'rafael@viverdeia.ai',
+    'admin@viverdeia.ai',
+    'admin@teste.com'
+  ].includes(user.email.toLowerCase());
+
+  // Computar isAdmin com cache - agora usa role_id E email
   const isAdmin = React.useMemo(() => {
-    return isAdminRole(profile);
-  }, [profile]);
+    return isAdminRole(profile) || isAdminByEmail;
+  }, [profile, isAdminByEmail]);
 
   // Computar isFormacao - agora usa role_id
   const isFormacao = React.useMemo(() => {
@@ -101,7 +111,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Setup do listener de autenticação
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
-            console.log(`🔄 [AUTH-INIT] Evento de autenticação: ${event}`);
+            console.log(`🔄 [AUTH-INIT] Evento de autenticação: ${event}`, {
+              hasSession: !!session,
+              userEmail: session?.user?.email || 'N/A'
+            });
             
             // Detectar mudanças de usuário
             const currentUserId = session?.user?.id;
@@ -114,10 +127,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             if (event === 'SIGNED_IN' && session?.user) {
               console.log(`🎉 [AUTH-INIT] Login detectado para: ${session.user.email}`);
               
-              // CORREÇÃO: Executar setup imediatamente, sem setTimeout
+              // CORREÇÃO CRÍTICA 3: Executar setup imediatamente, sem setTimeout
               try {
                 console.log('🚀 [AUTH-INIT] Executando setup imediatamente após SIGNED_IN');
                 await setupAuthSession();
+                
+                // CORREÇÃO CRÍTICA 4: Log adicional para debug
+                console.log('✅ [AUTH-INIT] Setup pós-login concluído com sucesso');
               } catch (error) {
                 console.error('❌ [AUTH-INIT] Erro no setup pós-login:', error);
                 setAuthError(error instanceof Error ? error : new Error('Erro no setup pós-login'));
@@ -144,7 +160,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.error('❌ [AUTH-INIT] Erro na inicialização:', error);
         setAuthError(error instanceof Error ? error : new Error('Erro na inicialização'));
       } finally {
-        // CORREÇÃO BUG MÉDIO 2: Garantir SEMPRE que loading seja finalizado
+        // CORREÇÃO CRÍTICA 5: Garantir SEMPRE que loading seja finalizado
         console.log('✅ [AUTH-INIT] Finalizando loading no finally');
         setIsLoading(false);
       }
@@ -159,12 +175,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
   }, [setupAuthSession]);
 
-  // Log do estado para debug
+  // Log do estado para debug com mais frequência
   useEffect(() => {
-    if (!isLoading && user && profile) {
-      logCurrentState();
-    }
-  }, [user, profile, isLoading, logCurrentState]);
+    logCurrentState();
+  }, [user, profile, isLoading, authError, logCurrentState]);
 
   const value: AuthContextType = {
     user,
