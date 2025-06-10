@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useOnboardingStorage } from './hooks/useOnboardingStorage';
@@ -42,45 +43,20 @@ const initialData: OnboardingData = {
   aiImplementationBudget: '',
   weeklyLearningTime: '',
   contentPreference: '',
-  wantsNetworking: false,
+  wantsNetworking: 'no',
   bestDays: [],
   bestPeriods: [],
-  acceptsCaseStudy: false,
+  acceptsCaseStudy: 'no',
   memberType: 'club',
   completedAt: '',
   startedAt: ''
 };
 
-const validationRules = {
-  1: {
-    name: 'required',
-    email: 'required|email',
-    phone: 'required',
-    state: 'required',
-    city: 'required',
-    birthDate: 'required',
-    memberType: 'required'
-  },
-  2: {
-    companyName: 'required',
-    companyWebsite: 'required|url',
-    businessSector: 'required',
-    companySize: 'required',
-    annualRevenue: 'required',
-    position: 'required'
-  },
-  3: {
-    hasImplementedAI: 'required',
-    aiKnowledgeLevel: 'required',
-    whoWillImplement: 'required',
-    mainObjective: 'required',
-    areaToImpact: 'required',
-    expectedResult90Days: 'required',
-    aiImplementationBudget: 'required',
-    weeklyLearningTime: 'required',
-    contentPreference: 'required'
-  }
-};
+const stepTitles = [
+  'Informações Pessoais',
+  'Perfil de IA',
+  'Finalização'
+];
 
 const OnboardingWizard = () => {
   const { user } = useAuth();
@@ -91,29 +67,34 @@ const OnboardingWizard = () => {
   
   const { 
     data, 
-    saveData, 
+    updateData, 
+    forceSave,
     isLoading, 
     lastSaved,
     hasUnsavedChanges 
   } = useOnboardingStorage();
   
   const { 
-    isValid: isCurrentStepValid, 
-    errors 
-  } = useOnboardingValidation(data, currentStep);
+    validateCurrentStep,
+    validationErrors,
+    getFieldError
+  } = useOnboardingValidation();
   
   const { 
-    syncToCloud, 
-    isSyncing,
-    lastSyncTime 
+    saveToCloud,
+    syncStatus
   } = useCloudSync();
 
   const totalSteps = 3;
 
+  // Validar etapa atual
+  const validationResult = validateCurrentStep(currentStep, data, data.memberType || 'club');
+  const isCurrentStepValid = validationResult.isValid;
+
   const handleNext = async () => {
     if (currentStep < totalSteps && isCurrentStepValid) {
       // Salvar dados antes de avançar
-      await saveData(data);
+      await forceSave();
       setCurrentStep(prev => prev + 1);
     }
   };
@@ -125,7 +106,7 @@ const OnboardingWizard = () => {
   };
 
   const handleDataChange = (newData: Partial<OnboardingData>) => {
-    saveData({ ...data, ...newData });
+    updateData(newData);
   };
 
   const handleSubmit = async () => {
@@ -138,8 +119,9 @@ const OnboardingWizard = () => {
           completedAt: new Date().toISOString()
         };
         
-        await saveData(finalData);
-        await syncToCloud(finalData);
+        updateData(finalData);
+        await forceSave();
+        await saveToCloud(finalData);
         
         // Redirecionar após conclusão
         setTimeout(() => {
@@ -163,23 +145,31 @@ const OnboardingWizard = () => {
         return (
           <OnboardingStep1
             data={data}
-            onDataChange={handleDataChange}
-            errors={errors}
+            onUpdateData={handleDataChange}
+            onNext={handleNext}
+            memberType={data.memberType || 'club'}
+            validationErrors={validationErrors}
+            getFieldError={getFieldError}
           />
         );
       case 2:
         return (
           <OnboardingStep3
             data={data}
-            onDataChange={handleDataChange}
-            errors={errors}
+            onUpdateData={handleDataChange}
+            onNext={handleNext}
+            onPrev={handlePrevious}
+            memberType={data.memberType || 'club'}
+            validationErrors={validationErrors}
+            getFieldError={getFieldError}
           />
         );
       case 3:
         return (
           <OnboardingFinal
             data={data}
-            onSubmit={handleSubmit}
+            onNext={handleSubmit}
+            memberType={data.memberType || 'club'}
             isSubmitting={isSubmitting}
           />
         );
@@ -206,6 +196,7 @@ const OnboardingWizard = () => {
           <OnboardingProgress 
             currentStep={currentStep} 
             totalSteps={totalSteps}
+            stepTitles={stepTitles}
           />
           
           <Card className="mt-8 p-8">
@@ -215,17 +206,16 @@ const OnboardingWizard = () => {
               currentStep={currentStep}
               totalSteps={totalSteps}
               onNext={handleNext}
-              onPrevious={handlePrevious}
-              isNextDisabled={!isCurrentStepValid}
-              isSubmitting={isSubmitting}
+              onPrev={handlePrevious}
+              canProceed={isCurrentStepValid}
+              isLoading={isSubmitting}
             />
           </Card>
           
           <OnboardingSaveIndicator
-            lastSaved={lastSaved}
             hasUnsavedChanges={hasUnsavedChanges}
-            isSyncing={isSyncing}
-            lastSyncTime={lastSyncTime}
+            lastSaved={lastSaved}
+            syncStatus={syncStatus}
           />
         </div>
       </div>
