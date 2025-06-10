@@ -9,29 +9,51 @@ export function useInvitesList() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  // Buscar todos os convites com uma única query otimizada usando JOINs
+  // Buscar todos os convites com duas queries otimizadas
   const fetchInvites = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Query otimizada com JOINs para buscar todos os dados necessários de uma vez
+      // Query 1: Buscar convites com roles
       const { data: invitesData, error: invitesError } = await supabase
         .from('invites')
         .select(`
           *,
-          role:role_id(name),
-          creator_profile:created_by(name, email)
+          role:role_id(name)
         `)
         .order('created_at', { ascending: false });
       
       if (invitesError) throw invitesError;
       
-      // Transformar os dados para manter compatibilidade com a interface existente
-      const enrichedInvites = (invitesData || []).map(invite => ({
+      // Se não há convites, retornar lista vazia
+      if (!invitesData || invitesData.length === 0) {
+        setInvites([]);
+        return;
+      }
+      
+      // Query 2: Buscar perfis dos criadores usando .in() para otimização
+      const creatorIds = [...new Set(invitesData.map(invite => invite.created_by))];
+      const { data: creatorsData, error: creatorsError } = await supabase
+        .from('profiles')
+        .select('id, name, email')
+        .in('id', creatorIds);
+        
+      if (creatorsError) {
+        console.error('Erro ao buscar perfis dos criadores:', creatorsError);
+      }
+      
+      // Criar mapa de criadores para lookup O(1)
+      const creatorsMap = (creatorsData || []).reduce((acc, profile) => {
+        acc[profile.id] = { name: profile.name, email: profile.email };
+        return acc;
+      }, {} as Record<string, { name?: string, email?: string }>);
+      
+      // Mapear dados finais com informações do criador
+      const enrichedInvites = invitesData.map(invite => ({
         ...invite,
-        creator_name: invite.creator_profile?.name || 'Usuário desconhecido',
-        creator_email: invite.creator_profile?.email
+        creator_name: creatorsMap[invite.created_by]?.name || 'Usuário desconhecido',
+        creator_email: creatorsMap[invite.created_by]?.email
       }));
       
       setInvites(enrichedInvites);

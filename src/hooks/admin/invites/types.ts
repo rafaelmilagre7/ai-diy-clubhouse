@@ -1,4 +1,3 @@
-
 export interface Invite {
   id: string;
   email: string;
@@ -15,10 +14,6 @@ export interface Invite {
   email_id?: string;
   role?: {
     name: string;
-  };
-  creator_profile?: {
-    name?: string;
-    email?: string;
   };
   creator_name?: string;
   creator_email?: string;
