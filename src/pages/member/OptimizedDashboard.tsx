@@ -1,6 +1,5 @@
-
-import React, { useNavigate, useSearchParams } from "react-router-dom";
-import { useState, useCallback, useMemo, Suspense } from "react";
+import React, { useState, useCallback, useMemo, Suspense, lazy } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useOnboardingStatus } from "@/components/onboarding/hooks/useOnboardingStatus";
 import { useOptimizedDashboardData } from "@/hooks/dashboard/useOptimizedDashboardData";
 import { useLoading } from "@/contexts/LoadingContext";
@@ -13,7 +12,7 @@ import OptimizedSkeletonLoader from '@/components/common/OptimizedSkeletonLoader
 import ProgressiveRenderer from '@/components/dashboard/ProgressiveRenderer';
 
 // Lazy load dos componentes pesados
-const DashboardLayout = React.lazy(() => import("@/components/dashboard/DashboardLayout"));
+const DashboardLayout = lazy(() => import("@/components/dashboard/DashboardLayout"));
 
 const OptimizedDashboard = () => {
   const navigate = useNavigate();
@@ -153,12 +152,12 @@ const OptimizedDashboard = () => {
 
   return (
     <ErrorBoundary
-      fallback={({ error, resetErrorBoundary }) => (
+      fallback={({ error, onRetry }) => (
         <div className="min-h-screen bg-background flex items-center justify-center p-4">
           <div className="text-center space-y-4">
             <h2 className="text-xl font-semibold">Problema no Dashboard</h2>
             <p className="text-muted-foreground">Encontramos um problema ao carregar seu dashboard</p>
-            <button onClick={resetErrorBoundary} className="px-4 py-2 bg-viverblue text-white rounded">
+            <button onClick={onRetry} className="px-4 py-2 bg-viverblue text-white rounded">
               Recarregar
             </button>
           </div>

@@ -14,7 +14,7 @@ import MemberDashboard from "@/pages/member/Dashboard";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminSolutions from "@/pages/admin/AdminSolutions";
 import SolutionDetails from "@/pages/member/SolutionDetails";
-import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
+import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import FormacaoDashboard from "@/pages/formacao/FormacaoDashboard";
 import OptimizedDashboard from "@/pages/member/OptimizedDashboard";
 
