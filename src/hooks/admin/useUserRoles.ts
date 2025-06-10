@@ -29,7 +29,10 @@ export function useUserRoles() {
       setIsUpdating(true);
       setError(null);
       
-      console.log(`🔄 [USER-ROLES] Iniciando atribuição de role: userId=${userId.substring(0, 8)}***, roleId=${roleId}`);
+      // CORREÇÃO BUG BAIXO 1: Proteger logs de debug em produção
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`🔄 [USER-ROLES] Iniciando atribuição de role: userId=${userId.substring(0, 8)}***, roleId=${roleId}`);
+      }
       
       // Buscar dados antigos para auditoria
       const { data: oldProfileData } = await supabase
@@ -38,7 +41,7 @@ export function useUserRoles() {
         .eq("id", userId)
         .single();
       
-      // Log da ação no sistema de auditoria de segurança
+      // Log da ação no sistema de auditoria de segurança (sempre importante para segurança)
       await logSecurityEvent(
         'assign_role',
         'profile',
@@ -55,11 +58,14 @@ export function useUserRoles() {
         .select();
       
       if (error) {
+        // Log de erro sempre visível (crítico)
         console.error('❌ [USER-ROLES] Erro ao atualizar role:', error);
         throw error;
       }
       
-      console.log('✅ [USER-ROLES] Role atualizado com sucesso no banco de dados');
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('✅ [USER-ROLES] Role atualizado com sucesso no banco de dados');
+      }
       
       // CORREÇÃO BUG MÉDIO 3: Invalidação de cache mais abrangente para sincronização imediata
       roleCache.current.delete(userId);
@@ -67,13 +73,20 @@ export function useUserRoles() {
       
       // CORREÇÃO: Limpar cache de perfil para forçar refresh na próxima busca
       clearProfileCache(userId);
-      console.log('🧹 [USER-ROLES] Cache de perfil e permissões limpo para sincronização imediata');
+      
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('🧹 [USER-ROLES] Cache de perfil e permissões limpo para sincronização imediata');
+      }
       
       toast.success('Papel do usuário atualizado com sucesso');
-      console.log('🎉 [USER-ROLES] Operação concluída com sucesso');
+      
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('🎉 [USER-ROLES] Operação concluída com sucesso');
+      }
       
       return data;
     } catch (err: any) {
+      // Log de erro sempre visível (crítico)
       console.error('❌ [USER-ROLES] Erro ao atribuir papel:', err);
       setError(err);
       toast.error('Erro ao atualizar papel', {
@@ -82,18 +95,24 @@ export function useUserRoles() {
       throw err;
     } finally {
       setIsUpdating(false);
-      console.log('✅ [USER-ROLES] Finalizando operação assignRoleToUser');
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('✅ [USER-ROLES] Finalizando operação assignRoleToUser');
+      }
     }
   }, [user?.id]);
 
   const getUserRole = useCallback(async (userId: string): Promise<UserRoleResult> => {
     if (roleCache.current.has(userId)) {
-      console.log(`🔄 [USER-ROLES] Retornando role do cache para: ${userId.substring(0, 8)}***`);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`🔄 [USER-ROLES] Retornando role do cache para: ${userId.substring(0, 8)}***`);
+      }
       return roleCache.current.get(userId)!;
     }
     
     try {
-      console.log(`🔍 [USER-ROLES] Buscando papel para usuário: ${userId.substring(0, 8)}***`);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`🔍 [USER-ROLES] Buscando papel para usuário: ${userId.substring(0, 8)}***`);
+      }
       
       const { data, error } = await supabase
         .from("profiles")
@@ -111,6 +130,7 @@ export function useUserRoles() {
         .single();
       
       if (error) {
+        // Log de erro sempre visível (crítico)
         console.error('❌ [USER-ROLES] Erro ao buscar papel do usuário:', error);
         return { roleId: null, roleName: null, roleData: null };
       }
@@ -136,9 +156,12 @@ export function useUserRoles() {
       const result: UserRoleResult = { roleId, roleName, roleData };
       roleCache.current.set(userId, result);
       
-      console.log(`✅ [USER-ROLES] Role carregado: ${roleName || 'undefined'} para usuário ${userId.substring(0, 8)}***`);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`✅ [USER-ROLES] Role carregado: ${roleName || 'undefined'} para usuário ${userId.substring(0, 8)}***`);
+      }
       return result;
     } catch (err) {
+      // Log de erro sempre visível (crítico)
       console.error('❌ [USER-ROLES] Erro ao buscar papel do usuário:', err);
       return { roleId: null, roleName: null, roleData: null };
     }
