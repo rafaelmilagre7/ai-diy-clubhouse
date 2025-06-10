@@ -1,166 +1,95 @@
 
-import { NavLink } from "react-router-dom";
-import { cn } from "@/lib/utils";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/auth";
-import { toast } from "sonner";
-import { Separator } from "@/components/ui/separator";
-import {
-  Users,
-  LayoutDashboard,
-  BookOpen,
-  CalendarDays,
-  Mail,
-  Boxes,
+import { useLocation } from "react-router-dom";
+import { 
+  LayoutDashboard, 
+  Users, 
+  Settings, 
+  BarChart3, 
   MessageSquare,
-  Lightbulb,
-  UserCog,
-  Wrench,
-  BarChart3,
+  Calendar,
+  GraduationCap,
+  Gift,
   Shield,
-  UserPlus,
-  TrendingUp,
-  MessageCircle,
-  Megaphone,
-  LogOut,
-  ArrowLeft
+  Activity
 } from "lucide-react";
+import { AdminNavItem } from "./AdminNavItem";
 
 export const AdminSidebarNav = () => {
-  const { signOut } = useAuth();
-  const navigate = useNavigate();
+  const location = useLocation();
 
-  const navItems = [
-    { 
-      to: "/admin", 
-      icon: <LayoutDashboard className="h-5 w-5" />, 
+  const navigationItems = [
+    {
       label: "Dashboard",
-      isExact: true
+      icon: LayoutDashboard,
+      href: "/admin",
+      isActive: location.pathname === "/admin"
     },
-    { 
-      to: "/admin/users", 
-      icon: <Users className="h-5 w-5" />, 
-      label: "Usuários" 
+    {
+      label: "Analytics",
+      icon: BarChart3,
+      href: "/admin/analytics",
+      isActive: location.pathname.startsWith("/admin/analytics")
     },
-    { 
-      to: "/admin/communications", 
-      icon: <Megaphone className="h-5 w-5" />, 
-      label: "Comunicações" 
+    {
+      label: "Usuários",
+      icon: Users,
+      href: "/admin/users",
+      isActive: location.pathname.startsWith("/admin/users")
     },
-    { 
-      to: "/admin/tools", 
-      icon: <Wrench className="h-5 w-5" />, 
-      label: "Ferramentas" 
+    {
+      label: "Soluções",
+      icon: Settings,
+      href: "/admin/solutions",
+      isActive: location.pathname.startsWith("/admin/solutions")
     },
-    { 
-      to: "/admin/solutions", 
-      icon: <Lightbulb className="h-5 w-5" />, 
-      label: "Soluções" 
+    {
+      label: "Papéis",
+      icon: Shield,
+      href: "/admin/roles",
+      isActive: location.pathname.startsWith("/admin/roles")
     },
-    { 
-      to: "/admin/analytics", 
-      icon: <BarChart3 className="h-5 w-5" />, 
-      label: "Analytics" 
+    {
+      label: "Comunicações",
+      icon: MessageSquare,
+      href: "/admin/communications",
+      isActive: location.pathname.startsWith("/admin/communications")
     },
-    { 
-      to: "/admin/suggestions", 
-      icon: <MessageSquare className="h-5 w-5" />, 
-      label: "Sugestões" 
+    {
+      label: "Eventos",
+      icon: Calendar,
+      href: "/admin/events",
+      isActive: location.pathname.startsWith("/admin/events")
     },
-    { 
-      to: "/admin/events", 
-      icon: <CalendarDays className="h-5 w-5" />, 
-      label: "Eventos" 
+    {
+      label: "Aprendizado",
+      icon: GraduationCap,
+      href: "/admin/learning",
+      isActive: location.pathname.startsWith("/admin/learning")
     },
-    { 
-      to: "/admin/roles", 
-      icon: <Shield className="h-5 w-5" />, 
-      label: "Papéis" 
+    {
+      label: "Benefícios",
+      icon: Gift,
+      href: "/admin/benefits",
+      isActive: location.pathname.startsWith("/admin/benefits")
     },
-    { 
-      to: "/admin/invites", 
-      icon: <UserPlus className="h-5 w-5" />, 
-      label: "Convites" 
-    },
-    { 
-      to: "/admin/benefits", 
-      icon: <TrendingUp className="h-5 w-5" />, 
-      label: "Benefícios" 
-    },
-    { 
-      to: "/admin/whatsapp-debug", 
-      icon: <MessageCircle className="h-5 w-5" />, 
-      label: "WhatsApp Debug" 
+    {
+      label: "Diagnóstico",
+      icon: Activity,
+      href: "/admin/diagnostics",
+      isActive: location.pathname.startsWith("/admin/diagnostics")
     }
   ];
 
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      navigate("/auth/login");
-    } catch (error) {
-      console.error("Erro ao fazer logout:", error);
-      toast.error("Erro ao fazer logout");
-    }
-  };
-
-  const handleBackToMember = () => {
-    navigate("/dashboard");
-    toast.success("Retornando para a área de membro");
-  };
-
   return (
-    <div className="flex flex-col h-full px-1">
-      {/* Área de navegação com scroll */}
-      <div className="flex-1 min-h-0">
-        <ScrollArea className="h-full">
-          <div className="space-y-1 pr-3">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.isExact}
-                className={({ isActive }) => cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
-                  isActive 
-                    ? "bg-white/10 text-white" 
-                    : "text-white/70 hover:text-white hover:bg-white/5"
-                )}
-              >
-                {item.icon}
-                {item.label}
-              </NavLink>
-            ))}
-          </div>
-        </ScrollArea>
+    <nav className="flex-1 overflow-y-auto py-4">
+      <div className="space-y-1 px-4">
+        {navigationItems.map((item) => (
+          <AdminNavItem
+            key={item.href}
+            {...item}
+          />
+        ))}
       </div>
-
-      {/* Botões fixos sempre visíveis na parte inferior */}
-      <div className="flex-shrink-0 pt-4 pb-4 space-y-2">
-        <Separator className="bg-white/5 mb-4" />
-        
-        {/* Botão destacado para voltar à área de membro */}
-        <Button 
-          variant="default" 
-          className="w-full justify-start bg-primary hover:bg-primary-hover text-white"
-          onClick={handleBackToMember}
-        >
-          <ArrowLeft className="h-5 w-5 mr-3" />
-          Área de Membro
-        </Button>
-        
-        {/* Botão de logout */}
-        <Button 
-          variant="ghost" 
-          className="w-full justify-start text-white/70 hover:text-white hover:bg-white/5"
-          onClick={handleLogout}
-        >
-          <LogOut className="h-5 w-5 mr-3" />
-          Sair
-        </Button>
-      </div>
-    </div>
+    </nav>
   );
 };

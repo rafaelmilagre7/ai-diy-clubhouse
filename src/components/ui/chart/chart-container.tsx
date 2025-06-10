@@ -1,54 +1,23 @@
 
-import * as React from "react"
-import { cn } from "@/lib/utils"
+import React from 'react'
+import { ChartConfig, ChartContext } from './context'
 
-export interface ChartConfig {
-  [key: string]: {
-    label: string
-    color: string
-  }
-}
-
-interface ChartContainerProps extends React.HTMLAttributes<HTMLDivElement> {
+interface ChartContainerProps {
   config?: ChartConfig
+  children: React.ReactNode
+  className?: string
 }
 
-const ChartContext = React.createContext<ChartConfig | undefined>(undefined)
-
-export function ChartContainer({
+export const ChartContainer: React.FC<ChartContainerProps> = ({
+  config = {},
   children,
-  config,
-  className,
-  ...props
-}: ChartContainerProps) {
+  className
+}) => {
   return (
     <ChartContext.Provider value={config}>
-      <div className={cn("", className)} {...props}>
+      <div className={className}>
         {children}
       </div>
-      <ChartStyle config={config} />
     </ChartContext.Provider>
-  )
-}
-
-export function useConfig() {
-  const config = React.useContext(ChartContext)
-  return config
-}
-
-export function ChartStyle({ config }: { config?: ChartConfig }) {
-  if (!config) {
-    return null
-  }
-
-  // Fix: Remove JSX style props and use dangerouslySetInnerHTML instead
-  return (
-    <style dangerouslySetInnerHTML={{
-      __html: Object.entries(config)
-        .map(([key, value]) => {
-          return `--color-${key}: ${value.color};`
-        })
-        .join("\n")
-    }} />
   )
 }
