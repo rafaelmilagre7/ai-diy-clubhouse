@@ -1,151 +1,94 @@
 
-// Functions for data processing in analytics
+// Utilitários para processamento de dados de analytics
 
-// Process user growth data
-export const processUsersByTime = (userData: any[]) => {
-  // Se não houver dados, criar dados simulados
-  if (userData.length === 0) {
-    return Array.from({ length: 6 }, (_, i) => ({
-      name: `Mês ${i + 1}`,
-      total: Math.floor(Math.random() * 50) + 10
-    }));
-  }
-
-  // Agrupar usuários por mês
-  const months: Record<string, number> = {};
-  const today = new Date();
+export const processUsersByTime = (users: any[]) => {
+  if (!users || users.length === 0) return [];
   
-  // Inicializar últimos 6 meses
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(today);
-    d.setMonth(d.getMonth() - i);
-    const monthKey = `${d.getFullYear()}-${d.getMonth() + 1}`;
-    months[monthKey] = 0;
-  }
+  const grouped = users.reduce((acc, user) => {
+    const date = new Date(user.created_at).toISOString().split('T')[0];
+    acc[date] = (acc[date] || 0) + 1;
+    return acc;
+  }, {});
   
-  // Contar usuários por mês
-  userData.forEach(user => {
-    const date = new Date(user.created_at);
-    const monthKey = `${date.getFullYear()}-${date.getMonth() + 1}`;
-    
-    if (months[monthKey] !== undefined) {
-      months[monthKey]++;
-    }
-  });
-  
-  // Formatar para gráfico
-  return Object.entries(months).map(([key, value]) => {
-    const [year, month] = key.split('-');
-    const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-    return {
-      name: `${monthNames[parseInt(month) - 1]}/${year.slice(2)}`,
-      total: value
-    };
-  });
-};
-
-// Process solution popularity data
-export const processSolutionPopularity = (progressData: any[], solutionsData: any[]) => {
-  // Se não houver dados, retornar array vazio para ser preenchido com dados simulados
-  if (progressData.length === 0 || solutionsData.length === 0) {
-    return [];
-  }
-
-  // Contar quantas vezes cada solução foi iniciada
-  const solutionCounts: Record<string, number> = {};
-  
-  progressData.forEach(progress => {
-    if (progress.solution_id) {
-      solutionCounts[progress.solution_id] = (solutionCounts[progress.solution_id] || 0) + 1;
-    }
-  });
-  
-  // Mapear IDs para títulos e formatar para gráfico
-  const solutionMap = new Map(solutionsData.map(s => [s.id, s.title || `Solução ${s.id.substring(0, 4)}`]));
-  
-  const result = Object.entries(solutionCounts)
-    .filter(([id]) => solutionMap.has(id)) // Apenas soluções que existem na lista filtrada
-    .map(([id, count]) => ({
-      name: solutionMap.get(id) || `Solução ${id.substring(0, 4)}`,
-      value: count
+  return Object.entries(grouped)
+    .map(([date, count]) => ({ 
+      date, 
+      usuarios: count,
+      name: new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
     }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 5);
-  
-  // Se não houver dados suficientes, adicionar dados simulados
-  while (result.length < 5) {
-    result.push({
-      name: `Solução ${result.length + 1}`,
-      value: Math.floor(Math.random() * 10) + 1
-    });
-  }
-  
-  return result;
+    .sort((a, b) => a.date.localeCompare(b.date));
 };
 
-// Process implementations by category
-export const processImplementationsByCategory = (progressData: any[], solutionsData: any[]) => {
-  // Mapear soluções por categoria
-  const solutionCategories = new Map(solutionsData.map(s => [s.id, s.category]));
+export const processSolutionPopularity = (progress: any[], solutions: any[]) => {
+  if (!progress || !solutions || progress.length === 0) return [];
   
-  // Contar implementações por categoria
-  const categoryCounts: Record<string, number> = {
-    revenue: 0,
-    operational: 0,
-    strategy: 0
-  };
+  const solutionMap = solutions.reduce((acc, solution) => {
+    acc[solution.id] = solution;
+    return acc;
+  }, {});
   
-  progressData.forEach(progress => {
-    if (progress.solution_id) {
-      const category = solutionCategories.get(progress.solution_id);
-      if (category && categoryCounts[category] !== undefined) {
-        categoryCounts[category]++;
-      }
+  const grouped = progress.reduce((acc, item) => {
+    const solution = solutionMap[item.solution_id];
+    if (solution) {
+      const title = solution.title || 'Solução sem título';
+      acc[title] = (acc[title] || 0) + 1;
     }
-  });
+    return acc;
+  }, {});
   
-  // Formatar para gráfico
-  return [
-    { name: 'Aumento de Receita', value: categoryCounts.revenue },
-    { name: 'Otimização Operacional', value: categoryCounts.operational },
-    { name: 'Gestão Estratégica', value: categoryCounts.strategy }
-  ];
+  return Object.entries(grouped)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => (b.value as number) - (a.value as number))
+    .slice(0, 10); // Top 10
 };
 
-// Process completion rate
-export const processCompletionRate = (progressData: any[]) => {
-  const total = progressData.length;
-  const completed = progressData.filter(p => p.is_completed).length;
+export const processImplementationsByCategory = (progress: any[], solutions: any[]) => {
+  if (!progress || !solutions || progress.length === 0) return [];
+  
+  const solutionMap = solutions.reduce((acc, solution) => {
+    acc[solution.id] = solution;
+    return acc;
+  }, {});
+  
+  const grouped = progress.reduce((acc, item) => {
+    const solution = solutionMap[item.solution_id];
+    if (solution && item.is_completed) {
+      const category = solution.category || 'Outros';
+      acc[category] = (acc[category] || 0) + 1;
+    }
+    return acc;
+  }, {});
+  
+  return Object.entries(grouped)
+    .map(([name, value]) => ({ name, value }));
+};
+
+export const processCompletionRate = (progress: any[]) => {
+  if (!progress || progress.length === 0) return [];
+  
+  const total = progress.length;
+  const completed = progress.filter(item => item.is_completed).length;
+  const completionRate = total > 0 ? (completed / total) * 100 : 0;
   
   return [
     { name: 'Concluídas', value: completed },
-    { name: 'Em Andamento', value: total - completed }
+    { name: 'Em andamento', value: total - completed }
   ];
 };
 
-// Process day of week activity
-export const processDayOfWeekActivity = (progressData: any[]) => {
-  const dayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
-  const dayCounts = Array(7).fill(0);
+export const processDayOfWeekActivity = (progress: any[]) => {
+  if (!progress || progress.length === 0) return [];
   
-  // Se não houver dados suficientes, usar dados simulados
-  if (progressData.length < 10) {
-    return dayNames.map((name) => ({
-      name,
-      atividade: Math.floor(Math.random() * 15) + 1
-    }));
-  }
+  const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const grouped = progress.reduce((acc, item) => {
+    const dayIndex = new Date(item.created_at).getDay();
+    const dayName = dayNames[dayIndex];
+    acc[dayName] = (acc[dayName] || 0) + 1;
+    return acc;
+  }, {});
   
-  progressData.forEach(progress => {
-    if (progress.created_at) {
-      const date = new Date(progress.created_at);
-      const day = date.getDay();
-      dayCounts[day]++;
-    }
-  });
-  
-  return dayNames.map((name, index) => ({
-    name,
-    atividade: dayCounts[index]
+  return dayNames.map(day => ({
+    day,
+    atividade: grouped[day] || 0
   }));
 };

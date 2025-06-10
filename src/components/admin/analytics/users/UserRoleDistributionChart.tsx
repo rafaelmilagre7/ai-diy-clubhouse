@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { PieChart } from '@/components/ui/chart';
 import { Skeleton } from '@/components/ui/skeleton';
-import { chartColors } from '@/lib/chart-utils';
+import { chartColors, userCountFormatter } from '@/lib/chart-utils';
 
 interface UserRoleDistributionChartProps {
   data: any[];
@@ -16,14 +16,13 @@ export const UserRoleDistributionChart: React.FC<UserRoleDistributionChartProps>
 }) => {
   // Palette de cores específica para papéis de usuários
   const roleColors = [
-    chartColors.primary, // Admin
-    chartColors.secondary,  // Member
-    chartColors.success, // Formação
-    chartColors.info,    // Outros papéis
+    chartColors.primary,
+    chartColors.secondary,
+    chartColors.success,
+    chartColors.info,
+    chartColors.warning,
+    chartColors.purple
   ];
-  
-  // Formatar valor para exibição
-  const valueFormatter = (value: number) => `${value} usuário${value !== 1 ? 's' : ''}`;
 
   if (isLoading) {
     return (
@@ -60,7 +59,7 @@ export const UserRoleDistributionChart: React.FC<UserRoleDistributionChartProps>
             index="name"
             category="value"
             colors={roleColors}
-            valueFormatter={valueFormatter}
+            valueFormatter={userCountFormatter}
             className="h-full"
           />
         )}

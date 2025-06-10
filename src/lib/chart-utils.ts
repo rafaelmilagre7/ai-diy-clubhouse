@@ -1,5 +1,4 @@
 
-
 // Cores e utilitários para gráficos
 export const chartColors = {
   primary: '#0ABAB5',
@@ -12,28 +11,11 @@ export const chartColors = {
   pink: '#EC4899',
   orange: '#F97316',
   teal: '#14B8A6',
-  // Propriedades adicionais necessárias
-  accent: '#6366F1', // Usando secondary como accent
+  accent: '#6366F1',
   categorical: [
-    '#0ABAB5', // primary
-    '#6366F1', // secondary
-    '#10B981', // success
-    '#F59E0B', // warning
-    '#EF4444', // danger
-    '#3B82F6', // info
-    '#8B5CF6', // purple
-    '#EC4899', // pink
-    '#F97316', // orange
-    '#14B8A6'  // teal
-  ],
-  areaGradient: {
-    id: 'areaGradient',
-    colors: ['#0ABAB5', '#6366F1']
-  },
-  barGradient: {
-    id: 'barGradient', 
-    colors: ['#6366F1', '#0ABAB5']
-  }
+    '#0ABAB5', '#6366F1', '#10B981', '#F59E0B', '#EF4444', 
+    '#3B82F6', '#8B5CF6', '#EC4899', '#F97316', '#14B8A6'
+  ]
 } as const;
 
 // Configuração básica para gráficos
@@ -63,18 +45,6 @@ export const chartTypeConfig = {
   }
 };
 
-// Função para criar configuração de gradientes (sem JSX)
-export const getChartGradient = (id: string, colors: string[]) => {
-  return {
-    id,
-    colors: colors.map((color, index) => ({
-      offset: index === 0 ? "5%" : "95%",
-      stopColor: color,
-      stopOpacity: index === 0 ? 0.8 : 0.1
-    }))
-  };
-};
-
 // Função para validar dados de gráfico
 export const validateChartData = (data: any[], requiredFields: string[]): boolean => {
   if (!Array.isArray(data) || data.length === 0) {
@@ -98,7 +68,23 @@ export const formatChartData = (data: any[], defaultValue: any[] = []): any[] =>
 
 // Cores para diferentes tipos de dados
 export const getDataColor = (index: number): string => {
-  const colors = Object.values(chartColors.categorical);
-  return colors[index % colors.length];
+  return chartColors.categorical[index % chartColors.categorical.length];
 };
 
+// Formatador de valores padrão
+export const defaultValueFormatter = (value: number): string => {
+  if (typeof value !== 'number') return String(value);
+  return value.toLocaleString('pt-BR');
+};
+
+// Formatador de percentual
+export const percentFormatter = (value: number): string => {
+  if (typeof value !== 'number') return '0%';
+  return `${Math.round(value)}%`;
+};
+
+// Formatador de usuários
+export const userCountFormatter = (value: number): string => {
+  if (typeof value !== 'number') return '0 usuários';
+  return `${value} usuário${value !== 1 ? 's' : ''}`;
+};

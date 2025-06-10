@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 
 /**
@@ -192,44 +191,23 @@ export const clearPermissionCache = (userId?: string) => {
 };
 
 /**
- * Logging seguro de eventos (sem dados sensíveis)
- * Adaptado para usar a função log_security_access
+ * Logging seguro de eventos usando a nova função log_security_access
  */
 export const logSecurityEvent = async (
   actionType: string,
   resourceType: string,
-  resourceId?: string,
-  oldValues?: any,
-  newValues?: any
+  resourceId?: string
 ) => {
   try {
-    // Sanitizar dados antes do log para remover informações sensíveis
-    const sanitizeData = (data: any) => {
-      if (!data) return null;
-      
-      const sanitized = { ...data };
-      
-      // Remover campos sensíveis
-      const sensitiveFields = ['password', 'token', 'email', 'phone', 'api_key', 'secret'];
-      sensitiveFields.forEach(field => {
-        if (sanitized[field]) {
-          sanitized[field] = '[REDACTED]';
-        }
-      });
-      
-      return sanitized;
-    };
-
     // Usar a nova função log_security_access implementada
     await supabase.rpc('log_security_access', {
       p_table_name: resourceType,
       p_operation: actionType,
       p_resource_id: resourceId
     });
-    
   } catch (error) {
-    // Não loggar o erro completo para evitar vazamento de dados
-    console.error('[SECURITY] Security event logging failed');
+    console.error('[SECURITY] Error logging security event:', error);
+    // Não falhar operações principais por causa de erros de log
   }
 };
 
