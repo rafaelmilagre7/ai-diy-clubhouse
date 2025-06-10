@@ -13,7 +13,7 @@ interface AuthStateManagerParams {
 export const useAuthStateManager = (params?: AuthStateManagerParams) => {
   const setupInProgress = useRef(false);
   const lastSetupTimestamp = useRef(0);
-  const DEBOUNCE_TIME = 1000;
+  const DEBOUNCE_TIME = 200; // Reduzido de 1000ms para 200ms
   const MAX_SETUP_TIME = 8000; // 8 segundos máximo
   
   // Se não temos parâmetros, retornar função mock
@@ -31,9 +31,9 @@ export const useAuthStateManager = (params?: AuthStateManagerParams) => {
   const setupAuthSession = useCallback(async () => {
     const now = Date.now();
     
-    // Implementar debounce
+    // Implementar debounce com log
     if (now - lastSetupTimestamp.current < DEBOUNCE_TIME) {
-      console.log("🔄 [AUTH] Setup ignorado por debounce");
+      console.log(`🔄 [AUTH] Setup ignorado por debounce (${now - lastSetupTimestamp.current}ms < ${DEBOUNCE_TIME}ms)`);
       return { success: true, error: null };
     }
     
@@ -96,6 +96,8 @@ export const useAuthStateManager = (params?: AuthStateManagerParams) => {
         
         // Processar perfil com timeout próprio
         try {
+          console.log(`🔍 [AUTH] Iniciando carregamento do perfil para: ${userId.substring(0, 8)}***`);
+          
           const profilePromise = processUserProfile(
             userId,
             userEmail,
@@ -112,7 +114,7 @@ export const useAuthStateManager = (params?: AuthStateManagerParams) => {
           ]) as any;
           
           if (profile) {
-            console.log(`📊 [AUTH] Perfil carregado: ${profile.role}`);
+            console.log(`📊 [AUTH] Perfil carregado com sucesso: role=${profile.role || 'undefined'}`);
             setProfile(profile);
             
             // Atualizar metadados em background (não crítico)
@@ -154,6 +156,7 @@ export const useAuthStateManager = (params?: AuthStateManagerParams) => {
     } finally {
       setupInProgress.current = false;
       setIsLoading(false);
+      console.log("✅ [AUTH] Setup finalizado, isLoading = false");
     }
   }, [setSession, setUser, setProfile, setIsLoading]);
   

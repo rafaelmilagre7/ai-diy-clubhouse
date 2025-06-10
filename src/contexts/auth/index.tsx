@@ -114,15 +114,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             if (event === 'SIGNED_IN' && session?.user) {
               console.log(`🎉 [AUTH DEBUG] Login detectado para: ${session.user.email}`);
               
-              // Usar setTimeout para evitar race conditions
-              setTimeout(async () => {
-                try {
-                  await setupAuthSession();
-                } catch (error) {
-                  console.error('❌ [AUTH DEBUG] Erro no setup pós-login:', error);
-                  setAuthError(error instanceof Error ? error : new Error('Erro no setup pós-login'));
-                }
-              }, 100);
+              // CORREÇÃO: Executar setup imediatamente, sem setTimeout
+              try {
+                console.log('🚀 [AUTH DEBUG] Executando setup imediatamente após SIGNED_IN');
+                await setupAuthSession();
+              } catch (error) {
+                console.error('❌ [AUTH DEBUG] Erro no setup pós-login:', error);
+                setAuthError(error instanceof Error ? error : new Error('Erro no setup pós-login'));
+              }
             } else if (event === 'SIGNED_OUT') {
               console.log('👋 [AUTH DEBUG] Logout detectado');
               clearProfileCache();
