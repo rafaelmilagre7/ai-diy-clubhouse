@@ -65,7 +65,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   // Configurar sessão na inicialização
   useEffect(() => {
-    logger.info('[AUTH-CONTEXT] Inicializando AuthProvider');
+    logger.info('[AUTH-CONTEXT] Inicializando AuthProvider', {
+      component: 'AuthContext'
+    });
     setupAuthSession();
   }, [setupAuthSession]);
 
@@ -73,7 +75,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        logger.info('[AUTH-CONTEXT] Auth state change:', event);
+        logger.info('[AUTH-CONTEXT] Auth state change:', {
+          event,
+          component: 'AuthContext'
+        });
         
         if (event === 'SIGNED_OUT' || !session) {
           setSession(null);
@@ -99,11 +104,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // Função de logout
   const signOut = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
     try {
-      logger.info('[AUTH-CONTEXT] Iniciando logout');
+      logger.info('[AUTH-CONTEXT] Iniciando logout', {
+        component: 'AuthContext'
+      });
       const { error } = await supabase.auth.signOut();
       
       if (error) {
-        logger.error('[AUTH-CONTEXT] Erro no logout:', error);
+        logger.error('[AUTH-CONTEXT] Erro no logout:', {
+          error: error.message,
+          component: 'AuthContext'
+        });
         return { success: false, error: error.message };
       }
       
@@ -113,11 +123,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setProfile(null);
       setIsLoading(false);
       
-      logger.info('[AUTH-CONTEXT] Logout realizado com sucesso');
+      logger.info('[AUTH-CONTEXT] Logout realizado com sucesso', {
+        component: 'AuthContext'
+      });
       return { success: true };
       
     } catch (error) {
-      logger.error('[AUTH-CONTEXT] Erro crítico no logout:', error);
+      logger.error('[AUTH-CONTEXT] Erro crítico no logout:', {
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        component: 'AuthContext'
+      });
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Erro desconhecido' 
