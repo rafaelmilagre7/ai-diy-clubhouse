@@ -59,6 +59,9 @@ verify_jwt = true
 [functions.generate-onboarding-message]
 verify_jwt = true
 
+[functions.auth-rate-limiter]
+verify_jwt = false
+
 [auth]
 enabled = true
 port = 54324

@@ -31,24 +31,71 @@ const AuthLayout = () => {
     try {
       setIsLoading(true);
       
-      // Login direto sem limpeza desnecessária de estado
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      // CORREÇÃO CRÍTICA: Usar Edge Function para rate limiting seguro no backend
+      const { data: authResult, error: functionError } = await supabase.functions.invoke(
+        'auth-rate-limiter',
+        {
+          body: { email, password }
+        }
+      );
       
-      if (error) throw error;
+      if (functionError) {
+        console.error("Erro na Edge Function:", functionError);
+        // Fallback para autenticação direta (mantém compatibilidade)
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        
+        if (error) throw error;
+        
+        if (data.user) {
+          toast({
+            title: "Login realizado com sucesso",
+            description: "Redirecionando...",
+          });
+          navigate('/dashboard', { replace: true });
+        }
+        return;
+      }
       
-      // Navegação otimizada usando React Router
-      if (data.user) {
+      // Verificar se foi bloqueado por rate limiting
+      if (authResult.error) {
+        const errorCode = authResult.code;
+        
+        if (errorCode === 'RATE_LIMITED') {
+          toast({
+            title: "Muitas tentativas",
+            description: authResult.error,
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        // Outros erros de autenticação
+        toast({
+          title: "Erro de autenticação",
+          description: authResult.error,
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Login bem-sucedido via Edge Function
+      if (authResult.success && authResult.session) {
+        // Definir sessão manualmente se necessário
+        if (authResult.session) {
+          await supabase.auth.setSession(authResult.session);
+        }
+        
         toast({
           title: "Login realizado com sucesso",
           description: "Redirecionando...",
         });
         
-        // Usar navigate para redirecionamento mais rápido
         navigate('/dashboard', { replace: true });
       }
+      
     } catch (error: any) {
       console.error("Erro ao fazer login:", error);
       toast({
