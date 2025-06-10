@@ -27,13 +27,7 @@ export const KpiGrid: React.FC<KpiGridProps> = ({
     );
   }
 
-  // Calcular percentual baseado no total real, não apenas em completed
   const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
-  
-  // Mostrar valores mínimos quando não há dados para evitar interface vazia
-  const displayTotal = Math.max(total, 1);
-  const displayCompleted = completed;
-  const displayInProgress = inProgress;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -45,8 +39,8 @@ export const KpiGrid: React.FC<KpiGridProps> = ({
           <div className="w-full">
             <h3 className="text-sm text-neutral-400 mb-1">Implementações Completas</h3>
             <div className="flex items-baseline">
-              <p className="text-xl font-medium text-white">{displayCompleted}</p>
-              <span className="text-xs ml-1.5 text-neutral-500">de {displayTotal}</span>
+              <p className="text-xl font-medium text-white">{completed}</p>
+              <span className="text-xs ml-1.5 text-neutral-500">de {total}</span>
             </div>
             <div className="w-full h-1.5 bg-white/5 rounded-full mt-2 overflow-hidden">
               <div 
@@ -66,21 +60,20 @@ export const KpiGrid: React.FC<KpiGridProps> = ({
           <div className="w-full">
             <h3 className="text-sm text-neutral-400 mb-1">Em Andamento</h3>
             <div className="flex items-baseline">
-              <p className="text-xl font-medium text-white">{displayInProgress}</p>
+              <p className="text-xl font-medium text-white">{inProgress}</p>
               <span className="text-xs ml-1.5 text-neutral-500">projetos</span>
             </div>
             <div className="flex space-x-1 mt-2">
-              {displayInProgress > 0 ? (
-                [...Array(Math.min(5, displayInProgress))].map((_, i) => (
-                  <div 
-                    key={i} 
-                    className={cn(
-                      "h-1.5 rounded-full bg-operational/60", 
-                      i < 3 ? "w-6" : "w-3"
-                    )}
-                  ></div>
-                ))
-              ) : (
+              {[...Array(Math.min(5, inProgress || 0))].map((_, i) => (
+                <div 
+                  key={i} 
+                  className={cn(
+                    "h-1.5 rounded-full bg-operational/60", 
+                    i < 3 ? "w-6" : "w-3"
+                  )}
+                ></div>
+              ))}
+              {inProgress === 0 && (
                 <div className="h-1.5 w-full rounded-full bg-white/5"></div>
               )}
             </div>

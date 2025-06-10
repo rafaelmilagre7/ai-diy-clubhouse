@@ -1,165 +1,44 @@
 
-import { Suspense } from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./contexts/auth";
-import { LoadingProvider } from "./contexts/LoadingContext";
-import { LoggingProvider } from "./hooks/useLogging";
-import OptimizedLoadingScreen from "@/components/common/OptimizedLoadingScreen";
-import RootRedirect from "@/components/routing/RootRedirect";
-import AuthLayout from "@/components/auth/AuthLayout";
-import MemberDashboard from "@/pages/member/Dashboard";
-import AdminDashboard from "@/pages/admin/AdminDashboard";
-import AdminSolutions from "@/pages/admin/AdminSolutions";
-import SolutionDetails from "@/pages/member/SolutionDetails";
-import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
-import FormacaoDashboard from "@/pages/formacao/FormacaoDashboard";
-import OptimizedDashboard from "@/pages/member/OptimizedDashboard";
-import AdminLayout from "@/components/layout/admin/AdminLayout";
-import MemberLayout from "@/components/layout/MemberLayout";
-import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
+import React from 'react';
+import { BrowserRouter as Router } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { Toaster } from 'sonner';
+import { AuthProvider } from '@/contexts/auth';
+import { LoggingProvider } from '@/contexts/logging';
+import { AppRoutes } from '@/routes';
+import { SEOWrapper } from '@/components/seo/SEOWrapper';
 
-// Importar componentes de páginas de membro que estavam faltando
-import Solutions from "@/pages/member/Solutions";
-import Tools from "@/pages/member/Tools";
-import ToolDetails from "@/pages/member/ToolDetails";
-import Profile from "@/pages/member/Profile";
-import EditProfile from "@/pages/member/EditProfile";
-
-// Query client otimizado
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 2 * 60 * 1000, // 2 minutos
-      gcTime: 5 * 60 * 1000, // 5 minutos
-      refetchOnWindowFocus: false,
-      refetchOnMount: true,
-      retry: 2,
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    },
-    mutations: {
-      retry: 1,
-    },
-  },
+      staleTime: 5 * 60 * 1000,
+      retry: 2
+    }
+  }
 });
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <LoadingProvider>
-          <LoggingProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <Suspense fallback={<OptimizedLoadingScreen />}>
-                  <Routes>
-                    <Route path="/" element={<RootRedirect />} />
-                    <Route path="/login" element={<AuthLayout />} />
-                    <Route path="/onboarding" element={<OnboardingWizard />} />
-                    
-                    {/* Rotas de Membro - TODAS com MemberLayout */}
-                    <Route 
-                      path="/dashboard" 
-                      element={
-                        <ProtectedRoutes>
-                          <MemberLayout>
-                            <OptimizedDashboard />
-                          </MemberLayout>
-                        </ProtectedRoutes>
-                      } 
-                    />
-                    <Route 
-                      path="/solutions" 
-                      element={
-                        <ProtectedRoutes>
-                          <MemberLayout>
-                            <Solutions />
-                          </MemberLayout>
-                        </ProtectedRoutes>
-                      } 
-                    />
-                    <Route 
-                      path="/solution/:id" 
-                      element={
-                        <ProtectedRoutes>
-                          <MemberLayout>
-                            <SolutionDetails />
-                          </MemberLayout>
-                        </ProtectedRoutes>
-                      } 
-                    />
-                    <Route 
-                      path="/tools" 
-                      element={
-                        <ProtectedRoutes>
-                          <MemberLayout>
-                            <Tools />
-                          </MemberLayout>
-                        </ProtectedRoutes>
-                      } 
-                    />
-                    <Route 
-                      path="/tools/:id" 
-                      element={
-                        <ProtectedRoutes>
-                          <MemberLayout>
-                            <ToolDetails />
-                          </MemberLayout>
-                        </ProtectedRoutes>
-                      } 
-                    />
-                    <Route 
-                      path="/profile" 
-                      element={
-                        <ProtectedRoutes>
-                          <MemberLayout>
-                            <Profile />
-                          </MemberLayout>
-                        </ProtectedRoutes>
-                      } 
-                    />
-                    <Route 
-                      path="/profile/edit" 
-                      element={
-                        <ProtectedRoutes>
-                          <MemberLayout>
-                            <EditProfile />
-                          </MemberLayout>
-                        </ProtectedRoutes>
-                      } 
-                    />
-                    
-                    {/* Rota de Formacao */}
-                    <Route path="/formacao" element={<FormacaoDashboard />} />
-                    
-                    {/* Rotas de Admin - TODAS com AdminLayout */}
-                    <Route 
-                      path="/admin" 
-                      element={
-                        <AdminLayout>
-                          <AdminDashboard />
-                        </AdminLayout>
-                      } 
-                    />
-                    <Route 
-                      path="/admin/solutions" 
-                      element={
-                        <AdminLayout>
-                          <AdminSolutions />
-                        </AdminLayout>
-                      } 
-                    />
-                  </Routes>
-                </Suspense>
-              </BrowserRouter>
-            </TooltipProvider>
-          </LoggingProvider>
-        </LoadingProvider>
+        <LoggingProvider>
+          <Router>
+            <SEOWrapper>
+              <div className="App">
+                <AppRoutes />
+                <Toaster 
+                  position="top-right"
+                  theme="dark"
+                  richColors
+                  expand
+                  visibleToasts={3}
+                />
+                <ReactQueryDevtools initialIsOpen={false} />
+              </div>
+            </SEOWrapper>
+          </Router>
+        </LoggingProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
