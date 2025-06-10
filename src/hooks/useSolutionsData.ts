@@ -35,10 +35,11 @@ export const useSolutionsData = () => {
         setLoading(true);
         setError(null);
 
-        // Log de acesso a dados críticos
+        // Log de acesso a dados críticos usando a nova função implementada
         await logDataAccess('solutions', 'fetch_list');
 
         // CORREÇÃO CRÍTICA: Filtrar soluções baseado no perfil do usuário
+        // As políticas RLS agora garantem que os filtros são aplicados no servidor
         let query = supabase.from("solutions").select("*");
 
         // Se não for admin, mostrar apenas soluções publicadas

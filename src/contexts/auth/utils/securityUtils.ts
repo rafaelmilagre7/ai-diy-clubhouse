@@ -2,7 +2,7 @@
 import { supabase } from '@/lib/supabase';
 
 /**
- * Utilitários de segurança centralizados com melhorias
+ * Utilitários de segurança centralizados com melhorias para trabalhar com as novas políticas RLS
  */
 
 // Cache de verificações admin com TTL curto para segurança
@@ -12,6 +12,7 @@ const MAX_VERIFICATION_ATTEMPTS = 5;
 
 /**
  * Verificação robusta de status de admin com múltiplas camadas de segurança
+ * Adaptada para trabalhar com as novas políticas RLS
  */
 export const verifyAdminStatus = async (userId: string, email?: string): Promise<boolean> => {
   if (!userId || typeof userId !== 'string') {
@@ -60,13 +61,11 @@ export const verifyAdminStatus = async (userId: string, email?: string): Promise
       }
     }
 
-    // Segunda camada: verificação no banco com função RPC segura
-    const { data, error } = await supabase.rpc('is_user_admin', {
-      user_id: userId
-    });
+    // Segunda camada: Usar função is_admin() implementada no banco
+    const { data, error } = await supabase.rpc('is_admin');
     
     if (error) {
-      console.error('[SECURITY] Admin verification RPC error:', error.message);
+      console.error('[SECURITY] Admin verification error:', error.message);
       return false;
     }
     
@@ -80,7 +79,7 @@ export const verifyAdminStatus = async (userId: string, email?: string): Promise
     });
     
     if (isAdmin) {
-      console.info('[SECURITY] Admin verified by database');
+      console.info('[SECURITY] Admin verified by database is_admin() function');
     }
     
     return isAdmin;
@@ -97,6 +96,7 @@ const PERMISSION_CACHE_TTL = 3 * 60 * 1000; // 3 minutos
 
 /**
  * Busca permissões do usuário com cache seguro
+ * Adaptada para trabalhar com as novas políticas RLS
  */
 export const getUserPermissions = async (userId: string): Promise<string[]> => {
   if (!userId || typeof userId !== 'string') {
@@ -112,16 +112,42 @@ export const getUserPermissions = async (userId: string): Promise<string[]> => {
   }
 
   try {
-    const { data, error } = await supabase.rpc('get_user_permissions', {
-      user_id: userId
-    });
+    // Integração com a função log_security_access
+    await supabase.rpc('log_security_access', {
+      p_table_name: 'user_roles',
+      p_operation: 'fetch_permissions',
+      p_resource_id: userId
+    }).catch(() => {}); // Ignorar erros de auditoria
+    
+    const { data, error } = await supabase.from('profiles')
+      .select(`
+        role_id,
+        user_roles:role_id (
+          name,
+          permissions
+        )
+      `)
+      .eq('id', userId)
+      .single();
     
     if (error) {
       console.error('[SECURITY] Permissions fetch error:', error.message);
       return [];
     }
     
-    const permissions = Array.isArray(data) ? data : [];
+    let permissions: string[] = [];
+    
+    if (data?.user_roles?.permissions) {
+      try {
+        const permObj = data.user_roles.permissions;
+        if (typeof permObj === 'object') {
+          const permKeys = Object.keys(permObj).filter(key => permObj[key] === true);
+          permissions = permKeys;
+        }
+      } catch (parseError) {
+        console.error('[SECURITY] Permission parsing error:', parseError);
+      }
+    }
     
     // Cache apenas se bem-sucedido
     permissionCache.set(userId, { 
@@ -157,6 +183,7 @@ export const clearPermissionCache = (userId?: string) => {
 
 /**
  * Logging seguro de eventos (sem dados sensíveis)
+ * Adaptado para usar a função log_security_access
  */
 export const logSecurityEvent = async (
   actionType: string,
@@ -183,12 +210,11 @@ export const logSecurityEvent = async (
       return sanitized;
     };
 
-    await supabase.rpc('log_security_event', {
-      p_action_type: actionType,
-      p_resource_type: resourceType,
-      p_resource_id: resourceId,
-      p_old_values: oldValues ? JSON.stringify(sanitizeData(oldValues)) : null,
-      p_new_values: newValues ? JSON.stringify(sanitizeData(newValues)) : null
+    // Integração com a nova função log_security_access implementada
+    await supabase.rpc('log_security_access', {
+      p_table_name: resourceType,
+      p_operation: actionType,
+      p_resource_id: resourceId
     });
     
   } catch (error) {

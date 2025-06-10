@@ -29,7 +29,7 @@ export const fetchUserProfileSecurely = async (userId: string) => {
   try {
     logger.info('[AUTH-SESSION] Buscando perfil do usuário no banco de dados');
     
-    // CORREÇÃO CRÍTICA: Usar RLS - apenas o próprio usuário pode ver seu perfil
+    // ATUALIZAÇÃO: Usar nova política RLS implementada
     const { data, error } = await supabase
       .from('profiles')
       .select(`
@@ -42,9 +42,9 @@ export const fetchUserProfileSecurely = async (userId: string) => {
     if (error) {
       logger.error('[AUTH-SESSION] Erro ao buscar perfil:', error);
       
-      // Se for erro de acesso negado, limpar cache e session
+      // Se for erro de acesso negado devido às novas políticas RLS
       if (error.code === 'PGRST116' || error.message.includes('row-level security')) {
-        logger.warn('[AUTH-SESSION] Acesso negado pelo RLS - possível violação de segurança');
+        logger.warn('[AUTH-SESSION] Acesso negado pelas novas políticas RLS');
         clearProfileCache();
         throw new Error('Acesso negado aos dados do perfil');
       }
@@ -72,6 +72,18 @@ export const fetchUserProfileSecurely = async (userId: string) => {
       timestamp: Date.now(),
       userId: userId
     };
+
+    // Log de auditoria usando nova função de segurança
+    try {
+      await supabase.rpc('log_security_access', {
+        p_table_name: 'profiles',
+        p_operation: 'fetch_profile',
+        p_resource_id: userId
+      });
+    } catch (auditError) {
+      // Falhar silenciosamente para não quebrar a operação principal
+      logger.warn('[AUTH-SESSION] Erro ao registrar auditoria:', auditError);
+    }
 
     logger.info('[AUTH-SESSION] Perfil carregado e cache atualizado', {
       userId: userId.substring(0, 8) + '***',
@@ -113,6 +125,18 @@ export const validateUserSession = async () => {
       return { session: null, user: null };
     }
 
+    // Log de auditoria de acesso à sessão
+    try {
+      await supabase.rpc('log_security_access', {
+        p_table_name: 'auth_sessions',
+        p_operation: 'validate_session',
+        p_resource_id: session.user.id
+      });
+    } catch (auditError) {
+      // Falhar silenciosamente para não quebrar a validação
+      logger.warn('[AUTH-SESSION] Erro ao registrar auditoria de sessão:', auditError);
+    }
+
     logger.info('[AUTH-SESSION] Sessão validada com sucesso', {
       userId: session.user.id.substring(0, 8) + '***',
       email: session.user.email?.substring(0, 3) + '***'
@@ -134,7 +158,7 @@ export const validateUserSession = async () => {
   }
 };
 
-// NOVA FUNÇÃO: Processar perfil de usuário com criação automática se necessário
+// ATUALIZADA: Processar perfil de usuário com criação automática se necessário
 export const processUserProfile = async (userId: string, email?: string, name?: string) => {
   try {
     let profile = await fetchUserProfileSecurely(userId);
@@ -170,6 +194,17 @@ export const processUserProfile = async (userId: string, email?: string, name?: 
         timestamp: Date.now(),
         userId: userId
       };
+
+      // Log de auditoria para criação de perfil
+      try {
+        await supabase.rpc('log_security_access', {
+          p_table_name: 'profiles',
+          p_operation: 'create_profile',
+          p_resource_id: userId
+        });
+      } catch (auditError) {
+        logger.warn('[AUTH-SESSION] Erro ao registrar auditoria de criação:', auditError);
+      }
     }
     
     return profile;
