@@ -17,6 +17,7 @@ import SolutionDetails from "@/pages/member/SolutionDetails";
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import FormacaoDashboard from "@/pages/formacao/FormacaoDashboard";
 import OptimizedDashboard from "@/pages/member/OptimizedDashboard";
+import AdminLayout from "@/components/layout/admin/AdminLayout";
 
 // Query client otimizado
 const queryClient = new QueryClient({
@@ -57,9 +58,9 @@ function App() {
                   {/* Rota de Formacao */}
                   <Route path="/formacao" element={<FormacaoDashboard />} />
                   
-                  {/* Rotas de Admin */}
-                  <Route path="/admin" element={<AdminDashboard />} />
-                  <Route path="/admin/solutions" element={<AdminSolutions />} />
+                  {/* Rotas de Admin - Agora com AdminLayout */}
+                  <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+                  <Route path="/admin/solutions" element={<AdminLayout><AdminSolutions /></AdminLayout>} />
                 </Routes>
               </Suspense>
             </BrowserRouter>

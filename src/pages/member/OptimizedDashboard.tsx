@@ -1,4 +1,5 @@
-import React, { useState, useCallback, useMemo, Suspense, lazy } from "react";
+
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useOnboardingStatus } from "@/components/onboarding/hooks/useOnboardingStatus";
 import { useOptimizedDashboardData } from "@/hooks/dashboard/useOptimizedDashboardData";
@@ -10,9 +11,7 @@ import { logger } from "@/utils/logger";
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import OptimizedSkeletonLoader from '@/components/common/OptimizedSkeletonLoader';
 import ProgressiveRenderer from '@/components/dashboard/ProgressiveRenderer';
-
-// Lazy load dos componentes pesados
-const DashboardLayout = lazy(() => import("@/components/dashboard/DashboardLayout"));
+import DashboardLayout from "@/components/dashboard/DashboardLayout";
 
 const OptimizedDashboard = () => {
   const navigate = useNavigate();
@@ -20,6 +19,9 @@ const OptimizedDashboard = () => {
   const { user, profile, isLoading: authLoading } = useAuth();
   const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingStatus();
   const { isCriticalLoading } = useLoading();
+  
+  // Estado para timeout de segurança
+  const [forceRender, setForceRender] = useState(false);
   
   // Estado local mínimo
   const initialCategory = useMemo(() => searchParams.get("category") || "general", [searchParams]);
@@ -38,6 +40,16 @@ const OptimizedDashboard = () => {
     stats
   } = useOptimizedDashboardData();
 
+  // Timeout de segurança para evitar loading infinito
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      logger.warn('[OptimizedDashboard] Timeout de segurança ativado');
+      setForceRender(true);
+    }, 5000); // 5 segundos
+
+    return () => clearTimeout(timer);
+  }, []);
+
   logger.info('[OptimizedDashboard] Estado atual', {
     authLoading,
     onboardingLoading,
@@ -45,6 +57,7 @@ const OptimizedDashboard = () => {
     dataLoading,
     canFetchData,
     solutionsCount: solutions?.length || 0,
+    forceRender,
     component: 'OPTIMIZED_DASHBOARD'
   });
   
@@ -115,8 +128,8 @@ const OptimizedDashboard = () => {
     window.location.reload();
   }, [invalidateData]);
 
-  // Loading states com prioridade
-  if (isCriticalLoading || authLoading || onboardingLoading) {
+  // Loading states com prioridade e timeout de segurança
+  if (!forceRender && (isCriticalLoading || authLoading || onboardingLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
         <div className="text-center space-y-4">
@@ -128,7 +141,7 @@ const OptimizedDashboard = () => {
   }
   
   // Redirecionamentos - retornar null para evitar flash
-  if (shouldRedirectToOnboarding || shouldRedirectToLogin) {
+  if (!forceRender && (shouldRedirectToOnboarding || shouldRedirectToLogin)) {
     return null;
   }
   
@@ -166,17 +179,15 @@ const OptimizedDashboard = () => {
       maxRetries={2}
     >
       <ProgressiveRenderer priority="high">
-        <Suspense fallback={<OptimizedSkeletonLoader variant="dashboard" />}>
-          <DashboardLayout
-            active={active}
-            completed={completed}
-            recommended={recommended}
-            category={category}
-            onCategoryChange={handleCategoryChange}
-            onSolutionClick={handleSolutionClick}
-            isLoading={dataLoading}
-          />
-        </Suspense>
+        <DashboardLayout
+          active={active}
+          completed={completed}
+          recommended={recommended}
+          category={category}
+          onCategoryChange={handleCategoryChange}
+          onSolutionClick={handleSolutionClick}
+          isLoading={dataLoading}
+        />
       </ProgressiveRenderer>
     </ErrorBoundary>
   );

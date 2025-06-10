@@ -22,8 +22,8 @@ const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
 
 export const LoadingProvider = ({ children }: { children: ReactNode }) => {
   const [loadingStates, setLoadingStates] = useState<LoadingState>({
-    auth: true,
-    profile: true,
+    auth: false,
+    profile: false,
     dashboard: false,
     solutions: false,
     progress: false,
