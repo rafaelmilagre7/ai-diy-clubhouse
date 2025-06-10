@@ -2,6 +2,7 @@
 import { useCallback, useRef } from "react";
 import { supabase } from '@/lib/supabase';
 import { getUserProfileFresh } from '@/hooks/auth/utils/authSessionUtils';
+import { getUserRoleName } from '@/lib/supabase/types';
 
 interface AuthStateManagerParams {
   setSession: (session: any) => void;
@@ -151,12 +152,14 @@ export const useAuthStateManager = (params?: AuthStateManagerParams) => {
           ]) as any;
           
           if (profile) {
-            console.log(`📊 [AUTH] Perfil carregado com sucesso: role=${profile.role || 'undefined'}`);
+            // CORREÇÃO: Usar getUserRoleName() para consistência
+            const roleName = getUserRoleName(profile);
+            console.log(`📊 [AUTH] Perfil carregado com sucesso: role=${roleName}`);
             setProfile(profile);
             
-            // Atualizar metadados em background (não crítico)
+            // Atualizar metadados em background (não crítico) usando helper consistente
             supabase.auth.updateUser({
-              data: { role: profile.role }
+              data: { role: roleName }
             }).catch(error => {
               console.warn("⚠️ [AUTH] Erro ao atualizar metadados:", error.message);
             });

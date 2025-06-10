@@ -65,6 +65,15 @@ export const getUserRoleName = (profile: UserProfile | null): string => {
   
   // Fallback para campo legado durante migração
   if (profile.role) {
+    // CORREÇÃO: Log de deprecação para monitoramento
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('⚠️ [DEPRECATED] Usando profile.role (legado). Migre para role_id/user_roles.', {
+        profileId: profile.id.substring(0, 8) + '***',
+        legacyRole: profile.role,
+        hasRoleId: !!profile.role_id,
+        hasUserRoles: !!profile.user_roles
+      });
+    }
     return profile.role;
   }
   

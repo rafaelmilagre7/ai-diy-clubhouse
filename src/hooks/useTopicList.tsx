@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Topic } from "@/types/forumTypes";
+import { getUserRoleName } from "@/lib/supabase/types";
 
 interface UseTopicListProps {
   categoryId: string;
@@ -84,7 +84,7 @@ export const useTopicList = ({ categoryId, categorySlug, itemsPerPage = 10 }: Us
       if (userIds.length > 0) {
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
-          .select('id, name, avatar_url, role')
+          .select('id, name, avatar_url, role_id, user_roles:role_id(name)')
           .in('id', userIds);
 
         if (profilesError) {
@@ -115,13 +115,24 @@ export const useTopicList = ({ categoryId, categorySlug, itemsPerPage = 10 }: Us
         const userProfile = userProfiles.find(profile => profile.id === topic.user_id);
         const category = categories.find(cat => cat.id === topic.category_id);
 
+        // CORREÇÃO: Usar getUserRoleName() para obter role de forma consistente
+        let userRole = '';
+        if (userProfile) {
+          // Criar objeto profile temporário para usar getUserRoleName
+          const profileForRole = {
+            ...userProfile,
+            user_roles: userProfile.user_roles || null
+          };
+          userRole = getUserRoleName(profileForRole as any) || '';
+        }
+
         return {
           ...topic,
           profiles: userProfile ? {
             id: userProfile.id,
             name: userProfile.name || 'Usuário',
             avatar_url: userProfile.avatar_url,
-            role: userProfile.role || ''
+            role: userRole // Usando role obtido via getUserRoleName
           } : null,
           category: category ? {
             id: category.id,

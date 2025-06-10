@@ -1,6 +1,7 @@
 
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/lib/supabase/types';
+import { getUserRoleName } from '@/lib/supabase/types';
 
 // Cache para evitar buscas desnecessárias
 const profileCache = new Map<string, UserProfile | null>();
@@ -121,9 +122,9 @@ export const processUserProfile = async (
       onboarding_completed_at: profile.onboarding_completed_at
     };
 
-    // CORREÇÃO CRÍTICA: Usar função helper segura para extrair role
-    const roleName = extractRoleName(userProfile.user_roles);
-    if (roleName) {
+    // CORREÇÃO: Usar getUserRoleName() para obter role de forma consistente
+    const roleName = getUserRoleName(userProfile);
+    if (roleName && roleName !== 'member') {
       try {
         console.log(`🔄 [AUTH] Atualizando user_metadata com role: ${roleName}`);
         await supabase.auth.updateUser({
@@ -135,7 +136,7 @@ export const processUserProfile = async (
         // Não é crítico, continuar
       }
     } else {
-      console.warn('⚠️ [AUTH] Não foi possível extrair role do perfil');
+      console.warn('⚠️ [AUTH] Não foi possível extrair role do perfil ou role é member');
     }
 
     // Atualizar cache
@@ -216,17 +217,7 @@ const createUserProfile = async (
       return null;
     }
 
-    // CORREÇÃO: Atualizar user_metadata para novo usuário com tratamento seguro
-    try {
-      const roleName = extractRoleName(data.user_roles) || 'member';
-      await supabase.auth.updateUser({
-        data: { role: roleName }
-      });
-      console.log(`✅ [AUTH] User_metadata definido para novo usuário: role=${roleName}`);
-    } catch (metadataError) {
-      console.warn('⚠️ [AUTH] Erro ao definir user_metadata inicial:', metadataError);
-    }
-
+    // CORREÇÃO: Usar getUserRoleName() para obter role de forma consistente
     const userProfile: UserProfile = {
       id: data.id,
       email: data.email || '',
@@ -241,6 +232,17 @@ const createUserProfile = async (
       onboarding_completed_at: data.onboarding_completed_at
     };
 
+    // Atualizar user_metadata para novo usuário usando helper consistente
+    try {
+      const roleName = getUserRoleName(userProfile);
+      await supabase.auth.updateUser({
+        data: { role: roleName }
+      });
+      console.log(`✅ [AUTH] User_metadata definido para novo usuário: role=${roleName}`);
+    } catch (metadataError) {
+      console.warn('⚠️ [AUTH] Erro ao definir user_metadata inicial:', metadataError);
+    }
+
     console.log(`✅ [AUTH] Perfil criado com sucesso: ${userId.substring(0, 8)}***`);
     return userProfile;
 
@@ -248,10 +250,4 @@ const createUserProfile = async (
     console.error('❌ [AUTH] Erro ao criar perfil:', error);
     return null;
   }
-};
-
-// Função para obter nome do role a partir do perfil (usando helper seguro)
-const getUserRoleName = (profile: UserProfile | null): string | null => {
-  if (!profile?.user_roles) return null;
-  return extractRoleName(profile.user_roles);
 };
