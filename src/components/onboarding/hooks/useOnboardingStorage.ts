@@ -5,7 +5,6 @@ import { useCloudSync } from './useCloudSync';
 import { useAuth } from '@/contexts/auth';
 
 const STORAGE_KEY = 'viver-ia-onboarding-data';
-const AUTO_SAVE_INTERVAL = 3000; // Auto-save a cada 3 segundos
 
 export const useOnboardingStorage = () => {
   const { user } = useAuth();
@@ -14,19 +13,6 @@ export const useOnboardingStorage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-
-  // Auto-save timer
-  useEffect(() => {
-    if (!hasUnsavedChanges || !Object.keys(data).length) return;
-
-    const timer = setTimeout(() => {
-      saveDataToStorage(data);
-      setHasUnsavedChanges(false);
-      setLastSaved(new Date());
-    }, AUTO_SAVE_INTERVAL);
-
-    return () => clearTimeout(timer);
-  }, [data, hasUnsavedChanges]);
 
   // Função para salvar dados no localStorage e tentar sync na nuvem
   const saveDataToStorage = async (dataToSave: OnboardingData) => {
@@ -122,7 +108,7 @@ export const useOnboardingStorage = () => {
     loadInitialData();
   }, [user?.id, loadFromCloud, saveToCloud]);
 
-  // Atualizar dados com auto-save
+  // Atualizar dados (sem auto-save, apenas atualiza estado local)
   const updateData = (newData: Partial<OnboardingData>) => {
     const updatedData = { 
       ...data, 
@@ -133,18 +119,18 @@ export const useOnboardingStorage = () => {
     setHasUnsavedChanges(true);
     
     // Log para debugging
-    console.log('[OnboardingStorage] Dados atualizados:', Object.keys(newData));
+    console.log('[OnboardingStorage] Dados atualizados (pendente salvamento):', Object.keys(newData));
   };
 
-  // Forçar salvamento imediato
+  // Salvamento manual forçado (usado nas mudanças de etapas)
   const forceSave = async () => {
     try {
       await saveDataToStorage(data);
       setHasUnsavedChanges(false);
       setLastSaved(new Date());
-      console.log('[OnboardingStorage] Salvamento forçado concluído');
+      console.log('[OnboardingStorage] Salvamento manual concluído');
     } catch (error) {
-      console.error('[OnboardingStorage] Erro no salvamento forçado:', error);
+      console.error('[OnboardingStorage] Erro no salvamento manual:', error);
       throw error;
     }
   };
@@ -179,6 +165,7 @@ export const useOnboardingStorage = () => {
       if (localData) {
         const parsedData = JSON.parse(localData);
         setData(parsedData);
+        setHasUnsavedChanges(false); // Dados recuperados estão salvos
         console.log('[OnboardingStorage] Dados recuperados do localStorage');
         return true;
       }

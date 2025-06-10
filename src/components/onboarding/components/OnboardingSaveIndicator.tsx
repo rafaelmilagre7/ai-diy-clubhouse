@@ -48,7 +48,7 @@ export const OnboardingSaveIndicator: React.FC<OnboardingSaveIndicatorProps> = (
     }
     
     if (hasUnsavedChanges) {
-      return 'Alterações não salvas';
+      return 'Salvo ao avançar etapa';
     }
     
     if (lastSaved) {
