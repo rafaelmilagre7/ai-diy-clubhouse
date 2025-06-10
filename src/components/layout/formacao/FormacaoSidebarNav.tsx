@@ -21,10 +21,11 @@ export const FormacaoSidebarNav = ({ sidebarOpen }: FormacaoSidebarNavProps) => 
 
   const navigationItems = [
     {
-      label: "Área de Membro",
+      label: "Voltar para Admin",
       icon: ArrowLeft,
-      href: "/dashboard",
-      isActive: false
+      href: "/admin",
+      isActive: false,
+      isBackLink: true
     },
     {
       label: "Dashboard",
@@ -61,26 +62,32 @@ export const FormacaoSidebarNav = ({ sidebarOpen }: FormacaoSidebarNavProps) => 
   return (
     <nav className="flex-1 overflow-y-auto py-4">
       <div className="space-y-1 px-4">
-        {navigationItems.map((item) => (
-          <div
-            key={item.href}
-            className={cn(
-              "flex items-center rounded-lg transition-colors hover:bg-accent",
-              item.isActive && "bg-accent"
-            )}
-          >
-            <a
-              href={item.href}
+        {navigationItems.map((item, index) => (
+          <div key={item.href}>
+            <div
               className={cn(
-                "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg w-full transition-colors",
-                item.isActive 
-                  ? "text-accent-foreground" 
-                  : "text-muted-foreground hover:text-foreground"
+                "flex items-center rounded-lg transition-colors hover:bg-accent",
+                item.isActive && "bg-accent"
               )}
             >
-              <item.icon className={cn("h-4 w-4", !sidebarOpen && "mx-auto")} />
-              {sidebarOpen && <span>{item.label}</span>}
-            </a>
+              <a
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg w-full transition-colors",
+                  item.isActive 
+                    ? "text-accent-foreground" 
+                    : "text-muted-foreground hover:text-foreground",
+                  item.isBackLink && "text-neutral-400 hover:text-neutral-200 border-b border-white/10 mb-2"
+                )}
+              >
+                <item.icon className={cn("h-4 w-4", !sidebarOpen && "mx-auto")} />
+                {sidebarOpen && <span>{item.label}</span>}
+              </a>
+            </div>
+            {/* Separador após o link de retorno */}
+            {item.isBackLink && index === 0 && (
+              <div className="my-2 border-b border-white/10" />
+            )}
           </div>
         ))}
       </div>
