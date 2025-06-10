@@ -14,7 +14,7 @@ export const ContentRenderer = ({ content }: ContentRendererProps) => {
     // Limpa o HTML para evitar XSS
     let cleanHtml = DOMPurify.sanitize(htmlContent);
     
-    // Adiciona classes Tailwind para melhorar contraste no tema escuro
+    // Adiciona classes Tailwind para melhorar contraste no tema escuro - cores mais claras
     cleanHtml = cleanHtml
       .replace(/<h1/g, '<h1 class="text-neutral-100 text-2xl font-semibold mb-4"')
       .replace(/<h2/g, '<h2 class="text-neutral-100 text-xl font-semibold mb-3"')

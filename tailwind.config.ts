@@ -85,17 +85,17 @@ export default {
                     dark: '#004D40',
                     darker: '#002B23',
                 },
-                // New neutral palette
+                // Neutral palette melhorada para contraste - cores mais claras no dark mode
                 neutral: {
-                    100: '#F8FAFC',
-                    200: '#EEF2F6',
-                    300: '#E3E8EF',
-                    400: '#CDD5E0',
-                    500: '#9AA5B8',
-                    600: '#657084',
-                    700: '#47536B',
-                    800: '#2F3847',
-                    900: '#1C2536',
+                    100: '#F8FAFC',  // Muito claro para backgrounds light
+                    200: '#F1F5F9',  // Claro para backgrounds light
+                    300: '#E2E8F0',  // Texto muito claro no dark mode (substitui text-neutral-700)
+                    400: '#CBD5E1',  // Texto claro no dark mode (substitui text-neutral-600)
+                    500: '#94A3B8',  // Texto secundário no dark mode (substitui text-neutral-500) 
+                    600: '#64748B',  // Texto mais escuro, usar apenas em light mode
+                    700: '#475569',  // Apenas para light mode
+                    800: '#334155',  // Backgrounds escuros
+                    900: '#1E293B',  // Backgrounds muito escuros
                 },
 			},
 			borderRadius: {

@@ -41,9 +41,9 @@ export const StatCard = ({
 
   const getPercentageColor = () => {
     if (effectivelyPositive) {
-      return "text-green-600";
+      return "text-green-400";
     } else {
-      return "text-red-600";
+      return "text-red-400";
     }
   };
 
@@ -53,7 +53,7 @@ export const StatCard = ({
         <div className="flex justify-between items-start">
           <div>
             <p className="text-sm font-medium text-neutral-300 dark:text-neutral-300 mb-1">{title}</p>
-            <h3 className="text-3xl font-bold text-white">{value}</h3>
+            <h3 className="text-3xl font-bold text-neutral-100">{value}</h3>
             
             {percentageChange !== undefined && (
               <div className="flex items-center mt-2">

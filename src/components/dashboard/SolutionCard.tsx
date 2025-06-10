@@ -69,7 +69,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution, onClick })
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-[#1A1E2E]">
-            <span className="text-4xl font-bold text-neutral-500">
+            <span className="text-4xl font-bold text-neutral-400">
               {solution.title.charAt(0)}
             </span>
           </div>
