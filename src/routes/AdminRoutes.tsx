@@ -19,6 +19,7 @@ import InvitesManagement from '@/pages/admin/invites/InvitesManagement';
 import BenefitStats from '@/pages/admin/BenefitStats';
 import WhatsAppDebug from '@/pages/admin/WhatsAppDebug';
 import AdminCommunications from '@/pages/admin/AdminCommunications';
+import SupabaseDiagnostics from '@/pages/admin/SupabaseDiagnostics';
 
 // Função helper para criar rotas protegidas com AdminLayout (sempre aberto)
 const createAdminRoute = (path: string, Component: React.ComponentType<any>) => ({
@@ -49,4 +50,5 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin/invites", InvitesManagement),
   createAdminRoute("/admin/communications", AdminCommunications),
   createAdminRoute("/admin/whatsapp-debug", WhatsAppDebug),
+  createAdminRoute("/admin/diagnostics", SupabaseDiagnostics),
 ];
