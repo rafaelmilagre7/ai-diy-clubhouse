@@ -5,6 +5,7 @@ import { UserProfile } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
 import { logSecurityEvent, clearPermissionCache } from '@/contexts/auth/utils/securityUtils';
+import { clearProfileCache } from '@/hooks/auth/utils/authSessionUtils';
 
 interface UserRoleResult {
   roleId: string | null;
@@ -27,6 +28,8 @@ export function useUserRoles() {
     try {
       setIsUpdating(true);
       setError(null);
+      
+      console.log(`🔄 [USER-ROLES] Iniciando atribuição de role: userId=${userId.substring(0, 8)}***, roleId=${roleId}`);
       
       // Buscar dados antigos para auditoria
       const { data: oldProfileData } = await supabase
@@ -51,16 +54,27 @@ export function useUserRoles() {
         .eq("id", userId)
         .select();
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [USER-ROLES] Erro ao atualizar role:', error);
+        throw error;
+      }
       
-      // Limpar caches relacionados
+      console.log('✅ [USER-ROLES] Role atualizado com sucesso no banco de dados');
+      
+      // CORREÇÃO BUG MÉDIO 3: Invalidação de cache mais abrangente para sincronização imediata
       roleCache.current.delete(userId);
       clearPermissionCache(userId);
       
+      // CORREÇÃO: Limpar cache de perfil para forçar refresh na próxima busca
+      clearProfileCache(userId);
+      console.log('🧹 [USER-ROLES] Cache de perfil e permissões limpo para sincronização imediata');
+      
       toast.success('Papel do usuário atualizado com sucesso');
+      console.log('🎉 [USER-ROLES] Operação concluída com sucesso');
+      
       return data;
     } catch (err: any) {
-      console.error('Erro ao atribuir papel:', err);
+      console.error('❌ [USER-ROLES] Erro ao atribuir papel:', err);
       setError(err);
       toast.error('Erro ao atualizar papel', {
         description: err.message || 'Não foi possível atribuir o papel ao usuário.'
@@ -68,16 +82,18 @@ export function useUserRoles() {
       throw err;
     } finally {
       setIsUpdating(false);
+      console.log('✅ [USER-ROLES] Finalizando operação assignRoleToUser');
     }
   }, [user?.id]);
 
   const getUserRole = useCallback(async (userId: string): Promise<UserRoleResult> => {
     if (roleCache.current.has(userId)) {
+      console.log(`🔄 [USER-ROLES] Retornando role do cache para: ${userId.substring(0, 8)}***`);
       return roleCache.current.get(userId)!;
     }
     
     try {
-      console.log(`Buscando papel para usuário: ${userId}`);
+      console.log(`🔍 [USER-ROLES] Buscando papel para usuário: ${userId.substring(0, 8)}***`);
       
       const { data, error } = await supabase
         .from("profiles")
@@ -95,7 +111,7 @@ export function useUserRoles() {
         .single();
       
       if (error) {
-        console.error('Erro ao buscar papel do usuário:', error);
+        console.error('❌ [USER-ROLES] Erro ao buscar papel do usuário:', error);
         return { roleId: null, roleName: null, roleData: null };
       }
       
@@ -120,9 +136,10 @@ export function useUserRoles() {
       const result: UserRoleResult = { roleId, roleName, roleData };
       roleCache.current.set(userId, result);
       
+      console.log(`✅ [USER-ROLES] Role carregado: ${roleName || 'undefined'} para usuário ${userId.substring(0, 8)}***`);
       return result;
     } catch (err) {
-      console.error('Erro ao buscar papel do usuário:', err);
+      console.error('❌ [USER-ROLES] Erro ao buscar papel do usuário:', err);
       return { roleId: null, roleName: null, roleData: null };
     }
   }, []);

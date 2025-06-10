@@ -46,14 +46,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading,
   });
 
-  // Timeout absoluto para inicialização
+  // CORREÇÃO BUG MÉDIO 2: Timeout absoluto para inicialização com garantia de finalização
   useEffect(() => {
     initTimeoutRef.current = window.setTimeout(() => {
       if (isLoading) {
-        console.warn("⚠️ [AUTH] Timeout absoluto de inicialização - forçando fim do loading");
+        console.warn("⚠️ [AUTH-INIT] Timeout absoluto de inicialização - forçando fim do loading");
         setIsLoading(false);
       }
-    }, 10000); // 10 segundos máximo para inicialização
+    }, 8000); // 8 segundos máximo para inicialização (aumentado de 10s para dar mais tempo)
 
     return () => {
       if (initTimeoutRef.current) {
@@ -87,12 +87,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return isFormacaoRole(profile);
   }, [profile]);
 
-  // Inicialização única
+  // Inicialização única com garantia de finalização do loading
   useEffect(() => {
     if (isInitialized.current) return;
     
     const initializeAuth = async () => {
-      console.log('🚀 [AUTH DEBUG] Inicializando sistema de autenticação');
+      console.log('🚀 [AUTH-INIT] Inicializando sistema de autenticação');
       
       try {
         // Setup inicial da sessão
@@ -101,29 +101,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Setup do listener de autenticação
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
-            console.log(`🔄 [AUTH DEBUG] Evento de autenticação: ${event}`);
+            console.log(`🔄 [AUTH-INIT] Evento de autenticação: ${event}`);
             
             // Detectar mudanças de usuário
             const currentUserId = session?.user?.id;
             if (lastUserId.current && lastUserId.current !== currentUserId) {
-              console.log('👤 [AUTH DEBUG] Mudança de usuário detectada, limpando cache');
+              console.log('👤 [AUTH-INIT] Mudança de usuário detectada, limpando cache');
               clearProfileCache();
             }
             lastUserId.current = currentUserId;
             
             if (event === 'SIGNED_IN' && session?.user) {
-              console.log(`🎉 [AUTH DEBUG] Login detectado para: ${session.user.email}`);
+              console.log(`🎉 [AUTH-INIT] Login detectado para: ${session.user.email}`);
               
               // CORREÇÃO: Executar setup imediatamente, sem setTimeout
               try {
-                console.log('🚀 [AUTH DEBUG] Executando setup imediatamente após SIGNED_IN');
+                console.log('🚀 [AUTH-INIT] Executando setup imediatamente após SIGNED_IN');
                 await setupAuthSession();
               } catch (error) {
-                console.error('❌ [AUTH DEBUG] Erro no setup pós-login:', error);
+                console.error('❌ [AUTH-INIT] Erro no setup pós-login:', error);
                 setAuthError(error instanceof Error ? error : new Error('Erro no setup pós-login'));
+                // CORREÇÃO: Garantir que loading seja finalizado mesmo com erro
+                setIsLoading(false);
               }
             } else if (event === 'SIGNED_OUT') {
-              console.log('👋 [AUTH DEBUG] Logout detectado');
+              console.log('👋 [AUTH-INIT] Logout detectado');
               clearProfileCache();
               setUser(null);
               setProfile(null);
@@ -136,10 +138,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         authListenerRef.current = subscription;
         isInitialized.current = true;
+        console.log('✅ [AUTH-INIT] Inicialização concluída com sucesso');
         
       } catch (error) {
-        console.error('❌ [AUTH DEBUG] Erro na inicialização:', error);
+        console.error('❌ [AUTH-INIT] Erro na inicialização:', error);
         setAuthError(error instanceof Error ? error : new Error('Erro na inicialização'));
+      } finally {
+        // CORREÇÃO BUG MÉDIO 2: Garantir SEMPRE que loading seja finalizado
+        console.log('✅ [AUTH-INIT] Finalizando loading no finally');
         setIsLoading(false);
       }
     };

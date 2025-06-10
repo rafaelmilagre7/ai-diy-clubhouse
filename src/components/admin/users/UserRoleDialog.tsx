@@ -29,6 +29,8 @@ interface UserRoleDialogProps {
   saving: boolean;
   loading?: boolean;
   availableRoles: Role[];
+  // CORREÇÃO BUG MÉDIO 3: Adicionar callback para sincronização imediata
+  onRoleUpdateSuccess?: () => void;
 }
 
 export const UserRoleDialog = ({
@@ -41,6 +43,7 @@ export const UserRoleDialog = ({
   saving,
   loading = false,
   availableRoles,
+  onRoleUpdateSuccess,
 }: UserRoleDialogProps) => {
   const getUserName = () => {
     return selectedUser?.name || selectedUser?.email || 'Usuário';
@@ -54,6 +57,30 @@ export const UserRoleDialog = ({
         return <Shield className="h-4 w-4 mr-2 text-purple-600" />;
       default:
         return <User className="h-4 w-4 mr-2 text-green-600" />;
+    }
+  };
+
+  // CORREÇÃO BUG MÉDIO 3: Handler melhorado com callback de sincronização
+  const handleUpdateRole = async () => {
+    console.log('🔄 [USER-ROLE-DIALOG] Iniciando atualização de role');
+    
+    try {
+      await onUpdateRole();
+      console.log('✅ [USER-ROLE-DIALOG] Role atualizado com sucesso');
+      
+      // Executar callback de sucesso para sincronização imediata
+      if (onRoleUpdateSuccess) {
+        console.log('🔄 [USER-ROLE-DIALOG] Executando callback de sincronização');
+        onRoleUpdateSuccess();
+      }
+      
+      // Fechar dialog automaticamente após sucesso
+      console.log('🚪 [USER-ROLE-DIALOG] Fechando dialog após sucesso');
+      onOpenChange(false);
+      
+    } catch (error) {
+      console.error('❌ [USER-ROLE-DIALOG] Erro na atualização:', error);
+      // Em caso de erro, não fechar o dialog para o usuário poder tentar novamente
     }
   };
 
@@ -97,7 +124,7 @@ export const UserRoleDialog = ({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving || loading}>
             Cancelar
           </Button>
-          <Button onClick={onUpdateRole} disabled={saving || loading}>
+          <Button onClick={handleUpdateRole} disabled={saving || loading}>
             {saving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
