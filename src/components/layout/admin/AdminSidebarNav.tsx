@@ -11,7 +11,8 @@ import {
   Gift,
   Shield,
   Activity,
-  UserPlus
+  UserPlus,
+  ArrowLeft
 } from "lucide-react";
 import { AdminNavItem } from "./AdminNavItem";
 
@@ -19,6 +20,12 @@ export const AdminSidebarNav = () => {
   const location = useLocation();
 
   const navigationItems = [
+    {
+      label: "Área de Membro",
+      icon: ArrowLeft,
+      href: "/dashboard",
+      isActive: false // Sempre false pois é uma ação de navegação
+    },
     {
       label: "Dashboard",
       icon: LayoutDashboard,
@@ -68,10 +75,10 @@ export const AdminSidebarNav = () => {
       isActive: location.pathname.startsWith("/admin/events")
     },
     {
-      label: "Aprendizado",
+      label: "Gestão LMS",
       icon: GraduationCap,
-      href: "/admin/learning",
-      isActive: location.pathname.startsWith("/admin/learning")
+      href: "/formacao",
+      isActive: location.pathname.startsWith("/formacao")
     },
     {
       label: "Benefícios",
