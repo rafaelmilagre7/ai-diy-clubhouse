@@ -12,7 +12,8 @@ import {
   Shield,
   AlertCircle,
   PlayCircle,
-  Activity
+  Activity,
+  CheckCircle2
 } from 'lucide-react';
 import { useRoleSync } from '@/hooks/admin/useRoleSync';
 
@@ -28,6 +29,7 @@ export const RoleSyncPanel = () => {
   } = useRoleSync();
 
   const [hasRunInitialCheck, setHasRunInitialCheck] = useState(false);
+  const [showMigrationSuccess, setShowMigrationSuccess] = useState(true);
 
   useEffect(() => {
     // Executar diagnóstico inicial automaticamente
@@ -93,6 +95,28 @@ export const RoleSyncPanel = () => {
 
   return (
     <div className="space-y-6">
+      {/* Mensagem de Sucesso da Migration */}
+      {showMigrationSuccess && (
+        <Alert className="border-green-200 bg-green-50">
+          <CheckCircle2 className="h-4 w-4 text-green-600" />
+          <AlertDescription className="text-green-800">
+            <div className="flex items-center justify-between">
+              <span>
+                ✅ Sistema atualizado com sucesso! As funções SQL foram recriadas para resolver problemas de cache.
+              </span>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setShowMigrationSuccess(false)}
+                className="text-green-600 hover:text-green-700"
+              >
+                ✕
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Painel de Status do Sistema */}
       <Card>
         <CardHeader>
