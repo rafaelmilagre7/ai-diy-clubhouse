@@ -1,4 +1,5 @@
 
+
 // Cores e utilitários para gráficos
 export const chartColors = {
   primary: '#0ABAB5',
@@ -62,16 +63,16 @@ export const chartTypeConfig = {
   }
 };
 
-// Função para criar gradientes SVG
+// Função para criar configuração de gradientes (sem JSX)
 export const getChartGradient = (id: string, colors: string[]) => {
-  return (
-    <defs key={id}>
-      <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-        <stop offset="5%" stopColor={colors[0]} stopOpacity={0.8}/>
-        <stop offset="95%" stopColor={colors[1] || colors[0]} stopOpacity={0.1}/>
-      </linearGradient>
-    </defs>
-  );
+  return {
+    id,
+    colors: colors.map((color, index) => ({
+      offset: index === 0 ? "5%" : "95%",
+      stopColor: color,
+      stopOpacity: index === 0 ? 0.8 : 0.1
+    }))
+  };
 };
 
 // Função para validar dados de gráfico
@@ -100,3 +101,4 @@ export const getDataColor = (index: number): string => {
   const colors = Object.values(chartColors.categorical);
   return colors[index % colors.length];
 };
+
