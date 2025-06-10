@@ -88,9 +88,11 @@ export const useRealAdminStats = (timeRange: string) => {
         const totalLearningLessons = lessons?.length || 0;
         const completedImplementations = completedProgress?.length || 0;
         
-        // Distribuição por role
+        // Distribuição por role - corrigindo o acesso ao array
         const usersByRole = usersWithRoles?.reduce((acc, user) => {
-          const roleName = user.user_roles?.name || user.role || 'member';
+          // user.user_roles é um array, então acessamos o primeiro item
+          const userRoleData = Array.isArray(user.user_roles) ? user.user_roles[0] : user.user_roles;
+          const roleName = userRoleData?.name || user.role || 'member';
           const existing = acc.find(r => r.role === roleName);
           if (existing) {
             existing.count++;

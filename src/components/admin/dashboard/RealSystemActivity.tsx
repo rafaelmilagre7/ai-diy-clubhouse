@@ -20,7 +20,7 @@ import {
   TrendingUp
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Avatar, AvatarFallback, AvatarInitials } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 
 interface SystemActivity {
@@ -168,7 +168,6 @@ export const RealSystemActivity = ({ activityData, loading }: RealSystemActivity
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <Avatar className="h-6 w-6">
-                          <AvatarInitials name={activity.user_name || "U"} />
                           <AvatarFallback>{(activity.user_name || "U").substring(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <span className="font-medium text-sm truncate">
