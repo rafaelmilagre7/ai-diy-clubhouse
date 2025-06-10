@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
@@ -14,6 +14,8 @@ import { OnboardingStep5 } from './steps/OnboardingStep5';
 import { OnboardingFinal } from './steps/OnboardingFinal';
 import { OnboardingProgress } from './OnboardingProgress';
 import { OnboardingFeedback } from './components/OnboardingFeedback';
+import { OnboardingSaveIndicator } from './components/OnboardingSaveIndicator';
+import { OnboardingRecoveryDialog } from './components/OnboardingRecoveryDialog';
 import { OnboardingData } from './types/onboardingTypes';
 import { toast } from 'sonner';
 
@@ -25,7 +27,19 @@ export const OnboardingWizard = () => {
   const { submitData, clearError, error } = useOnboardingStatus();
   const [currentStep, setCurrentStep] = useState(1);
   const [isCompleting, setIsCompleting] = useState(false);
-  const { data, updateData, clearData } = useOnboardingStorage();
+  const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
+  
+  const { 
+    data, 
+    updateData, 
+    forceSave, 
+    clearData, 
+    recoverData,
+    hasUnsavedChanges,
+    lastSaved,
+    syncStatus 
+  } = useOnboardingStorage();
+  
   const { validateCurrentStep, validationErrors, clearValidationErrors } = useOnboardingValidation();
 
   const memberType: 'club' | 'formacao' = useMemo(() => {
@@ -45,7 +59,37 @@ export const OnboardingWizard = () => {
     'Finalização'
   ], []);
 
-  const handleNext = useCallback(() => {
+  // Verificar se há dados para recuperar na inicialização
+  useEffect(() => {
+    const hasDataToRecover = localStorage.getItem('viver-ia-onboarding-data');
+    if (hasDataToRecover && !data.completedAt) {
+      try {
+        const parsedData = JSON.parse(hasDataToRecover);
+        if (Object.keys(parsedData).length > 0 && !parsedData.completedAt) {
+          setShowRecoveryDialog(true);
+        }
+      } catch (error) {
+        console.error('[OnboardingWizard] Erro ao verificar dados de recuperação:', error);
+      }
+    }
+  }, []);
+
+  // Auto-save forçado antes de mudanças críticas
+  const handleCriticalSave = async () => {
+    if (hasUnsavedChanges) {
+      try {
+        await forceSave();
+        console.log('[OnboardingWizard] Salvamento crítico realizado');
+      } catch (error) {
+        console.error('[OnboardingWizard] Erro no salvamento crítico:', error);
+        toast.error('Erro ao salvar dados. Por favor, tente novamente.');
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleNext = useCallback(async () => {
     console.log('[OnboardingWizard] handleNext - step:', currentStep, 'dados atuais:', data);
     
     clearError();
@@ -63,23 +107,30 @@ export const OnboardingWizard = () => {
       }
     }
 
+    // Salvar antes de prosseguir
+    const saveSuccess = await handleCriticalSave();
+    if (!saveSuccess) return;
+
     if (currentStep < totalSteps) {
       setCurrentStep(prev => prev + 1);
       if (currentStep < 5) {
         toast.success('Ótimo! Vamos para a próxima etapa 🎉');
       }
     }
-  }, [currentStep, totalSteps, data, memberType, validateCurrentStep, clearValidationErrors, clearError]);
+  }, [currentStep, totalSteps, data, memberType, validateCurrentStep, clearValidationErrors, clearError, handleCriticalSave]);
 
-  const handlePrev = useCallback(() => {
+  const handlePrev = useCallback(async () => {
     console.log('[OnboardingWizard] handlePrev - step:', currentStep);
+    
+    // Salvar antes de voltar
+    await handleCriticalSave();
     
     if (currentStep > 1) {
       setCurrentStep(prev => prev - 1);
       clearError();
       clearValidationErrors();
     }
-  }, [currentStep, clearValidationErrors, clearError]);
+  }, [currentStep, clearValidationErrors, clearError, handleCriticalSave]);
 
   const handleStepData = useCallback((stepData: Partial<OnboardingData>) => {
     console.log('[OnboardingWizard] Atualizando dados:', stepData);
@@ -93,6 +144,13 @@ export const OnboardingWizard = () => {
     setIsCompleting(true);
     
     try {
+      // Salvamento final forçado
+      const saveSuccess = await handleCriticalSave();
+      if (!saveSuccess) {
+        setIsCompleting(false);
+        return;
+      }
+
       // Validação final de todas as etapas
       for (let step = 1; step <= 5; step++) {
         const validation = validateCurrentStep(step, data, memberType);
@@ -100,6 +158,7 @@ export const OnboardingWizard = () => {
           console.log('[OnboardingWizard] Validação final falhou no step:', step);
           toast.error(`Dados incompletos na etapa ${step}. Por favor, revise.`);
           setCurrentStep(step);
+          setIsCompleting(false);
           return;
         }
       }
@@ -126,7 +185,24 @@ export const OnboardingWizard = () => {
     } finally {
       setIsCompleting(false);
     }
-  }, [data, memberType, validateCurrentStep, submitData, clearData, navigate]);
+  }, [data, memberType, validateCurrentStep, submitData, clearData, navigate, handleCriticalSave]);
+
+  const handleRecoverData = () => {
+    const recovered = recoverData();
+    if (recovered) {
+      toast.success('Dados recuperados com sucesso!');
+      setShowRecoveryDialog(false);
+    } else {
+      toast.error('Não foi possível recuperar os dados');
+      setShowRecoveryDialog(false);
+    }
+  };
+
+  const handleStartOver = () => {
+    clearData();
+    toast.info('Iniciando onboarding do zero');
+    setShowRecoveryDialog(false);
+  };
 
   const renderStep = () => {
     const stepProps = {
@@ -205,6 +281,21 @@ export const OnboardingWizard = () => {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Indicador de salvamento */}
+      <OnboardingSaveIndicator
+        hasUnsavedChanges={hasUnsavedChanges}
+        lastSaved={lastSaved}
+        syncStatus={syncStatus}
+      />
+
+      {/* Dialog de recuperação */}
+      <OnboardingRecoveryDialog
+        open={showRecoveryDialog}
+        onOpenChange={setShowRecoveryDialog}
+        onRecover={handleRecoverData}
+        onStartOver={handleStartOver}
+      />
     </div>
   );
 };
