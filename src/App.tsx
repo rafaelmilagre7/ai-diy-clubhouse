@@ -1,44 +1,69 @@
+import { Suspense } from "react";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/auth";
+import { LoadingProvider } from "./contexts/LoadingContext";
+import OptimizedLoadingScreen from "@/components/common/OptimizedLoadingScreen";
+import RootRedirect from "@/components/routing/RootRedirect";
+import AuthLayout from "@/components/auth/AuthLayout";
+import MemberDashboard from "@/pages/member/Dashboard";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+import AdminSolutions from "@/pages/admin/AdminSolutions";
+import SolutionDetails from "@/pages/member/SolutionDetails";
+import OnboardingPage from "@/components/onboarding/OnboardingPage";
+import FormacaoDashboard from "@/pages/formacao/FormacaoDashboard";
+import OptimizedDashboard from "@/pages/member/OptimizedDashboard";
 
-import React from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { Toaster } from 'sonner';
-import { AuthProvider } from '@/contexts/auth';
-import { LoggingProvider } from '@/contexts/logging';
-import { AppRoutes } from '@/routes';
-import { SEOWrapper } from '@/components/seo/SEOWrapper';
-
+// Query client otimizado
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000,
-      retry: 2
-    }
-  }
+      staleTime: 2 * 60 * 1000, // 2 minutos
+      gcTime: 5 * 60 * 1000, // 5 minutos
+      refetchOnWindowFocus: false,
+      refetchOnMount: true,
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
 });
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <LoggingProvider>
-          <Router>
-            <SEOWrapper>
-              <div className="App">
-                <AppRoutes />
-                <Toaster 
-                  position="top-right"
-                  theme="dark"
-                  richColors
-                  expand
-                  visibleToasts={3}
-                />
-                <ReactQueryDevtools initialIsOpen={false} />
-              </div>
-            </SEOWrapper>
-          </Router>
-        </LoggingProvider>
+        <LoadingProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Suspense fallback={<OptimizedLoadingScreen />}>
+                <Routes>
+                  <Route path="/" element={<RootRedirect />} />
+                  <Route path="/login" element={<AuthLayout />} />
+                  <Route path="/onboarding" element={<OnboardingPage />} />
+                  
+                  {/* Rotas de Membro */}
+                  <Route path="/dashboard" element={<OptimizedDashboard />} />
+                  <Route path="/solution/:id" element={<SolutionDetails />} />
+                  
+                  {/* Rota de Formacao */}
+                  <Route path="/formacao" element={<FormacaoDashboard />} />
+                  
+                  {/* Rotas de Admin */}
+                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin/solutions" element={<AdminSolutions />} />
+                </Routes>
+              </Suspense>
+            </BrowserRouter>
+          </TooltipProvider>
+        </LoadingProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
