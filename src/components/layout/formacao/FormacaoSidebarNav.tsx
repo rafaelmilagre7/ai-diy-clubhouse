@@ -1,5 +1,5 @@
 
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { 
   LayoutDashboard, 
   BookOpen,
@@ -70,9 +70,8 @@ export const FormacaoSidebarNav = ({ sidebarOpen }: FormacaoSidebarNavProps) => 
                 item.isActive && "bg-accent"
               )}
             >
-              <a
-                href={item.href}
-                // OTIMIZAÇÃO: Adicionar state para indicar origem da navegação
+              <Link
+                to={item.href}
                 state={{ from: location.pathname }}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg w-full transition-colors",
@@ -84,7 +83,7 @@ export const FormacaoSidebarNav = ({ sidebarOpen }: FormacaoSidebarNavProps) => 
               >
                 <item.icon className={cn("h-4 w-4", !sidebarOpen && "mx-auto")} />
                 {sidebarOpen && <span>{item.label}</span>}
-              </a>
+              </Link>
             </div>
             {/* Separador após o link de retorno */}
             {item.isBackLink && index === 0 && (
