@@ -37,7 +37,7 @@ export const ModuleLessons = ({
   if (isLoading) {
     return (
       <div className="p-4 text-center">
-        <p className="text-muted-foreground">Carregando aulas...</p>
+        <p className="text-neutral-300">Carregando aulas...</p>
       </div>
     );
   }
@@ -46,7 +46,7 @@ export const ModuleLessons = ({
     console.log(`Nenhuma aula encontrada para o módulo ${moduleId}`);
     return (
       <div className="p-4 text-center">
-        <p className="text-muted-foreground">Este módulo ainda não possui aulas disponíveis.</p>
+        <p className="text-neutral-300">Este módulo ainda não possui aulas disponíveis.</p>
       </div>
     );
   }
@@ -54,8 +54,8 @@ export const ModuleLessons = ({
   return (
     <div>
       {/* Banner estilo Netflix - Carrossel de miniaturas destacado */}
-      <div className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
-        <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">
+      <div className="p-6 bg-[#1A1E2E] border-b border-white/10">
+        <h3 className="text-lg font-semibold mb-4 text-neutral-100">
           Aulas do Módulo ({lessons.length})
         </h3>
         
@@ -95,9 +95,9 @@ export const ModuleLessons = ({
       </div>
       
       {/* Lista detalhada de aulas (formato tradicional) */}
-      <div className="divide-y bg-white dark:bg-gray-950">
-        <div className="px-6 py-3 bg-gray-50 dark:bg-gray-900">
-          <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">
+      <div className="divide-y divide-white/10 bg-[#151823]">
+        <div className="px-6 py-3 bg-[#1A1E2E] border-b border-white/10">
+          <h4 className="text-sm font-medium text-neutral-300">
             Lista Detalhada das Aulas
           </h4>
         </div>
