@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +33,7 @@ interface BaseLayoutProps {
 }
 
 const BaseLayout: React.FC<BaseLayoutProps> = ({
+  variant,
   sidebarComponent: SidebarComponent,
   contentComponent: ContentComponent,
   children,
@@ -57,7 +59,15 @@ const BaseLayout: React.FC<BaseLayoutProps> = ({
         setSidebarOpen={setSidebarOpen} 
       />
       
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* Conteúdo principal com margem para compensar sidebar fixa */}
+      <div 
+        className={cn(
+          "flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out",
+          // Para FormacaoLayout, aplicar margem baseada no estado da sidebar
+          variant === "formacao" && sidebarOpen && "ml-64 md:ml-64",
+          variant === "formacao" && !sidebarOpen && "ml-0 md:ml-[70px]"
+        )}
+      >
         <ContentComponent
           onSignOut={onSignOut}
           profileName={profileName}
@@ -70,6 +80,14 @@ const BaseLayout: React.FC<BaseLayoutProps> = ({
           {children}
         </ContentComponent>
       </div>
+
+      {/* Overlay para mobile quando sidebar está aberta */}
+      {variant === "formacao" && sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
     </div>
   );
 };

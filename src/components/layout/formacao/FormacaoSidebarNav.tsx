@@ -1,18 +1,16 @@
 
-import { cn } from "@/lib/utils";
-import { useAuth } from "@/contexts/auth";
+import { useLocation } from "react-router-dom";
 import { 
-  LayoutDashboard,
-  Book,
+  LayoutDashboard, 
   BookOpen,
-  GraduationCap,
+  Play,
+  FileText,
   Settings,
-  User,
-  ChevronLeft,
-  FileBox
+  ArrowLeft,
+  GraduationCap
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Link, useLocation } from "react-router-dom";
+import { AdminNavItem } from "../admin/AdminNavItem";
+import { cn } from "@/lib/utils";
 
 interface FormacaoSidebarNavProps {
   sidebarOpen: boolean;
@@ -20,109 +18,72 @@ interface FormacaoSidebarNavProps {
 
 export const FormacaoSidebarNav = ({ sidebarOpen }: FormacaoSidebarNavProps) => {
   const location = useLocation();
-  const { isAdmin } = useAuth();
 
-  const menuItems = [
+  const navigationItems = [
     {
-      title: "Dashboard",
-      href: "/formacao",
+      label: "Área de Membro",
+      icon: ArrowLeft,
+      href: "/dashboard",
+      isActive: false
+    },
+    {
+      label: "Dashboard",
       icon: LayoutDashboard,
+      href: "/formacao",
+      isActive: location.pathname === "/formacao"
     },
     {
-      title: "Cursos",
-      href: "/formacao/cursos",
-      icon: GraduationCap,
-    },
-    {
-      title: "Aulas",
-      href: "/formacao/aulas",
+      label: "Cursos",
       icon: BookOpen,
+      href: "/formacao/cursos",
+      isActive: location.pathname.startsWith("/formacao/cursos")
     },
     {
-      title: "Materiais",
+      label: "Aulas",
+      icon: Play,
+      href: "/formacao/aulas",
+      isActive: location.pathname.startsWith("/formacao/aulas")
+    },
+    {
+      label: "Materiais",
+      icon: FileText,
       href: "/formacao/materiais",
-      icon: FileBox,
+      isActive: location.pathname.startsWith("/formacao/materiais")
     },
     {
-      title: "Configurações",
-      href: "/formacao/configuracoes",
+      label: "Configurações",
       icon: Settings,
-    },
-    {
-      title: "Perfil",
-      href: "/profile",
-      icon: User,
+      href: "/formacao/configuracoes",
+      isActive: location.pathname.startsWith("/formacao/configuracoes")
     }
   ];
 
-  const isActive = (href: string) => {
-    // Para lidar com rotas dinâmicas como /formacao/cursos/[id]
-    if (href === "/formacao/cursos" && location.pathname.startsWith("/formacao/cursos/")) {
-      return true;
-    }
-    
-    if (href === "/formacao/aulas" && location.pathname.startsWith("/formacao/aulas/")) {
-      return true;
-    }
-    
-    if (href === "/formacao/materiais" && location.pathname.startsWith("/formacao/materiais/")) {
-      return true;
-    }
-    
-    return location.pathname === href || location.pathname.startsWith(href + '/');
-  };
-
   return (
-    <div className="space-y-4 py-4">
-      <div className="px-3 space-y-1">
-        {menuItems.map((item) => (
-          <Button
+    <nav className="flex-1 overflow-y-auto py-4">
+      <div className="space-y-1 px-4">
+        {navigationItems.map((item) => (
+          <div
             key={item.href}
-            variant={isActive(item.href) ? "default" : "ghost"}
             className={cn(
-              "w-full justify-start gap-2",
-              !sidebarOpen && "justify-center",
-              isActive(item.href) && "bg-viverblue hover:bg-viverblue/90"
+              "flex items-center rounded-lg transition-colors hover:bg-accent",
+              item.isActive && "bg-accent"
             )}
-            asChild
           >
-            <Link to={item.href}>
-              <item.icon className="h-4 w-4" />
-              {sidebarOpen && <span>{item.title}</span>}
-            </Link>
-          </Button>
+            <a
+              href={item.href}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg w-full transition-colors",
+                item.isActive 
+                  ? "text-accent-foreground" 
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <item.icon className={cn("h-4 w-4", !sidebarOpen && "mx-auto")} />
+              {sidebarOpen && <span>{item.label}</span>}
+            </a>
+          </div>
         ))}
-
-        {isAdmin && (
-          <Button
-            variant="outline"
-            className={cn(
-              "w-full justify-start gap-2 border-viverblue text-viverblue hover:bg-viverblue/10 mt-4",
-              !sidebarOpen && "justify-center"
-            )}
-            asChild
-          >
-            <Link to="/admin">
-              <ChevronLeft className="h-4 w-4" />
-              {sidebarOpen && <span>Voltar para Admin</span>}
-            </Link>
-          </Button>
-        )}
-        
-        <Button
-          variant="outline"
-          className={cn(
-            "w-full justify-start gap-2 mt-2",
-            !sidebarOpen && "justify-center"
-          )}
-          asChild
-        >
-          <Link to="/dashboard">
-            <ChevronLeft className="h-4 w-4" />
-            {sidebarOpen && <span>Voltar ao Dashboard</span>}
-          </Link>
-        </Button>
       </div>
-    </div>
+    </nav>
   );
 };
