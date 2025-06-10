@@ -1,177 +1,113 @@
 
-
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { 
-  LayoutDashboard, 
-  Users, 
-  Settings, 
   BarChart3, 
+  Users, 
+  Wrench, 
+  Gift, 
+  FileText, 
+  Calendar, 
+  UserCheck, 
+  Mail, 
   MessageSquare,
-  Calendar,
-  GraduationCap,
-  Gift,
-  Shield,
-  Activity,
-  UserPlus,
-  ArrowLeft,
-  BookOpen,
-  Play,
-  FileText
+  Settings,
+  Stethoscope
 } from "lucide-react";
-import { AdminNavItem } from "./AdminNavItem";
+import { 
+  SidebarMenu, 
+  SidebarMenuItem, 
+  SidebarMenuButton 
+} from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
+
+const navigationItems = [
+  {
+    title: "Dashboard",
+    href: "/admin",
+    icon: BarChart3,
+  },
+  {
+    title: "Usuários",
+    href: "/admin/users",
+    icon: Users,
+  },
+  {
+    title: "Ferramentas",
+    href: "/admin/tools",
+    icon: Wrench,
+  },
+  {
+    title: "Benefícios",
+    href: "/admin/benefits",
+    icon: Gift,
+  },
+  {
+    title: "Soluções",
+    href: "/admin/solutions",
+    icon: FileText,
+  },
+  {
+    title: "Analytics",
+    href: "/admin/analytics",
+    icon: BarChart3,
+  },
+  {
+    title: "Sugestões",
+    href: "/admin/suggestions",
+    icon: MessageSquare,
+  },
+  {
+    title: "Eventos",
+    href: "/admin/events",
+    icon: Calendar,
+  },
+  {
+    title: "Roles",
+    href: "/admin/roles",
+    icon: UserCheck,
+  },
+  {
+    title: "Convites",
+    href: "/admin/invites",
+    icon: Mail,
+  },
+  {
+    title: "Comunicações",
+    href: "/admin/communications",
+    icon: Mail,
+  },
+  {
+    title: "WhatsApp Debug",
+    href: "/admin/whatsapp-debug",
+    icon: MessageSquare,
+  },
+  {
+    title: "Diagnósticos",
+    href: "/admin/diagnostics",
+    icon: Stethoscope,
+  },
+];
 
 export const AdminSidebarNav = () => {
   const location = useLocation();
 
-  const navigationItems = [
-    {
-      label: "Área de Membro",
-      icon: ArrowLeft,
-      href: "/dashboard",
-      isActive: false // Sempre false pois é uma ação de navegação
-    },
-    {
-      label: "Dashboard",
-      icon: LayoutDashboard,
-      href: "/admin",
-      isActive: location.pathname === "/admin"
-    },
-    {
-      label: "Analytics",
-      icon: BarChart3,
-      href: "/admin/analytics",
-      isActive: location.pathname.startsWith("/admin/analytics")
-    },
-    {
-      label: "Usuários",
-      icon: Users,
-      href: "/admin/users",
-      isActive: location.pathname.startsWith("/admin/users")
-    },
-    {
-      label: "Convites",
-      icon: UserPlus,
-      href: "/admin/invites",
-      isActive: location.pathname.startsWith("/admin/invites")
-    },
-    {
-      label: "Soluções",
-      icon: Settings,
-      href: "/admin/solutions",
-      isActive: location.pathname.startsWith("/admin/solutions")
-    },
-    {
-      label: "Papéis",
-      icon: Shield,
-      href: "/admin/roles",
-      isActive: location.pathname.startsWith("/admin/roles")
-    },
-    {
-      label: "Comunicações",
-      icon: MessageSquare,
-      href: "/admin/communications",
-      isActive: location.pathname.startsWith("/admin/communications")
-    },
-    {
-      label: "Eventos",
-      icon: Calendar,
-      href: "/admin/events",
-      isActive: location.pathname.startsWith("/admin/events")
-    }
-  ];
-
-  const lmsItems = [
-    {
-      label: "Dashboard LMS",
-      icon: GraduationCap,
-      href: "/formacao",
-      isActive: location.pathname === "/formacao"
-    },
-    {
-      label: "Cursos",
-      icon: BookOpen,
-      href: "/formacao/cursos",
-      isActive: location.pathname.startsWith("/formacao/cursos")
-    },
-    {
-      label: "Aulas",
-      icon: Play,
-      href: "/formacao/aulas",
-      isActive: location.pathname.startsWith("/formacao/aulas")
-    },
-    {
-      label: "Materiais",
-      icon: FileText,
-      href: "/formacao/materiais",
-      isActive: location.pathname.startsWith("/formacao/materiais")
-    },
-    {
-      label: "Configurações LMS",
-      icon: Settings,
-      href: "/formacao/configuracoes",
-      isActive: location.pathname.startsWith("/formacao/configuracoes")
-    }
-  ];
-
-  const systemItems = [
-    {
-      label: "Benefícios",
-      icon: Gift,
-      href: "/admin/benefits",
-      isActive: location.pathname.startsWith("/admin/benefits")
-    },
-    {
-      label: "Diagnóstico",
-      icon: Activity,
-      href: "/admin/diagnostics",
-      isActive: location.pathname.startsWith("/admin/diagnostics")
-    }
-  ];
-
   return (
-    <nav className="flex-1 overflow-y-auto py-4">
-      <div className="space-y-1 px-4">
-        {/* Items principais */}
-        {navigationItems.map((item) => (
-          <AdminNavItem
-            key={item.href}
-            {...item}
-          />
-        ))}
+    <SidebarMenu>
+      {navigationItems.map((item) => {
+        const isActive = location.pathname === item.href || 
+          (item.href !== "/admin" && location.pathname.startsWith(item.href));
         
-        {/* Separador para seção LMS */}
-        <div className="h-px bg-white/10 my-4"></div>
-        <div className="px-3 py-2">
-          <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider">
-            Gestão LMS
-          </h3>
-        </div>
-        
-        {/* Items LMS */}
-        {lmsItems.map((item) => (
-          <AdminNavItem
-            key={item.href}
-            {...item}
-          />
-        ))}
-        
-        {/* Separador para itens do sistema */}
-        <div className="h-px bg-white/10 my-4"></div>
-        <div className="px-3 py-2">
-          <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider">
-            Sistema
-          </h3>
-        </div>
-        
-        {/* Items do sistema */}
-        {systemItems.map((item) => (
-          <AdminNavItem
-            key={item.href}
-            {...item}
-          />
-        ))}
-      </div>
-    </nav>
+        return (
+          <SidebarMenuItem key={item.href}>
+            <SidebarMenuButton asChild isActive={isActive}>
+              <Link to={item.href} className="flex items-center gap-3">
+                <item.icon className="h-4 w-4" />
+                <span>{item.title}</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        );
+      })}
+    </SidebarMenu>
   );
 };
-
