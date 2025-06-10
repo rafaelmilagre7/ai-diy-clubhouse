@@ -1,395 +1,282 @@
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, User, Mail, Phone, Instagram, Linkedin, MapPin } from 'lucide-react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { Textarea } from '@/components/ui/textarea';
 import { OnboardingStepProps } from '../types/onboardingTypes';
+import { motion } from 'framer-motion';
+import { User, Calendar, MapPin, Sparkles } from 'lucide-react';
 import { AIMessageDisplay } from '../components/AIMessageDisplay';
-import { generateAIMessage } from '../utils/aiMessageGenerator';
-import { brazilianStates, getCitiesByState } from '../utils/locationData';
+import { EnhancedFieldIndicator } from '../components/EnhancedFieldIndicator';
 
-export const OnboardingStep1 = ({ 
-  data, 
-  onUpdateData, 
-  onNext, 
-  memberType, 
-  userProfile,
-  getFieldError 
-}: OnboardingStepProps) => {
-  const [formData, setFormData] = useState({
-    name: data.name || userProfile?.name || '',
-    email: data.email || userProfile?.email || '',
+const OnboardingStep1 = ({ data, onUpdateData, validationErrors = [], getFieldError }: OnboardingStepProps) => {
+  const [localData, setLocalData] = useState({
+    name: data.name || '',
+    email: data.email || '',
     phone: data.phone || '',
     instagram: data.instagram || '',
     linkedin: data.linkedin || '',
     state: data.state || '',
     city: data.city || '',
-    birthDate: data.birthDate || '',
+    birthDay: '',
+    birthMonth: '',
+    birthYear: '',
     curiosity: data.curiosity || ''
   });
 
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    data.birthDate ? new Date(data.birthDate) : undefined
-  );
-  
-  const [cities, setCities] = useState<string[]>([]);
-  const [showAIMessage, setShowAIMessage] = useState(false);
-
+  // Extrair dia, mês e ano da data existente se houver
   useEffect(() => {
-    if (formData.state) {
-      const stateCities = getCitiesByState(formData.state);
-      setCities(stateCities);
-      if (!stateCities.includes(formData.city)) {
-        setFormData(prev => ({ ...prev, city: '' }));
+    if (data.birthDate) {
+      const date = new Date(data.birthDate);
+      if (!isNaN(date.getTime())) {
+        setLocalData(prev => ({
+          ...prev,
+          birthDay: date.getDate().toString(),
+          birthMonth: (date.getMonth() + 1).toString(),
+          birthYear: date.getFullYear().toString()
+        }));
       }
     }
-  }, [formData.state]);
+  }, [data.birthDate]);
 
-  useEffect(() => {
-    // Mostrar mensagem da IA após preenchimento significativo
-    const hasBasicInfo = formData.name && formData.state && formData.city;
-    if (hasBasicInfo && !showAIMessage) {
-      const timer = setTimeout(() => {
-        setShowAIMessage(true);
-      }, 1500);
-      return () => clearTimeout(timer);
+  const handleFieldChange = (field: string, value: string) => {
+    const newData = { ...localData, [field]: value };
+    setLocalData(newData);
+
+    // Se mudou dia, mês ou ano, reconstruir a data
+    if (field === 'birthDay' || field === 'birthMonth' || field === 'birthYear') {
+      const { birthDay, birthMonth, birthYear } = newData;
+      if (birthDay && birthMonth && birthYear) {
+        const birthDate = new Date(parseInt(birthYear), parseInt(birthMonth) - 1, parseInt(birthDay));
+        onUpdateData({ 
+          ...newData, 
+          birthDate: birthDate.toISOString().split('T')[0]
+        });
+      } else {
+        onUpdateData({ ...newData, birthDate: '' });
+      }
+    } else {
+      onUpdateData(newData);
     }
-  }, [formData.name, formData.state, formData.city, showAIMessage]);
-
-  const handleInputChange = (field: string, value: string) => {
-    const newData = { ...formData, [field]: value };
-    setFormData(newData);
-    onUpdateData(newData);
   };
 
-  const handleDateSelect = (date: Date | undefined) => {
-    setSelectedDate(date);
-    const dateValue = date ? date.toISOString().split('T')[0] : '';
-    handleInputChange('birthDate', dateValue);
-  };
-
-  const handleNext = () => {
-    onNext();
-  };
-
-  const getWelcomeTitle = () => {
-    if (memberType === 'formacao') {
-      return (
-        <>
-          Bem-vindo à{' '}
-          <span className="bg-gradient-to-r from-viverblue to-viverblue-light bg-clip-text text-transparent">
-            Formação Viver de IA! 🎓
-          </span>
-        </>
-      );
-    }
-    return (
-      <>
-        Bem-vindo ao{' '}
-        <span className="bg-gradient-to-r from-viverblue to-viverblue-light bg-clip-text text-transparent">
-          VIVER DE IA Club! 🚀
-        </span>
-      </>
-    );
-  };
-
-  const getWelcomeSubtitle = () => {
-    if (memberType === 'formacao') {
-      return "Vamos conhecer você melhor para personalizar sua jornada de aprendizado em IA!";
-    }
-    return "Vamos conhecer você melhor para personalizar sua experiência empresarial!";
-  };
+  // Gerar opções para os selects
+  const dayOptions = Array.from({ length: 31 }, (_, i) => i + 1);
+  const monthOptions = [
+    { value: '1', label: 'Janeiro' },
+    { value: '2', label: 'Fevereiro' },
+    { value: '3', label: 'Março' },
+    { value: '4', label: 'Abril' },
+    { value: '5', label: 'Maio' },
+    { value: '6', label: 'Junho' },
+    { value: '7', label: 'Julho' },
+    { value: '8', label: 'Agosto' },
+    { value: '9', label: 'Setembro' },
+    { value: '10', label: 'Outubro' },
+    { value: '11', label: 'Novembro' },
+    { value: '12', label: 'Dezembro' }
+  ];
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: currentYear - 1940 + 1 }, (_, i) => currentYear - i);
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center space-y-4"
-      >
-        <h1 className="text-4xl font-heading font-bold text-white">
-          {getWelcomeTitle()}
-        </h1>
-        <p className="text-xl text-neutral-300 max-w-2xl mx-auto leading-relaxed">
-          {getWelcomeSubtitle()}
-        </p>
-      </motion.div>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className="space-y-6"
+    >
+      <AIMessageDisplay 
+        message={data.aiMessage1} 
+        isLoading={false}
+      />
 
-      <div className="grid lg:grid-cols-2 gap-8">
-        {/* Formulário */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
-          className="space-y-6"
-        >
-          <div className="bg-[#151823] border border-white/10 rounded-2xl p-6 space-y-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-viverblue/20 flex items-center justify-center">
-                <User className="w-5 h-5 text-viverblue" />
-              </div>
-              <h3 className="text-xl font-heading font-semibold text-white">
-                Informações Pessoais
-              </h3>
-            </div>
-
-            {/* Nome */}
+      <Card className="bg-[#151823] border-white/10">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-white">
+            <User className="w-5 h-5 text-viverblue" />
+            Informações Pessoais
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-neutral-300">
-                Nome completo *
+              <Label htmlFor="name" className="text-white flex items-center gap-2">
+                Nome completo
+                <EnhancedFieldIndicator isRequired />
               </Label>
               <Input
                 id="name"
-                value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
+                value={localData.name}
+                onChange={(e) => handleFieldChange('name', e.target.value)}
                 placeholder="Seu nome completo"
-                className="bg-[#0F111A] border-white/20 text-white"
+                className="bg-white/5 border-white/20 text-white placeholder:text-neutral-400"
               />
               {getFieldError?.('name') && (
                 <p className="text-red-400 text-sm">{getFieldError('name')}</p>
               )}
             </div>
 
-            {/* Email */}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-neutral-300 flex items-center gap-2">
-                <Mail className="w-4 h-4" />
-                E-mail *
+              <Label htmlFor="email" className="text-white flex items-center gap-2">
+                E-mail
+                <EnhancedFieldIndicator isRequired />
               </Label>
               <Input
                 id="email"
                 type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
+                value={localData.email}
+                onChange={(e) => handleFieldChange('email', e.target.value)}
                 placeholder="seu@email.com"
-                className="bg-[#0F111A] border-white/20 text-white"
-                disabled={!!userProfile?.email}
+                className="bg-white/5 border-white/20 text-white placeholder:text-neutral-400"
               />
               {getFieldError?.('email') && (
                 <p className="text-red-400 text-sm">{getFieldError('email')}</p>
               )}
             </div>
+          </div>
 
-            {/* Telefone */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="phone" className="text-neutral-300 flex items-center gap-2">
-                <Phone className="w-4 h-4" />
-                Telefone *
+              <Label htmlFor="phone" className="text-white">
+                Telefone (WhatsApp)
               </Label>
               <Input
                 id="phone"
-                value={formData.phone}
-                onChange={(e) => handleInputChange('phone', e.target.value)}
+                value={localData.phone}
+                onChange={(e) => handleFieldChange('phone', e.target.value)}
                 placeholder="(11) 99999-9999"
-                className="bg-[#0F111A] border-white/20 text-white"
+                className="bg-white/5 border-white/20 text-white placeholder:text-neutral-400"
               />
-              {getFieldError?.('phone') && (
-                <p className="text-red-400 text-sm">{getFieldError('phone')}</p>
-              )}
             </div>
 
-            {/* Redes Sociais */}
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="instagram" className="text-neutral-300 flex items-center gap-2">
-                  <Instagram className="w-4 h-4" />
-                  Instagram
-                </Label>
-                <Input
-                  id="instagram"
-                  value={formData.instagram}
-                  onChange={(e) => handleInputChange('instagram', e.target.value)}
-                  placeholder="@seuinstagram"
-                  className="bg-[#0F111A] border-white/20 text-white"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="linkedin" className="text-neutral-300 flex items-center gap-2">
-                  <Linkedin className="w-4 h-4" />
-                  LinkedIn
-                </Label>
-                <Input
-                  id="linkedin"
-                  value={formData.linkedin}
-                  onChange={(e) => handleInputChange('linkedin', e.target.value)}
-                  placeholder="linkedin.com/in/seuperfil"
-                  className="bg-[#0F111A] border-white/20 text-white"
-                />
-              </div>
-            </div>
-
-            {/* Localização */}
-            <div className="space-y-4">
-              <Label className="text-neutral-300 flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
-                Localização *
-              </Label>
-              
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Select value={formData.state} onValueChange={(value) => handleInputChange('state', value)}>
-                    <SelectTrigger className="bg-[#0F111A] border-white/20 text-white">
-                      <SelectValue placeholder="Selecione o estado" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {brazilianStates.map((state) => (
-                        <SelectItem key={state.value} value={state.value}>
-                          {state.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {getFieldError?.('state') && (
-                    <p className="text-red-400 text-sm">{getFieldError('state')}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Select 
-                    value={formData.city} 
-                    onValueChange={(value) => handleInputChange('city', value)}
-                    disabled={!formData.state}
-                  >
-                    <SelectTrigger className="bg-[#0F111A] border-white/20 text-white">
-                      <SelectValue placeholder="Selecione a cidade" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {cities.map((city) => (
-                        <SelectItem key={city} value={city}>
-                          {city}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {getFieldError?.('city') && (
-                    <p className="text-red-400 text-sm">{getFieldError('city')}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Data de Nascimento */}
             <div className="space-y-2">
-              <Label className="text-neutral-300">Data de nascimento *</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left font-normal bg-[#0F111A] border-white/20 text-white hover:bg-[#1A1D2E]"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {selectedDate ? format(selectedDate, "dd/MM/yyyy", { locale: ptBR }) : "Selecione uma data"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={handleDateSelect}
-                    disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                    initialFocus
-                    locale={ptBR}
-                  />
-                </PopoverContent>
-              </Popover>
-              {getFieldError?.('birthDate') && (
-                <p className="text-red-400 text-sm">{getFieldError('birthDate')}</p>
-              )}
-            </div>
-
-            {/* Curiosidade */}
-            <div className="space-y-2">
-              <Label htmlFor="curiosity" className="text-neutral-300">
-                Conte uma curiosidade sobre você *
+              <Label htmlFor="instagram" className="text-white">
+                Instagram
               </Label>
-              <Textarea
-                id="curiosity"
-                value={formData.curiosity}
-                onChange={(e) => handleInputChange('curiosity', e.target.value)}
-                placeholder="Algo interessante que você gostaria de compartilhar..."
-                className="bg-[#0F111A] border-white/20 text-white min-h-[100px]"
+              <Input
+                id="instagram"
+                value={localData.instagram}
+                onChange={(e) => handleFieldChange('instagram', e.target.value)}
+                placeholder="@seuinstagram"
+                className="bg-white/5 border-white/20 text-white placeholder:text-neutral-400"
               />
-              {getFieldError?.('curiosity') && (
-                <p className="text-red-400 text-sm">{getFieldError('curiosity')}</p>
-              )}
             </div>
           </div>
-        </motion.div>
 
-        {/* Mensagem da IA */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4 }}
-          className="space-y-6"
-        >
-          {showAIMessage && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.6 }}
-            >
-              <AIMessageDisplay 
-                message={generateAIMessage(1, { ...data, ...formData }, memberType)}
+          <div className="space-y-2">
+            <Label htmlFor="linkedin" className="text-white">
+              LinkedIn
+            </Label>
+            <Input
+              id="linkedin"
+              value={localData.linkedin}
+              onChange={(e) => handleFieldChange('linkedin', e.target.value)}
+              placeholder="https://linkedin.com/in/seuperfil"
+              className="bg-white/5 border-white/20 text-white placeholder:text-neutral-400"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-white flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
+                Estado
+              </Label>
+              <Input
+                value={localData.state}
+                onChange={(e) => handleFieldChange('state', e.target.value)}
+                placeholder="São Paulo"
+                className="bg-white/5 border-white/20 text-white placeholder:text-neutral-400"
               />
-            </motion.div>
-          )}
+            </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="bg-viverblue/10 border border-viverblue/30 rounded-xl p-6"
-          >
-            <h4 className="font-semibold text-viverblue mb-3">
-              {memberType === 'formacao' ? '🎓 O que você vai encontrar na formação:' : '🚀 O que você vai encontrar no clube:'}
-            </h4>
-            <ul className="space-y-2 text-sm text-neutral-300">
-              {memberType === 'formacao' ? (
-                <>
-                  <li>• Aulas práticas e projetos reais com IA</li>
-                  <li>• Mentoria personalizada para sua carreira</li>
-                  <li>• Comunidade exclusiva de alunos</li>
-                  <li>• Certificação em Inteligência Artificial</li>
-                </>
-              ) : (
-                <>
-                  <li>• Soluções de IA personalizadas para seu negócio</li>
-                  <li>• Cases de sucesso do seu setor</li>
-                  <li>• Networking com empresários visionários</li>
-                  <li>• Implementação guiada passo a passo</li>
-                </>
-              )}
-            </ul>
-          </motion.div>
-        </motion.div>
-      </div>
+            <div className="space-y-2">
+              <Label className="text-white">
+                Cidade
+              </Label>
+              <Input
+                value={localData.city}
+                onChange={(e) => handleFieldChange('city', e.target.value)}
+                placeholder="São Paulo"
+                className="bg-white/5 border-white/20 text-white placeholder:text-neutral-400"
+              />
+            </div>
+          </div>
 
-      {/* Botão de próximo */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1 }}
-        className="flex justify-end pt-6"
-      >
-        <Button 
-          onClick={handleNext}
-          size="lg"
-          className="bg-viverblue hover:bg-viverblue-dark text-[#0F111A] px-8 py-3 text-lg font-semibold rounded-xl"
-        >
-          Continuar →
-        </Button>
-      </motion.div>
-    </div>
+          <div className="space-y-2">
+            <Label className="text-white flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              Data de nascimento
+            </Label>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <Select value={localData.birthDay} onValueChange={(value) => handleFieldChange('birthDay', value)}>
+                  <SelectTrigger className="bg-white/5 border-white/20 text-white">
+                    <SelectValue placeholder="Dia" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {dayOptions.map(day => (
+                      <SelectItem key={day} value={day.toString()}>
+                        {day.toString().padStart(2, '0')}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Select value={localData.birthMonth} onValueChange={(value) => handleFieldChange('birthMonth', value)}>
+                  <SelectTrigger className="bg-white/5 border-white/20 text-white">
+                    <SelectValue placeholder="Mês" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {monthOptions.map(month => (
+                      <SelectItem key={month.value} value={month.value}>
+                        {month.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Select value={localData.birthYear} onValueChange={(value) => handleFieldChange('birthYear', value)}>
+                  <SelectTrigger className="bg-white/5 border-white/20 text-white">
+                    <SelectValue placeholder="Ano" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {yearOptions.map(year => (
+                      <SelectItem key={year} value={year.toString()}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            {getFieldError?.('birthDate') && (
+              <p className="text-red-400 text-sm">{getFieldError('birthDate')}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="curiosity" className="text-white flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              O que te trouxe até aqui? Qual sua curiosidade sobre IA?
+            </Label>
+            <Textarea
+              id="curiosity"
+              value={localData.curiosity}
+              onChange={(e) => handleFieldChange('curiosity', e.target.value)}
+              placeholder="Conte-nos o que despertou seu interesse pela Inteligência Artificial..."
+              className="bg-white/5 border-white/20 text-white placeholder:text-neutral-400 min-h-[80px]"
+            />
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 };
+
+export default OnboardingStep1;

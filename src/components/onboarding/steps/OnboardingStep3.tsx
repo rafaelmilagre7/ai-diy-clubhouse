@@ -1,381 +1,317 @@
 
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Bot, Brain, Wrench, Users, ChevronLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { OnboardingStepProps } from '../types/onboardingTypes';
+import { motion } from 'framer-motion';
+import { Brain, Zap, Users, Target } from 'lucide-react';
 import { AIMessageDisplay } from '../components/AIMessageDisplay';
+import { EnhancedFieldIndicator } from '../components/EnhancedFieldIndicator';
 
-const aiTools = [
-  'ChatGPT',
-  'Claude',
-  'Gemini (Google)',
-  'Copilot (Microsoft)',
-  'Midjourney',
-  'DALL-E',
-  'Canva AI',
-  'Notion AI',
-  'Jasper',
-  'Copy.ai',
-  'Loom AI',
-  'Otter.ai',
-  'Runway ML',
-  'Stable Diffusion',
-  'Make.com',
-  'Zapier AI',
-  'Outros'
-];
+const OnboardingStep3 = ({ data, onUpdateData, validationErrors = [], getFieldError }: OnboardingStepProps) => {
+  const [localData, setLocalData] = useState({
+    hasImplementedAI: data.hasImplementedAI || '',
+    aiToolsUsed: data.aiToolsUsed || [],
+    aiKnowledgeLevel: data.aiKnowledgeLevel || '',
+    dailyTools: data.dailyTools || [],
+    whoWillImplement: data.whoWillImplement || ''
+  });
 
-const dailyToolsList = [
-  'Excel/Google Sheets',
-  'Word/Google Docs',
-  'PowerPoint/Google Slides',
-  'WhatsApp Business',
-  'Instagram',
-  'Facebook',
-  'LinkedIn',
-  'Canva',
-  'Photoshop',
-  'Figma',
-  'Trello/Asana',
-  'Slack',
-  'Teams',
-  'Zoom',
-  'CRM (HubSpot, Pipedrive, etc)',
-  'ERP',
-  'E-mail Marketing',
-  'Google Analytics',
-  'WordPress',
-  'Shopify',
-  'Outros'
-];
-
-export const OnboardingStep3 = ({ 
-  data, 
-  onUpdateData, 
-  onNext,
-  onPrev,
-  memberType,
-  getFieldError
-}: OnboardingStepProps) => {
-  const [hasImplementedAI, setHasImplementedAI] = useState<'yes' | 'no' | 'tried-failed' | ''>(data.hasImplementedAI || '');
-  const [aiToolsUsed, setAiToolsUsed] = useState<string[]>(data.aiToolsUsed || []);
-  const [aiKnowledgeLevel, setAiKnowledgeLevel] = useState<'beginner' | 'intermediate' | 'advanced' | 'expert' | ''>(data.aiKnowledgeLevel || '');
-  const [dailyTools, setDailyTools] = useState<string[]>(data.dailyTools || []);
-  const [whoWillImplement, setWhoWillImplement] = useState<'myself' | 'team' | 'hire' | ''>(data.whoWillImplement || '');
-
-  // Atualizar dados globais sempre que o estado local mudar
-  useEffect(() => {
-    onUpdateData({ 
-      hasImplementedAI,
-      aiToolsUsed,
-      aiKnowledgeLevel,
-      dailyTools,
-      whoWillImplement
-    });
-  }, [hasImplementedAI, aiToolsUsed, aiKnowledgeLevel, dailyTools, whoWillImplement, onUpdateData]);
-
-  const handleAiToolChange = (tool: string, checked: boolean) => {
-    if (checked) {
-      setAiToolsUsed([...aiToolsUsed, tool]);
-    } else {
-      setAiToolsUsed(aiToolsUsed.filter(t => t !== tool));
-    }
+  const handleFieldChange = (field: string, value: any) => {
+    const newData = { ...localData, [field]: value };
+    setLocalData(newData);
+    onUpdateData(newData);
   };
 
-  const handleDailyToolChange = (tool: string, checked: boolean) => {
-    if (checked) {
-      setDailyTools([...dailyTools, tool]);
-    } else {
-      setDailyTools(dailyTools.filter(t => t !== tool));
-    }
-  };
-
-  const handleNext = () => {
-    // Verificar se todos os campos obrigatórios estão preenchidos
-    const currentData = {
-      hasImplementedAI,
-      aiKnowledgeLevel,
-      whoWillImplement
-    };
-
-    if (!currentData.hasImplementedAI || !currentData.aiKnowledgeLevel || !currentData.whoWillImplement) {
-      console.log('[OnboardingStep3] Campos obrigatórios faltando:', currentData);
-      return;
-    }
-
-    // Gerar mensagem personalizada da IA baseada nas respostas
-    const firstName = data.name?.split(' ')[0] || 'Amigo';
-    let experienceComment = '';
+  const handleToolToggle = (toolName: string, isChecked: boolean) => {
+    const currentTools = localData.aiToolsUsed || [];
+    const updatedTools = isChecked 
+      ? [...currentTools, toolName]
+      : currentTools.filter(tool => tool !== toolName);
     
-    if (hasImplementedAI === 'yes') {
-      experienceComment = `Que ótimo que você já implementou IA! ${aiToolsUsed.length > 3 ? 'E usa várias ferramentas - você está bem avançado! ' : ''}`;
-    } else if (hasImplementedAI === 'tried-failed') {
-      experienceComment = 'Entendo que já tentou mas não deu certo - isso é super normal! Vamos garantir que dessa vez seja um sucesso total! ';
-    } else {
-      experienceComment = 'Perfeito momento para começar com IA! ';
-    }
+    handleFieldChange('aiToolsUsed', updatedTools);
+  };
 
-    const implementationComment = whoWillImplement === 'myself' ? 
-      'Adoro ver que você quer colocar a mão na massa! ' : 
-      whoWillImplement === 'team' ? 
-      'Excelente ter uma equipe para implementar! ' : 
-      'Smart! Contratar especialistas pode acelerar muito os resultados! ';
-
-    const aiMessage = `${firstName}, ${experienceComment}${implementationComment}Com seu nível ${aiKnowledgeLevel} e conhecendo as ferramentas que você usa, já consigo visualizar algumas oportunidades incríveis de IA para sua empresa! Agora vamos definir seus objetivos específicos! 🎯`;
-
-    // Atualizar dados finais e prosseguir
-    onUpdateData({ 
-      hasImplementedAI,
-      aiToolsUsed,
-      aiKnowledgeLevel,
-      dailyTools,
-      whoWillImplement,
-      aiMessage3: aiMessage
-    });
+  const handleDailyToolToggle = (toolName: string, isChecked: boolean) => {
+    const currentTools = localData.dailyTools || [];
+    const updatedTools = isChecked 
+      ? [...currentTools, toolName]
+      : currentTools.filter(tool => tool !== toolName);
     
-    onNext();
+    handleFieldChange('dailyTools', updatedTools);
   };
 
-  const handlePrev = () => {
-    onPrev();
-  };
+  const aiTools = [
+    'ChatGPT',
+    'Claude',
+    'Gemini (Google)',
+    'Copilot (Microsoft)',
+    'Lovable',
+    'Grok',
+    'Perplexity',
+    'Midjourney',
+    'DALL-E',
+    'Stable Diffusion',
+    'Runway',
+    'Notion AI',
+    'Jasper',
+    'Copy.ai',
+    'Grammarly',
+    'GitHub Copilot',
+    'Cursor',
+    'Canva AI',
+    'Adobe Firefly',
+    'ChatSonic',
+    'Character.AI',
+    'Poe',
+    'Bard (descontinuado)',
+    'Bing Chat',
+    'YouChat',
+    'Replika',
+    'DeepL Write',
+    'Murf AI',
+    'Synthesia',
+    'Luma AI',
+    'RunwayML',
+    'Pictory',
+    'Descript',
+    'Otter.ai',
+    'Fireflies.ai',
+    'MonkeyLearn',
+    'Zapier AI',
+    'Make (Integromat)',
+    'Automation Anywhere',
+    'UiPath',
+    'Robotic Process Automation (RPA)',
+    'Power Platform AI',
+    'Salesforce Einstein',
+    'HubSpot AI',
+    'Intercom Resolution Bot',
+    'Zendesk Answer Bot',
+    'Drift Conversational AI',
+    'Freshworks Freddy AI',
+    'IBM Watson',
+    'Amazon Alexa for Business',
+    'Google Assistant',
+    'Microsoft Cortana',
+    'Siri Shortcuts',
+    'IFTTT',
+    'Outro'
+  ];
 
-  const hasImplementedError = getFieldError?.('hasImplementedAI');
-  const aiKnowledgeError = getFieldError?.('aiKnowledgeLevel');
-  const whoWillImplementError = getFieldError?.('whoWillImplement');
-
-  const canProceed = hasImplementedAI && aiKnowledgeLevel && whoWillImplement;
+  const dailyTools = [
+    'Microsoft Office',
+    'Google Workspace',
+    'Slack',
+    'Teams',
+    'Zoom',
+    'Notion',
+    'Trello',
+    'Asana',
+    'Monday.com',
+    'ClickUp',
+    'Jira',
+    'Confluence',
+    'Figma',
+    'Adobe Creative Suite',
+    'Canva',
+    'Mailchimp',
+    'HubSpot',
+    'Salesforce',
+    'Zapier',
+    'Outro'
+  ];
 
   return (
-    <div className="space-y-8">
-      {/* Mensagem da IA da etapa anterior */}
-      {data.aiMessage2 && (
-        <AIMessageDisplay message={data.aiMessage2} />
-      )}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className="space-y-6"
+    >
+      <AIMessageDisplay 
+        message={data.aiMessage3} 
+        isLoading={false}
+      />
 
-      {/* Header */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center space-y-6"
-      >
-        <div className="flex justify-center">
-          <motion.div 
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2 }}
-            className="w-20 h-20 rounded-full bg-gradient-to-br from-viverblue/20 to-viverblue-light/20 flex items-center justify-center"
-          >
-            <Bot className="w-10 h-10 text-viverblue" />
-          </motion.div>
-        </div>
-        
-        <div className="space-y-4">
-          <motion.h1 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="text-4xl font-heading font-bold text-white"
-          >
-            Sua maturidade em{' '}
-            <span className="bg-gradient-to-r from-viverblue to-viverblue-light bg-clip-text text-transparent">
-              IA! 🤖
-            </span>
-          </motion.h1>
-          
-          <motion.p 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="text-xl text-neutral-300 max-w-2xl mx-auto leading-relaxed"
-          >
-            Vamos entender seu nível atual com Inteligência Artificial para criar 
-            um plano totalmente personalizado!
-          </motion.p>
-        </div>
-      </motion.div>
-
-      {/* Formulário */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8 }}
-        className="max-w-4xl mx-auto"
-      >
-        <div className="bg-[#151823] border border-white/10 rounded-2xl p-8">
-          <div className="space-y-8">
-            {/* Seção de experiência */}
-            <div className="space-y-6">
-              <h3 className="text-xl font-heading font-semibold text-white flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-viverblue/20 flex items-center justify-center">
-                  <Brain className="w-4 h-4 text-viverblue" />
-                </div>
-                Experiência com IA
-              </h3>
-              
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-white">
-                  Já implementou alguma solução de IA? *
+      <Card className="bg-[#151823] border-white/10">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-white">
+            <Brain className="w-5 h-5 text-viverblue" />
+            Maturidade em IA
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Pergunta sobre implementação de IA */}
+          <div className="space-y-3">
+            <Label className="text-white flex items-center gap-2">
+              <Zap className="w-4 h-4" />
+              Sua empresa já implementou alguma solução de IA?
+              <EnhancedFieldIndicator isRequired />
+            </Label>
+            <RadioGroup 
+              value={localData.hasImplementedAI} 
+              onValueChange={(value) => handleFieldChange('hasImplementedAI', value)}
+              className="space-y-2"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="yes" id="ai-yes" className="border-white/20 text-viverblue" />
+                <Label htmlFor="ai-yes" className="text-white cursor-pointer">
+                  Sim, já implementamos e está funcionando bem
                 </Label>
-                <Select value={hasImplementedAI} onValueChange={(value: 'yes' | 'no' | 'tried-failed') => setHasImplementedAI(value)}>
-                  <SelectTrigger className={`h-12 bg-[#181A2A] border-white/10 text-white ${hasImplementedError ? 'border-red-500' : ''}`}>
-                    <SelectValue placeholder="Selecione sua experiência" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#151823] border-white/10">
-                    <SelectItem value="yes">✅ Sim, já implementei</SelectItem>
-                    <SelectItem value="no">❌ Não, nunca implementei</SelectItem>
-                    <SelectItem value="tried-failed">🔄 Tentei mas não deu certo</SelectItem>
-                  </SelectContent>
-                </Select>
-                {hasImplementedError && (
-                  <p className="text-sm text-red-400">{hasImplementedError}</p>
-                )}
               </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="tried-failed" id="ai-tried" className="border-white/20 text-viverblue" />
+                <Label htmlFor="ai-tried" className="text-white cursor-pointer">
+                  Tentamos implementar, mas não deu certo
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="no" id="ai-no" className="border-white/20 text-viverblue" />
+                <Label htmlFor="ai-no" className="text-white cursor-pointer">
+                  Não, ainda não implementamos nada
+                </Label>
+              </div>
+            </RadioGroup>
+            {getFieldError?.('hasImplementedAI') && (
+              <p className="text-red-400 text-sm">{getFieldError('hasImplementedAI')}</p>
+            )}
+          </div>
 
-              {hasImplementedAI === 'yes' && (
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium text-white flex items-center gap-2">
-                    <Bot className="w-4 h-4" />
-                    Quais ferramentas/soluções já usou? (pode marcar várias)
+          {/* Pergunta sobre ferramentas - SEMPRE EXIBIDA */}
+          <div className="space-y-3">
+            <Label className="text-white">
+              Quais ferramentas/soluções de IA já usou? (pode marcar várias)
+            </Label>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-60 overflow-y-auto p-2 border border-white/10 rounded-lg bg-white/5">
+              {aiTools.map((tool) => (
+                <div key={tool} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`tool-${tool}`}
+                    checked={localData.aiToolsUsed?.includes(tool)}
+                    onCheckedChange={(checked) => handleToolToggle(tool, checked as boolean)}
+                    className="border-white/20 data-[state=checked]:bg-viverblue data-[state=checked]:border-viverblue"
+                  />
+                  <Label 
+                    htmlFor={`tool-${tool}`} 
+                    className="text-white text-sm cursor-pointer hover:text-viverblue transition-colors"
+                  >
+                    {tool}
                   </Label>
-                  <div className="grid grid-cols-2 gap-3 max-h-40 overflow-y-auto p-4 border border-white/10 rounded-lg bg-[#181A2A]">
-                    {aiTools.map((tool) => (
-                      <div key={tool} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={tool}
-                          checked={aiToolsUsed.includes(tool)}
-                          onCheckedChange={(checked) => handleAiToolChange(tool, checked as boolean)}
-                          className="border-white/20"
-                        />
-                        <Label htmlFor={tool} className="text-sm text-white cursor-pointer">
-                          {tool}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
                 </div>
-              )}
-
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-white">
-                  Qual seu nível de conhecimento em IA? *
-                </Label>
-                <Select value={aiKnowledgeLevel} onValueChange={(value: 'beginner' | 'intermediate' | 'advanced' | 'expert') => setAiKnowledgeLevel(value)}>
-                  <SelectTrigger className={`h-12 bg-[#181A2A] border-white/10 text-white ${aiKnowledgeError ? 'border-red-500' : ''}`}>
-                    <SelectValue placeholder="Selecione seu nível" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#151823] border-white/10">
-                    <SelectItem value="beginner">🌱 Iniciante - Pouco ou nenhum conhecimento</SelectItem>
-                    <SelectItem value="intermediate">📚 Intermediário - Já usei algumas ferramentas</SelectItem>
-                    <SelectItem value="advanced">⚡ Avançado - Uso frequentemente</SelectItem>
-                    <SelectItem value="expert">🚀 Especialista - Domino bem o assunto</SelectItem>
-                  </SelectContent>
-                </Select>
-                {aiKnowledgeError && (
-                  <p className="text-sm text-red-400">{aiKnowledgeError}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Seção de ferramentas atuais */}
-            <div className="space-y-6">
-              <h3 className="text-lg font-heading font-semibold text-white flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-viverblue/20 flex items-center justify-center">
-                  <Wrench className="w-4 h-4 text-viverblue" />
-                </div>
-                Ferramentas Atuais
-              </h3>
-              
-              <div className="space-y-3">
-                <Label className="text-sm font-medium text-white">
-                  Quais ferramentas você usa no dia a dia? (pode marcar várias)
-                </Label>
-                <div className="grid grid-cols-2 gap-3 max-h-48 overflow-y-auto p-4 border border-white/10 rounded-lg bg-[#181A2A]">
-                  {dailyToolsList.map((tool) => (
-                    <div key={tool} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={tool}
-                        checked={dailyTools.includes(tool)}
-                        onCheckedChange={(checked) => handleDailyToolChange(tool, checked as boolean)}
-                        className="border-white/20"
-                      />
-                      <Label htmlFor={tool} className="text-sm text-white cursor-pointer">
-                        {tool}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Seção de implementação */}
-            <div className="space-y-6">
-              <h3 className="text-lg font-heading font-semibold text-white flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-viverblue/20 flex items-center justify-center">
-                  <Users className="w-4 h-4 text-viverblue" />
-                </div>
-                Implementação
-              </h3>
-              
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-white">
-                  Quem vai implementar as soluções na sua empresa? *
-                </Label>
-                <Select value={whoWillImplement} onValueChange={(value: 'myself' | 'team' | 'hire') => setWhoWillImplement(value)}>
-                  <SelectTrigger className={`h-12 bg-[#181A2A] border-white/10 text-white ${whoWillImplementError ? 'border-red-500' : ''}`}>
-                    <SelectValue placeholder="Selecione quem vai implementar" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#151823] border-white/10">
-                    <SelectItem value="myself">👤 Eu mesmo vou implementar</SelectItem>
-                    <SelectItem value="team">👥 Minha equipe vai implementar</SelectItem>
-                    <SelectItem value="hire">💼 Quero contratar alguém especializado</SelectItem>
-                  </SelectContent>
-                </Select>
-                {whoWillImplementError && (
-                  <p className="text-sm text-red-400">{whoWillImplementError}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Navegação */}
-            <div className="flex items-center justify-between pt-6">
-              <Button
-                variant="outline"
-                onClick={handlePrev}
-                className="flex items-center gap-2 h-12 px-6 bg-transparent border-white/20 text-white hover:bg-white/5 hover:border-white/30"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                Voltar
-              </Button>
-
-              <Button 
-                onClick={handleNext}
-                disabled={!canProceed}
-                size="lg"
-                className="h-12 px-8 bg-viverblue hover:bg-viverblue-dark text-[#0F111A] text-lg font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
-              >
-                Definir objetivos! 🎯
-              </Button>
+              ))}
             </div>
           </div>
-        </div>
-      </motion.div>
 
-      {/* Dica */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.2 }}
-        className="bg-viverblue/5 border border-viverblue/20 rounded-xl p-4 text-center max-w-2xl mx-auto"
-      >
-        <p className="text-sm text-neutral-300">
-          💡 <strong className="text-white">Etapa 3 de 5:</strong> Perfeito! Agora já entendemos seu nível em IA! 🚀
-        </p>
-      </motion.div>
-    </div>
+          {/* Nível de conhecimento */}
+          <div className="space-y-3">
+            <Label className="text-white flex items-center gap-2">
+              Como você avalia seu nível de conhecimento em IA?
+              <EnhancedFieldIndicator isRequired />
+            </Label>
+            <RadioGroup 
+              value={localData.aiKnowledgeLevel} 
+              onValueChange={(value) => handleFieldChange('aiKnowledgeLevel', value)}
+              className="space-y-2"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="beginner" id="level-beginner" className="border-white/20 text-viverblue" />
+                <Label htmlFor="level-beginner" className="text-white cursor-pointer">
+                  Iniciante - Pouco ou nenhum conhecimento
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="intermediate" id="level-intermediate" className="border-white/20 text-viverblue" />
+                <Label htmlFor="level-intermediate" className="text-white cursor-pointer">
+                  Intermediário - Já uso algumas ferramentas básicas
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="advanced" id="level-advanced" className="border-white/20 text-viverblue" />
+                <Label htmlFor="level-advanced" className="text-white cursor-pointer">
+                  Avançado - Implemento soluções complexas
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="expert" id="level-expert" className="border-white/20 text-viverblue" />
+                <Label htmlFor="level-expert" className="text-white cursor-pointer">
+                  Expert - Desenvolvo e treino modelos próprios
+                </Label>
+              </div>
+            </RadioGroup>
+            {getFieldError?.('aiKnowledgeLevel') && (
+              <p className="text-red-400 text-sm">{getFieldError('aiKnowledgeLevel')}</p>
+            )}
+          </div>
+
+          {/* Ferramentas do dia a dia */}
+          <div className="space-y-3">
+            <Label className="text-white flex items-center gap-2">
+              <Target className="w-4 h-4" />
+              Quais ferramentas usa no dia a dia? (pode marcar várias)
+            </Label>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-48 overflow-y-auto p-2 border border-white/10 rounded-lg bg-white/5">
+              {dailyTools.map((tool) => (
+                <div key={tool} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`daily-${tool}`}
+                    checked={localData.dailyTools?.includes(tool)}
+                    onCheckedChange={(checked) => handleDailyToolToggle(tool, checked as boolean)}
+                    className="border-white/20 data-[state=checked]:bg-viverblue data-[state=checked]:border-viverblue"
+                  />
+                  <Label 
+                    htmlFor={`daily-${tool}`} 
+                    className="text-white text-sm cursor-pointer hover:text-viverblue transition-colors"
+                  >
+                    {tool}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Quem vai implementar */}
+          <div className="space-y-3">
+            <Label className="text-white flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Quem será responsável por implementar as soluções de IA?
+              <EnhancedFieldIndicator isRequired />
+            </Label>
+            <RadioGroup 
+              value={localData.whoWillImplement} 
+              onValueChange={(value) => handleFieldChange('whoWillImplement', value)}
+              className="space-y-2"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="myself" id="impl-myself" className="border-white/20 text-viverblue" />
+                <Label htmlFor="impl-myself" className="text-white cursor-pointer">
+                  Eu mesmo
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="team" id="impl-team" className="border-white/20 text-viverblue" />
+                <Label htmlFor="impl-team" className="text-white cursor-pointer">
+                  Minha equipe interna
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="hire" id="impl-hire" className="border-white/20 text-viverblue" />
+                <Label htmlFor="impl-hire" className="text-white cursor-pointer">
+                  Vamos contratar especialistas
+                </Label>
+              </div>
+            </RadioGroup>
+            {getFieldError?.('whoWillImplement') && (
+              <p className="text-red-400 text-sm">{getFieldError('whoWillImplement')}</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 };
+
+export default OnboardingStep3;
