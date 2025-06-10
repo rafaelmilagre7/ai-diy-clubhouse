@@ -1,351 +1,171 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle, Sparkles, Loader2, Zap, Trophy, Star, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { CheckCircle, Loader2, Sparkles, ArrowRight } from 'lucide-react';
 import { OnboardingData } from '../types/onboardingTypes';
 import { AIMessageDisplay } from '../components/AIMessageDisplay';
-import { OnboardingPreview } from '../components/OnboardingPreview';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import confetti from 'canvas-confetti';
+import { useAIMessageGeneration } from '../hooks/useAIMessageGeneration';
 
 interface OnboardingFinalProps {
   data: OnboardingData;
-  onComplete: () => void;
+  onComplete: () => Promise<void>;
   isCompleting: boolean;
   memberType: 'club' | 'formacao';
 }
 
-export const OnboardingFinal = ({ 
-  data, 
-  onComplete, 
-  isCompleting, 
-  memberType 
-}: OnboardingFinalProps) => {
-  const [isProcessing, setIsProcessing] = useState(true);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [finalAIMessage, setFinalAIMessage] = useState('');
-  const [activeTab, setActiveTab] = useState('processing');
+export const OnboardingFinal: React.FC<OnboardingFinalProps> = ({
+  data,
+  onComplete,
+  isCompleting,
+  memberType
+}) => {
+  const { generateMessage, isGenerating, generatedMessage } = useAIMessageGeneration();
 
+  // Gerar mensagem personalizada quando o componente carrega
   useEffect(() => {
-    // Simular processamento com IA
-    const timer = setTimeout(() => {
-      // Gerar mensagem final personalizada usando TODAS as respostas
-      const firstName = data.name?.split(' ')[0] || 'Amigo';
-      const companyName = data.companyName || 'sua empresa';
-      const businessSector = data.businessSector || '';
-      const mainObjective = data.mainObjective || '';
-      const city = data.city || '';
-      const state = data.state || '';
-      
-      let objectiveText = '';
-      switch (mainObjective) {
-        case 'reduce-costs':
-          objectiveText = 'reduzir custos';
-          break;
-        case 'increase-sales':
-          objectiveText = 'aumentar vendas';
-          break;
-        case 'automate-processes':
-          objectiveText = 'automatizar processos';
-          break;
-        case 'innovate-products':
-          objectiveText = 'inovar produtos';
-          break;
-      }
-
-      const aiMessage = `🎉 ${firstName}, QUE JORNADA INCRÍVEL acabamos de fazer juntos! 
-
-Agora tenho uma visão completa de quem você é e do potencial GIGANTESCO da ${companyName}! Uma empresa de ${businessSector.toLowerCase()} em ${city}/${state} com foco em ${objectiveText} - isso é uma combinação PERFEITA para transformação com IA!
-
-Nossa plataforma já está personalizando soluções específicas para seu perfil. Você terá acesso a:
-
-🚀 **Soluções de IA curadas** especialmente para ${businessSector.toLowerCase()}
-💼 **Planos de implementação** focados em ${objectiveText}
-🎯 **Conteúdo personalizado** baseado no seu nível de conhecimento
-📈 **Métricas de sucesso** alinhadas com seus objetivos de 90 dias
-
-${data.curiosity ? `E não esqueci da sua curiosidade sobre ${data.curiosity.toLowerCase()} - vamos usar isso para tornar nossos encontros ainda mais especiais! ` : ''}
-
-Bem-vindo oficialmente ao VIVER DE IA Club, ${firstName}! Sua jornada de transformação começa AGORA! 🔥`;
-
-      setFinalAIMessage(aiMessage);
-      setIsProcessing(false);
-      setShowSuccess(true);
-      setActiveTab('success');
-      
-      // Disparar confete
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
-      
-      // Confete adicional após um tempo
-      setTimeout(() => {
-        confetti({
-          particleCount: 50,
-          angle: 60,
-          spread: 55,
-          origin: { x: 0 }
-        });
-        confetti({
-          particleCount: 50,
-          angle: 120,
-          spread: 55,
-          origin: { x: 1 }
-        });
-      }, 500);
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, [data]);
+    if (!generatedMessage && !isGenerating) {
+      generateMessage(data, memberType);
+    }
+  }, [data, memberType, generatedMessage, isGenerating, generateMessage]);
 
   const handleComplete = async () => {
-    await onComplete();
+    try {
+      await onComplete();
+    } catch (error) {
+      console.error('[OnboardingFinal] Erro ao completar:', error);
+    }
   };
 
-  if (isProcessing) {
-    return (
-      <div className="space-y-8">
-        {/* Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center space-y-6"
-        >
-          <div className="flex justify-center">
-            <motion.div 
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2 }}
-              className="w-20 h-20 rounded-full bg-gradient-to-br from-viverblue/20 to-viverblue-light/20 flex items-center justify-center"
-            >
-              <Loader2 className="w-10 h-10 text-viverblue animate-spin" />
-            </motion.div>
-          </div>
-          
-          <div className="space-y-4">
-            <motion.h1 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="text-4xl font-heading font-bold text-white"
-            >
-              Processando suas informações{' '}
-              <span className="bg-gradient-to-r from-viverblue to-viverblue-light bg-clip-text text-transparent">
-                com IA... 🤖
-              </span>
-            </motion.h1>
-            
-            <motion.p 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-              className="text-xl text-neutral-300 max-w-2xl mx-auto leading-relaxed"
-            >
-              Nossa Inteligência Artificial está analisando seu perfil e criando 
-              uma experiência totalmente personalizada para você!
-            </motion.p>
-          </div>
-        </motion.div>
-
-        {/* Cartão de processamento */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-          className="max-w-4xl mx-auto"
-        >
-          <div className="bg-[#151823] border border-white/10 rounded-2xl p-8">
-            <div className="space-y-6">
-              <div className="flex items-center justify-center gap-3 mb-6">
-                <Zap className="w-6 h-6 text-viverblue animate-pulse" />
-                <span className="text-xl font-semibold text-viverblue">IA trabalhando...</span>
-              </div>
-              
-              <div className="grid md:grid-cols-2 gap-4 text-sm text-neutral-300">
-                <motion.div 
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 1 }}
-                  className="flex items-center gap-3 p-3 bg-[#181A2A] rounded-lg"
-                >
-                  <div className="w-2 h-2 bg-viverblue rounded-full animate-pulse"></div>
-                  <span>✨ Analisando seu perfil empresarial...</span>
-                </motion.div>
-                
-                <motion.div 
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 1.2 }}
-                  className="flex items-center gap-3 p-3 bg-[#181A2A] rounded-lg"
-                >
-                  <div className="w-2 h-2 bg-viverblue rounded-full animate-pulse"></div>
-                  <span>🎯 Personalizando soluções de IA...</span>
-                </motion.div>
-                
-                <motion.div 
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 1.4 }}
-                  className="flex items-center gap-3 p-3 bg-[#181A2A] rounded-lg"
-                >
-                  <div className="w-2 h-2 bg-viverblue rounded-full animate-pulse"></div>
-                  <span>📊 Criando métricas de sucesso...</span>
-                </motion.div>
-                
-                <motion.div 
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 1.6 }}
-                  className="flex items-center gap-3 p-3 bg-[#181A2A] rounded-lg"
-                >
-                  <div className="w-2 h-2 bg-viverblue rounded-full animate-pulse"></div>
-                  <span>🚀 Preparando sua jornada...</span>
-                </motion.div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Dica */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 2 }}
-          className="bg-viverblue/5 border border-viverblue/20 rounded-xl p-4 text-center max-w-2xl mx-auto"
-        >
-          <p className="text-sm text-neutral-300">
-            💡 <strong className="text-white">Quase pronto:</strong> Estamos criando sua experiência personalizada! 🎯
-          </p>
-        </motion.div>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-8">
-      {/* Header de sucesso */}
-      <motion.div 
+    <div className="max-w-4xl mx-auto p-6 space-y-8">
+      {/* Header */}
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center space-y-6"
+        className="text-center space-y-4"
       >
-        <div className="flex justify-center">
-          <motion.div 
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2 }}
-            className="w-20 h-20 rounded-full bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center"
-          >
-            <Trophy className="w-10 h-10 text-green-500" />
-          </motion.div>
+        <div className="w-20 h-20 mx-auto bg-viverblue/20 rounded-full flex items-center justify-center">
+          <CheckCircle className="w-10 h-10 text-viverblue" />
         </div>
         
-        <div className="space-y-4">
-          <motion.h1 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="text-4xl font-heading font-bold text-white"
-          >
-            ONBOARDING{' '}
-            <span className="bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
-              CONCLUÍDO! 🎉
-            </span>
-          </motion.h1>
-          
-          <motion.p 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="text-xl text-neutral-300 max-w-2xl mx-auto leading-relaxed"
-          >
-            Sua experiência está 100% personalizada e você está pronto para 
-            transformar seu negócio com Inteligência Artificial!
-          </motion.p>
-        </div>
+        <h1 className="text-3xl font-bold text-white">
+          Onboarding Concluído! 🎉
+        </h1>
+        
+        <p className="text-xl text-slate-300">
+          Bem-vindo(a) à transformação digital do seu negócio
+        </p>
       </motion.div>
 
-      {/* Tabs com conteúdo */}
+      {/* Mensagem Personalizada da IA */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8 }}
-        className="max-w-4xl mx-auto"
+        transition={{ delay: 0.3 }}
       >
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-[#151823] border border-white/10">
-            <TabsTrigger value="success" className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4" />
-              Mensagem da IA
-            </TabsTrigger>
-            <TabsTrigger value="preview" className="flex items-center gap-2">
-              <Eye className="w-4 h-4" />
-              Resumo do Perfil
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="success" className="mt-6">
-            {finalAIMessage && (
-              <AIMessageDisplay message={finalAIMessage} />
-            )}
-          </TabsContent>
-          
-          <TabsContent value="preview" className="mt-6">
-            <div className="bg-[#151823] border border-white/10 rounded-2xl p-6">
-              <OnboardingPreview data={data} />
-            </div>
-          </TabsContent>
-        </Tabs>
+        <AIMessageDisplay 
+          message={generatedMessage || ''} 
+          isLoading={isGenerating}
+        />
       </motion.div>
 
-      {/* Botão de ação */}
+      {/* Próximos Passos */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 1 }}
-        className="flex justify-center pt-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+        className="bg-[#1A1E2E] rounded-xl p-6 border border-white/10"
       >
-        <Button 
+        <div className="flex items-center gap-2 mb-4">
+          <Sparkles className="w-5 h-5 text-viverblue" />
+          <h3 className="text-lg font-semibold text-white">Seus próximos passos</h3>
+        </div>
+        
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-viverblue/20 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-viverblue font-semibold text-sm">1</span>
+              </div>
+              <div>
+                <h4 className="font-medium text-white mb-1">Explore o Dashboard</h4>
+                <p className="text-sm text-slate-400">
+                  Acesse suas soluções personalizadas e trilha de implementação
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-viverblue/20 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-viverblue font-semibold text-sm">2</span>
+              </div>
+              <div>
+                <h4 className="font-medium text-white mb-1">Comece sua primeira solução</h4>
+                <p className="text-sm text-slate-400">
+                  Implemente sua primeira solução de IA baseada no seu perfil
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-viverblue/20 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-viverblue font-semibold text-sm">3</span>
+              </div>
+              <div>
+                <h4 className="font-medium text-white mb-1">Conecte-se à comunidade</h4>
+                <p className="text-sm text-slate-400">
+                  Participe das discussões e aprenda com outros membros
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-viverblue/20 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-viverblue font-semibold text-sm">4</span>
+              </div>
+              <div>
+                <h4 className="font-medium text-white mb-1">Acompanhe seu progresso</h4>
+                <p className="text-sm text-slate-400">
+                  Monitore suas implementações e conquistas
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Botão de Finalização */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.9 }}
+        className="text-center"
+      >
+        <Button
           onClick={handleComplete}
-          disabled={isCompleting}
+          disabled={isCompleting || isGenerating}
           size="lg"
-          className="h-16 px-12 bg-viverblue hover:bg-viverblue-dark text-[#0F111A] text-xl font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+          className="bg-viverblue hover:bg-viverblue/80 text-white px-8 py-4 text-lg gap-3"
         >
           {isCompleting ? (
             <>
-              <Loader2 className="animate-spin mr-3 h-6 w-6" />
+              <Loader2 className="w-5 h-5 animate-spin" />
               Finalizando...
             </>
           ) : (
             <>
-              <Star className="mr-3 h-6 w-6" />
-              ACESSAR MEU DASHBOARD! 🚀
+              Acessar Dashboard
+              <ArrowRight className="w-5 h-5" />
             </>
           )}
         </Button>
-      </motion.div>
-
-      {/* Card de boas-vindas */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.2 }}
-        className="max-w-3xl mx-auto"
-      >
-        <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-2xl p-6">
-          <div className="text-center space-y-3">
-            <h3 className="text-xl font-heading font-semibold text-white flex items-center justify-center gap-2">
-              <Trophy className="w-5 h-5 text-green-400" />
-              Sua transformação com IA começa AGORA!
-            </h3>
-            <p className="text-neutral-300 leading-relaxed">
-              Prepare-se para descobrir soluções incríveis, implementar IA no seu negócio 
-              e fazer parte de uma comunidade de empresários visionários!
-            </p>
-          </div>
-        </div>
+        
+        <p className="text-sm text-slate-400 mt-3">
+          Você será redirecionado para o dashboard em instantes
+        </p>
       </motion.div>
     </div>
   );

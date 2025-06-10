@@ -1,5 +1,5 @@
 
-project_id = "zotzvtepvpnkcoobdubt"
+project_id = "djkxhfyicvjkmgvbofvp"
 
 [api]
 enabled = true
@@ -8,14 +8,66 @@ schemas = ["public", "graphql_public"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000
 
+[db]
+enabled = true
+port = 54322
+major_version = 15
+
+[db.pooler]
+enabled = true
+port = 54329
+pool_mode = "transaction"
+default_pool_size = 20
+max_client_conn = 100
+
+[realtime]
+enabled = true
+ip_version = "ipv4"
+port = 54323
+max_header_length = 4096
+
+[studio]
+enabled = true
+port = 54324
+api_url = "http://127.0.0.1:54321"
+openai_api_key = "env(OPENAI_API_KEY)"
+
+[inbucket]
+enabled = true
+port = 54325
+smtp_port = 54326
+pop3_port = 54327
+
+[functions.setup-storage-buckets]
+verify_jwt = false
+
+[functions.send-communication-email]
+verify_jwt = false
+
+[functions.send-whatsapp-invite]
+verify_jwt = false
+
+[functions.get-assistant-messages]
+verify_jwt = true
+
+[functions.enhance-trail-with-ai]
+verify_jwt = true
+
+[functions.list-panda-videos]
+verify_jwt = true
+
+[functions.generate-onboarding-message]
+verify_jwt = true
+
 [auth]
 enabled = true
-site_url = "http://localhost:3000"
-additional_redirect_urls = ["https://app.viverdeia.ai"]
+port = 54324
+site_url = "http://127.0.0.1:3000"
+additional_redirect_urls = ["https://127.0.0.1:3000"]
 jwt_expiry = 3600
-enable_signup = true
-enable_email_confirmations = false
-enable_sms_confirmations = false
+refresh_token_rotation_enabled = true
+refresh_token_reuse_interval = 10
+enable_manual_linking = false
 
 [auth.email]
 enable_signup = true
@@ -23,22 +75,15 @@ double_confirm_changes = true
 enable_confirmations = false
 
 [auth.sms]
-enable_signup = false
+enable_signup = true
 enable_confirmations = false
+template = "Your code is {{ .Code }}"
 
 [auth.external.google]
-enabled = false
-
-[db]
-port = 54322
-
-[storage]
 enabled = true
-file_size_limit = "50MiB"
-allowed_mime_types = ["image/jpeg", "image/png", "image/gif", "image/webp", "video/mp4", "application/pdf"]
+client_id = "env(GOOGLE_CLIENT_ID)"
+secret = "env(GOOGLE_CLIENT_SECRET)"
 
-[functions.generate-networking-matches]
-verify_jwt = true
-
-[functions.send-connection-email]
-verify_jwt = true
+[edge_runtime]
+policy = "per_worker"
+inspector_port = 8083
