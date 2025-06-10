@@ -11,6 +11,34 @@ const RATE_LIMIT_CONFIG = {
   CLEANUP_INTERVAL: 86400000 // 24h em ms
 }
 
+// CORREÇÃO DE SEGURANÇA: Validar entradas
+function validateAuthInput(data: any): { isValid: boolean; error?: string } {
+  if (!data || typeof data !== 'object') {
+    return { isValid: false, error: 'Dados de autenticação inválidos' };
+  }
+  
+  if (!data.email || typeof data.email !== 'string') {
+    return { isValid: false, error: 'Email é obrigatório e deve ser uma string' };
+  }
+  
+  if (!data.password || typeof data.password !== 'string') {
+    return { isValid: false, error: 'Senha é obrigatória e deve ser uma string' };
+  }
+  
+  // Validar formato de email básico
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(data.email)) {
+    return { isValid: false, error: 'Formato de email inválido' };
+  }
+  
+  // Validar comprimento mínimo da senha
+  if (data.password.length < 6) {
+    return { isValid: false, error: 'Senha deve ter pelo menos 6 caracteres' };
+  }
+  
+  return { isValid: true };
+}
+
 // Função para criar identificador seguro (hash do IP + email)
 function createSecureIdentifier(ip: string, email: string): string {
   const data = `${ip}:${email.toLowerCase()}`
@@ -210,18 +238,33 @@ Deno.serve(async (req) => {
   }
   
   try {
-    // Obter dados da requisição
-    const { email, password } = await req.json()
-    const clientIP = req.headers.get('x-forwarded-for') || 
-                    req.headers.get('x-real-ip') || 
-                    'unknown'
+    // CORREÇÃO DE SEGURANÇA: Usar variável de ambiente em vez de URL hardcoded
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')
     
-    // Validações básicas
-    if (!email || !password) {
+    if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey) {
       return new Response(
         JSON.stringify({ 
-          error: 'Email e senha são obrigatórios',
-          code: 'MISSING_CREDENTIALS'
+          error: 'Configuração do servidor indisponível',
+          code: 'SERVER_CONFIG_ERROR'
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+    
+    // Obter dados da requisição
+    let requestData: any = {}
+    try {
+      requestData = await req.json()
+    } catch (error) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'JSON inválido na requisição',
+          code: 'INVALID_JSON'
         }),
         { 
           status: 400, 
@@ -230,11 +273,28 @@ Deno.serve(async (req) => {
       )
     }
     
+    // CORREÇÃO DE SEGURANÇA: Validar entrada
+    const validation = validateAuthInput(requestData)
+    if (!validation.isValid) {
+      return new Response(
+        JSON.stringify({ 
+          error: validation.error,
+          code: 'VALIDATION_ERROR'
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+    
+    const { email, password } = requestData
+    const clientIP = req.headers.get('x-forwarded-for') || 
+                    req.headers.get('x-real-ip') || 
+                    'unknown'
+    
     // Criar cliente Supabase para operações de sistema
-    const serviceSupabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    const serviceSupabase = createClient(supabaseUrl, supabaseServiceKey)
     
     // Criar identificador seguro
     const identifier = createSecureIdentifier(clientIP, email)
@@ -273,10 +333,7 @@ Deno.serve(async (req) => {
     }
     
     // Tentar login no Supabase
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-    )
+    const supabase = createClient(supabaseUrl, supabaseAnonKey)
     
     const { data, error } = await supabase.auth.signInWithPassword({
       email,

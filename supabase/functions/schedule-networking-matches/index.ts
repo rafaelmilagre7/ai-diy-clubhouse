@@ -1,210 +1,176 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4'
+import { corsHeaders } from '../_shared/cors.ts'
+
+// CORREÇÃO DE SEGURANÇA: Validar entradas
+function validateCronInput(data: any): { isValid: boolean; error?: string } {
+  if (!data || typeof data !== 'object') {
+    return { isValid: true }; // Cron jobs podem não ter payload
+  }
+  
+  // Validar campos específicos se presentes
+  if (data.force && typeof data.force !== 'boolean') {
+    return { isValid: false, error: 'Campo force deve ser boolean' };
+  }
+  
+  return { isValid: true };
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    // 🚫 NETWORKING PAUSADO - Fase 3 da cleanup
-    // Esta Edge Function foi pausada como parte da reorganização do sistema de networking
-    // Para reativar: remover este bloco e descomentar o código abaixo
+    // CORREÇÃO DE SEGURANÇA: Usar variável de ambiente em vez de URL hardcoded
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     
-    console.log('⏸️ Networking Edge Function pausada - Fase 3 cleanup');
-    
-    return new Response(JSON.stringify({
-      success: true,
-      message: 'Sistema de networking temporariamente pausado',
-      status: 'paused',
-      phase: 'cleanup_phase_3',
-      timestamp: new Date().toISOString(),
-      note: 'Edge Function pausada para reorganização do sistema'
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    });
-
-    /* CÓDIGO ORIGINAL COMENTADO PARA ROLLBACK
-    
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    console.log('🚀 Iniciando geração automática mensal de matches...');
-
-    const currentMonth = new Date().toISOString().slice(0, 7);
-    const startTime = Date.now();
-
-    // Limpar matches antigos (mais de 3 meses)
-    const threeMonthsAgo = new Date();
-    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-    const cleanupMonth = threeMonthsAgo.toISOString().slice(0, 7);
-
-    console.log(`🧹 Limpando matches anteriores a ${cleanupMonth}...`);
-    
-    const { error: cleanupError } = await supabaseClient
-      .from('network_matches')
-      .delete()
-      .lt('month_year', cleanupMonth);
-
-    if (cleanupError) {
-      console.error('Erro na limpeza:', cleanupError);
-    } else {
-      console.log('✅ Limpeza de matches antigos concluída');
-    }
-
-    // Buscar usuários elegíveis (com onboarding completo)
-    const { data: eligibleUsers, error: usersError } = await supabaseClient
-      .from('onboarding_profile_view')
-      .select('user_id, profile_name, company_name')
-      .eq('is_completed', true)
-      .in('role', ['admin', 'formacao']);
-
-    if (usersError) {
-      throw new Error(`Erro ao buscar usuários: ${usersError.message}`);
-    }
-
-    const totalUsers = eligibleUsers?.length || 0;
-    console.log(`👥 Encontrados ${totalUsers} usuários elegíveis para networking`);
-
-    if (totalUsers === 0) {
-      return new Response(JSON.stringify({
-        success: true,
-        message: 'Nenhum usuário elegível encontrado',
-        stats: { total_users: 0, matches_generated: 0 }
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      });
-    }
-
-    // Processar usuários em lotes para evitar timeout
-    const batchSize = 10;
-    let totalMatches = 0;
-    let processedUsers = 0;
-    const errors: string[] = [];
-
-    for (let i = 0; i < totalUsers; i += batchSize) {
-      const batch = eligibleUsers.slice(i, i + batchSize);
-      console.log(`📦 Processando lote ${Math.floor(i/batchSize) + 1}/${Math.ceil(totalUsers/batchSize)} (${batch.length} usuários)`);
-
-      for (const user of batch) {
-        try {
-          // Verificar se já tem matches para este mês
-          const { data: existingMatches } = await supabaseClient
-            .from('network_matches')
-            .select('id')
-            .eq('user_id', user.user_id)
-            .eq('month_year', currentMonth)
-            .limit(1);
-
-          if (existingMatches && existingMatches.length > 0) {
-            console.log(`⏭️ Usuário ${user.profile_name} já tem matches para ${currentMonth}`);
-            processedUsers++;
-            continue;
-          }
-
-          // Chamar função de geração de matches
-          const { data: matchResult, error: matchError } = await supabaseClient.functions.invoke(
-            'generate-networking-matches',
-            {
-              body: { 
-                target_user_id: user.user_id,
-                force_regenerate: false
-              }
-            }
-          );
-
-          if (matchError) {
-            console.error(`❌ Erro ao gerar matches para ${user.profile_name}:`, matchError);
-            errors.push(`${user.profile_name}: ${matchError.message}`);
-          } else {
-            const userMatches = matchResult?.total_matches_generated || 0;
-            totalMatches += userMatches;
-            console.log(`✅ ${user.profile_name}: ${userMatches} matches gerados`);
-          }
-
-          processedUsers++;
-
-          // Pequena pausa para evitar rate limiting
-          await new Promise(resolve => setTimeout(resolve, 100));
-
-        } catch (error) {
-          console.error(`💥 Exceção ao processar ${user.profile_name}:`, error);
-          errors.push(`${user.profile_name}: ${error.message}`);
-          processedUsers++;
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('❌ Variáveis de ambiente SUPABASE não configuradas')
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Configuração do servidor indisponível' 
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
-      }
+      )
+    }
 
-      // Pausa entre lotes
-      if (i + batchSize < totalUsers) {
-        console.log('⏳ Pausa entre lotes...');
-        await new Promise(resolve => setTimeout(resolve, 1000));
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    
+    // CORREÇÃO DE SEGURANÇA: Validar entrada da requisição
+    let requestData = {}
+    if (req.method === 'POST') {
+      try {
+        requestData = await req.json()
+      } catch (error) {
+        // Ignorar erro de JSON para cron jobs
+        console.log('ℹ️ Requisição sem JSON (normal para cron)')
+      }
+      
+      const validation = validateCronInput(requestData)
+      if (!validation.isValid) {
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: validation.error 
+          }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        )
       }
     }
 
-    const executionTime = Date.now() - startTime;
-    const summary = {
-      execution_time_ms: executionTime,
-      month: currentMonth,
-      total_users: totalUsers,
-      processed_users: processedUsers,
-      matches_generated: totalMatches,
-      error_count: errors.length,
-      success_rate: Math.round((processedUsers - errors.length) / processedUsers * 100)
-    };
+    // Verificar se o sistema está pausado
+    const { data: systemStatus, error: statusError } = await supabase
+      .from('system_settings')
+      .select('value')
+      .eq('key', 'networking_paused')
+      .single()
 
-    console.log('📊 Resumo da execução:', summary);
-
-    // Criar log da execução
-    try {
-      await supabaseClient
-        .from('networking_execution_logs')
-        .insert({
-          execution_date: new Date().toISOString(),
-          month_processed: currentMonth,
-          total_users: totalUsers,
-          processed_users: processedUsers,
-          matches_generated: totalMatches,
-          execution_time_ms: executionTime,
-          errors: errors.length > 0 ? errors : null,
-          summary: summary
-        });
-    } catch (logError) {
-      console.error('Erro ao salvar log:', logError);
+    if (statusError && statusError.code !== 'PGRST116') {
+      console.error('❌ Erro ao verificar status do sistema:', statusError)
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Erro interno do servidor' 
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
     }
 
-    return new Response(JSON.stringify({
-      success: true,
-      message: `Processamento mensal concluído em ${Math.round(executionTime/1000)}s`,
-      stats: summary,
-      errors: errors.length > 0 ? errors.slice(0, 10) : undefined // Limitar erros na resposta
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    });
+    // CORREÇÃO CRÍTICA: Retornar false quando pausado
+    if (systemStatus?.value === 'true') {
+      console.log('🚫 Agendamento de networking pausado')
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Sistema de networking temporariamente pausado para manutenção',
+          code: 'NETWORKING_PAUSED'
+        }),
+        { 
+          status: 503, // Service Unavailable
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
 
-    FIM DO CÓDIGO COMENTADO */
+    console.log('⏰ Executando agendamento de matches de networking')
+    
+    // Chamar a função de geração de matches
+    const generateResponse = await fetch(`${supabaseUrl}/functions/v1/generate-networking-matches`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${supabaseServiceKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ scheduled: true, ...requestData })
+    })
+
+    const generateResult = await generateResponse.json()
+
+    if (!generateResponse.ok) {
+      console.error('❌ Erro na geração de matches:', generateResult)
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: generateResult.error || 'Erro na geração de matches' 
+        }),
+        { 
+          status: generateResponse.status, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
+    // Log da execução do agendamento
+    await supabase
+      .from('analytics')
+      .insert({
+        user_id: '00000000-0000-0000-0000-000000000000',
+        event_type: 'networking_scheduled',
+        event_data: {
+          matches_generated: generateResult.matches_generated || 0,
+          executed_at: new Date().toISOString()
+        }
+      })
+
+    console.log(`✅ Agendamento executado: ${generateResult.matches_generated || 0} matches gerados`)
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        message: 'Agendamento de networking executado com sucesso',
+        matches_generated: generateResult.matches_generated || 0
+      }),
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
 
   } catch (error) {
-    console.error('💥 Erro na Edge Function pausada:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Edge Function pausada durante cleanup',
-      status: 'paused',
-      phase: 'cleanup_phase_3',
-      timestamp: new Date().toISOString()
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200, // Retorna 200 mesmo com erro para não quebrar integrações
-    });
+    console.error('❌ Erro na função schedule-networking-matches:', error)
+    
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: 'Erro interno do servidor' 
+      }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
   }
-});
+})
