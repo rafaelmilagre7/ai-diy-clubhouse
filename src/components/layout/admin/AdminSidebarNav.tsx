@@ -1,4 +1,5 @@
 
+
 import { useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
@@ -12,7 +13,10 @@ import {
   Shield,
   Activity,
   UserPlus,
-  ArrowLeft
+  ArrowLeft,
+  BookOpen,
+  Play,
+  FileText
 } from "lucide-react";
 import { AdminNavItem } from "./AdminNavItem";
 
@@ -73,13 +77,43 @@ export const AdminSidebarNav = () => {
       icon: Calendar,
       href: "/admin/events",
       isActive: location.pathname.startsWith("/admin/events")
-    },
+    }
+  ];
+
+  const lmsItems = [
     {
-      label: "Gestão LMS",
+      label: "Dashboard LMS",
       icon: GraduationCap,
       href: "/formacao",
-      isActive: location.pathname.startsWith("/formacao")
+      isActive: location.pathname === "/formacao"
     },
+    {
+      label: "Cursos",
+      icon: BookOpen,
+      href: "/formacao/cursos",
+      isActive: location.pathname.startsWith("/formacao/cursos")
+    },
+    {
+      label: "Aulas",
+      icon: Play,
+      href: "/formacao/aulas",
+      isActive: location.pathname.startsWith("/formacao/aulas")
+    },
+    {
+      label: "Materiais",
+      icon: FileText,
+      href: "/formacao/materiais",
+      isActive: location.pathname.startsWith("/formacao/materiais")
+    },
+    {
+      label: "Configurações LMS",
+      icon: Settings,
+      href: "/formacao/configuracoes",
+      isActive: location.pathname.startsWith("/formacao/configuracoes")
+    }
+  ];
+
+  const systemItems = [
     {
       label: "Benefícios",
       icon: Gift,
@@ -97,7 +131,40 @@ export const AdminSidebarNav = () => {
   return (
     <nav className="flex-1 overflow-y-auto py-4">
       <div className="space-y-1 px-4">
+        {/* Items principais */}
         {navigationItems.map((item) => (
+          <AdminNavItem
+            key={item.href}
+            {...item}
+          />
+        ))}
+        
+        {/* Separador para seção LMS */}
+        <div className="h-px bg-white/10 my-4"></div>
+        <div className="px-3 py-2">
+          <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider">
+            Gestão LMS
+          </h3>
+        </div>
+        
+        {/* Items LMS */}
+        {lmsItems.map((item) => (
+          <AdminNavItem
+            key={item.href}
+            {...item}
+          />
+        ))}
+        
+        {/* Separador para itens do sistema */}
+        <div className="h-px bg-white/10 my-4"></div>
+        <div className="px-3 py-2">
+          <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider">
+            Sistema
+          </h3>
+        </div>
+        
+        {/* Items do sistema */}
+        {systemItems.map((item) => (
           <AdminNavItem
             key={item.href}
             {...item}
@@ -107,3 +174,4 @@ export const AdminSidebarNav = () => {
     </nav>
   );
 };
+
