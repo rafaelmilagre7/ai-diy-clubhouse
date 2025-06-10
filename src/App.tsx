@@ -18,6 +18,8 @@ import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import FormacaoDashboard from "@/pages/formacao/FormacaoDashboard";
 import OptimizedDashboard from "@/pages/member/OptimizedDashboard";
 import AdminLayout from "@/components/layout/admin/AdminLayout";
+import MemberLayout from "@/components/layout/MemberLayout";
+import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 
 // Query client otimizado
 const queryClient = new QueryClient({
@@ -51,16 +53,48 @@ function App() {
                   <Route path="/login" element={<AuthLayout />} />
                   <Route path="/onboarding" element={<OnboardingWizard />} />
                   
-                  {/* Rotas de Membro */}
-                  <Route path="/dashboard" element={<OptimizedDashboard />} />
-                  <Route path="/solution/:id" element={<SolutionDetails />} />
+                  {/* Rotas de Membro - TODAS com MemberLayout */}
+                  <Route 
+                    path="/dashboard" 
+                    element={
+                      <ProtectedRoutes>
+                        <MemberLayout>
+                          <OptimizedDashboard />
+                        </MemberLayout>
+                      </ProtectedRoutes>
+                    } 
+                  />
+                  <Route 
+                    path="/solution/:id" 
+                    element={
+                      <ProtectedRoutes>
+                        <MemberLayout>
+                          <SolutionDetails />
+                        </MemberLayout>
+                      </ProtectedRoutes>
+                    } 
+                  />
                   
                   {/* Rota de Formacao */}
                   <Route path="/formacao" element={<FormacaoDashboard />} />
                   
-                  {/* Rotas de Admin - Agora com AdminLayout */}
-                  <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
-                  <Route path="/admin/solutions" element={<AdminLayout><AdminSolutions /></AdminLayout>} />
+                  {/* Rotas de Admin - TODAS com AdminLayout */}
+                  <Route 
+                    path="/admin" 
+                    element={
+                      <AdminLayout>
+                        <AdminDashboard />
+                      </AdminLayout>
+                    } 
+                  />
+                  <Route 
+                    path="/admin/solutions" 
+                    element={
+                      <AdminLayout>
+                        <AdminSolutions />
+                      </AdminLayout>
+                    } 
+                  />
                 </Routes>
               </Suspense>
             </BrowserRouter>

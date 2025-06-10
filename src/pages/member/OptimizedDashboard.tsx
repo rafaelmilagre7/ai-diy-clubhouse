@@ -9,7 +9,6 @@ import { Solution } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 import { logger } from "@/utils/logger";
 import ErrorBoundary from '@/components/common/ErrorBoundary';
-import OptimizedSkeletonLoader from '@/components/common/OptimizedSkeletonLoader';
 import ProgressiveRenderer from '@/components/dashboard/ProgressiveRenderer';
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 
@@ -131,7 +130,7 @@ const OptimizedDashboard = () => {
   // Loading states com prioridade e timeout de segurança
   if (!forceRender && (isCriticalLoading || authLoading || onboardingLoading)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-viverblue mx-auto"></div>
           <p className="text-gray-600 dark:text-gray-300">Carregando...</p>
@@ -166,7 +165,7 @@ const OptimizedDashboard = () => {
   return (
     <ErrorBoundary
       fallback={({ error, onRetry }) => (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="min-h-[60vh] flex items-center justify-center p-4">
           <div className="text-center space-y-4">
             <h2 className="text-xl font-semibold">Problema no Dashboard</h2>
             <p className="text-muted-foreground">Encontramos um problema ao carregar seu dashboard</p>
