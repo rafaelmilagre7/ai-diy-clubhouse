@@ -1,21 +1,36 @@
 
-import * as React from "react"
-import { cn } from "@/lib/utils"
+import React from 'react'
 
-export interface ChartLegendProps extends React.HTMLAttributes<HTMLDivElement> {}
-
-export function ChartLegend({ className, ...props }: ChartLegendProps) {
-  return (
-    <div
-      className={cn("flex flex-wrap items-center gap-4 text-sm", className)}
-      {...props}
-    />
-  )
+interface ChartLegendProps {
+  content?: React.ComponentType<any>
 }
 
-export function ChartLegendContent({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("flex items-center gap-1", className)} {...props} />
+interface ChartLegendContentProps {
+  payload?: any[]
+}
+
+export const ChartLegend: React.FC<ChartLegendProps> = ({ content: Content = ChartLegendContent }) => {
+  return <Content />
+}
+
+export const ChartLegendContent: React.FC<ChartLegendContentProps> = ({ payload }) => {
+  if (!payload || !payload.length) {
+    return null
+  }
+
+  return (
+    <div className="flex flex-wrap gap-4 justify-center">
+      {payload.map((entry, index) => (
+        <div key={index} className="flex items-center gap-2">
+          <div 
+            className="h-3 w-3 rounded-sm" 
+            style={{ backgroundColor: entry.color }}
+          />
+          <span className="text-sm text-muted-foreground">
+            {entry.value}
+          </span>
+        </div>
+      ))}
+    </div>
+  )
 }
