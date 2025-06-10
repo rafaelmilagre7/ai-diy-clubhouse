@@ -4184,6 +4184,39 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limit_attempts: {
+        Row: {
+          attempts: number | null
+          block_level: number | null
+          block_until: string | null
+          created_at: string | null
+          first_attempt: string | null
+          id: string
+          identifier: string
+          last_attempt: string | null
+        }
+        Insert: {
+          attempts?: number | null
+          block_level?: number | null
+          block_until?: string | null
+          created_at?: string | null
+          first_attempt?: string | null
+          id?: string
+          identifier: string
+          last_attempt?: string | null
+        }
+        Update: {
+          attempts?: number | null
+          block_level?: number | null
+          block_until?: string | null
+          created_at?: string | null
+          first_attempt?: string | null
+          id?: string
+          identifier?: string
+          last_attempt?: string | null
+        }
+        Relationships: []
+      }
       referral_benefits: {
         Row: {
           benefit_type: string
@@ -5802,6 +5835,10 @@ export type Database = {
         Returns: Json
       }
       cleanup_expired_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      cleanup_old_rate_limits: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }

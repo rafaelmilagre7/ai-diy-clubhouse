@@ -11,15 +11,6 @@ const RATE_LIMIT_CONFIG = {
   CLEANUP_INTERVAL: 86400000 // 24h em ms
 }
 
-// Cache em memória para rate limiting (thread-safe para Edge Functions)
-const rateLimitCache = new Map<string, {
-  attempts: number;
-  firstAttempt: number;
-  lastAttempt: number;
-  blockUntil?: number;
-  blockLevel: number;
-}>()
-
 // Função para criar identificador seguro (hash do IP + email)
 function createSecureIdentifier(ip: string, email: string): string {
   const data = `${ip}:${email.toLowerCase()}`
@@ -38,110 +29,176 @@ function addJitter(): number {
   return Math.random() * RATE_LIMIT_CONFIG.JITTER_MAX
 }
 
-// Função para verificar e aplicar rate limiting
-function checkRateLimit(identifier: string): {
+// Função para verificar e aplicar rate limiting usando tabela persistente
+async function checkRateLimit(supabase: any, identifier: string): Promise<{
   allowed: boolean;
   reason?: string;
   waitTime?: number;
   remaining?: number;
-} {
+}> {
   const now = Date.now()
   const windowStart = now - (RATE_LIMIT_CONFIG.WINDOW_MINUTES * 60 * 1000)
   
-  // Obter ou criar entrada no cache
-  let entry = rateLimitCache.get(identifier)
-  
-  if (!entry) {
-    entry = {
-      attempts: 0,
-      firstAttempt: now,
-      lastAttempt: now,
-      blockLevel: 0
-    }
-    rateLimitCache.set(identifier, entry)
-  }
-  
-  // Verificar se ainda está bloqueado
-  if (entry.blockUntil && now < entry.blockUntil) {
-    const waitTime = Math.ceil((entry.blockUntil - now) / 1000)
-    return {
-      allowed: false,
-      reason: `Muitas tentativas. Tente novamente em ${waitTime} segundos.`,
-      waitTime
-    }
-  }
-  
-  // Limpar bloqueio expirado
-  if (entry.blockUntil && now >= entry.blockUntil) {
-    entry.blockUntil = undefined
-  }
-  
-  // Resetar contador se janela expirou
-  if (entry.firstAttempt < windowStart) {
-    entry.attempts = 0
-    entry.firstAttempt = now
-  }
-  
-  // Verificar se excedeu o limite
-  if (entry.attempts >= RATE_LIMIT_CONFIG.MAX_ATTEMPTS) {
-    // Aplicar bloqueio progressivo
-    const blockDuration = RATE_LIMIT_CONFIG.PROGRESSIVE_BLOCKS[
-      Math.min(entry.blockLevel, RATE_LIMIT_CONFIG.PROGRESSIVE_BLOCKS.length - 1)
-    ]
+  try {
+    // Buscar entrada existente
+    const { data: existingEntry, error: selectError } = await supabase
+      .from('rate_limit_attempts')
+      .select('*')
+      .eq('identifier', identifier)
+      .single()
     
-    entry.blockUntil = now + blockDuration + addJitter()
-    entry.blockLevel++
-    
-    const waitTime = Math.ceil(blockDuration / 1000)
-    return {
-      allowed: false,
-      reason: `Limite de tentativas excedido. Tente novamente em ${waitTime} segundos.`,
-      waitTime
+    if (selectError && selectError.code !== 'PGRST116') { // PGRST116 = not found
+      console.error('Error checking rate limit:', selectError)
+      // Em caso de erro, permitir (fail-open para não bloquear usuários legítimos)
+      return { allowed: true, remaining: RATE_LIMIT_CONFIG.MAX_ATTEMPTS }
     }
-  }
-  
-  return {
-    allowed: true,
-    remaining: RATE_LIMIT_CONFIG.MAX_ATTEMPTS - entry.attempts
+    
+    let entry = existingEntry
+    
+    // Se não existe entrada, criar uma nova
+    if (!entry) {
+      const { data: newEntry, error: insertError } = await supabase
+        .from('rate_limit_attempts')
+        .insert({
+          identifier,
+          attempts: 0,
+          first_attempt: new Date(now).toISOString(),
+          last_attempt: new Date(now).toISOString(),
+          block_level: 0
+        })
+        .select()
+        .single()
+      
+      if (insertError) {
+        console.error('Error creating rate limit entry:', insertError)
+        return { allowed: true, remaining: RATE_LIMIT_CONFIG.MAX_ATTEMPTS }
+      }
+      
+      entry = newEntry
+    }
+    
+    // Verificar se ainda está bloqueado
+    if (entry.block_until && new Date(entry.block_until).getTime() > now) {
+      const waitTime = Math.ceil((new Date(entry.block_until).getTime() - now) / 1000)
+      return {
+        allowed: false,
+        reason: `Muitas tentativas. Tente novamente em ${waitTime} segundos.`,
+        waitTime
+      }
+    }
+    
+    // Resetar contador se janela expirou
+    const firstAttemptTime = new Date(entry.first_attempt).getTime()
+    if (firstAttemptTime < windowStart) {
+      const { error: resetError } = await supabase
+        .from('rate_limit_attempts')
+        .update({
+          attempts: 0,
+          first_attempt: new Date(now).toISOString(),
+          last_attempt: new Date(now).toISOString(),
+          block_until: null
+        })
+        .eq('identifier', identifier)
+      
+      if (resetError) {
+        console.error('Error resetting rate limit:', resetError)
+      }
+      
+      return { allowed: true, remaining: RATE_LIMIT_CONFIG.MAX_ATTEMPTS }
+    }
+    
+    // Verificar se excedeu o limite
+    if (entry.attempts >= RATE_LIMIT_CONFIG.MAX_ATTEMPTS) {
+      // Aplicar bloqueio progressivo
+      const blockDuration = RATE_LIMIT_CONFIG.PROGRESSIVE_BLOCKS[
+        Math.min(entry.block_level || 0, RATE_LIMIT_CONFIG.PROGRESSIVE_BLOCKS.length - 1)
+      ]
+      
+      const blockUntil = new Date(now + blockDuration + addJitter()).toISOString()
+      
+      const { error: blockError } = await supabase
+        .from('rate_limit_attempts')
+        .update({
+          block_until: blockUntil,
+          block_level: (entry.block_level || 0) + 1,
+          last_attempt: new Date(now).toISOString()
+        })
+        .eq('identifier', identifier)
+      
+      if (blockError) {
+        console.error('Error applying rate limit block:', blockError)
+      }
+      
+      const waitTime = Math.ceil(blockDuration / 1000)
+      return {
+        allowed: false,
+        reason: `Limite de tentativas excedido. Tente novamente em ${waitTime} segundos.`,
+        waitTime
+      }
+    }
+    
+    return {
+      allowed: true,
+      remaining: RATE_LIMIT_CONFIG.MAX_ATTEMPTS - entry.attempts
+    }
+  } catch (error) {
+    console.error('Unexpected error in rate limiting:', error)
+    // Em caso de erro inesperado, permitir (fail-open)
+    return { allowed: true, remaining: RATE_LIMIT_CONFIG.MAX_ATTEMPTS }
   }
 }
 
-// Função para registrar tentativa
-function recordAttempt(identifier: string, success: boolean) {
-  const now = Date.now()
-  let entry = rateLimitCache.get(identifier)
+// Função para registrar tentativa usando tabela persistente
+async function recordAttempt(supabase: any, identifier: string, success: boolean): Promise<void> {
+  const now = new Date().toISOString()
   
-  if (!entry) {
-    entry = {
-      attempts: 0,
-      firstAttempt: now,
-      lastAttempt: now,
-      blockLevel: 0
+  try {
+    if (success) {
+      // Sucesso: diminuir contador gradualmente
+      const { error } = await supabase.rpc('sql', {
+        query: `
+          UPDATE rate_limit_attempts 
+          SET attempts = GREATEST(0, attempts - 1),
+              block_level = GREATEST(0, block_level - 1),
+              last_attempt = $1
+          WHERE identifier = $2
+        `,
+        params: [now, identifier]
+      })
+      
+      if (error) {
+        console.error('Error recording successful attempt:', error)
+      }
+    } else {
+      // Falha: incrementar contador
+      const { error } = await supabase.rpc('sql', {
+        query: `
+          UPDATE rate_limit_attempts 
+          SET attempts = attempts + 1,
+              last_attempt = $1
+          WHERE identifier = $2
+        `,
+        params: [now, identifier]
+      })
+      
+      if (error) {
+        console.error('Error recording failed attempt:', error)
+      }
     }
+  } catch (error) {
+    console.error('Unexpected error recording attempt:', error)
   }
-  
-  if (success) {
-    // Sucesso: resetar contador gradualmente
-    entry.attempts = Math.max(0, entry.attempts - 1)
-    entry.blockLevel = Math.max(0, entry.blockLevel - 1)
-  } else {
-    // Falha: incrementar contador
-    entry.attempts++
-    entry.lastAttempt = now
-  }
-  
-  rateLimitCache.set(identifier, entry)
 }
 
-// Função para cleanup do cache
-function cleanupCache() {
-  const now = Date.now()
-  const expireTime = now - RATE_LIMIT_CONFIG.CLEANUP_INTERVAL
-  
-  for (const [key, entry] of rateLimitCache.entries()) {
-    if (entry.lastAttempt < expireTime && (!entry.blockUntil || entry.blockUntil < now)) {
-      rateLimitCache.delete(key)
+// Função para cleanup do cache usando a função do banco
+async function cleanupCache(supabase: any): Promise<void> {
+  try {
+    const { error } = await supabase.rpc('cleanup_old_rate_limits')
+    if (error) {
+      console.error('Error during cleanup:', error)
     }
+  } catch (error) {
+    console.error('Unexpected error during cleanup:', error)
   }
 }
 
@@ -173,20 +230,21 @@ Deno.serve(async (req) => {
       )
     }
     
+    // Criar cliente Supabase para operações de sistema
+    const serviceSupabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+    
     // Criar identificador seguro
     const identifier = createSecureIdentifier(clientIP, email)
     
-    // Verificar rate limiting
-    const rateLimitCheck = checkRateLimit(identifier)
+    // Verificar rate limiting usando tabela persistente
+    const rateLimitCheck = await checkRateLimit(serviceSupabase, identifier)
     
     if (!rateLimitCheck.allowed) {
       // Log da tentativa bloqueada
-      const supabase = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-      )
-      
-      await supabase.from('audit_logs').insert({
+      await serviceSupabase.from('audit_logs').insert({
         user_id: null,
         event_type: 'security_violation',
         action: 'login_rate_limited',
@@ -227,14 +285,9 @@ Deno.serve(async (req) => {
     
     // Registrar resultado da tentativa
     const loginSuccess = !error && data.user
-    recordAttempt(identifier, loginSuccess)
+    await recordAttempt(serviceSupabase, identifier, loginSuccess)
     
     // Log da tentativa de autenticação
-    const serviceSupabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
-    
     await serviceSupabase.from('audit_logs').insert({
       user_id: loginSuccess ? data.user?.id : null,
       event_type: loginSuccess ? 'auth_success' : 'auth_failure',
@@ -251,9 +304,9 @@ Deno.serve(async (req) => {
       severity: loginSuccess ? 'info' : 'low'
     })
     
-    // Cleanup periódico do cache
-    if (Math.random() < 0.01) { // 1% chance
-      cleanupCache()
+    // Cleanup periódico do cache (1% chance)
+    if (Math.random() < 0.01) {
+      await cleanupCache(serviceSupabase)
     }
     
     if (error) {
