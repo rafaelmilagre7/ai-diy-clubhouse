@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
+import { getUserRoleName } from "@/lib/supabase/types";
 
 export const useLayoutAuthentication = () => {
   const { user, profile, isAdmin, isLoading, setIsLoading } = useAuth();
@@ -44,14 +45,14 @@ export const useLayoutAuthentication = () => {
     }
   }, [isLoading, retryCount, setIsLoading]);
 
-  // Check user role quando profile carrega (com proteções)
+  // Check user role quando profile carrega (com proteções) - agora usa role_id
   useEffect(() => {
     if (!profile || redirectChecked || !isMounted.current || !user || isLoading) {
       return;
     }
     
     // Validar se o perfil tem dados mínimos
-    if (!profile.id || !profile.role) {
+    if (!profile.id || !profile.role_id) {
       console.warn("⚠️ [AUTH] Perfil inválido detectado");
       return;
     }
@@ -60,7 +61,8 @@ export const useLayoutAuthentication = () => {
     setRetryCount(0);
     
     // Apenas redirecionar admin se estiver em página não-admin
-    if (profile.role === 'admin' && !window.location.pathname.startsWith('/admin')) {
+    const roleName = getUserRoleName(profile);
+    if (roleName === 'admin' && !window.location.pathname.startsWith('/admin')) {
       console.info("🔄 [AUTH] Admin detectado, redirecionando para área administrativa");
       toast.success("Redirecionando para área administrativa");
       navigate('/admin', { replace: true });

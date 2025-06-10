@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/auth";
 import { useOnboardingStatus } from "@/components/onboarding/hooks/useOnboardingStatus";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { useEffect, useState, useRef } from "react";
+import { getUserRoleName } from "@/lib/supabase/types";
 
 const RootRedirect = () => {
   const { user, profile, isAdmin, isLoading: authLoading } = useAuth();
@@ -29,10 +30,11 @@ const RootRedirect = () => {
   if (forceRedirect) {
     console.log("🚨 [ROOT REDIRECT] Redirecionamento forçado por timeout");
     if (user && profile) {
-      if (isAdmin || profile.role === 'admin') {
+      const roleName = getUserRoleName(profile);
+      if (isAdmin || roleName === 'admin') {
         return <Navigate to="/admin" replace />;
       }
-      if (profile.role === 'formacao') {
+      if (roleName === 'formacao') {
         return <Navigate to="/formacao" replace />;
       }
       return <Navigate to="/dashboard" replace />;
@@ -65,13 +67,16 @@ const RootRedirect = () => {
     return <Navigate to="/onboarding" replace />;
   }
   
+  // Usar getUserRoleName para determinar redirecionamento
+  const roleName = getUserRoleName(profile);
+  
   // Se é admin
-  if (isAdmin || profile.role === 'admin') {
+  if (isAdmin || roleName === 'admin') {
     return <Navigate to="/admin" replace />;
   }
   
   // Se é formação
-  if (profile.role === 'formacao') {
+  if (roleName === 'formacao') {
     return <Navigate to="/formacao" replace />;
   }
   

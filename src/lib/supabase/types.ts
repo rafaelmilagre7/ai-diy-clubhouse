@@ -27,6 +27,16 @@ export type LearningComment = Database['public']['Tables']['learning_comments'][
 // Outros tipos existentes
 export * from './types/database.types';
 
+// Interface para dados de role do usuário
+export interface UserRoleData {
+  id: string;
+  name: string;
+  description?: string;
+  permissions?: any;
+  is_system?: boolean;
+}
+
+// Enum para tipos de roles conhecidos (compatibilidade)
 export type UserRole = 'admin' | 'formacao' | 'membro_club';
 
 export interface UserProfile {
@@ -36,13 +46,42 @@ export interface UserProfile {
   avatar_url: string | null;
   company_name: string | null;
   industry: string | null;
-  role: UserRole;
-  role_id?: string;
-  user_roles?: any;
+  role_id: string | null; // Campo principal para roles
+  role?: UserRole; // Campo legado - deprecado, mas mantido para compatibilidade
+  user_roles?: UserRoleData | null; // Dados da role via join
   created_at: string;
   onboarding_completed: boolean;
   onboarding_completed_at: string | null;
 }
+
+// Função utilitária para obter o nome da role
+export const getUserRoleName = (profile: UserProfile | null): string => {
+  if (!profile) return 'member';
+  
+  // Priorizar user_roles (novo sistema)
+  if (profile.user_roles?.name) {
+    return profile.user_roles.name;
+  }
+  
+  // Fallback para campo legado durante migração
+  if (profile.role) {
+    return profile.role;
+  }
+  
+  return 'member';
+};
+
+// Função utilitária para verificar se é admin
+export const isAdminRole = (profile: UserProfile | null): boolean => {
+  const roleName = getUserRoleName(profile);
+  return roleName === 'admin';
+};
+
+// Função utilitária para verificar se é formação
+export const isFormacaoRole = (profile: UserProfile | null): boolean => {
+  const roleName = getUserRoleName(profile);
+  return roleName === 'formacao';
+};
 
 // Interface para Solution (sem dependência de tabela inexistente)
 export interface Solution {

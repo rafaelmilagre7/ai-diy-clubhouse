@@ -1,5 +1,6 @@
+
 import React, { useState } from "react";
-import { UserProfile } from "@/lib/supabase";
+import { UserProfile, getUserRoleName } from "@/lib/supabase";
 import {
   Table,
   TableBody,
@@ -82,79 +83,82 @@ export const UsersTable: React.FC<UsersTableProps> = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>
-                  <div className="flex items-center space-x-3">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.avatar_url || undefined} />
-                      <AvatarFallback>
-                        {user.name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="font-medium">{user.name || 'Sem nome'}</span>
-                  </div>
-                </TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>
-                  <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                    {user.role}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline" className="text-green-600">
-                    Ativo
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : 'N/A'}
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {canEditRoles && (
-                        <DropdownMenuItem onClick={() => onEditRole(user)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Editar Papel
-                        </DropdownMenuItem>
-                      )}
-                      {canResetPasswords && (
-                        <DropdownMenuItem onClick={() => onResetPassword(user)}>
-                          <Key className="mr-2 h-4 w-4" />
-                          Redefinir Senha
-                        </DropdownMenuItem>
-                      )}
-                      <DropdownMenuItem onClick={() => handleResetUser(user)}>
-                        <RotateCcw className="mr-2 h-4 w-4" />
-                        Reset Completo
-                      </DropdownMenuItem>
-                      {canDeleteUsers && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem 
-                            onClick={() => onDeleteUser(user)}
-                            className="text-red-600"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Excluir
+            {users.map((user) => {
+              const roleName = getUserRoleName(user);
+              
+              return (
+                <TableRow key={user.id}>
+                  <TableCell>
+                    <div className="flex items-center space-x-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={user.avatar_url || undefined} />
+                        <AvatarFallback>
+                          {user.name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="font-medium">{user.name || 'Sem nome'}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    <Badge variant={roleName === 'admin' ? 'default' : 'secondary'}>
+                      {roleName}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">Ativo</Badge>
+                  </TableCell>
+                  <TableCell>
+                    {new Date(user.created_at).toLocaleDateString('pt-BR')}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <span className="sr-only">Abrir menu</span>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {canEditRoles && (
+                          <DropdownMenuItem onClick={() => onEditRole(user)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Editar papel
                           </DropdownMenuItem>
-                        </>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
+                        )}
+                        {canResetPasswords && (
+                          <DropdownMenuItem onClick={() => onResetPassword(user)}>
+                            <Key className="mr-2 h-4 w-4" />
+                            Redefinir senha
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem onClick={() => handleResetUser(user)}>
+                          <RotateCcw className="mr-2 h-4 w-4" />
+                          Resetar usuário
+                        </DropdownMenuItem>
+                        {canDeleteUsers && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              onClick={() => onDeleteUser(user)}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Excluir usuário
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
 
-      <UserResetDialog
+      <UserResetDialog 
         open={resetDialogOpen}
         onOpenChange={setResetDialogOpen}
         user={selectedUser}

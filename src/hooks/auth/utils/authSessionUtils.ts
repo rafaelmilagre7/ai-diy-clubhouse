@@ -1,13 +1,13 @@
 
 import { supabase } from '@/lib/supabase';
-import { UserProfile } from '@/lib/supabase';
+import { UserProfile, getUserRoleName } from '@/lib/supabase';
 
 // Cache para perfis com TTL
 const profileCache = new Map<string, { profile: UserProfile; timestamp: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 
 /**
- * Processa o perfil do usuário com cache otimizado
+ * Processa o perfil do usuário com cache otimizado - agora usa role_id
  */
 export const processUserProfile = async (
   userId: string,
@@ -37,7 +37,6 @@ export const processUserProfile = async (
         id,
         email,
         name,
-        role,
         role_id,
         avatar_url,
         company_name,
@@ -45,11 +44,12 @@ export const processUserProfile = async (
         created_at,
         onboarding_completed,
         onboarding_completed_at,
-        user_roles (
+        user_roles:role_id (
           id,
           name,
           description,
-          permissions
+          permissions,
+          is_system
         )
       `)
       .eq('id', userId)
@@ -77,9 +77,8 @@ export const processUserProfile = async (
       id: profile.id,
       email: profile.email || email || '',
       name: profile.name || name || null,
-      role: profile.role || 'membro_club',
       role_id: profile.role_id,
-      user_roles: profile.user_roles,
+      user_roles: profile.user_roles as any,
       avatar_url: profile.avatar_url,
       company_name: profile.company_name,
       industry: profile.industry,
@@ -94,7 +93,7 @@ export const processUserProfile = async (
       timestamp: now
     });
 
-    console.log(`✅ [AUTH] Perfil processado com sucesso: ${userProfile.role}`);
+    console.log(`✅ [AUTH] Perfil processado com sucesso: ${getUserRoleName(userProfile)}`);
     return userProfile;
 
   } catch (error) {
@@ -104,7 +103,7 @@ export const processUserProfile = async (
 };
 
 /**
- * Cria um perfil básico para usuário sem perfil
+ * Cria um perfil básico para usuário sem perfil - agora usa role_id
  */
 const createBasicProfile = async (
   userId: string,
@@ -114,11 +113,18 @@ const createBasicProfile = async (
   try {
     console.log(`🆕 [AUTH] Criando perfil básico para: ${userId.substring(0, 8)}***`);
     
+    // Buscar role_id padrão para membro_club
+    const { data: defaultRole } = await supabase
+      .from('user_roles')
+      .select('id, name')
+      .eq('name', 'membro_club')
+      .single();
+
     const profileData = {
       id: userId,
       email: email || '',
       name: name || null,
-      role: 'membro_club', // Role padrão
+      role_id: defaultRole?.id || null,
       onboarding_completed: false,
       created_at: new Date().toISOString(),
     };
@@ -126,7 +132,25 @@ const createBasicProfile = async (
     const { data: newProfile, error } = await supabase
       .from('profiles')
       .insert([profileData])
-      .select()
+      .select(`
+        id,
+        email,
+        name,
+        role_id,
+        avatar_url,
+        company_name,
+        industry,
+        created_at,
+        onboarding_completed,
+        onboarding_completed_at,
+        user_roles:role_id (
+          id,
+          name,
+          description,
+          permissions,
+          is_system
+        )
+      `)
       .single();
 
     if (error) {
@@ -138,9 +162,8 @@ const createBasicProfile = async (
       id: newProfile.id,
       email: newProfile.email || '',
       name: newProfile.name,
-      role: newProfile.role || 'membro_club',
       role_id: newProfile.role_id,
-      user_roles: null,
+      user_roles: newProfile.user_roles as any,
       avatar_url: newProfile.avatar_url,
       company_name: newProfile.company_name,
       industry: newProfile.industry,
@@ -179,6 +202,6 @@ export const validateProfile = (profile: any): boolean => {
     profile &&
     profile.id &&
     profile.email &&
-    profile.role
+    profile.role_id
   );
 };

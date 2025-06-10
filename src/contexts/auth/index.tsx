@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import { UserProfile } from '@/lib/supabase';
+import { UserProfile, getUserRoleName, isAdminRole, isFormacaoRole } from '@/lib/supabase';
 import { useAuthMethods } from './hooks/useAuthMethods';
 import { useAuthStateManager } from './hooks/useAuthStateManager';
 import { clearProfileCache } from '@/hooks/auth/utils/authSessionUtils';
@@ -69,23 +69,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         hasUser: !!user,
         userEmail: user?.email || 'N/A',
         hasProfile: !!profile,
-        profileRole: profile?.role || 'N/A',
-        isAdmin: profile?.role === 'admin',
-        isFormacao: profile?.role === 'formacao',
+        roleName: getUserRoleName(profile),
+        isAdmin: isAdminRole(profile),
+        isFormacao: isFormacaoRole(profile),
         isLoading
       });
     }
   }, [user, profile, isLoading]);
 
-  // Computar isAdmin com cache
+  // Computar isAdmin com cache - agora usa role_id
   const isAdmin = React.useMemo(() => {
-    return profile?.role === 'admin';
-  }, [profile?.role]);
+    return isAdminRole(profile);
+  }, [profile]);
 
-  // Computar isFormacao
+  // Computar isFormacao - agora usa role_id
   const isFormacao = React.useMemo(() => {
-    return profile?.role === 'formacao';
-  }, [profile?.role]);
+    return isFormacaoRole(profile);
+  }, [profile]);
 
   // Inicialização única
   useEffect(() => {

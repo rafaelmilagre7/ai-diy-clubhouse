@@ -1,8 +1,9 @@
 
-import { supabase, UserProfile, UserRole } from '@/lib/supabase';
+import { supabase, UserProfile } from '@/lib/supabase';
+import { getUserRoleName } from '@/lib/supabase/types';
 
 /**
- * Fetch user profile from Supabase
+ * Fetch user profile from Supabase com join para user_roles
  */
 export const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
   try {
@@ -10,7 +11,25 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
     
     const { data, error } = await supabase
       .from('profiles')
-      .select('*')
+      .select(`
+        id,
+        email,
+        name,
+        role_id,
+        avatar_url,
+        company_name,
+        industry,
+        created_at,
+        onboarding_completed,
+        onboarding_completed_at,
+        user_roles:role_id (
+          id,
+          name,
+          description,
+          permissions,
+          is_system
+        )
+      `)
       .eq('id', userId)
       .single();
 
@@ -46,10 +65,16 @@ export const createUserProfileIfNeeded = async (
   name: string = 'Usuário'
 ): Promise<UserProfile | null> => {
   try {
-    // Determine role as membro_club by default (production setting)
-    const userRole: UserRole = 'membro_club';
+    console.log(`Tentando criar perfil para ${email}`);
     
-    console.log(`Tentando criar perfil para ${email} com papel ${userRole}`);
+    // Buscar role_id padrão para membro_club
+    const { data: defaultRole } = await supabase
+      .from('user_roles')
+      .select('id')
+      .eq('name', 'membro_club')
+      .single();
+    
+    const defaultRoleId = defaultRole?.id || null;
     
     // Use upsert with conflict handling to avoid duplications
     const { data: newProfile, error: insertError } = await supabase
@@ -58,7 +83,7 @@ export const createUserProfileIfNeeded = async (
         id: userId,
         email,
         name,
-        role: userRole,
+        role_id: defaultRoleId,
         created_at: new Date().toISOString(),
         avatar_url: null,
         company_name: null,
@@ -66,19 +91,36 @@ export const createUserProfileIfNeeded = async (
         onboarding_completed: false,
         onboarding_completed_at: null
       })
-      .select()
+      .select(`
+        id,
+        email,
+        name,
+        role_id,
+        avatar_url,
+        company_name,
+        industry,
+        created_at,
+        onboarding_completed,
+        onboarding_completed_at,
+        user_roles:role_id (
+          id,
+          name,
+          description,
+          permissions,
+          is_system
+        )
+      `)
       .single();
       
     if (insertError) {
-      // If insertion fails due to policies, try using RPC function created in SQL
+      // If insertion fails due to policies, try using fallback
       if (insertError.message.includes('policy') || insertError.message.includes('permission denied')) {
         console.warn('Erro de política ao criar perfil. Continuando com perfil alternativo:', insertError);
-        // Return minimal profile to allow application use
-        return createFallbackProfile(userId, email, name, userRole);
+        return createFallbackProfile(userId, email, name, defaultRoleId);
       }
       
       console.error('Erro ao criar perfil:', insertError);
-      return createFallbackProfile(userId, email, name, userRole);
+      return createFallbackProfile(userId, email, name, defaultRoleId);
     }
     
     console.log('Perfil criado com sucesso:', newProfile);
@@ -86,8 +128,7 @@ export const createUserProfileIfNeeded = async (
   } catch (error) {
     console.error('Erro inesperado ao criar perfil:', error);
     // Return minimal profile in case of error to not block application
-    const userRole: UserRole = 'membro_club';
-    return createFallbackProfile(userId, email, name, userRole);
+    return createFallbackProfile(userId, email, name, null);
   }
 };
 
@@ -98,14 +139,15 @@ const createFallbackProfile = (
   userId: string, 
   email: string, 
   name: string, 
-  role: UserRole
+  roleId: string | null
 ): UserProfile => {
-  console.log(`Criando perfil alternativo para ${email} com papel ${role}`);
+  console.log(`Criando perfil alternativo para ${email}`);
   return {
     id: userId,
     email,
     name,
-    role,
+    role_id: roleId,
+    user_roles: roleId ? { id: roleId, name: 'membro_club' } : null,
     avatar_url: null,
     company_name: null,
     industry: null,

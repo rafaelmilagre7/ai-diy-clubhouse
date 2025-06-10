@@ -31,7 +31,7 @@ export function useUserRoles() {
       // Buscar dados antigos para auditoria
       const { data: oldProfileData } = await supabase
         .from("profiles")
-        .select("role, role_id")
+        .select("role_id")
         .eq("id", userId)
         .single();
       
@@ -44,7 +44,7 @@ export function useUserRoles() {
         { role_id: roleId }
       );
       
-      // Atualizar o papel do usuário
+      // Atualizar o papel do usuário - apenas role_id
       const { data, error } = await supabase
         .from("profiles")
         .update({ role_id: roleId })
@@ -81,7 +81,16 @@ export function useUserRoles() {
       
       const { data, error } = await supabase
         .from("profiles")
-        .select("role_id, user_roles(*)")
+        .select(`
+          role_id,
+          user_roles:role_id (
+            id,
+            name,
+            description,
+            permissions,
+            is_system
+          )
+        `)
         .eq("id", userId)
         .single();
       
