@@ -21,6 +21,13 @@ import AdminLayout from "@/components/layout/admin/AdminLayout";
 import MemberLayout from "@/components/layout/MemberLayout";
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 
+// Importar componentes de páginas de membro que estavam faltando
+import Solutions from "@/pages/member/Solutions";
+import Tools from "@/pages/member/Tools";
+import ToolDetails from "@/pages/member/ToolDetails";
+import Profile from "@/pages/member/Profile";
+import EditProfile from "@/pages/member/EditProfile";
+
 // Query client otimizado
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -65,11 +72,61 @@ function App() {
                     } 
                   />
                   <Route 
+                    path="/solutions" 
+                    element={
+                      <ProtectedRoutes>
+                        <MemberLayout>
+                          <Solutions />
+                        </MemberLayout>
+                      </ProtectedRoutes>
+                    } 
+                  />
+                  <Route 
                     path="/solution/:id" 
                     element={
                       <ProtectedRoutes>
                         <MemberLayout>
                           <SolutionDetails />
+                        </MemberLayout>
+                      </ProtectedRoutes>
+                    } 
+                  />
+                  <Route 
+                    path="/tools" 
+                    element={
+                      <ProtectedRoutes>
+                        <MemberLayout>
+                          <Tools />
+                        </MemberLayout>
+                      </ProtectedRoutes>
+                    } 
+                  />
+                  <Route 
+                    path="/tools/:id" 
+                    element={
+                      <ProtectedRoutes>
+                        <MemberLayout>
+                          <ToolDetails />
+                        </MemberLayout>
+                      </ProtectedRoutes>
+                    } 
+                  />
+                  <Route 
+                    path="/profile" 
+                    element={
+                      <ProtectedRoutes>
+                        <MemberLayout>
+                          <Profile />
+                        </MemberLayout>
+                      </ProtectedRoutes>
+                    } 
+                  />
+                  <Route 
+                    path="/profile/edit" 
+                    element={
+                      <ProtectedRoutes>
+                        <MemberLayout>
+                          <EditProfile />
                         </MemberLayout>
                       </ProtectedRoutes>
                     } 
