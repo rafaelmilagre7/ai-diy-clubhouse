@@ -1,7 +1,7 @@
 
 import { useState } from "react";
-import { useAdminDashboardData } from "@/hooks/admin/useAdminDashboardData";
-import { AdminDashboardLayout } from "@/components/admin/dashboard/AdminDashboardLayout";
+import { useRealAdminDashboardData } from "@/hooks/admin/useRealAdminDashboardData";
+import { RealAdminDashboardLayout } from "@/components/admin/dashboard/RealAdminDashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { logger } from "@/utils/logger";
@@ -12,13 +12,11 @@ const AdminDashboard = () => {
   try {
     const {
       statsData,
-      engagementData,
-      completionRateData,
-      recentActivities,
+      activityData,
       loading
-    } = useAdminDashboardData(timeRange);
+    } = useRealAdminDashboardData(timeRange);
 
-    // Fallback para quando os dados não estão disponíveis
+    // Loading state otimizado
     if (loading) {
       logger.debug('AdminDashboard loading state', { timeRange });
       
@@ -29,7 +27,7 @@ const AdminDashboard = () => {
             <Skeleton className="h-10 w-32" />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {Array.from({ length: 4 }).map((_, i) => (
+            {Array.from({ length: 8 }).map((_, i) => (
               <Card key={i}>
                 <CardHeader className="pb-2">
                   <Skeleton className="h-4 w-24" />
@@ -40,6 +38,14 @@ const AdminDashboard = () => {
               </Card>
             ))}
           </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <Skeleton className="h-96 w-full" />
+            </div>
+            <div>
+              <Skeleton className="h-96 w-full" />
+            </div>
+          </div>
         </div>
       );
     }
@@ -47,19 +53,17 @@ const AdminDashboard = () => {
     logger.info('AdminDashboard data loaded successfully', {
       timeRange,
       hasStatsData: !!statsData,
-      engagementDataLength: engagementData?.length || 0,
-      completionDataLength: completionRateData?.length || 0,
-      activitiesCount: recentActivities?.length || 0
+      totalUsers: statsData?.totalUsers || 0,
+      totalEvents: activityData?.totalEvents || 0,
+      activitiesCount: activityData?.userActivities?.length || 0
     });
 
     return (
-      <AdminDashboardLayout
+      <RealAdminDashboardLayout
         timeRange={timeRange}
         setTimeRange={setTimeRange}
-        statsData={statsData || {}}
-        engagementData={engagementData || []}
-        completionRateData={completionRateData || []}
-        recentActivities={recentActivities || []}
+        statsData={statsData}
+        activityData={activityData}
         loading={loading}
       />
     );
@@ -81,7 +85,7 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">
-              O dashboard está sendo carregado. Tente novamente em alguns instantes.
+              Ocorreu um erro ao carregar o dashboard. Tente novamente em alguns instantes.
             </p>
           </CardContent>
         </Card>
