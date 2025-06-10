@@ -34,6 +34,9 @@ import TopicView from '@/pages/member/community/TopicView';
 import CategoryView from '@/pages/member/community/CategoryView';
 import NewTopic from '@/pages/member/community/NewTopic';
 
+// Profile pages
+import NotificationSettingsPage from '@/pages/profile/NotificationSettingsPage';
+
 // Função helper para criar rotas protegidas com MemberLayout
 const createProtectedRoute = (path: string, Component: React.ComponentType<any>) => ({
   path,
@@ -57,6 +60,7 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/tools/:id", ToolDetails),
   createProtectedRoute("/profile", Profile),
   createProtectedRoute("/profile/edit", EditProfile),
+  createProtectedRoute("/profile/notifications", NotificationSettingsPage),
   createProtectedRoute("/solution/:id", SolutionDetails),
   createProtectedRoute("/solution/:id/certificate", SolutionCertificate),
   createProtectedRoute("/implement/:id/:moduleIdx", SolutionImplementation),
