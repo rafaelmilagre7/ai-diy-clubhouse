@@ -19,7 +19,7 @@ export interface Implementation {
   last_activity?: string;
 }
 
-// CORREÇÃO BUG MÉDIO 1: Implementação de retry automático com backoff exponencial
+// CORREÇÃO BUG MÉDIO 1: Implementação de retry automático com backoff exponencial e jitter
 const executeWithRetry = async <T>(
   operation: () => Promise<T>,
   operationName: string,
@@ -50,9 +50,12 @@ const executeWithRetry = async <T>(
       
       // Apenas tentar novamente se for erro de rede
       if (isNetworkError) {
-        // Backoff exponencial: 1s, 2s, 4s
-        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 4000);
-        console.log(`🔄 [PROFILE] Aguardando ${delay}ms antes da próxima tentativa`);
+        // CORREÇÃO: Backoff exponencial com jitter para prevenir thundering herd
+        const baseDelay = Math.min(1000 * Math.pow(2, attempt - 1), 4000);
+        const jitter = Math.random() * 500; // 0ms a 500ms conforme solicitado
+        const delay = baseDelay + jitter;
+        
+        console.log(`🔄 [PROFILE] Aguardando ${Math.round(delay)}ms (base: ${baseDelay}ms + jitter: ${Math.round(jitter)}ms) antes da próxima tentativa`);
         await new Promise(resolve => setTimeout(resolve, delay));
       } else {
         // Se não é erro de rede, falhar imediatamente
@@ -86,7 +89,7 @@ export const useProfileData = () => {
         setLoading(true);
         console.log(`🔍 [PROFILE] Iniciando busca de dados para usuário: ${user.id.substring(0, 8)}***`);
         
-        // CORREÇÃO: Usar executeWithRetry para robustez de rede
+        // CORREÇÃO: Usar executeWithRetry para robustez de rede com jitter
         await executeWithRetry(async () => {
           // Fetch user's completed or in-progress solutions
           const { data: progressData, error: progressError } = await supabase
