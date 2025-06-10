@@ -1,3 +1,4 @@
+
 import { Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -13,7 +14,7 @@ import MemberDashboard from "@/pages/member/Dashboard";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminSolutions from "@/pages/admin/AdminSolutions";
 import SolutionDetails from "@/pages/member/SolutionDetails";
-import OnboardingPage from "@/components/onboarding/OnboardingPage";
+import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
 import FormacaoDashboard from "@/pages/formacao/FormacaoDashboard";
 import OptimizedDashboard from "@/pages/member/OptimizedDashboard";
 
@@ -47,7 +48,7 @@ function App() {
                 <Routes>
                   <Route path="/" element={<RootRedirect />} />
                   <Route path="/login" element={<AuthLayout />} />
-                  <Route path="/onboarding" element={<OnboardingPage />} />
+                  <Route path="/onboarding" element={<OnboardingWizard />} />
                   
                   {/* Rotas de Membro */}
                   <Route path="/dashboard" element={<OptimizedDashboard />} />

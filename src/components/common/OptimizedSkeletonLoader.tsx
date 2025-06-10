@@ -138,7 +138,7 @@ const OptimizedSkeletonLoader = memo<OptimizedSkeletonLoaderProps>(({
       default:
         return <Skeleton className={cn("h-4 w-full", baseClass)} />;
     }
-  }, [variant, count, baseClass]);
+  }, [variant, count, className, animate]);
 
   return skeletonContent;
 });
