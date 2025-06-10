@@ -10,7 +10,8 @@ import {
   UserCheck, 
   Mail, 
   MessageSquare,
-  Stethoscope
+  Stethoscope,
+  GraduationCap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -40,6 +41,11 @@ const navigationItems = [
     title: "Soluções",
     href: "/admin/solutions",
     icon: FileText,
+  },
+  {
+    title: "Formação (LMS)",
+    href: "/formacao",
+    icon: GraduationCap,
   },
   {
     title: "Analytics",
