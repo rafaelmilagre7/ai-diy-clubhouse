@@ -9,47 +9,29 @@ export function useInvitesList() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  // Buscar todos os convites
+  // Buscar todos os convites com uma única query otimizada usando JOINs
   const fetchInvites = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Consulta modificada para evitar o join direto com auth.users
+      // Query otimizada com JOINs para buscar todos os dados necessários de uma vez
       const { data: invitesData, error: invitesError } = await supabase
         .from('invites')
         .select(`
           *,
-          role:role_id(name)
+          role:role_id(name),
+          creator_profile:created_by(name, email)
         `)
         .order('created_at', { ascending: false });
       
       if (invitesError) throw invitesError;
       
-      // Obter IDs dos criadores para buscar seus perfis separadamente
-      const creatorIds = invitesData?.map(invite => invite.created_by) || [];
-      
-      // Buscar dados dos criadores da tabela de perfis
-      const { data: creatorsData, error: creatorsError } = await supabase
-        .from('profiles')
-        .select('id, name, email')
-        .in('id', creatorIds);
-        
-      if (creatorsError) {
-        console.error('Erro ao buscar perfis dos criadores:', creatorsError);
-      }
-      
-      // Mapa de ID para dados do criador
-      const creatorsMap = (creatorsData || []).reduce((acc, profile) => {
-        acc[profile.id] = { name: profile.name, email: profile.email };
-        return acc;
-      }, {} as Record<string, { name?: string, email?: string }>);
-      
-      // Combinar dados de convites com dados de criadores
+      // Transformar os dados para manter compatibilidade com a interface existente
       const enrichedInvites = (invitesData || []).map(invite => ({
         ...invite,
-        creator_name: creatorsMap[invite.created_by]?.name || 'Usuário desconhecido',
-        creator_email: creatorsMap[invite.created_by]?.email
+        creator_name: invite.creator_profile?.name || 'Usuário desconhecido',
+        creator_email: invite.creator_profile?.email
       }));
       
       setInvites(enrichedInvites);

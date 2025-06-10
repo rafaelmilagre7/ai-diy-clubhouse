@@ -16,6 +16,10 @@ export interface Invite {
   role?: {
     name: string;
   };
+  creator_profile?: {
+    name?: string;
+    email?: string;
+  };
   creator_name?: string;
   creator_email?: string;
   last_sent_at?: string;
