@@ -7,6 +7,7 @@ export interface InviteValidationResult {
   needsLogout?: boolean;
   invite?: any;
   suggestions?: string[];
+  debugInfo?: any;
 }
 
 export const validateInviteToken = async (
@@ -17,50 +18,74 @@ export const validateInviteToken = async (
     console.log("🔍 [VALIDATION] Validando token de convite:", token.substring(0, 8) + "***");
 
     if (!token) {
+      await logValidationAttempt(token, false, "Token de convite não fornecido");
       return {
         isValid: false,
         error: "Token de convite não fornecido"
       };
     }
 
-    // Buscar convite - corrigir a consulta para evitar array na propriedade role
-    const { data: invite, error: inviteError } = await supabase
-      .from('invites')
-      .select(`
-        id,
-        email,
-        expires_at,
-        used_at,
-        role_id,
-        created_at,
-        role:user_roles!role_id(name)
-      `)
-      .eq('token', token)
-      .maybeSingle();
+    // Limpar o token (remover espaços, caracteres especiais)
+    const cleanToken = token.trim().replace(/\s+/g, '').replace(/[^A-Za-z0-9]/g, '');
+    
+    console.log(`🔍 [VALIDATION] Token limpo: ${cleanToken.substring(0, 8)}*** (comprimento: ${cleanToken.length})`);
+
+    // Usar a nova função SQL melhorada
+    const { data: invites, error: inviteError } = await supabase
+      .rpc('validate_invite_token_enhanced', { p_token: cleanToken });
 
     if (inviteError) {
       console.error("❌ [VALIDATION] Erro ao buscar convite:", inviteError);
+      await logValidationAttempt(cleanToken, false, `Erro SQL: ${inviteError.message}`);
       return {
         isValid: false,
-        error: "Erro ao verificar convite no sistema"
+        error: "Erro ao verificar convite no sistema",
+        debugInfo: { sqlError: inviteError.message }
       };
     }
 
+    const invite = invites?.[0];
+
     if (!invite) {
-      console.log("❌ [VALIDATION] Convite não encontrado");
+      console.log("❌ [VALIDATION] Convite não encontrado com função melhorada");
+      
+      // Fallback: busca manual direta para debug
+      const { data: debugInvites, error: debugError } = await supabase
+        .from('invites')
+        .select('*')
+        .or(`token.ilike.%${cleanToken.substring(0, 6)}%,token.ilike.%${token.substring(0, 6)}%`)
+        .limit(5);
+
+      const debugInfo = {
+        originalToken: token,
+        cleanToken: cleanToken,
+        tokenLength: cleanToken.length,
+        foundSimilar: debugInvites?.length || 0,
+        similarTokens: debugInvites?.map(inv => ({
+          tokenPreview: inv.token?.substring(0, 8) + '***',
+          expired: new Date(inv.expires_at) < new Date(),
+          used: !!inv.used_at
+        })) || []
+      };
+
+      await logValidationAttempt(cleanToken, false, "Convite não encontrado ou inválido");
+      
       return {
         isValid: false,
         error: "Convite não encontrado ou inválido",
         suggestions: [
           "Verifique se o link do convite está correto",
+          "Certifique-se de que está usando o link completo",
           "Entre em contato com quem enviou o convite"
-        ]
+        ],
+        debugInfo
       };
     }
 
     // Verificar se já foi usado
     if (invite.used_at) {
       console.log("❌ [VALIDATION] Convite já utilizado:", invite.used_at);
+      await logValidationAttempt(cleanToken, false, `Convite já utilizado em ${invite.used_at}`);
       return {
         isValid: false,
         error: `Este convite já foi utilizado em ${new Date(invite.used_at).toLocaleString('pt-BR')}`,
@@ -77,6 +102,7 @@ export const validateInviteToken = async (
     
     if (expiresAt < now) {
       console.log("❌ [VALIDATION] Convite expirado:", invite.expires_at);
+      await logValidationAttempt(cleanToken, false, `Convite expirado em ${invite.expires_at}`);
       return {
         isValid: false,
         error: `Este convite expirou em ${expiresAt.toLocaleString('pt-BR')}`,
@@ -93,6 +119,8 @@ export const validateInviteToken = async (
         usuarioLogado: currentUserEmail,
         convitePara: invite.email
       });
+      
+      await logValidationAttempt(cleanToken, false, `Conflito de email: usuário logado como ${currentUserEmail}, convite para ${invite.email}`);
       
       return {
         isValid: false,
@@ -121,6 +149,8 @@ export const validateInviteToken = async (
       const timeDiff = Math.abs(now.getTime() - profileCreatedAt.getTime());
       const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
       
+      await logValidationAttempt(cleanToken, false, `Perfil já existe para ${invite.email}`);
+      
       return {
         isValid: false,
         error: `Já existe uma conta ativa para ${invite.email} (criada há ${daysDiff} dias)`,
@@ -133,6 +163,7 @@ export const validateInviteToken = async (
     }
 
     console.log("✅ [VALIDATION] Convite válido para:", invite.email);
+    await logValidationAttempt(cleanToken, true, "Convite validado com sucesso");
     
     return {
       isValid: true,
@@ -141,6 +172,8 @@ export const validateInviteToken = async (
 
   } catch (error) {
     console.error("❌ [VALIDATION] Erro inesperado:", error);
+    await logValidationAttempt(token, false, `Erro inesperado: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+    
     return {
       isValid: false,
       error: "Erro interno ao validar convite",
@@ -150,6 +183,24 @@ export const validateInviteToken = async (
         "Entre em contato com o suporte se o problema persistir"
       ]
     };
+  }
+};
+
+// Função auxiliar para registrar tentativas de validação
+const logValidationAttempt = async (
+  token: string,
+  success: boolean,
+  errorMessage?: string
+): Promise<void> => {
+  try {
+    await supabase.rpc('log_invite_validation_attempt', {
+      p_token: token,
+      p_success: success,
+      p_error_message: errorMessage
+    });
+  } catch (error) {
+    // Falhar silenciosamente para não quebrar o fluxo principal
+    console.warn("⚠️ [VALIDATION] Erro ao registrar log:", error);
   }
 };
 
@@ -175,4 +226,22 @@ export const getInviteSecurityRecommendations = () => {
     "Não compartilhe links de convite com outras pessoas",
     "Entre em contato com o administrador se encontrar problemas"
   ];
+};
+
+// Função para gerar URLs de convite padronizadas
+export const generateInviteUrl = (token: string): string => {
+  if (!token) {
+    console.error("❌ [URL-GENERATION] Token vazio");
+    return "";
+  }
+  
+  // Limpar o token
+  const cleanToken = token.trim().replace(/\s+/g, '');
+  
+  // Usar sempre o domínio correto em produção
+  const baseUrl = window.location.origin;
+  const inviteUrl = `${baseUrl}/convite/${encodeURIComponent(cleanToken)}`;
+  
+  console.log("🔗 [URL-GENERATION] URL gerada:", inviteUrl);
+  return inviteUrl;
 };

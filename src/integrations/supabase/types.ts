@@ -6056,6 +6056,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: boolean
       }
+      log_invite_validation_attempt: {
+        Args: { p_token: string; p_success: boolean; p_error_message?: string }
+        Returns: undefined
+      }
       log_permission_change: {
         Args: {
           user_id: string
@@ -6173,6 +6177,26 @@ export type Database = {
       user_has_permission: {
         Args: { user_id: string; permission_code: string }
         Returns: boolean
+      }
+      validate_invite_token_enhanced: {
+        Args: { p_token: string }
+        Returns: {
+          channel_preference: string | null
+          created_at: string
+          created_by: string
+          email: string
+          email_id: string | null
+          email_provider: string | null
+          expires_at: string
+          id: string
+          last_sent_at: string | null
+          notes: string | null
+          phone: string | null
+          role_id: string
+          send_attempts: number | null
+          token: string
+          used_at: string | null
+        }[]
       }
       validate_password_strength: {
         Args: { password: string }

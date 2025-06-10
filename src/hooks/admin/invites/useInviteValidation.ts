@@ -6,70 +6,84 @@ interface ValidationState {
   isValid: boolean;
   errors: string[];
   warnings: string[];
-  suggestions: string[];
+  isValidating: boolean;
 }
 
-export function useInviteValidation() {
+export const useInviteValidation = () => {
   const [validationState, setValidationState] = useState<ValidationState>({
     isValid: true,
     errors: [],
     warnings: [],
-    suggestions: []
+    isValidating: false
   });
 
-  const validateInviteData = useCallback((email: string, roleId: string): ValidationState => {
+  const validateInviteData = useCallback((email: string, roleId: string) => {
     const errors: string[] = [];
     const warnings: string[] = [];
-    
+
     // Validar email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email) {
       errors.push('Email é obrigatório');
-    } else if (!emailRegex.test(email)) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       errors.push('Formato de email inválido');
     }
-    
-    // Validar papel
+
+    // Validar role
     if (!roleId) {
       errors.push('Papel é obrigatório');
     }
-    
-    // Verificar domínios suspeitos
-    if (email && email.includes('@temp') || email.includes('@fake')) {
-      warnings.push('Email parece ser temporário ou fake');
+
+    // Verificar domínios comuns que podem gerar problemas
+    if (email && /^[^\s@]+@(gmail|yahoo|hotmail|outlook)\.(com|com\.br)$/i.test(email)) {
+      warnings.push('Emails de provedores gratuitos podem ter problemas de entrega');
     }
-    
-    const result = {
-      isValid: errors.length === 0,
+
+    const isValid = errors.length === 0;
+
+    setValidationState({
+      isValid,
       errors,
       warnings,
-      suggestions: []
-    };
-    
-    setValidationState(result);
-    return result;
+      isValidating: false
+    });
+
+    return { isValid, errors, warnings };
   }, []);
 
-  const validateInviteTokenAsync = useCallback(async (
-    token: string, 
+  const validateToken = useCallback(async (
+    token: string,
     currentUserEmail?: string
   ): Promise<InviteValidationResult> => {
-    return await validateInviteToken(token, currentUserEmail);
-  }, []);
-
-  const resetValidation = useCallback(() => {
-    setValidationState({
-      isValid: true,
-      errors: [],
-      warnings: [],
-      suggestions: []
-    });
+    setValidationState(prev => ({ ...prev, isValidating: true }));
+    
+    try {
+      const result = await validateInviteToken(token, currentUserEmail);
+      
+      setValidationState(prev => ({
+        ...prev,
+        isValidating: false,
+        isValid: result.isValid,
+        errors: result.isValid ? [] : [result.error || 'Erro na validação'],
+        warnings: result.suggestions || []
+      }));
+      
+      return result;
+    } catch (error) {
+      setValidationState(prev => ({
+        ...prev,
+        isValidating: false,
+        isValid: false,
+        errors: ['Erro interno na validação'],
+        warnings: []
+      }));
+      
+      throw error;
+    }
   }, []);
 
   return {
     validationState,
     validateInviteData,
-    validateInviteTokenAsync,
-    resetValidation
+    validateToken
   };
-}
+};
