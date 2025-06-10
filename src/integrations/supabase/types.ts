@@ -6005,6 +6005,14 @@ export type Database = {
         }
         Returns: string
       }
+      log_security_access: {
+        Args: {
+          p_table_name: string
+          p_operation: string
+          p_resource_id?: string
+        }
+        Returns: undefined
+      }
       log_security_event: {
         Args:
           | {

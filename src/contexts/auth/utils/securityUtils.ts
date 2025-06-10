@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 
 /**
@@ -111,7 +112,7 @@ export const getUserPermissions = async (userId: string): Promise<string[]> => {
   }
 
   try {
-    // CORREÇÃO: Usar try/catch apropriado para RPC call
+    // Log do acesso às permissões usando a nova função
     try {
       await supabase.rpc('log_security_access', {
         p_table_name: 'user_roles',
@@ -219,7 +220,7 @@ export const logSecurityEvent = async (
       return sanitized;
     };
 
-    // Integração com a nova função log_security_access implementada
+    // Usar a nova função log_security_access implementada
     await supabase.rpc('log_security_access', {
       p_table_name: resourceType,
       p_operation: actionType,
