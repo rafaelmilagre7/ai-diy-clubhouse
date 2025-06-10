@@ -4,6 +4,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { validateUserSession, fetchUserProfileSecurely, clearProfileCache } from '@/hooks/auth/utils/authSessionUtils';
 import { UserProfile } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
+import { useGlobalLoading } from '@/hooks/useGlobalLoading';
 
 interface UseAuthStateManagerProps {
   setSession: (session: Session | null) => void;
@@ -18,32 +19,50 @@ export const useAuthStateManager = ({
   setProfile,
   setIsLoading,
 }: UseAuthStateManagerProps) => {
+  const { setLoading: setGlobalLoading, circuitBreakerActive } = useGlobalLoading();
 
   const setupAuthSession = useCallback(async () => {
-    logger.info('[AUTH-STATE] Iniciando setup da sessão de autenticação');
+    logger.info('[AUTH-STATE] Iniciando setup - timeout unificado de 4s');
     
     try {
       setIsLoading(true);
+      setGlobalLoading('auth', true);
 
-      // CORREÇÃO 1: Timeout mais otimizado com Promise.race
+      // Verificação de circuit breaker
+      if (circuitBreakerActive) {
+        logger.warn('[AUTH-STATE] Circuit breaker ativo - setup simplificado');
+        setIsLoading(false);
+        setGlobalLoading('auth', false);
+        return;
+      }
+
+      // Timeout unificado de 4 segundos
       const sessionPromise = validateUserSession();
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Auth timeout")), 5000) // Aumentado para 5s
+        setTimeout(() => reject(new Error("Auth session timeout")), 4000)
       );
 
       let sessionResult;
       try {
         sessionResult = await Promise.race([sessionPromise, timeoutPromise]) as { session: Session | null; user: User | null };
       } catch (timeoutError) {
-        logger.warn('[AUTH-STATE] Timeout na validação de sessão, tentando novamente...');
-        // Segunda tentativa sem timeout
-        sessionResult = await validateUserSession();
+        logger.warn('[AUTH-STATE] Timeout na validação - tentativa final sem timeout');
+        try {
+          sessionResult = await validateUserSession();
+        } catch (finalError) {
+          logger.error('[AUTH-STATE] Falha final na validação:', finalError);
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+          clearProfileCache();
+          return;
+        }
       }
 
       const { session, user } = sessionResult;
       
       if (!session || !user) {
-        logger.info('[AUTH-STATE] Nenhuma sessão válida - limpando estado');
+        logger.info('[AUTH-STATE] Nenhuma sessão válida - estado limpo');
         setSession(null);
         setUser(null);
         setProfile(null);
@@ -51,11 +70,11 @@ export const useAuthStateManager = ({
         return;
       }
 
-      // Definir sessão e usuário primeiro
+      // Definir sessão e usuário
       setSession(session);
       setUser(user);
 
-      // CORREÇÃO 2: Verificação imediata de admin por email (circuit breaker)
+      // Verificação de admin por email (prioridade máxima)
       const isAdminByEmail = user.email && [
         'rafael@viverdeia.ai',
         'admin@viverdeia.ai',
@@ -63,68 +82,56 @@ export const useAuthStateManager = ({
       ].includes(user.email.toLowerCase());
 
       if (isAdminByEmail) {
-        logger.info('[AUTH-STATE] Admin detectado por email - priorizando acesso');
-        // Para admins por email, não bloquear por perfil
+        logger.info('[AUTH-STATE] Admin por email detectado - acesso prioritário');
       }
 
+      // Buscar perfil com timeout próprio (2 segundos)
       try {
-        // CORREÇÃO 3: Buscar perfil com timeout próprio
         const profilePromise = fetchUserProfileSecurely(user.id);
         const profileTimeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error("Profile timeout")), 3000)
+          setTimeout(() => reject(new Error("Profile timeout")), 2000)
         );
 
         let profile;
         try {
           profile = await Promise.race([profilePromise, profileTimeoutPromise]) as UserProfile | null;
         } catch (profileTimeoutError) {
-          logger.warn('[AUTH-STATE] Timeout no perfil, continuando sem perfil completo');
+          logger.warn('[AUTH-STATE] Timeout no perfil');
           profile = null;
         }
         
         if (profile) {
-          // Validação adicional do perfil
           if (profile.id !== user.id) {
-            logger.error('[AUTH-STATE] VIOLAÇÃO DE SEGURANÇA: ID do perfil não confere', {
-              userId: user.id,
-              profileId: profile.id
-            });
-            throw new Error('Violação de segurança detectada no perfil');
+            logger.error('[AUTH-STATE] VIOLAÇÃO DE SEGURANÇA: ID do perfil incorreto');
+            throw new Error('Violação de segurança detectada');
           }
 
           setProfile(profile);
-          
-          logger.info('[AUTH-STATE] Setup de autenticação concluído com sucesso', {
+          logger.info('[AUTH-STATE] ✅ Setup completo', {
             userId: user.id.substring(0, 8) + '***',
-            email: user.email?.substring(0, 3) + '***',
             hasProfile: true,
             roleName: profile.user_roles?.name || 'sem role'
           });
         } else {
-          logger.warn('[AUTH-STATE] Usuário autenticado mas sem perfil');
+          logger.warn('[AUTH-STATE] Sem perfil disponível');
           setProfile(null);
           
-          // Para admins por email, isso é aceitável
           if (!isAdminByEmail) {
             logger.warn('[AUTH-STATE] Usuário sem admin por email e sem perfil');
           }
         }
         
       } catch (profileError) {
-        logger.error('[AUTH-STATE] Erro ao buscar perfil:', profileError);
+        logger.error('[AUTH-STATE] Erro no perfil:', profileError);
         
-        // Se for admin por email, permitir acesso mesmo sem perfil
         if (isAdminByEmail) {
-          logger.info('[AUTH-STATE] Admin por email - permitindo acesso sem perfil');
+          logger.info('[AUTH-STATE] Admin por email - acesso permitido sem perfil');
           setProfile(null);
         } else {
           setProfile(null);
           
-          // Se for erro de segurança, fazer logout completo
-          if (profileError instanceof Error && 
-              (profileError.message.includes('segurança') || 
-               profileError.message.includes('Acesso negado'))) {
-            logger.warn('[AUTH-STATE] Fazendo logout por violação de segurança');
+          if (profileError instanceof Error && profileError.message.includes('segurança')) {
+            logger.warn('[AUTH-STATE] Logout por violação de segurança');
             setSession(null);
             setUser(null);
             clearProfileCache();
@@ -133,12 +140,10 @@ export const useAuthStateManager = ({
       }
 
     } catch (error) {
-      logger.error('[AUTH-STATE] Erro crítico no setup de autenticação:', error);
+      logger.error('[AUTH-STATE] Erro crítico:', error);
       
-      // CORREÇÃO 4: Em caso de erro crítico, limpar tudo mas não bloquear completamente
       if (error instanceof Error && error.message.includes('timeout')) {
-        logger.warn('[AUTH-STATE] Erro de timeout - mantendo sessão básica se possível');
-        // Não limpar sessão em caso de timeout
+        logger.warn('[AUTH-STATE] Erro de timeout - mantendo sessão básica');
       } else {
         setSession(null);
         setUser(null);
@@ -148,9 +153,10 @@ export const useAuthStateManager = ({
       
     } finally {
       setIsLoading(false);
-      logger.info('[AUTH-STATE] Setup de autenticação finalizado');
+      setGlobalLoading('auth', false);
+      logger.info('[AUTH-STATE] ✅ Setup finalizado');
     }
-  }, [setSession, setUser, setProfile, setIsLoading]);
+  }, [setSession, setUser, setProfile, setIsLoading, setGlobalLoading, circuitBreakerActive]);
 
   return { setupAuthSession };
 };

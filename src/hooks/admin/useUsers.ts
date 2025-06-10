@@ -1,48 +1,63 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { UserProfile, getUserRoleName } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
 import { usePermissions, Role } from '@/hooks/auth/usePermissions';
+import { useGlobalLoading } from '@/hooks/useGlobalLoading';
 
 export function useUsers() {
   const { user, isAdmin } = useAuth();
   const { hasPermission } = usePermissions();
+  const { setLoading } = useGlobalLoading();
+  
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLocalLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [error, setError] = useState<Error | null>(null);
+  
+  // Cache e refs para evitar loops
+  const lastSearchQuery = useRef<string>('');
+  const fetchInProgress = useRef(false);
+  const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Verificações de permissão
+  // Verificações de permissão (memoizadas)
   const canManageUsers = isAdmin || hasPermission('users.manage');
   const canAssignRoles = isAdmin || hasPermission('roles.assign');
   const canDeleteUsers = isAdmin || hasPermission('users.delete');
   const canResetPasswords = isAdmin || hasPermission('users.reset_password');
 
-  const fetchUsers = useCallback(async () => {
-    if (!canManageUsers) {
-      console.warn('[USERS] Usuário não tem permissão para gerenciar usuários');
+  // Função de busca otimizada com debounce interno
+  const fetchUsers = useCallback(async (forceRefresh = false) => {
+    if (!canManageUsers || (fetchInProgress.current && !forceRefresh)) {
+      console.warn('[USERS] Busca cancelada - sem permissão ou em progresso');
       return;
     }
 
-    console.log(`[USERS] Iniciando busca de usuários com filtro: "${searchQuery}"`);
-    setLoading(true);
+    // Debounce interno para busca
+    if (searchQuery !== lastSearchQuery.current && !forceRefresh) {
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
+      }
+      
+      fetchTimeoutRef.current = setTimeout(() => {
+        lastSearchQuery.current = searchQuery;
+        fetchUsers(true);
+      }, 300);
+      return;
+    }
+
+    console.log(`[USERS] Iniciando busca: "${searchQuery}"`);
+    fetchInProgress.current = true;
+    setLocalLoading(true);
+    setLoading('data', true);
     setError(null);
     
-    // Timeout de segurança para garantir que loading sempre finalize
-    const timeoutId = setTimeout(() => {
-      console.warn('[USERS] Timeout de 10s - forçando fim do loading');
-      setLoading(false);
-      setIsRefreshing(false);
-      toast.error('Timeout ao carregar usuários. Tente novamente.');
-    }, 10000);
-
     try {
-      // Query simplificada e direta
       let query = supabase
         .from('profiles')
         .select(`
@@ -64,22 +79,16 @@ export function useUsers() {
         `)
         .order('created_at', { ascending: false });
 
-      // Aplicar filtro de busca se houver
       if (searchQuery.trim()) {
         query = query.or(`name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,company_name.ilike.%${searchQuery}%`);
       }
 
-      console.log('[USERS] Executando query no Supabase...');
       const { data, error: queryError } = await query;
 
-      clearTimeout(timeoutId);
-
       if (queryError) {
-        console.error('[USERS] Erro na query:', queryError);
         throw new Error(`Erro ao buscar usuários: ${queryError.message}`);
       }
 
-      // Mapear dados para o formato UserProfile
       const mappedUsers: UserProfile[] = (data || []).map(user => ({
         id: user.id,
         email: user.email || '',
@@ -95,32 +104,27 @@ export function useUsers() {
       }));
 
       setUsers(mappedUsers);
-      console.log(`[USERS] ✅ ${mappedUsers.length} usuários carregados com sucesso`);
+      console.log(`[USERS] ✅ ${mappedUsers.length} usuários carregados`);
       
     } catch (err: any) {
-      clearTimeout(timeoutId);
       console.error('[USERS] Erro ao buscar usuários:', err);
       setError(err);
       
       toast.error('Erro ao carregar usuários', {
         description: err.message || 'Não foi possível carregar a lista de usuários.',
-        action: {
-          label: 'Tentar novamente',
-          onClick: () => fetchUsers()
-        }
       });
     } finally {
-      setLoading(false);
+      fetchInProgress.current = false;
+      setLocalLoading(false);
+      setLoading('data', false);
       setIsRefreshing(false);
-      console.log('[USERS] Busca finalizada - loading definido como false');
     }
-  }, [canManageUsers, searchQuery]); // Apenas dependências essenciais
+  }, [canManageUsers, searchQuery, setLoading]);
 
   const fetchAvailableRoles = useCallback(async () => {
     if (!canAssignRoles) return;
 
     try {
-      console.log('[USERS] Buscando roles disponíveis');
       const { data, error } = await supabase
         .from('user_roles')
         .select('*')
@@ -141,25 +145,13 @@ export function useUsers() {
     }
   }, [canAssignRoles]);
 
-  // Carregar usuários inicialmente e quando canManageUsers mudar
+  // Carregar dados iniciais apenas uma vez
   useEffect(() => {
     if (canManageUsers) {
-      console.log('[USERS] useEffect disparado - carregando usuários');
-      fetchUsers();
+      console.log('[USERS] Carregamento inicial');
+      fetchUsers(true);
     }
-  }, [canManageUsers]); // Apenas esta dependência para evitar loops
-
-  // Debounce search separado para evitar conflitos
-  useEffect(() => {
-    if (!canManageUsers) return;
-
-    const timeoutId = setTimeout(() => {
-      console.log(`[USERS] Debounce search: "${searchQuery}"`);
-      fetchUsers();
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery]); // Apenas searchQuery como dependência
+  }, [canManageUsers]); // Apenas esta dependência
 
   // Carregar roles disponíveis
   useEffect(() => {
@@ -168,11 +160,27 @@ export function useUsers() {
     }
   }, [canAssignRoles, fetchAvailableRoles]);
 
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Função para refresh manual
   const handleRefresh = useCallback(() => {
-    console.log('[USERS] Refresh manual iniciado');
+    console.log('[USERS] Refresh manual');
     setIsRefreshing(true);
-    fetchUsers();
+    fetchUsers(true);
+  }, [fetchUsers]);
+
+  // Update search query sem trigger automático
+  const updateSearchQuery = useCallback((query: string) => {
+    setSearchQuery(query);
+    // O debounce acontece dentro do fetchUsers
+    fetchUsers(false);
   }, [fetchUsers]);
 
   return {
@@ -181,7 +189,7 @@ export function useUsers() {
     loading,
     isRefreshing,
     searchQuery,
-    setSearchQuery,
+    setSearchQuery: updateSearchQuery,
     selectedUser,
     setSelectedUser,
     fetchUsers: handleRefresh,
