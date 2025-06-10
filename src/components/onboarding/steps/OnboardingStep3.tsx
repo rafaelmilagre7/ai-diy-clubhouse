@@ -1,316 +1,269 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { OnboardingStepProps } from '../types/onboardingTypes';
-import { motion } from 'framer-motion';
-import { Brain, Zap, Users, Target } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { OnboardingData } from '../types/onboardingTypes';
 import { AIMessageDisplay } from '../components/AIMessageDisplay';
-import { EnhancedFieldIndicator } from '../components/EnhancedFieldIndicator';
+import { useAIMessageGeneration } from '../hooks/useAIMessageGeneration';
 
-const OnboardingStep3 = ({ data, onUpdateData, validationErrors = [], getFieldError }: OnboardingStepProps) => {
-  const [localData, setLocalData] = useState({
-    hasImplementedAI: data.hasImplementedAI || '',
-    aiToolsUsed: data.aiToolsUsed || [],
-    aiKnowledgeLevel: data.aiKnowledgeLevel || '',
-    dailyTools: data.dailyTools || [],
-    whoWillImplement: data.whoWillImplement || ''
-  });
+interface OnboardingStep3Props {
+  data: OnboardingData;
+  onDataChange: (data: Partial<OnboardingData>) => void;
+  errors?: Record<string, string>;
+}
 
-  const handleFieldChange = (field: string, value: any) => {
-    const newData = { ...localData, [field]: value };
-    setLocalData(newData);
-    onUpdateData(newData);
+const OnboardingStep3: React.FC<OnboardingStep3Props> = ({ data, onDataChange, errors }) => {
+  const { aiMessage, isGenerating } = useAIMessageGeneration(data, 3);
+
+  const handleFieldChange = (field: keyof OnboardingData, value: any) => {
+    // Garantir tipagem correta para hasImplementedAI
+    if (field === 'hasImplementedAI') {
+      const validValues: Array<"" | "no" | "yes" | "tried-failed"> = ["", "no", "yes", "tried-failed"];
+      const typedValue = validValues.includes(value as any) ? value as "" | "no" | "yes" | "tried-failed" : "";
+      onDataChange({
+        [field]: typedValue,
+        // Limpar ferramentas se mudou para "não"
+        ...(typedValue === 'no' ? { aiToolsUsed: [] } : {})
+      });
+    } else {
+      onDataChange({ [field]: value });
+    }
   };
 
-  const handleToolToggle = (toolName: string, isChecked: boolean) => {
-    const currentTools = localData.aiToolsUsed || [];
-    const updatedTools = isChecked 
-      ? [...currentTools, toolName]
-      : currentTools.filter(tool => tool !== toolName);
+  const handleToolSelection = (tool: string, checked: boolean) => {
+    const currentTools = data.aiToolsUsed || [];
+    const updatedTools = checked 
+      ? [...currentTools, tool]
+      : currentTools.filter(t => t !== tool);
     
     handleFieldChange('aiToolsUsed', updatedTools);
   };
 
-  const handleDailyToolToggle = (toolName: string, isChecked: boolean) => {
-    const currentTools = localData.dailyTools || [];
-    const updatedTools = isChecked 
-      ? [...currentTools, toolName]
-      : currentTools.filter(tool => tool !== toolName);
-    
-    handleFieldChange('dailyTools', updatedTools);
-  };
-
+  // Lista expandida de ferramentas de IA
   const aiTools = [
+    // Assistentes Conversacionais
     'ChatGPT',
-    'Claude',
+    'Claude (Anthropic)',
     'Gemini (Google)',
-    'Copilot (Microsoft)',
-    'Lovable',
-    'Grok',
+    'Grok (X/Twitter)',
     'Perplexity',
+    
+    // Ferramentas de Desenvolvimento
+    'GitHub Copilot',
+    'Cursor',
+    'Lovable',
+    'Replit Ghostwriter',
+    'Tabnine',
+    
+    // Ferramentas de Design
     'Midjourney',
     'DALL-E',
     'Stable Diffusion',
-    'Runway',
+    'Figma AI',
+    'Canva AI',
+    
+    // Ferramentas de Produtividade
     'Notion AI',
     'Jasper',
     'Copy.ai',
     'Grammarly',
-    'GitHub Copilot',
-    'Cursor',
-    'Canva AI',
-    'Adobe Firefly',
-    'ChatSonic',
-    'Character.AI',
-    'Poe',
-    'Bard (descontinuado)',
-    'Bing Chat',
-    'YouChat',
-    'Replika',
-    'DeepL Write',
-    'Murf AI',
-    'Synthesia',
-    'Luma AI',
-    'RunwayML',
-    'Pictory',
-    'Descript',
     'Otter.ai',
-    'Fireflies.ai',
-    'MonkeyLearn',
-    'Zapier AI',
-    'Make (Integromat)',
-    'Automation Anywhere',
-    'UiPath',
-    'Robotic Process Automation (RPA)',
-    'Power Platform AI',
-    'Salesforce Einstein',
-    'HubSpot AI',
-    'Intercom Resolution Bot',
-    'Zendesk Answer Bot',
-    'Drift Conversational AI',
-    'Freshworks Freddy AI',
+    
+    // Análise e Dados
+    'DataRobot',
+    'H2O.ai',
     'IBM Watson',
-    'Amazon Alexa for Business',
-    'Google Assistant',
-    'Microsoft Cortana',
-    'Siri Shortcuts',
-    'IFTTT',
-    'Outro'
-  ];
-
-  const dailyTools = [
-    'Microsoft Office',
-    'Google Workspace',
-    'Slack',
-    'Teams',
-    'Zoom',
-    'Notion',
-    'Trello',
-    'Asana',
-    'Monday.com',
-    'ClickUp',
-    'Jira',
-    'Confluence',
-    'Figma',
-    'Adobe Creative Suite',
-    'Canva',
-    'Mailchimp',
-    'HubSpot',
-    'Salesforce',
-    'Zapier',
-    'Outro'
+    'Microsoft Copilot',
+    
+    // Outras
+    'Runway ML',
+    'Synthesia',
+    'Loom AI',
+    'Zapier AI'
   ];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="space-y-6"
-    >
-      <AIMessageDisplay 
-        message={data.aiMessage3} 
-        isLoading={false}
-      />
+    <div className="space-y-8">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          Sua Experiência com IA
+        </h2>
+        <p className="text-gray-600 dark:text-gray-300">
+          Conte-nos sobre sua jornada com inteligência artificial
+        </p>
+      </div>
 
-      <Card className="bg-[#151823] border-white/10">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
-            <Brain className="w-5 h-5 text-viverblue" />
-            Maturidade em IA
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Pergunta sobre implementação de IA */}
-          <div className="space-y-3">
-            <Label className="text-white flex items-center gap-2">
-              <Zap className="w-4 h-4" />
-              Sua empresa já implementou alguma solução de IA?
-              <EnhancedFieldIndicator isRequired />
-            </Label>
-            <RadioGroup 
-              value={localData.hasImplementedAI} 
-              onValueChange={(value) => handleFieldChange('hasImplementedAI', value)}
-              className="space-y-2"
+      <AIMessageDisplay message={aiMessage} isGenerating={isGenerating} />
+
+      <div className="grid gap-8">
+        {/* Experiência com IA - Sempre exibida */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Você já implementou ou tentou implementar IA na sua empresa/trabalho?</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <RadioGroup
+              value={data.hasImplementedAI || ''}
+              onValueChange={(value: "" | "no" | "yes" | "tried-failed") => handleFieldChange('hasImplementedAI', value)}
+              className="space-y-3"
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="ai-yes" className="border-white/20 text-viverblue" />
-                <Label htmlFor="ai-yes" className="text-white cursor-pointer">
-                  Sim, já implementamos e está funcionando bem
-                </Label>
+                <RadioGroupItem value="yes" id="implemented-yes" />
+                <Label htmlFor="implemented-yes">Sim, já implementei com sucesso</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="tried-failed" id="ai-tried" className="border-white/20 text-viverblue" />
-                <Label htmlFor="ai-tried" className="text-white cursor-pointer">
-                  Tentamos implementar, mas não deu certo
-                </Label>
+                <RadioGroupItem value="tried-failed" id="implemented-tried" />
+                <Label htmlFor="implemented-tried">Tentei, mas não consegui implementar</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="ai-no" className="border-white/20 text-viverblue" />
-                <Label htmlFor="ai-no" className="text-white cursor-pointer">
-                  Não, ainda não implementamos nada
-                </Label>
+                <RadioGroupItem value="no" id="implemented-no" />
+                <Label htmlFor="implemented-no">Não, ainda não tentei</Label>
               </div>
             </RadioGroup>
-            {getFieldError?.('hasImplementedAI') && (
-              <p className="text-red-400 text-sm">{getFieldError('hasImplementedAI')}</p>
+            {errors?.hasImplementedAI && (
+              <p className="text-red-500 text-sm mt-2">{errors.hasImplementedAI}</p>
             )}
-          </div>
+          </CardContent>
+        </Card>
 
-          {/* Pergunta sobre ferramentas - SEMPRE EXIBIDA */}
-          <div className="space-y-3">
-            <Label className="text-white">
-              Quais ferramentas/soluções de IA já usou? (pode marcar várias)
-            </Label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-60 overflow-y-auto p-2 border border-white/10 rounded-lg bg-white/5">
+        {/* Ferramentas Utilizadas - Sempre exibida */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Quais ferramentas/soluções de IA já usou? (pode marcar várias)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {aiTools.map((tool) => (
                 <div key={tool} className="flex items-center space-x-2">
                   <Checkbox
                     id={`tool-${tool}`}
-                    checked={localData.aiToolsUsed?.includes(tool)}
-                    onCheckedChange={(checked) => handleToolToggle(tool, checked as boolean)}
-                    className="border-white/20 data-[state=checked]:bg-viverblue data-[state=checked]:border-viverblue"
+                    checked={data.aiToolsUsed?.includes(tool) || false}
+                    onCheckedChange={(checked) => handleToolSelection(tool, checked as boolean)}
                   />
                   <Label 
                     htmlFor={`tool-${tool}`} 
-                    className="text-white text-sm cursor-pointer hover:text-viverblue transition-colors"
+                    className="text-sm font-normal cursor-pointer"
                   >
                     {tool}
                   </Label>
                 </div>
               ))}
             </div>
-          </div>
+            <div className="mt-4 text-sm text-gray-500">
+              Selecionou {data.aiToolsUsed?.length || 0} ferramenta(s)
+            </div>
+          </CardContent>
+        </Card>
 
-          {/* Nível de conhecimento */}
-          <div className="space-y-3">
-            <Label className="text-white flex items-center gap-2">
-              Como você avalia seu nível de conhecimento em IA?
-              <EnhancedFieldIndicator isRequired />
-            </Label>
-            <RadioGroup 
-              value={localData.aiKnowledgeLevel} 
+        {/* Nível de Conhecimento */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Como você classificaria seu nível de conhecimento sobre IA?</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <RadioGroup
+              value={data.aiKnowledgeLevel || ''}
               onValueChange={(value) => handleFieldChange('aiKnowledgeLevel', value)}
-              className="space-y-2"
+              className="space-y-3"
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="beginner" id="level-beginner" className="border-white/20 text-viverblue" />
-                <Label htmlFor="level-beginner" className="text-white cursor-pointer">
-                  Iniciante - Pouco ou nenhum conhecimento
-                </Label>
+                <RadioGroupItem value="beginner" id="knowledge-beginner" />
+                <Label htmlFor="knowledge-beginner">Iniciante - Sei pouco sobre IA</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="intermediate" id="level-intermediate" className="border-white/20 text-viverblue" />
-                <Label htmlFor="level-intermediate" className="text-white cursor-pointer">
-                  Intermediário - Já uso algumas ferramentas básicas
-                </Label>
+                <RadioGroupItem value="intermediate" id="knowledge-intermediate" />
+                <Label htmlFor="knowledge-intermediate">Intermediário - Tenho conhecimento básico</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="advanced" id="level-advanced" className="border-white/20 text-viverblue" />
-                <Label htmlFor="level-advanced" className="text-white cursor-pointer">
-                  Avançado - Implemento soluções complexas
-                </Label>
+                <RadioGroupItem value="advanced" id="knowledge-advanced" />
+                <Label htmlFor="knowledge-advanced">Avançado - Tenho bastante experiência</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="expert" id="level-expert" className="border-white/20 text-viverblue" />
-                <Label htmlFor="level-expert" className="text-white cursor-pointer">
-                  Expert - Desenvolvo e treino modelos próprios
-                </Label>
+                <RadioGroupItem value="expert" id="knowledge-expert" />
+                <Label htmlFor="knowledge-expert">Especialista - Sou profundo conhecedor</Label>
               </div>
             </RadioGroup>
-            {getFieldError?.('aiKnowledgeLevel') && (
-              <p className="text-red-400 text-sm">{getFieldError('aiKnowledgeLevel')}</p>
+            {errors?.aiKnowledgeLevel && (
+              <p className="text-red-500 text-sm mt-2">{errors.aiKnowledgeLevel}</p>
             )}
-          </div>
+          </CardContent>
+        </Card>
 
-          {/* Ferramentas do dia a dia */}
-          <div className="space-y-3">
-            <Label className="text-white flex items-center gap-2">
-              <Target className="w-4 h-4" />
-              Quais ferramentas usa no dia a dia? (pode marcar várias)
-            </Label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-48 overflow-y-auto p-2 border border-white/10 rounded-lg bg-white/5">
-              {dailyTools.map((tool) => (
+        {/* Ferramentas do Dia a Dia */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Quais ferramentas você usa no dia a dia de trabalho?</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {[
+                'Microsoft Office', 'Google Workspace', 'Slack', 'Discord', 'Zoom', 'Teams',
+                'Trello', 'Asana', 'Monday.com', 'Notion', 'Evernote', 'Dropbox',
+                'Photoshop', 'Canva', 'Figma', 'WordPress', 'Shopify', 'HubSpot',
+                'Salesforce', 'Zendesk', 'Mailchimp', 'WhatsApp Business', 'Instagram', 'LinkedIn'
+              ].map((tool) => (
                 <div key={tool} className="flex items-center space-x-2">
                   <Checkbox
                     id={`daily-${tool}`}
-                    checked={localData.dailyTools?.includes(tool)}
-                    onCheckedChange={(checked) => handleDailyToolToggle(tool, checked as boolean)}
-                    className="border-white/20 data-[state=checked]:bg-viverblue data-[state=checked]:border-viverblue"
+                    checked={data.dailyTools?.includes(tool) || false}
+                    onCheckedChange={(checked) => {
+                      const currentTools = data.dailyTools || [];
+                      const updatedTools = checked 
+                        ? [...currentTools, tool]
+                        : currentTools.filter(t => t !== tool);
+                      handleFieldChange('dailyTools', updatedTools);
+                    }}
                   />
-                  <Label 
-                    htmlFor={`daily-${tool}`} 
-                    className="text-white text-sm cursor-pointer hover:text-viverblue transition-colors"
-                  >
+                  <Label htmlFor={`daily-${tool}`} className="text-sm font-normal cursor-pointer">
                     {tool}
                   </Label>
                 </div>
               ))}
             </div>
-          </div>
+          </CardContent>
+        </Card>
 
-          {/* Quem vai implementar */}
-          <div className="space-y-3">
-            <Label className="text-white flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              Quem será responsável por implementar as soluções de IA?
-              <EnhancedFieldIndicator isRequired />
-            </Label>
-            <RadioGroup 
-              value={localData.whoWillImplement} 
+        {/* Quem Implementará */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Quem será responsável por implementar as soluções de IA?</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <RadioGroup
+              value={data.whoWillImplement || ''}
               onValueChange={(value) => handleFieldChange('whoWillImplement', value)}
-              className="space-y-2"
+              className="space-y-3"
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="myself" id="impl-myself" className="border-white/20 text-viverblue" />
-                <Label htmlFor="impl-myself" className="text-white cursor-pointer">
-                  Eu mesmo
-                </Label>
+                <RadioGroupItem value="myself" id="implement-myself" />
+                <Label htmlFor="implement-myself">Eu mesmo</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="team" id="impl-team" className="border-white/20 text-viverblue" />
-                <Label htmlFor="impl-team" className="text-white cursor-pointer">
-                  Minha equipe interna
-                </Label>
+                <RadioGroupItem value="team" id="implement-team" />
+                <Label htmlFor="implement-team">Minha equipe interna</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="hire" id="impl-hire" className="border-white/20 text-viverblue" />
-                <Label htmlFor="impl-hire" className="text-white cursor-pointer">
-                  Vamos contratar especialistas
-                </Label>
+                <RadioGroupItem value="consultant" id="implement-consultant" />
+                <Label htmlFor="implement-consultant">Consultor/Freelancer externo</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="agency" id="implement-agency" />
+                <Label htmlFor="implement-agency">Agência especializada</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="undecided" id="implement-undecided" />
+                <Label htmlFor="implement-undecided">Ainda não decidi</Label>
               </div>
             </RadioGroup>
-            {getFieldError?.('whoWillImplement') && (
-              <p className="text-red-400 text-sm">{getFieldError('whoWillImplement')}</p>
+            {errors?.whoWillImplement && (
+              <p className="text-red-500 text-sm mt-2">{errors.whoWillImplement}</p>
             )}
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 };
 
