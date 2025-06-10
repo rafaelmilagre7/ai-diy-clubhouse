@@ -168,9 +168,9 @@ const OnboardingWizard = () => {
         return (
           <OnboardingFinal
             data={data}
-            onNext={handleSubmit}
+            onComplete={handleSubmit}
             memberType={data.memberType || 'club'}
-            isSubmitting={isSubmitting}
+            isCompleting={isSubmitting}
           />
         );
       default:
