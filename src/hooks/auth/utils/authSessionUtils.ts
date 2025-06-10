@@ -5,7 +5,7 @@ import { UserProfile } from '@/lib/supabase/types';
 // Cache para evitar buscas desnecessárias
 const profileCache = new Map<string, UserProfile | null>();
 const cacheExpiry = new Map<string, number>();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+const CACHE_DURATION = 10 * 1000; // 10 segundos
 
 export const clearProfileCache = (userId?: string) => {
   if (userId) {
@@ -20,6 +20,42 @@ export const clearProfileCache = (userId?: string) => {
 const isCacheValid = (userId: string): boolean => {
   const expiry = cacheExpiry.get(userId);
   return expiry ? Date.now() < expiry : false;
+};
+
+// CORREÇÃO CRÍTICA: Função helper para extrair nome do role de forma segura
+const extractRoleName = (userRoles: any): string | null => {
+  if (!userRoles) {
+    console.warn('⚠️ [AUTH] user_roles está undefined/null');
+    return null;
+  }
+
+  // Caso 1: É um array de roles
+  if (Array.isArray(userRoles)) {
+    if (userRoles.length === 0) {
+      console.warn('⚠️ [AUTH] user_roles é um array vazio');
+      return null;
+    }
+    const firstRole = userRoles[0];
+    if (firstRole && typeof firstRole === 'object' && 'name' in firstRole) {
+      return String(firstRole.name);
+    }
+    console.warn('⚠️ [AUTH] Primeiro item do array user_roles não tem propriedade name');
+    return null;
+  }
+
+  // Caso 2: É um objeto único
+  if (typeof userRoles === 'object' && userRoles !== null && 'name' in userRoles) {
+    return String(userRoles.name);
+  }
+
+  // Caso 3: É uma string (fallback)
+  if (typeof userRoles === 'string') {
+    console.warn('⚠️ [AUTH] user_roles é uma string, usando valor direto:', userRoles);
+    return userRoles;
+  }
+
+  console.error('❌ [AUTH] user_roles tem formato inesperado:', typeof userRoles, userRoles);
+  return null;
 };
 
 export const processUserProfile = async (
@@ -70,7 +106,7 @@ export const processUserProfile = async (
       return null;
     }
 
-    // Mapear dados do perfil
+    // Mapear dados do perfil com tratamento seguro de user_roles
     const userProfile: UserProfile = {
       id: profile.id,
       email: profile.email || userEmail || '',
@@ -85,8 +121,8 @@ export const processUserProfile = async (
       onboarding_completed_at: profile.onboarding_completed_at
     };
 
-    // CORREÇÃO CRÍTICA: Atualizar user_metadata com role
-    const roleName = getUserRoleName(userProfile);
+    // CORREÇÃO CRÍTICA: Usar função helper segura para extrair role
+    const roleName = extractRoleName(userProfile.user_roles);
     if (roleName) {
       try {
         console.log(`🔄 [AUTH] Atualizando user_metadata com role: ${roleName}`);
@@ -98,6 +134,8 @@ export const processUserProfile = async (
         console.warn('⚠️ [AUTH] Erro ao atualizar user_metadata:', metadataError);
         // Não é crítico, continuar
       }
+    } else {
+      console.warn('⚠️ [AUTH] Não foi possível extrair role do perfil');
     }
 
     // Atualizar cache
@@ -111,6 +149,21 @@ export const processUserProfile = async (
     console.error('❌ [AUTH] Erro crítico no processamento do perfil:', error);
     return null;
   }
+};
+
+// Função para buscar perfil sempre fresh (bypass cache)
+export const getUserProfileFresh = async (
+  userId: string, 
+  userEmail?: string | null,
+  userName?: string
+): Promise<UserProfile | null> => {
+  console.log(`🆕 [AUTH] Buscando perfil fresh (bypass cache): ${userId.substring(0, 8)}***`);
+  
+  // Limpar cache para este usuário
+  clearProfileCache(userId);
+  
+  // Buscar dados frescos
+  return await processUserProfile(userId, userEmail, userName);
 };
 
 const createUserProfile = async (
@@ -163,12 +216,13 @@ const createUserProfile = async (
       return null;
     }
 
-    // CORREÇÃO: Atualizar user_metadata para novo usuário
+    // CORREÇÃO: Atualizar user_metadata para novo usuário com tratamento seguro
     try {
+      const roleName = extractRoleName(data.user_roles) || 'member';
       await supabase.auth.updateUser({
-        data: { role: 'member' }
+        data: { role: roleName }
       });
-      console.log('✅ [AUTH] User_metadata definido para novo usuário: role=member');
+      console.log(`✅ [AUTH] User_metadata definido para novo usuário: role=${roleName}`);
     } catch (metadataError) {
       console.warn('⚠️ [AUTH] Erro ao definir user_metadata inicial:', metadataError);
     }
@@ -196,17 +250,8 @@ const createUserProfile = async (
   }
 };
 
-// Função para obter nome do role a partir do perfil
+// Função para obter nome do role a partir do perfil (usando helper seguro)
 const getUserRoleName = (profile: UserProfile | null): string | null => {
   if (!profile?.user_roles) return null;
-  
-  if (Array.isArray(profile.user_roles)) {
-    return profile.user_roles[0]?.name || null;
-  }
-  
-  if (typeof profile.user_roles === 'object' && profile.user_roles.name) {
-    return profile.user_roles.name;
-  }
-  
-  return null;
+  return extractRoleName(profile.user_roles);
 };
