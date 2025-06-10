@@ -4,9 +4,9 @@ import { Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { SidebarProvider } from "@/components/ui/sidebar";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminContent } from "./AdminContent";
+import { useSidebarControl } from "@/hooks/useSidebarControl";
 
 interface AdminLayoutProps {
   children?: React.ReactNode;
@@ -19,6 +19,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const [retryCount, setRetryCount] = useState(0);
   const [forceReady, setForceReady] = useState(false);
   const maxRetries = 2;
+  
+  // Use o mesmo hook de controle de sidebar do membro
+  const { sidebarOpen, setSidebarOpen, isMobile } = useSidebarControl();
 
   // Timeout absoluto mais agressivo para evitar travamento
   useEffect(() => {
@@ -87,58 +90,78 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   // Loading state com skeleton melhorado
   if (!isMounted || (isLoading && !forceReady && retryCount < maxRetries)) {
     return (
-      <SidebarProvider defaultOpen={true}>
-        <div className="flex min-h-screen w-full bg-background">
-          <div className="w-64 border-r bg-sidebar p-4 flex flex-col">
-            <div className="space-y-4">
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-12 w-12 rounded-full mx-auto" />
-              <Skeleton className="h-4 w-24 mx-auto" />
-              
-              <div className="h-px bg-border my-4"></div>
-              
-              <div className="space-y-2">
-                {Array(6).fill(null).map((_, i) => (
-                  <Skeleton key={i} className="h-9 w-full" />
-                ))}
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex-1 p-8">
-            <div className="space-y-4">
-              <Skeleton className="h-8 w-64" />
-              <Skeleton className="h-64 w-full" />
-              <div className="text-center text-muted-foreground text-sm">
-                {retryCount > 0 && (
-                  <div className="text-yellow-600">
-                    Verificando credenciais... (tentativa {retryCount}/{maxRetries})
-                  </div>
-                )}
-                {forceReady && (
-                  <div className="text-blue-600">
-                    Forçando carregamento...
-                  </div>
-                )}
-              </div>
+      <div className="flex min-h-screen w-full bg-background">
+        {/* Backdrop para mobile quando sidebar aberto */}
+        {isMobile && sidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Fechar menu"
+          />
+        )}
+        
+        <div className="w-64 border-r bg-sidebar p-4 flex flex-col">
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-12 w-12 rounded-full mx-auto" />
+            <Skeleton className="h-4 w-24 mx-auto" />
+            
+            <div className="h-px bg-border my-4"></div>
+            
+            <div className="space-y-2">
+              {Array(6).fill(null).map((_, i) => (
+                <Skeleton key={i} className="h-9 w-full" />
+              ))}
             </div>
           </div>
         </div>
-      </SidebarProvider>
+        
+        <div className="flex-1 p-8">
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-64 w-full" />
+            <div className="text-center text-muted-foreground text-sm">
+              {retryCount > 0 && (
+                <div className="text-yellow-600">
+                  Verificando credenciais... (tentativa {retryCount}/{maxRetries})
+                </div>
+              )}
+              {forceReady && (
+                <div className="text-blue-600">
+                  Forçando carregamento...
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     );
   }
 
   // Renderização final com verificações de segurança
   if (forceReady || (!isLoading && user && isAdmin)) {
     return (
-      <SidebarProvider defaultOpen={true}>
-        <div className="flex min-h-screen w-full bg-background">
-          <AdminSidebar />
-          <AdminContent>
-            {children || <Outlet />}
-          </AdminContent>
-        </div>
-      </SidebarProvider>
+      <div className="flex min-h-screen w-full bg-background">
+        {/* Backdrop para mobile quando sidebar aberto */}
+        {isMobile && sidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Fechar menu"
+          />
+        )}
+        
+        <AdminSidebar 
+          sidebarOpen={sidebarOpen} 
+          setSidebarOpen={setSidebarOpen} 
+        />
+        <AdminContent 
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+        >
+          {children || <Outlet />}
+        </AdminContent>
+      </div>
     );
   }
 

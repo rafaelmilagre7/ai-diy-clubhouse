@@ -10,14 +10,9 @@ import {
   UserCheck, 
   Mail, 
   MessageSquare,
-  Settings,
   Stethoscope
 } from "lucide-react";
-import { 
-  SidebarMenu, 
-  SidebarMenuItem, 
-  SidebarMenuButton 
-} from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const navigationItems = [
@@ -88,26 +83,47 @@ const navigationItems = [
   },
 ];
 
-export const AdminSidebarNav = () => {
+interface AdminSidebarNavProps {
+  sidebarOpen: boolean;
+}
+
+export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
   const location = useLocation();
 
+  const isActive = (href: string) => {
+    return location.pathname === href || 
+      (href !== "/admin" && location.pathname.startsWith(href));
+  };
+
   return (
-    <SidebarMenu>
-      {navigationItems.map((item) => {
-        const isActive = location.pathname === item.href || 
-          (item.href !== "/admin" && location.pathname.startsWith(item.href));
-        
-        return (
-          <SidebarMenuItem key={item.href}>
-            <SidebarMenuButton asChild isActive={isActive}>
-              <Link to={item.href} className="flex items-center gap-3">
-                <item.icon className="h-4 w-4" />
-                <span>{item.title}</span>
+    <nav className="flex-1 px-3 py-2">
+      <div className="flex flex-col space-y-1">
+        {navigationItems.map((item) => {
+          const active = isActive(item.href);
+          
+          return (
+            <Button
+              key={item.href}
+              variant="ghost"
+              className={cn(
+                "w-full justify-start gap-3 h-10 px-3 text-sm font-medium transition-all duration-200 rounded-lg group",
+                !sidebarOpen && "justify-center px-2",
+                active 
+                  ? "bg-white/15 text-white shadow-lg border border-white/30" 
+                  : "text-neutral-200 hover:text-white hover:bg-white/10 hover:shadow-md"
+              )}
+              asChild
+            >
+              <Link to={item.href}>
+                <item.icon className="h-5 w-5 flex-shrink-0" />
+                {sidebarOpen && (
+                  <span className="truncate">{item.title}</span>
+                )}
               </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        );
-      })}
-    </SidebarMenu>
+            </Button>
+          );
+        })}
+      </div>
+    </nav>
   );
 };
