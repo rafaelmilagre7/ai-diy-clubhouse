@@ -6,71 +6,6 @@ import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
 import { usePermissions, Role } from '@/hooks/auth/usePermissions';
 
-// CORREÇÃO CRÍTICA: Error Boundary para operações Supabase
-class SupabaseErrorHandler {
-  static handleError(error: any, operation: string): never {
-    console.error(`❌ [USERS] Erro em ${operation}:`, error);
-    
-    // Categorizar tipos de erro
-    if (error?.code === 'PGRST116') {
-      throw new Error(`Recurso não encontrado durante ${operation}`);
-    }
-    
-    if (error?.message?.includes('network')) {
-      throw new Error(`Erro de rede durante ${operation}. Verifique sua conexão.`);
-    }
-    
-    if (error?.message?.includes('timeout')) {
-      throw new Error(`Timeout durante ${operation}. Tente novamente.`);
-    }
-    
-    if (error?.code?.startsWith('PGRST')) {
-      throw new Error(`Erro de banco de dados durante ${operation}: ${error.message}`);
-    }
-    
-    // Erro genérico
-    throw new Error(`Erro inesperado durante ${operation}: ${error.message || 'Erro desconhecido'}`);
-  }
-
-  static async executeWithRetry<T>(
-    operation: () => Promise<T>,
-    operationName: string,
-    maxRetries: number = 3,
-    retryDelay: number = 1000
-  ): Promise<T> {
-    let lastError: any;
-    
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        console.log(`🔄 [USERS] Tentativa ${attempt}/${maxRetries} para ${operationName}`);
-        return await operation();
-      } catch (error) {
-        lastError = error;
-        console.warn(`⚠️ [USERS] Tentativa ${attempt} falhou para ${operationName}:`, error);
-        
-        // Se é o último retry ou erro não é de rede, falhar imediatamente
-        if (attempt === maxRetries || !this.isRetryableError(error)) {
-          break;
-        }
-        
-        // Aguardar antes do próximo retry
-        await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
-      }
-    }
-    
-    // Se chegou aqui, todas as tentativas falharam
-    this.handleError(lastError, operationName);
-  }
-
-  static isRetryableError(error: any): boolean {
-    // Erros de rede e timeout são retryable
-    const errorMessage = error?.message?.toLowerCase() || '';
-    return errorMessage.includes('network') || 
-           errorMessage.includes('timeout') || 
-           errorMessage.includes('fetch');
-  }
-}
-
 export function useUsers() {
   const { user, isAdmin } = useAuth();
   const { hasPermission } = usePermissions();
@@ -90,78 +25,85 @@ export function useUsers() {
 
   const fetchUsers = useCallback(async () => {
     if (!canManageUsers) {
-      console.warn('Usuário não tem permissão para gerenciar usuários');
+      console.warn('[USERS] Usuário não tem permissão para gerenciar usuários');
       return;
     }
 
+    console.log(`[USERS] Iniciando busca de usuários com filtro: "${searchQuery}"`);
+    setLoading(true);
+    setError(null);
+    
+    // Timeout de segurança para garantir que loading sempre finalize
+    const timeoutId = setTimeout(() => {
+      console.warn('[USERS] Timeout de 10s - forçando fim do loading');
+      setLoading(false);
+      setIsRefreshing(false);
+      toast.error('Timeout ao carregar usuários. Tente novamente.');
+    }, 10000);
+
     try {
-      setLoading(true);
-      setError(null);
-      
-      // CORREÇÃO CRÍTICA: Usar error handler com retry
-      await SupabaseErrorHandler.executeWithRetry(async () => {
-        console.log(`🔍 [USERS] Buscando usuários com filtro: "${searchQuery}"`);
-        
-        // Query com join para user_roles
-        let query = supabase
-          .from('profiles')
-          .select(`
+      // Query simplificada e direta
+      let query = supabase
+        .from('profiles')
+        .select(`
+          id,
+          email,
+          name,
+          avatar_url,
+          company_name,
+          industry,
+          created_at,
+          role_id,
+          user_roles:role_id (
             id,
-            email,
             name,
-            avatar_url,
-            company_name,
-            industry,
-            created_at,
-            role_id,
-            user_roles:role_id (
-              id,
-              name,
-              description,
-              permissions,
-              is_system
-            )
-          `)
-          .order('created_at', { ascending: false });
+            description,
+            permissions,
+            is_system
+          )
+        `)
+        .order('created_at', { ascending: false });
 
-        // Aplicar filtro de busca se houver
-        if (searchQuery.trim()) {
-          query = query.or(`name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,company_name.ilike.%${searchQuery}%`);
-        }
+      // Aplicar filtro de busca se houver
+      if (searchQuery.trim()) {
+        query = query.or(`name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,company_name.ilike.%${searchQuery}%`);
+      }
 
-        const { data, error } = await query;
+      console.log('[USERS] Executando query no Supabase...');
+      const { data, error: queryError } = await query;
 
-        if (error) {
-          throw error;
-        }
+      clearTimeout(timeoutId);
 
-        // Mapear dados para o formato UserProfile
-        const mappedUsers: UserProfile[] = (data || []).map(user => ({
-          id: user.id,
-          email: user.email || '',
-          name: user.name,
-          avatar_url: user.avatar_url,
-          company_name: user.company_name,
-          industry: user.industry,
-          created_at: user.created_at,
-          role_id: user.role_id,
-          user_roles: user.user_roles as any,
-          onboarding_completed: false,
-          onboarding_completed_at: null
-        }));
+      if (queryError) {
+        console.error('[USERS] Erro na query:', queryError);
+        throw new Error(`Erro ao buscar usuários: ${queryError.message}`);
+      }
 
-        setUsers(mappedUsers);
-        console.log(`✅ [USERS] ${mappedUsers.length} usuários carregados com sucesso`);
-        
-      }, 'buscar usuários');
+      // Mapear dados para o formato UserProfile
+      const mappedUsers: UserProfile[] = (data || []).map(user => ({
+        id: user.id,
+        email: user.email || '',
+        name: user.name,
+        avatar_url: user.avatar_url,
+        company_name: user.company_name,
+        industry: user.industry,
+        created_at: user.created_at,
+        role_id: user.role_id,
+        user_roles: user.user_roles as any,
+        onboarding_completed: false,
+        onboarding_completed_at: null
+      }));
 
+      setUsers(mappedUsers);
+      console.log(`[USERS] ✅ ${mappedUsers.length} usuários carregados com sucesso`);
+      
     } catch (err: any) {
-      console.error('❌ [USERS] Erro crítico ao buscar usuários:', err);
+      clearTimeout(timeoutId);
+      console.error('[USERS] Erro ao buscar usuários:', err);
       setError(err);
       
-      // Toast de erro amigável
       toast.error('Erro ao carregar usuários', {
-        description: err.message || 'Não foi possível carregar a lista de usuários. Tente novamente.',
+        description: err.message || 'Não foi possível carregar a lista de usuários.',
         action: {
           label: 'Tentar novamente',
           onClick: () => fetchUsers()
@@ -170,67 +112,67 @@ export function useUsers() {
     } finally {
       setLoading(false);
       setIsRefreshing(false);
+      console.log('[USERS] Busca finalizada - loading definido como false');
     }
-  }, [canManageUsers, searchQuery]);
+  }, [canManageUsers, searchQuery]); // Apenas dependências essenciais
 
   const fetchAvailableRoles = useCallback(async () => {
+    if (!canAssignRoles) return;
+
     try {
-      // CORREÇÃO CRÍTICA: Usar error handler para buscar roles
-      await SupabaseErrorHandler.executeWithRetry(async () => {
-        console.log('🔍 [USERS] Buscando roles disponíveis');
-        
-        const { data, error } = await supabase
-          .from('user_roles')
-          .select('*')
-          .order('name');
+      console.log('[USERS] Buscando roles disponíveis');
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('*')
+        .order('name');
 
-        if (error) {
-          throw error;
-        }
+      if (error) {
+        throw new Error(`Erro ao buscar roles: ${error.message}`);
+      }
 
-        setAvailableRoles(data || []);
-        console.log(`✅ [USERS] ${data?.length || 0} roles carregadas com sucesso`);
-        
-      }, 'buscar roles disponíveis');
-
+      setAvailableRoles(data || []);
+      console.log(`[USERS] ✅ ${data?.length || 0} roles carregadas`);
+      
     } catch (err: any) {
-      console.error('❌ [USERS] Erro ao buscar roles:', err);
+      console.error('[USERS] Erro ao buscar roles:', err);
       toast.error('Erro ao carregar roles', {
-        description: err.message || 'Não foi possível carregar as roles disponíveis.'
+        description: err.message
       });
     }
-  }, []);
+  }, [canAssignRoles]);
 
-  // Debounce search com error handling
+  // Carregar usuários inicialmente e quando canManageUsers mudar
   useEffect(() => {
+    if (canManageUsers) {
+      console.log('[USERS] useEffect disparado - carregando usuários');
+      fetchUsers();
+    }
+  }, [canManageUsers]); // Apenas esta dependência para evitar loops
+
+  // Debounce search separado para evitar conflitos
+  useEffect(() => {
+    if (!canManageUsers) return;
+
     const timeoutId = setTimeout(() => {
-      if (canManageUsers) {
-        fetchUsers().catch(error => {
-          console.error('❌ [USERS] Erro no debounce de busca:', error);
-        });
-      }
+      console.log(`[USERS] Debounce search: "${searchQuery}"`);
+      fetchUsers();
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, fetchUsers, canManageUsers]);
+  }, [searchQuery]); // Apenas searchQuery como dependência
 
-  // Carregar roles disponíveis com error handling
+  // Carregar roles disponíveis
   useEffect(() => {
     if (canAssignRoles) {
-      fetchAvailableRoles().catch(error => {
-        console.error('❌ [USERS] Erro ao carregar roles iniciais:', error);
-      });
+      fetchAvailableRoles();
     }
   }, [canAssignRoles, fetchAvailableRoles]);
 
-  // Função para refresh manual com error handling melhorado
+  // Função para refresh manual
   const handleRefresh = useCallback(() => {
-    console.log('🔄 [USERS] Refresh manual iniciado');
+    console.log('[USERS] Refresh manual iniciado');
     setIsRefreshing(true);
-    fetchUsers().catch(error => {
-      console.error('❌ [USERS] Erro no refresh manual:', error);
-      setIsRefreshing(false);
-    });
+    fetchUsers();
   }, [fetchUsers]);
 
   return {
