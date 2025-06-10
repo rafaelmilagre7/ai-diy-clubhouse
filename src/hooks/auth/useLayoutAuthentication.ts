@@ -3,7 +3,6 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
-import { getUserRoleName } from "@/lib/supabase/types";
 
 export const useLayoutAuthentication = () => {
   const { user, profile, isAdmin, isLoading, setIsLoading } = useAuth();
@@ -11,8 +10,8 @@ export const useLayoutAuthentication = () => {
   const [redirectChecked, setRedirectChecked] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const isMounted = useRef(true);
-  const maxRetries = 2; // Reduzido para evitar loops
-  const authTimeout = 8000; // 8 segundos
+  const maxRetries = 2;
+  const authTimeout = 8000;
 
   // Setup component lifecycle
   useEffect(() => {
@@ -35,7 +34,6 @@ export const useLayoutAuthentication = () => {
           } else {
             console.error("❌ [AUTH] Timeout final na autenticação");
             setIsLoading(false);
-            // Não redirecionar automaticamente para evitar loops
             toast.error("Problema na verificação de autenticação");
           }
         }
@@ -45,7 +43,8 @@ export const useLayoutAuthentication = () => {
     }
   }, [isLoading, retryCount, setIsLoading]);
 
-  // Check user role quando profile carrega (com proteções) - agora usa role_id
+  // MUDANÇA PRINCIPAL: Remover redirecionamento automático para admin
+  // Permitir que usuários naveguem livremente, sem forçar redirecionamento para admin
   useEffect(() => {
     if (!profile || redirectChecked || !isMounted.current || !user || isLoading) {
       return;
@@ -60,14 +59,8 @@ export const useLayoutAuthentication = () => {
     // Reset retry count quando conseguimos carregar o perfil
     setRetryCount(0);
     
-    // Apenas redirecionar admin se estiver em página não-admin
-    const roleName = getUserRoleName(profile);
-    if (roleName === 'admin' && !window.location.pathname.startsWith('/admin')) {
-      console.info("🔄 [AUTH] Admin detectado, redirecionando para área administrativa");
-      toast.success("Redirecionando para área administrativa");
-      navigate('/admin', { replace: true });
-    }
-    
+    // REMOVIDO: Redirecionamento automático para admin
+    // Agora apenas marca como verificado, sem forçar redirecionamento
     setRedirectChecked(true);
   }, [profile, navigate, redirectChecked, user, isLoading]);
 

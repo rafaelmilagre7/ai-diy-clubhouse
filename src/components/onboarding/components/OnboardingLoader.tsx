@@ -62,8 +62,8 @@ export const OnboardingLoader = ({ children }: OnboardingLoaderProps) => {
 
   // CORREÇÃO CRÍTICA: Se é admin, nunca mostrar onboarding (apenas fora do modo preview)
   if (isAdmin || roleName === 'admin') {
-    console.log('[OnboardingLoader] Admin detectado - redirecionando para /admin');
-    return <Navigate to="/admin" replace />;
+    console.log('[OnboardingLoader] Admin detectado - redirecionando para /dashboard');
+    return <Navigate to="/dashboard" replace />;
   }
 
   // Se onboarding não é necessário, redirecionar para dashboard apropriado

@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { getUserRoleName } from "@/lib/supabase/types";
 
 const Auth = () => {
-  const { user, profile, isAdmin } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,21 +16,18 @@ const Auth = () => {
         description: "Redirecionando para o dashboard...",
       });
       
-      // CORREÇÃO CRÍTICA: Usar isAdmin baseado em role_id (não campo role legado)
+      // CORREÇÃO: Priorizar dashboard de membro
       const roleName = getUserRoleName(profile);
       
-      if (isAdmin || roleName === 'admin') {
-        console.log("🎯 [AUTH] Admin detectado - redirecionando para /admin");
-        navigate('/admin', { replace: true });
-      } else if (roleName === 'formacao') {
+      if (roleName === 'formacao') {
         console.log("🎯 [AUTH] Formação detectado - redirecionando para /formacao");
         navigate('/formacao', { replace: true });
       } else {
-        console.log("🎯 [AUTH] Usuário comum - redirecionando para /dashboard");
+        console.log("🎯 [AUTH] Usuário - redirecionando para /dashboard");
         navigate('/dashboard', { replace: true });
       }
     }
-  }, [user, profile, isAdmin, navigate]);
+  }, [user, profile, navigate]);
 
   return <AuthLayout />;
 };

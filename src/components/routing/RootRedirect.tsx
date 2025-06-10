@@ -39,13 +39,6 @@ const RootRedirect = () => {
     forceRedirect
   });
   
-  // Verificação imediata de admin baseada em email
-  const isAdminByEmail = user?.email && [
-    'rafael@viverdeia.ai',
-    'admin@viverdeia.ai',
-    'admin@teste.com'
-  ].includes(user.email.toLowerCase());
-  
   // OTIMIZAÇÃO 2: Circuit breaker reduzido para 2 segundos
   useEffect(() => {
     timeoutRef.current = window.setTimeout(() => {
@@ -62,20 +55,15 @@ const RootRedirect = () => {
   
   // OTIMIZAÇÃO 3: Limpeza de timeout para usuários com cache válido
   useEffect(() => {
-    if (user && (isAdmin || isAdminByEmail || profile || hasCachedAdminAccess || hasCachedFormacaoAccess)) {
+    if (user && (profile || hasCachedAdminAccess || hasCachedFormacaoAccess)) {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         console.log("⚡ [ROOT REDIRECT] Cache/auth válido - timeout cancelado");
       }
     }
-  }, [user, isAdmin, isAdminByEmail, profile, hasCachedAdminAccess, hasCachedFormacaoAccess]);
+  }, [user, profile, hasCachedAdminAccess, hasCachedFormacaoAccess]);
   
-  // OTIMIZAÇÃO 4: Navegação rápida com cache
-  if (user && hasCachedAdminAccess && location.pathname !== '/admin') {
-    console.log("🎯 [ROOT REDIRECT] Cache admin válido - redirecionamento direto");
-    return <Navigate to="/admin" replace />;
-  }
-  
+  // OTIMIZAÇÃO 4: Navegação rápida com cache apenas para formação
   if (user && hasCachedFormacaoAccess && location.pathname !== '/formacao') {
     console.log("🎯 [ROOT REDIRECT] Cache formação válido - redirecionamento direto");
     return <Navigate to="/formacao" replace />;
@@ -84,17 +72,14 @@ const RootRedirect = () => {
   // OTIMIZAÇÃO 5: Fallback mais rápido
   if (forceRedirect) {
     console.log("🚨 [ROOT REDIRECT] Circuit breaker ativo - redirecionamento forçado");
-    if (user && (isAdmin || isAdminByEmail)) {
-      console.log("🎯 [ROOT REDIRECT] Admin no circuit breaker - /admin");
-      return <Navigate to="/admin" replace />;
-    }
+    
     if (user && profile) {
       const roleName = getUserRoleName(profile);
       if (roleName === 'formacao') {
         console.log("🎯 [ROOT REDIRECT] Formação no circuit breaker - /formacao");
         return <Navigate to="/formacao" replace />;
       }
-      console.log("🎯 [ROOT REDIRECT] Usuário comum no circuit breaker - /dashboard");
+      console.log("🎯 [ROOT REDIRECT] Usuário no circuit breaker - /dashboard");
       return <Navigate to="/dashboard" replace />;
     }
     console.log("🎯 [ROOT REDIRECT] Sem usuário no circuit breaker - /login");
@@ -107,19 +92,13 @@ const RootRedirect = () => {
     
     const roleName = getUserRoleName(profile);
     
-    if (isAdmin || isAdminByEmail || roleName === 'admin') {
-      console.log("🎯 [ROOT REDIRECT] Admin em /login - redirecionando para /admin");
-      clearTimeout(timeoutRef.current!);
-      return <Navigate to="/admin" replace />;
-    }
-    
     if (roleName === 'formacao') {
       console.log("🎯 [ROOT REDIRECT] Formação em /login - redirecionando para /formacao");
       clearTimeout(timeoutRef.current!);
       return <Navigate to="/formacao" replace />;
     }
     
-    console.log("🎯 [ROOT REDIRECT] Usuário comum em /login - redirecionando para /dashboard");
+    console.log("🎯 [ROOT REDIRECT] Usuário em /login - redirecionando para /dashboard");
     clearTimeout(timeoutRef.current!);
     return <Navigate to="/dashboard" replace />;
   }
@@ -136,15 +115,8 @@ const RootRedirect = () => {
     return <Navigate to="/login" replace />;
   }
   
-  // Verificação de admin ANTES de qualquer outra verificação
+  // Verificação de roles APÓS verificação básica de usuário
   const roleName = getUserRoleName(profile);
-  
-  // Se é admin (por email OU por role), ir direto para área administrativa
-  if (isAdmin || isAdminByEmail || roleName === 'admin') {
-    console.log("🎯 [ROOT REDIRECT] Admin detectado - redirecionando para /admin");
-    clearTimeout(timeoutRef.current!);
-    return <Navigate to="/admin" replace />;
-  }
   
   // Se é formação, ir direto para área de formação
   if (roleName === 'formacao') {
@@ -179,8 +151,8 @@ const RootRedirect = () => {
     return <Navigate to="/onboarding" replace />;
   }
   
-  // Caso padrão: dashboard
-  console.log("🏠 [ROOT REDIRECT] Redirecionando para dashboard");
+  // Caso padrão: dashboard de membro (MUDANÇA PRINCIPAL)
+  console.log("🏠 [ROOT REDIRECT] Redirecionando para dashboard de membro");
   clearTimeout(timeoutRef.current!);
   return <Navigate to="/dashboard" replace />;
 };
