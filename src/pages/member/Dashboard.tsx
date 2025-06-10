@@ -1,4 +1,3 @@
-
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
@@ -12,6 +11,39 @@ import { Button } from "@/components/ui/button";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
 import { logger } from "@/utils/logger";
+import ErrorBoundary from '@/components/common/ErrorBoundary';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Home, RotateCcw } from 'lucide-react';
+
+// Componente de fallback específico para o dashboard
+const DashboardErrorFallback = ({ error, onRetry, onGoHome }: any) => {
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <Card className="w-full max-w-lg">
+        <CardHeader className="text-center">
+          <CardTitle className="text-xl">Problema no Dashboard</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-center text-muted-foreground">
+            Encontramos um problema ao carregar seu dashboard. Você pode tentar recarregar ou acessar as soluções diretamente.
+          </p>
+          
+          <div className="flex gap-3 justify-center">
+            <Button onClick={onRetry} className="flex items-center gap-2">
+              <RotateCcw className="w-4 h-4" />
+              Recarregar
+            </Button>
+            
+            <Button variant="outline" onClick={() => window.location.href = '/solutions'} className="flex items-center gap-2">
+              <Home className="w-4 h-4" />
+              Ver Soluções
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -201,15 +233,29 @@ const Dashboard = () => {
 
   // Renderizar dashboard com fallbacks seguros
   return (
-    <DashboardLayout
-      active={active || []}
-      completed={completed || []}
-      recommended={recommended || []}
-      category={category}
-      onCategoryChange={handleCategoryChange}
-      onSolutionClick={handleSolutionClick}
-      isLoading={solutionsLoading || progressLoading}
-    />
+    <ErrorBoundary
+      fallback={DashboardErrorFallback}
+      maxRetries={2}
+      showDetails={false}
+      resetOnLocationChange={true}
+      onError={(error, errorInfo) => {
+        logger.error('[Dashboard] Erro capturado pelo ErrorBoundary', {
+          error: error.message,
+          componentStack: errorInfo.componentStack,
+          component: 'Dashboard'
+        });
+      }}
+    >
+      <DashboardLayout
+        active={active || []}
+        completed={completed || []}
+        recommended={recommended || []}
+        category={category}
+        onCategoryChange={handleCategoryChange}
+        onSolutionClick={handleSolutionClick}
+        isLoading={solutionsLoading || progressLoading}
+      />
+    </ErrorBoundary>
   );
 };
 
