@@ -100,7 +100,6 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
     refetchOnMount: false,
     refetchInterval: false,
     retry: 1,
-    keepPreviousData: true, // Manter dados anteriores durante loading
     meta: {
       onError: (err: any) => {
         console.error("[useDashboardProgress] Erro no React Query:", err);
