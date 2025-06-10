@@ -1,10 +1,10 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
 import { OnboardingData } from '../types/onboardingTypes';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { logger } from '@/utils/logger';
+import { getUserRoleName } from '@/lib/supabase/types';
 
 interface OnboardingStatus {
   isRequired: boolean | null;
@@ -19,7 +19,7 @@ interface OnboardingActions {
 }
 
 export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
-  const { user, profile, isLoading: authLoading } = useAuth();
+  const { user, profile, isLoading: authLoading, isAdmin } = useAuth();
   const { handleError } = useErrorHandler();
   
   const [isRequired, setIsRequired] = useState<boolean | null>(null);
@@ -46,7 +46,7 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
   }, [isLoading]);
 
   const checkStatus = useCallback(async () => {
-    // Se não há usuário ou ainda está carregando auth, aguardar
+    // CORREÇÃO CRÍTICA 1: Se não há usuário ou ainda está carregando auth, aguardar
     if (!user?.id || authLoading) {
       logger.debug('Aguardando autenticação', { 
         hasUser: !!user, 
@@ -56,18 +56,39 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
       return;
     }
 
+    // CORREÇÃO CRÍTICA 2: Se é admin, NUNCA requer onboarding
+    if (isAdmin) {
+      logger.info('Admin detectado - onboarding não necessário', {
+        component: 'ONBOARDING_STATUS'
+      });
+      setIsRequired(false);
+      setIsLoading(false);
+      clearTimeout(timeoutRef.current!);
+      return;
+    }
+
     // Se já está verificando, não duplicar
     if (checkInProgress.current) {
       return;
     }
 
-    // Se não há profile ainda, usar fallback rápido
+    // CORREÇÃO CRÍTICA 3: Aguardar profile estar disponível
     if (!profile) {
-      logger.debug('Profile não disponível, assumindo onboarding necessário', {
+      logger.debug('Profile não disponível ainda, aguardando...', {
         component: 'ONBOARDING_STATUS'
       });
-      setIsRequired(true);
-      setIsLoading(false);
+      
+      // Dar mais tempo para carregar o profile antes de assumir onboarding necessário
+      const profileWaitTime = 3000; // 3 segundos
+      setTimeout(() => {
+        if (!profile && !isAdmin) {
+          logger.debug('Profile ainda não disponível após timeout, assumindo onboarding necessário', {
+            component: 'ONBOARDING_STATUS'
+          });
+          setIsRequired(true);
+          setIsLoading(false);
+        }
+      }, profileWaitTime);
       return;
     }
 
@@ -79,10 +100,11 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
       logger.debug('Verificando status do onboarding', {
         hasProfile: !!profile,
         onboardingCompleted: profile.onboarding_completed,
+        isAdmin,
         component: 'ONBOARDING_STATUS'
       });
       
-      // Verificar se profile indica onboarding completo
+      // CORREÇÃO CRÍTICA 4: Verificar se profile indica onboarding completo
       if (profile.onboarding_completed) {
         logger.info('Onboarding já completo no perfil', {
           component: 'ONBOARDING_STATUS'
@@ -133,7 +155,7 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
         component: 'ONBOARDING_STATUS'
       });
       
-      // Em caso de erro, assumir que não precisa para não bloquear
+      // CORREÇÃO CRÍTICA 5: Em caso de erro, assumir que não precisa para não bloquear admins
       setError(errorMessage);
       setIsRequired(false);
       handleError(err, 'useOnboardingStatus.checkStatus', { showToast: false });
@@ -141,7 +163,7 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
       checkInProgress.current = false;
       setIsLoading(false);
     }
-  }, [user?.id, profile, authLoading, handleError]);
+  }, [user?.id, profile, authLoading, isAdmin, handleError]);
 
   const submitData = useCallback(async (data: OnboardingData) => {
     logger.info('Iniciando submissão dos dados de onboarding', {
@@ -245,16 +267,26 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
     setError(null);
   }, []);
 
-  // Auto-verificar status quando há profile disponível
+  // CORREÇÃO CRÍTICA 6: Auto-verificar status com verificação de admin
   useEffect(() => {
     if (!authLoading && user?.id && isRequired === null) {
+      // Se é admin, marcar imediatamente como não necessário
+      if (isAdmin) {
+        logger.debug('Admin detectado - marcando onboarding como não necessário', {
+          component: 'ONBOARDING_STATUS'
+        });
+        setIsRequired(false);
+        setIsLoading(false);
+        return;
+      }
+      
       logger.debug('Auto-verificando status', {
         hasProfile: !!profile,
         component: 'ONBOARDING_STATUS'
       });
       checkStatus();
     }
-  }, [authLoading, user?.id, profile, isRequired, checkStatus]);
+  }, [authLoading, user?.id, profile, isRequired, isAdmin, checkStatus]);
 
   // Reset quando usuário muda
   useEffect(() => {
@@ -269,8 +301,8 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
     }
   }, [user?.id]);
 
-  // Se ainda está carregando auth, manter loading
-  const finalIsLoading = authLoading || (isLoading && !error);
+  // CORREÇÃO CRÍTICA 7: Se ainda está carregando auth, manter loading, mas considerar isAdmin
+  const finalIsLoading = authLoading || (isLoading && !error && !isAdmin);
 
   logger.debug('Estado final do onboarding', {
     isRequired,
@@ -278,6 +310,7 @@ export const useOnboardingStatus = (): OnboardingStatus & OnboardingActions => {
     hasError: !!error,
     hasUser: !!user,
     hasProfile: !!profile,
+    isAdmin,
     authLoading,
     component: 'ONBOARDING_STATUS'
   });

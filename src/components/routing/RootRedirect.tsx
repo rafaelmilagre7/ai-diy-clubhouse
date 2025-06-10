@@ -57,30 +57,34 @@ const RootRedirect = () => {
     return <Navigate to="/login" replace />;
   }
   
-  // Se ainda está carregando onboarding (mas não por muito tempo)
+  // CORREÇÃO CRÍTICA: Verificar se é admin ANTES de verificar onboarding
+  const roleName = getUserRoleName(profile);
+  
+  // Se é admin, ir direto para área administrativa (SEM verificar onboarding)
+  if (isAdmin || roleName === 'admin') {
+    console.log("🎯 [ROOT REDIRECT] Admin detectado - redirecionando para /admin");
+    return <Navigate to="/admin" replace />;
+  }
+  
+  // Se é formação, ir direto para área de formação
+  if (roleName === 'formacao') {
+    console.log("🎯 [ROOT REDIRECT] Formação detectado - redirecionando para /formacao");
+    return <Navigate to="/formacao" replace />;
+  }
+  
+  // APENAS para não-admins: verificar onboarding
   if (onboardingLoading) {
     return <LoadingScreen message="Verificando seu progresso..." />;
   }
   
-  // Se precisa de onboarding
+  // Se precisa de onboarding (apenas para não-admins)
   if (onboardingRequired) {
+    console.log("📝 [ROOT REDIRECT] Onboarding necessário - redirecionando para /onboarding");
     return <Navigate to="/onboarding" replace />;
   }
   
-  // Usar getUserRoleName para determinar redirecionamento
-  const roleName = getUserRoleName(profile);
-  
-  // Se é admin
-  if (isAdmin || roleName === 'admin') {
-    return <Navigate to="/admin" replace />;
-  }
-  
-  // Se é formação
-  if (roleName === 'formacao') {
-    return <Navigate to="/formacao" replace />;
-  }
-  
   // Caso padrão: dashboard
+  console.log("🏠 [ROOT REDIRECT] Redirecionando para dashboard");
   return <Navigate to="/dashboard" replace />;
 };
 
