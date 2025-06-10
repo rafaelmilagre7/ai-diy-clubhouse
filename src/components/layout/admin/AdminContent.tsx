@@ -1,13 +1,18 @@
 
 import { cn } from "@/lib/utils";
 import { AdminHeader } from "./AdminHeader";
-import { BaseContentProps } from "../BaseLayout";
+
+interface AdminContentProps {
+  sidebarOpen: boolean;
+  setSidebarOpen: (open: boolean) => void;
+  children: React.ReactNode;
+}
 
 export const AdminContent = ({ 
   sidebarOpen, 
   setSidebarOpen, 
   children 
-}: BaseContentProps) => {
+}: AdminContentProps) => {
   return (
     <div 
       className={cn(
