@@ -44,6 +44,7 @@ export interface OnboardingData {
   memberType?: 'club' | 'formacao';
   completedAt?: string;
   startedAt?: string;
+  updatedAt?: string; // Adicionar esta propriedade que estava faltando
   
   // IA Interativa - mensagens personalizadas para cada etapa
   aiMessage1?: string;
