@@ -53,26 +53,26 @@ const FormacaoMateriais = () => {
     fetchRecursos();
   }, []);
 
-  // Filtrar recursos
+  // Filtrar recursos baseado no file_type em vez de resource_type
   const filteredRecursos = recursos.filter(recurso => {
     const matchesSearch = !searchQuery || 
       recurso.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       recurso.description?.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesTab = activeTab === 'todos' || 
-      (activeTab === 'arquivos' && recurso.resource_type === 'file') ||
-      (activeTab === 'links' && recurso.resource_type === 'link') ||
-      (activeTab === 'videos' && recurso.resource_type === 'video');
+      (activeTab === 'arquivos' && (recurso.file_type?.includes('pdf') || recurso.file_type?.includes('doc'))) ||
+      (activeTab === 'links' && recurso.file_url?.startsWith('http')) ||
+      (activeTab === 'videos' && (recurso.file_type?.includes('video') || recurso.file_url?.includes('youtube')));
     
     return matchesSearch && matchesTab;
   });
 
-  // Estatísticas
+  // Estatísticas baseadas no file_type
   const stats = {
     total: recursos.length,
-    arquivos: recursos.filter(r => r.resource_type === 'file').length,
-    links: recursos.filter(r => r.resource_type === 'link').length,
-    videos: recursos.filter(r => r.resource_type === 'video').length
+    arquivos: recursos.filter(r => r.file_type?.includes('pdf') || r.file_type?.includes('doc')).length,
+    links: recursos.filter(r => r.file_url?.startsWith('http')).length,
+    videos: recursos.filter(r => r.file_type?.includes('video') || r.file_url?.includes('youtube')).length
   };
 
   // Handlers
@@ -86,9 +86,12 @@ const FormacaoMateriais = () => {
     setIsFormDialogOpen(true);
   };
 
-  const handleExcluirRecurso = (recurso: LearningResource) => {
-    setRecursoToDelete(recurso);
-    setDeleteDialogOpen(true);
+  const handleExcluirRecurso = (recursoId: string) => {
+    const recurso = recursos.find(r => r.id === recursoId);
+    if (recurso) {
+      setRecursoToDelete(recurso);
+      setDeleteDialogOpen(true);
+    }
   };
 
   const handleConfirmDelete = async () => {
@@ -202,18 +205,13 @@ const FormacaoMateriais = () => {
         </TabsList>
         
         <TabsContent value={activeTab} className="mt-6">
-          {loading ? (
-            <div className="flex justify-center items-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : (
-            <RecursosList 
-              recursos={filteredRecursos}
-              onEdit={handleEditarRecurso}
-              onDelete={handleExcluirRecurso}
-              isAdmin={isAdmin}
-            />
-          )}
+          <RecursosList 
+            recursos={filteredRecursos}
+            loading={loading}
+            onEdit={handleEditarRecurso}
+            onDelete={handleExcluirRecurso}
+            isAdmin={isAdmin}
+          />
         </TabsContent>
       </Tabs>
 
@@ -222,13 +220,14 @@ const FormacaoMateriais = () => {
         open={isFormDialogOpen}
         onOpenChange={setIsFormDialogOpen}
         recurso={editingRecurso}
+        lessonId=""
         onSuccess={handleSalvarRecurso}
       />
       
       <RecursoDeleteDialog 
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        recursoName={recursoToDelete?.name || ''}
+        recurso={recursoToDelete}
         onConfirm={handleConfirmDelete}
       />
     </div>

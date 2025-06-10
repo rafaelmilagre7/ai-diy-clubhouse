@@ -128,7 +128,7 @@ const FormacaoAulaDetalhes = () => {
       <AulaDeleteDialog 
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        aulaTitle={aula.title}
+        aula={aula}
         onConfirm={handleDeleteConfirm}
       />
     </div>
