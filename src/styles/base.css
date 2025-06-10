@@ -17,7 +17,7 @@
     --secondary: 222 23% 16%;
     --secondary-foreground: 222.2 80% 88%;
     --muted: 222 23% 16%;
-    --muted-foreground: 215 20% 75%;
+    --muted-foreground: 215 20% 85%; /* Clareado de 75% para 85% */
     --accent: 174 100% 36%;
     --accent-foreground: 174 100% 92%;
     --destructive: 2 75% 39%;
@@ -78,7 +78,7 @@
   
   /* Melhorias de contraste para texto secundário */
   .text-muted-foreground {
-    @apply text-neutral-600 dark:text-neutral-300;
+    @apply text-neutral-500 dark:text-neutral-300; /* Clareado para melhor contraste */
   }
 
   /* Link styles */

@@ -52,8 +52,8 @@ export const StatCard = ({
       <CardContent className="p-6">
         <div className="flex justify-between items-start">
           <div>
-            <p className="text-sm font-medium text-muted-foreground mb-1">{title}</p>
-            <h3 className="text-3xl font-bold">{value}</h3>
+            <p className="text-sm font-medium text-neutral-300 dark:text-neutral-300 mb-1">{title}</p>
+            <h3 className="text-3xl font-bold text-white">{value}</h3>
             
             {percentageChange !== undefined && (
               <div className="flex items-center mt-2">

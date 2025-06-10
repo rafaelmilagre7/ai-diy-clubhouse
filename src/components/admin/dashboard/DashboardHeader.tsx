@@ -10,8 +10,8 @@ export const DashboardHeader = ({ timeRange, setTimeRange }: DashboardHeaderProp
   return (
     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div>
-        <h1 className="text-3xl font-bold">Dashboard Admin</h1>
-        <p className="text-muted-foreground mt-1">
+        <h1 className="text-3xl font-bold text-white">Dashboard Admin</h1>
+        <p className="text-neutral-300 dark:text-neutral-300 mt-1">
           Visão geral da plataforma VIVER DE IA Club
         </p>
       </div>
