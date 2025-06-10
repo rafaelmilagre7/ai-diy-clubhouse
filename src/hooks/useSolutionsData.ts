@@ -1,10 +1,14 @@
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { Solution } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 import { useSecurityEnforcement } from "@/hooks/auth/useSecurityEnforcement";
 import { logger } from "@/utils/logger";
+
+// Cache global para evitar requests desnecessários
+const solutionsCache = new Map<string, { data: Solution[], timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 
 export const useSolutionsData = () => {
   const { user, profile } = useAuth();
@@ -12,22 +16,59 @@ export const useSolutionsData = () => {
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const lastFetchRef = useRef<number>(0);
+  const executionCountRef = useRef(0);
   
-  // CORREÇÃO: Adicionar estados de busca e filtragem que estavam faltando
+  // Estados de busca e filtragem
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
 
-  // CORREÇÃO: Computar canViewSolutions baseado no usuário atual
+  // Computar canViewSolutions baseado no usuário atual
   const canViewSolutions = useMemo(() => {
-    return !!user; // Por enquanto, qualquer usuário autenticado pode ver soluções
+    return !!user;
   }, [user]);
+
+  // Chave de cache baseada no perfil do usuário
+  const cacheKey = useMemo(() => {
+    const isAdmin = profile?.role === 'admin';
+    return `solutions_${user?.id}_${isAdmin ? 'admin' : 'user'}`;
+  }, [user?.id, profile?.role]);
 
   useEffect(() => {
     const fetchSolutions = async () => {
-      // CORREÇÃO CRÍTICA: Verificar autenticação antes de qualquer operação
+      // Verificar autenticação
       if (!user) {
         logger.warn('[SOLUTIONS] Tentativa de carregar soluções sem autenticação');
         setLoading(false);
+        return;
+      }
+
+      // Incrementar contador apenas em desenvolvimento
+      if (process.env.NODE_ENV === 'development') {
+        executionCountRef.current++;
+      }
+
+      // Debounce: evitar múltiplas execuções em sequência
+      const now = Date.now();
+      if (now - lastFetchRef.current < 1000) { // 1 segundo de debounce
+        return;
+      }
+      lastFetchRef.current = now;
+
+      // Verificar cache primeiro
+      const cached = solutionsCache.get(cacheKey);
+      if (cached && (now - cached.timestamp) < CACHE_TTL) {
+        setSolutions(cached.data);
+        setLoading(false);
+        setError(null);
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[SOLUTIONS] Dados carregados do cache:', {
+            execCount: executionCountRef.current,
+            count: cached.data.length,
+            cacheAge: Math.round((now - cached.timestamp) / 1000) + 's'
+          });
+        }
         return;
       }
 
@@ -35,11 +76,14 @@ export const useSolutionsData = () => {
         setLoading(true);
         setError(null);
 
-        // Log de acesso a dados críticos usando a nova função implementada
-        await logDataAccess('solutions', 'fetch_list');
+        // Log de acesso apenas uma vez
+        try {
+          await logDataAccess('solutions', 'fetch_list');
+        } catch (auditError) {
+          // Ignorar erros de auditoria silenciosamente
+        }
 
-        // CORREÇÃO CRÍTICA: Filtrar soluções baseado no perfil do usuário
-        // As políticas RLS agora garantem que os filtros são aplicados no servidor
+        // Query otimizada
         let query = supabase.from("solutions").select("*");
 
         // Se não for admin, mostrar apenas soluções publicadas
@@ -54,18 +98,27 @@ export const useSolutionsData = () => {
           throw fetchError;
         }
 
-        // CORREÇÃO CRÍTICA: Validar dados antes de definir no estado
+        // Validar dados antes de definir no estado
         const validSolutions = (data || []).filter(solution => 
           solution && typeof solution.id === 'string'
         );
 
+        // Atualizar cache
+        solutionsCache.set(cacheKey, {
+          data: validSolutions,
+          timestamp: now
+        });
+
         setSolutions(validSolutions);
         
-        logger.info('[SOLUTIONS] Soluções carregadas com sucesso', {
-          count: validSolutions.length,
-          isAdmin: profile?.role === 'admin',
-          userId: user.id.substring(0, 8) + '***'
-        });
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[SOLUTIONS] Soluções carregadas do servidor:', {
+            execCount: executionCountRef.current,
+            count: validSolutions.length,
+            isAdmin: profile?.role === 'admin',
+            userId: user.id.substring(0, 8) + '***'
+          });
+        }
 
       } catch (error: any) {
         logger.error('[SOLUTIONS] Erro ao carregar soluções:', error);
@@ -76,9 +129,9 @@ export const useSolutionsData = () => {
     };
 
     fetchSolutions();
-  }, [user, profile, logDataAccess]);
+  }, [user, profile?.role, cacheKey, logDataAccess]); // Dependências mínimas
 
-  // CORREÇÃO: Implementar filtragem de soluções baseada na busca e categoria
+  // Implementar filtragem de soluções baseada na busca e categoria
   const filteredSolutions = useMemo(() => {
     let filtered = solutions;
 

@@ -1,3 +1,4 @@
+
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
@@ -55,6 +56,7 @@ const Dashboard = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   
+  // Memoizar categoria inicial para evitar recriações
   const initialCategory = useMemo(() => searchParams.get("category") || "general", [searchParams]);
   const [category, setCategory] = useState<string>(initialCategory);
   
@@ -89,6 +91,43 @@ const Dashboard = () => {
   // Carregar soluções apenas se o usuário pode prosseguir
   const { solutions, loading: solutionsLoading, error: solutionsError } = useSolutionsData();
   
+  // Memoizar soluções para evitar recriações desnecessárias
+  const stableSolutions = useMemo(() => {
+    if (!solutions || !Array.isArray(solutions)) return [];
+    return solutions;
+  }, [solutions?.length, solutions?.map(s => s.id).join(',')]);
+  
+  // Filtrar soluções por categoria de forma memoizada
+  const filteredSolutions = useMemo(() => {
+    if (!stableSolutions || stableSolutions.length === 0) {
+      return [];
+    }
+    
+    try {
+      return category !== "general" 
+        ? stableSolutions.filter(s => s?.category === category)
+        : stableSolutions;
+    } catch (error) {
+      logger.warn('[Dashboard] Erro ao filtrar soluções', {
+        error,
+        category,
+        solutionsCount: stableSolutions?.length || 0,
+        component: 'DASHBOARD'
+      });
+      return stableSolutions || [];
+    }
+  }, [stableSolutions, category]);
+  
+  // Obter progresso das soluções - agora com soluções estáveis
+  const { 
+    active, 
+    completed, 
+    recommended, 
+    loading: progressLoading,
+    error: progressError,
+    isEmpty
+  } = useDashboardProgress(filteredSolutions);
+  
   // Tratamento de erro para soluções com retry
   useEffect(() => {
     if (solutionsError) {
@@ -112,36 +151,6 @@ const Dashboard = () => {
     }
   }, [solutionsError, retryCount]);
   
-  // Filtrar soluções por categoria com fallback
-  const filteredSolutions = useMemo(() => {
-    if (!solutions || !Array.isArray(solutions) || solutions.length === 0) {
-      return [];
-    }
-    
-    try {
-      return category !== "general" 
-        ? solutions.filter(s => s?.category === category)
-        : solutions;
-    } catch (error) {
-      logger.warn('[Dashboard] Erro ao filtrar soluções', {
-        error,
-        category,
-        solutionsCount: solutions?.length || 0,
-        component: 'DASHBOARD'
-      });
-      return solutions || [];
-    }
-  }, [solutions, category]);
-  
-  // Obter progresso das soluções com tratamento de erro
-  const { 
-    active, 
-    completed, 
-    recommended, 
-    loading: progressLoading,
-    error: progressError
-  } = useDashboardProgress(filteredSolutions);
-  
   // Tratamento de erro para progresso
   useEffect(() => {
     if (progressError) {
@@ -156,6 +165,7 @@ const Dashboard = () => {
     }
   }, [progressError]);
   
+  // Callbacks memoizados para evitar recriações
   const handleCategoryChange = useCallback((newCategory: string) => {
     try {
       setCategory(newCategory);
@@ -186,12 +196,12 @@ const Dashboard = () => {
     }
   }, [navigate]);
   
-  const handleRetry = () => {
+  const handleRetry = useCallback(() => {
     setHasError(false);
     setErrorMessage(null);
     setRetryCount(0);
     window.location.reload();
-  };
+  }, []);
 
   // Se ainda estiver verificando auth ou onboarding
   if (authLoading || onboardingLoading) {

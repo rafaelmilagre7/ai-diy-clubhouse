@@ -34,26 +34,17 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
 }) => {
   const { profile } = useAuth();
 
-  // Log apenas em desenvolvimento
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[DashboardLayout] Props recebidos:', {
-      active: active?.length || 0,
-      completed: completed?.length || 0,
-      recommended: recommended?.length || 0,
-      isLoading,
-      profile: !!profile
-    });
-  }
-
   // Memoizar o cálculo do nome do usuário
   const userName = useMemo(() => 
     profile?.name?.split(" ")[0] || "Membro"
   , [profile?.name]);
 
-  // Garantir que os arrays existam e sejam válidos
-  const safeActive = Array.isArray(active) ? active : [];
-  const safeCompleted = Array.isArray(completed) ? completed : [];
-  const safeRecommended = Array.isArray(recommended) ? recommended : [];
+  // Garantir que os arrays existam e sejam válidos - memoizado
+  const { safeActive, safeCompleted, safeRecommended } = useMemo(() => ({
+    safeActive: Array.isArray(active) ? active : [],
+    safeCompleted: Array.isArray(completed) ? completed : [],
+    safeRecommended: Array.isArray(recommended) ? recommended : []
+  }), [active, completed, recommended]);
 
   // Memoizar o estado de "sem soluções" para evitar recálculos
   const hasNoSolutions = useMemo(() => 
@@ -70,20 +61,8 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
     total: safeActive.length + safeCompleted.length + safeRecommended.length
   }), [safeActive.length, safeCompleted.length, safeRecommended.length]);
 
-  // Log apenas em desenvolvimento
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[DashboardLayout] Estado calculado:', {
-      hasNoSolutions,
-      kpiTotals,
-      userName
-    });
-  }
-
   // Se não há perfil e não está carregando, mostrar erro
   if (!profile && !isLoading) {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[DashboardLayout] Sem perfil, mostrando erro de conexão');
-    }
     return <DashboardConnectionErrorState />;
   }
 
