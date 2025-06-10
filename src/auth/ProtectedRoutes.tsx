@@ -10,8 +10,19 @@ interface ProtectedRoutesProps {
 }
 
 export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
-  const { user, isLoading } = useAuth();
   const location = useLocation();
+  
+  // CORREÇÃO: Verificação segura do contexto
+  let authContext;
+  try {
+    authContext = useAuth();
+  } catch (error) {
+    console.error("[PROTECTED] Auth context não disponível:", error);
+    // Se o contexto não está disponível, redirecionar para login
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+  }
+
+  const { user, isLoading } = authContext;
 
   // Mostrar loading enquanto verifica autenticação
   if (isLoading) {

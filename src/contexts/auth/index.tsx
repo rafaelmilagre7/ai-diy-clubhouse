@@ -1,12 +1,12 @@
+
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { UserProfile, getUserRoleName, isAdminRole, isFormacaoRole } from '@/lib/supabase';
 import { useAuthMethods } from './hooks/useAuthMethods';
-import { useAuthStateManager } from './hooks/useAuthStateManager';
+import { useAuthStateManager } from '../../hooks/auth/useAuthStateManager';
 import { clearProfileCache } from '@/hooks/auth/utils/authSessionUtils';
 import { AuthContextType } from './types';
-import { useGlobalLoading } from '@/hooks/useGlobalLoading';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -32,20 +32,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const authListenerRef = useRef<any>(null);
   const isInitialized = useRef(false);
   const lastUserId = useRef<string | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Usar o sistema global de loading
-  const { 
-    setLoading: setGlobalLoading, 
-    forceComplete, 
-    circuitBreakerActive,
-    isAnyLoading 
-  } = useGlobalLoading({
-    timeout: 4000,
-    enableCircuitBreaker: true,
-    retryAttempts: 1
-  });
-
-  // Inicializar useAuthStateManager com os setters
+  // Inicializar useAuthStateManager com os setters como parâmetros
   const { setupAuthSession } = useAuthStateManager({
     setSession,
     setUser,
@@ -57,13 +46,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading,
   });
 
-  // Circuit breaker global - timeout unificado
+  // Circuit breaker - timeout de 5 segundos para inicialização
   useEffect(() => {
-    if (circuitBreakerActive && isLoading) {
-      console.warn("⚠️ [AUTH] Circuit breaker global ativo - finalizando loading");
-      setIsLoading(false);
-    }
-  }, [circuitBreakerActive, isLoading]);
+    timeoutRef.current = setTimeout(() => {
+      if (isLoading) {
+        console.warn("⚠️ [AUTH] Circuit breaker ativado - forçando fim do loading");
+        setIsLoading(false);
+      }
+    }, 5000);
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [isLoading]);
 
   // Verificação imediata de admin baseada em email
   const isAdminByEmail = user?.email && [
@@ -87,12 +84,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (isInitialized.current) return;
     
     const initializeAuth = async () => {
-      console.log('🚀 [AUTH] Inicializando sistema com timeout unificado');
-      setGlobalLoading('auth', true);
+      console.log('🚀 [AUTH] Inicializando sistema de autenticação');
       
       try {
-        await setupAuthSession();
-        
+        // CORREÇÃO: Configurar listener ANTES de tentar setup
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
             console.log(`🔄 [AUTH] Evento: ${event}`);
@@ -107,22 +102,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             if (event === 'SIGNED_IN' && session?.user) {
               console.log(`🎉 [AUTH] Login: ${session.user.email}`);
               
-              try {
-                if (!circuitBreakerActive) {
+              // Defer a busca do perfil para evitar deadlock
+              setTimeout(async () => {
+                try {
                   await setupAuthSession();
-                } else {
-                  console.warn('[AUTH] Circuit breaker ativo - setup simplificado');
+                } catch (error) {
+                  console.error('❌ [AUTH] Erro no setup pós-login:', error);
+                  setAuthError(error instanceof Error ? error : new Error('Erro no setup'));
                   setUser(session.user);
                   setSession(session);
                   setIsLoading(false);
                 }
-              } catch (error) {
-                console.error('❌ [AUTH] Erro no setup pós-login:', error);
-                setAuthError(error instanceof Error ? error : new Error('Erro no setup'));
-                setUser(session.user);
-                setSession(session);
-                setIsLoading(false);
-              }
+              }, 0);
             } else if (event === 'SIGNED_OUT') {
               console.log('👋 [AUTH] Logout');
               clearProfileCache();
@@ -131,21 +122,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               setSession(null);
               setAuthError(null);
               setIsLoading(false);
-              setGlobalLoading('auth', false);
             }
           }
         );
         
         authListenerRef.current = subscription;
+        
+        // DEPOIS de configurar o listener, tentar setup inicial
+        await setupAuthSession();
+        
         isInitialized.current = true;
         console.log('✅ [AUTH] Inicialização concluída');
         
       } catch (error) {
         console.error('❌ [AUTH] Erro na inicialização:', error);
         setAuthError(error instanceof Error ? error : new Error('Erro na inicialização'));
-      } finally {
         setIsLoading(false);
-        setGlobalLoading('auth', false);
       }
     };
 
@@ -155,8 +147,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (authListenerRef.current) {
         authListenerRef.current.unsubscribe();
       }
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
-  }, [setupAuthSession, setGlobalLoading, circuitBreakerActive]);
+  }, []); // Sem dependências para evitar re-inicialização
 
   const value: AuthContextType = {
     user,
@@ -164,7 +159,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     profile,
     isAdmin,
     isFormacao,
-    isLoading: isLoading && !circuitBreakerActive,
+    isLoading,
     authError,
     signIn,
     signOut,

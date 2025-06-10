@@ -7,12 +7,22 @@ import { useEffect, useState, useRef } from "react";
 import { getUserRoleName } from "@/lib/supabase/types";
 
 const RootRedirect = () => {
-  const { user, profile, isAdmin, isLoading: authLoading } = useAuth();
-  const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingStatus();
-  const [forceRedirect, setForceRedirect] = useState(false);
-  const [circuitBreakerActive, setCircuitBreakerActive] = useState(false);
-  const timeoutRef = useRef<number | null>(null);
   const location = useLocation();
+  const [forceRedirect, setForceRedirect] = useState(false);
+  const timeoutRef = useRef<number | null>(null);
+  
+  // CORREÇÃO: Verificação segura do contexto
+  let authContext;
+  try {
+    authContext = useAuth();
+  } catch (error) {
+    console.error("[ROOT-REDIRECT] Auth context não disponível:", error);
+    // Se o contexto não está disponível, ir para login
+    return <Navigate to="/login" replace />;
+  }
+
+  const { user, profile, isAdmin, isLoading: authLoading } = authContext;
+  const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingStatus();
   
   console.log("[ROOT-REDIRECT] Estado atual:", {
     currentPath: location.pathname,
@@ -22,24 +32,22 @@ const RootRedirect = () => {
     authLoading,
     onboardingLoading,
     onboardingRequired,
-    forceRedirect,
-    circuitBreakerActive
+    forceRedirect
   });
   
-  // CORREÇÃO 1: Verificação imediata de admin baseada em email
+  // CORREÇÃO: Verificação imediata de admin baseada em email
   const isAdminByEmail = user?.email && [
     'rafael@viverdeia.ai',
     'admin@viverdeia.ai',
     'admin@teste.com'
   ].includes(user.email.toLowerCase());
   
-  // CORREÇÃO 2: Circuit breaker - timeout reduzido para 6 segundos
+  // CORREÇÃO: Circuit breaker - timeout reduzido para 4 segundos
   useEffect(() => {
     timeoutRef.current = window.setTimeout(() => {
-      console.warn("⚠️ [ROOT REDIRECT] Circuit breaker ativado (6s), forçando redirecionamento");
-      setCircuitBreakerActive(true);
+      console.warn("⚠️ [ROOT REDIRECT] Circuit breaker ativado (4s), forçando redirecionamento");
       setForceRedirect(true);
-    }, 6000);
+    }, 4000);
     
     return () => {
       if (timeoutRef.current) {
@@ -48,7 +56,7 @@ const RootRedirect = () => {
     };
   }, []);
   
-  // CORREÇÃO 3: Lógica de redirecionamento mais robusta
+  // CORREÇÃO: Lógica de redirecionamento mais robusta
   useEffect(() => {
     // Se temos informações suficientes para redirecionar, limpar timeout
     if (user && (isAdmin || isAdminByEmail || profile)) {
@@ -58,8 +66,8 @@ const RootRedirect = () => {
     }
   }, [user, isAdmin, isAdminByEmail, profile]);
   
-  // CORREÇÃO 4: Fallback mais agressivo por circuit breaker
-  if (forceRedirect || circuitBreakerActive) {
+  // CORREÇÃO: Fallback mais agressivo por circuit breaker
+  if (forceRedirect) {
     console.log("🚨 [ROOT REDIRECT] Circuit breaker ativo - redirecionamento forçado");
     if (user && (isAdmin || isAdminByEmail)) {
       console.log("🎯 [ROOT REDIRECT] Admin detectado no circuit breaker - /admin");
@@ -102,7 +110,7 @@ const RootRedirect = () => {
   }
   
   // Se ainda está carregando autenticação (mas não por muito tempo)
-  if (authLoading && !circuitBreakerActive) {
+  if (authLoading && !forceRedirect) {
     console.log("[ROOT-REDIRECT] Aguardando autenticação...");
     return <LoadingScreen message="Verificando sua sessão..." />;
   }
@@ -113,7 +121,7 @@ const RootRedirect = () => {
     return <Navigate to="/login" replace />;
   }
   
-  // CORREÇÃO 5: Verificação de admin ANTES de qualquer outra verificação
+  // CORREÇÃO: Verificação de admin ANTES de qualquer outra verificação
   const roleName = getUserRoleName(profile);
   
   // Se é admin (por email OU por role), ir direto para área administrativa
@@ -131,26 +139,26 @@ const RootRedirect = () => {
   }
   
   // Se há usuário mas não há perfil, aguardar um pouco mais ou ir para dashboard
-  if (!profile && !circuitBreakerActive) {
+  if (!profile && !forceRedirect) {
     console.log("[ROOT-REDIRECT] Usuário sem perfil - aguardando...");
     return <LoadingScreen message="Carregando seu perfil..." />;
   }
   
   // Se não há perfil mas circuit breaker está ativo, ir para dashboard
-  if (!profile && circuitBreakerActive) {
+  if (!profile && forceRedirect) {
     console.log("[ROOT-REDIRECT] Circuit breaker + sem perfil - redirecionando para dashboard");
     clearTimeout(timeoutRef.current!);
     return <Navigate to="/dashboard" replace />;
   }
   
   // APENAS para não-admins: verificar onboarding
-  if (onboardingLoading && !circuitBreakerActive) {
+  if (onboardingLoading && !forceRedirect) {
     console.log("[ROOT-REDIRECT] Verificando onboarding...");
     return <LoadingScreen message="Verificando seu progresso..." />;
   }
   
   // Se precisa de onboarding (apenas para não-admins)
-  if (onboardingRequired && !circuitBreakerActive) {
+  if (onboardingRequired && !forceRedirect) {
     console.log("📝 [ROOT REDIRECT] Onboarding necessário - redirecionando para /onboarding");
     clearTimeout(timeoutRef.current!);
     return <Navigate to="/onboarding" replace />;

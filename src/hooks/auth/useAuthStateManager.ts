@@ -1,38 +1,27 @@
 
 import { useCallback } from "react";
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/auth';
 import { processUserProfile } from './utils/authSessionUtils';
 
-export const useAuthStateManager = () => {
-  // Safe access to useAuth, use default implementation if not in context
-  let authContext;
-  try {
-    authContext = useAuth();
-  } catch (error) {
-    console.error("useAuthStateManager error:", error);
-    // Return a dummy function that doesn't do anything if we're not in the AuthProvider context
-    return { 
-      setupAuthSession: async () => ({ success: false, error: new Error("Authentication provider not found") }) 
-    };
-  }
-  
-  const {
-    setSession,
-    setUser,
-    setProfile,
-    setIsLoading,
-  } = authContext;
+interface AuthStateManagerParams {
+  setSession: (session: any) => void;
+  setUser: (user: any) => void;
+  setProfile: (profile: any) => void;
+  setIsLoading: (loading: boolean) => void;
+}
+
+export const useAuthStateManager = (params: AuthStateManagerParams) => {
+  const { setSession, setUser, setProfile, setIsLoading } = params;
   
   // Setup auth session function with optimized performance and better error handling
   const setupAuthSession = useCallback(async () => {
     try {
       console.log("[AUTH-STATE-MANAGER] Verificando sessão atual");
       
-      // CORREÇÃO CRÍTICA 1: Timeout reduzido para 1 segundo com retry mais agressivo
+      // CORREÇÃO CRÍTICA 1: Timeout reduzido para 2 segundos com retry mais agressivo
       const sessionPromise = supabase.auth.getSession();
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Session fetch timeout")), 1000)
+        setTimeout(() => reject(new Error("Session fetch timeout")), 2000)
       );
       
       let sessionResult;
@@ -81,11 +70,6 @@ export const useAuthStateManager = () => {
             isAdmin: isAdminByEmail || profile?.role_id === 'admin',
             roleName: profile?.user_roles?.name || 'sem role'
           });
-          
-          // CORREÇÃO CRÍTICA 3: Garantir que navegação aconteça após profile estar disponível
-          if (profile) {
-            console.log("[AUTH-STATE-MANAGER] ✅ Perfil carregado - sistema pronto para navegação");
-          }
           
         } catch (profileError) {
           console.error("[AUTH-STATE-MANAGER] Erro ao processar perfil do usuário:", profileError);
