@@ -180,7 +180,7 @@ export const PieChart: React.FC<PieChartProps> = ({
   data, 
   category, 
   index,
-  colors = Object.values(chartColors),
+  colors = chartColors.categorical,
   valueFormatter = (value) => value.toString(),
   className = ""
 }) => {
