@@ -92,12 +92,12 @@ export const useRealSystemActivity = (timeRange: string) => {
             event_type: activity.event_type,
             created_at: activity.created_at,
             user_name: userProfile?.name || 'Usuário Desconhecido',
-            event_description: this.generateEventDescription(activity.event_type, activity.event_data)
+            event_description: generateEventDescription(activity.event_type, activity.event_data)
           };
         });
         
         // Agrupar por tipo de evento
-        const eventsByType = this.groupEventsByType(userActivities);
+        const eventsByType = groupEventsByType(userActivities);
         
         // Log de segurança para monitoramento
         secureLogger.info('System activity data loaded', 'ADMIN_DASHBOARD', {
@@ -135,46 +135,46 @@ export const useRealSystemActivity = (timeRange: string) => {
     fetchSystemActivity();
   }, [toast, timeRange]);
 
-  // Método para gerar descrição legível do evento
-  const generateEventDescription = (eventType: string, eventData: any): string => {
-    const descriptions: Record<string, string> = {
-      'view': 'Visualizou conteúdo',
-      'start': 'Iniciou sessão',
-      'complete': 'Completou atividade',
-      'login': 'Fez login no sistema',
-      'logout': 'Fez logout do sistema',
-      'create': 'Criou novo item',
-      'update': 'Atualizou item',
-      'delete': 'Removeu item'
-    };
-    
-    let description = descriptions[eventType] || `Executou ação: ${eventType}`;
-    
-    // Adicionar detalhes do eventData se disponível
-    if (eventData && typeof eventData === 'object') {
-      if (eventData.page) {
-        description += ` na página ${eventData.page}`;
-      }
-      if (eventData.resource) {
-        description += ` (${eventData.resource})`;
-      }
-    }
-    
-    return description;
-  };
-
-  // Método para agrupar eventos por tipo
-  const groupEventsByType = (activities: SystemActivity[]): { type: string; count: number }[] => {
-    const grouped = activities.reduce((acc, activity) => {
-      const type = activity.event_type;
-      acc[type] = (acc[type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    
-    return Object.entries(grouped)
-      .map(([type, count]) => ({ type, count }))
-      .sort((a, b) => b.count - a.count);
-  };
-
   return { activityData, loading };
+};
+
+// Método para gerar descrição legível do evento
+const generateEventDescription = (eventType: string, eventData: any): string => {
+  const descriptions: Record<string, string> = {
+    'view': 'Visualizou conteúdo',
+    'start': 'Iniciou sessão',
+    'complete': 'Completou atividade',
+    'login': 'Fez login no sistema',
+    'logout': 'Fez logout do sistema',
+    'create': 'Criou novo item',
+    'update': 'Atualizou item',
+    'delete': 'Removeu item'
+  };
+  
+  let description = descriptions[eventType] || `Executou ação: ${eventType}`;
+  
+  // Adicionar detalhes do eventData se disponível
+  if (eventData && typeof eventData === 'object') {
+    if (eventData.page) {
+      description += ` na página ${eventData.page}`;
+    }
+    if (eventData.resource) {
+      description += ` (${eventData.resource})`;
+    }
+  }
+  
+  return description;
+};
+
+// Método para agrupar eventos por tipo
+const groupEventsByType = (activities: SystemActivity[]): { type: string; count: number }[] => {
+  const grouped = activities.reduce((acc, activity) => {
+    const type = activity.event_type;
+    acc[type] = (acc[type] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  
+  return Object.entries(grouped)
+    .map(([type, count]) => ({ type, count }))
+    .sort((a, b) => b.count - a.count);
 };
