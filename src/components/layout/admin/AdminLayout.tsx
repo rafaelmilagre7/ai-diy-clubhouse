@@ -5,6 +5,8 @@ import { useAuth } from "@/contexts/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { AdminSidebar } from "./AdminSidebar";
+import { AdminContent } from "./AdminContent";
+import { useSidebarControl } from "@/hooks/useSidebarControl";
 
 interface AdminLayoutProps {
   children?: React.ReactNode;
@@ -16,6 +18,8 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const [isMounted, setIsMounted] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 3;
+  
+  const { sidebarOpen, setSidebarOpen } = useSidebarControl();
 
   // Verificar autenticação e permissões com retry logic
   useEffect(() => {
@@ -102,14 +106,15 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
   // Renderização final apenas para usuários autorizados
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-background w-full">
       <AdminSidebar />
       
-      <div className="flex-1 overflow-auto">
-        <main className="max-w-7xl mx-auto p-8">
-          {children || <Outlet />}
-        </main>
-      </div>
+      <AdminContent 
+        sidebarOpen={sidebarOpen} 
+        setSidebarOpen={setSidebarOpen}
+      >
+        {children || <Outlet />}
+      </AdminContent>
     </div>
   );
 };

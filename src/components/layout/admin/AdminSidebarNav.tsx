@@ -10,7 +10,8 @@ import {
   GraduationCap,
   Gift,
   Shield,
-  Activity
+  Activity,
+  UserPlus
 } from "lucide-react";
 import { AdminNavItem } from "./AdminNavItem";
 
@@ -35,6 +36,12 @@ export const AdminSidebarNav = () => {
       icon: Users,
       href: "/admin/users",
       isActive: location.pathname.startsWith("/admin/users")
+    },
+    {
+      label: "Convites",
+      icon: UserPlus,
+      href: "/admin/invites",
+      isActive: location.pathname.startsWith("/admin/invites")
     },
     {
       label: "Soluções",

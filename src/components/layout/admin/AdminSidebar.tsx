@@ -4,7 +4,7 @@ import { AdminSidebarNav } from "./AdminSidebarNav";
 
 export const AdminSidebar = () => {
   return (
-    <div className="w-64 bg-[#0F111A] border-r border-white/5 flex flex-col h-screen">
+    <div className="w-64 bg-[#0F111A] border-r border-white/5 flex flex-col h-screen hidden lg:flex">
       {/* Header fixo */}
       <div className="flex-shrink-0 p-4">
         <div className="flex items-center justify-center mb-6">

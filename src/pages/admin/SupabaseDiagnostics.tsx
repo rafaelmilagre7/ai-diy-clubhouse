@@ -4,14 +4,14 @@ import { SupabaseErrorDiagnostics } from '@/components/debug/SupabaseErrorDiagno
 
 const SupabaseDiagnostics: React.FC = () => {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Diagnóstico do Supabase</h1>
+    <div className="container mx-auto py-6">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold tracking-tight">Diagnóstico do Sistema</h1>
         <p className="text-muted-foreground">
-          Análise detalhada dos erros e status de saúde do sistema Supabase.
+          Monitoramento e diagnóstico da saúde do sistema Supabase
         </p>
       </div>
-
+      
       <SupabaseErrorDiagnostics />
     </div>
   );

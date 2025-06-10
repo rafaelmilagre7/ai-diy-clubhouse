@@ -1,139 +1,104 @@
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-interface HealthCheckResult {
+interface HealthStatus {
   isHealthy: boolean;
-  issues: string[];
-  checkedAt: Date;
-  connectionStatus: 'connected' | 'disconnected' | 'slow';
+  connectionStatus: 'connected' | 'disconnected' | 'slow' | 'error';
   authStatus: 'authenticated' | 'unauthenticated' | 'error';
   databaseStatus: 'operational' | 'slow' | 'error';
-  storageStatus: 'operational' | 'error' | 'untested';
+  storageStatus: 'operational' | 'slow' | 'error';
+  issues: string[];
+  checkedAt: Date;
 }
 
 export const useSupabaseHealthCheck = () => {
-  const [healthStatus, setHealthStatus] = useState<HealthCheckResult>({
+  const [healthStatus, setHealthStatus] = useState<HealthStatus>({
     isHealthy: true,
-    issues: [],
-    checkedAt: new Date(),
     connectionStatus: 'connected',
-    authStatus: 'unauthenticated',
+    authStatus: 'authenticated',
     databaseStatus: 'operational',
-    storageStatus: 'untested'
+    storageStatus: 'operational',
+    issues: [],
+    checkedAt: new Date()
   });
   const [isChecking, setIsChecking] = useState(false);
 
-  const performHealthCheck = async () => {
+  const performHealthCheck = useCallback(async () => {
     setIsChecking(true);
     const issues: string[] = [];
-    const startTime = performance.now();
+    const startTime = Date.now();
 
     try {
-      // 1. Verificar conexão com o banco
-      let databaseStatus: 'operational' | 'slow' | 'error' = 'operational';
-      try {
-        const dbStart = performance.now();
-        const { error: dbError } = await supabase
-          .from('profiles')
-          .select('count')
-          .limit(1);
-        
-        const dbTime = performance.now() - dbStart;
-        
-        if (dbError) {
-          issues.push(`Erro no banco de dados: ${dbError.message}`);
-          databaseStatus = 'error';
-        } else if (dbTime > 2000) {
-          issues.push('Banco de dados respondendo lentamente');
-          databaseStatus = 'slow';
-        }
-      } catch (error) {
-        issues.push(`Erro de conexão com banco: ${error}`);
-        databaseStatus = 'error';
-      }
-
-      // 2. Verificar autenticação
-      let authStatus: 'authenticated' | 'unauthenticated' | 'error' = 'unauthenticated';
-      try {
-        const { data: { session }, error: authError } = await supabase.auth.getSession();
-        
-        if (authError) {
-          issues.push(`Erro de autenticação: ${authError.message}`);
-          authStatus = 'error';
-        } else if (session) {
-          authStatus = 'authenticated';
-        }
-      } catch (error) {
-        issues.push(`Erro no sistema de auth: ${error}`);
-        authStatus = 'error';
-      }
-
-      // 3. Verificar storage (se possível)
-      let storageStatus: 'operational' | 'error' | 'untested' = 'untested';
-      try {
-        const { data: buckets, error: storageError } = await supabase.storage.listBuckets();
-        
-        if (storageError) {
-          issues.push(`Erro no storage: ${storageError.message}`);
-          storageStatus = 'error';
-        } else {
-          storageStatus = 'operational';
-        }
-      } catch (error) {
-        issues.push(`Erro ao verificar storage: ${error}`);
-        storageStatus = 'error';
-      }
-
-      // 4. Verificar tempo de resposta geral
-      const totalTime = performance.now() - startTime;
-      let connectionStatus: 'connected' | 'disconnected' | 'slow' = 'connected';
+      // Testar conexão básica
+      const connectionTest = await supabase.from('profiles').select('count').limit(1);
+      const connectionTime = Date.now() - startTime;
       
-      if (totalTime > 5000) {
-        issues.push('Conexão muito lenta com Supabase');
+      let connectionStatus: HealthStatus['connectionStatus'] = 'connected';
+      if (connectionTest.error) {
+        connectionStatus = 'error';
+        issues.push(`Erro de conexão: ${connectionTest.error.message}`);
+      } else if (connectionTime > 3000) {
         connectionStatus = 'slow';
+        issues.push('Conexão lenta detectada (>3s)');
       }
 
-      const newHealthStatus: HealthCheckResult = {
+      // Testar autenticação
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      const authStatus: HealthStatus['authStatus'] = authError || !user ? 'unauthenticated' : 'authenticated';
+      if (authError) {
+        issues.push(`Erro de autenticação: ${authError.message}`);
+      }
+
+      // Testar banco de dados
+      const dbTest = await supabase.rpc('audit_role_assignments');
+      const databaseStatus: HealthStatus['databaseStatus'] = dbTest.error ? 'error' : 'operational';
+      if (dbTest.error) {
+        issues.push(`Erro no banco: ${dbTest.error.message}`);
+      }
+
+      // Testar storage (simplificado)
+      const storageTest = await supabase.storage.listBuckets();
+      const storageStatus: HealthStatus['storageStatus'] = storageTest.error ? 'error' : 'operational';
+      if (storageTest.error) {
+        issues.push(`Erro no storage: ${storageTest.error.message}`);
+      }
+
+      setHealthStatus({
         isHealthy: issues.length === 0,
-        issues,
-        checkedAt: new Date(),
         connectionStatus,
         authStatus,
         databaseStatus,
-        storageStatus
-      };
-
-      setHealthStatus(newHealthStatus);
-
-      // Mostrar notificação se houver problemas críticos
-      if (issues.length > 0) {
-        toast.error(`${issues.length} problema(s) detectado(s) no Supabase`, {
-          description: issues.slice(0, 2).join(', ') + (issues.length > 2 ? '...' : '')
-        });
-      }
+        storageStatus,
+        issues,
+        checkedAt: new Date()
+      });
 
     } catch (error) {
-      console.error('Erro durante health check:', error);
+      console.error('Health check error:', error);
       setHealthStatus({
         isHealthy: false,
-        issues: [`Erro crítico durante verificação: ${error}`],
-        checkedAt: new Date(),
-        connectionStatus: 'disconnected',
+        connectionStatus: 'error',
         authStatus: 'error',
         databaseStatus: 'error',
-        storageStatus: 'error'
+        storageStatus: 'error',
+        issues: [`Erro geral: ${error instanceof Error ? error.message : 'Erro desconhecido'}`],
+        checkedAt: new Date()
       });
     } finally {
       setIsChecking(false);
     }
-  };
+  }, []);
 
-  // Executar verificação inicial
   useEffect(() => {
     performHealthCheck();
-  }, []);
+    
+    // Check a cada 5 minutos
+    const interval = setInterval(performHealthCheck, 5 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, [performHealthCheck]);
 
   return {
     healthStatus,
