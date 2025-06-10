@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -47,9 +46,14 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
             .single();
 
           if (profile?.user_roles) {
-            const roleName = Array.isArray(profile.user_roles) 
-              ? profile.user_roles[0]?.name 
-              : profile.user_roles?.name;
+            // Correção de tipagem: garantir que user_roles seja tratado corretamente
+            let roleName: string | null = null;
+            
+            if (Array.isArray(profile.user_roles)) {
+              roleName = profile.user_roles[0]?.name || null;
+            } else if (profile.user_roles && typeof profile.user_roles === 'object' && 'name' in profile.user_roles) {
+              roleName = (profile.user_roles as { name: string }).name;
+            }
 
             if (roleName) {
               console.log(`🔄 [AUTH] Atualizando user_metadata no login: role=${roleName}`);
