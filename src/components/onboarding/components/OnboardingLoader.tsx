@@ -3,8 +3,10 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
 import { useOnboardingStatus } from '../hooks/useOnboardingStatus';
+import { useAdminPreview } from '@/hooks/useAdminPreview';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { getUserRoleName } from '@/lib/supabase/types';
+import { AdminPreviewBanner } from './AdminPreviewBanner';
 
 interface OnboardingLoaderProps {
   children: React.ReactNode;
@@ -15,6 +17,7 @@ export const OnboardingLoader = ({ children }: OnboardingLoaderProps) => {
   
   const { user, profile, isLoading: authLoading, isAdmin } = useAuth();
   const { isRequired, isLoading: onboardingLoading } = useOnboardingStatus();
+  const { isAdminPreviewMode, isValidAdminAccess } = useAdminPreview();
 
   // CORREÇÃO CRÍTICA: Usar getUserRoleName baseado em role_id
   const roleName = getUserRoleName(profile);
@@ -28,7 +31,8 @@ export const OnboardingLoader = ({ children }: OnboardingLoaderProps) => {
     isRequired,
     memberType,
     isAdmin,
-    roleName
+    roleName,
+    isAdminPreviewMode
   });
 
   // Mostrar loading enquanto carrega
@@ -43,7 +47,20 @@ export const OnboardingLoader = ({ children }: OnboardingLoaderProps) => {
     return <Navigate to="/login" replace />;
   }
 
-  // CORREÇÃO CRÍTICA: Se é admin, nunca mostrar onboarding
+  // MODO ADMIN PREVIEW: Permitir acesso mesmo se onboarding já foi concluído
+  if (isAdminPreviewMode && isValidAdminAccess) {
+    console.log('[OnboardingLoader] Modo admin preview ativo - permitindo acesso');
+    return (
+      <>
+        <AdminPreviewBanner />
+        <div style={{ paddingTop: '60px' }}>
+          {children}
+        </div>
+      </>
+    );
+  }
+
+  // CORREÇÃO CRÍTICA: Se é admin, nunca mostrar onboarding (apenas fora do modo preview)
   if (isAdmin || roleName === 'admin') {
     console.log('[OnboardingLoader] Admin detectado - redirecionando para /admin');
     return <Navigate to="/admin" replace />;

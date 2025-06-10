@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -6,6 +5,7 @@ import { useAuth } from '@/contexts/auth';
 import { useOnboardingStatus } from './hooks/useOnboardingStatus';
 import { useOnboardingStorage } from './hooks/useOnboardingStorage';
 import { useOnboardingValidation } from './hooks/useOnboardingValidation';
+import { useAdminPreview } from '@/hooks/useAdminPreview';
 import { OnboardingStep1 } from './steps/OnboardingStep1';
 import { OnboardingStep2 } from './steps/OnboardingStep2';
 import { OnboardingStep3 } from './steps/OnboardingStep3';
@@ -25,6 +25,7 @@ export const OnboardingWizard = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { submitData, clearError, error } = useOnboardingStatus();
+  const { isAdminPreviewMode } = useAdminPreview();
   const [currentStep, setCurrentStep] = useState(1);
   const [isCompleting, setIsCompleting] = useState(false);
   const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
@@ -76,6 +77,12 @@ export const OnboardingWizard = () => {
 
   // Auto-save forçado antes de mudanças críticas
   const handleCriticalSave = async () => {
+    // No modo admin preview, não salvar dados
+    if (isAdminPreviewMode) {
+      console.log('[OnboardingWizard] Modo admin preview - salvamento desabilitado');
+      return true;
+    }
+
     if (hasUnsavedChanges) {
       try {
         await forceSave();
@@ -99,7 +106,7 @@ export const OnboardingWizard = () => {
       // Validar usando os dados atuais do storage
       const validation = validateCurrentStep(currentStep, data, memberType);
       
-      if (!validation.isValid) {
+      if (!validation.isValid && !isAdminPreviewMode) {
         console.log('[OnboardingWizard] Validação falhou:', validation.errors);
         const errorFields = validation.errors.map(e => e.field).join(', ');
         toast.error(`Por favor, preencha os campos obrigatórios: ${errorFields}`);
@@ -107,17 +114,20 @@ export const OnboardingWizard = () => {
       }
     }
 
-    // Salvar antes de prosseguir
+    // Salvar antes de prosseguir (exceto no modo admin)
     const saveSuccess = await handleCriticalSave();
     if (!saveSuccess) return;
 
     if (currentStep < totalSteps) {
       setCurrentStep(prev => prev + 1);
       if (currentStep < 5) {
-        toast.success('Ótimo! Vamos para a próxima etapa 🎉');
+        const message = isAdminPreviewMode 
+          ? 'Próxima etapa (Modo Preview)' 
+          : 'Ótimo! Vamos para a próxima etapa 🎉';
+        toast.success(message);
       }
     }
-  }, [currentStep, totalSteps, data, memberType, validateCurrentStep, clearValidationErrors, clearError, handleCriticalSave]);
+  }, [currentStep, totalSteps, data, memberType, validateCurrentStep, clearValidationErrors, clearError, handleCriticalSave, isAdminPreviewMode]);
 
   const handlePrev = useCallback(async () => {
     console.log('[OnboardingWizard] handlePrev - step:', currentStep);
@@ -141,6 +151,16 @@ export const OnboardingWizard = () => {
 
   const handleComplete = useCallback(async () => {
     console.log('[OnboardingWizard] Iniciando finalização');
+    
+    // No modo admin preview, apenas simular finalização
+    if (isAdminPreviewMode) {
+      toast.success('Preview finalizado - dados não foram salvos (Modo Admin)');
+      setTimeout(() => {
+        navigate('/admin', { replace: true });
+      }, 1500);
+      return;
+    }
+    
     setIsCompleting(true);
     
     try {
@@ -185,7 +205,7 @@ export const OnboardingWizard = () => {
     } finally {
       setIsCompleting(false);
     }
-  }, [data, memberType, validateCurrentStep, submitData, clearData, navigate, handleCriticalSave]);
+  }, [data, memberType, validateCurrentStep, submitData, clearData, navigate, handleCriticalSave, isAdminPreviewMode]);
 
   const handleRecoverData = () => {
     const recovered = recoverData();
@@ -282,20 +302,24 @@ export const OnboardingWizard = () => {
         </div>
       </div>
 
-      {/* Indicador de salvamento */}
-      <OnboardingSaveIndicator
-        hasUnsavedChanges={hasUnsavedChanges}
-        lastSaved={lastSaved}
-        syncStatus={syncStatus}
-      />
+      {/* Indicador de salvamento - oculto no modo admin */}
+      {!isAdminPreviewMode && (
+        <OnboardingSaveIndicator
+          hasUnsavedChanges={hasUnsavedChanges}
+          lastSaved={lastSaved}
+          syncStatus={syncStatus}
+        />
+      )}
 
-      {/* Dialog de recuperação */}
-      <OnboardingRecoveryDialog
-        open={showRecoveryDialog}
-        onOpenChange={setShowRecoveryDialog}
-        onRecover={handleRecoverData}
-        onStartOver={handleStartOver}
-      />
+      {/* Dialog de recuperação - oculto no modo admin */}
+      {!isAdminPreviewMode && (
+        <OnboardingRecoveryDialog
+          open={showRecoveryDialog}
+          onOpenChange={setShowRecoveryDialog}
+          onRecover={handleRecoverData}
+          onStartOver={handleStartOver}
+        />
+      )}
     </div>
   );
 };
