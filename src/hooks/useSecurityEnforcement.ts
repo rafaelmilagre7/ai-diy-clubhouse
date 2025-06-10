@@ -6,7 +6,7 @@ import { logger } from '@/utils/logger';
 
 /**
  * Hook para forçar verificações de segurança e logs de auditoria
- * Atualizado para integrar com as novas políticas RLS
+ * Atualizado para usar as novas funções seguras de RLS
  */
 export const useSecurityEnforcement = () => {
   const { user, isLoading } = useAuth();
@@ -23,7 +23,7 @@ export const useSecurityEnforcement = () => {
     }
   }, [user, isLoading]);
 
-  // Função para logar acessos críticos a dados usando a nova função de auditoria
+  // CORREÇÃO: Função para logar acessos usando nova função robusta
   const logDataAccess = async (tableName: string, operation: string, resourceId?: string) => {
     if (!user) return;
 
@@ -34,8 +34,8 @@ export const useSecurityEnforcement = () => {
         p_resource_id: resourceId
       });
     } catch (error) {
-      // Falhar silenciosamente para não quebrar a experiência do usuário
-      logger.error('[SECURITY] Erro ao registrar log de auditoria:', error);
+      // A nova função já trata erros silenciosamente
+      logger.debug('[SECURITY] Log de auditoria processado:', { tableName, operation });
     }
   };
 

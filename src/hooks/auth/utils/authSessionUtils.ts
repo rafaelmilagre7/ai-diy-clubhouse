@@ -1,108 +1,19 @@
 
 import { supabase } from '@/lib/supabase';
+import { UserProfile } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
 
-// Cache do perfil com expiração para evitar chamadas excessivas
-let profileCache: { profile: any; timestamp: number; userId: string } | null = null;
+// Cache para perfis de usuário
+const profileCache = new Map<string, { profile: UserProfile | null; timestamp: number }>();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 
 export const clearProfileCache = () => {
-  profileCache = null;
-  logger.info('[AUTH-SESSION] Cache de perfil limpo');
+  profileCache.clear();
 };
 
-// CORREÇÃO CRÍTICA: Função segura para buscar perfil com validação rigorosa
-export const fetchUserProfileSecurely = async (userId: string) => {
-  if (!userId) {
-    logger.warn('[AUTH-SESSION] Tentativa de buscar perfil sem userId');
-    throw new Error('User ID é obrigatório');
-  }
-
-  // Verificar cache válido
-  if (profileCache && 
-      profileCache.userId === userId && 
-      Date.now() - profileCache.timestamp < CACHE_DURATION) {
-    logger.info('[AUTH-SESSION] Perfil obtido do cache');
-    return profileCache.profile;
-  }
-
-  try {
-    logger.info('[AUTH-SESSION] Buscando perfil do usuário no banco de dados');
-    
-    // ATUALIZAÇÃO: Usar nova política RLS implementada
-    const { data, error } = await supabase
-      .from('profiles')
-      .select(`
-        *,
-        user_roles:role_id(*)
-      `)
-      .eq('id', userId)
-      .single();
-
-    if (error) {
-      logger.error('[AUTH-SESSION] Erro ao buscar perfil:', error);
-      
-      // Se for erro de acesso negado devido às novas políticas RLS
-      if (error.code === 'PGRST116' || error.message.includes('row-level security')) {
-        logger.warn('[AUTH-SESSION] Acesso negado pelas novas políticas RLS');
-        clearProfileCache();
-        throw new Error('Acesso negado aos dados do perfil');
-      }
-      
-      throw error;
-    }
-
-    if (!data) {
-      logger.warn('[AUTH-SESSION] Perfil não encontrado para o usuário');
-      return null;
-    }
-
-    // CORREÇÃO CRÍTICA: Validar integridade dos dados do perfil
-    if (data.id !== userId) {
-      logger.error('[AUTH-SESSION] ALERTA DE SEGURANÇA: ID do perfil não confere com usuário autenticado', {
-        expectedUserId: userId,
-        profileUserId: data.id
-      });
-      throw new Error('Violação de segurança detectada');
-    }
-
-    // Atualizar cache
-    profileCache = {
-      profile: data,
-      timestamp: Date.now(),
-      userId: userId
-    };
-
-    // Log de auditoria usando nova função de segurança
-    try {
-      await supabase.rpc('log_security_access', {
-        p_table_name: 'profiles',
-        p_operation: 'fetch_profile',
-        p_resource_id: userId
-      });
-    } catch (auditError) {
-      // Falhar silenciosamente para não quebrar a operação principal
-      logger.warn('[AUTH-SESSION] Erro ao registrar auditoria:', auditError);
-    }
-
-    logger.info('[AUTH-SESSION] Perfil carregado e cache atualizado', {
-      userId: userId.substring(0, 8) + '***',
-      hasRole: !!data.user_roles,
-      roleName: data.user_roles?.name || 'sem role'
-    });
-
-    return data;
-
-  } catch (error) {
-    logger.error('[AUTH-SESSION] Erro crítico ao buscar perfil:', error);
-    
-    // Em caso de erro crítico, limpar cache para forçar nova busca
-    clearProfileCache();
-    throw error;
-  }
-};
-
-// CORREÇÃO CRÍTICA: Função para validar sessão com logs de segurança
+/**
+ * Valida a sessão do usuário de forma segura
+ */
 export const validateUserSession = async () => {
   try {
     const { data: { session }, error } = await supabase.auth.getSession();
@@ -111,105 +22,145 @@ export const validateUserSession = async () => {
       logger.error('[AUTH-SESSION] Erro ao validar sessão:', error);
       return { session: null, user: null };
     }
-
-    if (!session || !session.user) {
-      logger.info('[AUTH-SESSION] Nenhuma sessão ativa encontrada');
-      return { session: null, user: null };
-    }
-
-    // CORREÇÃO CRÍTICA: Validar integridade da sessão
-    const now = Math.floor(Date.now() / 1000);
-    if (session.expires_at && session.expires_at < now) {
-      logger.warn('[AUTH-SESSION] Sessão expirada detectada');
-      await supabase.auth.signOut();
-      return { session: null, user: null };
-    }
-
-    // Log de auditoria de acesso à sessão
-    try {
-      await supabase.rpc('log_security_access', {
-        p_table_name: 'auth_sessions',
-        p_operation: 'validate_session',
-        p_resource_id: session.user.id
-      });
-    } catch (auditError) {
-      // Falhar silenciosamente para não quebrar a validação
-      logger.warn('[AUTH-SESSION] Erro ao registrar auditoria de sessão:', auditError);
-    }
-
-    logger.info('[AUTH-SESSION] Sessão validada com sucesso', {
-      userId: session.user.id.substring(0, 8) + '***',
-      email: session.user.email?.substring(0, 3) + '***'
-    });
-
-    return { session, user: session.user };
-
+    
+    return { 
+      session, 
+      user: session?.user || null 
+    };
   } catch (error) {
-    logger.error('[AUTH-SESSION] Erro crítico na validação de sessão:', error);
-    
-    // Em caso de erro crítico, fazer logout por segurança
-    try {
-      await supabase.auth.signOut();
-    } catch (logoutError) {
-      logger.error('[AUTH-SESSION] Erro ao fazer logout de emergência:', logoutError);
-    }
-    
+    logger.error('[AUTH-SESSION] Erro crítico na validação:', error);
     return { session: null, user: null };
   }
 };
 
-// ATUALIZADA: Processar perfil de usuário com criação automática se necessário
-export const processUserProfile = async (userId: string, email?: string, name?: string) => {
+/**
+ * Busca o perfil do usuário usando a nova função segura
+ */
+export const fetchUserProfileSecurely = async (userId: string): Promise<UserProfile | null> => {
+  try {
+    // Verificar cache primeiro
+    const cached = profileCache.get(userId);
+    if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
+      logger.debug('[PROFILE-FETCH] Retornando perfil do cache');
+      return cached.profile;
+    }
+
+    logger.info('[PROFILE-FETCH] Buscando perfil usando função segura');
+    
+    // CORREÇÃO: Usar a nova função segura get_user_profile_safe
+    const { data: profiles, error } = await supabase
+      .rpc('get_user_profile_safe', { user_id: userId });
+    
+    if (error) {
+      logger.error('[PROFILE-FETCH] Erro na função segura:', error);
+      // Fallback para query direta simples
+      const { data: directData, error: directError } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          user_roles (
+            id,
+            name,
+            description,
+            permissions
+          )
+        `)
+        .eq('id', userId)
+        .single();
+      
+      if (directError) {
+        logger.error('[PROFILE-FETCH] Erro no fallback direto:', directError);
+        return null;
+      }
+      
+      const profile = directData as UserProfile;
+      // Cache o resultado
+      profileCache.set(userId, { profile, timestamp: Date.now() });
+      return profile;
+    }
+    
+    const profile = profiles?.[0] || null;
+    
+    if (profile) {
+      // Buscar informações do role separadamente se necessário
+      if (!profile.user_roles && profile.role_id) {
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('id, name, description, permissions')
+          .eq('id', profile.role_id)
+          .single();
+        
+        if (roleData) {
+          profile.user_roles = roleData;
+        }
+      }
+      
+      logger.info('[PROFILE-FETCH] Perfil carregado com sucesso:', {
+        userId: profile.id.substring(0, 8) + '***',
+        hasRole: !!profile.user_roles,
+        roleName: profile.user_roles?.name || 'sem role'
+      });
+    }
+    
+    // Cache o resultado
+    profileCache.set(userId, { profile, timestamp: Date.now() });
+    return profile;
+    
+  } catch (error) {
+    logger.error('[PROFILE-FETCH] Erro crítico:', error);
+    return null;
+  }
+};
+
+/**
+ * Processa e valida o perfil do usuário
+ */
+export const processUserProfile = async (
+  userId: string,
+  userEmail?: string,
+  userName?: string
+): Promise<UserProfile | null> => {
   try {
     let profile = await fetchUserProfileSecurely(userId);
     
-    // Se perfil não existe, criar um básico
-    if (!profile) {
-      logger.info('[AUTH-SESSION] Criando perfil básico para novo usuário');
+    // Se não há perfil, criar um básico
+    if (!profile && userEmail) {
+      logger.info('[PROFILE-PROCESS] Criando perfil básico para usuário');
       
       const { data: newProfile, error: createError } = await supabase
         .from('profiles')
         .insert({
           id: userId,
-          email: email,
-          name: name || email?.split('@')[0] || 'Usuário',
-          role_id: null // Role será definido posteriormente
+          email: userEmail,
+          name: userName || userEmail.split('@')[0],
+          created_at: new Date().toISOString()
         })
         .select(`
           *,
-          user_roles:role_id(*)
+          user_roles (
+            id,
+            name,
+            description,
+            permissions
+          )
         `)
         .single();
       
       if (createError) {
-        logger.error('[AUTH-SESSION] Erro ao criar perfil:', createError);
-        throw createError;
+        logger.error('[PROFILE-PROCESS] Erro ao criar perfil:', createError);
+        return null;
       }
       
-      profile = newProfile;
+      profile = newProfile as UserProfile;
       
-      // Atualizar cache com novo perfil
-      profileCache = {
-        profile: newProfile,
-        timestamp: Date.now(),
-        userId: userId
-      };
-
-      // Log de auditoria para criação de perfil
-      try {
-        await supabase.rpc('log_security_access', {
-          p_table_name: 'profiles',
-          p_operation: 'create_profile',
-          p_resource_id: userId
-        });
-      } catch (auditError) {
-        logger.warn('[AUTH-SESSION] Erro ao registrar auditoria de criação:', auditError);
-      }
+      // Limpar cache após criação
+      profileCache.delete(userId);
     }
     
     return profile;
+    
   } catch (error) {
-    logger.error('[AUTH-SESSION] Erro ao processar perfil:', error);
-    throw error;
+    logger.error('[PROFILE-PROCESS] Erro no processamento:', error);
+    return null;
   }
 };

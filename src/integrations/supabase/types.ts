@@ -5902,6 +5902,10 @@ export type Database = {
         Args: { bucket_name: string }
         Returns: boolean
       }
+      current_user_is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       decrement: {
         Args: { row_id: string; table_name: string; column_name: string }
         Returns: undefined
@@ -5941,6 +5945,31 @@ export type Database = {
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_user_profile_safe: {
+        Args: { user_id?: string }
+        Returns: {
+          available_for_networking: boolean | null
+          avatar_url: string | null
+          company_name: string | null
+          created_at: string
+          current_position: string | null
+          email: string
+          id: string
+          industry: string | null
+          last_active: string | null
+          linkedin_url: string | null
+          name: string | null
+          onboarding_completed: boolean
+          onboarding_completed_at: string | null
+          professional_bio: string | null
+          referrals_count: number
+          role: string
+          role_id: string | null
+          skills: string[] | null
+          successful_referrals_count: number
+          whatsapp_number: string | null
+        }[]
       }
       get_user_security_permissions: {
         Args: { user_id: string }
