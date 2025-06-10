@@ -17,8 +17,8 @@ export const UserRoleDistributionChart: React.FC<UserRoleDistributionChartProps>
   // Palette de cores específica para papéis de usuários
   const roleColors = [
     chartColors.primary, // Admin
-    chartColors.accent,  // Member
-    chartColors.secondary, // Formação
+    chartColors.secondary,  // Member
+    chartColors.success, // Formação
     chartColors.info,    // Outros papéis
   ];
   
@@ -62,9 +62,6 @@ export const UserRoleDistributionChart: React.FC<UserRoleDistributionChartProps>
             colors={roleColors}
             valueFormatter={valueFormatter}
             className="h-full"
-            innerRadius={50}
-            outerRadius={100}
-            paddingAngle={3}
           />
         )}
       </CardContent>

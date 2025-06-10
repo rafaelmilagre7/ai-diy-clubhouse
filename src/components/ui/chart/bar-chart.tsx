@@ -12,7 +12,7 @@ import {
   TooltipProps,
   Cell
 } from "recharts";
-import { chartColors, chartConfig, getChartGradient } from "@/lib/chart-utils";
+import { chartColors } from "@/lib/chart-utils";
 
 interface BarChartProps {
   data: any[];
@@ -47,7 +47,7 @@ export function BarChart({
   const [activeCategoryIndex, setActiveCategoryIndex] = React.useState<number | null>(null);
 
   // Usar cores personalizadas ou padrão
-  const customColors = colors || chartColors.categorical;
+  const customColors = colors || [chartColors.primary, chartColors.secondary, chartColors.success];
 
   // Tooltip personalizado com estilo melhorado
   const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
@@ -103,11 +103,6 @@ export function BarChart({
 
   return (
     <div className={className || "h-full w-full"}>
-      {/* Definindo gradientes reutilizáveis */}
-      <svg width="0" height="0" className="absolute">
-        {getChartGradient(chartColors.barGradient.id, chartColors.barGradient.colors)}
-      </svg>
-      
       <ResponsiveContainer width="100%" height="100%">
         <RechartsBarChart
           data={data}
@@ -189,10 +184,7 @@ export function BarChart({
               {data.map((entry, index) => (
                 <Cell 
                   key={`cell-${index}`} 
-                  fill={index === activeIndex 
-                    ? customColors[categoryIdx % customColors.length] 
-                    : `url(#${chartColors.barGradient.id})`
-                  }
+                  fill={customColors[categoryIdx % customColors.length]}
                   className="transition-all duration-300 hover:brightness-110"
                   style={{ 
                     filter: index === activeIndex ? 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))' : 'none',

@@ -10,7 +10,7 @@ import {
   Sector, 
   TooltipProps
 } from "recharts";
-import { chartColors, chartTypeConfig } from "@/lib/chart-utils";
+import { chartColors } from "@/lib/chart-utils";
 
 interface PieChartProps {
   data: any[];
@@ -46,7 +46,7 @@ export function PieChart({
   const [activeIndex, setActiveIndex] = React.useState<number | null>(null);
   
   // Usar cores personalizadas ou padrão
-  const customColors = colors || chartColors.categorical;
+  const customColors = colors || [chartColors.primary, chartColors.secondary, chartColors.success, chartColors.info];
   
   // Renderizador personalizado para fatia ativa
   const renderActiveShape = (props: any) => {

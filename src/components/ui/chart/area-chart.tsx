@@ -1,7 +1,7 @@
 
 import * as React from "react"
 import { Area, AreaChart as RechartsAreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Legend, Dot, TooltipProps } from "recharts"
-import { chartColors, chartConfig, getChartGradient } from "@/lib/chart-utils"
+import { chartColors } from "@/lib/chart-utils"
 
 interface AreaChartProps {
   data: any[]
@@ -34,7 +34,7 @@ export function AreaChart({
   const [hoveredValue, setHoveredValue] = React.useState<number | null>(null);
   
   // Usar cores padronizadas ou as cores fornecidas
-  const customColors = colors || chartColors.categorical;
+  const customColors = colors || [chartColors.primary, chartColors.secondary, chartColors.success];
   
   // Componente personalizado para pontos ativos com animação
   const CustomActiveDot = (props: any) => {
@@ -111,11 +111,6 @@ export function AreaChart({
 
   return (
     <div className={className || "h-full w-full"}>
-      {/* Definindo gradientes reutilizáveis */}
-      <svg width="0" height="0" className="absolute">
-        {getChartGradient(chartColors.areaGradient.id, chartColors.areaGradient.colors)}
-      </svg>
-      
       <ResponsiveContainer width="100%" height="100%">
         <RechartsAreaChart
           data={data}
@@ -192,7 +187,7 @@ export function AreaChart({
               dataKey={category}
               name={category}
               stroke={customColors[index % customColors.length]}
-              fill={index === 0 ? `url(#${chartColors.areaGradient.id})` : customColors[index % customColors.length] + '20'}
+              fill={customColors[index % customColors.length] + '20'}
               fillOpacity={0.8}
               strokeWidth={2}
               dot={false}
@@ -212,4 +207,3 @@ export function AreaChart({
     </div>
   )
 }
-

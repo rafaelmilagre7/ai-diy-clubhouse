@@ -31,7 +31,7 @@ export const CompletionRatesChart: React.FC<CompletionRatesChartProps> = ({
   
   // Escolher uma gradiente de cores baseada no valor
   const getColors = () => {
-    return [chartColors.primary, chartColors.accent, chartColors.secondary];
+    return [chartColors.primary, chartColors.secondary, chartColors.success];
   };
 
   if (isLoading) {
