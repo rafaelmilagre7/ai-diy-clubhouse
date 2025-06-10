@@ -25,7 +25,8 @@ export const validateUserRole = async (userId: string): Promise<string> => {
 
     // Return the role name from the database via join
     if (profile.user_roles && typeof profile.user_roles === 'object' && 'name' in profile.user_roles) {
-      return profile.user_roles.name || 'member';
+      const roleName = profile.user_roles.name;
+      return typeof roleName === 'string' ? roleName : 'member';
     }
 
     return 'member';

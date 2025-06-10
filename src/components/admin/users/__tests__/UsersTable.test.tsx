@@ -10,7 +10,11 @@ describe('UsersTable', () => {
       id: '1',
       email: 'test@example.com',
       name: 'Test User',
-      role: 'membro_club',
+      role_id: 'membro-club-role-id',
+      user_roles: {
+        id: 'membro-club-role-id',
+        name: 'membro_club'
+      },
       avatar_url: null,
       company_name: 'Test Company',
       industry: 'Technology',

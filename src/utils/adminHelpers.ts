@@ -31,7 +31,7 @@ export const verifyUserAccess = async (userEmail: string): Promise<{ success: bo
     
     // Usar getUserRoleName para obter o nome da role
     const roleName = userProfile.user_roles && typeof userProfile.user_roles === 'object' && 'name' in userProfile.user_roles
-      ? userProfile.user_roles.name 
+      ? String(userProfile.user_roles.name)
       : 'member';
     
     // Verificar se o usuário tem acesso básico à plataforma

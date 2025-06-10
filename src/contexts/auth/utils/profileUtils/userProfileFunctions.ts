@@ -48,8 +48,23 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
       return null;
     }
     
-    console.log('Perfil encontrado:', data);
-    return data as UserProfile;
+    // Mapear corretamente o resultado da query
+    const profile: UserProfile = {
+      id: data.id,
+      email: data.email,
+      name: data.name,
+      role_id: data.role_id,
+      avatar_url: data.avatar_url,
+      company_name: data.company_name,
+      industry: data.industry,
+      created_at: data.created_at,
+      onboarding_completed: data.onboarding_completed,
+      onboarding_completed_at: data.onboarding_completed_at,
+      user_roles: data.user_roles as any
+    };
+    
+    console.log('Perfil encontrado:', profile);
+    return profile;
   } catch (error) {
     console.error('Unexpected error fetching profile:', error);
     return null; // Retornar null ao invés de lançar erro
@@ -123,8 +138,23 @@ export const createUserProfileIfNeeded = async (
       return createFallbackProfile(userId, email, name, defaultRoleId);
     }
     
-    console.log('Perfil criado com sucesso:', newProfile);
-    return newProfile as UserProfile;
+    // Mapear corretamente o resultado da query
+    const profile: UserProfile = {
+      id: newProfile.id,
+      email: newProfile.email,
+      name: newProfile.name,
+      role_id: newProfile.role_id,
+      avatar_url: newProfile.avatar_url,
+      company_name: newProfile.company_name,
+      industry: newProfile.industry,
+      created_at: newProfile.created_at,
+      onboarding_completed: newProfile.onboarding_completed,
+      onboarding_completed_at: newProfile.onboarding_completed_at,
+      user_roles: newProfile.user_roles as any
+    };
+    
+    console.log('Perfil criado com sucesso:', profile);
+    return profile;
   } catch (error) {
     console.error('Erro inesperado ao criar perfil:', error);
     // Return minimal profile in case of error to not block application
