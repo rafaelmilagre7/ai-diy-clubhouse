@@ -1,69 +1,123 @@
 
 import React from 'react';
-import { SolutionStatCards } from './SolutionStatCards';
-import { SolutionPopularityChart } from './SolutionPopularityChart';
-import { CategoryDistributionChart } from './CategoryDistributionChart';
-import { DifficultyDistributionChart } from './DifficultyDistributionChart';
-import { CompletionRatesChart } from './CompletionRatesChart';
-import { SolutionsAnalyticsTable } from './SolutionsAnalyticsTable';
-import { useSolutionAnalyticsData } from '@/hooks/admin/analytics/useSolutionAnalyticsData';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
+import { PopularSolutionsChart } from '../PopularSolutionsChart';
+import { ImplementationsByCategoryChart } from '../ImplementationsByCategoryChart';
+import { useAnalyticsData } from '@/hooks/analytics/useAnalyticsData';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle, Package, TrendingUp, Target } from 'lucide-react';
 
 interface SolutionsAnalyticsTabContentProps {
   timeRange: string;
 }
 
-export const SolutionsAnalyticsTabContent: React.FC<SolutionsAnalyticsTabContentProps> = ({ 
-  timeRange 
-}) => {
-  const {
-    totalSolutions,
-    publishedSolutions,
-    drafts,
-    avgCompletionRate,
-    popularSolutions,
-    categoryDistribution,
-    difficultyDistribution,
-    completionRates,
-    solutionsWithMetrics,
-    loading,
-    error
-  } = useSolutionAnalyticsData(timeRange);
+export const SolutionsAnalyticsTabContent = ({ timeRange }: SolutionsAnalyticsTabContentProps) => {
+  const { data, loading, error } = useAnalyticsData({
+    timeRange,
+    category: 'all',
+    difficulty: 'all'
+  });
+
+  const renderSkeleton = () => (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {Array(3).fill(0).map((_, i) => (
+          <Card key={i} className="border border-gray-200 dark:border-gray-800">
+            <CardContent className="p-6">
+              <Skeleton className="h-4 w-[120px] mb-2" />
+              <Skeleton className="h-8 w-[80px]" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-[200px]" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-[300px] w-full" />
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-[200px]" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-[300px] w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+
+  if (loading) {
+    return renderSkeleton();
+  }
 
   if (error) {
     return (
       <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Erro</AlertTitle>
-        <AlertDescription>
-          Ocorreu um erro ao carregar os dados analíticos das soluções: {error}
-        </AlertDescription>
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Erro ao carregar dados</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
       </Alert>
     );
   }
 
+  const totalSolutions = data?.solutionPopularity?.length || 0;
+  const totalImplementations = data?.implementationsByCategory?.reduce((sum, item) => sum + (item.value || 0), 0) || 0;
+  const avgImplementationsPerSolution = totalSolutions > 0 ? Math.round(totalImplementations / totalSolutions) : 0;
+
   return (
     <div className="space-y-6">
-      <SolutionStatCards
-        totalSolutions={totalSolutions}
-        publishedSolutions={publishedSolutions}
-        drafts={drafts}
-        avgCompletionRate={avgCompletionRate}
-        loading={loading}
-      />
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <SolutionPopularityChart data={popularSolutions} />
-        <CompletionRatesChart data={completionRates} />
+      {/* Cards de estatísticas */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total de Soluções</p>
+                <p className="text-2xl font-bold text-foreground">{totalSolutions}</p>
+              </div>
+              <Package className="h-8 w-8 text-primary" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Implementações Totais</p>
+                <p className="text-2xl font-bold text-foreground">{totalImplementations}</p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-success" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Média por Solução</p>
+                <p className="text-2xl font-bold text-foreground">{avgImplementationsPerSolution}</p>
+              </div>
+              <Target className="h-8 w-8 text-info" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <CategoryDistributionChart data={categoryDistribution} />
-        <DifficultyDistributionChart data={difficultyDistribution} />
+      {/* Gráficos */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <PopularSolutionsChart data={data?.solutionPopularity || []} />
+        <ImplementationsByCategoryChart data={data?.implementationsByCategory || []} />
       </div>
-
-      <SolutionsAnalyticsTable data={solutionsWithMetrics || []} loading={loading} />
     </div>
   );
 };

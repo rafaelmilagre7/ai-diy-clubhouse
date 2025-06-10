@@ -1,105 +1,124 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Info } from 'lucide-react';
-import { UserStatCards } from './UserStatCards';
-import { UserGrowthChart } from './UserGrowthChart';
 import { UserRoleDistributionChart } from './UserRoleDistributionChart';
-import { UserActivityByDayChart } from './UserActivityByDayChart';
-import { TopActiveUsersTable } from './TopActiveUsersTable';
-import { useUserAnalyticsData } from '@/hooks/admin/useUserAnalyticsData';
+import { UserGrowthChart } from '../UserGrowthChart';
+import { WeeklyActivityChart } from '../WeeklyActivityChart';
+import { useUserAnalyticsData } from '@/hooks/analytics/useUserAnalyticsData';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle, Users, UserCheck, Activity } from 'lucide-react';
 
 interface UserAnalyticsTabContentProps {
   timeRange: string;
 }
 
-export const UserAnalyticsTabContent: React.FC<UserAnalyticsTabContentProps> = ({ timeRange }) => {
-  const { data, loading, error } = useUserAnalyticsData({ timeRange });
+export const UserAnalyticsTabContent = ({ timeRange }: UserAnalyticsTabContentProps) => {
+  const { data, loading, error } = useUserAnalyticsData({
+    timeRange,
+    role: 'all'
+  });
 
-  if (error) {
-    return (
-      <Alert variant="destructive" className="my-4">
-        <AlertTitle>Erro ao carregar dados</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {Array(4).fill(0).map((_, i) => (
-            <Card key={i}>
-              <CardHeader className="pb-2">
-                <Skeleton className="h-5 w-[120px]" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-9 w-[100px] mb-2" />
-                <Skeleton className="h-4 w-[80px]" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-[180px]" />
-              <Skeleton className="h-4 w-[240px]" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-[350px] w-full" />
+  const renderSkeleton = () => (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {Array(3).fill(0).map((_, i) => (
+          <Card key={i} className="border border-gray-200 dark:border-gray-800">
+            <CardContent className="p-6">
+              <Skeleton className="h-4 w-[100px] mb-2" />
+              <Skeleton className="h-8 w-[60px]" />
             </CardContent>
           </Card>
-          
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-[150px]" />
-              <Skeleton className="h-4 w-[200px]" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-[300px] w-full" />
-            </CardContent>
-          </Card>
-        </div>
+        ))}
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-[200px]" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-[300px] w-full" />
+          </CardContent>
+        </Card>
         
         <Card>
           <CardHeader>
-            <Skeleton className="h-6 w-[150px]" />
-            <Skeleton className="h-4 w-[180px]" />
+            <Skeleton className="h-6 w-[200px]" />
           </CardHeader>
           <CardContent>
             <Skeleton className="h-[300px] w-full" />
           </CardContent>
         </Card>
       </div>
+    </div>
+  );
+
+  if (loading) {
+    return renderSkeleton();
+  }
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Erro ao carregar dados</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Estatísticas chave */}
-      <UserStatCards 
-        totalUsers={data.totalUsers}
-        newUsersToday={data.newUsersToday}
-        activeUsers={data.activeUsersLast7Days}
-        growthRate={data.growthRate}
-      />
-      
+      {/* Cards de estatísticas */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total de Usuários</p>
+                <p className="text-2xl font-bold text-foreground">{data.totalUsers}</p>
+              </div>
+              <Users className="h-8 w-8 text-primary" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Usuários Ativos</p>
+                <p className="text-2xl font-bold text-foreground">{data.activeUsers}</p>
+              </div>
+              <UserCheck className="h-8 w-8 text-success" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Taxa de Atividade</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {data.totalUsers > 0 ? Math.round((data.activeUsers / data.totalUsers) * 100) : 0}%
+                </p>
+              </div>
+              <Activity className="h-8 w-8 text-info" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Gráficos principais */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <UserGrowthChart data={data.userGrowthData} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <UserGrowthChart data={data.usersByTime} />
         <UserRoleDistributionChart data={data.userRoleDistribution} />
       </div>
       
-      {/* Atividade por dia */}
-      <UserActivityByDayChart data={data.userActivityByDay} />
-      
-      {/* Tabela de usuários mais ativos */}
-      <TopActiveUsersTable users={data.topActiveUsers} />
+      {/* Gráfico de atividade semanal */}
+      <WeeklyActivityChart data={data.userActivityByDay} />
     </div>
   );
 };

@@ -1,69 +1,124 @@
 
 import React from 'react';
-import { ImplementationsStatCards } from './ImplementationsStatCards';
-import { CompletionTimeChart } from './CompletionTimeChart';
-import { DifficultyDistributionChart } from './DifficultyDistributionChart';
-import { AbandonmentRateChart } from './AbandonmentRateChart';
-import { RecentImplementationsTable } from './RecentImplementationsTable';
-import { useImplementationsAnalyticsData } from '@/hooks/analytics/implementations/useImplementationsAnalyticsData';
+import { CompletionRateChart } from '../CompletionRateChart';
+import { WeeklyActivityChart } from '../WeeklyActivityChart';
+import { useAnalyticsData } from '@/hooks/analytics/useAnalyticsData';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle, CheckCircle, Clock, TrendingUp } from 'lucide-react';
 
 interface ImplementationsAnalyticsTabContentProps {
   timeRange: string;
 }
 
-export const ImplementationsAnalyticsTabContent: React.FC<ImplementationsAnalyticsTabContentProps> = ({ timeRange }) => {
-  const { data, isLoading } = useImplementationsAnalyticsData(timeRange);
-  
-  // Calcular estatísticas gerais
-  const totalImplementations = 
-    (data?.completionRate?.completed || 0) + (data?.completionRate?.inProgress || 0);
-  
-  // Calcular tempo médio geral de todas as implementações
-  const avgCompletionTime = data?.averageCompletionTime?.length 
-    ? data.averageCompletionTime.reduce((sum, item) => sum + item.avgDays * item.count, 0) / 
-      data.averageCompletionTime.reduce((sum, item) => sum + item.count, 0)
-    : null;
-  
-  // Calcular taxa média de abandono
-  const abandonmentRate = data?.abandonmentByModule?.length 
-    ? Math.round(data.abandonmentByModule.reduce((sum, item) => sum + item.abandonmentRate, 0) / data.abandonmentByModule.length)
-    : 0;
-  
-  // Estatísticas para os cartões
-  const stats = {
-    completionRate: data?.completionRate || { completed: 0, inProgress: 0 },
-    totalImplementations,
-    avgCompletionTime: avgCompletionTime !== null ? Math.round(avgCompletionTime * 10) / 10 : null, // Arredondar para 1 casa decimal
-    abandonmentRate
-  };
-  
-  return (
+export const ImplementationsAnalyticsTabContent = ({ timeRange }: ImplementationsAnalyticsTabContentProps) => {
+  const { data, loading, error } = useAnalyticsData({
+    timeRange,
+    category: 'all',
+    difficulty: 'all'
+  });
+
+  const renderSkeleton = () => (
     <div className="space-y-6">
-      <ImplementationsStatCards stats={stats} loading={isLoading} />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {Array(3).fill(0).map((_, i) => (
+          <Card key={i} className="border border-gray-200 dark:border-gray-800">
+            <CardContent className="p-6">
+              <Skeleton className="h-4 w-[150px] mb-2" />
+              <Skeleton className="h-8 w-[80px]" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <CompletionTimeChart 
-          data={data?.averageCompletionTime || []} 
-          loading={isLoading} 
-        />
-        <DifficultyDistributionChart 
-          data={data?.implementationsByDifficulty || []} 
-          loading={isLoading} 
-        />
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-[200px]" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-[300px] w-full" />
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-[200px]" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-[300px] w-full" />
+          </CardContent>
+        </Card>
       </div>
-      
-      <div className="grid grid-cols-1 gap-6">
-        <AbandonmentRateChart 
-          data={data?.abandonmentByModule || []} 
-          loading={isLoading} 
-        />
+    </div>
+  );
+
+  if (loading) {
+    return renderSkeleton();
+  }
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Erro ao carregar dados</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
+
+  const completionData = data?.userCompletionRate || [];
+  const totalCompleted = completionData.find(item => item.name === 'Concluídas')?.value || 0;
+  const totalInProgress = completionData.find(item => item.name === 'Em andamento')?.value || 0;
+  const totalImplementations = totalCompleted + totalInProgress;
+  const completionRate = totalImplementations > 0 ? Math.round((totalCompleted / totalImplementations) * 100) : 0;
+
+  return (
+    <div className="space-y-6">
+      {/* Cards de estatísticas */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Implementações Concluídas</p>
+                <p className="text-2xl font-bold text-foreground">{totalCompleted}</p>
+              </div>
+              <CheckCircle className="h-8 w-8 text-success" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Em Andamento</p>
+                <p className="text-2xl font-bold text-foreground">{totalInProgress}</p>
+              </div>
+              <Clock className="h-8 w-8 text-warning" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Taxa de Conclusão</p>
+                <p className="text-2xl font-bold text-foreground">{completionRate}%</p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-info" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
-      
-      <div className="grid grid-cols-1 gap-6">
-        <RecentImplementationsTable 
-          data={data?.recentImplementations || []} 
-          loading={isLoading} 
-        />
+
+      {/* Gráficos */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <CompletionRateChart data={completionData} />
+        <WeeklyActivityChart data={data?.dayOfWeekActivity || []} />
       </div>
     </div>
   );
