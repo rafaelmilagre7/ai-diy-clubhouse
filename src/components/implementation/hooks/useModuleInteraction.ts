@@ -26,7 +26,7 @@ export const useModuleInteraction = (module: Module, onComplete: () => void) => 
       try {
         supabase.from("analytics").insert({
           user_id: user.id,
-          event_type: "module_interaction",
+          event_type: "interact",
           solution_id: module.solution_id,
           module_id: module.id,
           event_data: {

@@ -31,10 +31,19 @@ export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) 
 
     const logSecurityEvent = async (eventType: string) => {
       try {
+        // Mapear event_type para os valores válidos
+        let mappedEventType = 'view'; // padrão
+        if (eventType === 'session_start') {
+          mappedEventType = 'start';
+        } else if (eventType === 'console_access') {
+          mappedEventType = 'view';
+        }
+        
         await supabase.from('analytics').insert({
           user_id: user.id,
-          event_type: `security_${eventType}`,
+          event_type: mappedEventType,
           event_data: {
+            security_event_type: eventType,
             timestamp: new Date().toISOString(),
             user_agent: navigator.userAgent.substring(0, 100), // Limitado para privacidade
             url: window.location.pathname // Apenas o path, sem query params

@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { sanitizeForLogging } from './securityUtils';
 import { logger } from './logger';
@@ -32,12 +31,9 @@ export class AuditLogger {
     SYSTEM: 'system_event'
   } as const;
   
-  // Lista de eventos válidos para analytics
+  // Lista de eventos válidos para analytics - usando apenas os tipos permitidos
   private validAnalyticsEvents = [
-    'login_attempt', 'login_success', 'login_failure',
-    'logout', 'session_start', 'session_end', 'session_active',
-    'page_view', 'solution_start', 'solution_complete',
-    'security_warning', 'error_logged'
+    'view', 'complete', 'start', 'abandon', 'interact'
   ];
   
   // Log de evento de auditoria principal
@@ -207,19 +203,35 @@ export class AuditLogger {
     }
   }
   
-  // Log para analytics apenas de eventos válidos
+  // Log para analytics apenas de eventos válidos - usando mapeamento correto
   private async logToAnalytics(eventType: string, details: Record<string, any>, userId?: string): Promise<void> {
-    if (!userId || !this.validAnalyticsEvents.includes(eventType)) {
+    if (!userId) {
       return;
+    }
+    
+    // Mapear event_type para os valores válidos
+    let mappedEventType = 'view'; // padrão
+    
+    if (eventType.includes('login') || eventType.includes('start')) {
+      mappedEventType = 'start';
+    } else if (eventType.includes('complete') || eventType.includes('success')) {
+      mappedEventType = 'complete';
+    } else if (eventType.includes('logout') || eventType.includes('end')) {
+      mappedEventType = 'abandon';
+    } else if (eventType.includes('active') || eventType.includes('interact')) {
+      mappedEventType = 'interact';
     }
     
     try {
       const { error } = await supabase.from('analytics').insert({
         user_id: userId,
-        event_type: eventType,
+        event_type: mappedEventType,
         solution_id: details.solution_id || null,
         module_id: details.module_id || null,
-        event_data: sanitizeForLogging(details)
+        event_data: {
+          ...sanitizeForLogging(details),
+          original_event_type: eventType // preservar o tipo original no event_data
+        }
       });
       
       if (error) {
@@ -238,9 +250,9 @@ export class AuditLogger {
     await this.logAuditEvent('AUTH', action, details, userId);
     
     // Log específico para analytics se for evento válido
-    const analyticsEvent = action.includes('login') ? 'login_attempt' : 
-                          action.includes('logout') ? 'logout' :
-                          action.includes('session') ? 'session_start' : null;
+    const analyticsEvent = action.includes('login') ? 'start' : 
+                          action.includes('logout') ? 'abandon' :
+                          action.includes('session') ? 'start' : null;
     
     if (analyticsEvent && userId) {
       await this.logToAnalytics(analyticsEvent, details, userId);
@@ -252,7 +264,7 @@ export class AuditLogger {
     
     // Log para analytics apenas em casos críticos ou de alto risco
     if (['critical', 'high'].includes(severity)) {
-      await this.logToAnalytics('security_warning', { severity, action, ...details });
+      await this.logToAnalytics('view', { severity, action, ...details });
     }
   }
   
