@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/auth";
 import { LoadingProvider } from "./contexts/LoadingContext";
+import { LoggingProvider } from "./hooks/useLogging";
 import OptimizedLoadingScreen from "@/components/common/OptimizedLoadingScreen";
 import RootRedirect from "@/components/routing/RootRedirect";
 import AuthLayout from "@/components/auth/AuthLayout";
@@ -50,112 +51,114 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <LoadingProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Suspense fallback={<OptimizedLoadingScreen />}>
-                <Routes>
-                  <Route path="/" element={<RootRedirect />} />
-                  <Route path="/login" element={<AuthLayout />} />
-                  <Route path="/onboarding" element={<OnboardingWizard />} />
-                  
-                  {/* Rotas de Membro - TODAS com MemberLayout */}
-                  <Route 
-                    path="/dashboard" 
-                    element={
-                      <ProtectedRoutes>
-                        <MemberLayout>
-                          <OptimizedDashboard />
-                        </MemberLayout>
-                      </ProtectedRoutes>
-                    } 
-                  />
-                  <Route 
-                    path="/solutions" 
-                    element={
-                      <ProtectedRoutes>
-                        <MemberLayout>
-                          <Solutions />
-                        </MemberLayout>
-                      </ProtectedRoutes>
-                    } 
-                  />
-                  <Route 
-                    path="/solution/:id" 
-                    element={
-                      <ProtectedRoutes>
-                        <MemberLayout>
-                          <SolutionDetails />
-                        </MemberLayout>
-                      </ProtectedRoutes>
-                    } 
-                  />
-                  <Route 
-                    path="/tools" 
-                    element={
-                      <ProtectedRoutes>
-                        <MemberLayout>
-                          <Tools />
-                        </MemberLayout>
-                      </ProtectedRoutes>
-                    } 
-                  />
-                  <Route 
-                    path="/tools/:id" 
-                    element={
-                      <ProtectedRoutes>
-                        <MemberLayout>
-                          <ToolDetails />
-                        </MemberLayout>
-                      </ProtectedRoutes>
-                    } 
-                  />
-                  <Route 
-                    path="/profile" 
-                    element={
-                      <ProtectedRoutes>
-                        <MemberLayout>
-                          <Profile />
-                        </MemberLayout>
-                      </ProtectedRoutes>
-                    } 
-                  />
-                  <Route 
-                    path="/profile/edit" 
-                    element={
-                      <ProtectedRoutes>
-                        <MemberLayout>
-                          <EditProfile />
-                        </MemberLayout>
-                      </ProtectedRoutes>
-                    } 
-                  />
-                  
-                  {/* Rota de Formacao */}
-                  <Route path="/formacao" element={<FormacaoDashboard />} />
-                  
-                  {/* Rotas de Admin - TODAS com AdminLayout */}
-                  <Route 
-                    path="/admin" 
-                    element={
-                      <AdminLayout>
-                        <AdminDashboard />
-                      </AdminLayout>
-                    } 
-                  />
-                  <Route 
-                    path="/admin/solutions" 
-                    element={
-                      <AdminLayout>
-                        <AdminSolutions />
-                      </AdminLayout>
-                    } 
-                  />
-                </Routes>
-              </Suspense>
-            </BrowserRouter>
-          </TooltipProvider>
+          <LoggingProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Suspense fallback={<OptimizedLoadingScreen />}>
+                  <Routes>
+                    <Route path="/" element={<RootRedirect />} />
+                    <Route path="/login" element={<AuthLayout />} />
+                    <Route path="/onboarding" element={<OnboardingWizard />} />
+                    
+                    {/* Rotas de Membro - TODAS com MemberLayout */}
+                    <Route 
+                      path="/dashboard" 
+                      element={
+                        <ProtectedRoutes>
+                          <MemberLayout>
+                            <OptimizedDashboard />
+                          </MemberLayout>
+                        </ProtectedRoutes>
+                      } 
+                    />
+                    <Route 
+                      path="/solutions" 
+                      element={
+                        <ProtectedRoutes>
+                          <MemberLayout>
+                            <Solutions />
+                          </MemberLayout>
+                        </ProtectedRoutes>
+                      } 
+                    />
+                    <Route 
+                      path="/solution/:id" 
+                      element={
+                        <ProtectedRoutes>
+                          <MemberLayout>
+                            <SolutionDetails />
+                          </MemberLayout>
+                        </ProtectedRoutes>
+                      } 
+                    />
+                    <Route 
+                      path="/tools" 
+                      element={
+                        <ProtectedRoutes>
+                          <MemberLayout>
+                            <Tools />
+                          </MemberLayout>
+                        </ProtectedRoutes>
+                      } 
+                    />
+                    <Route 
+                      path="/tools/:id" 
+                      element={
+                        <ProtectedRoutes>
+                          <MemberLayout>
+                            <ToolDetails />
+                          </MemberLayout>
+                        </ProtectedRoutes>
+                      } 
+                    />
+                    <Route 
+                      path="/profile" 
+                      element={
+                        <ProtectedRoutes>
+                          <MemberLayout>
+                            <Profile />
+                          </MemberLayout>
+                        </ProtectedRoutes>
+                      } 
+                    />
+                    <Route 
+                      path="/profile/edit" 
+                      element={
+                        <ProtectedRoutes>
+                          <MemberLayout>
+                            <EditProfile />
+                          </MemberLayout>
+                        </ProtectedRoutes>
+                      } 
+                    />
+                    
+                    {/* Rota de Formacao */}
+                    <Route path="/formacao" element={<FormacaoDashboard />} />
+                    
+                    {/* Rotas de Admin - TODAS com AdminLayout */}
+                    <Route 
+                      path="/admin" 
+                      element={
+                        <AdminLayout>
+                          <AdminDashboard />
+                        </AdminLayout>
+                      } 
+                    />
+                    <Route 
+                      path="/admin/solutions" 
+                      element={
+                        <AdminLayout>
+                          <AdminSolutions />
+                        </AdminLayout>
+                      } 
+                    />
+                  </Routes>
+                </Suspense>
+              </BrowserRouter>
+            </TooltipProvider>
+          </LoggingProvider>
         </LoadingProvider>
       </AuthProvider>
     </QueryClientProvider>

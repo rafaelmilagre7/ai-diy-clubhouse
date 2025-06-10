@@ -6,14 +6,13 @@ import { Solution } from "@/lib/supabase";
 import { useQuery } from '@tanstack/react-query';
 import { useLoading } from "@/contexts/LoadingContext";
 
-// Cache otimizado para evitar recálculos desnecessários
+// Cache otimizado
 const progressCache = new Map<string, { data: any[], timestamp: number }>();
 const CACHE_TTL = 2 * 60 * 1000; // 2 minutos
 
 export const useDashboardProgress = (solutions: Solution[] = []) => {
   const { user } = useAuth();
   const { setLoading } = useLoading();
-  const lastSolutionsHashRef = useRef<string>("");
   
   // Criar hash estável das soluções para cache inteligente
   const solutionsHash = useMemo(() => {
@@ -26,7 +25,7 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
     return `${ids}_${solutions.length}`;
   }, [solutions]);
 
-  // Função para buscar o progresso - otimizada
+  // Função para buscar o progresso - simplificada
   const fetchProgress = useCallback(async () => {
     if (!user?.id) {
       throw new Error("Usuário não autenticado");
@@ -65,7 +64,7 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
     }
   }, [user?.id]);
   
-  // Query otimizada com configurações melhoradas
+  // Query simplificada
   const { 
     data: progressData,
     isLoading,
@@ -73,18 +72,12 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
   } = useQuery({
     queryKey: ['dashboard-progress', user?.id, solutionsHash],
     queryFn: fetchProgress,
-    staleTime: CACHE_TTL, // 2 minutos de cache no React Query
-    gcTime: 5 * 60 * 1000, // 5 minutos antes de garbage collection
-    enabled: !!(user?.id && Array.isArray(solutions) && solutions.length > 0),
+    staleTime: CACHE_TTL,
+    gcTime: 5 * 60 * 1000,
+    enabled: !!(user?.id),
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchInterval: false,
-    retry: 1,
-    meta: {
-      onError: (err: any) => {
-        console.error("[useDashboardProgress] Erro no React Query:", err);
-      }
-    }
+    refetchOnMount: true,
+    retry: 1
   });
 
   // Atualizar loading state no context
@@ -105,7 +98,7 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
     }
 
     // Se não há dados de progresso, todas as soluções são recomendadas
-    if (!progressData || !Array.isArray(progressData)) {
+    if (!progressData || !Array.isArray(progressData) || progressData.length === 0) {
       return { 
         active: [], 
         completed: [], 

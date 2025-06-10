@@ -7,10 +7,10 @@ import { useSecurityEnforcement } from "@/hooks/auth/useSecurityEnforcement";
 import { useLoading } from "@/contexts/LoadingContext";
 import { logger } from "@/utils/logger";
 
-// Cache global otimizado
-const solutionsCache = new Map<string, { data: Solution[], timestamp: number, version: string }>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
-const DEBOUNCE_TIME = 1000; // 1 segundo
+// Cache global simplificado
+const solutionsCache = new Map<string, { data: Solution[], timestamp: number }>();
+const CACHE_TTL = 3 * 60 * 1000; // 3 minutos
+const DEBOUNCE_TIME = 500; // 500ms
 
 export const useSolutionsData = () => {
   const { user, profile } = useAuth();
@@ -28,14 +28,13 @@ export const useSolutionsData = () => {
   // Computar canViewSolutions baseado no usuário atual
   const canViewSolutions = useMemo(() => !!user, [user]);
 
-  // Chave de cache baseada no perfil do usuário com versioning
+  // Chave de cache simplificada - sem versioning dinâmico
   const cacheKey = useMemo(() => {
     const isAdmin = profile?.role === 'admin';
-    const version = `v2_${Date.now().toString().slice(-6)}`; // Versioning básico
-    return `solutions_${user?.id}_${isAdmin ? 'admin' : 'user'}_${version}`;
-  }, [user?.id, profile?.role]);
+    return `solutions_${isAdmin ? 'admin' : 'user'}`;
+  }, [profile?.role]);
 
-  // Função otimizada de fetch com abort controller
+  // Função otimizada de fetch
   const fetchSolutions = useCallback(async () => {
     if (!user) {
       logger.warn('[SOLUTIONS] Tentativa de carregar soluções sem autenticação');
@@ -83,7 +82,7 @@ export const useSolutionsData = () => {
         // Ignorar erros de auditoria silenciosamente
       }
 
-      // Query otimizada com timeout
+      // Query otimizada
       let query = supabase.from("solutions").select("*");
 
       // Se não for admin, mostrar apenas soluções publicadas
@@ -110,11 +109,10 @@ export const useSolutionsData = () => {
         solution && typeof solution.id === 'string'
       );
 
-      // Atualizar cache com versioning
+      // Atualizar cache
       solutionsCache.set(cacheKey, {
         data: validSolutions,
-        timestamp: now,
-        version: 'v2'
+        timestamp: now
       });
 
       setSolutions(validSolutions);
