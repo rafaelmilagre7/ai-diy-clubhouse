@@ -1,12 +1,13 @@
 
 import { useEffect, useState } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminContent } from "./AdminContent";
 import { useSidebarControl } from "@/hooks/useSidebarControl";
+import { navigationCache } from "@/utils/navigationCache";
 
 interface AdminLayoutProps {
   children?: React.ReactNode;
@@ -15,34 +16,53 @@ interface AdminLayoutProps {
 const AdminLayout = ({ children }: AdminLayoutProps) => {
   const { user, isAdmin, isLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isMounted, setIsMounted] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [forceReady, setForceReady] = useState(false);
-  const maxRetries = 2;
+  const [optimisticLoad, setOptimisticLoad] = useState(false);
   
-  // Use o mesmo hook de controle de sidebar do membro
+  const maxRetries = 1; // Reduzido de 2 para 1
   const { sidebarOpen, setSidebarOpen, isMobile } = useSidebarControl();
 
-  // Timeout absoluto mais agressivo para evitar travamento
+  // Detectar navegação vinda do LMS
+  const isComingFromLMS = location.state?.from?.startsWith?.('/formacao') || 
+                         document.referrer.includes('/formacao');
+
+  // OTIMIZAÇÃO 1: Cache check para navegação rápida
   useEffect(() => {
+    if (user && isComingFromLMS) {
+      const isAdminCached = navigationCache.isAdminVerified(user.id);
+      if (isAdminCached) {
+        console.log("⚡ [ADMIN-LAYOUT] Cache hit - navegação otimizada do LMS");
+        setOptimisticLoad(true);
+        setForceReady(true);
+        return;
+      }
+    }
+  }, [user, isComingFromLMS]);
+
+  // OTIMIZAÇÃO 2: Timeout absoluto reduzido para 3 segundos
+  useEffect(() => {
+    const timeoutDuration = isComingFromLMS ? 2000 : 3000; // Mais rápido vindo do LMS
+    
     const absoluteTimeout = setTimeout(() => {
-      console.warn("⚠️ [ADMIN-LAYOUT] Timeout absoluto de 8s - forçando exibição");
+      console.warn(`⚠️ [ADMIN-LAYOUT] Timeout de ${timeoutDuration/1000}s - forçando exibição`);
       setForceReady(true);
-    }, 8000);
+    }, timeoutDuration);
 
     return () => clearTimeout(absoluteTimeout);
-  }, []);
+  }, [isComingFromLMS]);
 
-  // Circuit breaker - detectar e quebrar loops infinitos
+  // OTIMIZAÇÃO 3: Circuit breaker menos agressivo
   useEffect(() => {
     if (retryCount >= maxRetries) {
-      console.warn("🚨 [ADMIN-LAYOUT] Circuit breaker ativo - muitas tentativas");
+      console.warn("🚨 [ADMIN-LAYOUT] Max retries atingido");
       setForceReady(true);
-      toast.warning("Sistema demorou para carregar. Forçando exibição...");
     }
   }, [retryCount]);
 
-  // Verificar autenticação e permissões com retry mais inteligente
+  // OTIMIZAÇÃO 4: Verificação otimizada para usuários já autenticados
   useEffect(() => {
     setIsMounted(true);
     
@@ -60,38 +80,42 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         return;
       }
 
-      console.info("[SECURITY] Admin access granted", {
-        userId: user.id?.substring(0, 8) + '***',
-        timestamp: new Date().toISOString()
-      });
+      // OTIMIZAÇÃO 5: Definir cache após verificação bem-sucedida
+      if (user && isAdmin) {
+        navigationCache.set(user.id, null, 'admin');
+        console.info("[SECURITY] Admin access granted", {
+          userId: user.id?.substring(0, 8) + '***',
+          cached: true
+        });
+      }
       
       setRetryCount(0);
     }
   }, [user, isAdmin, isLoading, navigate]);
 
-  // Timeout com retry mais inteligente e menos agressivo
+  // OTIMIZAÇÃO 6: Timeout com retry reduzido
   useEffect(() => {
-    if (isLoading && isMounted && !forceReady) {
+    if (isLoading && isMounted && !forceReady && !optimisticLoad) {
+      const retryTimeout = isComingFromLMS ? 1500 : 2000; // Mais rápido do LMS
+      
       const timeoutId = setTimeout(() => {
         if (isLoading && retryCount < maxRetries && !forceReady) {
           console.warn(`[SECURITY] Auth timeout - retry ${retryCount + 1}/${maxRetries}`);
           setRetryCount(prev => prev + 1);
-          toast.warning(`Verificando credenciais... (${retryCount + 1}/${maxRetries})`);
-        } else if (isLoading && (retryCount >= maxRetries || forceReady)) {
+        } else if (isLoading && retryCount >= maxRetries) {
           console.error("[SECURITY] Forçando exibição após timeouts");
           setForceReady(true);
         }
-      }, 6000);
+      }, retryTimeout);
 
       return () => clearTimeout(timeoutId);
     }
-  }, [isLoading, isMounted, retryCount, forceReady]);
+  }, [isLoading, isMounted, retryCount, forceReady, optimisticLoad, isComingFromLMS]);
 
-  // Loading state com skeleton melhorado
-  if (!isMounted || (isLoading && !forceReady && retryCount < maxRetries)) {
+  // OTIMIZAÇÃO 7: Loading state otimista e menos complexo
+  if (!isMounted || (isLoading && !forceReady && !optimisticLoad && retryCount < maxRetries)) {
     return (
       <div className="flex min-h-screen w-full bg-background">
-        {/* Backdrop para mobile quando sidebar aberto */}
         {isMobile && sidebarOpen && (
           <div 
             className="fixed inset-0 bg-black/50 z-40 md:hidden"
@@ -100,16 +124,14 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           />
         )}
         
+        {/* OTIMIZAÇÃO 8: Skeleton simplificado para navegação rápida */}
         <div className="w-64 border-r bg-sidebar p-4 flex flex-col">
           <div className="space-y-4">
             <Skeleton className="h-8 w-full" />
             <Skeleton className="h-12 w-12 rounded-full mx-auto" />
-            <Skeleton className="h-4 w-24 mx-auto" />
-            
-            <div className="h-px bg-border my-4"></div>
             
             <div className="space-y-2">
-              {Array(6).fill(null).map((_, i) => (
+              {Array(4).fill(null).map((_, i) => ( // Reduzido de 6 para 4
                 <Skeleton key={i} className="h-9 w-full" />
               ))}
             </div>
@@ -119,30 +141,24 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         <div className="flex-1 p-8">
           <div className="space-y-4">
             <Skeleton className="h-8 w-64" />
-            <Skeleton className="h-64 w-full" />
-            <div className="text-center text-muted-foreground text-sm">
-              {retryCount > 0 && (
-                <div className="text-yellow-600">
-                  Verificando credenciais... (tentativa {retryCount}/{maxRetries})
-                </div>
-              )}
-              {forceReady && (
-                <div className="text-blue-600">
-                  Forçando carregamento...
-                </div>
-              )}
-            </div>
+            <Skeleton className="h-32 w-full" /> {/* Reduzido de h-64 para h-32 */}
+            
+            {/* Feedback otimista para navegação do LMS */}
+            {isComingFromLMS && (
+              <div className="text-center text-viverblue text-sm">
+                ⚡ Retornando para área administrativa...
+              </div>
+            )}
           </div>
         </div>
       </div>
     );
   }
 
-  // Renderização final com verificações de segurança
-  if (forceReady || (!isLoading && user && isAdmin)) {
+  // OTIMIZAÇÃO 9: Renderização com verificações reduzidas
+  if (forceReady || optimisticLoad || (!isLoading && user && isAdmin)) {
     return (
       <div className="flex min-h-screen w-full bg-background">
-        {/* Backdrop para mobile quando sidebar aberto */}
         {isMobile && sidebarOpen && (
           <div 
             className="fixed inset-0 bg-black/50 z-40 md:hidden"
@@ -165,8 +181,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     );
   }
 
-  // Fallback
-  console.warn("🚨 [ADMIN-LAYOUT] Fallback acionado - redirecionando para login");
+  // Fallback rápido
   navigate("/login", { replace: true });
   return null;
 };

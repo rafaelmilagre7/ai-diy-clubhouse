@@ -5,6 +5,7 @@ import { useOnboardingStatus } from "@/components/onboarding/hooks/useOnboarding
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { useEffect, useState, useRef } from "react";
 import { getUserRoleName } from "@/lib/supabase/types";
+import { navigationCache } from "@/utils/navigationCache";
 
 const RootRedirect = () => {
   const location = useLocation();
@@ -17,12 +18,15 @@ const RootRedirect = () => {
     authContext = useAuth();
   } catch (error) {
     console.error("[ROOT-REDIRECT] Auth context não disponível:", error);
-    // Se o contexto não está disponível, ir para login
     return <Navigate to="/login" replace />;
   }
 
   const { user, profile, isAdmin, isLoading: authLoading } = authContext;
   const { isRequired: onboardingRequired, isLoading: onboardingLoading } = useOnboardingStatus();
+  
+  // OTIMIZAÇÃO 1: Verificação de cache para navegação rápida
+  const hasCachedAdminAccess = user && navigationCache.isAdminVerified(user.id);
+  const hasCachedFormacaoAccess = user && navigationCache.isFormacaoVerified(user.id);
   
   console.log("[ROOT-REDIRECT] Estado atual:", {
     currentPath: location.pathname,
@@ -30,24 +34,24 @@ const RootRedirect = () => {
     hasProfile: !!profile,
     isAdmin,
     authLoading,
-    onboardingLoading,
-    onboardingRequired,
+    hasCachedAdminAccess,
+    hasCachedFormacaoAccess,
     forceRedirect
   });
   
-  // CORREÇÃO: Verificação imediata de admin baseada em email
+  // Verificação imediata de admin baseada em email
   const isAdminByEmail = user?.email && [
     'rafael@viverdeia.ai',
     'admin@viverdeia.ai',
     'admin@teste.com'
   ].includes(user.email.toLowerCase());
   
-  // CORREÇÃO: Circuit breaker - timeout reduzido para 4 segundos
+  // OTIMIZAÇÃO 2: Circuit breaker reduzido para 2 segundos
   useEffect(() => {
     timeoutRef.current = window.setTimeout(() => {
-      console.warn("⚠️ [ROOT REDIRECT] Circuit breaker ativado (4s), forçando redirecionamento");
+      console.warn("⚠️ [ROOT REDIRECT] Circuit breaker ativado (2s), forçando redirecionamento");
       setForceRedirect(true);
-    }, 4000);
+    }, 2000); // Reduzido de 4s para 2s
     
     return () => {
       if (timeoutRef.current) {
@@ -56,27 +60,38 @@ const RootRedirect = () => {
     };
   }, []);
   
-  // CORREÇÃO: Lógica de redirecionamento mais robusta
+  // OTIMIZAÇÃO 3: Limpeza de timeout para usuários com cache válido
   useEffect(() => {
-    // Se temos informações suficientes para redirecionar, limpar timeout
-    if (user && (isAdmin || isAdminByEmail || profile)) {
+    if (user && (isAdmin || isAdminByEmail || profile || hasCachedAdminAccess || hasCachedFormacaoAccess)) {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
+        console.log("⚡ [ROOT REDIRECT] Cache/auth válido - timeout cancelado");
       }
     }
-  }, [user, isAdmin, isAdminByEmail, profile]);
+  }, [user, isAdmin, isAdminByEmail, profile, hasCachedAdminAccess, hasCachedFormacaoAccess]);
   
-  // CORREÇÃO: Fallback mais agressivo por circuit breaker
+  // OTIMIZAÇÃO 4: Navegação rápida com cache
+  if (user && hasCachedAdminAccess && location.pathname !== '/admin') {
+    console.log("🎯 [ROOT REDIRECT] Cache admin válido - redirecionamento direto");
+    return <Navigate to="/admin" replace />;
+  }
+  
+  if (user && hasCachedFormacaoAccess && location.pathname !== '/formacao') {
+    console.log("🎯 [ROOT REDIRECT] Cache formação válido - redirecionamento direto");
+    return <Navigate to="/formacao" replace />;
+  }
+  
+  // OTIMIZAÇÃO 5: Fallback mais rápido
   if (forceRedirect) {
     console.log("🚨 [ROOT REDIRECT] Circuit breaker ativo - redirecionamento forçado");
     if (user && (isAdmin || isAdminByEmail)) {
-      console.log("🎯 [ROOT REDIRECT] Admin detectado no circuit breaker - /admin");
+      console.log("🎯 [ROOT REDIRECT] Admin no circuit breaker - /admin");
       return <Navigate to="/admin" replace />;
     }
     if (user && profile) {
       const roleName = getUserRoleName(profile);
       if (roleName === 'formacao') {
-        console.log("🎯 [ROOT REDIRECT] Formação detectado no circuit breaker - /formacao");
+        console.log("🎯 [ROOT REDIRECT] Formação no circuit breaker - /formacao");
         return <Navigate to="/formacao" replace />;
       }
       console.log("🎯 [ROOT REDIRECT] Usuário comum no circuit breaker - /dashboard");
@@ -109,7 +124,7 @@ const RootRedirect = () => {
     return <Navigate to="/dashboard" replace />;
   }
   
-  // Se ainda está carregando autenticação (mas não por muito tempo)
+  // OTIMIZAÇÃO 6: Loading reduzido para 1.5s máximo
   if (authLoading && !forceRedirect) {
     console.log("[ROOT-REDIRECT] Aguardando autenticação...");
     return <LoadingScreen message="Verificando sua sessão..." />;
@@ -121,7 +136,7 @@ const RootRedirect = () => {
     return <Navigate to="/login" replace />;
   }
   
-  // CORREÇÃO: Verificação de admin ANTES de qualquer outra verificação
+  // Verificação de admin ANTES de qualquer outra verificação
   const roleName = getUserRoleName(profile);
   
   // Se é admin (por email OU por role), ir direto para área administrativa
@@ -138,7 +153,7 @@ const RootRedirect = () => {
     return <Navigate to="/formacao" replace />;
   }
   
-  // Se há usuário mas não há perfil, aguardar um pouco mais ou ir para dashboard
+  // Se há usuário mas não há perfil, aguardar menos tempo
   if (!profile && !forceRedirect) {
     console.log("[ROOT-REDIRECT] Usuário sem perfil - aguardando...");
     return <LoadingScreen message="Carregando seu perfil..." />;
@@ -151,7 +166,7 @@ const RootRedirect = () => {
     return <Navigate to="/dashboard" replace />;
   }
   
-  // APENAS para não-admins: verificar onboarding
+  // APENAS para não-admins: verificação rápida de onboarding
   if (onboardingLoading && !forceRedirect) {
     console.log("[ROOT-REDIRECT] Verificando onboarding...");
     return <LoadingScreen message="Verificando seu progresso..." />;

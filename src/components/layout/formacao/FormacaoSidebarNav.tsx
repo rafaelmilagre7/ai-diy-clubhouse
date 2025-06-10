@@ -72,6 +72,8 @@ export const FormacaoSidebarNav = ({ sidebarOpen }: FormacaoSidebarNavProps) => 
             >
               <a
                 href={item.href}
+                // OTIMIZAÇÃO: Adicionar state para indicar origem da navegação
+                state={{ from: location.pathname }}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg w-full transition-colors",
                   item.isActive 

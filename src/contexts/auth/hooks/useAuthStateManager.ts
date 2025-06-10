@@ -5,6 +5,7 @@ import { validateUserSession, fetchUserProfileSecurely, clearProfileCache } from
 import { UserProfile } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
 import { useGlobalLoading } from '@/hooks/useGlobalLoading';
+import { navigationCache } from '@/utils/navigationCache';
 
 interface UseAuthStateManagerProps {
   setSession: (session: Session | null) => void;
@@ -22,13 +23,13 @@ export const useAuthStateManager = ({
   const { setLoading: setGlobalLoading, circuitBreakerActive } = useGlobalLoading();
 
   const setupAuthSession = useCallback(async () => {
-    logger.info('[AUTH-STATE] Iniciando setup - timeout unificado de 4s');
+    logger.info('[AUTH-STATE] Iniciando setup - timeout otimizado de 2s');
     
     try {
       setIsLoading(true);
       setGlobalLoading('auth', true);
 
-      // Verificação de circuit breaker
+      // OTIMIZAÇÃO 1: Verificação de circuit breaker mais rápida
       if (circuitBreakerActive) {
         logger.warn('[AUTH-STATE] Circuit breaker ativo - setup simplificado');
         setIsLoading(false);
@@ -36,10 +37,10 @@ export const useAuthStateManager = ({
         return;
       }
 
-      // Timeout unificado de 4 segundos
+      // OTIMIZAÇÃO 2: Timeout reduzido para 2 segundos
       const sessionPromise = validateUserSession();
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Auth session timeout")), 4000)
+        setTimeout(() => reject(new Error("Auth session timeout")), 2000) // Reduzido de 4s para 2s
       );
 
       let sessionResult;
@@ -67,6 +68,7 @@ export const useAuthStateManager = ({
         setUser(null);
         setProfile(null);
         clearProfileCache();
+        navigationCache.clear();
         return;
       }
 
@@ -74,7 +76,7 @@ export const useAuthStateManager = ({
       setSession(session);
       setUser(user);
 
-      // Verificação de admin por email (prioridade máxima)
+      // OTIMIZAÇÃO 3: Verificação de admin por email (prioridade máxima)
       const isAdminByEmail = user.email && [
         'rafael@viverdeia.ai',
         'admin@viverdeia.ai',
@@ -85,18 +87,33 @@ export const useAuthStateManager = ({
         logger.info('[AUTH-STATE] Admin por email detectado - acesso prioritário');
       }
 
-      // Buscar perfil com timeout próprio (2 segundos)
+      // OTIMIZAÇÃO 4: Verificar cache antes de buscar perfil
+      const cachedNavigation = navigationCache.get(user.id);
+      if (cachedNavigation?.userProfile) {
+        logger.info('[AUTH-STATE] Perfil em cache - usando dados salvos');
+        setProfile(cachedNavigation.userProfile);
+        
+        logger.info('[AUTH-STATE] ✅ Setup completo via cache', {
+          userId: user.id.substring(0, 8) + '***',
+          hasProfile: true,
+          cached: true
+        });
+        
+        return;
+      }
+
+      // OTIMIZAÇÃO 5: Buscar perfil com timeout reduzido para 1 segundo
       try {
         const profilePromise = fetchUserProfileSecurely(user.id);
         const profileTimeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error("Profile timeout")), 2000)
+          setTimeout(() => reject(new Error("Profile timeout")), 1000) // Reduzido de 2s para 1s
         );
 
         let profile;
         try {
           profile = await Promise.race([profilePromise, profileTimeoutPromise]) as UserProfile | null;
         } catch (profileTimeoutError) {
-          logger.warn('[AUTH-STATE] Timeout no perfil');
+          logger.warn('[AUTH-STATE] Timeout no perfil - continuando sem perfil');
           profile = null;
         }
         
@@ -107,10 +124,20 @@ export const useAuthStateManager = ({
           }
 
           setProfile(profile);
+          
+          // OTIMIZAÇÃO 6: Atualizar cache de navegação
+          const roleName = profile.user_roles?.name;
+          if (roleName === 'admin' || isAdminByEmail) {
+            navigationCache.set(user.id, profile, 'admin');
+          } else if (roleName === 'formacao') {
+            navigationCache.set(user.id, profile, 'formacao');
+          }
+          
           logger.info('[AUTH-STATE] ✅ Setup completo', {
             userId: user.id.substring(0, 8) + '***',
             hasProfile: true,
-            roleName: profile.user_roles?.name || 'sem role'
+            roleName: profile.user_roles?.name || 'sem role',
+            cached: false
           });
         } else {
           logger.warn('[AUTH-STATE] Sem perfil disponível');
@@ -118,6 +145,9 @@ export const useAuthStateManager = ({
           
           if (!isAdminByEmail) {
             logger.warn('[AUTH-STATE] Usuário sem admin por email e sem perfil');
+          } else {
+            // Para admin por email, criar cache básico mesmo sem perfil
+            navigationCache.set(user.id, null, 'admin');
           }
         }
         
@@ -127,6 +157,7 @@ export const useAuthStateManager = ({
         if (isAdminByEmail) {
           logger.info('[AUTH-STATE] Admin por email - acesso permitido sem perfil');
           setProfile(null);
+          navigationCache.set(user.id, null, 'admin');
         } else {
           setProfile(null);
           
@@ -135,6 +166,7 @@ export const useAuthStateManager = ({
             setSession(null);
             setUser(null);
             clearProfileCache();
+            navigationCache.clear();
           }
         }
       }
@@ -149,12 +181,13 @@ export const useAuthStateManager = ({
         setUser(null);
         setProfile(null);
         clearProfileCache();
+        navigationCache.clear();
       }
       
     } finally {
       setIsLoading(false);
       setGlobalLoading('auth', false);
-      logger.info('[AUTH-STATE] ✅ Setup finalizado');
+      logger.info('[AUTH-STATE] ✅ Setup finalizado (otimizado)');
     }
   }, [setSession, setUser, setProfile, setIsLoading, setGlobalLoading, circuitBreakerActive]);
 
