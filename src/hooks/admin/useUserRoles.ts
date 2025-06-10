@@ -41,13 +41,11 @@ export function useUserRoles() {
         .eq("id", userId)
         .single();
       
-      // Log da ação no sistema de auditoria de segurança (sempre importante para segurança)
+      // CORREÇÃO: Log da ação no sistema de auditoria de segurança com argumentos corretos
       await logSecurityEvent(
         'assign_role',
-        'profile',
-        userId,
-        oldProfileData,
-        { role_id: roleId }
+        'profiles',
+        userId
       );
       
       // Atualizar o papel do usuário - apenas role_id
