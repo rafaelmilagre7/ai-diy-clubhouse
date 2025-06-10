@@ -7,9 +7,14 @@ import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
 
-const RegisterForm = () => {
+interface RegisterFormProps {
+  inviteToken?: string;
+  prefilledEmail?: string;
+}
+
+const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) => {
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(prefilledEmail || "");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -50,6 +55,7 @@ const RegisterForm = () => {
         options: {
           data: {
             name,
+            invite_token: inviteToken, // Incluir o token de convite nos metadados
           },
           emailRedirectTo: window.location.origin.includes('localhost') 
             ? 'http://localhost:3000/auth' 
@@ -58,6 +64,22 @@ const RegisterForm = () => {
       });
       
       if (error) throw error;
+      
+      // Se há um token de convite, marcar como usado após o cadastro bem-sucedido
+      if (inviteToken && data.user) {
+        try {
+          await supabase
+            .from('invites')
+            .update({ 
+              used_at: new Date().toISOString(),
+              used_by: data.user.id 
+            })
+            .eq('token', inviteToken);
+        } catch (inviteError) {
+          console.warn('Erro ao marcar convite como usado:', inviteError);
+          // Não bloquear o fluxo se falhar ao marcar o convite
+        }
+      }
       
       toast({
         title: "Cadastro realizado",
@@ -112,7 +134,8 @@ const RegisterForm = () => {
               placeholder="seu@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="pl-10 bg-gray-800 border-gray-700 text-white"
+              disabled={!!prefilledEmail} // Desabilitar edição se email vem do convite
+              className="pl-10 bg-gray-800 border-gray-700 text-white disabled:opacity-50"
             />
           </div>
         </div>
