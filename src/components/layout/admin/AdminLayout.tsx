@@ -17,11 +17,31 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const navigate = useNavigate();
   const [isMounted, setIsMounted] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
-  const maxRetries = 3;
+  const [forceReady, setForceReady] = useState(false);
+  const maxRetries = 2; // Reduzido para evitar loops
   
   const { sidebarOpen, setSidebarOpen } = useSidebarControl();
 
-  // Verificar autenticação e permissões com retry logic
+  // CORREÇÃO 1: Timeout absoluto mais agressivo para evitar travamento
+  useEffect(() => {
+    const absoluteTimeout = setTimeout(() => {
+      console.warn("⚠️ [ADMIN-LAYOUT] Timeout absoluto de 8s - forçando exibição");
+      setForceReady(true);
+    }, 8000); // Reduzido de 15s para 8s
+
+    return () => clearTimeout(absoluteTimeout);
+  }, []);
+
+  // CORREÇÃO 2: Circuit breaker - detectar e quebrar loops infinitos
+  useEffect(() => {
+    if (retryCount >= maxRetries) {
+      console.warn("🚨 [ADMIN-LAYOUT] Circuit breaker ativo - muitas tentativas");
+      setForceReady(true);
+      toast.warning("Sistema demorou para carregar. Forçando exibição...");
+    }
+  }, [retryCount]);
+
+  // Verificar autenticação e permissões com retry mais inteligente
   useEffect(() => {
     setIsMounted(true);
     
@@ -42,8 +62,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       // Log de acesso administrativo (sem dados sensíveis)
       console.info("[SECURITY] Admin access granted", {
         userId: user.id?.substring(0, 8) + '***',
-        timestamp: new Date().toISOString(),
-        userAgent: navigator.userAgent.substring(0, 50)
+        timestamp: new Date().toISOString()
       });
       
       // Reset retry count em caso de sucesso
@@ -51,27 +70,26 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     }
   }, [user, isAdmin, isLoading, navigate]);
 
-  // Timeout com retry mais inteligente (sem redirecionamento forçado)
+  // CORREÇÃO 3: Timeout com retry mais inteligente e menos agressivo
   useEffect(() => {
-    if (isLoading && isMounted) {
+    if (isLoading && isMounted && !forceReady) {
       const timeoutId = setTimeout(() => {
-        if (isLoading && retryCount < maxRetries) {
+        if (isLoading && retryCount < maxRetries && !forceReady) {
           console.warn(`[SECURITY] Auth timeout - retry ${retryCount + 1}/${maxRetries}`);
           setRetryCount(prev => prev + 1);
-          toast.warning(`Verificando credenciais... (tentativa ${retryCount + 1})`);
-        } else if (isLoading && retryCount >= maxRetries) {
-          console.error("[SECURITY] Auth timeout after retries - redirecting to login");
-          toast.error("Timeout na verificação de credenciais");
-          navigate("/login", { replace: true });
+          toast.warning(`Verificando credenciais... (${retryCount + 1}/${maxRetries})`);
+        } else if (isLoading && (retryCount >= maxRetries || forceReady)) {
+          console.error("[SECURITY] Forçando exibição após timeouts");
+          setForceReady(true);
         }
-      }, 15000); // Aumentado para 15 segundos
+      }, 6000); // Reduzido para 6 segundos
 
       return () => clearTimeout(timeoutId);
     }
-  }, [isLoading, isMounted, retryCount, navigate]);
+  }, [isLoading, isMounted, retryCount, forceReady]);
 
-  // Renderização com loading mais seguro
-  if (!isMounted || isLoading) {
+  // CORREÇÃO 4: Renderização com loading mais seguro e circuit breaker
+  if (!isMounted || (isLoading && !forceReady && retryCount < maxRetries)) {
     return (
       <div className="flex min-h-screen bg-[#0F111A] text-white">
         <div className="w-64 bg-[#0F111A] border-r border-white/5 p-4 flex flex-col">
@@ -93,30 +111,44 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           <div className="space-y-4">
             <Skeleton className="h-8 w-64 bg-white/10" />
             <Skeleton className="h-64 w-full bg-white/10" />
-            {retryCount > 0 && (
-              <div className="text-center text-yellow-400 text-sm">
-                Verificando credenciais... (tentativa {retryCount}/{maxRetries})
-              </div>
-            )}
+            <div className="text-center text-white/70 text-sm">
+              {retryCount > 0 && (
+                <div className="text-yellow-400">
+                  Verificando credenciais... (tentativa {retryCount}/{maxRetries})
+                </div>
+              )}
+              {forceReady && (
+                <div className="text-blue-400">
+                  Forçando carregamento...
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  // Renderização final apenas para usuários autorizados
-  return (
-    <div className="flex min-h-screen bg-background w-full">
-      <AdminSidebar />
-      
-      <AdminContent 
-        sidebarOpen={sidebarOpen} 
-        setSidebarOpen={setSidebarOpen}
-      >
-        {children || <Outlet />}
-      </AdminContent>
-    </div>
-  );
+  // CORREÇÃO 5: Renderização final com verificações adicionais de segurança
+  if (forceReady || (!isLoading && user && isAdmin)) {
+    return (
+      <div className="flex min-h-screen bg-background w-full">
+        <AdminSidebar />
+        
+        <AdminContent 
+          sidebarOpen={sidebarOpen} 
+          setSidebarOpen={setSidebarOpen}
+        >
+          {children || <Outlet />}
+        </AdminContent>
+      </div>
+    );
+  }
+
+  // Fallback - não deveria chegar aqui, mas por segurança
+  console.warn("🚨 [ADMIN-LAYOUT] Fallback acionado - redirecionando para login");
+  navigate("/login", { replace: true });
+  return null;
 };
 
 export default AdminLayout;

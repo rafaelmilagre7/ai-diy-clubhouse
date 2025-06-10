@@ -33,6 +33,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const isInitialized = useRef(false);
   const lastUserId = useRef<string | null>(null);
   const initTimeoutRef = useRef<number | null>(null);
+  const circuitBreakerRef = useRef(false);
 
   // Inicializar useAuthStateManager com os setters
   const { setupAuthSession } = useAuthStateManager({
@@ -46,14 +47,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading,
   });
 
-  // CORREÇÃO CRÍTICA 1: Timeout absoluto reduzido para 4 segundos
+  // CORREÇÃO 1: Circuit breaker - timeout absoluto reduzido para 6 segundos
   useEffect(() => {
     initTimeoutRef.current = window.setTimeout(() => {
-      if (isLoading) {
-        console.warn("⚠️ [AUTH-INIT] Timeout absoluto de inicialização (4s) - forçando fim do loading");
+      if (isLoading && !circuitBreakerRef.current) {
+        console.warn("⚠️ [AUTH-INIT] Circuit breaker ativado (6s) - forçando fim do loading");
+        circuitBreakerRef.current = true;
         setIsLoading(false);
       }
-    }, 4000);
+    }, 6000);
 
     return () => {
       if (initTimeoutRef.current) {
@@ -75,12 +77,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         isAdmin: isAdminRole(profile),
         isFormacao: isFormacaoRole(profile),
         isLoading,
-        hasAuthError: !!authError
+        hasAuthError: !!authError,
+        circuitBreakerActive: circuitBreakerRef.current
       });
     }
   }, [user, profile, isLoading, authError]);
 
-  // CORREÇÃO CRÍTICA 2: Verificação imediata de admin baseada em email
+  // CORREÇÃO 2: Verificação imediata de admin baseada em email
   const isAdminByEmail = user?.email && [
     'rafael@viverdeia.ai',
     'admin@viverdeia.ai',
@@ -127,17 +130,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             if (event === 'SIGNED_IN' && session?.user) {
               console.log(`🎉 [AUTH-INIT] Login detectado para: ${session.user.email}`);
               
-              // CORREÇÃO CRÍTICA 3: Executar setup imediatamente, sem setTimeout
+              // CORREÇÃO 3: Executar setup com circuit breaker
               try {
-                console.log('🚀 [AUTH-INIT] Executando setup imediatamente após SIGNED_IN');
-                await setupAuthSession();
+                console.log('🚀 [AUTH-INIT] Executando setup pós-login');
                 
-                // CORREÇÃO CRÍTICA 4: Log adicional para debug
+                // Verificar se circuit breaker já foi ativado
+                if (circuitBreakerRef.current) {
+                  console.warn('[AUTH-INIT] Circuit breaker ativo - setup simplificado');
+                  setUser(session.user);
+                  setSession(session);
+                  setIsLoading(false);
+                  return;
+                }
+                
+                await setupAuthSession();
                 console.log('✅ [AUTH-INIT] Setup pós-login concluído com sucesso');
               } catch (error) {
                 console.error('❌ [AUTH-INIT] Erro no setup pós-login:', error);
                 setAuthError(error instanceof Error ? error : new Error('Erro no setup pós-login'));
-                // CORREÇÃO: Garantir que loading seja finalizado mesmo com erro
+                
+                // CORREÇÃO 4: Fallback - definir dados básicos mesmo com erro
+                setUser(session.user);
+                setSession(session);
                 setIsLoading(false);
               }
             } else if (event === 'SIGNED_OUT') {
@@ -148,6 +162,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               setSession(null);
               setAuthError(null);
               setIsLoading(false);
+              circuitBreakerRef.current = false; // Reset circuit breaker
             }
           }
         );
@@ -160,7 +175,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.error('❌ [AUTH-INIT] Erro na inicialização:', error);
         setAuthError(error instanceof Error ? error : new Error('Erro na inicialização'));
       } finally {
-        // CORREÇÃO CRÍTICA 5: Garantir SEMPRE que loading seja finalizado
+        // CORREÇÃO 5: Garantir SEMPRE que loading seja finalizado
         console.log('✅ [AUTH-INIT] Finalizando loading no finally');
         setIsLoading(false);
       }
