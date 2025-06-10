@@ -4,6 +4,7 @@ import { AlertCircle } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/auth';
+import { getUserRoleName } from '@/lib/supabase/types';
 
 interface PermissionGuardProps {
   permission: string;
@@ -22,7 +23,7 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
   const [timedOut, setTimedOut] = useState(false);
   
   // Verificação rápida e simplificada
-  const isAdmin = profile?.role === 'admin';
+  const isAdmin = getUserRoleName(profile) === 'admin';
   const isLoading = !profile && !timedOut;
   
   // Se é admin, renderiza imediatamente os filhos

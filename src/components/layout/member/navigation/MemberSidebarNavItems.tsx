@@ -16,6 +16,7 @@ import {
   Shield
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
+import { getUserRoleName } from '@/lib/supabase/types';
 
 interface MemberSidebarNavItemsProps {
   sidebarOpen: boolean;
@@ -76,7 +77,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
     }
   ];
 
-  if (profile?.role === 'admin') {
+  if (getUserRoleName(profile) === 'admin') {
     navigationItems.push({
       title: "Painel Admin",
       href: "/admin",
@@ -252,7 +253,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       </div>
       
       {/* Admin no final se existir */}
-      {profile?.role === 'admin' && (
+      {getUserRoleName(profile) === 'admin' && (
         <div className="mt-auto pt-3 border-t border-white/10">
           {renderNavButton(navigationItems[navigationItems.length - 1])}
         </div>

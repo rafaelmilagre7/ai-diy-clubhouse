@@ -3,6 +3,7 @@ import React from 'react';
 import { useAuth } from '@/contexts/auth';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Lock } from 'lucide-react';
+import { getUserRoleName } from '@/lib/supabase/types';
 
 interface FeatureGuardProps {
   feature: string;
@@ -20,7 +21,8 @@ export const FeatureGuard: React.FC<FeatureGuardProps> = ({
   const { profile } = useAuth();
   
   // Verificação simplificada baseada apenas no papel do usuário
-  const hasAccess = profile?.role && ['admin', 'member', 'membro_club'].includes(profile.role);
+  const roleName = getUserRoleName(profile);
+  const hasAccess = roleName && ['admin', 'member', 'membro_club'].includes(roleName);
   
   if (hasAccess) {
     return <>{children}</>;

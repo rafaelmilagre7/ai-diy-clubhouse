@@ -4,6 +4,7 @@ import { NavLink } from 'react-router-dom';
 import { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/auth';
+import { getUserRoleName } from '@/lib/supabase/types';
 
 interface MemberSidebarNavItemProps {
   to: string;
@@ -23,7 +24,7 @@ export const MemberSidebarNavItem: React.FC<MemberSidebarNavItemProps> = ({
   const { profile } = useAuth();
 
   // Se for admin only e o usuário não for admin, não mostrar
-  if (adminOnly && profile?.role !== 'admin') {
+  if (adminOnly && getUserRoleName(profile) !== 'admin') {
     return null;
   }
 

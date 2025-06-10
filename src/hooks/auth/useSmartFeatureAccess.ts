@@ -2,6 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/auth';
 import { isFeatureEnabledForUser, APP_FEATURES } from '@/config/features';
+import { getUserRoleName } from '@/lib/supabase/types';
 
 interface SmartFeatureAccessResult {
   hasAccess: boolean;
@@ -19,9 +20,10 @@ interface SmartFeatureAccessResult {
  */
 export const useSmartFeatureAccess = (feature: string) => {
   const { profile, user } = useAuth();
+  const userRole = getUserRoleName(profile);
 
   return useQuery({
-    queryKey: ['smart-feature-access', feature, user?.id, profile?.role],
+    queryKey: ['smart-feature-access', feature, user?.id, userRole],
     queryFn: async (): Promise<SmartFeatureAccessResult> => {
       // Verificar se a feature existe na configuração
       if (!(feature in APP_FEATURES)) {
@@ -39,7 +41,7 @@ export const useSmartFeatureAccess = (feature: string) => {
       if (!featureConfig?.enabled) {
         return {
           hasAccess: false,
-          hasRoleAccess: profile?.role === 'admin',
+          hasRoleAccess: userRole === 'admin',
           setupComplete: true,
           blockReason: 'feature_disabled',
           isLoading: false
@@ -47,7 +49,7 @@ export const useSmartFeatureAccess = (feature: string) => {
       }
 
       // Verificar acesso baseado no papel do usuário
-      const hasRoleAccess = isFeatureEnabledForUser(feature, profile?.role);
+      const hasRoleAccess = isFeatureEnabledForUser(feature, userRole);
       
       return {
         hasAccess: hasRoleAccess,
