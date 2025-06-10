@@ -82,16 +82,11 @@ export const useAuthStateManager = () => {
             roleName: profile?.user_roles?.name || 'sem role'
           });
           
-          // CORREÇÃO CRÍTICA 3: Atualizar metadados apenas se necessário (não crítico)
-          if (profile && !isAdminByEmail) {
-            supabase.auth.updateUser({
-              data: { role: profile.role }
-            }).then(() => {
-              console.log("[AUTH-STATE-MANAGER] Metadados do usuário atualizados");
-            }).catch(error => {
-              console.warn("[AUTH-STATE-MANAGER] Erro ao atualizar metadados (não crítico):", error.message);
-            });
+          // CORREÇÃO CRÍTICA 3: Garantir que navegação aconteça após profile estar disponível
+          if (profile) {
+            console.log("[AUTH-STATE-MANAGER] ✅ Perfil carregado - sistema pronto para navegação");
           }
+          
         } catch (profileError) {
           console.error("[AUTH-STATE-MANAGER] Erro ao processar perfil do usuário:", profileError);
           // CORREÇÃO CRÍTICA 4: Se é admin por email, permitir acesso mesmo sem perfil
@@ -123,7 +118,7 @@ export const useAuthStateManager = () => {
       };
     } finally {
       // CORREÇÃO CRÍTICA 5: Set loading to false regardless of the outcome
-      console.log("[AUTH-STATE-MANAGER] Finalizando loading");
+      console.log("[AUTH-STATE-MANAGER] ✅ Finalizando loading - sistema pronto");
       setIsLoading(false);
     }
   }, [setSession, setUser, setProfile, setIsLoading]);

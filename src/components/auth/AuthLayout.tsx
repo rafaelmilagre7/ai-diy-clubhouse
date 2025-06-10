@@ -7,12 +7,40 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/auth";
+import { useEffect } from "react";
 
 const AuthLayout = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { user, profile, isAdmin } = useAuth();
+
+  // CORREÇÃO CRÍTICA 1: Verificar se usuário já está logado e redirecionar
+  useEffect(() => {
+    if (user && profile) {
+      console.log("[AUTH-LAYOUT] Usuário já autenticado detectado, redirecionando...", {
+        email: user.email,
+        isAdmin,
+        profileRole: profile.role_id
+      });
+      
+      // Redirecionar baseado no papel do usuário
+      if (isAdmin || profile.role_id === 'admin') {
+        console.log("[AUTH-LAYOUT] Redirecionando admin para /admin");
+        navigate('/admin', { replace: true });
+      } else if (profile.role_id === 'formacao') {
+        console.log("[AUTH-LAYOUT] Redirecionando formação para /formacao");
+        navigate('/formacao', { replace: true });
+      } else {
+        console.log("[AUTH-LAYOUT] Redirecionando usuário comum para /dashboard");
+        navigate('/dashboard', { replace: true });
+      }
+    }
+  }, [user, profile, isAdmin, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +58,6 @@ const AuthLayout = () => {
       setIsLoading(true);
       console.log("[AUTH-LAYOUT] Iniciando processo de login");
       
-      // CORREÇÃO CRÍTICA 1: Usar autenticação direta sem Edge Function complexa
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -48,8 +75,9 @@ const AuthLayout = () => {
           description: "Redirecionando...",
         });
         
-        // CORREÇÃO CRÍTICA 2: Não navegar manualmente - deixar o sistema de rotas fazer isso
-        console.log("[AUTH-LAYOUT] Aguardando redirecionamento automático do sistema");
+        // CORREÇÃO CRÍTICA 2: Redirecionar explicitamente para a raiz após login
+        console.log("[AUTH-LAYOUT] Redirecionando para / para acionar RootRedirect");
+        navigate('/', { replace: true });
       }
       
     } catch (error: any) {
@@ -76,11 +104,11 @@ const AuthLayout = () => {
         });
       }
     } finally {
-      // CORREÇÃO CRÍTICA 3: Sempre finalizar loading após alguns segundos para evitar travamento
+      // CORREÇÃO CRÍTICA 3: Timeout mais curto e sempre finalizar loading
       setTimeout(() => {
         setIsLoading(false);
         console.log("[AUTH-LAYOUT] Loading finalizado");
-      }, 2000);
+      }, 1000);
     }
   };
 
