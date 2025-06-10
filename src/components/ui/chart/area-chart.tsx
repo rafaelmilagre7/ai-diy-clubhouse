@@ -43,7 +43,7 @@ export const AreaChart: React.FC<AreaChartProps> = ({
             fontSize={12}
           />
           <YAxis className="text-muted-foreground" fontSize={12} />
-          <ChartTooltip content={<ChartTooltipContent valueFormatter={valueFormatter} />} />
+          <Tooltip content={<ChartTooltipContent valueFormatter={valueFormatter} />} />
           <Legend />
           {categories.map((category, idx) => (
             <Area

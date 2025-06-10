@@ -12,6 +12,11 @@ export interface ChartConfig {
   }
 }
 
+export const THEMES = {
+  light: "",
+  dark: ".dark"
+} as const
+
 const ChartContext = React.createContext<ChartConfig | null>(null)
 
 export function useChart() {

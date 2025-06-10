@@ -12,6 +12,7 @@ interface BarChartProps {
   colors?: string[]
   valueFormatter?: (value: number) => string
   className?: string
+  layout?: 'horizontal' | 'vertical'
 }
 
 export const BarChart: React.FC<BarChartProps> = ({
@@ -20,7 +21,8 @@ export const BarChart: React.FC<BarChartProps> = ({
   categories,
   colors = ['#0ABAB5', '#3B82F6', '#10B981', '#F59E0B', '#EF4444'],
   valueFormatter,
-  className
+  className,
+  layout = 'horizontal'
 }) => {
   const validation = validateBarChartData(data, index, categories)
   
@@ -35,15 +37,28 @@ export const BarChart: React.FC<BarChartProps> = ({
   return (
     <ChartContainer className={className}>
       <ResponsiveContainer width="100%" height="100%">
-        <RechartsBarChart data={validation.data}>
+        <RechartsBarChart 
+          data={validation.data}
+          layout={layout}
+          margin={{ top: 10, right: 30, left: 20, bottom: 5 }}
+        >
           <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-          <XAxis 
-            dataKey={index}
-            className="text-muted-foreground"
-            fontSize={12}
-          />
-          <YAxis className="text-muted-foreground" fontSize={12} />
-          <ChartTooltip content={<ChartTooltipContent valueFormatter={valueFormatter} />} />
+          {layout === 'vertical' ? (
+            <>
+              <XAxis type="number" className="text-muted-foreground" fontSize={12} />
+              <YAxis type="category" dataKey={index} className="text-muted-foreground" fontSize={12} width={100} />
+            </>
+          ) : (
+            <>
+              <XAxis 
+                dataKey={index}
+                className="text-muted-foreground"
+                fontSize={12}
+              />
+              <YAxis className="text-muted-foreground" fontSize={12} />
+            </>
+          )}
+          <Tooltip content={<ChartTooltipContent valueFormatter={valueFormatter} />} />
           <Legend />
           {categories.map((category, idx) => (
             <Bar

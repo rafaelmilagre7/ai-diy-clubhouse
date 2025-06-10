@@ -26,13 +26,6 @@ export const NPSPerLessonChart: React.FC<NPSPerLessonChartProps> = ({ npsData, i
     respostas: lesson.responseCount || 0
   }));
   
-  // Determinar cores com base no score NPS
-  const getBarColor = (npsScore: number) => {
-    if (npsScore >= 50) return "#22c55e"; // Verde para bom
-    if (npsScore >= 0) return "#f59e0b";  // Âmbar para médio
-    return "#ef4444";                      // Vermelho para ruim
-  };
-  
   // Criar array de cores para o gráfico
   const barColors = ["#8B5CF6"]; // Cor padrão roxa para todas as barras
   

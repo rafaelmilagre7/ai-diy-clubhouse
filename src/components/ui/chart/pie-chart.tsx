@@ -50,7 +50,7 @@ export const PieChart: React.FC<PieChartProps> = ({
               <Cell key={`cell-${idx}`} fill={colors[idx % colors.length]} />
             ))}
           </Pie>
-          <ChartTooltip content={<ChartTooltipContent valueFormatter={valueFormatter} />} />
+          <Tooltip content={<ChartTooltipContent valueFormatter={valueFormatter} />} />
           <Legend />
         </RechartsPieChart>
       </ResponsiveContainer>
