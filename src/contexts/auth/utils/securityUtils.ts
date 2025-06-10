@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 
 /**
@@ -112,12 +111,16 @@ export const getUserPermissions = async (userId: string): Promise<string[]> => {
   }
 
   try {
-    // Integração com a função log_security_access
-    await supabase.rpc('log_security_access', {
-      p_table_name: 'user_roles',
-      p_operation: 'fetch_permissions',
-      p_resource_id: userId
-    }).catch(() => {}); // Ignorar erros de auditoria
+    // CORREÇÃO: Usar try/catch apropriado para RPC call
+    try {
+      await supabase.rpc('log_security_access', {
+        p_table_name: 'user_roles',
+        p_operation: 'fetch_permissions',
+        p_resource_id: userId
+      });
+    } catch (auditError) {
+      // Ignorar erros de auditoria silenciosamente
+    }
     
     const { data, error } = await supabase.from('profiles')
       .select(`
@@ -137,12 +140,18 @@ export const getUserPermissions = async (userId: string): Promise<string[]> => {
     
     let permissions: string[] = [];
     
-    if (data?.user_roles?.permissions) {
+    // CORREÇÃO: Acesso correto ao campo permissions
+    if (data?.user_roles) {
       try {
-        const permObj = data.user_roles.permissions;
-        if (typeof permObj === 'object') {
-          const permKeys = Object.keys(permObj).filter(key => permObj[key] === true);
-          permissions = permKeys;
+        // user_roles pode ser um objeto único ou array, verificar ambos os casos
+        const roleData = Array.isArray(data.user_roles) ? data.user_roles[0] : data.user_roles;
+        
+        if (roleData?.permissions) {
+          const permObj = roleData.permissions;
+          if (typeof permObj === 'object') {
+            const permKeys = Object.keys(permObj).filter(key => permObj[key] === true);
+            permissions = permKeys;
+          }
         }
       } catch (parseError) {
         console.error('[SECURITY] Permission parsing error:', parseError);
