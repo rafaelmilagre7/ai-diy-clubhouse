@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { Solution } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
@@ -12,6 +12,15 @@ export const useSolutionsData = () => {
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // CORREÇÃO: Adicionar estados de busca e filtragem que estavam faltando
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState("all");
+
+  // CORREÇÃO: Computar canViewSolutions baseado no usuário atual
+  const canViewSolutions = useMemo(() => {
+    return !!user; // Por enquanto, qualquer usuário autenticado pode ver soluções
+  }, [user]);
 
   useEffect(() => {
     const fetchSolutions = async () => {
@@ -68,5 +77,39 @@ export const useSolutionsData = () => {
     fetchSolutions();
   }, [user, profile, logDataAccess]);
 
-  return { solutions, loading, error };
+  // CORREÇÃO: Implementar filtragem de soluções baseada na busca e categoria
+  const filteredSolutions = useMemo(() => {
+    let filtered = solutions;
+
+    // Filtrar por categoria
+    if (activeCategory !== "all") {
+      filtered = filtered.filter(solution => 
+        solution.category?.toLowerCase() === activeCategory.toLowerCase()
+      );
+    }
+
+    // Filtrar por termo de busca
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(solution =>
+        solution.title?.toLowerCase().includes(query) ||
+        solution.description?.toLowerCase().includes(query) ||
+        solution.category?.toLowerCase().includes(query)
+      );
+    }
+
+    return filtered;
+  }, [solutions, activeCategory, searchQuery]);
+
+  return { 
+    solutions,
+    filteredSolutions,
+    loading, 
+    error,
+    searchQuery,
+    setSearchQuery,
+    activeCategory,
+    setActiveCategory,
+    canViewSolutions
+  };
 };

@@ -72,7 +72,7 @@ export function useUserRoles() {
       clearPermissionCache(userId);
       
       // CORREÇÃO: Limpar cache de perfil para forçar refresh na próxima busca
-      clearProfileCache(userId);
+      clearProfileCache();
       
       if (process.env.NODE_ENV !== 'production') {
         console.log('🧹 [USER-ROLES] Cache de perfil e permissões limpo para sincronização imediata');

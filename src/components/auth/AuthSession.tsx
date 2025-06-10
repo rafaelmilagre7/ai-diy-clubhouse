@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
-import { processUserProfile } from '@/hooks/auth/utils/authSessionUtils';
+import { fetchUserProfileSecurely } from '@/hooks/auth/utils/authSessionUtils';
 import LoadingScreen from '@/components/common/LoadingScreen';
 
 const AuthSession = () => {
@@ -21,11 +21,7 @@ const AuthSession = () => {
       try {
         console.log("Carregando perfil para usuário:", user.id);
         
-        const profile = await processUserProfile(
-          user.id,
-          user.email,
-          user.user_metadata?.name || user.user_metadata?.full_name
-        );
+        const profile = await fetchUserProfileSecurely(user.id);
         
         if (profile) {
           console.log("Perfil carregado:", profile);

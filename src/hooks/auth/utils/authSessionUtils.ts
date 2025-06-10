@@ -133,3 +133,48 @@ export const validateUserSession = async () => {
     return { session: null, user: null };
   }
 };
+
+// NOVA FUNÇÃO: Processar perfil de usuário com criação automática se necessário
+export const processUserProfile = async (userId: string, email?: string, name?: string) => {
+  try {
+    let profile = await fetchUserProfileSecurely(userId);
+    
+    // Se perfil não existe, criar um básico
+    if (!profile) {
+      logger.info('[AUTH-SESSION] Criando perfil básico para novo usuário');
+      
+      const { data: newProfile, error: createError } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          email: email,
+          name: name || email?.split('@')[0] || 'Usuário',
+          role_id: null // Role será definido posteriormente
+        })
+        .select(`
+          *,
+          user_roles:role_id(*)
+        `)
+        .single();
+      
+      if (createError) {
+        logger.error('[AUTH-SESSION] Erro ao criar perfil:', createError);
+        throw createError;
+      }
+      
+      profile = newProfile;
+      
+      // Atualizar cache com novo perfil
+      profileCache = {
+        profile: newProfile,
+        timestamp: Date.now(),
+        userId: userId
+      };
+    }
+    
+    return profile;
+  } catch (error) {
+    logger.error('[AUTH-SESSION] Erro ao processar perfil:', error);
+    throw error;
+  }
+};
