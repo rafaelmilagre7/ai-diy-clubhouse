@@ -1,12 +1,11 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Settings, Clock, Users, Bell } from 'lucide-react';
+import { Settings, Clock, Users, Bell, Calendar, Sun } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Textarea } from '@/components/ui/textarea';
 import { OnboardingStepProps } from '../types/onboardingTypes';
 
 const learningTimeOptions = [
@@ -28,12 +27,30 @@ const contentPreferences = [
   'Mentoria 1:1'
 ];
 
+const weekDays = [
+  'Segunda-feira',
+  'Terça-feira',
+  'Quarta-feira',
+  'Quinta-feira',
+  'Sexta-feira',
+  'Sábado',
+  'Domingo'
+];
+
+const dayPeriods = [
+  'Manhã (08:00 - 12:00)',
+  'Tarde (12:00 - 18:00)',
+  'Noite (18:00 - 22:00)'
+];
+
 const OnboardingStep5: React.FC<OnboardingStepProps> = ({
   data,
   onUpdateData,
   getFieldError
 }) => {
   const selectedPreferences = Array.isArray(data.contentPreference) ? data.contentPreference : [];
+  const selectedDays = data.bestDays || [];
+  const selectedPeriods = data.bestPeriods || [];
 
   const handlePreferenceToggle = (preference: string, checked: boolean) => {
     const currentPreferences = selectedPreferences;
@@ -46,6 +63,32 @@ const OnboardingStep5: React.FC<OnboardingStepProps> = ({
     }
     
     onUpdateData({ contentPreference: newPreferences });
+  };
+
+  const handleDayToggle = (day: string, checked: boolean) => {
+    const currentDays = selectedDays;
+    let newDays;
+    
+    if (checked) {
+      newDays = [...currentDays, day];
+    } else {
+      newDays = currentDays.filter(d => d !== day);
+    }
+    
+    onUpdateData({ bestDays: newDays });
+  };
+
+  const handlePeriodToggle = (period: string, checked: boolean) => {
+    const currentPeriods = selectedPeriods;
+    let newPeriods;
+    
+    if (checked) {
+      newPeriods = [...currentPeriods, period];
+    } else {
+      newPeriods = currentPeriods.filter(p => p !== period);
+    }
+    
+    onUpdateData({ bestPeriods: newPeriods });
   };
 
   return (
@@ -188,19 +231,120 @@ const OnboardingStep5: React.FC<OnboardingStepProps> = ({
           </div>
         </Card>
 
-        {/* Curiosidade Final */}
+        {/* Horários e Disponibilidade */}
         <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
-          <div className="space-y-4">
-            <Label htmlFor="curiosity" className="text-slate-200 text-base font-medium">
-              Há algo específico sobre IA que você tem curiosidade ou gostaria de aprender?
-            </Label>
-            <Textarea
-              id="curiosity"
-              value={data.curiosity || ''}
-              onChange={(e) => onUpdateData({ curiosity: e.target.value })}
-              className="bg-[#151823] border-white/20 text-white min-h-[80px]"
-              placeholder="Compartilhe suas curiosidades, dúvidas ou áreas específicas de interesse..."
-            />
+          <div className="space-y-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Calendar className="w-5 h-5 text-viverblue" />
+              <h3 className="text-lg font-semibold text-white">Disponibilidade para Encontros</h3>
+            </div>
+
+            {/* Melhores dias da semana */}
+            <div>
+              <Label className="text-slate-200 text-base font-medium">
+                Qual o melhor dia da semana para encontros ao vivo? *
+              </Label>
+              <p className="text-sm text-slate-400 mb-3">
+                Selecione todos os dias que funcionam para você
+              </p>
+              
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {weekDays.map((day) => (
+                  <div key={day} className="flex items-center space-x-3">
+                    <Checkbox
+                      id={day}
+                      checked={selectedDays.includes(day)}
+                      onCheckedChange={(checked) => handleDayToggle(day, checked as boolean)}
+                      className="border-white/30 data-[state=checked]:bg-viverblue data-[state=checked]:border-viverblue"
+                    />
+                    <Label 
+                      htmlFor={day} 
+                      className="text-sm text-slate-300 cursor-pointer"
+                    >
+                      {day}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+              
+              {getFieldError?.('bestDays') && (
+                <p className="text-red-400 text-sm mt-1">{getFieldError('bestDays')}</p>
+              )}
+            </div>
+
+            {/* Melhores períodos do dia */}
+            <div>
+              <Label className="text-slate-200 text-base font-medium">
+                Qual melhor período do dia? *
+              </Label>
+              <p className="text-sm text-slate-400 mb-3">
+                Selecione todos os períodos que funcionam para você
+              </p>
+              
+              <div className="grid grid-cols-1 gap-3">
+                {dayPeriods.map((period) => (
+                  <div key={period} className="flex items-center space-x-3">
+                    <Checkbox
+                      id={period}
+                      checked={selectedPeriods.includes(period)}
+                      onCheckedChange={(checked) => handlePeriodToggle(period, checked as boolean)}
+                      className="border-white/30 data-[state=checked]:bg-viverblue data-[state=checked]:border-viverblue"
+                    />
+                    <Label 
+                      htmlFor={period} 
+                      className="text-sm text-slate-300 cursor-pointer"
+                    >
+                      {period}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+              
+              {getFieldError?.('bestPeriods') && (
+                <p className="text-red-400 text-sm mt-1">{getFieldError('bestPeriods')}</p>
+              )}
+            </div>
+          </div>
+        </Card>
+
+        {/* Case de Sucesso */}
+        <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
+          <div className="space-y-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Sun className="w-5 h-5 text-viverblue" />
+              <h3 className="text-lg font-semibold text-white">Compartilhamento de Sucesso</h3>
+            </div>
+
+            <div>
+              <Label className="text-slate-200 text-base font-medium">
+                Aceita ser um case de sucesso do Viver de IA? *
+              </Label>
+              <p className="text-sm text-slate-400 mb-3">
+                Caso obtenha resultados positivos, gostaria de compartilhar sua história?
+              </p>
+              <Select 
+                value={data.acceptsCaseStudy || ''} 
+                onValueChange={(value) => onUpdateData({ acceptsCaseStudy: value })}
+              >
+                <SelectTrigger className="mt-3 bg-[#151823] border-white/20 text-white">
+                  <SelectValue placeholder="Selecione sua resposta" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#151823] border-white/20">
+                  <SelectItem value="yes" className="text-white hover:bg-white/10">
+                    Sim, adoraria compartilhar minha história
+                  </SelectItem>
+                  <SelectItem value="maybe" className="text-white hover:bg-white/10">
+                    Talvez, dependendo dos resultados
+                  </SelectItem>
+                  <SelectItem value="no" className="text-white hover:bg-white/10">
+                    Não, prefiro manter privacidade
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              {getFieldError?.('acceptsCaseStudy') && (
+                <p className="text-red-400 text-sm mt-1">{getFieldError('acceptsCaseStudy')}</p>
+              )}
+            </div>
           </div>
         </Card>
       </div>

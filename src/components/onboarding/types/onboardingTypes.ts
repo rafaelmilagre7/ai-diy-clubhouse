@@ -39,11 +39,11 @@ export interface OnboardingData {
   
   // Etapa 5 - Personalização da Experiência
   weeklyLearningTime?: string;
-  contentPreference?: string;
+  contentPreference?: string[]; // Corrigido para array
   wantsNetworking?: string;
-  bestDays?: string[];
-  bestPeriods?: string[];
-  acceptsCaseStudy?: string;
+  bestDays?: string[]; // Novo campo obrigatório
+  bestPeriods?: string[]; // Novo campo obrigatório
+  acceptsCaseStudy?: string; // Novo campo obrigatório
   
   // Metadados
   memberType?: 'club' | 'formacao';
