@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, ReactNode, useState } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOnboardingStorage } from '../hooks/useOnboardingStorage';
 import { useOnboardingValidation } from '../hooks/useOnboardingValidation';
@@ -57,38 +57,32 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     validateStep 
   } = useOnboardingValidation();
 
-  // Determinar se o passo atual é válido
-  const isCurrentStepValid = validateStep(currentStep, data, 'club');
-
-  const handleNext = async (): Promise<void> => {
+  // Usar useCallback para evitar re-criação desnecessária das funções
+  const handleNext = useCallback(async (): Promise<void> => {
     if (currentStep < totalSteps) {
       await forceSave();
       setCurrentStep(prev => prev + 1);
     }
-  };
+  }, [currentStep, totalSteps, forceSave]);
 
-  const handlePrevious = async (): Promise<void> => {
+  const handlePrevious = useCallback(async (): Promise<void> => {
     if (currentStep > 1) {
       await forceSave();
       setCurrentStep(prev => prev - 1);
     }
-  };
+  }, [currentStep, forceSave]);
 
-  const handleDataChange = (newData: Partial<OnboardingData>): void => {
+  const handleDataChange = useCallback((newData: Partial<OnboardingData>): void => {
     updateData(newData);
-  };
+  }, [updateData]);
 
-  const handleSubmit = async (): Promise<void> => {
+  const handleSubmit = useCallback(async (): Promise<void> => {
+    if (isSubmitting) return; // Prevenir múltiplas submissões
+    
     try {
       setIsSubmitting(true);
       
-      // Marcar onboarding como completo
-      const completedData = {
-        ...data,
-        completedAt: new Date().toISOString()
-      };
-      
-      updateData(completedData);
+      // Salvar dados antes de navegar
       await forceSave();
       
       console.log('[OnboardingWizard] Onboarding finalizado com sucesso');
@@ -100,9 +94,14 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [isSubmitting, forceSave, navigate]);
 
-  const contextValue: OnboardingWizardContextType = {
+  // Calcular se o passo atual é válido de forma memoizada
+  const isCurrentStepValid = React.useMemo(() => {
+    return validateStep(currentStep, data, 'club');
+  }, [validateStep, currentStep, data]);
+
+  const contextValue: OnboardingWizardContextType = React.useMemo(() => ({
     currentStep,
     isSubmitting,
     data,
@@ -117,7 +116,22 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     handleSubmit,
     isCurrentStepValid,
     totalSteps
-  };
+  }), [
+    currentStep,
+    isSubmitting,
+    data,
+    isLoading,
+    lastSaved,
+    hasUnsavedChanges,
+    validationErrors,
+    getFieldError,
+    handleNext,
+    handlePrevious,
+    handleDataChange,
+    handleSubmit,
+    isCurrentStepValid,
+    totalSteps
+  ]);
 
   return (
     <OnboardingWizardContext.Provider value={contextValue}>
