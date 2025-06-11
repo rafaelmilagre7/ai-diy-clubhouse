@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useOnboardingStorage } from '../hooks/useOnboardingStorage';
 import { useOnboardingValidation } from '../hooks/useOnboardingValidation';
@@ -63,29 +63,32 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
 
   const totalSteps = 3;
 
-  // Validar etapa atual
-  const validationResult = validateCurrentStep(currentStep, data, data.memberType || 'club');
-  const isCurrentStepValid = validationResult.isValid;
+  // Memoizar o resultado da validação para evitar re-cálculos desnecessários
+  const isCurrentStepValid = useMemo(() => {
+    const validationResult = validateCurrentStep(currentStep, data, data.memberType || 'club');
+    return validationResult.isValid;
+  }, [validateCurrentStep, currentStep, data, data.memberType]);
 
-  const handleNext = async () => {
+  // Usar useCallback para todas as funções para evitar re-renderizações
+  const handleNext = useCallback(async () => {
     if (currentStep < totalSteps && isCurrentStepValid) {
       // Salvar dados antes de avançar
       await forceSave();
       setCurrentStep(prev => prev + 1);
     }
-  };
+  }, [currentStep, totalSteps, isCurrentStepValid, forceSave]);
 
-  const handlePrevious = () => {
+  const handlePrevious = useCallback(() => {
     if (currentStep > 1) {
       setCurrentStep(prev => prev - 1);
     }
-  };
+  }, [currentStep]);
 
-  const handleDataChange = (newData: Partial<OnboardingData>) => {
+  const handleDataChange = useCallback((newData: Partial<OnboardingData>) => {
     updateData(newData);
-  };
+  }, [updateData]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (isCurrentStepValid && !isSubmitting) {
       setIsSubmitting(true);
       try {
@@ -113,30 +116,47 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
         setIsSubmitting(false);
       }
     }
-  };
+  }, [isCurrentStepValid, isSubmitting, data, updateData, forceSave, saveToCloud, isAdminPreviewMode]);
 
-  return (
-    <>
-      {children({
-        currentStep,
-        setCurrentStep,
-        isSubmitting,
-        data,
-        updateData,
-        forceSave,
-        isLoading,
-        lastSaved,
-        hasUnsavedChanges,
-        validationErrors,
-        getFieldError,
-        syncStatus,
-        handleNext,
-        handlePrevious,
-        handleDataChange,
-        handleSubmit,
-        isCurrentStepValid,
-        totalSteps
-      })}
-    </>
-  );
+  // Memoizar o objeto de props para evitar re-renderizações desnecessárias
+  const childrenProps = useMemo(() => ({
+    currentStep,
+    setCurrentStep,
+    isSubmitting,
+    data,
+    updateData,
+    forceSave,
+    isLoading,
+    lastSaved,
+    hasUnsavedChanges,
+    validationErrors,
+    getFieldError,
+    syncStatus,
+    handleNext,
+    handlePrevious,
+    handleDataChange,
+    handleSubmit,
+    isCurrentStepValid,
+    totalSteps
+  }), [
+    currentStep,
+    isSubmitting,
+    data,
+    updateData,
+    forceSave,
+    isLoading,
+    lastSaved,
+    hasUnsavedChanges,
+    validationErrors,
+    getFieldError,
+    syncStatus,
+    handleNext,
+    handlePrevious,
+    handleDataChange,
+    handleSubmit,
+    isCurrentStepValid,
+    totalSteps
+  ]);
+
+  return children(childrenProps);
 };

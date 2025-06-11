@@ -81,20 +81,6 @@ const OnboardingWizard = () => {
                     />
                   )}
                 </Card>
-                
-                {currentStep < totalSteps && (
-                  <OnboardingWizardControls
-                    currentStep={currentStep}
-                    totalSteps={totalSteps}
-                    onNext={handleNext}
-                    onPrev={handlePrevious}
-                    canProceed={isCurrentStepValid}
-                    isLoading={isSubmitting}
-                    hasUnsavedChanges={hasUnsavedChanges}
-                    lastSaved={lastSaved}
-                    syncStatus={syncStatus}
-                  />
-                )}
               </div>
             </div>
           </div>
