@@ -153,25 +153,6 @@ export const SecureLoginForm: React.FC = () => {
     }
   };
 
-  // Função para login de teste (apenas em desenvolvimento)
-  const handleTestLogin = async (testEmail: string, testPassword: string) => {
-    if (!canShowTestFeatures()) {
-      toast.error('Recursos de teste não disponíveis em produção');
-      return;
-    }
-    
-    setEmail(testEmail);
-    setPassword(testPassword);
-    
-    // Simular envio do formulário após um pequeno delay
-    setTimeout(() => {
-      const form = document.querySelector('form');
-      if (form) {
-        form.requestSubmit();
-      }
-    }, 100);
-  };
-
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader className="space-y-1">
@@ -257,35 +238,6 @@ export const SecureLoginForm: React.FC = () => {
             )}
           </Button>
         </form>
-        
-        {/* Botões de teste apenas em desenvolvimento */}
-        {canShowTestFeatures() && (
-          <div className="mt-6 pt-4 border-t border-gray-200">
-            <p className="text-sm text-gray-600 mb-3 text-center">
-              🔧 Recursos de desenvolvimento
-            </p>
-            <div className="flex flex-col space-y-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => handleTestLogin('admin@teste.com', '123456')}
-                disabled={isLoading}
-              >
-                Login Admin (Teste)
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => handleTestLogin('user@teste.com', '123456')}
-                disabled={isLoading}
-              >
-                Login Usuário (Teste)
-              </Button>
-            </div>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
