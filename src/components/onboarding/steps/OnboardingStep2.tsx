@@ -9,6 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { OnboardingStepProps } from '../types/onboardingTypes';
 import { Step2AIInteraction } from '../components/Step2AIInteraction';
 
+interface OnboardingStep2Props extends OnboardingStepProps {
+  aiMessage?: string;
+  isGeneratingAI?: boolean;
+  onGenerateAIMessage?: () => void;
+}
+
 const businessSectors = [
   'Tecnologia', 'Saúde', 'Educação', 'Varejo', 'Finanças', 'Marketing', 
   'Consultoria', 'Agricultura', 'Indústria', 'Serviços', 'E-commerce', 'Outro'
@@ -27,11 +33,14 @@ const positions = [
   'Analista', 'Consultor', 'Freelancer', 'Empresário', 'Outro'
 ];
 
-const OnboardingStep2: React.FC<OnboardingStepProps> = ({
+const OnboardingStep2: React.FC<OnboardingStep2Props> = ({
   data,
   onUpdateData,
   memberType,
-  getFieldError
+  getFieldError,
+  aiMessage,
+  isGeneratingAI,
+  onGenerateAIMessage
 }) => {
   return (
     <motion.div
@@ -59,8 +68,9 @@ const OnboardingStep2: React.FC<OnboardingStepProps> = ({
 
       {/* Mensagem Personalizada da IA */}
       <Step2AIInteraction 
-        data={data} 
-        memberType={memberType}
+        message={aiMessage}
+        isLoading={isGeneratingAI}
+        onGenerateMessage={onGenerateAIMessage}
       />
 
       <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">

@@ -1,80 +1,34 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Bot } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { TypingEffect } from './TypingEffect';
-import { OnboardingData } from '../types/onboardingTypes';
-import { supabase } from '@/lib/supabase';
 
 interface Step2AIInteractionProps {
-  data: OnboardingData;
-  memberType: 'club' | 'formacao';
+  message?: string;
+  isLoading?: boolean;
+  onGenerateMessage?: () => void;
 }
 
 export const Step2AIInteraction: React.FC<Step2AIInteractionProps> = ({
-  data,
-  memberType
+  message,
+  isLoading = false,
+  onGenerateMessage
 }) => {
-  const [message, setMessage] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Gerar mensagem automaticamente quando o componente monta E quando os dados necessários estão disponíveis
+  // Tentar gerar mensagem quando o componente monta
   useEffect(() => {
-    const generateMessage = async () => {
-      console.log('[Step2AI] Iniciando geração de mensagem com dados:', {
-        hasName: !!data.name,
-        hasCity: !!data.city,
-        name: data.name,
-        city: data.city
-      });
+    if (!message && !isLoading && onGenerateMessage) {
+      console.log('[Step2AI] Solicitando geração de mensagem');
+      onGenerateMessage();
+    }
+  }, [message, isLoading, onGenerateMessage]);
 
-      // Se não tem nome, usar fallback estático imediatamente
-      if (!data.name) {
-        console.log('[Step2AI] Usando fallback por falta de nome');
-        setMessage('Bem-vindo à Viver de IA! Estamos empolgados em ter você aqui na nossa comunidade. Agora vamos descobrir mais sobre seu perfil empresarial para personalizar sua experiência na plataforma. Vamos começar! 🚀');
-        return;
-      }
-
-      setIsLoading(true);
-      
-      try {
-        console.log('[Step2AI] Chamando API do Supabase para gerar mensagem');
-        
-        const { data: response, error } = await supabase.functions.invoke('generate-onboarding-message', {
-          body: {
-            onboardingData: data,
-            memberType,
-            currentStep: 2
-          }
-        });
-
-        console.log('[Step2AI] Resposta da API:', { response, error });
-
-        if (error) throw error;
-
-        if (response?.success && response?.message) {
-          console.log('[Step2AI] Mensagem gerada com sucesso:', response.message);
-          setMessage(response.message);
-        } else {
-          console.warn('[Step2AI] Resposta inválida da API, usando fallback');
-          throw new Error('Resposta inválida da API');
-        }
-      } catch (error) {
-        console.warn('[Step2AI] Erro ao gerar mensagem, usando fallback:', error);
-        
-        // Fallback personalizado com dados do usuário
-        const fallbackMessage = `Olá ${data.name}! Que bom ter você aqui na Viver de IA! ${data.city ? `Vi que você está em ${data.city}` : ''} e fico empolgado em ver mais um apaixonado por IA se juntando à nossa comunidade. ${data.curiosity ? `Adorei saber que ${data.curiosity.toLowerCase()}.` : ''} Agora vamos descobrir como podemos acelerar sua jornada empresarial com IA - vamos para seu perfil de negócios! 🚀`;
-        
-        console.log('[Step2AI] Usando fallback personalizado:', fallbackMessage);
-        setMessage(fallbackMessage);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    generateMessage();
-  }, [data.name, data.city, data.curiosity, memberType]); // Dependências corretas para reagir às mudanças
+  console.log('[Step2AI] Renderizando com:', {
+    hasMessage: !!message,
+    isLoading,
+    messageLength: message?.length || 0
+  });
 
   return (
     <Card className="p-6 bg-gradient-to-r from-viverblue/10 to-purple-600/10 border-viverblue/20 mb-6">

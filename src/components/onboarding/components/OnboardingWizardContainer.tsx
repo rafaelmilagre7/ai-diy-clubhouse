@@ -6,6 +6,7 @@ import { useOnboardingValidation } from '../hooks/useOnboardingValidation';
 import { useCloudSync } from '../hooks/useCloudSync';
 import { useAdminPreview } from '@/hooks/useAdminPreview';
 import { OnboardingData } from '../types/onboardingTypes';
+import { supabase } from '@/lib/supabase';
 
 interface OnboardingWizardContainerProps {
   children: (props: {
@@ -31,6 +32,9 @@ interface OnboardingWizardContainerProps {
     handleSubmit: () => Promise<void>;
     isCurrentStepValid: boolean;
     totalSteps: number;
+    aiMessages: Map<number, string>;
+    generateAIMessage: (step: number) => Promise<void>;
+    isGeneratingAI: boolean;
   }) => React.ReactNode;
 }
 
@@ -40,6 +44,10 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
   
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Estados para mensagens de IA
+  const [aiMessages, setAiMessages] = useState<Map<number, string>>(new Map());
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   
   const { 
     data, 
@@ -63,6 +71,70 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
 
   const totalSteps = 6;
 
+  // Função para gerar mensagem de IA
+  const generateAIMessage = useCallback(async (step: number) => {
+    // Se já temos a mensagem em cache, não gerar novamente
+    if (aiMessages.has(step)) {
+      console.log(`[WizardContainer] Mensagem da etapa ${step} já existe no cache`);
+      return;
+    }
+
+    // Para etapa 2, verificar se temos dados necessários
+    if (step === 2 && !data.name) {
+      console.log('[WizardContainer] Dados insuficientes para gerar mensagem da etapa 2');
+      const fallbackMessage = 'Bem-vindo à Viver de IA! Estamos empolgados em ter você aqui na nossa comunidade. Agora vamos descobrir mais sobre seu perfil empresarial para personalizar sua experiência na plataforma. Vamos começar! 🚀';
+      setAiMessages(prev => new Map(prev).set(step, fallbackMessage));
+      return;
+    }
+
+    setIsGeneratingAI(true);
+    
+    try {
+      console.log(`[WizardContainer] Gerando mensagem para etapa ${step}`, {
+        hasName: !!data.name,
+        hasCity: !!data.city,
+        name: data.name,
+        city: data.city
+      });
+
+      const { data: response, error } = await supabase.functions.invoke('generate-onboarding-message', {
+        body: {
+          onboardingData: data,
+          memberType: data.memberType || 'club',
+          currentStep: step
+        }
+      });
+
+      console.log(`[WizardContainer] Resposta da API para etapa ${step}:`, { response, error });
+
+      if (error) throw error;
+
+      if (response?.success && response?.message) {
+        console.log(`[WizardContainer] Mensagem gerada com sucesso para etapa ${step}:`, response.message);
+        setAiMessages(prev => new Map(prev).set(step, response.message));
+      } else {
+        throw new Error('Resposta inválida da API');
+      }
+    } catch (error) {
+      console.warn(`[WizardContainer] Erro ao gerar mensagem para etapa ${step}, usando fallback:`, error);
+      
+      // Fallback personalizado baseado na etapa
+      let fallbackMessage = '';
+      if (step === 2) {
+        fallbackMessage = data.name 
+          ? `Olá ${data.name}! Que bom ter você aqui na Viver de IA! ${data.city ? `Vi que você está em ${data.city}` : ''} e fico empolgado em ver mais um apaixonado por IA se juntando à nossa comunidade. ${data.curiosity ? `Adorei saber que ${data.curiosity.toLowerCase()}.` : ''} Agora vamos descobrir como podemos acelerar sua jornada empresarial com IA - vamos para seu perfil de negócios! 🚀`
+          : 'Bem-vindo à Viver de IA! Estamos empolgados em ter você aqui na nossa comunidade. Agora vamos descobrir mais sobre seu perfil empresarial para personalizar sua experiência na plataforma. Vamos começar! 🚀';
+      } else {
+        fallbackMessage = `Parabéns ${data.name || 'Membro'}! Continue sua jornada na Viver de IA. 🚀`;
+      }
+      
+      console.log(`[WizardContainer] Usando fallback para etapa ${step}:`, fallbackMessage);
+      setAiMessages(prev => new Map(prev).set(step, fallbackMessage));
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  }, [data.name, data.city, data.curiosity, data.memberType, aiMessages]);
+
   // Log detalhado dos dados quando mudarem
   console.log('[WizardContainer] Estado atual dos dados:', {
     currentStep,
@@ -75,7 +147,8 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     city: data?.city,
     curiosity: data?.curiosity,
     isLoading,
-    hasUnsavedChanges
+    hasUnsavedChanges,
+    aiMessagesCount: aiMessages.size
   });
 
   // Função para scroll suave para o topo
@@ -131,29 +204,27 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     if (currentStep < totalSteps && isCurrentStepValid) {
       try {
         console.log('[WizardContainer] Avançando da etapa', currentStep, 'para', currentStep + 1);
-        console.log('[WizardContainer] Dados antes de salvar:', {
-          name: data?.name,
-          city: data?.city,
-          state: data?.state,
-          phone: data?.phone,
-          email: data?.email
-        });
         
         // Salvar dados antes de avançar
         await forceSave();
         
         // Avançar etapa
-        setCurrentStep(prev => prev + 1);
+        const nextStep = currentStep + 1;
+        setCurrentStep(nextStep);
         
-        // Log após mudança de etapa
-        console.log('[WizardContainer] Etapa avançada para:', currentStep + 1);
+        // Gerar mensagem para a próxima etapa se necessário
+        if (nextStep === 2) {
+          setTimeout(() => {
+            generateAIMessage(nextStep);
+          }, 500); // Delay para garantir que os dados estão atualizados
+        }
         
         // Scroll suave para o topo após um pequeno delay para permitir a renderização
         setTimeout(() => {
           scrollToTop();
         }, 100);
         
-        console.log('[WizardContainer] Etapa avançada com sucesso');
+        console.log('[WizardContainer] Etapa avançada com sucesso para:', nextStep);
       } catch (error) {
         console.error('Erro ao avançar etapa:', error);
       }
@@ -171,7 +242,7 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
         }
       });
     }
-  }, [currentStep, totalSteps, isCurrentStepValid, forceSave, scrollToTop, data]);
+  }, [currentStep, totalSteps, isCurrentStepValid, forceSave, scrollToTop, data, generateAIMessage]);
 
   const handlePrevious = useCallback(() => {
     if (currentStep > 1) {
@@ -243,7 +314,10 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     handleDataChange,
     handleSubmit,
     isCurrentStepValid,
-    totalSteps
+    totalSteps,
+    aiMessages,
+    generateAIMessage,
+    isGeneratingAI
   }), [
     currentStep,
     isSubmitting,
@@ -261,7 +335,10 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     totalSteps,
     updateData,
     forceSave,
-    getFieldError
+    getFieldError,
+    aiMessages,
+    generateAIMessage,
+    isGeneratingAI
   ]);
 
   return children(childrenProps);
