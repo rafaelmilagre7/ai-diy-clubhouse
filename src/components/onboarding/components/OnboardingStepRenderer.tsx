@@ -19,9 +19,6 @@ interface OnboardingStepRendererProps {
   validationErrors: Array<{ field: string; message: string }>;
   getFieldError: (field: string) => string | undefined;
   isCompleting: boolean;
-  aiMessage: string | null;
-  isGeneratingAI: boolean;
-  onGenerateAIMessage: () => Promise<void>;
 }
 
 export const OnboardingStepRenderer: React.FC<OnboardingStepRendererProps> = ({
@@ -34,10 +31,7 @@ export const OnboardingStepRenderer: React.FC<OnboardingStepRendererProps> = ({
   memberType,
   validationErrors,
   getFieldError,
-  isCompleting,
-  aiMessage,
-  isGeneratingAI,
-  onGenerateAIMessage
+  isCompleting
 }) => {
   switch (currentStep) {
     case 1:
@@ -62,9 +56,6 @@ export const OnboardingStepRenderer: React.FC<OnboardingStepRendererProps> = ({
           memberType={memberType}
           validationErrors={validationErrors}
           getFieldError={getFieldError}
-          aiMessage={aiMessage}
-          isGeneratingAI={isGeneratingAI}
-          onGenerateAIMessage={onGenerateAIMessage}
         />
       );
     case 3:

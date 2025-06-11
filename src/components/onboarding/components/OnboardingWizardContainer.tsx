@@ -3,7 +3,6 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { useOnboardingValidation } from '../hooks/useOnboardingValidation';
 import { useOnboardingStorage } from '../hooks/useOnboardingStorage';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase';
 import { OnboardingData } from '../types/onboardingTypes';
 
 interface OnboardingWizardContextType {
@@ -21,9 +20,6 @@ interface OnboardingWizardContextType {
   handleDataChange: (newData: Partial<OnboardingData>) => void;
   handleSubmit: () => Promise<void>;
   isCurrentStepValid: boolean;
-  currentAIMessage: string | null;
-  isGeneratingAI: boolean;
-  generateAIMessage: () => Promise<void>;
 }
 
 const OnboardingWizardContext = createContext<OnboardingWizardContextType | undefined>(undefined);
@@ -56,10 +52,6 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
 
   // Estados básicos
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Estados para IA - SIMPLIFICADOS
-  const [currentAIMessage, setCurrentAIMessage] = useState<string | null>(null);
-  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
   const { toast } = useToast();
 
@@ -86,64 +78,6 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     console.log('[WIZARD-CONTAINER] Resultado da validação (useMemo):', result);
     return result.isValid;
   }, [currentStep, data, validateCurrentStep]);
-
-  // Função para gerar mensagem de IA - SIMPLIFICADA
-  const generateAIMessage = useCallback(async () => {
-    console.log('[WIZARD-CONTAINER] Iniciando geração de mensagem IA - SIMPLIFICADA');
-    console.log('[WIZARD-CONTAINER] Dados para IA:', { name: data.name, city: data.city });
-    
-    setIsGeneratingAI(true);
-
-    try {
-      const { data: result, error } = await supabase.functions.invoke('generate-onboarding-message', {
-        body: {
-          step: 2,
-          userData: {
-            name: data.name || '',
-            city: data.city || '',
-            memberType: data.memberType || 'club'
-          }
-        }
-      });
-
-      if (error) {
-        console.error('[WIZARD-CONTAINER] Erro na API:', error);
-        throw error;
-      }
-
-      console.log('[WIZARD-CONTAINER] Resposta da API:', result);
-
-      if (result?.message) {
-        console.log('[WIZARD-CONTAINER] Mensagem recebida da API:', result.message);
-        setCurrentAIMessage(result.message);
-      } else {
-        console.warn('[WIZARD-CONTAINER] API sem mensagem, usando fallback');
-        const fallbackMessage = `Olá${data.name ? ` ${data.name}` : ''}! Vamos continuar configurando seu perfil empresarial para personalizar ainda mais sua experiência na Viver de IA. 🚀`;
-        setCurrentAIMessage(fallbackMessage);
-      }
-
-    } catch (error) {
-      console.error('[WIZARD-CONTAINER] Erro ao gerar mensagem:', error);
-      const fallbackMessage = `Olá${data.name ? ` ${data.name}` : ''}! Vamos continuar configurando seu perfil empresarial para personalizar ainda mais sua experiência na Viver de IA. 🚀`;
-      setCurrentAIMessage(fallbackMessage);
-    } finally {
-      setIsGeneratingAI(false);
-    }
-  }, [data.name, data.city, data.memberType]);
-
-  // Gerar mensagem automaticamente quando entrar na etapa 2 - SIMPLIFICADO
-  useEffect(() => {
-    if (currentStep === 2) {
-      console.log('[WIZARD-CONTAINER] Etapa 2 detectada - gerando mensagem');
-      // Sempre gerar nova mensagem na etapa 2
-      generateAIMessage();
-    } else {
-      // Limpar mensagem quando sair da etapa 2
-      console.log('[WIZARD-CONTAINER] Saindo da etapa 2 - limpando mensagem');
-      setCurrentAIMessage(null);
-      setIsGeneratingAI(false);
-    }
-  }, [currentStep, generateAIMessage]);
 
   const handleNext = useCallback(async () => {
     console.log('[WIZARD-CONTAINER] Tentando avançar para próxima etapa');
@@ -231,9 +165,6 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     handleDataChange,
     handleSubmit,
     isCurrentStepValid,
-    currentAIMessage,
-    isGeneratingAI,
-    generateAIMessage,
   }), [
     currentStep,
     totalSteps,
@@ -249,9 +180,6 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     handleDataChange,
     handleSubmit,
     isCurrentStepValid,
-    currentAIMessage,
-    isGeneratingAI,
-    generateAIMessage,
   ]);
 
   return children(contextValue);

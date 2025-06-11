@@ -32,10 +32,7 @@ const OnboardingWizard = () => {
         handleDataChange,
         handleSubmit,
         isCurrentStepValid,
-        totalSteps,
-        currentAIMessage,
-        isGeneratingAI,
-        generateAIMessage
+        totalSteps
       }) => {
         if (isLoading) {
           return (
@@ -70,9 +67,6 @@ const OnboardingWizard = () => {
                     validationErrors={validationErrors}
                     getFieldError={getFieldError}
                     isCompleting={isSubmitting}
-                    aiMessage={currentAIMessage}
-                    isGeneratingAI={isGeneratingAI}
-                    onGenerateAIMessage={generateAIMessage}
                   />
                   
                   {currentStep < totalSteps && (

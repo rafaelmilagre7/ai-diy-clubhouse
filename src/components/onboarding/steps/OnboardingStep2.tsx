@@ -7,13 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { OnboardingStepProps } from '../types/onboardingTypes';
-import { Step2AIInteraction } from '../components/Step2AIInteraction';
-
-interface OnboardingStep2Props extends OnboardingStepProps {
-  aiMessage: string | null;
-  isGeneratingAI: boolean;
-  onGenerateAIMessage: () => Promise<void>;
-}
 
 const businessSectors = [
   'Tecnologia', 'Saúde', 'Educação', 'Varejo', 'Finanças', 'Marketing', 
@@ -33,21 +26,12 @@ const positions = [
   'Analista', 'Consultor', 'Freelancer', 'Empresário', 'Outro'
 ];
 
-const OnboardingStep2: React.FC<OnboardingStep2Props> = ({
+const OnboardingStep2: React.FC<OnboardingStepProps> = ({
   data,
   onUpdateData,
   memberType,
-  getFieldError,
-  aiMessage,
-  isGeneratingAI,
-  onGenerateAIMessage
+  getFieldError
 }) => {
-  console.log('[STEP2] Renderizando com:', {
-    hasAIMessage: !!aiMessage,
-    isGeneratingAI,
-    userName: data.name
-  });
-
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -71,12 +55,6 @@ const OnboardingStep2: React.FC<OnboardingStep2Props> = ({
           Agora vamos conhecer mais sobre seu negócio e objetivos profissionais
         </p>
       </div>
-
-      {/* Mensagem Personalizada da IA - Simplificada */}
-      <Step2AIInteraction 
-        message={aiMessage}
-        isLoading={isGeneratingAI}
-      />
 
       <Card className="p-6 bg-[#1A1E2E]/80 backdrop-blur-sm border-white/10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
