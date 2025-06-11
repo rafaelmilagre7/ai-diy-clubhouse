@@ -76,16 +76,8 @@ export const useAuthStateManager = ({
       setSession(session);
       setUser(user);
 
-      // OTIMIZAÇÃO 3: Verificação de admin por email (prioridade máxima)
-      const isAdminByEmail = user.email && [
-        'rafael@viverdeia.ai',
-        'admin@viverdeia.ai',
-        'admin@teste.com'
-      ].includes(user.email.toLowerCase());
-
-      if (isAdminByEmail) {
-        logger.info('[AUTH-STATE] Admin por email detectado - acesso prioritário');
-      }
+      // CORREÇÃO DE SEGURANÇA: Removida verificação por email hardcodado
+      // Agora usa APENAS o sistema de roles do banco de dados
 
       // OTIMIZAÇÃO 4: Verificar cache antes de buscar perfil
       const cachedNavigation = navigationCache.get(user.id);
@@ -125,9 +117,9 @@ export const useAuthStateManager = ({
 
           setProfile(profile);
           
-          // OTIMIZAÇÃO 6: Atualizar cache de navegação
+          // OTIMIZAÇÃO 6: Atualizar cache de navegação baseado APENAS no role do banco
           const roleName = profile.user_roles?.name;
-          if (roleName === 'admin' || isAdminByEmail) {
+          if (roleName === 'admin') {
             navigationCache.set(user.id, profile, 'admin');
           } else if (roleName === 'formacao') {
             navigationCache.set(user.id, profile, 'formacao');
@@ -142,32 +134,18 @@ export const useAuthStateManager = ({
         } else {
           logger.warn('[AUTH-STATE] Sem perfil disponível');
           setProfile(null);
-          
-          if (!isAdminByEmail) {
-            logger.warn('[AUTH-STATE] Usuário sem admin por email e sem perfil');
-          } else {
-            // Para admin por email, criar cache básico mesmo sem perfil
-            navigationCache.set(user.id, null, 'admin');
-          }
         }
         
       } catch (profileError) {
         logger.error('[AUTH-STATE] Erro no perfil:', profileError);
+        setProfile(null);
         
-        if (isAdminByEmail) {
-          logger.info('[AUTH-STATE] Admin por email - acesso permitido sem perfil');
-          setProfile(null);
-          navigationCache.set(user.id, null, 'admin');
-        } else {
-          setProfile(null);
-          
-          if (profileError instanceof Error && profileError.message.includes('segurança')) {
-            logger.warn('[AUTH-STATE] Logout por violação de segurança');
-            setSession(null);
-            setUser(null);
-            clearProfileCache();
-            navigationCache.clear();
-          }
+        if (profileError instanceof Error && profileError.message.includes('segurança')) {
+          logger.warn('[AUTH-STATE] Logout por violação de segurança');
+          setSession(null);
+          setUser(null);
+          clearProfileCache();
+          navigationCache.clear();
         }
       }
 

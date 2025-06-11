@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
@@ -45,7 +46,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setIsLoading,
   });
 
-  // CORREÇÃO CRÍTICA 3: Verificação de admin apenas via banco de dados
+  // CORREÇÃO DE SEGURANÇA: Verificação de admin APENAS via banco de dados
   const isAdmin = Boolean(profile?.user_roles?.name === 'admin');
 
   const isFormacao = Boolean(

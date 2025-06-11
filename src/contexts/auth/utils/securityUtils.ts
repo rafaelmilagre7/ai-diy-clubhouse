@@ -10,10 +10,10 @@ const ADMIN_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 const MAX_VERIFICATION_ATTEMPTS = 5;
 
 /**
- * Verificação robusta de status de admin com múltiplas camadas de segurança
+ * Verificação robusta de status de admin APENAS via banco de dados
  * Adaptada para trabalhar com as novas políticas RLS
  */
-export const verifyAdminStatus = async (userId: string, email?: string): Promise<boolean> => {
+export const verifyAdminStatus = async (userId: string): Promise<boolean> => {
   if (!userId || typeof userId !== 'string') {
     console.warn('[SECURITY] Invalid userId for admin verification');
     return false;
@@ -45,22 +45,7 @@ export const verifyAdminStatus = async (userId: string, email?: string): Promise
       attempts: currentAttempts 
     });
 
-    // Primeira camada: verificação por email para domínios confiáveis
-    if (email) {
-      const trustedEmails = [
-        'rafael@viverdeia.ai',
-        'admin@viverdeia.ai', 
-        'admin@teste.com'
-      ];
-      
-      if (trustedEmails.includes(email.toLowerCase())) {
-        adminCache.set(userId, { isAdmin: true, timestamp: now, attempts: currentAttempts });
-        console.info('[SECURITY] Admin verified by trusted email');
-        return true;
-      }
-    }
-
-    // Segunda camada: Usar função is_admin() implementada no banco
+    // CORREÇÃO DE SEGURANÇA: Usar APENAS função is_admin() implementada no banco
     const { data, error } = await supabase.rpc('is_admin');
     
     if (error) {
