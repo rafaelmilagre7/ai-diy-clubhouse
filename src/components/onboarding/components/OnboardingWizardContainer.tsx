@@ -61,7 +61,33 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
     syncStatus
   } = useCloudSync();
 
-  const totalSteps = 6; // Corrigido para 6 etapas
+  const totalSteps = 6;
+
+  // Função para scroll suave para o topo
+  const scrollToTop = useCallback(() => {
+    try {
+      // Scroll suave para o topo da página
+      window.scrollTo({ 
+        top: 0, 
+        behavior: 'smooth' 
+      });
+      
+      // Fallback para navegadores mais antigos
+      if (window.scrollY > 0) {
+        setTimeout(() => {
+          if (window.scrollY > 50) {
+            window.scrollTo(0, 0);
+          }
+        }, 300);
+      }
+      
+      console.log('[OnboardingWizard] Scroll para o topo executado');
+    } catch (error) {
+      console.warn('[OnboardingWizard] Erro no scroll:', error);
+      // Fallback simples
+      window.scrollTo(0, 0);
+    }
+  }, []);
 
   // Memoizar apenas valores estáticos
   const memberType = useMemo(() => data.memberType || 'club', [data.memberType]);
@@ -80,19 +106,40 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
   const handleNext = useCallback(async () => {
     if (currentStep < totalSteps && isCurrentStepValid) {
       try {
+        console.log('[OnboardingWizard] Avançando da etapa', currentStep, 'para', currentStep + 1);
+        
+        // Salvar dados antes de avançar
         await forceSave();
+        
+        // Avançar etapa
         setCurrentStep(prev => prev + 1);
+        
+        // Scroll suave para o topo após um pequeno delay para permitir a renderização
+        setTimeout(() => {
+          scrollToTop();
+        }, 100);
+        
+        console.log('[OnboardingWizard] Etapa avançada com sucesso');
       } catch (error) {
-        console.error('Error saving on next:', error);
+        console.error('Erro ao avançar etapa:', error);
       }
     }
-  }, [currentStep, totalSteps, isCurrentStepValid, forceSave]);
+  }, [currentStep, totalSteps, isCurrentStepValid, forceSave, scrollToTop]);
 
   const handlePrevious = useCallback(() => {
     if (currentStep > 1) {
+      console.log('[OnboardingWizard] Voltando da etapa', currentStep, 'para', currentStep - 1);
+      
       setCurrentStep(prev => prev - 1);
+      
+      // Scroll suave para o topo
+      setTimeout(() => {
+        scrollToTop();
+      }, 100);
+      
+      console.log('[OnboardingWizard] Etapa anterior com sucesso');
     }
-  }, [currentStep]);
+  }, [currentStep, scrollToTop]);
 
   const handleDataChange = useCallback((newData: Partial<OnboardingData>) => {
     updateData(newData);
@@ -111,6 +158,9 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
         await forceSave();
         await saveToCloud(finalData);
         
+        // Scroll para o topo antes de redirecionar
+        scrollToTop();
+        
         setTimeout(() => {
           if (isAdminPreviewMode) {
             window.location.href = '/admin';
@@ -124,7 +174,7 @@ export const OnboardingWizardContainer: React.FC<OnboardingWizardContainerProps>
         setIsSubmitting(false);
       }
     }
-  }, [isCurrentStepValid, isSubmitting, data, isAdminPreviewMode, updateData, forceSave, saveToCloud]);
+  }, [isCurrentStepValid, isSubmitting, data, isAdminPreviewMode, updateData, forceSave, saveToCloud, scrollToTop]);
 
   // Memoizar o objeto de props com dependências estáveis
   const childrenProps = useMemo(() => ({

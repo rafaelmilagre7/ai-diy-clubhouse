@@ -14,6 +14,7 @@ export const useAIMessageGeneration = () => {
   const generateMessage = useCallback(async (onboardingData: OnboardingData, memberType: 'club' | 'formacao', currentStep?: number) => {
     // Evitar gerar novamente se já está gerando ou se não tem dados mínimos
     if (isGenerating || !onboardingData.name) {
+      console.log('[AIMessageGeneration] Não é possível gerar - faltam dados ou já está gerando');
       return;
     }
 
@@ -27,8 +28,11 @@ export const useAIMessageGeneration = () => {
       
       // Simular progresso para melhor UX
       const progressInterval = setInterval(() => {
-        setProgress(prev => Math.min(prev + 10, 90));
-      }, 200);
+        setProgress(prev => {
+          const next = Math.min(prev + 15, 85);
+          return next;
+        });
+      }, 300);
 
       const { data, error: functionError } = await supabase.functions.invoke('generate-onboarding-message', {
         body: {
@@ -42,28 +46,44 @@ export const useAIMessageGeneration = () => {
       setProgress(100);
 
       if (functionError) {
+        console.error('[AIMessageGeneration] Erro da função:', functionError);
         throw functionError;
       }
 
+      console.log('[AIMessageGeneration] Dados recebidos:', data);
+
       if (data?.success && data?.message) {
-        // Sanitizar e limpar a mensagem recebida
+        // Sanitização mais robusta da mensagem recebida
         let cleanMessage = data.message;
         if (typeof cleanMessage === 'string') {
           cleanMessage = cleanMessage
             .trim()
-            .replace(/undefined/g, '')
-            .replace(/null/g, '')
+            // Remove undefined, null e outros valores inválidos
+            .replace(/undefined/gi, '')
+            .replace(/null/gi, '')
+            .replace(/\[object Object\]/gi, '')
+            // Remove espaços extras e quebras de linha desnecessárias
             .replace(/\s+/g, ' ')
-            .replace(/\n\s*\n/g, '\n\n');
+            .replace(/\n\s*\n/g, '\n\n')
+            // Remove caracteres de controle
+            .replace(/[\x00-\x1F\x7F]/g, '')
+            // Remove espaços no início e fim
+            .trim();
+          
+          // Validação adicional - se a mensagem ficou muito pequena, usar fallback
+          if (cleanMessage.length < 20) {
+            console.warn('[AIMessageGeneration] Mensagem muito pequena após sanitização, usando fallback');
+            cleanMessage = getFallbackMessage(onboardingData, currentStep);
+          }
         }
         
         setGeneratedMessage(cleanMessage);
-        console.log('[AIMessageGeneration] Mensagem gerada com sucesso');
+        console.log('[AIMessageGeneration] Mensagem sanitizada e definida:', cleanMessage.substring(0, 100) + '...');
       } else {
         // Usar mensagem de fallback se houve erro mas ainda retornou uma mensagem
         const fallbackMessage = data?.message || getFallbackMessage(onboardingData, currentStep);
-        setGeneratedMessage(fallbackMessage);
         console.warn('[AIMessageGeneration] Usando mensagem de fallback:', data?.error);
+        setGeneratedMessage(fallbackMessage);
       }
 
     } catch (err) {
@@ -74,12 +94,13 @@ export const useAIMessageGeneration = () => {
       // Fallback local em caso de erro total
       const fallbackMessage = getFallbackMessage(onboardingData, currentStep);
       setGeneratedMessage(fallbackMessage);
+      console.log('[AIMessageGeneration] Fallback aplicado devido a erro');
     } finally {
       setIsGenerating(false);
       setProgress(100);
       
       // Reset progress após um delay
-      setTimeout(() => setProgress(0), 1000);
+      setTimeout(() => setProgress(0), 1500);
     }
   }, [isGenerating, handleError]);
 
