@@ -1,3 +1,4 @@
+
 export interface OnboardingData {
   // Etapa 1 - Informações pessoais
   name?: string;
@@ -8,6 +9,10 @@ export interface OnboardingData {
   state?: string;
   city?: string;
   birthDate?: string;
+  // Campos separados para salvar parcialmente
+  birthDay?: string;
+  birthMonth?: string;
+  birthYear?: string;
   curiosity?: string;
   profilePicture?: string; // Nova foto de perfil opcional
   

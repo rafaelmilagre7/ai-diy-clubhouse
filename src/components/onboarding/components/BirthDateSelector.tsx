@@ -4,38 +4,31 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface BirthDateSelectorProps {
-  value?: string; // ISO date string (YYYY-MM-DD)
-  onChange: (date: string) => void;
+  birthDay?: string;
+  birthMonth?: string;
+  birthYear?: string;
+  onChange: (day: string, month: string, year: string) => void;
   getFieldError?: (field: string) => string | undefined;
 }
 
 export const BirthDateSelector: React.FC<BirthDateSelectorProps> = ({
-  value,
+  birthDay,
+  birthMonth,
+  birthYear,
   onChange,
   getFieldError
 }) => {
   // Estados internos para cada campo
-  const [selectedDay, setSelectedDay] = useState<string>('');
-  const [selectedMonth, setSelectedMonth] = useState<string>('');
-  const [selectedYear, setSelectedYear] = useState<string>('');
+  const [selectedDay, setSelectedDay] = useState<string>(birthDay || '');
+  const [selectedMonth, setSelectedMonth] = useState<string>(birthMonth || '');
+  const [selectedYear, setSelectedYear] = useState<string>(birthYear || '');
 
-  // Inicializar estados internos quando value prop mudar
+  // Sincronizar estados internos com props
   useEffect(() => {
-    if (value) {
-      const date = new Date(value);
-      if (!isNaN(date.getTime())) {
-        setSelectedDay(date.getDate().toString().padStart(2, '0'));
-        setSelectedMonth((date.getMonth() + 1).toString().padStart(2, '0'));
-        setSelectedYear(date.getFullYear().toString());
-        console.log('[BirthDateSelector] Inicializando com valor:', value);
-      }
-    } else {
-      setSelectedDay('');
-      setSelectedMonth('');
-      setSelectedYear('');
-      console.log('[BirthDateSelector] Limpando valores');
-    }
-  }, [value]);
+    setSelectedDay(birthDay || '');
+    setSelectedMonth(birthMonth || '');
+    setSelectedYear(birthYear || '');
+  }, [birthDay, birthMonth, birthYear]);
 
   // Gerar lista de dias baseado no mês e ano selecionados
   const days = useMemo(() => {
@@ -80,33 +73,10 @@ export const BirthDateSelector: React.FC<BirthDateSelectorProps> = ({
     return yearsArray;
   }, []);
 
-  // Função para validar e enviar data completa
-  const updateParentIfComplete = (day: string, month: string, year: string) => {
-    console.log('[BirthDateSelector] Verificando completude:', { day, month, year });
-    
-    if (day && month && year) {
-      // Validar se a data é válida
-      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-      if (date.getDate() === parseInt(day) && 
-          date.getMonth() === parseInt(month) - 1 && 
-          date.getFullYear() === parseInt(year)) {
-        const isoDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-        console.log('[BirthDateSelector] Enviando data válida:', isoDate);
-        onChange(isoDate);
-      } else {
-        console.log('[BirthDateSelector] Data inválida detectada');
-        onChange('');
-      }
-    } else {
-      console.log('[BirthDateSelector] Data incompleta, enviando string vazia');
-      onChange('');
-    }
-  };
-
   const handleDayChange = (day: string) => {
     console.log('[BirthDateSelector] Dia selecionado:', day);
     setSelectedDay(day);
-    updateParentIfComplete(day, selectedMonth, selectedYear);
+    onChange(day, selectedMonth, selectedYear);
   };
 
   const handleMonthChange = (month: string) => {
@@ -124,7 +94,7 @@ export const BirthDateSelector: React.FC<BirthDateSelectorProps> = ({
       }
     }
     
-    updateParentIfComplete(dayToUse, month, selectedYear);
+    onChange(dayToUse, month, selectedYear);
   };
 
   const handleYearChange = (year: string) => {
@@ -142,7 +112,7 @@ export const BirthDateSelector: React.FC<BirthDateSelectorProps> = ({
       }
     }
     
-    updateParentIfComplete(dayToUse, selectedMonth, year);
+    onChange(dayToUse, selectedMonth, year);
   };
 
   return (

@@ -17,6 +17,28 @@ const OnboardingStep1: React.FC<OnboardingStepProps> = ({
   onUpdateData,
   getFieldError
 }) => {
+  const handleBirthDateChange = (day: string, month: string, year: string) => {
+    // Salvar campos separadamente para preservar dados parciais
+    const updates: any = {
+      birthDay: day || undefined,
+      birthMonth: month || undefined,
+      birthYear: year || undefined
+    };
+
+    // Se todos os campos estão preenchidos, também criar a data ISO
+    if (day && month && year) {
+      const isoDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      updates.birthDate = isoDate;
+      console.log('[OnboardingStep1] Data completa criada:', isoDate);
+    } else {
+      // Se não está completa, limpar a data ISO
+      updates.birthDate = undefined;
+      console.log('[OnboardingStep1] Data incompleta, salvando campos separados:', updates);
+    }
+
+    onUpdateData(updates);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -85,7 +107,7 @@ const OnboardingStep1: React.FC<OnboardingStepProps> = ({
             )}
           </div>
 
-          {/* WhatsApp - usando o novo componente */}
+          {/* WhatsApp */}
           <div>
             <WhatsAppInput
               value={data.phone}
@@ -133,8 +155,10 @@ const OnboardingStep1: React.FC<OnboardingStepProps> = ({
           {/* Data de Nascimento */}
           <div>
             <BirthDateSelector
-              value={data.birthDate}
-              onChange={(date) => onUpdateData({ birthDate: date })}
+              birthDay={data.birthDay}
+              birthMonth={data.birthMonth}
+              birthYear={data.birthYear}
+              onChange={handleBirthDateChange}
               getFieldError={getFieldError}
             />
           </div>
