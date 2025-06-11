@@ -57,27 +57,20 @@ export const useAIMessageGeneration = () => {
         let cleanMessage = data.message;
         if (typeof cleanMessage === 'string') {
           cleanMessage = cleanMessage
-            // Remove apenas espaços no início e fim
             .trim()
-            // Remove palavras inválidas mas preserva caracteres válidos
             .replace(/\bundefined\b/gi, '')
             .replace(/\bnull\b/gi, '')
             .replace(/\[object Object\]/gi, '')
-            // Normaliza espaçamento sem remover caracteres válidos
             .replace(/\s+/g, ' ')
             .replace(/\n\s*\n/g, '\n\n')
-            // Remove apenas caracteres de controle, preservando acentos e emojis
             .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
-            // Trim final para remover espaços desnecessários
             .trim();
           
-          // Validação adicional - verificar se perdeu conteúdo importante
           if (cleanMessage.length < 10) {
             console.warn('[AIMessageGeneration] Mensagem muito pequena após sanitização, usando fallback');
             cleanMessage = getFallbackMessage(onboardingData, currentStep);
           }
           
-          // Log para debug - verificar se o primeiro caractere está sendo preservado
           console.log('[AIMessageGeneration] Primeiro caractere:', cleanMessage.charAt(0));
           console.log('[AIMessageGeneration] Mensagem sanitizada (50 chars):', cleanMessage.substring(0, 50));
         }
@@ -85,7 +78,6 @@ export const useAIMessageGeneration = () => {
         setGeneratedMessage(cleanMessage);
         console.log('[AIMessageGeneration] Mensagem definida com sucesso');
       } else {
-        // Usar mensagem de fallback se houve erro mas ainda retornou uma mensagem
         const fallbackMessage = data?.message || getFallbackMessage(onboardingData, currentStep);
         console.warn('[AIMessageGeneration] Usando mensagem de fallback:', data?.error);
         setGeneratedMessage(fallbackMessage);
@@ -96,7 +88,6 @@ export const useAIMessageGeneration = () => {
       handleError(err, 'AIMessageGeneration', { showToast: false });
       setError('Erro ao gerar mensagem personalizada');
       
-      // Fallback local em caso de erro total
       const fallbackMessage = getFallbackMessage(onboardingData, currentStep);
       setGeneratedMessage(fallbackMessage);
       console.log('[AIMessageGeneration] Fallback aplicado devido a erro');
@@ -104,16 +95,15 @@ export const useAIMessageGeneration = () => {
       setIsGenerating(false);
       setProgress(100);
       
-      // Reset progress após um delay
       setTimeout(() => setProgress(0), 1500);
     }
   }, [isGenerating, handleError]);
 
   const getFallbackMessage = (onboardingData: OnboardingData, currentStep?: number) => {
     if (currentStep === 2) {
-      return `Olá ${onboardingData.name || 'Membro'}! Que incrível ter você aqui conosco! Vi que você está em ${onboardingData.city || 'sua cidade'} e isso me deixa empolgado com as possibilidades. ${onboardingData.curiosity ? `Adorei saber que ${onboardingData.curiosity.toLowerCase()}.` : ''} Agora vamos falar sobre seu negócio e como posso ajudar você a identificar as melhores oportunidades de IA! 🚀`;
+      return `Olá ${onboardingData.name || 'Membro'}! Que bom ter você aqui na Viver de IA! Vi que você está em ${onboardingData.city || 'sua cidade'} e fico empolgado em ver mais um apaixonado por IA se juntando à nossa comunidade. ${onboardingData.curiosity ? `Adorei saber que ${onboardingData.curiosity.toLowerCase()}.` : ''} Agora vamos descobrir como podemos acelerar sua jornada empresarial com IA - vamos para seu perfil de negócios! 🚀`;
     }
-    return `Parabéns ${onboardingData.name || 'Membro'}! Seu onboarding foi concluído com sucesso. Vamos transformar o futuro com IA! 🚀`;
+    return `Parabéns ${onboardingData.name || 'Membro'}! Seu onboarding foi concluído com sucesso. Bem-vindo à comunidade Viver de IA - agora vamos transformar o futuro dos negócios juntos! 🚀`;
   };
 
   const clearMessage = useCallback(() => {

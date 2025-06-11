@@ -26,20 +26,21 @@ serve(async (req) => {
     let userPrompt = '';
 
     if (currentStep === 2) {
-      // System prompt ultra-otimizado para etapa 2 - resposta rápida
-      systemPrompt = `Você é um consultor em IA empresarial especialista em perfis brasileiros.
+      // System prompt otimizado para etapa 2 - assistente interno da plataforma
+      systemPrompt = `Você é o assistente inteligente da plataforma "Viver de IA", uma comunidade/formação especializada em transformação digital e implementação de inteligência artificial em negócios.
 
-MISSÃO: Criar UM parágrafo personalizado conectando perfil pessoal com oportunidades empresariais de IA.
+CONTEXTO: O usuário está fazendo onboarding na plataforma. Ele acabou de completar a etapa 1 (dados pessoais) e está prestes a preencher a etapa 2 (perfil empresarial).
 
-REGRAS:
-1. Máximo 3-4 frases
-2. Use nome da pessoa naturalmente  
-3. Mencione cidade contextualmente
-4. Integre curiosidade pessoal
-5. Tom caloroso mas profissional
-6. Foque na transição para negócios
+MISSÃO: Criar mensagem de boas-vindas personalizada que:
+1. Parabenize por completar etapa 1
+2. Use dados pessoais para criar conexão calorosa
+3. Gere expectativa para etapa 2 (perfil empresarial)
+4. Transmita valor da plataforma
 
-ESTRUTURA: Saudação + conexão cidade/curiosidade + ponte empresarial + convite próximo passo`;
+ESTRUTURA: Saudação personalizada + conexão com dados pessoais + transição para etapa empresarial + motivação para continuar
+
+TOM: Caloroso, acolhedor, motivador, interno da plataforma (não consultoria externa)
+TAMANHO: Máximo 3-4 frases concisas`;
 
       const contextData = {
         nome: onboardingData.name || 'Membro',
@@ -48,32 +49,38 @@ ESTRUTURA: Saudação + conexão cidade/curiosidade + ponte empresarial + convit
         curiosidade: onboardingData.curiosity || ''
       };
 
-      userPrompt = `Crie 1 parágrafo personalizado para:
+      userPrompt = `Crie mensagem de boas-vindas da plataforma para:
 
 Nome: ${contextData.nome}
 Local: ${contextData.cidade}, ${contextData.estado}
 Curiosidade: ${contextData.curiosidade}
 
-Contexto: Pessoa completou dados pessoais, agora vai para etapa empresarial. Use dados pessoais para criar conexão única e preparar para discussão sobre negócios.
+SITUAÇÃO: Usuário completou etapa 1 do onboarding e vai para etapa 2 (perfil empresarial).
 
-Resposta: 1 parágrafo demonstrando compreensão do perfil.`;
+OBJETIVO: Mensagem que conecte dados pessoais com próxima etapa, demonstrando que a plataforma entende seu perfil e vai ajudá-lo a identificar oportunidades de IA no seu negócio.
+
+NÃO MENCIONE: "agendar conversa", "consultor externo", "reunião"
+FOQUE EM: Completar o onboarding, próxima etapa, oportunidades na plataforma`;
 
     } else {
-      // System prompt original para outras etapas
-      systemPrompt = `Você é um consultor especialista em transformação digital e IA empresarial. 
+      // System prompt para outras etapas - assistente da plataforma
+      systemPrompt = `Você é o assistente inteligente da plataforma "Viver de IA", especializada em transformação digital e implementação de IA em negócios.
 
-Analise CUIDADOSAMENTE todas as informações do onboarding fornecidas e crie uma mensagem personalizada única que demonstre compreensão profunda do perfil, contexto empresarial e objetivos.
+CONTEXTO: Usuário completou todo o onboarding e agora é membro da plataforma.
 
-NÃO use templates genéricos ou simplesmente insira variáveis no texto.
-ENTENDA o contexto completo e crie insights relevantes baseados no perfil específico.
+MISSÃO: Criar mensagem final personalizada que:
+1. Parabenize pela conclusão do onboarding
+2. Destaque insights únicos do perfil completo
+3. Apresente próximos passos na plataforma
+4. Motive engajamento com a comunidade
 
-Estruture a mensagem em 3-4 parágrafos:
-1. Reconhecimento personalizado do perfil e contexto
-2. Insights específicos baseados nas respostas (setor, objetivos, maturidade em IA)
-3. Próximos passos recomendados para o perfil específico
-4. Motivação final personalizada
+A mensagem deve mostrar compreensão profunda do perfil empresarial e objetivos, sugerindo como a plataforma pode acelerar sua jornada de transformação digital.
 
-A mensagem deve parecer escrita por um consultor que realmente analisou o perfil.`;
+Estruture em 3-4 parágrafos:
+1. Parabéns personalizado com insights do perfil
+2. Conexão entre perfil e oportunidades específicas de IA
+3. Próximos passos recomendados na plataforma
+4. Motivação para engajamento na comunidade`;
 
       const contextData = {
         nome: onboardingData.name,
@@ -99,12 +106,15 @@ A mensagem deve parecer escrita por um consultor que realmente analisou o perfil
         tipoMembro: memberType
       };
 
-      userPrompt = `Analise este perfil completo de onboarding e crie uma mensagem final personalizada:
+      userPrompt = `Analise este perfil completo de onboarding da plataforma "Viver de IA":
 
 DADOS DO PERFIL:
 ${JSON.stringify(contextData, null, 2)}
 
-Crie uma mensagem que demonstre que você realmente entendeu este perfil específico, seus desafios, objetivos e contexto empresarial.`;
+Crie mensagem final que demonstre compreensão profunda do perfil e apresente como a plataforma pode acelerar sua transformação digital com IA.
+
+FOQUE EM: Trilhas de implementação, comunidade, recursos da plataforma, networking
+NÃO MENCIONE: Consultoria externa, agendamentos, serviços fora da plataforma`;
     }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -120,7 +130,7 @@ Crie uma mensagem que demonstre que você realmente entendeu este perfil especí
           { role: 'user', content: userPrompt }
         ],
         temperature: 0.7,
-        max_tokens: 150, // Reduzido para respostas mais rápidas
+        max_tokens: 200,
       }),
     });
 
@@ -138,7 +148,14 @@ Crie uma mensagem que demonstre que você realmente entendeu este perfil especí
         .replace(/undefined/g, '')
         .replace(/null/g, '')
         .replace(/\s+/g, ' ')
-        .replace(/\n\s*\n/g, '\n\n');
+        .replace(/\n\s*\n/g, '\n\n')
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+        .trim();
+      
+      if (generatedMessage.length < 10) {
+        console.warn('[AIMessageGeneration] Mensagem muito pequena após sanitização, usando fallback');
+        generatedMessage = getFallbackMessage(onboardingData, currentStep);
+      }
     }
 
     console.log(`Mensagem gerada com sucesso para: ${onboardingData.name} (Etapa ${currentStep || 'final'})`);
@@ -153,8 +170,8 @@ Crie uma mensagem que demonstre que você realmente entendeu este perfil especí
   } catch (error) {
     console.error('Erro na generate-onboarding-message:', error);
     
-    // Fallback message otimizado e limpo
-    const fallbackMessage = `Olá ${onboardingData?.name || 'Membro'}! Que bom ter você aqui conosco! Vi que você está em ${onboardingData?.city || 'sua cidade'} e isso me deixa empolgado com as possibilidades. ${onboardingData?.curiosity ? `Adorei saber que ${onboardingData.curiosity.toLowerCase()}.` : ''} Agora vamos falar sobre seu negócio e como posso ajudar você a identificar as melhores oportunidades de IA! 🚀`;
+    // Fallback message otimizado para o contexto da plataforma
+    const fallbackMessage = getFallbackMessage(onboardingData, currentStep);
 
     return new Response(JSON.stringify({ 
       message: fallbackMessage,
@@ -165,3 +182,11 @@ Crie uma mensagem que demonstre que você realmente entendeu este perfil especí
     });
   }
 });
+
+// Função auxiliar para mensagens de fallback contextualizadas
+function getFallbackMessage(onboardingData: any, currentStep?: number) {
+  if (currentStep === 2) {
+    return `Olá ${onboardingData?.name || 'Membro'}! Que bom ter você aqui na Viver de IA! Vi que você está em ${onboardingData?.city || 'sua cidade'} e fico empolgado em ver mais um apaixonado por IA se juntando à nossa comunidade. ${onboardingData?.curiosity ? `Adorei saber que ${onboardingData.curiosity.toLowerCase()}.` : ''} Agora vamos descobrir como podemos acelerar sua jornada empresarial com IA - vamos para seu perfil de negócios! 🚀`;
+  }
+  return `Parabéns ${onboardingData?.name || 'Membro'}! Seu onboarding foi concluído com sucesso. Bem-vindo à comunidade Viver de IA - agora vamos transformar o futuro dos negócios juntos! 🚀`;
+}
