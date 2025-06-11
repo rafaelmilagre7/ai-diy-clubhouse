@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle, Loader2, Sparkles, ArrowRight } from 'lucide-react';
 import { OnboardingData } from '../types/onboardingTypes';
 import { AIMessageDisplay } from '../components/AIMessageDisplay';
-import { useAIMessageGeneration } from '../hooks/useAIMessageGeneration';
 
 interface OnboardingFinalProps {
   data: OnboardingData;
@@ -20,14 +19,10 @@ export const OnboardingFinal: React.FC<OnboardingFinalProps> = ({
   isCompleting,
   memberType
 }) => {
-  const { generateMessage, isGenerating, generatedMessage } = useAIMessageGeneration();
-
-  // Gerar mensagem personalizada quando o componente carrega
-  useEffect(() => {
-    if (!generatedMessage && !isGenerating) {
-      generateMessage(data, memberType);
-    }
-  }, [data, memberType, generatedMessage, isGenerating, generateMessage]);
+  // Mensagem de parabéns personalizada
+  const congratsMessage = data.name 
+    ? `Parabéns ${data.name}! Seu onboarding foi concluído com sucesso. Agora você está pronto(a) para explorar todas as funcionalidades da Viver de IA e começar sua jornada de transformação digital. Seja bem-vindo(a) à nossa comunidade! 🚀`
+    : `Parabéns! Seu onboarding foi concluído com sucesso. Agora você está pronto(a) para explorar todas as funcionalidades da Viver de IA e começar sua jornada de transformação digital. Seja bem-vindo(a) à nossa comunidade! 🚀`;
 
   const handleComplete = async () => {
     try {
@@ -58,15 +53,15 @@ export const OnboardingFinal: React.FC<OnboardingFinalProps> = ({
         </p>
       </motion.div>
 
-      {/* Mensagem Personalizada da IA */}
+      {/* Mensagem de Parabéns */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
       >
         <AIMessageDisplay 
-          message={generatedMessage || ''} 
-          isLoading={isGenerating}
+          message={congratsMessage} 
+          isLoading={false}
         />
       </motion.div>
 
@@ -146,7 +141,7 @@ export const OnboardingFinal: React.FC<OnboardingFinalProps> = ({
       >
         <Button
           onClick={handleComplete}
-          disabled={isCompleting || isGenerating}
+          disabled={isCompleting}
           size="lg"
           className="bg-viverblue hover:bg-viverblue/80 text-white px-8 py-4 text-lg gap-3"
         >
