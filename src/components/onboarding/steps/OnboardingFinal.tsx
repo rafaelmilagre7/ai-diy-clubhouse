@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Loader2, Sparkles, ArrowRight } from 'lucide-react';
 import { OnboardingData } from '../types/onboardingTypes';
+import { useAIFinalMessage } from '../hooks/useAIFinalMessage';
 
 interface OnboardingFinalProps {
   data: OnboardingData;
@@ -18,6 +19,8 @@ export const OnboardingFinal: React.FC<OnboardingFinalProps> = ({
   isCompleting,
   memberType
 }) => {
+  const { message: aiMessage, isLoading: isGeneratingMessage, error: messageError } = useAIFinalMessage(data);
+
   const handleComplete = async () => {
     try {
       await onComplete();
@@ -47,21 +50,34 @@ export const OnboardingFinal: React.FC<OnboardingFinalProps> = ({
         </p>
       </motion.div>
 
-      {/* Mensagem de Parabéns */}
+      {/* Mensagem Personalizada de IA */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
         className="bg-gradient-to-r from-viverblue/10 to-viverblue-light/10 border border-viverblue/30 rounded-xl p-6"
       >
-        <div className="prose prose-slate max-w-none">
-          <p className="leading-relaxed text-slate-100 text-lg text-center">
-            {data.name 
-              ? `Parabéns ${data.name}! Seu onboarding foi concluído com sucesso. Agora você está pronto(a) para explorar todas as funcionalidades da Viver de IA e começar sua jornada de transformação digital. Seja bem-vindo(a) à nossa comunidade! 🚀`
-              : `Parabéns! Seu onboarding foi concluído com sucesso. Agora você está pronto(a) para explorar todas as funcionalidades da Viver de IA e começar sua jornada de transformação digital. Seja bem-vindo(a) à nossa comunidade! 🚀`
-            }
-          </p>
-        </div>
+        {isGeneratingMessage ? (
+          <div className="flex items-center justify-center space-x-3 py-4">
+            <Loader2 className="w-5 h-5 animate-spin text-viverblue" />
+            <p className="text-slate-300">Gerando sua mensagem personalizada...</p>
+          </div>
+        ) : messageError ? (
+          <div className="prose prose-slate max-w-none">
+            <p className="leading-relaxed text-slate-100 text-lg text-center">
+              {data.name 
+                ? `Parabéns ${data.name}! Seu onboarding foi concluído com sucesso. Agora você está pronto(a) para explorar todas as funcionalidades da Viver de IA e começar sua jornada de transformação digital. Seja bem-vindo(a) à nossa comunidade! 🚀`
+                : `Parabéns! Seu onboarding foi concluído com sucesso. Agora você está pronto(a) para explorar todas as funcionalidades da Viver de IA e começar sua jornada de transformação digital. Seja bem-vindo(a) à nossa comunidade! 🚀`
+              }
+            </p>
+          </div>
+        ) : (
+          <div className="prose prose-slate max-w-none">
+            <p className="leading-relaxed text-slate-100 text-lg text-center whitespace-pre-line">
+              {aiMessage}
+            </p>
+          </div>
+        )}
       </motion.div>
 
       {/* Próximos Passos */}
@@ -140,7 +156,7 @@ export const OnboardingFinal: React.FC<OnboardingFinalProps> = ({
       >
         <Button
           onClick={handleComplete}
-          disabled={isCompleting}
+          disabled={isCompleting || isGeneratingMessage}
           size="lg"
           className="bg-viverblue hover:bg-viverblue/80 text-white px-8 py-4 text-lg gap-3"
         >
